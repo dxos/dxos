@@ -960,25 +960,14 @@ const layoutRuns = (content: ContentMap, model: StudioModel, grid: number): numb
   return laid;
 };
 
-/** How near two cards' centres must be to count as one column. */
-const COLUMN_TOLERANCE = 24;
+/** How near two cards' centres must be to count as one column or one row. */
+const LINE_TOLERANCE = 24;
 
-/** How far from its column's middle width a card may be and still take the column's width: a header is not a column. */
-const COLUMN_SPREAD = 1.5;
+/** How far from its line's middle size a card may be and still take it: a header is not a member of a column. */
+const LINE_SPREAD = 1.5;
 
-/**
- * Gives every card of a column one width. The deck sized each box to its own content, so a column came out ragged —
- * on the Plugins slide a module's card was 283 wide and the consumer under it 262 — and the space between columns was
- * whatever that left. Cards are grouped by their centres, which is what the deck aligned them on, and each column
- * takes its NARROWEST card: a column never grows into its neighbour, so the slide gains the gutter it lacked.
- *
- * A card far from its column's middle width is left alone ({@link COLUMN_SPREAD}): the Plugins slide's header spans
- * five columns from the middle one's centre, and is not a member of it.
- *
- * Only the cards move, and only across: a frame, a component or a label keeps the box it was given, and a card's
- * height still says how much it holds.
- */
-const uniformColumns = (content: ContentMap, model: StudioModel, grid: number): number => {
+/** The slide's cards, which are the only shapes these passes move. */
+const cardsOf = (content: ContentMap, model: StudioModel): { key: string; node: Node }[] => {
   const cards: { key: string; node: Node }[] = [];
   for (const id of Object.keys(model.nodes)) {
     const key = nodeKey(boxOf(id));
@@ -987,44 +976,101 @@ const uniformColumns = (content: ContentMap, model: StudioModel, grid: number): 
       cards.push({ key, node: record.node });
     }
   }
-  // Columns by centre, in order across the slide.
-  const columns: { center: number; members: typeof cards }[] = [];
-  for (const card of [...cards].sort((left, right) => left.node.center.x - right.node.center.x)) {
-    const last = columns.at(-1);
-    if (last && Math.abs(card.node.center.x - last.center) <= COLUMN_TOLERANCE) {
+  return cards;
+};
+
+/** Cards grouped by a centre they share, in order along that axis. */
+const linesOf = (cards: { key: string; node: Node }[], axis: 'x' | 'y') => {
+  const lines: { center: number; members: typeof cards }[] = [];
+  for (const card of [...cards].sort((left, right) => left.node.center[axis] - right.node.center[axis])) {
+    const last = lines.at(-1);
+    if (last && Math.abs(card.node.center[axis] - last.center) <= LINE_TOLERANCE) {
       last.members.push(card);
     } else {
-      columns.push({ center: card.node.center.x, members: [card] });
+      lines.push({ center: card.node.center[axis], members: [card] });
     }
   }
+  return lines;
+};
+
+/** A line's members less the odd one out, by the size that line shares. */
+const alongLine = (members: { key: string; node: Node }[], extent: (node: Node) => number) => {
+  const sizes = members.map(({ node }) => extent(node)).sort((left, right) => left - right);
+  const middle = sizes[Math.floor(sizes.length / 2)];
+  return members.filter(({ node }) => extent(node) <= middle * LINE_SPREAD && extent(node) * LINE_SPREAD >= middle);
+};
+
+/**
+ * Gives every card of a row one height and every card of a column one width, and spaces a column of equal cards on
+ * one pitch. The deck sized each box to its own content and left whatever gap that produced, so a slide's grid came
+ * out ragged — on the ECHO layers slide the bottom row of cards was 8 units taller than the two above it and sat 8
+ * units lower than its own pitch. A line takes its SMALLEST card: it never grows into its neighbour, so the slide
+ * gains the gutter it lacked.
+ *
+ * A card far from its line's middle size is left alone ({@link LINE_SPREAD}): the Plugins slide's header spans five
+ * columns from the middle one's centre, and is not a member of it.
+ *
+ * Only the cards move: a frame, a component or a label keeps the box it was given.
+ */
+const uniformGrid = (content: ContentMap, model: StudioModel, grid: number): number => {
   let changed = 0;
-  for (const { center, members } of columns) {
-    const widths = members.map(({ node }) => onGrid(node.size.width, grid)).sort((left, right) => left - right);
-    const middle = widths[Math.floor(widths.length / 2)];
-    const column = members.filter(
-      ({ node }) =>
-        onGrid(node.size.width, grid) <= middle * COLUMN_SPREAD &&
-        onGrid(node.size.width, grid) * COLUMN_SPREAD >= middle,
-    );
+  const write = (
+    key: string,
+    node: Node,
+    center: { x: number; y: number },
+    size: { width: number; height: number },
+  ) => {
+    const record = content[key];
+    if (!isNodeRecord(record)) {
+      return;
+    }
+    if (
+      node.center.x === center.x &&
+      node.center.y === center.y &&
+      node.size.width === size.width &&
+      node.size.height === size.height
+    ) {
+      return;
+    }
+    content[key] = { ...record, node: { ...node, center, size } };
+    changed++;
+  };
+
+  // Rows first: a row's height is what a column then spaces.
+  for (const { center, members } of linesOf(cardsOf(content, model), 'y')) {
+    const row = alongLine(members, (node) => onGrid(node.size.height, grid));
+    if (row.length < 2) {
+      continue;
+    }
+    const height = Math.max(grid, Math.min(...row.map(({ node }) => onGrid(node.size.height, grid))));
+    const top = onGrid(center - height / 2, grid);
+    for (const { key, node } of row) {
+      write(key, node, { x: node.center.x, y: top + height / 2 }, { ...node.size, height });
+    }
+  }
+
+  for (const { center, members } of linesOf(cardsOf(content, model), 'x')) {
+    const column = alongLine(members, (node) => onGrid(node.size.width, grid));
     if (column.length < 2) {
       continue;
     }
     const width = Math.max(grid, Math.min(...column.map(({ node }) => onGrid(node.size.width, grid))));
-    for (const { key, node } of column) {
-      const left = onGrid(center - width / 2, grid);
-      if (node.size.width === width && node.center.x === left + width / 2) {
-        continue;
-      }
-      const record = content[key];
-      if (!isNodeRecord(record)) {
-        continue;
-      }
-      content[key] = {
-        ...record,
-        node: { ...node, center: { x: left + width / 2, y: node.center.y }, size: { ...node.size, width } },
-      };
-      changed++;
-    }
+    const left = onGrid(center - width / 2, grid);
+    const ordered = [...column].sort((first, second) => first.node.center.y - second.node.center.y);
+    // A column of cards of one height is spaced on one pitch, inside the span it already covers; a column whose cards
+    // differ (a module card over its consumer) keeps the places the deck gave them, and so does one the pitch would
+    // move further than a cell — that is a column the deck spaced on purpose, not a rounding to tidy.
+    const height = ordered[0].node.size.height;
+    const even = ordered.length > 2 && ordered.every(({ node }) => node.size.height === height);
+    const first = onGrid(ordered[0].node.center.y - height / 2, grid);
+    const last = ordered.at(-1)!.node.center.y + height / 2;
+    const pitch = even ? Math.max(height, onGrid((last - first - height) / (ordered.length - 1), grid)) : 0;
+    const spaced =
+      even && ordered.every(({ node }, index) => Math.abs(first + index * pitch + height / 2 - node.center.y) <= grid);
+    ordered.forEach(({ key, node }, index) => {
+      const y = spaced ? first + index * pitch + height / 2 : node.center.y;
+      write(key, node, { x: left + width / 2, y }, { ...node.size, width });
+    });
   }
   return changed;
 };
@@ -1058,6 +1104,39 @@ export type ComponentMode = 'kind' | 'generator';
  * how the drawing reads where the kind is not there. `fat-arrow` is not here: it draws as plain shapes.
  */
 export const STUDIO_COMPONENT_KINDS: ReadonlySet<string> = new Set(['space-graph', 'substrate', 'app-frame', 'plank']);
+
+/**
+ * The box a view frames to draw this slide: the deck's own page, moved onto what the slide actually draws. Every
+ * slide takes the same 1600 x 900, so the nine open at ONE scale; centring it on the slide's own content is what
+ * stops a slide with a wide top margin (the deck left room there for a title this import does not draw) from sitting
+ * low in the box a presentation gives it.
+ */
+export const studioPageFrame = ({ page, nodes, frames, texts }: StudioModel) => {
+  const size = { width: page?.w ?? 1600, height: page?.h ?? 900 };
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const card of Object.values(nodes)) {
+    const [width, height] = [card.w ?? 0, card.h ?? 0];
+    xs.push(card.cx - width / 2, card.cx + width / 2);
+    ys.push(card.cy - height / 2, card.cy + height / 2);
+  }
+  for (const frame of frames) {
+    xs.push(frame.x, frame.x + frame.w);
+    ys.push(frame.y, frame.y + frame.h);
+  }
+  for (const text of texts ?? []) {
+    xs.push(text.x, text.x + (text.w ?? 0));
+    ys.push(text.y);
+  }
+  if (xs.length === 0) {
+    return { x: 0, y: 0, ...size };
+  }
+  const center = {
+    x: (Math.min(...xs) + Math.max(...xs)) / 2,
+    y: (Math.min(...ys) + Math.max(...ys)) / 2,
+  };
+  return { x: center.x - size.width / 2, y: center.y - size.height / 2, ...size };
+};
 
 /** What the loader had to take from the sidecar, which is the spike's finding in numbers. */
 export type StudioReport = {
@@ -1119,7 +1198,7 @@ export const seedStudioSlide =
     const snapped = snapToGrid(content, grid);
     // After the snap and before the routes: a route is taken from the outlines it meets, so the run has to be laid
     // out while they are still what the links will be measured against.
-    const laid = layoutRuns(content, model, grid) + uniformColumns(content, model, grid);
+    const laid = layoutRuns(content, model, grid) + uniformGrid(content, model, grid);
     const routed = routeLinks(content, model, components);
     const placed =
       components === 'generator'

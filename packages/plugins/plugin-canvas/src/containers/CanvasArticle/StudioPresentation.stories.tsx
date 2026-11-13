@@ -36,7 +36,7 @@ import types from '../../capabilities/schema.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import { STUDIO_KINDS } from '../../testing/studio/kinds.ts';
 import { STUDIO_SLIDES } from '../../testing/studio/slides.ts';
-import { STUDIO_CANVAS, seedStudioSlide } from '../../testing/studio/studio.ts';
+import { STUDIO_CANVAS, seedStudioSlide, studioPageFrame } from '../../testing/studio/studio.ts';
 
 /** The deck's look: the studio's own accent, and its fonts. */
 const THEME: SlideTheme.Settings = { accent: '#2d6fff', font: 'space-grotesk', monoFont: 'fira' };
@@ -62,12 +62,6 @@ const StudioKindsPlugin = Plugin.define(
   }),
   Plugin.make,
 );
-
-/**
- * The deck's own page, which every slide was drawn on. Framing THIS rather than each slide's own content is what puts
- * the nine diagrams at one scale: a slide that fills less of the page draws smaller, as it does in the deck.
- */
-const PAGE = { x: 0, y: 0, width: 1600, height: 900 };
 
 /** How far a slide may magnify the page. A fit stops at 1:1 by default, and a slide is wider than the deck's page. */
 const FIT_ZOOM = 4;
@@ -114,7 +108,9 @@ const decorators = createStoryDecorators<StoryArgs>(({ args }) => ({
       const canvas = addTestCanvas(space.db, seedStudioSlide(source, model, { labels, remap }), {
         ...STUDIO_CANVAS,
         readonly: true,
-        fitFrame: PAGE,
+        // The deck's page, over what this slide draws: one size for all nine, so they open at one scale, and centred
+        // on the slide's own content, so none of them sits off to a side of the box ({@link studioPageFrame}).
+        fitFrame: studioPageFrame(model),
         fitZoom: FIT_ZOOM,
       });
       return { model, drawing: space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas })) };
@@ -152,6 +148,8 @@ type Story = StoryObj<typeof meta>;
 
 /** Nine slides, one per diagram, each a drawing of the deck rather than a picture of one. */
 export const Default: Story = {
+  // On, so the box a slide gives its drawing is visible without turning the control on first.
+  args: { borders: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByTestId('presenter.slide-grid.0', undefined, { timeout: 60_000 });

@@ -115,16 +115,19 @@ describe('studio deck slides on a canvas', () => {
         expect({ key, inside: node.center.y > run.y && node.center.y < run.y + run.h }).toEqual({ key, inside: true });
         continue;
       }
-      // The top-left corner, not the centre: a card widened to its column's width keeps its left edge and moves its
-      // centre by half of what it gained.
+      // A card sized to its row or column keeps its centre, so its corner moves by half of what it gained or gave
+      // back; everything else moves by at most half a cell.
+      const extent = (shape: typeof node | undefined, axis: 'x' | 'y') =>
+        shape ? (axis === 'x' ? shape.size.width : shape.size.height) : 0;
       const corner = (shape: typeof node | undefined, axis: 'x' | 'y') =>
-        shape ? shape.center[axis] - (axis === 'x' ? shape.size.width : shape.size.height) / 2 : 0;
+        shape ? shape.center[axis] - extent(shape, axis) / 2 : 0;
       for (const axis of ['x', 'y'] as const) {
-        expect({ key, axis, far: Math.abs(corner(node, axis) - corner(original, axis)) > STUDIO_GRID }).toEqual({
+        const slack = Math.abs(extent(node, axis) - extent(original, axis)) / 2;
+        expect({
           key,
           axis,
-          far: false,
-        });
+          far: Math.abs(corner(node, axis) - corner(original, axis)) > STUDIO_GRID + slack,
+        }).toEqual({ key, axis, far: false });
       }
     }
   });

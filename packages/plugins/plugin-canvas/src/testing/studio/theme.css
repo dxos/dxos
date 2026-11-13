@@ -49,6 +49,12 @@
 
 /* The glyph is the card's colour: its own tone where it has one, the deck's accent otherwise — a muted glyph read
    as disabled beside a titled card. */
+/* A plain card's title: the framed card's 23px, so the two read as one family. */
+.studio-card-title {
+  font-size: 23px;
+  line-height: 1;
+}
+
 .studio-card-icon {
   color: var(--sd-tone, var(--sd-accent));
 }
@@ -96,9 +102,10 @@
   padding-block-start: 8px;
 }
 
+/* As the simple card's glyph: the card's tone where it has one, the deck's accent otherwise. */
 .studio-card-frame [data-part='card-header'] .dx-icon,
 .studio-card-frame [data-scope='icon'] {
-  color: var(--sd-tone, var(--sd-muted));
+  color: var(--sd-tone, var(--sd-accent));
 }
 
 /* A feed block: an inset well, or filled in its mark's tone. */

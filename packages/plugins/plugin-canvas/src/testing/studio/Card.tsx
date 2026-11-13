@@ -106,8 +106,10 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
       data-tone={tone ? true : undefined}
       style={style}
     >
-      {symbol && <Icon.Icon icon={symbol} size='lg' classNames='studio-card-icon shrink-0' />}
-      <TextPart part='label' text={node.label} editing={editing} classNames='grow truncate text-lg'>
+      {/* The header reads as the framed card's does — the same glyph and title — so a row of plain cards under a row
+          of framed ones is one scale. The glyph is sized inline: the icon recipe's own size class would win. */}
+      {symbol && <Icon.Icon icon={symbol} classNames='studio-card-icon shrink-0' style={{ width: 26, height: 26 }} />}
+      <TextPart part='label' text={node.label} editing={editing} classNames='studio-card-title grow truncate'>
         {node.label}
       </TextPart>
     </div>
