@@ -8989,9 +8989,6 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../../ui/ui-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -9035,6 +9032,9 @@ importers:
       '@dxos/react-ui-masonry':
         specifier: workspace:*
         version: link:../../ui/react-ui-masonry
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -23295,15 +23295,9 @@ importers:
       '@dxos/plugin-brain':
         specifier: workspace:*
         version: link:../../plugins/plugin-brain
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-client
       '@dxos/plugin-discord':
         specifier: workspace:*
         version: link:../../plugins/plugin-discord
-      '@dxos/plugin-routine':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-routine
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -23371,6 +23365,9 @@ importers:
       '@dxos/pipeline-transcription':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-transcription
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-client
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
@@ -23380,6 +23377,9 @@ importers:
       '@dxos/plugin-progress':
         specifier: workspace:*
         version: link:../../plugins/plugin-progress
+      '@dxos/plugin-routine':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-routine
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
