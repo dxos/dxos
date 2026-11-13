@@ -157,6 +157,10 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   #deletionChanged = false;
   /** Entities removed themselves; the rest of {@link ObjectDeletedId} is derived from their dependencies. */
   readonly #ownDeleted = new WeakSet<Entity.Unknown>();
+  /** The newest change-log record read, and the `data_version` it was read at (F-8.5). */
+  #changeCursor: number | undefined;
+  #dataVersion: number | undefined;
+  #polling = false;
   #scheduled = false;
   /** Set while the database writes a derived meta field, whose change notification is not an edit. */
   #stamping = false;
@@ -194,15 +198,52 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     this.#unregister = this.#join();
   }
 
-  /** Joins the graph and follows its registry; the cleanup leaves both. */
+  /** Joins the graph, follows its registry and watches other connections' commits; the cleanup stops all three. */
   #join(): CleanupFn {
     const unregister = this.#graph.register(this, this.#resolver);
     // A registry-scoped query answers from the shared registry, so a change there re-runs queries.
     const unsubscribe = this.#registry.changed.on(() => this.#committed.emit(new Set([ANY_TYPE])));
+    const timer = setInterval(() => void this.#pollOtherWriters(), QUERY_POLL_MS);
+    // The poll must not keep a process alive that is otherwise done.
+    timer.unref?.();
     return () => {
+      clearInterval(timer);
       unregister();
       unsubscribe();
     };
+  }
+
+  /**
+   * Applies what other connections to the file committed: SQLite's `data_version` moves when one does,
+   * and the change log names the objects it wrote (F-8.5).
+   */
+  async #pollOtherWriters(): Promise<void> {
+    if (this.#polling || this.#closed || this.#changeCursor === undefined) {
+      return;
+    }
+    this.#polling = true;
+    try {
+      const version = await this.#run(this.#store.dataVersion());
+      if (version === this.#dataVersion) {
+        return;
+      }
+      this.#dataVersion = version;
+      const { lastId, ids } = await this.#run(this.#store.readChanges(this.#changeCursor));
+      this.#changeCursor = lastId;
+      if (ids.size > 0) {
+        this.applyCommitted(ids);
+      }
+    } catch (err) {
+      log.warn("could not read other connections' commits", { error: err });
+    } finally {
+      this.#polling = false;
+    }
+  }
+
+  /** Tells the databases sharing this file, in this process and others, that a commit wrote `ids`. */
+  async #announce(ids: ReadonlySet<string>): Promise<void> {
+    this.#graph.notifyCommitted(this, ids);
+    await this.#run(this.#store.logChanges(ids));
   }
 
   /**
@@ -228,6 +269,9 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
         );
         const types = yield* store.loadTypes();
         yield* Effect.promise(() => db.#registerTypes(types));
+        // Commits before now are in what this database reads; it follows the ones after.
+        db.#dataVersion = yield* store.dataVersion();
+        db.#changeCursor = (yield* store.readChanges()).lastId;
         return db;
       }),
       (db) => Effect.promise(() => db.close()),
@@ -265,6 +309,19 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
    */
   onCommit(listener: () => void): CleanupFn {
     return this.#committed.on(() => listener());
+  }
+
+  /**
+   * Takes or renews the space's sync lease for `holder`, which only one connection to the file holds at a
+   * time; it lapses when not renewed for `ttl` ms (F-8.3).
+   */
+  holdSyncLease(holder: string, ttl: number): Promise<boolean> {
+    return this.#run(this.#store.holdSyncLease(holder, ttl));
+  }
+
+  /** Gives up the space's sync lease, if `holder` holds it. */
+  releaseSyncLease(holder: string): Promise<void> {
+    return this.#run(this.#store.releaseSyncLease(holder));
   }
 
   /**
@@ -1132,7 +1189,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       await this.#refreshStale(indexed);
       if (indexed.size > 0) {
         this.#committed.emit(new Set([ANY_TYPE]));
-        this.#graph.notifyCommitted(this, indexed);
+        await this.#announce(indexed);
       }
     });
     this.#writes = done.catch((err) => {
@@ -1539,8 +1596,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
           const current = new Set([...results].filter(([, result]) => !result.merged).map(([id]) => id));
           await this.#refreshStale([...indexed].filter((id) => !current.has(id)));
           // Appended items and tombstones count too: a sibling's feed queries read them.
-          this.#graph.notifyCommitted(
-            this,
+          await this.#announce(
             new Set([...indexed, ...results.keys(), ...batch.keys(), ...tombstones.map(([id]) => id)]),
           );
           // An appended item learns its block id and position from the row its block indexed into.
@@ -1619,6 +1675,9 @@ const replaceMeta = (target: Record<string, unknown>, source: Record<string, unk
     target[key] = structuredClone(value);
   }
 };
+
+/** How often a database checks whether another connection committed to its file. */
+const QUERY_POLL_MS = 100;
 
 /** Marks a write batch that must invalidate every query. */
 const ANY_TYPE = '*';

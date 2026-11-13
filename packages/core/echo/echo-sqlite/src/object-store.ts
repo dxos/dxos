@@ -84,6 +84,8 @@ export class ObjectStore {
   readonly #spaceId: SpaceId;
   readonly #feedStore: FeedStore;
   readonly #docs: DocStore;
+  /** Names this store's commits in the change log, so it skips its own. */
+  readonly #writer = crypto.randomUUID();
   readonly #engine: IndexEngine;
   readonly #source: AutomergeFeedSource;
   readonly #items: ItemFeedSource;
@@ -353,10 +355,12 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
   }
 
   /**
-   * Forgets cached documents that another writer appended to, so the next write reads them again.
+   * Forgets cached documents (and feed-store caches) that another writer appended to, so the next read sees them.
    */
   invalidate(ids: Iterable<string>): void {
     this.#docs.invalidate(ids);
+    // The feed store caches feed heads and rows, which another writer's appends leave behind.
+    this.#feedStore.resetCaches();
   }
 
   #purge(ids: readonly string[]): Effect.Effect<void, SqlError.SqlError | CypherError, SqlClient.SqlClient> {
@@ -399,6 +403,90 @@ WHERE m.spaceId = ? AND json_extract(s.snapshot, '$."@meta".key') = ?`,
    * Ids of deleted rows and of everything their deletion hides: descendants through `parentId` and
    * relations with a purged endpoint. Purging only the flagged rows would make those visible again.
    */
+  /**
+   * Records that this store's commit wrote `ids`, for other connections to the file, and forgets
+   * records old enough that every polling connection has read them.
+   */
+  logChanges(ids: Iterable<string>): Store<void> {
+    const spaceId = this.#spaceId;
+    const writer = this.#writer;
+    const objectIds = [...ids];
+    return Effect.gen(function* () {
+      if (objectIds.length === 0) {
+        return;
+      }
+      const sql = yield* SqlClient.SqlClient;
+      const now = Date.now();
+      yield* sql.unsafe(
+        `INSERT INTO echo_sqlite_change_log (spaceId, objectId, writer, at)
+SELECT ?1, value, ?2, ?3 FROM json_each(?4)`,
+        [spaceId, writer, now, JSON.stringify(objectIds)],
+      );
+      yield* sql`DELETE FROM echo_sqlite_change_log WHERE at < ${now - CHANGE_LOG_RETENTION_MS}`;
+    });
+  }
+
+  /**
+   * The objects other connections' commits wrote after change `afterId`, and the newest change id.
+   * With no `afterId`, only the newest id: where a new reader starts.
+   */
+  readChanges(afterId?: number): Store<{ lastId: number; ids: Set<string> }> {
+    const spaceId = this.#spaceId;
+    const writer = this.#writer;
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      if (afterId === undefined) {
+        const [row] = yield* sql<{ lastId: number | null }>`SELECT MAX(id) AS lastId FROM echo_sqlite_change_log`;
+        return { lastId: row?.lastId ?? 0, ids: new Set<string>() };
+      }
+      const rows = yield* sql<{ id: number; objectId: string; writer: string }>`
+        SELECT id, objectId, writer FROM echo_sqlite_change_log WHERE spaceId = ${spaceId} AND id > ${afterId} ORDER BY id`;
+      const [newest] = yield* sql<{ lastId: number | null }>`SELECT MAX(id) AS lastId FROM echo_sqlite_change_log`;
+      return {
+        lastId: newest?.lastId ?? afterId,
+        ids: new Set(rows.filter((row) => row.writer !== writer).map((row) => row.objectId)),
+      };
+    });
+  }
+
+  /** SQLite's `data_version`: it changes when another connection commits to the file. */
+  dataVersion(): Store<number> {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const [row] = yield* sql<{ data_version: number }>`PRAGMA data_version`;
+      return row?.data_version ?? 0;
+    });
+  }
+
+  /**
+   * Takes or renews the space's sync lease for `holder`: granted when nobody holds it, `holder` already
+   * does, or the holder has not renewed it for `ttl` ms. Atomic, so two connections never both hold it.
+   */
+  holdSyncLease(holder: string, ttl: number): Store<boolean> {
+    const spaceId = this.#spaceId;
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const now = Date.now();
+      yield* sql`
+        INSERT INTO echo_sqlite_sync_leases (spaceId, holder, renewedAt) VALUES (${spaceId}, ${holder}, ${now})
+        ON CONFLICT (spaceId) DO UPDATE SET holder = excluded.holder, renewedAt = excluded.renewedAt
+        WHERE echo_sqlite_sync_leases.holder = excluded.holder OR echo_sqlite_sync_leases.renewedAt < ${now - ttl}`;
+      const [row] = yield* sql<{
+        holder: string;
+      }>`SELECT holder FROM echo_sqlite_sync_leases WHERE spaceId = ${spaceId}`;
+      return row?.holder === holder;
+    });
+  }
+
+  /** Gives up the space's sync lease, if `holder` holds it, so another connection takes it at once. */
+  releaseSyncLease(holder: string): Store<void> {
+    const spaceId = this.#spaceId;
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM echo_sqlite_sync_leases WHERE spaceId = ${spaceId} AND holder = ${holder}`;
+    });
+  }
+
   /**
    * Folds each stored document of the space into one chunk (see {@link DocStore.compact}).
    *
@@ -500,6 +588,9 @@ const toDocWrite = (record: EntityRecord & { readonly heads?: readonly string[] 
   structure: objectStructureFromJson(record.body as Obj.JSON, { createdAt: record.createdAt }),
   heads: record.heads,
 });
+
+/** How long change-log records are kept; far beyond any connection's poll interval. */
+const CHANGE_LOG_RETENTION_MS = 60_000;
 
 /** Trimmed blocks purged from the index per batch. */
 const PURGE_BATCH = 500;

@@ -1549,21 +1549,13 @@ export class FeedStore {
           ...block,
           position: positionByBlock.get(block) ?? block.position,
         }));
-      }).pipe(Effect.withSpan('FeedStore.appendLocal')),
+      }).pipe(
+        // Read and written in one transaction, so two connections to the file never take the same sequence.
+        inTransaction,
+        Effect.withSpan('FeedStore.appendLocal'),
+      ),
   );
 
-  /**
-   * Adopts the positions a position authority reported for blocks this store already holds.
-   *
-   * The authority's word is final: a block whose local position differs takes the reported one, and
-   * any other block occupying that slot is cleared (see {@link AppendResult.displaced}). Refusing
-   * either would pin the replica to an ordering the authority no longer has, and a refusal retried
-   * verbatim never resolves -- which is how a client wedged behind a server whose storage had been
-   * rolled back.
-   *
-   * @returns How many other blocks were cleared to make room, and how many of the blocks themselves
-   * left a different position.
-   */
   /**
    * Appends one local block and deletes every earlier block of the same feed, in one transaction: a
    * writer that folded a feed's history into one block (a compacted document) replaces the blocks it
@@ -1607,6 +1599,18 @@ export class FeedStore {
       return result;
     }).pipe(Effect.withSpan('FeedStore.appendReplacing'), SpanAttributes.annotateSpace(message.spaceId));
 
+  /**
+   * Adopts the positions a position authority reported for blocks this store already holds.
+   *
+   * The authority's word is final: a block whose local position differs takes the reported one, and
+   * any other block occupying that slot is cleared (see {@link AppendResult.displaced}). Refusing
+   * either would pin the replica to an ordering the authority no longer has, and a refusal retried
+   * verbatim never resolves -- which is how a client wedged behind a server whose storage had been
+   * rolled back.
+   *
+   * @returns How many other blocks were cleared to make room, and how many of the blocks themselves
+   * left a different position.
+   */
   setPosition = (request: {
     spaceId: string;
     blocks: { feedId: string; feedNamespace: string; actorId: string; sequence: number; position: number }[];
@@ -2030,6 +2034,15 @@ const toFeedRow = (row: FeedRowColumns): FeedRow => ({
 const blockNaturalKey = (feedId: string, actorId: string, sequence: number) => `${feedId}:${actorId}:${sequence}`;
 
 /** One item for {@link FeedStore.appendLocal}. */
+/** Runs `effect` in one transaction of the SQL client it uses (a savepoint inside another). */
+const inTransaction = <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E | SqlError.SqlError, R | SqlClient.SqlClient> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    return yield* sql.withTransaction(effect);
+  });
+
 export type LocalAppendMessage = {
   spaceId: string;
   feedId: string;
