@@ -426,8 +426,12 @@ feat F-9: Parity with echo-client
     when: an app uses the Database API
     then: echo-sqlite behaves as echo-client does for queries, refs, relations, parent and child,
           deletion, types and the registry, reactivity, the text CRDT, feeds and queues, the
-          serializer, and convergence keys; each is shown by the same end-to-end test passing against
-          both backends
+          serializer, and convergence keys; each is shown by a copy of the echo-client end-to-end test
+          that passes against echo-sqlite
+
+  req F-9.3:
+    when: echo-sqlite implements a feature for parity
+    then: it uses its own object layer and query compiler, with no code from echo-client
 
   req F-9.2:
     when: an app uses branches, lenses (panproto), inline root objects or storage metrics
@@ -841,4 +845,26 @@ decision D-23: Parity is shown by running the same end-to-end tests against echo
   for: user:dmaretskyi
   affects: [F-9.1]
   why: A test run against only the new backend shows that it works, not that it behaves like echo-client.
+```
+
+```mdl
+decision D-24: echo-sqlite keeps its own object layer and grows it to back each object with an Automerge document; it does not reuse echo-client.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-9.3]
+```
+
+```mdl
+decision D-25: echo-sync-worker depends on the workspace's feed store and deploys from the monorepo; it no longer deploys on its own.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-4]
+```
+
+```mdl
+decision D-26: The parity tests are copies of the portable echo-client end-to-end tests, run against echo-sqlite, and the echo-client tests stay unchanged.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  supersedes: D-23
+  affects: [F-9.1]
 ```
