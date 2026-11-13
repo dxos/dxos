@@ -9,7 +9,6 @@ export default defineConfig({
     index: 'src/index.ts',
     ClassNode: 'src/types/ClassNode.ts',
     UmlSkill: 'src/skills/UmlSkill.ts',
-    components: 'src/components/index.ts',
     skills: 'src/skills/index.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',

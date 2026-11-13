@@ -221,6 +221,70 @@ describe('mdl lint', () => {
       ).toEqual(['Decision D-2 supersedes D-9, which is not in the changelog.']);
     });
 
+    describe('a duplicated id at the base', () => {
+      // The base as a bad merge leaves it: two branches each appended their own D-2.
+      const base = spec('X [D-2]', d1, decision('D-2', 'Use Y.'), decision('D-2', 'Use W.'), decision('D-3', 'Use V.'));
+
+      test('is repaired by moving a copy, unchanged, to the next free id', ({ expect }) => {
+        expect(
+          checkChangelogChange(
+            base,
+            spec('X [D-2]', d1, decision('D-2', 'Use W.'), decision('D-3', 'Use V.'), decision('D-4', 'Use Y.')),
+          ),
+        ).toEqual([]);
+      });
+
+      // Pointing a reference at a moved copy changes the body, which still needs a decision or a waiver.
+      test('a moved copy is not a new decision', ({ expect }) => {
+        expect(
+          checkChangelogChange(
+            base,
+            spec('X [D-4]', d1, decision('D-2', 'Use W.'), decision('D-3', 'Use V.'), decision('D-4', 'Use Y.')),
+          ),
+        ).toEqual([MISSING_DECISION]);
+        expect(
+          checkChangelogChange(
+            base,
+            spec(
+              'X [D-4]',
+              d1,
+              decision('D-2', 'Use W.'),
+              decision('D-3', 'Use V.'),
+              decision('D-4', 'Use Y.'),
+              decision('D-5', 'Use U.'),
+            ),
+          ),
+        ).toEqual([]);
+      });
+
+      test('a moved copy must keep its text', ({ expect }) => {
+        expect(
+          checkChangelogChange(
+            base,
+            spec('X [D-2]', d1, decision('D-2', 'Use W.'), decision('D-3', 'Use V.'), decision('D-4', 'Use Y and Z.')),
+          ),
+        ).toEqual([
+          'Decision D-2 was edited — the changelog is append-only; supersede it instead.',
+          'Decisions must stay in order, with new ones appended last.',
+        ]);
+      });
+
+      test('a moved copy must take the next free id', ({ expect }) => {
+        expect(
+          checkChangelogChange(
+            base,
+            spec('X [D-2]', d1, decision('D-2', 'Use W.'), decision('D-3', 'Use V.'), decision('D-5', 'Use Y.')),
+          ),
+        ).toEqual(['Decision D-5 is out of sequence — the next id is D-4.']);
+      });
+
+      test('an id held once cannot be moved', ({ expect }) => {
+        expect(checkChangelogChange(spec('X', d1, d2), spec('X', d2, decision('D-3', 'Use X.')))).toEqual([
+          'Decision D-1 was removed — the changelog is append-only; supersede it instead.',
+        ]);
+      });
+    });
+
     describe('questions', () => {
       const question = (id: string, prose: string) =>
         block(`question ${id}: ${prose}\n  date: 2026-10-20\n  by: agent:claude-code\n  for: user:bob`);

@@ -16,6 +16,7 @@ import { type Scene, findLayout } from '@dxos/scene';
 
 import { type ComputeGraphController } from '../graph/index.ts';
 import { parseAnchorId } from '../shapes/index.ts';
+import { computeNodeId } from './echo-store.ts';
 
 const RADIUS = 3;
 const DURATION_MS = 500;
@@ -33,7 +34,10 @@ const outgoing = (layout: Scene.LayoutRecord | undefined, nodeId: string, proper
     : Object.values(layout.elements).flatMap(({ id, type, source }) => {
         const node = layout.elements[source?.node ?? ''];
         const port = source?.port;
-        return type === 'link' && node?.node === nodeId && (port ? parseAnchorId(port)[1] : DEFAULT_OUTPUT) === property
+        return type === 'link' &&
+          node !== undefined &&
+          computeNodeId(node) === nodeId &&
+          (port ? parseAnchorId(port)[1] : DEFAULT_OUTPUT) === property
           ? [id]
           : [];
       });

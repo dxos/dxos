@@ -922,7 +922,7 @@ page halo-spaces-membership: Spaces and membership
     - The membership policy: invite or locked
     - Membership is signed delegations and revocations that converge with no server; a member revokes only those it has causal seniority over, an admin anyone
     - The group key, which changes with membership and which pull members relay without reading
-    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-238]
+    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-239]
     - Links to ECHO's Spaces and databases for data and replication
 ```
 ```mdl
@@ -1087,9 +1087,9 @@ page halo-llms-txt: llms.txt
 
 MESH is DXOS's peer networking: how a device finds the other devices in a space and carries replication, presence
 and invitations to them. MESH multiplexes transports. A direct WebRTC link to a peer and the WebSocket to EDGE are
-both transports it carries the same protocols over [D-220]. The section has no learning path, API or guides; it
-explains the architecture and how ECHO and HALO use it [D-219]. Swarms, signaling and ICE/TURN are MESH's pages;
-EDGE's pages cover EDGE as a server and link here [D-221].
+both transports it carries the same protocols over [D-221]. The section has no learning path, API or guides; it
+explains the architecture and how ECHO and HALO use it [D-220]. Swarms, signaling and ICE/TURN are MESH's pages;
+EDGE's pages cover EDGE as a server and link here [D-222].
 
 ### Start here
 
@@ -1102,7 +1102,7 @@ page mesh-overview: Overview
   template: concept
   status: spike
   covers:
-    - What MESH is in one paragraph: the networking under ECHO and HALO, which multiplexes transports [D-220]
+    - What MESH is in one paragraph: the networking under ECHO and HALO, which multiplexes transports [D-221]
     - A diagram of devices, direct WebRTC links between peers, and EDGE as both the signaling server and a transport
     - A table of where ECHO and HALO use MESH: space swarms for replication, presence, device sync and invitations
     - How these pages are organized, and where to go next: Why MESH?, then Architecture
@@ -1118,7 +1118,7 @@ page why-mesh: Why MESH?
   covers:
     - Direct links give lower latency between nearby devices, keep sync going if EDGE drops, and carry data that does not pass through a server
     - EDGE is a transport too: it reaches devices that are rarely online together and peers no direct link reaches
-    - Today ECHO replicates each space over both at once, peer links and EDGE (`subductionReplicator`, `feedReplicator`), and the pages say so plainly [D-220]
+    - Today ECHO replicates each space over both at once, peer links and EDGE (`subductionReplicator`, `feedReplicator`), and the pages say so plainly [D-221]
 ```
 
 ### Core concepts
@@ -1134,7 +1134,7 @@ page mesh-architecture: Architecture
   covers:
     - The layers, bottom to top: transport, Teleport, signaling, swarm, extensions, in one diagram
     - Which package holds each layer in `packages/core/mesh`: `network-manager`, `teleport`, `messaging`, the `teleport-extension-*` packages and `edge-client`
-    - The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of these pages [D-223]
+    - The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of these pages [D-224]
 ```
 ```mdl
 page mesh-signaling: Signaling and discovery
@@ -1148,7 +1148,7 @@ page mesh-signaling: Signaling and discovery
     - The signal manager, and EDGE as the signaling server over the device's WebSocket; the in-memory signal manager in tests
     - Swarm topics, keyed by space; joining and leaving a swarm; the offers and answers peers exchange
     - ICE servers and TURN providers for peers behind NAT
-    - Configuration: `runtime.services.ice`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures.signaling` [D-224]
+    - Configuration: `runtime.services.ice`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures.signaling` [D-225]
 ```
 ```mdl
 page mesh-swarms: Swarms and topology
@@ -1173,9 +1173,9 @@ page mesh-transports: Transports
   template: concept
   status: spike
   covers:
-    - MESH multiplexes transports: the same replication runs over a direct link and over EDGE, and a device uses whichever reaches the peer [D-220]
+    - MESH multiplexes transports: the same replication runs over a direct link and over EDGE, and a device uses whichever reaches the peer [D-221]
     - WebRTC in the browser, TCP in Node, memory in tests, and the EDGE WebSocket
-    - Iroh, a QUIC transport for presence and gossip, in one paragraph marked planned [D-222]
+    - Iroh, a QUIC transport for presence and gossip, in one paragraph marked planned [D-223]
 ```
 ```mdl
 page mesh-teleport: Teleport
@@ -1234,9 +1234,9 @@ page mesh-llms-txt: llms.txt
 
 EDGE is the set of services DXOS runs on Cloudflare Workers: an always-online peer for every space and identity. The
 section explains EDGE's architecture and how ECHO, HALO, MESH and PLEX use it; it has only Start here, Core concepts and
-Resources [D-225]. EDGE can read a space only when the space gives it more than `pull` access; HALO's Spaces and
-membership says so, and EDGE has no page of its own on it [D-238]. DXOS operates EDGE; the pages cover no self-hosting and never link its source [D-230].
-Swarms, signaling and ICE/TURN are MESH's; Connecting covers only the link between a device and EDGE [D-227].
+Resources [D-226]. EDGE can read a space only when the space gives it more than `pull` access; HALO's Spaces and
+membership says so, and EDGE has no page of its own on it [D-239]. DXOS operates EDGE; the pages cover no self-hosting and never link its source [D-231].
+Swarms, signaling and ICE/TURN are MESH's; Connecting covers only the link between a device and EDGE [D-228].
 
 ### Start here
 
@@ -1266,7 +1266,7 @@ page why-edge: Why EDGE?
     - The pattern: a space that syncs between two devices that are never online at the same time
     - Comparison: an app server that owns the data, against an always-online peer that holds a copy
     - Practical problems: devices rarely online together, queries over objects this device has not loaded, recovery when every device is lost, work that runs while you are offline
-    - One line that EDGE reads a space only with more than `pull` access, linking HALO's Spaces and membership [D-238]
+    - One line that EDGE reads a space only with more than `pull` access, linking HALO's Spaces and membership [D-239]
 ```
 
 ### Core concepts
@@ -1283,7 +1283,7 @@ page edge-architecture: Architecture
     - The services, one line each: router, db, identity, compute, KMS, hub, AI, blob and registry
     - The Durable Objects per identity and per space, in a diagram
     - The development, preview and production environments, and how an app's config selects one
-    - DXOS operates every environment; there is no self-hosted EDGE [D-230]
+    - DXOS operates every environment; there is no self-hosted EDGE [D-231]
 ```
 ```mdl
 page edge-connecting: Connecting
@@ -1298,7 +1298,7 @@ page edge-connecting: Connecting
     - Authentication: a challenge signed by the device key, with the HALO credential chain that admits the device
     - The router per identity, which delivers messages to the identity's devices
     - The `edgeFeatures` flags; reconnecting, and what works while offline
-    - Swarms, signaling and ICE/TURN link to MESH [D-227]
+    - Swarms, signaling and ICE/TURN link to MESH [D-228]
 ```
 ```mdl
 page edge-replication: Replication and backup
@@ -1367,7 +1367,7 @@ page edge-configuration: Configuration
   template: reference
   status: spike
   covers:
-    - `runtime.services.edge.url`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures`, with defaults [D-229]
+    - `runtime.services.edge.url`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures`, with defaults [D-230]
     - Links to ECHO's Installation, which uses them
 ```
 ```mdl
@@ -1947,12 +1947,12 @@ page app-framework-cli: The dx CLI
 
 ## TILE
 
-TILE is DXOS's design system: themed UI components and the tokens behind them [D-239]. Its core is `@dxos/react-ui`,
-and `@dxos/ui-theme` is documented as part of its setup, since nothing renders styled without it [D-231]. The other
-`react-ui-*` packages get one line each in a catalog, and four of them get a guide [D-233]. The learning path builds a
-contacts screen with plain React state and connects it to ECHO only on its last page [D-232]. Live previews on these
-pages are islands rendered in the page, never iframes [D-234]. It has six concept pages and eleven API family
-pages [D-235]. The routes are under `/docs/tile/`.
+TILE is DXOS's design system: themed UI components and the tokens behind them [D-240]. Its core is `@dxos/react-ui`,
+and `@dxos/ui-theme` is documented as part of its setup, since nothing renders styled without it [D-232]. The other
+`react-ui-*` packages get one line each in a catalog, and four of them get a guide [D-234]. The learning path builds a
+contacts screen with plain React state and connects it to ECHO only on its last page [D-233]. Live previews on these
+pages are islands rendered in the page, never iframes [D-235]. It has six concept pages and eleven API family
+pages [D-236]. The routes are under `/docs/tile/`.
 
 ### Start here
 
@@ -1993,8 +1993,8 @@ page tile-build-with-agent: Build with a coding agent
   template: tutorial
   status: spike
   covers:
-    - Links to the `composer-ui` and `composite-components` skills, and where each agent loads skills from [D-241]
-    - No prompt builder for now [D-241]
+    - Links to the `composer-ui` and `composite-components` skills, and where each agent loads skills from [D-242]
+    - No prompt builder for now [D-242]
     - The `/tile/llms-full.txt` file for an agent that reads docs
 ```
 
@@ -2009,7 +2009,7 @@ page tile-the-tile-component: The TILE component
   template: tutorial
   status: spike
   covers:
-    - What a TILE component is: a namespace of parts, themed by the provider, styled with `classNames` [D-241]
+    - What a TILE component is: a namespace of parts, themed by the provider, styled with `classNames` [D-242]
     - The finished contacts screen, running, so the reader sees where the path ends
     - What each page of the path adds, and the folder it goes in
 ```
@@ -2022,11 +2022,11 @@ page tile-learn-installation: Installation
   template: tutorial
   status: spike
   covers:
-    - The packages: `@dxos/react-ui` and its peer `@dxos/ui-theme` [D-241]
+    - The packages: `@dxos/react-ui` and its peer `@dxos/ui-theme` [D-242]
     - The Vite plugins: `ThemePlugin` from `@dxos/ui-theme/plugin` and `IconsPlugin` from `@dxos/vite-plugin-icons`
     - The stylesheets, `Theme.Provider` with `Theme.defaultTx`, and the `translations` resources
     - Dark mode: the `dark` class on the root element, following the system
-    - The first buttons, which follow light and dark [D-232]
+    - The first buttons, which follow light and dark [D-233]
 ```
 ```mdl
 page tile-learn-layout: Lay out a screen
@@ -2081,7 +2081,7 @@ page tile-learn-echo: Connect to ECHO
   template: tutorial
   status: spike
   covers:
-    - `useQuery` for the list and `useObject` for the detail, with the ECHO tutorial's schema [D-232]
+    - `useQuery` for the list and `useObject` for the detail, with the ECHO tutorial's schema [D-233]
     - The edit dialog becomes a schema form, with a link to the Forms guide
 ```
 
@@ -2335,7 +2335,7 @@ page tile-guide-lists: Lists
   template: tutorial
   status: spike
   covers:
-    - `Listbox`, `OrderedList`, and `Tree` over `createStaticTreeModel` [D-233]
+    - `Listbox`, `OrderedList`, and `Tree` over `createStaticTreeModel` [D-234]
 ```
 ```mdl
 page tile-guide-forms: Forms
@@ -2346,7 +2346,7 @@ page tile-guide-forms: Forms
   template: tutorial
   status: spike
   covers:
-    - `Form.Root` over a schema, `include`, and `ObjectForm` for an ECHO object, linked from ECHO's Defining types [D-233]
+    - `Form.Root` over a schema, `include`, and `ObjectForm` for an ECHO object, linked from ECHO's Defining types [D-234]
 ```
 ```mdl
 page tile-guide-menus: Menus and toolbars
@@ -2357,7 +2357,7 @@ page tile-guide-menus: Menus and toolbars
   template: tutorial
   status: spike
   covers:
-    - `MenuBuilder`, `useMenuBuilder`, `ActionToolbar` and `ActionMenu`, and `graphActions` in a plugin, linked to PLEX's App Graph [D-233]
+    - `MenuBuilder`, `useMenuBuilder`, `ActionToolbar` and `ActionMenu`, and `graphActions` in a plugin, linked to PLEX's App Graph [D-234]
 ```
 ```mdl
 page tile-guide-editor: Text editor
@@ -2368,7 +2368,7 @@ page tile-guide-editor: Text editor
   template: tutorial
   status: spike
   covers:
-    - `Editor.Root`, `Editor.View` and `Editor.Toolbar`, the `@dxos/ui-editor` extensions, and the `automerge` binding to an ECHO `Text` [D-233]
+    - `Editor.Root`, `Editor.View` and `Editor.Toolbar`, the `@dxos/ui-editor` extensions, and the `automerge` binding to an ECHO `Text` [D-234]
 ```
 
 ### Resources
@@ -2382,8 +2382,8 @@ page tile-api-reference: API reference
   template: reference
   status: spike
   covers:
-    - Typedoc for `@dxos/react-ui` and `@dxos/ui-theme` [D-242]
-    - Typedoc for `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, the packages the guides cover [D-242]
+    - Typedoc for `@dxos/react-ui` and `@dxos/ui-theme` [D-243]
+    - Typedoc for `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, the packages the guides cover [D-243]
 ```
 ```mdl
 page tile-packages: Component packages
@@ -2394,7 +2394,7 @@ page tile-packages: Component packages
   template: reference
   status: spike
   covers:
-    - A catalog of the `react-ui-*` packages, grouped as general purpose and designed for ECHO [D-244]
+    - A catalog of the `react-ui-*` packages, grouped as general purpose and designed for ECHO [D-245]
 ```
 ```mdl
 page tile-glossary: Glossary
@@ -2625,7 +2625,7 @@ feat F-7: Relationship to dxos.org
     when: a reader is on any dxos.org docs page
     then: the header shows the DXOS logo, linking home, and the dxos.org nav (Home, ECHO, Composer,
           Plugins, Blog, Docs); the footer links the same pages, every docs section in the
-          topic switcher's order (ECHO, HALO, MESH, EDGE, PLEX, TILE), GitHub and Discord [D-243]
+          topic switcher's order (ECHO, HALO, MESH, EDGE, PLEX, TILE), GitHub and Discord [D-244]
 
   req F-7.2:
     when: a reader looks for ECHO material on dxos.org
@@ -2674,6 +2674,10 @@ feat F-7: Relationship to dxos.org
           plugins that render it: which plugins load, what each contributes, and how they share the objects
           without importing each other; each demo runs on its own page in an iframe, so its styles stay off
           the docs page
+
+  req F-7.11:
+    when: a reader comes back to a page with demos after its tab has been in the background
+    then: every demo still shows its peers and their content, as it did before the tab was hidden
 ```
 
 ```mdl
@@ -2700,7 +2704,7 @@ feat F-9: Diagrams as canvas applications
   req F-9.2:
     when: a docs page shows a static diagram
     then: it is a plugin-illustrator render (`.dx` source and `.dx.svg` in `src/assets/diagrams/`) shown with
-      `Diagram`, never ASCII art in a code block [D-236]
+      `Diagram`, never ASCII art in a code block [D-237]
 
 feat F-10: Live schema forms
 
@@ -4775,7 +4779,19 @@ decision D-217: Each learning path's app lives in a folder named for its section
 ```
 
 ```mdl
-decision D-218: The topic switcher moves from the top of the sidebar to the docs header, as logotype tabs beside the logo and Docs, folding into a picker below 72rem, where the sidebar folds into a menu. The sections become ECHO, HALO, MESH, PLEX, EDGE and TILE, and MESH, EDGE and TILE get an Overview with only the hero. Replaces the list in [D-92] and [D-105].
+decision D-218: A demo's peers stay mounted while their client's status lapses. Each peer's `ClientProvider` skips its status gate, since the demo runtime owns the client and its initialization.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.11]
+  why: A background tab's timers are throttled to about one a minute, so the client misses its status heartbeat and marks itself inactive. The gate then unmounted the peer's plugin app, whose ClientPlugin destroyed the client, and the panes stayed blank after the reader came back.
+  rejected:
+    - Keep the gate and rebuild the peer when its status returns: a destroyed client cannot come back, so the demo would have to make new peers and replay the invitation.
+    - Lengthen the client's status timeout: it lives in the client SDK and changes every app, and a long enough background stay still trips it.
+```
+
+```mdl
+decision D-219: The topic switcher moves from the top of the sidebar to the docs header, as logotype tabs beside the logo and Docs, folding into a picker below 72rem, where the sidebar folds into a menu. The sections become ECHO, HALO, MESH, PLEX, EDGE and TILE, and MESH, EDGE and TILE get an Overview with only the hero. Replaces the list in [D-92] and [D-105].
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-16.1, F-16.4, F-16.6, F-16.9]
@@ -4783,7 +4799,7 @@ decision D-218: The topic switcher moves from the top of the sidebar to the docs
 ```
 
 ```mdl
-decision D-219: MESH has Start here, Core concepts and Resources, with no learning path, API or guides. It explains the architecture and where ECHO and HALO use it. Amends [F-17.1] for MESH.
+decision D-220: MESH has Start here, Core concepts and Resources, with no learning path, API or guides. It explains the architecture and where ECHO and HALO use it. Amends [F-17.1] for MESH.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-17.1, mesh-overview, why-mesh, mesh-architecture]
@@ -4791,7 +4807,7 @@ decision D-219: MESH has Start here, Core concepts and Resources, with no learni
 ```
 
 ```mdl
-decision D-220: The MESH pages describe MESH as multiplexing transports: a direct WebRTC link and the WebSocket to EDGE both carry the same protocols, and ECHO replicates each space over both today.
+decision D-221: The MESH pages describe MESH as multiplexing transports: a direct WebRTC link and the WebSocket to EDGE both carry the same protocols, and ECHO replicates each space over both today.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [mesh-overview, why-mesh, mesh-transports]
@@ -4799,7 +4815,7 @@ decision D-220: The MESH pages describe MESH as multiplexing transports: a direc
 ```
 
 ```mdl
-decision D-221: Swarms, signaling and ICE/TURN are MESH pages. EDGE's pages describe EDGE as a server and link to MESH for these.
+decision D-222: Swarms, signaling and ICE/TURN are MESH pages. EDGE's pages describe EDGE as a server and link to MESH for these.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [mesh-signaling, mesh-swarms, edge-connecting]
@@ -4807,7 +4823,7 @@ decision D-221: Swarms, signaling and ICE/TURN are MESH pages. EDGE's pages desc
 ```
 
 ```mdl
-decision D-222: Iroh, the planned QUIC transport for presence and gossip, gets one paragraph on Transports, marked planned.
+decision D-223: Iroh, the planned QUIC transport for presence and gossip, gets one paragraph on Transports, marked planned.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [mesh-transports]
@@ -4815,7 +4831,7 @@ decision D-222: Iroh, the planned QUIC transport for presence and gossip, gets o
 ```
 
 ```mdl
-decision D-223: The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of the MESH pages.
+decision D-224: The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of the MESH pages.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [mesh-architecture]
@@ -4823,7 +4839,7 @@ decision D-223: The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-
 ```
 
 ```mdl
-decision D-224: MESH's client settings (`runtime.services.ice`, `runtime.services.iceProviders`, `runtime.client.edgeFeatures.signaling`) are documented on Signaling and discovery, not on a page of their own.
+decision D-225: MESH's client settings (`runtime.services.ice`, `runtime.services.iceProviders`, `runtime.client.edgeFeatures.signaling`) are documented on Signaling and discovery, not on a page of their own.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [mesh-signaling]
@@ -4831,7 +4847,7 @@ decision D-224: MESH's client settings (`runtime.services.ice`, `runtime.service
 ```
 
 ```mdl
-decision D-225: EDGE has Start here, Core concepts and Resources, with no learning path, API or guides. Amends [F-17.1] for EDGE.
+decision D-226: EDGE has Start here, Core concepts and Resources, with no learning path, API or guides. Amends [F-17.1] for EDGE.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-17.1, edge-overview, why-edge, edge-architecture]
@@ -4839,7 +4855,7 @@ decision D-225: EDGE has Start here, Core concepts and Resources, with no learni
 ```
 
 ```mdl
-decision D-226: The sections are ordered ECHO, HALO, MESH, EDGE, PLEX, TILE. EDGE moves before PLEX. Amends [D-218].
+decision D-227: The sections are ordered ECHO, HALO, MESH, EDGE, PLEX, TILE. EDGE moves before PLEX. Amends [D-219].
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-16.1]
@@ -4847,15 +4863,15 @@ decision D-226: The sections are ordered ECHO, HALO, MESH, EDGE, PLEX, TILE. EDG
 ```
 
 ```mdl
-decision D-227: EDGE's Connecting page covers only the link between a device and EDGE: the WebSocket, its authentication and reconnecting. Peer links are MESH's.
+decision D-228: EDGE's Connecting page covers only the link between a device and EDGE: the WebSocket, its authentication and reconnecting. Peer links are MESH's.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [edge-connecting]
-  why: Follows [D-221].
+  why: Follows [D-222].
 ```
 
 ```mdl
-decision D-228: The EDGE pages say plainly that EDGE stores space content in plaintext and can read it today, and describe Keyhive's encrypted relay only as the target. Replaces the part of [F-16.4] that kept EDGE undocumented.
+decision D-229: The EDGE pages say plainly that EDGE stores space content in plaintext and can read it today, and describe Keyhive's encrypted relay only as the target. Replaces the part of [F-16.4] that kept EDGE undocumented.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-16.4, edge-what-it-can-see, edge-replication]
@@ -4863,7 +4879,7 @@ decision D-228: The EDGE pages say plainly that EDGE stores space content in pla
 ```
 
 ```mdl
-decision D-229: EDGE has a Configuration page in Resources listing every client setting that points at or turns on EDGE.
+decision D-230: EDGE has a Configuration page in Resources listing every client setting that points at or turns on EDGE.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [edge-configuration]
@@ -4871,7 +4887,7 @@ decision D-229: EDGE has a Configuration page in Resources listing every client 
 ```
 
 ```mdl
-decision D-230: DXOS operates EDGE. The pages cover no self-hosting, and never link EDGE's source, which is private.
+decision D-231: DXOS operates EDGE. The pages cover no self-hosting, and never link EDGE's source, which is private.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [edge-overview, edge-architecture]
@@ -4879,7 +4895,7 @@ decision D-230: DXOS operates EDGE. The pages cover no self-hosting, and never l
 ```
 
 ```mdl
-decision D-231: TILE's core is `@dxos/react-ui`, with `@dxos/ui-theme` documented as part of its setup. The other `react-ui-*` packages get one line each in the Component packages catalog.
+decision D-232: TILE's core is `@dxos/react-ui`, with `@dxos/ui-theme` documented as part of its setup. The other `react-ui-*` packages get one line each in the Component packages catalog.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [tile-overview, tile-installation, tile-packages]
@@ -4887,7 +4903,7 @@ decision D-231: TILE's core is `@dxos/react-ui`, with `@dxos/ui-theme` documente
 ```
 
 ```mdl
-decision D-232: TILE's learning path builds a contacts screen with plain React state on pages 1 to 5 and connects it to ECHO, with the ECHO tutorial's schema, on page 6. Amends [F-17.3].
+decision D-233: TILE's learning path builds a contacts screen with plain React state on pages 1 to 5 and connects it to ECHO, with the ECHO tutorial's schema, on page 6. Amends [F-17.3].
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-17.3, tile-learn-theme, tile-learn-echo]
@@ -4895,7 +4911,7 @@ decision D-232: TILE's learning path builds a contacts screen with plain React s
 ```
 
 ```mdl
-decision D-233: Four component packages get guides, picked by how many plugins use them: Lists (`react-ui-list`), Forms from a schema (`react-ui-form`), Menus and toolbars (`react-ui-menu`) and Text editor (`react-ui-editor`). They are planned until Josiah confirms the picks.
+decision D-234: Four component packages get guides, picked by how many plugins use them: Lists (`react-ui-list`), Forms from a schema (`react-ui-form`), Menus and toolbars (`react-ui-menu`) and Text editor (`react-ui-editor`). They are planned until Josiah confirms the picks.
   date: 2026-11-11
   by: agent:claude
   for: user:wittjosiah
@@ -4904,7 +4920,7 @@ decision D-233: Four component packages get guides, picked by how many plugins u
 ```
 
 ```mdl
-decision D-234: TILE's live previews are `client:only` React islands rendered in the docs page, inside a `.dx-island` root, never iframes. The layer order of [D-68] keeps Starlight and the react-ui preflight apart.
+decision D-235: TILE's live previews are `client:only` React islands rendered in the docs page, inside a `.dx-island` root, never iframes. The layer order of [D-68] keeps Starlight and the react-ui preflight apart.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-16.10, tile-overview]
@@ -4912,7 +4928,7 @@ decision D-234: TILE's live previews are `client:only` React islands rendered in
 ```
 
 ```mdl
-decision D-235: TILE has six concept pages and eleven API family pages (Theme, Layout, Button, Input, Status, Panel, Toolbar, Overlays, Menu, Icon, Hooks), not one page per exported subpath. Its API reference stays planned until react-ui and ui-theme build typedoc.
+decision D-236: TILE has six concept pages and eleven API family pages (Theme, Layout, Button, Input, Status, Panel, Toolbar, Overlays, Menu, Icon, Hooks), not one page per exported subpath. Its API reference stays planned until react-ui and ui-theme build typedoc.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-18.1, tile-api-reference]
@@ -4920,7 +4936,7 @@ decision D-235: TILE has six concept pages and eleven API family pages (Theme, L
 ```
 
 ```mdl
-decision D-236: Docs pages draw diagrams with plugin-illustrator and never use ASCII art. The MESH and EDGE pages' six ASCII diagrams are redrawn this way.
+decision D-237: Docs pages draw diagrams with plugin-illustrator and never use ASCII art. The MESH and EDGE pages' six ASCII diagrams are redrawn this way.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-9.2]
@@ -4928,7 +4944,7 @@ decision D-236: Docs pages draw diagrams with plugin-illustrator and never use A
 ```
 
 ```mdl
-decision D-237: TILE's guides cover the four packages [D-233] picked: Lists, Forms, Menus and toolbars, and Text editor. They and the learning path show their components in live previews. The API reference stays planned until react-ui and ui-theme build typedoc [D-235].
+decision D-238: TILE's guides cover the four packages [D-234] picked: Lists, Forms, Menus and toolbars, and Text editor. They and the learning path show their components in live previews. The API reference stays planned until react-ui and ui-theme build typedoc [D-236].
   date: 2026-11-11
   by: user:wittjosiah
   affects: [tile-learn-installation, tile-learn-layout, tile-learn-inputs, tile-learn-overlays, tile-learn-icons, tile-learn-echo, tile-guide-lists, tile-guide-forms, tile-guide-menus, tile-guide-editor]
@@ -4936,16 +4952,16 @@ decision D-237: TILE's guides cover the four packages [D-233] picked: Lists, For
 ```
 
 ```mdl
-decision D-238: EDGE has no page on what it can see. HALO's Spaces and membership says it: a space that gives EDGE more than `pull` access is readable on EDGE. The data is stored encrypted and the keys apart from it, both are needed to read it, and they come together while an operation works on the data. Supersedes [D-228].
+decision D-239: EDGE has no page on what it can see. HALO's Spaces and membership says it: a space that gives EDGE more than `pull` access is readable on EDGE. The data is stored encrypted and the keys apart from it, both are needed to read it, and they come together while an operation works on the data. Supersedes [D-229].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [why-edge, halo-spaces-membership, edge-replication, edge-compute]
-  supersedes: D-228
+  supersedes: D-229
   why: It follows from the ECHO and HALO pages, and access to the data during operations is the trade-off for EDGE's compute, indexing and other services.
 ```
 
 ```mdl
-decision D-239: TILE's tagline is "Design system and UI components.", and its overview calls its parts UI components, not React components. Pages about using them from React still say React.
+decision D-240: TILE's tagline is "Design system and UI components.", and its overview calls its parts UI components, not React components. Pages about using them from React still say React.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [tile-overview]
@@ -4953,7 +4969,7 @@ decision D-239: TILE's tagline is "Design system and UI components.", and its ov
 ```
 
 ```mdl
-decision D-240: TILE's mark is the seven tangram pieces cut into a diamond, in the arrangement Josiah picked as variant 7, in the topic switcher's logotype and the Overview hero. The hero's rays start at the diamond's border and continue only its edges and the cut lines that reach it.
+decision D-241: TILE's mark is the seven tangram pieces cut into a diamond, in the arrangement Josiah picked as variant 7, in the topic switcher's logotype and the Overview hero. The hero's rays start at the diamond's border and continue only its edges and the cut lines that reach it.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [F-16.6, tile-overview]
@@ -4961,23 +4977,23 @@ decision D-240: TILE's mark is the seven tangram pieces cut into a diamond, in t
 ```
 
 ```mdl
-decision D-241: TILE's Start here has Overview, Why TILE? and Build with a coding agent, like ECHO and PLEX. Its learning path starts with The TILE component, which shows the finished contacts screen, then Installation, which also builds the first buttons. The coding-agent page links DXOS's TILE skills and has no prompt builder for now.
+decision D-242: TILE's Start here has Overview, Why TILE? and Build with a coding agent, like ECHO and PLEX. Its learning path starts with The TILE component, which shows the finished contacts screen, then Installation, which also builds the first buttons. The coding-agent page links DXOS's TILE skills and has no prompt builder for now.
   date: 2026-11-12
   by: user:wittjosiah
-  affects: [tile-build-with-agent, tile-the-tile-component, tile-learn-installation, tile-overview, D-232]
+  affects: [tile-build-with-agent, tile-the-tile-component, tile-learn-installation, tile-overview, D-233]
   why: Josiah asked for TILE to start like ECHO, HALO and PLEX, with a first learning-path page about its core idea, and for the coding-agent page to stay simple.
 ```
 
 ```mdl
-decision D-242: TILE's API reference links generated typedoc for `@dxos/react-ui`, `@dxos/ui-theme`, `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, which now build it like the ECHO and HALO packages. Supersedes the part of [D-235] that kept it planned.
+decision D-243: TILE's API reference links generated typedoc for `@dxos/react-ui`, `@dxos/ui-theme`, `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, which now build it like the ECHO and HALO packages. Supersedes the part of [D-236] that kept it planned.
   date: 2026-11-12
   by: user:wittjosiah
-  affects: [tile-api-reference, D-235]
+  affects: [tile-api-reference, D-236]
   why: Josiah asked for an API reference for the core and the four packages with guides.
 ```
 
 ```mdl
-decision D-243: The footer's Docs column lists every section the topic switcher has, in its order: ECHO, HALO, MESH, EDGE, PLEX and TILE. Amends [F-7.1].
+decision D-244: The footer's Docs column lists every section the topic switcher has, in its order: ECHO, HALO, MESH, EDGE, PLEX and TILE. Amends [F-7.1].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [F-7.1]
@@ -4985,7 +5001,7 @@ decision D-243: The footer's Docs column lists every section the topic switcher 
 ```
 
 ```mdl
-decision D-244: The Component packages catalog has two groups: general purpose, and designed for ECHO. No package is described as built on ECHO or as specific to the plugin shell; `react-ui-menu` and `react-ui-editor` are general purpose. Amends [D-231].
+decision D-245: The Component packages catalog has two groups: general purpose, and designed for ECHO. No package is described as built on ECHO or as specific to the plugin shell; `react-ui-menu` and `react-ui-editor` are general purpose. Amends [D-232].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [tile-packages, tile-overview]
@@ -4993,7 +5009,7 @@ decision D-244: The Component packages catalog has two groups: general purpose, 
 ```
 
 ```mdl
-decision D-245: Each section's Overview hero uses the background from the final product suite, with the mark on the right. HALO and MESH keep the brand's right-hand art. EDGE uses the brand's DXNS art. ECHO and PLEX use the brand's ECHO and Kube art moved right, with the rays extended to the edges; PLEX drops the rays from the cube's upper-left edge and through its top-left vertex. TILE keeps its tangram art from [D-240] but drops the horizontal ray left of the diamond. Replaces EDGE's earlier hand-drawn background.
+decision D-246: Each section's Overview hero uses the background from the final product suite, with the mark on the right. HALO and MESH keep the brand's right-hand art. EDGE uses the brand's DXNS art. ECHO and PLEX use the brand's ECHO and Kube art moved right, with the rays extended to the edges; PLEX drops the rays from the cube's upper-left edge and through its top-left vertex. TILE keeps its tangram art from [D-241] but drops the horizontal ray left of the diamond. Replaces EDGE's earlier hand-drawn background.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [F-16.8]
@@ -5001,7 +5017,7 @@ decision D-245: Each section's Overview hero uses the background from the final 
 ```
 
 ```mdl
-decision D-246: Each Overview hero follows the page's theme. In dark mode it is unchanged. In light mode its ground is the page background, so the hero blends into the page as it does in dark mode, its mark and title are the page's text color, and its tagline is the muted text color. The rays keep the section's color in both themes. Amends [D-245].
+decision D-247: Each Overview hero follows the page's theme. In dark mode it is unchanged. In light mode its ground is the page background, so the hero blends into the page as it does in dark mode, its mark and title are the page's text color, and its tagline is the muted text color. The rays keep the section's color in both themes. Amends [D-246].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [F-16.8]
@@ -5009,7 +5025,7 @@ decision D-246: Each Overview hero follows the page's theme. In dark mode it is 
 ```
 
 ```mdl
-decision D-247: On `/echo` the four reason cards and the four guarantee cards each sit in one row on a wide screen, in two rows of two on a medium one, and in one column on a narrow one. They never wrap to three and one. Amends [D-211].
+decision D-248: On `/echo` the four reason cards and the four guarantee cards each sit in one row on a wide screen, in two rows of two on a medium one, and in one column on a narrow one. They never wrap to three and one. Amends [D-211].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [landing]
@@ -5017,7 +5033,7 @@ decision D-247: On `/echo` the four reason cards and the four guarantee cards ea
 ```
 
 ```mdl
-decision D-248: Corrections from review. EDGE and MESH pages say EDGE holds a copy of each space that replicates through it, that `Space.setEdgeReplication` turns that off, and that EDGE indexes only spaces it can read; Why MESH? no longer says a direct link carries data that never passes through a server. Teleport's other extensions open alongside the auth extension, not after it. MMST usually connects a swarm but does not guarantee it. A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space key. The TILE learning path's ECHO app configures its client as ECHO's Installation page does, so the sharing exercise works across browser profiles, and its new entry point keeps the stylesheet imports. TILE's samples key rows by id, keep editor text in state across theme changes, and make tooltip triggers focusable. TILE's reference pages say Popover holds focus only with `modal`, `useTranslation` returns `{ t, … }`, `Menu.Root`'s `onSelect` receives `{ value }`, `modal-surface` is at the `raised` level, only `Flex`, `Grid` and `Container` take `asChild`, a layout primitive may take a role, `include` keeps schema order, and Save is disabled only while a touched field has an error. The topic picker scrolls on a short screen.
+decision D-249: Corrections from review. EDGE and MESH pages say EDGE holds a copy of each space that replicates through it, that `Space.setEdgeReplication` turns that off, and that EDGE indexes only spaces it can read; Why MESH? no longer says a direct link carries data that never passes through a server. Teleport's other extensions open alongside the auth extension, not after it. MMST usually connects a swarm but does not guarantee it. A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space key. The TILE learning path's ECHO app configures its client as ECHO's Installation page does, so the sharing exercise works across browser profiles, and its new entry point keeps the stylesheet imports. TILE's samples key rows by id, keep editor text in state across theme changes, and make tooltip triggers focusable. TILE's reference pages say Popover holds focus only with `modal`, `useTranslation` returns `{ t, … }`, `Menu.Root`'s `onSelect` receives `{ value }`, `modal-surface` is at the `raised` level, only `Flex`, `Grid` and `Container` take `asChild`, a layout primitive may take a role, `include` keeps schema order, and Save is disabled only while a touched field has an error. The topic picker scrolls on a short screen.
   date: 2026-11-13
   by: agent:claude
   for: user:wittjosiah

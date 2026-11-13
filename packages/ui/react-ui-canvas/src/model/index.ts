@@ -10,6 +10,7 @@ export * from './orphans.ts';
 export * from './registry.ts';
 export * from './sample.ts';
 export * from './style-set.ts';
+export * from './template.ts';
 export * from './theme-choice.ts';
 export * from './types.ts';
 export * from './versioned.ts';

@@ -54,7 +54,12 @@ export const ComboboxField = ({
   const value = getValue() ?? '';
   const trimmed = query.trim();
   const items = useMemo<Combobox.Option[]>(() => {
-    const loaded = (data ?? []).map((option) => ({ value: option.value, label: option.label ?? option.value }));
+    const loaded = (data ?? []).map((option) => ({
+      value: option.value,
+      label: option.label ?? option.value,
+      // A lookup that gives each entry a glyph (the icon catalogue) shows it in the row and in the trigger.
+      ...(option.icon ? { icon: option.icon } : {}),
+    }));
     const results =
       trimmed.length === 0
         ? lookup.eager

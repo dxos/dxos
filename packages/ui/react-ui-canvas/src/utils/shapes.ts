@@ -59,11 +59,12 @@ export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
  * new shape scales with the drawing's grid.
  */
 export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: { width: 2, height: 1 },
+  rect: { width: 4, height: 2 },
   ellipse: { width: 2, height: 2 },
   cloud: { width: 3, height: 2 },
   polygon: { width: 2, height: 2 },
   polyline: { width: 2, height: 2 },
+  hull: { width: 4, height: 2 },
   note: { width: 4, height: 2 },
   view: { width: 4, height: 2 },
   instance: { width: 4, height: 2 },
@@ -82,6 +83,7 @@ export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
   cloud: nominalSize({ width: 6, height: 4 }),
   polygon: nominalSize({ width: 4, height: 4 }),
   polyline: nominalSize({ width: 4, height: 4 }),
+  hull: nominalSize({ width: 8, height: 4 }),
   note: nominalSize({ width: 4, height: 2 }),
   view: nominalSize({ width: 8, height: 4 }),
   instance: nominalSize({ width: 8, height: 4 }),
@@ -125,6 +127,9 @@ export const createNode = ({
       return { type, id, z, center, size, params: { sides: DEFAULT_POLYGON_SIDES } };
     case 'polyline':
       return { type, id, z, center, size, points: [...DEFAULT_POLYLINE_POINTS] };
+    // Its frame and border follow the nodes that name it as their parent, once any does.
+    case 'hull':
+      return { type, id, z, center, size };
     case 'note':
       return { type, id, z, center, size, text: 'Note' };
     case 'view':
@@ -179,6 +184,7 @@ export const createLink = ({ type, id, z, source, target, ends }: CreateLinkProp
   const base = { id, z, source, target, ...(ends ? { ends } : {}) };
   switch (type) {
     case 'line':
+    case 'ortho':
     case 'curve':
     case 'smart':
       return { type, ...base };
