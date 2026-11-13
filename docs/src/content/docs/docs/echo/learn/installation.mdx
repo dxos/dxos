@@ -1,0 +1,81 @@
+---
+title: Installation
+description: Add the packages and open a database in Node or the browser.
+---
+
+import { Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
+
+By the end of this page the tutorial app will have a running client, an identity, and the space it keeps its records in.
+
+To write the code as you read, open the starter on StackBlitz. It is the finished app with the code from these pages taken out. Each piece the pages write is a `todo` in the file that uses it, and the app names the next step to write and its file.
+
+<StackBlitzButton kind="starter" label="Follow along in StackBlitz" file="src/app/App.tsx" />
+
+## Background
+
+The `Client` is the app's way into ECHO. It holds the databases of the spaces you belong to, on the device, and connects them to the network so peers can replicate them.
+
+A client acts for an identity. The identity owns the spaces it creates, and other peers recognize it when it joins theirs. A space is a database that a set of identities replicate between them, and every object lives in exactly one space. The app keeps all its records in one space, called Contacts.
+
+## Steps
+
+<Steps>
+
+1. **Install the client.** `@dxos/client` holds the `Client`, and it brings `@dxos/echo` with it. The schemas these pages write also import `effect`.
+
+   Until the next npm release, install the build of main these pages describe, from pkg.pr.new. The releases on npm are older and lack some of the APIs below.
+
+   <Tabs>
+     <TabItem label="pnpm">
+       ```bash
+       pnpm add https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 effect@4.0.4
+       ```
+     </TabItem>
+     <TabItem label="npm">
+       ```bash
+       npm install --save https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 effect@4.0.4
+       ```
+     </TabItem>
+     <TabItem label="yarn">
+       ```bash
+       yarn add https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 effect@4.0.4
+       ```
+     </TabItem>
+   </Tabs>
+
+   Install any other `@dxos` package from the same build, with its name in place of `client`. The tutorial app's [package.json](/echo/project/package.json) lists every package it uses at that build. Most of them are for its interface: the `@dxos/react-ui` packages, `@dxos/ui-theme`, `@dxos/vite-plugin-icons` and `tailwindcss`. An app with its own interface needs only `@dxos/client` (or `@dxos/react-client`) and `effect`.
+
+   In TypeScript, also add `@types/zen-observable` as a dev dependency. The client's observables, such as `client.spaces` and an invitation, take their `subscribe` method from it.
+
+   In a React app, install `@dxos/react-client` instead and follow the [React guide](/docs/echo/guides/react/).
+
+2. **Configure the bundler.** In the browser, ECHO runs its database in a worker and loads WebAssembly in the page and in that worker. Vite needs four settings for it:
+
+   - `vite-plugin-wasm` in `plugins` and in `worker.plugins`, so both can import WebAssembly.
+   - `build.target: 'esnext'`, since the WebAssembly modules are loaded with top-level `await`.
+   - `optimizeDeps.exclude` for `@dxos/wa-sqlite`, `@automerge/automerge` and `@automerge/automerge-subduction`. Vite's pre-bundling would move their WebAssembly files away from the code that loads them.
+   - `optimizeDeps.include` for the CommonJS modules that only the database worker imports. Vite's dependency scan starts from the page, so it does not find them, and the worker cannot import a CommonJS module that Vite has not pre-bundled.
+
+   <Snippet file="vite-config" title="vite.config.ts" />
+
+   The tutorial app's [vite.config.ts](/echo/project/vite.config.ts) has these settings, plus React, the theme's `ThemePlugin` and an `IconsPlugin` for the icons of the `@dxos/react-ui` components. Node needs no bundler setup.
+
+3. **Point the client at the network.** A client keeps its data on the device and reaches other devices through DXOS's EDGE network, which relays invitations and replicates spaces. The app's config, at the top of `App.tsx`, says where EDGE is and keeps the data across reloads. The learning path writes its config in code; the [Configuration guide](/docs/echo/guides/configuration/) covers loading it from files instead.
+
+   <Snippet file="echo-tutorial/app/App" region="config" lang="tsx" />
+
+   EDGE serves only identities linked to a DXOS account, which for now you can create only through [Composer](https://composer.space). Without one, the console shows `403` responses from `dxos.network` for `/db/spaces/…` and `/inbox`. They are expected: peers still find each other through EDGE and replicate directly.
+
+4. **Open the app's space.** The app does this in one function, below the config. The `App` component calls it when it mounts. `new Client` takes the app's types, which the next page declares, and the config. `createOpfsWorker` keeps the database in the browser's private file system. `initialize` opens local storage and connects to the network. The first time, the client needs an identity before it can create a space; [HALO](/docs/halo/overview/) covers identities and devices. After that, the app opens the space it made before.
+
+   <Snippet file="echo-tutorial/app/App" region="client" lang="tsx" />
+
+   `space.db` is the database the rest of the learning path reads and writes. `services` replaces the network: the embeds on these pages pass in-memory services, so each runs its devices in the page and keeps nothing.
+
+</Steps>
+
+## What you can do now
+
+You can install ECHO, configure a client for the browser or Node, and open the app's space with an identity.

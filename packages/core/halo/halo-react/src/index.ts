@@ -3,6 +3,7 @@
 //
 
 export * from './HaloProvider.tsx';
+export * from './useContacts.ts';
 export * from './useCredentials.ts';
 export * from './useDevices.ts';
 export * from './useIdentity.ts';

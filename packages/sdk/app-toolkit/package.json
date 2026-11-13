@@ -303,6 +303,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@bufbuild/protobuf": "catalog:",
@@ -354,7 +357,8 @@
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
     "@effect/atom-react": "catalog:",

@@ -1,0 +1,39 @@
+---
+title: Testing
+description: Test code that uses ECHO, with in-memory databases and peers that replicate.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+```
+
+A test of code that uses ECHO needs a database, and a test of sync needs more than one peer. `EchoTestBuilder` makes
+both in memory, without an identity or a server, so tests run fast in Node.
+
+## Make a database
+
+`createDatabase` makes a peer with its own storage and opens a database on it. Pass the types the test uses.
+`await using` closes the builder, and every peer it made, when the test ends.
+
+<Snippet file="echo-guide-testing" region="database" />
+
+`flush({ indexes: true })` waits until queries see what the test wrote, so a read right after a write does not race the
+index.
+
+## Replicate between peers
+
+Each peer from `createPeer` has its own storage, like a separate device. A `TestReplicationNetwork` from
+`@dxos/echo-host/testing` connects them in memory. One peer creates the space, and the other opens it from the space's
+root URL. `waitUntilHeadsReplicated` waits until one peer has all the changes another has made.
+
+<Snippet file="echo-guide-testing" region="peers" />
+
+Use two peers to test what happens when both write: make the writes on each peer, wait for each to have the other's
+changes, then check that both show the same result.
+
+## Related
+
+- [Changes and branches](/docs/echo/concepts/changes/) for how concurrent writes merge.
+- [Testing a plugin](/docs/plex/guides/testing/) for tests that run a whole Composer plugin.

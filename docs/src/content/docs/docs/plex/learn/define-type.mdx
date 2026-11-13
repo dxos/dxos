@@ -1,0 +1,54 @@
+---
+title: Define a type
+description: Give the plugin its own ECHO type.
+---
+
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the plugin has a Stashed link type, and the inspector lists its fields.
+
+## Background
+
+A plugin's data is ECHO objects, and a type describes them. The app reads the type's annotations to name an object,
+pick its icon, and decide whether a person can create one. [Defining types](/docs/echo/learn/defining-types/) and the
+[Type](/docs/echo/api/type/) guide cover types in full; this page uses only what PLEX needs.
+
+## Steps
+
+1. **Declare the type.** `Type.makeObject` gives the schema a DXN and makes it an ECHO type. The annotations tell
+   the app which field is the object's label, which icon to show, and that the type is one a person creates
+   (`UserType`). The fields are optional because a new object starts empty.
+
+   <Snippet file="plex-tutorial/src/types/StashedLink" region="type" />
+
+2. **Add a factory.** `make` fills in defaults, so every caller creates a link the same way.
+
+   <Snippet file="plex-tutorial/src/types/StashedLink" region="make" />
+
+3. **Register the type with the app.** The schema module tells the app the type exists, so it can query, store and
+   name objects of it.
+
+   <Snippet file="plex-tutorial/src/capabilities/schema" region="schema" />
+
+4. **Name the type.** The app labels a type with strings from the type's own namespace, its typename. Add an entry
+   for it to the translations, after the plugin's own.
+
+   <Snippet file="plex-tutorial/src/translations" region="type" />
+
+5. **Add the module to the manifest.**
+
+   <Snippet file="plex-tutorial/dx.config" region="schema" />
+
+6. **See the type.** Click **Load dev plugin** below, or **Reload** if your plugin is loaded already, and select
+   **Schema**. It lists the Stashed link type with its fields.
+
+   <InspectorEmbed adds={['schema']} />
+
+   There is no way to create a link yet. Creating one runs an operation, and the next page adds operations.
+
+## What you can do now
+
+- Declare a type with the annotations the app reads.
+- Register the type so the app can store and name it.
+- Name the type in the plugin's translations.

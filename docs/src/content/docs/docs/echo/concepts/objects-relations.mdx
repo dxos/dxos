@@ -1,0 +1,66 @@
+---
+title: Objects and relations
+description: Typed records in one space, the entities that join them, and the fields ECHO manages.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+An object is a typed record, like a document or a row in other databases, and it always belongs to one space. A relation
+is an entity that joins two others.
+
+## Model
+
+An object has the fields its [type](/docs/echo/concepts/types/) declares. Field values are strings, numbers, booleans and
+`null`, records and arrays of those, and [references](/docs/echo/concepts/references/) to other entities.
+
+<Snippet file="concept-objects" region="make" />
+
+Every object also carries fields that ECHO manages:
+
+| Field | How to read it |
+| --- | --- |
+| Id, unique and stable | `obj.id` |
+| Type | `Obj.getTypename(obj)` |
+| Keys from other systems, and tags | `Obj.getKeys(obj, source)`, `Obj.getMeta(obj)` |
+| Label | `Obj.getLabel(obj)` |
+| Whether it was removed | `Obj.isDeleted(obj)` |
+
+<Snippet file="concept-objects" region="managed" />
+
+A **relation** joins a source and a target, and can have fields of its own. Person's `employer` field and a WorksAt
+relation record the same fact in two ways:
+
+- A reference field belongs to its object. It is the simplest choice when the link is part of the record, one value or
+  a list.
+- A relation is an entity of its own. It can carry data about the link, such as a role, and it can be added or removed
+  without writing to either end.
+
+<Snippet file="concept-objects" region="relation" />
+
+An object can have a **parent**. A child belongs to its parent: removing the parent removes the child. The parent holds a
+reference to each child in one of its fields, and `Obj.setParent` and `Obj.getParent` set and read the link.
+
+## Behavior
+
+- `Obj.make` creates an object with an id and the DXN of its type. <SpecCite item="org.dxos.echo#F-3.1" />
+- A change to an object's field notifies `Obj.subscribe` listeners and re-runs live queries.
+  <SpecCite item="org.dxos.echo#F-3.2" />
+- An object read from a database is live: its fields show the latest value. `Obj.getSnapshot` returns an immutable copy
+  that does not change.
+
+  <Snippet file="concept-objects" region="snapshot" />
+
+- Serializing an object and reading it back keeps its id, type, metadata and references.
+  <SpecCite item="org.dxos.echo#F-3.4" />
+- Removing an object marks it as deleted. It stays in the change history until the next
+  [epoch](/docs/additional-resources/glossary#epoch), so a peer that wrote while offline can still merge its changes.
+
+  <Snippet file="concept-objects" region="remove" />
+
+## Limits
+
+- The top level of an object is always a record, never a single number or string.
+- A relation needs both ends. Its source and target are set when it is made and do not change.
+- Only an object can be a child. A relation can be a parent, with `Relation.setParent`, so that an object is removed
+  along with the relation it belongs to.
