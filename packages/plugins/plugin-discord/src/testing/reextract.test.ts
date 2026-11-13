@@ -23,6 +23,8 @@ import { MessageStore, extractQuestionsStage, replayStream } from '@dxos/pipelin
 import { storesLayer } from '@dxos/pipeline-discord/testing';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
+import { extractOptionsFromEnv } from './vocabularies.ts';
+
 const dbPath = process.env.DISCORD_CRAWL_DB ?? join(tmpdir(), 'dxos-discord-crawl.db');
 const factsPath = process.env.DISCORD_FACTS_DB ?? join(tmpdir(), 'dxos-discord-facts.db');
 const hasKey = Boolean(process.env.DX_ANTHROPIC_API_KEY);
@@ -46,7 +48,7 @@ describe('re-extract', () => {
           // Agent profiles are left alone: the crawl already counted each message once.
           yield* replayStream().pipe(
             extractQuestionsStage(),
-            extractFactsStage(),
+            extractFactsStage(extractOptionsFromEnv()),
             Pipeline.run({ sink: () => Effect.void }),
           );
           // A failed batch is only recorded on its targets.

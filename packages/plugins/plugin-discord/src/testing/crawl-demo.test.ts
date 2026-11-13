@@ -31,6 +31,7 @@ import { storesLayer } from '@dxos/pipeline-discord/testing';
 import { FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { discordSourceLayer } from '../services/index.ts';
+import { extractOptionsFromEnv } from './vocabularies.ts';
 
 const token = process.env.DISCORD_TOKEN;
 // Defaults: DXOS #general, #composer-vip, #dxos-team.
@@ -116,12 +117,15 @@ describe('crawl demo', () => {
           if (rewind.length > 0) {
             yield* StateStore.resetTargets(rewind);
           }
-          const summary = yield* DiscordPipeline.run({
-            channels,
-            descendThreads: true,
-            seed: { maxDays },
-            channelSettings,
-          });
+          const summary = yield* DiscordPipeline.run(
+            {
+              channels,
+              descendThreads: true,
+              seed: { maxDays },
+              channelSettings,
+            },
+            { extract: extractOptionsFromEnv() },
+          );
           const stored = yield* MessageStore.count();
           const agents = yield* AgentRegistry.list();
           const targets = yield* StateStore.listTargets();

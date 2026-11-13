@@ -16,6 +16,8 @@ export type KnowledgeCardRow = {
 export type KnowledgeCardProps = {
   icon: string;
   title: ReactNode;
+  /** Beside the title in the card's end column (e.g. a provenance tag), so every card's tags line up. */
+  trailing?: ReactNode;
   rows: readonly KnowledgeCardRow[];
   /** After the rows, the card's full width (e.g. the raw TriG). */
   children?: ReactNode;
@@ -28,10 +30,20 @@ export type KnowledgeCardProps = {
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
 };
 
-/** One item as a read-only form: an icon and title head the card, its key/value rows follow. */
-export const KnowledgeCard = ({ icon, title, rows, children, testId, data, selected, onClick }: KnowledgeCardProps) => (
+/** One item as a read-only form: an icon, title and trailing cell head the card, its key/value rows follow. */
+export const KnowledgeCard = ({
+  icon,
+  title,
+  trailing,
+  rows,
+  children,
+  testId,
+  data,
+  selected,
+  onClick,
+}: KnowledgeCardProps) => (
   <Card.Root grid selected={selected} onClick={onClick} data-testid={testId} {...data}>
-    <Card.Row icon={icon} align='start'>
+    <Card.Row icon={icon} trailing={trailing}>
       <Card.Text lines={3}>{title}</Card.Text>
     </Card.Row>
     {rows.map(({ label, value }, index) => (

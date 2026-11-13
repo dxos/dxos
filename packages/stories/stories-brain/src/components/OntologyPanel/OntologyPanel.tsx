@@ -180,11 +180,9 @@ const PredicateCard = ({ entry, count, ontology, selected, onClick }: PredicateC
   return (
     <KnowledgeCard
       icon='ph--arrow-right--regular'
-      title={
-        <>
-          {entry.label}{' '}
-          <Tag.Tag hue={minted ? 'amber' : 'sky'}>{minted ? `minted · ${vocabulary}` : `seed · ${vocabulary}`}</Tag.Tag>
-        </>
+      title={entry.label}
+      trailing={
+        <Tag.Tag hue={minted ? 'amber' : 'sky'}>{minted ? `minted · ${vocabulary}` : `seed · ${vocabulary}`}</Tag.Tag>
       }
       rows={rows}
       testId='ontology-predicate'

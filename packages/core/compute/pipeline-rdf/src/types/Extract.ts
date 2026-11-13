@@ -45,6 +45,11 @@ export type ExtractOptions = {
    * ontology's namespace. Defaults to the seed ontology.
    */
   readonly ontology?: Ontology.Ontology;
+  /**
+   * Only the ontology's predicates are used: a relation none of them fits is dropped rather than minted, so the
+   * graph conforms to the seeded vocabularies.
+   */
+  readonly closed?: boolean;
   /** Entities the extractor is shown by name; a mention that names one is stored under its IRI. */
   readonly entities?: ReadonlyArray<KnownEntity>;
 };

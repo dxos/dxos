@@ -29,6 +29,8 @@ export const DCTERMS = 'http://purl.org/dc/terms/';
 export const SCHEMA = 'https://schema.org/';
 export const FOAF = 'http://xmlns.com/foaf/0.1/';
 export const ORG = 'http://www.w3.org/ns/org#';
+/** SIOC: online communities (posts, replies, channels, members). */
+export const SIOC = 'http://rdfs.org/sioc/ns#';
 /** Brain namespaces: each brain mints the predicates its extractors invent under its own IRI. */
 export const BRAIN = 'https://dxos.org/semantic/brain/';
 

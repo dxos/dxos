@@ -23,6 +23,10 @@ export type ExtractFactsOptions = {
    * its own, as a single-document request.
    */
   readonly batchSize?: number;
+  /** The predicates the extractor reuses (e.g. seeded with published vocabularies); defaults to the seed ontology. */
+  readonly ontology?: RDF.ExtractOptions['ontology'];
+  /** Drop relations no listed predicate fits instead of minting one. */
+  readonly closed?: boolean;
 };
 
 type MessageEvent = Extract<Type.Event, { readonly _tag: 'Message' }>;
@@ -117,7 +121,11 @@ export const extractFactsStage = (
   AgentRegistry.AgentRegistry | FactStore | AiService.AiService | StateStore.StateStore
 > => {
   const namespace = options?.sourceNamespace ?? 'discord';
-  const extractOptions = options?.rules ? { rules: options.rules } : {};
+  const extractOptions: RDF.ExtractOptions = {
+    ...(options?.rules ? { rules: options.rules } : {}),
+    ...(options?.ontology ? { ontology: options.ontology } : {}),
+    ...(options?.closed ? { closed: true } : {}),
+  };
   const extract = Effect.fnUntraced(function* (events: readonly MessageEvent[]) {
     const authors = new Map<string, AgentRegistry.Profile>();
     for (const event of events) {

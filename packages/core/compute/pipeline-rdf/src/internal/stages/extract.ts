@@ -128,7 +128,10 @@ For each proposition output: subject, predicate (a listed predicate's shorthand,
  * typing, so the extractor reuses them rather than inventing variants. Deprecated (merged-away) predicates are left
  * out: their replacement is listed with their surface forms.
  */
-export const predicateSection = (ontology: Ontology.Ontology): string => {
+export const predicateSection = (
+  ontology: Ontology.Ontology,
+  { closed = false }: { closed?: boolean } = {},
+): string => {
   const lines = ontology.entries
     .filter((entry) => entry.replacedBy === undefined)
     .map((entry) => {
@@ -139,7 +142,9 @@ export const predicateSection = (ontology: Ontology.Ontology): string => {
       return `- ${entry.name}: "${entry.label}"${synonyms}${typing}${entry.description ? ` — ${entry.description}` : ''}`;
     });
   return [
-    'Predicates. Use the shorthand of the one that fits the relation (or any of its forms). Only when none fits, write a new short verb phrase in timeless present form and set predicateDescription to one sentence saying what it relates:',
+    closed
+      ? 'Predicates. Use the shorthand of the one that fits the relation (or any of its forms). When none fits, omit the proposition: never write a predicate that is not listed:'
+      : 'Predicates. Use the shorthand of the one that fits the relation (or any of its forms). Only when none fits, write a new short verb phrase in timeless present form and set predicateDescription to one sentence saying what it relates:',
     ...lines,
   ].join('\n');
 };
@@ -186,7 +191,7 @@ export const buildExtractionPrompt = (options?: ExtractOptions): string => {
   const rules = [...DEFAULT_EXTRACTION_RULES, ...(options?.rules ?? [])];
   return [
     `${BASE_PROMPT}\nRules:\n${rules.map((rule, index) => `${index + 1}. ${rule}`).join('\n')}`,
-    predicateSection(options?.ontology ?? Ontology.DEFAULT),
+    predicateSection(options?.ontology ?? Ontology.DEFAULT, { closed: options?.closed }),
     ...(options?.entities?.length ? [entitySection(options.entities)] : []),
   ].join('\n\n');
 };

@@ -99,6 +99,7 @@ const entityTerm = (surface: string, type: EntityTerm['type'], known: ReadonlyMa
 type FactContext = {
   readonly recordedAt: string;
   readonly ontology: Ontology.Ontology;
+  readonly closed: boolean;
   readonly known: ReadonlyMap<string, KnownEntity>;
 };
 
@@ -110,6 +111,7 @@ const factContext = (options: ExtractOptions | undefined) =>
     return {
       recordedAt,
       ontology: options?.ontology ?? Ontology.DEFAULT,
+      closed: options?.closed ?? false,
       known: indexEntities(options?.entities ?? []),
     } satisfies FactContext;
   });
@@ -133,6 +135,10 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
   // A listed predicate is stored under its IRI and label; any other is minted in the ontology's namespace and
   // keeps the definition the extractor gave it.
   const listed = context.ontology.find(candidate.predicate);
+  // A closed ontology conforms the graph to its vocabularies, so a model that mints anyway loses the proposition.
+  if (!listed && context.closed) {
+    return undefined;
+  }
   const predicate = listed ?? context.ontology.resolve(candidate.predicate);
   return {
     // Replaced by the statement's id once the facts are placed in their graphs.
