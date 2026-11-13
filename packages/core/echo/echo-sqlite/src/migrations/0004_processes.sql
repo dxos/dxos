@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS echo_sqlite_change_log (
 
 CREATE INDEX IF NOT EXISTS echo_sqlite_change_log_space ON echo_sqlite_change_log (spaceId, id);
 
+-- Every commit deletes the rows past retention, by age.
+CREATE INDEX IF NOT EXISTS echo_sqlite_change_log_at ON echo_sqlite_change_log (at);
+
 CREATE TABLE IF NOT EXISTS echo_sqlite_sync_leases (
   spaceId TEXT PRIMARY KEY,
   holder TEXT NOT NULL,
