@@ -5607,6 +5607,14 @@ decision D-287: `/echo` uses ECHO's green from the alt 4 suite [D-273]. The hero
   why: Josiah asked for `/echo` to match the colors ECHO got when the section colors were swapped around; its purple and maroon now read as PLEX and TILE.
 ```
 
+```mdl
+decision D-288: `/echo` draws its hero from the same ECHO art as the docs heroes and takes its green from that art's ray color, so a change to the section suite reaches `/echo` with no second edit. Amends [D-220] and [D-287].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [D-220, D-287]
+  why: Josiah asked for `/echo` to share assets and inherit colors so it does not diverge from the suite again.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
