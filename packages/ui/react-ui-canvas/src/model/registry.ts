@@ -101,6 +101,11 @@ export type NodeDef = {
    */
   createFromPoints?: (props: CreateProps, points: readonly Point[], closed: boolean) => Node;
   /**
+   * The tool draws in one stroke rather than vertex by vertex: it samples the pointer while it is pressed, and
+   * `createFromPoints` makes the node from the samples when it is released.
+   */
+  freehand?: boolean;
+  /**
    * What the node's edit mode (a double-click on it, or Enter with it selected alone) edits: `'label'`, the default, its
    * text part in place; `'vertices'`, the unit-space `points` of a type drawn vertex by vertex, each shown as a point to
    * drag, with its move and resize handles hidden. Enter, Escape or a press outside the node leaves either.

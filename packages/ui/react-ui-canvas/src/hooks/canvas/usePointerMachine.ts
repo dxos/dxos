@@ -46,11 +46,14 @@ import {
   type CreateProps,
   type NodeRegistry,
   type RenderList2D,
+  type Tool,
   isHandDrag,
   nodeDef,
 } from '../../model/index.ts';
 import {
   DEFAULT_LAYER,
+  FREEHAND_STEP_PX,
+  FREEHAND_TOLERANCE_PX,
   NOMINAL_SIZES,
   type SceneEdit,
   VERTEX_SNAP_PX,
@@ -87,6 +90,7 @@ import {
   resizeTo,
   screenToScene,
   sideToward,
+  simplifyPath,
   topOfView,
   updateElement,
 } from '../../utils/index.ts';
@@ -268,31 +272,53 @@ export const usePointerMachine = ({
     [cancelAnimation, setDrag, interactedRef, rootRef, registry, atoms.hover, exitEdit],
   );
 
-  /** Lands a vertex-by-vertex drawing as a node, framed by its vertices; fewer than two make nothing. */
-  const landVertices = useCallback(
-    (drawing: Extract<Drag, { kind: 'vertices' }>, closed: boolean) => {
-      const def = nodeRegistry[drawing.type];
+  /**
+   * Lands a line drawn through `points` as a node of the tool `type`, framed by them; fewer than two make nothing.
+   * A line placed vertex by vertex is selected and the tool put down. A `stroke` drawn freehand is one of several, so
+   * the tool stays in hand and nothing is selected, whose handles would sit over the next stroke.
+   */
+  const landPoints = useCallback(
+    (type: NodeType, points: readonly Point[], closed: boolean, stroke = false) => {
+      const def = nodeRegistry[type];
       // The frame needs some extent on each axis to scale the line by, so a straight run gets a minor cell.
-      const frame = drawing.points.length >= 2 ? polylineFrame(drawing.points, minor) : undefined;
+      const frame = points.length >= 2 ? polylineFrame(points, minor) : undefined;
       if (!def?.createFromPoints || !frame) {
         return;
       }
       const { bounds } = frame;
       const node = def.createFromPoints(
         {
-          id: createId(drawing.type),
+          id: createId(type),
           z: topOfView(scene),
           center: boundsCenter(bounds),
           size: { width: bounds.width, height: bounds.height },
         },
         frame.points,
-        closed && drawing.points.length >= 3,
+        closed && points.length >= 3,
       );
       draw.apply(insertNode({ ...node, layer: activeLayer(scene, registry.get(atoms.layer)) }));
-      select([node.id]);
-      setTool({ kind: 'select' });
+      if (!stroke) {
+        select([node.id]);
+        setTool({ kind: 'select' });
+      }
     },
     [nodeRegistry, minor, scene, draw, registry, atoms.layer, select, setTool],
+  );
+
+  /** The type the tool in hand draws in one stroke (`NodeDef.freehand`), where it is such a tool and may draw. */
+  const strokeType = useCallback(
+    (tool: Tool): NodeType | undefined =>
+      tool.kind === 'node' && capabilities.create && nodeRegistry[tool.type]?.freehand ? tool.type : undefined,
+    [capabilities.create, nodeRegistry],
+  );
+
+  /** A stroke starts where the pointer is, not on the grid: a line drawn freehand follows the hand. */
+  const startStroke = useCallback(
+    (type: NodeType, event: PointerEvent) => {
+      select([]);
+      startDrag({ kind: 'freehand', type, points: [toScene(event)] }, event);
+    },
+    [select, startDrag, toScene],
   );
 
   const finishVertices = useCallback(
@@ -302,9 +328,9 @@ export const usePointerMachine = ({
         return;
       }
       setDrag(undefined);
-      landVertices(drawing, closed);
+      landPoints(drawing.type, drawing.points, closed);
     },
-    [registry, atoms.drag, setDrag, landVertices],
+    [registry, atoms.drag, setDrag, landPoints],
   );
 
   const removeVertex = useCallback(() => {
@@ -356,10 +382,13 @@ export const usePointerMachine = ({
       if (event.target !== event.currentTarget) {
         return;
       }
+      const stroke = strokeType(currentTool);
       if (event.button === 1 || currentTool.kind === 'hand' || isHandDrag(event)) {
         startDrag({ kind: 'pan', last: { x: event.clientX, y: event.clientY } }, event);
       } else if (event.button !== 0) {
         return;
+      } else if (stroke !== undefined) {
+        startStroke(stroke, event);
       } else if (currentTool.kind === 'node') {
         if (capabilities.create && nodeRegistry[currentTool.type]?.createFromPoints) {
           select([]);
@@ -410,6 +439,8 @@ export const usePointerMachine = ({
       nodeRegistry,
       onDrawingPointerDown,
       setDrag,
+      strokeType,
+      startStroke,
     ],
   );
 
@@ -452,6 +483,12 @@ export const usePointerMachine = ({
         return;
       }
       event.stopPropagation();
+      // A stroke is drawn over whatever is there, as on paper: the shape under the press is not picked up.
+      const stroke = strokeType(currentTool);
+      if (stroke !== undefined) {
+        startStroke(stroke, event);
+        return;
+      }
       exitEdit(node.id);
       // A node in vertex edit mode holds still under a press: its vertices are what move.
       const editing = registry.get(atoms.editing);
@@ -511,6 +548,8 @@ export const usePointerMachine = ({
       scene.nodes,
       toScene,
       startDrag,
+      strokeType,
+      startStroke,
     ],
   );
 
@@ -875,6 +914,16 @@ export const usePointerMachine = ({
           setDrag({ ...current, to: { x: snap(point.x), y: snap(point.y) } });
           break;
         }
+        case 'freehand': {
+          // A sample every few px of travel on screen: enough to follow the hand, without one per pointer event.
+          const point = toScene(event);
+          const last = current.points[current.points.length - 1];
+          const step = FREEHAND_STEP_PX / registry.get(atoms.camera).zoom;
+          if (Math.hypot(point.x - last.x, point.y - last.y) >= step) {
+            setDrag({ ...current, points: [...current.points, point] });
+          }
+          break;
+        }
         case 'vertex': {
           // A vertex lands on the minor grid, as the polyline tool places one.
           const point = toScene(event);
@@ -1165,6 +1214,13 @@ export const usePointerMachine = ({
           }
           commitCreated(node);
           setTool({ kind: 'select' });
+          break;
+        }
+        case 'freehand': {
+          // Thinned to the points the line needs, so it has few enough vertices to edit; a press with no travel
+          // leaves one point, which makes nothing.
+          const tolerance = FREEHAND_TOLERANCE_PX / registry.get(atoms.camera).zoom;
+          landPoints(current.type, simplifyPath(current.points, tolerance), false, true);
           break;
         }
         case 'point': {

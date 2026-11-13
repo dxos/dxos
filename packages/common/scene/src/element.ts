@@ -381,6 +381,8 @@ export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
 export const PolylineParams = Schema.Struct({
   /** Unset, the line is open: drawn as a stroke alone, with no fill. */
   closed: Schema.optional(Schema.Boolean.annotate({ title: 'Closed' })),
+  /** The line runs as one curve through its points rather than as straight segments: a line drawn freehand. */
+  smooth: Schema.optional(Schema.Boolean.annotate({ title: 'Smooth' })),
 }).annotate({ title: 'Polyline' });
 export type PolylineParams = Schema.Schema.Type<typeof PolylineParams>;
 

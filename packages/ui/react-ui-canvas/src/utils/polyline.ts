@@ -6,6 +6,12 @@ import { type Bounds, type Point, type PolylineNode, type Size } from '@dxos/sce
 /** How near a placed vertex a press must be, in screen px, to land on it: on the first, it closes the line. */
 export const VERTEX_SNAP_PX = 8;
 
+/** How far the pointer travels, in screen px, between two samples of a stroke drawn freehand. */
+export const FREEHAND_STEP_PX = 2;
+
+/** How far off its line, in screen px, a sample of a stroke may lie and still be dropped when the stroke lands. */
+export const FREEHAND_TOLERANCE_PX = 1.5;
+
 /** Default vertices of a new polyline, in unit space: a zig-zag across the frame. */
 export const DEFAULT_POLYLINE_POINTS: readonly Point[] = [
   { x: 0, y: 1 },
@@ -122,9 +128,46 @@ export const polylineMidpoints = (vertices: readonly Point[], closed: boolean): 
   });
 };
 
+/** How far `point` is from the line through `from` and `to`, or from `from` where the two are one point. */
+const offLine = (point: Point, from: Point, to: Point): number => {
+  const [dx, dy] = [to.x - from.x, to.y - from.y];
+  const length = Math.hypot(dx, dy);
+  return length === 0
+    ? Math.hypot(point.x - from.x, point.y - from.y)
+    : Math.abs(dy * (point.x - from.x) - dx * (point.y - from.y)) / length;
+};
+
+/**
+ * `points` without those that lie within `tolerance` of the line the rest draw (Ramer-Douglas-Peucker): a stroke
+ * sampled from the pointer has a point every few px, and a line drawn through a tenth of them reads the same, with
+ * few enough vertices to edit. The ends are always kept.
+ */
+export const simplifyPath = (points: readonly Point[], tolerance: number): Point[] => {
+  if (points.length <= 2) {
+    return [...points];
+  }
+  const [first, last] = [points[0], points[points.length - 1]];
+  const { index, distance } = points.slice(1, -1).reduce(
+    (furthest, point, offset) => {
+      const distance = offLine(point, first, last);
+      return distance > furthest.distance ? { index: offset + 1, distance } : furthest;
+    },
+    { index: 0, distance: 0 },
+  );
+  if (distance <= tolerance) {
+    return [first, last];
+  }
+  return [
+    ...simplifyPath(points.slice(0, index + 1), tolerance).slice(0, -1),
+    ...simplifyPath(points.slice(index), tolerance),
+  ];
+};
+
 export type PolylinePathOptions = {
   /** Joins the last vertex back to the first. */
   closed?: boolean;
+  /** The line is one curve through the vertices (a Catmull-Rom spline) rather than straight segments. */
+  smooth?: boolean;
   /** Px kept inside the frame, so a stroke twice that wide stays within it. */
   inset?: number;
   /** Px each corner is rounded by, no larger than half of either adjacent edge allows. */
@@ -166,7 +209,7 @@ const corner = (from: Point, vertex: Point, to: Point, radius: number): Corner =
 export const polylinePath = (
   size: Size,
   points: readonly Point[],
-  { closed = false, inset = 0, radius = 0 }: PolylinePathOptions = {},
+  { closed = false, smooth = false, inset = 0, radius = 0 }: PolylinePathOptions = {},
 ): string => {
   const width = Math.max(0, size.width - 2 * inset);
   const height = Math.max(0, size.height - 2 * inset);
@@ -187,6 +230,25 @@ export const polylinePath = (
   const at = ({ x, y }: Point) => `${round(x)} ${round(y)}`;
   const count = placed.length;
   const shut = closed && count > 2;
+  if (smooth && count > 2) {
+    // Each span is a cubic whose handles follow the chord of its neighbours, so the curve passes through every
+    // vertex and leaves it the way it came in. An open line's ends have one neighbour, which stands in for both.
+    const vertex = (index: number) => placed[shut ? (index + count) % count : Math.min(Math.max(index, 0), count - 1)];
+    // A handle is held inside the frame, which is only as large as the vertices: a curve lies within its handles, so
+    // it then never bulges past the frame, where it would be cut off.
+    const within = ({ x, y }: Point): Point => ({
+      x: Math.min(Math.max(x, inset), inset + width),
+      y: Math.min(Math.max(y, inset), inset + height),
+    });
+    const span = (index: number) => {
+      const [before, from, to, after] = [vertex(index - 1), vertex(index), vertex(index + 1), vertex(index + 2)];
+      const first = within({ x: from.x + (to.x - before.x) / 6, y: from.y + (to.y - before.y) / 6 });
+      const second = within({ x: to.x - (after.x - from.x) / 6, y: to.y - (after.y - from.y) / 6 });
+      return `C ${at(first)}, ${at(second)}, ${at(to)}`;
+    };
+    const spans = Array.from({ length: shut ? count : count - 1 }, (_, index) => span(index));
+    return [`M ${at(placed[0])}`, ...spans, ...(shut ? ['Z'] : [])].join(' ');
+  }
   const corners: Corner[] = placed.map((vertex, index) => {
     const inner = shut || (index > 0 && index < count - 1);
     return radius > 0 && inner

@@ -220,6 +220,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
         ? polylinePath(node.size, node.points, {
             inset,
             closed: node.params?.closed,
+            smooth: node.params?.smooth,
             radius,
           })
         : '',
@@ -230,6 +231,22 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     parts: [{ field: 'label' }],
     resizable: true,
     minSize: { width: 12, height: 12 },
+  },
+  // A tool rather than a type of its own: the stroke it draws is a polyline, run as a curve through its points.
+  freehand: {
+    name: 'Free draw',
+    icon: 'ph--scribble--regular',
+    key: 'S',
+    schema: PolylineNode,
+    component: PolylineNodeView,
+    create: (props) => createNode({ type: 'polyline', ...props }),
+    createFromPoints: (props, points) => ({
+      ...createNode({ type: 'polyline', ...props }),
+      points: [...points],
+      params: { smooth: true },
+    }),
+    freehand: true,
+    defaultSize: NOMINAL_SIZES.polyline,
   },
   // Dragged out round the shapes it is to hold, which it takes as it lands; Enclose makes one round a selection.
   hull: {

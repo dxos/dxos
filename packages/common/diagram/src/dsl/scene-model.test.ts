@@ -86,9 +86,9 @@ describe('composite statements', () => {
     expect(printScenes(document)).toBe(COMPOSITE);
   });
 
-  test("a 2D element's text size is read into its style and printed back, beside its other look", () => {
+  test("a 2D element's text size and alignment are read into its style and printed back, beside its other look", () => {
     const source = `composite c {
-  element title note "Card" @ 0,0 size=100x24 fontSize=18 constrain=stretch,min
+  element title note "Card" @ 0,0 size=100x24 fontSize=18 alignVertical=middle constrain=stretch,min
   element tag note "New" @ 0,30 size=100x24 fontSize=14 rounded=true
   element plain note "Body" @ 0,60 size=100x24
 }
@@ -96,7 +96,13 @@ describe('composite statements', () => {
     const { document, problems } = readScenes(source);
     expect(problems).toEqual([]);
     const parts = document.layouts.find((layout) => layout.id === 'c');
-    expect(parts?.elements.title?.overrides).toEqual({ fontSize: 18 });
+    expect(parts?.elements.title?.overrides).toEqual({ fontSize: 18, alignVertical: 'middle' });
+    // A word that is no alignment is reported, and not stored.
+    const bad = readScenes('composite d {\n  element a note "A" @ 0,0 size=10x10 alignVertical=centre\n}\n');
+    expect(bad.problems.map((problem) => problem.message)).toEqual([
+      'alignVertical must be one of top, middle, bottom.',
+    ]);
+    expect(bad.document.layouts.find((layout) => layout.id === 'd')?.elements.a?.overrides).toBeUndefined();
     expect(parts?.elements.tag?.overrides).toMatchObject({ fontSize: 14, rounded: true });
     // Not a field of the element's own: it is the style's, as it is set from the Properties panel.
     expect(parts?.elements.title?.props).toBeUndefined();

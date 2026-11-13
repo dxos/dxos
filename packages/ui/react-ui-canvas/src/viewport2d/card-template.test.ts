@@ -78,6 +78,9 @@ describe('the card template', () => {
     const { nodes } = composite();
     const sizes = Object.fromEntries(['icon', 'title', 'body', 'footer'].map((id) => [id, nodes[id]?.style?.fontSize]));
     expect(sizes).toEqual({ icon: 24, title: 18, body: 16, footer: 14 });
+    // The title is a line beside the glyph, so it sits at the glyph's middle rather than at its top.
+    expect(nodes.title?.style?.alignVertical).toBe('middle');
+    expect(nodes.body?.style?.alignVertical).toBeUndefined();
     // The frame and the hairline have no text.
     expect([nodes.frame?.style?.fontSize, nodes.rule?.style?.fontSize]).toEqual([undefined, undefined]);
   });

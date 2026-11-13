@@ -76,6 +76,11 @@ export type Drag =
    * `to` the pointer, where the next segment runs. It outlasts each press, ending when the line is finished or dropped.
    */
   | { kind: 'vertices'; type: NodeType; points: Point[]; to: Point }
+  /**
+   * Drawing a node in one stroke (`NodeDef.freehand`): `points` are the pointer's path since the press, in scene
+   * coordinates. It ends with the press, when the stroke lands as a node.
+   */
+  | { kind: 'freehand'; type: NodeType; points: Point[] }
   /** Moving one vertex of a node in vertex edit mode; `points` are all its vertices, in scene coordinates. */
   | { kind: 'vertex'; id: NodeId; index: number; points: Point[] }
   /** Moving one control point of a spline; `points` is the transient list. */

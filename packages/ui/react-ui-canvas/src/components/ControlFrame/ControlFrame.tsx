@@ -380,6 +380,17 @@ export const ControlFrame = memo(
           />
         )}
         {drag?.kind === 'vertices' && <VertexBand drag={drag} unit={unit} />}
+        {/* A stroke being drawn freehand: the pointer's path so far, which is the line that will land. */}
+        {drag?.kind === 'freehand' && (
+          <polyline
+            data-testid='freehand-stroke'
+            points={drag.points.map(({ x, y }) => `${x},${y}`).join(' ')}
+            className='fill-none stroke-focus pointer-events-none'
+            strokeWidth={2 * unit}
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+        )}
         {marquee && (
           <rect
             x={marquee.x}

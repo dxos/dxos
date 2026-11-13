@@ -490,6 +490,90 @@ export const Polyline: Story = {
   },
 };
 
+/** The strokes drawn freehand on the canvas, as drawn. */
+const strokes = (root: HTMLElement) => [
+  ...root.querySelectorAll('[data-testid="scene-view"] [data-node-id^="freehand-"]'),
+];
+
+/**
+ * The free draw tool (S) draws a line in one stroke: press, drag, release. The stroke lands as a polyline run as a
+ * curve through a few of the points the pointer passed, and the tool stays in hand for the next stroke.
+ */
+export const FreeDraw: Story = {
+  args: { depth: 0, liveDepth: 1 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view');
+    const rect = view.getBoundingClientRect();
+    const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const at = ([dx, dy]: readonly [number, number]) => ({
+      clientX: center.x + dx,
+      clientY: center.y + dy,
+      button: 0,
+      pointerId: 1,
+    });
+    // An arch sampled every few px, as a pointer reports a stroke.
+    const arch = (left: number, top: number): [number, number][] =>
+      Array.from({ length: 41 }, (_, index) => [left + index * 6, top - 80 * Math.sin((index / 40) * Math.PI)]);
+    const drag = async (target: Element, path: readonly [number, number][]) => {
+      await fireEvent.pointerDown(target, at(path[0]));
+      for (const point of path.slice(1)) {
+        await fireEvent.pointerMove(view, at(point));
+      }
+    };
+    const release = (path: readonly [number, number][]) => fireEvent.pointerUp(view, at(path[path.length - 1]));
+
+    // 1. While the button is down the stroke is drawn as it goes; released, it lands as one line.
+    view.focus();
+    await userEvent.keyboard('s');
+    const first = arch(-240, -120);
+    await drag(view, first);
+    await expect(await canvas.findByTestId('freehand-stroke')).toBeInTheDocument();
+    await release(first);
+    await waitFor(() => expect(strokes(canvasElement)).toHaveLength(1));
+    await expect(canvas.queryByTestId('freehand-stroke')).toBeNull();
+
+    // 2. It is a curve through far fewer points than were sampled.
+    // The outline is painted through a mask, whose image is the line's path.
+    const mask = strokes(canvasElement)[0].querySelector<HTMLElement>('[style*="mask-image"]')?.style.maskImage ?? '';
+    const curve = decodeURIComponent(mask).match(/ d='([^']+)'/)?.[1] ?? '';
+    const spans = curve.match(/C /g)?.length ?? 0;
+    await expect(spans).toBeGreaterThan(1);
+    await expect(spans).toBeLessThan(first.length / 2);
+    await expect(curve).not.toContain(' L ');
+
+    // 3. The tool stays in hand and nothing is selected, so the next stroke needs no key.
+    await expect(canvas.queryByRole('switch', { name: 'Smooth' })).toBeNull();
+    const second = arch(-240, 80);
+    await drag(view, second);
+    await release(second);
+    await waitFor(() => expect(strokes(canvasElement)).toHaveLength(2));
+
+    // 4. A stroke begun on a shape is drawn over it; the shape is not picked up.
+    const [under] = strokes(canvasElement);
+    const start = under.getBoundingClientRect();
+    const over = arch(start.left + start.width / 2 - center.x, start.top + start.height / 2 - center.y + 30);
+    await drag(under, over);
+    await release(over);
+    await waitFor(() => expect(strokes(canvasElement)).toHaveLength(3));
+    await expect(under.getBoundingClientRect().left).toBe(start.left);
+
+    // 5. A press with no travel makes nothing.
+    await drag(view, [[200, 200]]);
+    await release([[200, 200]]);
+    await expect(strokes(canvasElement)).toHaveLength(3);
+
+    // 6. With the select tool, a stroke is a polyline whose Smooth setting is on.
+    view.focus();
+    await userEvent.keyboard('v');
+    const picked = strokes(canvasElement)[1];
+    await fireEvent.pointerDown(picked, { ...centreOf(picked), button: 0, pointerId: 1 });
+    await fireEvent.pointerUp(view, { ...centreOf(picked), button: 0, pointerId: 1 });
+    await waitFor(() => expect(canvas.getByRole('switch', { name: 'Smooth' })).toBeChecked());
+    await expect(canvas.getByRole('switch', { name: 'Closed' })).not.toBeChecked();
+  },
+};
+
 /** The vertex handles of the polyline in vertex edit mode. */
 const vertexHandles = (root: HTMLElement) => [...root.querySelectorAll('[data-testid="vertex-handle"]')];
 

@@ -95,6 +95,7 @@ export const Default: Story = {};
  * 1. Both cards draw their title, body and footer.
  * 2. Each text part is drawn at its own size: the title 18 px, the body 16, the footer 14.
  * 3. The glyph is 24 px, the size of the two cells it stands in.
+ * 4. The title is centred on the glyph's middle.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -118,5 +119,12 @@ export const Test: Story = {
     const glyph = (await drawn('authored')).querySelector('[data-part="icon"] svg');
     await expect(glyph).not.toBeNull();
     await expect([glyph?.clientWidth, glyph?.clientHeight]).toEqual([24, 24]);
+
+    // The title's line of text sits at the glyph's middle, not at the top of its cell.
+    const middle = ({ top, height }: DOMRect) => top + height / 2;
+    const line = document.createRange();
+    line.selectNodeContents(authored.getByText('The Card'));
+    const offset = middle(line.getBoundingClientRect()) - middle(glyph?.getBoundingClientRect() ?? new DOMRect());
+    await expect(Math.abs(offset)).toBeLessThan(0.75);
   },
 };
