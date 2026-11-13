@@ -1,8 +1,5 @@
 ---
 '@dxos/plugin-markdown': patch
-'@dxos/plugin-sheet': patch
-'@dxos/plugin-presenter': patch
-'@dxos/plugin-illustrator': patch
 '@dxos/app-toolkit': patch
 ---
 
