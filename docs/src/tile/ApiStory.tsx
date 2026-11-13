@@ -274,7 +274,7 @@ export const ApiStory = ({ id }: ApiStoryProps) => {
             classNames={
               story.parameters?.layout === 'fullscreen'
                 ? 'h-full'
-                : 'h-full grid [place-items:safe_center] overflow-auto dx-base-surface'
+                : 'h-full grid [place-items:safe_center] overflow-auto'
             }
           />
         )

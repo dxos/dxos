@@ -23,4 +23,9 @@ const { id, height = '28rem' } = Astro.props;
     border-radius: var(--c-radius);
     overflow: hidden;
   }
+
+  /* Storybook's frames (the size rows, the centred and column layouts) show the page through; components keep their surfaces. */
+  .api-story :global(:is([data-testid^='size-'], .dx-deck-surface, .fixed.inset-0 > .dx-base-surface)) {
+    background: transparent;
+  }
 </style>
