@@ -71,6 +71,7 @@
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",
+    "@dxos/plugin-dev-shell": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-higgsfield": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",

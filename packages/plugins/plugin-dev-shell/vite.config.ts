@@ -13,6 +13,7 @@ export default defineConfig({
     'shell': 'src/shell/index.ts',
     // Node-only: mounts the route in a vite dev server. Never reachable from a browser bundle.
     'vite-plugin': 'src/vite-plugin/index.ts',
+    'ComposerPluginTemplate': 'src/ComposerPluginTemplate.ts',
     'DevShellOperation': 'src/types/DevShellOperation.ts',
     'types': 'src/types/index.ts',
   },

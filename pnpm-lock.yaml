@@ -22776,6 +22776,9 @@ importers:
       '@dxos/plugin-debug':
         specifier: workspace:*
         version: link:../../plugins/plugin-debug
+      '@dxos/plugin-dev-shell':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-dev-shell
       '@dxos/plugin-game':
         specifier: workspace:*
         version: link:../../plugins/plugin-game
@@ -27649,6 +27652,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../packages/common/log
+      '@dxos/plugin-dev-shell':
+        specifier: workspace:*
+        version: link:../../packages/plugins/plugin-dev-shell
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui

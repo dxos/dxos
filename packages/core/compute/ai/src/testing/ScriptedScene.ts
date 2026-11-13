@@ -12,7 +12,7 @@ import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
 /**
  * A scripted model written as the conversations it plays. Each conversation is one thread's dialogue: `user` turns are
  * matched against the thread's prompts, `tool` turns against what a tool returned, and `assistant` turns are what the
- * model sends back. Conversations keep their own place, so an agent and the subagents it starts run at once against one
+ * model sends back; a `system` turn reads the system prompt, e.g. to capture what the harness put there. Conversations keep their own place, so an agent and the subagents it starts run at once against one
  * model.
  *
  * A pattern is a substring, a RegExp (whose named groups are captured), or a template string with placeholders —
@@ -28,7 +28,7 @@ export const toolCall = ScriptedLanguageModel.toolCall;
 export type Pattern = string | RegExp;
 
 export type Turn =
-  | { readonly role: 'user' | 'tool'; readonly pattern: Pattern }
+  | { readonly role: 'user' | 'tool' | 'system'; readonly pattern: Pattern }
   | {
       readonly role: 'assistant';
       readonly parts: readonly ScriptedLanguageModel.ScriptedPart[];
@@ -200,7 +200,7 @@ export const generated = (
   generate: ScriptedLanguageModel.ScriptedTurnGenerator,
 ): Generated => ({ name, prompt, generate });
 
-export function turn(role: 'user' | 'tool', pattern: Pattern): Turn;
+export function turn(role: 'user' | 'tool' | 'system', pattern: Pattern): Turn;
 export function turn(
   role: 'assistant',
   parts: readonly ScriptedLanguageModel.ScriptedPart[],
@@ -262,7 +262,7 @@ const lastToolResult = ({ prompt }: ScriptedLanguageModel.ScriptedRequest): stri
 // Player.
 //
 
-type MatchedTurn = { readonly role: 'user' | 'tool'; readonly match: Matcher; readonly pattern: string };
+type MatchedTurn = { readonly role: 'user' | 'tool' | 'system'; readonly match: Matcher; readonly pattern: string };
 
 /** A pattern as its author wrote it, placeholders shown by name, for errors. */
 const describe = (pattern: Pattern): string =>
@@ -300,7 +300,7 @@ type Step =
 
 type Mismatch = {
   readonly turn: number;
-  readonly role: 'user' | 'tool';
+  readonly role: 'user' | 'tool' | 'system';
   readonly pattern: string;
   readonly value: string;
 };
@@ -308,7 +308,7 @@ type Mismatch = {
 /** Exactly what failed to match: the turn, its pattern as written, and the text it was tested against. */
 const mismatchReport = (conversation: string, { turn, role, pattern, value }: Mismatch): string =>
   [
-    `Conversation "${conversation}", turn ${turn} (${role}): the ${role === 'user' ? 'prompt' : 'tool result'} did not match.`,
+    `Conversation "${conversation}", turn ${turn} (${role}): the ${role === 'user' ? 'prompt' : role === 'system' ? 'system prompt' : 'tool result'} did not match.`,
     `  expected: ${pattern}`,
     `  got:      ${quote(value)}`,
   ].join('\n');
@@ -346,7 +346,7 @@ export const play = ({
     const captured: Record<string, string> = {};
     let opened = false;
     for (let next = turns[cursor]; next !== undefined && next.role !== 'assistant'; next = turns[cursor]) {
-      const value = next.role === 'user' ? prompt : lastToolResult(request);
+      const value = next.role === 'user' ? prompt : next.role === 'system' ? request.system : lastToolResult(request);
       const found = next.match(value);
       if (found === undefined) {
         return { mismatch: { turn: cursor + 1, role: next.role, pattern: next.pattern, value } };

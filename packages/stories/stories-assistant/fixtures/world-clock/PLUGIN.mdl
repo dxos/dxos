@@ -1,0 +1,63 @@
+---
+id: org.example.plugin.worldClock
+name: WorldClockPlugin
+version: 0.1.0
+---
+
+A world clock for each space: a map with a pin per timezone above a row of ticking clocks. Written by an agent
+from the Composer Plugin project template, built in a sandbox and published to its author's private registry.
+
+## Extensions
+
+| Term        | URI                          |
+|-------------|------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+
+## Types
+
+```mdl
+type Zone
+  fields:
+    timezone: string
+    lat: number
+    lng: number
+```
+
+```mdl
+type Clock
+  fields:
+    zones: Zone[]
+```
+
+## Components
+
+```mdl
+component ClocksArticle
+  desc: The Clocks page under the space's WORLD CLOCK group.
+  props:
+    clock?: Clock
+  slots:
+    map: World
+  actions:
+    addZone(timezone: string)
+    removeZone(timezone: string)
+    selectZone(timezone: string)
+```
+
+## Features
+
+```mdl
+feat F-1: World Clock
+
+  req F-1.1: Each space's navtree holds a WORLD CLOCK group with a Clocks page under it.
+  req F-1.2: The page shows the map with a pin per clock above a row of clocks sorted west to east.
+  req F-1.3: Each clock shows the date and the 24-hour time, ticking every second, and its timezone.
+  req F-1.4:
+    when: the reader picks a timezone from the plus card's form
+    then: a clock is added and stored on the space's Clock, created on the first change
+  req F-1.5:
+    when: the reader clicks a clock
+    then: its card and its pin on the map are selected
+```

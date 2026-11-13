@@ -146,4 +146,26 @@ describe('ScriptedScene', () => {
     expect(reply).toMatchObject({ parts: [{ _tag: 'text', text: 'thread-a and thread-b' }] });
     expect(play(request(user('echo hello')), 2)).toMatchObject({ parts: [{ _tag: 'text', text: 'call 2: hello' }] });
   });
+
+  test('captures from the system prompt with a system turn', ({ expect }) => {
+    const play = ScriptedScene.play(
+      ScriptedScene.make([
+        ScriptedScene.conversation('checklist', [
+          ScriptedScene.turn('user', 'Build.'),
+          ScriptedScene.turn('system', `1. [ ] Write it\n   (ref: [AB12](${ScriptedScene.objectId('task')}))`),
+          ScriptedScene.turn('assistant', [ScriptedScene.text(`Starting ${ScriptedScene.objectId('task')}.`)]),
+        ]),
+      ]),
+    );
+    const reply = play(
+      {
+        system: `Your checklist:\n1. [ ] Write it\n   (ref: [AB12](${OBJECT}))`,
+        text: '',
+        prompt: Prompt.make([user('Build.')]),
+        tools: [],
+      },
+      0,
+    );
+    expect(reply).toMatchObject({ parts: [{ _tag: 'text', text: `Starting ${OBJECT}.` }] });
+  });
 });

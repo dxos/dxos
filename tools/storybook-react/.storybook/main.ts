@@ -609,6 +609,16 @@ export const createConfig = ({
             },
           },
 
+          // Dev Shell's shell route, so a story's agent runs bash and edits on this machine as composer-app's dev server
+          // lets it. Rooted at the Composer app, the directory the Composer Plugin template's commands start in. Dev only:
+          // it runs arbitrary scripts, so no build mounts it, nor a test run unless it opts into manual tests. Imported
+          // dynamically, as the package is ESM-only.
+          options.configType !== 'PRODUCTION' &&
+            (!isVitestRun || isTrue(process.env.DX_RUN_MANUAL_TESTS)) &&
+            import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) =>
+              DevShellVitePlugin({ root: resolve(rootDir, 'packages/apps/composer-app'), agentHost: false }),
+            ),
+
           IconsPlugin({
             // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
             symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
