@@ -75,6 +75,15 @@ const ResolveRegistryHandler = ResolveRegistry.pipe(
   ),
 );
 
+/** An operation hidden from agents, so the registry an invocation is given must not hold its record. */
+export const Hidden = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.hidden'), name: 'Hidden', skipRegistry: true },
+  input: Schema.Struct({}),
+  output: Schema.Struct({}),
+});
+
+const HiddenHandler = Hidden.pipe(Operation.withHandler(() => Effect.succeed({})));
+
 /** A trace event {@link Inspect} writes. */
 export const InspectEvent = Trace.EventType('hostTest.inspect', {
   schema: Schema.Struct({ note: Schema.String }),
@@ -275,6 +284,7 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
             AdoptHandler,
             FailsHandler,
             ResolveRegistryHandler,
+            HiddenHandler,
           ),
         ),
       ),

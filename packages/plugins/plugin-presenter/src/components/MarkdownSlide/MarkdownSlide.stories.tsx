@@ -4,12 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type LayoutName } from '#markdown';
 
+import { query, slide } from '../../testing/slideStory.tsx';
 import { Slide } from '../Slide/index.ts';
 import { MarkdownSlide, type MarkdownSlideProps } from './MarkdownSlide.tsx';
 
@@ -40,29 +41,6 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
-
-const slide = (frontmatter: Record<string, string | number>, ...body: string[]) =>
-  [
-    '---',
-    ...Object.entries(frontmatter).map(
-      ([key, value]) => `${key}: ${typeof value === 'string' ? JSON.stringify(value) : value}`,
-    ),
-    '---',
-    '',
-    ...body,
-  ].join('\n');
-
-const query = (canvasElement: HTMLElement, selector: string, timeout = 1_000) =>
-  waitFor(
-    () => {
-      const element = canvasElement.querySelector(selector);
-      if (!element) {
-        throw new Error(`Missing ${selector}`);
-      }
-      return element;
-    },
-    { timeout },
-  );
 
 /** A story asserting that `selector` (scoped to the layout root) contains `text`. */
 const layoutStory = (layout: LayoutName, content: string, selector: string, text: string): Story => ({
