@@ -1,0 +1,446 @@
+{
+  "id": "architecture",
+  "title": "Architecture",
+  "subtitle": "The worker mirrors the EDGE: same shape, a subset of its services",
+  "page": {
+    "w": 1600,
+    "h": 900
+  },
+  "size": {
+    "w": 592,
+    "h": 104
+  },
+  "nodes": {
+    "c-plugins": {
+      "cx": 376,
+      "cy": 224,
+      "w": 592,
+      "h": 104,
+      "variant": "compact",
+      "icon": "puzzle-piece",
+      "title": "Plugins",
+      "tag": "tab",
+      "body": "Surfaces, operations and skills in each app tab.",
+      "footer": "navtree · markdown · assistant · +100"
+    },
+    "c-halo": {
+      "cx": 376,
+      "cy": 362.3469387755102,
+      "w": 592,
+      "h": 112.6938775510204,
+      "variant": "compact",
+      "icon": "vault",
+      "title": "HALO Vault",
+      "tone": "accent",
+      "body": "Keys and credentials for this device and its agents.",
+      "footer": "keyring · identity"
+    },
+    "c-runtime": {
+      "cx": 376,
+      "cy": 486.0163265306123,
+      "w": 592,
+      "h": 110.64489795918368,
+      "variant": "compact",
+      "icon": "cpu",
+      "title": "Runtime",
+      "body": "Effect service layers, shared by every tab.",
+      "footer": "WorkerRuntime"
+    },
+    "c-services": {
+      "cx": 376,
+      "cy": 636.3224489795919,
+      "w": 592,
+      "h": 165.9673469387755,
+      "variant": "compact",
+      "icon": "stack",
+      "title": "Client services",
+      "chips": {
+        "items": [
+          {
+            "icon": "database",
+            "label": "ECHO",
+            "ghost": false,
+            "tone": "accent"
+          },
+          {
+            "icon": "sparkle",
+            "label": "AI",
+            "ghost": false,
+            "tone": "accent"
+          },
+          {
+            "icon": "user-circle",
+            "label": "Identity",
+            "ghost": false,
+            "tone": "accent"
+          },
+          {
+            "icon": "files",
+            "label": "Blobs",
+            "ghost": false,
+            "tone": "accent"
+          },
+          {
+            "icon": "robot",
+            "label": "Agents",
+            "ghost": false,
+            "tone": "accent"
+          },
+          {
+            "icon": "video-camera",
+            "label": "Calls",
+            "ghost": true,
+            "tone": null
+          },
+          {
+            "icon": "waveform",
+            "label": "Transcription",
+            "ghost": true,
+            "tone": null
+          },
+          {
+            "icon": "cube",
+            "label": "Sandbox",
+            "ghost": true,
+            "tone": null
+          }
+        ]
+      },
+      "footer": "client-protocol · RPC from every tab"
+    },
+    "c-spaces": {
+      "cx": 376,
+      "cy": 787.6530612244898,
+      "w": 592,
+      "h": 112.6938775510204,
+      "variant": "compact",
+      "icon": "cube",
+      "title": "Spaces",
+      "body": "A local replica of every space, in SQLite on OPFS.",
+      "footer": "EchoHost · SpaceManager"
+    },
+    "e-plugins": {
+      "cx": 1224,
+      "cy": 224,
+      "w": 592,
+      "h": 104,
+      "variant": "compact",
+      "icon": "puzzle-piece",
+      "title": "Plugins",
+      "tag": "edge",
+      "body": "Plugin services that run next to the data.",
+      "footer": "layerSpec · workerd"
+    },
+    "e-halo": {
+      "cx": 1224,
+      "cy": 362.3469387755102,
+      "w": 592,
+      "h": 112.6938775510204,
+      "variant": "compact",
+      "icon": "shield-check",
+      "title": "HALO",
+      "tone": "accent",
+      "body": "Credential chains and membership, checked on every request.",
+      "footer": "identity · kms · state machine"
+    },
+    "e-runtime": {
+      "cx": 1224,
+      "cy": 486.0163265306123,
+      "w": 592,
+      "h": 110.64489795918368,
+      "variant": "compact",
+      "icon": "plugs-connected",
+      "title": "Plugin Manager",
+      "body": "Loads plugin services and runs them per space.",
+      "footer": "Workers · service bindings"
+    },
+    "e-services": {
+      "cx": 1224,
+      "cy": 636.3224489795919,
+      "w": 592,
+      "h": 165.9673469387755,
+      "variant": "compact",
+      "icon": "stack",
+      "title": "EDGE services",
+      "chips": {
+        "items": [
+          {
+            "icon": "database",
+            "label": "ECHO",
+            "ghost": false,
+            "tone": "accent"
+          },
+          {
+            "icon": "sparkle",
+            "label": "AI",
+            "ghost": false,
+            "tone": "accent"
+          },
+          {
+            "icon": "user-circle",
+            "label": "Identity",
+            "ghost": false,
+            "tone": "accent"
+          },
+          {
+            "icon": "files",
+            "label": "Blobs",
+            "ghost": false,
+            "tone": "accent"
+          },
+          {
+            "icon": "robot",
+            "label": "Agents",
+            "ghost": false,
+            "tone": "accent"
+          },
+          {
+            "icon": "video-camera",
+            "label": "Calls",
+            "ghost": false,
+            "tone": null
+          },
+          {
+            "icon": "waveform",
+            "label": "Transcription",
+            "ghost": false,
+            "tone": null
+          },
+          {
+            "icon": "cube",
+            "label": "Sandbox",
+            "ghost": false,
+            "tone": null
+          }
+        ]
+      },
+      "footer": "db · ai · calls · transcription · sandbox"
+    },
+    "e-spaces": {
+      "cx": 1224,
+      "cy": 787.6530612244898,
+      "w": 592,
+      "h": 112.6938775510204,
+      "variant": "compact",
+      "icon": "cube",
+      "title": "Space",
+      "body": "One Durable Object group per space.",
+      "footer": "replicator · indexer · feeds · scheduler"
+    },
+    "router": {
+      "cx": 800,
+      "cy": 575,
+      "w": 168,
+      "h": 537.9999999999999,
+      "variant": "compact",
+      "icon": "arrows-left-right",
+      "title": "Router",
+      "tone": "ink",
+      "footer": "RouterObject DO"
+    }
+  },
+  "edges": [
+    [
+      "c-halo",
+      "router",
+      "",
+      {
+        "arrow": "both"
+      }
+    ],
+    [
+      "router",
+      "e-halo",
+      "",
+      {
+        "arrow": "both"
+      }
+    ],
+    [
+      "c-runtime",
+      "router",
+      "",
+      {
+        "arrow": "both"
+      }
+    ],
+    [
+      "router",
+      "e-runtime",
+      "",
+      {
+        "arrow": "both"
+      }
+    ],
+    [
+      "c-services",
+      "router",
+      "",
+      {
+        "arrow": "both"
+      }
+    ],
+    [
+      "router",
+      "e-services",
+      "",
+      {
+        "arrow": "both"
+      }
+    ],
+    [
+      "c-spaces",
+      "router",
+      "",
+      {
+        "arrow": "both"
+      }
+    ],
+    [
+      "router",
+      "e-spaces",
+      "",
+      {
+        "arrow": "both"
+      }
+    ],
+    [
+      "c-plugins",
+      "e-plugins",
+      "",
+      {
+        "dash": true,
+        "arrow": "both"
+      }
+    ]
+  ],
+  "frames": [
+    {
+      "id": "client-col",
+      "x": 60,
+      "w": 632,
+      "y": 128,
+      "h": 728,
+      "label": "Client · app tab + shared worker"
+    },
+    {
+      "id": "edge-col",
+      "x": 908,
+      "w": 632,
+      "y": 128,
+      "h": 728,
+      "label": "EDGE · Workers + Durable Objects"
+    },
+    {
+      "id": "client-bracket",
+      "x": 70,
+      "y": 280,
+      "w": 612,
+      "h": 569.9999999999999,
+      "label": "Worker · shared by every tab"
+    },
+    {
+      "id": "edge-bracket",
+      "x": 918,
+      "y": 280,
+      "w": 612,
+      "h": 569.9999999999999,
+      "label": "EDGE worker · per identity and space"
+    }
+  ],
+  "texts": [
+    {
+      "id": "l-halo",
+      "x": 726,
+      "y": 369.3469387755102,
+      "w": 148,
+      "h": 18,
+      "text": "credentials",
+      "role": "link-label",
+      "align": "center",
+      "for": ["c-halo-router", "router-e-halo"]
+    },
+    {
+      "id": "l-runtime",
+      "x": 726,
+      "y": 477.0163265306123,
+      "w": 148,
+      "h": 18,
+      "text": "activation",
+      "role": "link-label",
+      "align": "center",
+      "for": ["c-runtime-router", "router-e-runtime"]
+    },
+    {
+      "id": "l-services",
+      "x": 726,
+      "y": 627.3224489795919,
+      "w": 148,
+      "h": 18,
+      "text": "RPC",
+      "role": "link-label",
+      "align": "center",
+      "for": ["c-services-router", "router-e-services"]
+    },
+    {
+      "id": "l-spaces",
+      "x": 726,
+      "y": 778.6530612244898,
+      "w": 148,
+      "h": 18,
+      "text": "sync",
+      "role": "link-label",
+      "align": "center",
+      "for": ["c-spaces-router", "router-e-spaces"]
+    },
+    {
+      "id": "l-plugins",
+      "x": 715,
+      "y": 201,
+      "w": 170,
+      "h": 18,
+      "text": "one plugin, two halves",
+      "role": "link-label",
+      "align": "center",
+      "for": ["c-plugins-e-plugins"]
+    },
+    {
+      "id": "footnote",
+      "x": 60,
+      "y": 864,
+      "w": 1480,
+      "h": 30,
+      "text": "Outlined services run only at the EDGE; the worker reaches them through the router.",
+      "role": "note"
+    }
+  ],
+  "layout": [
+    {
+      "id": "client-rows",
+      "kind": "stack",
+      "x": 60,
+      "w": 632,
+      "y": 128,
+      "h": 728,
+      "rows": [1, 1, 1, 1, 1],
+      "heights": [104, 110, 108, 162, 110],
+      "gap": 12
+    },
+    {
+      "id": "edge-rows",
+      "kind": "stack",
+      "x": 908,
+      "w": 632,
+      "y": 128,
+      "h": 728,
+      "rows": [1, 1, 1, 1, 1],
+      "heights": [104, 110, 108, 162, 110],
+      "gap": 12
+    }
+  ],
+  "controls": {
+    "ghosts": true,
+    "labels": true,
+    "footers": true
+  }
+}

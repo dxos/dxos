@@ -20,8 +20,11 @@
   --sd-line: light-dark(hsl(220 14% 80%), hsl(220 10% 27%));
   --sd-accent: light-dark(#2d6fff, #06c5fd);
   --sd-lo: light-dark(hsl(220 22% 57% / 0.32), hsl(220 20% 3% / 0.7));
-  --sd-raised-sm: light-dark(2.8px 2.8px 8px, 2.5px 2.5px 7px) var(--sd-lo);
-  --sd-inset-sm: inset light-dark(2.8px 2.8px 8px, 2.5px 2.5px 7px) var(--sd-lo);
+  /* `light-dark()` takes two COLOURS; a list of lengths in it makes the whole `box-shadow` invalid, which left every
+     card flat and took the tone outline with it, since the two share one declaration. The offsets are therefore
+     fixed and only the colour switches — which is the part that has to. */
+  --sd-raised-sm: 2.8px 2.8px 8px var(--sd-lo);
+  --sd-inset-sm: inset 2.8px 2.8px 8px var(--sd-lo);
 
   /* Object types (Studio ROLES), which a card names through `tone`; the same in both modes. */
   --sd-t-event: #d83eff;
@@ -47,8 +50,16 @@
     inset 0 0 0 2px var(--sd-tone);
 }
 
+/* The glyph is the card's colour: its own tone where it has one, the deck's accent otherwise — a muted glyph read
+   as disabled beside a titled card. */
+/* A plain card's title: the framed card's 23px, so the two read as one family. */
+.studio-card-title {
+  font-size: 23px;
+  line-height: 1;
+}
+
 .studio-card-icon {
-  color: var(--sd-tone, var(--sd-muted));
+  color: var(--sd-tone, var(--sd-accent));
 }
 
 .studio-card-body {
@@ -81,8 +92,8 @@
 
 .studio-card-frame .studio-card-body,
 .studio-card-frame [data-part='body'] {
-  font-size: 15px;
-  line-height: 1.3;
+  font-size: 17px;
+  line-height: 1.35;
   color: var(--sd-fg);
 }
 
@@ -94,9 +105,10 @@
   padding-block-start: 8px;
 }
 
+/* As the simple card's glyph: the card's tone where it has one, the deck's accent otherwise. */
 .studio-card-frame [data-part='card-header'] .dx-icon,
 .studio-card-frame [data-scope='icon'] {
-  color: var(--sd-tone, var(--sd-muted));
+  color: var(--sd-tone, var(--sd-accent));
 }
 
 /* A feed block: an inset well, or filled in its mark's tone. */
@@ -108,4 +120,277 @@
 .studio-feed-block[data-marked] {
   background: var(--sd-mark, var(--sd-accent));
   box-shadow: none;
+}
+
+/*
+ * A chip of the deck (`.d-chip`): a pill of icon, label and an optional mono note. Every length here is the slide's
+ * own `cqw` resolved at 1cqw = 16 slide units, which is what a drawing's scene units are, so a chip imported from a
+ * slide is the size the slide drew it.
+ */
+/* The deck's `.d-chips`, with more air down the grid: a row of chips reads as a row, not as a block of them. */
+.studio-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8.8px;
+  row-gap: 16px;
+  align-content: center;
+  /* The deck's `.d-chips.flat` (`margin-block: auto`): the rows take the space the header and footer leave, so what
+     is above the first row is what is below the last. */
+  margin-block: auto;
+}
+
+.studio-chips[data-grid] {
+  display: grid;
+}
+
+.studio-chip {
+  gap: 8px;
+  padding: 6.7px 12.8px;
+  border-radius: 99px;
+  color: var(--sd-fg);
+  background: var(--sd-panel);
+  box-shadow: var(--sd-raised-sm);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.studio-chip[data-flat] {
+  border-radius: 7px;
+  box-shadow: 1px 1px 3px var(--sd-lo);
+}
+
+.studio-chip[data-tone] {
+  box-shadow:
+    var(--sd-raised-sm),
+    inset 0 0 0 1.6px var(--sd-tone);
+}
+
+/* A ghost chip: present elsewhere, not here. */
+.studio-chip[data-ghost] {
+  color: var(--sd-muted);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.6px var(--sd-line);
+  opacity: 0.75;
+}
+
+.studio-chip-icon {
+  color: var(--sd-tone, var(--sd-accent));
+}
+
+.studio-chip[data-ghost] .studio-chip-icon {
+  color: var(--sd-line);
+}
+
+.studio-chip-note {
+  font-size: 13px;
+  color: var(--sd-muted);
+}
+
+/* The standalone chip of the Plugins slide (`.d-chip-fill.lg`): the whole node, centred. */
+.studio-chip[data-large] {
+  width: 100%;
+  justify-content: center;
+  gap: 9.6px;
+  padding: 9.6px 16px;
+  font-size: 23px;
+}
+
+/*
+ * The wireframe pieces a plank and the app frame are drawn from (studio `lib/kit.mjs`, `lib/frame.mjs`): a run of
+ * text as a bar, a column as an inset well, a card as a raised one. Lengths are slide units, as above.
+ */
+.studio-wire-line {
+  height: 9px;
+  border-radius: 3px;
+  background: var(--sd-line);
+}
+
+.studio-wire-line[data-strong] {
+  height: 10px;
+  background: var(--sd-muted);
+}
+
+.studio-wire-col {
+  background: var(--sd-bg);
+  box-shadow: var(--sd-inset-sm);
+}
+
+.studio-wire-card,
+.studio-wire-bubble {
+  background: var(--sd-panel);
+  box-shadow: var(--sd-raised-sm);
+}
+
+.studio-wire-bubble[data-me] {
+  background: var(--sd-accent);
+  box-shadow: none;
+}
+
+.studio-wire-bubble[data-me] .studio-wire-line {
+  background: light-dark(hsl(0 0% 100% / 0.8), hsl(220 10% 12% / 0.65));
+}
+
+.studio-wire-compose {
+  box-shadow: var(--sd-inset-sm);
+}
+
+.studio-wire-cell {
+  background: var(--sd-deep);
+}
+
+.studio-wire-cell[data-head] {
+  background: var(--sd-line);
+}
+
+.studio-wire-cell[data-selected] {
+  box-shadow: inset 0 0 0 1.6px var(--sd-accent);
+}
+
+/* A plank: the kit component under a header of its title and the package it comes from. */
+.studio-plank-header {
+  font-size: 20px;
+  font-weight: 500;
+  border-block-end: 1px solid var(--sd-line);
+}
+
+.studio-plank-package {
+  font-size: 14px;
+  color: var(--sd-muted);
+}
+
+/*
+ * The Composer window of the Composer slide (`.d-frame`): a soft panel of a title bar, three columns and a status
+ * bar. `--sd-hl` is the region's own outline colour, set per pane where the slide highlights it.
+ */
+.studio-frame {
+  color: var(--sd-fg);
+  background: var(--sd-panel);
+  box-shadow: var(--sd-raised-sm);
+}
+
+.studio-frame-bar {
+  border-block-end: 1px solid var(--sd-line);
+}
+
+.studio-frame-foot {
+  border-block-start: 1px solid var(--sd-line);
+}
+
+.studio-frame-dot {
+  background: var(--sd-line);
+}
+
+.studio-frame-heading {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--sd-muted);
+}
+
+.studio-frame-caption {
+  margin-block-end: 6.4px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--sd-muted);
+}
+
+.studio-frame-glyph {
+  color: var(--sd-muted);
+}
+
+.studio-frame-glyph-accent {
+  color: var(--sd-accent);
+}
+
+.studio-frame-pane,
+.studio-frame-doc {
+  border-radius: 8px;
+}
+
+.studio-frame-pane {
+  background: var(--sd-bg);
+}
+
+.studio-frame-object[data-selected] {
+  border-radius: 6.4px;
+  background: var(--sd-deep);
+}
+
+.studio-frame-embed {
+  padding: 9.6px;
+  border-radius: 12.8px;
+  background: var(--sd-bg);
+  box-shadow: var(--sd-inset-sm);
+}
+
+.studio-frame-message {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 11.2px;
+  border-radius: 11.2px;
+  background: var(--sd-panel);
+  box-shadow: var(--sd-raised-sm);
+}
+
+.studio-frame-message[data-me] {
+  background: var(--sd-accent);
+  box-shadow: none;
+}
+
+.studio-frame-message[data-me] .studio-wire-line {
+  background: light-dark(hsl(0 0% 100% / 0.8), hsl(220 10% 12% / 0.65));
+}
+
+.studio-frame-input {
+  padding: 9.6px 11.2px;
+  border-radius: 11.2px;
+  box-shadow: var(--sd-inset-sm);
+}
+
+/* A highlighted region: outlined in the colour of the plugin card that supplies it. */
+.studio-frame [data-highlight] {
+  box-shadow: inset 0 0 0 1.9px var(--sd-hl);
+}
+
+.studio-frame .studio-frame-embed[data-highlight] {
+  box-shadow:
+    var(--sd-inset-sm),
+    inset 0 0 0 1.9px var(--sd-hl);
+}
+
+/* `.d-card.simple`: the EDGE services of the Hyperspace slide. One row of icon and title, with the footer under the
+   title — indented to the title's own column, and with no rule over it, which is what separates it from `full`.
+   The block padding is the deck's less the 3px its own type scale leaves over: a run gives every card one height
+   (64 units here), and the deck's 11.2 would push the footer past it. */
+.studio-card-simple {
+  padding: 4px 19.2px;
+  gap: 0;
+}
+
+/* Nothing in the row compresses: the card is the height its run gives it, and a shrunk line box clips the mono
+   descenders rather than overflowing. */
+.studio-card-simple > * {
+  flex-shrink: 0;
+}
+
+.studio-card-simple [data-part='label'] {
+  font-size: 21.6px;
+  line-height: 1.1;
+}
+
+.studio-card-simple .studio-card-icon {
+  inline-size: 28px;
+  block-size: 28px;
+  margin-inline-end: 12.8px;
+}
+
+/* The line box holds the mono descenders: `truncate` clips to it, so 1.3 cut the tails off `query` and `free/busy`. */
+.studio-card-simple .studio-card-note {
+  margin-inline-start: 43.2px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--sd-muted);
 }

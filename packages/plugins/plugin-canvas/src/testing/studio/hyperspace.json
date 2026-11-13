@@ -1,0 +1,453 @@
+{
+  "id": "hyperspace",
+  "title": "Composer · ECHO Hyperspace · EDGE Services",
+  "page": {
+    "w": 1600,
+    "h": 900
+  },
+  "size": {
+    "w": 300,
+    "h": 60.4
+  },
+  "nodes": {
+    "calendar": {
+      "cx": 1394,
+      "cy": 134.2,
+      "w": 300,
+      "h": 60.4,
+      "variant": "simple",
+      "icon": "calendar-blank",
+      "title": "Calendar",
+      "footer": "events · free/busy",
+      "tone": "var(--t-event)",
+      "type": "event"
+    },
+    "email": {
+      "cx": 1394,
+      "cy": 208.6,
+      "w": 300,
+      "h": 60.4,
+      "variant": "simple",
+      "icon": "envelope",
+      "title": "Email",
+      "footer": "send · receive",
+      "tone": "var(--t-message)",
+      "type": "message"
+    },
+    "storage": {
+      "cx": 1394,
+      "cy": 283,
+      "w": 300,
+      "h": 60.4,
+      "variant": "simple",
+      "icon": "database",
+      "title": "Storage",
+      "footer": "blobs · objects",
+      "tone": "var(--t-file)",
+      "type": "file"
+    },
+    "translation": {
+      "cx": 1394,
+      "cy": 357.40000000000003,
+      "w": 300,
+      "h": 60.4,
+      "variant": "simple",
+      "icon": "translate",
+      "title": "Translation",
+      "footer": "text ↔ locale",
+      "tone": null,
+      "type": null
+    },
+    "search": {
+      "cx": 1394,
+      "cy": 431.8,
+      "w": 300,
+      "h": 60.4,
+      "variant": "simple",
+      "icon": "magnifying-glass",
+      "title": "Search",
+      "footer": "index · query",
+      "tone": null,
+      "type": null
+    },
+    "sql": {
+      "cx": 1394,
+      "cy": 506.2,
+      "w": 300,
+      "h": 60.4,
+      "variant": "simple",
+      "icon": "table",
+      "title": "SQL",
+      "footer": "tables · queries",
+      "tone": null,
+      "type": null
+    },
+    "files": {
+      "cx": 1394,
+      "cy": 580.6000000000001,
+      "w": 300,
+      "h": 60.4,
+      "variant": "simple",
+      "icon": "folder",
+      "title": "Files",
+      "footer": "drives · folders",
+      "tone": null,
+      "type": null
+    },
+    "commerce": {
+      "cx": 1394,
+      "cy": 655.0000000000001,
+      "w": 300,
+      "h": 60.4,
+      "variant": "simple",
+      "icon": "shopping-cart",
+      "title": "Commerce",
+      "footer": "catalog · checkout",
+      "tone": null,
+      "type": null
+    },
+    "travel": {
+      "cx": 1394,
+      "cy": 729.4000000000001,
+      "w": 300,
+      "h": 60.4,
+      "variant": "simple",
+      "icon": "airplane-tilt",
+      "title": "Travel",
+      "footer": "flights · stays",
+      "tone": "var(--t-trip)",
+      "type": "trip"
+    },
+    "slack": {
+      "cx": 1394,
+      "cy": 803.8000000000001,
+      "w": 300,
+      "h": 60.4,
+      "variant": "simple",
+      "icon": "hash",
+      "title": "Slack",
+      "footer": "channels · threads",
+      "tone": null,
+      "type": null
+    }
+  },
+  "edges": [
+    [
+      "plank-board",
+      "substrate",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "arrow": "none",
+        "color": "ink",
+        "halo": true,
+        "tap": {
+          "nodes": [57, 28, 8, 54, 51, 45],
+          "space": 0,
+          "entry": 57,
+          "toward": {
+            "x": 684,
+            "y": 436.477
+          }
+        }
+      }
+    ],
+    [
+      "plank-thread",
+      "substrate",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "arrow": "none",
+        "color": "ink",
+        "halo": true,
+        "tap": {
+          "nodes": [184, 128, 127, 148],
+          "space": 2,
+          "entry": 184,
+          "toward": {
+            "x": 468,
+            "y": 727.461
+          }
+        }
+      }
+    ]
+  ],
+  "components": [
+    {
+      "id": "plank-board",
+      "kind": "plank",
+      "x": 48,
+      "y": 84,
+      "w": 300,
+      "h": 230.66666666666666,
+      "label": "Roadmap",
+      "params": {
+        "comp": "board",
+        "title": "Roadmap",
+        "package": "react-ui-board"
+      }
+    },
+    {
+      "id": "plank-sheet",
+      "kind": "plank",
+      "x": 48,
+      "y": 354.66666666666663,
+      "w": 300,
+      "h": 230.66666666666666,
+      "label": "Budget",
+      "params": {
+        "comp": "sheet",
+        "title": "Budget",
+        "package": "react-ui-sheet"
+      }
+    },
+    {
+      "id": "plank-thread",
+      "kind": "plank",
+      "x": 48,
+      "y": 625.3333333333333,
+      "w": 300,
+      "h": 230.66666666666666,
+      "label": "Design chat",
+      "params": {
+        "comp": "thread",
+        "title": "Design chat",
+        "package": "react-ui-thread"
+      }
+    },
+    {
+      "id": "substrate",
+      "kind": "substrate",
+      "x": 390,
+      "y": 60,
+      "w": 812,
+      "h": 820,
+      "params": {
+        "seed": 29,
+        "gap": 10,
+        "rmin": 34,
+        "rmax": 150,
+        "pitch": 24,
+        "fill": 0.55,
+        "extra": 0.4,
+        "size": 24,
+        "pad": 30,
+        "show": {
+          "borders": true,
+          "dots": true,
+          "bridges": true,
+          "flows": true,
+          "colors": true
+        }
+      },
+      "spaces": [
+        [796, 470, 148.383],
+        [577.699, 255.453, 147.699],
+        [579.335, 688.51, 149.335],
+        [1015.459, 258.302, 146.541],
+        [1023.236, 661.468, 138.764],
+        [811.173, 745.982, 79.52],
+        [797.553, 199.304, 69.212],
+        [512.805, 471.375, 67.764],
+        [1091.08, 462.629, 61.331]
+      ],
+      "objects": 344,
+      "bridges": 10,
+      "flows": [
+        {
+          "id": "board",
+          "space": 0,
+          "entry": 57,
+          "from": [348, 199.333],
+          "pick": "middle",
+          "objects": [
+            {
+              "i": 57,
+              "type": "event",
+              "at": [684, 436.477]
+            },
+            {
+              "i": 28,
+              "type": "file",
+              "at": [732, 436.477]
+            },
+            {
+              "i": 8,
+              "type": "message",
+              "at": [672, 498.831]
+            },
+            {
+              "i": 54,
+              "type": "event",
+              "at": [672, 457.261]
+            },
+            {
+              "i": 51,
+              "type": "file",
+              "at": [696, 498.831]
+            },
+            {
+              "i": 45,
+              "type": "message",
+              "at": [696, 457.261]
+            }
+          ],
+          "path": [
+            [57, 45],
+            [45, 28],
+            [45, 3],
+            [3, 8],
+            [45, 54],
+            [3, 51]
+          ],
+          "services": ["calendar", "storage", "email"]
+        },
+        {
+          "id": "thread",
+          "space": 2,
+          "entry": 184,
+          "from": [348, 740.667],
+          "pick": "lower-left",
+          "objects": [
+            {
+              "i": 184,
+              "type": "message",
+              "at": [468, 727.461]
+            },
+            {
+              "i": 128,
+              "type": "trip",
+              "at": [492, 685.892]
+            },
+            {
+              "i": 127,
+              "type": "message",
+              "at": [480, 748.246]
+            },
+            {
+              "i": 148,
+              "type": "message",
+              "at": [492, 769.031]
+            }
+          ],
+          "path": [
+            [184, 178],
+            [178, 128],
+            [184, 127],
+            [127, 148]
+          ],
+          "services": ["email", "travel"]
+        }
+      ]
+    },
+    {
+      "id": "more-up",
+      "kind": "fat-arrow",
+      "x": 1362,
+      "y": 63,
+      "w": 64,
+      "h": 34,
+      "params": {
+        "up": true
+      }
+    },
+    {
+      "id": "more-down",
+      "kind": "fat-arrow",
+      "x": 1362,
+      "y": 845,
+      "w": 64,
+      "h": 34,
+      "params": {
+        "up": false
+      }
+    }
+  ],
+  "frames": [
+    {
+      "id": "hyperspace",
+      "x": 390,
+      "y": 60,
+      "w": 812,
+      "h": 820
+    }
+  ],
+  "texts": [
+    {
+      "id": "col-0",
+      "x": 48,
+      "y": 22,
+      "w": 300,
+      "h": 36,
+      "text": "Composer",
+      "role": "col-heading",
+      "align": "center"
+    },
+    {
+      "id": "col-1",
+      "x": 390,
+      "y": 22,
+      "w": 812,
+      "h": 36,
+      "text": "ECHO Hyperspace",
+      "role": "col-heading",
+      "align": "center"
+    },
+    {
+      "id": "col-2",
+      "x": 1244,
+      "y": 22,
+      "w": 300,
+      "h": 36,
+      "text": "EDGE Services",
+      "role": "col-heading",
+      "align": "center"
+    }
+  ],
+  "layout": [
+    {
+      "id": "planks",
+      "kind": "down",
+      "x": 48,
+      "y": 84,
+      "w": 300,
+      "h": 772,
+      "n": 3,
+      "gap": 40
+    },
+    {
+      "id": "services",
+      "kind": "down",
+      "x": 1244,
+      "y": 104,
+      "w": 300,
+      "h": 730,
+      "n": 10,
+      "gap": 14
+    }
+  ],
+  "controls": {
+    "seed": 29,
+    "rmax": 150,
+    "rmin": 34,
+    "gap": 10,
+    "pad": 30,
+    "borders": true,
+    "pitch": 24,
+    "fill": 55,
+    "size": 24,
+    "extra": 40,
+    "bridges": true,
+    "dots": true,
+    "flows": true,
+    "colors": true
+  },
+  "stats": {
+    "spaces": 9,
+    "objects": 344,
+    "bridges": 10
+  }
+}

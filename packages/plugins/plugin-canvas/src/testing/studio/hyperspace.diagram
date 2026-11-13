@@ -1,0 +1,77 @@
+# Composer · ECHO Hyperspace · EDGE Services
+# Exported from studio assets/deck (slide "hyperspace"), 1600 × 900 slide units.
+
+object title @ 80,40 {
+  text heading 0,0 "Composer · ECHO Hyperspace · EDGE Services"
+}
+
+object hyperspace @ 390,60 {
+  rect frame 0,0 812x820 color=grey stroke=dashed
+}
+object col-0 @ 48,22 {
+  text label 0,0 "Composer"
+}   # role=col-heading
+object col-1 @ 390,22 {
+  text label 0,0 "ECHO Hyperspace"
+}   # role=col-heading
+object col-2 @ 1244,22 {
+  text label 0,0 "EDGE Services"
+}   # role=col-heading
+
+object calendar @ 1244,104 {
+  rect box 0,0 300x60 "Calendar"
+}   # card variant=simple icon=calendar-blank tone=var(--t-event) footer="events · free/busy"
+object email @ 1244,178 {
+  rect box 0,0 300x60 "Email"
+}   # card variant=simple icon=envelope tone=var(--t-message) footer="send · receive"
+object storage @ 1244,253 {
+  rect box 0,0 300x60 "Storage"
+}   # card variant=simple icon=database tone=var(--t-file) footer="blobs · objects"
+object translation @ 1244,327 {
+  rect box 0,0 300x60 "Translation"
+}   # card variant=simple icon=translate footer="text ↔ locale"
+object search @ 1244,402 {
+  rect box 0,0 300x60 "Search"
+}   # card variant=simple icon=magnifying-glass footer="index · query"
+object sql @ 1244,476 {
+  rect box 0,0 300x60 "SQL"
+}   # card variant=simple icon=table footer="tables · queries"
+object files @ 1244,550 {
+  rect box 0,0 300x60 "Files"
+}   # card variant=simple icon=folder footer="drives · folders"
+object commerce @ 1244,625 {
+  rect box 0,0 300x60 "Commerce"
+}   # card variant=simple icon=shopping-cart footer="catalog · checkout"
+object travel @ 1244,699 {
+  rect box 0,0 300x60 "Travel"
+}   # card variant=simple icon=airplane-tilt tone=var(--t-trip) footer="flights · stays"
+object slack @ 1244,774 {
+  rect box 0,0 300x60 "Slack"
+}   # card variant=simple icon=hash footer="channels · threads"
+
+object plank-board @ 48,84 {
+  rect box 0,0 300x231 "Roadmap"
+}   # component=plank comp=board title=Roadmap package=react-ui-board
+object plank-sheet @ 48,355 {
+  rect box 0,0 300x231 "Budget"
+}   # component=plank comp=sheet title=Budget package=react-ui-sheet
+object plank-thread @ 48,625 {
+  rect box 0,0 300x231 "Design chat"
+}   # component=plank comp=thread title="Design chat" package=react-ui-thread
+object substrate @ 390,60 {
+  rect box 0,0 812x820
+}   # component=substrate seed=29 gap=10 rmin=34 rmax=150 pitch=24 fill=0.55 extra=0.4 size=24 pad=30 show={"borders":true,"dots":true,"bridges":true,"flows":true,"colors":true}
+object more-up @ 1362,63 {
+  rect box 0,0 64x34
+}   # component=fat-arrow up=true
+object more-down @ 1362,845 {
+  rect box 0,0 64x34
+}   # component=fat-arrow up=false
+
+object links @ 0,0 {
+  arrow plank-board-substrate plank-board/box -> substrate/box stroke=dashed   # route=curve-h color=ink arrow=none tap=57,28,8,54,51,45
+  arrow plank-thread-substrate plank-thread/box -> substrate/box stroke=dashed   # route=curve-h color=ink arrow=none tap=184,128,127,148
+}
+
+# layout planks down @ 48,84 300x772 n=3 gap=40
+# layout services down @ 1244,104 300x730 n=10 gap=14

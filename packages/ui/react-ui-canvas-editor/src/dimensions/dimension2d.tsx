@@ -131,7 +131,10 @@ const ObjectThumbnail = ({ id }: { id: ViewId }) => {
  * `Canvas.Root` props a host sets beyond the editor's, for a 2D canvas it drives itself (a drift across the scene, a view
  * listener, a refit timed to its own reveal); they change as the host renders, so they ride a context.
  */
-export type Canvas2DHostProps = Pick<CanvasRootProps, 'drift' | 'onViewChange' | 'refitKey' | 'refitDuration'>;
+export type Canvas2DHostProps = Pick<
+  CanvasRootProps,
+  'drift' | 'onViewChange' | 'refitKey' | 'refitDuration' | 'frame' | 'fitZoom'
+>;
 
 const Canvas2DHostContext = createContext<Canvas2DHostProps>({});
 

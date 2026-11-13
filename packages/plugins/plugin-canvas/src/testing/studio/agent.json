@@ -2,6 +2,10 @@
   "id": "agent",
   "title": "Agent",
   "subtitle": "How agents pursue goals",
+  "page": {
+    "w": 1600,
+    "h": 900
+  },
   "size": {
     "w": 236,
     "h": 56

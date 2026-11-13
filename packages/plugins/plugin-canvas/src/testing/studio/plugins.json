@@ -1,0 +1,303 @@
+{
+  "id": "plugins",
+  "title": "Plugins",
+  "subtitle": "One package: types, skills, components, operations and EDGE services",
+  "page": {
+    "w": 1600,
+    "h": 900
+  },
+  "size": {
+    "w": 283.2,
+    "h": 200
+  },
+  "nodes": {
+    "plugin": {
+      "cx": 800,
+      "cy": 253,
+      "w": 720,
+      "h": 170,
+      "icon": "puzzle-piece",
+      "tone": "accent",
+      "title": "Plugin",
+      "code": "Plugin.config({ plugin, modules })",
+      "body": "modules load lazily on activation events, in the browser, Node, desktop (Tauri) or at the EDGE (workerd).",
+      "footer": "106 plugins in dxos/dxos",
+      "count": 106
+    },
+    "types": {
+      "cx": 201.6,
+      "cy": 520,
+      "w": 283.2,
+      "h": 200,
+      "icon": "brackets-curly",
+      "title": "Types",
+      "body": "Effect Schema types, registered with ECHO.",
+      "footer": "schema · 66",
+      "titleSize": 1.6,
+      "symbol": "schema",
+      "count": 66
+    },
+    "use-types": {
+      "cx": 201.6,
+      "cy": 707.52,
+      "w": 262,
+      "h": 47.04,
+      "kind": "chip",
+      "icon": "database",
+      "title": "ECHO",
+      "tone": null
+    },
+    "skills": {
+      "cx": 500.79999999999995,
+      "cy": 520,
+      "w": 283.2,
+      "h": 200,
+      "icon": "robot",
+      "title": "Skills",
+      "body": "Operations offered to agents as tools.",
+      "footer": "skillDefinition · 41",
+      "titleSize": 1.6,
+      "symbol": "skillDefinition",
+      "count": 41
+    },
+    "use-skills": {
+      "cx": 500.79999999999995,
+      "cy": 707.52,
+      "w": 262,
+      "h": 47.04,
+      "kind": "chip",
+      "icon": "sparkle",
+      "title": "Agents",
+      "tone": null
+    },
+    "components": {
+      "cx": 800,
+      "cy": 520,
+      "w": 283.2,
+      "h": 200,
+      "icon": "squares-four",
+      "title": "Components",
+      "body": "React surfaces bound to roles: article, card, section.",
+      "footer": "surface · 88",
+      "titleSize": 1.6,
+      "symbol": "surface",
+      "count": 88
+    },
+    "use-components": {
+      "cx": 800,
+      "cy": 707.52,
+      "w": 262,
+      "h": 47.04,
+      "kind": "chip",
+      "icon": "app-window",
+      "title": "Surface",
+      "tone": null
+    },
+    "operations": {
+      "cx": 1099.1999999999998,
+      "cy": 520,
+      "w": 283.2,
+      "h": 200,
+      "icon": "function",
+      "title": "Operations",
+      "body": "Typed operations with input and output schemas.",
+      "footer": "operationHandler · 81",
+      "titleSize": 1.6,
+      "symbol": "operationHandler",
+      "count": 81
+    },
+    "use-operations": {
+      "cx": 1099.1999999999998,
+      "cy": 707.52,
+      "w": 262,
+      "h": 47.04,
+      "kind": "chip",
+      "icon": "plugs-connected",
+      "title": "UI · agents · MCP",
+      "tone": null
+    },
+    "services": {
+      "cx": 1398.3999999999999,
+      "cy": 520,
+      "w": 283.2,
+      "h": 200,
+      "icon": "cloud",
+      "title": "Services",
+      "body": "Effect services that run at the EDGE (workerd).",
+      "footer": "layerSpec · 11",
+      "tone": "ink",
+      "titleSize": 1.6,
+      "symbol": "layerSpec",
+      "count": 11
+    },
+    "use-services": {
+      "cx": 1398.3999999999999,
+      "cy": 707.52,
+      "w": 262,
+      "h": 47.04,
+      "kind": "chip",
+      "icon": "cloud",
+      "title": "EDGE",
+      "tone": "accent"
+    }
+  },
+  "edges": [
+    [
+      "plugin",
+      "types",
+      "",
+      {
+        "route": "elbow-vhv",
+        "via": [
+          {
+            "x": 800,
+            "y": 377
+          },
+          {
+            "x": 201.6,
+            "y": 377
+          }
+        ]
+      }
+    ],
+    [
+      "use-types",
+      "types",
+      "",
+      {
+        "dash": true
+      }
+    ],
+    [
+      "plugin",
+      "skills",
+      "",
+      {
+        "route": "elbow-vhv",
+        "via": [
+          {
+            "x": 800,
+            "y": 377
+          },
+          {
+            "x": 500.79999999999995,
+            "y": 377
+          }
+        ]
+      }
+    ],
+    [
+      "use-skills",
+      "skills",
+      "",
+      {
+        "dash": true
+      }
+    ],
+    [
+      "plugin",
+      "components",
+      "",
+      {
+        "route": "elbow-vhv",
+        "via": [
+          {
+            "x": 800,
+            "y": 377
+          },
+          {
+            "x": 800,
+            "y": 377
+          }
+        ]
+      }
+    ],
+    [
+      "use-components",
+      "components",
+      "",
+      {
+        "dash": true
+      }
+    ],
+    [
+      "plugin",
+      "operations",
+      "",
+      {
+        "route": "elbow-vhv",
+        "via": [
+          {
+            "x": 800,
+            "y": 377
+          },
+          {
+            "x": 1099.1999999999998,
+            "y": 377
+          }
+        ]
+      }
+    ],
+    [
+      "use-operations",
+      "operations",
+      "",
+      {
+        "dash": true
+      }
+    ],
+    [
+      "plugin",
+      "services",
+      "",
+      {
+        "route": "elbow-vhv",
+        "via": [
+          {
+            "x": 800,
+            "y": 377
+          },
+          {
+            "x": 1398.3999999999999,
+            "y": 377
+          }
+        ]
+      }
+    ],
+    [
+      "use-services",
+      "services",
+      "",
+      {
+        "dash": true
+      }
+    ]
+  ],
+  "frames": [],
+  "texts": [
+    {
+      "id": "footnote",
+      "x": 80,
+      "y": 810,
+      "w": 1440,
+      "text": "Counts: plugins in dxos/dxos whose config contributes each module (main, 11 Nov 2026). Every module is optional; a plugin ships only what it needs.",
+      "role": "note"
+    }
+  ],
+  "layout": [
+    {
+      "id": "modules",
+      "kind": "across",
+      "x": 60,
+      "y": 420,
+      "w": 1480,
+      "h": 200,
+      "n": 5,
+      "gap": 16
+    }
+  ],
+  "controls": {
+    "counts": true,
+    "consumers": true
+  }
+}

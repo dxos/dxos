@@ -68,6 +68,18 @@ export const CanvasSettings = Schema.Struct({
    * rather than as canvas shapes: a laid-out diagram brought onto the canvas keeps the look it had.
    */
   diagramShapes: Schema.optional(Schema.Boolean),
+  /**
+   * What Fit frames, in scene units, rather than the scene's own content. Drawings of one page that each fill it
+   * differently (a deck of slides) then open at ONE scale, since every view frames the same box.
+   */
+  fitFrame: Schema.optional(
+    Schema.Struct({ x: Schema.Number, y: Schema.Number, width: Schema.Number, height: Schema.Number }),
+  ),
+  /**
+   * The highest zoom a fit reaches. It stops at 1:1 unless raised, so a drawing smaller than its view is centred at
+   * its natural size rather than enlarged; a drawing meant to fill the view (a slide) raises it.
+   */
+  fitZoom: Schema.optional(Schema.Number),
 });
 export type CanvasSettings = Schema.Schema.Type<typeof CanvasSettings>;
 

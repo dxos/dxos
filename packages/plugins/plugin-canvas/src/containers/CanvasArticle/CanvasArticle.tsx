@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useAttention } from '@dxos/react-ui-attention';
-import { SceneEditor } from '@dxos/react-ui-canvas-editor';
+import { Canvas2DHost, SceneEditor } from '@dxos/react-ui-canvas-editor';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Scene } from '@dxos/scene';
 
@@ -79,6 +79,7 @@ const SceneEditorArticle = <C,>({
   }
 
   const section = role === AppSurface.Section.role;
+  const fit = { frame: host.frame, fitZoom: host.fitZoom };
   return (
     <Panel.Root
       role={role}
@@ -90,47 +91,50 @@ const SceneEditorArticle = <C,>({
       ref={setElement}
     >
       <Panel.Body>
-        <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
-          <SceneEditor.Root
-            config={dimension.config}
-            document={document}
-            scene={stored.key}
-            role={role}
-            navigable={section && hasAttention}
-            readonly={host.readonly}
-            onReadonlyChange={host.onReadonlyChange}
-            onIntent={host.onIntent}
-            history={host.history}
-            onModelIntent={host.onModelIntent}
-            readDocument={host.readDocument}
-            onLayersChange={host.onLayersChange}
-            codec={sceneClipboardCodec}
-            display={dimension.display}
-            onDisplayChange={dimension.onDisplayChange}
-            camera={dimension.camera}
-            authoredCamera={dimension.authoredCamera}
-            onCameraChange={dimension.onCameraChange}
-            refitKey={host.refitKey}
-            docked={host.docked}
-            onDockedChange={host.onDockedChange}
-            sceneChoice={host.sceneChoice}
-            shots={host.shots}
-            onShotChange={host.onShotChange}
-          >
-            <CanvasEditCommands element={element} />
-            <SceneEditor.Viewport>
-              <SceneEditor.Navigation />
-              <SceneEditor.Tools />
-              <SceneEditor.Actions />
-              <SceneEditor.Camera />
-              <SceneEditor.Display />
-              <SceneEditor.ContextMenu />
-              <SceneEditor.Notice />
-              <SceneEditor.Timeline />
-            </SceneEditor.Viewport>
-            <SceneEditor.Inspector catalogs={dimension.catalogs} />
-          </SceneEditor.Root>
-        </CanvasDatabaseContext.Provider>
+        {/* What Fit frames and how far it may magnify, where the drawing says so: the 2D root reads them from here. */}
+        <Canvas2DHost value={fit}>
+          <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
+            <SceneEditor.Root
+              config={dimension.config}
+              document={document}
+              scene={stored.key}
+              role={role}
+              navigable={section && hasAttention}
+              readonly={host.readonly}
+              onReadonlyChange={host.onReadonlyChange}
+              onIntent={host.onIntent}
+              history={host.history}
+              onModelIntent={host.onModelIntent}
+              readDocument={host.readDocument}
+              onLayersChange={host.onLayersChange}
+              codec={sceneClipboardCodec}
+              display={dimension.display}
+              onDisplayChange={dimension.onDisplayChange}
+              camera={dimension.camera}
+              authoredCamera={dimension.authoredCamera}
+              onCameraChange={dimension.onCameraChange}
+              refitKey={host.refitKey}
+              docked={host.docked}
+              onDockedChange={host.onDockedChange}
+              sceneChoice={host.sceneChoice}
+              shots={host.shots}
+              onShotChange={host.onShotChange}
+            >
+              <CanvasEditCommands element={element} />
+              <SceneEditor.Viewport>
+                <SceneEditor.Navigation />
+                <SceneEditor.Tools />
+                <SceneEditor.Actions />
+                <SceneEditor.Camera />
+                <SceneEditor.Display />
+                <SceneEditor.ContextMenu />
+                <SceneEditor.Notice />
+                <SceneEditor.Timeline />
+              </SceneEditor.Viewport>
+              <SceneEditor.Inspector catalogs={dimension.catalogs} />
+            </SceneEditor.Root>
+          </CanvasDatabaseContext.Provider>
+        </Canvas2DHost>
       </Panel.Body>
     </Panel.Root>
   );

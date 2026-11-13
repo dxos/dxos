@@ -9,7 +9,7 @@ import { useObject } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type History, type SceneChoice, createHistory, sessionHistory } from '@dxos/react-ui-canvas-editor';
 import { type VersionedSource, combinedSource } from '@dxos/react-ui-canvas/headless';
-import { type Layer, type LayoutIntent, type ModelIntent, Scene, reachedObjects } from '@dxos/scene';
+import { type Bounds, type Layer, type LayoutIntent, type ModelIntent, Scene, reachedObjects } from '@dxos/scene';
 
 import { applyLayoutIntent, canvasDocument, layoutSource, openScene, writeDocument, writeModelIntent } from '#model';
 import { type Canvas } from '#types';
@@ -53,6 +53,9 @@ export type CanvasEditorHost = {
   onLayersChange: (layout: string, layers: readonly Layer[]) => void;
   readonly: boolean;
   onReadonlyChange: (readonly: boolean) => void;
+  /** What Fit frames, and how far it may magnify, when the drawing says so rather than taking its own content at 1:1. */
+  frame: Bounds | undefined;
+  fitZoom: number | undefined;
   refitKey: string | number | undefined;
   docked: boolean;
   onDockedChange: (docked: boolean) => void;
@@ -134,7 +137,8 @@ export const useCanvasEditor = (canvas: Canvas.Canvas, dim: Scene.Dimension): Ca
   const contextId = Entity.getURI(canvas);
   const { readonly: viewReadonly } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
-  const readonly = viewReadonly ?? snapshot.settings?.readonly ?? false;
+  const settings = snapshot.settings;
+  const readonly = viewReadonly ?? settings?.readonly ?? false;
   const onReadonlyChange = useCallback(
     (next: boolean) => updateViewState((state) => ({ ...state, readonly: next })),
     [updateViewState],
@@ -155,6 +159,8 @@ export const useCanvasEditor = (canvas: Canvas.Canvas, dim: Scene.Dimension): Ca
     onLayersChange,
     readonly,
     onReadonlyChange,
+    frame: settings?.fitFrame,
+    fitZoom: settings?.fitZoom,
     refitKey,
     docked: dock.docked,
     onDockedChange: dock.onDockedChange,

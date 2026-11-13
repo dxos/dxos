@@ -1,0 +1,60 @@
+# Plugins: One package: types, skills, components, operations and EDGE services
+# Exported from studio assets/deck (slide "plugins"), 1600 × 900 slide units.
+
+object title @ 80,40 {
+  text heading 0,0 "Plugins"
+  text subtitle 0,44 "One package: types, skills, components, operations and EDGE services"
+}
+
+object footnote @ 80,810 {
+  text label 0,0 "Counts: plugins in dxos/dxos whose config contributes each module (main, 11 Nov 2026). Every module is optional; a plugin ships only what it needs."
+}   # role=note
+
+object plugin @ 440,168 {
+  rect box 0,0 720x170 "Plugin"
+}   # card icon=puzzle-piece tone=accent code="Plugin.config({ plugin, modules })" footer="106 plugins in dxos/dxos" body="modules load lazily on activation events, in the browser, Node, desktop (Tauri) or at the EDGE (workerd)."
+object types @ 60,420 {
+  rect box 0,0 283x200 "Types"
+}   # card icon=brackets-curly footer="schema · 66" body="Effect Schema types, registered with ECHO."
+object use-types @ 71,684 {
+  rect box 0,0 262x47 "ECHO"
+}   # card kind=chip icon=database
+object skills @ 359,420 {
+  rect box 0,0 283x200 "Skills"
+}   # card icon=robot footer="skillDefinition · 41" body="Operations offered to agents as tools."
+object use-skills @ 370,684 {
+  rect box 0,0 262x47 "Agents"
+}   # card kind=chip icon=sparkle
+object components @ 658,420 {
+  rect box 0,0 283x200 "Components"
+}   # card icon=squares-four footer="surface · 88" body="React surfaces bound to roles: article, card, section."
+object use-components @ 669,684 {
+  rect box 0,0 262x47 "Surface"
+}   # card kind=chip icon=app-window
+object operations @ 958,420 {
+  rect box 0,0 283x200 "Operations"
+}   # card icon=function footer="operationHandler · 81" body="Typed operations with input and output schemas."
+object use-operations @ 968,684 {
+  rect box 0,0 262x47 "UI · agents · MCP"
+}   # card kind=chip icon=plugs-connected
+object services @ 1257,420 {
+  rect box 0,0 283x200 "Services"
+}   # card icon=cloud tone=ink footer="layerSpec · 11" body="Effect services that run at the EDGE (workerd)."
+object use-services @ 1267,684 {
+  rect box 0,0 262x47 "EDGE"
+}   # card kind=chip icon=cloud tone=accent
+
+object links @ 0,0 {
+  arrow plugin-types plugin/box -> types/box head=triangle   # route=via 800,377 202,377
+  arrow use-types-types use-types/box -> types/box head=triangle stroke=dashed
+  arrow plugin-skills plugin/box -> skills/box head=triangle   # route=via 800,377 501,377
+  arrow use-skills-skills use-skills/box -> skills/box head=triangle stroke=dashed
+  arrow plugin-components plugin/box -> components/box head=triangle   # route=via 800,377 800,377
+  arrow use-components-components use-components/box -> components/box head=triangle stroke=dashed
+  arrow plugin-operations plugin/box -> operations/box head=triangle   # route=via 800,377 1099,377
+  arrow use-operations-operations use-operations/box -> operations/box head=triangle stroke=dashed
+  arrow plugin-services plugin/box -> services/box head=triangle   # route=via 800,377 1398,377
+  arrow use-services-services use-services/box -> services/box head=triangle stroke=dashed
+}
+
+# layout modules across @ 60,420 1480x200 n=5 gap=16
