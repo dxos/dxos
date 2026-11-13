@@ -166,7 +166,7 @@
       "path": "../packages/ui/react-ui-calendar"
     },
     {
-      "path": "../packages/ui/react-ui-diagram"
+      "path": "../packages/ui/react-ui-canvas-editor"
     },
     {
       "path": "../packages/ui/react-ui-dnd"

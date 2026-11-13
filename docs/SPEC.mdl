@@ -2741,18 +2741,18 @@ page tile-api-plot-plot: Plot
     - `Plot` over `toPlotData`, its chart types and options, and when it draws a legend; the Overview grid's Chart card links here [D-296]
 ```
 ```mdl
-page tile-api-diagram-diagram: Diagram
-  Boxes and links on a canvas the user can pan and zoom.
+page tile-api-canvas-editor-canvas-editor: CanvasEditor
+  An editor for drawings of shapes and links on a canvas that pans, zooms and opens nested views.
   section: TILE
-  route: /docs/tile/api/react-ui-diagram/diagram/
+  route: /docs/tile/api/react-ui-canvas-editor/canvas-editor/
   group: API
-  package: react-ui-diagram
+  package: react-ui-canvas-editor
   family: Visualization
   template: namespace
   status: spike
   covers:
-    - The package's `Docs` story, the one its Overview card runs, live at the top [D-296] [D-297]
-    - A `Projection` of nodes, ports and edges, laid out by the diagram, and an `Overlay` for what the user pins; the Overview grid's Diagram card links here [D-296]
+    - The package's `Model` story, the one the Overview's Canvas card runs, live at the top [D-305]
+    - Every part of `CanvasEditor` and the props of `CanvasEditor.Root` [D-305]
 ```
 ```mdl
 page tile-api-geo-globe: Globe
@@ -6029,6 +6029,14 @@ decision D-304: Every section's sidebar lists its groups in one order: Start her
   why: A reader who knows one section's sidebar finds the same group in the same place in every other.
   rejected:
     - API before Guides everywhere: guides teach a task and the API is what a reader looks up after, so Guides lead in four of the five sections already.
+```
+
+```mdl
+decision D-305: TILE documents and demos `@dxos/react-ui-canvas-editor`'s `CanvasEditor`, the canvas Composer's drawing plugins use, in place of `@dxos/react-ui-diagram`. The Overview's Diagram card becomes a Canvas card that runs `CanvasEditor`'s `Model` story, and the Diagram API page becomes a CanvasEditor page in the Visualization group. `react-ui-diagram` keeps no `Docs` story. Amends [D-297], [D-299].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-overview, tile-api-canvas-editor-canvas-editor]
+  why: The canvas editor is the one the platform draws with, in the canvas, code graph, code and UML plugins; no plugin uses the React Flow diagram.
 ```
 
 ## Appendix: Extension Definitions

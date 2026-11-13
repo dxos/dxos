@@ -16,7 +16,6 @@ import { EditorView, createBasicExtensions, createMermaidExtensions, createTheme
 
 import { CLASS_DIAGRAM, FLOWCHART, NESTED_FLOWCHART, projectMermaid } from '../../testing/index.ts';
 import { type Overlay, type Point, type Projection } from '../../types/index.ts';
-import { GROUP, type Node } from '../../types/index.ts';
 import { Diagram, type DiagramBackgroundProps } from './Diagram.tsx';
 
 /**
@@ -180,61 +179,4 @@ export const Neutral: Story = {
     projection: CLASS_DIAGRAM,
     background: 'lines',
   },
-};
-
-//
-// Docs
-//
-
-const PORTS: Node['ports'] = [
-  { id: 'n', side: 'top', offset: 0.5 },
-  { id: 's', side: 'bottom', offset: 0.5 },
-];
-
-const box = (id: string, label: string, parent?: string): Node => ({ id, type: 'node', label, ports: PORTS, parent });
-
-const link = (source: string, target: string) => ({
-  id: `${source}->${target}`,
-  type: 'link',
-  source,
-  target,
-  sourcePort: 's',
-  targetPort: 'n',
-});
-
-const ARCHITECTURE: Projection = {
-  graph: {
-    nodes: [
-      box('app', 'App'),
-      { id: 'client', type: GROUP, label: 'Client' },
-      box('echo', 'ECHO', 'client'),
-      box('halo', 'HALO', 'client'),
-      box('mesh', 'MESH'),
-    ],
-    edges: [link('app', 'echo'), link('app', 'halo'), link('echo', 'mesh'), link('halo', 'mesh')],
-  },
-};
-
-const ArchitectureStory = () => {
-  const [overlay, setOverlay] = useState<Overlay>({});
-  return (
-    <div className='fixed inset-0 flex dx-base-surface'>
-      <Diagram.Root
-        diagram={ARCHITECTURE}
-        overlay={overlay}
-        onNodeMove={(id, origin) =>
-          setOverlay((current) => ({ ...current, positions: { ...current.positions, [id]: origin } }))
-        }
-      >
-        <Diagram.Canvas>
-          <Diagram.Background variant='dots' />
-        </Diagram.Canvas>
-      </Diagram.Root>
-    </div>
-  );
-};
-
-/** The docs' diagram: boxes and links with no positions, laid out by the diagram; drag a box to pin it. */
-export const Docs: Story = {
-  render: () => <ArchitectureStory />,
 };

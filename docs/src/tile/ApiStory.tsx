@@ -27,9 +27,9 @@ const STORIES: Record<string, ApiStoryEntry> = {
     load: () => import('../../../packages/ui/react-ui-calendar/src/components/Calendar/Calendar.stories.tsx'),
     name: 'Week',
   },
-  'react-ui-diagram/diagram': {
-    load: () => import('../../../packages/ui/react-ui-diagram/src/components/Diagram/Diagram.stories.tsx'),
-    name: 'Docs',
+  'react-ui-canvas-editor/canvas-editor': {
+    load: () => import('../../../packages/ui/react-ui-canvas-editor/src/components/CanvasEditor/Canvas.stories.tsx'),
+    name: 'Model',
   },
   'react-ui-editor/editor': {
     load: () => import('../../../packages/ui/react-ui-editor/src/components/Editor/Editor.stories.tsx'),
