@@ -40,6 +40,17 @@ tasks:
       runInCI: false
       cache: false
 
+  # Serve the RDF facts crawl-demo persisted (DISCORD_FACTS_DB) over HTTP on DISCORD_FACT_SERVER_PORT (7700) for the
+  # stories-brain `FactExplorer` story. Runs until interrupted.
+  fact-server:
+    command: 'pnpm exec tsx src/testing/fact-server.ts'
+    deps:
+      - 'pipeline-rdf:build'
+    options:
+      runInCI: false
+      cache: false
+      persistent: true
+
   # Replay the stored SQLite messages (no token) through question extraction and print the tuples.
   questions-demo:
     command: 'pnpm exec vitest run src/testing/questions-demo.test.ts'
