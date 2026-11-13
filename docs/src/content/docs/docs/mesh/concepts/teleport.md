@@ -28,8 +28,9 @@ once both sides have added it. A peer that does not know an extension never open
 
 ## Behavior
 
-- Each space connection runs the auth extension. An invitation connection carries only `dxos.halo.invitations`, which
-  runs its own authentication between host and guest. On a space connection, a peer that fails auth is disconnected only if the session's owner closes the
+- Each space connection runs the auth extension. An invitation connection has no auth extension: besides the control
+  extension every session carries, it adds only `dxos.halo.invitations`, which checks the guest by the invitation's auth
+  method. The `none` method checks nothing. On a space connection, a peer that fails auth is disconnected only if the session's owner closes the
   session when told of the failure, as the space manager does. The other extensions open
   alongside it rather than after it and do not wait for it, so replication can start before the peer has
   authenticated.
