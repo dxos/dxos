@@ -6,14 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
 import { Stage } from '@dxos/pipeline';
-import {
-  DEFAULT_INDEX_BATCH_SIZE,
-  FactStore,
-  FactStoreUnsupportedError,
-  RDF,
-  hashText,
-  indexFactsBatch,
-} from '@dxos/pipeline-rdf';
+import { DEFAULT_INDEX_BATCH_SIZE, FactStore, RDF, hashText, indexFactsBatch } from '@dxos/pipeline-rdf';
 
 import * as AgentRegistry from '../AgentRegistry.ts';
 import { type StateError } from '../errors.ts';
@@ -59,6 +52,12 @@ const resolveMentions = (text: string, users: ReadonlyMap<string, RDF.KnownEntit
     const user = users.get(id);
     return user ? `@${user.label}` : mention;
   });
+
+/** A profile cursor: the profile's hash and the graph it was last written to, separated by a space. */
+const parseProfileCursor = (cursor: string | undefined): { hash: string; graph: string } | undefined => {
+  const at = cursor?.indexOf(' ') ?? -1;
+  return cursor !== undefined && at > 0 ? { hash: cursor.slice(0, at), graph: cursor.slice(at + 1) } : undefined;
+};
 
 /** Time on the profile graph, fixed so re-extraction rewrites the same graph rather than minting another. */
 const PROFILE_TIME = new Date(0).toISOString();
@@ -141,23 +140,20 @@ export const extractFactsStage = (
       };
     });
     yield* indexFactsBatch(docs, { ...extractOptions, entities: [...users.values()] });
-    // A profile is rewritten only when it changed: an append-only store (an ECHO fact feed) would grow on every batch.
+    // A profile is rewritten only when it changed (an append-only store, such as an ECHO fact feed, would grow on every
+    // batch). The cursor also names the graph last written, so each version supersedes the one before it on any store,
+    // a write-only one included, with no read.
     const store = yield* FactStore;
     for (const profile of new Set(authors.values())) {
       const [first] = profileFacts(profile);
-      if (first && (yield* store.cursor(first.attribution.source)) !== first.sourceHash) {
-        // A write-only store (an ECHO fact feed) cannot be read back, so its profile graphs supersede nothing; any other
-        // failure propagates, so the profile is not written without superseding the one it replaces.
-        const earlier = (yield* store.query({ source: first.attribution.source }).pipe(
-          Effect.catchIf(
-            (error): error is FactStoreUnsupportedError => error instanceof FactStoreUnsupportedError,
-            (): Effect.Effect<RDF.Fact[]> => Effect.succeed([]),
-          ),
-        ))
-          .filter((fact) => fact.extractor.id === first.extractor.id)
-          .map((fact) => RDF.Mapping.graphOf(fact));
-        yield* store.putFacts(profileFacts(profile, [...new Set(earlier)]));
-        yield* store.setCursor(first.attribution.source, first.sourceHash);
+      if (!first) {
+        continue;
+      }
+      const previous = parseProfileCursor(yield* store.cursor(first.attribution.source));
+      if (previous?.hash !== first.sourceHash) {
+        const facts = profileFacts(profile, previous ? [previous.graph] : []);
+        yield* store.putFacts(facts);
+        yield* store.setCursor(first.attribution.source, `${first.sourceHash} ${RDF.Mapping.graphOf(facts[0])}`);
       }
     }
   });

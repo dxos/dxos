@@ -7,12 +7,12 @@ import * as Layer from 'effect/Layer';
 
 import { CrawlState } from '@dxos/crawler';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { FactStore, type FactStoreApi, FactStoreUnsupportedError } from '@dxos/pipeline-rdf';
+import { FactStore, type FactStoreApi, SemanticIndexError } from '@dxos/pipeline-rdf';
 import * as FactFeed from '@dxos/plugin-agent/FactFeed';
 
 const unsupported = (method: string) =>
   Effect.fail(
-    new FactStoreUnsupportedError({
+    new SemanticIndexError({
       message: `The fact feed store does not support ${method}: register the feed with an agent's brain to query it.`,
     }),
   );

@@ -10,7 +10,7 @@ import { expect } from 'vitest';
 
 import { type AiService } from '@dxos/ai';
 import { Pipeline } from '@dxos/pipeline';
-import { FactStore, RDF } from '@dxos/pipeline-rdf';
+import { FactStore, type FactStoreApi, RDF, SemanticIndexError } from '@dxos/pipeline-rdf';
 import { failingAiService } from '@dxos/pipeline-rdf/testing';
 
 import * as Crawler from '../Crawler.ts';
@@ -153,14 +153,57 @@ describe('extractFactsStage', () => {
       yield* store.setCursor('https://discord.com/users/111', 'stale');
       yield* Stream.fromIterable([say('2', 'Alice')]).pipe(agentProfileStage(), extractFactsStage(), Stream.runDrain);
 
-      // Supersession is part of a graph's provenance, so the rewrite is a new graph superseding the first, not itself.
+      // Without a readable cursor the rewrite has no previous graph, so it lands in the same graph, never superseding it.
       const profiles = (yield* store.query({ subjectEntity: 'https://discord.com/users/111' })).filter(
         (fact) => fact.extractor.id === 'agent-registry',
       );
       const statuses = RDF.Graph.status(profiles);
       const graphs = [...new Set(profiles.map((fact) => RDF.Mapping.graphOf(fact)))];
-      expect(graphs.length).toBeGreaterThan(1);
-      expect(graphs.filter((graph) => statuses.get(graph) === 'active')).toHaveLength(1);
+      expect(graphs.map((graph) => statuses.get(graph))).toEqual(['active']);
+    }).pipe(Effect.provide(layer(prompts)));
+  });
+
+  it.effect('a changed profile supersedes the previous one on a store that cannot be read', () => {
+    const prompts: string[] = [];
+    const target: Type.Target = { id: 'chan-1', channelId: 'chan-1', depth: 0, status: 'active' };
+    const say = (id: string, username: string): Type.Event => ({
+      _tag: 'Message',
+      target,
+      message: {
+        id,
+        text: 'Automerge compaction reduces OPFS growth.',
+        author: { id: '111', source: 'discord', username },
+      },
+    });
+    return Effect.gen(function* () {
+      const memory = yield* FactStore;
+      const written: RDF.Fact[] = [];
+      // Like the ECHO fact feed: writes and cursors work, reads fail.
+      const writeOnly: FactStoreApi = {
+        ...memory,
+        putFacts: (facts) => memory.putFacts(facts).pipe(Effect.tap(() => Effect.sync(() => written.push(...facts)))),
+        query: () => Effect.fail(new SemanticIndexError({ message: 'write-only' })),
+      };
+      for (const [id, username] of [
+        ['1', 'alice_w'],
+        ['2', 'alice_v'],
+      ] as const) {
+        yield* Stream.fromIterable([say(id, username)]).pipe(
+          agentProfileStage(),
+          extractFactsStage(),
+          Stream.runDrain,
+          Effect.provideService(FactStore, writeOnly),
+        );
+      }
+      const profiles = written.filter((fact) => fact.extractor.id === 'agent-registry');
+      const [first, second] = [...new Set(profiles.map((fact) => RDF.Mapping.graphOf(fact)))];
+      expect(second).toBeDefined();
+      expect(
+        profiles
+          .filter((fact) => RDF.Mapping.graphOf(fact) === second)
+          .every((fact) => fact.supersedes?.includes(first)),
+      ).toBe(true);
+      expect(RDF.Graph.status(profiles).get(first)).toBe('superseded');
     }).pipe(Effect.provide(layer(prompts)));
   });
 
