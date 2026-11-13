@@ -48,6 +48,14 @@ export type StudioSlide = {
    * pills, and they read as cards of the module above (one column, one width).
    */
   remap?: Readonly<Record<string, string>>;
+  /** How far the slide's columns are pulled apart about its centre; unset leaves the deck's own spacing. */
+  spread?: number;
+  /** The slide's columns are made symmetrical about its centre. */
+  balance?: boolean;
+  /** Every card of the slide is drawn at one size. */
+  uniform?: boolean;
+  /** A card the slide draws at a size of its own, by its id. */
+  sizes?: Readonly<Record<string, { width?: number; height?: number }>>;
 };
 
 const slide = (id: string, source: string, model: string, rest: Omit<StudioSlide, 'id' | 'source' | 'model'> = {}) => ({
@@ -63,13 +71,21 @@ const slide = (id: string, source: string, model: string, rest: Omit<StudioSlide
  * scale: a card on one slide is the size of a card on another.
  */
 export const STUDIO_SLIDES: readonly StudioSlide[] = [
-  slide('hyperspace', hyperspaceSource, hyperspaceModel),
+  // The deck fitted three columns to one page; a drawing is not a page, so its columns take the air they read better with.
+  slide('hyperspace', hyperspaceSource, hyperspaceModel, { spread: 1.12 }),
   slide('echo-layers', echoLayersSource, echoLayersModel),
-  slide('plugins', pluginsSource, pluginsModel, { labels: false, remap: { chip: 'card' } }),
-  slide('composer', composerSource, composerModel),
+  slide('plugins', pluginsSource, pluginsModel, {
+    labels: false,
+    remap: { chip: 'card' },
+    // The deck's header spanned the five columns under it; at a column and a half it reads as their parent.
+    sizes: { plugin: { width: 400, height: 240 } },
+  }),
+  // The deck placed each side column where its content ended; balanced, the window sits in the middle of the two.
+  slide('composer', composerSource, composerModel, { balance: true }),
   slide('architecture', architectureSource, architectureModel, { labels: false }),
   slide('agents', agentsSource, agentsModel, { spaceGraph: true, labels: false }),
-  slide('ontology', ontologySource, ontologyModel),
+  // Every card is a type, so every card is one box; the deck sized each to its own label.
+  slide('ontology', ontologySource, ontologyModel, { uniform: true }),
   slide('chat', chatSource, chatModel),
   slide('agent', agentSource, agentModel),
 ];

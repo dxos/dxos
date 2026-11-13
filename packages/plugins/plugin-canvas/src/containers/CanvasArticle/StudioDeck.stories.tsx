@@ -65,15 +65,19 @@ const decorators = (slides: readonly StudioSlide[] = STUDIO_SLIDES) =>
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), StudioKindsPlugin()],
     onInit: async ({ space }) => {
-      const drawings = slides.map(({ id, source, model, labels, remap }) => {
+      const drawings = slides.map(({ id, source, model, labels, remap, spread, balance, uniform, sizes }) => {
         // Every component is drawn as a kind: the space graph's Generator is exercised by `StudioAgents`, and nine
         // compiled generators on one page would say nothing the one story does not.
         // Read-only, so each cell is the slide rather than nine editors: the rail, the actions and the inspectors
         // take a third of a cell this size, and this view is for comparing the drawings.
-        const canvas = addTestCanvas(space.db, seedStudioSlide(source, model, { labels, remap }), {
-          ...STUDIO_CANVAS,
-          readonly: true,
-        });
+        const canvas = addTestCanvas(
+          space.db,
+          seedStudioSlide(source, model, { labels, remap, spread, balance, uniform, sizes }),
+          {
+            ...STUDIO_CANVAS,
+            readonly: true,
+          },
+        );
         return space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas }));
       });
       await space.db.flush();

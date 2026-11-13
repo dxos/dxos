@@ -1057,22 +1057,169 @@ const uniformGrid = (content: ContentMap, model: StudioModel, grid: number): num
     const width = Math.max(grid, Math.min(...column.map(({ node }) => onGrid(node.size.width, grid))));
     const left = onGrid(center - width / 2, grid);
     const ordered = [...column].sort((first, second) => first.node.center.y - second.node.center.y);
-    // A column of cards of one height is spaced on one pitch, inside the span it already covers; a column whose cards
-    // differ (a module card over its consumer) keeps the places the deck gave them, and so does one the pitch would
-    // move further than a cell — that is a column the deck spaced on purpose, not a rounding to tidy.
-    const height = ordered[0].node.size.height;
-    const even = ordered.length > 2 && ordered.every(({ node }) => node.size.height === height);
-    const first = onGrid(ordered[0].node.center.y - height / 2, grid);
-    const last = ordered.at(-1)!.node.center.y + height / 2;
-    const pitch = even ? Math.max(height, onGrid((last - first - height) / (ordered.length - 1), grid)) : 0;
-    const spaced =
-      even && ordered.every(({ node }, index) => Math.abs(first + index * pitch + height / 2 - node.center.y) <= grid);
-    ordered.forEach(({ key, node }, index) => {
-      const y = spaced ? first + index * pitch + height / 2 : node.center.y;
-      write(key, node, { x: left + width / 2, y }, { ...node.size, width });
-    });
+    // One gap down the column, from the gaps the deck left: the cards keep their own heights and their first top, and
+    // what was 16, 16 and 24 between them becomes 16, 16 and 16.
+    const gaps = ordered
+      .slice(1)
+      .map(({ node }, index) => {
+        const previous = ordered[index].node;
+        return node.center.y - node.size.height / 2 - (previous.center.y + previous.size.height / 2);
+      })
+      .sort((first, second) => first - second);
+    const gap = gaps.length > 0 ? Math.max(0, onGrid(gaps[Math.floor(gaps.length / 2)], grid)) : 0;
+    let top = onGrid(ordered[0].node.center.y - ordered[0].node.size.height / 2, grid);
+    for (const { key, node } of ordered) {
+      write(key, node, { x: left + width / 2, y: top + node.size.height / 2 }, { ...node.size, width });
+      top += node.size.height + gap;
+    }
   }
   return changed;
+};
+
+/** Draws the named cards at the size the slide asks for, on the grid and about their own centres. */
+const resizeCards = (
+  content: ContentMap,
+  sizes: Readonly<Record<string, { width?: number; height?: number }>>,
+  grid: number,
+): number => {
+  let resized = 0;
+  for (const [id, size] of Object.entries(sizes)) {
+    const key = nodeKey(boxOf(id));
+    const record = content[key];
+    if (!isNodeRecord(record)) {
+      continue;
+    }
+    const { node } = record;
+    const next = {
+      width: Math.max(grid, onGrid(size.width ?? node.size.width, grid)),
+      height: Math.max(grid, onGrid(size.height ?? node.size.height, grid)),
+    };
+    content[key] = { ...record, node: { ...node, size: next } };
+    resized++;
+  }
+  return resized;
+};
+
+/**
+ * Draws every card of the slide at one size: the middle width and height of the cards it holds, on the grid. A slide
+ * whose cards are all the same thing — the Ontology slide's types — reads as a set, and the deck's own boxes were
+ * sized to their labels, so `Organization` came out wider than `Task`.
+ */
+const uniformCards = (content: ContentMap, model: StudioModel, uniform: boolean, grid: number): number => {
+  if (!uniform) {
+    return 0;
+  }
+  const cards = cardsOf(content, model);
+  if (cards.length === 0) {
+    return 0;
+  }
+  const middle = (extent: (node: Node) => number) => {
+    const sizes = cards.map(({ node }) => onGrid(extent(node), grid)).sort((left, right) => left - right);
+    return Math.max(grid, sizes[Math.floor(sizes.length / 2)]);
+  };
+  const size = { width: middle((node) => node.size.width), height: middle((node) => node.size.height) };
+  let sized = 0;
+  for (const { key, node } of cards) {
+    if (node.size.width === size.width && node.size.height === size.height) {
+      continue;
+    }
+    const record = content[key];
+    if (!isNodeRecord(record)) {
+      continue;
+    }
+    content[key] = { ...record, node: { ...node, size } };
+    sized++;
+  }
+  return sized;
+};
+
+/**
+ * Makes the slide symmetrical: each pair of columns, taken from the outside in, is moved to the mean of the two
+ * distances from the slide's centre, and a column left in the middle is centred on it. The deck placed a side column
+ * where its content happened to end, so the Composer slide's plugins sat 70 units from one edge and 100 from the
+ * other, with the window between them off centre.
+ */
+const balanceColumns = (content: ContentMap, balance: boolean, grid: number): number => {
+  if (!balance) {
+    return 0;
+  }
+  const boxes = Object.entries(content).flatMap(([key, record]) =>
+    isNodeRecord(record) ? [{ key, node: record.node }] : [],
+  );
+  if (boxes.length === 0) {
+    return 0;
+  }
+  const edges = boxes.flatMap(({ node }) => [node.center.x - node.size.width / 2, node.center.x + node.size.width / 2]);
+  const middle = (Math.min(...edges) + Math.max(...edges)) / 2;
+  // Columns by centre, as {@link linesOf} groups them, but over every shape: a component is a column too.
+  const columns: { center: number; members: typeof boxes }[] = [];
+  for (const box of [...boxes].sort((left, right) => left.node.center.x - right.node.center.x)) {
+    const last = columns.at(-1);
+    if (last && Math.abs(box.node.center.x - last.center) <= LINE_TOLERANCE) {
+      last.members.push(box);
+    } else {
+      columns.push({ center: box.node.center.x, members: [box] });
+    }
+  }
+  let moved = 0;
+  for (let index = 0; index < Math.ceil(columns.length / 2); index++) {
+    const near = columns[index];
+    const far = columns[columns.length - 1 - index];
+    const span = near === far ? 0 : (Math.abs(near.center - middle) + Math.abs(far.center - middle)) / 2;
+    for (const [column, side] of [
+      [near, -1],
+      [far, 1],
+    ] as const) {
+      const center = onGrid(middle + side * span, grid);
+      if (column.center === center) {
+        continue;
+      }
+      for (const { key, node } of column.members) {
+        const record = content[key];
+        if (!isNodeRecord(record)) {
+          continue;
+        }
+        const left = onGrid(center - node.size.width / 2, grid);
+        content[key] = { ...record, node: { ...node, center: { ...node.center, x: left + node.size.width / 2 } } };
+        moved++;
+      }
+    }
+  }
+  return moved;
+};
+
+/**
+ * Pulls the slide's columns apart about its own centre. The deck laid every slide out on one 1600-unit page, so a
+ * three-column slide had whatever room that left between its columns; a drawing is not a page — it may be any size,
+ * and the view frames whatever it covers — so a slide that reads tight is given more air here.
+ *
+ * Distances from the centre scale, sizes do not: a card keeps its width and a column keeps its own spacing, while the
+ * space BETWEEN the columns grows.
+ */
+const spreadColumns = (content: ContentMap, model: StudioModel, spread: number, grid: number): number => {
+  const xs = Object.values(content).flatMap((record) =>
+    isNodeRecord(record)
+      ? [record.node.center.x - record.node.size.width / 2, record.node.center.x + record.node.size.width / 2]
+      : [],
+  );
+  if (spread === 1 || xs.length === 0) {
+    return 0;
+  }
+  const center = (Math.min(...xs) + Math.max(...xs)) / 2;
+  let moved = 0;
+  for (const [key, record] of Object.entries(content)) {
+    if (!isNodeRecord(record)) {
+      continue;
+    }
+    const { node } = record;
+    const left = onGrid(center + (node.center.x - node.size.width / 2 - center) * spread, grid);
+    if (left === onGrid(node.center.x - node.size.width / 2, grid)) {
+      continue;
+    }
+    content[key] = { ...record, node: { ...node, center: { ...node.center, x: left + node.size.width / 2 } } };
+    moved++;
+  }
+  return moved;
 };
 
 /**
@@ -1167,6 +1314,10 @@ export const seedStudioSlide =
       grid = STUDIO_GRID,
       labels = true,
       remap = {},
+      spread = 1,
+      balance = false,
+      uniform = false,
+      sizes = {},
       kinds = STUDIO_COMPONENT_KINDS,
       generators = {},
       report,
@@ -1178,6 +1329,14 @@ export const seedStudioSlide =
       labels?: boolean;
       /** Element kinds the slide draws as another kind, by the kind the sidecar names. */
       remap?: Readonly<Record<string, string>>;
+      /** How far the slide's columns are pulled apart about its centre; 1 leaves the deck's own spacing. */
+      spread?: number;
+      /** The slide's columns are made symmetrical about its centre ({@link balanceColumns}). */
+      balance?: boolean;
+      /** Every card of the slide is drawn at one size ({@link uniformCards}). */
+      uniform?: boolean;
+      /** A card the slide draws at a size of its own, by its id: what the deck drew is not always what reads. */
+      sizes?: Readonly<Record<string, { width?: number; height?: number }>>;
       /** The component kinds the host has registered; one it has not is left as the DSL's ring. */
       kinds?: ReadonlySet<string>;
       generators?: Generators;
@@ -1198,7 +1357,16 @@ export const seedStudioSlide =
     const snapped = snapToGrid(content, grid);
     // After the snap and before the routes: a route is taken from the outlines it meets, so the run has to be laid
     // out while they are still what the links will be measured against.
-    const laid = layoutRuns(content, model, grid) + uniformGrid(content, model, grid);
+    // Every move the import makes happens here, before the routes: a connector is taken from the outlines it meets,
+    // so a card resized or moved afterwards would leave its line bent around where the card used to be.
+    const laid =
+      layoutRuns(content, model, grid) +
+      uniformCards(content, model, uniform, grid) +
+      uniformGrid(content, model, grid) +
+      // After the grid: a size the slide asks for is the slide's, not its column's.
+      resizeCards(content, sizes, grid) +
+      balanceColumns(content, balance, grid) +
+      spreadColumns(content, model, spread, grid);
     const routed = routeLinks(content, model, components);
     const placed =
       components === 'generator'

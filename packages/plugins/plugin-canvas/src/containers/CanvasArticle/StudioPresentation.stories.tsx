@@ -103,16 +103,20 @@ const decorators = createStoryDecorators<StoryArgs>(({ args }) => ({
     StudioKindsPlugin(),
   ],
   onInit: async ({ space }) => {
-    const seeded = STUDIO_SLIDES.map(({ id, source, model, labels, remap }) => {
+    const seeded = STUDIO_SLIDES.map(({ id, source, model, labels, remap, spread, balance, uniform, sizes }) => {
       // Read-only: a slide is looked at, and the rail would take a corner of every one.
-      const canvas = addTestCanvas(space.db, seedStudioSlide(source, model, { labels, remap }), {
-        ...STUDIO_CANVAS,
-        readonly: true,
-        // The deck's page, over what this slide draws: one size for all nine, so they open at one scale, and centred
-        // on the slide's own content, so none of them sits off to a side of the box ({@link studioPageFrame}).
-        fitFrame: studioPageFrame(model),
-        fitZoom: FIT_ZOOM,
-      });
+      const canvas = addTestCanvas(
+        space.db,
+        seedStudioSlide(source, model, { labels, remap, spread, balance, uniform, sizes }),
+        {
+          ...STUDIO_CANVAS,
+          readonly: true,
+          // The deck's page, over what this slide draws: one size for all nine, so they open at one scale, and centred
+          // on the slide's own content, so none of them sits off to a side of the box ({@link studioPageFrame}).
+          fitFrame: studioPageFrame(model),
+          fitZoom: FIT_ZOOM,
+        },
+      );
       return { model, drawing: space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas })) };
     });
     const deck = space.db.add(

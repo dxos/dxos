@@ -76,19 +76,17 @@ describe('studio deck slides on a canvas', () => {
   });
 
   test.for(SLIDES)('%s lands every shape on the grid the drawing carries', (name, { expect }) => {
-    // The deck was laid out by eye, so the import rounds its geometry to the pitch the drawing carries. Edges are
-    // rounded, not centres and sizes, so a shape that was flush with another still is; and each corner moves by at
-    // most half a cell, which is what keeps a slide looking like the slide. A member of a layout run is the exception: the
-    // run takes one size and one pitch for all of it, which redistributes its members, so what holds for them is that
-    // they stay inside the run's own box.
+    // The deck was laid out by eye, so the import rounds its geometry to the pitch the drawing carries, then
+    // regularises it: a row takes one height, a column one width and one gap, and a slide may be spread. Where the
+    // shapes end up is the drawing's business; what has to hold is that every edge is on the grid.
     const { source, model } = slide(name);
-    const [before, after]: ContentMap[] = [{}, {}];
-    seedStudioSlide(source, model, { grid: 1 })(before);
-    seedStudioSlide(source, model)(after);
-    const nodes = (content: ContentMap) =>
-      Object.entries(content).flatMap(([key, record]) => (isNodeRecord(record) ? [[key, record.node] as const] : []));
-    const was = new Map(nodes(before));
-    for (const [key, node] of nodes(after)) {
+    const content: ContentMap = {};
+    seedStudioSlide(source, model)(content);
+    const nodes = Object.entries(content).flatMap(([key, record]) =>
+      isNodeRecord(record) ? [[key, record.node] as const] : [],
+    );
+    expect(nodes.length).toBeGreaterThan(0);
+    for (const [key, node] of nodes) {
       for (const edge of [
         node.center.x - node.size.width / 2,
         node.center.y - node.size.height / 2,
@@ -99,35 +97,26 @@ describe('studio deck slides on a canvas', () => {
         const derived = node.style?.fill === false && node.style?.border === false;
         expect({ key, off: derived ? 0 : edge % STUDIO_GRID }).toEqual({ key, off: 0 });
       }
-      const original = was.get(key);
-      expect(original).toBeDefined();
-      const run = (model.layout ?? []).find(
-        ({ kind, n, x, y, w, h }) =>
-          kind !== 'stack' &&
-          (n ?? 0) > 1 &&
-          (original?.center.x ?? 0) > x &&
-          (original?.center.x ?? 0) < x + w &&
-          (original?.center.y ?? 0) > y &&
-          (original?.center.y ?? 0) < y + h,
-      );
-      if (run) {
-        expect({ key, inside: node.center.x > run.x && node.center.x < run.x + run.w }).toEqual({ key, inside: true });
-        expect({ key, inside: node.center.y > run.y && node.center.y < run.y + run.h }).toEqual({ key, inside: true });
-        continue;
-      }
-      // A card sized to its row or column keeps its centre, so its corner moves by half of what it gained or gave
-      // back; everything else moves by at most half a cell.
-      const extent = (shape: typeof node | undefined, axis: 'x' | 'y') =>
-        shape ? (axis === 'x' ? shape.size.width : shape.size.height) : 0;
-      const corner = (shape: typeof node | undefined, axis: 'x' | 'y') =>
-        shape ? shape.center[axis] - extent(shape, axis) / 2 : 0;
-      for (const axis of ['x', 'y'] as const) {
-        const slack = Math.abs(extent(node, axis) - extent(original, axis)) / 2;
-        expect({
-          key,
-          axis,
-          far: Math.abs(corner(node, axis) - corner(original, axis)) > STUDIO_GRID + slack,
-        }).toEqual({ key, axis, far: false });
+    }
+  });
+
+  test.for(SLIDES)('%s leaves no two cards overlapping', (name, { expect }) => {
+    // What the regularising passes must not do: a column laid out on one gap, a row given one height or a card drawn
+    // at a size of its own could each push a card into its neighbour.
+    const { source, model } = slide(name);
+    const content: ContentMap = {};
+    seedStudioSlide(source, model)(content);
+    const cards = Object.keys(model.nodes).flatMap((id) => {
+      const record = content[`node:${id}/box`];
+      return isNodeRecord(record) ? [{ id, node: record.node }] : [];
+    });
+    for (let index = 0; index < cards.length; index++) {
+      for (let other = index + 1; other < cards.length; other++) {
+        const [left, right] = [cards[index], cards[other]];
+        const overlap =
+          Math.abs(left.node.center.x - right.node.center.x) < (left.node.size.width + right.node.size.width) / 2 &&
+          Math.abs(left.node.center.y - right.node.center.y) < (left.node.size.height + right.node.size.height) / 2;
+        expect({ pair: `${left.id}/${right.id}`, overlap }).toEqual({ pair: `${left.id}/${right.id}`, overlap: false });
       }
     }
   });
