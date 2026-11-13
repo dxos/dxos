@@ -11,12 +11,12 @@
 // files off disk instead).
 //
 
+import { agentsSpec } from './agent-feeds.spec.ts';
+import { AGENT } from './agent-model.spec.ts';
 import agentSource from './agent.diagram?raw';
 import agentModel from './agent.json?raw';
-import { AGENT } from './agent.spec.ts';
 import agentsSource from './agents.diagram?raw';
 import agentsModel from './agents.json?raw';
-import { agentsSpec } from './agents.spec.ts';
 import architectureSource from './architecture.diagram?raw';
 import architectureModel from './architecture.json?raw';
 import chatSource from './chat.diagram?raw';
