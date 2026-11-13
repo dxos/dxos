@@ -94,10 +94,13 @@ const QueryModuleContainer = ({ space }: { space: Space }) => {
       } else {
         next = { kind: 'rows', count: rows.length, text: formatBindings(rows) };
       }
+      // The store may have grown since the views loaded; the scope can only show facts they hold.
+      const all = await EffectEx.runPromise(store.query({}));
+      setFacts(all);
       setScope({ graphs, iris, literals });
       setResult(next);
     });
-  }, [guard, registry, space.id, query, setScope]);
+  }, [guard, registry, space.id, query, setFacts, setScope]);
 
   // Reset the field, drop the result's scope and re-read all facts.
   const handleReset = useCallback(() => {

@@ -52,20 +52,24 @@ export const BrainChatPlugin = Plugin.define(
       }
 
       // Binding is idempotent, so an existing chat whose earlier binding failed gets the skill now.
-      const feed = yield* Effect.promise(() => chat.feed.load());
-      const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
-      const binder = new AiContext.Binder({ feed, runtime, registry });
-      yield* Effect.promise(() =>
-        binder.use(async (binder) => {
-          if (binder.getSkills().some((skill) => Obj.getMeta(skill).key === BrainSkill.key)) {
-            return;
-          }
-          const skills = await space.db.query(Filter.type(Skill.Skill)).run();
-          const skill =
-            skills.find((skill) => Obj.getMeta(skill).key === BrainSkill.key) ?? space.db.add(BrainSkill.make());
-          await binder.bind({ skills: [Ref.make(skill)] });
-        }),
-      );
+      const bind = Effect.gen(function* () {
+        const feed = yield* Effect.promise(() => chat.feed.load());
+        const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+        const binder = new AiContext.Binder({ feed, runtime, registry });
+        yield* Effect.promise(() =>
+          binder.use(async (binder) => {
+            if (binder.getSkills().some((skill) => Obj.getMeta(skill).key === BrainSkill.key)) {
+              return;
+            }
+            const skills = await space.db.query(Filter.type(Skill.Skill)).run();
+            const skill =
+              skills.find((skill) => Obj.getMeta(skill).key === BrainSkill.key) ?? space.db.add(BrainSkill.make());
+            await binder.bind({ skills: [Ref.make(skill)] });
+          }),
+        );
+      });
+      // A chat created here that fails setup is removed, so the next activation starts clean rather than adding another.
+      yield* bind.pipe(Effect.onError(() => Effect.sync(() => (existing ? undefined : space.db.remove(chat)))));
 
       // Keyed only once bound, so a failed binding leaves no keyed chat without the skill.
       if (!existing) {

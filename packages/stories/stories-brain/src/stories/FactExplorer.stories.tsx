@@ -58,6 +58,12 @@ const ExplorerRoot = () => {
       const graphs = now - lookup.current.at > LOOKUP_WINDOW_MS ? new Set<string>() : lookup.current.graphs;
       read.forEach((fact) => graphs.add(RDF.Mapping.graphOf(fact)));
       lookup.current = { at: now, graphs };
+      // A fact the store gained after the views loaded must join them, or the scope would point at nothing.
+      setFacts((current) => {
+        const known = new Set(current.map((fact) => fact.id));
+        const added = read.filter((fact) => !known.has(fact.id));
+        return added.length === 0 ? current : [...current, ...added];
+      });
       setScope({ graphs: new Set(graphs), iris: new Set(), literals: new Set() });
     };
     operationFactListeners.add(listener);
