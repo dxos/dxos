@@ -154,10 +154,27 @@ export const toViewportDocument = (document: Scene.SceneDocument, kinds: Kinds):
   layouts: document.layouts.map((layout) => (layout.dim === '2d' ? toViewportLayout(layout, kinds) : layout)),
 });
 
+/** The stored value where the written one still equals it, so a reference the engine copied as JSON stays one. */
+const keep = (current: unknown, value: unknown): unknown =>
+  current !== undefined && JSON.stringify(current) === JSON.stringify(value) ? current : value;
+
+/**
+ * The written `data` with each field the stored element still agrees on kept as stored: a kind's fields share the one
+ * `data`, so an edit of one must not replace a reference another holds. A field stored at the element's top (before
+ * kinds kept theirs under `data`) is compared there.
+ */
+const keepData = (stored: KindElement | undefined, value: unknown): unknown => {
+  const current = isRecord(stored?.data) ? stored.data : {};
+  return isRecord(value)
+    ? Object.fromEntries(
+        Object.entries(value).map(([name, field]) => [name, keep(current[name] ?? stored?.[name], field)]),
+      )
+    : value;
+};
+
 /**
  * An element the viewport wrote, with its `data` and the engine's fields back at its top. The `derived` fields (the
- * host's, such as runtime ports) are dropped; a field that still equals the stored element's keeps the stored value, so a reference the
- * engine copied as JSON stays a reference.
+ * host's, such as runtime ports) are dropped; a field that still equals the stored element's keeps the stored value.
  */
 const lift = (
   element: Record<string, unknown>,
@@ -169,8 +186,8 @@ const lift = (
   const own = Object.entries(isRecord(canvas) ? canvas : {}).filter(([key]) => !derived.includes(key));
   const kept = Object.fromEntries(
     own.map(([key, value]) => {
-      const current = stored?.[key];
-      return [key, current !== undefined && JSON.stringify(current) === JSON.stringify(value) ? current : value];
+      const whole = keep(stored?.[key], value);
+      return [key, key === DATA && whole === value ? keepData(stored, value) : whole];
     }),
   );
   return { ...slots, ...kept, ...(Object.keys(rest).length > 0 ? { props: rest } : {}) };

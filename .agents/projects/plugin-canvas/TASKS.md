@@ -365,7 +365,16 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       `Scene.BaseElement.data`; `KindRegistry.dataFields` / `normalize`; `kindNodeDef` refuses a top-level field of
       the kind's own unless it extends a core prototype; `kindData` for views; parts and binds name `data.<field>`.
       Moved: the space graph (its radius is now `size`), the studio card and feed card, the story's task kind, the
-      UML class. An element stored flat reads as before and is written back under `data`.
+      UML class, and conductor's compute shapes (board shape, element and node; `computeData` in
+      react-ui-canvas-compute `shapes/defs.ts`). An element or board shape stored flat reads as before and is written
+      back under `data`. The Properties panel shows `data` last, as a group labelled `Custom`.
+- [x] Space graph: fields two to a row (`FormLayoutAnnotation`), Population renamed Node density, a Base dots toggle
+      (off by default).
+- [ ] Conductor: `data.node` (the compute node id) is an editable text field in the Properties panel, as `node` was.
+- [ ] Conductor: a board's legacy trigger keeps `spaceId` / `triggerKind` at the shape's top; nothing reads them.
+- [ ] Conductor: `createComputeGraph` / `useGraphMonitor` read `data` only, so a canvas graph model built with flat
+      fields (none in the repo) would lose them. Not exercised in a browser: a legacy flat board, a trigger, paste,
+      undo, and editing `data.value` in the Properties form.
 - [ ] The Properties panel's generic list editor does not save a change to one row of a list under `data` (nor did
       it at the top): `patchValues` splits a path on `.` and the form names a row `list[0]`. UML is unaffected, since
       it edits its lists with `LinesField`.

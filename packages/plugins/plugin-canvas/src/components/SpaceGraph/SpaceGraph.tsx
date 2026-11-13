@@ -17,7 +17,7 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { type ElementKindSpec, type NodeViewProps, kindData } from '@dxos/react-ui-canvas';
-import { StepAnnotation } from '@dxos/react-ui-form';
+import { DEFAULT_LAYOUT_NAME, FormLayoutAnnotation, StepAnnotation } from '@dxos/react-ui-form';
 import { Scene } from '@dxos/scene';
 
 import { layout } from './generator/space-graph.generator.ts';
@@ -70,7 +70,7 @@ export const spaceGraphFields = {
   /** Share of the lattice that becomes objects (0–1): how full the space is. */
   fill: Schema.optional(
     Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 }))
-      .annotate({ title: 'Population' })
+      .annotate({ title: 'Node density' })
       .pipe(StepAnnotation.set(0.05)),
   ),
   /** Chance that each neighbouring pair beyond the spanning tree is linked (0–1): how connected the graph is. */
@@ -87,10 +87,19 @@ export const spaceGraphFields = {
   ),
   /** The graph's colour. */
   hue: Schema.optional(Schema.Literals(HUES).annotate({ title: 'Hue' })),
+  /** Whether the lattice points that hold no object are drawn, as faint dots under the graph; unset, they are not. */
+  dots: Schema.optional(Schema.Boolean.annotate({ title: 'Base dots' })),
 };
 
 /** The kind's own fields, kept under `data`: they share names with the element (`size`) and its style (`fill`, `hue`). */
-export const SpaceGraphData = Schema.Struct(spaceGraphFields);
+export const SpaceGraphData = Schema.Struct(spaceGraphFields).pipe(
+  // Two to a row, each pair of a kind: what is drawn, how far apart, and how full.
+  FormLayoutAnnotation.set({
+    [DEFAULT_LAYOUT_NAME]: `<grid cols="2" fixed="true">${['seed', 'hue', 'pitch', 'size', 'fill', 'extra', 'dots']
+      .map((name) => `<field name="${name}"/>`)
+      .join('')}</grid>`,
+  }),
+);
 
 export const SpaceGraphNode = Schema.Struct({
   ...Scene.Element2D.fields,
@@ -123,7 +132,7 @@ export const SpaceGraphNodeView = ({ node }: NodeViewProps) => {
       height={height}
       data-testid='space-graph-node'
     >
-      {cells
+      {(data.dots ? cells : [])
         .filter((cell) => !on.has(`${cell.x},${cell.y}`))
         .map((cell, index) => (
           <circle

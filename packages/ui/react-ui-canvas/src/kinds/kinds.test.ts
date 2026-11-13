@@ -91,6 +91,28 @@ describe('element kinds', () => {
     expect(intent.kind === 'update' && intent.value).toEqual(layout.elements.s);
   });
 
+  test('a field of data the write leaves alone keeps its stored value, whatever else in data changes', () => {
+    // A reference among a kind's fields: the engine hands back an equal copy, which must not replace the original.
+    const owner = { uri: 'dxn:owner' };
+    const stored: Scene.LayoutRecord2D = {
+      ...layout,
+      elements: { s: { ...layout.elements.s, data: { votes: 2, owner } } },
+    };
+    const drawn = toViewportLayout(stored, kinds).elements.s;
+    const canvas = drawn.props?.canvas;
+    const edited = {
+      ...drawn,
+      props: { ...drawn.props, canvas: { ...canvas, data: { votes: 3, owner: { ...owner } } } },
+    };
+    const intent = fromViewportIntent({ kind: 'update', id: 's', path: [], value: edited }, stored, kinds);
+    const value = intent.kind === 'update' ? Object(intent.value) : {};
+    expect(value.data).toEqual({ votes: 3, owner });
+    expect(value.data.owner).toBe(owner);
+    // Nothing of `data` changed: the stored `data` itself is kept.
+    const same = fromViewportIntent({ kind: 'update', id: 's', path: [], value: drawn }, stored, kinds);
+    expect(same.kind === 'update' && Object(same.value).data).toBe(stored.elements.s.data);
+  });
+
   test("an element stored with its kind's fields at its top draws them as data, and its next write stores them there", () => {
     const { data, ...base } = layout.elements.s;
     const stored: Scene.LayoutRecord2D = { ...layout, elements: { s: { ...base, votes: 5 } } };

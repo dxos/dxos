@@ -3,6 +3,7 @@
 '@dxos/diagram': minor
 '@dxos/react-ui-canvas': minor
 '@dxos/react-ui-canvas-editor': minor
+'@dxos/react-ui-canvas-compute': minor
 '@dxos/plugin-uml': minor
 '@dxos/plugin-canvas': minor
 '@dxos/plugin-markdown': patch
@@ -108,12 +109,21 @@ An extension kind keeps its own fields under its element's `data`, not at the el
 (`Schema.Struct({ ...Scene.Element2D.fields, type, data: Schema.Struct({ … }) })`), so a kind's field never meets the
 base's or another kind's; `Scene.BaseElement` gains the `data` slot. The engine's node carries the same `data`: a
 view reads it with `kindData(schema, node)`, a part or a bind names a field as `data.<field>`, and the Properties
-panel shows it as a group named after the kind. `kindNodeDef` refuses a kind that declares a field of its own at the
+panel shows it last, as a group labelled `Custom`. `kindNodeDef` refuses a kind that declares a field of its own at the
 top, unless it extends a core prototype whose frame reads fields there (a card's `icon`, `body`, `footer`).
 `KindRegistry` gains `dataFields(type)` and `normalize(element)`. **Migration:** move a kind's own fields into
 `data` in its schema, its `create`, its view, and its `parts` / `fields` / template `bind` names. A stored element
 with the fields at its top is read as before and written back under `data` on its next edit. plugin-uml's class
 keeps `attributes` and `methods` in `data`.
+
+Conductor's compute shapes follow the same rule in a board's stored shape, its scene element and the engine's node:
+the compute `node` id and each shape's own fields (a constant's `value`, a template's `valueType`, a random number's
+`min` and `max`, a trigger's `functionTrigger`) are under `data`. **Migration:** pass a shape's own fields to its
+factory under `data` (`createConstant({ data: { value } })`) and read them from `shape.data`; a board stored with
+the fields beside the shape's own opens as before and is rewritten on its next edit.
+
+The space graph's Properties are two to a row; Population is Node density, and Base dots (off unless turned on) draws
+the lattice points that hold no object.
 
 The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
 

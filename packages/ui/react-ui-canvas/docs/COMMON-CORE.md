@@ -87,7 +87,7 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
     `data`.** A plugin kind's schema is `Schema.Struct({ ...elementBase, type: Schema.Literal('class'), data:
 Schema.Struct({ …own fields }) })`: one typed sub-object, the same name for every kind, so a kind's field never
     meets the base's (`size`) or another kind's. The engine's node carries the same `data`, a part or a bind names a
-    field as `data.<field>`, and the Properties panel shows `data` as a group named after the kind. The fields of the
+    field as `data.<field>`, and the Properties panel shows `data` last, as a group labelled `Custom`. The fields of the
     core prototype a kind extends stay at the top, where the prototype's frame reads them (a card's `icon`, `body` and
     `footer`), as does the base's `label`. An element stored with its kind's fields at its top (decision 13 as first
     built) is read with them under `data`, and its next write stores them there. This supersedes the "own fields" at

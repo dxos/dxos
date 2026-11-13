@@ -86,6 +86,8 @@ export const Default: Story = {};
  * 2. The Space graph tool is in the rail, in a group of its own: not among the shapes and links.
  * 3. Select a graph: Border reads on and Fill off. Turn Border off: the ring goes, nothing inside it moves, and the
  *    inspector stays in place.
+ * 4. Its own fields are the last group, Custom, two to a row. Base dots is off: turn it on and the empty lattice
+ *    points are drawn.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -109,6 +111,14 @@ export const Test: Story = {
     await userEvent.click(graphs[0]);
     const dock = await canvas.findByTestId('scene-view-dock');
     const border = await within(dock).findByRole('switch', { name: 'Border' });
+    // The kind's own fields are one group, labelled Custom, after every field the graph shares with the core's.
+    const custom = await within(dock).findByTestId('group.data');
+    await expect(custom.textContent).toMatch(/^Custom/);
+    await expect(within(custom).getByText('Seed')).toBeTruthy();
+    const style = within(dock).getByTestId('group.style');
+    await expect(style.compareDocumentPosition(custom) & globalThis.Node.DOCUMENT_POSITION_FOLLOWING).toBeGreaterThan(
+      0,
+    );
     await expect(border).toBeChecked();
     // Selected, the ring keeps its own colour: the selection frame marks the graph.
     await expect(canvas.getAllByTestId('space-graph-node')[0].closest('[data-node-id]')?.className).not.toContain(
@@ -128,5 +138,14 @@ export const Test: Story = {
         (element) => element.scrollTop > 0 && getComputedStyle(element).overflowY === 'hidden',
       ),
     ).toEqual([]);
+
+    // Two to a row: the density of the nodes beside the density of the links.
+    const top = (name: string) => within(custom).getByText(name).getBoundingClientRect().top;
+    await expect(top('Node density')).toBe(top('Link density'));
+    // The lattice points that hold no object are drawn only once Base dots is on.
+    const dots = () => canvas.getAllByTestId('space-graph-node')[0].querySelectorAll('circle[opacity]').length;
+    await expect(dots()).toBe(0);
+    await userEvent.click(within(custom).getByRole('switch', { name: 'Base dots' }));
+    await waitFor(() => expect(dots()).toBeGreaterThan(0));
   },
 };

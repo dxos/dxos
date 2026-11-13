@@ -146,7 +146,7 @@ decision D-1: A class is an element kind: `ClassNode` is the 2D element base plu
     - Members kept under the element's canvas fields: no kind registry could check them, and every class would need moving again when the View model goes.
   source: packages/ui/react-ui-canvas/docs/COMMON-CORE-PLAN.md (Task E.4, R-40 to R-44)
 
-decision D-2: A class keeps `attributes` and `methods` under its element's `data`, and its name in the base's `label`. Its template binds the two compartments to `data.attributes` and `data.methods`, its parts and its Properties editors name them the same way, and the panel shows them in a group named `Class`. A class stored with its members at the element's top, or under the element's canvas fields, draws as before and moves to `data` on its next edit. Supersedes the "at the element's top" of [D-1].
+decision D-2: A class keeps `attributes` and `methods` under its element's `data`, and its name in the base's `label`. Its template binds the two compartments to `data.attributes` and `data.methods`, its parts and its Properties editors name them the same way, and the panel shows them last, in a group labelled `Custom`. A class stored with its members at the element's top, or under the element's canvas fields, draws as before and moves to `data` on its next edit. Supersedes the "at the element's top" of [D-1].
   date: 2026-11-12
   by: user:richburdon
   affects: [F-1.1, F-1.2, F-1.3, F-1.4]

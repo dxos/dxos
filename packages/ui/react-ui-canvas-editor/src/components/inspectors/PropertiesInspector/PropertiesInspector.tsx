@@ -248,6 +248,8 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'inset': { hidden: true },
   'scene': { label: 'View' },
   'layer': { label: 'Layer' },
+  // An extension kind's own fields, whatever the kind.
+  'data': { label: 'Custom' },
 };
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
@@ -311,24 +313,22 @@ export const PropertiesInspector = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const schema = useMemo(() => commonSchema(elements.map((element) => schemaOf(nodes, element))), [typesKey, nodes]);
   // A shape's text names it, so its label leads, ahead of the shared fields (style) its type's own fields follow.
+  // An extension kind's own fields (`data`) come last, after everything the shape shares with the core's.
   const fieldOrder = useMemo(() => {
     const names =
       schema && SchemaAST.isObjects(schema.ast) ? schema.ast.propertySignatures.map(({ name }) => String(name)) : [];
     const style = names.indexOf('style');
-    return names.includes('label') && style >= 0
-      ? [
-          ...names.slice(0, style).filter((name) => name !== 'label'),
-          'label',
-          ...names.slice(style).filter((name) => name !== 'label'),
-        ]
-      : undefined;
+    const labelled =
+      names.includes('label') && style >= 0
+        ? [
+            ...names.slice(0, style).filter((name) => name !== 'label'),
+            'label',
+            ...names.slice(style).filter((name) => name !== 'label'),
+          ]
+        : names;
+    const ordered = [...labelled.filter((name) => name !== 'data'), ...labelled.filter((name) => name === 'data')];
+    return ordered.some((name, index) => name !== names[index]) ? ordered : undefined;
   }, [schema]);
-  const kindName = useMemo(() => {
-    const [first] = elements;
-    const single = first && !isLink(first) && elements.every((element) => element.type === first.type);
-    return single ? nodeDef(nodes, first)?.name : undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typesKey, nodes]);
   const { values, fieldOverrides } = useMemo(() => {
     const shown = elements.map((element) => formValues(nodes, element, styleMap, layers));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
@@ -338,8 +338,6 @@ export const PropertiesInspector = ({
       ...(viewOptions ? {} : { scene: { hidden: true } }),
       // The class is edited in the layer's row (`LayerClassField`).
       class: { hidden: true },
-      // An extension kind's own fields are its `data`: a group named after the kind, where the selection is of one.
-      ...(kindName ? { data: { label: kindName } } : {}),
       // A link has no font face, so its size is not drawn by `FontField` and needs its own row.
       ...(elements.some(isLink) ? { 'style.fontSize': {} } : {}),
       ...overrides?.(elements),
@@ -358,7 +356,7 @@ export const PropertiesInspector = ({
       }
     }
     return { values, fieldOverrides };
-  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers, groups, onGroupsChange, kindName]);
+  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers, groups, onGroupsChange]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
