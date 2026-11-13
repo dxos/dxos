@@ -1123,9 +1123,12 @@ const NodeFrame = memo(
     // An outline's border is part of what the type draws, so selecting or hovering it leaves its colour alone: the
     // selection frame marks it, and a ring turned off stays off.
     const marked = def?.outline !== true;
+    // A line is nothing but its stroke, so one recoloured while it is selected or its vertices are edited could not
+    // be seen in its own style as it is worked on: the selection frame and the vertex handles mark it.
+    const line = def?.editor === 'vertices';
     const frameLook = props.opening
       ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
-      : frameClasses(drawn, marked && selected, marked && hovered, def?.ellipse, look);
+      : frameClasses(drawn, marked && selected && !line, marked && hovered && !(line && selected), def?.ellipse, look);
     const silhouetteFilled = def?.filled?.(drawn) ?? true;
     const silhouetteRadius = RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))];
     const relief = silhouette && silhouetteFilled ? nodeRelief(drawn, look) : undefined;

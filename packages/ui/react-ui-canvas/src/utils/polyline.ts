@@ -258,6 +258,31 @@ export const bendsAfterDelete = (
 };
 
 /**
+ * `bends` once the vertex at `index` of `count` has moved by `delta`: the controls that are its own go with it, so the
+ * line leaves and arrives at it as it did. Those are a cubic's, one to each end; a parabola's one control is both
+ * its ends', and stays.
+ */
+export const bendsWithVertex = (
+  bends: readonly PolylineBend[],
+  index: number,
+  count: number,
+  delta: Point,
+): PolylineBend[] => {
+  const shifted = ({ x, y }: Point): Point => ({ x: x + delta.x, y: y + delta.y });
+  const arriving = (index - 1 + count) % count;
+  return bends.map((bend) => {
+    if (!bend.second) {
+      return bend;
+    }
+    return {
+      ...bend,
+      ...(bend.segment === index ? { control: shifted(bend.control) } : {}),
+      ...(bend.segment === arriving ? { second: shifted(bend.second) } : {}),
+    };
+  });
+};
+
+/**
  * A bend for every segment of a line through scene `points`, so the line runs through them as one curve: each
  * segment is a cubic that leaves its first point along the way from the point before it to the one after, and
  * arrives at its last along that point's way (a Catmull-Rom spline). The end of an open line has one neighbour,

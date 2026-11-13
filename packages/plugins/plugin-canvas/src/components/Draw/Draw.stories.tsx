@@ -363,7 +363,8 @@ export const ShapesTest: Story = {
  * 1. Press U, then click four points on the canvas and double-click the last: one smooth curve lands through them.
  * 2. Every segment is a cubic, so the line bows one way and then the other without a corner.
  * 3. Double-click the curve: each vertex shows a square, and each segment two control points to drag.
- * 4. Drag a control point: its segment changes, and stays a curve.
+ * 4. The curve keeps its own colour while it is edited: it is not drawn in the selection's colour.
+ * 5. Drag a control point: its segment changes, and stays a curve.
  */
 export const SplineTest: Story = {
   args: { board: 'shapes' },
@@ -405,6 +406,8 @@ export const SplineTest: Story = {
     await fireEvent.dblClick(spline, at([-120, 130]));
     await waitFor(() => expect(canvas.getAllByTestId('vertex-handle')).toHaveLength(4));
     await expect(canvas.getAllByTestId('bend-handle')).toHaveLength(6);
+    // Selected and in its edit mode, the line is still drawn in its style's colour, not the selection's.
+    await expect(drawn(canvasElement, 'spline')[0].querySelector('.border-focus')).toBeNull();
 
     const before = pathOf(spline);
     const control = canvasElement.querySelector('[data-testid="bend-handle"][data-segment="1"][data-handle="control"]');

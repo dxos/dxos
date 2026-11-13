@@ -9,6 +9,7 @@ import { type PolylineNode } from '@dxos/scene';
 import {
   bendsAfterDelete,
   bendsAfterInsert,
+  bendsWithVertex,
   cubicPoint,
   polylineBends,
   polylineFrame,
@@ -389,6 +390,27 @@ describe('bends', () => {
     expect(joined.segment).toBe(0);
     expect(joined.control).toEqual(left.control);
     expect(joined.second).toEqual(right.second);
+  });
+
+  test("a vertex that moves takes its own controls with it, and leaves its neighbours' where they are", () => {
+    const points = [
+      { x: 0, y: 100 },
+      { x: 120, y: 0 },
+      { x: 240, y: 100 },
+    ];
+    const bends = smoothBends(points);
+    const delta = { x: 12, y: -24 };
+    const moved = bendsWithVertex(bends, 1, points.length, delta);
+    // The control it arrives by and the one it leaves toward.
+    expect(moved[0].second).toEqual({ x: (bends[0].second?.x ?? 0) + 12, y: (bends[0].second?.y ?? 0) - 24 });
+    expect(moved[1].control).toEqual({ x: bends[1].control.x + 12, y: bends[1].control.y - 24 });
+    // The controls at the other ends of those two segments are the neighbours' own.
+    expect(moved[0].control).toEqual(bends[0].control);
+    expect(moved[1].second).toEqual(bends[1].second);
+    // The first vertex of an open line has no segment arriving, and a parabola's one control is both its ends'.
+    expect(bendsWithVertex(bends, 0, points.length, delta)[1]).toEqual(bends[1]);
+    const parabola = [{ segment: 0, control }];
+    expect(bendsWithVertex(parabola, 0, 2, delta)).toEqual(parabola);
   });
 
   test('a refit keeps a bend where it is in the scene', () => {

@@ -64,6 +64,7 @@ import {
   activeLayer,
   bendsAfterDelete,
   bendsAfterInsert,
+  bendsWithVertex,
   between,
   boundsCenter,
   boundsFromPoints,
@@ -1078,8 +1079,14 @@ export const usePointerMachine = ({
             break;
           }
           const points = [...current.points];
+          const from = points[current.index];
           points[current.index] = landed;
-          setDrag({ ...current, points });
+          // The vertex's own controls go with it, so the curve keeps its shape there.
+          const bends = bendsWithVertex(current.bends, current.index, points.length, {
+            x: landed.x - from.x,
+            y: landed.y - from.y,
+          });
+          setDrag({ ...current, points, bends });
           break;
         }
         case 'point': {

@@ -392,6 +392,9 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] **Views list front first** (user: "the operations work, but the view list is reversed"): `buildViewTree` and
       `layoutTree` list a View's rows from the element drawn last to the one drawn first, and a drop above a row
       puts the element in front of it (`dropPosition`). The Layers list was top first already (`LayersInspector`).
+- [x] **A line keeps its colour** (user, 2026-11-12): a type edited by its vertices (`editor: 'vertices'`) is not
+      drawn in the selection's colour while selected or edited (`SceneLayer`); a hover on one not selected still
+      tints it.
 - [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Sketch`; the registry keys
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)
@@ -401,8 +404,8 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       draws the graph the data describes. Not designed yet: where the data is declared, how a bind is written
       beside the template's `bind=`, and what a shape does when the path resolves to nothing.
 - [ ] Polyline `bends`: hit testing, ports and the `.dx` / SVG export treat a bent segment as straight, and 3D does
-      not draw one. A straight segment has no gesture to bend it, and a spline's two controls at a vertex move
-      apart (no smooth-vertex constraint).
+      not draw one. A straight segment has no gesture to bend it. A spline's vertex takes its two controls with
+      it (`bendsWithVertex`), but dragging one control does not turn the other (no smooth-vertex constraint).
 - [x] Text colour for notes: `style.textHue` / `style.textTone`, a 9 by 3 grid in Properties.
 - [ ] Text colour is offered for notes alone; a shape's label still takes its shape's colour.
 - [x] The icon picker offers the DXOS mark (`dx--dxos--regular`), first in its list.
