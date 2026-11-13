@@ -60,33 +60,43 @@ const STROKE: Record<Hue, string> = {
 // constraints are declared rather than annotated with a step.
 //
 
+/**
+ * What a graph draws with where a field is unset. Each is also the field's `default` in the schema, which is what the
+ * Properties panel shows for an unset field, so the panel and the drawing cannot disagree.
+ */
+const DEFAULTS = { pitch: 26, fill: 0.6, extra: 0.45, size: 24, hue: 'neutral' } as const;
+
 export const spaceGraphFields = {
   /** Same seed, same graph. */
   seed: Schema.Number.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)).annotate({ title: 'Seed' }),
   /** Distance between neighbouring lattice points, in scene units: how far apart the objects sit. */
   pitch: Schema.optional(
-    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 8, maximum: 120 })).annotate({ title: 'Spacing' }),
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 8, maximum: 120 })).annotate({
+      title: 'Spacing',
+      default: DEFAULTS.pitch,
+    }),
   ),
   /** Share of the lattice that becomes objects (0–1): how full the space is. */
   fill: Schema.optional(
     Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 }))
-      .annotate({ title: 'Node density' })
+      .annotate({ title: 'Node density', default: DEFAULTS.fill })
       .pipe(StepAnnotation.set(0.05)),
   ),
   /** Chance that each neighbouring pair beyond the spanning tree is linked (0–1): how connected the graph is. */
   extra: Schema.optional(
     Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 }))
-      .annotate({ title: 'Link density' })
+      .annotate({ title: 'Link density', default: DEFAULTS.extra })
       .pipe(StepAnnotation.set(0.05)),
   ),
   /** Object radius as a percentage of pitch. */
   size: Schema.optional(
     Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 5, maximum: 50 })).annotate({
       title: 'Object size',
+      default: DEFAULTS.size,
     }),
   ),
   /** The graph's colour. */
-  hue: Schema.optional(Schema.Literals(HUES).annotate({ title: 'Hue' })),
+  hue: Schema.optional(Schema.Literals(HUES).annotate({ title: 'Hue', default: DEFAULTS.hue })),
   /** Whether the lattice points that hold no object are drawn, as faint dots under the graph; unset, they are not. */
   dots: Schema.optional(Schema.Boolean.annotate({ title: 'Base dots' })),
 };
@@ -107,19 +117,13 @@ export const SpaceGraphNode = Schema.Struct({
   data: SpaceGraphData,
 });
 
-/**
- * What a graph draws with where a field is unset. A new graph is made with these written out, so the Properties panel
- * shows each as a value to change rather than as an empty field.
- */
-export const SPACE_GRAPH_DEFAULTS = { pitch: 26, fill: 0.6, extra: 0.45, size: 24, hue: 'neutral' } as const;
-
 export const SpaceGraphNodeView = ({ node }: NodeViewProps) => {
   const data = kindData(SpaceGraphData, node);
   if (!data) {
     return null;
   }
 
-  const params = { ...SPACE_GRAPH_DEFAULTS, ...data };
+  const params = { ...DEFAULTS, ...data };
   const { width, height } = node.size;
   // Local coordinates: the circle is inscribed in the node's frame, so the graph moves and resizes with the node.
   const center = { x: width / 2, y: height / 2 };
@@ -173,14 +177,7 @@ export const spaceGraphSpec: ElementKindSpec = {
   key: 'G',
   schema: SpaceGraphNode,
   component: SpaceGraphNodeView,
-  create: ({ id, z, center, size }) => ({
-    type: 'space-graph',
-    id,
-    z,
-    center,
-    size,
-    data: { seed: 7, ...SPACE_GRAPH_DEFAULTS },
-  }),
+  create: ({ id, z, center, size }) => ({ type: 'space-graph', id, z, center, size, data: { seed: 7 } }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 392-unit circle, give or take.
   defaultSize: { width: 8, height: 8 },
   resizable: true,

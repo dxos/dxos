@@ -8,7 +8,7 @@
 '@dxos/plugin-canvas': minor
 '@dxos/plugin-markdown': patch
 '@dxos/react-ui': patch
-'@dxos/react-ui-form': patch
+'@dxos/react-ui-form': minor
 '@dxos/ui-types': minor
 ---
 
@@ -123,8 +123,12 @@ factory under `data` (`createConstant({ data: { value } })`) and read them from 
 the fields beside the shape's own opens as before and is rewritten on its next edit.
 
 The space graph's Properties are two to a row; Population is Node density, and Base dots (off unless turned on) draws
-the lattice points that hold no object. A new space graph has its defaults written out (`SPACE_GRAPH_DEFAULTS`), so
-the panel shows each as a value.
+the lattice points that hold no object.
+
+A form field with no value shows the default its schema declares (Effect's `default` annotation,
+`Schema.Number.annotate({ default: 26 })`) as its value. Showing it writes nothing: the form holds no value for the
+field until it is edited. The space graph declares its defaults this way, so the Properties panel and the drawing
+agree on an unset field.
 
 The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
 

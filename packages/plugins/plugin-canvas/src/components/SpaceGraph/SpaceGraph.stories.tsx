@@ -27,7 +27,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type Node, type Scene } from '@dxos/scene';
 
-import { SPACE_GRAPH_DEFAULTS, spaceGraphSpec } from './SpaceGraph.tsx';
+import { spaceGraphSpec } from './SpaceGraph.tsx';
 
 const NODES = createNodeRegistry(
   {
@@ -37,14 +37,14 @@ const NODES = createNodeRegistry(
   defaultNodePrototypes,
 );
 
-/** A space graph as the tool makes one: the node base, and the kind's own fields under `data`, defaults written out. */
+/** A space graph as the engine draws one: the node base, and the kind's own fields under `data`. */
 const graph = (id: string, x: number, data: Record<string, unknown>): Node & { data: Record<string, unknown> } => ({
   type: 'space-graph',
   id,
   z: `a${id}`,
   center: { x, y: 0 },
   size: { width: 384, height: 384 },
-  data: { ...SPACE_GRAPH_DEFAULTS, ...data },
+  data,
 });
 
 /** Two spaces of different seeds, the second denser and in a hue of its own. */
@@ -139,13 +139,9 @@ export const Test: Story = {
       ),
     ).toEqual([]);
 
-    // A graph's fields hold values, the defaults included, so each reads as a setting rather than an empty field.
-    await expect(within(custom).getByRole('spinbutton', { name: 'Spacing' })).toHaveValue(
-      String(SPACE_GRAPH_DEFAULTS.pitch),
-    );
-    await expect(within(custom).getByRole('spinbutton', { name: 'Link density' })).toHaveValue(
-      String(SPACE_GRAPH_DEFAULTS.extra),
-    );
+    // This graph stores its seed alone: every other field shows the default its schema declares, as a value.
+    await expect(within(custom).getByRole('spinbutton', { name: 'Spacing' })).toHaveValue('26');
+    await expect(within(custom).getByRole('spinbutton', { name: 'Link density' })).toHaveValue('0.45');
     // Two to a row: the density of the nodes beside the density of the links.
     const top = (name: string) => within(custom).getByText(name).getBoundingClientRect().top;
     await expect(top('Node density')).toBe(top('Link density'));

@@ -99,8 +99,8 @@ describe('core prototypes', () => {
     expect(space.ellipse).toBe(true);
     expect([space.bare, space.outline]).toEqual([undefined, true]);
     expect(space.minSize).toEqual({ width: 120, height: 120 });
-    // A new graph has every setting written out, so the Properties panel shows values rather than empty fields.
+    // A new graph stores its seed alone: the rest are the schema's defaults, which the Properties panel shows.
     const made = space.create({ id: 's', z: 'a0', center: { x: 0, y: 0 }, size: { width: 384, height: 384 } });
-    expect(Reflect.get(made, 'data')).toEqual({ seed: 7, pitch: 26, fill: 0.6, extra: 0.45, size: 24, hue: 'neutral' });
+    expect(Reflect.get(made, 'data')).toEqual({ seed: 7 });
   });
 });
