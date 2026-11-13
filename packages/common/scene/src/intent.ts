@@ -10,6 +10,7 @@ import {
   type Dimension,
   Element2D,
   Element3D,
+  GridPitch,
   Lattice,
   LayoutKind,
   type LayoutRecord,
@@ -28,6 +29,7 @@ type Element = Element2D | Element3D;
  * leaves it.
  */
 export type LayoutPatch = {
+  readonly grid?: number;
   readonly lattice?: Lattice;
   readonly constraints?: readonly Constraint[];
   readonly kind?: LayoutKind;
@@ -36,6 +38,7 @@ export type LayoutPatch = {
 };
 
 export const LayoutPatch: Schema.Codec<LayoutPatch> = Schema.Struct({
+  grid: Schema.optional(GridPitch),
   lattice: Schema.optional(Lattice),
   constraints: Schema.optional(Schema.Array(Constraint)),
   kind: Schema.optional(LayoutKind),
@@ -45,6 +48,7 @@ export const LayoutPatch: Schema.Codec<LayoutPatch> = Schema.Struct({
 
 /** The layout fields a `layout` intent writes, so a store writes every one of them. */
 export const LAYOUT_PATCH_FIELDS = [
+  'grid',
   'lattice',
   'constraints',
   'kind',
@@ -404,6 +408,10 @@ const sameElement = (left: unknown, right: unknown): boolean => JSON.stringify(l
  * One batch that takes a layout's elements from `before` to `after`, in either dimension: deletions, then creations
  * (shapes before links, so a link's ends exist when it is created), then whole-element updates. Writers emit it rather
  * than assigning records, so every write goes through the one intent vocabulary.
+ *
+ * A link that stays but leaves an element that goes is updated ahead of the deletions: deleting an element takes the
+ * links still on it, so re-attached afterwards the link would already be gone (shapes grouped under one element,
+ * the links that crossed out of them now ending at it).
  */
 export const layoutChanges = <E extends Element>(
   before: { readonly [id: string]: E },
@@ -415,15 +423,20 @@ export const layoutChanges = <E extends Element>(
   const changed = Object.values(after).filter(
     (element) => before[element.id] !== undefined && !sameElement(before[element.id], element),
   );
+  const gone = new Set(removed);
+  const leaves = (element: E) =>
+    [before[element.id]?.source, before[element.id]?.target].some((end) => end && gone.has(endpointNode(end) ?? ''));
+  const update = (element: E) => ({ kind: 'update' as const, id: element.id, path: [], value: element });
   return {
     kind: 'batch',
     intents: [
+      ...changed.filter(leaves).map(update),
       ...(removed.length > 0 ? [{ kind: 'delete' as const, ids: removed }] : []),
       ...[...added.filter((element) => !isLink(element)), ...added.filter(isLink)].map((element) => ({
         kind: 'create' as const,
         element,
       })),
-      ...changed.map((element) => ({ kind: 'update' as const, id: element.id, path: [], value: element })),
+      ...changed.filter((element) => !leaves(element)).map(update),
     ],
   };
 };

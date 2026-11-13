@@ -165,6 +165,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
                 schema,
                 space,
                 get,
+                hasViews: viewIndex.typeUrisWithViews.has(Type.getURI(schema)),
                 // A view over the type lives under this node, so the node stays visible while it has one.
                 hidden:
                   Type.getDatabase(schema) == null &&
@@ -320,11 +321,13 @@ const createSchemaNode = ({
   schema,
   space,
   get,
+  hasViews,
   hidden,
 }: {
   schema: Type.AnyEntity;
   space: Space;
   get: Atom.AtomContext;
+  hasViews?: boolean;
   hidden?: boolean;
 }): AppGraphNode.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
@@ -368,7 +371,8 @@ const createSchemaNode = ({
       iconHue,
       // Selecting the type node opens a list of every object of this type (see TypeArticle);
       // objects resolve on demand as hidden children. View objects are its only visible children, so
-      // without a view the node is a leaf (no `role: 'branch'`).
+      // only a type with a view is a branch; the role shows its caret before the node is first expanded.
+      role: hasViews ? 'branch' : undefined,
       testId: `spacePlugin.schemaNode.${typename}`,
       disposition: hidden ? 'hidden' : undefined,
       selectable: true,

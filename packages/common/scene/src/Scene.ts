@@ -8,7 +8,7 @@ import { AnimatableAnnotation, Vec3 as AnimationVec3 } from '@dxos/animation';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { VectorAnnotationId } from '@dxos/ui-types';
 
-import { ElementEndpoint, Layer } from './element.ts';
+import { ElementEndpoint, Layer, PartLayout } from './element.ts';
 import { NamedStyle2D, NamedStyle3D, Style2D, Style3D, StyleCatalog } from './style.ts';
 
 /** A 3D vector (a position, scale or rotation); a form stacks one number input per axis. */
@@ -28,18 +28,25 @@ export const Dimension = Schema.Literals(['2d', '3d']);
 export type Dimension = Schema.Schema.Type<typeof Dimension>;
 
 /** Kinds every layout may hold; the dimension's own kinds are listed separately. */
-export const KINDS_SHARED: readonly string[] = ['link', 'label', 'group'];
+// `instance` is the kind of a placed composite Object, as `group` is of an anonymous one: the two differ in whether
+// the composite stands in the library, not in what either dimension can hold.
+export const KINDS_SHARED: readonly string[] = ['link', 'label', 'group', 'instance'];
 export const KINDS_2D: readonly string[] = [
   'rect',
   'ellipse',
   'cloud',
   'polygon',
   'polyline',
+  'hull',
   'path',
   'note',
   'image',
   'generator',
   'diagram',
+  // The prototype-built types of the 2D editor, which a composite's parts are mostly made of.
+  'card',
+  'icon',
+  'view',
 ];
 export const KINDS_3D: readonly string[] = ['cube', 'sphere', 'cylinder', 'cone', 'pyramid', 'mesh', 'solid'];
 
@@ -152,9 +159,18 @@ export const BaseElement = Schema.Struct({
   target: Schema.optional(ElementEndpoint),
   /** Set when a person placed the element, so arranging its layout leaves it where it is. */
   pinned: Schema.optional(Schema.Boolean),
+  /** How the element follows its frame when it is a part of a composite and an instance is resized. */
+  constrain: Schema.optional(PartLayout),
+  /** The composite Object the element draws, where its type declares one (a UML class). */
+  composite: Schema.optional(Schema.String),
   /** The DSL statement that made the element, so compiling the source again updates it rather than adding a copy. */
   dsl: Schema.optional(DslIdentity),
-  /** Kind-specific fields, validated by the kind's registration. */
+  /**
+   * An extension kind's own fields, typed and validated by the kind's registration. They are kept apart from the
+   * element's own so a kind may name a field as the base names one (`size`), and two kinds never contend for a name.
+   */
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  /** Renderer-specific fields the base has no slot for (the 2D viewport's under `canvas`). */
   props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });
 export type BaseElement = Schema.Schema.Type<typeof BaseElement>;
@@ -200,6 +216,13 @@ const elementRecord = <E extends Schema.Struct<Schema.Struct.Fields>>(element: E
 export const LayoutKind = Schema.Literals(['view', 'composite']);
 export type LayoutKind = Schema.Schema.Type<typeof LayoutKind>;
 
+/**
+ * A grid pitch in scene px. A finite number, at least one: snapping divides by the pitch, so a zero or negative one
+ * would put every drop and nudge at `NaN`, and `Infinity` — which `Schema.Number` admits and `>= 1` accepts — would
+ * too, since `Math.round(v / Infinity) * Infinity` is `0 * Infinity`.
+ */
+export const GridPitch = Schema.Finite.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(1)));
+
 /** Lattice mode's grid: shapes span whole cells and links route along the gutters between them. */
 export const Lattice = Schema.Struct({
   width: Schema.Number,
@@ -217,8 +240,10 @@ export const Constraint = Schema.Struct({
 });
 export type Constraint = Schema.Schema.Type<typeof Constraint>;
 
-/** The fields only a 2D layout has: its lattice and constraints (the modes that place its elements). */
+/** The fields only a 2D layout has: its grid, lattice and constraints (the modes that place its elements). */
 const layout2DFields = {
+  /** The drawing's grid pitch in scene px, which snapping, nudging and the drawn grid all derive from (`DEFAULT_GRID` when unset). */
+  grid: Schema.optional(GridPitch),
   lattice: Schema.optional(Lattice),
   constraints: Schema.optional(Schema.Array(Constraint)),
 };

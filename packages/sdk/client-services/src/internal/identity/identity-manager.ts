@@ -1,14 +1,14 @@
 //
 // Copyright 2022 DXOS.org
 //
-import { isValidAutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, isValidAutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import platform from 'platform';
 
-import { Event } from '@dxos/async';
+import { Event, scheduleTask, sleepWithContext } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
   CredentialGenerator,
@@ -17,14 +17,14 @@ import {
   credentialPayload,
 } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { type EchoHost } from '@dxos/echo-host';
+import { type EchoHost, type EdgeAutomergeReplicator } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Hook from '@dxos/effect/Hook';
 import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { fromPublicKey, fromTimeframe, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
 import {
@@ -59,6 +59,7 @@ import { deferFunction, isNode, isTauri, markMilestone } from '@dxos/util';
 import * as Auth from '../../Auth.ts';
 import * as IdentityContract from '../../contracts/identity.ts';
 import { openCredentialsDocument } from '../../CredentialsDocument.ts';
+import { lookupEdgeSpaceRoot } from '../../EdgeSpaceRoot.ts';
 import * as Events from '../../Events.ts';
 import { Identity } from '../../Identity.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
@@ -66,6 +67,17 @@ import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../s
 
 const DEVICE_PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const DEVICE_PRESENCE_OFFLINE_TIMEOUT = 20_000;
+
+/** How long one adoption attempt waits for an edge-minted HALO root to replicate before failing it. */
+const EDGE_ROOT_FETCH_TIMEOUT = 5_000;
+
+/** Backoff bounds for asking edge to migrate a HALO it has not processed far enough to anchor yet. */
+const EDGE_MIGRATION_RETRY_INITIAL = 500;
+const EDGE_MIGRATION_RETRY_MAX = 8_000;
+
+/** Backoff bounds for re-anchoring a HALO whose root lookup failed or did not replicate in time. */
+const HALO_ANCHOR_RETRY_INITIAL = 500;
+const HALO_ANCHOR_RETRY_MAX = 30_000;
 
 interface ConstructSpaceProps {
   spaceRecord: SpaceMetadata;
@@ -143,6 +155,18 @@ export class IdentityManager {
    * driven by whichever of the two arrives last.
    */
   private _echoHost: EchoHost | undefined;
+  /** Set late, like {@link _echoHost}; see {@link setEdgeServices}. */
+  private _edgeHttpClient: IdentityContract.EdgeServices['edgeHttpClient'];
+  private _echoEdgeReplicator: EdgeAutomergeReplicator | undefined;
+  /** The HALO space connected to edge document replication, so it is connected once. */
+  private _haloReplicationSpaceId: SpaceId | undefined;
+  /** The HALO space whose credentials are mirrored, so a repeated anchor does not subscribe twice. */
+  private _haloMirroredSpaceId: SpaceId | undefined;
+  /** Serializes anchoring, which open, the late setters and migration can each trigger. */
+  private _anchorQueue: Promise<void> = Promise.resolve();
+  /** Delay before the next re-anchor of an unsettled HALO; past the max it stops until the next open. */
+  private _haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
+  private _haloAnchorRetryPending = false;
   /** Root the inviting device named, adopted once the identity is accepted. */
   private _pendingHaloSpaceRootUrl: string | undefined;
   private readonly _devicePresenceAnnounceInterval: number;
@@ -187,6 +211,71 @@ export class IdentityManager {
     }
   }
 
+  /**
+   * Supplies the edge services the HALO uses to adopt a root edge holds and replicate its documents.
+   * Anchors immediately when an identity is already open, since they arrive after it.
+   */
+  async setEdgeServices({ edgeHttpClient, echoEdgeReplicator }: IdentityContract.EdgeServices): Promise<void> {
+    this._edgeHttpClient = edgeHttpClient;
+    this._echoEdgeReplicator = echoEdgeReplicator;
+    if (this._identity) {
+      await this._anchorHaloOnRootDocument(this._ctx, this._identity);
+    }
+  }
+
+  /**
+   * Has edge migrate the HALO onto a space root document it mints from the chain it holds, then
+   * adopts that root. Every device of the identity gets the same root because edge records it once.
+   * Idempotent.
+   */
+  async migrateHaloRootOnEdge(ctx: Context): Promise<AutomergeUrl> {
+    const identity = this._identity;
+    invariant(identity, 'Identity not initialized.');
+    invariant(this._edgeHttpClient, 'Migrating the HALO on edge requires an edge connection.');
+    invariant(this._echoHost, 'Migrating the HALO requires the echo host.');
+    const edgeHttpClient = this._edgeHttpClient;
+    const echoHost = this._echoHost;
+    const spaceId = identity.haloSpaceId;
+
+    let haloSpaceRootUrl: AutomergeUrl | undefined;
+    let delay = EDGE_MIGRATION_RETRY_INITIAL;
+    while (haloSpaceRootUrl === undefined) {
+      try {
+        const { rootDocumentUrl } = await edgeHttpClient.migrateSpaceRoot(ctx, spaceId);
+        invariant(isValidAutomergeUrl(rootDocumentUrl), `Edge returned an invalid HALO root: ${rootDocumentUrl}`);
+        haloSpaceRootUrl = rootDocumentUrl;
+      } catch (err) {
+        // Edge answers "not yet" until it has processed the HALO feed far enough to anchor it.
+        if (delay > EDGE_MIGRATION_RETRY_MAX) {
+          throw err;
+        }
+        log('edge cannot migrate the HALO yet, retrying', { spaceId, delay, err });
+        await sleepWithContext(ctx, delay);
+        delay *= 2;
+      }
+    }
+
+    const existing = echoHost.getSpaceRootRefs(spaceId);
+    if (existing) {
+      invariant(
+        existing.spaceRootDocUrl === haloSpaceRootUrl,
+        `HALO ${spaceId} is anchored on ${existing.spaceRootDocUrl}, but edge holds ${haloSpaceRootUrl}.`,
+      );
+    } else {
+      // Adoption waits on the root replicating from edge, so it is retried rather than failed on the first miss.
+      delay = EDGE_MIGRATION_RETRY_INITIAL;
+      while (!(await this._adoptHaloRoot(ctx, identity, haloSpaceRootUrl))) {
+        invariant(delay <= EDGE_MIGRATION_RETRY_MAX, `HALO root ${haloSpaceRootUrl} did not replicate from edge.`);
+        await sleepWithContext(ctx, delay);
+        delay *= 2;
+      }
+    }
+
+    await this._anchorHaloOnRootDocument(this._ctx, identity);
+    this.stateUpdate.emit();
+    return haloSpaceRootUrl;
+  }
+
   @Trace.span({ showInBrowserTimeline: true })
   async open(ctx: Context): Promise<void> {
     log('opening identity manager');
@@ -227,6 +316,16 @@ export class IdentityManager {
       this._identity = undefined;
       await this._ctx.dispose();
       this._ctx = new Context();
+      this._haloMirroredSpaceId = undefined;
+      this._haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
+      this._haloAnchorRetryPending = false;
+      if (this._haloReplicationSpaceId) {
+        const replicatedSpaceId = this._haloReplicationSpaceId;
+        this._haloReplicationSpaceId = undefined;
+        await this._echoEdgeReplicator
+          ?.disconnectFromSpace(replicatedSpaceId)
+          .catch((err) => log.warn('failed to disconnect the HALO from edge replication', { err }));
+      }
       await identity.close(ctx).catch((err) => log.warn('identity teardown failed; deleting anyway', { err }));
     } else {
       log('no live identity to delete');
@@ -516,9 +615,14 @@ export class IdentityManager {
    * `haloSpaceKey` alone (the only identifier EDGE returns), so a root-derived id would leave a
    * recovering device computing an id no replicated document belongs to.
    */
-  private async _anchorHaloOnRootDocument(ctx: Context, identity: Identity): Promise<void> {
-    // Opt-in: without the flag the HALO keeps its control feed and grows no documents.
-    if (!this._echoHost || !this._automergeCredentials) {
+  private _anchorHaloOnRootDocument(ctx: Context, identity: Identity): Promise<void> {
+    const anchored = this._anchorQueue.then(() => this._anchorHaloOnce(ctx, identity));
+    this._anchorQueue = anchored.catch(() => {});
+    return anchored;
+  }
+
+  private async _anchorHaloOnce(ctx: Context, identity: Identity): Promise<void> {
+    if (!this._echoHost || this._identity !== identity) {
       return;
     }
     const echoHost = this._echoHost;
@@ -526,17 +630,29 @@ export class IdentityManager {
     const spaceId = identity.haloSpaceId;
     try {
       if (!echoHost.getSpaceRootRefs(spaceId)) {
-        const adopted = this._pendingHaloSpaceRootUrl;
-        if (adopted !== undefined && isValidAutomergeUrl(adopted)) {
-          // A second root over the same space would leave the two devices disagreeing about which
-          // document carries the chain, so the joining device takes the one the inviter named — and
-          // mints nothing when it cannot, since halo documents have no replication path between
-          // devices yet and the root may simply never arrive.
-          await echoHost.adoptSpaceRoot(ctx, spaceId, adopted).catch((err) => {
-            log.warn('halo space root named by the inviting device is not available', { spaceId, adopted, err });
-          });
-          return;
+        // A root the inviting device named, or one edge holds, is the HALO's only root: adopting it
+        // comes before anything local could mint a second one, whatever the flag says.
+        const pending = this._pendingHaloSpaceRootUrl;
+        const edgeRoot =
+          pending !== undefined && isValidAutomergeUrl(pending)
+            ? ({ kind: 'found', url: pending } as const)
+            : await lookupEdgeSpaceRoot(this._ctx, this._edgeHttpClient, spaceId);
+        if (edgeRoot.kind === 'found') {
+          if (!(await this._adoptHaloRoot(ctx, identity, edgeRoot.url))) {
+            this._scheduleHaloAnchorRetry(identity);
+            return;
+          }
         } else {
+          // Asked again whatever the flag says: a root EDGE holds is adopted with the flag off too.
+          if (edgeRoot.kind === 'unavailable') {
+            this._scheduleHaloAnchorRetry(identity);
+            return;
+          }
+          // Minting a root locally is the opt-in behaviour.
+          if (!this._automergeCredentials) {
+            return;
+          }
+
           // HALO has never had a directory — its data has always lived in the control feed — so one
           // is created here to give the root something to point at.
           if (!echoHost.spaceIds.includes(spaceId)) {
@@ -553,11 +669,19 @@ export class IdentityManager {
       }
 
       const refs = echoHost.getSpaceRootRefs(spaceId);
-      if (refs) {
-        identity.setHaloSpaceRootUrl(refs.spaceRootDocUrl);
+      if (!refs) {
+        return;
       }
+      identity.setHaloSpaceRootUrl(refs.spaceRootDocUrl);
+      this._haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
+      await this._connectHaloReplication(ctx, identity);
 
+      // An anchored HALO mirrors whatever the flag says, or its document falls behind after a reload.
+      if (this._haloMirroredSpaceId === spaceId) {
+        return;
+      }
       const store = await openCredentialsDocument(ctx, echoHost, spaceId);
+      this._haloMirroredSpaceId = spaceId;
       for (const credential of identity.space.spaceState.credentials) {
         store.append(credential);
       }
@@ -569,6 +693,68 @@ export class IdentityManager {
     } catch (err) {
       log.warn('failed to anchor the halo space on a root document', { spaceId, err });
     }
+  }
+
+  /**
+   * Re-anchors a HALO left unsettled, since nothing else attempts it again before the next open: a
+   * root that replicates late, or an EDGE that answers later, arrives without any event to react to.
+   */
+  private _scheduleHaloAnchorRetry(identity: Identity): void {
+    if (this._haloAnchorRetryPending || this._haloAnchorRetryDelay > HALO_ANCHOR_RETRY_MAX) {
+      return;
+    }
+    this._haloAnchorRetryPending = true;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this._haloAnchorRetryPending = false;
+        const previousRootUrl = identity.haloSpaceRootUrl;
+        void this._anchorHaloOnRootDocument(this._ctx, identity)
+          .then(() => {
+            // Clients learn of a root only through this event, and nothing else fires it for a background adoption.
+            if (identity.haloSpaceRootUrl !== previousRootUrl) {
+              this.stateUpdate.emit();
+            }
+          })
+          .catch((err) => log.catch(err));
+      },
+      this._haloAnchorRetryDelay,
+    );
+    this._haloAnchorRetryDelay *= 2;
+  }
+
+  /**
+   * Adopts a HALO root named by an inviting device or held by edge, fetching it over edge replication.
+   * @returns Whether the root was adopted; false leaves it for the next open or a retrying caller.
+   */
+  private async _adoptHaloRoot(ctx: Context, identity: Identity, haloSpaceRootUrl: AutomergeUrl): Promise<boolean> {
+    const echoHost = this._echoHost;
+    invariant(echoHost, 'Adopting a HALO root requires the echo host.');
+    const spaceId = identity.haloSpaceId;
+    try {
+      // The root exists on edge and other devices, so this device has to replicate before it can load it.
+      await this._connectHaloReplication(ctx, identity);
+      const refs = await echoHost.adoptSpaceRoot(ctx, spaceId, haloSpaceRootUrl, {
+        fetchFromNetwork: true,
+        timeout: EDGE_ROOT_FETCH_TIMEOUT,
+      });
+      identity.setHaloSpaceRootUrl(refs.spaceRootDocUrl);
+      this._pendingHaloSpaceRootUrl = undefined;
+      log('adopted the HALO root', { spaceId, refs });
+      return true;
+    } catch (err) {
+      log.warn('HALO root is not available yet', { spaceId, haloSpaceRootUrl, err });
+      return false;
+    }
+  }
+
+  /** Connects the HALO space to edge document replication, once per identity. */
+  private async _connectHaloReplication(ctx: Context, identity: Identity): Promise<void> {
+    if (!this._echoEdgeReplicator || this._haloReplicationSpaceId === identity.haloSpaceId) {
+      return;
+    }
+    await this._echoEdgeReplicator.connectToSpace(ctx, identity.haloSpaceId);
+    this._haloReplicationSpaceId = identity.haloSpaceId;
   }
 
   private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {

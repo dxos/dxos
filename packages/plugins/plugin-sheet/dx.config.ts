@@ -65,6 +65,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.locator(() => import('./src/capabilities/locator.ts', { with: { type: 'module-url' } }), {
       activatesOn: SheetEvents.Start,
     }),
+    Capability.lazyModule(
+      'ChartTypes',
+      { provides: [SheetCapabilities.ChartType], activatesOn: SheetEvents.Start, environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/chart-types.tsx', { with: { type: 'module-url' } }),
+    ),
     AppCapability.commentConfig(
       () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
       {

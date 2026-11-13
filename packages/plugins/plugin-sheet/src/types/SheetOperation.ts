@@ -82,9 +82,7 @@ export const Create = Operation.make({
   output: Schema.Struct({
     id: Schema.String.annotate({ description: 'The DXN of the created sheet.' }),
   }),
-  // The capability manager carries the `DefaultParent` rule that files the sheet into the root
-  // collection; an undeclared service is not provided, so without it the sheet is never filed.
-  services: [Capability.Service, Database.Service],
+  services: [Database.Service],
 });
 
 export const GetValues = Operation.make({

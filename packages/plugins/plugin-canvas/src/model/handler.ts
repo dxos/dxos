@@ -41,6 +41,7 @@ import {
   endpointNode,
   isDiagramNode,
   isEllipseNode,
+  isHullNode,
   isNoteNode,
 } from '@dxos/scene';
 
@@ -178,8 +179,8 @@ const nodesIn = (content: ContentMap, scene: string): Node[] =>
     .filter((record): record is NodeRecord => isNodeRecord(record) && record.scene === scene)
     .map((record) => record.node);
 
-/** A group's backdrop: a guide, or a diagram's tinted group frame. */
-const isBackdrop = (node: Node): boolean => node.style?.guide === true || isDiagramBackdrop(node);
+/** A group's backdrop: a guide, a hull, or a diagram's tinted group frame. */
+const isBackdrop = (node: Node): boolean => node.style?.guide === true || isHullNode(node) || isDiagramBackdrop(node);
 
 /** Small text's width and height (scene px) as the diagram renderer sets it, for the frame of a diagram text node. */
 const textFrame = (element: Shape.Text, scale: number): { w: number; h: number } => {

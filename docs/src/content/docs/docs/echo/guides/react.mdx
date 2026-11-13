@@ -1,0 +1,116 @@
+---
+title: React
+description: "The tutorial app's React layer: ClientProvider, useQuery, useObject and a schema form, and the reactivity rules behind them."
+---
+
+import { Aside, Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
+
+By the end of this page you will know how the tutorial app's components get their data, and why they re-render when any peer changes it.
+
+## Background
+
+The [learning path](/docs/echo/learn/the-echo-object/) builds the app's ECHO code in plain TypeScript: its types, its add and update functions, and its queries. This guide covers the React layer on top, which `@dxos/react-client` connects to ECHO.
+
+Two rules decide when a component re-renders:
+
+- A hook subscribes the component to what it returns. `useQuery` re-renders when the query's results change, and `useObject` when the object changes.
+- Reading a field of an ECHO object during render subscribes to nothing. A component that reads `person.name` straight off the object does not re-render when the name changes.
+
+## Steps
+
+<Steps>
+
+1. **Install the React client.** `@dxos/react-client` wraps `@dxos/client` in a provider and hooks. Install it from the same build as `@dxos/client`, and configure the bundler, as in [Installation](/docs/echo/learn/installation/). It needs React 19.3.
+
+   <Tabs>
+     <TabItem label="pnpm">
+       ```bash
+       pnpm add https://pkg.pr.new/dxos/dxos/@dxos/react-client@20a14b9 effect@4.0.4 react@~19.3.1 react-dom@~19.3.1
+       ```
+     </TabItem>
+     <TabItem label="npm">
+       ```bash
+       npm install --save https://pkg.pr.new/dxos/dxos/@dxos/react-client@20a14b9 effect@4.0.4 react@~19.3.1 react-dom@~19.3.1
+       ```
+     </TabItem>
+     <TabItem label="yarn">
+       ```bash
+       yarn add https://pkg.pr.new/dxos/dxos/@dxos/react-client@20a14b9 effect@4.0.4 react@~19.3.1 react-dom@~19.3.1
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **Provide the client.** `ClientProvider` gives the hooks below it a client. The app opens its client and space with `openSpace` from [Installation](/docs/echo/learn/installation/), and the app renders one provider for it. The app also keeps the space it shows in state, so Join can switch it to another.
+
+   <Snippet file="echo-tutorial/app/PeerApp" region="provider" lang="tsx" />
+
+   <Aside type="caution">
+     Open the client once per page load. In development, `StrictMode` runs each effect twice, and two clients on the same
+     storage race to create the identity, so a reload can come back with the other one and none of its records. Start
+     `openSpace` at module level, `const opened = openSpace();`, and await that promise in the effect.
+   </Aside>
+
+3. **Query the space.** `useQuery` takes a database and a query, here the app's queries from [Querying](/docs/echo/learn/querying/). It returns the current results and re-renders the component when they change.
+
+   <Snippet file="echo-tutorial/app/Contacts" region="query" lang="tsx" />
+
+   A query returns the same live object for an id every time, so a renamed record leaves the results array as it was. The app's list reads its labels with `useLabels`, which re-renders the list when a label changes.
+
+   To show only the records whose field has a value, put the field in the query, as in `Filter.type(Todo, { completed: false })`. The results then change when a record's field does. A `.filter()` over the results in render reads the fields straight off the objects, so the list goes stale.
+
+4. **Show a record.** `useObject` returns a snapshot of the object and re-renders the component when the object changes. The form's title reads the record's name through it.
+
+   <Snippet file="echo-tutorial/app/RecordForm" region="title" lang="tsx" />
+
+   <Aside type="caution">
+     Read fields through the snapshot from `useObject`. A field read straight off the ECHO object shows its value at
+     render time, and the component does not re-render when the field changes.
+   </Aside>
+
+5. **Edit a record.** The app's form is `Form.Root` from `@dxos/react-ui-form`, given the record's type and the values from `useObject`. `onValuesChanged` writes each change back inside `Obj.update`, as in [Mutating objects](/docs/echo/learn/mutating-objects/). A reference field lists the records of the type it points at.
+
+   <Snippet file="echo-tutorial/app/RecordForm" region="edit" lang="tsx" />
+
+   `ObjectForm` from the same package does all of this in one component:
+
+   ```tsx
+   <ObjectForm type={Person} object={person} showTags={false} />
+   ```
+
+6. **Create a record.** For a new record, `Form.Root` takes the type's schema and hands its values to `onSave`, which adds the record as in [Mutating objects](/docs/echo/learn/mutating-objects/).
+
+   <Snippet file="echo-tutorial/app/RecordForm" region="create" lang="tsx" />
+
+</Steps>
+
+## Try it
+
+The app with every piece in place: the lists, the table and the graph are all `useQuery`, and the form writes inside `Obj.update`.
+
+<TutorialEmbed stage="complete" />
+
+## Configure the provider
+
+### Show a fallback
+
+`fallback` renders while the client initializes.
+
+<Snippet file="react" region="fallback" lang="tsx" />
+
+### Pass your own client
+
+Create the client yourself to use it outside React too.
+
+<Snippet file="react" region="client" lang="tsx" />
+
+### Pass a config
+
+`config` takes a function that returns a `Config`, built from the same sources as in the [Configuration guide](/docs/echo/guides/configuration/).
+
+<Snippet file="react" region="config" lang="tsx" />
+
+## What you can do now
+
+You can provide a client to a React app, query a space from a component, show a record that re-renders on every change, and edit records with a form built from their schema. The [Tasks sample](/docs/additional-resources/samples#tasks) is another complete app built this way.

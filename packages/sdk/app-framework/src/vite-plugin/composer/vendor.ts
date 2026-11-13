@@ -3,7 +3,7 @@
 //
 
 import type { Plugin as EsbuildPlugin } from 'esbuild';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, realpath, rm, writeFile } from 'node:fs/promises';
 import { builtinModules } from 'node:module';
 import { dirname, join } from 'node:path';
 
@@ -15,7 +15,14 @@ export const VENDOR_MANIFEST = 'manifest.json';
 /** What the Workers runtime provides; anything else a vendored package imports is bundled. */
 const RUNTIME_MODULES = ['cloudflare:*', 'node:*'];
 
-const NODE_BUILTIN = new RegExp(`^(${builtinModules.filter((name) => !name.startsWith('_')).join('|')})(/.*)?$`);
+/** Packages bun lists in `builtinModules` beside Node's own, which workerd does not provide as `node:` modules. */
+const BUN_BUILTINS = new Set(['bun', 'undici', 'ws']);
+
+const NODE_BUILTIN = new RegExp(
+  `^(${builtinModules
+    .filter((name) => !name.startsWith('_') && !name.startsWith('bun:') && !BUN_BUILTINS.has(name))
+    .join('|')})(/.*)?$`,
+);
 
 /** Imports Node built-ins as `node:<name>`, the form workerd's `nodejs_compat` provides them under. */
 const nodeBuiltins = (): EsbuildPlugin => ({
@@ -74,7 +81,8 @@ const resolveEntries = (specifiers: readonly VendorSpecifier[], root: string): E
       const specifier = args.path.slice(ENTRY_PREFIX.length);
       const path = bySpecifier.get(specifier)?.path;
       if (path !== undefined) {
-        return { path };
+        // Its real path: under pnpm a package's dependencies sit beside its store directory, not beside the plugin's link.
+        return { path: await realpath(path) };
       }
       const importers = bySpecifier.get(specifier)?.importers ?? [];
       const directories = [...new Set([...importers.map((file) => dirname(file)), root])];
@@ -128,12 +136,17 @@ export const buildVendor = async ({ root, outDir, specifiers, isShared }: BuildV
   for (;;) {
     const discovered = new Map<string, Set<string>>();
     await rm(outDir, { recursive: true, force: true });
-    await buildOnce(build, root, outDir, [...all.values()], sharedExternals(isShared, discovered));
+    // Sorted: shared packages are discovered in the order esbuild's async resolves finish, and esbuild's chunks and
+    // their imports follow entry order, so an unsorted build differs from run to run.
+    const entries = [...all.values()].sort((left, right) =>
+      left.specifier < right.specifier ? -1 : left.specifier > right.specifier ? 1 : 0,
+    );
+    await buildOnce(build, root, outDir, entries, sharedExternals(isShared, discovered));
     const added = [...discovered].filter(([specifier]) => !all.has(specifier));
     if (added.length === 0) {
       break;
     }
-    added.forEach(([specifier, importers]) => all.set(specifier, { specifier, importers: [...importers] }));
+    added.forEach(([specifier, importers]) => all.set(specifier, { specifier, importers: [...importers].sort() }));
   }
   await mkdir(outDir, { recursive: true });
   await writeFile(

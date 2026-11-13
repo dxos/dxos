@@ -56,12 +56,13 @@ import {
   fitBounds,
   fitFrame,
   nodeBounds,
+  orderToEnd,
   pastedRecords,
   pasteFragment,
   promotedBy,
   reorderElement,
   restackZ,
-  topZ,
+  topOfView,
   ungroupInstance,
   unionBounds,
   updateElement,
@@ -152,6 +153,9 @@ export type NavigationCommands = {
   /** Opens a composite on its own: its definition scene, fitted, on a plain background; Escape returns. */
   isolate: (composite: ViewId) => void;
   exitIsolation: () => void;
+  /** Enters an Instance to edit its parts where they are drawn, the rest of the scene faded; Escape leaves. */
+  enter: (instance: Node) => void;
+  exitInside: () => void;
   /** Frames the scene and keeps it framed (fit mode) until the user pans or zooms. */
   fit: () => void;
   /** Frames the selected nodes, leaving fit mode. */
@@ -203,10 +207,16 @@ export type DocumentEditCommands = {
    */
   restack: (container: ViewId, element: ElementId, target: ElementId, position: 'before' | 'after') => boolean;
   /**
+   * Lifts `ids` above every other element of the open View, or drops them below it, keeping their order among
+   * themselves (nodes among nodes, links among links), as one edit; false when nothing moved.
+   */
+  order: (ids: Iterable<ElementId>, place: 'front' | 'back') => boolean;
+  /**
    * Drops a copy of the nodes `ids` and the links between them `delta` away, as one undo step, and selects it; an
    * anonymous Object placed again this way joins the library. False when nothing was copied.
    */
-  duplicate: (ids: Iterable<ElementId>, delta: Point) => boolean;
+  /** Copies `ids` one step aside; without a `delta`, by the drawn major cell, as the duplicate shortcut does. */
+  duplicate: (ids: Iterable<ElementId>, delta?: Point) => boolean;
 };
 
 /** Text editing and the clipboard (DESIGN.md §13.1, the Editing aspect). */
@@ -222,6 +232,8 @@ export type EditingCommands = {
 export type ToolsCommands = {
   /** A creation tool clears the selection, whose outline would only sit over the drawing; a link tool sets the type. */
   setTool: (tool: Tool) => void;
+  /** The background grid drawn; a host that owns the display takes the change from the atom. */
+  toggleGrid: () => void;
   toggleSnap: () => void;
   toggleGuides: () => void;
   toggleAxes: () => void;
@@ -414,14 +426,15 @@ export const createCanvasController = ({
       const bounds = clipboardBounds(fragment);
       const step = major * (fragment.pasted + 1);
       const offset = at && bounds ? { x: snap(at.x) - bounds.x, y: snap(at.y) - bounds.y } : { x: step, y: step };
-      let nodeZ = topZ(Object.values(scene.nodes));
-      let linkZ = topZ(Object.values(scene.links));
+      // One cursor for both kinds, so every pasted element lands above the view and above the one pasted before it.
+      let z = topOfView(scene);
+      const next = () => (z = between(z, undefined));
       const { edit, ids } = pasteFragment({
         clipboard: fragment,
         offset,
         createId: newId,
-        nodeZ: () => (nodeZ = between(nodeZ, undefined)),
-        linkZ: () => (linkZ = between(linkZ, undefined)),
+        nodeZ: next,
+        linkZ: next,
         layer: activeLayer(scene, registry.get(atoms.layer)),
       });
       const records = pastedRecords(registry.get(store.views), fragment);
@@ -442,6 +455,7 @@ export const createCanvasController = ({
         select([]);
       }
     },
+    toggleGrid: toggle(atoms.grid),
     toggleSnap: toggle(atoms.snap),
     toggleGuides: toggle(atoms.guides),
     toggleAxes: toggle(atoms.axes),
@@ -567,6 +581,27 @@ export const createCanvasController = ({
     }
   };
 
+  /**
+   * Enters an Object in place: its parts become what the editor acts on, the drawing around them is faded and locked,
+   * and the camera does not move — the Object is edited where it stands rather than opened somewhere else.
+   */
+  const enter = (instance: Node) => {
+    if (!isInstanceNode(instance) || !registry.get(store.views)[instance.composite]) {
+      return;
+    }
+    select([]);
+    registry.set(atoms.inside, { instance: instance.id, composite: instance.composite });
+  };
+
+  const exitInside = () => {
+    if (!registry.get(atoms.inside)) {
+      return;
+    }
+    const { instance } = registry.get(atoms.inside)!;
+    registry.set(atoms.inside, undefined);
+    select([instance]);
+  };
+
   const exitIsolation = () => {
     const current = registry.get(atoms.isolation);
     if (!current) {
@@ -636,9 +671,13 @@ export const createCanvasController = ({
   const navigation: NavigationCommands = {
     openView,
     openPlace,
-    drillIn: (node, animate) => (isInstanceNode(node) ? isolate(node.composite) : drillInto(node, animate)),
+    // An Object is edited where it stands; its definition is still opened on its own from the Objects panel.
+    drillIn: (node, animate) => (isInstanceNode(node) ? enter(node) : drillInto(node, animate)),
     drillOut,
-    back: () => (registry.get(atoms.isolation) ? exitIsolation() : drillOut()),
+    back: () =>
+      registry.get(atoms.inside) ? exitInside() : registry.get(atoms.isolation) ? exitIsolation() : drillOut(),
+    enter,
+    exitInside,
     goHistory: (offset) => {
       const history = registry.get(atoms.history);
       const index = history.index + offset;
@@ -732,10 +771,26 @@ export const createCanvasController = ({
       commit(() => registry.set(store.views, { ...views, [container]: moved }));
       return true;
     },
+    order: (ids, place) => {
+      if (!capabilities().update) {
+        return false;
+      }
+      const scene = currentScene();
+      // Nodes and links share one paint order, so they restack against each other: a shape brought to the front
+      // goes over the links too, and a link sent to the back goes under the shapes.
+      const keys = orderToEnd([...Object.values(scene.nodes), ...Object.values(scene.links)], ids, place);
+      const moved = Object.entries(keys);
+      if (moved.length === 0) {
+        return false;
+      }
+      return commit(() => draw().apply(chainEdits(moved.map(([id, z]) => reorderElement(id, z)))));
+    },
     duplicate: (ids, delta) => {
       const scene = currentScene();
+      const { major } = grid();
+      const step = delta ?? { x: major, y: major };
       const selected = [...ids];
-      const copy = capabilities().create ? duplicateSelection(scene, selected, delta, newId) : undefined;
+      const copy = capabilities().create ? duplicateSelection(scene, selected, step, newId) : undefined;
       if (!copy) {
         return false;
       }

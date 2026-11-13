@@ -88,7 +88,8 @@ ext verdict
   uri: org.dxos.mdl.verdict@1.0
   desc: |
     How far the code meets one spec item. The identifier is the item's id in the reviewed spec
-    (`F-1.2`, `Scene`, `openDirectory`); the inline prose is the verdict in one line.
+    (`F-1.2`, `Scene`, `openDirectory`), or `<kind>:<id>` for a worker or SQL block
+    (`binding:DATA_SERVICE`, `table:feeds`); the inline prose is the verdict in one line.
   fields:
     status: done | untested | partial | diverged | missing
     evidence?: RefList          # github: keys of the code that supports the verdict, with #Symbol

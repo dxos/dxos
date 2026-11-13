@@ -4,7 +4,7 @@
 
 import md5Hex from 'md5-hex';
 
-import { DeferredTask, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
+import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { Context, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
@@ -52,12 +52,24 @@ export type CallState = {
   tracks?: UserState['tracks'];
 };
 
-export type CallSwarmSynchronizerProps = { networkService: ClientServices['NetworkService'] };
+/** The swarm verbs the synchronizer uses. */
+export type CallNetworkService = Pick<
+  ClientServices['NetworkService'],
+  'joinSwarm' | 'leaveSwarm' | 'querySwarm' | 'subscribeSwarmState'
+>;
+
+export type CallSwarmSynchronizerProps = { networkService: CallNetworkService };
 
 /**
  * Period for peer to reconnect to the call swarm gracefully if connection was lost abruptly.
  */
 const DISCONNECTED_ABRUPT_TIMEOUT = 10_000; // [ms]
+
+/**
+ * Swarm activity key under which the room's RealtimeKit meeting id is advertised. A joiner advertises the meeting it
+ * got (last write wins); late joiners read it, and a peer in another meeting moves to it, so the room shares one.
+ */
+export const MEETING_ACTIVITY_KEY = 'org.dxos.plugin.calls.realtimekit-meeting';
 
 /**
  * Sends and receives state to/from Swarm network.
@@ -66,11 +78,13 @@ export class CallSwarmSynchronizer extends Resource {
   public readonly stateUpdated = new Event<CallState>();
 
   private readonly _state: CallState = { activities: {} };
-  private readonly _networkService: ClientServices['NetworkService'];
+  private readonly _networkService: CallNetworkService;
   private _lastSwarmEvent?: SwarmResponse = undefined;
   private _reconcileSwarmStateTask?: DeferredTask = undefined;
+  // A single pending inactive-peer re-check (see `_reconcileSwarmState`); reset on `leave()`.
+  #inactivePeerRecheckPending = false;
 
-  private _identityKey?: string = undefined;
+  private _identityDid?: string = undefined;
   private _deviceKey?: string = undefined;
   private _displayName?: string = undefined;
 
@@ -124,7 +138,8 @@ export class CallSwarmSynchronizer extends Resource {
 
   setActivity(key: string, payload: ActivityState['payload']): void {
     const lamportTimestamp = LamportTimestampCrdt.increment(
-      this._state.activities?.[key]?.lamportTimestamp ?? { id: this._deviceKey },
+      this._state.activities?.[key]?.lamportTimestamp,
+      this._deviceKey,
     );
     this._state.activities![key] = { lamportTimestamp, payload };
 
@@ -135,7 +150,7 @@ export class CallSwarmSynchronizer extends Resource {
    * @internal
    */
   _setIdentity(identity: Identity.Info): void {
-    this._identityKey = identity.identityKey;
+    this._identityDid = identity.did;
     this._displayName = identity.displayName ?? generateName(identity.identityKey ?? '');
   }
 
@@ -180,19 +195,20 @@ export class CallSwarmSynchronizer extends Resource {
 
     this._swarmCtx = new Context();
     const topic = getTopic(this._state.roomId);
-    log('joining swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
+    log('joining swarm', { topic, peer: { identityDid: this._identityDid, peerKey: this._deviceKey } });
     const stream = this._networkService.subscribeSwarmState({ topic });
     stream.subscribe((event) => this._processSwarmEvent(event));
 
     const cleanup = () => {
       void stream.close();
-      if (topic && this._identityKey && this._deviceKey) {
-        log('leaving swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
+      if (topic && this._identityDid && this._deviceKey) {
+        log('leaving swarm', { topic, peer: { identityDid: this._identityDid, peerKey: this._deviceKey } });
         void this._networkService
           .leaveSwarm(
             buf.create(LeaveRequestSchema, {
               topic: fromPublicKey(topic),
-              peer: buf.create(PeerSchema, { identityKey: this._identityKey, peerKey: this._deviceKey }),
+              // DX-1059: `identityDid` is the only identity field senders write.
+              peer: buf.create(PeerSchema, { identityDid: this._identityDid, peerKey: this._deviceKey }),
             }),
           )
           .catch((err) => log.catch(err));
@@ -216,6 +232,12 @@ export class CallSwarmSynchronizer extends Resource {
 
     this._state.users = undefined;
     this._state.self = undefined;
+    // Activities belong to the session being left: otherwise a rejoin would advertise its meeting and flags (the
+    // RealtimeKit meeting, an extension's transcription toggle) before learning the room's current ones.
+    this._state.activities = {};
+    // The snapshot belongs to the session being left; a straggling reconcile must not repopulate state from it.
+    this._lastSwarmEvent = undefined;
+    this.#inactivePeerRecheckPending = false;
   }
 
   async querySwarm(roomId: string) {
@@ -224,6 +246,40 @@ export class CallSwarmSynchronizer extends Resource {
       buf.create(QueryRequestSchema, { topic: fromPublicKey(topic) }),
     );
     return swarm.peers ?? [];
+  }
+
+  /** The meeting id a peer advertised for this room, queried once at join, before swarm state has arrived. */
+  async queryMeetingId(roomId: string): Promise<string | undefined> {
+    return this.#readAdvertisedMeetingId(await this.querySwarm(roomId));
+  }
+
+  /** The room's meeting id as the swarm currently agrees on it (last write wins), ours included. */
+  get advertisedMeetingId(): string | undefined {
+    const meetingId = this._state.activities?.[MEETING_ACTIVITY_KEY]?.payload?.meetingId;
+    return typeof meetingId === 'string' && meetingId.length > 0 ? meetingId : undefined;
+  }
+
+  /** Advertises the room's RealtimeKit meeting id so late joiners converge on it. */
+  advertiseMeetingId(meetingId: string): void {
+    this.setActivity(MEETING_ACTIVITY_KEY, { meetingId });
+  }
+
+  #readAdvertisedMeetingId(peers: SwarmResponse['peers']): string | undefined {
+    for (const peer of peers ?? []) {
+      // Our own advertisement is no evidence the meeting still exists: a rejoin could resolve to one we tore down.
+      if (!peer.state || peer.peerKey === this._deviceKey) {
+        continue;
+      }
+      try {
+        const meetingId = codec.decode(peer.state).activities?.[MEETING_ACTIVITY_KEY]?.payload?.meetingId;
+        if (typeof meetingId === 'string' && meetingId.length > 0) {
+          return meetingId;
+        }
+      } catch (err) {
+        log.warn('failed to decode peer state', { err });
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -262,7 +318,7 @@ export class CallSwarmSynchronizer extends Resource {
 
   private async _sendState(): Promise<void> {
     const state = this._getLocalUser();
-    if (!this._state.roomId || !this._identityKey || !state || !this._state.joined) {
+    if (!this._state.roomId || !this._identityDid || !state || !this._state.joined) {
       return;
     }
 
@@ -270,7 +326,8 @@ export class CallSwarmSynchronizer extends Resource {
       buf.create(JoinRequestSchema, {
         topic: fromPublicKey(getTopic(this._state.roomId)),
         peer: buf.create(PeerSchema, {
-          identityKey: this._identityKey,
+          // DX-1059: `identityDid` is the only identity field senders write.
+          identityDid: this._identityDid,
           peerKey: this._deviceKey,
           state: codec.encode(state),
         }),
@@ -288,8 +345,12 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private async _reconcileSwarmState(): Promise<void> {
+    // A reconcile can land after `leave()`; applying its stale snapshot would resurrect the state `leave()` cleared.
     const swarmEvent = this._lastSwarmEvent;
-    invariant(swarmEvent);
+    const swarmCtx = this._swarmCtx;
+    if (!swarmEvent || !swarmCtx || !this._state.joined) {
+      return;
+    }
     // We include inactive peers that were disconnected abruptly and have not yet reconnected to not drop them from call.
     // Websocket connection could be unstable and we include graceful period for peers to reconnect.
     const peers = [
@@ -318,24 +379,32 @@ export class CallSwarmSynchronizer extends Resource {
       return;
     }
 
-    const activityKeys = new Set<string>(users.flatMap((user) => Object.keys(user.activities)));
+    // Only remote activities are merged: ours are authoritative locally, and a stale echo of our own entry must
+    // not re-introduce state we deleted.
+    const remoteUsers = users.filter((user) => user.id !== this._deviceKey);
+    const activityKeys = new Set<string>(remoteUsers.flatMap((user) => Object.keys(user.activities)));
     [...activityKeys].forEach((key) => {
-      const activities = users.map((user) => user.activities?.[key]).filter(isNonNullable);
+      const activities = remoteUsers.map((user) => user.activities?.[key]).filter(isNonNullable);
       const lastActivity = LamportTimestampCrdt.getLastState(activities);
       if (
         lastActivity &&
-        lastActivity.lamportTimestamp!.version! > (this._state.activities![key]?.lamportTimestamp?.version ?? 0)
+        LamportTimestampCrdt.supersedes(lastActivity.lamportTimestamp, this._state.activities?.[key]?.lamportTimestamp)
       ) {
         this._state.activities![key] = lastActivity;
       }
     });
     this.stateUpdated.emit(this._state);
 
-    // Schedule next reconcile if there are inactive peer to drop them after timeout.
-    if (peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
-      scheduleTaskInterval(
-        this._ctx,
-        async () => this._reconcileSwarmStateTask!.schedule(),
+    // One pending re-check bound to the swarm session drops inactive peers after the grace period; a repeating
+    // interval would stack per reconcile and keep firing after the call ends.
+    if (!this.#inactivePeerRecheckPending && peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
+      this.#inactivePeerRecheckPending = true;
+      scheduleTask(
+        swarmCtx,
+        async () => {
+          this.#inactivePeerRecheckPending = false;
+          this._reconcileSwarmStateTask?.schedule();
+        },
         Math.min(DISCONNECTED_ABRUPT_TIMEOUT / 2, 1000),
       );
     }
@@ -357,9 +426,33 @@ class LamportTimestampCrdt {
     return sortedStates[0];
   }
 
-  static increment(timestamp: LamportTimestamp): LamportTimestamp {
+  /**
+   * Total order over activity writes: the higher version wins, and equal versions tie-break on the smallest
+   * writer id (as `getLastState` orders), so two peers that wrote the same version concurrently converge.
+   */
+  static supersedes(candidate: LamportTimestamp | undefined, current: LamportTimestamp | undefined): boolean {
+    if (!candidate) {
+      return false;
+    }
+    if (!current) {
+      return true;
+    }
+    const candidateVersion = candidate.version ?? 0;
+    const currentVersion = current.version ?? 0;
+    if (candidateVersion !== currentVersion) {
+      return candidateVersion > currentVersion;
+    }
+    // The same writer at the same version is its own write echoed back, not a concurrent one.
+    if (!candidate.id || !current.id || candidate.id === current.id) {
+      return false;
+    }
+    return candidate.id.localeCompare(current.id) < 0;
+  }
+
+  /** The incrementing peer authors the new write, so the id is its own rather than the previous writer's. */
+  static increment(timestamp: LamportTimestamp | undefined, writerId: string | undefined): LamportTimestamp {
     return {
-      ...(timestamp ?? {}),
+      id: writerId,
       version: (timestamp?.version ?? 0) + 1,
     };
   }

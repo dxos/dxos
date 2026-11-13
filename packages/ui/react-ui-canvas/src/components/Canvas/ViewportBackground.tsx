@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { type Bounds, type ElementId, isViewNode } from '@dxos/scene';
 
 import { GRID_LEVELS, GRID_RANGE, useChanging } from '../../hooks/index.ts';
-import { type Camera, type SceneLook } from '../../model/index.ts';
+import { type BackgroundGrid, type Camera, type SceneLook } from '../../model/index.ts';
 import { GRID_CLASSES, cameraTransform, enterPortal, nodeBounds, screenBounds } from '../../utils/index.ts';
 import {
   BackgroundField,
@@ -47,19 +47,26 @@ export const ViewportBackground = ({
   const { childFrame } = useCanvasNavigation('Canvas.Viewport').commands;
   const snapEnabled = useAtomValue(tools.atoms.snap);
   const axesShown = useAtomValue(tools.atoms.axes);
+  const guidesShown = useAtomValue(tools.atoms.guides);
   const field = useMemo(
     () => backgroundField(look.background, backgroundBounds ?? bounds, latticeBounds),
     [look.background, backgroundBounds, bounds, latticeBounds],
   );
   const zooming = useChanging(camera.zoom, ZOOM_SETTLE);
-  // While editing with snap on, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws
-  // no lines too; with snap off, or on a lattice scene that snaps to its cells, the field draws the lines itself.
-  const snapLines = !readonly && look.background.grid === 'lines';
-  const snapGridDrawn = snapEnabled && snapLines && !draw.lattice;
-  // Dots are drawn in screen space, as the snap grid is, so they hold their size and keep showing while the camera moves.
-  // A lattice scene shows its cells instead, which are what a shape lands on, so it draws no dots or lines at all.
+  // A lattice scene draws what a shape snaps to: its cells (the guides, drawn over the scene) or else the grid's lines,
+  // unless the look draws no grid at all; read-only or as a picture nothing snaps, so it draws neither.
   const latticeScene = draw.lattice !== undefined;
-  const dotsDrawn = look.background.grid === 'dots' && !latticeScene;
+  const gridDrawn: BackgroundGrid = latticeScene
+    ? guidesShown || readonly || transparent || look.background.grid === 'none'
+      ? 'none'
+      : 'lines'
+    : look.background.grid;
+  // While editing with snap on, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws
+  // no lines too; with snap off the field draws the lines itself.
+  const snapLines = !readonly && gridDrawn === 'lines';
+  const snapGridDrawn = snapEnabled && snapLines;
+  // Dots are drawn in screen space, as the snap grid is, so they hold their size and keep showing while the camera moves.
+  const dotsDrawn = gridDrawn === 'dots';
   // As a frame grows to fill the view the canvas's grid fades and the frame's own scene grid fades in inside it, mapped
   // as drilling in maps the scene, so the drill crossfades into the grid the scene then shows rather than swapping.
   const focusNode = focus && focus.opacity < 1 ? displayScene.nodes[focus.id] : undefined;
@@ -85,11 +92,11 @@ export const ViewportBackground = ({
   const fieldBackground = useMemo(
     () => ({
       ...look.background,
-      ...((snapGridDrawn || dotsDrawn || latticeScene) && { grid: 'none' as const }),
+      grid: snapGridDrawn || dotsDrawn ? ('none' as const) : gridDrawn,
       // Transparent draws no surface, so it draws no washes either, though the grid stays.
       ...((gpuWashes || transparent) && { washes: [] }),
     }),
-    [snapGridDrawn, dotsDrawn, latticeScene, gpuWashes, transparent, look.background],
+    [snapGridDrawn, dotsDrawn, gridDrawn, gpuWashes, transparent, look.background],
   );
 
   return (
@@ -116,8 +123,8 @@ export const ViewportBackground = ({
       )}
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
           states a constraint the canvas is not applying. The minor level goes when its cells get too
-          small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. A lattice scene snaps to its
-          cells, not the lines, so its cells are its grid. The theme bar's grid choice decides whether they show. */}
+          small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. A lattice scene draws the lines
+          only while it snaps to them rather than to its cells. */}
       {snapGridDrawn && (
         <GridComponent
           size={grid}

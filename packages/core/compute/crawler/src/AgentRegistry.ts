@@ -101,6 +101,23 @@ export const identifiersForUser = (user: Type.User): Identifier[] => [
 /** Best display label for a source user: display name, else username, else the raw id. */
 export const labelForUser = (user: Type.User): string | undefined => user.displayName ?? user.username ?? user.id;
 
+/**
+ * The IRI a source user is known by in facts: Discord's profile URL, else `<source>-user:<id>`. An absolute IRI, so
+ * every graph that mentions the user names the same node.
+ */
+export const iriForUser = (user: Pick<Type.User, 'id' | 'source'>): string =>
+  user.source === 'discord' ? `https://discord.com/users/${user.id}` : `${user.source}-user:${user.id}`;
+
+/** The source user a profile was resolved from: its first `<source>-user` identifier. */
+export const userOf = (profile: Profile): Pick<Type.User, 'id' | 'source'> | undefined => {
+  const identifier = profile.identifiers.find(({ namespace }) => namespace.endsWith('-user'));
+  return identifier ? { source: identifier.namespace.slice(0, -'-user'.length), id: identifier.value } : undefined;
+};
+
+/** The usernames a profile is known by (its `<source>-username` identifiers). */
+export const usernamesOf = (profile: Profile): string[] =>
+  profile.identifiers.filter(({ namespace }) => namespace.endsWith('-username')).map(({ value }) => value);
+
 const key = (identifier: Identifier) => `${identifier.namespace}:${identifier.value}`;
 
 const earliest = (a?: string, b?: string) => (a === undefined ? b : b === undefined ? a : a < b ? a : b);

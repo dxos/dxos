@@ -37,7 +37,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.BindChatContext> 
           return;
         }
 
-        const registry = yield* Capability.get(Capabilities.AtomRegistry);
+        // Optional: EDGE hosts contribute no atom registry, and the binder then makes its own.
+        const registry = Option.getOrUndefined(yield* Capability.getOption(Capabilities.AtomRegistry));
         yield* Effect.gen(function* () {
           const contributions = yield* Effect.all(providers.map(({ getBindings }) => getBindings({ subject, chat })));
 

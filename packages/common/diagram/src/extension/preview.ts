@@ -17,7 +17,7 @@ import * as SvgFile from '../svg-file.ts';
 /** Fence info strings that `diagramBlockDescription` parses as the diagram DSL. */
 const FENCE_NAMES = new Set(['diagram', 'dxd']);
 
-/** Renders kept by source text, so re-decorating after an unrelated edit does not lay the diagram out again. */
+/** Renders kept by theme and source text, so re-decorating after an unrelated edit does not lay the diagram out again. */
 const MAX_RENDERS = 32;
 
 export type DiagramRender =
@@ -34,9 +34,16 @@ const ESTIMATED_COLUMN_WIDTH = 720;
 
 const PREVIEW_PADDING = 24 + 16;
 
-/** Lays out one diagram DSL source and serializes it as a standalone SVG document. */
-export const renderDiagram = (source: string): Promise<DiagramRender> => {
-  const cached = renders.get(source);
+/** What a render is kept under: the same source draws differently in each theme. */
+const renderKey = (source: string, theme: SvgFile.SvgTheme): string => `${theme}\n${source}`;
+
+/**
+ * Lays out one diagram DSL source and serializes it as a standalone SVG document in `theme`, its ground left
+ * unpainted so the host's own surface shows behind it.
+ */
+export const renderDiagram = (source: string, theme: SvgFile.SvgTheme = 'light'): Promise<DiagramRender> => {
+  const key = renderKey(source, theme);
+  const cached = renders.get(key);
   if (cached) {
     return cached;
   }
@@ -49,7 +56,7 @@ export const renderDiagram = (source: string): Promise<DiagramRender> => {
             error: problems.find((problem) => problem.severity === 'error')?.message ?? 'The diagram is empty.',
           };
         }
-        const svg = SvgFile.toSvgFile(objects);
+        const svg = SvgFile.toSvgFile(objects, { theme, transparent: true });
         const [, width = '0', height = '0'] = /<svg [^>]*?width="([\d.]+)" height="([\d.]+)"/.exec(svg) ?? [];
         return { svg, width: Number(width), height: Number(height) };
       },
@@ -57,8 +64,8 @@ export const renderDiagram = (source: string): Promise<DiagramRender> => {
     )
     .then((result) => {
       // A render evicted while pending must not repopulate the cache it was dropped from.
-      if (renders.get(source) === pending) {
-        settled.set(source, result);
+      if (renders.get(key) === pending) {
+        settled.set(key, result);
       }
       return result;
     });
@@ -69,21 +76,25 @@ export const renderDiagram = (source: string): Promise<DiagramRender> => {
       settled.delete(oldest.value);
     }
   }
-  renders.set(source, pending);
+  renders.set(key, pending);
   return pending;
 };
 
 class DiagramWidget extends WidgetType {
-  constructor(readonly source: string) {
+  constructor(
+    readonly source: string,
+    readonly theme: SvgFile.SvgTheme,
+  ) {
     super();
   }
 
+  // The theme too: a widget kept across a colour-mode switch would keep the other mode's picture.
   override eq(other: DiagramWidget): boolean {
-    return other.source === this.source;
+    return other.source === this.source && other.theme === this.theme;
   }
 
   override get estimatedHeight(): number {
-    const result = settled.get(this.source);
+    const result = settled.get(renderKey(this.source, this.theme));
     if (result && 'svg' in result && result.width > 0) {
       return Math.min(result.height, (result.height * ESTIMATED_COLUMN_WIDTH) / result.width) + PREVIEW_PADDING;
     }
@@ -115,13 +126,13 @@ class DiagramWidget extends WidgetType {
       }
     };
     // A widget whose size changes after mount shifts everything below it, which moves the reader's scroll position.
-    const ready = settled.get(this.source);
+    const ready = settled.get(renderKey(this.source, this.theme));
     if (ready) {
       show(ready);
     } else {
       container.style.minHeight = `${this.estimatedHeight}px`;
       container.textContent = 'Rendering diagram…';
-      void renderDiagram(this.source).then((result) => {
+      void renderDiagram(this.source, this.theme).then((result) => {
         container.style.minHeight = '';
         show(result);
         view.requestMeasure();
@@ -145,6 +156,7 @@ const isEditing = (state: EditorState, from: number, to: number): boolean =>
  */
 export const buildDiagramPreviews = (state: EditorState): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
+  const theme = state.facet(EditorView.darkTheme) ? 'dark' : 'light';
   syntaxTree(state).iterate({
     enter: (node) => {
       if (node.name !== 'FencedCode') {
@@ -155,8 +167,8 @@ export const buildDiagramPreviews = (state: EditorState): DecorationSet => {
       if (info && body && FENCE_NAMES.has(state.doc.sliceString(info.from, info.to).trim())) {
         const source = state.doc.sliceString(body.from, body.to);
         // Laid out ahead of scrolling, so a widget that mounts later is drawn at its final size at once.
-        void renderDiagram(source);
-        const widget = new DiagramWidget(source);
+        void renderDiagram(source, theme);
+        const widget = new DiagramWidget(source, theme);
         if (isEditing(state, node.from, node.to)) {
           builder.add(node.to, node.to, Decoration.widget({ widget, block: true, side: 1 }));
         } else {
@@ -175,23 +187,25 @@ const previews = StateField.define<DecorationSet>({
   update: (value, transaction) =>
     transaction.docChanged ||
     transaction.selection ||
+    // A colour-mode switch arrives as a reconfiguration, with no edit and no selection.
+    transaction.state.facet(EditorView.darkTheme) !== transaction.startState.facet(EditorView.darkTheme) ||
     syntaxTree(transaction.state) !== syntaxTree(transaction.startState)
       ? buildDiagramPreviews(transaction.state)
       : value,
   provide: (field) => EditorView.decorations.from(field),
 });
 
-// The render's colours are drawn for a white ground, so the frame stays white in both themes.
-const theme = EditorView.baseTheme({
+// The frame is the host's own surface where it has one; the fallbacks are the grounds the two palettes are drawn for.
+const frameTheme = EditorView.baseTheme({
   '.cm-diagram-preview': {
     margin: '8px 0',
     padding: '12px',
     borderRadius: '6px',
-    background: '#ffffff',
-    color: '#525252',
     overflowX: 'auto',
     fontSize: '12px',
   },
+  '&light .cm-diagram-preview': { background: 'var(--color-group-surface, #ffffff)', color: '#525252' },
+  '&dark .cm-diagram-preview': { background: 'var(--color-group-surface, #171717)', color: '#a3a3a3' },
   '.cm-diagram-preview:has(img)': { cursor: 'pointer' },
   '.cm-diagram-preview img': { display: 'block', maxWidth: '100%', height: 'auto', margin: '0 auto' },
   '.cm-diagram-preview-error': { color: '#dc2626' },
@@ -202,4 +216,4 @@ const theme = EditorView.baseTheme({
  * (with the diagram below it) while the selection is inside the fence. Pair it with
  * `diagramBlockDescription` in `createMarkdownExtensions({ codeLanguages })` for highlighting.
  */
-export const diagramPreview = (): Extension => [previews, theme];
+export const diagramPreview = (): Extension => [previews, frameTheme];

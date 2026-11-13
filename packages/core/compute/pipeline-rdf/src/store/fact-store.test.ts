@@ -244,7 +244,7 @@ describe('FactStore', () => {
             assertion: {
               subject: { kind: 'entity', entity: 'alice' },
               predicate: 'travels to',
-              predicateIri: `${Vocab.brainNamespace('agent-1')}travelTo`,
+              predicateIri: `${Vocab.brainNamespace('agent-1')}travelsTo`,
               predicateDescription: 'A place the subject is going to.',
               object: { kind: 'entity', entity: 'paris' },
               quote,
@@ -257,8 +257,8 @@ describe('FactStore', () => {
         );
         expect(predicates).toEqual([
           {
-            iri: `${Vocab.brainNamespace('agent-1')}travelTo`,
-            name: 'travel_to',
+            iri: `${Vocab.brainNamespace('agent-1')}travelsTo`,
+            name: 'travels_to',
             label: 'travels to',
             description: 'A place the subject is going to.',
             definedBy: Vocab.brainNamespace('agent-1'),

@@ -3,6 +3,7 @@
 //
 
 export * as Meeting from './Meeting.ts';
+export * as MeetingActivity from './MeetingActivity.ts';
 export * as MeetingCapabilities from './MeetingCapabilities.ts';
 export * as MeetingEvents from './MeetingEvents.ts';
 export * as MeetingOperation from './MeetingOperation.ts';

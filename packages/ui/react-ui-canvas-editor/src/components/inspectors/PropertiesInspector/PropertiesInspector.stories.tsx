@@ -14,6 +14,7 @@ import {
   between,
   createCanvasAtoms,
   createDrawState,
+  defaultNodeRegistry,
   getElement,
   useCanvasHistory,
   useDrawScene,
@@ -64,7 +65,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
   const store = useMemo(() => createDrawState([VIEW]), []);
   const atoms = useMemo(() => createCanvasAtoms(VIEW.id), []);
   const history = useCanvasHistory({ registry, atoms, store });
-  const draw = useDrawScene({ store, atoms, history });
+  const draw = useDrawScene({ store, atoms, history, nodeRegistry: defaultNodeRegistry });
   useLayoutEffect(() => {
     registry.set(atoms.selection, new Set(select));
   }, [registry, atoms, select]);
