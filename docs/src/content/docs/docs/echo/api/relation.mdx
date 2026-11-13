@@ -1,0 +1,63 @@
+---
+title: Relation
+description: The runtime API for relations.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+```ts
+import { Relation } from '@dxos/echo';
+```
+
+A relation is an object with two typed endpoints, a source and a target. Use one when the link has data of its own, such
+as a role or a date, or when you need to query it from either end. A plain `Ref` field is enough when one object just
+points at another. `Relation` mirrors [Obj](/docs/echo/api/obj/) for everything that is not about endpoints.
+
+## Make a relation
+
+Declare the type with `Type.makeRelation`, which fixes the endpoint types
+<SpecCite item="org.dxos.echo#F-2.2" />. Then pass the endpoints under the reserved `Relation.Source` and
+`Relation.Target` keys.
+
+<Snippet file="guide-relation" region="make" />
+
+## Read the endpoints
+
+`getSource` and `getTarget` return the endpoint objects with their types. `getSourceURI` and `getTargetURI` return their
+URIs without resolving them.
+
+<Snippet file="guide-relation" region="endpoints" />
+
+## Query from either end
+
+`targetOf` selects the relations that point at the current selection, and `sourceOf` the ones that start from it. Then
+`source()` or `target()` steps to the objects at the other end. [Query](/docs/echo/api/query/) covers traversal.
+
+<Snippet file="guide-relation" region="query" />
+
+## Update, subscribe and sort
+
+<Snippet file="guide-relation" region="update" />
+
+## Members at a glance
+
+| Member                                     | Summary                                       |
+| ------------------------------------------ | --------------------------------------------- |
+| `make`                                     | Create a relation between two objects         |
+| `Source` `Target`                          | Reserved keys for the endpoints               |
+| `getSource` `getTarget`                    | The endpoint objects                          |
+| `getSourceURI` `getTargetURI`              | The endpoint URIs, unresolved                 |
+| `update` `subscribe` `getSnapshot`         | Write, watch and copy, as in `Obj`            |
+| `sort` `sortByLabel` `sortByTypename`      | Comparators for `Array.sort`                  |
+| `instanceOf` `isRelation`                  | Predicates                                    |
+
+The full list is in the [API reference](/docs/additional-resources/api-reference/).
+
+## Related
+
+- [Objects and relations](/docs/echo/concepts/objects-relations/)
+- [Type](/docs/echo/api/type/) for declaring relation types.

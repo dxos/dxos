@@ -22,6 +22,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -55,11 +56,11 @@ component ExplorerArticle
     Renders one of four SVG layout variants and a toolbar for switching between them.
   props:
     role: article | section
-    subject: Ref<View>
+    subject: Ref<Graph>
     attendableId?: string
   state:
     variant: ExplorerVariant        # active layout; default force
-    filter?: Filter.Any             # compiled from toolbar query input
+    filter?: Filter.Any             # compiled from the Graph's saved query, then from toolbar query input
     model?: SpaceGraphModel         # live reactive graph built from db + filter
   slots:
     toolbar?: ReactNode             # shown only when role === article
@@ -151,6 +152,10 @@ feat F-2: Live Graph Model
   req F-2.2:
     when: user types a query in the toolbar
     then: op:buildFilter compiles the raw string; model.setFilter applied; SVG re-renders
+
+  req F-2.5:
+    when: ExplorerArticle opens a Graph whose query has a raw string
+    then: the toolbar shows that string and the graph shows only the objects it matches, until the user edits it
 
   req F-2.3:
     when: Graph is unmounted
@@ -344,6 +349,19 @@ test QA-2: Showcase clip
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: ExplorerArticle opens a Graph on its saved raw query, shown in the toolbar, rather than on every object in the space.
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.5]
+  why: A Graph stores a query, but the article ignored it and drew the whole space. The `/echo` graph demo shares its space with other demos' objects and needs its graph kept to companies and people.
+  rejected:
+    - Applying the saved query's AST when there is no raw string: graphs created in Composer store a match-nothing AST and no raw string, so they would open empty.
+```
 
 ## Appendix: Extension Definitions
 

@@ -1,0 +1,11 @@
+---
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+
+import SidebarTopics from './SidebarTopics.astro';
+
+const { hasSidebar } = Astro.locals.starlightRoute;
+const { isPageWithTopic } = Astro.locals.starlightSidebarTopics;
+---
+
+{hasSidebar && isPageWithTopic && <SidebarTopics />}
+<Default><slot /></Default>

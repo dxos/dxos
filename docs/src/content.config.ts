@@ -11,7 +11,18 @@ import { z } from 'astro:content';
 export const collections = {
   docs: defineCollection({
     loader: docsLoader(),
-    schema: docsSchema(),
+    schema: docsSchema({
+      extend: z.object({
+        /** A section's welcome page shows its title over a brand background; see `WelcomeHero.astro`. */
+        welcome: z
+          .object({
+            section: z.string(),
+            tagline: z.string(),
+            background: z.enum(['dxos', 'echo', 'halo', 'kube', 'mesh']),
+          })
+          .optional(),
+      }),
+    }),
   }),
 
   team: defineCollection({

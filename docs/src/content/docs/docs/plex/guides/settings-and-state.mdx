@@ -1,0 +1,38 @@
+---
+title: Settings and state
+description: Keep a plugin's settings, which sync, apart from its device state, which does not.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+A plugin keeps two kinds of value outside ECHO:
+
+- **Settings** are choices the person makes, such as a default view. They follow the person to every device.
+- **State** belongs to one device, such as the last item opened or a panel's width. It does not sync.
+
+Keep them apart. A device-only value stored as a setting moves to the person's other devices, where it is wrong.
+
+## Settings
+
+Describe the settings with a schema, and contribute it with `AppCapabilities.Settings`. The app renders a form for
+it on the settings page, using each field's `title`, and syncs the values. `KvsStore.make` gives an atom that holds
+the values, with defaults for a first run.
+
+<Snippet file="plex-guide-settings-and-state" region="settings" />
+
+## State
+
+Device state is the plugin's own capability. Declare a singleton on the plugin's namespace and store it under the
+key `${key}.state`, so it stays on this device.
+
+<Snippet file="plex-guide-settings-and-state" region="state" />
+
+## Read and write them
+
+Both are atoms. A component reads one with `useAtomValue` and writes it with `useAtomSet`, after getting it with
+`useCapability`. Other modules read them the same way they read any capability.
+
+## Limits
+
+- Settings are not ECHO objects, so they do not appear in a space or in search.
+- Change a settings schema only by adding optional fields, so values stored by an earlier version still decode.

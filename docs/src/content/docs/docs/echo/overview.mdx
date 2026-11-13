@@ -1,0 +1,45 @@
+---
+title: Overview
+description: What ECHO is and how these docs are organized.
+welcome:
+  section: ECHO
+  tagline: A peer-to-peer graph database for TypeScript, local-first and synced between peers.
+  background: echo
+---
+
+ECHO, the **E**ventually **C**onsistent **H**ierarchical **O**bject store, is a peer-to-peer graph database for TypeScript.
+
+## Model
+
+- Peers replicate data with [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). There is no central authority: the data lives with the clients.
+- Peers connect to each other over [WebRTC](https://en.wikipedia.org/wiki/WebRTC).
+- Several writers can change the same data at once, including structured objects and collaborative text.
+- A peer can write while offline. Its changes merge when it rejoins the network.
+
+Data lives in [spaces](/docs/echo/concepts/spaces/), and each unit of data is an [object](/docs/echo/concepts/objects-relations/). [Why ECHO?](/docs/echo/why-echo/) makes the case for this design.
+
+## Where ECHO fits in DXOS
+
+DXOS is an open source framework for real-time, collaborative apps that keep their data on the client and sync it peer to peer. ECHO is one of its parts:
+
+- **ECHO** stores and replicates the data.
+- **[HALO](/docs/halo/overview/)** gives each user an identity, links their devices and controls who can join a space.
+- **MESH** is the networking that ECHO and HALO use to reach peers.
+- **EDGE** runs web services on Cloudflare Workers for sync, backup and compute.
+- **[PLEX](/docs/plex/overview/)** builds apps from plugins and capabilities. [Composer](/composer), our local-first workspace, is built on it.
+
+The SDK is under active development, and right now its features follow what Composer needs. Support for other uses is limited, so suggestions and contributions that line up with Composer get priority. Feedback goes to [GitHub](https://github.com/dxos/dxos/issues) or [Discord](https://dxos.org/discord).
+
+## How these docs are organized
+
+- **Learn** builds one app step by step, from [Installation](/docs/echo/learn/installation/) to [Sharing a space](/docs/echo/learn/sharing/):
+  1. Install `@dxos/client` and create a client.
+  2. Set up an identity with [HALO](/docs/halo/overview/).
+  3. Create or join a space.
+  4. Add, change and query objects.
+- **Core concepts** describe one idea each, for a reader who has finished Learn.
+- **Guides** cover one `@dxos/echo` namespace per page, such as [Filter](/docs/echo/api/filter/), then the frameworks, such as [React](/docs/echo/guides/react/).
+
+## Behavior
+
+Each concept page states what ECHO guarantees, and each claim cites an item in the ECHO spec.

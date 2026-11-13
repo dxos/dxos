@@ -24,6 +24,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
@@ -33,6 +36,7 @@
     "@dxos/echo-client": "workspace:*",
     "@solidjs/testing-library": "catalog:",
     "solid-js": "catalog:",
+    "typedoc": "catalog:",
     "vite-plugin-solid": "catalog:",
     "vitest": "catalog:"
   },

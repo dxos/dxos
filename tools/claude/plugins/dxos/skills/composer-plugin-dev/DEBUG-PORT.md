@@ -75,12 +75,13 @@ return {
   hubUrl: v.runtime?.app?.env?.DX_HUB_URL,
   iceProviders: v.runtime?.services?.iceProviders,
   identity: dxos.client.halo.identity.get()?.did,
+  origin: location.origin,
 };
 ```
 
 Copy only these fields out of the config: the rest of `runtime.services` holds credentials.
 
-**Done when** `.dxos/target.json` has a non-empty `edgeUrl`, `hubUrl` and `identity`.
+**Done when** `.dxos/target.json` has a non-empty `edgeUrl`, `hubUrl`, `identity` and `origin`.
 
 ## Load
 

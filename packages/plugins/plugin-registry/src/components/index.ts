@@ -8,3 +8,4 @@ export * from './PluginFailureBadge/index.ts';
 export * from './PluginList/index.ts';
 export * from './PluginScope/index.ts';
 export * from './RegistrySettings/index.ts';
+export * from './SpacePluginsPanel/index.ts';

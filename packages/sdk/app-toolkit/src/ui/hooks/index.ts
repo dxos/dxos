@@ -7,6 +7,7 @@ export * from './useAwareness.ts';
 export * from './useDetailNavigation.ts';
 export * from './useActiveSpace.ts';
 export * from './useHomeVisibility.ts';
+export * from './useSpacePlugins.ts';
 export * from './useLayout.ts';
 export * from './useNavigationPresence.ts';
 export * from './useObjectMenuItems.ts';

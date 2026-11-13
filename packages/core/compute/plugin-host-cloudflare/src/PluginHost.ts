@@ -14,9 +14,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManifest from '@dxos/app-framework/PluginManifest';
-import { wrapFunctionHandler } from '@dxos/compute-runtime';
-import type * as Operation from '@dxos/compute/Operation';
+import { wrapFunctionHandler } from '@dxos/compute-runtime/protocol';
+import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
+import { type Entity } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, messageOf } from '@dxos/errors';
 import { ServiceContainer, createFunctionContext } from '@dxos/functions-runtime-cloudflare';
@@ -159,6 +160,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     const func = wrapFunctionHandler(contextual, {
       // Registering types needs a database, which exists only for a space-scoped invocation.
       types: spaceId === undefined ? undefined : [...activation.registeredTypes],
+      registry: spaceId === undefined ? undefined : registryEntities(activation),
       toolkits: [...activation.toolkits],
       typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
       // EDGE's hosted blob store, the default storage of the file backend every bundle is offered.
@@ -282,6 +284,16 @@ const makeContext = async (
   });
   return { context, serviceContainer };
 };
+
+/**
+ * The primary's skills, which a skill bound by registry URI resolves only through, and its operation records, which
+ * the tool resolver projects a skill's tools from; no other plugin's, since a bundle reads none of theirs (D-88).
+ */
+const registryEntities = (activation: PluginActivation.Activation): Entity.Unknown[] => [
+  // Made per invocation: `make()` mints ids, which workerd allows only inside a request.
+  ...activation.skills.map((definition) => definition.make()),
+  ...activation.operationHandlers.map((handler) => Operation.serialize(handler)),
+];
 
 /** Gives the handler the plugins' capability manager, which operations that read contributed capabilities require. */
 const withCapabilities = (

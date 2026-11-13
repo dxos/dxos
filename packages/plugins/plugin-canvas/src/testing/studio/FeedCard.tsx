@@ -156,7 +156,7 @@ export const feedCardSpec: ElementKindSpec = {
     center,
     size,
     label: 'Feed',
-    icon: { name: 'queue' },
+    icon: { type: 'queue' },
     data: { feed: 9, marks: [] },
   }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 300 x 138 card, give or take.

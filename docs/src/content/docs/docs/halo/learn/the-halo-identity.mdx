@@ -1,0 +1,51 @@
+---
+title: The HALO identity
+description: What an identity is, and the app the learning path builds, running for three people.
+---
+
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
+import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
+
+The learning path builds one app: a contact book. You give yourself a name, keep a few named spaces, and invite people
+into them. Your contacts are the people you share a space with. This page explains what a HALO identity is, and shows the
+contact book finished.
+
+## What an identity is
+
+Everything the contact book shows comes from one identity per person. An identity has four parts:
+
+- **A DID.** Peers know the identity by this one name, on every device and in every space.
+- **A profile.** Its display name, which every space the identity is in shows.
+- **Members.** An identity is a Keyhive group, and its members are the keys allowed to act for it. Each device holds its
+  own key, so adding a device adds a member and removing one revokes it. The key behind a recovery code is a member too.
+- **Spaces.** A space is a group as well, and the identity is one of its members, with an access level. The identity's
+  devices act for it in every space it belongs to.
+
+No server issues or holds an identity. Each change to its members is a signed delegation or revocation, and every peer
+checks it. [Identities and devices](/docs/halo/concepts/identities-devices/) describes the model in full.
+
+## The finished app
+
+Here it runs for Alice, Bob and Carol. All three are in Book club, and Alice and Carol are also in Climbing. Open Contacts
+on Alice's device to see Bob and Carol with the spaces each shares with her. Make a new space, invite someone into it, or
+switch a device offline. To change the code and run it yourself, fork it on StackBlitz.
+
+<HaloEmbed stage="recovery" scene="book" />
+
+<StackBlitzButton project="halo" kind="complete" label="Fork on StackBlitz" file="src/app/ContactBook.tsx" />
+
+Each page of the learning path builds one piece of it:
+
+| Page | Files | What it adds |
+| --- | --- | --- |
+| [Your profile](/docs/halo/learn/your-profile/) | `App.tsx`, `Welcome.tsx`, `ContactBook.tsx`, `Profile.tsx` | A client, an identity with a profile, and renaming |
+| [Your spaces](/docs/halo/learn/your-spaces/) | `Spaces.tsx`, `ContactBook.tsx` | Named spaces, and a list to switch between them |
+| [Invite people](/docs/halo/learn/invite-people/) | `Invitations.tsx` | Invite and Join, with an authorization code |
+| [Your contacts](/docs/halo/learn/your-contacts/) | `Contacts.tsx` | Everyone you share a space with, and removing them |
+| [Add a device](/docs/halo/learn/add-device/) | `Devices.tsx`, `Welcome.tsx` | Your phone, with the same name, spaces and contacts |
+| [Recover an identity](/docs/halo/learn/recover-identity/) | `Recovery.tsx`, `Welcome.tsx` | A recovery code, and your identity back on a new device |
+
+The code is Effect. Each change is an `Effect` that needs the HALO services. A `HaloProvider` from `@dxos/halo-react`
+holds each device's services. A component reads state with that package's hooks, such as `useIdentity` and `useSpaces`,
+and runs a change with `useHaloServices`, `Effect.provide` and `Effect.runPromise`. Each piece sits in the component that uses it; the samples show it there, with the rest of the
+component folded away.
