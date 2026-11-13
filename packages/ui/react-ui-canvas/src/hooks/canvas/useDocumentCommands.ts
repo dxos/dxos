@@ -36,7 +36,7 @@ export type UseDocumentCommandsOptions = {
   /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
   cell: number;
   viewport: Size;
-  snapMinor: (value: number) => number;
+  snap: (value: number) => number;
 } & Pick<PointerMachine, 'createdNode' | 'commitCreated'>;
 
 /** The document commands, stable for the life of the canvas: each reads the view as it is when it runs. */
@@ -50,7 +50,7 @@ export const useDocumentCommands = ({
   capabilities,
   cell,
   viewport,
-  snapMinor,
+  snap,
   createdNode,
   commitCreated,
 }: UseDocumentCommandsOptions): DocumentCommands => {
@@ -65,7 +65,7 @@ export const useDocumentCommands = ({
     }
     const size = nominalSize(def.defaultSize, cell);
     const centre = screenToScene(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 });
-    const from = { x: snapMinor(centre.x - size.width / 2), y: snapMinor(centre.y - size.height / 2) };
+    const from = { x: snap(centre.x - size.width / 2), y: snap(centre.y - size.height / 2) };
     // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
     const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
     if (node) {

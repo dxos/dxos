@@ -9,11 +9,12 @@ import { type Link, type Node } from '@dxos/scene';
 import { defaultNodeRegistry } from '../components/index.ts';
 import { type RenderList2D } from '../model/index.ts';
 import { gutterRoute } from './gutter-route.ts';
-import { DEFAULT_LATTICE, cellBounds } from './lattice.ts';
+import { type LatticeSpec, cellBounds } from './lattice.ts';
 import { viewLinkGeometry } from './route.ts';
 import { createLink, createNode } from './shapes.ts';
 
-const spec = DEFAULT_LATTICE;
+// The lattice these positions are worked out on: a pitch of 384 by 192.
+const spec: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
 const cellNode = (id: string, col: number, row: number, spanX = 1, spanY = 1): Node => {
   const { x, y, width, height } = cellBounds({ col, row, spanX, spanY }, spec);

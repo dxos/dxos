@@ -1,0 +1,55 @@
+{
+  "$comment": "Parameters of the space-graph generator (space-graph.generator.ts). The node's frame sets the circle: centre = frame centre, radius = half the shorter side. CHANGED from the studio draft: `x-binding` sits on the `readers` array itself rather than on its `items`, because `bindingsOf` (react-ui-canvas generator/runner.ts) reads the property and never looks inside it.",
+  "type": "object",
+  "properties": {
+    "seed": { "type": "integer", "default": 7, "description": "Same seed, same graph." },
+    "pitch": {
+      "type": "number",
+      "default": 26,
+      "minimum": 8,
+      "description": "Distance between neighbouring lattice points (scene units)."
+    },
+    "fill": {
+      "type": "number",
+      "default": 0.6,
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Share of lattice points that become objects."
+    },
+    "extra": {
+      "type": "number",
+      "default": 0.45,
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Chance each other pair of neighbouring objects is linked."
+    },
+    "size": {
+      "type": "number",
+      "default": 24,
+      "minimum": 5,
+      "maximum": 50,
+      "description": "Object radius, % of pitch."
+    },
+    "readers": {
+      "type": "array",
+      "x-binding": "node",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Cards that read and write this space; each gets links to `picks` nodes, which light up."
+    },
+    "picks": {
+      "type": "integer",
+      "default": 2,
+      "minimum": 1,
+      "maximum": 6,
+      "description": "Graph nodes each reader reaches."
+    },
+    "hue": {
+      "type": "string",
+      "default": "violet",
+      "enum": ["neutral", "red", "orange", "amber", "green", "teal", "sky", "blue", "violet"],
+      "description": "Lit nodes and reader links."
+    }
+  },
+  "required": ["seed"]
+}

@@ -618,6 +618,8 @@
   }
 
   .dx-checkbox {
+    /* Holds the visually hidden input, which is positioned; see `.dx-switch`. */
+    position: relative;
     display: inline-flex;
     align-items: center;
     /* Start, not centre: in a column (Field) the cross axis is horizontal, so centre would float it mid-track. */

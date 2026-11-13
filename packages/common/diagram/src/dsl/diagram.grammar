@@ -33,6 +33,7 @@ statement {
   FragmentDecl |
   SceneDecl |
   LayoutDecl |
+  CompositeDecl |
   ModelDecl
 }
 
@@ -56,6 +57,14 @@ LayoutBody { "{" ElementStmt* "}" }
 // element <id> <kind | object id> ["label"] [@ x,y | @ x,y,z] [name=value]*
 ElementStmt { ckw<"element"> Id Word Label? Position? Attribute* }
 Position { "@" (Point3 | Point) }
+
+// composite <id> [size=WxH] [name="…"] { element … }
+//
+// One statement for what a composite object is: a layout of parts that stands on its own, and the model object that
+// places it. Spelling it as a `layout kind=composite` plus a matching `object … parts=` would say the same thing in
+// three statements and let the two drift apart, and a composite is the unit a tool ships.
+CompositeDecl { ckw<"composite"> Id Attribute* CompositeBody }
+CompositeBody { "{" ElementStmt* "}" }
 
 // model <id> dim=2d|3d [name="…"] { object … }
 ModelDecl { ckw<"model"> Id Attribute* ModelBody }
@@ -176,7 +185,10 @@ Ref { name | String }
 // the only case that wanted one.
 Attribute { AttrName "=" AttrValue }
 AttrName  { name }
-AttrValue { Number | Size | Size3 | Ratio | String | Word | Point3 | Point | Dimension }
+AttrValue { Number | Size | Size3 | Ratio | String | Pair | Word | Point3 | Point | Dimension }
+// `constrain=stretch,max`: two words, as `Point` is two numbers. The reader hands the raw text on, so a pair-valued
+// attribute no field claims still round-trips through `props`.
+Pair { Word "," Word }
 // `aspect=4:3`.
 Ratio { Number ":" Number }
 

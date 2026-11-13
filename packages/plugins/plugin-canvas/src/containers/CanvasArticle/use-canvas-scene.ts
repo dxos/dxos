@@ -8,6 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Database, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import {
+  EXTENSIONS_GROUP,
   type GeneratorSource,
   type NodeRegistry,
   createNodeRegistry,
@@ -24,9 +25,15 @@ import { CanvasCapabilities, Generator } from '#types';
 import { CanvasViewNodeView, CanvasViewToolbar } from './CanvasViewNodeView.tsx';
 import { ImageNodeView } from './ImageNodeView.tsx';
 
+/** The tools panel group a built-in type is offered in, where it names one. */
+const builtinGroup = (type: string): string | undefined => {
+  const group: unknown = Reflect.get(Reflect.get(defaultNodeTypes, type) ?? {}, 'group');
+  return typeof group === 'string' ? group : undefined;
+};
+
 /**
- * The built-in node types and whatever other plugins contribute (a contribution may replace a built-in).
- * The canvas's frame shows an object (`object`) as that object's surface.
+ * The built-in node types and whatever plugins contribute (a contribution may replace a built-in, and is then
+ * offered where the built-in was). The canvas's frame shows an object (`object`) as that object's surface.
  */
 export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefined): NodeRegistry => {
   const contributed = Hooks.useCapabilities(CanvasCapabilities.NodeType);
@@ -55,7 +62,17 @@ export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefin
             // The picture is the shape: no fill or border unless the style asks for them.
             bare: true,
           },
-          ...Object.fromEntries(contributed.map(({ type, spec }) => [type, kindNodeDef(type, spec)])),
+          ...Object.fromEntries(
+            contributed.map(({ type, spec }) => [
+              type,
+              kindNodeDef(type, {
+                // A plugin's tools stand apart from the canvas's own shapes, in the group the card is in; a kind
+                // that replaces a built-in is offered where the built-in was.
+                group: builtinGroup(type) ?? (type in defaultNodeTypes ? undefined : EXTENSIONS_GROUP),
+                ...spec,
+              }),
+            ]),
+          ),
         },
         defaultNodePrototypes,
       ),

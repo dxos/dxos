@@ -25,7 +25,7 @@ import {
 } from '@dxos/scene';
 
 import { type Camera, type Tool } from '../model/index.ts';
-import { type Clipboard, type PartKey } from '../utils/index.ts';
+import { type Clipboard, type Inside, type PartKey } from '../utils/index.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 
@@ -51,9 +51,21 @@ export type Drag =
   | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
   /**
    * Rubber band from a port, or from a free point under a link tool; `target` is set while hovering a
-   * valid drop, and the link is then previewed as created.
+   * valid drop, and the link is then previewed as created. `from` and `to` are where the link is drawn, which
+   * a free end snaps to the grid; `press` and `pointer` are where the gesture began and where the pointer is,
+   * unsnapped, which is how far it has gone.
    */
-  | { kind: 'link'; type: LinkType; source: Endpoint; from: Point; fromSide: Side; to: Point; target?: Endpoint }
+  | {
+      kind: 'link';
+      type: LinkType;
+      source: Endpoint;
+      from: Point;
+      fromSide: Side;
+      to: Point;
+      press: Point;
+      pointer: Point;
+      target?: Endpoint;
+    }
   /**
    * Drawing a new node with a tool. `dropped` marks one dragged in from the palette or a host's
    * draggable, which previews as its frame alone: the pointer already carries the drag's own preview.
@@ -64,6 +76,11 @@ export type Drag =
    * `to` the pointer, where the next segment runs. It outlasts each press, ending when the line is finished or dropped.
    */
   | { kind: 'vertices'; type: NodeType; points: Point[]; to: Point }
+  /**
+   * Drawing a node in one stroke (`NodeDef.freehand`): `points` are the pointer's path since the press, in scene
+   * coordinates. It ends with the press, when the stroke lands as a node.
+   */
+  | { kind: 'freehand'; type: NodeType; points: Point[] }
   /** Moving one vertex of a node in vertex edit mode; `points` are all its vertices, in scene coordinates. */
   | { kind: 'vertex'; id: NodeId; index: number; points: Point[] }
   /** Moving one control point of a spline; `points` is the transient list. */
@@ -132,6 +149,11 @@ export type CanvasAtoms = {
   clock: Clock;
   /** The composite open in isolation, if any. */
   isolation: Atom.Writable<Isolation | undefined>;
+  /**
+   * The Object being edited in place, if any (ANIMATION.md §4.2): its parts are what the editor acts on and the rest
+   * of the scene is drawn faded behind them. Unlike isolation this moves no camera and opens no view.
+   */
+  inside: Atom.Writable<Inside | undefined>;
 };
 
 /**
@@ -160,4 +182,5 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
   clock: createClock(),
   isolation: Atom.keepAlive(Atom.make<Isolation | undefined>(undefined)),
+  inside: Atom.keepAlive(Atom.make<Inside | undefined>(undefined)),
 });

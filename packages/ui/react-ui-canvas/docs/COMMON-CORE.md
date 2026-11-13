@@ -83,6 +83,15 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
     diagram-styled elements can take catalog styles. Supersedes decision 15's style approach.
 20. (2026-10-30, agent call, approved by the user) Two theme-independent hues, `black` and `white`, are added
     to the hue list so diagram `black`/`white` map exactly and the corpus metric gate stays stable.
+21. (2026-11-12, user) **Only core shapes keep properties at an element's top; an extension keeps its own under
+    `data`.** A plugin kind's schema is `Schema.Struct({ ...elementBase, type: Schema.Literal('class'), data:
+Schema.Struct({ …own fields }) })`: one typed sub-object, the same name for every kind, so a kind's field never
+    meets the base's (`size`) or another kind's. The engine's node carries the same `data`, a part or a bind names a
+    field as `data.<field>`, and the Properties panel shows `data` last, as a group labelled `Custom`. The fields of the
+    core prototype a kind extends stay at the top, where the prototype's frame reads them (a card's `icon`, `body` and
+    `footer`), as does the base's `label`. An element stored with its kind's fields at its top (decision 13 as first
+    built) is read with them under `data`, and its next write stores them there. This supersedes the "own fields" at
+    the top of decision 13; the registry and the unknown-field rule of 13 stand.
 
 ## Expectations (user, 2026-10-30)
 
@@ -139,12 +148,12 @@ elementBase = { id; type; z; locked?; layer?; label?; text?; style?: string /* w
                 source?: Endpoint; target?: Endpoint; ends?; connector? }     // links: an element with endpoints
 Endpoint    = { node: string; port?: string } | { point: Vec2 | Vec3 }
 Element2D   = elementBase & { center?: Vec2; size?: Size2; rotation?: number; points?: Vec2[];
-                              overrides?: Partial<Style2D> /* was style */ } & <type's own fields>
+                              overrides?: Partial<Style2D> /* was style */; data?: <kind's own fields> }
 Element3D   = elementBase & { center?: Vec3; scale?: Vec3; rotation?: Vec3; points?: Vec3[];
-                              overrides?: Partial<Style3D> } & <type's own fields>
+                              overrides?: Partial<Style3D>; data?: <kind's own fields> }
 // Instance transform (decision 18): { object; center; scale?; rotation?; fit?: 'none' | 'frame' }
-// Plugin kinds: Schema.Struct({ ...elementBase, type: Schema.Literal('class'), ...own }) registered in the kind
-// registry (decision 13).
+// Plugin kinds: Schema.Struct({ ...elementBase, type: Schema.Literal('class'), data: Schema.Struct({ ...own }) })
+// registered in the kind registry (decisions 13 and 21).
 LayoutIntent | ModelIntent                                        // the one edit vocabulary
 ```
 

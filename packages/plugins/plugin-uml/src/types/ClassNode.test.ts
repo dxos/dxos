@@ -40,8 +40,8 @@ describe('ClassNode', () => {
     const element = ClassNode.make(frame);
     expect(Schema.is(Scene.Element2D)(element)).toBe(true);
     expect(ClassNode.kinds.validate(element)).toEqual({ ok: true });
-    expect(ClassNode.kinds.validate({ ...element, methods: 'save()' }).ok).toBe(false);
-    expect(ClassNode.isClassNode(element) && [element.label, element.attributes, element.methods]).toEqual([
+    expect(ClassNode.kinds.validate({ ...element, data: { ...element.data, methods: 'save()' } }).ok).toBe(false);
+    expect(ClassNode.isClassNode(element) && [element.label, element.data.attributes, element.data.methods]).toEqual([
       'Class',
       ['id: string'],
       ['save(): void'],
@@ -62,38 +62,58 @@ describe('ClassNode', () => {
     const node = registry.class.create(frame);
     expect(Schema.is(registry.class.schema)(node)).toBe(true);
     expect(nodeTitle(registry, node)).toBe('Class');
-    expect(partValues(registry, node, 'methods', 'greet()\n\n hire() ')).toEqual({ methods: ['greet()', 'hire()'] });
+    expect(partValues(registry, node, 'data.methods', 'greet()\n\n hire() ')).toEqual({
+      data: { attributes: ['id: string'], methods: ['greet()', 'hire()'] },
+    });
   });
 
-  test('is drawn with its members and written back with them at the top of the element', ({ expect }) => {
+  test("is drawn with its members and written back with them under the element's data", ({ expect }) => {
+    const made = ClassNode.make(frame);
     const { layout, document } = documentOf({
-      ...ClassNode.make(frame),
+      ...made,
       label: 'Person',
-      attributes: ['name: string'],
+      data: { ...made.data, attributes: ['name: string'] },
     });
     const drawn = toViewportLayout(layout, ClassNode.kinds);
     const node = toRenderList2D({ ...document, layouts: [drawn] }, drawn).nodes.c;
-    expect(ClassNode.isClassNode(node) && [node.label, node.attributes, node.methods]).toEqual([
+    expect(ClassNode.isClassNode(node) && [node.label, node.data.attributes, node.data.methods]).toEqual([
       'Person',
       ['name: string'],
       ['save(): void'],
     ]);
 
     // The engine moves the class and edits a member; the write lands as the kind's element.
-    const moved = { ...node, center: { x: 64, y: 0 }, methods: ['greet()'] };
+    const moved = {
+      ...node,
+      center: { x: 64, y: 0 },
+      ...(ClassNode.isClassNode(node) ? { data: { ...node.data, methods: ['greet()'] } } : {}),
+    };
     const written = fromRenderList2D({ id: 'main', nodes: { c: moved }, links: {} }).layout.elements.c;
     const intent = fromViewportIntent({ kind: 'update', id: 'c', path: [], value: written }, layout, ClassNode.kinds);
     const value = intent.kind === 'update' ? intent.value : undefined;
-    expect(value).toMatchObject({ center: { x: 64, y: 0 }, attributes: ['name: string'], methods: ['greet()'] });
+    expect(value).toMatchObject({
+      center: { x: 64, y: 0 },
+      data: { attributes: ['name: string'], methods: ['greet()'] },
+    });
+    expect(value).not.toHaveProperty('attributes');
     expect(value).not.toHaveProperty('props');
     expect(ClassNode.kinds.validate(Object(value))).toEqual({ ok: true });
   });
 
-  test('a class written before keeps its members under the canvas fields and still draws', ({ expect }) => {
-    const { label, attributes, methods, ...base } = ClassNode.make(frame);
-    const { layout, document } = documentOf({ ...base, label, props: { canvas: { attributes, methods } } });
-    const drawn = toViewportLayout(layout, ClassNode.kinds);
-    const node = toRenderList2D({ ...document, layouts: [drawn] }, drawn).nodes.c;
-    expect(ClassNode.isClassNode(node) && node.methods).toEqual(['save(): void']);
+  test('a class written before, with its members at its top or under the canvas fields, still draws', ({ expect }) => {
+    const { data, ...base } = ClassNode.make(frame);
+    for (const stored of [
+      { ...base, ...data },
+      { ...base, props: { canvas: { ...data } } },
+    ]) {
+      const { layout, document } = documentOf(stored);
+      const drawn = toViewportLayout(layout, ClassNode.kinds);
+      const node = toRenderList2D({ ...document, layouts: [drawn] }, drawn).nodes.c;
+      expect(ClassNode.isClassNode(node) && node.data).toEqual(data);
+      // Its next write stores the members under `data` alone.
+      const written = fromRenderList2D({ id: 'main', nodes: { c: node }, links: {} }).layout.elements.c;
+      const intent = fromViewportIntent({ kind: 'update', id: 'c', path: [], value: written }, layout, ClassNode.kinds);
+      expect(intent.kind === 'update' && intent.value).toEqual({ ...base, data });
+    }
   });
 });

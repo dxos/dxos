@@ -18,7 +18,7 @@ import { type LinkType } from '@dxos/scene';
 
 import { type ToolDef } from '../editor/index.ts';
 
-const LINK_TYPES = ['line', 'curve', 'spline', 'smart'] as const satisfies readonly LinkType[];
+const LINK_TYPES = ['line', 'ortho', 'curve', 'spline', 'smart'] as const satisfies readonly LinkType[];
 
 /** A 2D engine tool as the editor's tool id: `select`, `hand`, `node:<type>` or `link:<type>`. */
 const toolId = (tool: Tool): string =>
@@ -62,6 +62,21 @@ export const tools2D = (
       ...(entry.key ? { key: entry.key } : {}),
       ...(entry.fold ? { fold: entry.fold } : {}),
     })),
+  );
+
+/**
+ * Every element type's icon by type name, from the registries the rail's tools are built from. Not from the tools
+ * themselves: a `view` and an `instance` are types the canvas draws but not ones the rail creates, and they would
+ * have no icon at all.
+ */
+export const typeIcons2D = (
+  nodes: NodeRegistry = defaultNodeRegistry,
+  links: LinkRegistry = defaultLinkRegistry,
+): Record<string, string> =>
+  Object.fromEntries(
+    [...Object.entries(nodes), ...Object.entries(links)].flatMap(([type, def]) =>
+      def.icon ? [[type, def.icon] as const] : [],
+    ),
   );
 
 /** A node tool drags a node of its type onto the canvas, as the canvas's palette did; other tools do not drag. */

@@ -10,7 +10,7 @@ import { type Bounds, type ElementId, MAJOR_GRID_RATIO } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { isMoving } from '../../engine/index.ts';
-import { PREVIEW_NODE_ID } from '../../hooks/index.ts';
+import { PREVIEW_NODE_ID, useRegistry } from '../../hooks/index.ts';
 import { type Camera } from '../../model/index.ts';
 import { MIN_ZOOM, cameraTransform, visibleView } from '../../utils/index.ts';
 import { ControlFrame } from '../ControlFrame/index.ts';
@@ -57,6 +57,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
     onVertexPointerDown,
     onVertexMidpointPointerDown,
   } = useCanvasGesture('Canvas.Viewport');
+  const registry = useRegistry();
   const tools = useCanvasTools('Canvas.Viewport');
   const selectionAspect = useCanvasSelection('Canvas.Viewport');
   const editingAspect = useCanvasEditing('Canvas.Viewport');
@@ -71,7 +72,23 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
   const active = useAtomValue(editingAspect.atoms.active);
   const time = useAtomValue(timeAspect.atoms.time);
   const drag = useAtomValue(atoms.drag);
+  const inside = useAtomValue(atoms.inside);
   const { generated } = timeAspect;
+  // Inside an Object the drawing around it goes back: what the scene holds that is not one of its parts. The parts
+  // are the elements the composite contributes, which the draw scene has already put in place of the Instance.
+  const faded = useMemo(() => {
+    if (!inside) {
+      return undefined;
+    }
+    const composite = registry.get(store.views)[inside.composite];
+    if (!composite) {
+      return undefined;
+    }
+    const parts = new Set<string>([...Object.keys(composite.nodes), ...Object.keys(composite.links)]);
+    return new Set(
+      [...Object.keys(displayScene.nodes), ...Object.keys(displayScene.links)].filter((id) => !parts.has(id)),
+    );
+  }, [inside, displayScene, registry, store]);
 
   /** One screen pixel in scene units, for chrome that should not grow with the camera. */
   const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);
@@ -103,6 +120,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           hoveredLink={linkHover}
           opening={opening}
           focus={focus}
+          faded={faded}
           editing={editing?.kind === 'label' ? editing : undefined}
           dimmed={editing?.kind === 'vertices' ? editing.id : undefined}
           active={active}
@@ -132,6 +150,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           landing={landing}
           blocked={blocked}
           lattice={draw.lattice}
+          grid={grid}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}
