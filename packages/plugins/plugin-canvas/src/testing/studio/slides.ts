@@ -58,6 +58,8 @@ export type StudioSlide = {
   frames?: readonly string[];
   /** How the slide's links are drawn; a slide this import re-lays out takes `ortho`. */
   links?: 'deck' | 'ortho';
+  /** Which sides a routed link uses; a slide that fans out downwards takes `vertical`. */
+  ports?: 'facing' | 'vertical';
   /** Every card of the slide is drawn at one size. */
   uniform?: boolean;
   /** A card the slide draws at a size of its own, by its id. */
@@ -80,7 +82,7 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   // The deck fitted three columns to one page; a drawing is not a page, so its columns take the air they read better
   // with, and the field sits in the middle of the two rather than where the deck's own margins left it.
   slide('hyperspace', hyperspaceSource, hyperspaceModel, { balance: true, spread: 1.12, links: 'ortho' }),
-  slide('echo-layers', echoLayersSource, echoLayersModel),
+  slide('echo-layers', echoLayersSource, echoLayersModel, { links: 'ortho' }),
   // Every card is a type, so every card is one box; the deck sized each to its own label.
   slide('ontology', ontologySource, ontologyModel, { uniform: true, links: 'ortho' }),
   slide('plugins', pluginsSource, pluginsModel, {
@@ -90,6 +92,8 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     sizes: { plugin: { width: 400, height: 176 } },
     gap: 96,
     links: 'ortho',
+    // One card over a row of them: every wire leaves its foot and lands on a head.
+    ports: 'vertical',
   }),
   // The deck placed each side column where its content ended; balanced, the window sits in the middle of the two.
   slide('composer', composerSource, composerModel, { balance: true, gap: 96, links: 'ortho' }),
@@ -114,8 +118,8 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     frames: ['subagents'],
     links: 'ortho',
   }),
-  slide('chat', chatSource, chatModel),
-  slide('agent', agentSource, agentModel),
+  slide('chat', chatSource, chatModel, { links: 'ortho' }),
+  slide('agent', agentSource, agentModel, { links: 'ortho' }),
 ];
 
 export const studioSlide = (id: string): StudioSlide => {

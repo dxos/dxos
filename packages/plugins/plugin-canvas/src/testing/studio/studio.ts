@@ -272,8 +272,10 @@ const LINK_HUES: Record<string, string> = { accent: 'blue', ink: 'neutral' };
 
 /** Text sizes in scene units by the role the sidecar gives a text; the DSL's only lever is `weight=s`. */
 const TEXT_SIZES: Record<string, number> = {
-  'heading': 20,
-  'caption': 15,
+  // A column's own heading and the line under it: the deck set these against a 1600-unit page it also put a slide
+  // title on; drawn on their own they carry the column, so they are the size a reader reads them at.
+  'heading': 32,
+  'caption': 20,
   // A column's own heading (`.d-colh`, 1.6cqw), which the deck sets smaller than the slide's title.
   'col-heading': 26,
   'label': 19,
@@ -370,6 +372,9 @@ const textWidth = (label: string, fontSize: number) => label.length * fontSize *
  * because the scene language has no notion of a heading: every size here comes from the sidecar's `role`.
  */
 const styleText = (content: ContentMap, model: StudioModel): void => {
+  // Where each column's last line ended, so a caption follows its heading rather than sitting where the deck put it:
+  // the deck set these against its own type sizes, and a heading drawn larger here would run over the line under it.
+  const after = new Map<number, number>();
   for (const text of model.texts ?? []) {
     const id = elementId(text.id, 'label');
     const record = content[nodeKey(id)];
@@ -385,13 +390,16 @@ const styleText = (content: ContentMap, model: StudioModel): void => {
     const width = text.w ?? (label ? textWidth(label, fontSize) : node.size.width);
     const align = text.align ?? 'left';
     const height = fontSize * 1.9;
+    const previous = after.get(text.x) ?? -Infinity;
+    const top = Math.max(text.y, previous);
+    after.set(text.x, top + height);
     content[nodeKey(id)] = {
       ...record,
       node: {
         ...rest,
         type: 'rect',
         label,
-        center: { x: text.x + width / 2, y: text.y + height / 2 },
+        center: { x: text.x + width / 2, y: top + height / 2 },
         size: { width, height },
         style: { fill: false, border: false, alignHorizontal: align, alignVertical: 'middle', fontSize },
       },
@@ -567,19 +575,26 @@ const waypointsOf = (route: StudioRoute, source: Frame, target: Frame): Vec[] =>
  * `portsPerSide` ports along each side and names the middle one `1`, so a card under another is joined bottom
  * centre to top centre rather than corner to corner.
  */
-const facingPorts = (source: Frame, target: Frame): { source: string; target: string } => {
-  const [top, bottom] = [source.center.y - source.size.height / 2, source.center.y + source.size.height / 2];
-  const [targetTop, targetBottom] = [
-    target.center.y - target.size.height / 2,
-    target.center.y + target.size.height / 2,
-  ];
-  // Clear of each other vertically: bottom centre to top centre, however far apart they are across. A parent fanning
-  // out to a row of children below it leaves by its foot, not by whichever side each child happens to sit on.
-  if (targetTop >= bottom) {
-    return { source: 's1', target: 'n1' };
+const facingPorts = (source: Frame, target: Frame, ports: PortMode): { source: string; target: string } => {
+  const span = (frame: Frame) => ({
+    left: frame.center.x - frame.size.width / 2,
+    right: frame.center.x + frame.size.width / 2,
+    top: frame.center.y - frame.size.height / 2,
+    bottom: frame.center.y + frame.size.height / 2,
+  });
+  const [from, to] = [span(source), span(target)];
+  const below = to.top >= from.bottom;
+  const above = to.bottom <= from.top;
+  // A slide that fans out downwards (one card over a row of them) joins foot to head whatever the two are apart
+  // across; otherwise the sides that face each other are the ones the shapes are furthest apart on, so two cards
+  // side by side with a little vertical offset are joined across rather than over the top of one of them.
+  if (ports === 'vertical' && (below || above)) {
+    return below ? { source: 's1', target: 'n1' } : { source: 'n1', target: 's1' };
   }
-  if (targetBottom <= top) {
-    return { source: 'n1', target: 's1' };
+  const across = Math.max(to.left - from.right, from.left - to.right);
+  const down = Math.max(to.top - from.bottom, from.top - to.bottom);
+  if (down > across) {
+    return below ? { source: 's1', target: 'n1' } : { source: 'n1', target: 's1' };
   }
   return target.center.x >= source.center.x ? { source: 'e1', target: 'w1' } : { source: 'w1', target: 'e1' };
 };
@@ -589,7 +604,13 @@ const facingPorts = (source: Frame, target: Frame): { source: string; target: st
  * routes survive the export only as `# route=` comments, which the parser drops. The scene model does carry them —
  * `connector.route` on a link whose ends stay bound to their nodes — so this is a DSL gap, not a canvas one.
  */
-const routeLinks = (content: ContentMap, model: StudioModel, components: ComponentMode, links: LinkMode): number => {
+const routeLinks = (
+  content: ContentMap,
+  model: StudioModel,
+  components: ComponentMode,
+  links: LinkMode,
+  ports: PortMode,
+): number => {
   let routed = 0;
   for (const edge of model.edges) {
     const route = edge.length === 4 ? edge[3] : undefined;
@@ -630,14 +651,14 @@ const routeLinks = (content: ContentMap, model: StudioModel, components: Compone
     // the route. What stays is the link's own style, which is what the canvas's link renderer reads.
     if (links === 'ortho') {
       const { connector: _connector, ...link } = record.link;
-      const ports = facingPorts(source, target);
+      const ends = facingPorts(source, target, ports);
       content[key] = {
         ...record,
         link: {
           ...link,
           type: 'ortho',
-          source: { ...link.source, port: ports.source },
-          target: { ...link.target, port: ports.target },
+          source: { ...link.source, port: ends.source },
+          target: { ...link.target, port: ends.target },
           ...(route.arrow === 'none' ? { ends } : {}),
           ...(route.color ? { style: { ...link.style, hue: LINK_HUES[route.color] ?? 'blue' } } : {}),
         },
@@ -1209,6 +1230,60 @@ const dropFrames = (content: ContentMap, frames: readonly string[]): number => {
   return dropped;
 };
 
+/** The space a frame keeps around what it holds, in scene units: the deck's own inset. */
+const FRAME_PADDING = 24;
+
+/**
+ * Grows each frame to hold what is inside it. The deck sized a frame to the cards it drew; those cards have since
+ * taken one size and one gap, so a frame drawn to the old ones has its last card hanging out of it. A frame keeps
+ * its own origin and takes the room its contents need, with one padding all round.
+ */
+const fitFrames = (content: ContentMap, model: StudioModel, grid: number): number => {
+  let fitted = 0;
+  for (const frame of model.frames) {
+    const key = nodeKey(elementId(frame.id, 'frame'));
+    const record = content[key];
+    if (!isNodeRecord(record)) {
+      continue;
+    }
+    const { center, size } = record.node;
+    const box = {
+      left: center.x - size.width / 2,
+      right: center.x + size.width / 2,
+      top: center.y - size.height / 2,
+      bottom: center.y + size.height / 2,
+    };
+    // What the frame holds: a card whose centre is inside it. A card that merely crosses it belongs to another.
+    const held = cardsOf(content, model).filter(
+      ({ node }) =>
+        node.center.x > box.left && node.center.x < box.right && node.center.y > box.top && node.center.y < box.bottom,
+    );
+    if (held.length === 0) {
+      continue;
+    }
+    const left = onGrid(Math.min(...held.map(({ node }) => node.center.x - node.size.width / 2)) - FRAME_PADDING, grid);
+    const right = onGrid(
+      Math.max(...held.map(({ node }) => node.center.x + node.size.width / 2)) + FRAME_PADDING,
+      grid,
+    );
+    const top = onGrid(Math.min(...held.map(({ node }) => node.center.y - node.size.height / 2)) - FRAME_PADDING, grid);
+    const bottom = onGrid(
+      Math.max(...held.map(({ node }) => node.center.y + node.size.height / 2)) + FRAME_PADDING,
+      grid,
+    );
+    const next = { width: right - left, height: bottom - top };
+    if (next.width === size.width && next.height === size.height && left + next.width / 2 === center.x) {
+      continue;
+    }
+    content[key] = {
+      ...record,
+      node: { ...record.node, center: { x: left + next.width / 2, y: top + next.height / 2 }, size: next },
+    };
+    fitted++;
+  }
+  return fitted;
+};
+
 /**
  * Puts one gap between every column of the slide. Where {@link uniformGrid} evens the columns a slide stands on, this
  * takes every column — a component and a frame among them — and spaces the lot left to right, from the leftmost
@@ -1417,6 +1492,9 @@ export type ComponentMode = 'kind' | 'generator';
  */
 export type LinkMode = 'deck' | 'ortho';
 
+/** Which sides a routed link leaves and arrives on: the ones facing each other, or always foot to head. */
+export type PortMode = 'facing' | 'vertical';
+
 /**
  * The component kinds the studio stories register (`testing/studio/*.tsx`). A host that has registered fewer passes
  * its own set to {@link seedStudioSlide}; a kind the host does not have is left as the DSL's placeholder, which is
@@ -1503,6 +1581,7 @@ export const seedStudioSlide =
       balance = false,
       gap,
       links = 'deck',
+      ports = 'facing',
       frames = [],
       uniform = false,
       sizes = {},
@@ -1525,6 +1604,8 @@ export const seedStudioSlide =
       gap?: number;
       /** How the slide's links are drawn; a slide this import moves takes `ortho`, since the deck's routes are stale. */
       links?: LinkMode;
+      /** Which sides a routed link uses; a slide that fans out downwards takes `vertical`. */
+      ports?: PortMode;
       /** Frames the slide does not draw, by id ({@link dropFrames}). */
       frames?: readonly string[];
       /** Every card of the slide is drawn at one size ({@link uniformCards}). */
@@ -1572,8 +1653,9 @@ export const seedStudioSlide =
       resizeCards(content, sizes, grid) +
       balanceColumns(content, balance, grid) +
       evenColumns(content, gap, grid) +
+      fitFrames(content, model, grid) +
       spreadColumns(content, model, spread, grid);
-    const routed = routeLinks(content, model, components, links);
+    const routed = routeLinks(content, model, components, links, ports);
     const placed =
       components === 'generator'
         ? placeGenerators(content, model, generators)
