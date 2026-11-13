@@ -218,6 +218,9 @@ describe('FactStoreLive', () => {
 
       const update = yield* store.rows('DELETE WHERE { GRAPH ?g { ?s ?p ?o } }').pipe(Effect.flip);
       expect(update).toBeInstanceOf(SemanticIndexError);
+      // `select` runs the same engine, so it refuses an update too rather than deleting the store.
+      const selected = yield* store.select('DELETE WHERE { GRAPH ?g { ?s ?p ?o } }').pipe(Effect.flip);
+      expect(selected).toBeInstanceOf(SemanticIndexError);
       expect(yield* store.query({})).toHaveLength(1);
       expect(yield* store.rows('this is not sparql').pipe(Effect.flip)).toBeInstanceOf(SemanticIndexError);
     }),

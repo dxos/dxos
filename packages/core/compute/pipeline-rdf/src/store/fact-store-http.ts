@@ -129,15 +129,33 @@ export const make = (baseUrl: string): FactStoreApi => {
 /** Layer of {@link make}. */
 export const layer = (baseUrl: string): Layer.Layer<FactStore> => Layer.succeed(FactStore, make(baseUrl));
 
-/** CORS headers, so a page on another origin (a storybook) may call the server. */
-const CORS_HEADERS = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'POST, OPTIONS',
-  'access-control-allow-headers': 'content-type',
+export type HandleOptions = {
+  /**
+   * Which browser origins may call the server. Defaults to pages served from this machine (`localhost`, `127.0.0.1`,
+   * `[::1]`, `*.localhost`), since the store can be read and cleared and has no other authentication. Requests with no
+   * `Origin` header (node clients, curl) are always allowed: a browser always sends one cross-origin.
+   */
+  readonly allowOrigin?: (origin: string) => boolean;
 };
 
-const json = (status: number, body: unknown): Response =>
-  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...CORS_HEADERS } });
+const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|[a-z0-9.-]+\.localhost)(:\d+)?$/i;
+
+/** Whether `origin` is a page served from this machine. */
+export const isLocalOrigin = (origin: string): boolean => LOCAL_ORIGIN.test(origin);
+
+/** CORS headers granting exactly `origin`, so an allowed page (a storybook) may call the server. */
+const corsHeaders = (origin: string | null): Record<string, string> => ({
+  ...(origin ? { 'access-control-allow-origin': origin } : {}),
+  'access-control-allow-methods': 'POST, OPTIONS',
+  'access-control-allow-headers': 'content-type',
+  'vary': 'Origin',
+});
+
+const json = (status: number, body: unknown, origin: string | null): Response =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json', ...corsHeaders(origin) },
+  });
 
 const dispatch = (
   store: FactStoreApi,
@@ -175,25 +193,34 @@ const dispatch = (
 
 /**
  * Serves `store` to {@link make} clients: answers one request with its JSON response. Mount it under any path; the
- * method is the last path segment. Malformed arguments answer 400, a store failure 500.
+ * method is the last path segment. A browser origin outside `allowOrigin` answers 403 before reaching the store,
+ * malformed arguments 400, a store failure 500.
  */
-export const handle = (store: FactStoreApi, request: Request): Effect.Effect<Response> =>
+export const handle = (
+  store: FactStoreApi,
+  request: Request,
+  { allowOrigin = isLocalOrigin }: HandleOptions = {},
+): Effect.Effect<Response> =>
   Effect.gen(function* () {
+    const origin = request.headers.get('origin');
+    if (origin !== null && !allowOrigin(origin)) {
+      return json(403, { error: `Origin ${origin} may not call this fact store` }, null);
+    }
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
+      return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
     const method = new URL(request.url).pathname.split('/').pop() ?? '';
     if (request.method !== 'POST' || !isMethod(method)) {
-      return json(404, { error: `No fact-store method ${request.method} ${method}` });
+      return json(404, { error: `No fact-store method ${request.method} ${method}` }, origin);
     }
     const body = yield* Effect.tryPromise(() => request.json()).pipe(Effect.orElseSucceed(() => undefined));
     return yield* dispatch(store, method, body ?? {}).pipe(
-      Effect.map((result) => json(200, { result })),
+      Effect.map((result) => json(200, { result }, origin)),
       Effect.catch((error) =>
         Effect.succeed(
           error instanceof SemanticIndexError
-            ? json(500, { error: error.message })
-            : json(400, { error: String(error) }),
+            ? json(500, { error: error.message }, origin)
+            : json(400, { error: String(error) }, origin),
         ),
       ),
     );

@@ -172,7 +172,10 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
     });
 
   const select: FactStoreApi['select'] = (sparql) =>
-    attempt('SPARQL query failed')(() => boundGraphs(engine.query(sparql))).pipe(
+    attempt('SPARQL query failed')(() => {
+      assertSelect(sparql);
+      return boundGraphs(engine.query(sparql));
+    }).pipe(
       Effect.flatMap((graphs) =>
         attempt('Failed to reassemble facts')(() => {
           const quads: RdfQuad[] = [];

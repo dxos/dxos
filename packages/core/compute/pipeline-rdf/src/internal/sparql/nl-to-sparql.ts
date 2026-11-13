@@ -39,6 +39,10 @@ const predicateLines = (predicates: readonly Ontology.Entry[]): string =>
       [
         `- <${entry.iri}> "${entry.label}"`,
         entry.synonyms?.length ? ` (also: ${entry.synonyms.join(', ')})` : '',
+        // Merged predicates keep their statements under the old IRIs, and SPARQL does not expand equivalents.
+        entry.equivalents?.length
+          ? ` (same meaning, also stored under: ${entry.equivalents.map((iri) => `<${iri}>`).join(', ')})`
+          : '',
         entry.description ? ` — ${entry.description}` : '',
       ].join(''),
     )
@@ -74,6 +78,7 @@ export const sparqlPrompt = (question: string, predicates: readonly Ontology.Ent
   Rules:
   - Emit only a SELECT (no updates, no CONSTRUCT/ASK/DESCRIBE), with every prefix it uses declared.
   - Prefer a predicate from the list; when unsure which, leave the predicate a variable and filter by entity labels.
+  - A predicate also stored under other IRIs must match all of them: VALUES ?p { <iri> <other> } … ?s ?p ?o.
   - Keep it small: DISTINCT, and a LIMIT of at most 500 unless the question asks for a count.
 
   Examples:

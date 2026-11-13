@@ -76,6 +76,51 @@ describe('FactStoreHttp', () => {
   );
 
   it.effect(
+    'refuses a foreign browser origin before it reaches the store, and allows a local one',
+    Effect.fnUntraced(function* () {
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const backing = FactStoreLive.makeMemory();
+          yield* backing.putFacts([fact('f1', 'alice')]);
+          const { url } = yield* serveFactStore(backing);
+          const post = (origin: string) =>
+            Effect.promise(() =>
+              fetch(`${url}/clear`, {
+                method: 'POST',
+                headers: { origin, 'content-type': 'application/json' },
+                body: '{}',
+              }),
+            );
+
+          const foreign = yield* post('https://evil.example');
+          expect(foreign.status).toBe(403);
+          expect(foreign.headers.get('access-control-allow-origin')).toBeNull();
+          expect(yield* backing.query({})).toHaveLength(1);
+
+          const local = yield* post('http://localhost:9009');
+          expect(local.status).toBe(200);
+          expect(local.headers.get('access-control-allow-origin')).toBe('http://localhost:9009');
+          expect(yield* backing.query({})).toHaveLength(0);
+        }),
+      );
+    }),
+  );
+
+  it.effect(
+    'fails to serve on a port already in use instead of crashing',
+    Effect.fnUntraced(function* () {
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const { url } = yield* serveFactStore(FactStoreLive.makeMemory());
+          const port = Number(new URL(url).port);
+          const error = yield* serveFactStore(FactStoreLive.makeMemory(), { port }).pipe(Effect.flip);
+          expect(error).toBeInstanceOf(SemanticIndexError);
+        }),
+      );
+    }),
+  );
+
+  it.effect(
     'fails with a SemanticIndexError when the server is unreachable',
     Effect.fnUntraced(function* () {
       const error = yield* FactStoreHttp.make('http://127.0.0.1:1').query({}).pipe(Effect.flip);

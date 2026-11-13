@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { SemanticIndexError } from '../../errors.ts';
@@ -14,7 +14,7 @@ const PEOPLE = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT DISTINCT ?person ?label WHERE { GRAPH ?g { ?person a <https://schema.org/Person> . OPTIONAL { ?person rdfs:label ?label } } }`;
 
 describe('generateSparql', () => {
-  it('grounds the prompt in the storage model and the store’s predicates', () => {
+  test('grounds the prompt in the storage model and the store’s predicates', () => {
     const minted = Ontology.entry('mentors', {
       iri: 'https://dxos.org/semantic/brain/local/mentors',
       label: 'mentors',

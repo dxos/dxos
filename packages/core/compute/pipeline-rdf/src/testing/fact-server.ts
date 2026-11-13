@@ -8,10 +8,11 @@ import { type IncomingMessage, type ServerResponse, createServer } from 'node:ht
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
+import { SemanticIndexError } from '../errors.ts';
 import * as FactStoreHttp from '../store/fact-store-http.ts';
 import { type FactStoreApi } from '../store/fact-store.ts';
 
-export type FactServerOptions = {
+export type FactServerOptions = FactStoreHttp.HandleOptions & {
   /** 0 picks a free port. */
   readonly port?: number;
   readonly host?: string;
@@ -33,7 +34,12 @@ const readBody = (request: IncomingMessage): Promise<Buffer> =>
   });
 
 /** Bridges node's request/response pair to the fetch-style {@link FactStoreHttp.handle}. */
-const respond = async (store: FactStoreApi, request: IncomingMessage, response: ServerResponse): Promise<void> => {
+const respond = async (
+  store: FactStoreApi,
+  options: FactStoreHttp.HandleOptions,
+  request: IncomingMessage,
+  response: ServerResponse,
+): Promise<void> => {
   const body = request.method === 'POST' ? new Uint8Array(await readBody(request)) : undefined;
   const headers = new Headers();
   for (const [name, value] of Object.entries(request.headers)) {
@@ -45,6 +51,7 @@ const respond = async (store: FactStoreApi, request: IncomingMessage, response: 
     FactStoreHttp.handle(
       store,
       new Request(new URL(request.url ?? '/', 'http://localhost'), { method: request.method, headers, body }),
+      options,
     ),
   );
   response.writeHead(answer.status, Object.fromEntries(answer.headers));
@@ -53,21 +60,25 @@ const respond = async (store: FactStoreApi, request: IncomingMessage, response: 
 
 /**
  * Serves `store` over HTTP on node for the scope's lifetime (closed when the scope closes), so a browser story or
- * another process can read it through {@link FactStoreHttp.layer}.
+ * another process can read it through {@link FactStoreHttp.layer}. Fails when the server cannot listen (a port in use).
  */
 export const serveFactStore = (
   store: FactStoreApi,
   options: FactServerOptions = {},
-): Effect.Effect<FactServer, never, Scope.Scope> =>
+): Effect.Effect<FactServer, SemanticIndexError, Scope.Scope> =>
   Effect.acquireRelease(
-    Effect.callback<Listening>((resume) => {
+    Effect.callback<Listening, SemanticIndexError>((resume) => {
       const server = createServer((request, response) => {
-        respond(store, request, response).catch((error: unknown) => {
+        respond(store, options, request, response).catch((error: unknown) => {
           response.writeHead(500, { 'content-type': 'application/json' });
           response.end(JSON.stringify({ error: String(error) }));
         });
       });
       const host = options.host ?? '127.0.0.1';
+      // Without a listener, node turns a listen failure (EADDRINUSE) into an uncaught exception.
+      server.once('error', (cause) =>
+        resume(Effect.fail(new SemanticIndexError({ message: `Fact server could not listen on ${host}`, cause }))),
+      );
       server.listen(options.port ?? 0, host, () => {
         const address = server.address();
         const port = typeof address === 'object' && address !== null ? address.port : options.port;
