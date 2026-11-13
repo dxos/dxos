@@ -131,7 +131,9 @@ grid. `linkGeometry`, `viewLinkGeometry`, `linkPath`, `smartPoints` and `splineP
 argument (the default grid when left out), and `ControlFrame` a `grid` prop.
 
 A port is the same size on screen at any zoom, as a resize handle is; it grew with the drawing, and covered a
-zoomed-in shape. The Properties panel shows a part selected inside an Object that is being edited in place, where it
+zoomed-in shape. A selected shape drawn too small for its resize handles (under 40 px on its shorter side) shows
+its outline alone, where the handles overlapped and hid it; `handlesFit(bounds, zoom)` is the rule. The Properties
+panel shows a part selected inside an Object that is being edited in place, where it
 showed nothing selected.
 
 A form field with no value shows the default its schema declares (Effect's `default` annotation,

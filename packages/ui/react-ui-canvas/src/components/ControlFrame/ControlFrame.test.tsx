@@ -9,7 +9,7 @@ import { afterEach, describe, test } from 'vitest';
 
 import { type RenderList2D } from '../../model/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
-import { ControlFrame } from './ControlFrame.tsx';
+import { ControlFrame, handlesFit } from './ControlFrame.tsx';
 
 const SCENE: RenderList2D = {
   id: 'board',
@@ -50,7 +50,7 @@ describe('ControlFrame', () => {
   });
 
   test('a resize handle is the same size on screen at any zoom', ({ expect }) => {
-    for (const zoom of [0.25, 1, 4]) {
+    for (const zoom of [0.5, 1, 4]) {
       const { container, unmount } = renderFrame(zoom, true);
       const handles = Array.from(container.querySelectorAll('rect.pointer-events-auto'));
       expect(handles).toHaveLength(8);
@@ -59,5 +59,23 @@ describe('ControlFrame', () => {
       }
       unmount();
     }
+  });
+
+  test('a shape too small on screen for its handles shows none, and its outline still', ({ expect }) => {
+    // Three 8 px handles to a side, a handle apart: 40 px on the shorter side.
+    const frame = { x: 0, y: 0, width: 192, height: 96 };
+    expect([handlesFit(frame, 1), handlesFit(frame, 0.5), handlesFit(frame, 0.4), handlesFit(frame, 0.25)]).toEqual([
+      true,
+      true,
+      false,
+      false,
+    ]);
+    // The shorter side decides, whichever it is.
+    expect(handlesFit({ x: 0, y: 0, width: 30, height: 400 }, 1)).toBe(false);
+    expect(handlesFit({ x: 0, y: 0, width: 30, height: 400 }, 2)).toBe(true);
+
+    const { container } = renderFrame(0.25, true);
+    expect(container.querySelectorAll('rect.pointer-events-auto')).toHaveLength(0);
+    expect(container.querySelector('[data-selected-id="box"]')).not.toBeNull();
   });
 });

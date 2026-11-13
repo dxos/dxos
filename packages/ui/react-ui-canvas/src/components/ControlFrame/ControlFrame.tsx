@@ -108,6 +108,17 @@ const midpoints = (source: Point, points: readonly Point[], target: Point) => {
 /** A port's radius on screen, in px. */
 const PORT_RADIUS = 5;
 
+/** A resize handle's side on screen, in px. */
+const HANDLE_SIZE = 8;
+
+/**
+ * Whether a frame has room for its resize handles at `zoom`: three to a side, a handle's width apart. On a shape
+ * drawn smaller than that they touch or overlap, hide the shape and cannot be told apart to grab, so none is drawn;
+ * the shape still moves, and resizes once it is zoomed in on.
+ */
+export const handlesFit = (bounds: Bounds, zoom: number): boolean =>
+  Math.min(bounds.width, bounds.height) * zoom >= HANDLE_SIZE * 5;
+
 export const ControlFrame = memo(
   ({
     scene,
@@ -136,7 +147,7 @@ export const ControlFrame = memo(
     onVertexMidpointPointerDown,
   }: ControlFrameProps) => {
     const unit = 1 / Math.max(zoom, 0.05);
-    const handleSize = 8 * unit;
+    const handleSize = HANDLE_SIZE * unit;
     // A port is a control, as a handle is: the same size on screen at any zoom, so it never covers a zoomed-in shape.
     const portRadius = PORT_RADIUS * unit;
     const portStroke = unit;
@@ -316,7 +327,8 @@ export const ControlFrame = memo(
           single.id !== edited?.id &&
           capabilities.resize &&
           nodeDef(registry, single)?.resizable &&
-          !single.locked && (
+          !single.locked &&
+          handlesFit(nodeBounds(single), zoom) && (
             <g>
               {HANDLES.map((handle) => {
                 const point = handlePoint(nodeBounds(single), handle);
