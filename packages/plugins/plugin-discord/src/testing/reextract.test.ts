@@ -37,19 +37,21 @@ describe('re-extract', () => {
       );
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
-          const errorsBefore = new Map(
-            (yield* StateStore.listTargets()).map((target) => [target.id, target.lastError]),
-          );
+          // Earlier extraction errors are cleared first, so any left afterwards came from this replay, same text or not.
+          for (const target of yield* StateStore.listTargets()) {
+            if (target.lastError?.startsWith('extract-facts:')) {
+              yield* StateStore.setStatus(target.id, target.status, '');
+            }
+          }
           // Agent profiles are left alone: the crawl already counted each message once.
           yield* replayStream().pipe(
             extractQuestionsStage(),
             extractFactsStage(),
             Pipeline.run({ sink: () => Effect.void }),
           );
-          // A failed batch is only recorded on its targets, so compare against the errors the crawl already had.
-          const failures = (yield* StateStore.listTargets()).filter(
-            (target) =>
-              target.lastError?.startsWith('extract-facts:') && target.lastError !== errorsBefore.get(target.id),
+          // A failed batch is only recorded on its targets.
+          const failures = (yield* StateStore.listTargets()).filter((target) =>
+            target.lastError?.startsWith('extract-facts:'),
           );
           const store = yield* FactStore;
           return {
