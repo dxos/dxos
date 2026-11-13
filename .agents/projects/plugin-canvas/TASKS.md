@@ -370,6 +370,10 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       back under `data`. The Properties panel shows `data` last, as a group labelled `Custom`.
 - [x] Space graph: fields two to a row (`FormLayoutAnnotation`), Population renamed Node density, a Base dots toggle
       (off by default).
+- [x] A link's elbows (corner radius, smart stub, lane spacing) are counts of the drawing's grid, not of the default
+      grid (`utils/route.ts`); the scene layer, the selection frame and the SVG export pass the layout's grid.
+- [ ] `toDiagramObjects` (`utils/diagram.ts`) and the generator runner still route on the default grid: neither is
+      given a layout to read the grid from.
 - [ ] Conductor: `data.node` (the compute node id) is an editable text field in the Properties panel, as `node` was.
 - [ ] Conductor: a board's legacy trigger keeps `spaceId` / `triggerKind` at the shape's top; nothing reads them.
 - [ ] Conductor: `createComputeGraph` / `useGraphMonitor` read `data` only, so a canvas graph model built with flat

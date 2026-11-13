@@ -125,6 +125,11 @@ the fields beside the shape's own opens as before and is rewritten on its next e
 The space graph's Properties are two to a row; Population is Node density, and Base dots (off unless turned on) draws
 the lattice points that hold no object.
 
+A link's elbows are sized by the drawing's grid: a corner is cut one grid cell back, a smart link's stub leaves its
+port by half a major cell, and lanes sharing a gutter are a cell apart, where each was a fixed length of the default
+grid. `linkGeometry`, `viewLinkGeometry`, `linkPath`, `smartPoints` and `splinePath` take the grid as a last
+argument (the default grid when left out), and `ControlFrame` a `grid` prop.
+
 A form field with no value shows the default its schema declares (Effect's `default` annotation,
 `Schema.Number.annotate({ default: 26 })`) as its value. Showing it writes nothing: the form holds no value for the
 field until it is edited. The space graph declares its defaults this way, so the Properties panel and the drawing

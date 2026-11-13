@@ -14,7 +14,7 @@ import {
   DEFAULT_GRID,
   type Endpoint,
   type Link,
-  MAJOR_GRID,
+  MAJOR_GRID_RATIO,
   type Node,
   type Point,
   type Port,
@@ -45,14 +45,20 @@ import { nodeBounds } from './shapes.ts';
 const MIN_TANGENT = 40;
 const TANGENT_RATIO = 0.4;
 
-/**
- * How far a rounded corner reaches back along each of its segments, in scene px: one minor grid cell, so
- * every corner of a route has the same radius (a gutter route's port stubs are half a gutter, two cells).
- */
-const CORNER_RADIUS = DEFAULT_GRID;
+//
+// A route's own lengths are counts of the drawing's minor grid cells (`grid`, scene px), so a drawing on a coarser or
+// finer grid keeps the proportions of its elbows; every function that draws a route takes the grid and defaults to
+// `DEFAULT_GRID`.
+//
 
-/** How far a smart link's stub leaves its port, in scene px (half a major cell). */
-const SMART_STUB = MAJOR_GRID / 2;
+/**
+ * How far a rounded corner reaches back along each of its segments: one minor grid cell, so every corner of a route
+ * has the same radius (a gutter route's port stubs are half a gutter, at least a cell).
+ */
+const cornerRadius = (grid: number): number => grid;
+
+/** How far a smart link's stub leaves its port: half a major cell. */
+const smartStub = (grid: number): number => (grid * MAJOR_GRID_RATIO) / 2;
 
 /**
  * A resolved link end. `free` marks a point end (one being dragged, or left on empty canvas): it has no port to
@@ -110,7 +116,7 @@ const towards = (from: Point, to: Point, length: number): Point => {
  * through it and a corner reads as a corner. The radius shrinks to half the shorter adjoining segment
  * where a point is close to its neighbours, so two corners never eat into each other.
  */
-export const splinePath = (points: readonly Point[]): string => {
+export const splinePath = (points: readonly Point[], grid = DEFAULT_GRID): string => {
   if (points.length < 2) {
     return '';
   }
@@ -120,7 +126,7 @@ export const splinePath = (points: readonly Point[]): string => {
     const previous = points[index - 1];
     const vertex = points[index];
     const next = points[index + 1];
-    const radius = Math.min(CORNER_RADIUS, distance(previous, vertex) / 2, distance(vertex, next) / 2);
+    const radius = Math.min(cornerRadius(grid), distance(previous, vertex) / 2, distance(vertex, next) / 2);
     segments.push(`L ${pt(towards(vertex, previous, radius))}`);
     segments.push(`Q ${pt(vertex)}, ${pt(towards(vertex, next, radius))}`);
   }
@@ -129,16 +135,22 @@ export const splinePath = (points: readonly Point[]): string => {
 };
 
 /** The path of a link between two resolved ends, by its type; on a lattice a smart link takes the gutters. */
-export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd, lattice?: LatticeRoute): string => {
+export const linkPath = (
+  link: Link,
+  from: RouteEnd,
+  to: RouteEnd,
+  lattice?: LatticeRoute,
+  grid = DEFAULT_GRID,
+): string => {
   switch (link.type) {
     case 'line':
       return linePath(from.point, to.point);
     case 'curve':
       return curvePath(from, to);
     case 'ortho':
-      return splinePath(orthoPoints(from, to));
+      return splinePath(orthoPoints(from, to), grid);
     case 'spline':
-      return splinePath([from.point, ...link.points, to.point]);
+      return splinePath([from.point, ...link.points, to.point], grid);
     case 'smart':
       // A free end (one being dragged) takes no gutter: the route runs straight to it.
       return splinePath(
@@ -146,7 +158,8 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd, lattice?: Lat
           !from.free &&
           !to.free &&
           gutterRoute(lattice.nodes, lattice.spec, from, to, lattice.walls?.(link))) ||
-          smartPoints(from, to),
+          smartPoints(from, to, grid),
+        grid,
       );
     default:
       // A link type this engine does not know (saved by a newer one) draws as the core base: a straight line.
@@ -222,13 +235,14 @@ const elbowPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
  * ports imply rather than a straight line cutting across their own nodes. An end on no port has no normal to leave
  * along, so the link draws an even elbow to it instead ({@link elbowPoints}).
  */
-export const smartPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
+export const smartPoints = (from: RouteEnd, to: RouteEnd, grid = DEFAULT_GRID): Point[] => {
   if (from.free || to.free) {
     return elbowPoints(from, to);
   }
+  const length = smartStub(grid);
   const stub = (end: RouteEnd): Point => {
     const normal = sideNormal(end.side);
-    return { x: end.point.x + normal.x * SMART_STUB, y: end.point.y + normal.y * SMART_STUB };
+    return { x: end.point.x + normal.x * length, y: end.point.y + normal.y * length };
   };
   return [from.point, stub(from), stub(to), to.point];
 };
@@ -415,6 +429,7 @@ export const linkGeometry = (
   registry: NodeRegistry,
   link: Link,
   lattice?: LatticeSpec,
+  grid = DEFAULT_GRID,
 ): LinkGeometry | undefined => {
   const diagram = diagramGeometry(scene, link);
   if (diagram) {
@@ -423,14 +438,14 @@ export const linkGeometry = (
   const route = lattice && onCells(scene, link, lattice) ? latticeRoute(scene, lattice) : undefined;
   const routed = route && latticeEnds(scene, registry, link, route);
   if (routed) {
-    return { link, path: splinePath(routed.points), source: routed.from, target: routed.to };
+    return { link, path: splinePath(routed.points, grid), source: routed.from, target: routed.to };
   }
   const ends = resolveEnds(scene, registry, link.source, link.target, link.type);
   if (!ends) {
     return undefined;
   }
   const [from, to] = ends;
-  return { link, path: linkPath(link, from, to, route), source: from, target: to };
+  return { link, path: linkPath(link, from, to, route, grid), source: from, target: to };
 };
 
 /**
@@ -542,9 +557,10 @@ export const viewLinkGeometry = (
   registry: NodeRegistry,
   links: readonly Link[],
   lattice?: LatticeSpec,
+  grid = DEFAULT_GRID,
 ): LinkGeometry[] => {
   if (!lattice) {
-    return links.flatMap((link) => linkGeometry(scene, registry, link) ?? []);
+    return links.flatMap((link) => linkGeometry(scene, registry, link, undefined, grid) ?? []);
   }
   // A diagram connector keeps its own route, so it neither takes the gutters nor is nudged into a lane.
   const diagrams = new Map(
@@ -570,7 +586,7 @@ export const viewLinkGeometry = (
     .flatMap((link) => {
       if (!onCells(scene, link, lattice)) {
         // Routed on its own and left out of the lanes, which are for gutter routes.
-        const geometry = linkGeometry(scene, registry, link);
+        const geometry = linkGeometry(scene, registry, link, undefined, grid);
         return geometry ? [{ link, from: geometry.source, to: geometry.target, points: undefined }] : [];
       }
       const chosen = latticeEnds(scene, registry, link, route);
@@ -586,7 +602,7 @@ export const viewLinkGeometry = (
       const gutters = link.type === 'smart' && !from.free && !to.free;
       const points =
         link.type === 'smart'
-          ? (gutters && gutterRoute(nodes, lattice, from, to, route.walls?.(link))) || smartPoints(from, to)
+          ? (gutters && gutterRoute(nodes, lattice, from, to, route.walls?.(link))) || smartPoints(from, to, grid)
           : undefined;
       return [{ link, from, to, points }];
     });
@@ -599,7 +615,7 @@ export const viewLinkGeometry = (
     })),
     // A hull's frame covers the nodes inside it, so as an obstacle it would hold every lane inside it where it is.
     {
-      spacing: DEFAULT_GRID,
+      spacing: grid,
       obstacles: nodes.filter((node) => !isHullNode(node)).map((node) => rect(nodeBounds(node))),
     },
   );
@@ -608,12 +624,12 @@ export const viewLinkGeometry = (
     routed.map(({ link, from, to }) => {
       const points = lanes.get(link.id);
       if (!points || points.length < 2) {
-        return [link.id, { link, path: linkPath(link, from, to), source: from, target: to }] as const;
+        return [link.id, { link, path: linkPath(link, from, to, undefined, grid), source: from, target: to }] as const;
       }
       // A nudged port may slide along its side, so the ends are read back from the lane.
       const source = { point: points[0], side: from.side };
       const target = { point: points[points.length - 1], side: to.side };
-      return [link.id, { link, path: splinePath(points), source, target }] as const;
+      return [link.id, { link, path: splinePath(points, grid), source, target }] as const;
     }),
   );
   // In the order given, which is the paint order.

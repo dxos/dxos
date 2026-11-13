@@ -80,6 +80,8 @@ export type ControlFrameProps = {
   blocked?: boolean;
   /** The scene's lattice, so a selected smart link's handles sit on its gutter route. */
   lattice?: LatticeSpec;
+  /** The drawing's minor grid cell in scene px, which a link's elbows are sized by; unset, the default grid's. */
+  grid?: number;
   onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
   onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
   onEndPointerDown?: (link: Link, end: LinkEnd, event: React.PointerEvent) => void;
@@ -122,6 +124,7 @@ export const ControlFrame = memo(
     landing,
     blocked,
     lattice,
+    grid,
     onHandlePointerDown,
     onPortPointerDown,
     onEndPointerDown,
@@ -147,7 +150,7 @@ export const ControlFrame = memo(
     const lanes =
       lattice && (selectedLinks.length > 0 || linkUnder !== undefined)
         ? new Map(
-            viewLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
+            viewLinkGeometry(scene, registry, Object.values(scene.links), lattice, grid).map((geometry) => [
               geometry.link.id,
               geometry,
             ]),
@@ -200,7 +203,7 @@ export const ControlFrame = memo(
     const linkHandles = (link: Link, hoverOnly: boolean) => {
       // On a lattice the handles sit on the link's lane, which depends on the links around it.
       const geometry = capabilities.update
-        ? (lanes?.get(link.id) ?? linkGeometry(scene, registry, link, lattice))
+        ? (lanes?.get(link.id) ?? linkGeometry(scene, registry, link, lattice, grid))
         : undefined;
       if (!geometry) {
         return null;

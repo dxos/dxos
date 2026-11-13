@@ -220,8 +220,8 @@ export const SceneLayer = memo(
       [sceneProp, lattice, cell],
     );
     const links = useMemo(
-      () => viewLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
-      [scene, registry, lattice],
+      () => viewLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice, cell / MAJOR_GRID_RATIO),
+      [scene, registry, lattice, cell],
     );
     // Paint order is the layers', bottom first, so an upper layer covers a lower one whole. Within a layer it is one
     // order over the nodes and the links together, by `z`: a shape drawn over a link covers it and a link drawn over a

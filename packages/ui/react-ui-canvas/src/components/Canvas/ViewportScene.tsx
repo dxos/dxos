@@ -150,6 +150,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           landing={landing}
           blocked={blocked}
           lattice={draw.lattice}
+          grid={grid}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}

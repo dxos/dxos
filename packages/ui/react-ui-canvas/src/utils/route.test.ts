@@ -92,6 +92,38 @@ describe('route', () => {
     ).toBe('M 0 0 L 10 0 Q 20 0, 30 0 L 40 0');
   });
 
+  test("a route's elbows are counts of the drawing's grid: a corner one cell, a stub half a major cell", ({
+    expect,
+  }) => {
+    const corner = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 100 },
+    ];
+    // On a grid of 16 the corner is cut 16 back and the stub is 32 long; on one of 8, half that.
+    expect(splinePath(corner, 16)).toBe('M 0 0 L 84 0 Q 100 0, 100 16 L 100 100');
+    expect(splinePath(corner, 8)).toBe('M 0 0 L 92 0 Q 100 0, 100 8 L 100 100');
+    expect(smartPoints(from, to, 16).map(({ x }) => x)).toEqual([0, 32, 268, 300]);
+    expect(smartPoints(from, to, 8).map(({ x }) => x)).toEqual([0, 16, 284, 300]);
+    // A link's path takes the same grid, and no grid is the default one.
+    const smart: Link = { type: 'smart', id: 'm', ...ends };
+    expect(linkPath(smart, from, to, undefined, 16)).toBe(splinePath(smartPoints(from, to, 16), 16));
+    expect(linkPath(smart, from, to)).toBe(splinePath(smartPoints(from, to, DEFAULT_GRID), DEFAULT_GRID));
+    // A whole view's links take it too.
+    const boxed = (x: number) => ({ type: 'rect', z: 'a0', center: { x, y: 0 }, size: { width: 96, height: 96 } });
+    const view: RenderList2D = {
+      id: 'v',
+      nodes: { a: { id: 'a', ...boxed(0) }, b: { id: 'b', ...boxed(400) } },
+      links: {},
+    };
+    const joined: Link = { type: 'smart', id: 'ab', z: 'a1', source: { node: 'a' }, target: { node: 'b' } };
+    const [coarse] = viewLinkGeometry(view, defaultNodeRegistry, [joined], undefined, 16);
+    const [fine] = viewLinkGeometry(view, defaultNodeRegistry, [joined], undefined, 8);
+    expect(coarse.path).toBe(linkPath(joined, coarse.source, coarse.target, undefined, 16));
+    expect(fine.path).toBe(linkPath(joined, fine.source, fine.target, undefined, 8));
+    expect(coarse.path).not.toBe(fine.path);
+  });
+
   test('insertIndex picks the nearest segment of the polyline', ({ expect }) => {
     const points = [
       { x: 100, y: 100 },
