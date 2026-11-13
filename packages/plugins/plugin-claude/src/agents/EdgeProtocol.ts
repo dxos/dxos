@@ -21,6 +21,7 @@ export const Annotation = {
   mode: 'org.dxos.coding-agent.mode',
   unattended: 'org.dxos.coding-agent.unattended',
   repositories: 'org.dxos.coding-agent.repositories',
+  meta: 'org.dxos.coding-agent.meta',
 } as const;
 
 /** A repository the process checks out in its sandbox, under the agent's working directory. */

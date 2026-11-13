@@ -85,3 +85,14 @@ export const peekDeclaredVersion = (
   const database = isEchoObject(object) ? getEchoDatabase(getObjectCore(object)) : undefined;
   return type && database ? database._peekVersionOfType(object, type, onLoad) : object;
 };
+
+/** Each entry of a one-shot answer at the version `query` declares for its results, once that version is bound. */
+export const toDeclaredVersions = <E extends { result?: Entity.Unknown }>(
+  entries: readonly E[],
+  query: QueryAST.Query,
+): Promise<E[]> =>
+  Promise.all(
+    entries.map(async (entry) =>
+      entry.result ? { ...entry, result: await toDeclaredVersion(entry.result, query) } : entry,
+    ),
+  );

@@ -12,7 +12,7 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "scripts": {
-    "1p-credentials": "printf 'export DX_ANTHROPIC_API_KEY=\"op://CI/Claude - agents/credential\"\\nexport CLOUDFLARE_API_TOKEN=\"op://CI/dev.dxos.network/CLOUDFLARE_API_TOKEN\"\\nexport LINEAR_API_KEY=\"op://CI/dev.dxos.network/LINEAR_API_KEY\"\\nexport VITE_LINEAR_API_KEY=\"op://CI/dev.dxos.network/LINEAR_API_KEY\"\\n' | op inject",
+    "1p-credentials": "printf 'export DX_ANTHROPIC_API_KEY=\"op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY\"\\nexport CLOUDFLARE_API_TOKEN=\"op://eng-dev/com.cloudflare/local/CLOUDFLARE_API_TOKEN\"\\nexport LINEAR_API_KEY=\"op://eng-dev/app.linear/DEVELOPER_API_KEY\"\\nexport VITE_LINEAR_API_KEY=\"op://eng-dev/app.linear/DEVELOPER_API_KEY\"\\n' | op inject",
     "audit-classes": "pnpm --filter @dxos/ui-theme audit-classes",
     "beast": "beast docs",
     "build": "moon run :build",
@@ -35,7 +35,7 @@
     "postinstall": "[ \"$CI\" != \"true\" ] && vite-node tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
-    "knip": "knip --config .config/knip.ts --no-config-hints && knip --config .config/knip.ts --no-config-hints --production --strict --exclude binaries,files",
+    "knip": "NODE_OPTIONS=--max-old-space-size=8192 knip --config .config/knip.ts --no-config-hints && NODE_OPTIONS=--max-old-space-size=8192 knip --config .config/knip.ts --no-config-hints --production --strict --exclude binaries,files",
     "lint": "pnpm exec moon run :lint-fix",
     "lint-changed": "pnpm exec moon run :lint-fix --affected remote",
     "lint-check": "pnpm exec moon run :lint",

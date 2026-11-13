@@ -20,7 +20,9 @@ A `.mdl` file is the authoritative description of a component: Markdown prose pl
 | `docs/DESIGN.md` §Standard Dialect | `type`, `op`, `feat`/`req`, `scenario`, `component`, `service`, `db` |
 | `lang/app.mdl`                     | `node`, `deck`, `plank`, `companion`, `surface`, `menu`              |
 | `lang/qa.mdl`                      | `test`, `step`, `suite` — executable QA                              |
-| `lang/changelog.mdl`               | `decision` — the attributed changelog                                |
+| `lang/changelog.mdl`               | `decision`, `question` — the attributed changelog                    |
+| `lang/sql.mdl`                     | `table` — a SQL table a component owns                               |
+| `lang/worker.mdl`                  | `binding`, `actor`, `route`, `keyspace` — a worker's surface         |
 | `lang/PLUGIN-.template.mdl`        | Starting point for a new `PLUGIN.mdl`                                |
 
 Read the dialect file before you use one of its blocks. Copy `ext` definitions from `lang/`; do not
@@ -36,6 +38,14 @@ invent fields.
 3. **The code is the truth about what exists; the spec is the truth about why.** When code and spec
    disagree on structure, follow `agents/routines/spec-sync.md`. When they disagree on intent, ask.
 4. **Cross-reference by id** — `[F-2.1]`, `type:Scene`, `op:Name` — never by prose paraphrase.
+5. **Name code, never its path.** Refer to code by component or symbol (`FeedStore`, `IndexEngine`) and
+   to another spec by its frontmatter `id` (`org.dxos.feed`), not by file path: files move, names stay.
+   Point into another spec with `<spec id>#<item>` (`org.dxos.ui.react-ui-canvas#F-9.2`), never a
+   `github:` key into a `.mdl` file. Every spec you refer to must be a dependency: a `uses <id>: why`
+   block under `## Dependencies` (after the opening prose, before `## Extensions`; `lang/core.mdl`), or,
+   for a plugin's runtime dependency, an entry in the `plugin` block's `dependsOn` (`lang/plugin.mdl`),
+   which must equal `dx.config.ts`'s. Never list one id in both. Check with
+   `pnpm deus lint --only mdl/ref <file.mdl>` and `--only mdl/uses`.
 
 ## The changelog
 
@@ -159,6 +169,36 @@ decision D-3: Approve [D-2].
 - **Do not log a decision nobody made.** If you cannot tell whether the person chose something or
   only described it, ask them (as a numbered question), then record their answer.
 
+### Questions
+
+When a spec needs a choice that you should not make alone, ask it in the spec rather than guessing.
+Append a `question Q-n` to `## Changelog` (and `question` to the Extensions table), attributed like a
+decision, with suggested answers under `options:` as `- <title>: <description>`:
+
+```mdl
+question Q-1: Does the canvas shrink when nodes are removed?
+  date: 2026-10-06
+  by: agent:claude-code
+  for: user:alice
+  affects: [Scene]
+  options:
+    - Never: bounds only grow, so the view never jumps.
+    - On drop: bounds fit the content again after each edit.
+```
+
+The answer is a decision by whoever answered, with `answers: Q-n`. Never edit the question. Composer's
+spec article lists questions at the top of the decisions-by-person view and appends that decision
+when a person answers one there. When the person answers in chat instead, record it the same way:
+
+```mdl
+decision D-6: Never.
+  date: 2026-10-07
+  by: user:alice
+  answers: Q-1
+```
+
+Asking a question changes nothing outside the changelog, so it needs no decision of its own.
+
 ## Answering "who decided this?"
 
 Read the spec's `## Changelog` and follow `supersedes:` chains to the live entry. Report the
@@ -190,6 +230,10 @@ command as **Check spec changelogs**. It fails when:
   branch commit carries `Spec-Changelog-Skip`;
 - a new spec has no decision;
 - an existing entry was edited, removed or reordered;
+  the one exception repairs an id the base already holds twice (two branches each appended it):
+  move all but one copy, text unchanged, to the next free ids at the end, and point the references
+  that meant a moved copy at its new id. The moved copies are not new decisions; a repair that
+  changes nothing else carries `Spec-Changelog-Skip`;
 - an id is out of sequence, or `supersedes:` names an id that is not in the log;
 - a decision breaks the attribution rules below.
 

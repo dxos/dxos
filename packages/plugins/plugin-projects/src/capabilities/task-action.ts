@@ -13,19 +13,17 @@ import { Ref } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
 
-import { MOVE_TASK_DIALOG, meta } from '#meta';
 import { ProjectOperation } from '#types';
 
-const ASSIGN_GROUP = 'assign';
+import { MOVE_TASK_DIALOG } from '../constants.ts';
+import { ProjectsNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const manager = yield* Capability.Service;
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const module = (yield* Capability.CurrentModuleId) ?? meta.profile.key;
+    const module = (yield* Capability.CurrentModuleId) ?? ProjectsNamespace.key;
 
-    // Contributed here rather than returned, so the menu keeps one order — the default assign, each
-    // agent, then the rest — while agents come and go with the plugins that bring them.
     let contributed: TasksCapabilities.TaskAction[] = [];
     const withdraw = () => contributed.forEach((action) => manager.remove(TasksCapabilities.TaskAction, action));
     const sync = (agents: AssistantCapabilities.Agent[]) => {
@@ -49,14 +47,17 @@ export default Capability.makeModule(
 
 const ASSIGN: TasksCapabilities.TaskAction = {
   id: 'delegate-to-chat',
-  label: 'Assign to agent',
+  label: 'Default agent',
   icon: 'ph--sparkle--regular',
-  group: ASSIGN_GROUP,
+  group: TasksCapabilities.DELEGATE_GROUP,
   // Applies to every task: a conversation about it is always meaningful, so there is nothing
   // to gate on and the list is never empty. The operation takes a list, and the row passes a
   // one-element one, so the row action and the toolbar's checked-set action share one write path.
-  // No agent named: the reader's default agent takes it; the entries after this one pick one.
-  createInvocations: (task) => [{ operation: ProjectOperation.DelegateTaskToChat, input: { tasks: [Ref.make(task)] } }],
+  // No agent named: the reader's default agent takes it; the entries after this one pick one. The
+  // companion opens on the new session, so handing work over from a row shows the agent taking it.
+  createInvocations: (task) => [
+    { operation: ProjectOperation.DelegateTaskToChat, input: { tasks: [Ref.make(task)], openCompanion: true } },
+  ],
 };
 
 const OTHERS: TasksCapabilities.TaskAction[] = [
@@ -97,14 +98,17 @@ const agentLabel = (agent: AssistantCapabilities.Agent): string =>
 
 const assignTo = (agent: AssistantCapabilities.Agent): TasksCapabilities.TaskAction => ({
   id: `assign-to-${agent.id}`,
-  label: `Assign to ${agentLabel(agent)}`,
+  label: agentLabel(agent),
   icon: agent.icon,
-  group: ASSIGN_GROUP,
+  group: TasksCapabilities.DELEGATE_GROUP,
   unavailable: Atom.make((get) => {
     const availability = get(agent.availability);
     return availability.available ? undefined : availability.reason;
   }),
   createInvocations: (task) => [
-    { operation: ProjectOperation.DelegateTaskToChat, input: { tasks: [Ref.make(task)], harness: agent.id } },
+    {
+      operation: ProjectOperation.DelegateTaskToChat,
+      input: { tasks: [Ref.make(task)], harness: agent.id, openCompanion: true },
+    },
   ],
 });

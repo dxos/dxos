@@ -3,3 +3,4 @@
 //
 
 export * from './VerdictCard.tsx';
+export * from './Walkthrough.tsx';

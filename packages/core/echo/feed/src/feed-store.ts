@@ -2,15 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Clock from 'effect/Clock';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
+import type * as Statement from 'effect/sql/Statement';
 
 import { Event } from '@dxos/async';
+import { Feed } from '@dxos/echo';
 import * as SpanAttributes from '@dxos/effect/SpanAttributes';
-import { assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
@@ -37,6 +42,44 @@ export type BlockHead = {
   position: number | null;
 };
 
+/** A feed's indexing and retention options, as stored in `feeds.options`. */
+export type FeedOptions = Feed.FeedOptions;
+
+/** Identifies one feed of a space in one namespace. */
+export type FeedKey = { spaceId: string; feedId: string; feedNamespace: string };
+
+/**
+ * Most blocks one {@link FeedStore.trim} or {@link FeedStore.trimAll} call deletes, so a first trim
+ * after enabling retention on a large feed stays inside one Durable Object request's limits.
+ */
+export const TRIM_LIMIT = 10_000;
+
+/** Outcome of a trim: blocks deleted, and whether blocks past a limit remain for another call. */
+export type TrimResult = { deleted: number; more: boolean };
+
+/** A block retention deleted, as logged in `trimmed_blocks` until {@link FeedStore.clearTrimmed}. */
+export type TrimmedBlock = {
+  spaceId: string;
+  feedId: string;
+  feedNamespace: string;
+  insertionId: number;
+  position: number | null;
+};
+
+/** Canonical JSON for `feeds.options`: the schema fixes key order, so equal options store equal text. */
+const FeedOptionsJson = Schema.fromJsonString(Feed.FeedOptions);
+
+const decodeFeedOptions = (json: string | null): FeedOptions | undefined =>
+  json == null ? undefined : Option.getOrUndefined(Schema.decodeUnknownOption(FeedOptionsJson)(json));
+
+/** A feed row as retention needs it. */
+type FeedRow = {
+  spaceId: string;
+  feedPrivateId: number;
+  feedNamespace: string | null;
+  options: FeedOptions | undefined;
+};
+
 /** A block payload ready for insertion, encrypted when the cypher asked for it. */
 type SealedBlock = { data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null };
 
@@ -57,6 +100,12 @@ export interface FeedStoreOptions {
    * default); the cypher decides per feed whether to encrypt at all.
    */
   cypher?: Cypher;
+
+  /**
+   * Host-imposed maximum length per namespace (EDGE's trace-queue cap). It applies to every feed of
+   * the namespace, with or without stored options; a feed's own `maxLength` can lower it, not raise it.
+   */
+  maxLengthCap?: (feedNamespace: string) => number | undefined;
 }
 
 /**
@@ -87,6 +136,11 @@ export type AppendResult = AppendResponse & {
    * a position authority's positions ever displaces anything; an authority assigns fresh ones.
    */
   displaced: number;
+  /**
+   * What retention deleted from the appended feeds in the same transaction; a caller loops
+   * {@link FeedStore.trim} while `more`.
+   */
+  trim: TrimResult;
   /**
    * Appended blocks the store already held at a different position. Like a displacement it means
    * the authority's ordering has diverged from this store's, and it is the only trace a re-issued
@@ -152,11 +206,12 @@ export class FeedStore {
       Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 
-        const rows = yield* sql<{ feedPrivateId: number; feedNamespace: string | null }>`
-              SELECT feedPrivateId, feedNamespace FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}
+        const rows = yield* sql<{ feedPrivateId: number; feedNamespace: string | null; options: string | null }>`
+              SELECT feedPrivateId, feedNamespace, options FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}
           `;
         if (rows.length > 0) {
           this.#feedNamespaces.set(rows[0].feedPrivateId, rows[0].feedNamespace);
+          this.#feedOptions.set(rows[0].feedPrivateId, decodeFeedOptions(rows[0].options));
           return rows[0].feedPrivateId;
         }
 
@@ -164,6 +219,7 @@ export class FeedStore {
               INSERT INTO feeds (spaceId, feedId, feedNamespace) VALUES (${spaceId}, ${feedId}, ${namespace}) RETURNING feedPrivateId
           `;
         this.#feedNamespaces.set(newRows[0].feedPrivateId, namespace ?? null);
+        this.#feedOptions.set(newRows[0].feedPrivateId, undefined);
         return newRows[0].feedPrivateId;
       }).pipe(Effect.withSpan('FeedStore.ensureFeed'), SpanAttributes.annotateSpace(spaceId)),
   );
@@ -174,6 +230,12 @@ export class FeedStore {
    */
   readonly #feedNamespaces = new Map<number, string | null>();
 
+  /**
+   * The options last read for each feed row; {@link #ensureFeed} re-reads them on every append, so the
+   * append-path trim never acts on options older than its own transaction.
+   */
+  readonly #feedOptions = new Map<number, FeedOptions | undefined>();
+
   /** Keyed by space; a space's token is written once, so only {@link resetCaches} invalidates it. */
   readonly #cursorTokens = new Map<string, string>();
 
@@ -183,6 +245,7 @@ export class FeedStore {
    */
   resetCaches(): void {
     this.#feedNamespaces.clear();
+    this.#feedOptions.clear();
     this.#cursorTokens.clear();
     this.#heads.clear();
   }
@@ -375,6 +438,7 @@ export class FeedStore {
       if (!cypher || row.encryptionKeyId == null || row.iv == null) {
         return {
           ...row,
+          ...branchFieldsOf(row),
           data,
           encryptionKeyId: row.encryptionKeyId ?? undefined,
           iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
@@ -388,7 +452,7 @@ export class FeedStore {
           ),
         catch: (error) => new CypherError({ operation: 'decrypt', blockId, cause: error }),
       });
-      return { ...row, data: plaintext, encryptionKeyId: undefined, iv: undefined };
+      return { ...row, ...branchFieldsOf(row), data: plaintext, encryptionKeyId: undefined, iv: undefined };
     });
 
   /**
@@ -404,6 +468,7 @@ export class FeedStore {
         Effect.succeed(
           rows.map((row) => ({
             ...row,
+            ...branchFieldsOf(row),
             data: new Uint8Array(row.data),
             encryptionKeyId: row.encryptionKeyId ?? undefined,
             iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
@@ -433,11 +498,14 @@ export class FeedStore {
         if (request.feedIds !== undefined && request.feedIds.length === 0) {
           return { heads: [], blocks: [] };
         }
+        // Hidden heads read as removed to a subscriber diffing them, which is what expiry means to it.
+        const notExpired = yield* this.#notExpired(request.spaceId, request.feedNamespace);
         const scope = sql`
           FROM blocks
           JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
           WHERE feeds.spaceId = ${request.spaceId} AND feeds.feedNamespace = ${request.feedNamespace}
           ${request.feedIds !== undefined ? sql`AND feeds.feedId IN ${sql.in([...request.feedIds])}` : sql``}
+          ${notExpired}
         `;
         const heads = yield* sql<BlockHead>`
           SELECT blocks.insertionId, feeds.feedId, blocks.actorId, blocks.sequence, blocks.position
@@ -459,6 +527,7 @@ export class FeedStore {
 
   /**
    * Queries feed blocks by feed IDs or subscription with cursor/position pagination.
+   * Blocks past their feed's `maxAge` are hidden from the moment they expire, before any trim.
    */
   query = Effect.fn('Feed.query')(
     (request: QueryRequest): Effect.Effect<QueryResponse, SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
@@ -584,6 +653,7 @@ export class FeedStore {
         }
 
         // Fetch blocks.
+        const notExpired = yield* this.#notExpired(request.spaceId, request.feedNamespace);
         const query = sql<Block>`
             SELECT blocks.*, feeds.feedId, feeds.feedNamespace
             FROM blocks
@@ -592,6 +662,7 @@ export class FeedStore {
             ${feedIds !== undefined ? sql`AND feeds.feedId IN ${sql.in(feedIds)}` : sql``}
             ${request.spaceId ? sql`AND feeds.spaceId = ${request.spaceId}` : sql``}
             ${sql`AND feeds.feedNamespace = ${request.feedNamespace}`}
+            ${notExpired}
         `;
 
         // Add filter based on cursor or position.
@@ -920,13 +991,24 @@ export class FeedStore {
     Effect.gen({ self: this }, function* () {
       const sealed = yield* this.#sealForInsert(request);
       const sql = yield* SqlClient.SqlClient;
-      // Wrap in transaction to ensure atomicity when assigning positions.
-      const { positions, displaced, moved } = yield* sql.withTransaction(this.#insertSealed(request, sealed));
+      const now = yield* Clock.currentTimeMillis;
+      // One transaction, so positions are assigned atomically and retention drops what the append
+      // pushed past a limit before anyone can read it (a pulled block included, so it is not re-requested).
+      const { positions, displaced, moved, trim } = yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          const inserted = yield* this.#insertSealed(request, sealed);
+          const trim = yield* this.#trimRows(
+            inserted.feedPrivateIds.map((feedPrivateId) => this.#feedRow(request.spaceId!, feedPrivateId)),
+            now,
+          );
+          return { ...inserted, trim };
+        }),
+      );
       // Notify on the committed blocks, before the cursor token, which is a separate write.
       this.#emitBlocksChanged(request.spaceId!, request.feedNamespace);
 
       const serverToken = this.#options.assignPositions ? yield* this.#ensureCursorToken(request.spaceId!) : undefined;
-      return { requestId: request.requestId, positions, serverToken, displaced, moved };
+      return { requestId: request.requestId, positions, serverToken, displaced, moved, trim };
     }).pipe(Effect.withSpan('FeedStore.append'));
 
   /**
@@ -963,7 +1045,11 @@ export class FeedStore {
   #insertSealed = (
     request: AppendRequest,
     sealed: SealedBlock[],
-  ): Effect.Effect<{ positions: number[]; displaced: number; moved: number }, SqlError.SqlError, SqlClient.SqlClient> =>
+  ): Effect.Effect<
+    { positions: number[]; displaced: number; moved: number; feedPrivateIds: number[] },
+    SqlError.SqlError,
+    SqlClient.SqlClient
+  > =>
     Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       // 1. Collect unique feed IDs and batch #ensureFeed calls.
@@ -1032,13 +1118,16 @@ export class FeedStore {
           moved += evicted.moved;
         }
 
+        const predecessor = yield* this.#findPredecessor(feedPrivateId, block);
+        const branch = inferBranch(block, predecessor);
         const inserted = yield* sql<{ position: number | null; insertionId: number }>`
           INSERT INTO blocks (
             feedPrivateId, position, sequence, actorId,
-            prevSequence, prevActorId, timestamp, data, encryptionKeyId, iv
+            prevSequence, prevActorId, timestamp, data, encryptionKeyId, iv, fork, branch
           ) VALUES (
             ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
-            ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${data}, ${encryptionKeyId}, ${iv}
+            ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${data}, ${encryptionKeyId}, ${iv},
+            ${block.fork === true ? 1 : 0}, ${branch}
           )
           ${onConflict}
           RETURNING position, insertionId
@@ -1046,6 +1135,21 @@ export class FeedStore {
         const feedNamespace = this.#feedNamespaces.get(feedPrivateId);
         if (inserted.length > 0 && feedNamespace != null) {
           this.#noteHead(request.spaceId, feedNamespace, inserted[0].insertionId);
+        }
+        if (inserted.length > 0) {
+          yield* this.#noteBranchHead(feedPrivateId, block, branch, inserted[0].insertionId, predecessor);
+          // A synced fork can arrive before its fork point; once the fork point lands, give its branch row the base.
+          yield* sql`
+            UPDATE branches
+            SET baseBranchId = ${branch ?? ROOT_BRANCH_ROW}, forkInsertionId = ${inserted[0].insertionId}
+            WHERE feedPrivateId = ${feedPrivateId}
+              AND baseBranchId IS NULL AND forkInsertionId IS NULL AND branchId != ${ROOT_BRANCH_ROW}
+              AND EXISTS (
+                SELECT 1 FROM blocks
+                WHERE blocks.insertionId = branches.baseInsertionId
+                  AND blocks.prevSequence = ${block.sequence} AND blocks.prevActorId = ${block.actorId}
+              )
+          `;
         }
 
         if (!this.#options.assignPositions) {
@@ -1084,8 +1188,190 @@ export class FeedStore {
         maxPositions.set(request.feedNamespace, positionToInsert!);
       }
 
-      return { positions, displaced, moved };
+      return { positions, displaced, moved, feedPrivateIds: [...feedPrivateIds.values()] };
     });
+
+  /**
+   * Walks one feed along the path from the root branch to a target branch, in local order: each branch
+   * on the path up to the fork point of the next, then the target. A backward walk gives the same blocks
+   * in reverse. With `forks`, the base block of each branch that forks at a walked block follows that
+   * block. Returns the opened blocks after `after`, or none when `after` is not on the walk.
+   *
+   * @performance One recursive query for the path, one read for each branch on it, and one for the
+   * fork bases; it reads the whole path, so a page costs the path rather than the page.
+   */
+  walk = Effect.fn('FeedStore.walk')({ self: this }, function* (this: FeedStore, request: WalkRequest) {
+    const sql = yield* SqlClient.SqlClient;
+    const [feed] = yield* sql<{ feedPrivateId: number }>`
+        SELECT feedPrivateId FROM feeds WHERE spaceId = ${request.spaceId} AND feedId = ${request.feedId}
+      `;
+    if (feed === undefined) {
+      return [];
+    }
+    const { feedPrivateId } = feed;
+
+    let after: StoredPredecessor | undefined;
+    if (request.after !== undefined) {
+      const block = FeedProtocol.parseBlockId(request.after);
+      const [row] =
+        block === undefined
+          ? []
+          : yield* sql<StoredPredecessor>`
+                SELECT insertionId, branch FROM blocks
+                WHERE feedPrivateId = ${feedPrivateId} AND sequence = ${block.sequence} AND actorId = ${block.actorId}
+              `;
+      if (row === undefined) {
+        return [];
+      }
+      after = row;
+    }
+
+    // Blocks past the feed's maxAge are hidden from every read until the next trim deletes them.
+    const notExpired = yield* this.#notExpired(request.spaceId, request.feedNamespace);
+    if (request.branch === 'all') {
+      // Every branch at once is the store's own local order, so no path is needed and the fork points are already in
+      // it; a cursor bounds the read, so a page costs the blocks after it rather than the feed.
+      const desc = request.direction === 'desc';
+      const bound =
+        after === undefined
+          ? sql``
+          : desc
+            ? sql`AND blocks.insertionId < ${after.insertionId}`
+            : sql`AND blocks.insertionId > ${after.insertionId}`;
+      const limit = request.limit === undefined ? sql`` : sql`LIMIT ${request.limit}`;
+      const blocks = desc
+        ? yield* sql<Block>`
+            SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+            FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+            WHERE blocks.feedPrivateId = ${feedPrivateId} ${bound}
+            ${notExpired}
+            ORDER BY blocks.insertionId DESC ${limit}
+          `
+        : yield* sql<Block>`
+            SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+            FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+            WHERE blocks.feedPrivateId = ${feedPrivateId} ${bound}
+            ${notExpired}
+            ORDER BY blocks.insertionId ASC ${limit}
+          `;
+      return yield* this.#openRows(blocks, request.spaceId, request.feedNamespace);
+    }
+
+    const target =
+      request.branch !== undefined ? request.branch : request.direction === 'desc' ? (after?.branch ?? null) : null;
+    const path = yield* sql<BranchRow>`
+        WITH RECURSIVE path(branchId, baseBranchId, baseInsertionId, forkInsertionId, depth) AS (
+          SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId, 0
+            FROM branches WHERE feedPrivateId = ${feedPrivateId} AND branchId = ${target ?? ROOT_BRANCH_ROW}
+          UNION ALL
+          SELECT branches.branchId, branches.baseBranchId, branches.baseInsertionId, branches.forkInsertionId, path.depth + 1
+            FROM branches JOIN path
+              ON branches.feedPrivateId = ${feedPrivateId} AND branches.branchId = path.baseBranchId
+        )
+        SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId FROM path ORDER BY depth DESC
+      `;
+
+    const sequence: Block[] = [];
+    const onPath = new Set(path.map((row) => row.branchId));
+    const forksAt = new Map<number, Block[]>();
+    if (request.forks === true) {
+      const others = yield* sql<BranchRow>`
+          SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId FROM branches
+          WHERE feedPrivateId = ${feedPrivateId} AND forkInsertionId IS NOT NULL
+        `;
+      const bases = others.filter((row) => !onPath.has(row.branchId));
+      const baseBlocks =
+        bases.length === 0
+          ? []
+          : yield* sql<Block>`
+                SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+                FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+                WHERE blocks.insertionId IN ${sql.in(bases.map((row) => row.baseInsertionId))}
+                ${notExpired}
+                ORDER BY blocks.insertionId ASC
+              `;
+      const forkOf = new Map(bases.map((row) => [row.baseInsertionId, row.forkInsertionId]));
+      for (const block of baseBlocks) {
+        const forkInsertionId = block.insertionId === undefined ? undefined : forkOf.get(block.insertionId);
+        if (forkInsertionId != null) {
+          forksAt.set(forkInsertionId, [...(forksAt.get(forkInsertionId) ?? []), block]);
+        }
+      }
+    }
+
+    for (const [index, row] of path.entries()) {
+      const next = path[index + 1];
+      // An ancestor is cut at the fork point of the next branch on the path, by local order.
+      const cutoff = next === undefined ? Number.MAX_SAFE_INTEGER : (next.forkInsertionId ?? next.baseInsertionId - 1);
+      const branch = row.branchId === ROOT_BRANCH_ROW ? null : row.branchId;
+      const blocks = yield* sql<Block>`
+          SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+          FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+          WHERE blocks.feedPrivateId = ${feedPrivateId} AND blocks.branch IS ${branch} AND blocks.insertionId <= ${cutoff}
+          ${notExpired}
+          ORDER BY blocks.insertionId ASC
+        `;
+      for (const block of blocks) {
+        sequence.push(block, ...(block.insertionId === undefined ? [] : (forksAt.get(block.insertionId) ?? [])));
+      }
+    }
+
+    const ordered = request.direction === 'desc' ? sequence.reverse() : sequence;
+    const start = after === undefined ? 0 : ordered.findIndex((block) => block.insertionId === after.insertionId) + 1;
+    if (start === 0 && after !== undefined) {
+      return [];
+    }
+    return yield* this.#openRows(ordered.slice(start), request.spaceId, request.feedNamespace);
+  });
+
+  /** The stored predecessor of a block, or `undefined` when it has none or the store does not hold it. */
+  #findPredecessor = Effect.fnUntraced(function* (
+    feedPrivateId: number,
+    block: Block,
+  ): Effect.fn.Return<StoredPredecessor | undefined, SqlError.SqlError, SqlClient.SqlClient> {
+    if (block.prevSequence == null || block.prevActorId == null) {
+      return undefined;
+    }
+    const sql = yield* SqlClient.SqlClient;
+    const rows = yield* sql<StoredPredecessor>`
+        SELECT insertionId, branch FROM blocks
+        WHERE feedPrivateId = ${feedPrivateId}
+          AND sequence = ${block.prevSequence}
+          AND actorId = ${block.prevActorId}
+      `;
+    return rows[0];
+  });
+
+  /**
+   * Keeps the row of the branch a block was inserted on: a fork block (or the first block of a feed)
+   * creates it, and every block moves its head.
+   */
+  #noteBranchHead = Effect.fnUntraced(function* (
+    feedPrivateId: number,
+    block: Block,
+    branch: string | null,
+    insertionId: number,
+    predecessor: StoredPredecessor | undefined,
+  ): Effect.fn.Return<void, SqlError.SqlError, SqlClient.SqlClient> {
+    const sql = yield* SqlClient.SqlClient;
+    const forks = block.fork === true && predecessor !== undefined;
+    const baseBranchId = forks ? (predecessor.branch ?? ROOT_BRANCH_ROW) : null;
+    const forkInsertionId = forks ? predecessor.insertionId : null;
+    yield* sql`
+        INSERT INTO branches (
+          feedPrivateId, branchId, baseBranchId, baseInsertionId, forkInsertionId,
+          headInsertionId, headSequence, headActorId
+        ) VALUES (
+          ${feedPrivateId}, ${branch ?? ROOT_BRANCH_ROW}, ${baseBranchId}, ${insertionId}, ${forkInsertionId},
+          ${insertionId}, ${block.sequence}, ${block.actorId}
+        )
+        ON CONFLICT(feedPrivateId, branchId) DO UPDATE SET
+          headInsertionId = excluded.headInsertionId,
+          headSequence = excluded.headSequence,
+          headActorId = excluded.headActorId
+        WHERE excluded.headInsertionId > branches.headInsertionId
+      `;
+  });
 
   /**
    * Records pull progress for a pull that brought no blocks. Writes and notifies only when the
@@ -1116,17 +1402,15 @@ export class FeedStore {
   }
 
   /**
-   * Creates local blocks with sequential predecessors and appends grouped batches.
+   * Creates local blocks with sequential predecessors and appends grouped batches, trimming each
+   * batch's feeds by their retention in the same transaction as {@link append} does.
    *
-   * A block whose object id is later superseded by a newer same-id block (a live feed object's
-   * `Obj.update`, persisted as a whole-object re-append) is never reclaimed — the index collapses
-   * reads to the latest block by id, but old blocks stay on disk indefinitely.
-   * TODO(wittjosiah): Add compaction/retention driven by `Feed.RetentionOptions`.
+   * Retention trims in insertion order and does not compact: a block superseded by a newer same-id
+   * block (a live feed object's `Obj.update`) is reclaimed only when it falls past a limit. A caller
+   * that must drain a large trim loops {@link trim} while `more`.
    */
   appendLocal = Effect.fn('Feed.appendLocal')(
-    (
-      messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[],
-    ): Effect.Effect<Block[], SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
+    (messages: LocalAppendMessage[]): Effect.Effect<Block[], SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
       Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 
@@ -1166,39 +1450,63 @@ export class FeedStore {
         }
 
         // 3. Build all blocks with correct sequences.
-        // Track in-flight sequences per feed to handle multiple messages to same feed.
+        // Track in-flight sequences per feed, and in-flight heads per branch, to handle multiple messages to same feed.
         const currentSeqs = new Map<FeedKey, { sequence: number; actorId: string }>();
+        const branchHeads = new Map<string, { sequence: number; actorId: string } | null>();
         const blocks: Block[] = [];
         const blocksBySpaceNamespace = new Map<string, { spaceId: string; feedNamespace: string; blocks: Block[] }>();
 
         for (const msg of messages) {
           const key = `${msg.spaceId}|${msg.feedNamespace}|${msg.feedId}`;
-
-          // Determine predecessor: either from in-flight blocks or from DB.
-          let sequence: number;
-          let prevSequence: number | null;
-          let prevActorId: string | null;
+          const feedPrivateId = feedPrivateIds.get(key);
+          invariant(feedPrivateId !== undefined, 'feed ensured above');
 
           const inFlight = currentSeqs.get(key);
-          if (inFlight) {
-            // We've already added blocks for this feed - continue from last in-flight.
-            sequence = inFlight.sequence + 1;
-            prevSequence = inFlight.sequence;
-            prevActorId = inFlight.actorId;
+          const sequence = (inFlight ?? lastSeqs.get(key))?.sequence;
+          const nextSequence = (sequence ?? -1) + 1;
+
+          // The predecessor is the fork point of a fork, else the head of the branch the block continues.
+          let predecessor: { sequence: number; actorId: string } | null;
+          let branch: string | null;
+          if (msg.forkAt !== undefined) {
+            const forkPoint = FeedProtocol.parseBlockId(msg.forkAt);
+            if (forkPoint === undefined) {
+              return yield* Effect.die(new Error(`Malformed fork point block id: ${msg.forkAt}`));
+            }
+            // A fork at a block the store does not hold would have no base, so no walk could reach its ancestors.
+            const held = yield* sql<{ insertionId: number }>`
+              SELECT insertionId FROM blocks
+              WHERE feedPrivateId = ${feedPrivateId}
+                AND sequence = ${forkPoint.sequence} AND actorId = ${forkPoint.actorId}
+            `;
+            if (held.length === 0) {
+              return yield* Effect.die(new Error(`Unknown fork point block: ${msg.forkAt}`));
+            }
+            predecessor = forkPoint;
+            branch = FeedProtocol.formatBlockId(this.#options.localActorId, nextSequence);
           } else {
-            // First block for this feed - use DB state.
-            const lastBlock = lastSeqs.get(key);
-            sequence = (lastBlock?.sequence ?? -1) + 1;
-            prevSequence = lastBlock?.sequence ?? null;
-            prevActorId = lastBlock?.actorId ?? null;
+            branch = msg.branch ?? null;
+            const headKey = `${key}|${branch ?? ''}`;
+            if (!branchHeads.has(headKey)) {
+              const rows = yield* sql<{ sequence: number; actorId: string }>`
+                SELECT headSequence AS sequence, headActorId AS actorId FROM branches
+                WHERE feedPrivateId = ${feedPrivateId} AND branchId = ${branch ?? ROOT_BRANCH_ROW}
+              `;
+              if (rows.length === 0 && branch !== null) {
+                return yield* Effect.die(new Error(`Unknown feed branch: ${branch}`));
+              }
+              branchHeads.set(headKey, rows[0] ?? null);
+            }
+            predecessor = branchHeads.get(headKey) ?? null;
           }
 
           const block: Block = {
             feedId: msg.feedId,
             actorId: this.#options.localActorId,
-            sequence,
-            prevActorId,
-            prevSequence,
+            sequence: nextSequence,
+            prevActorId: predecessor?.actorId ?? null,
+            prevSequence: predecessor?.sequence ?? null,
+            ...(msg.forkAt !== undefined ? { fork: true } : {}),
             timestamp: Date.now(),
             data: msg.data,
             position: null, // Assigned by append.
@@ -1207,7 +1515,9 @@ export class FeedStore {
           blocks.push(block);
 
           // Update in-flight tracking.
-          currentSeqs.set(key, { sequence, actorId: this.#options.localActorId });
+          const head = { sequence: nextSequence, actorId: this.#options.localActorId };
+          currentSeqs.set(key, head);
+          branchHeads.set(`${key}|${branch ?? ''}`, head);
 
           // Group by (spaceId, feedNamespace).
           const spaceNamespaceKey = `${msg.spaceId}|${msg.feedNamespace}`;
@@ -1294,6 +1604,323 @@ export class FeedStore {
       return result;
     }).pipe(Effect.withSpan('FeedStore.setPosition'));
 
+  //
+  // Feed options and retention.
+  //
+
+  /**
+   * Stores a feed's options, creating its row when the feed has no blocks yet, and trims the feed by
+   * them in the same transaction. Options already stored change nothing and trim nothing.
+   *
+   * Fails with a schema error, storing nothing, when the options are invalid.
+   */
+  setFeedOptions = (
+    request: FeedKey & { options: FeedOptions },
+  ): Effect.Effect<
+    { changed: boolean; trim: TrimResult },
+    SqlError.SqlError | Schema.SchemaError,
+    SqlClient.SqlClient
+  > =>
+    Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const json = yield* Schema.encodeEffect(FeedOptionsJson)(request.options);
+      const now = yield* Clock.currentTimeMillis;
+      const result = yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          const feedPrivateId = yield* this.#ensureFeed(request.spaceId, request.feedId, request.feedNamespace);
+          const [row] = yield* sql<{ options: string | null }>`
+            SELECT options FROM feeds WHERE feedPrivateId = ${feedPrivateId}
+          `;
+          if (row?.options === json) {
+            return { changed: false, trim: { deleted: 0, more: false } };
+          }
+          yield* sql`UPDATE feeds SET options = ${json} WHERE feedPrivateId = ${feedPrivateId}`;
+          this.#feedOptions.set(feedPrivateId, decodeFeedOptions(json));
+          const trim = yield* this.#trimRows([this.#feedRow(request.spaceId, feedPrivateId)], now);
+          return { changed: true, trim };
+        }),
+      );
+      if (result.trim.deleted > 0) {
+        this.#emitBlocksChanged(request.spaceId, request.feedNamespace);
+      }
+      return result;
+    }).pipe(Effect.withSpan('FeedStore.setFeedOptions'), SpanAttributes.annotateSpace(request.spaceId));
+
+  /**
+   * The feed's stored options, or undefined when it has none (the defaults); stored JSON that does
+   * not decode reads as none, since a store must keep serving a feed whose options it cannot parse.
+   */
+  getFeedOptions = (feed: FeedKey): Effect.Effect<FeedOptions | undefined, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const [row] = yield* sql<{ options: string | null }>`
+        SELECT options FROM feeds WHERE spaceId = ${feed.spaceId} AND feedId = ${feed.feedId}
+      `;
+      return decodeFeedOptions(row?.options ?? null);
+    }).pipe(Effect.withSpan('FeedStore.getFeedOptions'), SpanAttributes.annotateSpace(feed.spaceId));
+
+  /**
+   * Every feed of the space with decodable stored options, keyed by feed id.
+   */
+  listFeedOptions = (
+    spaceId: string,
+  ): Effect.Effect<Map<string, FeedOptions>, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ feedId: string; options: string }>`
+        SELECT feedId, options FROM feeds WHERE spaceId = ${spaceId} AND options IS NOT NULL
+      `;
+      const result = new Map<string, FeedOptions>();
+      for (const row of rows) {
+        const options = decodeFeedOptions(row.options);
+        if (options !== undefined) {
+          result.set(row.feedId, options);
+        }
+      }
+      return result;
+    }).pipe(Effect.withSpan('FeedStore.listFeedOptions'), SpanAttributes.annotateSpace(spaceId));
+
+  /**
+   * Spaces holding a feed with stored options, which a host trims at open with {@link trimAll}.
+   */
+  listSpacesWithOptions = (): Effect.Effect<string[], SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ spaceId: string }>`
+        SELECT DISTINCT spaceId FROM feeds WHERE options IS NOT NULL ORDER BY spaceId
+      `;
+      return rows.map((row) => row.spaceId);
+    }).pipe(Effect.withSpan('FeedStore.listSpacesWithOptions'));
+
+  /**
+   * The namespace a feed's blocks are stored under, or undefined when the store has no row for it.
+   */
+  getFeedNamespace = (feed: {
+    spaceId: string;
+    feedId: string;
+  }): Effect.Effect<string | undefined, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const [row] = yield* sql<{ feedNamespace: string | null }>`
+        SELECT feedNamespace FROM feeds WHERE spaceId = ${feed.spaceId} AND feedId = ${feed.feedId}
+      `;
+      return row?.feedNamespace ?? undefined;
+    }).pipe(Effect.withSpan('FeedStore.getFeedNamespace'), SpanAttributes.annotateSpace(feed.spaceId));
+
+  /**
+   * Deletes, oldest first by insertion id, at most {@link TRIM_LIMIT} blocks of the feed that break
+   * its `maxLength` (or the host cap) or `maxAge` at `now`, in one transaction; `more` reports that
+   * blocks past a limit remain. Every partial trim is a prefix of the full one, so repeated and
+   * concurrent calls converge on the same retained blocks.
+   */
+  trim = (feed: FeedKey, now: number): Effect.Effect<TrimResult, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const result = yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          const rows = yield* sql<FeedRowColumns>`
+            SELECT spaceId, feedPrivateId, feedNamespace, options FROM feeds
+            WHERE spaceId = ${feed.spaceId} AND feedId = ${feed.feedId}
+          `;
+          return yield* this.#trimRows(rows.map(toFeedRow), now);
+        }),
+      );
+      if (result.deleted > 0) {
+        this.#emitBlocksChanged(feed.spaceId, feed.feedNamespace);
+      }
+      return result;
+    }).pipe(Effect.withSpan('FeedStore.trim'), SpanAttributes.annotateSpace(feed.spaceId));
+
+  /**
+   * {@link trim} over every feed of the space that has options or a host cap, sharing one
+   * {@link TRIM_LIMIT} budget across them. Run at store open and, on EDGE, from the alarm.
+   */
+  trimAll = (spaceId: string, now: number): Effect.Effect<TrimResult, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const result = yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          const rows = yield* sql<FeedRowColumns>`
+            SELECT spaceId, feedPrivateId, feedNamespace, options FROM feeds WHERE spaceId = ${spaceId}
+            ORDER BY feedPrivateId ASC
+          `;
+          return yield* this.#trimRows(rows.map(toFeedRow), now);
+        }),
+      );
+      if (result.deleted > 0) {
+        this.#emitBlocksChanged(spaceId);
+      }
+      return result;
+    }).pipe(Effect.withSpan('FeedStore.trimAll'), SpanAttributes.annotateSpace(spaceId));
+
+  /**
+   * Blocks retention deleted and not yet cleared, oldest first; `maxId` (-1 when none) is what to pass
+   * to {@link clearTrimmed} once the caller has durably acted on them.
+   */
+  takeTrimmed = (
+    opts: { limit?: number } = {},
+  ): Effect.Effect<{ maxId: number; blocks: TrimmedBlock[] }, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<TrimmedBlock & { id: number }>`
+        SELECT trimmed_blocks.id, feeds.spaceId, feeds.feedId, feeds.feedNamespace,
+          trimmed_blocks.insertionId, trimmed_blocks.position
+        FROM trimmed_blocks
+        JOIN feeds ON trimmed_blocks.feedPrivateId = feeds.feedPrivateId
+        ORDER BY trimmed_blocks.id ASC
+        ${opts.limit !== undefined ? sql`LIMIT ${opts.limit}` : sql``}
+      `;
+      return {
+        maxId: rows.at(-1)?.id ?? -1,
+        blocks: rows.map(({ id: _id, ...block }) => block),
+      };
+    }).pipe(Effect.withSpan('FeedStore.takeTrimmed'));
+
+  /**
+   * Forgets logged trimmed blocks up to and including `upToId`, as returned by {@link takeTrimmed}.
+   */
+  clearTrimmed = (upToId: number): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM trimmed_blocks WHERE id <= ${upToId}`;
+    }).pipe(Effect.withSpan('FeedStore.clearTrimmed'));
+
+  /** A feed row from the caches {@link #ensureFeed} filled. */
+  #feedRow(spaceId: string, feedPrivateId: number): FeedRow {
+    return {
+      spaceId,
+      feedPrivateId,
+      feedNamespace: this.#feedNamespaces.get(feedPrivateId) ?? null,
+      options: this.#feedOptions.get(feedPrivateId),
+    };
+  }
+
+  /**
+   * A replica never trims a block it has not pushed: deleting it would lose local data the
+   * authority never received.
+   */
+  get #trimsUnpushed(): boolean {
+    return this.#options.assignPositions;
+  }
+
+  /** The limits retention enforces on a feed: its own options, with `maxLength` capped by the host. */
+  #limits(row: FeedRow): { maxLength?: number; maxAge?: number } {
+    const cap = row.feedNamespace != null ? this.#options.maxLengthCap?.(row.feedNamespace) : undefined;
+    const own = row.options?.retention?.maxLength;
+    const maxLength = own !== undefined && cap !== undefined ? Math.min(own, cap) : (own ?? cap);
+    return { maxLength, maxAge: row.options?.retention?.maxAge };
+  }
+
+  /**
+   * SQL condition dropping blocks past their feed's `maxAge` -- exactly those trim would delete by age
+   * -- so reads hide them from the moment they expire rather than from the next trim.
+   */
+  #notExpired = (
+    spaceId: string,
+    feedNamespace: string,
+  ): Effect.Effect<Statement.Fragment, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ feedPrivateId: number; options: string }>`
+        SELECT feedPrivateId, options FROM feeds
+        WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace} AND options IS NOT NULL
+      `;
+      const now = yield* Clock.currentTimeMillis;
+      const expired = rows.flatMap(({ feedPrivateId, options }) => {
+        const maxAge = decodeFeedOptions(options)?.retention?.maxAge;
+        return maxAge === undefined
+          ? []
+          : [sql`(blocks.feedPrivateId = ${feedPrivateId} AND blocks.timestamp < ${now - maxAge})`];
+      });
+      if (expired.length === 0) {
+        return sql``;
+      }
+      return this.#trimsUnpushed
+        ? sql`AND NOT (${sql.or(expired)})`
+        : sql`AND NOT ((${sql.or(expired)}) AND blocks.position IS NOT NULL)`;
+    });
+
+  /**
+   * Trims each feed in turn from one shared {@link TRIM_LIMIT} budget. The caller owns the transaction.
+   */
+  #trimRows = (
+    rows: readonly FeedRow[],
+    now: number,
+  ): Effect.Effect<TrimResult, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      let deleted = 0;
+      for (const row of rows) {
+        const result = yield* this.#trimFeed(row, now, TRIM_LIMIT - deleted);
+        deleted += result.deleted;
+        if (result.more) {
+          return { deleted, more: true };
+        }
+      }
+      return { deleted, more: false };
+    });
+
+  /**
+   * Deletes at most `budget` of the feed's blocks past a limit, oldest insertion id first, logging each
+   * in `trimmed_blocks`. With a budget of 0 it deletes nothing and only reports whether any remain.
+   */
+  #trimFeed = (
+    row: FeedRow,
+    now: number,
+    budget: number,
+  ): Effect.Effect<TrimResult, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const { maxLength, maxAge } = this.#limits(row);
+      const breaks: Statement.Fragment[] = [];
+      if (maxLength !== undefined) {
+        const [{ count }] = yield* sql<{ count: number }>`
+          SELECT COUNT(*) AS count FROM blocks WHERE feedPrivateId = ${row.feedPrivateId}
+        `;
+        if (count > maxLength) {
+          // The newest block of the excess: it and everything inserted before it break the length.
+          const [{ insertionId }] = yield* sql<{ insertionId: number }>`
+            SELECT insertionId FROM blocks WHERE feedPrivateId = ${row.feedPrivateId}
+            ORDER BY insertionId ASC LIMIT 1 OFFSET ${count - maxLength - 1}
+          `;
+          breaks.push(sql`blocks.insertionId <= ${insertionId}`);
+        }
+      }
+      if (maxAge !== undefined) {
+        breaks.push(sql`blocks.timestamp < ${now - maxAge}`);
+      }
+      if (breaks.length === 0) {
+        return { deleted: 0, more: false };
+      }
+
+      // An authority assigns the next position from the highest it holds, so deleting that block would
+      // re-issue a position replicas already have; it stays, hidden by age, until a newer one exists.
+      const keepHighest =
+        this.#options.assignPositions && row.feedNamespace != null
+          ? sql`AND (blocks.position IS NULL OR blocks.position < ${yield* this.#maxPosition(row.spaceId, row.feedNamespace)})`
+          : sql``;
+      const candidates = sql`
+        blocks.feedPrivateId = ${row.feedPrivateId} AND (${sql.or(breaks)})
+        ${this.#trimsUnpushed ? sql`` : sql`AND blocks.position IS NOT NULL`}
+        ${keepHighest}
+      `;
+      // The first candidate past the budget bounds this call, so a partial trim is a prefix of the full one.
+      const [overflow] = yield* sql<{ insertionId: number }>`
+        SELECT blocks.insertionId FROM blocks WHERE ${candidates}
+        ORDER BY blocks.insertionId ASC LIMIT 1 OFFSET ${budget}
+      `;
+      if (budget <= 0) {
+        return { deleted: 0, more: overflow !== undefined };
+      }
+      const scope =
+        overflow !== undefined ? sql`${candidates} AND blocks.insertionId < ${overflow.insertionId}` : candidates;
+      yield* sql`
+        INSERT INTO trimmed_blocks (feedPrivateId, insertionId, position)
+        SELECT feedPrivateId, insertionId, position FROM blocks WHERE ${scope}
+      `;
+      const deleted = yield* sql<{ insertionId: number }>`DELETE FROM blocks WHERE ${scope} RETURNING insertionId`;
+      return { deleted: deleted.length, more: overflow !== undefined };
+    });
+
   /**
    * Gets all feeds and their blocks for a space, organized by feed ID and namespace.
    * Used for space archive export.
@@ -1347,5 +1974,79 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.getAllFeedsForSpace'));
 }
 
+type FeedRowColumns = { spaceId: string; feedPrivateId: number; feedNamespace: string | null; options: string | null };
+
+const toFeedRow = (row: FeedRowColumns): FeedRow => ({
+  spaceId: row.spaceId,
+  feedPrivateId: row.feedPrivateId,
+  feedNamespace: row.feedNamespace,
+  options: decodeFeedOptions(row.options),
+});
+
 /** Immutable natural key of a block, bound as AAD so sealed bytes cannot be relocated. */
 const blockNaturalKey = (feedId: string, actorId: string, sequence: number) => `${feedId}:${actorId}:${sequence}`;
+
+/** One item for {@link FeedStore.appendLocal}. */
+export type LocalAppendMessage = {
+  spaceId: string;
+  feedId: string;
+  feedNamespace: string;
+  data: Uint8Array;
+} & (
+  | {
+      /** Makes the block the base of a new branch that forks at this block id. */
+      forkAt: string;
+      branch?: never;
+    }
+  | {
+      /** The branch the block continues; absent or `null` for the root branch. */
+      branch?: string | null;
+      forkAt?: never;
+    }
+);
+
+/** One walk of a feed, for {@link FeedStore.walk}. */
+export type WalkRequest = {
+  spaceId: string;
+  feedNamespace: string;
+  feedId: string;
+  /**
+   * The branch the walk ends on: its id, or `null` for the root branch. Absent is the root branch, or on
+   * a backward walk the branch of `after`. `'all'` walks every branch in local order.
+   */
+  branch?: string | null | 'all';
+  /** The block id the walk starts after, excluded. */
+  after?: string;
+  direction: 'asc' | 'desc';
+  /** Also gives the base block of each branch that forks at a walked block, right after that block. */
+  forks?: boolean;
+  /** The most blocks to read; only a walk of every branch (`'all'`) takes it. */
+  limit?: number;
+};
+
+/** What a walk reads of a row of `branches`. */
+type BranchRow = {
+  branchId: string;
+  baseBranchId: string | null;
+  baseInsertionId: number;
+  forkInsertionId: number | null;
+};
+
+/** The key `branches.branchId` uses for the root branch, which blocks and scopes name `null`. */
+const ROOT_BRANCH_ROW = '';
+
+/** What the insert of a block reads of its predecessor. */
+type StoredPredecessor = { insertionId: number; branch: string | null };
+
+/**
+ * The branch of a block: its own block id when it forks, else the branch of its predecessor. A block
+ * with no predecessor, or one the store does not hold, is on the root branch.
+ */
+const inferBranch = (block: Block, predecessor: StoredPredecessor | undefined): string | null =>
+  block.fork === true ? FeedProtocol.formatBlockId(block.actorId, block.sequence) : (predecessor?.branch ?? null);
+
+/** Reads the branch columns of a stored row as the `Block` fields; SQLite returns the flag as 0 or 1. */
+const branchFieldsOf = (row: Block): Pick<Block, 'fork' | 'branch'> => ({
+  fork: row.fork ? true : undefined,
+  branch: row.branch ?? null,
+});

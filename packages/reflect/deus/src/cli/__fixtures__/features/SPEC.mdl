@@ -1,0 +1,22 @@
+---
+id: org.dxos.fixture.features
+name: Features fixture
+version: 0.1.0
+---
+
+A fixture spec for `deus features`.
+
+```mdl
+feat F-1: Listing
+  req F-1.1: The CLI lists items.
+  req F-1.2: The CLI filters items.
+```
+
+```mdl
+feat F-2: Export
+  req F-2.1: The CLI exports items as JSON.
+```
+
+```mdl
+op Greet: Says hello
+```

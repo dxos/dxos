@@ -7,15 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { ScriptPlugin } from '#plugin';
+import * as ScriptPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { ScriptNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), ScriptPlugin.make()] });
+
+const moduleId = (name: string) => `${ScriptNamespace.key}.module.${name}`;
 
 describe('ScriptPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ScriptPlugin()],
+      plugins: [ClientPlugin.make({}), ScriptPlugin.make()],
     });
 
     // After autoStart: AppGraphBuilder, CreateObject, schema all auto-cascade. SkillDefinition is a

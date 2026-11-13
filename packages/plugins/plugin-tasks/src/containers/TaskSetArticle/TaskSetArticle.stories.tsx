@@ -29,10 +29,10 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { File, Milestone, Person, Task, TaskSet } from '@dxos/types';
 
+import * as TasksPlugin from '#meta';
 import { translations } from '#translations';
 import { TasksCapabilities } from '#types';
 
-import * as TasksPlugin from '../../TasksPlugin.ts';
 import { TaskSetArticle } from './TaskSetArticle.tsx';
 
 /**
@@ -122,7 +122,7 @@ const seedTaskSet = (space: Space) => {
   seeded = { space, taskSet: set, roasting };
 };
 
-const DefaultStory = () => {
+const DefaultStory = ({ showDescription }: { showDescription?: boolean }) => {
   const [space] = useSpaces();
   const taskSets = useQuery(space?.db, Filter.type(TaskSet.TaskSet));
   const taskSet = taskSets.find((entry) => entry.name === TASK_SET_NAME);
@@ -132,7 +132,7 @@ const DefaultStory = () => {
 
   return (
     <div className='dx-expand'>
-      <TaskSetArticle role='article' subject={taskSet} attendableId='story' />
+      <TaskSetArticle role='article' subject={taskSet} attendableId='story' showDescription={showDescription} />
     </div>
   );
 };
@@ -205,12 +205,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * A description renders with the extensions other plugins contribute: the row of the task whose
+ * A description, where a host shows them in rows, renders with the extensions other plugins contribute: the row of the task whose
  * description links a pull request shows it as an anchor chip, through the match plugin-github's
  * resolver contributes. Hovering the chip resolves it through that resolver, and the popover shows
  * the pull request's card.
  */
 export const DescriptionLinks: Story = {
+  args: { showDescription: true },
   play: async ({ canvasElement }) => {
     // One chip, in the row itself — a React markdown renderer, which sets `eid` as a property. The
     // foot pane is create-only now that the detail is its own surface, so a selected task no longer
@@ -238,6 +239,7 @@ export const DescriptionLinks: Story = {
  * rather than leaving a chip that does nothing.
  */
 export const DescriptionLinkUnavailable: Story = {
+  args: { showDescription: true },
   play: async ({ canvasElement }) => {
     const url = 'https://github.com/acme/private/pull/7';
     const chip = () =>
@@ -321,6 +323,33 @@ export const StatusFilter: Story = {
     await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText('Print run v1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(trigger()).toHaveAttribute('data-filtered', 'false'), { timeout: 10_000 });
+  },
+};
+
+export const MilestoneFilter: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Draft launch email', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+
+    // Re-queried rather than held: the trigger is rebuilt when the deferred menu mounts under it.
+    const trigger = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.milestone"]');
+    const item = (id: string) => document.querySelector<HTMLElement>(`[data-testid="tasks.filter.milestone.${id}"]`);
+    await userEvent.click(trigger()!);
+    await waitFor(() => expect(item(context.roasting.id)).toBeTruthy(), { timeout: 10_000 });
+    await userEvent.click(item(context.roasting.id)!);
+
+    await waitFor(() => expect(canvas.queryByText('Draft launch email')).toBeNull(), { timeout: 10_000 });
+    await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(trigger()).toHaveTextContent('Roasting'), { timeout: 10_000 });
+
+    await userEvent.click(trigger()!);
+    await waitFor(() => expect(item('all')).toBeTruthy(), { timeout: 10_000 });
+    await userEvent.click(item('all')!);
+    await expect(canvas.findByText('Draft launch email', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };
 
@@ -458,6 +487,29 @@ export const SortAndGroup: Story = {
   },
 };
 
+export const EmptySetOffersContacts: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    for (const task of TaskSet.resolveTasks(context.taskSet)) {
+      context.space.db.remove(task);
+    }
+    await waitFor(() => expect(canvasElement.querySelector('[data-testid="taskList.item"]')).toBeNull(), {
+      timeout: 10_000,
+    });
+
+    await userEvent.click(
+      canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit.properties"] [data-testid="assignee"]')!,
+    );
+    await expect(body.findByText('Kai Watanabe')).resolves.toBeTruthy();
+  },
+};
+
 /**
  * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action
  * will act on, and it is offered only because a plugin contributed one (`StoryTaskActionPlugin`).
@@ -511,7 +563,9 @@ export const Behavior: Story = {
     // Unfiled tasks are not segregated into a backlog — they are rows like any other.
     await expect(canvas.findByText('Schedule cuppings', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText('Roasting')).toBeNull(), { timeout: 10_000 });
-    await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByText('Backlog', { ignore: 'script, style, option' })).toBeNull(), {
+      timeout: 10_000,
+    });
 
     const context = seeded;
     if (!context) {

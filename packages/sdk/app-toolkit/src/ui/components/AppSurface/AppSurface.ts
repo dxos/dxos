@@ -5,16 +5,16 @@
 // @import-as-namespace
 
 import type * as Schema from 'effect/Schema';
-import { type ComponentType, type ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
-import * as Surface from '@dxos/app-framework/Surface';
+import type * as Surface from '@dxos/app-framework/Surface';
 import { Entity, Obj, type Ref, Type } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { log } from '@dxos/log';
-import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
+import type { Space, SpaceMember_Role } from '@dxos/react-client/echo';
 import type { MenuActions } from '@dxos/react-ui-menu';
-import { type ProjectionModel } from '@dxos/schema';
+import type { ProjectionModel } from '@dxos/schema';
 import { type Actor, SpaceInvitationMessage } from '@dxos/types';
 
 import { AppCapabilities } from '../../../app-framework/index.ts';
@@ -86,6 +86,18 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
 // Generic filter builders (role-agnostic — take a role token as first argument)
 //
 
+/** Wraps a contributed predicate so that one which throws excludes its candidate instead of breaking matching for the role. */
+const catching =
+  (guard: (data: unknown) => boolean) =>
+  (data: unknown): boolean => {
+    try {
+      return guard(data);
+    } catch (err) {
+      log.catch(err);
+      return false;
+    }
+  };
+
 /**
  * Filter: matches an ECHO object at the given role token's subject position.
  *
@@ -128,7 +140,7 @@ export const object: {
     }
     return predicate ? predicate(data) : true;
   };
-  return Surface.makeFilter(token, guard);
+  return { bindings: [{ role: token.role, guard: catching(guard) }] };
 };
 
 /**
@@ -489,6 +501,11 @@ export type CardData<Subject = unknown, Props extends {} = {}> = {
   ignorePaths?: ReadonlyArray<string>;
   /** When true, card surfaces should render an editable variant of the subject (full-bleed editor) rather than a read-only preview. Hosts opt in per-cell — e.g. plugin-board passes editable for in-place editing in grid cells. */
   editable?: boolean;
+  /**
+   * Set when the card is sized by its container (e.g. a frame on a canvas) rather than its intrinsic content, so the
+   * surface can fit its content to the box instead of sizing to it.
+   */
+  extrinsic?: boolean;
 } & Props;
 
 /** Component props for card role. */
@@ -658,17 +675,21 @@ export type FormInputData = {
 /** Role token for the `formInput` role (was `form-input`). */
 export const FormInput: Role.Role<FormInputData> = Role.make('org.dxos.role.formInput');
 
+const isFormInputData = (data: unknown): data is FormInputData =>
+  typeof data === 'object' && data !== null && 'prop' in data && typeof data.prop === 'string' && 'schema' in data;
+
 /** Filter FormInput surfaces by a typed data predicate. */
-export const formInput = (predicate: (data: FormInputData) => boolean): Surface.Filter<FormInputData> =>
-  Surface.makeFilter(FormInput, predicate);
+export const formInput = (predicate: (data: FormInputData) => boolean): Surface.Filter<FormInputData> => ({
+  bindings: [{ role: FormInput.role, guard: catching((data) => isFormInputData(data) && predicate(data)) }],
+});
 
 /** Filter FormInput surfaces by a predicate on the field's AST (`fieldPropertyAst`). */
 export const formInputByField = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
-  Surface.makeFilter(FormInput, (data) => data.fieldPropertyAst != null && predicate(data.fieldPropertyAst));
+  formInput((data) => data.fieldPropertyAst != null && predicate(data.fieldPropertyAst));
 
 /** Filter FormInput surfaces by a predicate on the schema's root AST. */
 export const formInputBySchema = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
-  Surface.makeFilter(FormInput, (data) => predicate(data.schema.ast));
+  formInput((data) => predicate(data.schema.ast));
 
 /** Surface data for navtree-item-end role. */
 export type NavtreeItemEndData<Subject = unknown> = {

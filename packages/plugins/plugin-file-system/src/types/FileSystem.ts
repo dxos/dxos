@@ -23,6 +23,30 @@ export type RepoRoot = {
   path: string;
 };
 
+/** The open pull request a branch heads. */
+export type GitPullRequest = { number: number; url: string; title: string; base: string };
+
+/** Where a checkout stands against the branch it will merge into; must match composer-app's `src/vite/git.ts`. */
+export type GitStatus = {
+  /** Current branch; absent on a detached HEAD. */
+  branch?: string;
+  /** Commit HEAD points at. */
+  head: string;
+  /** The ref the branch is compared with: the pull request's base, else the remote's default branch. */
+  base: string;
+  /** Where the branch forked from `base`; absent when they share no history. */
+  mergeBase?: string;
+  pullRequest?: GitPullRequest;
+};
+
+/** Read-only git queries about a local file's repository. */
+export type Git = {
+  /** The status of the repository holding `path`, or undefined when it is not in a git working tree. */
+  status: (path: string) => Effect.Effect<GitStatus | undefined, FileSystemError>;
+  /** The file's text at commit `rev`, or undefined when it did not exist there. */
+  show: (path: string, rev: string) => Effect.Effect<string | undefined, FileSystemError>;
+};
+
 /**
  * Local files by absolute path, for any plugin. The desktop app reaches them through the Tauri fs plugin and a
  * Composer dev server through a dev-only route; a deployed web app has neither, so `available` answers false there.
@@ -39,6 +63,8 @@ export type FileSystem = {
   list: (dir: string, suffix?: string) => Effect.Effect<string[], FileSystemError>;
   /** Checkouts the host knows without configuration: the dev server's own working tree. */
   roots: () => Effect.Effect<RepoRoot[], FileSystemError>;
+  /** Absent where the host cannot run git (the desktop app). */
+  git?: Git;
 };
 
 const attempt = <T>(message: string, run: () => Promise<T>): Effect.Effect<T, FileSystemError> =>
@@ -148,6 +174,18 @@ const devFileSystem = (): FileSystem => {
         return response.status === 404 ? [] : (await response.json()).files;
       }),
     roots,
+    git: {
+      status: (path) =>
+        attempt(`Git status failed: ${path}`, async () => {
+          const response = await request(`/git/status?path=${encodeURIComponent(path)}`);
+          return (await response.json()).status ?? undefined;
+        }),
+      show: (path, rev) =>
+        attempt(`Git show failed: ${path}@${rev}`, async () => {
+          const response = await request(`/git/show?path=${encodeURIComponent(path)}&rev=${encodeURIComponent(rev)}`);
+          return response.status === 404 ? undefined : response.text();
+        }),
+    },
   };
 };
 

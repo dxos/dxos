@@ -20,9 +20,10 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { PresenterOperation } from '#types';
 
 import { SlideArticle } from '../containers/SlideArticle/SlideArticle.tsx';
+import { getPresentingPath } from '../paths.ts';
 
 /**
- * Stands in for the deck plugin: `SetPresenting` sets the deck's fullscreen plank to the presentation,
+ * Stands in for the deck plugin: `SetPresenting` sets the deck's fullscreen plank to the presented object's path,
  * which is all the article reads. With `slideSurface`, also renders linked documents as slides.
  */
 export const createPresenterStoryPlugin = ({ slideSurface = false }: { slideSurface?: boolean } = {}) => {
@@ -38,7 +39,11 @@ export const createPresenterStoryPlugin = ({ slideSurface = false }: { slideSurf
     Operation.withHandler(({ object, state }) =>
       Effect.gen(function* () {
         const registry = yield* Capability.get(Capabilities.AtomRegistry);
-        registry.update(ephemeralAtom, (ephemeral) => ({ ...ephemeral, fullscreen: state ? object.id : undefined }));
+        // A plank keyed by the object's id stands in for the open plank, so a document presents via its companion path.
+        registry.update(ephemeralAtom, (ephemeral) => ({
+          ...ephemeral,
+          fullscreen: state ? getPresentingPath(object.id, object) : undefined,
+        }));
       }),
     ),
   );

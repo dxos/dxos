@@ -6,8 +6,10 @@ import * as Effect from 'effect/Effect';
 import type * as Rpc from 'effect/rpc/Rpc';
 import type * as RpcClient from 'effect/rpc/RpcClient';
 import type * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as RpcSchema from 'effect/rpc/RpcSchema';
 import * as RpcTest from 'effect/rpc/RpcTest';
 import type * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 
 // Bridges an effect-rpc Handlers implementation to a Client without a wire hop or serialization
 // (backed by RpcServer/RpcClient in no-serialization mode). Consumers use the same effect-rpc
@@ -37,6 +39,30 @@ export const normalizeHandlers = <Rpcs extends Rpc.Any>(
     }
   }
   return normalized as unknown as RpcGroup.HandlersFrom<Rpcs>;
+};
+
+/**
+ * {@link normalizeHandlers}, with every request held until `until` resolves: a host that is not reachable
+ * yet, for exercising a client that must work before it is.
+ */
+export const deferHandlers = <Rpcs extends Rpc.AnyWithProps>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+  handlers: RpcGroup.HandlersFrom<Rpcs>,
+  until: Promise<void>,
+): RpcGroup.HandlersFrom<Rpcs> => {
+  const source = normalizeHandlers(group, handlers) as unknown as Record<string, (...args: any[]) => unknown>;
+  const reached = Effect.promise(() => until);
+  const deferred: Record<string, (...args: any[]) => unknown> = {};
+  for (const [tag, rpc] of group.requests) {
+    const handler = source[tag];
+    if (handler === undefined) {
+      continue;
+    }
+    deferred[tag] = RpcSchema.isStreamSchema(rpc.successSchema)
+      ? (...args) => Stream.unwrap(Effect.map(reached, () => handler(...args) as Stream.Stream<unknown, unknown>))
+      : (...args) => Effect.flatMap(reached, () => handler(...args) as Effect.Effect<unknown, unknown>);
+  }
+  return deferred as unknown as RpcGroup.HandlersFrom<Rpcs>;
 };
 
 /**

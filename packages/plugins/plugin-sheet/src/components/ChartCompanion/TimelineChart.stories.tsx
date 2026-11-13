@@ -29,6 +29,7 @@ import {
 import { translations } from '#translations';
 import { Sheet } from '#types';
 
+import { chartTypes } from '../../capabilities/chart-types.tsx';
 import { useSheetContext } from '../SheetRoot/index.ts';
 import { SheetCharts } from './SheetCharts.tsx';
 
@@ -43,7 +44,7 @@ const timelineChart = (hidden?: string[]): Sheet.ChartProperties => ({
 /** The sheet's charts, as the app's charts companion shows them. */
 const Companion = () => {
   const { model } = useSheetContext();
-  return <SheetCharts sheet={model.sheet} model={model} />;
+  return <SheetCharts sheet={model.sheet} model={model} chartTypes={chartTypes} />;
 };
 
 type StoryArgs = { mode?: SheetCompanionFrameMode; hidden?: string[] };

@@ -14,7 +14,7 @@ pnpm perf capture --attach 9222 --seconds 30      # while the user repeats X
 ```
 
 The capture keeps a profile per realm and prints the hot functions. Its run name is the
-`--capture` argument below. With no live app, use the report's own evidence (a trace, SigNoz lag,
+`--capture` argument below. With no live app, use the report's own evidence (a trace, the PostHog lag gauge,
 the steps) and skip the signature check.
 
 ## 2. Write the scenario

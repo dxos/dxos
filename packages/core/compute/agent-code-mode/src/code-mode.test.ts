@@ -12,6 +12,8 @@ import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { callTool } from '@dxos/ai';
 import { LanguageModelFixture } from '@dxos/ai/testing';
+import { TrajectoryStore } from '@dxos/assistant';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -23,7 +25,7 @@ import { Message } from '@dxos/types';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
-import { DEFAULT_MAX_OUTPUT, EVAL_TOOL_NAME, evaluate, makeEvalToolkit } from './eval-tool.ts';
+import { DEFAULT_MAX_OUTPUT, EVAL_TOOL_NAME, type Evaluation, evaluate, makeEvalToolkit } from './eval-tool.ts';
 import { makeCodeModeTurnProducer } from './producer.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -81,7 +83,8 @@ const ScoreSkill = Skill.make({
 
 const testLayerOptions = {
   types: [Task, Feed.Feed, Skill.Skill],
-  operationHandlers: [handlers],
+  // Code mode states the Skill Manager, so its operations need their handlers.
+  operationHandlers: [handlers, SkillManagerSkill.Handlers],
   skills: [ScoreSkill],
 };
 
@@ -117,7 +120,7 @@ const seedTasks = Effect.fnUntraced(function* () {
 });
 
 const feedText = Effect.fnUntraced(function* (feed: Feed.Feed) {
-  const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+  const messages = yield* TrajectoryStore.messages(feed);
   return messages.map(Message.extractText).join('\n');
 });
 
@@ -319,6 +322,33 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   it.effect(
+    'a name left over from an earlier call says each call is a fresh program',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult('yield* print(mailbox.id);', EffectDialect);
+        expect(ok).toBe(false);
+        expect(output).toContain('mailbox is not defined');
+        expect(output).toContain('each eval call is a fresh program');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'print without yield* says why nothing came back',
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* runEval("print('hello');", EffectDialect);
+        expect(output).toContain('write `yield* print(...)`');
+        expect(yield* runEval("yield* print('hello');", EffectDialect)).toEqual('hello');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'the effect dialect binds DOCS as a plain object of markdown',
     Effect.fnUntraced(
       function* (_) {
@@ -381,6 +411,27 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
         expect(output).toEqual('open 2\ncreated Review the PR\nscored 13');
         const tasks = yield* Database.query(Filter.type(Task)).run;
         expect(tasks.find((task) => task.title === 'Write the docs')?.priority).toEqual('Write the docs'.length);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'the effect dialect resolves an object by its legacy ECHO DXN as by its URI',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* seedTasks();
+        const [task] = yield* Database.query(Filter.type(Task, { title: 'Write the docs' })).run;
+        const uri = Obj.getURI(task);
+        const legacy = uri.replace(/^echo:\/\/([^/]*)\/(.+)$/, (_, space, id) => `dxn:echo:${space || '@'}:${id}`);
+        expect(legacy).toMatch(/^dxn:echo:/);
+
+        const output = yield* runEval(
+          `yield* print((yield* Database.resolve('${legacy}')).title, (yield* Database.resolve('${uri}')).title);`,
+          EffectDialect,
+        );
+        expect(output).toEqual('Write the docs Write the docs');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -482,7 +533,7 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
           expect(yield* feedText(session.feed)).toContain('Write the docs');
 
           // The call reaches the feed labelled after the operation its code invoked, still an eval.
-          const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+          const messages = yield* TrajectoryStore.messages(session.feed);
           const calls = messages.flatMap((message) =>
             message.blocks.filter((block) => block._tag === 'toolCall' && block.name === EVAL_TOOL_NAME),
           );
@@ -495,4 +546,59 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
       { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
     );
   });
+});
+
+// No model in the loop, so not tagged `model-fixture`: this runs with every test run.
+describe('code mode records the operations an eval ran', () => {
+  it.effect(
+    'on both dialects, keyed by the eval call, including what ran before a failure',
+    Effect.fnUntraced(
+      function* (_) {
+        const runtime = yield* Effect.context<Database.Service | Operation.Service>();
+        const evaluations: Evaluation[] = [];
+        const call = Effect.fnUntraced(function* (dialect: Dialect, toolCallId: string, code: string) {
+          const toolkit = makeEvalToolkit({
+            dialect,
+            sandbox: Sandbox.inProcess,
+            runtime,
+            operations: [ScoreOperation],
+            onEvaluated: (evaluation) => evaluations.push(evaluation),
+          });
+          return yield* callTool(yield* toolkit.handlers, {
+            _tag: 'toolCall',
+            toolCallId,
+            name: EVAL_TOOL_NAME,
+            input: JSON.stringify({ code }),
+            providerExecuted: false,
+          });
+        });
+
+        // The plain dialect reaches the operation through its tool path; the program then fails.
+        yield* call(PlainDialect, 'plain', "print(await ops.score({ title: 'abc' })); throw new Error('boom');");
+        // The Effect dialect reaches it through `Operation.invoke`, which goes to the runtime's `Operation.Service`.
+        yield* call(
+          EffectDialect,
+          'effect',
+          `const Score = yield* Database.resolve('${SCORE_KEY}');\nyield* print(yield* Operation.invoke(Score, { title: 'abcd' }));`,
+        );
+
+        // `invokePromise` on the same service is recorded too, and once: it does not go through the wrapped `invoke`.
+        yield* call(
+          EffectDialect,
+          'promise',
+          `const Score = yield* Database.resolve('${SCORE_KEY}');\nconst service = yield* Operation.Service;\n` +
+            `const outcome = yield* Effect.promise(() => service.invokePromise(Score, { title: 'abcde' }));\n` +
+            'yield* print(outcome.data);',
+        );
+
+        expect(evaluations.map(({ toolCallId, invocations }) => ({ toolCallId, invocations }))).toEqual([
+          { toolCallId: 'plain', invocations: [{ operationKey: SCORE_KEY }] },
+          { toolCallId: 'effect', invocations: [{ operationKey: SCORE_KEY }] },
+          { toolCallId: 'promise', invocations: [{ operationKey: SCORE_KEY }] },
+        ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

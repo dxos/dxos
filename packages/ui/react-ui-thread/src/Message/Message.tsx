@@ -201,6 +201,7 @@ const TextBlock = ({
   onSave?: (text: string) => void;
 }) => {
   const themeMode = Hooks.useThemeMode();
+  const { mentions } = useThreadContext('Message.Text');
   const inMemoryContentRef = useRef(text);
 
   const handleDocumentChange = useCallback((next: string) => {
@@ -221,7 +222,7 @@ const TextBlock = ({
         // `isAuthor` — and a mid-edit flip to read-only makes the editor drop input silently.
         createBasicExtensions({ readOnly: !editing }),
         createThemeExtensions({ themeMode }),
-        command,
+        command({ mentions }),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             handleDocumentChange(update.state.doc.toString());
@@ -232,7 +233,14 @@ const TextBlock = ({
     // While editing, the editor owns its content and its authorisation: pinning both keeps an incoming
     // `text` update or member-list refresh from rebuilding the view being typed in. `editing` is
     // itself a dep, so the flip still rebuilds.
-    [editing, editing ? undefined : text, editing ? undefined : isAuthor, themeMode, handleDocumentChange],
+    [
+      editing,
+      editing ? undefined : text,
+      editing ? undefined : isAuthor,
+      themeMode,
+      handleDocumentChange,
+      editing ? undefined : mentions,
+    ],
   );
 
   useEffect(() => {

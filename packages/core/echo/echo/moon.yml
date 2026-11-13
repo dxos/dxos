@@ -1,6 +1,8 @@
 layer: library
 language: typescript
 tags:
+  - typetest
   - ts-vite-build
   - ts-test
+  - typedoc
   - pack

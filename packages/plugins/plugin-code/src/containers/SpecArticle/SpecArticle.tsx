@@ -2,89 +2,58 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection } from '@codemirror/state';
-import { EditorView, ViewPlugin } from '@codemirror/view';
-import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import { ViewPlugin } from '@codemirror/view';
+import { useAtomSet, useAtomValue } from '@effect/atom-react';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import type * as Spec from '@dxos/compute/Spec';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
 import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
+import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { log } from '@dxos/log';
+import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
 import { getSpace } from '@dxos/react-client/echo';
+import { Attention } from '@dxos/react-ui-attention';
 import { Editor } from '@dxos/react-ui-editor';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Tag from '@dxos/react-ui/Tag';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { Spec } from '@dxos/types';
+import * as Splitter from '@dxos/react-ui/Splitter';
 import {
+  type WidgetState,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  diffView,
   documentSlots,
   editorClassNames,
+  widgetHost,
 } from '@dxos/ui-editor';
-import { isTruthy, openExternalUrl } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
-import {
-  ApiSurface,
-  ChangelogGraph,
-  CodeView,
-  DataModelGraph,
-  type DecisionModel,
-  DefinitionGraph,
-  type DefinitionModel,
-  ReviewPanel,
-  buildChangelogGraph,
-  decisionGutter,
-  parseReview,
-  reviewGutter,
-  sourceLinks,
-} from '#components';
-import { meta } from '#meta';
-import {
-  type SourceKey,
-  findSourceKeys,
-  formatSourceKey,
-  getSpecKey,
-  isSpecKey,
-  parseSourceKey,
-  reviewKeyOf,
-} from '#sync';
-import { CodeOperation } from '#types';
+import { SPEC_INDEX, decisionGutter, pendingReveal, reviewGutter, sourceLinks } from '#components';
 
-import { fileKey, useLocalTexts, useResolvedPath, useSpecSyncState } from './useSpecSources.ts';
+import { SPEC_COMPANION } from '../../constants.ts';
+import { CodeNamespace } from '../../namespace.ts';
+import { type SpecSessionState, registerEditor, reveal } from './spec-session.ts';
+import { SpecPanel, useOpenSource } from './SpecPanel.tsx';
+import { useSpecModel } from './useSpecModel.ts';
+import { type DiffAgainst } from './useSpecSources.ts';
 
-/** What the panel beside the spec shows. */
-const VIEWS = ['definitions', 'review', 'code', 'decisions', 'data', 'api'] as const;
+/** Lower bound (rem) of either side while split, so a drag cannot squeeze one unreadable; the toggle hides the panel. */
+const MIN_PANE_SIZE = 16;
 
-type View = (typeof VIEWS)[number];
-
-const VIEW_ICON: Record<View, string> = {
-  definitions: 'ph--tree-structure--regular',
-  review: 'ph--seal-check--regular',
-  code: 'ph--file-code--regular',
-  decisions: 'ph--graph--regular',
-  data: 'ph--database--regular',
-  api: 'ph--plugs-connected--regular',
-};
-
-const isView = (value: string): value is View => (VIEWS as readonly string[]).includes(value);
-
-/** A declaration line (`feat F-1: …`, `  req F-1.2: …`, `type Scene`) for the given id. */
-const declarationOf = (id: string) =>
-  new RegExp(`^\\s*[a-z]+\\s+${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*(?::|$)`);
+/** Lines of unchanged context kept around each change when unchanged runs are folded. */
+const FOLD_CONTEXT = 3;
 
 export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 'subject'> & {
   /** ECHO Spec to live-edit; omit to render a static `content` string (e.g. a bundled plugin spec). */
@@ -95,146 +64,101 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
   sourceKey?: string;
   /** Force read-only mode. Defaults to read-only for static content and editable when editing a Spec. */
   readOnly?: boolean;
+  /** Base text that diff mode compares with, for hosts that cannot run git; git's base wins when both exist. */
+  base?: string;
+  /** Review text (`<SPEC>.review.mdl`), for hosts that cannot read the checkout; the checkout's review wins. */
+  review?: string;
+  /** Opens in diff mode against this base. */
+  defaultDiff?: DiffAgainst;
+  /**
+   * Shows the spec's panel beside the text. An ECHO spec's panel is its companion, so this defaults to static content
+   * only, which has no node to be the companion of.
+   */
+  panel?: boolean;
 };
 
 /**
- * A spec as an IDE page: the MDL editor beside a panel of views. `github:` keys in the text are links (Ctrl/⌘-click):
- * a code key opens the file at its symbol, another spec's key opens that spec, synced from its checkout. The latest
- * compliance review (`<SPEC>.review.mdl` beside the spec) marks each reviewed item in the margin and on the graph.
- * Each ```diagram fence is drawn in place of its source until the selection enters it.
+ * A spec as an IDE page: the MDL editor, with its panel of views beside it or in its companion. `github:` keys in the
+ * text are links (Ctrl/⌘-click): a code key opens the file at its symbol, another spec's key opens that spec, synced
+ * from its checkout. The latest compliance review (`<SPEC>.review.mdl` beside the spec) marks each reviewed item in the
+ * margin and on the graph. Each ```diagram fence is drawn in place of its source until the selection enters it.
  */
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
-  ({ role, subject: spec, content, sourceKey, attendableId, readOnly = spec == null }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+  (
+    {
+      role,
+      subject: spec,
+      content,
+      sourceKey,
+      attendableId,
+      readOnly = spec == null,
+      base,
+      review: staticReview,
+      defaultDiff,
+      panel = spec == null,
+    },
+    forwardedRef,
+  ) => {
+    const { t } = Hooks.useTranslation(CodeNamespace.key);
     const themeMode = Hooks.useThemeMode();
     const identity = useIdentity();
     const space = spec ? getSpace(spec) : undefined;
     const { invokePromise } = AppHooks.useOperationInvoker();
-    const sync = useSpecSyncState();
+    const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
-    // Trigger re-render when the bound content ref resolves (no-op when there is no spec).
-    const [snapshot] = useObject(spec?.content);
-    const target = spec?.content.target;
-    const ownText = (spec ? snapshot?.content : content) ?? '';
+    const source = { spec, content, sourceKey, base, review: staticReview };
+    const { id, session, setSession, target, key, text, review, readLatest, decisions, baseText } =
+      useSpecModel(source);
+    const { fold } = session;
+    const open = useOpenSource({ ...source, id, key, setSession });
+    // Objects the text embeds render as their own plugin's widgets, through the editor's widget host; comments on the
+    // spec anchor into the text the editor is bound to.
+    const binding = useMemo(() => (target ? { object: target, path: ['content'] } : undefined), [target]);
+    const contributed = ProjectHooks.useSpecExtensions(spec, { attendableId, t, binding });
 
-    const key = useMemo(
-      () => (spec ? getSpecKey(spec) : sourceKey ? parseSourceKey(sourceKey) : undefined),
-      [spec, sourceKey],
-    );
-    const reviewKey = key && formatSourceKey(reviewKeyOf(key));
-
-    const [view, setView] = useState<View>('definitions');
-    const [codeTarget, setCodeTarget] = useState<SourceKey>();
-    const [selectedVerdict, setSelectedVerdict] = useState<string>();
-    const [selectedDecision, setSelectedDecision] = useState<string>();
-
-    // Every file this page reads from the checkout: the review, specs the text names, the open code file, and, for a
-    // bundled spec, its own file, so the page shows what is in the checkout rather than what was bundled.
-    const related = useMemo(
-      () =>
-        [
-          reviewKey,
-          !spec && key && fileKey(key),
-          codeTarget && fileKey(codeTarget),
-          ...findSourceKeys(ownText)
-            .map(({ key }) => key)
-            .filter(isSpecKey)
-            .map(fileKey),
-        ].filter(isTruthy),
-      [reviewKey, spec, key, codeTarget, ownText],
-    );
-    const texts = useLocalTexts(related);
-    const text = (!spec && key && texts.get(fileKey(key))) || ownText;
-    const reviewText = reviewKey ? texts.get(reviewKey) : undefined;
-    const review = useMemo(() => (reviewText ? parseReview(reviewText) : undefined), [reviewText]);
-    const specs = useMemo(
-      () => new Map([...texts].filter(([raw]) => raw.endsWith('.mdl') && raw !== reviewKey)),
-      [texts, reviewKey],
-    );
-    const codePath = useResolvedPath(codeTarget);
-
-    // A spec with no changelog has none; slicing from -1 would make the whole body the "changelog".
-    const changelogStart = text.search(/^## Changelog/m);
-    const changelog = changelogStart < 0 ? '' : text.slice(changelogStart);
-    const parsedDecisions = useMemo(
-      () => buildChangelogGraph(changelog).nodes.filter((node): node is DecisionModel => node.kind === 'decision'),
-      [changelog],
-    );
-    // Held stable while the decisions are unchanged, so typing does not rebuild the editor's extensions (which resets it).
-    const decisionsKey = JSON.stringify(parsedDecisions.map(({ id, entry }) => [id, entry.by, entry.affects]));
-    const decisions = useMemo(() => parsedDecisions, [decisionsKey]);
-
-    const viewRef = useRef<EditorView | undefined>(undefined);
-    const reveal = useCallback((id: string, focus = true) => {
-      const editor = viewRef.current;
-      if (!editor) {
-        return;
+    useEffect(() => {
+      if (defaultDiff) {
+        setSession((current) => ({ ...current, diff: defaultDiff }));
       }
-      const pattern = declarationOf(id);
-      for (let number = 1; number <= editor.state.doc.lines; number++) {
-        const line = editor.state.doc.line(number);
-        if (pattern.test(line.text)) {
-          editor.dispatch({
-            selection: EditorSelection.cursor(line.from),
-            effects: EditorView.scrollIntoView(line.from, { y: 'center' }),
+    }, [defaultDiff, setSession]);
+
+    // The panel's width in rem, held here so it survives a collapse; seeded to half the page on first layout.
+    const [panelSize, setPanelSize] = useState<number>();
+    const [panelOpen, setPanelOpen] = useState(true);
+    const splitRef = useRef<HTMLDivElement>(null);
+    useLayoutEffect(() => {
+      const width = splitRef.current?.getBoundingClientRect().width;
+      if (width) {
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        setPanelSize((current) => current ?? width / 2 / rem);
+      }
+    }, []);
+
+    // A margin click shows its item in the panel, opening the plank's companion when the panel is there.
+    const show = useCallback(
+      (patch: Partial<SpecSessionState>) => {
+        setSession((current) => ({ ...current, ...patch }));
+        if (!panel && attendableId) {
+          void invokePromise(LayoutOperation.UpdateCompanion, {
+            subject: Attention.linkedSegment(SPEC_COMPANION),
+            anchor: attendableId,
           });
-          if (focus) {
-            editor.focus();
-          }
-          return;
         }
+      },
+      [setSession, panel, attendableId, invokePromise],
+    );
+
+    // Another article that opened this spec at an item left it pending; the text may arrive after mount.
+    const pending = useAtomValue(pendingReveal);
+    const setPendingReveal = useAtomSet(pendingReveal);
+    useEffect(() => {
+      if (pending && key && pending.path === key.path && reveal(id, pending.item)) {
+        setPendingReveal(undefined);
       }
-    }, []);
+    }, [pending, id, key, text, setPendingReveal]);
 
-    const showCode = useCallback((target: SourceKey) => {
-      setCodeTarget(target);
-      setView('code');
-    }, []);
-
-    const open = useCallback(
-      async (target: SourceKey) => {
-        if (!isSpecKey(target)) {
-          showCode(target);
-          return;
-        }
-        if (key && fileKey(target) === fileKey(key)) {
-          target.fragment && reveal(target.fragment);
-          return;
-        }
-        // Another spec opens as its own synced Spec in this space; outside a space it is shown read-only here.
-        if (space) {
-          const { data, error } = await invokePromise(
-            CodeOperation.ImportSpec,
-            { key: formatSourceKey(target, false) },
-            { spaceId: space.id },
-          );
-          const other = data && (await data.spec.load());
-          if (other) {
-            await invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(other)] });
-            return;
-          }
-          log.warn('spec not imported', { key: formatSourceKey(target), error });
-        }
-        showCode(target);
-      },
-      [key, space, invokePromise, reveal, showCode],
-    );
-
-    const activate = useCallback(
-      (definition: DefinitionModel) =>
-        definition.external ? void open(definition.external.key) : reveal(definition.id),
-      [open, reveal],
-    );
-
-    const selectVerdict = useCallback(
-      (id: string) => {
-        setSelectedVerdict(id);
-        // The card list keeps focus, so the arrow keys keep moving through the verdicts.
-        reveal(id, false);
-      },
-      [reveal],
-    );
-
+    // A review keeps its `github:` evidence keys, which the index would report as errors.
+    const isReviewFile = key?.path.endsWith('.review.mdl') ?? false;
     const extensions = useMemo(
       () =>
         [
@@ -242,132 +166,111 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           createMarkdownExtensions({ codeLanguages: [mdlBlockDescription, diagramBlockDescription] }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
-          mdl(),
-          sourceLinks((target) => void open(target)),
-          ViewPlugin.define((editor) => {
-            viewRef.current = editor;
-            return { destroy: () => viewRef.current === editor && (viewRef.current = undefined) };
-          }),
+          mdl(isReviewFile ? {} : { index: SPEC_INDEX }),
+          sourceLinks((target) => void open(target), SPEC_INDEX),
+          ViewPlugin.define((editor) => ({ destroy: registerEditor(id, editor) })),
           decisions.length > 0 &&
-            decisionGutter(decisions, (id) => {
-              setSelectedDecision(id);
-              setView('decisions');
-            }),
+            decisionGutter(decisions, (item) =>
+              // A question is answered in the log, which lists it; a decision shows in the graph.
+              show({
+                selectedDecision: item,
+                view: decisions.some(({ id, kind }) => id === item && kind === 'question') ? 'log' : 'decisions',
+              }),
+            ),
           review &&
             reviewGutter(review, {
-              onSelect: (id) => {
-                setSelectedVerdict(id);
-                setView('review');
-              },
+              onSelect: (verdict) => show({ selectedVerdict: verdict, selectedReview: undefined, view: 'review' }),
               onOpen: (target) => void open(target),
+              read: readLatest,
             }),
           diagramPreview(),
+          widgetHost({ setWidgets }),
+          ...contributed,
+          baseText !== undefined &&
+            diffView({
+              original: baseText,
+              orientation: 'changes',
+              collapseUnchanged: fold ? FOLD_CONTEXT : undefined,
+            }),
           // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
           spec &&
             target &&
             createDataExtensions({
-              id: spec.id,
+              // The awareness channel the project's spec editor uses too, so peers in either view see each other.
+              id: Obj.getURI(spec),
               text: Doc.createAccessor(target, ['content']),
               messenger: space,
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec?.id, target, themeMode, readOnly, decisions, review, open],
+      [
+        id,
+        identity,
+        space,
+        spec?.id,
+        target,
+        themeMode,
+        readOnly,
+        isReviewFile,
+        decisions,
+        review,
+        open,
+        show,
+        readLatest,
+        baseText,
+        fold,
+        contributed,
+      ],
     );
 
-    const syncEntry = spec ? sync.specs[spec.id] : undefined;
-    const codeText = codeTarget ? texts.get(fileKey(codeTarget)) : undefined;
-    const openExternal = useCallback(
-      (line?: number) =>
-        codePath && void openExternalUrl(`vscode://file${codePath}${line !== undefined ? `:${line}` : ''}`),
-      [codePath],
+    const editor = (
+      // Scrolls the editor, which sizes to its content.
+      <div className='relative overflow-auto h-full' data-testid='spec-article.spec'>
+        <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : text} />
+      </div>
     );
 
     return (
-      <Editor.Root extensions={extensions}>
+      <Editor.Root extensions={extensions} widgets={widgets}>
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Header>{!readOnly && <Editor.Toolbar role={role} attendableId={attendableId} />}</Panel.Header>
+          <Panel.Header>{!readOnly && <SpecToolbar role={role} attendableId={attendableId} />}</Panel.Header>
           <Panel.Body>
-            <Layout.Grid cols={['fill', 'fill']} grow classNames='divide-x divide-separator'>
-              {/* Scrolls the editor, which sizes to its content. */}
-              <div className='relative overflow-auto' data-testid='spec-article.spec'>
-                <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : text} />
-              </div>
-              <Panel.Root>
-                <Panel.Header>
-                  <Toolbar.Root>
-                    <Toolbar.ToggleGroup
-                      type='single'
-                      value={view}
-                      onValueChange={(value) => isView(value) && setView(value)}
-                      aria-label={t('spec-view.label')}
-                    >
-                      {VIEWS.map((value) => (
-                        <ToggleGroup.Item
-                          key={value}
-                          value={value}
-                          icon={VIEW_ICON[value]}
-                          label={t(`spec-view.${value}.label`)}
-                          data-testid={`spec-article.view.${value}`}
-                        />
-                      ))}
-                    </Toolbar.ToggleGroup>
-                    {key && (
-                      <Toolbar.Text classNames='font-mono text-xs'>
-                        <span title={formatSourceKey(key)}>{key.path.split('/').slice(-2).join('/')}</span>
-                      </Toolbar.Text>
-                    )}
-                    {syncEntry && (
-                      <Tag.Tag
-                        hue={syncEntry.status === 'error' || syncEntry.status === 'conflict' ? 'warning' : 'neutral'}
-                        title={syncEntry.error ?? syncEntry.path}
-                        data-testid='spec-article.sync-status'
-                        data-status={syncEntry.status}
-                      >
-                        <Icon.Icon icon='ph--arrows-clockwise--regular' size='xs' />
-                        {t(`spec-sync.${syncEntry.status}.label`)}
-                      </Tag.Tag>
-                    )}
-                  </Toolbar.Root>
-                </Panel.Header>
-                <Panel.Body classNames='relative' data-testid='spec-article.panel' data-view={view}>
-                  {view === 'definitions' && (
-                    <DefinitionGraph content={text} specs={specs} review={review} onActivate={activate} />
-                  )}
-                  {view === 'review' && (
-                    <ReviewPanel
-                      review={review}
-                      reviewKey={reviewKey}
-                      selected={selectedVerdict}
-                      onSelect={selectVerdict}
-                      onOpenCode={(target) => void open(target)}
-                    />
-                  )}
-                  {view === 'code' &&
-                    (codeTarget ? (
-                      <CodeView
-                        label={formatSourceKey(codeTarget)}
-                        path={codeTarget.path}
-                        content={codeText}
-                        symbol={codeTarget.fragment}
-                        error={
-                          !sync.available
-                            ? t('code-view.no-files.label')
-                            : !codePath
-                              ? t('code-view.no-checkout.label', { repo: `${codeTarget.owner}/${codeTarget.repo}` })
-                              : undefined
-                        }
-                        onOpenExternal={codePath ? openExternal : undefined}
-                      />
-                    ) : (
-                      <Layout.Flex classNames='p-4 text-description'>{t('code-view.empty.label')}</Layout.Flex>
-                    ))}
-                  {view === 'decisions' && <ChangelogGraph content={changelog} selected={selectedDecision} />}
-                  {view === 'data' && <DataModelGraph content={text} />}
-                  {view === 'api' && <ApiSurface content={text} />}
-                </Panel.Body>
-              </Panel.Root>
-            </Layout.Grid>
+            {/* Inside the body: a portal anchor beside the panel would be a row of the host's grid. */}
+            <Editor.Blocks />
+            {panel ? (
+              <Splitter.Root
+                ref={splitRef}
+                orientation='horizontal'
+                anchor='end'
+                mode={panelOpen ? 'split' : 'start'}
+                size={panelSize}
+                onSizeChange={setPanelSize}
+                resizable
+                minSize={MIN_PANE_SIZE}
+              >
+                <Splitter.Panel position='start'>
+                  {editor}
+                  {/* Outside the scroller, so the toggle stays at the seam whether the panel is open or hidden. */}
+                  <Button.Root
+                    variant='ghost'
+                    icon={panelOpen ? 'ph--caret-line-right--regular' : 'ph--caret-line-left--regular'}
+                    iconOnly
+                    label={t(panelOpen ? 'spec-panel.hide.label' : 'spec-panel.show.label')}
+                    tooltipSide='left'
+                    aria-expanded={panelOpen}
+                    classNames='absolute top-1 end-3 z-10 bg-base-surface'
+                    onClick={() => setPanelOpen((open) => !open)}
+                    data-testid='spec-article.panel-toggle'
+                  />
+                </Splitter.Panel>
+                <Splitter.ResizeTrigger aria-label={t('spec-panel.resize.label')} data-testid='spec-article.divider' />
+                <Splitter.Panel position='end'>
+                  <SpecPanel {...source} readOnly={readOnly} />
+                </Splitter.Panel>
+              </Splitter.Root>
+            ) : (
+              editor
+            )}
           </Panel.Body>
         </Panel.Root>
       </Editor.Root>
@@ -376,3 +279,16 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 );
 
 SpecArticle.displayName = 'SpecArticle';
+
+/** The editor's toolbar, with the toolbar actions other plugins give the spec's node, such as commenting. */
+const SpecToolbar = ({ role, attendableId }: Pick<SpecArticleProps, 'role' | 'attendableId'>) => {
+  const { graph } = ToolkitHooks.useAppGraph();
+  const customActions = useMemo(
+    () =>
+      attendableId
+        ? Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }))
+        : undefined,
+    [graph, attendableId],
+  );
+  return <Editor.Toolbar role={role} attendableId={attendableId} customActions={customActions} />;
+};

@@ -23,6 +23,7 @@ Design: `agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -51,9 +52,10 @@ type StoredMessage
 ## Capabilities
 
 ```mdl
-component MessengerCapabilities.Sender
+component AppCapabilities.InboxSender
   desc: |
-    `send(recipientDid, message): Effect<void, InboxSendError>`. Resolves the DID through the
+    `send(recipientDid, message): Effect<void, InboxSendError>`, a capability `@dxos/app-toolkit`
+    declares and this plugin contributes. Resolves the DID through the
     contact book (a DID cannot be turned back into an identity key), JSON-encodes the message and
     calls `client.halo.inbox.sendMessage`.
   errors: UnknownRecipientError | MessageSendError | InboxPayloadTooLargeError
@@ -115,7 +117,7 @@ component MessengerCompanion
 ```mdl
 op send
   key: org.dxos.operation.messenger.send
-  desc: Sends a notification to a contact through MessengerCapabilities.Sender.
+  desc: Sends a notification to a contact through AppCapabilities.InboxSender.
   input:
     recipientDid: string
     text: string
@@ -199,4 +201,25 @@ test QA-1: A contact's notification reaches the panel
     - name: Read
       do: Click the tile.
       expect: the badge clears
+```
+
+---
+
+## Changelog
+
+```mdl
+decision D-1: The inbox sender capability is declared in `@dxos/app-toolkit`'s `AppCapabilities`, like `CommentAgentRunner`, and this plugin contributes it, so a plugin that sends notifications (plugin-review) does not depend on this plugin.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [AppCapabilities.InboxSender, send]
+```
+
+```mdl
+decision D-2: The capability is named `InboxSender` and its `send` fails with `Error`; this plugin's implementation keeps the `InboxSendError` union. Fills in [D-1].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [AppCapabilities.InboxSender]
+  why: The error classes belong to this plugin, so the toolkit cannot name them without depending on it.
+  rejected: Moving `UnknownRecipientError` and `MessageSendError` into the toolkit too.
 ```

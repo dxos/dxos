@@ -46,9 +46,10 @@ describe('WorkerRuntime', () => {
     const failure = await EffectEx.runPromise(
       makeWorkerRuntime({
         configProvider: Effect.succeed(new Config({})),
-        requestShutdown: Effect.sync(() => {
-          shutdownRequested = true;
-        }),
+        requestShutdown: () =>
+          Effect.sync(() => {
+            shutdownRequested = true;
+          }),
         sqliteLayer,
       }).pipe(Effect.scoped, Effect.flip),
     );

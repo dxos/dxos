@@ -4,18 +4,18 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type EncodedReference, ForeignKey } from '@dxos/echo-protocol';
+import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Comparator, intersection } from '@dxos/util';
 
 import type * as Tag from '../../../Tag.ts';
 import { Dictionary } from '../../Annotation/dictionary.ts';
-// `meta` is no longer re-exported from the `common/types` barrel (see ./index.ts), so importing the
-// Ref schema builder here no longer forms an eval-order cycle with `Annotation`/`Database`.
-import { type Ref, createEchoReferenceSchema } from '../../Ref/ref.ts';
+import { EntityValueAnnotationId } from '../proxy/symbols.ts';
 import { type AnyProperties } from './base.ts';
+import { KindId } from './entity.ts';
 import { MetaId } from './model-symbols.ts';
+import { TypeId } from './typename.ts';
 import { TagTypeDXN } from './well-known-types.ts';
 
 /**
@@ -28,29 +28,34 @@ export const ATTR_META = '@meta';
 //
 
 /**
- * Schema for references to {@link Tag} objects stored in {@link EntityMetaSchema.tags}.
- *
- * Built from the shared {@link createEchoReferenceSchema} (the same builder `Ref.Ref` uses) via
- * `Schema.suspend`, so it reuses the canonical ref codec rather than duplicating it. The Tag type
- * identity comes from the shared {@link TagTypeDXN} constant; `suspend` defers construction until
- * first use, and `Tag` is referenced type-only, so no `Tag` value import is needed.
+ * Whether the value is a {@link Tag} entity. Read off the entity's own kind and type stamps, so
+ * neither `Tag` nor the annotation helpers are imported here (both would form an eval-order cycle).
  */
-const TagRefSchema = Schema.suspend(
-  (): Schema.Codec<Ref<Tag.Tag>, EncodedReference> =>
-    // The factory yields a loosely-typed `Ref<any>` schema; narrow it to the Tag-typed ref.
-    createEchoReferenceSchema(undefined, DXN.getName(TagTypeDXN), DXN.getVersion(TagTypeDXN)) as Schema.Codec<
-      Ref<Tag.Tag>,
-      EncodedReference
-    >,
-);
+export const isTagEntity = (value: unknown): value is Tag.Tag => {
+  if (value == null || typeof value !== 'object' || Reflect.get(value, KindId) === undefined) {
+    return false;
+  }
+  const type = Reflect.get(value, TypeId);
+  const dxn = DXN.isDXN(type) ? DXN.tryMake(type) : undefined;
+  return dxn != null && DXN.getName(dxn) === DXN.getName(TagTypeDXN);
+};
+
+/**
+ * Schema for the {@link Tag} entities in {@link EntityMetaSchema.tags}: a strong dependency, held by
+ * identity like a relation endpoint, and persisted as a reference.
+ */
+const TagEntitySchema = Schema.declare(isTagEntity, {
+  identifier: 'Tag',
+  [EntityValueAnnotationId]: true,
+});
 
 export const EntityMetaSchema = Schema.Struct({
   keys: Schema.Array(ForeignKey),
 
   /**
-   * Tags applied to this entity, as references to {@link Tag} objects.
+   * Tags applied to this entity: {@link Tag} objects, loaded with the entity as strong dependencies.
    */
-  tags: Schema.Array(TagRefSchema),
+  tags: Schema.Array(TagEntitySchema),
 
   /**
    * Fully-qualified registry key for the object (FQN format, e.g. `com.example.type.foo`).

@@ -5,23 +5,12 @@
 // @import-as-namespace
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Channel } from '@dxos/types';
 
-import { meta } from '#meta';
+import { type CallManager as CallManagerImpl } from '../calls/index.ts';
+import { CallsNamespace } from '../namespace.ts';
 
-import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls/index.ts';
-
-export const Manager = Capability.makeSingleton<CallManagerImpl>()(`${meta.profile.key}.capability.callManager`);
-
-// TODO(wittjosiah): These callbacks could be intents once we support broadcast.
-export type CallProperties = {
-  onJoin: (state: { channel?: Channel.Channel; roomId?: string }) => Promise<void>;
-  onLeave: (roomId?: string) => Promise<void>;
-  onCallStateUpdated: (callState: CallState) => Promise<void>;
-  onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
-};
-
-export const EventHandler = Capability.makeSingleton<CallProperties>()(`${meta.profile.key}.capability.callExtension`);
+/** The call manager; plugins that react to a call subscribe to its events (`roomJoined`, `left`, `transcript`, …). */
+export const Manager = Capability.makeSingleton<CallManagerImpl>()(`${CallsNamespace.key}.capability.callManager`);
 
 /**
  * Pluggable live-transport for a call, keyed by `kind`. A call is identified by
@@ -42,7 +31,7 @@ export type CallTransportProvider = {
 // Multi: consumers (`plugin-thread`, `plugin-meeting`) read the full registry via
 // `useCapabilities`/`getAll` to check availability and pick a provider.
 export const CallTransportProvider = Capability.make<CallTransportProvider>()(
-  `${meta.profile.key}.capability.callTransportProvider`,
+  `${CallsNamespace.key}.capability.callTransportProvider`,
 );
 
 export type Call = { roomId: string };

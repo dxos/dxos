@@ -99,9 +99,10 @@ const serializeMeta = (meta: EntityMeta) => {
   const { tags, annotations, ...rest } = meta;
   const compact = {
     ...rest,
-    ...(tags != null && tags.length > 0 ? { tags } : {}),
+    // Tags are entities held by identity; they serialize as references, like relation endpoints.
+    ...(tags != null && tags.length > 0 ? { tags: tags.map((tag) => Ref.make(tag)) } : {}),
     ...(annotations != null && Object.keys(annotations).length > 0 ? { annotations } : {}),
   };
-  // Use `serializeData` so `meta.tags` `Ref<Tag>` values encode to the on-wire reference form.
+  // Use `serializeData` so the tag refs encode to the on-wire reference form.
   return serializeData(compact);
 };

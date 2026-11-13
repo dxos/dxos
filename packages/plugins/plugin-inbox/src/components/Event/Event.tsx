@@ -177,7 +177,11 @@ const EventBody = ({ classNames, editable }: EventBodyProps) => {
   }
 
   return (
-    <MarkdownViewer content={event.description} markdown={viewMode !== 'plain'} classNames={mx('p-3', classNames)} />
+    <MarkdownViewer
+      content={event.description}
+      markdown={viewMode !== 'plain'}
+      classNames={mx('p-trim-md', classNames)}
+    />
   );
 };
 

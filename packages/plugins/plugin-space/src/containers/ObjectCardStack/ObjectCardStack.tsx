@@ -18,7 +18,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../namespace.ts';
 
 export type ObjectCardStackProps = {
   db: Database.Database;
@@ -31,7 +31,7 @@ export type ObjectCardStackProps = {
  */
 export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   ({ objectId, db, type }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(SpaceNamespace.key);
 
     const queriedObjects = useQuery(db, Filter.type(Type.getURI(type)));
     const selectedRows = useSelection(objectId, 'multi');

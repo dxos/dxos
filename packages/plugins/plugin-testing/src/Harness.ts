@@ -4,9 +4,10 @@
 
 // @import-as-namespace
 
-import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { type TestAppOptions, type TestHarness, createTestApp } from '@dxos/app-framework/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
 import { SettingsPlugin } from '@dxos/plugin-settings/testing';
@@ -46,15 +47,34 @@ const headlessCorePlugins = (): Plugin.Plugin[] => [
  *   related: org.dxos.app-framework.testing.operationCapture
  */
 export const createComposerTestApp = async (opts: ComposerTestAppOptions = {}): Promise<TestHarness> => {
-  const { plugins = [], theme = false, ...rest } = opts;
+  const { plugins: _, theme: __, ...rest } = opts;
+  return createTestApp({
+    ...rest,
+    plugins: await composerPlugins(opts),
+  });
+};
+
+/**
+ * Imports every lazy module of the harness's plugins without activating any of them.
+ * Await it at a test file's top level: the first harness boot otherwise loads ~1,000 modules
+ * inside the first test, against its timeout.
+ */
+export const preload = async (opts: Pick<ComposerTestAppOptions, 'plugins' | 'theme'> = {}): Promise<void> => {
+  const plugins = await Promise.all(
+    (await composerPlugins(opts)).map((plugin) => EffectEx.runPromise(Plugin.resolveLazy(plugin))),
+  );
+  await Promise.all(plugins.flatMap((plugin) => plugin.modules.map((module) => module.load?.())));
+};
+
+const composerPlugins = async ({
+  plugins = [],
+  theme = false,
+}: Pick<ComposerTestAppOptions, 'plugins' | 'theme'>): Promise<Plugin.Plugin[]> => {
   const core = headlessCorePlugins();
   if (theme) {
     const { ThemePlugin } = await import('@dxos/plugin-theme/testing');
     const { defaultTx } = await import('@dxos/react-ui/Theme');
     core.push(ThemePlugin.make({ tx: defaultTx }));
   }
-  return createTestApp({
-    ...rest,
-    plugins: [...core, ...plugins],
-  });
+  return [...core, ...plugins];
 };

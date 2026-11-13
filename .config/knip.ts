@@ -88,7 +88,7 @@ const AUXILIARY_ENTRY = [
   // Alias targets wired up in the storybook config, never imported by name.
   '.storybook/mocks/**',
   // Stand-in package trees the introspection tests read from disk.
-  'src/__fixtures__/**',
+  'src/**/__fixtures__/**',
   'scripts/**/*.{ts,mts,js,mjs}',
 ];
 
@@ -427,21 +427,26 @@ const TESTING_ENTRY_ONLY: Record<string, string[]> = {
 };
 
 const BUNDLER_RESOLVED: Record<string, string[]> = {
-  'packages/plugins/plugin-presenter': ['marked'],
   // The app's import map is built from its direct dependencies, and plugins loaded by URL import
   // these bare; nothing in the app imports them, but without the declaration they have no entry.
   'packages/apps/composer-app': [
     '@dxos/app-graph',
     '@dxos/echo',
+    '@dxos/echo-doc',
     '@dxos/echo-react',
     '@dxos/graph',
     '@dxos/react-ui-attention',
     '@dxos/react-ui-geo',
+    'decode-named-character-reference',
   ],
   // edge-compute generates a function entrypoint containing
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
+  // The builder vendors the host by its installed path (`node_modules/@dxos/plugin-host-cloudflare`), never importing it.
+  'packages/core/compute/plugin-builder': ['@dxos/plugin-host-cloudflare'],
+  // The fixture plugin `build-remote-plugin` builds lives under `__fixtures__`, which knip does not scan.
+  'packages/e2e/composer-e2e': ['@dxos/compute'],
   // `index.html` links these by path rather than importing them, so no module graph reaches them —
   // and unstyled, `#spaces` becomes a full-flow block over the todo list that swallows every click.
   'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],
@@ -452,6 +457,32 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     'sharp',
     // Declared so `docs:typedoc`'s `^:typedoc` builds the API reference `collect-typedoc.sh` copies.
     '@dxos/app-framework',
+    '@dxos/halo-react',
+    // Read through `node_modules/@dxos/brand` paths for its fonts and logos, never imported.
+    '@dxos/brand',
+    // A peer of `expressive-code-twoslash`, which `ec.config.mjs` loads outside knip's graph.
+    'twoslash',
+    // Shared packages in the inspector page's import map, found by path in `docs/node_modules`, never imported.
+    '@dxos/client-protocol',
+    '@dxos/crypto',
+    '@dxos/debug',
+    '@dxos/display-name',
+    '@dxos/echo-protocol',
+    '@dxos/echo-query',
+    '@dxos/errors',
+    '@dxos/invariant',
+    '@dxos/operation',
+    '@dxos/random',
+    '@dxos/react-hooks',
+    '@dxos/react-ui-menu',
+    '@dxos/timeframe',
+    '@dxos/tracing',
+    '@dxos/ui',
+    '@dxos/ui-types',
+    '@dxos/util',
+    '@dxos/web-context',
+    '@dxos/web-context-react',
+    'decode-named-character-reference',
   ],
   // `@opentui/core` reaches its native library through a dynamic import interpolating
   // `process.platform`/`process.arch`, which bun folds into a constant per `--compile` target, so
@@ -463,6 +494,10 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     '@opentui/core-linux-arm64',
     '@opentui/core-linux-x64',
     '@opentui/core-win32-x64',
+    // `dx registry publish` runs the builder's `check-bundle` in a subprocess and points a plugin's build at the host's
+    // entry, both by path.
+    '@dxos/plugin-builder',
+    '@dxos/plugin-host-cloudflare',
   ],
 };
 
@@ -538,6 +573,9 @@ for (const manifest of globSync(
       ),
       ...supplemental.map((p) => `${p}!`),
       ...AUXILIARY_ENTRY,
+      // Run by path with `vitest bench`, imported by nothing. Only where entries are declared: without
+      // them the whole-source glob above already reaches benches as production code.
+      ...(entry.length && !isApp ? ['src/**/*.bench.{ts,tsx}'] : []),
     ],
     project: PROJECT.map((path) => `${path}!`),
     paths: { ...WORKSPACE_PATHS, ...paths },
@@ -558,6 +596,10 @@ for (const manifest of globSync(
 
 const config: KnipConfig = {
   workspaces,
+  // A project's `parked/` holds spike files kept for reference outside any package — they import
+  // paths that exist only where they came from. Only those: `.agents/` also holds a real workspace
+  // (`skills/composer-forensics/scripts`), which stays covered.
+  ignore: ['.agents/projects/*/parked/**'],
   // The issue types this repo gates on. Unused exports and types are deliberately excluded: barrel
   // files re-export far more than any one consumer uses, so they are noise here.
   include: ['files', 'dependencies', 'devDependencies', 'unlisted', 'binaries', 'unresolved'],
@@ -627,6 +669,8 @@ const config: KnipConfig = {
     /^watch$/,
     // Bundler resource queries (`?raw`, `?url`, `?worker`) are not part of the module path.
     /\?[a-z]+$/,
+    // The model's program in a `WorkerdSandbox` isolate, which the sandbox writes beside `workerd/main.mjs` at runtime.
+    /^\.\/program\.mjs$/,
   ],
   // These plugins execute the config files they discover, and those import workspace packages
   // through `exports` conditions that only resolve after a build. The config files are covered

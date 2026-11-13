@@ -7,4 +7,5 @@ import createElement from 'react-syntax-highlighter/dist/esm/create-element';
 
 export { createElement };
 
+export * from './renderer.ts';
 export * from './SyntaxHighlighter.tsx';

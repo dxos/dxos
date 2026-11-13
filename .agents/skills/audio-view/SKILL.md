@@ -49,13 +49,13 @@ typically about 2 s, round trip through the sandbox's proxy.
 
 ## Silence
 
-`whistle-replay.mjs` opens the stream only once the story's endpointer hears sound (louder than the noise-floor
-threshold and -35 dBFS for 0.15 s, with 0.5 s of pre-roll), as the stories' worker does; without that Whistle
+`whistle-replay.mjs` opens the stream only once the worker's endpointer hears sound (louder than the noise-floor
+threshold and -35 dBFS for 0.15 s, with 0.5 s of pre-roll), as a Whistle worker started with `endpoint` on does; without that Whistle
 transcribes room tone as "Thank you.". `--no-gate` decodes from the first sample, to see what the model alone hears.
 
 ## Evals over the fixtures
 
-`packages/plugins/plugin-transcription/src/stories/whistle/fixtures.test.ts` replays the agents-scope `whistle-*`
+`packages/plugins/plugin-transcription/src/whistle/fixtures.test.ts` replays the agents-scope `whistle-*`
 fixtures in both pass modes, bounds WER and words committed in silence, and logs keyword recall. It is tagged `manual` and
 skips without the fixtures:
 
@@ -63,17 +63,16 @@ skips without the fixtures:
 for name in whistle-silence whistle-one-two-three whistle-echo-query-a whistle-echo-query-b; do
   moon run fixtures:pull -- $name --scope agents
 done
-DX_RUN_MANUAL_TESTS=1 moon run plugin-transcription:test -- src/stories/whistle/fixtures.test.ts
+DX_RUN_MANUAL_TESTS=1 moon run plugin-transcription:test -- src/whistle/fixtures.test.ts
 ```
 
 ## How to read the results
 
 - **Invented words** ("Thank you.", "you") show up as words committed in silence, or with low `p`.
-- **Paragraph splits** in the story need 1.5 s of silence; check `describe`'s timeline for the pause actually there.
 - **Commit lag** is how long after a word ends it was committed; roughly two pass intervals in the accurate mode.
 - **Keywords** bias recognition but do not guarantee it: compare recall with and without `--keywords`.
 
-The replay runs the exact engine and model revisions the Whistle story pins (`protocol.ts` in plugin-transcription),
+The replay runs the exact engine and model revisions the Whistle module pins (`protocol.ts` in plugin-transcription),
 cached under `~/.cache/dxos/whistle`; the first run downloads about 18 MB.
 
 Recordings to test against are private fixtures (`private-fixtures` skill), never files in the repo.

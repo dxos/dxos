@@ -85,7 +85,7 @@ const openai = (model) => ({
 
 const PROVIDERS = [
   {
-    // Streamed as the story does; its time includes loading the model.
+    // Streamed as the Whistle worker does; its time includes loading the model.
     name: 'whistle (on-device, streamed)',
     run: async () => {
       const whistle = await loadWhistle({ language, keywords });

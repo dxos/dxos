@@ -24,7 +24,7 @@
     "src"
   ],
   "scripts": {
-    "evals:live": "DEEPSEEK_API_KEY=op://eng-dev/com.deepseek/credential op run -- pnpm exec dx-killorphans evalite run"
+    "evals:live": "DEEPSEEK_API_KEY=op://eng-dev/com.deepseek.platform/local/credential op run -- pnpm exec dx-killorphans evalite run"
   },
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
@@ -78,6 +78,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@modelcontextprotocol/sdk": "catalog:",
+    "@playwright/test": "catalog:",
     "autoevals": "^0.0.132",
     "chess.js": "catalog:",
     "effect": "catalog:",

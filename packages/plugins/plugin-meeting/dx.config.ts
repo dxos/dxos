@@ -2,19 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
+import * as CallsEvents from '@dxos/plugin-calls/CallsEvents';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { MeetingNamespace } from './src/namespace.ts';
+import * as MeetingCapabilities from './src/types/MeetingCapabilities.ts';
+import * as MeetingEvents from './src/types/MeetingEvents.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.meeting',
+    key: MeetingNamespace.key,
     name: 'Meetings',
     author: 'DXOS',
     description: trim`
       Comprehensive meeting management that captures notes, generates real-time transcriptions, and produces AI-powered summaries of every session.
       Each meeting record stores an ISO-timestamped creation time, a list of participant identities, and three linked documents: a live transcript feed, a freeform markdown notes editor, and an AI-generated summary.
 
-      The plugin integrates with the Calls plugin so that joining a call automatically opens a TranscriptionManager, routes the audio feed to a transcript object in ECHO, and synchronises the active meeting identity across all peers in the session.
+      The plugin integrates with the Calls plugin so that enabling transcription during a call writes each participant's native RealtimeKit transcript segments to a transcript object in ECHO, and synchronises the active meeting identity across all peers in the session.
       Participants can switch which meeting is active at any time, and the call layer propagates the selection via a typed activity payload so every peer stays in sync.
 
       AI summarisation sends the combined transcript and notes content to a language model, which returns a structured markdown document containing key discussion points, verbatim quotes, and a checklist of clearly assigned action items.
@@ -27,4 +42,59 @@ export default Config2.make({
     // TODO(wittjosiah): Needs new screenshots.
     screenshots: [{ dark: 'https://media.dxos.network/plugin-details-calls-dark.png' }],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+      {
+        // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
+        requires: [MeetingCapabilities.State, Capabilities.OperationInvoker],
+      },
+    ),
+    Capability.lazyModule(
+      'CallExtension',
+      {
+        requires: [MeetingCapabilities.State, CallsCapabilities.Manager, ClientCapabilities.IdentityService],
+        provides: [],
+        // The module subscribes to the call manager, which rides the client-initialized event, so the two
+        // features starting is not enough for the pull to find it.
+        activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start, ClientEvents.Initialized),
+      },
+      () => import('./src/capabilities/call-extension.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'MeetingSettings',
+      { provides: [MeetingCapabilities.SettingsAtom], activatesOn: MeetingEvents.Start },
+      () => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'MeetingState',
+      {
+        requires: [Capabilities.AtomRegistry],
+        provides: [MeetingCapabilities.State],
+        activatesOn: MeetingEvents.Start,
+      },
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: MeetingNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: [AppSurface.Article],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

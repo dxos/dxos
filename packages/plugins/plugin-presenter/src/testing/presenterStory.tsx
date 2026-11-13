@@ -59,7 +59,7 @@ export const presentationStoryDecorators = ({
   withTheme(),
   withLayout({ layout: 'fullscreen' }),
   withClientProvider({
-    types: [Presentation.Presentation, Text.Text, Markdown.Document],
+    types: [Presentation.Presentation, Presentation.Slide, Text.Text, Markdown.Document],
     createIdentity: true,
     createSpace: true,
     onCreateSpace,

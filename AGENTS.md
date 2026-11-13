@@ -159,8 +159,8 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Lint & fix: `moon run :lint -- --fix`
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
 - Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
-- Storybook: `moon run storybook-react:serve` (port 9009). **One server, shared with
-  the user — see "Sharing long-running servers" below.** It periodically wedges;
+- Storybook: `moon run storybook-react:serve -- --port=<free port>` (9009 is only the default).
+  **Each session runs its own — see "Long-running servers" below.** It periodically wedges;
   `serve` arms a watcher that captures the cause. If it wedges under a server you
   started another way, run `bash tools/storybook-react/diagnose.sh` BEFORE restarting —
   a restart destroys the evidence. → `REPOSITORY_GUIDE.md` §Storybooks.
@@ -169,52 +169,50 @@ A remote-cache warning from moon is harmless — builds work, they just don't sh
 cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
 once per machine, for every worktree.
 
-## Sharing long-running servers
+## Long-running servers
 
-Applies to every long-running server the user might be looking at — storybook on 9009,
-the Composer app on 5199, any `*:serve` task. Ports and specifics below are storybook's;
-the rules are the same for the others.
+Applies to every long-running server — storybook, the Composer app, any `*:serve` task. The
+specifics below are storybook's; the rules are the same for the others.
 
-**Each server serves ONE worktree, and that is invisible from the outside.** A server
-answering on its usual port may be serving a different worktree entirely — the app boots,
-the page renders, and none of your changes are in it. Before using one to verify, confirm
-whose tree it serves: fetch a file that exists only in yours
-(`/@fs/<abs path to a file you just wrote>` returns 200), or check the process's cwd with
-`lsof -a -p <pid> -d cwd -Fn`. If it is serving another worktree, restart it from yours
-rather than starting a second — and say so, since it moves a window someone may be using.
+**Each session runs its own server, from its own worktree, on whatever port is free, and owns
+it.** Do not ask the user which server, port or worktree to use, and do not ask them to start,
+restart or wait for one — waiting on that question costs more than the server does. Start yours
+in the background as soon as the work turns to UI (it takes minutes to come up) and keep working
+while it does.
 
-**There is ONE storybook server, on port 9009, and the user is looking at it.** Never
-start a second one "on a free port" to avoid disturbing them — two servers on one machine
-starve each other (each holds a monorepo-wide watcher and 1-2GB), and each one's file
-writes wedge the other, which is how a debugging session ends up chasing its own noise.
-
-- **Reuse before starting.**
-  `curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 --max-time 5 http://localhost:9009/`
-  — bounded, so a wedged server cannot hang the probe. Reuse it only on a `200`, and only after
-  the worktree check below: a `000` is not a free port, and any other code is not a storybook.
-- **The server serves ONE worktree.** If 9009 is serving a different worktree than the one
-  you are editing, restart it against yours (`moon run storybook-react:serve` from your
-  worktree) rather than adding a second server. Say so in your reply — you are moving a
-  window the user may be looking at.
-- **Restart with `moon run storybook-react:serve-nodeps`** when the worktree is already
-  built. `serve` first runs every `:build` it depends on, and if another moon run (e.g.
-  `composer-app:bundle`) is building the same packages, both rewrite the same `dist/types`
-  and the builds fail with TS7016. Use `serve` only on a fresh worktree.
+- **Pick a free port; never take one in use.** 9009 is only the default. Probe upward from it —
+  `lsof -ti :<port> -sTCP:LISTEN` prints nothing for a free port — and start with
+  `moon run storybook-react:serve-nodeps -- --port=<port>`. The `--port=` reaches the hang
+  watcher too, so it watches your server and not someone else's.
+- **Never stop a server you did not start.** One on another port is another session's, or the
+  user's. Kill only the PID you own, from `lsof -ti :<your port> -sTCP:LISTEN`; never
+  `pkill -f storybook`.
+- **Each server serves ONE worktree, and that is invisible from the outside.** A server that
+  answers may be serving a different worktree entirely — the page renders, and none of your
+  changes are in it. Before using one to verify, confirm whose tree it serves: fetch a file that
+  exists only in yours (`/@fs/<abs path to a file you just wrote>` returns 200), or check the
+  process's cwd with `lsof -a -p <pid> -d cwd -Fn`.
+- **Finish with a check and a link.** When you finish work on a story, confirm your server
+  answers — `curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 --max-time 5 http://localhost:<port>/`
+  is bounded, so a wedged server cannot hang the probe — and that its `index.json` lists the
+  story. Then give the story's link on your port in the reply. A link to a server that is down,
+  or to another worktree's, is not a link to your work.
+- **If yours dies, restart it** on any free port, without asking.
+- **`serve-nodeps` when the worktree is already built.** `serve` first runs every `:build` it
+  depends on, and if another moon run (e.g. `composer-app:bundle`) is building the same
+  packages, both rewrite the same `dist/types` and the builds fail with TS7016. Use `serve` only
+  on a fresh worktree.
 - **A stale module is not a hung server.** If `/@fs/<file>` still serves old code but
   `index.json` answers fast, the file watch was lost, not the server; the `dxos:rearm-watch`
   plugin in `tools/storybook-react/.storybook/main.ts` exists for exactly this, so suspect a regression there.
 - **Unresponsive is usually not dead.** Wait ~3 minutes before concluding anything. If it
   is still down, run `tools/storybook-react/diagnose.sh` to capture the cause BEFORE
   restarting; a restart destroys the only evidence.
-- **Never `pkill -f storybook`.** Kill by the PID you own, established via
-  `lsof -ti :9009 -sTCP:LISTEN`, and only after the wait above.
-- **Do not run `moon run <pkg>:build` while a server is up** unless you need it — a build
+- **Do not run `moon run <pkg>:build` while your server is up** unless you need it — a build
   rewrites dist under the live watcher and reliably stalls the server. A package
   typecheck (`npx tsc --noEmit -p tsconfig.json`) verifies as much without the churn.
-- **The one exception:** a session whose actual subject is the storybook server (profiling
-  a wedge, testing a watcher fix) may run its own instrumented server on its own port —
-  but it MUST do so from its own worktree. An instrumented server in someone else's
-  worktree perturbs their server and contaminates its own measurements.
+- **Stop yours when the session's UI work is done.** Each server holds a monorepo-wide watcher
+  and 1-2GB, and one left behind by a finished session keeps costing that.
 
 ## Working across dxos and edge
 
@@ -231,6 +229,10 @@ is invisible there until something publishes it.
   day (06:00 UTC); to bump edge to a commit that landed since, dispatch it first.
 - The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
   `CLAUDE.md` covers the undo.
+- **Skills edge shares live here.** edge installs them with `npx skills` (recorded in its
+  `skills-lock.json`), so change a skill here, never in edge's copy; a skill folder holds no
+  repo-specific content (rules go in each repo's `.agents/rules/`). `scripts/skills-sync.ts` reports
+  which copies are behind or edited in place, and `agents/routines/skills-sync.md` acts on it.
 
 ## Long-running tasks
 
@@ -409,6 +411,9 @@ Do not paste real credential values into any shell command, and do not paste the
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **The feature map** (`FEATURES.mdl`) — the top of feature map > spec > review > tasks > code > result;
+  carry a feature change down every layer, one commit each → `feature-waterfall` skill
+  (`.agents/skills/feature-waterfall/SKILL.md`); `pnpm deus features check` shows where each feature stands.
 - **`.mdl` specs** (`PLUGIN.mdl`, `SPEC.mdl`) — the Deus language, and the `## Changelog`
   decision that every spec change must add, attributed to a `user:` or an `agent:` → `mdl` skill
   (`.agents/skills/mdl/SKILL.md`).

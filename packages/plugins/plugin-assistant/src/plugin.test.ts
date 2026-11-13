@@ -12,16 +12,17 @@ import { AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AiContext } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import * as Reducer from '@dxos/compute/Reducer';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Query, Ref, Registry } from '@dxos/echo';
+import { Database, Ref, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EntityId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -31,16 +32,20 @@ import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { AssistantPlugin } from '#plugin';
+import * as AssistantPlugin from '#meta';
 import { AssistantEvents, AssistantOperation } from '#types';
 
+import { AssistantNamespace } from './namespace.ts';
 import { AssistantSkill } from './skills/assistant/index.ts';
 import { PluginManagerSkill } from './skills/plugin-manager/index.ts';
 
+await Harness.preload({
+  plugins: [ClientPlugin.make({}), AssistantPlugin.make(), RegistryPlugin.make(), RoutinePlugin.make()],
+});
+
 EntityId.dangerouslyDisableRandomness();
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+const moduleId = (name: string) => `${AssistantNamespace.key}.module.${name}`;
 
 // Memoized-replay cases (frozen A/B); gated off the default `:test` path. The module-activation
 // boot test below carries the real composition signal and always runs.
@@ -48,7 +53,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 describe('AssistantPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), AssistantPlugin()],
+      plugins: [ClientPlugin.make({}), AssistantPlugin.make()],
     });
 
     // Dependency-mode roots activate immediately during the startup dependency pass.
@@ -87,14 +92,14 @@ describe('AssistantPlugin', () => {
       // The curated production and mobile sets ship no registry, so the skill's verbs would have no
       // handlers there.
       await using harness = await Harness.createComposerTestApp({
-        plugins: [ClientPlugin.make({}), AssistantPlugin()],
+        plugins: [ClientPlugin.make({}), AssistantPlugin.make()],
       });
       expect(skillKeys(harness)).not.toContain(PluginManagerSkill.key);
     }
 
     {
       await using harness = await Harness.createComposerTestApp({
-        plugins: [ClientPlugin.make({}), AssistantPlugin(), RegistryPlugin.make()],
+        plugins: [ClientPlugin.make({}), AssistantPlugin.make(), RegistryPlugin.make()],
       });
       expect(skillKeys(harness)).toContain(PluginManagerSkill.key);
     }
@@ -121,18 +126,18 @@ describe('AssistantPlugin', () => {
           yield* Database.flush();
 
           const feed = yield* Database.load(chat.feed);
-          const bindings = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
-          return bindings.flatMap((binding) => binding.skills.added.map((ref) => ref.uri));
+          const { state } = yield* TrajectoryStore.load(feed, Reducer.session);
+          return state.skills.map((ref) => ref.uri);
         }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
       );
     };
 
-    const withRegistry = await boundSkillUris([ClientPlugin.make({}), AssistantPlugin(), RegistryPlugin.make()]);
+    const withRegistry = await boundSkillUris([ClientPlugin.make({}), AssistantPlugin.make(), RegistryPlugin.make()]);
     expect(withRegistry.some((uri) => uri.includes(PluginManagerSkill.key))).toBe(true);
     // Every host still gets the rest of the default set, so a missing registry costs only this skill.
     expect(withRegistry.some((uri) => uri.includes(AssistantSkill.key))).toBe(true);
 
-    const withoutRegistry = await boundSkillUris([ClientPlugin.make({}), AssistantPlugin()]);
+    const withoutRegistry = await boundSkillUris([ClientPlugin.make({}), AssistantPlugin.make()]);
     expect(withoutRegistry.some((uri) => uri.includes(PluginManagerSkill.key))).toBe(false);
     expect(withoutRegistry.some((uri) => uri.includes(AssistantSkill.key))).toBe(true);
   });
@@ -141,7 +146,7 @@ describe('AssistantPlugin', () => {
     await using harness = await Harness.createComposerTestApp({
       plugins: [
         ClientPlugin.make({}),
-        AssistantPlugin({
+        AssistantPlugin.make({
           aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
             { parts: [ScriptedLanguageModel.text('Paris is the capital of France.')] },
           ]),
@@ -172,7 +177,7 @@ describe('AssistantPlugin', () => {
     await using harness = await Harness.createComposerTestApp({
       plugins: [
         ClientPlugin.make({}),
-        AssistantPlugin({
+        AssistantPlugin.make({
           aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
             { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { capital: 'paris' } })] },
             { parts: [ScriptedLanguageModel.text('Done.')] },
@@ -219,7 +224,7 @@ describe('AssistantPlugin', () => {
       await using harness = await Harness.createComposerTestApp({
         plugins: [
           ClientPlugin.make({}),
-          AssistantPlugin({
+          AssistantPlugin.make({
             aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
               { parts: [ScriptedLanguageModel.text('Hello back.')] },
             ]),

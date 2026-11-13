@@ -6,8 +6,10 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useRef } from 'react';
 
 import { Annotation, Ref } from '@dxos/echo';
+import { useType as defaultUseType } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { OrderedList } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
@@ -23,6 +25,7 @@ import { type FormFieldStateProps } from '#types';
 import { useFormValues } from '../../hooks/index.ts';
 import { getFormProperties } from '../../util/index.ts';
 import { FormFieldDispatch } from '../FormFieldDispatch.tsx';
+import { FormFieldSet } from '../FormFieldSet.tsx';
 import { type FormFieldDispatchProps } from '../resolve-field.ts';
 import { getDefaultValue } from './default-value.ts';
 
@@ -30,24 +33,49 @@ type Item = { id: string; index: number };
 
 export type ArrayFieldProps = {
   label: string;
+  /** Leave the header's text empty while the list keeps `label` as its name, for a host whose heading already says it. */
+  hideLabel?: boolean;
+  section?: boolean;
+  /** Shown in place of the rows while there are none; only a field override sets it. */
+  placeholder?: string;
   fieldProps: FormFieldStateProps;
 } & FormFieldDispatchProps;
 
 /**
  * An array as a header row (label and an add Button) over a `react-ui-list` OrderedList whose rows hold the item's
  * control and a remove Button; a `FormOrderedAnnotation` array adds a DragHandle (pointer drag and keyboard moves).
+ * An owned-ref array (`FormCreateAnnotation`) adds by creating the target, and each row is the target's fields inline.
  */
-export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ...props }: ArrayFieldProps) => {
+export const ArrayField = ({
+  type,
+  path,
+  label,
+  hideLabel,
+  section,
+  placeholder,
+  readonly,
+  layout,
+  fieldProps,
+  ...props
+}: ArrayFieldProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const elementType = SchemaEx.getArrayElementType(type);
+  // A suspended element (a recursive or circular schema) renders as the type it resolves to.
+  const element = SchemaEx.getArrayElementType(type);
+  const elementType = element && SchemaAST.isSuspend(element) ? element.thunk() : element;
   const { onValueChange } = fieldProps;
   const values = useFormValues<unknown[]>('Form.ArrayField', path, () => []);
   const ordered = Annotation.FormOrderedAnnotation.getFromAst(type).pipe(Option.getOrElse(() => false));
   const editable = !readonly && layout !== 'static';
+  const { db, onCreate, getCreateDefaults, useType = defaultUseType } = props;
+  const createTypename = Annotation.FormCreateAnnotation.getFromAst(type).pipe(Option.getOrUndefined);
+  const createType = useType(db, createTypename ? DXN.make(createTypename) : undefined);
+  const owned = !!createTypename && !!elementType && Ref.isRefType(elementType);
 
   // Rows need identities that survive a reorder; values have none, so the field keeps a parallel id list.
   const idsRef = useRef<string[]>([]);
   const counterRef = useRef(0);
+  // Rows created here start open, so the new target's fields are ready to fill in.
+  const createdRef = useRef(new Set<string>());
   const ids = idsRef.current;
   const count = values?.length ?? 0;
   while (ids.length < count) {
@@ -55,6 +83,21 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
   }
   ids.length = count;
   const items: Item[] = ids.map((id, index) => ({ id, index }));
+
+  const handleCreate = useCallback(async () => {
+    if (!createType || !onCreate) {
+      return;
+    }
+    const defaults = getCreateDefaults?.({ jsonPath: SchemaEx.createJsonPath(path ?? []), schema: createType });
+    const created = await onCreate(createType, defaults ?? {});
+    if (!created) {
+      return;
+    }
+    const id = `item-${counterRef.current++}`;
+    idsRef.current.push(id);
+    createdRef.current.add(id);
+    onValueChange(type, [...(values ?? []), Ref.make(created)]);
+  }, [createType, onCreate, getCreateDefaults, path, onValueChange, type, values]);
 
   const handleAdd = useCallback(() => {
     let value: unknown;
@@ -98,21 +141,21 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
     .filter(Boolean)
     .join(' ');
 
-  return (
-    <>
-      <Field.Header>
-        <Typography.Text truncate>{label}</Typography.Text>
-        {editable && (
-          <Button.Root
-            iconOnly
-            variant='ghost'
-            icon='ph--plus--regular'
-            label={t('add-item.button')}
-            onClick={handleAdd}
-            data-testid={`${SchemaEx.createJsonPath(path ?? [])}.add`}
-          />
-        )}
-      </Field.Header>
+  const addButton = editable && (
+    <Button.Root
+      iconOnly
+      variant='ghost'
+      icon='ph--plus--regular'
+      label={t('add-item.button')}
+      disabled={owned && (!createType || !onCreate)}
+      onClick={owned ? () => void handleCreate() : handleAdd}
+      data-testid={`${SchemaEx.createJsonPath(path ?? [])}.add`}
+    />
+  );
+  const list =
+    count === 0 && placeholder ? (
+      <Typography.Text tone='muted'>{placeholder}</Typography.Text>
+    ) : (
       <OrderedList.Root
         items={items}
         getId={(item) => item.id}
@@ -132,10 +175,12 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
                     {...props}
                     type={elementType}
                     name={null}
-                    label={asObject ? undefined : label}
+                    label={asObject || owned ? undefined : label}
                     path={[...(path ?? []), item.index]}
                     readonly={!editable}
                     layout={asObject ? layout : 'inline'}
+                    refInline={owned || undefined}
+                    defaultOpen={owned ? createdRef.current.has(item.id) : undefined}
                   />
                 </Layout.Container>
                 {editable && (
@@ -152,6 +197,24 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
           </OrderedList.Content>
         )}
       </OrderedList.Root>
+    );
+
+  // A section with no name has no heading to carry its add button, so it keeps the plain header.
+  if (section && label) {
+    return (
+      <FormFieldSet label={label} actions={addButton} presentation='section'>
+        {list}
+      </FormFieldSet>
+    );
+  }
+
+  return (
+    <>
+      <Field.Header>
+        <Typography.Text truncate>{hideLabel ? '' : label}</Typography.Text>
+        {addButton}
+      </Field.Header>
+      {list}
     </>
   );
 };

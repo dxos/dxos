@@ -100,6 +100,14 @@ const PickerRoot = ({ children, resetSelectionOnChange = false }: PickerRootProp
     }
   }, [itemVersion, selectedValue, resetSelectionOnChange]);
 
+  // Scrolled here rather than by each item, so a custom item that registers through `usePickerItemContext`
+  // follows the highlight too. Instant, as a native listbox: a smooth scroll restarts on every key repeat.
+  useEffect(() => {
+    if (selectedValue !== undefined) {
+      itemsRef.current.get(selectedValue)?.element.scrollIntoView({ block: 'nearest' });
+    }
+  }, [selectedValue]);
+
   const registerItem = useCallback(
     (value: string, element: HTMLElement | null, onSelect: (() => void) | undefined, disabled?: boolean) => {
       if (element) {
@@ -367,13 +375,6 @@ const PickerItem = Util.slottable<HTMLDivElement, PickerItemProps>(
       }
       return () => unregisterItem(value);
     }, [value, onSelect, disabled, registerItem, unregisterItem]);
-
-    // Instant, as a native listbox: a smooth scroll restarts on every key repeat and lags behind the highlight.
-    useEffect(() => {
-      if (isSelected && internalRef.current) {
-        internalRef.current.scrollIntoView({ block: 'nearest' });
-      }
-    }, [isSelected]);
 
     const handleClick = useCallback(() => {
       if (disabled) {

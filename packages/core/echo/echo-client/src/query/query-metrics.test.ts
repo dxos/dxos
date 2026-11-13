@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -44,6 +44,47 @@ describe('queryMetrics', () => {
 
     unsubscribe();
     expect(queryMetrics.getMetrics().find((entry) => entry.query === Query.pretty(query))?.active).toBe(0);
+  });
+
+  test('times evaluation only, not the wait for an answer', async ({ expect }) => {
+    const WAIT_MS = 200;
+    const HOST_TIME_MS = 5;
+    const runQuery = Query.select(Filter.type(TestSchema.Person));
+    await new QueryResultImpl(
+      {
+        ...makeQueryContext(),
+        run: async (_ctx, _query, opts) => {
+          await sleep(WAIT_MS);
+          opts?.onExecutionTime?.(HOST_TIME_MS);
+          return [];
+        },
+      },
+      runQuery,
+    ).run();
+
+    let pending = true;
+    const changed = new Event<void>();
+    const reactiveQuery = Query.select(Filter.type(TestSchema.Organization));
+    const unsubscribe = new QueryResultImpl(
+      {
+        ...makeQueryContext(),
+        changed,
+        hasPendingSources: () => pending,
+        getRemoteExecutionTime: () => (pending ? undefined : HOST_TIME_MS),
+      },
+      reactiveQuery,
+    ).subscribe();
+    await sleep(WAIT_MS);
+    pending = false;
+    changed.emit();
+    unsubscribe();
+
+    for (const query of [runQuery, reactiveQuery]) {
+      const metrics = queryMetrics.getMetrics().find((entry) => entry.query === Query.pretty(query));
+      expect(metrics?.executions).toBe(1);
+      expect(metrics?.maxTime).toBeGreaterThanOrEqual(HOST_TIME_MS);
+      expect(metrics?.maxTime).toBeLessThan(WAIT_MS / 2);
+    }
   });
 
   test('reset keeps the active count of running queries', ({ expect }) => {

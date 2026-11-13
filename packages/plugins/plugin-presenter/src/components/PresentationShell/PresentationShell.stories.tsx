@@ -10,6 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createSlide } from '#testing';
 
+import { MarkdownSlide } from '../MarkdownSlide/index.ts';
 import { Slide } from '../Slide/index.ts';
 import { PresentationShell, type PresentationShellProps } from './PresentationShell.tsx';
 
@@ -26,7 +27,11 @@ const DefaultStory = (props: PresentationShellProps) => {
 
   return (
     <PresentationShell {...props} onExit={() => setOpen(false)}>
-      <Slide content={createSlide({ number: 1, code: true })} />
+      <div className='dx-cover flex flex-col'>
+        <Slide.Frame>
+          <MarkdownSlide content={createSlide({ number: 1, code: true })} />
+        </Slide.Frame>
+      </div>
     </PresentationShell>
   );
 };

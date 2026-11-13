@@ -2,10 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
 
+import { Annotation } from '@dxos/echo';
 import { createAnnotationHelper } from '@dxos/echo/internal';
-import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
+import {
+  HueAnnotationId,
+  type NumberLayout,
+  NumberLayoutAnnotationId,
+  StepAnnotationId,
+  VectorAnnotationId,
+} from '@dxos/ui-types';
 
 /** One selectable option produced by an {@link OptionsLookup}. */
 export type OptionsLookupEntry = { value: string; label?: string; secondaryLabel?: string; icon?: string };
@@ -68,6 +75,47 @@ export const autofill =
     derive: (values: Pick<Values, Deps[number]>) => Effect.Effect<string | undefined, unknown>,
   ): Autofill => ({ deps, derive });
 
+/**
+ * The marks the picker offers beside Phosphor's glyphs, first in the list. Each is named by its whole symbol, written
+ * out: it is in the `dx` set, which has no source to fetch from at runtime, so it is drawn only where the sprite
+ * holds it, and the sprite is built by scanning sources for these names.
+ */
+const BRAND_ICONS = [{ value: 'dx--dxos--regular', label: 'dxos', icon: 'dx--dxos--regular' }];
+
+/**
+ * Every Phosphor glyph as a combobox: a field annotated with it is typed into rather than picked from a grid, which
+ * is what 1,512 of them need. The value is the bare name (`chat-circle-dots`), as a node's `icon` field and the
+ * `Icon` component both take it; each row shows the glyph beside the name.
+ *
+ * The whole catalogue loads once (the lookup has no deps) and the combobox filters it as you type, so nothing is
+ * listed before the query narrows it. A name that is not in the list is still accepted: the registry resolves any
+ * symbol at runtime, so a glyph added to Phosphor after this build still works. The DXOS mark is offered too.
+ */
+export const iconOptions = (): OptionsLookup => ({
+  deps: [],
+  combobox: true,
+  // The catalogue is some 1,500 names, so it is fetched when a picker first asks for it rather than with the app.
+  load: () =>
+    Effect.promise(() => import('@dxos/ui-types/phosphor')).pipe(
+      Effect.map(({ phosphorIcons }) => [
+        ...BRAND_ICONS,
+        ...phosphorIcons.map((name) => ({ value: name, label: name, icon: `ph--${name}--regular` })),
+      ]),
+    ),
+});
+
+/**
+ * Lays a struct's fields out with the FormLayout DSL, under a name (`'default'` unless one is asked for). Re-exported
+ * here so a package that renders forms need not depend on `@dxos/echo` for the annotation alone; `pairLayout` is the
+ * common case, two fields side by side.
+ */
+export const FormLayoutAnnotation = Annotation.FormLayoutAnnotation;
+export const DEFAULT_LAYOUT_NAME = Annotation.DEFAULT_LAYOUT_NAME;
+
+/** Two fields side by side in one row. */
+export const pairLayout = (first: string, second: string): string =>
+  `<grid cols="2" fixed="true"><field name="${first}"/><field name="${second}"/></grid>`;
+
 /** Marks a field whose value is one of the theme's hues; the form renders the hue picker for it. */
 export const HueAnnotation = createAnnotationHelper<boolean>(HueAnnotationId);
 
@@ -76,3 +124,12 @@ export const HueAnnotation = createAnnotationHelper<boolean>(HueAnnotationId);
  * any other by 0.1 or 0.01, by the size of its current value.
  */
 export const StepAnnotation = createAnnotationHelper<number>(StepAnnotationId);
+
+/** Aligns a number field's figures and places its steppers (see {@link NumberLayout}). */
+export const NumberLayoutAnnotation = createAnnotationHelper<NumberLayout>(NumberLayoutAnnotationId);
+
+/**
+ * Marks a struct of numeric axes as a vector: the form stacks one labelled number input per axis instead of a nested
+ * group. A model schema sets `[VectorAnnotationId]: true` directly, without depending on this package.
+ */
+export const VectorAnnotation = createAnnotationHelper<boolean>(VectorAnnotationId);

@@ -12,10 +12,10 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Script from '@dxos/compute/Script';
 
 import { DeploymentDialog, ScriptProperties, TestContainer } from '#containers';
-import { meta } from '#meta';
 import { Notebook } from '#types';
 
 import { DEPLOYMENT_DIALOG } from '../constants.ts';
+import { ScriptNamespace } from '../namespace.ts';
 import {
   NotebookArticleSurface,
   ScriptArticleSurface,
@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, ScriptNamespace.key),
         component: ScriptSettingsSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),

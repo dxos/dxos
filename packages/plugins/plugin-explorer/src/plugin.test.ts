@@ -7,8 +7,11 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { ExplorerPlugin } from '#plugin';
+import * as ExplorerPlugin from '#meta';
+
+const { meta } = ExplorerPlugin;
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), ExplorerPlugin.make()] });
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
@@ -17,7 +20,7 @@ describe('ExplorerPlugin', () => {
   // can exceed the default 15s under vite-node transform load.
   test('modules activate on the expected events', { timeout: 60_000 }, async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ExplorerPlugin()],
+      plugins: [ClientPlugin.make({}), ExplorerPlugin.make()],
     });
 
     expect(harness.manager.getActive()).toEqual(

@@ -9,12 +9,15 @@ export const AgentProperties: ComponentType<any> = lazy(() => import('./AgentPro
 export const AssistantSettings: ComponentType<any> = lazy(() => import('./AssistantSettings/index.ts'));
 export const ChatCompanion: ComponentType<any> = lazy(() => import('./ChatCompanion/index.ts'));
 export const ChatArticle: ComponentType<any> = lazy(() => import('./ChatArticle/index.ts'));
+export const ChatCard: ComponentType<any> = lazy(() => import('./ChatCard/index.ts'));
 export const ChatDialog: ComponentType<any> = lazy(() => import('./ChatDialog/index.ts'));
 export const IntegrationPrompt: ComponentType<any> = lazy(() => import('./IntegrationPrompt/index.ts'));
 export const PluginPrompt: ComponentType<any> = lazy(() => import('./PluginPrompt/index.ts'));
 export const PluginUrlPrompt: ComponentType<any> = lazy(() => import('./PluginUrlPrompt/index.ts'));
+export const ThreadCard: ComponentType<any> = lazy(() => import('./ThreadCard/index.ts'));
 export const ObjectCardSurface: ComponentType<any> = lazy(() => import('./ObjectCardSurface/index.ts'));
 export const QuestionSurface: ComponentType<any> = lazy(() => import('./QuestionSurface/index.ts'));
+export const SpaceAssistantSettings: ComponentType<any> = lazy(() => import('./SpaceAssistantSettings/index.ts'));
 export const SpaceHomePrompt: ComponentType<any> = lazy(() => import('./SpaceHomePrompt/index.ts'));
 export const SpaceHomeSuggestions: ComponentType<any> = lazy(() => import('./SpaceHomeSuggestions/index.ts'));
 export const TracePanel: ComponentType<any> = lazy(() => import('./TracePanel/index.ts'));

@@ -131,6 +131,41 @@ describe('ECHO flush on exit', () => {
     return { error, notes: await reopened.query(Filter.id(id)).run() };
   };
 
+  // Declares no services: an operation that only edits the object its input names needs none, and the context still
+  // gives it the database the ref is resolved from.
+  const RenamesNote = Operation.make({
+    meta: { key: DXN.make('com.example.operation.renamesNote'), name: 'Renames Note' },
+    input: Schema.Struct({ note: Ref.Ref(Note) }),
+    output: Schema.Void,
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ note }) {
+        const target = yield* Effect.promise(() => note.load());
+        Obj.update(target, (target) => {
+          target.title = 'renamed';
+        });
+      }),
+    ),
+  );
+
+  test('persists edits made by an operation that declares no Database.Service', async ({ expect }) => {
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    db.graph.registry.add([Note]);
+    const note = db.add(Obj.make(Note, { title: 'draft' }));
+    await db.flush();
+
+    await wrapFunctionHandler(RenamesNote, { types: [Note] }).handler({
+      data: { note: { '/': `echo:///${note.id}` } },
+      context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+    });
+
+    const reopened = await peer.openDatabase(db.spaceKey, db.rootUrl, { client: await peer.createClient() });
+    reopened.graph.registry.add([Note]);
+    const [renamed] = await reopened.query(Filter.id(note.id)).run();
+    expect((renamed as { title?: string } | undefined)?.title).toBe('renamed');
+  });
+
   test('persists writes made before Operation.runAgain', async ({ expect }) => {
     const { error, notes } = await runAndReopen(false);
 
@@ -387,6 +422,39 @@ const scheduleWith = async (
  * A live peer with its host services bridged in-process, the way `createFunctionContext` bridges
  * the EDGE bindings — so the runtime builds its own client and graph exactly as the worker does.
  */
+// A bundle's nested call to another plugin's operation sends the objects in its input as references (EDGE-PLUGINS
+// D-71); where the operation's schema takes a live object, the callee loads it.
+describe('object references in the input', () => {
+  const Note = Type.makeObject(DXN.make('com.example.type.note', '0.1.0'))(Schema.Struct({ title: Schema.String }));
+
+  const TakesObject = Operation.make({
+    meta: { key: DXN.make('com.example.operation.takesObject'), name: 'Takes Object' },
+    services: [Database.Service],
+    input: Schema.Struct({ object: Obj.Unknown }),
+    output: Schema.Struct({ title: Schema.String }),
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ object }) {
+        return { title: Obj.instanceOf(Note, object) ? object.title : 'not a note' };
+      }),
+    ),
+  );
+
+  test('loads a referenced object where the schema takes a live one', async ({ expect }) => {
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    db.graph.registry.add([Note]);
+    const note = db.add(Obj.make(Note, { title: 'Referenced' }));
+    await db.flush();
+
+    const result = await wrapFunctionHandler(TakesObject, { types: [Note], resolveObjectReferences: true }).handler({
+      data: { object: { '/': Obj.getURI(note).toString() } },
+      context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+    });
+    expect(result).toEqual({ title: 'Referenced' });
+  });
+});
+
 const openPeer = async () => {
   const builder = new EchoTestBuilder();
   await builder.open();

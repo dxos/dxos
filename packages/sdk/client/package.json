@@ -26,6 +26,11 @@
     }
   },
   "exports": {
+    "./calls": {
+      "source": "./src/calls/index.ts",
+      "types": "./dist/types/src/calls/index.d.ts",
+      "import": "./dist/lib/calls.mjs"
+    },
     "./devtools": {
       "source": "./src/devtools/index.ts",
       "types": "./dist/types/src/devtools/index.d.ts",

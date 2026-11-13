@@ -6,9 +6,9 @@ import { describe, test } from 'vitest';
 
 import { Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { Task } from '@dxos/types';
+import { Milestone, Task } from '@dxos/types';
 
-import { filterTasks } from './task-filter.ts';
+import { filterTasks, withinScope } from './task-filter.ts';
 
 const tagUrgent = Tag.make({ label: 'urgent' });
 const tagLater = Tag.make({ label: 'later' });
@@ -30,7 +30,7 @@ const makeTask = (
   if (tagged.length > 0) {
     Obj.update(task, (task) => {
       for (const tag of tagged) {
-        Obj.addTag(task, Ref.make(tag));
+        Obj.addTag(task, tag);
       }
     });
   }
@@ -155,5 +155,32 @@ describe('filterTasks', () => {
     const child = makeTask({ title: 'Child', status: 'started', parent: absent });
     const kept = filterTasks([child], { statuses: new Set<Task.Status>(['started']) });
     expect(kept.map(({ title }) => title)).to.deep.eq(['Child']);
+  });
+
+  test('a milestone keeps the tasks under it, inherited, and the ancestors of a match', ({ expect }) => {
+    const beta = Milestone.make({ name: 'Beta' });
+    const launch = Milestone.make({ name: 'Launch' });
+    const parent = makeTask({ title: 'Parent' });
+    const scheduled = makeTask({ title: 'Scheduled', milestone: Ref.make(beta), parent });
+    const inherited = makeTask({ title: 'Inherited', parent: scheduled });
+    const other = makeTask({ title: 'Other', milestone: Ref.make(launch) });
+    const backlog = makeTask({ title: 'Backlog' });
+    const kept = filterTasks([parent, scheduled, inherited, other, backlog], { milestone: beta.id });
+    expect(kept.map(({ title }) => title)).to.deep.eq(['Parent', 'Scheduled', 'Inherited']);
+  });
+});
+
+describe('withinScope', () => {
+  test('keeps the scoped tasks and everything filed under them, in order', ({ expect }) => {
+    const parent = makeTask({ title: 'Parent' });
+    const child = makeTask({ title: 'Child', parent });
+    const grandchild = makeTask({ title: 'Grandchild', parent: child });
+    const other = makeTask({ title: 'Other' });
+    const kept = withinScope([parent, child, grandchild, other], new Set([child.id]));
+    expect(kept.map(({ title }) => title)).to.deep.eq(['Child', 'Grandchild']);
+  });
+
+  test('an empty scope keeps nothing', ({ expect }) => {
+    expect(withinScope([makeTask({ title: 'Task' })], new Set())).to.deep.eq([]);
   });
 });

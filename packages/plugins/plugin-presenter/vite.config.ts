@@ -7,23 +7,28 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    PresenterPlugin: 'src/PresenterPlugin.ts',
-    plugin: 'src/plugin.tsx',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     deck: 'src/deck/index.ts',
-    meta: 'src/meta.ts',
+    markdown: 'src/markdown/index.ts',
     operations: 'src/operations/index.ts',
+    skills: 'src/skills/index.ts',
     translations: 'src/translations.ts',
     testing: 'src/testing/index.ts',
     Presentation: 'src/types/Presentation.ts',
+    PresenterCapabilities: 'src/types/PresenterCapabilities.ts',
     PresenterEvents: 'src/types/PresenterEvents.ts',
     PresenterOperation: 'src/types/PresenterOperation.ts',
+    PresenterSettings: 'src/types/PresenterSettings.ts',
+    PresenterSurface: 'src/types/PresenterSurface.ts',
+    SlideEditorViewState: 'src/types/SlideEditorViewState.ts',
+    SlideTheme: 'src/types/SlideTheme.ts',
     SlideViewState: 'src/types/SlideViewState.ts',
     hooks: 'src/hooks/index.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  // Clears `GenerateImage`'s own waits (a scripted turn up to 30s, then four 10s checks), so a slow run fails on the
+  // wait that names what is missing rather than on the default 15s test timeout.
+  test: { node: true, storybook: { timeout: 90_000 }, workerd: true },
 });

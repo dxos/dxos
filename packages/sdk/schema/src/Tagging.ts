@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Database, Obj, Ref, type Tag } from '@dxos/echo';
+import { type Database, Obj, type Ref, Tag } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
 
 import * as TagIndex from './TagIndex.ts';
@@ -13,13 +13,13 @@ import * as TagIndex from './TagIndex.ts';
  * Unified tag handling for objects whether their tags live on the object (mutable database objects)
  * or alongside it (immutable feed/queue objects).
  *
- * - Mutable database objects track their tags in `Obj.getMeta(obj).tags` (an array of `Ref<Tag>`).
+ * - Mutable database objects track their tags in `Obj.getMeta(obj).tags` (an array of {@link Tag} objects).
  * - Immutable feed objects can't carry their own meta, so their tags live in a {@link TagIndex}
  *   object referenced from a host; pass that index via {@link Options.index}.
  *
  * Either way the tag id is an existing {@link Tag} object's id/URI, so the same tag applies across
  * mutable and immutable objects and its label is resolved (and edited) in one place. This API works
- * in terms of those URI tag ids; on the mutable path it converts to/from the stored `Ref<Tag>`.
+ * in terms of those URI tag ids; on the mutable path it converts to/from the {@link Tag} objects in meta.
  */
 export interface Options {
   /** Tag index holding tags for the (immutable) object. Omit for mutable objects. */
@@ -32,7 +32,22 @@ export const get = (object: Obj.Any | Obj.Snapshot<Obj.Any>, { index }: Options 
     return TagIndex.bind(index).tags(object.id);
   }
 
-  return Obj.getMeta(object).tags.map((tag) => tag.uri);
+  return Obj.getMeta(object).tags.map((tag) => Obj.getURI(tag));
+};
+
+/** The entity id a tag id (URI) names, so local and space-qualified forms compare alike. */
+const tagEntityId = (tagId: string): string => {
+  const eid = EID.tryParse(tagId);
+  return (eid && EID.getEntityId(eid)) || tagId;
+};
+
+/** The {@link Tag} object a tag id names, from the database the object lives in. */
+const lookupTag = (object: Obj.Any, tagId: string): Tag.Tag => {
+  const tag = Obj.getDatabase(object)?.getObjectById(tagEntityId(tagId));
+  if (!Obj.instanceOf(Tag.Tag, tag)) {
+    throw new TypeError(`tag not found in the object's database: ${tagId}`);
+  }
+  return tag;
 };
 
 /** Applies a tag (by id/URI) to an object (idempotent). */
@@ -46,15 +61,8 @@ export const set = (object: Obj.Any | Obj.Snapshot<Obj.Any>, tagId: string, { in
   if (Obj.isSnapshot(object)) {
     throw new TypeError('tagging without an index requires a live object');
   }
-  // Stored tag refs are canonical EIDs (read-time upgrade normalizes legacy DXN ids); normalize the
-  // incoming id the same way so dedupe compares like-for-like.
-  const id = EID.tryParse(tagId) ?? tagId;
-  Obj.update(object, (object) => {
-    const meta = Obj.getMeta(object);
-    if (!meta.tags.some((tag) => tag.uri === id)) {
-      meta.tags.push(Ref.fromURI(URI.make(id)));
-    }
-  });
+  const tag = lookupTag(object, tagId);
+  Obj.update(object, (object) => Obj.addTag(object, tag));
 };
 
 /**
@@ -84,11 +92,11 @@ export const unset = (object: Obj.Any | Obj.Snapshot<Obj.Any>, tagId: string, { 
   if (Obj.isSnapshot(object)) {
     throw new TypeError('tagging without an index requires a live object');
   }
-  const id = EID.tryParse(tagId) ?? tagId;
+  const id = tagEntityId(tagId);
   Obj.update(object, (object) => {
     const meta = Obj.getMeta(object);
     for (let i = meta.tags.length - 1; i >= 0; i--) {
-      if (meta.tags[i].uri === id) {
+      if (meta.tags[i].id === id) {
         meta.tags.splice(i, 1);
       }
     }

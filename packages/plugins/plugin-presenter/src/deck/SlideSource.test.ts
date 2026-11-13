@@ -26,49 +26,54 @@ describe('toSlideSources', () => {
 
   const setup = async () => {
     const { db } = await builder.createDatabase({
-      types: [Presentation.Presentation, Text.Text, Markdown.Document, Collection.Collection],
+      types: [Presentation.Presentation, Presentation.Slide, Text.Text, Markdown.Document, Collection.Collection],
     });
     return { db };
   };
 
-  test('owned text, linked document and unresolved ref', async ({ expect }) => {
+  const resolve = async (presentation: Presentation.Presentation) =>
+    Promise.all(
+      presentation.slides.map(async (ref) => {
+        const slide = await ref.load();
+        return { id: slide.id, slide, content: await slide.content.load() };
+      }),
+    );
+
+  test('owned text and linked document', async ({ expect }) => {
     const { db } = await setup();
     const presentation = db.add(Presentation.make({ slides: ['a'] }));
     const doc = db.add(Markdown.make({ content: 'x' }));
     Presentation.link(presentation, doc);
     await db.flush({ indexes: true });
-    const text = await presentation.sections[0].load();
-    const sources = toSlideSources(presentation, [text, doc]);
+    const resolved = await resolve(presentation);
+    const sources = toSlideSources(resolved);
     expect(sources.length).toBe(2);
-    expect(sources[0]).toMatchObject({ kind: 'text', id: text.id });
-    expect(sources[1]).toMatchObject({ kind: 'object', id: doc.id });
+    expect(sources[0]).toMatchObject({ kind: 'text', id: resolved[0].slide.id });
+    expect(sources[1]).toMatchObject({ kind: 'object', id: resolved[1].slide.id, object: doc });
   });
 
-  test('unresolved targets are pending and keep length', async ({ expect }) => {
+  test('a slide or content not loaded yet is pending and keeps its place', async ({ expect }) => {
     const { db } = await setup();
     const presentation = db.add(Presentation.make({ slides: ['a', 'b'] }));
     await db.flush({ indexes: true });
-    const first = await presentation.sections[0].load();
-    const sources = toSlideSources(presentation, [undefined, undefined]);
+    const [first, second] = await resolve(presentation);
+    const sources = toSlideSources([{ id: first.id }, { id: second.id, slide: second.slide }]);
     expect(sources.map((source) => source.kind)).toEqual(['pending', 'pending']);
     expect(sources[0].id).toBe(first.id);
   });
 
-  test('deleted targets are omitted', async ({ expect }) => {
+  test('a slide whose content was deleted is omitted', async ({ expect }) => {
     const { db } = await setup();
     const presentation = db.add(Presentation.make({ slides: ['a'] }));
     const doc = db.add(Markdown.make({ content: 'x' }));
     Presentation.link(presentation, doc);
     await db.flush({ indexes: true });
-    const text = await presentation.sections[0].load();
+    const resolved = await resolve(presentation);
     db.remove(doc);
-    const sources = toSlideSources(presentation, [text, doc]);
-    expect(sources.map((source) => source.id)).toEqual([text.id]);
+    expect(toSlideSources(resolved).map((source) => source.id)).toEqual([resolved[0].id]);
   });
 
-  test('empty presentation', async ({ expect }) => {
-    const { db } = await setup();
-    const presentation = db.add(Presentation.make());
-    expect(toSlideSources(presentation, [])).toEqual([]);
+  test('empty presentation', ({ expect }) => {
+    expect(toSlideSources([])).toEqual([]);
   });
 });

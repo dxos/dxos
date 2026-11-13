@@ -14,8 +14,8 @@ import { Dashboard } from '@dxos/react-ui-dashboard';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { SPACE_STATS_QUERY, countObjects, countTypenames } from '#dashboard';
-import { meta } from '#meta';
 
+import { SpaceNamespace } from '../../namespace.ts';
 import { HOURLY_ACTIVITY_QUERY, toActivity } from './activity.ts';
 
 const STAT_IDS = ['objects', 'types', 'collections', 'members', 'active-days', 'plugins'] as const;
@@ -32,7 +32,7 @@ type SpaceHomeDashboardProps = {
 const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
 
 export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
   const members = useMembers(space?.key);
 
   const manager = PluginManagerProvider.usePluginManager();

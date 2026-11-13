@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { type SourceKey, type Verdict, formatSourceKey, parseSourceKey, walkthroughOf } from '@dxos/deus/review';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -12,19 +13,10 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-import { type SourceKey, formatSourceKey, parseSourceKey } from '#sync';
-
-import { STATUS_STYLE, type Verdict, type VerdictStatus } from '../SpecModel/index.ts';
-
-/** Status icon colours, matching the review chips in the editor's margin. */
-const STATUS_TEXT: Record<VerdictStatus, string> = {
-  done: 'text-success-text',
-  untested: 'text-info-text',
-  partial: 'text-warning-text',
-  diverged: 'text-orange-text',
-  missing: 'text-error-text',
-};
+import { CodeNamespace } from '../../namespace.ts';
+import { type SourceReader } from '../SpecEditor/snippet-card.ts';
+import { STATUS_STYLE } from '../SpecModel/index.ts';
+import { Walkthrough } from './Walkthrough.tsx';
 
 export type VerdictCardProps = {
   verdict: Verdict;
@@ -34,6 +26,8 @@ export type VerdictCardProps = {
   onOpenCode?: (key: SourceKey) => void;
   /** The verdict the host has made current; Card.Root owns `aria-current`, so the host's attribute would be lost. */
   current?: boolean;
+  /** The checkout's text of a file, for the walkthrough the current card expands to. */
+  read?: SourceReader;
 };
 
 /**
@@ -42,14 +36,17 @@ export type VerdictCardProps = {
  * host's tile, so the card is `asChild`-friendly.
  */
 export const VerdictCard = Util.composable<HTMLDivElement, VerdictCardProps>(
-  ({ verdict, onReveal, onOpenCode, current, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
-    const { id, status, summary, note, evidence } = verdict;
+  ({ verdict, onReveal, onOpenCode, current, read, ...props }, forwardedRef) => {
+    const { t } = Hooks.useTranslation(CodeNamespace.key);
+    const { id, status, summary, note, evidence, review } = verdict;
     const keys = evidence.map(parseSourceKey).filter((key) => key !== undefined);
     const style = STATUS_STYLE[status];
+    // Expanded only on the current card, so the list stays scannable.
+    const steps = current ? walkthroughOf(verdict) : undefined;
     return (
       <Card.Root
         {...props}
+        grid
         selected={current}
         data-testid='verdict-card'
         data-verdict={id}
@@ -58,7 +55,7 @@ export const VerdictCard = Util.composable<HTMLDivElement, VerdictCardProps>(
       >
         <Card.Header>
           <Layout.Block rail='start'>
-            <Icon.Icon icon={style.icon} classNames={STATUS_TEXT[status]} />
+            <Icon.Icon icon={style.icon} classNames={style.text} />
           </Layout.Block>
           <Card.Title truncate classNames='font-mono'>
             {id}
@@ -99,15 +96,25 @@ export const VerdictCard = Util.composable<HTMLDivElement, VerdictCardProps>(
           )}
           {note && (
             <Card.Row>
-              <Card.Text lines={4} variant='muted'>
+              <Card.Text lines={current ? undefined : 4} variant='muted'>
                 {note}
               </Card.Text>
+            </Card.Row>
+          )}
+          {steps && (
+            <Card.Row>
+              <Walkthrough steps={steps} read={read} onOpenCode={onOpenCode} />
             </Card.Row>
           )}
           <Card.Row>
             <Layout.Flex wrap gap='xs'>
               <Tag.Tag hue={style.hue}>{style.label}</Tag.Tag>
               {keys.length > 0 && <Tag.Tag>{t('verdict-card.evidence.label', { count: keys.length })}</Tag.Tag>}
+              {review && (
+                <Tag.Tag title={review.commit} data-testid='verdict-card.review'>
+                  {[review.date, review.commit?.slice(0, 7)].filter(Boolean).join(' · ')}
+                </Tag.Tag>
+              )}
             </Layout.Flex>
           </Card.Row>
         </Card.Body>

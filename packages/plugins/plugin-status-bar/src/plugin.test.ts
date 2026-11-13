@@ -6,15 +6,18 @@ import { describe, test } from 'vitest';
 
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { StatusBarPlugin } from '#plugin';
+import * as StatusBarPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { StatusBarNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [StatusBarPlugin.make()] });
+
+const moduleId = (name: string) => `${StatusBarNamespace.key}.module.${name}`;
 
 describe('StatusBarPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [StatusBarPlugin()],
+      plugins: [StatusBarPlugin.make()],
     });
 
     // ReactSurface is role-gated (SurfacesRequested) and parks until one of its roles renders.

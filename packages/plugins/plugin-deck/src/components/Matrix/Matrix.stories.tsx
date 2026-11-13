@@ -28,8 +28,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
-import { DeckState, OperationHandler } from '#capabilities';
-import { meta as pluginMeta } from '#meta';
+import DeckConfig, { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import type { DeckCapabilities } from '#types';
 
@@ -39,8 +38,8 @@ import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix.ts
 random.seed(123);
 
 const TestPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(pluginMeta).pipe(
-  Plugin.addModule(DeckState),
-  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Plugin.getModule(DeckConfig, 'DeckState')),
+  Plugin.addModule(Plugin.getModule(DeckConfig, 'OperationHandler')),
   Plugin.make,
 );
 

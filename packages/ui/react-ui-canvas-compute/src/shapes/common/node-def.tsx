@@ -13,15 +13,13 @@ import React, { type ComponentType, type FC } from 'react';
 import {
   type CreateProps,
   DEFAULT_CELL,
-  type Node,
   type NodeDef,
   type NodeViewProps,
-  type Port,
-  type Size,
   UnknownNodeView,
   nodeDef,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
+import { type Node, type Port, type Size } from '@dxos/scene';
 
 import { ComputeNodeDefContext, useComputeContext } from '../../hooks/compute-context.ts';
 import { useControllerUpdates } from '../../hooks/useControllerUpdates.ts';
@@ -84,6 +82,8 @@ const computeNodeView = <S extends ComputeShape>(
   Component: FC<ComputeNodeViewProps<S>>,
 ): ComponentType<NodeViewProps> => {
   const View = (props: NodeViewProps) => {
+    // The compiler would cache the shape's element on its unchanged props, so a controller update never reached it.
+    'use no memo';
     const { node, registry } = props;
     const { controller } = useComputeContext();
     useControllerUpdates(controller);
@@ -92,7 +92,8 @@ const computeNodeView = <S extends ComputeShape>(
     }
     // A shape with no compute node behind it (the ghost of a create or palette drag, or one whose node a delete or a
     // peer removed first) has no runtime state to read, so it shows what it is rather than mounting the live component.
-    if (!node.node || !controller.graph.findNode(node.node)) {
+    const computeId = node.data?.node;
+    if (!computeId || !controller.graph.findNode(computeId)) {
       const def = nodeDef(registry, node);
       return (
         <div className='dx-cover flex flex-col items-center justify-center gap-1 text-fg-muted'>

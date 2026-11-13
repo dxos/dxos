@@ -1,0 +1,13 @@
+---
+spec: github:dxos/dxos/packages/reflect/deus/src/cli/__fixtures__/review/plugin-deps-mismatch/PLUGIN.mdl
+commit: 0000000000000000000000000000000000000000
+date: 2026-10-27
+by: agent:claude-code
+---
+
+```mdl
+verdict SamplePlugin: Sample
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/review.ts#checkReview]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+```

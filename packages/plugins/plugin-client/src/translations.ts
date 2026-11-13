@@ -5,13 +5,13 @@
 import type * as Theme from '@dxos/react-ui/Theme';
 import { translations as shellTranslations } from '@dxos/shell/translations';
 
-import { meta } from '#meta';
+import { ClientNamespace } from './namespace.ts';
 
 // TODO(burdon): Disambiguate with sdk/shell
 const pluginTranslations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [ClientNamespace.key]: {
         'account.label': 'User profile',
         'profile.label': 'Profile',
         'profile.description': 'User profile and account settings.',
@@ -113,6 +113,14 @@ const pluginTranslations = [
           'The color used to represent you in the app, including as your avatar’s background, your cursor as it appears to others, and the messages you send in group threads.',
         'did.label': 'DID',
         'did.description': 'Your unique ID.',
+        'identity-controls.label': 'Identity controls',
+        'migrate-identity-root.title': 'Credential storage',
+        'migrate-identity-root.description':
+          'Move your identity’s device credentials off the legacy hypercore feed onto an Automerge document. EDGE performs the migration; your other devices adopt it when they next open.',
+        'migrate-identity-root.label': 'Migrate',
+        'migrate-identity-root.pending.label': 'Migrating…',
+        'migrate-identity-root.migrated.label': 'Migrated',
+        'migrate-identity-root-failed.message': 'Identity migration failed.',
         'open-user-account.label': 'Open user account',
         'manage-credentials-dialog.title': 'Manage Account Recovery',
         'credentials-list.label': 'Recovery credentials',

@@ -14,9 +14,8 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
 import { useChatReportContext } from '../../components/Chat/context.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 
 const PLUGIN_URL_PROMPT_NAME = 'PluginUrlPrompt';
 
@@ -33,7 +32,7 @@ export type PluginUrlPromptProps = {
  * button here is the only path that loads it.
  */
 export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_URL_PROMPT_NAME);
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -77,7 +76,7 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
       gap='sm'
       // Inline-size containment: rendered as a CodeMirror widget, whose line sizes to its widest child, the card
       // otherwise grows to the URL's unwrapped width and pushes its Load button out of the chat.
-      classNames='my-2 p-3 border border-separator-subtle rounded-sm [contain:inline-size]'
+      classNames='my-2 p-trim-md border border-separator-subtle rounded-sm [contain:inline-size]'
       data-testid='assistant.pluginUrlPrompt'
     >
       <Layout.Flex gap='sm' align='center'>

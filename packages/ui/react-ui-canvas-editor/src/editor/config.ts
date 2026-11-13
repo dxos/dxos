@@ -1,0 +1,255 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
+import { type ComponentType, type PropsWithChildren, type ReactNode } from 'react';
+
+import {
+  type ActiveTool,
+  type BackgroundGrid,
+  type CanvasShellProps,
+  type ConstrainIntent,
+  type FaceSelection,
+  type SceneMenuCommand,
+  type ThemeMode,
+  type ThemeRegistry,
+} from '@dxos/react-ui-canvas';
+import { type Fragment, type Layer, type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
+
+import { type InspectorSectionDef, type ObjectEntry } from '../components/index.ts';
+import { type EditorDocument, type EditorNavigation, type EditorSelection, type EditorTools } from './aspects/index.ts';
+import { type MenuAnchor } from './store.ts';
+import { type AnimatableFields } from './timeline.ts';
+
+/** What a tool does, which decides its rail group and whether a locked editor keeps it. */
+export type ToolCategory = 'select' | 'transform' | 'create';
+
+/**
+ * A tool on the rail. `kind` is the element type a create tool makes; `key` the shortcut that picks it; `group` names
+ * its rail group when the category's own does not (2D's further node groups).
+ */
+export type ToolDef = {
+  id: string;
+  icon: string;
+  label: string;
+  category: ToolCategory;
+  kind?: string;
+  key?: string;
+  group?: string;
+  /** Adjacent tools of a group naming the same fold share one flyout button (e.g. the link types). */
+  fold?: string;
+  /** The tool draws its element point by point or in a stroke, so it has no shape to drag onto the canvas. */
+  drawn?: boolean;
+};
+
+/** Moving, measuring and snapping elements, in the dimension's units. */
+export type GeometryOps = {
+  /** How far the `pasted`th paste lands from its copy: a grid step along each ground axis per paste. */
+  pasteOffset: (pasted: number) => { x: number; y: number; z?: number };
+  /** The steps snapping moves, turns and scales by. */
+  snap: { move: number; rotate?: number; scale?: number };
+};
+
+/** The camera bar's maths over the camera of a dimension whose viewport does not move its own (3D). */
+export type CameraOps<C> = {
+  /** The camera framing the open layout's elements in a viewport of `size`. */
+  fit: (camera: C, document: Scene.SceneDocument, layout: string, size: { width: number; height: number }) => C;
+  /** Actual size: the authored camera's scale and view, moved so the open layout's elements sit in the middle. */
+  reset: (authored: C, document: Scene.SceneDocument, layout: string, size: { width: number; height: number }) => C;
+  /** The camera `factor` closer (below 1) or further (above 1), about the centre of a viewport of `size`. */
+  zoom: (camera: C, factor: number, size: { width: number; height: number }) => C;
+  /** The zoom as a percentage of the authored camera's. */
+  percent: (camera: C, authored: C) => number;
+};
+
+/** What the display panel offers: the looks (default style catalogs), grid kinds and the 2D-only guides. */
+export type DisplayOptions = {
+  /** Each look by id and name; with a `mode`, it holds that mode whatever the app's. */
+  themes: readonly { id: string; label: string; mode?: ThemeMode }[];
+  /** The looks as a theme registry, which the picker draws as swatches (2D's canvas themes). */
+  registry?: ThemeRegistry;
+  grids: readonly Exclude<BackgroundGrid, 'none'>[];
+  guides: boolean;
+};
+
+/** What the Properties section gives its form: the one selected element, and where its edits go. */
+export type PropertyFormProps = {
+  element: Scene.Element2D | Scene.Element3D;
+  readonly: boolean;
+  onIntents: (intents: LayoutIntent[]) => void;
+};
+
+/** A dimension's own inspector section, stacked with the shared ones. */
+export type SectionDef = { section: InspectorSectionDef; render: () => ReactNode };
+
+/** A command only one dimension offers (3D join, subtract, import mesh, export STL). */
+export type ExtraCommandDef = {
+  /** `import` is offered by the Objects section's import button rather than the actions bar. */
+  id: string;
+  label: string;
+  icon: string;
+  enabled: (state: { selection: readonly string[]; readonly: boolean }) => boolean;
+  run: (context: ExtraCommandContext) => void | Promise<void>;
+};
+
+/** What an extra command may do: read the open layout and selection, and edit through intents. */
+export type ExtraCommandContext = {
+  document: Scene.SceneDocument;
+  layout: string;
+  selection: readonly string[];
+  onIntent: (layout: string, intent: LayoutIntent) => void;
+  /** Writes a model edit as one undo step; returns its problems. */
+  onModelIntent: (intent: ModelIntent) => readonly string[];
+  select: (ids: readonly string[]) => void;
+  setTool: (tool: ActiveTool) => void;
+  notify: (message: string | undefined) => void;
+};
+
+/** The `.dx` text a copy writes and a paste reads, lifted or flattened into the dimension pasted into. */
+export type ClipboardCodec = {
+  write: (document: Scene.SceneDocument, layout: Scene.LayoutRecord, fragment: Fragment) => string;
+  read: (text: string, dim: Scene.Dimension) => Fragment | undefined;
+};
+
+/** What the editor gives a dimension to build its aspects over: the document and the host's camera. */
+export type DimensionContext<C> = {
+  registry: Registry.AtomRegistry;
+  document: EditorDocument;
+  /** This viewer's camera as the host stores it, the scene's authored one, and where a settled camera is reported. */
+  camera: { host: Atom.Atom<C | undefined>; authored: Atom.Atom<C | undefined>; report: (camera: C) => void };
+  /** Shows a gesture's edit without writing it; undefined drops it. */
+  preview: (layout: string | undefined, intent?: LayoutIntent) => void;
+  setMenu: (menu: MenuAnchor | undefined) => void;
+};
+
+/** A command a dimension's engine offers beside the shared ones (2D: auto layout, debug), its state as atoms. */
+export type DimensionCommand = {
+  id: string;
+  label: string;
+  icon: string;
+  enabled: Atom.Atom<boolean>;
+  /** A toggle's state; unset, the command is a plain action. */
+  pressed?: Atom.Atom<boolean>;
+  run: () => void;
+};
+
+/**
+ * The viewing aids as the dimension's engine draws them, which its own keys toggle too, so the display panel shows what is
+ * drawn; and whether the open layout is a lattice, whose cells are its grid and its guides.
+ */
+export type DimensionAids = {
+  snap: Atom.Writable<boolean>;
+  guides: Atom.Writable<boolean>;
+  axes: Atom.Writable<boolean>;
+  lattice: Atom.Atom<boolean>;
+};
+
+/** A shared command the dimension's engine runs itself, with its own enabled state. */
+export type EngineEdit = Pick<DimensionCommand, 'enabled' | 'run'>;
+
+/** Layers the engine keeps where no edit of them reaches the document (the standalone 2D editor's). */
+export type DimensionLayers = {
+  layers: Atom.Atom<readonly Layer[]>;
+  write: (next: readonly Layer[]) => void;
+  merge: (ids: readonly string[], into: string) => void;
+};
+
+/** Objects the engine keeps where the model hears none of its edits (the standalone 2D editor's composites). */
+export type DimensionObjects = {
+  objects: Atom.Atom<readonly ObjectEntry[]>;
+  /** The object open in isolation, or the one the selected instance draws. */
+  selected: Atom.Atom<string | undefined>;
+  select: (id: string) => void;
+  rename: (id: string, name: string) => void;
+  duplicate: (id: string) => void;
+  place: (id: string) => void;
+  remove: (id: string, instances: boolean) => void;
+};
+
+/** What the shared inspectors take from the dimension's engine rather than from the document. */
+export type DimensionInspector = {
+  /** The layer new shapes go on, which the top-most picked layer sets. */
+  activeLayer?: Atom.Writable<string | undefined>;
+  layers?: DimensionLayers;
+  objects?: DimensionObjects;
+  /** An object drawn small for its row. */
+  thumbnail?: (id: string) => ReactNode;
+  /** Commands on the selection at the start of the inspector panel's toolbar, after group and ungroup. */
+  selectionCommands?: readonly DimensionCommand[];
+};
+
+/**
+ * A dimension's aspects for one editor (COMMON-CORE Expectation 0): the shared hooks read them, so each dimension
+ * supplies its own navigation, selection and tools behind the same parts.
+ */
+export type Dimension = {
+  navigation: EditorNavigation;
+  selection: EditorSelection;
+  tools: EditorTools;
+  /**
+   * Holds the dimension's engine round all the editor's parts, so each can read it; inside `Frame` (the inspector
+   * panel's) while it edits.
+   */
+  Root: ComponentType<PropsWithChildren<{ Frame?: ComponentType<CanvasShellProps> }>>;
+  /** The scene drawn, with the floating panels over it. */
+  Viewport: ComponentType<PropsWithChildren>;
+  /** False when the dimension's engine takes the chorded shortcuts itself, with its own undo and clipboard. */
+  shortcuts?: boolean;
+  /** The dimension's own commands, after the shared ones in the actions bar. */
+  commands?: readonly DimensionCommand[];
+  /**
+   * The shared commands the engine runs for a host that gives no history or codec (a standalone 2D editor's undo,
+   * clipboard and grouping), so every surface of the command table shows the engine's state.
+   */
+  edits?: Partial<Record<SceneMenuCommand, EngineEdit>>;
+  /** The aids as the engine draws them; without them the display panel shows the host's display. */
+  aids?: DimensionAids;
+  inspector?: DimensionInspector;
+};
+
+/**
+ * Everything that differs between the 2D and 3D editors; the rest of `SceneEditor` (panels, inspectors, commands,
+ * history, clipboard, lock, roles) is shared.
+ */
+type LibraryObject = Scene.Object2D | Scene.Object3D;
+
+/** An object a host offers from its library: picked, it joins the model (once) and the place tool arms for it. */
+export type LibraryItem = {
+  id: string;
+  label: string;
+  icon?: string;
+  /**
+   * The object to define, made on the first pick (a promise where its asset loads then); undefined when it cannot be
+   * made, e.g. its asset is missing.
+   */
+  make: () => LibraryObject | undefined | Promise<LibraryObject | undefined>;
+};
+
+export type DimensionConfig<C = unknown> = {
+  dim: Scene.Dimension;
+  /** Builds the dimension's aspects for one editor, once. */
+  create: (context: DimensionContext<C>) => Dimension;
+  tools: readonly ToolDef[];
+  /** Each element type's icon by type name, which the Views tree draws a row with; the rail's tools are the same icons. */
+  icons?: Readonly<Record<string, string>>;
+  /** The host's library, offered as a tool at the end of the rail's create group while it holds any. */
+  library?: readonly LibraryItem[];
+  /** What dragging a rail tool onto the viewport drops (2D: a node of the tool's type); undefined, the tool does not drag. */
+  toolDragData?: (tool: ToolDef) => Record<string, unknown> | undefined;
+  geometry: GeometryOps;
+  display: DisplayOptions;
+  /** The form over one selected element; `createPropertyForm` builds it from a schema. */
+  propertyForm: ComponentType<PropertyFormProps>;
+  /** The form edits a whole selection (values the elements share, mixed where they differ), not only one element. */
+  propertyFormSelection?: boolean;
+  /** A line over the properties form (3D: the selected face). */
+  propertyInfo?: (state: { face?: FaceSelection }) => ReactNode;
+  sections?: readonly SectionDef[];
+  /** The element fields the Timeline panel keys (`placementFields` when unset). */
+  animatable?: AnimatableFields;
+  commands?: readonly ExtraCommandDef[];
+  /** The layout's mode, between every edit and its write (2D's lattice, dynamic). */
+  constrain?: ConstrainIntent;
+};

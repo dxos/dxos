@@ -1,0 +1,77 @@
+---
+title: Recover an identity
+description: Make a recovery code, and get Alice's identity back on a new laptop.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
+
+By the end of this page Alice has a recovery code, and with it gets her name, spaces and contacts back on a new laptop.
+
+<Aside type="caution">
+  Recovery needs a DXOS account. EDGE stores recovery credentials only for identities linked to an account, and for now
+  you can create an account only through [Composer](https://composer.space).
+</Aside>
+
+## Background
+
+If every device is lost, the identity is lost with them, unless it has a recovery credential: a key kept outside every
+device. A recovery code is one such key, written as twelve words. Making it adds the key to the identity's group as a
+member, the same way a device is added, so the key can admit a new device later.
+
+Recovery goes through EDGE. The new device asks EDGE for a challenge, signs it with the key derived from the words, and
+EDGE checks the signature against the identity's recovery credentials before it admits the device. The new device is a
+new member of the same identity, with the same DID, and syncs its spaces from EDGE and from anyone online.
+
+HALO shows a recovery code once and keeps only its public half, and it will not revoke the last code you have: make the
+new one first. A passkey works the same way; see [Passkey recovery](/docs/halo/guides/passkey-recovery/).
+
+## Steps
+
+<Steps>
+
+1. **Make a recovery code.** `Identity.createRecoveryCredential` makes the key, adds it to the identity, and returns the
+   words. **Make a recovery code** on the Recovery tab calls this.
+
+   <Snippet file="halo-tutorial/app/Recovery" region="create" lang="tsx" />
+
+2. **List your codes.** `useCredentials` returns the identity's credentials and re-renders when one is written. It
+   follows `Identity.credentials`. A recovery credential carries
+   its kind, a label, the date it was made, a lookup key and whether it was revoked. The Recovery tab lists the ones still
+   active.
+
+   <Snippet file="halo-tutorial/app/Recovery" region="list" lang="tsx" />
+
+3. **Revoke a code.** `Identity.revokeRecoveryCredential` takes the lookup key. Revoke a code you think someone has seen.
+
+   <Snippet file="halo-tutorial/app/Recovery" region="revoke" lang="tsx" />
+
+4. **Recover on a new device.** On a device with no identity, `Identity.recover` takes the words and gets the identity
+   back. **Recover with a code** calls this.
+
+   <Snippet file="halo-tutorial/app/Welcome" region="recover" lang="tsx" />
+
+</Steps>
+
+## Try it
+
+Open **Recovery** on Alice's laptop and make a code. Make a second one, then revoke the first. Try revoking the last one
+too, and HALO refuses.
+
+<HaloEmbed stage="recovery" scene="laptop" />
+
+<Aside>
+  The devices on these pages run in your browser with no network, and recovering needs EDGE. To recover, fork the
+  finished app on StackBlitz, which runs on the real network: make a code there, then open the project in a private
+  window, choose **Recover with a code** and enter the words.
+</Aside>
+
+<StackBlitzButton project="halo" kind="complete" label="Fork on StackBlitz" file="src/app/Recovery.tsx" />
+
+## What you can do now
+
+You can make and revoke recovery codes, and recover an identity on a new device. That is the whole contact book. From
+here, [Core concepts](/docs/halo/concepts/identities-devices/) explains the model behind it, and the
+[API](/docs/halo/api/identity/) pages cover the rest of `@dxos/halo`.

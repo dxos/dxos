@@ -3,14 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AiContext } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 
 import { AssistantOperation } from '#types';
 
@@ -18,15 +19,16 @@ import { bindChatDefaults, contributesPluginManager } from '../util/default-skil
 
 const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, instructions }) {
-      const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    Effect.fnUntraced(function* ({ name, instructions, feed: feedProp }) {
+      // Optional: EDGE hosts contribute no atom registry, and the binder then makes its own.
+      const registry = Option.getOrUndefined(yield* Capability.getOption(Capabilities.AtomRegistry));
       const { db } = yield* Database.Service;
 
       // The chat is left for the caller to add (`SpaceOperation.AddObject`); the feed is added here only
       // because the default bindings below are written immediately, and `Feed.query` asserts a stored feed.
       // TODO(wittjosiah): Defer binding until the caller has added the chat, so the feed can stay in
       //  memory too — nothing needs to write to a feed before its chat is in the database.
-      const feed = db.add(Feed.make());
+      const feed = feedProp ?? db.add(TrajectoryStore.makeFeed());
       const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
 
       const pluginManager = contributesPluginManager(yield* Capability.getAll(AppCapabilities.SkillDefinition));

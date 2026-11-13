@@ -1,3 +1,4 @@
+// Depth-of-field points: round sprites that fade with their distance.
 uniform vec3 uColor;
 uniform float uOpacity;
 varying float vDistance;

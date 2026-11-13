@@ -20,7 +20,9 @@ import { DXN } from '@dxos/keys';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { RoutinePlugin } from '#plugin';
+import * as RoutinePlugin from '#meta';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), RoutinePlugin.make()] });
 
 /** A port fetch refuses outright, so the client's own EDGE probes fail locally and the tests need no network. */
 const EDGE_URL = 'http://127.0.0.1:1';
@@ -48,7 +50,7 @@ const EchoPlugin = Plugin.define({ profile: { key: 'com.example.plugin.echo', na
 
 const createApp = (config?: Config) =>
   Harness.createComposerTestApp({
-    plugins: [ClientPlugin.make(config ? { config } : {}), RoutinePlugin(), EchoPlugin()],
+    plugins: [ClientPlugin.make(config ? { config } : {}), RoutinePlugin.make(), EchoPlugin()],
   });
 
 type App = Awaited<ReturnType<typeof createApp>>;

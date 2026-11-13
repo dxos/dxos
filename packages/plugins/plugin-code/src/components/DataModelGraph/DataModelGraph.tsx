@@ -4,16 +4,16 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type GraphEdge, type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas/scene';
+import { type GraphEdge, type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import { LatticeGraph } from '../LatticeGraph/index.ts';
 import { type DataModelEdgeKind, type DataTypeModel, buildDataModel } from '../SpecModel/index.ts';
 
@@ -32,7 +32,7 @@ const EDGE_STYLE: Record<DataModelEdgeKind, Pick<GraphEdge, 'ends' | 'style'>> =
 const FIELD_COLUMNS = ['auto', 'fill'] as const;
 
 const TypeCard = ({ type, types }: { type: DataTypeModel; types: ReadonlySet<string> }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
     <Card.Root
       classNames={type.stored ? 'border-2 border-blue-border' : 'border border-dashed border-separator'}
@@ -42,7 +42,15 @@ const TypeCard = ({ type, types }: { type: DataTypeModel; types: ReadonlySet<str
     >
       <Card.Header>
         <Layout.Block rail='start'>
-          <Icon.Icon icon={type.stored ? 'ph--database--regular' : 'ph--cube--regular'} />
+          <Icon.Icon
+            icon={
+              type.stored === 'table'
+                ? 'ph--table--regular'
+                : type.stored
+                  ? 'ph--database--regular'
+                  : 'ph--cube--regular'
+            }
+          />
         </Layout.Block>
         <Card.Title truncate classNames='font-mono'>
           {type.id}
@@ -57,6 +65,11 @@ const TypeCard = ({ type, types }: { type: DataTypeModel; types: ReadonlySet<str
               <Tag.Tag>{t('data-model.embedded.label')}</Tag.Tag>
             )}
             {type.typename && <Tag.Tag classNames='font-mono'>{type.typename}</Tag.Tag>}
+            {type.store && (
+              <Tag.Tag classNames='font-mono max-w-full truncate' title={type.store}>
+                {type.store}
+              </Tag.Tag>
+            )}
           </Layout.Flex>
         </Card.Row>
         {type.variants.length > 0 && (
@@ -99,7 +112,7 @@ const TypeCard = ({ type, types }: { type: DataTypeModel; types: ReadonlySet<str
 };
 
 const Legend = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
     <Layout.Flex
       wrap
@@ -134,7 +147,7 @@ export type DataModelGraphProps = {
  * spec type, per union variant and per base type.
  */
 export const DataModelGraph = ({ content }: DataModelGraphProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const model = useMemo(() => buildDataModel(content), [content]);
   const byId = useMemo(() => new Map(model.types.map((type) => [type.id, type])), [model]);
   const ids = useMemo(() => new Set(byId.keys()), [byId]);
@@ -161,9 +174,9 @@ export const DataModelGraph = ({ content }: DataModelGraphProps) => {
 
   if (model.types.length === 0) {
     return (
-      <Layout.Flex center grow classNames='text-description' data-testid='data-model.empty'>
+      <Status.Empty classNames='dx-fill' data-testid='data-model.empty'>
         {t('data-model.empty.message')}
-      </Layout.Flex>
+      </Status.Empty>
     );
   }
 

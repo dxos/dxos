@@ -141,8 +141,11 @@ export const OperationRoundTrip: Story = {
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByText('Instructions', {}, { timeout: 10_000 }));
+    const instructionsToggle = await canvas.findByText('Instructions', {}, { timeout: 10_000 });
+    await userEvent.click(instructionsToggle);
     await waitFor(() => expect(isRunInstructions(primaryTrigger()?.runnable)).toBe(true));
+    // The kind switch remounts the form after the data changes; a click on the outgoing tree's toggle is lost.
+    await waitFor(() => expect(instructionsToggle.isConnected).toBe(false));
     await userEvent.click(await canvas.findByText('Operation'));
     await waitFor(() => expect(primaryTrigger()?.runnable?.uri).toBe(syncOperation.uri));
     await expect(liveAutomation && Routine.runnableRef(liveAutomation)?.uri).toBe(syncOperation.uri);

@@ -677,6 +677,7 @@ describe('ConvergenceKeyMerger.mergeDuplicates', () => {
       createdAt: null,
       updatedAt: null,
       queuePosition: null,
+      queueBranch: null,
     });
     const rows = [
       ...good.group.map(({ objectId, documentId }) => makeRow(objectId, documentId, goodKey)),
@@ -740,6 +741,7 @@ describe('ConvergenceKeyMerger.mergeDuplicates over version documents', () => {
       createdAt: null,
       updatedAt: null,
       queuePosition: null,
+      queueBranch: null,
     });
     const documentOf = (fixture: Fixture, id: EntityId) => {
       const handle = fixture.handles.get(id);
@@ -802,6 +804,7 @@ describe('ConvergenceKeyMerger.mergeDuplicates over one document each', () => {
       createdAt: null,
       updatedAt: null,
       queuePosition: null,
+      queueBranch: null,
     }));
     const merger = new ConvergenceKeyMerger({ ...fixture.context, queryByConvergenceKeys: async () => rows });
     const result = await merger.mergeDuplicates(Context.default(), new Map([[spaceId, new Set([KEY])]]));

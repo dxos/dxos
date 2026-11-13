@@ -13,7 +13,9 @@ import React, {
   createContext,
   forwardRef,
   useContext,
+  useEffect,
   useId,
+  useRef,
   useState,
 } from 'react';
 
@@ -29,6 +31,9 @@ import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/Popup
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
+
+/** A popup's ring is 1px drawn outside its box, so a submenu this far off its parent paints its ring on the parent's. */
+const SUBMENU_OFFSET = 1;
 
 //
 // Root
@@ -151,6 +156,43 @@ type MenuContentProps = ThemedClassName<MenuPrimitive.ContentProps> & {
 };
 
 /**
+ * Closes the menu on a pointerdown outside it whose target leaves the DOM within a frame (e.g. a CodeMirror line that
+ * redraws as the caret enters it): zag checks the target a frame later and ignores a detached one, so it never closes.
+ */
+const useDismissOnDetachedPointerDown = (open: boolean, setOpen: (open: boolean) => void) => {
+  // Zag's api is rebuilt every render; re-subscribing on each would cancel a frame the click itself re-rendered past.
+  const setOpenRef = useRef(setOpen);
+  setOpenRef.current = setOpen;
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    let frame: number | undefined;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element) || target.closest('[data-scope="menu"]')) {
+        return;
+      }
+
+      frame = requestAnimationFrame(() => {
+        if (!target.isConnected) {
+          setOpenRef.current(false);
+        }
+      });
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+      if (frame !== undefined) {
+        cancelAnimationFrame(frame);
+      }
+    };
+  }, [open]);
+};
+
+/**
  * Ark's content as a composable part, so the ScrollArea viewport slot merges onto it (a plain Ark part gets the dev
  * warning wrapper, which breaks the frame's child rules); it restates Ark's scope and part, which the slot's replace.
  */
@@ -168,6 +210,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
     // A submenu opens beside its row and a context menu at the pointer: neither has a trigger to point at.
     const arrow = arrowProp ?? (!sub && !atPointer);
     const menu = useMenuContext();
+    useDismissOnDetachedPointerDown(menu.open, menu.setOpen);
     // A menu reads at one density wherever it opens (a navtree row or a plank's larger header), so a top-level menu is
     // `md` unless sized; a Sub's trigger is its item in the parent menu, so it inherits the parent popup's size.
     const popupSize = usePopupSize(
@@ -485,8 +528,8 @@ const MenuSub = ({ positioning, onSelect, ...props }: MenuSubProps) => {
 };
 
 /**
- * The trigger item's rect stretched to its menu's end edge, so a submenu opens beside the menu rather than over the
- * thumb strip an overflowing menu reserves after its items.
+ * The trigger item's rect stretched to its menu's end edge (plus {@link SUBMENU_OFFSET}, since zag forces a submenu's
+ * gutter to 0), so a submenu opens beside the menu rather than over the thumb strip an overflowing menu reserves.
  */
 const parentEdgeRect = (element: unknown) => {
   // A virtual anchor has no menu to measure, so zag falls back to its own rect.
@@ -495,7 +538,7 @@ const parentEdgeRect = (element: unknown) => {
   }
   const item = element.getBoundingClientRect();
   const frame = element.closest('.dx-popup')?.getBoundingClientRect();
-  return { x: item.x, y: item.y, width: (frame?.right ?? item.right) - item.x, height: item.height };
+  return { x: item.x, y: item.y, width: (frame?.right ?? item.right) + SUBMENU_OFFSET - item.x, height: item.height };
 };
 
 MenuSub.displayName = 'Menu.Sub';

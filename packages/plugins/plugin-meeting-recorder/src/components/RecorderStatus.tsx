@@ -11,9 +11,10 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
 import { appDisplayName } from '#recorder';
 import { MeetingRecorderCapabilities, MeetingRecorderOperation } from '#types';
+
+import { MeetingRecorderNamespace } from '../namespace.ts';
 
 /** `m:ss`, or `h:mm:ss` past an hour. */
 export const formatElapsed = (ms: number): string => {
@@ -41,7 +42,7 @@ const useElapsed = (startedAt: number | undefined): number => {
  * when idle, the detected meeting with a "Take notes" action, and the running timer with Stop.
  */
 export const RecorderStatus = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MeetingRecorderNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const state = Hooks.useOptionalAtomCapability(MeetingRecorderCapabilities.State) ?? { phase: 'idle' as const };
   const elapsed = useElapsed(state.phase === 'recording' ? state.startedAt : undefined);

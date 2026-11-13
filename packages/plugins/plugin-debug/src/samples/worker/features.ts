@@ -5,17 +5,22 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { Database, Ref, Relation } from '@dxos/echo';
-import * as Feature from '@dxos/plugin-projects/Feature';
+import type * as Spec from '@dxos/compute/Spec';
+import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import * as Feature from '@dxos/plugin-code/Feature';
+import * as FeatureMap from '@dxos/plugin-code/FeatureMap';
+import * as SpecText from '@dxos/plugin-code/SpecText';
 
 import { type ProjectResult } from './project.ts';
-import { SPEC_PATH } from './spec.ts';
+import specContent from './SPEC.mdl?raw';
+import { SPEC_PATH, type SpecResult } from './spec.ts';
 import { type TasksResult } from './tasks.ts';
 
 //
-// The project's feature map: one feature per spec block the finished spec will have, all `planned` — the template is a
-// plan to run. Each feature needs the one before it. Only the diagram task is seeded against one; the agent links the
-// implementation tasks it files, so the map fills in as the plan does.
+// The feature map: a spec that names the project and holds the spec document, with one feature per spec block the
+// finished document will have, all `planned` — the template is a plan to run. Each feature needs the one before it.
+// Only the diagram task is seeded against one; the agent links the implementation tasks it files, so the map fills in
+// as the plan does.
 //
 
 export type FeatureSeed = {
@@ -23,7 +28,8 @@ export type FeatureSeed = {
   readonly description: string;
   /** The spec block it is described by; F-1 is seeded, the agent writes the rest. */
   readonly feat: string;
-  readonly subfeatures?: readonly Feature.Subfeature[];
+  /** Its parts, each added as a feature on the spec that breaks this one down. */
+  readonly subfeatures?: readonly { readonly name: string; readonly status: Feature.Status }[];
   /** Indexes into the template's task list. */
   readonly tasks: readonly number[];
 };
@@ -60,30 +66,46 @@ export const FEATURES: readonly FeatureSeed[] = [
   },
 ];
 
-export type FeaturesInput = { tasks: TasksResult; project: ProjectResult };
+export type FeaturesInput = { tasks: TasksResult; project: ProjectResult; spec: SpecResult };
 
-export type FeaturesResult = { features: Feature.Feature[] };
+export type FeaturesResult = { map: Spec.Spec; features: Feature.Feature[] };
 
 export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput> = SampleSpace.partial('features', {
   schemas: [Feature.Feature, Feature.DependsOn, Feature.Implements],
-  run: ({ tasks, project }: FeaturesInput) =>
+  run: ({ tasks, project, spec }: FeaturesInput) =>
     Effect.gen(function* () {
-      const projectRef = Ref.make(project.project);
+      // The imported spec is the map, which the project that tracks its tasks owns.
+      const map = spec.spec;
+      Obj.update(project.project, (project) => {
+        project.specs.push(Ref.make(map));
+      });
       const features: Feature.Feature[] = [];
       for (const seed of FEATURES) {
-        features.push(
-          yield* Database.add(
-            Feature.make({
-              name: seed.name,
-              description: seed.description,
-              status: 'planned',
-              specs: [`${SPEC_PATH}#${seed.feat}`],
-              subfeatures: seed.subfeatures?.map((subfeature) => ({ ...subfeature })),
-              project: projectRef,
-            }),
-          ),
+        const feature = yield* Database.add(
+          Feature.make({
+            name: seed.name,
+            description: seed.description,
+            status: 'planned',
+          }),
         );
+        Obj.update(feature, (feature) => {
+          Feature.setSources(feature, [`${SPEC_PATH}#${seed.feat}`]);
+        });
+        if (seed.subfeatures) {
+          const parts: Feature.Feature[] = [];
+          for (const subfeature of seed.subfeatures) {
+            parts.push(yield* Database.add(Feature.make({ ...subfeature })));
+          }
+          const breakdown = yield* Database.add(FeatureMap.make({ name: seed.name, features: parts }));
+          Obj.update(feature, (feature) => {
+            feature.spec = Ref.make(breakdown);
+          });
+        }
+        features.push(feature);
       }
+      FeatureMap.setFeatures(map, features);
+      // Each `feat` block in the text becomes an embed of the feature seeded from it.
+      yield* Effect.promise(() => SpecText.take(map, { path: SPEC_PATH, text: specContent }));
 
       for (const [index, feature] of features.entries()) {
         if (index > 0) {
@@ -98,6 +120,6 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
         }
       }
 
-      return { features };
+      return { map, features };
     }),
 });

@@ -6,16 +6,16 @@ import React from 'react';
 
 import * as Media from '@dxos/react-ui/Media';
 
-import { type VariantContent } from '#surfaces';
+import { type StudioSurface } from '#types';
 
-import { useVariantSource } from '../../hooks/index.ts';
+import { useVariantSource } from '../../hooks/useVariantSource.ts';
 
 export type VideoVariantProps = {
-  variant: VariantContent;
+  variant: StudioSurface.VariantContent;
 };
 
 /**
- * Default `VariantRenderer` for `video/*`: the react-ui {@link MediaPlayer} resolved from the
+ * Default `StudioSurface.VariantRenderer` for `video/*`: the react-ui {@link MediaPlayer} resolved from the
  * variant's url/content. `MediaPlayer` reserves a width-derived `aspect-video` box, so switching
  * variants no longer flashes the element at its intrinsic size before metadata loads. `kind='video'`
  * forces native playback even for extensionless `blob:`/`data:` sources (materialized content).

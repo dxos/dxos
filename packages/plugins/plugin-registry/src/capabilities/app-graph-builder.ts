@@ -10,17 +10,20 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
 import { getCategoryPredicate, getPopulatedCategories, getRemotePluginIds } from '../categories.ts';
+import { SPACE_SETTINGS_ID, SPACE_SETTINGS_TYPE } from '../constants.ts';
+import { RegistryNamespace } from '../namespace.ts';
 import { PLUGINS_SEGMENT, REGISTRY_ID } from '../paths.ts';
 
 /**
@@ -53,6 +56,22 @@ export default Capability.makeModule(
     const pluginManagerAtom = yield* Capability.atom(Capabilities.PluginManager);
 
     const extensions = yield* Effect.all([
+      // The plugins panel in each space's settings section (spec D-78).
+      AppGraphBuilder.createExtension({
+        id: 'spaceSettingsPlugins',
+        url: { key: SPACE_SETTINGS_ID, kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
+        match: GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeSettingsPanel({
+              id: SPACE_SETTINGS_ID,
+              type: SPACE_SETTINGS_TYPE,
+              label: ['space-plugins.label', { ns: RegistryNamespace.key }],
+              icon: 'ph--squares-four--regular',
+              position: Position.last,
+            }),
+          ]),
+      }),
       AppGraphBuilder.createExtension({
         id: 'openRegistry',
         match: GraphNodeMatcher.whenRoot,
@@ -62,7 +81,7 @@ export default Capability.makeModule(
               id: 'openRegistry',
               data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry, {}),
               properties: {
-                label: ['open-plugin-registry.label', { ns: meta.profile.key }],
+                label: ['open-plugin-registry.label', { ns: RegistryNamespace.key }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'menu',
               },
@@ -80,9 +99,9 @@ export default Capability.makeModule(
           Effect.succeed([
             AppGraphNode.make({
               id: REGISTRY_ID,
-              type: meta.profile.key,
+              type: RegistryNamespace.key,
               properties: {
-                label: ['plugin-registry.label', { ns: meta.profile.key }],
+                label: ['plugin-registry.label', { ns: RegistryNamespace.key }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'pin-end',
                 position: Position.first,
@@ -120,7 +139,7 @@ export default Capability.makeModule(
                 type: 'category',
                 data: id,
                 properties: {
-                  label: [labelKey, { ns: meta.profile.key }],
+                  label: [labelKey, { ns: RegistryNamespace.key }],
                   icon,
                   testId,
                   count,
@@ -146,7 +165,7 @@ export default Capability.makeModule(
                       });
                     }),
                     properties: {
-                      label: ['load-by-url.label', { ns: meta.profile.key }],
+                      label: ['load-by-url.label', { ns: RegistryNamespace.key }],
                       icon: 'ph--cloud-arrow-down--regular',
                       disposition: 'list-item-primary',
                     },
@@ -205,7 +224,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppGraphNode.make({
               id: PLUGINS_SEGMENT,
-              type: `${meta.profile.key}.plugins`,
+              type: `${RegistryNamespace.key}.plugins`,
               properties: { disposition: 'hidden' },
               nodes: [...installedNodes, ...registryNodes],
             }),

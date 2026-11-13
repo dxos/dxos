@@ -11,8 +11,9 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { SpaceSchema } from '#types';
+
+import { SpaceNamespace } from '../../../namespace.ts';
 
 //
 // Extension Factory
@@ -35,7 +36,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
         AppNode.makeSection({
           id: SpaceSchema.SETTINGS_SECTION_ID,
           type: SpaceSchema.SETTINGS_SECTION_TYPE,
-          label: ['settings-section.label', { ns: meta.profile.key }],
+          label: ['settings-section.label', { ns: SpaceNamespace.key }],
           icon: 'ph--sliders--regular',
           iconHue: 'emerald',
           space,
@@ -55,10 +56,10 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
       Effect.succeed([
         AppGraphNode.make({
           id: 'settings',
-          type: `${meta.profile.key}.general`,
-          data: `${meta.profile.key}.general`,
+          type: `${SpaceNamespace.key}.general`,
+          data: `${SpaceNamespace.key}.general`,
           properties: {
-            label: ['space-settings-properties.label', { ns: meta.profile.key }],
+            label: ['space-settings-properties.label', { ns: SpaceNamespace.key }],
             icon: 'ph--brackets-curly--regular',
             iconHue: 'emerald',
             space,
@@ -81,10 +82,10 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           : [
               AppGraphNode.make({
                 id: 'members',
-                type: `${meta.profile.key}.members`,
-                data: `${meta.profile.key}.members`,
+                type: `${SpaceNamespace.key}.members`,
+                data: `${SpaceNamespace.key}.members`,
                 properties: {
-                  label: ['members-panel.label', { ns: meta.profile.key }],
+                  label: ['members-panel.label', { ns: SpaceNamespace.key }],
                   icon: 'ph--users--regular',
                   iconHue: 'emerald',
                   space,

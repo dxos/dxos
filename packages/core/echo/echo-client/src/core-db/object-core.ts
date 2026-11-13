@@ -89,6 +89,16 @@ export type SnapshotState = Omit<ObjectSnapshot, 'root' | 'handle'> & {
 export type TargetRefreshScope = { target: object; key: string };
 
 /**
+ * {@link ObjectCore.isDeleted} verdicts by remaining depth, valid only while no core changes — that is,
+ * within one synchronous read.
+ */
+export type DeletionMemo = Map<ObjectCore, boolean[]>;
+
+/** Dependency lookups during a deletion walk; shared so the walk allocates no options per hop. */
+const LOOKUP_LOADING: GetObjectCoreByIdOptions = { load: true };
+const LOOKUP_HELD: GetObjectCoreByIdOptions = { load: false };
+
+/**
  *
  */
 // TODO(burdon): Comment.
@@ -117,6 +127,18 @@ export class ObjectCore {
   public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   #snapshot?: ObjectSnapshot = undefined;
+
+  /**
+   * The system fields a deletion walk reads, decoded at {@link #deletionRoot}: each document read is a
+   * call into wasm, and a write replaces the root. Binding and remounting replace it too.
+   */
+  #deletionRoot: unknown = undefined;
+  #ownDeleted = false;
+  /** Same-space strong dependencies, whose deletion deletes this entity. */
+  #parentId: EntityId | undefined = undefined;
+  #sourceId: EntityId | undefined = undefined;
+  #targetId: EntityId | undefined = undefined;
+  #mergedIntoId: EntityId | undefined = undefined;
 
   /** When the document last loaded or changed (`performance.now()`); the space releases it after a TTL. */
   public activeAt = 0;
@@ -884,66 +906,136 @@ export class ObjectCore {
 
   getMeta(): EntityMeta {
     // Codec boundary: raw decoded automerge data is returned typed as the logical `EntityMeta`
-    // (tags are encoded references at rest; the handler materializes them into live refs on access).
+    // (tags are encoded references at rest; the handler resolves them into tag entities on access).
     return this.getDecoded([META_NAMESPACE]) as unknown as EntityMeta;
+  }
+
+  /** References to the {@link Tag}s in `meta.tags`, as stored (a legacy bare id is upgraded on read). */
+  getTags(): EncodedReference[] {
+    const tags = this.getDecoded([META_NAMESPACE, 'tags']);
+    return Array.isArray(tags) ? tags.filter(EncodedReference.isEncodedReference) : [];
   }
 
   setMeta(meta: EntityMeta): void {
     this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
-  isDeleted(remainingDepth: number = 10): boolean {
-    const value = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
-    const ownDeleted = typeof value === 'boolean' ? value : false;
-    if (ownDeleted) {
+  /**
+   * Whether the entity is deleted, itself or through a strong dependency up to `remainingDepth` hops away.
+   * A `memo` shares verdicts across one synchronous read, so siblings walk their common ancestors once.
+   */
+  isDeleted(remainingDepth: number = 10, memo?: DeletionMemo): boolean {
+    const cached = memo?.get(this)?.[remainingDepth];
+    if (cached !== undefined) {
+      return cached;
+    }
+    const deleted = this.#computeIsDeleted(remainingDepth, memo);
+    if (memo) {
+      const byDepth = memo.get(this) ?? [];
+      byDepth[remainingDepth] = deleted;
+      memo.set(this, byDepth);
+    }
+    return deleted;
+  }
+
+  #computeIsDeleted(remainingDepth: number, memo: DeletionMemo | undefined): boolean {
+    this.#readDeletionFields();
+    if (this.#ownDeleted) {
       return true;
     }
 
-    if (this.entityManager && remainingDepth > 0) {
-      // An entity is transitively deleted when one of its strong dependencies is deleted: a child
-      // when its parent is removed, or a relation when either endpoint is removed — a dangling
-      // relation has no valid graph edge, so it is treated as deleted and excluded from queries.
-      if (this._isReferencedCoreDeleted(this.getParent(), remainingDepth)) {
-        return true;
-      }
-      if (this.getKind() === EntityKind.Relation) {
-        if (
-          this._isReferencedCoreDeleted(this.getSource(), remainingDepth) ||
-          this._isReferencedCoreDeleted(this.getTarget(), remainingDepth)
-        ) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  get #dependencyLookup(): GetObjectCoreByIdOptions {
-    return { load: this.#snapshot === undefined };
+    // An entity is transitively deleted when one of its strong dependencies is deleted: a child
+    // when its parent is removed, or a relation when either endpoint is removed — a dangling
+    // relation has no valid graph edge, so it is treated as deleted and excluded from queries.
+    return (
+      this.entityManager !== undefined &&
+      remainingDepth > 0 &&
+      (this.#isDependencyDeleted(this.#parentId, remainingDepth, memo) ||
+        this.#isDependencyDeleted(this.#sourceId, remainingDepth, memo) ||
+        this.#isDependencyDeleted(this.#targetId, remainingDepth, memo))
+    );
   }
 
   /**
-   * Whether the same-space entity referenced by `ref` is (transitively) deleted. Cross-space and
-   * unresolved references are treated as not-deleted. Strong dependencies guarantee parent/relation
-   * endpoints load alongside the dependent entity, so this stays a synchronous core lookup —
-   * `loadObjectCoreById` is avoided because it may be async.
-   *
-   * A merged-away dependency is a renamed one, not a removed one: the walk follows `mergedInto`
-   * redirects and judges deletion at the survivor, so relations and children anchored at a merge
-   * loser stay visible while the survivor lives.
+   * Adds to `ids` the same-space entities whose writes can change {@link isDeleted}: the strong dependencies it walks
+   * and the merge redirects between them. Nothing is loaded.
    */
-  private _isReferencedCoreDeleted(ref: EncodedReference | undefined, remainingDepth: number): boolean {
+  addDeletionDependencies(ids: Set<string>, remainingDepth: number = 10): void {
+    if (!this.entityManager || remainingDepth <= 0) {
+      return;
+    }
+    this.#readDeletionFields();
+    for (const dependency of [this.#parentId, this.#sourceId, this.#targetId]) {
+      // An entity already in `ids` has its dependencies there, but a redirect from it may not be.
+      let id = dependency;
+      while (id !== undefined) {
+        const seen = ids.has(id);
+        ids.add(id);
+        const core = this.entityManager.getObjectCoreById(id, LOOKUP_HELD);
+        const next = core?.getMergedInto();
+        if (next === undefined || next >= id) {
+          if (!seen) {
+            core?.addDeletionDependencies(ids, remainingDepth - 1);
+          }
+          break;
+        }
+        id = next;
+      }
+    }
+  }
+
+  #readDeletionFields(): void {
+    const root = this.#root();
+    if (root === this.#deletionRoot) {
+      return;
+    }
+    this.#deletionRoot = root;
+    const deleted: unknown = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
+    this.#ownDeleted = deleted === true;
+    this.#parentId = this.#sameSpaceEntityId(this.getParent());
+    const relation = this.getKind() === EntityKind.Relation;
+    this.#sourceId = relation ? this.#sameSpaceEntityId(this.getSource()) : undefined;
+    this.#targetId = relation ? this.#sameSpaceEntityId(this.getTarget()) : undefined;
+    this.#mergedIntoId = this.getMergedInto();
+  }
+
+  /** The entity `ref` points at, if it is in this core's space; cross-space and unparseable refs have none. */
+  #sameSpaceEntityId(ref: EncodedReference | undefined): EntityId | undefined {
     if (!ref || !this.entityManager) {
-      return false;
+      return undefined;
     }
     const echoUri = EID.tryParse(EncodedReference.toURI(ref));
     const spaceId = echoUri ? EID.getSpaceId(echoUri) : undefined;
     const entityId = echoUri ? EID.getEntityId(echoUri) : undefined;
     if (!entityId || (spaceId !== undefined && spaceId !== this.entityManager.spaceId)) {
+      return undefined;
+    }
+    return entityId;
+  }
+
+  get #dependencyLookup(): GetObjectCoreByIdOptions {
+    return this.#snapshot === undefined ? LOOKUP_LOADING : LOOKUP_HELD;
+  }
+
+  /**
+   * Whether the same-space entity `entityId` is (transitively) deleted; an unresolved one is treated as
+   * not-deleted. Strong dependencies guarantee parent/relation endpoints load alongside the dependent
+   * entity, so this stays a synchronous core lookup — `loadObjectCoreById` is avoided because it may be async.
+   *
+   * A merged-away dependency is a renamed one, not a removed one: the walk follows `mergedInto`
+   * redirects and judges deletion at the survivor, so relations and children anchored at a merge
+   * loser stay visible while the survivor lives.
+   */
+  #isDependencyDeleted(
+    entityId: EntityId | undefined,
+    remainingDepth: number,
+    memo: DeletionMemo | undefined,
+  ): boolean {
+    if (entityId === undefined) {
       return false;
     }
-    const core = this._resolveMergeRedirect(this.entityManager.getObjectCoreById(entityId, this.#dependencyLookup));
-    return core != null && core.isDeleted(remainingDepth - 1);
+    const core = this._resolveMergeRedirect(this.entityManager?.getObjectCoreById(entityId, this.#dependencyLookup));
+    return core != null && core.isDeleted(remainingDepth - 1, memo);
   }
 
   /**
@@ -955,7 +1047,8 @@ export class ObjectCore {
   private _resolveMergeRedirect(core: ObjectCore | undefined): ObjectCore | undefined {
     let current = core;
     while (current) {
-      const next = current.getMergedInto();
+      current.#readDeletionFields();
+      const next = current.#mergedIntoId;
       if (next === undefined || next >= current.id) {
         return current;
       }
@@ -986,6 +1079,7 @@ export class ObjectCore {
         source: sourceRef ? EncodedReference.toURI(sourceRef) : undefined,
         target: targetRef ? EncodedReference.toURI(targetRef) : undefined,
         parent: parentRef ? EncodedReference.toURI(parentRef) : undefined,
+        tags: this.getTags().map((ref) => EncodedReference.toURI(ref)),
       },
       this.entityManager?.spaceId,
     );

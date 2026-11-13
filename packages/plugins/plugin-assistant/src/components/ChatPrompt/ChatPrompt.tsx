@@ -46,10 +46,10 @@ import { objectLinks, pendingText } from '@dxos/ui-editor';
 import { type Merge } from '@dxos/util';
 
 import { insertMention, mentionText, useAttachFile, useChatKeymapExtensions, useObjectMentions } from '#hooks';
-import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
 import { type ChatModel, getChatModelState } from '../../chat-model/index.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 import { type ChatEvent } from '../Chat/index.ts';
 import { attachmentAnchors, dropAnchor, insertAtAnchor, placeAnchor } from './attachment-anchors.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
@@ -79,9 +79,9 @@ export type ChatPromptProps = Merge<
     slashCommands?: readonly SlashCommand.SlashCommand[];
     event: Event<ChatEvent>;
     drawers?: ChatActionsProps['drawers'];
-    /** The prompt's graph node, which is what contributed actions are filed under. */
+    /** Attention id of the surface: scopes the toolbar and pivots the panels the prompt opens. */
     attendableId?: string;
-    /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
+    /** Actions other plugins filed on this prompt's node (see `ChatActions`). */
     customActions?: Atom.Atom<ActionGraphProps>;
     /**
      * The graph node those actions were filed on. Keys the dictation session, because the mic that
@@ -129,7 +129,7 @@ export const ChatPrompt = ({
   started,
   onPresetChange,
 }: ChatPromptProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   const chatModelState = getChatModelState(chatModel);
   const error = useAtomValue(chatModelState.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(chatModelState.streaming);
@@ -142,14 +142,15 @@ export const ChatPrompt = ({
       if (ev.type === 'update-prompt' && !editorRef.current?.getText()?.length) {
         editorRef.current?.setText(ev.text);
         editorRef.current?.focus();
+      } else if (ev.type === 'focus-prompt') {
+        editorRef.current?.focus();
       }
     });
   }, [event]);
 
   const fallbackDocId = useId();
-  // The node the mic action was filed on, which is what it keys the recording session by. A chat
-  // rendered as a companion is a companion node, not the chat object's own, so the object id is only
-  // the fallback for a prompt rendered outside a plank.
+  // The prompt node the mic action was filed on, which is what it keys the recording session by. The
+  // object id is only the fallback for a prompt rendered outside the app graph.
   const docId = nodeId ?? (chat ? Obj.getURI(chat) : fallbackDocId);
   useChatVoiceInput(docId, editorRef);
 
@@ -386,7 +387,7 @@ export const ChatPrompt = ({
           onDismiss={() => setFailed([])}
         />
 
-        <Layout.Flex gap='sm' classNames='p-2'>
+        <Layout.Flex gap='sm' classNames='py-2 ps-1.5 pe-2'>
           <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
           <ChatEditor
             ref={editorRef}
@@ -404,7 +405,7 @@ export const ChatPrompt = ({
         {db && settings && (
           <>
             <ChatActions
-              classNames='p-1.5'
+              classNames='px-1 py-1.5'
               attendableId={attendableId}
               customActions={customActions}
               processing={active}

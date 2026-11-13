@@ -41,6 +41,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
@@ -48,8 +49,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@effect/atom-react": "catalog:",
-    "date-fns": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

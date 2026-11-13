@@ -10,13 +10,14 @@ import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { Game, GameCapabilities } from '#types';
+
+import { GameNamespace } from '../../namespace.ts';
 
 export type GameArticleProps = AppSurface.ObjectArticleProps<Game.Game>;
 
 export const GameArticle = ({ role, attendableId, subject: game }: GameArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GameNamespace.key);
   const variants = Hooks.useCapabilities(GameCapabilities.VariantProvider);
   // Resolved live rather than as a snapshot: variants mutate their state, and a snapshot is frozen.
   const variant = useResolveRef(game.variant);

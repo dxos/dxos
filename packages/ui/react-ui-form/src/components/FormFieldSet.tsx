@@ -8,6 +8,8 @@ import * as Collapsible from '@dxos/react-ui/Collapsible';
 import * as Fieldset from '@dxos/react-ui/Fieldset';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
+import { type FormPresentation } from '#types';
+
 import { useFormContext } from '../hooks/index.ts';
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
@@ -26,6 +28,8 @@ export type FormFieldSetProps = PropsWithChildren<{
   'actions'?: ReactNode;
   /** A nested object's group: its fields bordered and indented under the legend. Set by the dispatcher, never read from context. */
   'nested'?: boolean;
+  /** The set's presentation in place of the form's layout, as a field override's is. */
+  'presentation'?: FormPresentation;
   'data-testid'?: string;
 }>;
 
@@ -45,6 +49,7 @@ export const FormFieldSet = ({
   onOpenChange,
   actions,
   nested,
+  presentation,
   'data-testid': testId,
 }: FormFieldSetProps) => {
   const { layout } = useFormContext(FORM_FIELDSET_NAME);
@@ -54,15 +59,25 @@ export const FormFieldSet = ({
     setOpenState(next);
     onOpenChange?.(next);
   };
-  const showLabel = layout !== 'inline' && !!label;
+  const showLabel = (presentation ?? layout) !== 'inline' && !!label;
   const canCollapse = !!collapsible && showLabel && Children.toArray(children).length > 0;
   const helper = description && <Fieldset.HelperText>{description}</Fieldset.HelperText>;
   const legend = showLabel && (
-    <Fieldset.Legend size={nested ? undefined : 'md'} variant={nested ? undefined : 'section'}>
+    <Fieldset.Legend
+      size={nested ? undefined : 'md'}
+      variant={nested ? undefined : 'section'}
+      data-nested={nested ? '' : undefined}
+    >
       {label}
       {actions}
       {canCollapse && (
-        <SystemButton.Disclosure variant='ghost' label={label} expanded={open} onExpandedChange={setOpen} />
+        <SystemButton.Disclosure
+          variant='ghost'
+          label={label}
+          expanded={open}
+          onExpandedChange={setOpen}
+          data-testid={testId && `${testId}.disclosure`}
+        />
       )}
     </Fieldset.Legend>
   );

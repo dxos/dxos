@@ -86,7 +86,7 @@ describe('UpdateTasks', () => {
   );
 
   it.effect(
-    'starting a task from elsewhere assigns it: onto the checklist and to the agent together',
+    'starting a task from elsewhere delegates it: onto the checklist and to the agent together',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { chat, invoke } = yield* setupChat();
@@ -98,12 +98,11 @@ describe('UpdateTasks', () => {
 
         expect((yield* Chat.loadTasks(chat)).map((task) => task.id)).toEqual([subTask.id]);
         expect(subTask.status).toEqual('started');
-        expect(subTask.assignee?.role).toEqual('assistant');
+        expect(subTask.delegate?.role).toEqual('assistant');
         // A plain chat is its own session object.
-        expect(subTask.assignee?.subject?.target?.id).toEqual(chat.id);
-        // One log line per edit: the assignment rides the status change rather than adding an entry.
+        expect(subTask.delegate?.subject?.target?.id).toEqual(chat.id);
         expect((subTask.history ?? []).filter(Task.isChangeEntry).map(({ description }) => description)).toEqual([
-          'Status changed from todo to started. Assigned to an agent.',
+          'Status changed from todo to started. Delegated to an agent.',
         ]);
       },
       Effect.provide(TestLayer),
@@ -112,7 +111,60 @@ describe('UpdateTasks', () => {
   );
 
   it.effect(
-    'assign and unassign move the checklist and the assignee together, never deleting the task',
+    "claiming an unowned step of a person's tree answers to them, so the agent's finish waits on review",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { chat, invoke } = yield* setupChat();
+        const step = yield* Database.add(Task.make({ title: 'Name the two tools', status: 'todo' }));
+        const root = yield* Database.add(
+          Task.make({
+            title: 'Ship the tools',
+            assignee: { name: 'Riley', identityDid: 'did:key:riley' },
+            subtasks: [Ref.make(step)],
+          }),
+        );
+        Obj.setParent(step, root);
+        yield* Database.flush();
+
+        yield* invoke([{ task: Ref.make(step), status: 'started' }]);
+        expect(step.assignee?.name).toEqual('Riley');
+
+        yield* invoke([{ task: Ref.make(step), status: 'done' }]);
+        expect(step.status).toEqual('review');
+
+        const legacy = yield* Database.add(
+          Task.make({ title: 'Test the tools', status: 'todo', assignee: { role: 'assistant', name: 'Old session' } }),
+        );
+        Obj.update(root, (root) => {
+          root.subtasks?.push(Ref.make(legacy));
+        });
+        Obj.setParent(legacy, root);
+        yield* Database.flush();
+        yield* invoke([{ task: Ref.make(legacy), status: 'started' }]);
+        expect(legacy.assignee?.name).toEqual('Riley');
+
+        const own = yield* Database.add(
+          Task.make({
+            title: 'Note the versions',
+            status: 'todo',
+            assignee: { role: 'assistant', subject: Ref.make(chat) },
+          }),
+        );
+        Obj.update(root, (root) => {
+          root.subtasks = [...(root.subtasks ?? []), Ref.make(own)];
+        });
+        Obj.setParent(own, root);
+        yield* Database.flush();
+        yield* invoke([{ task: Ref.make(own), status: 'started' }]);
+        expect(Task.refEntityId(own.assignee?.subject)).toEqual(chat.id);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'assign and unassign move the checklist and the delegate together, keeping the assignee and the task',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { chat, invoke } = yield* setupChat();
@@ -123,7 +175,8 @@ describe('UpdateTasks', () => {
 
         yield* invoke([{ task: Ref.make(task), assign: true }]);
         expect(chat.tasks).toHaveLength(1);
-        expect(task.assignee?.subject?.target?.id).toEqual(chat.id);
+        expect(task.delegate?.subject?.target?.id).toEqual(chat.id);
+        expect(task.assignee?.name).toEqual('Alice');
         expect(task.status).toEqual('todo');
 
         // Assigning twice must not duplicate the checklist entry.
@@ -132,8 +185,56 @@ describe('UpdateTasks', () => {
 
         yield* invoke([{ task: Ref.make(task), unassign: true }]);
         expect(chat.tasks).toEqual([]);
-        expect(task.assignee).toBeUndefined();
+        expect(task.delegate).toBeUndefined();
+        expect(task.assignee?.name).toEqual('Alice');
         expect(Obj.isDeleted(task)).toBe(false);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'unassign lets go of only what this agent holds, never the person who answers for the task',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { chat, invoke } = yield* setupChat();
+        const task = yield* Database.add(
+          Task.make({ title: 'Renew the domain', status: 'todo', assignee: { name: 'Alice' } }),
+        );
+        yield* Database.flush();
+        yield* invoke([{ task: Ref.make(task), assign: true }]);
+        Task.setDelegate(task, null);
+
+        yield* invoke([{ task: Ref.make(task), unassign: true }]);
+        expect(chat.tasks).toEqual([]);
+        expect(task.assignee?.name).toEqual('Alice');
+
+        const queued = yield* Database.add(
+          Task.make({
+            title: 'Draft the notice',
+            status: 'todo',
+            assignee: { role: 'assistant', subject: Ref.make(chat) },
+            delegate: { role: 'assistant' },
+          }),
+        );
+        Chat.assignTasks(chat, [Ref.make(queued)]);
+        yield* invoke([{ task: Ref.make(queued), unassign: true }]);
+        expect(chat.tasks).toEqual([]);
+        expect(queued.delegate).toBeUndefined();
+        expect(queued.assignee).toBeUndefined();
+
+        const elsewhere = yield* Database.add(
+          Task.make({
+            title: 'Book the venue',
+            status: 'todo',
+            delegate: { role: 'assistant', name: 'Claude', identityDid: 'did:key:claude' },
+          }),
+        );
+        Chat.assignTasks(chat, [Ref.make(elsewhere)]);
+        yield* invoke([{ task: Ref.make(elsewhere), unassign: true }]);
+        expect(chat.tasks).toEqual([]);
+        expect(elsewhere.delegate?.name).toEqual('Claude');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -206,9 +307,8 @@ describe('UpdateTasks', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { invoke } = yield* setupChat();
-        // A task with reviewers does not close on the model's word: `done` lands it in `review`.
         const task = yield* Database.add(
-          Task.make({ title: 'Reviewed', status: 'started', reviewers: [{ name: 'Alice' }] }),
+          Task.make({ title: 'Reviewed', status: 'started', assignee: { name: 'Alice', role: 'user' } }),
         );
         yield* Database.flush();
 

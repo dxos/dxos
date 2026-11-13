@@ -17,7 +17,7 @@ import { DXN } from '@dxos/keys';
 import { toDocumentId } from '../../automerge/index.ts';
 import { createBranch, getObjectCore, mergeBranch, switchBranch } from '../../echo-handler/index.ts';
 import { EchoTestBuilder } from '../../testing/index.ts';
-import { type EchoDatabase } from '../database.ts';
+import { type DatabaseImpl } from '../database.ts';
 
 const TYPENAME = 'org.dxos.test.versionedTask';
 
@@ -47,7 +47,7 @@ const NewBoard = Type.makeObject(DXN.make('org.dxos.test.newBoard', '0.1.0'))(
 const types = [TaskV1, TaskV2, TaskV3, OldBoard, NewBoard];
 
 /** The version document `db` records for `objectId` at `version`. */
-const versionDoc = async (db: EchoDatabase, objectId: string, version: string) => {
+const versionDoc = async (db: DatabaseImpl, objectId: string, version: string) => {
   const url = DatabaseDirectory.getVersionDocUrls(db._getSpaceRootDocHandle().doc(), objectId)[version];
   invariant(url && isValidAutomergeUrl(url), `no document for ${version}`);
   const handle = db._repo.find<DatabaseDirectory>(url);
@@ -182,7 +182,7 @@ describe('version documents', () => {
    * Leaves the task reading v2, then records v3 at `url`, a document this device lacks; returns v3's bytes to
    * deliver later and a function that moves v3 to another document.
    */
-  const routeV3Elsewhere = async (db: EchoDatabase, task: Obj.Unknown, url: AutomergeUrl) => {
+  const routeV3Elsewhere = async (db: DatabaseImpl, task: Obj.Unknown, url: AutomergeUrl) => {
     const v3Name = DatabaseDirectory.versionBranchName('0.3.0');
     const bytes = A.save((await versionDoc(db, task.id, '0.3.0')).doc());
     const v3Type = db._getSpaceRootDocHandle().doc().branches?.[task.id]?.[v3Name]?.type;
@@ -463,7 +463,7 @@ describe('version documents on branches', () => {
   });
 
   /** The data of the object in a branch document of `version`. */
-  const branchData = async (db: EchoDatabase, objectId: string, name: string, version: string) => {
+  const branchData = async (db: DatabaseImpl, objectId: string, name: string, version: string) => {
     const record = db._getSpaceRootDocHandle().doc().branches?.[objectId]?.[name];
     const url =
       version === '0.1.0' ? record?.members[objectId]?.toString() : record?.versions?.[objectId]?.[version]?.toString();
@@ -473,10 +473,10 @@ describe('version documents on branches', () => {
     return dataOf(handle.doc(), objectId);
   };
 
-  const versionDocUrlOf = (db: EchoDatabase, objectId: string, version: string) =>
+  const versionDocUrlOf = (db: DatabaseImpl, objectId: string, version: string) =>
     DatabaseDirectory.getVersionDocUrls(db._getSpaceRootDocHandle().doc(), objectId)[version];
 
-  const mainData = async (db: EchoDatabase, objectId: string, version: string) =>
+  const mainData = async (db: DatabaseImpl, objectId: string, version: string) =>
     dataOf((await versionDoc(db, objectId, version)).doc(), objectId);
 
   test('a branch forks every version, translates within itself and merges back version by version', async () => {

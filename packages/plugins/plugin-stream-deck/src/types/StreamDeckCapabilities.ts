@@ -8,8 +8,9 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
 import type * as Protocol from '#protocol';
+
+import { StreamDeckNamespace } from '../namespace.ts';
 
 export type BridgeStatus = {
   /** `idle` covers "no device plugin installed", which is the normal case for most users. */
@@ -22,5 +23,5 @@ export type BridgeStatus = {
  * connection of their own — the device accepts one client, so there is exactly one bridge.
  */
 export const BridgeStatus = Capability.makeSingleton<Atom.Writable<BridgeStatus>>()(
-  `${meta.profile.key}.capability.bridgeStatus`,
+  `${StreamDeckNamespace.key}.capability.bridgeStatus`,
 );

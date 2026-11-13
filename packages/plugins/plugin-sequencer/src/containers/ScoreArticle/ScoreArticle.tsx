@@ -425,8 +425,24 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
           },
           handleExport,
         )
+        // A row field, so the label sits beside the stepper in the one-line toolbar rather than above it.
+        .custom('tempo', { label: 'BPM' }, () => (
+          <Field.Root layout='row'>
+            <Field.Label classNames='text-xs'>BPM</Field.Label>
+            <Input.Number
+              min={1}
+              step={1}
+              formatOptions={{ maximumFractionDigits: 0 }}
+              value={String(score.tempo)}
+              onValueChange={(_, tempo) => handleTempoChange(tempo)}
+              classNames='w-28'
+            />
+          </Field.Root>
+        ))
         .build(),
     [
+      score.tempo,
+      handleTempoChange,
       isPlaying,
       togglePlay,
       showAllTracks,
@@ -442,20 +458,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   return (
     <Panel.Root role={role}>
       <Panel.Header>
-        <ActionToolbar {...menuActions} attendableId={attendableId}>
-          {/* A row field, so the label sits beside the stepper in the one-line toolbar rather than above it. */}
-          <Field.Root layout='row'>
-            <Field.Label classNames='text-xs'>BPM</Field.Label>
-            <Input.Number
-              min={1}
-              step={1}
-              formatOptions={{ maximumFractionDigits: 0 }}
-              value={String(score.tempo)}
-              onValueChange={(_, tempo) => handleTempoChange(tempo)}
-              classNames='w-28'
-            />
-          </Field.Root>
-        </ActionToolbar>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
 
       <Panel.Body asChild>

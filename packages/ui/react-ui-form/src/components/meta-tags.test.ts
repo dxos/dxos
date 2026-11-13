@@ -8,9 +8,10 @@ import { describe, test } from 'vitest';
 import { Obj, Ref, Tag } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
+import { EID, URI } from '@dxos/keys';
 
 import { Organization } from '../testing/schema.ts';
-import { META_TAGS_KEY, filterTagCandidates, partitionMetaTags, withMetaTags } from './meta-tags.ts';
+import { META_TAGS_KEY, filterTagCandidates, partitionMetaTags, resolveMetaTags, withMetaTags } from './meta-tags.ts';
 
 // A feed-host schema whose own `tags` field is a `TagIndex` record (tagId -> objectId[]), not an
 // array — mirrors plugin-commerce `Search`, plugin-inbox `Mailbox`, plugin-magazine `Subscription`.
@@ -93,36 +94,43 @@ describe('partitionMetaTags', () => {
     [Obj.Meta]: { keys: [{ source: Tag.CANONICAL_ORIGIN, id: 'starred' }] },
     label: 'Starred',
   });
-  const spaceTags = [userTag, gmailTag, canonicalTag];
 
   test('holds provider tags back and leaves the rest editable', ({ expect }) => {
-    const refs = [Ref.make(userTag), Ref.make(gmailTag), Ref.make(canonicalTag)];
-    const { editable, preserved } = partitionMetaTags(refs, spaceTags);
+    const { editable, preserved } = partitionMetaTags([userTag, gmailTag, canonicalTag]);
 
     // Canonical tags stay editable — only a foreign provider owns membership.
-    expect(editable.map((ref) => ref.uri)).toEqual([Ref.make(userTag).uri, Ref.make(canonicalTag).uri]);
-    expect(preserved.map((ref) => ref.uri)).toEqual([Ref.make(gmailTag).uri]);
+    expect(editable).toEqual([userTag, canonicalTag]);
+    expect(preserved).toEqual([gmailTag]);
   });
 
   test('a save that writes back only `editable` would drop the provider tag (why `preserved` exists)', ({ expect }) => {
-    const refs = [Ref.make(userTag), Ref.make(gmailTag)];
-    const { editable, preserved } = partitionMetaTags(refs, spaceTags);
+    const tags = [userTag, gmailTag];
+    const { editable, preserved } = partitionMetaTags(tags);
 
     // What a naive handler would persist, versus the correct merge.
     expect(editable.length).toBe(1);
-    expect([...preserved, ...editable].map((ref) => ref.uri).sort()).toEqual(refs.map((ref) => ref.uri).sort());
-  });
-
-  test('an unresolvable tag stays editable rather than being silently held back', ({ expect }) => {
-    // A ref whose target is not among the space's tags (not yet replicated): treated as editable, so a
-    // missing candidate never makes a user tag un-removable.
-    const orphan = Ref.make(Tag.make({ label: 'Elsewhere' }));
-    const { editable, preserved } = partitionMetaTags([orphan], spaceTags);
-    expect(editable.map((ref) => ref.uri)).toEqual([orphan.uri]);
-    expect(preserved).toEqual([]);
+    expect([...preserved, ...editable]).toEqual([gmailTag, userTag]);
   });
 
   test('no tags is a no-op', ({ expect }) => {
-    expect(partitionMetaTags([], spaceTags)).toEqual({ editable: [], preserved: [] });
+    expect(partitionMetaTags([])).toEqual({ editable: [], preserved: [] });
+  });
+});
+
+describe('resolveMetaTags', () => {
+  test('resolves a picker ref built from a bare URI through the database', ({ expect }) => {
+    const tag = Tag.make({ label: 'Reading' });
+    const db = { getObjectById: (id: string) => (id === tag.id ? tag : undefined) };
+    // The ref picker selects by id, so its refs have no target of their own to read.
+    const picked = Ref.fromURI(URI.make(EID.make({ entityId: tag.id })));
+    expect(resolveMetaTags([picked], db)).toEqual([tag]);
+    expect(resolveMetaTags([picked], undefined)).toEqual([]);
+  });
+
+  test('keeps a held tag the database lookup misses (deleted or from another space)', ({ expect }) => {
+    const tag = Tag.make({ label: 'Archived' });
+    const db = { getObjectById: () => undefined };
+    const picked = Ref.fromURI(URI.make(EID.make({ entityId: tag.id })));
+    expect(resolveMetaTags([picked], db, [tag])).toEqual([tag]);
   });
 });

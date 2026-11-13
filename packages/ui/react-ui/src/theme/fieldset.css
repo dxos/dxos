@@ -12,6 +12,10 @@
     flex-direction: column;
     gap: var(--dx-gap-size);
   }
+  /* A compact set (a vector's axes) sits under its legend as a field's control sits under its label. */
+  .dx-fieldset[data-compact]:not(.dx-container) {
+    gap: 0;
+  }
   /* A grid set (`gutter='inherit'`) spaces its rows as its parent grid does, since a subgrid shares columns only. */
   .dx-fieldset.dx-container {
     row-gap: inherit;
@@ -70,6 +74,13 @@
   .dx-fieldset-legend > .dx-button:not([data-variant='primary']) {
     color: var(--color-fg);
   }
+  /*
+   * A nested group's legend is a row of its own above the bordered fields: one block tall, so its disclosure fits with
+   * room above the border; the disclosure stays in the form's trailing column, with every other trailing control.
+   */
+  .dx-fieldset-legend[data-nested] {
+    min-height: var(--dx-block-size);
+  }
   /* A legend given its own size is a heading row: one block tall, in that size's text. */
   .dx-fieldset-legend[data-size] {
     min-height: var(--dx-block-size);
@@ -81,6 +92,10 @@
     font-size: var(--text-lg);
     line-height: var(--text-lg--line-height);
     color: var(--color-fg);
+  }
+  /* Sections stand apart: each after the first leaves a wider gap above its heading than the rows inside it. */
+  .dx-fieldset:has(> .dx-fieldset-legend[data-variant='section']):not(:first-child) {
+    margin-block-start: calc(var(--dx-gap-size) * 3);
   }
   /* The section's subtitle reads at the body size in the description colour, as a settings row's description does. */
   .dx-fieldset-legend[data-variant='section'] + .dx-field-helper {

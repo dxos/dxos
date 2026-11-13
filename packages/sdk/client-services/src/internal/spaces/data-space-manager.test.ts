@@ -14,7 +14,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { type DatabaseDirectory, type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -146,6 +146,33 @@ describe('DataSpaceManager', () => {
     expect(peer.echoHost.getSpaceRootRefs(space.id)).to.be.undefined;
   });
 
+  test('with the flag on, a legacy space mints no root of its own while edge cannot be asked', async ({ expect }) => {
+    /** An EDGE whose root lookup fails, as one that is unreachable does. */
+    class UnreachableEdge extends EdgeHttpClient {
+      lookups = 0;
+      override async getSpaceRoot(): Promise<{ rootDocumentUrl: string | null }> {
+        this.lookups++;
+        throw new Error('edge unreachable');
+      }
+    }
+    const edgeHttpClient = new UnreachableEdge('http://127.0.0.1:9');
+    const builder = new TestBuilder();
+    const peer = builder.createPeer({ dataSpaceProps: { automergeCredentials: true }, edgeHttpClient });
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context(), { useSpaceRootDocument: false });
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+    // On load the flag would migrate it, but EDGE may already hold a root this device could not see.
+    await peer.dataSpaceManager.close();
+    await peer.dataSpaceManager.open();
+    await getFirstSpace(peer).activate(new Context());
+    // A second lookup is the retry of an attempt that finished unsettled, so the first minted nothing.
+    await expect.poll(() => edgeHttpClient.lookups, { timeout: 5_000 }).to.be.greaterThan(1);
+    expect(peer.echoHost.getSpaceRootRefs(space.id)).to.be.undefined;
+  });
+
   test('a legacy space can still be created, for migration coverage', async () => {
     const builder = new TestBuilder();
 
@@ -204,6 +231,8 @@ describe('DataSpaceManager', () => {
     const attempts: string[] = [];
     const reported = new Trigger<void>();
     const edgeHttpClient = {
+      // Edge confirms it holds no root, which is what lets the member mint one of its own.
+      getSpaceRoot: async () => ({ rootDocumentUrl: null }),
       recordSpaceRoot: async (_ctx: Context, spaceId: string, body: { rootDocumentUrl: string }) => {
         attempts.push(spaceId);
         if (attempts.length === 1) {
@@ -284,6 +313,114 @@ describe('DataSpaceManager', () => {
     await expect
       .poll(() => peer2.echoHost.getSpaceRootRefs(space2.id)?.spaceRootDocUrl, { timeout: 10_000 })
       .to.equal(assertion.spaceRootUrl);
+  });
+
+  describe('migration executed by edge', () => {
+    /**
+     * Two members of a legacy space, the second with an edge client that serves `edgeRoot`. The first
+     * member's local anchor stands in for the root edge would mint: both are a root over the same
+     * directory that every member must converge on.
+     */
+    const setupLegacySpaceWithEdge = async () => {
+      const builder = new TestBuilder();
+      // `pending` is how many migrate calls edge answers "not yet" before it can anchor the space.
+      const edge = { root: null as string | null, migrations: 0, pending: 0 };
+      const edgeHttpClient = {
+        getSpaceRoot: async () => ({ rootDocumentUrl: edge.root }),
+        migrateSpaceRoot: async () => {
+          edge.migrations++;
+          if (edge.root === null || edge.pending > 0) {
+            edge.pending--;
+            throw new Error('space root not available yet');
+          }
+          return { rootDocumentUrl: edge.root };
+        },
+        recordSpaceRoot: async () => {
+          throw new Error('a member adopting the edge root must not report one of its own');
+        },
+      } as unknown as EdgeHttpClient;
+
+      // Neither member has the flag: accepting a migration must not depend on it.
+      const peer1 = builder.createPeer();
+      await peer1.createIdentity();
+      const peer2 = builder.createPeer({ edgeHttpClient });
+      await peer2.createIdentity();
+      await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
+      await connectReplicators([peer1, peer2]);
+
+      const space1 = await peer1.dataSpaceManager.createSpace(new Context(), { useSpaceRootDocument: false });
+      await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+      await peer1.dataSpaceManager.admitMember({
+        spaceKey: space1.key,
+        identityKey: peer2.identity.identityKey,
+        role: SpaceMember_Role.ADMIN,
+      });
+      const space2 = await peer2.dataSpaceManager.acceptSpace(new Context(), {
+        spaceKey: space1.key,
+        genesisFeedKey: space1.inner.genesisFeedKey,
+      });
+      await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
+      expect(peer2.echoHost.getSpaceRootRefs(space2.id)).to.be.undefined;
+
+      const minted = await peer1.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space1.key);
+      return { edge, peer2, space2, minted };
+    };
+
+    test('a member adopts the root edge holds when it reopens the space', { timeout: 45_000 }, async ({ expect }) => {
+      const { edge, peer2, space2, minted } = await setupLegacySpaceWithEdge();
+      edge.root = minted.spaceRootDocUrl;
+
+      await space2.deactivate(new Context());
+      await space2.activate(new Context());
+
+      // A fetch that misses times out and the anchor's backoff asks again, so this allows a few rounds.
+      await expect
+        .poll(() => peer2.echoHost.getSpaceRootRefs(space2.id)?.spaceRootDocUrl, { timeout: 30_000 })
+        .to.equal(minted.spaceRootDocUrl);
+      expect(peer2.dataSpaceManager.getSpaceRootUrl(space2.key)).to.equal(minted.spaceRootDocUrl);
+      expect(edge.migrations).to.equal(0);
+    });
+
+    test('migrating on edge retries until edge can anchor, then adopts its root', async ({ expect }) => {
+      const { edge, peer2, space2, minted } = await setupLegacySpaceWithEdge();
+      edge.root = minted.spaceRootDocUrl;
+      edge.pending = 2;
+
+      const spaceRootUrl = await peer2.dataSpaceManager.migrateSpaceRootOnEdge(new Context(), space2.key);
+      expect(spaceRootUrl).to.equal(minted.spaceRootDocUrl);
+      expect(peer2.echoHost.getSpaceRootRefs(space2.id)?.spaceRootDocUrl).to.equal(minted.spaceRootDocUrl);
+      expect(edge.migrations).to.equal(3);
+
+      // Idempotent: asking again returns the same root and does not re-adopt.
+      expect(await peer2.dataSpaceManager.migrateSpaceRootOnEdge(new Context(), space2.key)).to.equal(spaceRootUrl);
+    });
+  });
+
+  test('an anchored space keeps mirroring new credentials after a reload, with the flag off', async ({ expect }) => {
+    const builder = new TestBuilder();
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context(), { useSpaceRootDocument: false });
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+    await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
+
+    // The reload is the case that matters: the session that anchored the space mirrors anyway.
+    await peer.dataSpaceManager.close();
+    await peer.dataSpaceManager.open();
+    await peer.dataSpaceManager.spaces.get(space.key)?.activate(new Context());
+    await peer.dataSpaceManager.waitUntilSpaceReady(space.key);
+
+    const store = await openCredentialsDocument(new Context(), peer.echoHost, space.id);
+    await expect.poll(() => store.read().length, { timeout: 10_000 }).to.be.greaterThan(0);
+    const before = store.read().length;
+    await peer.dataSpaceManager.admitMember({
+      spaceKey: space.key,
+      identityKey: PublicKey.random(),
+      role: SpaceMember_Role.EDITOR,
+    });
+    await expect.poll(() => store.read().length, { timeout: 10_000 }).to.be.greaterThan(before);
   });
 
   test('a legacy hypercore space migrates onto a space root document, keeping its id', async () => {

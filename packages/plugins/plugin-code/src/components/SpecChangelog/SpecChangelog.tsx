@@ -5,6 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { type SourceKey, parseReview } from '@dxos/deus/review';
 import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -21,18 +22,15 @@ import {
   editorClassNames,
 } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
-import { type SourceKey } from '#sync';
-
+import { CodeNamespace } from '../../namespace.ts';
 import { ApiSurface } from '../ApiSurface/index.ts';
-import { ChangelogGraph, type DecisionModel, buildChangelogGraph } from '../ChangelogGraph/index.ts';
+import { ChangelogGraph, buildChangelogGraph } from '../ChangelogGraph/index.ts';
 import { DataModelGraph } from '../DataModelGraph/index.ts';
 import { DecisionLog } from '../DecisionLog/index.ts';
 import { DefinitionGraph } from '../DefinitionGraph/index.ts';
 import { ReviewPanel } from '../ReviewPanel/index.ts';
-import { reviewGutter } from '../SpecEditor/index.ts';
-import { parseReview } from '../SpecModel/index.ts';
-import { decisionGutter } from './decision-gutter.ts';
+import { type SourceReader, reviewGutter } from '../SpecEditor/index.ts';
+import { type GutterItem, decisionGutter } from './decision-gutter.ts';
 
 /** What the panel beside the spec shows. */
 export const SPEC_VIEWS = ['decisions', 'log', 'definitions', 'review', 'data', 'api'] as const;
@@ -59,6 +57,8 @@ export type SpecChangelogProps = {
   review?: string;
   /** Opens a code key from an implementation chip; without it the chips only name the code. */
   onOpenCode?: (key: SourceKey) => void;
+  /** The text of a file a key names, for the declarations hover cards and walkthroughs show. */
+  read?: SourceReader;
 };
 
 /**
@@ -71,15 +71,16 @@ export const SpecChangelog = ({
   defaultView = 'decisions',
   review: reviewText,
   onOpenCode,
+  read,
 }: SpecChangelogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const themeMode = Hooks.useThemeMode();
   const [view, setView] = useState<SpecView>(defaultView);
   const [selected, setSelected] = useState<string>();
   const [selectedVerdict, setSelectedVerdict] = useState<string>();
   const review = useMemo(() => (reviewText ? parseReview(reviewText) : undefined), [reviewText]);
   const decisions = useMemo(
-    () => buildChangelogGraph(content).nodes.filter((node): node is DecisionModel => node.kind === 'decision'),
+    () => buildChangelogGraph(content).nodes.filter((node): node is GutterItem => node.kind !== 'block'),
     [content],
   );
   const extensions = useMemo(
@@ -92,8 +93,10 @@ export const SpecChangelog = ({
       diagramPreview(),
       decisionGutter(decisions, (id) => {
         setSelected(id);
-        // A gutter chip is about a decision, so it brings back a view that shows decisions.
-        setView((current) => (current === 'decisions' || current === 'log' ? current : 'decisions'));
+        // A gutter chip is about a decision, so it brings back a view that shows decisions; a question is listed only
+        // in the log.
+        const question = decisions.some((item) => item.id === id && item.kind === 'question');
+        setView((current) => (question ? 'log' : current === 'decisions' || current === 'log' ? current : 'decisions'));
       }),
       review
         ? reviewGutter(review, {
@@ -102,10 +105,11 @@ export const SpecChangelog = ({
               setView('review');
             },
             onOpen: (key) => onOpenCode?.(key),
+            read,
           })
         : [],
     ],
-    [themeMode, decisions, review, onOpenCode],
+    [themeMode, decisions, review, onOpenCode, read],
   );
 
   return (
@@ -149,6 +153,7 @@ export const SpecChangelog = ({
           )}
           {view === 'review' && (
             <ReviewPanel
+              read={read}
               review={review}
               selected={selectedVerdict}
               onSelect={setSelectedVerdict}

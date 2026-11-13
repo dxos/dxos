@@ -8,28 +8,45 @@
 //
 
 import {
-  DEFAULT_LOOK,
   type HorizontalAlign,
   type Link,
-  type LookTone,
   type Node,
   type NodeStyle,
-  type NodeSurface,
   type NodeTone,
-  type Radius,
-  type SceneLook,
   STYLE_HUES,
   type StyleHue,
   type StyleMap,
-  type StyleVariant,
+  type TextTone,
   type VerticalAlign,
   isEllipseNode,
   isViewNode,
+  resolveStyle as resolveSceneStyle,
   showsContents,
+} from '@dxos/scene';
+
+import {
+  DEFAULT_LOOK,
+  type LookTone,
+  type NeuRelief,
+  type NodeSurface,
+  type Opacity,
+  type Radius,
+  type SceneLook,
+  type StyleVariant,
   styleVariant,
 } from '../model/index.ts';
-import { DEFAULT_TEXT, NEAREST_HUE, RADIUS_CLASSES, type SetSurface, SURFACES, VIEW_FILLS } from './surfaces.ts';
+import {
+  CANVAS_FILLS,
+  DEFAULT_TEXT,
+  NEAREST_HUE,
+  NEU_CANVAS_FILL,
+  RADIUS_CLASSES,
+  type SetSurface,
+  SURFACES,
+  VIEW_FILLS,
+} from './surfaces.ts';
 
+/** A hue's classes. */
 export type HueClasses = { surface: string; text: string; border: string };
 
 const HUES: Record<string, HueClasses> = {
@@ -108,6 +125,68 @@ const TONE_FILLS: Record<StyleHue, Record<'strong' | 'light', ToneClasses>> = {
 
 const isStyleHue = (hue: string | undefined): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
 
+/** A text colour as it is drawn, and the swatch that offers it. */
+export type TextColor = { text: string; swatch: string };
+
+/** The tone a text colour takes when its style names a hue alone. */
+export const DEFAULT_TEXT_TONE: TextTone = 2;
+
+/**
+ * Each style hue as a text colour at its three tones, light to dark: the palette's 300, 500 and 700, so a text set in
+ * a hue can be made to stand out or sit back on either canvas.
+ */
+export const TEXT_COLORS: Record<StyleHue, readonly [TextColor, TextColor, TextColor]> = {
+  neutral: [
+    { text: 'text-neutral-300', swatch: 'bg-neutral-300' },
+    { text: 'text-neutral-500', swatch: 'bg-neutral-500' },
+    { text: 'text-neutral-700', swatch: 'bg-neutral-700' },
+  ],
+  red: [
+    { text: 'text-red-300', swatch: 'bg-red-300' },
+    { text: 'text-red-500', swatch: 'bg-red-500' },
+    { text: 'text-red-700', swatch: 'bg-red-700' },
+  ],
+  orange: [
+    { text: 'text-orange-300', swatch: 'bg-orange-300' },
+    { text: 'text-orange-500', swatch: 'bg-orange-500' },
+    { text: 'text-orange-700', swatch: 'bg-orange-700' },
+  ],
+  amber: [
+    { text: 'text-amber-300', swatch: 'bg-amber-300' },
+    { text: 'text-amber-500', swatch: 'bg-amber-500' },
+    { text: 'text-amber-700', swatch: 'bg-amber-700' },
+  ],
+  green: [
+    { text: 'text-green-300', swatch: 'bg-green-300' },
+    { text: 'text-green-500', swatch: 'bg-green-500' },
+    { text: 'text-green-700', swatch: 'bg-green-700' },
+  ],
+  teal: [
+    { text: 'text-teal-300', swatch: 'bg-teal-300' },
+    { text: 'text-teal-500', swatch: 'bg-teal-500' },
+    { text: 'text-teal-700', swatch: 'bg-teal-700' },
+  ],
+  sky: [
+    { text: 'text-sky-300', swatch: 'bg-sky-300' },
+    { text: 'text-sky-500', swatch: 'bg-sky-500' },
+    { text: 'text-sky-700', swatch: 'bg-sky-700' },
+  ],
+  blue: [
+    { text: 'text-blue-300', swatch: 'bg-blue-300' },
+    { text: 'text-blue-500', swatch: 'bg-blue-500' },
+    { text: 'text-blue-700', swatch: 'bg-blue-700' },
+  ],
+  violet: [
+    { text: 'text-violet-300', swatch: 'bg-violet-300' },
+    { text: 'text-violet-500', swatch: 'bg-violet-500' },
+    { text: 'text-violet-700', swatch: 'bg-violet-700' },
+  ],
+};
+
+/** The colour a text hue draws at a tone; none for a name that is no style hue. */
+export const textColor = (hue: string | undefined, tone: TextTone = DEFAULT_TEXT_TONE): TextColor | undefined =>
+  isStyleHue(hue) ? TEXT_COLORS[hue][tone - 1] : undefined;
+
 /** The default look: the base surface, the base text and the separator border. */
 const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'border-separator' };
 
@@ -129,37 +208,52 @@ export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TON
   return base;
 };
 
-/** `base` with every field `own` sets over it; an `undefined` field of `own` is unset, so it leaves the base's. */
-const overlay = <T extends object>(base: T | undefined, own: T | undefined): T | undefined => {
-  if (!base || !own) {
-    return own ?? base;
-  }
-  const merged = { ...base };
-  for (const [key, value] of Object.entries(own)) {
-    if (value !== undefined) {
-      Reflect.set(merged, key, value);
-    }
-  }
-  return merged;
-};
-
 /** A node as drawn: its class's style under its own (`StyleClass`). */
 export const classedNode = (node: Node, styles: StyleMap | undefined): Node => {
   const style = node.class ? styles?.[node.class]?.style : undefined;
-  return style ? { ...node, style: overlay(style, node.style) } : node;
+  return style && node.class
+    ? {
+        ...node,
+        style: resolveSceneStyle(
+          { style: node.class, overrides: node.style },
+          {},
+          { styles: { [node.class]: style } },
+          [],
+          {},
+        ),
+      }
+    : node;
 };
 
 /** A link as drawn: its class's colour, line style and caption size under its own. */
 export const classedLink = (link: Link, styles: StyleMap | undefined): Link => {
   const style = link.class ? styles?.[link.class]?.style : undefined;
   // A link draws only what `LineStyle` shares with its class's style; an edit of a classed link writes there.
-  return style
+  return style && link.class
     ? {
         ...link,
-        style: overlay({ hue: style.hue, lineStyle: style.lineStyle, fontSize: style.fontSize }, link.style),
+        style: resolveSceneStyle(
+          { style: link.class, overrides: link.style },
+          {},
+          { styles: { [link.class]: { hue: style.hue, lineStyle: style.lineStyle, fontSize: style.fontSize } } },
+          [],
+          {},
+        ),
       }
     : link;
 };
+
+/**
+ * A node as its type draws it where its style sets no fill or border: a `bare` type draws neither, since it draws
+ * all it shows, and an `outline` type draws its border alone. The properties panel reads the same node, so a toggle
+ * shows what is drawn.
+ */
+export const bareNode = (node: Node, def: { bare?: boolean; outline?: boolean } | undefined): Node =>
+  def?.bare
+    ? { ...node, style: { fill: false, border: false, ...node.style } }
+    : def?.outline
+      ? { ...node, style: { fill: false, ...node.style } }
+      : node;
 
 /**
  * A node's style with the defaults the frame draws spelled out: an unset `fill`, `border` or `rounded` is drawn (the
@@ -232,10 +326,12 @@ export const frameClasses = (
   const clear = !filled || hue.surface === 'bg-transparent';
   const surface = opaque && clear ? VIEW_FILLS[view.contents][look.tone] : filled ? hue.surface : '';
   const lineStyle = style.lineStyle ?? tokens.borderStyle;
+  // A text colour of its own wins over the one the shape's hue and fill give the text.
+  const text = textColor(style.textHue, style.textTone)?.text ?? hue.text;
   return [
     surface,
     // A guide's hue marks its edge (a group's backdrop); its title reads in the default text colour.
-    style.guide ? '' : hue.text,
+    style.guide ? '' : text,
     selected
       ? 'border-focus'
       : hovered
@@ -257,6 +353,30 @@ export const cornerRadius = (
   style: NodeStyle | undefined,
   tokens: Pick<StyleVariant, 'radius' | 'roundedRadius'>,
 ): Radius => (style?.rounded === false ? 'none' : style?.rounded ? tokens.roundedRadius : tokens.radius);
+
+/**
+ * The canvas colour in SVG, under a link's caption and inside a hollow end marker: the Neu ground on the Neu
+ * background, else the canvas's own surface.
+ */
+export const canvasFillClass = (look: SceneLook, opacity: Opacity): string =>
+  look.background.surface === 'neu' ? NEU_CANVAS_FILL : CANVAS_FILLS[opacity][look.tone];
+
+const SURFACE_RELIEF: Partial<Record<NodeSurface, NeuRelief>> = {
+  'neu-raised': 'raised',
+  'neu-inset': 'inset',
+};
+
+/**
+ * The Neu relief a filled node stands in by its tone, for a shape drawn as a silhouette (its box-shadow would be
+ * masked away with the box); none for a flat or unfilled shape or another style set. Selection never changes it.
+ */
+export const nodeRelief = (node: Node, look: SceneLook = DEFAULT_LOOK): NeuRelief | undefined => {
+  const style = resolveStyle(node.style);
+  if (!style.fill || style.guide) {
+    return undefined;
+  }
+  return SURFACE_RELIEF[styleVariant(look.styleSet, style.tone).surface];
+};
 
 export type LineClasses = { stroke: string; fill: string };
 

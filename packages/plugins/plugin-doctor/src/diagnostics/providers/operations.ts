@@ -10,8 +10,7 @@ import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Registry } from '@dxos/echo';
 
-import { meta } from '#meta';
-
+import { DoctorNamespace } from '../../namespace.ts';
 import { getReadyDatabases } from '../helpers.ts';
 import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
@@ -39,8 +38,8 @@ export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
  */
 export const operationsServicesDiagnostic: DiagnosticProvider = {
   id: 'operations-services',
-  label: ['diagnostic.operations-services.label', { ns: meta.profile.key }],
-  description: ['diagnostic.operations-services.description', { ns: meta.profile.key }],
+  label: ['diagnostic.operations-services.label', { ns: DoctorNamespace.key }],
+  description: ['diagnostic.operations-services.description', { ns: DoctorNamespace.key }],
   run: async ({ spaces, graph, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const databases = await getReadyDatabases({ spaces, graph });

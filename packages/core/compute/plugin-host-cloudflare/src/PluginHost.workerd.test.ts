@@ -1,0 +1,527 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { next as A } from '@automerge/automerge';
+import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+import { describe, test } from 'vitest';
+
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
+import { Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
+import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
+import { type EdgeFunctionEnv, ErrorCodec, PluginProtocol } from '@dxos/protocols';
+import { QueryResponseSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
+
+import * as PluginHost from './PluginHost.ts';
+import {
+  Adopt,
+  Delegate,
+  Fails,
+  Followup,
+  Greet,
+  Greeter,
+  GREETER_WIRE_KEY,
+  Hidden,
+  Inspect,
+  InspectEvent,
+  Nest,
+  ResolveRegistry,
+  TEST_PLUGIN_KEY,
+  TestFailure,
+  TestPlugin,
+  TestSkill,
+} from './testing/index.ts';
+
+const SPACE_ID = 'B2N35FBQKXIOTC5XEOCRVORIYQZHM2IBM';
+
+describe('PluginHost', () => {
+  test('describes what the plugin contributes', async ({ expect }) => {
+    const catalog = await makeHost().describe();
+
+    expect(catalog.failures).toEqual([]);
+    expect(catalog.plugin).toEqual({ key: TEST_PLUGIN_KEY, name: 'Host test' });
+    expect(catalog.types.map(({ typename }) => typename)).toEqual([Type.getTypename(TestSchema.Person)]);
+    expect(catalog.types[0].jsonSchema).toMatchObject({ type: 'object' });
+    expect(catalog.skills).toMatchObject([{ key: TestSkill.key, name: 'Host test', mcpPrompt: true }]);
+    expect(catalog.skills[0].tools.length).toBe(1);
+    // The skill manager lets an agent enable only a skill that says it may; without the flag a bundled skill is unusable
+    // by an agent that starts with the skill manager alone.
+    expect(catalog.skills[0].agentCanEnable).toBe(true);
+    const operations = JSON.stringify(catalog.operations);
+    expect(operations).toContain(String(Reply.meta.key));
+  });
+
+  // EDGE speaks to a bundle at the version of the host it was published with (EDGE-PLUGINS F-6.9).
+  test('reports the protocol version it speaks', async ({ expect }) => {
+    expect((await makeHost().describe()).protocolVersion).toBe(PluginProtocol.PROTOCOL_VERSION);
+  });
+
+  test('invokes an operation of the primary plugin by key', async ({ expect }) => {
+    const host = makeHost();
+    expect(await host.invoke({ operationKey: String(Reply.meta.key), input: { hello: 'world' } }, {})).toEqual({
+      ok: true,
+      output: { hello: 'world' },
+    });
+    // EDGE names an operation by its bare key.
+    expect(await host.invoke({ operationKey: 'com.example.operation.reply', input: 'bare' }, {})).toEqual({
+      ok: true,
+      output: 'bare',
+    });
+    // An operation the plugin does not contribute is not found.
+    expect(await host.invoke({ operationKey: String(Fibonacci.meta.key), input: {} }, {})).toMatchObject({
+      ok: false,
+      error: { code: 'operation-not-found' },
+    });
+  });
+
+  test('activates once per host and reuses it across calls', async ({ expect }) => {
+    let made = 0;
+    const host = PluginHost.make(() => {
+      made++;
+      return { primary: TestPlugin() };
+    });
+    await Promise.all([
+      host.invoke({ operationKey: String(Reply.meta.key), input: 1 }, {}),
+      host.invoke({ operationKey: String(Reply.meta.key), input: 2 }, {}),
+    ]);
+    await host.describe();
+    expect(made).toBe(1);
+  });
+
+  // A tool error reads the same whichever routing ran the operation (operation-service rethrows `ErrorCodec`'s form).
+  test("returns the handler's error encoded as operation-service sends it", async ({ expect }) => {
+    const result = await makeHost().invoke({ operationKey: String(Fails.meta.key), input: {} }, {});
+    expect(result.ok).toBe(false);
+    const expected = ErrorCodec.encode(new TestFailure({ context: { uri: 'echo:///missing' } }));
+    const encoded = result.ok ? undefined : result.error.encoded;
+    expect(encoded && ErrorCodec.decode(encoded).message).toBe(ErrorCodec.decode(expected).message);
+    expect(encoded?.name).toBe('TestFailure');
+  });
+
+  test('returns failures as data: an unknown operation and an invalid or unserved space', async ({ expect }) => {
+    const host = makeHost();
+    expect(await host.invoke({ operationKey: 'com.example.operation.missing' }, {})).toMatchObject({
+      ok: false,
+      error: { code: 'operation-not-found', name: 'OperationNotFoundError' },
+    });
+    expect(await host.invoke({ operationKey: String(Reply.meta.key), spaceId: 'nope' }, {})).toMatchObject({
+      ok: false,
+      error: { code: 'invalid-request', message: expect.stringContaining('nope') },
+    });
+    // A space needs the data bindings, which this host was not given.
+    expect(await host.invoke({ operationKey: String(Reply.meta.key), spaceId: SPACE_ID }, {})).toMatchObject({
+      ok: false,
+      error: { code: 'invalid-request' },
+    });
+  });
+
+  // The request context operation-service gives a handler (EDGE-PLUGINS F-5.6).
+  describe('request context', () => {
+    test("forwards the handler's trace events to the sink, between start and end envelopes", async ({ expect }) => {
+      const { messages, sink } = collectingSink();
+      const result = await makeHost().invoke(
+        { operationKey: String(Inspect.meta.key), input: {} },
+        {},
+        {
+          traceSink: sink,
+          parentPid: 'parent',
+        },
+      );
+      expect(result).toMatchObject({ ok: true });
+      const types = messages.flatMap((message) => message.events.map((event) => event.type));
+      expect(types).toEqual(['operation.start', InspectEvent.key, 'operation.end']);
+      expect(messages[0].meta).toMatchObject({ parentPid: 'parent' });
+    });
+
+    test('a caller-minted pid owns the envelopes', async ({ expect }) => {
+      const { messages, sink } = collectingSink();
+      await makeHost().invoke(
+        { operationKey: String(Inspect.meta.key), input: {} },
+        {},
+        { traceSink: sink, pid: 'minted' },
+      );
+      expect(messages).toHaveLength(1);
+      expect(messages[0].meta).toMatchObject({ pid: 'minted' });
+    });
+
+    test("aborts the handler's cancellation signal when the caller cancels", async ({ expect }) => {
+      const result = await makeHost().invoke(
+        { operationKey: String(Inspect.meta.key), input: { waitForCancel: true } },
+        {},
+        { cancellation: { waitForCancel: () => new Promise((resolve) => setTimeout(resolve, 10)) } },
+      );
+      expect(result).toMatchObject({ ok: true, output: { cancelled: true } });
+    });
+
+    test('pins the ids the handler mints to the seed', async ({ expect }) => {
+      const host = makeHost();
+      const invoke = () =>
+        host.invoke(
+          { operationKey: String(Inspect.meta.key), input: {} },
+          {},
+          { idSeed: { time: 1_700_000_000_000, seed: 7 } },
+        );
+      const [first, second] = [await invoke(), await invoke()];
+      expect(first).toMatchObject({ ok: true });
+      expect(first).toEqual(second);
+    });
+
+    // operation-service derives a nested invocation's seed from the parent's stream, and the parent continues on it.
+    test('an in-process nested operation draws its ids as operation-service does', async ({ expect }) => {
+      const host = makeHost();
+      const idSeed = { time: 1_700_000_000_000, seed: 7 };
+      const nested = await host.invoke({ operationKey: String(Nest.meta.key), input: {} }, {}, { idSeed });
+
+      // The parent mints its pid, then draws the child's seed; the child mints its pid, then the id it returns.
+      EntityId.dangerouslySetSeed(idSeed.time, idSeed.seed);
+      EntityId.random();
+      const childSeed = { time: idSeed.time, seed: fnv1a(EntityId.random()) };
+      EntityId.dangerouslySetSeed(childSeed.time, childSeed.seed);
+      const [, inner, after] = [EntityId.random(), EntityId.random(), EntityId.random()];
+      expect(nested).toEqual({ ok: true, output: { inner, after } });
+    });
+
+    test('a conversation needs a space, whose database holds it', async ({ expect }) => {
+      expect(
+        await makeHost().invoke(
+          { operationKey: String(Inspect.meta.key), input: {} },
+          {},
+          {
+            conversation: 'echo://B2N35FBQKXIOTC5XEOCRVORIYQZHM2IBM/01KABCDEFGHJKMNPQRSTVWXYZ0',
+          },
+        ),
+      ).toMatchObject({
+        ok: false,
+        error: { code: 'invalid-request', message: expect.stringContaining('conversation') },
+      });
+    });
+  });
+
+  // A skill bound by registry URI resolves only through the invocation's registry, as on operation-service.
+  describe('registry', () => {
+    test(
+      "holds the primary's skills and operation records, and no other plugin's",
+      { timeout: 20_000 },
+      async ({ expect }) => {
+        const spaceId = SpaceId.random();
+        const result = await makeHost().invoke(
+          { operationKey: String(ResolveRegistry.meta.key), spaceId, input: {} },
+          makeSpaceEnv(spaceId),
+        );
+        expect(result).toMatchObject({ ok: true, output: { own: TestSkill.key, other: null } });
+        const operations = result.ok ? JSON.stringify(result.output) : '';
+        expect(operations).toContain(String(Reply.meta.key));
+        expect(operations).toContain(String(ResolveRegistry.meta.key));
+        expect(operations).not.toContain(String(Fibonacci.meta.key));
+        expect(operations).not.toContain(String(Hidden.meta.key));
+      },
+    );
+
+    // A pending `waitForCancel` pins the invocation until its stub is disposed.
+    test('a skill that fails to make leaves no cancellation wait pending', { timeout: 20_000 }, async ({ expect }) => {
+      let waiting = false;
+      let disposed = false;
+      const cancellation: PluginProtocol.CancellationSignal & Disposable = {
+        waitForCancel: () => {
+          waiting = true;
+          return new Promise<void>(() => {});
+        },
+        [Symbol.dispose]: () => {
+          disposed = true;
+        },
+      };
+      const spaceId = SpaceId.random();
+      const result = await PluginHost.make(() => ({ primary: BrokenSkillPlugin() })).invoke(
+        { operationKey: String(Reply.meta.key), spaceId, input: {} },
+        makeSpaceEnv(spaceId),
+        { cancellation },
+      );
+      expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining('No skill.') } });
+      expect(disposed).toBe(waiting);
+    });
+  });
+
+  test('an operation whose schema cannot be serialized leaves no cancellation wait pending', async ({ expect }) => {
+    let waiting = false;
+    let disposed = false;
+    const cancellation: PluginProtocol.CancellationSignal & Disposable = {
+      waitForCancel: () => {
+        waiting = true;
+        return new Promise<void>(() => {});
+      },
+      [Symbol.dispose]: () => {
+        disposed = true;
+      },
+    };
+    const result = await PluginHost.make(() => ({ primary: UnserializablePlugin() })).invoke(
+      { operationKey: String(Unserializable.meta.key), input: {} },
+      {},
+      { cancellation },
+    );
+    expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining('No JSON Schema.') } });
+    expect(disposed).toBe(waiting);
+  });
+
+  // Services only EDGE holds, and other plugins' operations (EDGE-PLUGINS F-5.7).
+  describe('host services', () => {
+    test('a handler reaches a service EDGE serves, its methods and streams', async ({ expect }) => {
+      const calls: unknown[] = [];
+      const services: PluginProtocol.HostServices = {
+        descriptors: [{ key: Greeter.key, streams: ['names'] }],
+        host: {
+          call: async (service, method, args) => {
+            calls.push([service, method, ...args]);
+            return method === 'names'
+              ? { ok: true, value: ['Ada', 'Grace'] }
+              : { ok: true, value: `Hello, ${String(args[0])}` };
+          },
+        },
+      };
+      const result = await makeHost().invoke({ operationKey: String(Greet.meta.key), input: {} }, {}, { services });
+      expect(result).toEqual({ ok: true, output: ['Hello, Ada', 'Hello, Grace'] });
+      expect(calls).toEqual([
+        [Greeter.key, 'names'],
+        [Greeter.key, 'greet', 'Ada'],
+        [Greeter.key, 'greet', 'Grace'],
+      ]);
+    });
+
+    test("a plugin's adapter builds the service from its wire service, over the generic proxy", async ({ expect }) => {
+      const calls: unknown[] = [];
+      const services: PluginProtocol.HostServices = {
+        descriptors: [{ key: Greeter.key, streams: ['names'] }, { key: GREETER_WIRE_KEY }],
+        host: {
+          call: async (service, method, args) => {
+            calls.push([service, method, ...args]);
+            return method === 'names' ? { ok: true, value: ['Ada'] } : { ok: true, value: `Hi, ${String(args[0])}` };
+          },
+        },
+      };
+      const result = await makeHost().invoke({ operationKey: String(Greet.meta.key), input: {} }, {}, { services });
+      expect(result).toEqual({ ok: true, output: ['Hi, Ada (adapted)'] });
+      expect(calls).toEqual([
+        [GREETER_WIRE_KEY, 'names'],
+        [GREETER_WIRE_KEY, 'greet', 'Ada'],
+      ]);
+    });
+
+    test('a service failure fails the handler with its message', async ({ expect }) => {
+      const services: PluginProtocol.HostServices = {
+        descriptors: [{ key: Greeter.key, streams: ['names'] }],
+        host: { call: async () => ({ ok: false, error: { code: 'failed', message: 'The bot is offline.' } }) },
+      };
+      expect(
+        await makeHost().invoke({ operationKey: String(Greet.meta.key), input: {} }, {}, { services }),
+      ).toMatchObject({ ok: false, error: { message: expect.stringContaining('The bot is offline.') } });
+    });
+
+    test('a service EDGE does not serve is not found', async ({ expect }) => {
+      expect(await makeHost().invoke({ operationKey: String(Greet.meta.key), input: {} }, {})).toMatchObject({
+        ok: false,
+        error: { message: expect.stringContaining('Service not found') },
+      });
+    });
+
+    test("a scheduled followup's failure does not fail its caller", async ({ expect }) => {
+      const operations: PluginProtocol.OperationHost = {
+        invoke: async () => ({ ok: false, error: { code: 'failed', message: 'The followup failed.' } }),
+      };
+      const host = makeHost();
+      expect(await host.invoke({ operationKey: String(Followup.meta.key), input: {} }, {}, { operations })).toEqual({
+        ok: true,
+        output: { done: true },
+      });
+      expect(await host.invoke({ operationKey: String(Followup.meta.key), input: {} }, {})).toEqual({
+        ok: true,
+        output: { done: true },
+      });
+    });
+
+    // In process the callee's output is the caller's own object, as operation-service returns it.
+    test('an in-process call returns a live object', async ({ expect }) => {
+      expect(await makeHost().invoke({ operationKey: String(Adopt.meta.key), input: {} }, {})).toEqual({
+        ok: true,
+        output: { live: true },
+      });
+    });
+
+    test("runs its own operations in process and other plugins' through EDGE", async ({ expect }) => {
+      const invoked: unknown[] = [];
+      const operations: PluginProtocol.OperationHost = {
+        invoke: async (operationKey, input, options) => {
+          invoked.push({ operationKey, input, options });
+          return { ok: true, output: { result: '55' } };
+        },
+      };
+      const result = await makeHost().invoke(
+        { operationKey: String(Delegate.meta.key), input: { n: 10 } },
+        {},
+        { operations, pid: 'outer' },
+      );
+      expect(result).toEqual({ ok: true, output: { reply: { n: 10 }, fibonacci: { result: '55' } } });
+      expect(invoked).toEqual([
+        { operationKey: 'com.example.operation.fib', input: { iterations: 10 }, options: { parentPid: 'outer' } },
+      ]);
+    });
+  });
+});
+
+/** FNV-1a of an id, as operation-service derives a nested invocation's seed. */
+const fnv1a = (id: string): number => {
+  let hash = 2166136261;
+  for (let index = 0; index < id.length; index++) {
+    hash ^= id.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+};
+
+/** The part of a `Trace.Message` JSON the tests read. */
+const SinkMessage = Schema.Struct({
+  meta: Schema.Struct({ pid: Schema.String, parentPid: Schema.optional(Schema.String) }),
+  events: Schema.Array(Schema.Struct({ type: Schema.String })),
+});
+
+/** A trace sink that keeps what it is sent. */
+const collectingSink = () => {
+  const messages: Schema.Schema.Type<typeof SinkMessage>[] = [];
+  return {
+    messages,
+    sink: { write: (message: object) => void messages.push(Schema.decodeUnknownSync(SinkMessage)(message)) },
+  };
+};
+
+/** Adds the `Symbol.dispose` a Workers RPC result carries, which the host's data services release with `using`. */
+const disposable = <T extends object>(value: T): T & Disposable => Object.assign(value, { [Symbol.dispose]: () => {} });
+
+/** EDGE's document store for one space, in memory, whose root starts with no objects. */
+class MemoryDataService implements EdgeFunctionEnv.DataService {
+  readonly #documents = new Map<string, A.Doc<Record<string, unknown>>>();
+  readonly #spaceKey = PublicKey.random();
+  readonly #rootDocumentId: string;
+
+  constructor(spaceId: SpaceId) {
+    this.#rootDocumentId = this.#create(
+      A.from<Record<string, unknown>>({
+        version: 1,
+        access: { spaceId, spaceKey: this.#spaceKey.toHex() },
+        objects: {},
+        links: {},
+      }),
+    );
+  }
+
+  async getSpaceMeta() {
+    return disposable({ spaceKey: this.#spaceKey.toHex(), rootDocumentId: this.#rootDocumentId });
+  }
+
+  async getDocuments(_ctx: EdgeFunctionEnv.TraceContext, _spaceId: SpaceId, documentIds: string[]) {
+    return disposable(
+      documentIds.flatMap((documentId) => {
+        const document = this.#documents.get(documentId);
+        return document === undefined ? [] : [{ documentId, data: A.save(document) }];
+      }),
+    );
+  }
+
+  async execQuery() {
+    return disposable(create(QueryResponseSchema, { results: [] }));
+  }
+
+  async createDocument() {
+    return disposable({ documentId: this.#create(A.init()) });
+  }
+
+  async changeDocument(_ctx: EdgeFunctionEnv.TraceContext, _spaceId: SpaceId, documentId: string, changes: Uint8Array) {
+    const document = this.#documents.get(documentId);
+    if (document === undefined) {
+      throw new Error(`No document ${documentId}`);
+    }
+    this.#documents.set(documentId, A.loadIncremental(document, changes));
+  }
+
+  #create(document: A.Doc<Record<string, unknown>>): string {
+    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+    this.#documents.set(documentId, document);
+    return documentId;
+  }
+}
+
+/** Fails any call: the registry test reads no feed and calls no model. */
+const unserved = async (): Promise<never> => {
+  throw new Error('Not served by this test.');
+};
+
+/** The data bindings a space-scoped invocation needs, over one in-memory space. */
+const makeSpaceEnv = (spaceId: SpaceId): PluginProtocol.Env => ({
+  DATA_SERVICE: new MemoryDataService(spaceId),
+  QUEUE_SERVICE: { queryQueue: unserved, insertIntoQueue: unserved, deleteFromQueue: unserved },
+  FUNCTIONS_AI_SERVICE: { fetch: unserved },
+});
+
+/** An operation whose input schema throws when serialized to JSON Schema, as the host does before running it. */
+const Unserializable = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.unserializable'), name: 'Unserializable' },
+  input: Schema.Struct({
+    name: Schema.String.check(
+      Schema.makeFilter((name: string) => name.length > 0, {
+        toJsonSchema: () => {
+          throw new Error('No JSON Schema.');
+        },
+      }),
+    ),
+  }),
+  output: Schema.Struct({}),
+});
+
+const UnserializablePlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.hostTestUnserializable'), name: 'Unserializable' }),
+).pipe(
+  Plugin.addModule(
+    Capability.inlineModule('UnserializableOperations', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed(
+        Capability.contribute(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(Unserializable.pipe(Operation.withHandler(() => Effect.succeed({})))),
+        ),
+      ),
+    ),
+  ),
+  Plugin.make,
+);
+
+/** A plugin whose one skill throws when made, as a skill with a broken definition does. */
+const BrokenSkillPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.hostTestBroken'), name: 'Broken skill' }),
+).pipe(
+  Plugin.addModule(
+    Capability.inlineModule('BrokenOperations', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed(Capability.contribute(Capabilities.OperationHandler, OperationHandlerSet.make(ReplyHandler))),
+    ),
+  ),
+  Plugin.addModule(
+    Capability.inlineModule('BrokenSkill', { provides: [AppCapabilities.SkillDefinition] }, () =>
+      Effect.succeed(
+        Capability.contribute(AppCapabilities.SkillDefinition, {
+          key: 'org.dxos.skill.hostTestBroken',
+          make: () => {
+            throw new Error('No skill.');
+          },
+        }),
+      ),
+    ),
+  ),
+  Plugin.make,
+);
+
+const makeHost = () => PluginHost.make(() => ({ primary: TestPlugin() }));

@@ -1,0 +1,162 @@
+{
+  "name": "@dxos/plugin-recorder",
+  "version": "0.16.0",
+  "private": true,
+  "description": "Record a presentation's voice-over from its speaker notes.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "imports": {
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/components.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/containers.mjs"
+    },
+    "#meta": {
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/RecorderPlugin.workerd.mjs",
+      "node": "./dist/lib/RecorderPlugin.node.mjs",
+      "default": "./dist/lib/RecorderPlugin.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/operations.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./RecorderCapabilities": {
+      "source": "./src/types/RecorderCapabilities.ts",
+      "types": "./dist/types/src/types/RecorderCapabilities.d.ts",
+      "import": "./dist/lib/RecorderCapabilities.mjs"
+    },
+    "./RecorderEvents": {
+      "source": "./src/types/RecorderEvents.ts",
+      "types": "./dist/types/src/types/RecorderEvents.d.ts",
+      "import": "./dist/lib/RecorderEvents.mjs"
+    },
+    "./RecorderOperation": {
+      "source": "./src/types/RecorderOperation.ts",
+      "types": "./dist/types/src/types/RecorderOperation.d.ts",
+      "import": "./dist/lib/RecorderOperation.mjs"
+    },
+    "./RecorderPlugin": {
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/RecorderPlugin.workerd.mjs",
+      "node": "./dist/lib/RecorderPlugin.node.mjs",
+      "import": "./dist/lib/RecorderPlugin.mjs"
+    },
+    "./RecorderSettings": {
+      "source": "./src/types/RecorderSettings.ts",
+      "types": "./dist/types/src/types/RecorderSettings.d.ts",
+      "import": "./dist/lib/RecorderSettings.mjs"
+    },
+    "./Take": {
+      "source": "./src/types/Take.ts",
+      "types": "./dist/types/src/types/Take.d.ts",
+      "import": "./dist/lib/Take.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "RecorderCapabilities": [
+        "dist/types/src/types/RecorderCapabilities.d.ts"
+      ],
+      "RecorderEvents": [
+        "dist/types/src/types/RecorderEvents.d.ts"
+      ],
+      "RecorderOperation": [
+        "dist/types/src/types/RecorderOperation.d.ts"
+      ],
+      "RecorderSettings": [
+        "dist/types/src/types/RecorderSettings.d.ts"
+      ],
+      "Take": [
+        "dist/types/src/types/Take.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-file": "workspace:*",
+    "@dxos/plugin-presenter": "workspace:*",
+    "@dxos/plugin-studio": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/atom-react": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}

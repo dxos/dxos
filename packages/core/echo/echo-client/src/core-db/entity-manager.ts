@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId, isValidAutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -29,10 +29,12 @@ import {
   BACKED_OBJECT_LIMIT,
   type BranchRecord,
   DatabaseDirectory,
+  type DirectoryJson,
   EncodedReference,
   type EntityStructure,
   SpaceDocVersion,
   type SpaceState,
+  directoryJson,
 } from '@dxos/echo-protocol';
 import {
   type RefResolver,
@@ -51,6 +53,7 @@ import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, countWork, deepMapValues } from '@dxos/util';
 
+import { isValidAutomergeUrl } from '../automerge/automerge-url.ts';
 import {
   type ChangeEvent,
   type ClientDocHandleEvents,
@@ -65,8 +68,8 @@ import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts'
 import { ObjectCoreRegistry } from './object-core-registry.ts';
 import { type IDatabaseBinding, ObjectCore, type SnapshotState } from './object-core.ts';
 import { shareStructure } from './share-structure.ts';
+import { getSnapshotState } from './snapshot-state.ts';
 import {
-  type AddCoreOptions,
   type AtomicReplaceObjectProps,
   type DocumentChanges,
   type GetObjectCoreByIdOptions,
@@ -76,7 +79,9 @@ import {
   type ReleaseObjectOptions,
   type SpaceDocumentHeads,
 } from './types.ts';
+import { UpdateDispatch } from './update-dispatch.ts';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
+import { type ExportWorkingSetOptions, type WorkingSetRow } from './working-set-row.ts';
 
 const TRACE_LOADING = false;
 
@@ -199,6 +204,8 @@ export class EntityManager implements IDatabaseBinding {
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   /** Objects a local commit wrote, emitted synchronously after the commit and before {@link _updateEvent}. */
   readonly _localCommitEvent = new Event<ItemsUpdatedEvent>();
+  /** Routes {@link _updateEvent} to the live queries it can change; they stay registered across a close and reopen. */
+  readonly updateDispatch = new UpdateDispatch(this._updateEvent, (id) => this.getObjectCoreById(id, { load: false }));
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
   /** Fires when the database has finished loading its initial space root document. */
@@ -217,6 +224,15 @@ export class EntityManager implements IDatabaseBinding {
 
   // ── Automerge document state ────────────────────────────────────────────
   private _spaceRootDocHandle: DocHandleProxy<DatabaseDirectory> | null = null;
+
+  /**
+   * The space root read from JSON while its handle stays passive, so routing never loads Automerge; undefined once
+   * the root is loaded, after which its document is read directly. `text` is kept for the working-set export.
+   */
+  #directory: { json: DirectoryJson; text: string } | undefined = undefined;
+
+  /** Stops following the passive root's host updates and activation. */
+  #unwatchRoot: CleanupFn | undefined = undefined;
 
   private readonly _objectDocumentHandles = new Map<string, DocHandleProxy<DatabaseDirectory>>();
 
@@ -254,6 +270,9 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Ids {@link _linksAddedEvent} has already reported. */
   #linkedObjectIds = new Set<string>();
+
+  /** Objects moved out of the space directory whose cores rebind to their new document once it loads. */
+  readonly #pendingPromotions = new Set<string>();
 
   /** Set from {@link close} until the next {@link open}: the working set is gone, not merely unloaded. */
   #closed = false;
@@ -314,6 +333,15 @@ export class EntityManager implements IDatabaseBinding {
     return this._linksAddedEvent;
   }
 
+  get lifetimeEnded(): ReadOnlyEvent<void> {
+    return this.#lifetimeEnded;
+  }
+
+  /** Whether a close has begun, so the working set and the space root handle are no longer readable. */
+  get isClosing(): boolean {
+    return this.#closing;
+  }
+
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
   /**
@@ -364,9 +392,9 @@ export class EntityManager implements IDatabaseBinding {
     try {
       await this._loadSpaceRootDocHandle(ctx, spaceState);
       const spaceRootDocHandle = this.getSpaceRootDocHandle();
-      const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
-      invariant(spaceRootDoc);
-      const objectIds = Object.keys(spaceRootDoc.objects ?? {});
+      // Deprecated inline directory objects stay readable until the host migrates them into linked documents.
+      // TODO(dmaretskyi): Drop once every space has run the inline object migration.
+      const objectIds = Object.keys(this.#rootDirectory().objects ?? {});
       this._createInlineObjects(spaceRootDocHandle, objectIds);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
     } catch (err) {
@@ -613,6 +641,116 @@ export class EntityManager implements IDatabaseBinding {
     } catch (err) {
       log.warn('index row not placed, the object loads from its document', { id, err });
       return undefined;
+    }
+  }
+
+  /**
+   * The working set as rows the host can be bypassed with at the next open: the space root first, then
+   * each object's document by most recent use, leaving out what does not fit `maxBytes` and any
+   * document with a change the host has not taken.
+   */
+  exportWorkingSet({ maxBytes }: ExportWorkingSetOptions): WorkingSetRow[] {
+    const root = this._spaceRootDocHandle;
+    const rootState = root?._heldState();
+    if (!root?.documentId || !rootState || rootState.bytes.length > maxBytes) {
+      return [];
+    }
+    const rootRow: WorkingSetRow = { documentId: root.documentId, heads: [...rootState.heads], bytes: rootState.bytes };
+    // A passive root's text is what the host sent at these heads; a loaded one is acknowledged, so its doc is at them.
+    const rootJson = this.#directory?.text ?? directoryJson(root.doc());
+    if (rootJson !== undefined) {
+      rootRow.directoryJson = rootJson;
+    }
+    const rows: WorkingSetRow[] = [rootRow];
+    let total = rootState.bytes.length;
+    const exported = new Set<string>([root.documentId]);
+    const cores = this.allObjectCores()
+      .filter((core) => this.getCurrentBranch(core.id) === 'main')
+      .sort((a, b) => b.activeAt - a.activeAt);
+    for (const core of cores) {
+      const handle = core.handle;
+      const documentId = handle?.documentId;
+      if (!handle || !documentId || exported.has(documentId)) {
+        continue;
+      }
+      const row = this.#workingSetRow(core, handle, documentId);
+      if (!row || total + row.bytes.length > maxBytes) {
+        continue;
+      }
+      exported.add(documentId);
+      total += row.bytes.length;
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  #workingSetRow(
+    core: ObjectCore,
+    handle: DocHandleProxy<DatabaseDirectory>,
+    documentId: string,
+  ): WorkingSetRow | undefined {
+    const state = handle._heldState();
+    if (!state) {
+      return undefined;
+    }
+    const row: WorkingSetRow = { documentId, heads: [...state.heads], bytes: state.bytes };
+    const structure = core.snapshot ? core.snapshot.root.objects[core.id] : this.#soleObjectStructure(core.id, handle);
+    if (structure) {
+      row.objectId = core.id;
+      row.objectJson = JSON.stringify(objectStructureToJson(core.id as EntityId, structure));
+      row.createdAt = structure.system?.createdAt;
+      row.updatedAt = core.getUpdatedAt();
+    }
+    return row;
+  }
+
+  /** The object's structure when it is the only thing its loaded document holds — the shape a JSON row can stand for. */
+  #soleObjectStructure(id: string, handle: DocHandleProxy<DatabaseDirectory>): EntityStructure | undefined {
+    if (handle === this._spaceRootDocHandle || this._documentObjects.get(handle)?.size !== 1) {
+      return undefined;
+    }
+    const doc = handle.doc();
+    const structure = doc.objects?.[id];
+    return structure &&
+      Object.keys(doc.objects ?? {}).length === 1 &&
+      Object.keys(doc.links ?? {}).length === 0 &&
+      structure.system?.mergedInto === undefined
+      ? structure
+      : undefined;
+  }
+
+  /**
+   * Holds each row's stored changes as a passive handle, so the space root and every object document
+   * load from them, without waiting for the host. Called between {@link open} and {@link openWithSpaceState}.
+   */
+  seedDocuments(rows: readonly WorkingSetRow[]): void {
+    for (const { documentId, bytes, heads, directoryJson } of rows) {
+      this._repoProxy.find<DatabaseDirectory>(documentId as DocumentId, {
+        passive: { bytes, heads, json: directoryJson },
+        directory: directoryJson !== undefined,
+      });
+    }
+  }
+
+  /** Shows each object row from its JSON, as an index row is, once the space root routes objects to documents. */
+  placeSeededObjects(rows: readonly WorkingSetRow[]): void {
+    for (const { objectId, objectJson, documentId, heads, bytes, createdAt, updatedAt } of rows) {
+      if (objectId === undefined || objectJson === undefined) {
+        continue;
+      }
+      this.placeIndexRow(EntityId.make(objectId), documentId, () =>
+        getSnapshotState({
+          id: objectId,
+          spaceId: this._spaceId,
+          documentId,
+          rank: 0,
+          documentJson: objectJson,
+          heads,
+          bytes,
+          createdAt,
+          updatedAt,
+        }),
+      );
     }
   }
 
@@ -951,7 +1089,11 @@ export class EntityManager implements IDatabaseBinding {
       if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
         result[i] = undefined;
       } else if (!returnWithUnsatisfiedDeps && core && !this._areDepsSatisfied(core)) {
-        result[i] = undefined;
+        if (this._areDepsResolved(core)) {
+          result[i] = undefined;
+        } else {
+          objectsToLoad.push({ id: objectId, resultIndex: i });
+        }
       } else if (core != null) {
         result[i] = core;
       } else {
@@ -990,18 +1132,22 @@ export class EntityManager implements IDatabaseBinding {
             if (updatedIds.includes(objectToLoad.id)) {
               clearTimeout(inactivityTimeoutTimer);
 
-              const isDeleted = this._objects.get(objectToLoad.id)?.isDeleted();
-              const depsUnsatisfied =
-                this._objects.get(objectToLoad.id) && !this._areDepsSatisfied(this._objects.get(objectToLoad.id)!);
-
-              if (!returnDeleted && isDeleted) {
+              // Rehydrated if collected: the wait can outlast the core's pin, and every check below reads it.
+              const core = this.getObjectCoreById(objectToLoad.id, { load: false });
+              if (!returnDeleted && core?.isDeleted()) {
                 diagnostics.push('object-deleted');
                 result[objectToLoad.resultIndex] = undefined;
-              } else if (!returnWithUnsatisfiedDeps && depsUnsatisfied) {
+              } else if (!returnWithUnsatisfiedDeps && core && !this._areDepsSatisfied(core)) {
+                // The body lands before its strong dependencies can be discovered, so a closure still
+                // loading is waited on; only one settled unreachable answers the id with nothing.
+                if (!this._areDepsResolved(core)) {
+                  scheduleInactivityTimeout();
+                  continue;
+                }
                 diagnostics.push('deps-unsatisfied');
                 result[objectToLoad.resultIndex] = undefined;
               } else {
-                result[objectToLoad.resultIndex] = this.getObjectCoreById(objectToLoad.id)!;
+                result[objectToLoad.resultIndex] = core;
               }
 
               objectsToLoad.splice(i, 1);
@@ -1032,12 +1178,12 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  addCore(core: ObjectCore, opts?: AddCoreOptions): void {
+  addCore(core: ObjectCore): void {
     // One commit: live queries must see the object bound and available, not the link written before it.
-    runInCommit(() => this.#addCore(core, opts));
+    runInCommit(() => this.#addCore(core));
   }
 
-  #addCore(core: ObjectCore, opts?: AddCoreOptions): void {
+  #addCore(core: ObjectCore): void {
     if (core.entityManager) {
       if (core.entityManager !== this) {
         throw new Error('Object already belongs to another database');
@@ -1053,22 +1199,9 @@ export class EntityManager implements IDatabaseBinding {
     invariant(!this._objects.has(core.id));
     this._objects.set(core.id, core);
 
-    let spaceDocHandle: DocHandleProxy<DatabaseDirectory>;
-    const placement = opts?.placeIn ?? 'linked-doc';
-    switch (placement) {
-      case 'linked-doc': {
-        spaceDocHandle = this._createDocumentForObject(core.id);
-        spaceDocHandle.on('change', this._onDocumentUpdate);
-        break;
-      }
-      case 'root-doc': {
-        spaceDocHandle = this.getSpaceRootDocHandle();
-        this._onObjectBoundToDocument(spaceDocHandle, core.id);
-        break;
-      }
-      default:
-        throw new TypeError(`Unknown object placement: ${placement}`);
-    }
+    // Every object gets a document of its own; the space directory holds only its link.
+    const spaceDocHandle = this._createDocumentForObject(core.id);
+    spaceDocHandle.on('change', this._onDocumentUpdate);
 
     core.bind({
       db: this,
@@ -1087,8 +1220,9 @@ export class EntityManager implements IDatabaseBinding {
 
   unlinkObjects(objectIds: string[]): void {
     const root = this.getSpaceRootDocHandle();
+    const directory = this.#rootDirectory();
     for (const objectId of objectIds) {
-      if (!root.doc().links?.[objectId]) {
+      if (!directory.links?.[objectId]) {
         throw new Error(`Link not found: ${objectId}`);
       }
     }
@@ -1115,7 +1249,7 @@ export class EntityManager implements IDatabaseBinding {
 
   #retainObjects(keep: Iterable<string>): string[] {
     const root = this.getSpaceRootDocHandle();
-    const doc = root.doc();
+    const doc = this.#rootDirectory();
     const retained = new Set(keep);
     const droppedInline = Object.keys(doc.objects ?? {}).filter((id) => !retained.has(id));
     const droppedLinks = Object.keys(doc.links ?? {}).filter((id) => !retained.has(id));
@@ -1247,8 +1381,8 @@ export class EntityManager implements IDatabaseBinding {
 
   async getDocumentHeads(): Promise<SpaceDocumentHeads> {
     const root = this.getSpaceRootDocHandle();
-    const doc = root.doc();
-    if (!doc || root.documentId == null) {
+    const doc = this.#rootDirectory();
+    if (root.documentId == null) {
       return { heads: {} };
     }
 
@@ -1267,7 +1401,7 @@ export class EntityManager implements IDatabaseBinding {
       heads[state.documentId] = state.heads ?? [];
     }
 
-    heads[root.documentId] = getHeads(doc);
+    heads[root.documentId] = root.passiveHeads ?? getHeads(root.doc());
 
     return { heads };
   }
@@ -1300,6 +1434,8 @@ export class EntityManager implements IDatabaseBinding {
     if (!rootHeads?.length) {
       return;
     }
+    // Whether a replica carries heads is a question about its history, which only the loaded document holds.
+    rootHandle._activate();
 
     await asyncTimeout(
       Event.wrap<ChangeEvent<DatabaseDirectory>>(rootHandle, 'change').waitForCondition(() => {
@@ -1313,8 +1449,7 @@ export class EntityManager implements IDatabaseBinding {
 
   async reIndexHeads(): Promise<void> {
     const root = this.getSpaceRootDocHandle();
-    const doc = root.doc();
-    invariant(doc);
+    const doc = this.#rootDirectory();
     invariant(root.documentId, 'Space root document must have documentId');
 
     await runServiceCall(this._runtime, this._dataService, 'DataService.reIndexHeads', {
@@ -1408,20 +1543,20 @@ export class EntityManager implements IDatabaseBinding {
     if (!hasLoadedHandles) {
       return [];
     }
-    const rootDoc = this.getSpaceRootDocHandle().doc();
-    if (!rootDoc) {
-      return [];
-    }
-
+    const rootDoc = this.#rootDirectory();
     return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
   }
 
+  /**
+   * @deprecated Inline directory objects are migrated into linked documents; this counts the ones not migrated yet.
+   */
+  // TODO(dmaretskyi): Remove once every space has run the inline object migration.
   getNumberOfInlineObjects(): number {
-    return Object.keys(this.getSpaceRootDocHandle().doc()?.objects ?? {}).length;
+    return Object.keys(this.#rootDirectory().objects ?? {}).length;
   }
 
   getNumberOfLinkedObjects(): number {
-    return Object.keys(this.getSpaceRootDocHandle().doc()?.links ?? {}).length;
+    return Object.keys(this.#rootDirectory().links ?? {}).length;
   }
 
   getTotalNumberOfObjects(): number {
@@ -1464,8 +1599,7 @@ export class EntityManager implements IDatabaseBinding {
 
   getObjectDocumentId(objectId: string): string | undefined {
     invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
-    const spaceRootDoc = this._spaceRootDocHandle.doc();
-    invariant(spaceRootDoc);
+    const spaceRootDoc = this.#rootDirectory();
     if (spaceRootDoc.objects?.[objectId]) {
       return this._spaceRootDocHandle.documentId;
     }
@@ -1487,7 +1621,7 @@ export class EntityManager implements IDatabaseBinding {
 
   /** The synced branch registry for a subtree-root object (undefined if it has no branches). */
   getBranchRegistry(rootObjectId: string): Record<string, BranchRecord> | undefined {
-    return DatabaseDirectory.getBranches(this.getSpaceRootDocHandle().doc(), rootObjectId as EntityId);
+    return DatabaseDirectory.getBranches(this.#rootDirectory(), rootObjectId as EntityId);
   }
 
   /**
@@ -1509,7 +1643,7 @@ export class EntityManager implements IDatabaseBinding {
 
   /** The subtree root that owns the branch set containing `objectId`, if any. */
   private _findBranchRootFor(objectId: string): string | undefined {
-    const branches = this.getSpaceRootDocHandle().doc().branches ?? {};
+    const branches = this.#rootDirectory().branches ?? {};
     for (const [rootId, byName] of Object.entries(branches)) {
       for (const [name, record] of Object.entries(byName)) {
         if (!DatabaseDirectory.isReservedBranchName(name) && record.members[objectId]) {
@@ -1588,7 +1722,7 @@ export class EntityManager implements IDatabaseBinding {
       // Every version is forked, each at the point matching the one the object is read at, so the branch
       // is a whole alternate timeline that merges back version by version.
       const read = member.getDoc();
-      const link = this.getSpaceRootDocHandle().doc().links?.[member.id]?.toString();
+      const link = this.#rootDirectory().links?.[member.id]?.toString();
       for (const { version, handle } of versions) {
         const doc = handle.doc();
         const at = heads && (handle === member.docHandle ? heads : imageHeads(read, heads, doc, member.id));
@@ -1775,13 +1909,13 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Whether the object has its own linked document (not inlined in the space root). */
   private _hasOwnDocument(objectId: string): boolean {
-    return this.getSpaceRootDocHandle().doc().links?.[objectId] != null;
+    return this.#rootDirectory().links?.[objectId] != null;
   }
 
   /** Resolve the object's main (default-branch) document handle. */
   private async _mainDocHandle(objectId: string): Promise<DocHandleProxy<DatabaseDirectory>> {
     const spaceRoot = this.getSpaceRootDocHandle();
-    const url = spaceRoot.doc().links?.[objectId]?.toString();
+    const url = this.#rootDirectory().links?.[objectId]?.toString();
     if (!url) {
       return spaceRoot; // Inline object.
     }
@@ -1794,7 +1928,7 @@ export class EntityManager implements IDatabaseBinding {
   async #mainVersionHandles(
     objectId: string,
   ): Promise<{ version: string; handle: DocHandleProxy<DatabaseDirectory> }[]> {
-    const entries = DatabaseDirectory.getVersionDocs(this.getSpaceRootDocHandle().doc(), objectId);
+    const entries = DatabaseDirectory.getVersionDocs(this.#rootDirectory(), objectId);
     return Promise.all(
       entries.flatMap(({ version, url }) => {
         if (!isValidAutomergeUrl(url)) {
@@ -1814,7 +1948,7 @@ export class EntityManager implements IDatabaseBinding {
     memberId: string,
     member: DocHandleProxy<DatabaseDirectory>,
   ): Promise<DocHandleProxy<DatabaseDirectory>> {
-    const versions = DatabaseDirectory.getVersionDocs(this.getSpaceRootDocHandle().doc(), memberId);
+    const versions = DatabaseDirectory.getVersionDocs(this.#rootDirectory(), memberId);
     if (versions.length === 0) {
       return this._mainDocHandle(memberId);
     }
@@ -1844,7 +1978,7 @@ export class EntityManager implements IDatabaseBinding {
     for (const [memberId, url] of Object.entries(record.members)) {
       const member = await load(url.toString());
       pairs.push({ branch: member, main: await this.#mainCounterpart(memberId, member) });
-      const mainVersions = DatabaseDirectory.getVersionDocUrls(this.getSpaceRootDocHandle().doc(), memberId);
+      const mainVersions = DatabaseDirectory.getVersionDocUrls(this.#rootDirectory(), memberId);
       for (const [version, branchUrl] of Object.entries(record.versions?.[memberId] ?? {})) {
         const mainUrl = mainVersions[version];
         if (mainUrl) {
@@ -1861,7 +1995,7 @@ export class EntityManager implements IDatabaseBinding {
    */
   #routedBranchUrl(record: BranchRecord, memberId: string): string | undefined {
     const member = record.members[memberId]?.toString();
-    const root = this.getSpaceRootDocHandle().doc();
+    const root = this.#rootDirectory();
     const main = DatabaseDirectory.getVersionDocs(root, memberId);
     const linked = main.find((entry) => entry.url === root.links?.[memberId]?.toString());
     const candidates = [
@@ -1938,7 +2072,7 @@ export class EntityManager implements IDatabaseBinding {
     if (!url && core.snapshot) {
       return; // A snapshot core shows its main document.
     }
-    const readUrl = url ?? this.#routedUrl(this.getSpaceRootDocHandle().doc(), memberId);
+    const readUrl = url ?? this.#routedUrl(this.#rootDirectory(), memberId);
     let handle: DocHandleProxy<DatabaseDirectory>;
     if (readUrl && isValidAutomergeUrl(readUrl)) {
       handle = this._repoProxy.find<DatabaseDirectory>(readUrl);
@@ -1979,32 +2113,143 @@ export class EntityManager implements IDatabaseBinding {
       throw new Error('Database opened with no rootUrl');
     }
 
-    const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl).catch((err) => {
-      // Named here because the caller only knows it failed to open the space: every read and write
-      // in it fails, and which document is missing is the whole diagnosis.
+    const rootUrl = spaceState.rootUrl;
+    // Named here because the caller only knows it failed to open the space: every read and write in it fails, and
+    // which document is missing is the whole diagnosis.
+    const unavailable = (err: unknown): never => {
       throw DocumentUnavailableError.is(err)
         ? new EchoClientError({
             message: 'Space root document is not available.',
-            context: { spaceId: this._spaceId, rootUrl: spaceState.rootUrl },
+            context: { spaceId: this._spaceId, rootUrl },
             cause: err,
           })
         : err;
-    });
-    const doc = existingDocHandle.doc();
-    invariant(doc);
+    };
+    const passive = await this.#openPassiveRoot(ctx, rootUrl).catch(unavailable);
+    const existingDocHandle = passive?.handle ?? (await this._initDocHandle(ctx, rootUrl).catch(unavailable));
+    this._spaceRootDocHandle = existingDocHandle;
+    if (passive) {
+      this.#directory = passive.directory;
+      this.#watchRoot(existingDocHandle);
+    }
+    const doc = this.#rootDirectory();
     invariant(doc.version === SpaceDocVersion.CURRENT);
     if (doc.access?.spaceId == null || doc.access?.spaceKey == null) {
       this._initDocAccess(existingDocHandle);
     }
-    this._spaceRootDocHandle = existingDocHandle;
+  }
+
+  /**
+   * The root's handle held passive with its directory JSON, from the boot cache or the host's first send, so nothing
+   * loads Automerge to route objects; undefined when the root must load (it holds inline objects, outgrew the JSON
+   * limit, or is already loaded), and the caller loads it as before.
+   */
+  async #openPassiveRoot(
+    ctx: Context,
+    rootUrl: string,
+  ): Promise<
+    { handle: DocHandleProxy<DatabaseDirectory>; directory: { json: DirectoryJson; text: string } } | undefined
+  > {
+    if (!isValidAutomergeUrl(rootUrl)) {
+      return undefined;
+    }
+    // A seeded handle is shown at once, so a seeded open never waits on the host, which may still be starting.
+    const handle = this._repoProxy.find<DatabaseDirectory>(toDocumentId(rootUrl), { directory: true });
+    await warnAfterTimeout(5_000, 'Automerge root doc load timeout (EntityManager)', async () => {
+      await cancelWithContext(ctx, handle.whenPassiveShown());
+    });
+    const text = handle.passiveJson;
+    if (!handle.passiveHeads || text === undefined) {
+      handle._activate();
+      return undefined;
+    }
+    const json: DirectoryJson = JSON.parse(text);
+    // An object's JSON, sent for a root holding exactly one inline object, carries its id; a directory never does.
+    if ('id' in json) {
+      handle._activate();
+      return undefined;
+    }
+    return { handle, directory: { json, text } };
+  }
+
+  /** The space root as routing reads it: the passive root's JSON, or the loaded document. */
+  #rootDirectory(): DatabaseDirectory {
+    return this.#directory?.json ?? this.getSpaceRootDocHandle().doc();
+  }
+
+  #watchRoot(handle: DocHandleProxy<DatabaseDirectory>): void {
+    const onPassive = () => this.#onRootPassiveUpdate(handle);
+    const onActivated = () => this.#onRootActivated(handle);
+    handle.on('passive', onPassive);
+    handle.on('activated', onActivated);
+    this.#unwatchRoot = () => {
+      handle.off('passive', onPassive);
+      handle.off('activated', onActivated);
+    };
+  }
+
+  /** A change to the root from the host is what loads it: from then on the root takes the host's changes incrementally. */
+  #onRootPassiveUpdate(handle: DocHandleProxy<DatabaseDirectory>): void {
+    if (!this.#closing && handle === this._spaceRootDocHandle && handle.passiveHeads && this.#directory) {
+      handle._activate();
+    }
+  }
+
+  /** Hands routing to the loaded root, applying whatever its document holds beyond the view it replaces. */
+  #onRootActivated(handle: DocHandleProxy<DatabaseDirectory>): void {
+    const before = this.#directory;
+    if (handle !== this._spaceRootDocHandle || !before) {
+      return;
+    }
+    this.#directory = undefined;
+    this.#unwatchRoot?.();
+    this.#unwatchRoot = undefined;
+    if (!this.#closing) {
+      this.#applyDirectoryChange(handle, before.json, handle.doc());
+    }
+  }
+
+  /**
+   * Applies a directory change read from JSON rather than from patches: the same evictions, link loads and inline
+   * object creations `_onDocumentUpdate` makes for a loaded root.
+   */
+  #applyDirectoryChange(
+    handle: DocHandleProxy<DatabaseDirectory>,
+    before: DatabaseDirectory,
+    after: DatabaseDirectory,
+  ): void {
+    const beforeLinks = before.links ?? {};
+    const afterLinks = after.links ?? {};
+    const removed = [...Object.keys(beforeLinks), ...Object.keys(before.objects ?? {})].filter(
+      (objectId) =>
+        afterLinks[objectId] == null &&
+        after.objects?.[objectId] == null &&
+        (this._objects.has(objectId) || this._objectDocumentHandles.has(objectId)) &&
+        !this._pendingDocumentCreations.has(objectId),
+    );
+    for (const objectId of removed) {
+      this._objects.delete(objectId);
+      this._releaseObject(objectId, { releaseDocument: true });
+    }
+    const changedLinks: SpaceDocumentLinks = {};
+    for (const [objectId, url] of Object.entries(afterLinks)) {
+      const value = url.toString();
+      if (beforeLinks[objectId]?.toString() !== value && isValidAutomergeUrl(value)) {
+        changedLinks[objectId] = value;
+      }
+    }
+    const created = Object.keys(after.objects ?? {}).filter((objectId) => !this._objects.has(objectId));
+    this._createInlineObjects(handle, created);
+    this._onObjectLinksUpdated(changedLinks);
+    if (removed.length > 0 || created.length > 0) {
+      this._scheduleThrottledDbUpdate(created);
+    }
   }
 
   private _objectPresent(id: EntityId): boolean {
     assertState(this._spaceRootDocHandle, 'Database was not initialized with root object.');
-    return (
-      DatabaseDirectory.getInlineObject(this._spaceRootDocHandle.doc(), id) != null ||
-      DatabaseDirectory.getLink(this._spaceRootDocHandle.doc(), id) != null
-    );
+    const directory = this.#rootDirectory();
+    return DatabaseDirectory.getInlineObject(directory, id) != null || DatabaseDirectory.getLink(directory, id) != null;
   }
 
   private _loadObjectDocument(objectIdOrMany: string | string[], opts: LoadObjectDocumentOptions = {}): void {
@@ -2023,7 +2268,7 @@ export class EntityManager implements IDatabaseBinding {
       const documentUrl = this._getLinkedDocumentUrl(objectId);
       if (documentUrl == null) {
         this._objectsPendingDocumentLoad.set(objectId, opts);
-        const isInline = DatabaseDirectory.getInlineObject(this._spaceRootDocHandle.doc(), objectId) != null;
+        const isInline = DatabaseDirectory.getInlineObject(this.#rootDirectory(), objectId) != null;
         if (!isInline) {
           log('object absent from space directory, marking unavailable', { objectId });
           this._onObjectUnavailable({ objectId });
@@ -2051,7 +2296,7 @@ export class EntityManager implements IDatabaseBinding {
       added.forEach((objectId) => this.#linkedObjectIds.add(objectId));
       this._linksAddedEvent.emit(added);
     }
-    const spaceRootDoc = this._spaceRootDocHandle?.doc();
+    const spaceRootDoc = this._spaceRootDocHandle ? this.#rootDirectory() : undefined;
     const linksAwaitingLoad = Object.entries(links)
       .filter(([objectId]) => this._objectsPendingDocumentLoad.has(objectId))
       .map(([objectId, url]): [string, string] => [
@@ -2072,6 +2317,57 @@ export class EntityManager implements IDatabaseBinding {
       }
     }
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
+
+    // A root write can re-point a loaded object at another document (a migration committed in place),
+    // which no epoch switch will rebind. The handle map covers objects whose core was collected, which
+    // rehydrate from it; an object viewed on another branch keeps its branch document.
+    for (const [objectId, link] of Object.entries(links)) {
+      const url = link.toString();
+      const boundUrl = this._objectDocumentHandles.get(objectId)?.url;
+      if (
+        boundUrl != null &&
+        boundUrl !== url &&
+        isValidAutomergeUrl(url) &&
+        this.getCurrentBranch(objectId) === 'main'
+      ) {
+        this.#rebindWhenReady(this._repoProxy.find<DatabaseDirectory>(url), objectId, this.#generation);
+      }
+    }
+  }
+
+  /** Rebinds an object to the document its root link now names, once that document is ready. */
+  #rebindWhenReady(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
+    handle
+      .whenReady()
+      .then(() => {
+        if (
+          this.#isStale(generation) ||
+          this._getLinkedDocumentUrl(objectId) !== handle.url ||
+          this.getCurrentBranch(objectId) !== 'main'
+        ) {
+          return;
+        }
+        const previous = this._objectDocumentHandles.get(objectId);
+        if (previous == null) {
+          return;
+        }
+        // Move the change listener as a branch switch does: `_processDocumentUpdate` rebinds an object
+        // to whichever document fires a change, so the superseded one must stop firing for it.
+        const spaceRoot = this.getSpaceRootDocHandle();
+        if (previous !== spaceRoot && (this._documentObjects.get(previous)?.size ?? 0) <= 1) {
+          previous.off('change', this._onDocumentUpdate);
+        }
+        if (handle !== spaceRoot) {
+          handle.off('change', this._onDocumentUpdate);
+          handle.on('change', this._onDocumentUpdate);
+        }
+        if (this._objects.has(objectId)) {
+          this._rebindObjects(handle, [objectId]);
+        } else {
+          this._bindObjectDocument(objectId, handle);
+        }
+      })
+      .catch((err) => log.catch(err));
   }
 
   private _onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
@@ -2161,7 +2457,11 @@ export class EntityManager implements IDatabaseBinding {
     const objectsWithHandles = [...this._objectDocumentHandles.keys()];
     this._objectDocumentHandles.clear();
     this.#linkedObjectIds.clear();
+    this.#pendingPromotions.clear();
     this._documentObjects.clear();
+    this.#unwatchRoot?.();
+    this.#unwatchRoot = undefined;
+    this.#directory = undefined;
     this._spaceRootDocHandle = null;
     return objectsWithHandles;
   }
@@ -2173,9 +2473,8 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   private _getLinkedDocumentUrl(objectId: string): AutomergeUrl | undefined {
-    const spaceRootDoc = this._spaceRootDocHandle?.doc();
-    invariant(spaceRootDoc);
-    return this.#routedUrl(spaceRootDoc, objectId);
+    invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
+    return this.#routedUrl(this.#rootDirectory(), objectId);
   }
 
   /**
@@ -2287,9 +2586,7 @@ export class EntityManager implements IDatabaseBinding {
   /** The document an object's live core reads: on the branch this device views, else on main. */
   #readUrl(objectId: string): AutomergeUrl | undefined {
     const record = this.#viewedBranchRecord(objectId);
-    const url = record
-      ? this.#routedBranchUrl(record, objectId)
-      : this.#routedUrl(this.getSpaceRootDocHandle().doc(), objectId);
+    const url = record ? this.#routedBranchUrl(record, objectId) : this.#routedUrl(this.#rootDirectory(), objectId);
     return url !== undefined && isValidAutomergeUrl(url) ? url : undefined;
   }
 
@@ -2344,7 +2641,7 @@ export class EntityManager implements IDatabaseBinding {
 
   /** The url of the object's version document whose id is `documentId`, if it is one. */
   versionDocumentUrl(objectId: string, documentId: string): AutomergeUrl | undefined {
-    const spaceRootDoc = this.getSpaceRootDocHandle().doc();
+    const spaceRootDoc = this.#rootDirectory();
     const urls = [
       spaceRootDoc.links?.[objectId]?.toString(),
       ...DatabaseDirectory.getVersionDocs(spaceRootDoc, objectId).map(({ url }) => url),
@@ -2367,7 +2664,7 @@ export class EntityManager implements IDatabaseBinding {
     if (routed && documentIds.includes(toDocumentId(routed))) {
       return toDocumentId(routed);
     }
-    const [newest] = DatabaseDirectory.getVersionDocs(this.getSpaceRootDocHandle().doc(), objectId)
+    const [newest] = DatabaseDirectory.getVersionDocs(this.#rootDirectory(), objectId)
       .filter(({ url }) => isValidAutomergeUrl(url) && documentIds.includes(toDocumentId(url)))
       .sort((left, right) => Lens.compareVersions(right.version, left.version));
     return newest && isValidAutomergeUrl(newest.url) ? toDocumentId(newest.url) : documentIds[0];
@@ -2375,7 +2672,7 @@ export class EntityManager implements IDatabaseBinding {
 
   /** The url of the object's document holding version `type` (a type URI) on the branch this device views, if recorded. */
   versionDocumentUrlOfType(objectId: string, type: string): AutomergeUrl | undefined {
-    const root = this.getSpaceRootDocHandle().doc();
+    const root = this.#rootDirectory();
     const entry = DatabaseDirectory.getVersionDocs(root, objectId).find((entry) => entry.type === type);
     const record = entry && this.#viewedBranchRecord(objectId);
     // On a branch the member's own document holds the version `links` names, and `versions` holds the rest.
@@ -2389,7 +2686,7 @@ export class EntityManager implements IDatabaseBinding {
 
   /** The document the object's live core reads. */
   routedDocumentUrl(objectId: string): AutomergeUrl | undefined {
-    return this.#routedUrl(this.getSpaceRootDocHandle().doc(), objectId);
+    return this.#routedUrl(this.#rootDirectory(), objectId);
   }
 
   /**
@@ -2470,7 +2767,7 @@ export class EntityManager implements IDatabaseBinding {
   private async _initDocHandle(ctx: Context, url: string): Promise<DocHandleProxy<DatabaseDirectory>> {
     const docHandle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
     await warnAfterTimeout(5_000, 'Automerge root doc load timeout (EntityManager)', async () => {
-      await cancelWithContext(ctx, docHandle.whenReady());
+      await cancelWithContext(ctx, docHandle.whenUsable());
     });
 
     return docHandle;
@@ -2538,7 +2835,8 @@ export class EntityManager implements IDatabaseBinding {
       }
       this._currentlyLoadingObjects.add({ url: handle.url, objectId });
 
-      if (opts.diskOnly) {
+      // A document loaded from stored changes this client held is on hand, wherever the host is.
+      if (opts.diskOnly && !handle.isLoaded()) {
         const onDisk = await handle.whenSettledOnDisk();
         if (this.#isStale(generation)) {
           this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
@@ -2567,7 +2865,7 @@ export class EntityManager implements IDatabaseBinding {
         }
       }
 
-      await handle.whenReady();
+      await handle.whenUsable();
       this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
       if (this.#isStale(generation)) {
         log('lifetime ended while a document was loading, abandoning load', { objectId });
@@ -2617,7 +2915,8 @@ export class EntityManager implements IDatabaseBinding {
       return;
     }
 
-    const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
+    const spaceRootDoc = this.#rootDirectory();
+    // Deprecated inline directory objects, read until the host migrates them; TODO(dmaretskyi): drop once migrated.
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(
       Object.keys(spaceRootDoc.links ?? {}).flatMap((objectId) => {
@@ -2797,11 +3096,20 @@ export class EntityManager implements IDatabaseBinding {
     // Bound documents count, not just live cores: a core collected before its entry was removed
     // leaves the document behind, and `_rehydrateCore` would resurrect an object the directory no
     // longer lists from it.
-    const removed = getRemovedObjectIds(event).filter(
+    const candidates = getRemovedObjectIds(event).filter(
       (objectId) =>
         (this._objects.has(objectId) || this._objectDocumentHandles.has(objectId)) &&
         !this._pendingDocumentCreations.has(objectId),
     );
+    if (candidates.length === 0) {
+      return;
+    }
+
+    // An inline object the host migrated out of the directory is replaced by a link in the same change: it moved.
+    const links = event.handle === this._spaceRootDocHandle ? (event.handle.doc()?.links ?? {}) : {};
+    const promoted = candidates.filter((objectId) => links[objectId] != null);
+    const removed = candidates.filter((objectId) => links[objectId] == null);
+    this.#promoteInlineObjects(promoted);
     if (removed.length === 0) {
       return;
     }
@@ -2812,6 +3120,43 @@ export class EntityManager implements IDatabaseBinding {
     }
     log('evicted objects removed from the space directory', { count: removed.length });
     this._updateScheduler.forceTrigger();
+  }
+
+  /**
+   * Rebinds objects that moved from the space directory into documents of their own (see
+   * `EchoHost.migrateInlineObjects`). Their cores are kept, so callers holding the objects keep them; each is rebound
+   * once its document loads.
+   */
+  #promoteInlineObjects(objectIds: string[]): void {
+    if (this._spaceRootDocHandle == null) {
+      return;
+    }
+    for (const objectId of objectIds) {
+      const url = this._getLinkedDocumentUrl(objectId);
+      const bound = this._objectDocumentHandles.get(objectId);
+      if (url == null || bound == null || bound.url === url) {
+        continue;
+      }
+      if (!this._objects.has(objectId)) {
+        // No core to keep: the next read loads the object through its link.
+        this._unbindObjectDocument(objectId);
+        continue;
+      }
+      let handle: DocHandleProxy<DatabaseDirectory>;
+      try {
+        handle = this._repoProxy.find<DatabaseDirectory>(url);
+      } catch (err) {
+        if (!RepoClosedError.is(err)) {
+          throw err;
+        }
+        log('repo closed while promoting inline objects, abandoning', { objectId });
+        return;
+      }
+      log('inline object moved to its own document, rebinding', { objectId, url });
+      this.#pendingPromotions.add(objectId);
+      this._bindObjectDocument(objectId, handle);
+      void this._loadHandleForObject(handle, objectId);
+    }
   }
 
   /**
@@ -2928,7 +3273,8 @@ export class EntityManager implements IDatabaseBinding {
     countWork('echo.objectDocumentsLoaded');
 
     const existing = this._objects.get(objectId);
-    if (existing?.snapshot) {
+    const promoted = this.#pendingPromotions.delete(objectId);
+    if (existing != null && (existing.snapshot || promoted)) {
       existing.bind({ db: this, docHandle: handle, path: existing.mountPath, assignFromLocalState: false });
       this._onObjectBoundToDocument(handle, objectId);
     }

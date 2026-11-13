@@ -15,9 +15,9 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
 import { Book } from '#types';
 
+import { LibraryNamespace } from '../../namespace.ts';
 import { EpubReader, type EpubReaderHandle, type ReaderLocation } from './EpubReader.tsx';
 
 const ACCEPT = '.pdf,.epub,application/pdf,application/epub+zip';
@@ -48,7 +48,7 @@ const Spinner = () => (
  * Forwards a paging handle to the EPUB reader (null for PDF/no content) so the toolbar can page.
  */
 export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ book }, forwardedRef) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LibraryNamespace.key);
   const db = Obj.getDatabase(book);
   // Subscribe so attaching (or replacing) the content blob re-renders and re-resolves.
   const [live] = useObject(book);

@@ -4,10 +4,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 
-import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+import { MeetingActivity, MeetingCapabilities, MeetingOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.SetActive> = MeetingOperation.SetActive.pipe(
   Operation.withHandler(
@@ -15,9 +15,9 @@ const handler: Operation.WithHandler<typeof MeetingOperation.SetActive> = Meetin
       const store = yield* Capability.get(MeetingCapabilities.State);
       const callManager = yield* Capability.get(CallsCapabilities.Manager);
       store.updateState((current) => ({ ...current, activeMeeting: object }));
-      callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-        meetingId: object ? Obj.getURI(object) : '',
-      });
+      callManager.setActivity(MeetingActivity.meetingKey(), {
+        meetingId: object ? Obj.getURI(object, { prefer: 'absolute' }) : '',
+      } satisfies MeetingActivity.MeetingPayload);
       return { object };
     }),
   ),

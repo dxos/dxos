@@ -77,8 +77,8 @@ const storyOptions = {
       plugins: [
         // A space template's `apply` writes through the space DB, and the objects it creates surface
         // through these plugins' articles.
-        SpacePlugin({}),
-        InboxPlugin(),
+        SpacePlugin.make({}),
+        InboxPlugin.make(),
         ProjectsPlugin.make(),
         // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
         TasksPlugin.make(),

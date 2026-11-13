@@ -5,8 +5,10 @@
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type RefObject, useEffect, useRef } from 'react';
 
+import { type NodeType } from '@dxos/scene';
+
 import { type Drag } from '../../engine/index.ts';
-import { type Capabilities, type NodeRegistry, type NodeType } from '../../model/index.ts';
+import { type Capabilities, type NodeRegistry } from '../../model/index.ts';
 import { nodeDragType, nominalSize } from '../../utils/index.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 
@@ -16,7 +18,7 @@ export type UseNodeDropOptions = {
   nodeRegistry: NodeRegistry;
   /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
   cell: number;
-  snapMinor: (value: number) => number;
+  snap: (value: number) => number;
 } & Pick<PointerMachine, 'toScene' | 'setDrag' | 'cancelDrag' | 'onPointerUp'>;
 
 /** Makes the canvas a drop target for node types dragged in from the palette or a host's draggable. */
@@ -26,7 +28,7 @@ export const useNodeDrop = ({
   nodeRegistry,
   cell,
   toScene,
-  snapMinor,
+  snap,
   setDrag,
   cancelDrag,
   onPointerUp,
@@ -46,7 +48,7 @@ export const useNodeDrop = ({
       const point = toScene(input);
       const def = nodeRegistry[type];
       const size = def ? nominalSize(def.defaultSize, cell) : { width: 0, height: 0 };
-      const from = { x: snapMinor(point.x - size.width / 2), y: snapMinor(point.y - size.height / 2) };
+      const from = { x: snap(point.x - size.width / 2), y: snap(point.y - size.height / 2) };
       return { kind: 'create', type, from, to: from, dropped: true };
     };
     return dropTargetForElements({
@@ -74,5 +76,5 @@ export const useNodeDrop = ({
         onPointerUpRef.current();
       },
     });
-  }, [capabilities.create, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag]);
+  }, [capabilities.create, nodeRegistry, cell, toScene, snap, setDrag, cancelDrag]);
 };

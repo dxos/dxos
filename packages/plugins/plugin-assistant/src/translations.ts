@@ -16,7 +16,7 @@ import { translations as taskTranslations } from '@dxos/react-ui-task/translatio
 import { translations as traceTranslations } from '@dxos/react-ui-trace/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from './namespace.ts';
 
 export const translations: Theme.Resource[] = [
   ...assistantTranslations,
@@ -83,7 +83,7 @@ export const translations: Theme.Resource[] = [
         'object-deleted.label': 'Agent deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
-      [meta.profile.key]: {
+      [AssistantNamespace.key]: {
         'delete-task.label': 'Delete task',
         'execute-task.label': 'Execute task',
         'execute-task.prompt': 'Implement task #{{ordinal}}',
@@ -138,8 +138,10 @@ export const translations: Theme.Resource[] = [
         'no-results.message': 'No results',
 
         'cancel-queued.button': 'Remove from queue',
+        'move-thread.button': 'Move thread',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',
+        'thread-menu.button': 'Thread options',
         'chat-history.label': 'Chat History',
         'chat-update-name.label': 'Update AI Chat name',
         'create-chat.label': 'New AI Chat',
@@ -148,6 +150,10 @@ export const translations: Theme.Resource[] = [
         'stats.label': 'Stats',
         'summary.label': 'Summary',
         'rewind.label': 'Rewind to here',
+        'fork.label': 'Fork',
+        'fork-back.label': 'Back to main',
+        'fork-bar.label': 'A fork of this chat: what you send here stays out of the main conversation.',
+        'fork-merge.label': 'Merge into main',
         'thinking.label': 'Thinking',
 
         'connect.label': 'Connect',
@@ -175,7 +181,7 @@ export const translations: Theme.Resource[] = [
         'plugin-url-prompt.button': 'Load plugin',
 
         'search.placeholder': 'Search...',
-        'prompt.placeholder': '/ for skills, @ for content',
+        'prompt.placeholder': ' / for skills, @ for content',
         'add-menu.button': 'Add',
         'add-files.label': 'Add files or photos',
         'add-object.menu': 'Add object…',
@@ -186,8 +192,17 @@ export const translations: Theme.Resource[] = [
         'connectors-empty.label': 'No connectors with MCP servers',
         'agent-picker.label': 'Agent',
         'model-picker.models.label': 'Models',
+        'agent-setting-default.label': 'Default',
+        'agent-setting.agentModel.label': 'Model',
+        'agent-setting.agentModel.locked.label': 'Model (fixed once the chat has started)',
+        'agent-setting.agentEffort.label': 'Effort',
+        'agent-setting.agentEffort.locked.label': 'Effort (fixed once the chat has started)',
+        'agent-setting.agentMode.label': 'Permissions',
+        'agent-setting.agentMode.locked.label': 'Permissions (fixed once the chat has started)',
         'model-picker.environment.label': 'Agent runs on',
         'send.label': 'Send',
+        'prompt-options.label': 'Prompt options',
+        'prompt-controls.label': 'Prompt controls',
         'cancel-processing.button': 'Stop processing',
         'tasks-drawer.label': 'Tasks',
         'context-drawer.label': 'Context',
@@ -236,6 +251,16 @@ export const translations: Theme.Resource[] = [
         'settings.ollama.unload.label': 'Unload from memory',
         'settings.ollama.remove.label': 'Delete model',
         'settings.ollama.failed.message': 'Could not reach the local model service: {{error}}',
+
+        // Space settings
+        'space-settings.label': 'Assistant',
+        'space-settings-hooks.label': 'Hooks',
+        'space-settings-hooks.description':
+          'Plugins whose hooks run when an agent in this space finishes a request. Instructions can override this per plugin.',
+        'space-settings-hooks.empty.message': 'No enabled plugin provides hooks.',
+        'space-settings-hooks.scoped.description': 'Runs when one of its skills is added to the conversation.',
+        'space-settings-hooks.every-agent.description': 'Runs for every agent in this space.',
+        'space-settings-hooks.missing.description': 'On for this space, but the plugin is not enabled on this device.',
 
         'debug.button': 'Debug',
         'model-unavailable.label': '{{label}} (unavailable)',

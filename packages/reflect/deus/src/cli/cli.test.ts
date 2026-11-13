@@ -14,7 +14,17 @@ import * as Path from 'effect/Path';
 import { describe, test } from 'vitest';
 
 import { git } from './git.ts';
-import { ChangelogCheckError, LintError, QaLintError, ReviewCheckError, checkChangelog, deus } from './index.ts';
+import {
+  ChangelogCheckError,
+  FeatureCheckError,
+  LintError,
+  QaLintError,
+  ReviewCheckError,
+  checkChangelog,
+  configDependsOn,
+  deriveStatus,
+  deus,
+} from './index.ts';
 
 const FIXTURES = new URL('./__fixtures__/', import.meta.url).pathname;
 const QA_LIST = `${FIXTURES}qa-list`;
@@ -58,7 +68,7 @@ describe('deus command parsing', () => {
     const { exit, output } = await run(['--help']);
     expect(Exit.isSuccess(exit)).toBe(true);
     const help = output.join('\n');
-    for (const name of ['changelog', 'lint', 'qa', 'review']) {
+    for (const name of ['changelog', 'features', 'lint', 'qa', 'review']) {
       expect(help).toContain(name);
     }
   });
@@ -78,6 +88,22 @@ describe('deus lint', () => {
     for (const line of output) {
       expect(line).toMatch(new RegExp(`^${file}:\\d+: error \\[mdl/decision\\]: `));
     }
+  });
+});
+
+describe('deus lint references', () => {
+  const dir = `${FIXTURES}lint-refs`;
+
+  test('lint reports mdl/ref in a spec', async ({ expect }) => {
+    const { exit, output } = await run(['lint', '--only', 'mdl/ref', `${dir}/SPEC.mdl`]);
+    expect(LintError.is(failure(exit))).toBe(true);
+    expect(output).toEqual([`${dir}/SPEC.mdl:7: error [mdl/ref]: Unknown spec \`org.dxos.fixture.nope\`.`]);
+  });
+
+  test('lint skips mdl/ref in review files', async ({ expect }) => {
+    const { exit, output } = await run(['lint', `${dir}/SPEC.review.mdl`]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(output).toEqual([]);
   });
 });
 
@@ -167,6 +193,158 @@ describe('deus review', () => {
       'QA-1 has no verdict',
     ]);
     expect(output.at(-1)).toBe('3 verdicts for 4 items; 5 errors, 1 warnings.');
+  });
+
+  test('items lists worker and SQL blocks by their qualified ids', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'items', `${dir}/worker/SPEC.mdl`]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(output.map((line) => line.split('\t').slice(0, 2).join(' '))).toEqual([
+      'Feed type',
+      'binding:SCHEDULER binding',
+      'actor:Scheduler actor',
+      'route:listFeeds route',
+      'keyspace:schedulerState keyspace',
+      'table:Feed table',
+    ]);
+  });
+
+  test('check accepts a verdict for each worker and SQL item', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/worker/SPEC.review.mdl`]);
+    expect(output.filter((line) => line.startsWith('error: '))).toEqual([]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(output.filter((line) => line.startsWith('warning: '))).toEqual([
+      'warning: frontmatter: commit 0000000000000000000000000000000000000000 is not in this clone (shallow, or not fetched)',
+    ]);
+    expect(output.at(-1)).toBe('6 verdicts for 6 items; 0 errors, 1 warnings.');
+  });
+
+  test('check points a bare id at the qualified item it names', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/worker/bare-ids.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    expect(
+      output.filter((line) => line.startsWith('error: ')).map((line) => line.replace(/^error: .*?:\d+: /, '')),
+    ).toEqual([
+      'Scheduler is not a reviewable item of the spec; did you mean actor:Scheduler?',
+      'listFeeds is not a reviewable item of the spec; did you mean route:listFeeds?',
+      'actor:Scheduler has no verdict',
+      'route:listFeeds has no verdict',
+      'table:Feed has no verdict',
+    ]);
+  });
+
+  test('check refuses a date that is not a real UTC time, as the importer does', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/bad-date/PLUGIN.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    expect(output.filter((line) => line.startsWith('error: '))).toEqual([
+      'error: frontmatter: `date` must be YYYY-MM-DD, or YYYY-MM-DDTHH:MMZ with a UTC time',
+    ]);
+  });
+});
+
+describe('review dependsOn', () => {
+  const dir = `${FIXTURES}review`;
+
+  test('configDependsOn parses the array', ({ expect }) => {
+    expect(configDependsOn('plugin: {\n  dependsOn: [\'a.b\', "c.d"],\n}')).toEqual(['a.b', 'c.d']);
+    expect(configDependsOn('plugin: { dependsOn: [] }')).toEqual([]);
+    expect(configDependsOn('plugin: {}')).toEqual([]);
+    expect(configDependsOn("plugin: { key: 'x' }")).toEqual([]);
+    expect(configDependsOn("export default { name: 'x' }")).toBeUndefined();
+    expect(configDependsOn('plugin: { dependsOn: DEPS }')).toBeUndefined();
+    expect(configDependsOn("plugin: { dependsOn: [...BASE, 'x'] }")).toBeUndefined();
+    expect(configDependsOn("plugin: { dependsOn: ['a', B] }")).toBeUndefined();
+    expect(
+      configDependsOn(
+        "plugin: {\n  // dependsOn: ['old'],\n  dependsOn: [\n    'a',\n    // 'x',\n    'b', /* 'y' */\n  ],\n}",
+      ),
+    ).toEqual(['a', 'b']);
+  });
+
+  test('review check fails on a dependsOn mismatch judged done', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/plugin-deps-mismatch/PLUGIN.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    expect(
+      output.filter((line) => line.startsWith('error: ')).map((line) => line.replace(/^error: .*?:\d+: /, '')),
+    ).toEqual([
+      'SamplePlugin dependsOn [org.example.plugin.a] differs from dx.config.ts [org.example.plugin.a, org.example.plugin.b]; judge it diverged',
+    ]);
+  });
+
+  test('review check treats a config plugin without dependsOn as empty', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/plugin-deps-empty/PLUGIN.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    expect(
+      output.filter((line) => line.startsWith('error: ')).map((line) => line.replace(/^error: .*?:\d+: /, '')),
+    ).toEqual(['SamplePlugin dependsOn [org.example.plugin.a] differs from dx.config.ts []; judge it diverged']);
+  });
+
+  test('review check passes when the mismatch is judged diverged, or the sets match', async ({ expect }) => {
+    for (const name of ['plugin-deps-diverged', 'plugin-deps', 'plugin-deps-noplugin']) {
+      const { exit, output } = await run(['review', 'check', `${dir}/${name}/PLUGIN.review.mdl`]);
+      expect(Exit.isSuccess(exit)).toBe(true);
+      expect(output.at(-1)).toMatch(/^1 verdicts for 1 items; 0 errors, /);
+    }
+  });
+});
+
+describe('deus features', () => {
+  const dir = `${FIXTURES}features`;
+  const map = `${dir}/FEATURES.mdl`;
+  /** Drops the `<map>:<line>: ` prefix so assertions read as the message. */
+  const message = (line: string) => line.replace(/^(warning|error): .*?\.mdl(?::\d+)?: /, '$1: ');
+
+  test('status follows the verdicts of the cited items', ({ expect }) => {
+    expect(deriveStatus(['done', 'done'])).toBe('operational');
+    expect(deriveStatus(['done', 'untested'])).toBe('prototype');
+    expect(deriveStatus(['missing', 'missing'])).toBe('planned');
+    expect(deriveStatus(['done', 'missing'])).toBe('in-progress');
+    expect(deriveStatus(['diverged'])).toBe('in-progress');
+    expect(deriveStatus(['done', undefined])).toBe('unreviewed');
+    expect(deriveStatus([])).toBe('unreviewed');
+  });
+
+  test('check derives each status and reports what is wrong or out of step', async ({ expect }) => {
+    const { exit, output } = await run(['features', 'check', '--map', map]);
+    expect(FeatureCheckError.is(failure(exit))).toBe(true);
+    expect(output.filter((line) => !line.startsWith('warning') && !line.startsWith('error'))).toEqual([
+      'listing\toperational\toperational\t2/2 done',
+      'greeting\toperational\tprototype\t0/1 done',
+      'listing-next\tplanned\tplanned\t0/1 done',
+      'export\tin-progress\tplanned\t0/1 done',
+      'ghost\tshiny\tunreviewed\t0/0 done',
+      '5 features; 4 errors, 4 warnings.',
+    ]);
+    expect(output.filter((line) => /^(warning|error)/.test(line)).map(message)).toEqual([
+      expect.stringMatching(/^warning: listing: the review of .*SPEC\.mdl names a commit not in this clone$/),
+      'warning: greeting: marked operational but its reviews say prototype',
+      'warning: export: marked in-progress but its reviews say planned',
+      'warning: export: partly built with no work planned: no TASKS.md beside its spec has a `## export` section',
+      'error: ghost: status `shiny`; use one of planned, in-progress, prototype, operational, failing',
+      'error: export: depends on unknown feature nobody',
+      expect.stringMatching(/^error: ghost: .*SPEC\.mdl#F-9 names no reviewable item of the spec$/),
+      expect.stringMatching(/^error: ghost: spec not found: .*NOPE\.mdl$/),
+    ]);
+  });
+
+  test('check rejects a dependency cycle', async ({ expect }) => {
+    const { exit, output } = await run(['features', 'check', '--map', `${dir}/CYCLE.mdl`]);
+    expect(FeatureCheckError.is(failure(exit))).toBe(true);
+    expect(output.filter((line) => line.startsWith('error')).map(message)).toEqual([
+      'error: dependency cycle: first -> second -> first',
+    ]);
+  });
+
+  test('tasks lists the open items of one feature with their verdicts', async ({ expect }) => {
+    const { exit, output } = await run(['features', 'tasks', '--map', map, 'export']);
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(output.filter((line) => line.startsWith('- ['))).toEqual([
+      '- [ ] F-2.1: The CLI exports items as JSON. (missing: No exporter exists.)',
+    ]);
+  });
+
+  test('tasks fails for a feature that is not on the map', async ({ expect }) => {
+    const { exit } = await run(['features', 'tasks', '--map', map, 'nope']);
+    expect(FeatureCheckError.is(failure(exit))).toBe(true);
   });
 });
 

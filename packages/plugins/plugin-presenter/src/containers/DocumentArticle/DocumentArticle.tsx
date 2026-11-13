@@ -4,53 +4,82 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import * as Surface from '@dxos/app-framework/Surface';
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { type Database, Obj, URI } from '@dxos/echo';
-import { useObject, useResolveRef } from '@dxos/echo-react';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Obj } from '@dxos/echo';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { useAttention } from '@dxos/react-ui-attention';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { PresentationShell, RevealPlayer, type SlideEmbed } from '#components';
-import { useExitPresenter, useIsPresenting } from '#hooks';
+import { Deck } from '#components';
+import { useDocumentDeck, useIsPresenting, usePresentedIndex, useSetPresenting, useSlideIndex } from '#hooks';
+import { isHiddenSlide } from '#markdown';
 
 export type DocumentArticleProps = AppSurface.ObjectArticleProps<Markdown.Document>;
 
-export const DocumentArticle = ({ role, subject: document }: DocumentArticleProps) => {
-  const handleExit = useExitPresenter(document);
+/**
+ * Preview companion of a markdown document: its `---`-separated slides on the deck runtime.
+ */
+export const DocumentArticle = ({ role, subject: document, attendableId }: DocumentArticleProps) => {
+  const slides = useDocumentDeck(document);
+  const [index, setIndex] = useSlideIndex(Obj.getURI(document), slides.length);
   const fullscreen = useIsPresenting(document);
-  const [content] = useObject(document.content, 'content');
-  const db = Obj.getDatabase(document);
-  const renderEmbed = useCallback(
-    ({ uri }: SlideEmbed) => <EmbeddedSlide db={db} uri={uri} attendableId={Obj.getURI(document)} />,
-    [db, document],
+  // Presenting leaves out slides whose frontmatter sets `hide: true`; the preview still shows every slide.
+  const positions = useMemo(
+    () =>
+      slides.flatMap((slide, position) =>
+        slide.kind === 'markdown' && isHiddenSlide(slide.content) ? [] : [position],
+      ),
+    [slides],
+  );
+  const presented = usePresentedIndex(slides, positions, index, setIndex);
+  const setPresenting = useSetPresenting(document);
+  // Only the attended article takes focus, so the editor beside the preview keeps its caret.
+  const { hasAttention } = useAttention(attendableId);
+
+  const handleFullscreenChange = useCallback(
+    (next: boolean) => {
+      void setPresenting(next);
+    },
+    [setPresenting],
   );
 
   return (
-    <Panel.Root role={role} classNames='relative'>
-      <Panel.Body asChild>
-        <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
-          {content !== undefined && (
-            <RevealPlayer
-              data-testid='presenter.deck'
-              fullscreen={fullscreen}
-              content={content}
-              renderEmbed={renderEmbed}
-            />
+    <Deck.Root
+      slides={fullscreen ? presented.slides : slides}
+      index={fullscreen ? presented.index : index}
+      onIndexChange={fullscreen ? presented.onIndexChange : setIndex}
+      fullscreen={fullscreen}
+      onFullscreenChange={handleFullscreenChange}
+      attendableId={attendableId}
+      autoFocus={hasAttention}
+    >
+      <Panel.Root role={role} asChild>
+        <Deck.Content>
+          {/* Fullscreen is the slide alone; the toolbar and pager return on exit. */}
+          {!fullscreen && (
+            <Panel.Header>
+              <Toolbar.Root>
+                <div className='grow' />
+                <Deck.PlayButton />
+              </Toolbar.Root>
+            </Panel.Header>
           )}
-        </PresentationShell>
-      </Panel.Body>
-    </Panel.Root>
+          <Panel.Body asChild>
+            <Deck.Viewport />
+          </Panel.Body>
+          {!fullscreen && (
+            <Panel.Footer>
+              <div className='flex items-center justify-center gap-4'>
+                <Deck.Pager />
+                <Deck.PageNumber />
+              </div>
+            </Panel.Footer>
+          )}
+        </Deck.Content>
+      </Panel.Root>
+    </Deck.Root>
   );
 };
 
 DocumentArticle.displayName = 'DocumentArticle';
-
-type EmbeddedSlideProps = { db?: Database.Database; uri: string; attendableId: string };
-
-/** An object embedded in a slide, shown through its slide surface; resolved in the document's database. */
-const EmbeddedSlide = ({ db, uri, attendableId }: EmbeddedSlideProps) => {
-  const ref = useMemo(() => db?.makeRef<Obj.Unknown>(URI.make(uri)), [db, uri]);
-  const subject = useResolveRef(ref);
-  return subject ? <Surface.Surface type={AppSurface.Slide} data={{ subject, attendableId }} limit={1} /> : null;
-};

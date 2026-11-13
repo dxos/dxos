@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type ReactNode } from 'react';
+
 import { invariant } from '@dxos/invariant';
 import type { DropdownMenuItemGroupProperties, MenuActionProperties, MenuItemGroupProperties } from '@dxos/ui-types';
 
@@ -44,6 +46,12 @@ export interface ActionGroupBuilder {
   /** Add a switch action rendered as a labeled Field.Switch. */
   switch(id: string, props: Omit<MenuActionProperties, 'variant'> & { checked: boolean }, invoke: () => void): this;
 
+  /** Add a control the caller renders itself (a picker, a field); it stays in the toolbar and never collapses. */
+  custom(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>, render: () => ReactNode): this;
+
+  /** Add a plain label (e.g. a panel's name) that takes the toolbar's free space. */
+  text(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>): this;
+
   /** Add a nested action group. */
   group(id: string, props: MenuItemGroupProperties, cb: ActionGroupBuilderFn): this;
 
@@ -73,8 +81,6 @@ export interface MenuBuilder extends ActionGroupBuilder {
 }
 
 class MenuBuilderImpl implements MenuBuilder {
-  private _separatorCount = 0;
-
   constructor(
     private readonly _data: ActionGraphProps,
     private readonly _rootId: string,
@@ -101,6 +107,14 @@ class MenuBuilderImpl implements MenuBuilder {
     return this.action(id, { ...props, variant: 'switch' }, invoke);
   }
 
+  custom(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>, render: () => ReactNode): this {
+    return this.action(id, { ...props, variant: 'custom', render }, () => {});
+  }
+
+  text(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>): this {
+    return this.action(id, { ...props, variant: 'text' }, () => {});
+  }
+
   group(id: string, props: MenuItemGroupProperties, cb: ActionGroupBuilderFn): this {
     this._data.nodes.push(createMenuItemGroup(id, props));
     this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
@@ -119,14 +133,30 @@ class MenuBuilderImpl implements MenuBuilder {
     if (typeof subgraphOrCb === 'function') {
       subgraphOrCb(new MenuBuilderImpl(this._data, this._rootId));
     } else {
-      this._data.nodes.push(...subgraphOrCb.nodes);
-      this._data.edges.push(...subgraphOrCb.edges);
+      // A graph built on its own numbers its separators from one, so they are renumbered into this one.
+      const ids = new Map<string, string>();
+      for (const node of subgraphOrCb.nodes) {
+        if (node.type === MenuSeparatorType) {
+          const id = this._nextSeparatorId();
+          ids.set(node.id, id);
+          this._data.nodes.push({ ...node, id });
+        } else {
+          this._data.nodes.push(node);
+        }
+      }
+      this._data.edges.push(
+        ...subgraphOrCb.edges.map((edge) => ({
+          ...edge,
+          source: ids.get(edge.source) ?? edge.source,
+          target: ids.get(edge.target) ?? edge.target,
+        })),
+      );
     }
     return this;
   }
 
   separator(variant: 'gap' | 'line' = 'gap'): this {
-    const id = `separator-${++this._separatorCount}`;
+    const id = this._nextSeparatorId();
     this._data.nodes.push({
       id,
       type: MenuSeparatorType,
@@ -136,8 +166,30 @@ class MenuBuilderImpl implements MenuBuilder {
     this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
     return this;
   }
+
+  // Numbered across the whole graph: a nested group or subgraph builds into the same nodes, so a count of its own
+  // would reuse an id and the later separator would replace the earlier one.
+  private _nextSeparatorId(): string {
+    return `separator-${this._data.nodes.filter((node) => node.type === MenuSeparatorType).length + 1}`;
+  }
 }
+
+/** Id of the overflow menu (⋮) every toolbar ends with; contributors add to it with {@link MenuBuilder.extend}. */
+export const TOOLBAR_OVERFLOW_ID = 'toolbar-overflow';
+
+/** The overflow group a toolbar uses when its owner declares none, so contributors can still add to it. */
+export const defaultOverflowGroup = createMenuItemGroup(TOOLBAR_OVERFLOW_ID, overflowMenuProperties);
 
 export const MenuBuilder = Object.freeze({
   make: (): MenuBuilder => new MenuBuilderImpl({ nodes: [], edges: [] }, 'root'),
+
+  /**
+   * Builds items into a named group another component declared, so a plugin extends a toolbar or menu it does not own.
+   * The result is merged into the owner's graph (e.g. with `subgraph`); its edges hang off `groupId`.
+   */
+  extend: (groupId: string, cb: ActionGroupBuilderFn): ActionGraphProps => {
+    const data: ActionGraphProps = { nodes: [], edges: [] };
+    cb(new MenuBuilderImpl(data, groupId));
+    return data;
+  },
 });

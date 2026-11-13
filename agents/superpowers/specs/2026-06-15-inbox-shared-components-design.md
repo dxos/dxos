@@ -49,7 +49,7 @@ Still duplicated (targets):
 - **Article scaffold** — `EventArticle` and `MessageArticle` both render
   `Panel.Root.dx-document → Panel.Toolbar → Panel.Content[grid-rows-[auto_1fr]]`, copy-pasted.
 - **Header chrome** — `Event.Header` and `Message.Header` each hand-roll the borderless
-  `Card.Root border={false} fullWidth classNames='p-1 border-b border-subdued-separator'` + `Card.Body`.
+  `Card.Root border={false} fullWidth classNames='p-1 border-b border-separator-subtle'` + `Card.Body`.
 - **Toolbar ops** — `open`/`delete`/`more` builder groups duplicated across `Event/useToolbar.tsx` and
   `Message/useToolbar.tsx`; only `viewModeGroup` is shared.
 - **Settings** — `components/InboxSettings/` + a `pluginSettings` surface in `react-surface.tsx`.
@@ -170,7 +170,7 @@ Presentation-only namespace, no app-framework deps. Replaces the inlined `EventT
 
 - `Tile.Root` — `forwardRef`, props `{ id, data, location, current, onCurrentChange, onClick?, classNames?, children }`.
   Renders `Mosaic.Tile asChild classNames={TILE_CLASSNAMES} → Focus.Item asChild → Card.Root fullWidth border={false}`.
-  `TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator'`
+  `TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border border-separator-subtle'`
   (moved here from both stacks; single source).
 - `Tile.Header` — props `{ starred?, onToggleStar?, title: ReactNode, menu?: boolean }`. Renders
   `Card.Header` with `Card.Block` › `Row.Star`, a `Card.Title` slot for `title`, and `Card.Menu`
@@ -192,7 +192,7 @@ own the star in the shell. `EventDetails` keeps rendering the star only on the a
 shared chrome:
 
 ```tsx
-<Card.Root border={false} fullWidth classNames={mx('p-1 border-b border-subdued-separator', classNames)} {...}>
+<Card.Root border={false} fullWidth classNames={mx('p-1 border-b border-separator-subtle', classNames)} {...}>
   <Card.Body>{children}</Card.Body>
 </Card.Root>
 ```

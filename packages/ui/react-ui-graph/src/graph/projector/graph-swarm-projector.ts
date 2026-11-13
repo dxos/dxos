@@ -56,6 +56,8 @@ export type GraphSwarmProjectorOptions = GraphProjectorOptions & {
    * coarser sample interval introduces when only the head moves between samples.
    */
   trailLength?: number;
+  /** Keep the graph's edges in the layout so the renderer draws them between boids. Default true. */
+  edges?: boolean;
 };
 
 const DEFAULTS: Required<
@@ -84,7 +86,7 @@ const DEFAULTS: Required<
 /**
  * Boids projector. One simulation timer (d3 `timer`) drives the tick; nodes are
  * the boids, with `vx/vy/ax/ay` carried alongside `x/y`. Edges are kept in the
- * layout so the renderer still draws them between connected boids, but they do
+ * layout (unless `edges: false`) so the renderer still draws them between connected boids, but they do
  * NOT exert a link force — boid motion is governed purely by alignment, cohesion
  * and separation, with viewBox-wrap at the SVG bounds.
  */
@@ -114,6 +116,9 @@ export class GraphSwarmProjector<NodeData = any> extends GraphProjector<NodeData
   protected override onUpdate(graph?: GraphModel.AnyData): void {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
+    if (this.options.edges === false) {
+      this.layout.graph.edges = [];
+    }
     this.initializeNodes();
     // Bind enter/exit once before motion starts; subsequent ticks emit 'positions'.
     this.emitUpdate('topology');

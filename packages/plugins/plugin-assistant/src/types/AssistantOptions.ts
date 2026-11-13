@@ -16,7 +16,7 @@ export interface AssistantPluginOptions {
   experimentalTypes?: boolean;
 
   /**
-   * Builds the turn engine used when the user enables `Settings.codeMode`; injected by the host
+   * Builds the turn engine used unless the user sets `Settings.disableCodeMode`; injected by the host
    * because the code-mode package is not published. Handed the app's capabilities so the host can
    * reach what its sandbox needs (e.g. the client's services). Without it the setting has no effect.
    */

@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Magazine, Subscription } from '#types';
+
+import { MagazineNamespace } from './namespace.ts';
 
 export const translations = [
   ...formTranslations,
@@ -42,7 +43,7 @@ export const translations = [
         'delete-object.label': 'Delete magazine',
         'object-deleted.label': 'Magazine deleted',
       },
-      [meta.profile.key]: {
+      [MagazineNamespace.key]: {
         'plugin.name': 'Feed',
         'empty-feed.message': 'No posts yet',
         'feed-companion.label': 'Feed',

@@ -29,6 +29,21 @@ export class State extends Type.makeObject<State>(DXN.make('org.dxos.type.chess.
   ),
 ) {}
 
+/** The position a state is at: its PGN replayed, else its set-up FEN, else the starting position. */
+export const fen = ({ pgn, fen }: { pgn?: string; fen?: string }): string => {
+  const chess = new ChessJS();
+  try {
+    if (pgn) {
+      chess.loadPgn(pgn);
+    } else if (fen) {
+      chess.load(fen);
+    }
+  } catch {
+    log.warn('invalid chess state', { pgn, fen });
+  }
+  return chess.fen();
+};
+
 export const make = ({ pgn, fen }: { pgn?: string; fen?: string } = {}): State => {
   const chess = new ChessJS();
   if (pgn) {

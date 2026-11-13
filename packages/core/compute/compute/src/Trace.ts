@@ -21,8 +21,25 @@ import * as Trigger from './types/Trigger.ts';
  * Exposed to processes and operations to record events to the trace.
  */
 export interface Writer {
-  write<T>(eventType: EventType<T>, payload: NoInfer<T>): void;
+  /** `meta` carries what only the writing fiber knows, such as its {@link CurrentThread}. */
+  write<T>(eventType: EventType<T>, payload: NoInfer<T>, meta?: FiberMeta): void;
 }
+
+/**
+ * Meta a {@link Writer} cannot know from its process alone.
+ */
+export type FiberMeta = Pick<Meta, 'thread'>;
+
+/**
+ * Lane of the agent turn the current fiber runs (its light thread, or the prompt a turn on main answers), stamped
+ * on its events as {@link Meta.thread}
+ * and on the processes it spawns as {@link Meta.parentThread}: one process runs several turns at once,
+ * and the pid alone cannot tell their events apart.
+ */
+export const CurrentThread: Context.Reference<string | undefined> = Context.Reference<string | undefined>(
+  '@dxos/compute/Trace/CurrentThread',
+  { defaultValue: () => undefined },
+);
 
 /**
  * Service that writes events to the trace.
@@ -37,7 +54,8 @@ export function write<T>(eventType: EventType<T>, payload: NoInfer<T>): Effect.E
   return Effect.gen(function* () {
     log('trace write', { key: eventType.key, isEphemeral: eventType.isEphemeral });
     const writer = yield* TraceService;
-    writer.write(eventType, payload);
+    const thread = yield* CurrentThread;
+    writer.write(eventType, payload, thread === undefined ? undefined : { thread });
   });
 }
 
@@ -142,6 +160,16 @@ export const Meta = Schema.Struct({
    * Extensible name informing which runtime executed the code that produced the event.
    */
   runtimeName: Schema.optional(RuntimeName),
+
+  /**
+   * Lane of the process's turn that produced the event (see {@link CurrentThread}).
+   */
+  thread: Schema.optional(Schema.String),
+
+  /**
+   * Light thread of the parent process's turn that spawned this process.
+   */
+  parentThread: Schema.optional(Schema.String),
 });
 export type Meta = Schema.Schema.Type<typeof Meta>;
 
@@ -322,6 +350,8 @@ const encodeMetaForWire = (meta: Meta): Meta => ({
   space: meta.space,
   toolCallId: meta.toolCallId,
   runtimeName: meta.runtimeName,
+  thread: meta.thread,
+  parentThread: meta.parentThread,
 });
 
 /**
@@ -447,10 +477,10 @@ export const testTraceService = (
       const sink = yield* TraceSink;
       const clock = opts.clock ?? Date.now;
       return {
-        write: (event, data) => {
+        write: (event, data, fiberMeta) => {
           sink.write(
             Obj.make(Message, {
-              meta: opts.meta ?? {},
+              meta: { ...opts.meta, ...fiberMeta },
               isEphemeral: event.isEphemeral,
               events: [{ type: event.key, timestamp: clock(), data }],
             }),
@@ -626,6 +656,18 @@ export const StatusUpdate = EventType('status.update', {
   isEphemeral: true,
 });
 
+/** {@link StatusUpdate} message that ends a run's progress: the meter completes and is removed. */
+export const StatusComplete = 'progress.complete';
+
+/** {@link StatusUpdate} message that ends a sync's progress as failed; the meter stays visible. */
+export const StatusFailed = 'Sync failed';
+
+/** {@link StatusUpdate} message that ends any other run's progress as failed; the meter stays visible. */
+export const StatusError = 'Failed';
+
+/** {@link StatusUpdate} message that ends a run's progress as cancelled: the meter is removed. */
+export const StatusCancelled = 'Cancelled';
+
 /**
  * Emit the current human-readable execution status to the trace.
  */
@@ -672,6 +714,21 @@ export const AgentRequestEnd = EventType('assistant.agentRequestEnd', {
   schema: Schema.Struct({
     status: Schema.Literals(['success', 'error', 'interrupted']),
     error: Schema.optional(Schema.String),
+  }),
+  isEphemeral: false,
+});
+
+/**
+ * The end-request hooks a request runs, resolved when it begins (see `Hook.resolve`): which ran by their plugin's
+ * default, which a setting turned on but whose skill is unbound, and which plugins a setting turned on that this
+ * host lacks. Written only when one of those is non-empty.
+ */
+export const AgentHooksResolved = EventType('assistant.agentHooksResolved', {
+  schema: Schema.Struct({
+    run: Schema.Array(Schema.String),
+    byDefault: Schema.Array(Schema.String),
+    inactive: Schema.Array(Schema.String),
+    missing: Schema.Array(Schema.String),
   }),
   isEphemeral: false,
 });

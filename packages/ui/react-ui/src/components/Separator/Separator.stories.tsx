@@ -49,7 +49,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * A horizontal separator is a 1px rule across the content track; a vertical one is 1px wide, control-tall and centred
+ * A horizontal separator is a 1px rule across the content track; a vertical one is 1px wide, half a control tall and centred
  * beside the controls it separates. Both are painted in the separator colour and claim `role=separator` (vertical
  * spelling out its orientation), unless `decorative`, which hides the rule from assistive tech.
  */
@@ -68,7 +68,7 @@ export const Test: Story = {
 
       const vertical = byTestId(canvasElement, `vertical-${size}`).getBoundingClientRect();
       await expect(vertical.width, `vertical-${size} width`).toBeCloseTo(1, 0);
-      await expect(vertical.height, `vertical-${size} height`).toBeCloseTo(controlSize(size), 0);
+      await expect(vertical.height, `vertical-${size} height`).toBeCloseTo(controlSize(size) / 2, 0);
       const left = byTestId(canvasElement, `left-${size}`).getBoundingClientRect();
       await expect(centreY(vertical), `vertical-${size} centre`).toBeCloseTo(centreY(left), 0);
     }

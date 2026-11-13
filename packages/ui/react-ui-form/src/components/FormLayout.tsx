@@ -104,7 +104,7 @@ const LayoutNodeView = ({ node, schema, basePath, ...props }: LayoutNodeViewProp
             layout={props.layout}
           />
         ) : (
-          <FormFieldDispatch type={type} name={leafName} path={path} required={required} {...props} />
+          <FormFieldDispatch type={type} name={leafName} label={title} path={path} required={required} {...props} />
         )}
       </FormFieldErrorBoundary>
     </Layout.Container>

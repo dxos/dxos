@@ -38,6 +38,30 @@ export const backingJson = (doc: DatabaseDirectory, structure: EntityStructure, 
   return text.length <= BACKED_OBJECT_LIMIT ? text : undefined;
 };
 
+/**
+ * Largest directory JSON (characters) and stored changes (bytes) a client shows a space root from instead of
+ * loading it. Far above {@link BACKED_OBJECT_LIMIT}: a root holds one link per object, and the alternative to
+ * its JSON is loading its whole history into Automerge.
+ */
+export const BACKED_DIRECTORY_LIMIT = 8 * 1024 * 1024;
+
+/** A space directory as JSON: every field but inline objects, with each Automerge url a plain string. */
+export type DirectoryJson = Omit<DatabaseDirectory, 'objects'>;
+
+/**
+ * The JSON text a client shows a space directory from, or `undefined` when the directory holds inline objects
+ * (which only loading it can show) or the text exceeds {@link BACKED_DIRECTORY_LIMIT}.
+ */
+export const directoryJson = (doc: DatabaseDirectory): string | undefined => {
+  if (Object.keys(doc.objects ?? {}).length > 0) {
+    return undefined;
+  }
+  const { objects: _objects, ...directory } = doc;
+  // `RawString` serializes as its value, so links and branch members come out as plain urls.
+  const text = JSON.stringify(directory);
+  return text.length <= BACKED_DIRECTORY_LIMIT ? text : undefined;
+};
+
 export type SpaceState = {
   // Url of the root automerge document.
   rootUrl?: string;
@@ -111,7 +135,11 @@ export interface DatabaseDirectory {
     spaceKey?: string;
   };
   /**
-   * Objects inlined in the current document.
+   * Objects inlined in the current document. An object document holds its object here.
+   *
+   * In a space directory (root) this map is deprecated: new objects are always linked, and the host migrates the
+   * ones older clients inlined into documents of their own (see `EchoHost.migrateInlineObjects`). Directories still
+   * carry an empty map so peers that predate the migration can write into it without a merge conflict.
    */
   objects?: {
     [id: string]: EntityStructure;

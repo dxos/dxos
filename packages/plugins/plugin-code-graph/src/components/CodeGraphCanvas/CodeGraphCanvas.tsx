@@ -2,55 +2,74 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { type ReactNode, createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
   type Arrangement,
-  Canvas,
   type CreateProps,
-  DYNAMIC_VIEW_ID,
-  type DynamicOptions,
-  type FreehandProjectionOptions,
+  type GraphLayoutOptions,
   type GraphModel,
-  type Node,
+  type GraphShape,
   type NodeViewProps,
-  type Overlay,
-  type Point,
-  createCanvasAtoms,
-  createDynamicProjection,
-  createMemoryStore,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-  nodeBase,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas';
+import { Graph2DView } from '@dxos/react-ui-canvas-editor';
+import * as HoverCard from '@dxos/react-ui/HoverCard';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Tag from '@dxos/react-ui/Tag';
+import { type Layer, type Node, type Point, nodeBase } from '@dxos/scene';
 
-import { Model, Semantic } from '#graph';
+import { Kind, Model, Semantic } from '#graph';
 import { type CodeGraph } from '#types';
 
 import { KIND_ICONS } from '../icons.ts';
 
 const CODE_NODE_TYPE = 'code';
 
+/** Frame node ids, apart from box ids, which are IRIs. */
+const FRAME_PREFIX = 'frame:';
+const frameId = (group: string) => `${FRAME_PREFIX}${group}`;
+const isFrame = (id: string) => id.startsWith(FRAME_PREFIX);
+
 /** A box that shows one code-index resource; the node id is the resource's IRI. */
 const CodeNode = Schema.Struct({ type: Schema.Literal(CODE_NODE_TYPE), ...nodeBase });
 
 const createCodeNode = (props: CreateProps): Node => ({ type: CODE_NODE_TYPE, ...props });
 
+/** Package frames sit on a layer of their own under the boxes and arrows, as the illustrator draws them. */
+const BACKDROP_LAYER: Layer = { id: 'backdrop', name: 'Packages', z: 'a0' };
+const GRAPH_LAYER: Layer = { id: 'graph', name: 'Code', z: 'a1' };
+
+/** A package's frame as the canvas's own diagram shape: the illustrator's tinted box and title, locked in place. */
+const frameShape = (frame: Semantic.Frame): GraphShape => ({
+  type: 'diagram',
+  size: frame.size,
+  label: frame.label,
+  layer: BACKDROP_LAYER.id,
+  locked: true,
+  fields: { element: frame.element, ...(frame.heading && { heading: frame.heading }) },
+});
+
 /** Node views get no host props, so the boxes' data reaches them through context. */
-const CodeNodeContext = createContext<{ lookup: (id: string) => CodeGraph.Node | undefined; selected?: string }>({
+const CodeNodeContext = createContext<{
+  lookup: (id: string) => CodeGraph.Node | undefined;
+  kinds: Record<string, string>;
+  selected?: string;
+  renderPreview?: (id: string) => ReactNode;
+}>({
   lookup: () => undefined,
+  kinds: {},
 });
 
 const CodeNodeView = ({ node }: NodeViewProps) => {
-  const { lookup, selected } = useContext(CodeNodeContext);
+  const { lookup, kinds, selected, renderPreview } = useContext(CodeNodeContext);
   const resource = lookup(node.id);
-  return (
+  const kind = kinds[node.id] ?? Kind.describe({ coarse: resource?.kind ?? 'other' });
+  const box = (
     <Layout.Flex
       asChild
       column
@@ -60,14 +79,27 @@ const CodeNodeView = ({ node }: NodeViewProps) => {
         selected === node.id ? 'border-accent-text' : 'border-separator',
       ]}
     >
-      <div data-testid='code-graph-node' title={node.id}>
+      <div data-testid='code-graph-node'>
         <Layout.Flex align='center' gap='sm' classNames='min-w-0'>
           <Icon.Icon icon={KIND_ICONS[resource?.kind ?? 'other']} size='md' />
-          <span className='truncate font-medium'>{resource?.label ?? node.id}</span>
+          <span className='truncate font-medium'>{resource ? Kind.titleOf(resource) : node.id}</span>
         </Layout.Flex>
-        {resource?.group && <span className='truncate text-xs text-description'>{resource.group}</span>}
+        <Layout.Flex>
+          <Tag.Tag hue={Kind.hueOf(kind)}>{kind}</Tag.Tag>
+        </Layout.Flex>
       </div>
     </Layout.Flex>
+  );
+  if (!renderPreview) {
+    return box;
+  }
+  return (
+    <HoverCard.Root positioning={{ placement: 'right-start' }}>
+      <HoverCard.Trigger asChild>{box}</HoverCard.Trigger>
+      <HoverCard.Content arrow={false} classNames='p-0'>
+        {renderPreview(node.id)}
+      </HoverCard.Content>
+    </HoverCard.Root>
   );
 };
 
@@ -94,17 +126,25 @@ const createRegistry = (open: (id: string) => void) =>
   );
 
 /** Boxes and pitch match the illustrator layout's, so its positions land on boxes the same size. */
-const LAYOUT: Omit<DynamicOptions, 'nodes'> = {
-  createNode: (_node, props) => createCodeNode(props),
-  link: { type: 'curve', ends: { end: 'arrow' } },
+const LAYOUT: GraphLayoutOptions = {
   size: Semantic.BOX,
   pitch: Semantic.PITCH,
+  layers: [BACKDROP_LAYER, GRAPH_LAYER],
+  link: { type: 'curve', ends: { end: 'arrow' }, layer: GRAPH_LAYER.id },
 };
 
-const toGraph = (nodes: readonly CodeGraph.Node[], edges: readonly CodeGraph.Edge[]): GraphModel => {
+const toGraph = (
+  nodes: readonly CodeGraph.Node[],
+  edges: readonly CodeGraph.Edge[],
+  frames: readonly Semantic.Frame[],
+): GraphModel => {
   const ids = new Set(nodes.map(({ id }) => id));
   return {
-    nodes: nodes.map(({ id, label }) => ({ id, label })),
+    // Frames first, so they paint under the boxes.
+    nodes: [
+      ...frames.map(({ group }) => ({ id: frameId(group), label: group })),
+      ...nodes.map(({ id, label }) => ({ id, label })),
+    ],
     edges: edges
       .filter(({ from, to }) => ids.has(from) && ids.has(to))
       .map((edge) => ({
@@ -119,8 +159,12 @@ const toGraph = (nodes: readonly CodeGraph.Node[], edges: readonly CodeGraph.Edg
   };
 };
 
-const samePositions = (left: Record<string, Point>, right: Record<string, Point>) =>
-  JSON.stringify(left) === JSON.stringify(right);
+const EMPTY_KINDS: Record<string, string> = {};
+const EMPTY_FRAMES: readonly Semantic.Frame[] = [];
+
+/** Where a frame's centre goes in a canvas's positions. */
+export const framePositions = (frames: readonly Semantic.Frame[]): Record<string, Point> =>
+  Object.fromEntries(frames.map(({ group, center }) => [frameId(group), center]));
 
 export type CodeGraphCanvasProps = {
   nodes: readonly CodeGraph.Node[];
@@ -130,8 +174,14 @@ export type CodeGraphCanvasProps = {
   onPositionsChange?: (positions: Record<string, Point>) => void;
   /** How boxes take their slots when no position is given for them. */
   arrange?: Arrangement;
+  /** Package frames, drawn under the boxes and arrows; their centres come in `positions` under the frame's id. */
+  frames?: readonly Semantic.Frame[];
+  /** What each box is (`capability`, `file`), by IRI; boxes not listed show their coarse kind. */
+  kinds?: Record<string, string>;
   /** The box shown highlighted, e.g. the one whose details are open. */
   selected?: string;
+  /** The card shown while the pointer rests on a box; mounted only while it is open. */
+  renderPreview?: (id: string) => ReactNode;
   /** Double-clicking a box. */
   onOpen?: (id: string) => void;
   /** Boxes deleted on the canvas; without it they cannot be. */
@@ -150,25 +200,24 @@ export const CodeGraphCanvas = ({
   positions = {},
   onPositionsChange,
   arrange = 'crossings',
+  frames = EMPTY_FRAMES,
+  kinds = EMPTY_KINDS,
   selected,
+  renderPreview,
   onOpen,
   onRemove,
   refitKey,
 }: CodeGraphCanvasProps) => {
-  const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => {
     const byId = new Map(nodes.map((node) => [node.id, node]));
     return (id: string) => byId.get(id);
   }, [nodes]);
-  const nodeContext = useMemo(() => ({ lookup, selected }), [lookup, selected]);
+  const nodeContext = useMemo(
+    () => ({ lookup, kinds, selected, renderPreview }),
+    [lookup, kinds, selected, renderPreview],
+  );
 
-  // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
-  const graph = useMemo(() => Atom.make<GraphModel>(toGraph(nodes, edges)), []);
-  const overlay = useMemo(() => Atom.make<Overlay>({ positions }), []);
-  const store = useMemo(() => createMemoryStore([]), []);
-  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_VIEW_ID), []);
-
-  // Read through a ref so the registry and projection, which the canvas does not expect to change, stay stable.
+  // Read through a ref so the registry, which the viewport does not expect to change, stays stable.
   const callbacks = useRef({ onOpen, onRemove });
   // After commit, so a render React discards never leaves its callbacks behind.
   useLayoutEffect(() => {
@@ -176,61 +225,38 @@ export const CodeGraphCanvas = ({
   }, [onOpen, onRemove]);
   const registry = useMemo(() => createRegistry((id) => callbacks.current.onOpen?.(id)), []);
 
-  useEffect(() => {
-    atomRegistry.set(graph, toGraph(nodes, edges));
-  }, [atomRegistry, graph, nodes, edges]);
+  const graph = useMemo(() => toGraph(nodes, edges, frames), [nodes, edges, frames]);
+  const layout = useMemo<GraphLayoutOptions>(() => {
+    const framesById = new Map(frames.map((frame) => [frameId(frame.group), frame]));
+    return {
+      ...LAYOUT,
+      arrange,
+      shape: (node) => {
+        const frame = framesById.get(node.id);
+        return frame ? frameShape(frame) : { type: CODE_NODE_TYPE, layer: GRAPH_LAYER.id };
+      },
+    };
+  }, [frames, arrange]);
 
-  useEffect(() => {
-    if (!samePositions(atomRegistry.get(overlay).positions, positions)) {
-      atomRegistry.set(overlay, { positions });
+  const handleDelete = useCallback((ids: string[]) => {
+    // An arrow is a fact in the index, so only boxes can be removed.
+    const boxes = ids.filter((id) => !id.includes(Model.EDGE_SEPARATOR) && !isFrame(id));
+    if (boxes.length > 0) {
+      callbacks.current.onRemove?.(boxes);
     }
-  }, [atomRegistry, overlay, positions]);
-
-  useEffect(
-    () =>
-      atomRegistry.subscribe(overlay, ({ positions: next }) => {
-        if (!samePositions(next, positions)) {
-          onPositionsChange?.(next);
-        }
-      }),
-    [atomRegistry, overlay, positions, onPositionsChange],
-  );
-
-  const removable = !!onRemove;
-  const createProjection = useCallback(
-    ({ registry: nodeRegistry, constrained }: FreehandProjectionOptions) =>
-      createDynamicProjection({
-        registry: nodeRegistry,
-        constrained,
-        graph,
-        overlay,
-        options: { ...LAYOUT, nodes: registry, arrange },
-        capabilities: { move: true, link: false, delete: removable },
-        onDelete: (ids) => {
-          // An arrow is a fact in the index, so only boxes can be removed.
-          const boxes = ids.filter((id) => !id.includes(Model.EDGE_SEPARATOR));
-          if (boxes.length > 0) {
-            callbacks.current.onRemove?.(boxes);
-          }
-        },
-      }),
-    [graph, overlay, registry, arrange, removable],
-  );
+  }, []);
 
   return (
     <CodeNodeContext.Provider value={nodeContext}>
-      <Canvas.Root
-        store={store}
-        root={DYNAMIC_VIEW_ID}
-        atoms={atoms}
+      <Graph2DView
+        graph={graph}
+        layout={layout}
         nodes={registry}
-        createProjection={createProjection}
-        backgroundGrid='none'
+        positions={positions}
+        onPositionsChange={onPositionsChange}
+        onDelete={onRemove ? handleDelete : undefined}
         refitKey={refitKey}
-      >
-        <Canvas.Viewport />
-        <Canvas.Navigation />
-      </Canvas.Root>
+      />
     </CodeNodeContext.Provider>
   );
 };

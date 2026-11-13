@@ -2,12 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as TripCapabilities from '@dxos/plugin-trip/TripCapabilities';
+import * as TripEvents from '@dxos/plugin-trip/TripEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { DuffelNamespace } from './src/namespace.ts';
+import * as DuffelCapabilities from './src/types/DuffelCapabilities.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.duffel',
+    key: DuffelNamespace.key,
     name: 'Duffel',
     author: 'DXOS',
     description: trim`
@@ -24,4 +32,16 @@ export default Config2.make({
     tags: ['labs'],
     dependsOn: ['org.dxos.plugin.trip'],
   },
+  modules: [
+    AppCapability.settings(() => import('./src/capabilities/duffel.ts', { with: { type: 'module-url' } }), {
+      requires: [Capabilities.AtomRegistry],
+      provides: [DuffelCapabilities.Settings, TripCapabilities.BookingService],
+      activatesOn: TripEvents.Start,
+    }),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

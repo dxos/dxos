@@ -14,6 +14,7 @@ import restampFeedSnapshots from './0007_restamp_feed_snapshots.sql?raw';
 import reindexObjectMetaAnnotations from './0008_reindex_object_meta_annotations.sql?raw';
 import reindexObjectState from './0009_reindex_object_state.sql?raw';
 import representFeedBlocks from './0010_represent_feed_blocks.sql?raw';
+import representFeedBranches from './0011_represent_feed_branches.sql?raw';
 
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
@@ -26,6 +27,7 @@ export const MIGRATIONS = {
   '0008_reindex_object_meta_annotations': SqlMigrations.apply(reindexObjectMetaAnnotations),
   '0009_reindex_object_state': SqlMigrations.apply(reindexObjectState),
   '0010_represent_feed_blocks': SqlMigrations.apply(representFeedBlocks),
+  '0011_represent_feed_branches': SqlMigrations.apply(representFeedBranches),
 };
 
 /** Own history table per store, since many stores share the client database. */

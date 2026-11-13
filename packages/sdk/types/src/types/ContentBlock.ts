@@ -127,6 +127,15 @@ export const ToolCall = Schema.TaggedStruct('toolCall', {
 
 export type ToolCall = Schema.Schema.Type<typeof ToolCall>;
 
+/** One operation a code-mode `eval` ran: the operation's key, and whether it failed. What it returned is not kept. */
+export const Invocation = Schema.Struct({
+  operationKey: Schema.String,
+  /** The first line of the failure. */
+  error: Schema.optional(Schema.String),
+});
+
+export interface Invocation extends Schema.Schema.Type<typeof Invocation> {}
+
 export const ToolResult = Schema.TaggedStruct('toolResult', {
   /**
    * Id of the tool call that this result is for.
@@ -162,6 +171,12 @@ export const ToolResult = Schema.TaggedStruct('toolResult', {
    * Is the tool executed by the provider.
    */
   providerExecuted: Schema.Boolean,
+
+  /**
+   * The operations a code-mode `eval` ran, in order. Its tool name says nothing about what it did, so a reader of the
+   * history that asks which operations ran (an end-request hook) looks here. Never sent to the model.
+   */
+  invocations: Schema.optional(Schema.mutable(Schema.Array(Invocation))),
 
   ...Base.fields,
 });
@@ -383,6 +398,8 @@ export const Request = Schema.TaggedStruct('request', {
   title: Schema.String,
   toolCallId: Schema.optional(Schema.String),
   options: Schema.Array(RequestOption),
+  /** What the call would send or write (an email's body), shown collapsed under the request. */
+  preview: Schema.optional(Schema.Struct({ label: Schema.String, text: Schema.String })),
   /** Set once answered, or `cancelled` when the turn that asked ended first. */
   resolution: Schema.optional(
     Schema.Struct({

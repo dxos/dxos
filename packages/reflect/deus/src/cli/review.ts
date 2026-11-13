@@ -10,6 +10,10 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 
+import { parseMdlBlocks } from '../extension/blocks.ts';
+import { specDependencies } from '../extension/refs.ts';
+import { parseVerdictHeader, reviewItemId } from '../review/review.ts';
+import { frontmatter, reqs } from '../spec-index/parse.ts';
 import { ReviewCheckError } from './errors.ts';
 import { git } from './git.ts';
 
@@ -29,13 +33,21 @@ const REVIEWED_KINDS = new Set([
   'db',
   'scenario',
   'test',
+  'table',
+  'binding',
+  'actor',
+  'route',
+  'keyspace',
 ]);
+
+/** A walkthrough says where things are; more steps than this retells the code. */
+const MAX_WALKTHROUGH = 5;
 
 /** Kinds judged on whether automation exercises them rather than on whether code implements them. */
 const EXERCISE_KINDS = new Set(['scenario', 'test']);
 
 /** A key list written inline (`[a, b]`), wrapped over lines, or as `- a` items, as `parseReview` reads it. */
-const keyList = (value: string | undefined): string[] =>
+export const keyList = (value: string | undefined): string[] =>
   (value ?? '')
     .split(/[,\n]/)
     .map((item) => item.replace(/^[\s[-]+|[\s\]]+$/g, ''))
@@ -57,24 +69,78 @@ export const reviewItems = (text: string): ReviewItem[] =>
     if (!header || !REVIEWED_KINDS.has(header[1])) {
       return [];
     }
-    const reqs = lines.flatMap((text, offset) => {
-      const req = text.match(/^\s+req\s+([A-Za-z][\w.-]*)\s*:\s*(.*)$/);
-      return req ? [{ id: req[1], kind: 'req', line: line + offset, title: req[2] }] : [];
-    });
-    return reqs.length > 0 ? reqs : [{ id: header[2], kind: header[1], line, title: header[3] ?? '' }];
+    const nested = reqs(body).map(({ id, title, offset }) => ({ id, kind: 'req', line: line + offset, title }));
+    return nested.length > 0
+      ? nested
+      : [{ id: reviewItemId(header[1], header[2]), kind: header[1], line, title: header[3] ?? '' }];
   });
 
-const frontmatter = (text: string): Record<string, string> =>
-  Object.fromEntries(
-    (text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '').split('\n').flatMap((line) => {
-      const match = line.match(/^([\w-]+):\s*(.*?)\s*(?:#.*)?$/);
-      return match ? [[match[1], match[2]]] : [];
+/** A block field at two spaces of indent; a `|` value continues on lines indented four or more. */
+export const blockField = (body: string, name: string): string | undefined => {
+  const match = body.match(new RegExp(`^  ${name}:[ \\t]*(.*)$((?:\\n {4,}.*)*)`, 'm'));
+  return match ? `${match[1]} ${match[2]}`.replace(/^\|/, '').trim() : undefined;
+};
+
+/**
+ * The items a reference to `id` covers: a block's reqs (or the block itself when it has none), or one nested req.
+ * A block is found by its id or its review id (`table:feeds`).
+ */
+export const itemsUnder = (text: string, id: string): ReviewItem[] => {
+  const block = blocks(text).find(({ body }) => {
+    const header = body.split('\n')[0].match(/^(\w+)\s+([A-Za-z][\w.-]*)/);
+    return header !== null && (header[2] === id || reviewItemId(header[1], header[2]) === id);
+  });
+  if (block) {
+    const end = block.line + block.body.split('\n').length;
+    return reviewItems(text).filter(({ line }) => line >= block.line && line < end);
+  }
+  return reviewItems(text).filter((item) => item.id === id);
+};
+
+/** Each verdict's status and note, by item id. */
+export const reviewVerdicts = (text: string): Map<string, { status?: string; note?: string }> =>
+  new Map(
+    blocks(text).flatMap(({ body }) => {
+      const id = parseVerdictHeader(body.split('\n')[0])?.id;
+      return id ? [[id, { status: blockField(body, 'status'), note: blockField(body, 'note') }] as const] : [];
     }),
   );
 
-const field = (body: string, name: string): string | undefined => {
-  const match = body.match(new RegExp(`^  ${name}:[ \\t]*(.*)$((?:\\n {4,}.*)*)`, 'm'));
-  return match ? `${match[1]} ${match[2]}`.replace(/^\|/, '').trim() : undefined;
+/**
+ * The `dependsOn` array of the `plugin` object in a `dx.config.ts`, empty when the object has none; undefined when
+ * there is no `plugin` object or `dependsOn` is not a literal array of strings. Comments are stripped first so a commented-out entry does not count.
+ */
+export const configDependsOn = (configText: string): string[] | undefined => {
+  const code = configText.replace(/(['"`])(?:\\.|(?!\1)[^\\])*\1|\/\/.*|\/\*[\s\S]*?\*\//g, (match) =>
+    match.startsWith('/') ? ' ' : match,
+  );
+  const start = /\bplugin\s*:\s*\{/.exec(code);
+  if (start?.index === undefined) {
+    return undefined;
+  }
+  let depth = 0;
+  let end = code.length;
+  for (let index = start.index + start[0].length - 1; index < code.length; index++) {
+    depth += code[index] === '{' ? 1 : code[index] === '}' ? -1 : 0;
+    if (depth === 0) {
+      end = index;
+      break;
+    }
+  }
+  const plugin = code.slice(start.index, end);
+  if (!/\bdependsOn\s*:/.test(plugin)) {
+    return [];
+  }
+  const literal = plugin.match(/\bdependsOn\s*:\s*\[([^\]]*)\]/)?.[1];
+  if (literal === undefined) {
+    return undefined;
+  }
+  const items = literal
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item !== '');
+  const strings = items.map((item) => item.match(/^(['"`])([^'"`$\\]*)\1$/)?.[2]);
+  return strings.every((value) => value !== undefined) ? strings.filter((value) => value !== undefined) : undefined;
 };
 
 /** Whether the source declares the name: a top-level declaration, a member, or an export list entry. */
@@ -93,6 +159,19 @@ const declares = (source: string, name: string): boolean => {
 type ResolvedKey = { file?: string; symbol?: string; error?: string };
 
 /**
+ * Whether `value` is a calendar date written `YYYY-MM-DD`, or one with a UTC time (`YYYY-MM-DDTHH:MMZ`, no
+ * seconds), as plugin-code's importer accepts it: the forms whose text order is their time order.
+ */
+const isReviewDate = (value: string) => {
+  const time = Date.parse(value.includes('T') ? value : `${value}T00:00:00Z`);
+  return (
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}Z)?$/.test(value) &&
+    !Number.isNaN(time) &&
+    new Date(time).toISOString().startsWith(value.replace(/Z$/, ''))
+  );
+};
+
+/**
  * Validates a `.review.mdl` against its spec and the checkout: frontmatter, statuses, notes, coverage of every item,
  * and that each evidence key names an existing file and symbol.
  */
@@ -108,8 +187,8 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
       errors.push(`frontmatter: missing \`${key}\``);
     }
   }
-  if (meta.date && !/^\d{4}-\d{2}-\d{2}$/.test(meta.date)) {
-    errors.push('frontmatter: `date` must be YYYY-MM-DD');
+  if (meta.date && !isReviewDate(meta.date)) {
+    errors.push('frontmatter: `date` must be YYYY-MM-DD, or YYYY-MM-DDTHH:MMZ with a UTC time');
   }
   if (meta.by && !/^(user|agent):\S+$/.test(meta.by)) {
     errors.push('frontmatter: `by` must be `user:<handle>` or `agent:<name>`');
@@ -155,8 +234,8 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
   const kindOf = new Map(items.map(({ id, kind }) => [id, kind]));
 
   const verdicts = blocks(text).flatMap(({ body, line }) => {
-    const header = body.split('\n')[0].match(/^verdict\s+([A-Za-z][\w.-]*)\s*(?::\s*(.*))?$/);
-    return header ? [{ id: header[1], line, body }] : [];
+    const header = parseVerdictHeader(body.split('\n')[0]);
+    return header ? [{ id: header.id, line, body }] : [];
   });
   const seen = new Set<string>();
   for (const { id, line, body } of verdicts) {
@@ -166,17 +245,22 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
     }
     seen.add(id);
     if (specText && !itemIds.has(id)) {
-      errors.push(`${at}: ${id} is not a reviewable item of the spec (run \`items\` for the list)`);
+      const qualified = items.filter((item) => item.id.endsWith(`:${id}`)).map((item) => item.id);
+      errors.push(
+        qualified.length > 0
+          ? `${at}: ${id} is not a reviewable item of the spec; did you mean ${qualified.join(' or ')}?`
+          : `${at}: ${id} is not a reviewable item of the spec (run \`items\` for the list)`,
+      );
     }
-    const status = field(body, 'status');
+    const status = blockField(body, 'status');
     if (!status || !STATUSES.has(status)) {
       errors.push(`${at}: ${id} has status \`${status ?? ''}\`; use one of ${[...STATUSES].join(', ')}`);
     }
-    if (status && status !== 'done' && !field(body, 'note')) {
+    if (status && status !== 'done' && !blockField(body, 'note')) {
       errors.push(`${at}: ${id} is ${status} but has no note saying what is missing or different`);
     }
     const exercise = EXERCISE_KINDS.has(kindOf.get(id) ?? '');
-    const evidence = keyList(field(body, 'evidence'));
+    const evidence = keyList(blockField(body, 'evidence'));
     if (!exercise && (status === 'done' || status === 'untested' || status === 'partial') && evidence.length === 0) {
       warnings.push(`${at}: ${id} is ${status} with no evidence`);
     }
@@ -192,7 +276,7 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
         }
       }
     }
-    const tests = keyList(field(body, 'tests'));
+    const tests = keyList(blockField(body, 'tests'));
     if (exercise && status === 'untested') {
       errors.push(`${at}: ${id} is a ${kindOf.get(id)}; use done, partial, diverged or missing (see lang/review.mdl)`);
     }
@@ -213,6 +297,52 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
         errors.push(`${at}: a test key names the test file only, without #: ${key}`);
       } else if (file && !(yield* exists(file))) {
         errors.push(`${at}: test file not found: ${key}`);
+      }
+    }
+    // Each step is `- <sentence>. github:<key>`; the joined field holds them as `- ` separated items.
+    const steps = (blockField(body, 'walkthrough') ?? '')
+      .split(/(?:^|\s)-\s+/)
+      .map((step) => step.trim())
+      .filter(Boolean);
+    if (steps.length > MAX_WALKTHROUGH) {
+      errors.push(`${at}: ${id} has ${steps.length} walkthrough steps; keep it to ${MAX_WALKTHROUGH}`);
+    }
+    if (steps.length > 0 && evidence.length < 2) {
+      warnings.push(`${at}: ${id} has one implementation; its code chip already shows it, so drop the walkthrough`);
+    }
+    for (const step of steps) {
+      const key = step.match(/(github:\S+)\s*$/)?.[1];
+      if (!key) {
+        errors.push(`${at}: walkthrough step does not end with a github: key: ${step}`);
+        continue;
+      }
+      const { file, symbol, error } = yield* resolveKey(key);
+      if (error) {
+        errors.push(`${at}: ${error}`);
+      } else if (file && !(yield* exists(file))) {
+        errors.push(`${at}: walkthrough file not found: ${key}`);
+      } else if (file && symbol) {
+        if (!declares(yield* fs.readFileString(file), symbol.split('.').pop() ?? symbol)) {
+          errors.push(`${at}: no declaration of ${symbol} in ${key.split('#')[0]} (walkthrough)`);
+        }
+      }
+    }
+  }
+  // dx.config.ts is what the app loads, so a spec that lists other dependencies has diverged from the code.
+  const pluginBlock = specText ? parseMdlBlocks(specText).find(({ type }) => type === 'plugin') : undefined;
+  const configFile = specFile ? path.join(path.dirname(specFile), 'dx.config.ts') : undefined;
+  if (specText && pluginBlock && configFile && (yield* exists(configFile))) {
+    const config = configDependsOn(yield* fs.readFileString(configFile));
+    const declared = specDependencies(specText)
+      .filter(({ via }) => via === 'dependsOn')
+      .map(({ id }) => id);
+    const verdict = verdicts.find(({ id }) => id === pluginBlock.id);
+    if (config && verdict && blockField(verdict.body, 'status') !== 'diverged') {
+      const same = new Set(declared).size === new Set(config).size && declared.every((id) => config.includes(id));
+      if (!same) {
+        errors.push(
+          `${reviewPath}:${verdict.line}: ${pluginBlock.id} dependsOn [${declared.join(', ')}] differs from dx.config.ts [${config.join(', ')}]; judge it diverged`,
+        );
       }
     }
   }

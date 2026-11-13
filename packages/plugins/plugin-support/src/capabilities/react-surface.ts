@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as DeckRole from '@dxos/plugin-deck/DeckRole';
+import * as DeckSurface from '@dxos/plugin-deck/DeckSurface';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import * as Position from '@dxos/util/Position';
 
@@ -24,10 +24,10 @@ import {
   SupportHomeCompanion,
   SupportSettings,
 } from '#containers';
-import { meta } from '#meta';
 import { Support } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants.ts';
+import { SupportNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -80,12 +80,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'hints',
-        filter: Surface.makeFilter(DeckRole.Hints),
+        filter: Surface.makeFilter(DeckSurface.Hints),
         component: ShortcutsHints,
       }),
       Surface.create({
         id: 'keyshortcuts',
-        filter: Surface.makeFilter(DeckRole.Keyshortcuts),
+        filter: Surface.makeFilter(DeckSurface.Keyshortcuts),
         component: ShortcutsList,
       }),
       Surface.create({
@@ -95,7 +95,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, SupportNamespace.key),
         component: SupportSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),

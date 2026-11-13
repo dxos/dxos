@@ -17,7 +17,7 @@ import { SubscriptionList } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
-import { PublicKey, parseId } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -26,14 +26,16 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { unpackJson } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceCapabilities } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
+import {
+  PRESENCE_BROADCAST_INTERVAL,
+  groupPresenceChangesBySpace,
+  groupPresenceKeysBySpace,
+} from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
-
-const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
 /**
  * Resolve the designated default space, migrating a legacy profile into the settings space until
@@ -198,55 +200,30 @@ export default Capability.makeModule(
 
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
     let broadcastCleanup: (() => void) | undefined;
+    let previousActive: readonly string[] = [];
     const setupBroadcast = () => {
       broadcastCleanup?.();
 
       const layout = registry.get(layoutAtom);
       const current = attention.getCurrent();
       const active = layout.active;
-      const inactive = layout.inactive;
+      const departed = previousActive.filter((id) => !active.includes(id));
+      const inactive = [...layout.inactive, ...departed];
+      previousActive = active;
 
       const send = () => {
         const spaces = client.spaces.get();
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
-          // Group parts by space for efficient messaging.
-          const idsBySpace = reduceGroupBy(active, (id: string) => {
-            try {
-              const { spaceId } = parseId(id);
-              return spaceId;
-            } catch {
-              return null;
-            }
-          });
+          const attendedBySpace = groupPresenceKeysBySpace([...current]);
+          const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 
-          const removedBySpace = reduceGroupBy(inactive, (id: string) => {
-            try {
-              const { spaceId } = parseId(id);
-              return spaceId;
-            } catch {
-              return null;
-            }
-          });
-
-          // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
           for (const space of spaces) {
-            if (!idsBySpace.has(space.id)) {
-              idsBySpace.set(space.id, []);
-            }
-          }
-
-          for (const [spaceId, added] of idsBySpace) {
-            const removed = removedBySpace.get(spaceId) ?? [];
-            const space = spaces.find((space) => space.id === spaceId);
-            if (!space) {
-              continue;
-            }
-
+            const { added, removed } = changesBySpace.get(space.id) ?? { added: [], removed: [] };
             void space
               .postMessage('viewing', {
                 identityKey: identity.identityKey ?? '',
-                attended: [...current],
+                attended: attendedBySpace.get(space.id) ?? [],
                 added,
                 removed,
               })
@@ -262,7 +239,7 @@ export default Capability.makeModule(
 
       send();
       // Send at interval to allow peers to expire entries if they become disconnected.
-      const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
+      const interval = setInterval(() => send(), PRESENCE_BROADCAST_INTERVAL);
       broadcastCleanup = () => clearInterval(interval);
     };
 
@@ -296,33 +273,26 @@ export default Capability.makeModule(
               Array.isArray(added) &&
               Array.isArray(removed)
             ) {
-              // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
+              const peer = identityKey.toHex();
+              const lastSeen = Date.now();
               registry.update(ephemeralAtom, (ephemeral) => {
-                added.forEach((id) => {
-                  if (typeof id === 'string') {
-                    if (!(id in ephemeral.viewersByObject)) {
-                      ephemeral.viewersByObject[id] = new ComplexMap(PublicKey.hash);
-                    }
-                    ephemeral.viewersByObject[id]!.set(identityKey, {
-                      lastSeen: Date.now(),
-                      currentlyAttended: attended.has(id),
-                    });
-                    if (!ephemeral.viewersByIdentity.has(identityKey)) {
-                      ephemeral.viewersByIdentity.set(identityKey, new Set());
-                    }
-                    ephemeral.viewersByIdentity.get(identityKey)!.add(id);
+                const viewersByObject = { ...ephemeral.viewersByObject };
+                for (const key of added) {
+                  if (typeof key === 'string') {
+                    viewersByObject[key] = {
+                      ...viewersByObject[key],
+                      [peer]: { lastSeen, currentlyAttended: attended.has(key) },
+                    };
                   }
-                });
-
-                removed.forEach((id) => {
-                  if (typeof id === 'string') {
-                    ephemeral.viewersByObject[id]?.delete(identityKey);
-                    ephemeral.viewersByIdentity.get(identityKey)?.delete(id);
-                    // It's okay for these to be empty sets/maps, reduces churn.
+                }
+                for (const key of removed) {
+                  if (typeof key === 'string' && viewersByObject[key]?.[peer]) {
+                    const { [peer]: _, ...rest } = viewersByObject[key];
+                    viewersByObject[key] = rest;
                   }
-                });
+                }
 
-                return { ...ephemeral };
+                return { ...ephemeral, viewersByObject };
               });
             }
           }),

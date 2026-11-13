@@ -1,0 +1,301 @@
+{
+  "layout": {
+    "id": "root",
+    "dim": "2d",
+    "elements": {
+      "text": {
+        "id": "text",
+        "type": "note",
+        "z": "V",
+        "center": {
+          "x": 120,
+          "y": 48
+        },
+        "size": {
+          "width": 240,
+          "height": 96
+        },
+        "overrides": {
+          "hue": "violet",
+          "fontSize": 36,
+          "fontFamily": "monospace",
+          "alignHorizontal": "center"
+        },
+        "props": {
+          "canvas": {
+            "text": "Title\nSubtitle"
+          }
+        }
+      },
+      "sticky": {
+        "id": "sticky",
+        "type": "rect",
+        "z": "l",
+        "center": {
+          "x": 384,
+          "y": 96
+        },
+        "size": {
+          "width": 192,
+          "height": 192
+        },
+        "label": "Remember",
+        "overrides": {
+          "hue": "amber"
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "star": {
+        "id": "star",
+        "type": "rect",
+        "z": "x",
+        "center": {
+          "x": 672,
+          "y": 48
+        },
+        "size": {
+          "width": 96,
+          "height": 96
+        },
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "cloud": {
+        "id": "cloud",
+        "type": "cloud",
+        "z": "z",
+        "center": {
+          "x": 672,
+          "y": 240
+        },
+        "size": {
+          "width": 96,
+          "height": 96
+        },
+        "label": "Sky",
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "hexagon": {
+        "id": "hexagon",
+        "type": "polygon",
+        "z": "zV",
+        "center": {
+          "x": 864,
+          "y": 240
+        },
+        "size": {
+          "width": 96,
+          "height": 96
+        },
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {
+            "params": {
+              "sides": 6
+            }
+          }
+        }
+      },
+      "free": {
+        "id": "free",
+        "type": "link",
+        "z": "t",
+        "source": {
+          "point": {
+            "x": 0,
+            "y": 288
+          }
+        },
+        "target": {
+          "point": {
+            "x": 144,
+            "y": 336
+          }
+        },
+        "props": {
+          "canvas": {
+            "type": "curve",
+            "ends": {
+              "start": "circle",
+              "end": "triangle"
+            }
+          }
+        }
+      }
+    }
+  },
+  "parts": [],
+  "objects": [],
+  "intents": [
+    {
+      "kind": "create",
+      "element": {
+        "id": "text",
+        "type": "note",
+        "z": "V",
+        "center": {
+          "x": 120,
+          "y": 48
+        },
+        "size": {
+          "width": 240,
+          "height": 96
+        },
+        "overrides": {
+          "hue": "violet",
+          "fontSize": 36,
+          "fontFamily": "monospace",
+          "alignHorizontal": "center"
+        },
+        "props": {
+          "canvas": {
+            "text": "Title\nSubtitle"
+          }
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "sticky",
+        "type": "rect",
+        "z": "l",
+        "center": {
+          "x": 384,
+          "y": 96
+        },
+        "size": {
+          "width": 192,
+          "height": 192
+        },
+        "label": "Remember",
+        "overrides": {
+          "hue": "amber"
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "star",
+        "type": "rect",
+        "z": "x",
+        "center": {
+          "x": 672,
+          "y": 48
+        },
+        "size": {
+          "width": 96,
+          "height": 96
+        },
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "cloud",
+        "type": "cloud",
+        "z": "z",
+        "center": {
+          "x": 672,
+          "y": 240
+        },
+        "size": {
+          "width": 96,
+          "height": 96
+        },
+        "label": "Sky",
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "hexagon",
+        "type": "polygon",
+        "z": "zV",
+        "center": {
+          "x": 864,
+          "y": 240
+        },
+        "size": {
+          "width": 96,
+          "height": 96
+        },
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {
+            "params": {
+              "sides": 6
+            }
+          }
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "free",
+        "type": "link",
+        "z": "t",
+        "source": {
+          "point": {
+            "x": 0,
+            "y": 288
+          }
+        },
+        "target": {
+          "point": {
+            "x": 144,
+            "y": 336
+          }
+        },
+        "props": {
+          "canvas": {
+            "type": "curve",
+            "ends": {
+              "start": "circle",
+              "end": "triangle"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "skipped": {
+    "draw": 1
+  },
+  "approximated": {
+    "geo:star": 1,
+    "geo:hexagon": 1
+  }
+}

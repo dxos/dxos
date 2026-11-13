@@ -741,18 +741,18 @@ describe('Obj', () => {
       expect(fires).toBe(baseline);
 
       Obj.update(obj, (obj) => {
-        Obj.getMeta(obj).tags.push(Ref.make(urgent));
+        Obj.getMeta(obj).tags.push(urgent);
       });
       expect(fires).toBe(baseline + 1);
-      expect(registry.get(tagsAtom).map((ref) => ref.uri.toString())).toEqual([Ref.make(urgent).uri.toString()]);
+      expect(registry.get(tagsAtom)).toEqual([urgent]);
 
       Obj.update(obj, (obj) => {
-        Obj.getMeta(obj).tags.splice(0, 1, Ref.make(urgent));
+        Obj.getMeta(obj).tags.splice(0, 1, urgent);
       });
       expect(fires).toBe(baseline + 1);
 
       Obj.update(obj, (obj) => {
-        Obj.getMeta(obj).tags.push(Ref.make(later));
+        Obj.getMeta(obj).tags.push(later);
       });
       expect(fires).toBe(baseline + 2);
       expect(registry.get(tagsAtom)).toHaveLength(2);

@@ -73,6 +73,35 @@ describe('Client.waitUntilInitialized', () => {
   });
 });
 
+describe('Client.waitUntilServicesReady', () => {
+  test('resolves with initialize when the client opens without a boot cache', async () => {
+    const client = new Client();
+    const waiting = client.waitUntilServicesReady();
+    expect(client.servicesReady).toBe(false);
+    await client.initialize();
+    expect(client.servicesReady).toBe(true);
+    await expect(waiting).resolves.toBeUndefined();
+    await client.destroy();
+  });
+
+  test('rejects with TimeoutError when the services do not open in time', async () => {
+    const client = new Client();
+    await expect(client.waitUntilServicesReady({ timeout: 100 })).rejects.toBeInstanceOf(TimeoutError);
+  });
+
+  test('goes back to pending after destroy and resolves again after re-initialization', async () => {
+    const client = new Client();
+    await client.initialize();
+    await client.destroy();
+    expect(client.servicesReady).toBe(false);
+    await expect(client.waitUntilServicesReady({ timeout: 100 })).rejects.toBeInstanceOf(TimeoutError);
+
+    await client.initialize();
+    await expect(client.waitUntilServicesReady({ timeout: 100 })).resolves.toBeUndefined();
+    await client.destroy();
+  });
+});
+
 describe('Client.indexStatus', () => {
   test('follows the host index status once open', async () => {
     const client = new Client();

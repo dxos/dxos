@@ -47,6 +47,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/scene"
+    },
+    {
       "path": "../../common/tracing"
     },
     {
@@ -170,6 +173,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-code"
+    },
+    {
       "path": "../plugin-connector"
     },
     {
@@ -189,6 +195,9 @@
     },
     {
       "path": "../plugin-kanban"
+    },
+    {
+      "path": "../plugin-map"
     },
     {
       "path": "../plugin-markdown"
@@ -219,6 +228,9 @@
     },
     {
       "path": "../plugin-tldraw"
+    },
+    {
+      "path": "../plugin-voxel"
     }
   ]
 }

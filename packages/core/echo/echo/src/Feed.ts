@@ -5,25 +5,80 @@
 // @import-as-namespace
 
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
+import { KEY_FEED_BLOCK, KEY_FEED_BRANCH, KEY_FEED_FORK, KEY_FEED_PREV, KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 
 import * as Annotation from './Annotation.ts';
 import * as Database from './Database.ts';
 import type * as Entity from './Entity.ts';
-import type * as Filter from './Filter.ts';
+import * as Filter from './Filter.ts';
 import * as internal from './internal/index.ts';
 import * as Obj from './Obj.ts';
+import * as Order from './Order.ts';
 import * as Query from './Query.ts';
 import type * as QueryResult from './QueryResult.ts';
 import * as Scope from './Scope.ts';
 import * as Type from './Type.ts';
+
+//
+// Options
+//
+
+/** The namespaces a feed can store its data under; `data` is the default. */
+export const Namespace = Schema.Literals(['data', 'trace']);
+export type Namespace = Schema.Schema.Type<typeof Namespace>;
+
+/**
+ * Indexing options for a feed. Absent on a feed means indexing is enabled.
+ *
+ * A struct rather than a bare boolean so later options (which indexes to build) need no migration.
+ */
+export const IndexingOptions = Schema.Struct({
+  /** When false, the feed's items are not indexed at all; there is no partial mode. */
+  enabled: Schema.Boolean,
+  /**
+   * Which branches the index holds: `main` (the default) or `all`. There is no selected subset.
+   * A feed whose items mutate objects keeps `main`; a feed of messages from people can index `all`.
+   */
+  mode: Schema.optional(Schema.Literals(['all', 'main'])),
+});
+export type IndexingOptions = Schema.Schema.Type<typeof IndexingOptions>;
+
+/**
+ * Retention options for a feed. With both limits set, an item is dropped when it breaks either;
+ * an empty struct (or no `retention` on the feed) trims nothing.
+ *
+ * Live feed objects persist every `Obj.update` as a whole-object re-append, so superseded blocks are
+ * trimmed by these limits like any other block; retention does not compact them.
+ */
+export const RetentionOptions = Schema.Struct({
+  /** Maximum number of items kept; the oldest beyond it are dropped. */
+  maxLength: Schema.Int.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(1)), Schema.optional),
+
+  /**
+   * Maximum age of an item in milliseconds, measured from its append timestamp.
+   * Milliseconds rather than a `Duration` because ECHO stores plain JSON; {@link setRetention} converts.
+   */
+  maxAge: Schema.Finite.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.optional),
+});
+export type RetentionOptions = Schema.Schema.Type<typeof RetentionOptions>;
+
+/**
+ * A feed's indexing and retention options, as the indexer carries them down to the feed store.
+ */
+export const FeedOptions = Schema.Struct({
+  indexing: Schema.optional(IndexingOptions),
+  retention: Schema.optional(RetentionOptions),
+});
+export type FeedOptions = Schema.Schema.Type<typeof FeedOptions>;
 
 /**
  * Runtime schema for a Feed object.
@@ -47,7 +102,7 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * - `data`: Data feed (default).
      * - `trace`: Trace feed.
      */
-    namespace: Schema.optional(Schema.Literals(['data', 'trace'])),
+    namespace: Schema.optional(Namespace),
 
     /**
      * Earliest item a pending rewind discards — set when a soft fork is decided but not yet expressed,
@@ -62,6 +117,12 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * order relative to the blocks.
      */
     rewindFrom: Schema.optional(Obj.ID.pipe(internal.FormInputAnnotation.set(false))),
+
+    /** Indexing options; absent means indexing is enabled. Set with {@link setIndexing}. */
+    indexing: IndexingOptions.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
+
+    /** Retention options; absent means nothing is trimmed. Set with {@link setRetention}. */
+    retention: RetentionOptions.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' })),
 ) {}
 
@@ -103,18 +164,13 @@ export const CursorAnnotation: Annotation.Annotation<Cursor> = Annotation.make({
 export const START: Cursor = Cursor.make('');
 
 /**
- * Retention options for a feed.
- *
- * Live feed objects persist every `Obj.update` as a whole-object re-append reusing the object's id
- * (see `EchoFeedCodec.encode`), so superseded blocks accumulate indefinitely — retention/compaction
- * of those superseded blocks (driven by these options, once implemented) is the reclaim mechanism.
- * TODO(wittjosiah): Implement when feed retention is supported (see `setRetention` below and
- * `FeedStore.appendLocal`).
+ * Input to {@link setRetention}: {@link RetentionOptions} with `maxAge` as any Duration input.
  */
-export interface RetentionOptions {
-  /** Retain items after this cursor position. */
-  // TODO(wittjosiah): Use FeedCursor from @dxos/feed?
-  cursor?: string;
+export interface SetRetentionOptions {
+  /** Maximum number of items kept; an integer of at least 1. */
+  maxLength?: number;
+  /** Maximum age of an item, measured from its append timestamp; must be positive and finite. */
+  maxAge?: Duration.Input;
 }
 
 /**
@@ -126,6 +182,51 @@ export interface AppendOptions {
    * Applies to the first item only; the rest of the batch chain implicitly in append order.
    */
   parent?: Entity.Unknown | Entity.Snapshot | EntityId;
+
+  /** The branch the appended items continue; omit for the root branch. */
+  branch?: BranchId;
+}
+
+/**
+ * Options for {@link fork}.
+ */
+export interface ForkOptions {
+  /**
+   * The fork point: the item (at the block it was read from) or the block id that the new branch
+   * continues from. Its branch is the parent of the new branch.
+   */
+  at: Entity.Unknown | Entity.Snapshot | BlockId;
+}
+
+/**
+ * Options for {@link walk}.
+ */
+export interface WalkOptions {
+  /**
+   * The branch the walk ends on; omit for the root branch, or for the branch of `begin` on a backward walk.
+   * `'all'` walks every branch of the feed in local order, each item once at its first block.
+   */
+  branch?: BranchId | null | 'all';
+  /** Starts after this item; read it off the last item of a page with {@link getLocalCursor}. */
+  begin?: LocalCursor;
+  /** Also gives the base item of each branch that forks at a block the walk gives. */
+  forks?: boolean;
+  /** `asc` walks from the root base to the branch; `desc` walks back to the root base. Defaults to `asc`. */
+  order?: 'asc' | 'desc';
+  /** The page size. */
+  limit?: number;
+}
+
+/**
+ * Options for {@link query}.
+ */
+export interface QueryOptions {
+  /**
+   * Branches to read: branch ids, `null` for the main branch, or `'all'`. Defaults to the main branch only,
+   * so a private branch never reaches a reader that did not ask for it. Read a branch's ancestors with
+   * `'all'` (or the branches on its path) and pass the items to {@link readBranch}.
+   */
+  branches?: Scope.FeedScopeOptions['branches'];
 }
 
 /**
@@ -257,6 +358,10 @@ export const append = (
           if (options?.parent !== undefined && items.length > 0) {
             setParent(items[0], options.parent);
           }
+          if (options?.branch !== undefined) {
+            const branch = options.branch;
+            items.forEach((item) => internal.change(item, (mutable) => setBranchKey(mutable, branch)));
+          }
           return db.appendToFeed(feed, items, { origin });
         }),
       ),
@@ -284,6 +389,7 @@ export const remove = (
         db.removeFeedItemsByIds(
           feed,
           items.map((item) => item.id),
+          { branches: items.map((item) => getBranch(item) ?? null) },
         ),
       ),
     ),
@@ -449,6 +555,226 @@ export const history = <T extends Entity.Unknown | Entity.Snapshot>(
   return { items: reachable.reverse(), shallow };
 };
 
+//
+// Branches
+//
+
+/**
+ * The id of a branch: the block id (`<sequence>@<actorId>`) of the base block of the branch, as an
+ * opaque string. The root branch has no id; scopes and the index name it `null`.
+ */
+export const BranchId = Schema.String.pipe(Schema.brand('@dxos/echo/Feed/BranchId'));
+export type BranchId = Schema.Schema.Type<typeof BranchId>;
+
+/** The id of a block within its feed, `<sequence>@<actorId>`. */
+export type BlockId = string;
+
+/**
+ * The foreign-key sources a store stamps on an item from the block it was read from: its block id, its
+ * branch, its fork flag (as the fork point) and its predecessor. A copy of the item into another feed
+ * drops them, since that feed has none of those blocks or branches.
+ */
+export const BLOCK_KEYS: readonly string[] = [KEY_FEED_BLOCK, KEY_FEED_BRANCH, KEY_FEED_FORK, KEY_FEED_PREV];
+
+/**
+ * The position of a walk on one device: the branch the walk is on and the last block it gave. Read it
+ * off an item with {@link getLocalCursor}; another device cannot use it.
+ */
+export const LocalCursor = Schema.String.pipe(Schema.brand('@dxos/echo/Feed/LocalCursor'));
+export type LocalCursor = Schema.Schema.Type<typeof LocalCursor>;
+
+// A live object this client wrote carries the keys of its latest block hidden, so they never notify.
+const keyOf = (item: Entity.Unknown | Entity.Snapshot, source: string): string | undefined =>
+  (internal.getFeedBlockKeys(item) ?? internal.getKeys(item, source)).find((key) => key.source === source)?.id;
+
+/** Writes the branch key into an open change, so a caller can batch it with its other writes. */
+const setBranchKey = (mutable: Entity.Mutable<Entity.Unknown>, branch: BranchId): void => {
+  internal.deleteKeys(mutable, KEY_FEED_BRANCH);
+  internal.getMetaChecked(mutable).keys.push(internal.foreignKey(KEY_FEED_BRANCH, branch));
+};
+
+/**
+ * The foreign key that puts an item on `branch`, for an item built with it in its meta (`Obj.make(…, { [Obj.Meta]: {
+ * keys: [Feed.branchKey(branch)] } })`); cheaper than {@link setBranch}, which opens a change on an item made without it.
+ *
+ * @performance O(1).
+ */
+export const branchKey = (branch: BranchId): { readonly source: string; readonly id: string } => ({
+  source: KEY_FEED_BRANCH,
+  id: branch,
+});
+
+/**
+ * Puts an item on a branch: a later {@link append} of it continues `branch`, so items for several
+ * branches can be built before they are written. Must be called within an `Obj.update` callback.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const setBranch = (mutable: Entity.Mutable<Entity.Unknown>, branch: BranchId): void =>
+  setBranchKey(mutable, branch);
+
+/**
+ * The branch of an item, as the store inferred it from the block the item was read from; `undefined`
+ * on the root branch.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getBranch = (item: Entity.Unknown | Entity.Snapshot): BranchId | undefined => {
+  const branch = keyOf(item, KEY_FEED_BRANCH);
+  return branch === undefined ? undefined : BranchId.make(branch);
+};
+
+/**
+ * True when the item was read from the base block of a branch: its fork flag is set, and its
+ * predecessor is the fork point.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const isFork = (item: Entity.Unknown | Entity.Snapshot): boolean => keyOf(item, KEY_FEED_FORK) !== undefined;
+
+/**
+ * The id of the block the item was read from; `undefined` on an item the store has not echoed yet.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getBlockId = (item: Entity.Unknown | Entity.Snapshot): BlockId | undefined => keyOf(item, KEY_FEED_BLOCK);
+
+/**
+ * The id of the predecessor of the block the item was read from: the head of its branch when it was
+ * written, or the fork point of a base block; `undefined` on the first block of a feed.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getPredecessor = (item: Entity.Unknown | Entity.Snapshot): BlockId | undefined =>
+  keyOf(item, KEY_FEED_PREV);
+
+/**
+ * The cursor a walk resumes after this item; `undefined` on an item the store has not echoed yet.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getLocalCursor = (item: Entity.Unknown | Entity.Snapshot): LocalCursor | undefined => {
+  const block = getBlockId(item);
+  return block === undefined ? undefined : LocalCursor.make(`${getBranch(item) ?? ''}|${block}`);
+};
+
+/**
+ * Starts a new branch: the first item is appended as the base block of the branch, with the fork
+ * point `at` as its predecessor, and the rest continue the branch. Returns the id of the branch, the
+ * block id of its base, once the base is written.
+ *
+ * @example
+ * ```ts
+ * const branch = yield* Feed.fork(feed, [reply], { at: message });
+ * yield* Feed.append(feed, [followUp], { branch });
+ * ```
+ *
+ * @performance Async; one append for the base, then one for the rest.
+ */
+export const fork = Effect.fn('Feed.fork')(function* (
+  feed: Feed,
+  items: Entity.Unknown[],
+  options: ForkOptions,
+): Effect.fn.Return<BranchId, never, Database.Service> {
+  const { db } = yield* Database.Service;
+  const [base, ...rest] = items;
+  invariant(base !== undefined, 'fork: pass at least the base item');
+  const branch = yield* Effect.promise(() => db.forkFeed(feed, base, { at: options.at }));
+  if (rest.length > 0) {
+    yield* append(feed, rest, { branch });
+  }
+  return branch;
+}, Database.withSpaceId);
+
+/**
+ * Returns what a read of one branch sees: the items of its ancestors up to each fork point, then the
+ * items of the branch itself. Omit `branch` for the root branch.
+ *
+ * A feed appended as `A1, A2, A3, B1(fork at A2), A4, B2` reads `A1, A2, A3, A4` on the root branch and
+ * `A1, A2, B1, B2` on branch `B1`.
+ *
+ * `items` must be in **append order**, as read from the feed with `branches: 'all'`. The read is
+ * `shallow` when the base of a branch or its fork point is missing from `items` (a base or fork point
+ * that was updated is read at its latest block, which is not the one the branch names); the branch's
+ * own items are still returned. A walk ({@link walk}) reads blocks, so it has no such gap.
+ *
+ * @performance O(n) in items; one pass to group them and one walk up the branch's ancestors.
+ */
+export const readBranch = <T extends Entity.Unknown | Entity.Snapshot>(
+  items: readonly T[],
+  branch?: BranchId,
+): History<T> => {
+  const indexByBlock = new Map<BlockId, number>();
+  const byBranch = new Map<BranchId | undefined, number[]>();
+  items.forEach((item, index) => {
+    const block = getBlockId(item);
+    if (block !== undefined) {
+      indexByBlock.set(block, index);
+    }
+    const key = getBranch(item);
+    const members = byBranch.get(key) ?? [];
+    members.push(index);
+    byBranch.set(key, members);
+  });
+
+  const resolve = (target: BranchId | undefined): { indices: number[]; shallow: boolean } => {
+    const own = byBranch.get(target) ?? [];
+    if (target === undefined) {
+      return { indices: own, shallow: false };
+    }
+    const baseIndex = indexByBlock.get(target);
+    const forkPoint = baseIndex === undefined ? undefined : keyOf(items[baseIndex], KEY_FEED_FORK);
+    // A fork point at or after the base is a cycle or a forward reference; requiring it to be strictly
+    // earlier also makes each step up the tree move to an earlier base, so the walk ends.
+    const forkIndex = forkPoint === undefined ? undefined : indexByBlock.get(forkPoint);
+    if (baseIndex === undefined || forkIndex === undefined || forkIndex >= baseIndex) {
+      return { indices: own, shallow: true };
+    }
+    const parent = resolve(getBranch(items[forkIndex]));
+    return { indices: [...parent.indices.filter((index) => index <= forkIndex), ...own], shallow: parent.shallow };
+  };
+
+  const { indices, shallow } = resolve(branch);
+  return { items: indices.map((index) => items[index]), shallow };
+};
+
+/**
+ * Walks a feed along the path from the root branch to `branch`, in local order: a wrapper of the
+ * walk query, which reads the same as
+ *
+ * ```ts
+ * Database.query(
+ *   Query.select(Filter.and(filter, Filter.feedCursor({ begin, positions: 'local' })))
+ *     .from(Scope.feed(feedUri, { walk: { branch, forks } }))
+ *     .orderBy(Order.natural(order))
+ *     .limit(limit),
+ * );
+ * ```
+ *
+ * A forward walk gives each branch on the path up to the fork point of the next; a backward walk
+ * goes from `begin` (or the head of `branch`) back to the root base. Each item comes once, at the place
+ * of its first block on the path, with the content of its latest one. Resume with {@link getLocalCursor}
+ * of the last item of a page.
+ *
+ * @performance O(1) to build; a page reads every block of the path.
+ */
+export const walk = <F extends Filter.Any>(
+  feed: Feed,
+  filter: F,
+  options: WalkOptions = {},
+): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service> => {
+  const feedUri = getFeedUri(feed);
+  invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+  const select =
+    options.begin === undefined
+      ? filter
+      : Filter.and(filter, Filter.feedCursor({ begin: options.begin, positions: 'local' }));
+  const query = Query.select(select)
+    .from(Scope.feed(feedUri.toString(), { walk: { branch: options.branch, forks: options.forks } }))
+    .orderBy(Order.natural(options.order ?? 'asc'));
+  return Database.query(options.limit === undefined ? query : query.limit(options.limit));
+};
+
 /**
  * Creates a reactive query over items in a feed.
  *
@@ -479,20 +805,32 @@ export const history = <T extends Entity.Unknown | Entity.Snapshot>(
  * @performance O(1) to build; the result is lazy, so nothing executes until read.
  */
 export const query: {
-  <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
-  <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
+  <Q extends Query.Any>(
+    feed: Feed,
+    query: Q,
+    options?: QueryOptions,
+  ): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
+  <F extends Filter.Any>(
+    feed: Feed,
+    filter: F,
+    options?: QueryOptions,
+  ): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
   <Q extends Query.Any>(
     query: Q,
   ): (feed: Feed) => QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
   <F extends Filter.Any>(
     filter: F,
   ): (feed: Feed) => QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
-} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) => {
-  const feedUri = getFeedUri(feed);
-  invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
-  const query = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
-  return Database.query(query.from(Scope.feed(feedUri.toString())));
-});
+  // Data-first takes two or three arguments; data-last takes one, so arity alone tells them apart.
+} = Function.dual(
+  (args) => args.length >= 2,
+  (feed: Feed, queryOrFilter: Query.Any | Filter.Any, options?: QueryOptions) => {
+    const feedUri = getFeedUri(feed);
+    invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+    const query = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
+    return Database.query(query.from(Scope.feed(feedUri.toString(), { branches: options?.branches })));
+  },
+);
 
 /**
  * Syncs the feed with the server.
@@ -528,16 +866,61 @@ export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, Databa
   );
 
 /**
- * Sets the local retention policy for a feed.
- * Currently stubbed — feeds do not yet support retention.
+ * Sets the feed's indexing options on the feed object, in one change.
+ *
+ * Returns once the change is applied locally; the store stops indexing on its own index pass, which
+ * may run on another device.
  *
  * @example
  * ```ts
- * yield* Feed.setRetention(feed, { count: 1000 });
+ * yield* Feed.setIndexing(feed, { enabled: false });
  * ```
  *
- * @performance O(1); currently a no-op.
+ * @performance O(1); one object change.
  */
-// TODO(dmaretskyi): Implement when feed retention is supported.
-export const setRetention = (_feed: Feed, _options: RetentionOptions): Effect.Effect<void, never, Database.Service> =>
-  Effect.void;
+export const setIndexing = (feed: Feed, options: IndexingOptions): Effect.Effect<void, Schema.SchemaError> =>
+  Schema.decodeUnknownEffect(IndexingOptions)(options).pipe(
+    Effect.map((indexing) =>
+      Obj.update(feed, (feed) => {
+        feed.indexing = indexing;
+      }),
+    ),
+    Effect.asVoid,
+    Effect.withSpan('Feed.setIndexing'),
+  );
+
+/**
+ * Sets the feed's retention options on the feed object, in one change.
+ *
+ * Fails with the schema error, leaving the object unchanged, when `maxLength` is not an integer of
+ * at least 1 or `maxAge` is not a positive, finite duration. Returns once the change is applied
+ * locally; the store trims on its own index pass, which may run on another device.
+ *
+ * @example
+ * ```ts
+ * yield* Feed.setRetention(feed, { maxLength: 1000, maxAge: Duration.days(7) });
+ * ```
+ *
+ * @performance O(1); one object change.
+ */
+export const setRetention = (feed: Feed, options: SetRetentionOptions): Effect.Effect<void, Schema.SchemaError> =>
+  Schema.decodeUnknownEffect(RetentionOptions)({
+    // Keys are omitted rather than set to undefined, which ECHO does not store.
+    ...(options.maxLength !== undefined ? { maxLength: options.maxLength } : {}),
+    ...(options.maxAge !== undefined ? { maxAge: durationToMillis(options.maxAge) } : {}),
+  }).pipe(
+    Effect.map((retention) =>
+      Obj.update(feed, (feed) => {
+        feed.retention = retention;
+      }),
+    ),
+    Effect.asVoid,
+    Effect.withSpan('Feed.setRetention'),
+  );
+
+/** An unparseable duration maps to NaN so the schema, not this conversion, reports it. */
+const durationToMillis = (input: Duration.Input): number =>
+  Duration.fromInput(input).pipe(
+    Option.map(Duration.toMillis),
+    Option.getOrElse(() => Number.NaN),
+  );

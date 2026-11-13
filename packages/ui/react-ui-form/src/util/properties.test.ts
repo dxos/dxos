@@ -75,6 +75,26 @@ describe('getFormProperties', () => {
     expect(names).not.toContain('userId');
   });
 
+  test('filters out optional fields whose optional wrapper is annotated FormInputAnnotation.set(false)', ({
+    expect,
+  }) => {
+    // `Schema.optional(T).pipe(FormInputAnnotation.set(false))` annotates the `T | undefined` union, not `T`.
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.optionalWrapperHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        theme: Schema.optional(Schema.Struct({ accent: Schema.optional(Schema.String) })).pipe(
+          Annotation.FormInputAnnotation.set(false),
+        ),
+        note: Schema.optional(Schema.String).pipe(Annotation.FormInputAnnotation.set(false)),
+      }),
+    );
+
+    const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
+    expect(names).toContain('name');
+    expect(names).not.toContain('theme');
+    expect(names).not.toContain('note');
+  });
+
   test('preserves a deeply-nested FormInputAnnotation through unions and arrays', ({ expect }) => {
     // Regression: a hidden field nested below a discriminated union and arrays of structs (e.g.
     // Segment.details(road).routes[].legs[].geometry). `encodedBoundAST` strips annotations from

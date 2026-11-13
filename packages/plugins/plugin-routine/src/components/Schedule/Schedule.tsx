@@ -13,8 +13,7 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../../namespace.ts';
 import { MAX_MIN_INTERVAL_SECONDS, clampSchedule, fromCron, scheduleIntervalSeconds, scheduleToCron } from './cron.ts';
 import { type Day, Days } from './days.ts';
 import { describeSchedule } from './describe-schedule.ts';
@@ -237,7 +236,7 @@ export type ScheduleHeaderProps = { classNames?: string };
  * (column 3).
  */
 const ScheduleHeader = forwardRef<HTMLDivElement, ScheduleHeaderProps>(({ classNames }, forwardedRef) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const { value, timezone } = useScheduleContext('Schedule.Header');
   return <p className={mx('grow truncate text-fg-muted', classNames)}>{describeSchedule(value, timezone)}</p>;
 });
@@ -252,7 +251,7 @@ export type ScheduleKindProps = Util.ThemedClassName;
 
 /** Segmented frequency tabs (Once / Hourly / Daily / Weekly / Custom). */
 const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNames }, forwardedRef) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const { value, onValueChange, kinds } = useScheduleContext('Schedule.Kind');
   const handleKindChange = useCallback(
     (kind: string) => {
@@ -318,7 +317,7 @@ const LabelledRow = ({ label, children, classNames }: Util.ThemedClassName<Props
 );
 
 const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (value: ScheduleValue) => void }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   switch (value.kind) {
     // case 'once':
     // `Field.Root` renders no DOM, so the trigger (column 1) and the field (center) become direct children

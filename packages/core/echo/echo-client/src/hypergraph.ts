@@ -18,7 +18,7 @@ import {
   type Registry,
   Type,
 } from '@dxos/echo';
-import { QueryAST } from '@dxos/echo-protocol';
+import { EncodedReference, QueryAST } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   type RefResolverRequest,
@@ -42,13 +42,11 @@ import { RequestImpl } from './core-db/ref-resolver-request.ts';
 import { getObjectCore, isEchoObject } from './echo-handler/index.ts';
 import { type DatabaseImpl } from './proxy-db/index.ts';
 import {
-  GraphQueryContext,
+  LocalQueryEngine,
   type QueryContext,
   QueryResultCache,
   QueryResultImpl,
-  type QuerySource,
-  RegistryQuerySource,
-  SpaceQuerySource,
+  type RemoteQuerySource,
 } from './query/index.ts';
 import { makeRegistry } from './registry/index.ts';
 
@@ -63,6 +61,12 @@ type DatabaseResolution = { readonly entity?: Entity.Unknown; readonly indexed: 
 /**
  * Manages cross-space database interactions.
  */
+/**
+ * Resolves a type the registry and the spaces do not hold, e.g. from a remote registry of published types.
+ * Called with the type's URI (a typename DXN); returns undefined when the source does not know it.
+ */
+export type TypeSource = (uri: URI.URI) => Promise<Type.AnyEntity | undefined>;
+
 export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _databases = new Map<SpaceId, DatabaseImpl>();
 
@@ -71,7 +75,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _registry: Registry.Registry;
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
-  private readonly _queryContexts = new Set<GraphQueryContext>();
+  private readonly _queryContexts = new Set<LocalQueryEngine>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
@@ -79,8 +83,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   // normalizes scope and delegates here.
   //
   // Replaced (not mutated) on every database registration change: each `QueryResultImpl` embeds
-  // a `GraphQueryContext` snapshot of the database set at creation time. Active (subscribed)
-  // results stay valid because `_registerDatabase` pushes new sources into `_queryContexts`.
+  // a `LocalQueryEngine` snapshot of the database set at creation time. Active (subscribed)
+  // results stay valid because `_registerDatabase` adds the new database to `_queryContexts`.
   // Idle (unsubscribed) cached results would not receive those updates and would miss newly
   // registered databases, so we discard them on every topology change.
   #queryResultCache = new QueryResultCache();
@@ -90,6 +94,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   readonly #loadOpTable = new LoadOpTable((uri) => this.#routeBackend(uri));
   readonly #spaceBackends = new Map<SpaceId, LoadBackend>();
   readonly #blobManager = new BlobManager();
+
+  /** Malformed `echo:` URIs already warned about; a ref is read on every render, so one warning each. */
+  readonly #reportedMalformedUris = new Set<string>();
+  #typeSources: TypeSource[] = [];
+  readonly #typeSourceRequests = new Map<URI.URI, Promise<Type.AnyEntity | undefined>>();
 
   constructor() {
     this._registry = makeRegistry();
@@ -130,7 +139,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
 
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(new SpaceQuerySource(database));
+      context.addDatabase(database);
     }
     this.#queryResultCache = new QueryResultCache();
   }
@@ -246,9 +255,19 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
-        if (EID.isEID(uri)) {
-          const res = this._resolveSync(uri, context, onLoad);
+        // Parsed rather than prefix-checked: a malformed `echo:` URI in stored data resolves to nothing
+        // instead of throwing out of every caller that walks an object's refs.
+        const eid = EID.tryParse(uri);
+        if (eid) {
+          const res = this._resolveSync(eid, context, onLoad);
           return res ? materializeStoredSchema(res) : undefined;
+        }
+        if (EID.isEID(uri)) {
+          if (!this.#reportedMalformedUris.has(uri)) {
+            this.#reportedMalformedUris.add(uri);
+            log.warn('malformed echo reference', { uri, space: context.space });
+          }
+          return undefined;
         }
 
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
@@ -263,6 +282,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
       resolveLegacy: async (uri, options) => {
         const obj = await this._resolveAsync(uri, context, options);
+        if (obj) {
+          await this.#resolveTypeOf(obj);
+        }
         return obj ? materializeStoredSchema(obj) : undefined;
       },
 
@@ -272,7 +294,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         try {
           // Static/runtime types are held in the registry (DXN-form, typename-based).
           // Persisted (db-backed) types are resolved from the owning space db (echo-form URIs).
-          const typeEntity = this.#resolveRegistryType(uri) ?? (await this._resolveTypeFromDatabase(uri, context));
+          const typeEntity =
+            this.#resolveRegistryType(uri) ??
+            (await this._resolveTypeFromDatabase(uri, context)) ??
+            (await this.#resolveFromTypeSources(uri));
           if (typeEntity != null) {
             status = 'resolved';
             return Type.getSchema(typeEntity);
@@ -295,7 +320,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       // and serializer paths) so deserialized objects stamp a TypeEntityId
       // back-reference resolvable via `Obj.getType` / `Entity.getType`.
       resolveType: async (uri) => {
-        return this.#resolveRegistryType(uri) ?? (await this._resolveTypeFromDatabase(uri, context));
+        return (
+          this.#resolveRegistryType(uri) ??
+          (await this._resolveTypeFromDatabase(uri, context)) ??
+          (await this.#resolveFromTypeSources(uri))
+        );
       },
     } satisfies Ref.Resolver;
   }
@@ -342,10 +371,26 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       const entity = this._registry.getByURI(uri.toString());
       return entity ? { result: entity as AnyProperties, strongDeps: [] } : undefined;
     },
-    load: (_uri, _source, set) => {
-      // Registry entities never load asynchronously; a probe miss is permanent.
-      set('unavailable', undefined);
-      return () => {};
+    load: (uri, source, set) => {
+      // A type source is remote, so only a network-ceiling load reaches it; otherwise a probe miss is permanent.
+      if (source !== 'network' || this.#typeSources.length === 0) {
+        set('unavailable', undefined);
+        return () => {};
+      }
+      let cancelled = false;
+      void this.#resolveFromTypeSources(uri).then((type) => {
+        if (cancelled) {
+          return;
+        }
+        if (type === undefined) {
+          set('unavailable', undefined);
+        } else {
+          set('ready', { result: type, strongDeps: [] });
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
     },
   };
 
@@ -446,12 +491,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       }
     };
 
+    const done = () => settled || cancelled;
     const diskOnly = source !== 'network';
     for (const candidateSpaceId of candidateSpaceIds) {
       const db = this._databases.get(candidateSpaceId);
+      let dbAttempt: Promise<unknown> = Promise.resolve();
       if (db) {
         pendingDb++;
-        void db
+        dbAttempt = db
           .loadObjectCoreById(entityId, { diskOnly, returnWithUnsatisfiedDeps: true })
           .then((core) => {
             pendingDb--;
@@ -474,10 +521,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         const handles = [...db._knownFeedHandles()];
         if (handles.length > 0) {
           pendingQueue++;
-          void this.#searchFeedHandles(candidateSpaceId, entityId, handles)
+          // A disk load misses definitively, and most ids name document objects, so the feeds (each
+          // read whole on a miss) are searched only once the database has not answered.
+          void this.#searchFeedHandles(candidateSpaceId, entityId, handles, {
+            before: diskOnly ? dbAttempt : undefined,
+            done,
+          })
             .then((item) => {
               pendingQueue--;
-              if (cancelled) {
+              // Settled by the database: polling now would outlive the cleanup that already ran.
+              if (done()) {
                 return;
               }
               if (item != null) {
@@ -521,6 +574,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     spaceId: SpaceId,
     entityId: EntityId,
     handles: ReturnType<DatabaseImpl['_knownFeedHandles']>,
+    { before, done }: { before?: Promise<unknown>; done?: () => boolean } = {},
   ): Promise<Entity.Unknown | undefined> {
     for (const handle of handles) {
       const cached = handle.getCachedObjectById(entityId);
@@ -528,13 +582,94 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         return cached;
       }
     }
+    await before;
     for (const handle of handles) {
+      if (done?.()) {
+        return undefined;
+      }
       const [item] = await handle.getObjectsById([entityId]);
       if (item != null) {
         return item;
       }
     }
+    if (done?.()) {
+      return undefined;
+    }
     return this._resolveObjectInSpaceFeeds(spaceId, entityId);
+  }
+
+  /**
+   * Registers a source that type resolution consults after the registry and the spaces; a type it returns is added to
+   * the registry, so it is fetched once.
+   * @returns A cleanup function that unregisters the source.
+   */
+  registerTypeSource(source: TypeSource): CleanupFn {
+    this.#typeSources.push(source);
+    return () => {
+      this.#typeSources = this.#typeSources.filter((entry) => entry !== source);
+    };
+  }
+
+  /**
+   * Asks each registered source, in order, for a typename DXN the registry does not hold; the first answer is added to
+   * the registry so the next lookup is synchronous.
+   */
+  #resolveFromTypeSources(uri: URI.URI): Promise<Type.AnyEntity | undefined> {
+    // A reactive query and its one-shot run ask for the same type at once; one request answers both.
+    const pending = this.#typeSourceRequests.get(uri);
+    if (pending !== undefined) {
+      return pending;
+    }
+    const request = this.#askTypeSources(uri).finally(() => this.#typeSourceRequests.delete(uri));
+    this.#typeSourceRequests.set(uri, request);
+    return request;
+  }
+
+  async #askTypeSources(uri: URI.URI): Promise<Type.AnyEntity | undefined> {
+    if (!DXN.isDXN(uri)) {
+      return undefined;
+    }
+    // The registry indexes a type only under its versioned DXN, so a bare typename is matched by name here before a
+    // source is asked for a type that is already registered.
+    if (DXN.getVersion(uri) === undefined) {
+      const typename = DXN.getName(uri);
+      const registered = this._registry
+        .list()
+        .find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
+      if (registered !== undefined && Type.isType(registered)) {
+        return registered;
+      }
+    }
+    for (const source of this.#typeSources) {
+      // A failing source reads as one that does not know the type, so resolution reports it missing rather than throws.
+      const type = await source(uri).catch((error) => {
+        log.warn('type source failed', { uri, error });
+        return undefined;
+      });
+      if (type !== undefined) {
+        this._registry.add([type]);
+        return type;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Registers a loaded object's static type from the type sources when the registry lacks it. A `dxn:` type is not a
+   * strong dependency, on the premise that the registry always holds it; with a type source that does not hold — a
+   * plugin bundle on EDGE registers only its own types, and loads objects of types other bundles publish — and an
+   * object whose type is missing has no schema to read or write through.
+   */
+  async #resolveTypeOf(obj: Entity.Unknown): Promise<void> {
+    if (this.#typeSources.length === 0 || !isEchoObject(obj)) {
+      return;
+    }
+    const typeRef = getObjectCore(obj).getType();
+    const typeUri = typeRef ? EncodedReference.toURI(typeRef) : undefined;
+    if (typeUri === undefined || !DXN.isDXN(typeUri) || this._registry.getByURI(typeUri) !== undefined) {
+      return;
+    }
+    await this.#resolveFromTypeSources(typeUri);
   }
 
   /**
@@ -589,7 +724,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       loadedStack: new StackTrace().getStack(),
     }));
 
-    log('trap', { spaceId, objectId });
     if (onResolve) {
       entry(this._resolveEvents, spaceId)
         .orInsert(new Map())
@@ -845,7 +979,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   registerQuerySourceProvider(provider: QuerySourceProvider): void {
     this._querySourceProviders.push(provider);
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(provider.create());
+      context.addRemoteSource(provider.create());
     }
     this.#queryResultCache = new QueryResultCache();
   }
@@ -909,7 +1043,19 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private _createLiveObjectQueryContext(): QueryContext {
-    const context = new GraphQueryContext({
+    const context = new LocalQueryEngine({
+      registry: this._registry,
+      resolveRegistryKeys: async (keys) => {
+        if (this.#typeSources.length === 0) {
+          return;
+        }
+        await Promise.all(
+          keys.flatMap((key) => {
+            const dxn = DXN.tryMake(`dxn:${key}`);
+            return dxn === undefined ? [] : [this.#resolveFromTypeSources(dxn)];
+          }),
+        );
+      },
       onStart: () => {
         this._queryContexts.add(context);
       },
@@ -919,11 +1065,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     });
 
     for (const database of this._databases.values()) {
-      context.addQuerySource(new SpaceQuerySource(database));
+      context.addDatabase(database);
     }
-    context.addQuerySource(new RegistryQuerySource(this._registry));
     for (const provider of this._querySourceProviders) {
-      context.addQuerySource(provider.create());
+      context.addRemoteSource(provider.create());
     }
 
     return context;
@@ -931,7 +1076,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 }
 
 export interface QuerySourceProvider {
-  create(): QuerySource;
+  create(): RemoteQuerySource;
 }
 
 type ObjectDiagnostic = {

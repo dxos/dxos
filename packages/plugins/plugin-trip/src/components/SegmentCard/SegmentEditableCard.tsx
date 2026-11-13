@@ -13,9 +13,9 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
 import { Segment } from '#types';
 
+import { TripNamespace } from '../../namespace.ts';
 import { type SegmentCardActionHandler } from './SegmentCard.tsx';
 
 /** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone (the value shape `<input type='datetime-local'>` expects). */
@@ -51,7 +51,7 @@ type FlightEditableCardProps = {
  */
 export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardProps>(
   ({ segment, onAction }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(TripNamespace.key);
 
     const handleDepartChange = useCallback(
       (next: string) => {

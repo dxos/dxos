@@ -6,12 +6,23 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 
 import * as Issue from './Issue.ts';
+import * as Repo from './Repo.ts';
+// Lazily referenced below: `Task` imports this module, so an eager `Task.Task` read here would see it uninitialized.
+import * as Task from './Task.ts';
 
 export const State = Schema.Literals(['open', 'closed', 'merged', 'draft']);
 export type State = Schema.Schema.Type<typeof State>;
+
+/** Rollup of every check run and commit status on the head commit. */
+export const CheckState = Schema.Literals(['pending', 'success', 'failure', 'neutral']);
+export type CheckState = Schema.Schema.Type<typeof CheckState>;
+
+/** The verdict branch protection reads from the pull request's reviews. */
+export const ReviewDecision = Schema.Literals(['approved', 'changes_requested', 'review_required']);
+export type ReviewDecision = Schema.Schema.Type<typeof ReviewDecision>;
 
 /**
  * A proposed change to a repository. Host-agnostic like `Repo` and `Issue`, and named by
@@ -64,6 +75,22 @@ export class PullRequest extends Type.makeObject<PullRequest>(DXN.make('org.dxos
 
     /** When the host last saw activity on it — a push, a review, a comment. */
     updatedAt: Schema.optional(Format.DateTime.annotate({ title: 'Updated' })),
+
+    /** The repository it belongs to; absent on a preview, set by sync and by import. `repo` stays the name string. */
+    repository: Schema.optional(Ref.Ref(Repo.Repo).annotate({ title: 'Repository' })),
+
+    /** Commit at the head branch's tip; {@link checks} describes this commit. */
+    headSha: Schema.optional(Schema.String.annotate({ title: 'Head commit' })),
+
+    /** Rollup of every check run and status on `headSha`; absent when the commit has none. */
+    checks: Schema.optional(CheckState.annotate({ title: 'Checks' })),
+
+    reviewDecision: Schema.optional(ReviewDecision.annotate({ title: 'Review' })),
+
+    /** Issues the host closes when it merges. */
+    closes: Schema.optional(
+      Schema.Array(Schema.suspend((): Ref.RefSchema<Task.Task> => Ref.Ref(Task.Task))).annotate({ title: 'Closes' }),
+    ),
   }).pipe(
     Schema.annotate({ title: 'Pull request', description: 'A proposed change to a repository.' }),
     Annotation.LabelAnnotation.set(['title']),

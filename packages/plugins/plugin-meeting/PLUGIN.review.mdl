@@ -1,0 +1,293 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-meeting/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: MeetingPlugin
+
+The four operations exist and do roughly what the spec says: `Create` builds the meeting with a fresh
+Transcript and empty notes and summary Texts, `SetActive` updates state and the call activity,
+`HandlePayload` resolves the meeting and feed, and `Summarize` delegates to
+`TranscriptOperation.Summarize` and writes `meeting.summary`. None of them has a test; the only test is
+module activation, and the story play functions that touch meetings are tagged `!test`.
+
+The biggest finding is that the call lifecycle is dead code. `call-extension.ts` contributes
+`CallsCapabilities.EventHandler` (`onJoin`, `onLeave`, `onCallStateUpdated`, `onMediaStateUpdated`),
+but nothing in plugin-calls or elsewhere reads that capability, so the TranscriptionManager is never
+opened on join, never fed speaking state, and `HandlePayload` is never triggered from call state; the
+module's own comment notes `onJoin` is never invoked. Other divergences: the `Meeting` type has no
+`created` field, `MeetingArticle` is a tabbed hub (notes / transcript / summary / call) rather than a
+side-by-side view, the summary uses a Sonnet model rather than Haiku, `MeetingsList` sorts by label
+rather than newest-first, and the `entityExtraction` setting (F-6) does not exist — `Settings` is an
+empty struct.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Meeting: The type has name, participants, transcript, notes and summary, but no created field.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/types/Meeting.ts#Meeting]
+  note: |
+    `created` is absent; transcript, notes and summary are required refs rather than optional, and
+    an extra optional `event` ref links a calendar event. No test.
+```
+
+```mdl
+verdict MeetingState: The state holds activeMeeting and transcriptionManager behind a store.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/types/MeetingCapabilities.ts#MeetingState, github:dxos/dxos/packages/plugins/plugin-meeting/src/types/MeetingCapabilities.ts#State]
+  note: No test reads or writes the state.
+```
+
+```mdl
+verdict MeetingArticle: The article is a tabbed hub with a generate/regenerate summary action, not a side-by-side view.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/containers/MeetingArticle/MeetingArticle.tsx#MeetingArticle]
+  note: |
+    Tabs notes / transcript / summary / call show one pane at a time; the summary action sits in the
+    toolbar and its label flips on `hasSummary`. No test.
+```
+
+```mdl
+verdict MeetingsList: The companion lists meetings and creates, adds and activates one, sorted by label.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx#MeetingsList]
+  note: Meetings are sorted alphabetically by label, not newest-first. Creation also invokes SpaceOperation.AddObject. No test.
+```
+
+```mdl
+verdict Create: Create makes a meeting with a new Transcript and empty notes and summary.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/types/MeetingOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/create.ts]
+  walkthrough:
+    - The op declares name, channel, event and db inputs. github:dxos/dxos/packages/plugins/plugin-meeting/src/types/MeetingOperation.ts#Create
+    - The handler resolves the space, invokes TranscriptOperation.Create and builds the meeting, adding it only for event or bare-db callers. github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/create.ts
+  note: No test.
+```
+
+```mdl
+verdict SetActive: SetActive updates state and sets the call activity to the meeting URI.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/types/MeetingOperation.ts#SetActive, github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/set-active.ts]
+  walkthrough:
+    - The op declares an optional meeting in and out. github:dxos/dxos/packages/plugins/plugin-meeting/src/types/MeetingOperation.ts#SetActive
+    - The handler writes activeMeeting and calls callManager.setActivity. github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/set-active.ts
+  note: No test.
+```
+
+```mdl
+verdict HandlePayload: HandlePayload resolves meeting and feed and toggles transcription, but nothing triggers it.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/types/MeetingOperation.ts#HandlePayload, github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/handle-payload.ts, github:dxos/dxos/packages/plugins/plugin-meeting/src/capabilities/call-extension.ts]
+  walkthrough:
+    - The op declares meetingId, transcriptDxn and transcriptionEnabled. github:dxos/dxos/packages/plugins/plugin-meeting/src/types/MeetingOperation.ts#HandlePayload
+    - The handler sets activeMeeting, the feed and setEnabled on the stored manager. github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/handle-payload.ts
+    - The only caller is onCallStateUpdated in an EventHandler nobody reads. github:dxos/dxos/packages/plugins/plugin-meeting/src/capabilities/call-extension.ts
+  note: The input field is `transcriptDxn`, not `transcriptDXN`. No test.
+```
+
+```mdl
+verdict Summarize: Summarize reads transcript and notes, delegates to the transcription summarizer and writes the summary.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/types/MeetingOperation.ts#Summarize, github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/summarize.ts, github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/summarize.ts]
+  walkthrough:
+    - The op declares the meeting input. github:dxos/dxos/packages/plugins/plugin-meeting/src/types/MeetingOperation.ts#Summarize
+    - The handler opens the transcript, loads notes and invokes TranscriptOperation.Summarize. github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/summarize.ts
+    - The transcription summarizer prompts the model for key points, quotes and tasks. github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/summarize.ts
+  note: The model is `claude-sonnet-5`, not `claude-3-5-haiku-latest`. No test.
+```
+
+```mdl
+verdict F-1.1: The meeting starts with an empty participants list but no timestamp field.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/create.ts]
+  note: `Meeting` has no `created` field; creation time is only the ECHO object meta.
+```
+
+```mdl
+verdict F-1.2: Create links a fresh Transcript from TranscriptOperation.Create.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/create.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-1.3: Create links empty notes and summary Texts.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/create.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-1.4: Creating from MeetingsList sets the new meeting active.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx#MeetingsList]
+  note: No test.
+```
+
+```mdl
+verdict F-2.1: SetActive writes activeMeeting.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/set-active.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-2.2: SetActive sets the call activity payload to the meeting URI.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/set-active.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-2.3: SetActive with no meeting clears state and sends an empty meetingId.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/set-active.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-3.1: onJoin opens a TranscriptionManager, but nothing calls onJoin.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/capabilities/call-extension.ts]
+  note: |
+    `CallsCapabilities.EventHandler` is contributed only by this plugin and read by no one (searched
+    plugin-calls and all plugins), so joining a call never opens the manager.
+```
+
+```mdl
+verdict F-3.2: HandlePayload enables transcription on the feed, but the manager is never stored.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/handle-payload.ts]
+  note: The handler works only when state holds a manager, which only the uncalled onJoin sets.
+```
+
+```mdl
+verdict F-3.3: onMediaStateUpdated forwards speaking state, but nothing calls it.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/capabilities/call-extension.ts]
+  note: Same dead EventHandler as F-3.1.
+```
+
+```mdl
+verdict F-3.4: onLeave closes the manager and resets state, but nothing calls it.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/capabilities/call-extension.ts]
+  note: Same dead EventHandler as F-3.1.
+```
+
+```mdl
+verdict F-4.1: Summarize passes the transcript text and notes content to the summarizer.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/summarize.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-4.2: The summary markdown is written into meeting.summary.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/summarize.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-4.3: The toolbar action reads regenerate once a summary exists.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/containers/MeetingArticle/MeetingArticle.tsx#MeetingArticle]
+  note: One action whose label flips, rather than two buttons. No test.
+```
+
+```mdl
+verdict F-4.4: The prompt asks the model to omit the tasks section when there are none.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/summarize.ts]
+  note: Prompt instruction only; nothing checks the output.
+```
+
+```mdl
+verdict F-5.1: Notes is the default tab, available whatever the summary state.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/containers/MeetingArticle/MeetingArticle.tsx#MeetingArticle]
+  note: Notes is one tab among four rather than an always-rendered section beside the summary.
+```
+
+```mdl
+verdict F-5.2: Notes are a linked ECHO Text.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/operations/create.ts]
+  note: Replication is ECHO's; no test here.
+```
+
+```mdl
+verdict F-6.1: There is no entityExtraction setting or annotation step.
+  status: missing
+  note: `Settings` is `Schema.Struct({})`; no plugin-meeting code enriches transcript messages with entity mentions.
+```
+
+```mdl
+verdict F-6.2: There is no entityExtraction setting to turn off.
+  status: missing
+  note: Messages are always stored without plugin-meeting enrichment, but there is no setting.
+```
+
+```mdl
+verdict T-1: Nothing tests meeting creation.
+  status: missing
+  note: `plugin.test.ts` only checks module activation.
+```
+
+```mdl
+verdict T-2: Nothing tests SetActive.
+  status: missing
+  note: No unit or story test.
+```
+
+```mdl
+verdict T-3: Nothing tests clearing the active meeting.
+  status: missing
+  note: No unit or story test.
+```
+
+```mdl
+verdict T-4: Nothing tests HandlePayload.
+  status: missing
+  note: No unit or story test.
+```
+
+```mdl
+verdict T-5: Nothing tests summary generation.
+  status: missing
+  note: No memoized-model test in plugin-meeting or plugin-transcription for Summarize was found.
+```
+
+```mdl
+verdict T-6: Nothing tests regenerating a summary.
+  status: missing
+  note: No story play function clicks the summary action.
+```
+
+```mdl
+verdict T-7: Nothing tests the transcription lifecycle.
+  status: missing
+  note: The lifecycle handlers are never invoked even in the app.
+```
+
+```mdl
+verdict QA-1: The QA round-trip has no automated test.
+  status: missing
+  note: Status is unverified; agent QA only.
+```
+
+```mdl
+verdict QA-2: The four-person call QA has no automated test.
+  status: missing
+  note: Agent/human QA only.
+```

@@ -1,7 +1,6 @@
 {
   "name": "@dxos/agent-code-mode",
   "version": "0.16.0",
-  "private": true,
   "description": "Code mode for agent turns: the model writes code against the workspace instead of calling a tool per action.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -60,6 +59,7 @@
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@dxos/assistant": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/mcp-client": "workspace:*",
     "@effect/vitest": "catalog:",
@@ -67,6 +67,10 @@
   },
   "peerDependencies": {
     "@dxos/assistant": "workspace:^",
+    "@dxos/assistant-toolkit": "workspace:^",
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

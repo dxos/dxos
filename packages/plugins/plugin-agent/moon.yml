@@ -2,27 +2,16 @@ layer: library
 language: typescript
 tags:
   - composer-plugin
+  - edge-release
   - ts-vite-build
   - ts-test
   - ts-test-storybook
   - storybook
 
 tasks:
-  check-module-structure:
-    # EDGE's operation service loads this plugin in workerd, so its headless entry must stay UI-free.
-    command: >-
-      bun $workspaceRoot/tools/dx-trace-imports/cli.js
-      --export ./AgentPlugin
-      --to "{react,react-dom}"
-      --conditions workerd,worker
-      --conditions node
-      --fail-on present
+  test:
     deps:
-      - dx-trace-imports:build
-      - build
-    inputs:
-      - tsconfig.json
-      - '@group(production)'
-      - /pnpm-lock.yaml
-    options:
-      timeout: 60
+      # `edge-bundle.test.ts` builds this plugin's bundle, which resolves the plugin's own `#` imports from its dist and
+      # vendors the host from the host's dist.
+      - plugin-agent:build
+      - plugin-host-cloudflare:build

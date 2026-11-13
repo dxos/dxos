@@ -3,8 +3,12 @@
 //
 
 import { type EditorState, type Extension } from '@codemirror/state';
+import { type EditorView as CodeMirrorView } from '@codemirror/view';
 import * as Atom from 'effect/reactivity/Atom';
 import React, {
+  type ComponentPropsWithoutRef,
+  type KeyboardEvent,
+  type MouseEvent,
   type PropsWithChildren,
   Suspense,
   forwardRef,
@@ -19,6 +23,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import type * as Util from '@dxos/react-ui/Util';
+import { focusBlockField, handleBlockWidgetKey } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -31,6 +36,8 @@ import {
 import {
   type EditorToolbarState,
   EditorToolbar as NaturalEditorToolbar,
+  EditorToolbarMenu as NaturalEditorToolbarMenu,
+  type EditorToolbarMenuProps as NaturalEditorToolbarMenuProps,
   type EditorToolbarProps as NaturalEditorToolbarProps,
 } from '../EditorToolbar/index.ts';
 import { type EditorController, noopController } from './controller.ts';
@@ -166,6 +173,30 @@ const EditorToolbar = (props: EditorToolbarProps) => {
 EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 
 //
+// ToolbarMenu
+//
+
+const EDITOR_TOOLBAR_MENU_NAME = 'Editor.ToolbarMenu';
+
+type EditorToolbarMenuProps = Omit<NaturalEditorToolbarMenuProps, 'getView' | 'state'>;
+
+/**
+ * The toolbar's actions as a menu opened from its trigger (the child), for where a toolbar does not fit.
+ * Connects to the editor view through context, as `Editor.Toolbar` does.
+ */
+const EditorToolbarMenu = (props: EditorToolbarMenuProps) => {
+  const { controller, state } = useEditorContext(EDITOR_TOOLBAR_MENU_NAME);
+  const getView = useCallback(() => {
+    invariant(controller?.view);
+    return controller?.view;
+  }, [controller]);
+
+  return <NaturalEditorToolbarMenu {...props} getView={getView} state={state} />;
+};
+
+EditorToolbarMenu.displayName = EDITOR_TOOLBAR_MENU_NAME;
+
+//
 // Blocks
 //
 
@@ -197,6 +228,100 @@ const EditorBlocks = () => {
 };
 
 EditorBlocks.displayName = EDITOR_BLOCKS_NAME;
+
+//
+// BlockFrame
+//
+
+const EDITOR_BLOCK_FRAME_NAME = 'Editor.BlockFrame';
+
+/** What Enter on a selected block focuses: its first enabled field, or else its first control. */
+const ENTER_TARGETS = [
+  ':is(input, textarea, select):not(:disabled), [contenteditable="true"]',
+  'button:not(:disabled), [tabindex]:not([tabindex="-1"])',
+];
+
+type EditorBlockFrameProps = Util.ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  /** The editor the block is in, for the keys that act on its document; Enter and Escape need none. */
+  view?: CodeMirrorView | null;
+  /** Whether the block has attention; until it does, its keys reach the editor. */
+  attended: boolean;
+};
+
+/**
+ * The frame of an embedded block: it takes focus for the block, which selects it and shows the focus ring, and while
+ * selected it answers the editor's block keys (`handleBlockWidgetKey`). Enter goes into the block, Escape inside it
+ * selects it again unless the block consumes it (`preventDefault`), and while attended no key leaves it. A click on
+ * anything but a button selects it.
+ */
+const EditorBlockFrame = forwardRef<HTMLDivElement, EditorBlockFrameProps>(
+  ({ classNames, children, view, attended, ...props }, forwardedRef) => {
+    const handleMouseDown = useCallback(
+      (event: MouseEvent<HTMLDivElement>) => {
+        if (!attended && !(event.target instanceof Element && event.target.closest('button'))) {
+          event.currentTarget.focus();
+        }
+      },
+      [attended],
+    );
+
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        if (!attended) {
+          return;
+        }
+        event.stopPropagation();
+        const frame = event.currentTarget;
+        if (event.defaultPrevented) {
+          return;
+        }
+        if (event.target !== frame) {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            frame.focus();
+          }
+          return;
+        }
+        if (event.key === 'Enter') {
+          const target = ENTER_TARGETS.map((selector) => frame.querySelector<HTMLElement>(selector)).find(Boolean);
+          if (target) {
+            event.preventDefault();
+            focusBlockField(target);
+          }
+        } else if (view && handleBlockWidgetKey(view, frame, event)) {
+          event.preventDefault();
+        }
+      },
+      [attended, view],
+    );
+
+    const handleKeyUp = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        if (attended) {
+          event.stopPropagation();
+        }
+      },
+      [attended],
+    );
+
+    return (
+      <div
+        {...props}
+        ref={forwardedRef}
+        tabIndex={0}
+        // `white-space` is reset: the editor's `break-spaces` would otherwise lay out the block's template whitespace.
+        className={mx('dx-focus-item rounded-md whitespace-normal', classNames)}
+        onMouseDown={handleMouseDown}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+      >
+        {children}
+      </div>
+    );
+  },
+);
+
+EditorBlockFrame.displayName = EDITOR_BLOCK_FRAME_NAME;
 
 //
 // Diagnostics
@@ -292,16 +417,20 @@ EditorDiagnostics.displayName = EDITOR_DIAGNOSTICS_NAME;
 export const Editor = {
   Root: EditorRoot,
   Toolbar: EditorToolbar,
+  ToolbarMenu: EditorToolbarMenu,
   Content: EditorContent,
   View: EditorView,
   Blocks: EditorBlocks,
+  BlockFrame: EditorBlockFrame,
   Diagnostics: EditorDiagnostics,
 };
 
 export type {
+  EditorBlockFrameProps,
   EditorContentProps,
   EditorController,
   EditorRootProps,
+  EditorToolbarMenuProps,
   EditorToolbarProps,
   EditorToolbarState,
   EditorViewProps,

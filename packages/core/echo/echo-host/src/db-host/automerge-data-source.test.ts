@@ -110,7 +110,7 @@ describe('AutomergeDataSource', () => {
     expect(result.cursors[0].cursor).toBe(headsCodec.encode(getHeads(handle.doc()!)));
   });
 
-  test("ships heads only once the JSON's heads are saved", async () => {
+  test('records the heads it read as the version, and ships heads only once they are saved', async () => {
     const host = await setupAutomergeHost();
     const handle = await createDatabaseDirectory(host, SpaceId.random(), {
       'obj-1': EntityStructure.makeObject({
@@ -127,8 +127,10 @@ describe('AutomergeDataSource', () => {
     const dataSource = new AutomergeDataSource(host);
     const unsaved = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
     const unsavedObject = unsaved.objects.find((object) => object.data.id === 'obj-1');
-    expect(unsavedObject).toBeDefined();
+    const unsavedDoc = handle.doc();
+    invariant(unsavedDoc);
     expect(unsavedObject?.heads).toBeUndefined();
+    expect(unsavedObject?.version).toEqual(getHeads(unsavedDoc));
 
     await host.flush(Context.default());
     const cursor: IndexCursor = {
@@ -142,6 +144,7 @@ describe('AutomergeDataSource', () => {
     const object = objects.find((object) => object.data.id === 'obj-1');
     invariant(object?.heads);
     expect(object.heads).toEqual(getHeads(handle.doc()!));
+    expect(object.version).toEqual(object.heads);
     const stored = loadIncremental(init<DatabaseDirectory>(), (await host.readStoredChanges(handle.documentId))!);
     expect(hasHeads(stored, [...object.heads])).toBe(true);
 
@@ -171,7 +174,7 @@ describe('AutomergeDataSource', () => {
     const dataSource = new AutomergeDataSource(host);
     const { objects } = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
     expect(objects).toHaveLength(4);
-    expect(objects.every((object) => object.heads === undefined)).toBe(true);
+    expect(objects.every((object) => object.heads === undefined && object.version !== undefined)).toBe(true);
   });
 
   test('returns documents with changed heads', async () => {

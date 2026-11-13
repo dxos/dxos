@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { addressFromA1Notation, isFormula, rangeFromA1Notation } from '@dxos/compute-hyperformula/types';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, Collection, DXN, EID, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, DXN, EID, Format, Obj, Ref, Type } from '@dxos/echo';
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices, rangeToIndex } from './SheetUtil.ts';
 
@@ -71,9 +71,6 @@ export const TimelineSettings = Schema.Struct({
 
 export type TimelineSettings = Schema.Schema.Type<typeof TimelineSettings>;
 
-export const ChartType = Schema.Literals(['bar', 'pie', 'xy', 'scatter', 'heatmap', 'radar', 'map', 'timeline']);
-export type ChartType = Schema.Schema.Type<typeof ChartType>;
-
 /**
  * How a chart of a 2D range is drawn. The first column is the category (bar, pie), x axis (xy, scatter), row
  * (heatmap), spoke (radar) or country (map); each other column is a series. A timeline instead has one event per row.
@@ -82,7 +79,8 @@ export const ChartProperties = Schema.Struct({
   name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
   // TODO(burdon): Store as an indexed range (see `SheetUtil.rangeToIndex`) so it tracks row/column edits.
   range: Schema.String.annotate({ title: 'Range', description: 'A1 notation (e.g., B1:C5).' }),
-  type: ChartType.annotate({ title: 'Chart type' }),
+  /** The `type` of a `SheetCapabilities.ChartType` contribution. */
+  type: Schema.String.annotate({ title: 'Chart type' }),
   /** The first row holds the series names. */
   header: Schema.optional(Schema.Boolean.annotate({ title: 'Header row' })),
   grid: Schema.optional(Schema.Boolean.annotate({ title: 'Grid lines' })),
@@ -118,6 +116,7 @@ export const RowColumnMeta = Schema.Struct({
 export class Sheet extends Type.makeObject<Sheet>(DXN.make('org.dxos.type.sheet', '0.2.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Text))),
 
     // Sparse map of cells referenced by index.
     cells: Schema.Record(Schema.String, CellValue).pipe(Annotation.FormInputAnnotation.set(false)),

@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { parseReview } from '@dxos/deus/review';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -13,7 +14,6 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { translations } from '#translations';
 
 import FILE_SYSTEM_REVIEW from '../../../../plugin-file-system/PLUGIN.review.mdl?raw';
-import { parseReview } from '../SpecModel/index.ts';
 import { ReviewPanel, type ReviewPanelProps } from './ReviewPanel.tsx';
 
 /** The plugin-file-system review the spec-review skill wrote, with verdicts across every status. */
@@ -53,6 +53,26 @@ export const Default: Story = {
     // Re-queried after the click, since selection re-renders the tiles; the `dx-current` class is on every tile.
     await waitFor(() => expect(canvas.getAllByTestId('verdict-card')[2].getAttribute('aria-current')).toBe('true'));
     await expect(canvas.getAllByTestId('verdict-card')[0].getAttribute('aria-current')).toBeNull();
+  },
+};
+
+/** A status in the filter shows only its verdicts; the summary's first paragraph shows, the rest behind a disclosure. */
+export const Filter: Story = {
+  args: { review: REVIEW, onOpenCode: () => {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByTestId('review-panel.count.diverged'));
+    await waitFor(() =>
+      expect(canvas.getAllByTestId('verdict-card').map((card) => card.dataset.status)).toEqual(
+        REVIEW.verdicts.filter(({ status }) => status === 'diverged').map(() => 'diverged'),
+      ),
+    );
+    await userEvent.click(canvas.getByTestId('review-panel.count.all'));
+    await waitFor(() => expect(canvas.getAllByTestId('verdict-card')).toHaveLength(REVIEW.verdicts.length));
+
+    await expect(canvas.getByText(/Other notes/)).not.toBeVisible();
+    await userEvent.click(canvas.getByTestId('review-panel.summary.more'));
+    await waitFor(() => expect(canvas.getByText(/Other notes/)).toBeVisible());
   },
 };
 

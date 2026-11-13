@@ -9,12 +9,14 @@ import * as Operation from '@dxos/compute/Operation';
 import { DrawingOperation } from '#types';
 
 import { resolveVariant } from '../util/load-drawing.ts';
+import { requestRefit } from '../util/refit.ts';
 
 const handler: Operation.WithHandler<typeof DrawingOperation.Edit> = DrawingOperation.Edit.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ drawing, commands }) {
       const { canvas, variant } = yield* resolveVariant(drawing);
       const { upserted, removed } = variant.builder.apply(canvas, commands);
+      yield* requestRefit(canvas);
       const { scene, unmanaged } = variant.builder.read(canvas);
       return { scene, unmanaged, upserted, removed };
     }),

@@ -14,13 +14,15 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
-import { Filter, Type } from '@dxos/echo';
+import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
+import { formatSourceKey } from '@dxos/deus/review';
+import { Filter, Obj, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
-import { formatSourceKey, keyFromTreeUrl } from '#sync';
+import { keyFromTreeUrl } from '#sync';
 import { CodeProject } from '#types';
 
 import {
@@ -28,7 +30,9 @@ import {
   CODE_PROJECT_SPEC_TYPE,
   CODE_PROJECTS_SECTION_TYPE,
   PLUGIN_SPEC_TYPE,
+  SPEC_COMPANION,
 } from '../constants.ts';
+import { CodeNamespace } from '../namespace.ts';
 import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths.ts';
 import { makePluginSpecSubject } from '../plugin-spec.ts';
 
@@ -88,7 +92,7 @@ export default Capability.makeModule(
               type: PLUGIN_SPEC_TYPE,
               data: makePluginSpecSubject({ pluginId: slug, name, content, sourceKey }),
               properties: {
-                label: ['plugin-spec.label', { ns: meta.profile.key }],
+                label: ['plugin-spec.label', { ns: CodeNamespace.key }],
                 icon: 'ph--file-code--regular',
                 disposition: 'hidden',
               },
@@ -111,7 +115,7 @@ export default Capability.makeModule(
             AppNode.makeSection({
               id: getCodeProjectsSectionId(),
               type: CODE_PROJECTS_SECTION_TYPE,
-              label: ['code-projects-section.label', { ns: meta.profile.key }],
+              label: ['code-projects-section.label', { ns: CodeNamespace.key }],
               icon: 'ph--code--regular',
               iconHue: 'indigo',
               space,
@@ -152,7 +156,7 @@ export default Capability.makeModule(
                     type: CODE_PROJECT_SPEC_TYPE,
                     data: spec ?? null,
                     properties: {
-                      label: ['spec.label', { ns: meta.profile.key }],
+                      label: ['spec.label', { ns: CodeNamespace.key }],
                       icon: 'ph--file-text--regular',
                       iconHue: 'indigo',
                     },
@@ -162,7 +166,7 @@ export default Capability.makeModule(
                     type: CODE_PROJECT_BUILD_TYPE,
                     data: project,
                     properties: {
-                      label: ['build.label', { ns: meta.profile.key }],
+                      label: ['build.label', { ns: CodeNamespace.key }],
                       icon: 'ph--app-window--regular',
                       iconHue: 'indigo',
                     },
@@ -175,6 +179,35 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
+    // The spec's panel of views, beside a spec's level and beside a project, whose Specs tab shows one of its specs.
+    const specCompanionExtensions = yield* AppGraphBuilder.createTypeExtension({
+      id: 'specCompanion',
+      relation: AppNode.companion,
+      type: Spec.Spec,
+      connector: () => Effect.succeed([makeSpecCompanion()]),
+    });
+    const projectSpecCompanionExtensions = yield* AppGraphBuilder.createTypeExtension({
+      id: 'projectSpecCompanion',
+      relation: AppNode.companion,
+      type: Project.Project,
+      connector: (project, get) => {
+        const specs = get(Obj.atomReactive(get(Obj.atom(project)).specs ?? [])).filter(Spec.instanceOf);
+        return Effect.succeed(specs.length > 0 ? [makeSpecCompanion()] : []);
+      },
+    });
+
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [
+      ...extensions,
+      ...specCompanionExtensions,
+      ...projectSpecCompanionExtensions,
+    ]);
   }),
 );
+
+const makeSpecCompanion = () =>
+  AppNode.makeCompanion({
+    variant: SPEC_COMPANION,
+    label: ['spec-companion.label', { ns: CodeNamespace.key }],
+    icon: 'ph--blueprint--regular',
+    data: SPEC_COMPANION,
+  });

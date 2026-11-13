@@ -12,6 +12,7 @@ import { Task } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors.ts';
+import { cascadeClaim, claimedAssignee } from './claim.ts';
 import { assignToSession } from './session-assignee.ts';
 
 const handler: Operation.WithHandler<typeof TaskOperation.AskQuestion> = TaskOperation.AskQuestion.pipe(
@@ -32,11 +33,35 @@ const handler: Operation.WithHandler<typeof TaskOperation.AskQuestion> = TaskOpe
         return yield* Effect.fail(new InvalidOperationInput({ message: 'The question is empty.' }));
       }
 
-      // After the refusals, so a refused call leaves the task's assignee as it found it.
+      const answering = remoteSession ? (Task.owner(task) ?? Task.owner(Task.getParentTask(task))) : undefined;
+      if (remoteSession && !answering) {
+        return yield* Effect.fail(
+          new InvalidOperationInput({
+            message:
+              `"${task.title}" has no person answering for it, so it cannot be delegated to your session. ` +
+              'Claim it with `tasks-update` first, naming the assignee, or ask without `remoteSession`.',
+          }),
+        );
+      }
+
       let asker = actor;
       if (remoteSession) {
         asker = yield* assignToSession(remoteSession, actor, { defaultTitle: task.title });
-        Task.update(task, { assignee: asker }, { actor: asker });
+        const previousDelegate = task.delegate && { ...task.delegate };
+        Task.update(
+          task,
+          {
+            assignee: claimedAssignee(answering, undefined, { owned: Task.owner(task) !== undefined }),
+            delegate: asker,
+          },
+          { actor: asker },
+        );
+        yield* cascadeClaim(task, {
+          delegate: task.delegate,
+          previousDelegate,
+          owner: Task.owner(task),
+          started: false,
+        });
       }
 
       const question = Task.ask(task, {

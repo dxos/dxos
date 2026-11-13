@@ -24,9 +24,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PORT = 9321;
 const PORT = Number(process.env.COMPOSER_RECOVERY_PORT ?? DEFAULT_PORT);
 const LONG_POLL_MS = 25_000;
-/** Must match `DEBUG_PORT_RECONNECT_MS` in @dxos/client devtools/debug-port.ts. */
+/** Must match `DEBUG_PORT_RECONNECT_MS` and `DEBUG_PORT_RECONNECT_MAX_MS` in @dxos/client devtools/debug-port.ts. */
 const BROWSER_RECONNECT_MS = 2_000;
-const DEFAULT_CONNECT_TIMEOUT_MS = 3 * BROWSER_RECONNECT_MS;
+const BROWSER_RECONNECT_MAX_MS = 30_000;
+// A browser left idle has backed off to the ceiling, so one full interval plus slack reaches its next poll.
+const DEFAULT_CONNECT_TIMEOUT_MS = BROWSER_RECONNECT_MAX_MS + 3 * BROWSER_RECONNECT_MS;
 const DEFAULT_RESULT_TIMEOUT_MS = 120_000;
 const TLS_DIR = path.join(__dirname, '.recovery-tls');
 
@@ -158,7 +160,7 @@ const waitForSessionConnect = (sessionId) => {
       reject(
         new Error(
           `Browser did not connect for session ${sessionId} within ${timeoutMs}ms ` +
-            `(~${Math.ceil(timeoutMs / BROWSER_RECONNECT_MS)} poll intervals). ` +
+            `(the browser retries every ${BROWSER_RECONNECT_MS / 1000}-${BROWSER_RECONNECT_MAX_MS / 1000}s). ` +
             'Open /recovery.html → Open Debug Port and pass the session id from the log.',
         ),
       );

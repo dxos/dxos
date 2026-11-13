@@ -8,11 +8,11 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import { type ApiGroupModel, type EndpointModel, buildApiModel, kindStyle } from '../SpecModel/index.ts';
 
 const TYPE_TOKEN = /([A-Za-z][\w.]*)/g;
@@ -61,7 +61,7 @@ type GroupRowsProps = { group: ApiGroupModel; effects: string[]; types: Readonly
 
 /** An op is one row; a service is a heading row then one row per method or event, all sharing its effects. */
 const GroupRows = ({ group, effects, types }: GroupRowsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { icon } = kindStyle(group.kind);
   const effectCells = (dim: boolean) =>
     effects.map((effect) => (
@@ -151,7 +151,7 @@ export type ApiSurfaceProps = {
  * capabilities each needs and errors each can raise.
  */
 export const ApiSurface = ({ content }: ApiSurfaceProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const model = useMemo(() => buildApiModel(content), [content]);
   const types = useMemo(() => new Set(model.types), [model]);
   const ops = model.groups.filter(({ kind }) => kind === 'op');
@@ -159,9 +159,9 @@ export const ApiSurface = ({ content }: ApiSurfaceProps) => {
 
   if (model.groups.length === 0) {
     return (
-      <Layout.Flex center grow classNames='text-description' data-testid='api-surface.empty'>
+      <Status.Empty classNames='dx-fill' data-testid='api-surface.empty'>
         {t('api-surface.empty.message')}
-      </Layout.Flex>
+      </Status.Empty>
     );
   }
 

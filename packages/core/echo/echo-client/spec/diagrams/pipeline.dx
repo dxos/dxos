@@ -1,0 +1,28 @@
+diagram flow=down
+group client "@dxos/echo-client" {
+  node Result "QueryResultImpl" ref="packages/core/echo/echo-client/src/query/query-result.ts"
+  node Engine "LocalQueryEngine" ref="packages/core/echo/echo-client/src/query/local-query-engine.ts"
+  node WorkingSet "WorkingSetView" ref="packages/core/echo/echo-client/src/query/working-set-view.ts"
+  node Registry "RegistryView" ref="packages/core/echo/echo-client/src/query/registry-view.ts"
+  node Plan "merge-plan" ref="packages/core/echo/echo-client/src/query/merge-plan.ts"
+  node Remote "RemoteQuerySource" ref="packages/core/echo/echo-client/src/query/remote-query-source.ts"
+  node Index "IndexQuerySource" ref="packages/core/echo/echo-client/src/client/index-query-source-provider.ts"
+}
+group host "@dxos/echo-host" {
+  node Service "QueryServiceImpl" ref="packages/core/echo/echo-host/src/db-host/query-service.ts"
+  node Executor "QueryExecutor" ref="packages/core/echo/echo-host/src/query/query-executor.ts"
+  node Sql "SqlPlanCompiler" ref="packages/core/echo/echo-host/src/query/sql/compile.ts"
+}
+group core "@dxos/index-core" {
+  node Snapshots "ObjectSnapshotIndex" ref="packages/core/echo/index-core/src/indexes/object-snapshot-index.ts"
+}
+edge Result -> Engine
+edge Engine owns WorkingSet
+edge Engine owns Registry
+edge Engine -> Plan "verdicts"
+edge Engine -> Remote
+edge Index implements Remote
+edge Index -> Service "QueryService"
+edge Service -> Executor
+edge Executor -> Sql
+edge Executor -> Snapshots "index copies"

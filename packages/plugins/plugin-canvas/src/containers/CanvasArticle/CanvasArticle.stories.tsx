@@ -3,38 +3,88 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { type ContentMap, Dsl } from '@dxos/diagram';
+import { EXEMPLARS } from '@dxos/diagram/testing';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { random } from '@dxos/random';
-import { DEFAULT_CELL } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_CELL, fromRenderLists2D } from '@dxos/react-ui-canvas';
+import { createNestedDeepTree } from '@dxos/react-ui-canvas/testing';
+import { type Scene, toEcho } from '@dxos/scene';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import { trim } from '@dxos/util';
 
-import { createCanvas, linkKey, nodeKey, rootOf } from '#model';
-import { CanvasPlugin } from '#plugin';
+import * as CanvasPlugin from '#meta';
+import { linkKey, nodeKey } from '#model';
 import { translations } from '#translations';
 import { Canvas } from '#types';
 
+import types from '../../capabilities/schema.ts';
+import { addTestCanvas } from '../../testing/canvas.ts';
+
 random.seed(1234);
 
+/** Fills a new canvas's open scene through content records keyed under its `root` scene. */
+type Seed = (db: Database.Database, content: ContentMap, root: string) => void;
+
 // The drawing is opened through the illustrator's article surface, as the app opens it, so the story
-// covers the variant dispatch as well as the scene engine it lands on.
-const withDrawing = (seed: (db: Database.Database, canvas: Drawing.Canvas) => void = () => {}) =>
+// covers the variant dispatch as well as the dimension's article it lands on.
+const withDrawing = (
+  seed: Seed = () => {},
+  role: typeof AppSurface.Article | typeof AppSurface.Slide = AppSurface.Article,
+) =>
   createStoryDecorators({
-    types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document],
-    plugins: [IllustratorPlugin.make(), CanvasPlugin(), MarkdownPlugin.make()],
+    types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
     onInit: async ({ space }) => {
-      const canvas = space.db.add(createCanvas());
-      seed(space.db, canvas);
+      const canvas = addTestCanvas(space.db, (content, root) => seed(space.db, content, root));
       const drawing = space.db.add(Drawing.make({ name: 'Canvas', canvas }));
+      await space.db.flush();
+      return [[role === AppSurface.Article ? Cell.article(drawing) : { object: drawing, token: role }]];
+    },
+  });
+
+/** Adds a drawing whose canvas holds a scene document. */
+const addDocumentDrawing = (db: Database.Database, document: Scene.SceneDocument) => {
+  const stored = toEcho(document);
+  [...stored.models.values(), ...stored.layouts.values(), ...stored.scenes.values()].forEach((object) =>
+    db.add(object),
+  );
+  const model = stored.models.values().next().value;
+  const canvas = db.add(
+    Obj.make(Canvas.Canvas, {
+      settings: {},
+      ...(model ? { model: Ref.make(model) } : {}),
+      layouts: [...stored.layouts.values()].map((layout) => Ref.make(layout)),
+      scenes: [
+        Ref.make(stored.root),
+        ...[...stored.scenes.values()].filter((scene) => scene !== stored.root).map((scene) => Ref.make(scene)),
+      ],
+    }),
+  );
+  return db.add(Drawing.make({ name: 'Canvas', canvas }));
+};
+
+/** A canvas over a scene document, opened through the illustrator's article as the app opens it. */
+const withDocument = (document: Scene.SceneDocument) =>
+  createStoryDecorators({
+    types: [Drawing.Drawing, Drawing.Canvas, ...types],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
+    onInit: async ({ space }) => {
+      const drawing = addDocumentDrawing(space.db, document);
       await space.db.flush();
       return [[Cell.article(drawing)]];
     },
   });
+
+/** A canvas over scenes written in `.dx`. */
+const withScenes = (text: string) => withDocument(Dsl.readScenes(text).document);
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'plugins/plugin-canvas/containers/CanvasArticle',
@@ -50,8 +100,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // A -> B -> C: three boxes in a row joined by smart lines, enough of a drawing to see the shapes, links and theme.
-const seedBasic = (_db: Database.Database, canvas: Drawing.Canvas) => {
-  const scene = rootOf(canvas.content);
+const seedBasic: Seed = (_db, content, scene) => {
   const box = (id: string, x: number, z: string) => ({
     kind: 'node',
     scene,
@@ -76,13 +125,12 @@ const seedBasic = (_db: Database.Database, canvas: Drawing.Canvas) => {
       ends: { end: 'arrow' },
     },
   });
-  Obj.update(canvas, (canvas) => {
-    canvas.content[nodeKey('a')] = box('a', -384, 'a1');
-    canvas.content[nodeKey('b')] = box('b', 0, 'a2');
-    canvas.content[nodeKey('c')] = box('c', 384, 'a3');
-    canvas.content[linkKey('a-b')] = link('a', 'b', 'a4');
-    canvas.content[linkKey('b-c')] = link('b', 'c', 'a5');
-  });
+  // Six cells apart, so the gap between two boxes is half a box: close enough to read as a chain.
+  content[nodeKey('a')] = box('a', -6 * DEFAULT_CELL, 'a1');
+  content[nodeKey('b')] = box('b', 0, 'a2');
+  content[nodeKey('c')] = box('c', 6 * DEFAULT_CELL, 'a3');
+  content[linkKey('a-b')] = link('a', 'b', 'a4');
+  content[linkKey('b-c')] = link('b', 'c', 'a5');
 };
 
 export const Default: Story = {
@@ -108,31 +156,41 @@ export const Test: Story = {
 };
 
 /**
- * A canvas a newer Canvas plugin saved (a later `dxos.org/scene/<n>`) opens read-only under a banner saying why.
+ * A drawing on a slide is a picture: read-only, with no toolbar, palette or panels.
  *
  * Test:
- * 1. The banner shows and the palette offers only select and pan.
+ * 1. The scene view mounts through the illustrator's slide surface.
+ * 2. No toolbar and no palette show.
  */
-export const NewerFormat: Story = {
-  decorators: withDrawing((db, canvas) => {
-    seedBasic(db, canvas);
-    Obj.update(canvas, (canvas) => {
-      canvas.schema = `dxos.org/scene/${Canvas.SCENE_REVISION + 1}`;
-    });
-  }),
+export const Slide: Story = {
+  decorators: withDrawing(seedBasic, AppSurface.Slide),
   play: async ({ canvasElement }) => {
     const view = within(canvasElement);
-    await expect(await view.findByTestId('canvas.newer-format', undefined, { timeout: 30_000 })).toBeVisible();
-    await expect(await view.findByTestId('scene-view')).toBeInTheDocument();
-    // Read-only, the palette has no shape tools and no toggle to unlock it.
-    await waitFor(() => expect(view.queryByTestId('palette-R')).toBeNull());
-    await expect(view.queryByTestId('palette-readonly')).toBeNull();
+    await expect(await view.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
+    await expect(canvasElement.querySelector('[role="toolbar"]')).toBeNull();
+    await expect(view.queryByTestId('palette')).toBeNull();
+    // Transparent: nothing from the scene up to the article's panel paints a background, so a slide shows through.
+    const scene = await view.findByTestId('scene-view');
+    const panel = scene.closest('.dx-panel');
+    const painted: string[] = [];
+    for (
+      let element: Element | null = scene;
+      element && element !== panel?.parentElement;
+      element = element.parentElement
+    ) {
+      const color = getComputedStyle(element).backgroundColor;
+      if (color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent') {
+        painted.push(`${element.tagName}.${element.className}: ${color}`);
+      }
+    }
+    await expect(painted).toEqual([]);
+    await expect(canvasElement.querySelector('[data-testid="scene-background-fill"]')).toBeNull();
   },
 };
 
 /** View nodes holding a markdown document, which is no canvas drawing, show its card and its section surfaces. */
 export const ObjectView: Story = {
-  decorators: withDrawing((db, canvas) => {
+  decorators: withDrawing((db, content, root) => {
     const document = db.add(
       Markdown.make({
         name: random.lorem.words(3),
@@ -143,7 +201,7 @@ export const ObjectView: Story = {
     // The same document twice, side by side: once as a card, once as an embedded section.
     const frame = (id: string, x: number, role: 'card' | 'section', cells: { width: number; height: number }) => ({
       kind: 'node',
-      scene: rootOf(canvas.content),
+      scene: root,
       node: {
         id,
         type: 'view',
@@ -154,13 +212,11 @@ export const ObjectView: Story = {
         link: { object: Ref.make(document), role },
       },
     });
-    Obj.update(canvas, (canvas) => {
-      for (const id of ['card', 'section']) {
-        canvas.content[`scene:${id}`] = { kind: 'scene', id };
-      }
-      canvas.content[nodeKey('card')] = frame('card', -384, 'card', { width: 4, height: 4 });
-      canvas.content[nodeKey('section')] = frame('section', 256, 'section', { width: 8, height: 10 });
-    });
+    for (const id of ['card', 'section']) {
+      content[`scene:${id}`] = { kind: 'scene', id };
+    }
+    content[nodeKey('card')] = frame('card', -384, 'card', { width: 4, height: 4 });
+    content[nodeKey('section')] = frame('section', 256, 'section', { width: 8, height: 10 });
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -186,6 +242,49 @@ export const ObjectView: Story = {
   },
 };
 
+/** A wide view node holding another drawing, as an architecture overview's drill box does: its card fits the frame. */
+export const DrawingView: Story = {
+  decorators: withDrawing((db, content, root) => {
+    const canvas = addTestCanvas(db, (childContent, childRoot) => seedBasic(db, childContent, childRoot));
+    const child = db.add(Drawing.make({ name: 'Detail', canvas }));
+    content['scene:detail'] = { kind: 'scene', id: 'detail' };
+    content[nodeKey('detail')] = {
+      kind: 'node',
+      scene: root,
+      node: {
+        id: 'detail',
+        type: 'view',
+        z: 'a1',
+        center: { x: 0, y: 0 },
+        size: { width: 8 * DEFAULT_CELL, height: 3 * DEFAULT_CELL },
+        scene: 'detail',
+        link: { object: Ref.make(child), role: 'card' },
+      },
+    };
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The card draws the child drawing through a scene view of its own.
+    await expect(await canvas.findAllByTestId('scene-view', undefined, { timeout: 30_000 })).not.toHaveLength(0);
+    const { surface, view } = await waitFor(
+      () => {
+        const surface = canvasElement.querySelector('[data-node-id="detail"] [data-testid="frame-surface"]');
+        const view = surface?.querySelector('.dx-card-section > *');
+        if (!surface || !view) {
+          throw new Error('The frame has not resolved the drawing card.');
+        }
+        return { surface, view };
+      },
+      { timeout: 10_000 },
+    );
+    // The view is the frame's box, so the fit centres the drawing in it; a square card overflowed a wide frame.
+    const frame = surface.getBoundingClientRect();
+    const preview = view.getBoundingClientRect();
+    await expect(Math.abs(preview.width - frame.width)).toBeLessThan(2);
+    await expect(Math.abs(preview.height - frame.height)).toBeLessThan(2);
+  },
+};
+
 /**
  * Image shapes, linked by URL in their properties.
  *
@@ -194,10 +293,10 @@ export const ObjectView: Story = {
  * 2. An image with no URL, or one that is not a web link, shows the placeholder rather than following the link.
  */
 export const Image: Story = {
-  decorators: withDrawing((_db, canvas) => {
+  decorators: withDrawing((_db, content, root) => {
     const image = (id: string, x: number, src?: string) => ({
       kind: 'node',
-      scene: rootOf(canvas.content),
+      scene: root,
       node: {
         id,
         type: 'image',
@@ -207,18 +306,184 @@ export const Image: Story = {
         ...(src ? { src } : {}),
       },
     });
-    Obj.update(canvas, (canvas) => {
-      canvas.content[nodeKey('empty')] = image('empty', -320);
-      canvas.content[nodeKey('unsafe')] = image('unsafe', 320, 'javascript:alert(1)');
-    });
+    content[nodeKey('empty')] = image('empty', -320);
+    content[nodeKey('unsafe')] = image('unsafe', 320, 'javascript:alert(1)');
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
-    // 1. The tool.
-    await expect(await canvas.findByTestId('palette-I')).toBeInTheDocument();
+    // 1. The tool: on the rail, or in its Create flyout when a short view folds the rail.
+    const palette = await canvas.findByTestId('palette');
+    if (palette.hasAttribute('data-collapsed')) {
+      await userEvent.click(canvas.getByTestId('palette-group-Create-open'));
+    }
+    await expect(
+      await within(canvasElement.ownerDocument.body).findByTestId('canvas.tool.node:image'),
+    ).toBeInTheDocument();
     // 2. Placeholders, no image element.
     await waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="image-placeholder"]')).toHaveLength(2));
     await expect(canvasElement.querySelector('[data-testid="image-node"]')).toBeNull();
+  },
+};
+
+/**
+ * A markdown document embedding a canvas drawing with no height of its own, as a link dropped into a document does: A
+ * → B → C, where B is a frame onto a nested layout (X → Y).
+ *
+ * Test:
+ * 1. The embed shows the drawing at a non-zero height, fitted to the embed with a small margin but never past actual
+ *    size (100%).
+ * 2. Clicking the embed shows its breadcrumbs (top left) and zoom bar (bottom left); clicking the document text hides them.
+ * 3. Zooming into B until it fills the embed drills in; the breadcrumbs then lead back out.
+ */
+/** What the Markdown Embed story's space holds for the embed, reported when the embed never appears. */
+let describeEmbedTarget: (() => Promise<string>) | undefined;
+
+export const MarkdownEmbed: Story = {
+  decorators: createStoryDecorators({
+    types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
+    onInit: async ({ space }) => {
+      const drawing = addDocumentDrawing(space.db, Dsl.readScenes(EXEMPLARS.subscene).document);
+      describeEmbedTarget = async () => {
+        const target = await space.db.makeRef(Obj.getURI(drawing)).tryLoad();
+        return `the drawing ${target ? 'loads' : 'does not load'} by its URI; the page is ${globalThis.document.visibilityState} at ${innerWidth}x${innerHeight}`;
+      };
+      const document = space.db.add(
+        Markdown.make({
+          name: 'Notes',
+          content: ['# Notes', 'Before the drawing.', `![Canvas](${Obj.getURI(drawing)})`, 'After the drawing.'].join(
+            '\n\n',
+          ),
+        }),
+      );
+      await space.db.flush({ indexes: true });
+      return [[Cell.article(document)]];
+    },
+  }),
+  play: async ({ canvasElement }) => {
+    // The embed first, then the canvas within it; a link never embedded reports what the editor shows instead.
+    const embed = await waitFor(
+      () => {
+        const found = canvasElement.querySelector<HTMLElement>('[data-testid="markdown.embed"]');
+        if (!found) {
+          throw new Error(`No embed in: ${canvasElement.querySelector('.cm-content')?.innerHTML ?? 'no editor'}`);
+        }
+        return found;
+      },
+      { timeout: 30_000 },
+    ).catch(async (error: Error) => {
+      throw new Error(`${error.message}; ${(await describeEmbedTarget?.()) ?? 'no space'}`);
+    });
+    await within(embed).findByTestId('scene-view', undefined, { timeout: 30_000 });
+    await waitFor(() => expect(embed.getBoundingClientRect().height).toBeGreaterThan(100));
+    // 2. The breadcrumbs and zoom bar show only while the embed is attended. The load-time rebuilds land first: a block redrawn under
+    // the click would be a fresh element, and the click's focus would go with the old one.
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await expect(embed.querySelector('[data-testid="canvas-debug"]')).toBeNull();
+    await userEvent.click(embed);
+    await waitFor(() => expect(embed.querySelector('[data-testid="canvas-debug"]')).not.toBeNull());
+    await expect(embed.querySelector('[data-testid="canvas-toolbar"]')).not.toBeNull();
+    // 1. The fit stops at actual size, however wide the embed: the readout never reads more than 100%.
+    const zoom = parseInt(
+      embed.querySelector('[data-testid="canvas-debug"]')?.textContent?.match(/(\d+)%/)?.[1] ?? '',
+      10,
+    );
+    await expect(zoom).toBeLessThanOrEqual(100);
+  },
+};
+
+/** A 2D canvas (A → B → C) written in `.dx`: the canvas's palette, actions, inspectors and display panel. */
+export const Canvas2D: Story = { decorators: withScenes(EXEMPLARS.links) };
+
+/**
+ * A 2D canvas whose B is a labelled frame onto a nested layout (X → Y): a labelled frame shows its label, not its
+ * contents.
+ *
+ * Test:
+ * 1. Double-click B: the view zooms into it and the breadcrumbs (top left) read `⌂ › B detail`.
+ * 2. Escape, Up or the home crumb drills back out.
+ * 3. The animation panel is hidden until the display panel's Timeline toggle shows it.
+ */
+export const Nested2D: Story = { decorators: withScenes(EXEMPLARS.subscene) };
+
+const nestedDeep = createNestedDeepTree();
+
+/**
+ * The legacy `NestedDeep` drawing, three levels deep: A, frame B and C; inside B, D, frame E, F and four boxes; inside
+ * E, X, Y, Z and their neighbours. B and E are unlabelled, so each frame draws its scene inside it.
+ *
+ * Test:
+ * 1. B draws D, E, F and the boxes inside its frame.
+ * 2. Pinch (or ctrl/cmd+wheel) in on B until it fills the view: the breadcrumbs read `⌂ › B`.
+ * 3. Keep pinching in on E: the breadcrumbs read `⌂ › B › E`.
+ * 4. Pinch out: E, then B, close, and the breadcrumbs return to `⌂`.
+ * 5. Double-click a frame drills in the same way; Escape, Up or a crumb drills out.
+ */
+export const NestedDeep2D: Story = {
+  decorators: withDocument(fromRenderLists2D(nestedDeep.views, { root: nestedDeep.root })),
+};
+
+/**
+ * A 3D canvas whose glass shell is a composite (a hub and four spokes).
+ *
+ * Test:
+ * 1. Double-click the shell: its parts open with the rest faded, and the breadcrumbs read `⌂ › cluster`.
+ * 2. Escape or the home crumb goes back out.
+ */
+export const Nested3D: Story = { decorators: withScenes(EXEMPLARS.encapsulated) };
+
+/**
+ * A 3D canvas, a single plain cube written in `.dx`, under the same floating panels as 2D.
+ * 1. Click selects; Move, Rotate or Scale puts a gizmo on it; Undo and Redo step back and forth.
+ * 2. Orbit (or the middle button) orbits; shift or the right button pans; the wheel zooms.
+ * 3. Cube or Sphere places one where the pointer meets the ground.
+ * 4. The display panel toggles the ground grid and picks the look; both are this viewer's own, like the orbit.
+ * 5. Library offers the contributed vehicles: Taxi defines the taxi in the model, and a click places it.
+ *
+ * Test:
+ * 1. The rail's Library tool shows, and its menu offers Taxi.
+ * 2. Picking Taxi, then clicking the ground, places a taxi element and selects it.
+ */
+export const Canvas3D: Story = {
+  decorators: withScenes(trim`
+    scene cube dim=3d layout=cube name="Cube" {
+      camera target=0,1,0 yaw=-45 pitch=30 distance=8 fov=0.8 projection=perspective
+    }
+
+    layout cube dim=3d model=library {
+      element box cube @ 0,1,0 scale=2 hue=blue surface=solid
+    }
+
+    model library dim=3d {
+    }
+  `),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('scene.3d.editor', undefined, { timeout: 30_000 });
+    // 1. The tool, and the contributed entry.
+    await userEvent.click(await canvas.findByTestId('canvas3d.tool.library'));
+    await userEvent.click(await within(document.body).findByTestId('canvas3d.library.taxi'));
+    // 2. The pick arms placement; a click on open ground (left of and below the cube) places the taxi and selects it.
+    await waitFor(() => expect(canvas.getByTestId('canvas3d.tool.library')).toHaveAttribute('aria-pressed', 'true'));
+    // The click is retried: until the renderer has drawn a frame, nothing under the pointer is picked and it places nothing.
+    await waitFor(
+      async () => {
+        const view = editor.querySelector('canvas');
+        if (view && !editor.dataset.selection) {
+          const rect = view.getBoundingClientRect();
+          const at = {
+            clientX: rect.left + rect.width / 4,
+            clientY: rect.top + (rect.height * 3) / 4,
+            button: 0,
+            pointerId: 1,
+          };
+          await fireEvent.pointerDown(view, at);
+          await fireEvent.pointerUp(view, at);
+        }
+        await expect(editor.dataset.selection).toMatch(/^taxi/);
+      },
+      { timeout: 10_000, interval: 500 },
+    );
   },
 };

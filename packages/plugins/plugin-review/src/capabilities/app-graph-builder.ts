@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -17,11 +18,12 @@ import { Selection } from '@dxos/react-ui-attention/types';
 import { createComment } from '@dxos/ui-editor/headless';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
-import { CommentOperation } from '#types';
+import { CommentCapabilities, CommentOperation } from '#types';
 
+import { ReviewNamespace } from '../namespace.ts';
 // Not the `../util` barrel: it re-exports `author-hue`, whose palette lookup is UI-only.
 import { findCommentConfig, getCommentConfig } from '../util/commentable.ts';
+import { getFocusedEditor } from '../util/focused-editor.ts';
 import { getAnchor } from '../util/message.ts';
 
 export default Capability.makeModule(
@@ -29,6 +31,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     // Read through the atom: a config contributed after the relation expands has to reach the matcher.
     const commentConfigsAtom = yield* Capability.atom(AppCapabilities.CommentConfig);
+    const commentScopesAtom = yield* Capability.atom(AppCapabilities.CommentScope);
 
     const getAnchorResolver = (typename: string) =>
       capabilities.getAll(AppCapabilities.AnchorResolver).find(({ key }) => key === typename);
@@ -38,12 +41,15 @@ export default Capability.makeModule(
         id: 'commentsCompanion',
         relation: AppNode.companion,
         match: (node, get) =>
-          findCommentConfig(get(commentConfigsAtom), node.data) ? Option.some(node) : Option.none(),
+          findCommentConfig(get(commentConfigsAtom), node.data) ||
+          get(commentScopesAtom).some((scope) => scope.resolve(node.data, get))
+            ? Option.some(node)
+            : Option.none(),
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'comments',
-              label: ['comments.label', { ns: meta.profile.key }],
+              label: ['comments.label', { ns: ReviewNamespace.key }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
               position: Position.first,
@@ -54,10 +60,17 @@ export default Capability.makeModule(
         id: 'commentToolbar',
         match: (node, get) =>
           findCommentConfig(get(commentConfigsAtom), node.data) ? Option.some(node) : Option.none(),
-        actions: (matched) => {
+        actions: (matched, get) => {
           const object = matched.data;
           const objectUri = Obj.getURI(object);
           const viewState = capabilities.get(AttentionCapabilities.ViewState);
+          // The texts the node's comments cover: the object's, and those of the objects its scopes add (a spec's features).
+          const uris = [
+            objectUri,
+            ...get(commentScopesAtom).flatMap(
+              (scope) => scope.resolve(object, get)?.targets.map((target) => Obj.getURI(target)) ?? [],
+            ),
+          ];
 
           return Effect.succeed([
             {
@@ -79,21 +92,34 @@ export default Capability.makeModule(
                   return;
                 }
 
-                // Fallback (non-editor objects): anchor to the current selection, or create an
-                // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
-                // placeholder is not a cursor range the resolver could span.
+                // Else the comment editor focused last on one of the node's texts: a spec's, or a feature field drawn in it.
+                const state = capabilities
+                  .get(Capabilities.AtomRegistry)
+                  .get(capabilities.get(CommentCapabilities.State));
+                const fieldView = getFocusedEditor(state, uris);
+                if (fieldView) {
+                  createComment(fieldView);
+                  return;
+                }
+
+                // Fallback (non-editor objects): anchor to the current selection, or comment on the whole object.
                 const typename = Obj.getTypename(object);
                 const selection = viewState.get(Selection.aspect, objectUri);
-                const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
+                const cursorAnchor =
+                  config.comments !== 'anchored'
+                    ? undefined
+                    : config.anchorFromSelection
+                      ? config.anchorFromSelection(object, selection)
+                      : getAnchor(selection);
                 yield* Operation.invoke(CommentOperation.Create, {
-                  anchor: cursorAnchor ?? Date.now().toString(),
+                  anchor: cursorAnchor,
                   name:
                     cursorAnchor && typename ? getAnchorResolver(typename)?.getText(object, cursorAnchor) : undefined,
                   subject: object,
                 });
               }),
               properties: {
-                label: ['add-comment.label', { ns: meta.profile.key }],
+                label: ['add-comment.label', { ns: ReviewNamespace.key }],
                 icon: 'ph--chat-text--regular',
                 disposition: 'toolbar',
                 // Always enabled: the create-comment command snaps to a sensible region, so a precise

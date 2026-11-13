@@ -19,6 +19,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -199,6 +200,14 @@ feat F-6: AI / Skill
     then: agent can create tables with sorted columns via op:create
 ```
 
+```mdl
+feat F-7: Collaboration
+
+  req F-7.1:
+    when: another member selects a cell in a table the reader has open
+    then: the reader sees that cell outlined in the member's hue with their name, on the same row and field even when the reader's sort or filter puts it elsewhere
+```
+
 ## Acceptance
 
 ```mdl
@@ -329,7 +338,9 @@ test QA-2: Build a typed table and sort it
     - name: Sort by rating
       do: Open the Rating column's menu and choose Sort Descending.
       expect: the rows reorder to Neuromancer, Foundation, Dune, Snow Crash, and the header shows a sort icon
+```
 
+```mdl
 test QA-3: Showcase clip
   desc: |
     The 10s showcase clip: Open a new table. Recorded light at 60 fps with no ident, captions or
@@ -347,6 +358,54 @@ test QA-3: Showcase clip
     - name: Work in it
       do: Click across it as the clip gesture does.
       expect: the object responds to each click
+```
+
+```mdl
+test QA-4: A collaborator's selection follows its row
+  desc: Two members open the same table; the host's selected cell stays on its row when the guest sorts.
+  actors: human
+  covers: [F-3.1, F-7.1]
+  status: unverified
+  automated:
+    - composer-e2e:grid-selection.spec.ts#Grid selections › a table selection stays on its row when the other client sorts
+  given:
+    - two identities, host and guest, in two browsers
+    - space: a space of the host's with a Table "Tasks" over the Task type whose rows read Bob then Alice, shared with the guest
+  steps:
+    - name: Both open the table
+      do: As host and as guest, open "Tasks".
+      expect: both see Bob in row 1 and Alice in row 2
+    - name: The host selects Alice
+      do: As host, click Alice's cell.
+      expect: the guest sees that cell outlined in the host's colour, with the host's name
+    - name: The guest sorts
+      do: As guest, open the first column's menu and choose Sort Ascending.
+      expect: Alice moves to row 1 on the guest, and the host's outline moves with her
+```
+
+## Changelog
+
+```mdl
+decision D-1: Collaborators' cell selections are published as field id and row object id on a `@dxos/protocols/Awareness` channel of their own, `awareness.selection.<id>`, and drawn in each member's hue with their name, the name and hue their Markdown cursor carries.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.1]
+  why: Each client sorts and filters its own view, so a row index names a different row on each side; the object id does not.
+  rejected:
+    - Publish visual row and column indexes: a peer's sort would move the outline onto another row.
+    - Reuse the Markdown cursors' `awareness.<id>` channel with cell ids written as JSON into the caret's anchor and head strings: the editor and the grid on one object read each other's values.
+```
+
+```mdl
+decision D-2: The published selection is what the member's grid shows, kept by field and row object id: focusing a header or the draft row clears it, a sort or insert moves the grid's highlight with it, and a selection whose row is filtered out or deleted keeps naming it. Fills in [D-1].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.1]
+  why: A header or draft row names no record, so keeping the last cell showed peers a record the member had left; a filtered-out row cannot be told apart from a deleted one, so renaming the selection to the row now in its place published records the member never chose.
+  rejected:
+    - Rename the selection to the row now at its position when its row is gone: a search makes that a record the member never chose.
 ```
 
 ## Appendix: Extension Definitions

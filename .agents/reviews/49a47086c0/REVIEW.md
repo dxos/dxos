@@ -1097,7 +1097,7 @@ System One judges this a likely violation of `extract-non-rendering-logic-from-c
 
 # WARN 49a47086c0-129 no-styling-wrapper-divs `packages/plugins/plugin-inbox/src/components/ConversationStack/ConversationStack.tsx:420`
 
-System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`), p=0.87. The likeliest place is lines 420-443 (`'dx-document dx-attention-surface border border-subdued-separator rounded ove...`, location confidence 0.33). This is a single-shot classifier: confirm against the rule before acting.
+System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`), p=0.87. The likeliest place is lines 420-443 (`'dx-document dx-attention-surface border border-separator-subtle rounded ove...`, location confidence 0.33). This is a single-shot classifier: confirm against the rule before acting.
 
 # WARN 49a47086c0-130 setter-must-not-own-transaction `packages/plugins/plugin-inbox/src/components/EditMessage/EditMessage.tsx:167`
 

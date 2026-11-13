@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { CallsNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [CallsNamespace.key]: {
         'plugin.name': 'Calls',
 
         'call-panel.label': 'Active Call',
@@ -23,13 +23,14 @@ export const translations = [
         'meeting-status.title': 'Calls',
         'share-meeting-link.label': 'Share meeting',
         'show-webrtc-stats.title': 'WebRTC Stats',
-        'show-calls-history.title': 'Service History',
 
         'icon-pin.label': 'Pin video',
         'icon-unpin.label': 'Unpin video',
         'icon-wave.label': 'Waving',
         'icon-muted.label': 'Muted',
         'join-call.button': 'Join',
+        'transcribed-call.message':
+          'Calls are transcribed live by Cloudflare. A meeting keeps the text only while its transcription is on.',
         'leave-call.button': 'Leave',
         'mic-on.button': 'Unmute',
         'mic-off.button': 'Mute',

@@ -15,4 +15,6 @@ export type GeoControlProps = {
   tileUrl?: string;
   /** Great-circle arcs between points (globe variant). */
   lines?: GeoLine[];
+  /** Stops the tour flies through in order (globe variant); unset, it visits every marker. */
+  tour?: LatLngLiteral[];
 } & MapMarkersProps;

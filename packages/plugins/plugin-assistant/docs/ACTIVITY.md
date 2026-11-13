@@ -319,7 +319,7 @@ classDiagram
     status: todo|backlog|started|review|done|duplicate|blocked|cancelled|failed
     subtasks: Ref~Task~[]
     dependsOn: Ref~Task~[]
-    assignee, reviewers: Actor
+    assignee, delegate: Actor
     history: HistoryEntry[] created and updated only
     artifacts: Ref[]
   }

@@ -68,6 +68,13 @@ export interface SpaceInternal {
   setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
 
   /**
+   * Has EDGE move the space's credentials off its hypercore control feed onto a space root document,
+   * and adopts that root on this device. Other members adopt the same root when they next open the
+   * space. Idempotent; resolves to the root URL, which `data.spaceRootUrl` then reports.
+   */
+  migrateSpaceRoot(): Promise<string>;
+
+  /**
    * Waits until the space is fully synced with EDGE.
    * @throws If the EDGE sync is disabled.
    */

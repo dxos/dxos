@@ -4,18 +4,30 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { NavTreeNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [NavTreeNamespace.key]: {
         'app-menu.label': 'App menu',
         'open-commands.label': 'Search commands',
         'commands-dialog.title': 'Commands',
         'command-list-input.placeholder': 'Search for commands…',
         'node-actions-menu-invoker.label': 'More options',
         'tree-item-actions.label': 'More actions',
+        'context-menu.open-link.label': 'Open link in new tab',
+        'context-menu.copy-link.label': 'Copy link',
+        'context-menu.open-image.label': 'Open image in new tab',
+        'context-menu.copy-image-address.label': 'Copy image address',
+        'context-menu.undo.label': 'Undo',
+        'context-menu.redo.label': 'Redo',
+        'context-menu.cut.label': 'Cut',
+        'context-menu.copy.label': 'Copy',
+        'context-menu.paste.label': 'Paste',
+        'context-menu.home.label': 'Home',
+        'context-menu.back.label': 'Back',
+        'context-menu.forward.label': 'Forward',
         'button-back.button': 'Back to Space',
         'pending-workspace.label': 'Loading workspace…',
         'workspace-unavailable.heading': 'Workspace unavailable',

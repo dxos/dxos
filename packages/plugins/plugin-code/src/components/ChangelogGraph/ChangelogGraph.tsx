@@ -2,45 +2,36 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 
 import {
-  Canvas,
   type CreateProps,
-  DYNAMIC_VIEW_ID,
-  type DynamicOptions,
-  type FreehandProjectionOptions,
   type GraphEdge,
+  type GraphLayoutOptions,
   type GraphModel,
-  type Node,
   type NodeViewProps,
-  type Overlay,
-  createCanvasAtoms,
-  createDynamicProjection,
-  createMemoryStore,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-  nodeBase,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas';
+import { Graph2DView } from '@dxos/react-ui-canvas-editor';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
+import { type Node, nodeBase } from '@dxos/scene';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import {
   type ChangelogEdgeKind,
   type ChangelogGraphModel,
   type ChangelogNodeModel,
   type DecisionActor,
   type DecisionModel,
+  type QuestionModel,
   type SpecBlockModel,
   buildChangelogGraph,
   githubAvatarUrl,
@@ -81,6 +72,7 @@ const EDGE_STYLE: Record<ChangelogEdgeKind, Pick<GraphEdge, 'ends' | 'style'> & 
   'builds-on': { ends: { start: 'arrow' }, labelled: false },
   'supersedes': { ends: { start: 'arrow' }, style: { hue: 'red', lineStyle: 'dashed' }, labelled: true },
   'approves': { ends: { start: 'arrow' }, style: { hue: 'green' }, labelled: true },
+  'answers': { ends: { start: 'arrow' }, style: { hue: 'amber' }, labelled: true },
   'affects': { ends: { end: 'arrow' }, style: { hue: 'sky', lineStyle: 'dotted' }, labelled: false },
 };
 
@@ -98,7 +90,7 @@ const NodeLookupContext = createContext<NodeLookup>(() => undefined);
 const SelectedContext = createContext<string | undefined>(undefined);
 
 const DecisionCard = ({ decision }: { decision: DecisionModel }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { entry, actor, handle, principal, supersededBy, approvedBy } = decision;
   const style = actor ? ACTOR_STYLE[actor] : undefined;
   const selected = useContext(SelectedContext) === entry.id;
@@ -178,6 +170,46 @@ const DecisionCard = ({ decision }: { decision: DecisionModel }) => {
   );
 };
 
+const QuestionNodeCard = ({ question }: { question: QuestionModel }) => {
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
+  const { entry, actor, handle, answer } = question;
+  const selected = useContext(SelectedContext) === entry.id;
+  return (
+    <Card.Root
+      grid
+      selected={selected}
+      classNames={['border-2 border-warning-border', answer && 'opacity-60']}
+      data-testid='changelog-graph.question'
+      data-question={entry.id}
+      data-answered={answer ? '' : undefined}
+    >
+      <Card.Header>
+        <Layout.Block rail='start'>
+          <ActorAvatar actor={actor} handle={handle} />
+        </Layout.Block>
+        <Card.Title lines={1}>
+          {entry.id} · {handle ?? t('changelog-graph.unknown-actor.label')}
+        </Card.Title>
+      </Card.Header>
+      <Card.Body>
+        <Card.Row icon='ph--question--regular'>
+          <Card.Text lines={3}>{entry.title}</Card.Text>
+        </Card.Row>
+        <Card.Row>
+          <Layout.Flex wrap gap='xs'>
+            {entry.date && <Tag.Tag>{entry.date}</Tag.Tag>}
+            {answer ? (
+              <Tag.Tag hue='success'>{t('changelog-graph.question.answered-in.label', { id: answer.id })}</Tag.Tag>
+            ) : (
+              <Tag.Tag hue='warning'>{t('changelog-graph.question.open.label')}</Tag.Tag>
+            )}
+          </Layout.Flex>
+        </Card.Row>
+      </Card.Body>
+    </Card.Root>
+  );
+};
+
 const BlockChip = ({ block }: { block: SpecBlockModel }) => (
   <Layout.Flex
     classNames='dx-cover items-center justify-center gap-2 rounded-sm border border-dashed border-separator bg-card-surface'
@@ -194,6 +226,7 @@ const ChangelogNodeView = ({ node }: NodeViewProps) => {
     // Inert, so a press anywhere on the card selects and drags the box rather than reaching the card.
     <Layout.Grid classNames='dx-cover overflow-hidden pointer-events-none'>
       {model?.kind === 'decision' && <DecisionCard decision={model} />}
+      {model?.kind === 'question' && <QuestionNodeCard question={model} />}
       {model?.kind === 'block' && <BlockChip block={model} />}
     </Layout.Grid>
   );
@@ -232,13 +265,11 @@ const nodes = createNodeRegistry(
 
 const BLOCK_SIZE = { width: 144, height: 48 };
 
-const createLayout = (lookup: NodeLookup): DynamicOptions => ({
-  nodes,
-  size: { width: 288, height: 256 },
-  pitch: { width: 320, height: 320 },
-  createNode: (node, props) =>
-    lookup(node.id)?.kind === 'block' ? createBlockNode({ ...props, size: BLOCK_SIZE }) : createDecisionNode(props),
-  link: { type: 'line' },
+const createLayout = (lookup: NodeLookup): GraphLayoutOptions => ({
+  // The same 288×256 cards on a 320×320 pitch, as a lattice so smart links route through the gutters around the cards.
+  lattice: { width: 288, height: 256, gutterX: 32, gutterY: 64 },
+  shape: (node) =>
+    lookup(node.id)?.kind === 'block' ? { type: BLOCK_NODE_TYPE, size: BLOCK_SIZE } : { type: DECISION_NODE_TYPE },
 });
 
 const toGraph = (model: ChangelogGraphModel, label: (kind: ChangelogEdgeKind) => string): GraphModel => ({
@@ -250,7 +281,7 @@ const toGraph = (model: ChangelogGraphModel, label: (kind: ChangelogEdgeKind) =>
 });
 
 const Legend = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
     <Layout.Flex
       wrap
@@ -285,54 +316,21 @@ export type ChangelogGraphProps = {
  * order it was written, with an arrow to each decision it builds on, supersedes or approves.
  */
 export const ChangelogGraph = ({ content, affects = false, selected }: ChangelogGraphProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const atomRegistry = useContext(RegistryContext);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const model = useMemo(() => buildChangelogGraph(content, { affects }), [content, affects]);
   const lookup = useMemo<NodeLookup>(() => {
     const byId = new Map(model.nodes.map((node) => [node.id, node]));
     return (id) => byId.get(id);
   }, [model]);
-  const graphModel = useMemo(() => toGraph(model, (kind) => t(`changelog-graph.edge.${kind}.label`)), [model, t]);
-
-  // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
-  const graph = useMemo(() => Atom.make<GraphModel>(graphModel), []);
-  const overlay = useMemo(() => Atom.make<Overlay>({ positions: {} }), []);
-  const store = useMemo(() => createMemoryStore([]), []);
-  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_VIEW_ID), []);
-
-  useEffect(() => {
-    atomRegistry.set(graph, graphModel);
-  }, [atomRegistry, graph, graphModel]);
-
-  const createProjection = useCallback(
-    ({ registry }: FreehandProjectionOptions) =>
-      createDynamicProjection({
-        registry,
-        graph,
-        overlay,
-        options: createLayout(lookup),
-        capabilities: { move: true },
-      }),
-    [graph, overlay, lookup],
-  );
+  const graph = useMemo(() => toGraph(model, (kind) => t(`changelog-graph.edge.${kind}.label`)), [model, t]);
+  const layout = useMemo(() => createLayout(lookup), [lookup]);
 
   return (
     <NodeLookupContext.Provider value={lookup}>
       <SelectedContext.Provider value={selected}>
-        {/* The positioning context the legend floats in over the canvas. */}
-        <div className='dx-fill relative'>
+        <Graph2DView graph={graph} layout={layout} nodes={nodes}>
           <Legend />
-          <Canvas.Root
-            store={store}
-            root={DYNAMIC_VIEW_ID}
-            atoms={atoms}
-            nodes={nodes}
-            createProjection={createProjection}
-          >
-            <Canvas.Viewport />
-            <Canvas.Navigation />
-          </Canvas.Root>
-        </div>
+        </Graph2DView>
       </SelectedContext.Provider>
     </NodeLookupContext.Provider>
   );

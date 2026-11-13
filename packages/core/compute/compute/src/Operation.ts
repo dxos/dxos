@@ -468,6 +468,9 @@ export interface DurableDefinition<_Input, _Output, _Requirements = never, _Rpcs
 
   readonly services: readonly Context.Key<any, any>[];
 
+  /** See {@link DurableProps.optionalServices}. */
+  readonly optionalServices?: readonly Context.Key<any, any>[];
+
   /**
    * Codecs for the process's inputs and outputs, from {@link DurableProps}. Exposed on the
    * interface so a caller that moves a value across a boundary (a remote runtime) can encode it
@@ -478,6 +481,9 @@ export interface DurableDefinition<_Input, _Output, _Requirements = never, _Rpcs
 
   /** Schemas to register with the process's database; see {@link DurableProps.types}. */
   readonly types?: readonly Type.AnyEntity[];
+
+  /** See {@link DurableProps.resumable}. */
+  readonly resumable?: boolean;
 
   // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
   // argument (and `DurableHandler.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
@@ -583,6 +589,12 @@ export interface DurableProps {
   readonly input: Schema.Codec<any, any>;
   readonly output: Schema.Codec<any, any>;
   readonly services: readonly Context.Key<any, any>[];
+
+  /**
+   * Services the process uses when the runtime has them: it gets each one that resolves and runs without the rest,
+   * so the handler reads them with `Effect.serviceOption`.
+   */
+  readonly optionalServices?: readonly Context.Key<any, any>[];
   readonly rpcs?: RpcGroup.RpcGroup<any>;
 
   /**
@@ -594,6 +606,12 @@ export interface DurableProps {
    * rather than a missing schema.
    */
   readonly types?: readonly Type.AnyEntity[];
+
+  /**
+   * False when a process interrupted by a restart could only fail on resuming. Such a process is kept in
+   * memory rather than persisted, unless a persisted parent waits on it. Defaults to true.
+   */
+  readonly resumable?: boolean;
 }
 
 /**
@@ -1132,6 +1150,30 @@ export const getRequirements = (op: Definition.Any): readonly unknown[] =>
   op.meta.annotations
     ? Option.getOrElse(Annotation.getDictionary(op.meta.annotations, RequiresAnnotation), (): readonly unknown[] => [])
     : [];
+
+/**
+ * The input field a consent prompt shows before the person allows the call (the body of an email it
+ * would send), so they approve what is sent and not only that something is.
+ */
+export const ConsentPreviewAnnotation = Annotation.make({
+  id: 'org.dxos.operation.consentPreview',
+  schema: Schema$.Struct({ field: Schema$.String, label: Schema$.String }),
+});
+
+/** The text a consent prompt previews for this call, when the operation names a string field to show. */
+export const getConsentPreview = (
+  op: Definition.Any,
+  input: unknown,
+): { readonly label: string; readonly text: string } | undefined => {
+  const preview = op.meta.annotations
+    ? Annotation.getDictionary(op.meta.annotations, ConsentPreviewAnnotation)
+    : Option.none();
+  if (Option.isNone(preview) || input === null || typeof input !== 'object') {
+    return undefined;
+  }
+  const text: unknown = Reflect.get(input, preview.value.field);
+  return typeof text === 'string' && text.trim().length > 0 ? { label: preview.value.label, text } : undefined;
+};
 
 /**
  * Operation service interface - provides unified access to operation invocation and scheduling.

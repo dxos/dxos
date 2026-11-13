@@ -17,17 +17,11 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
 import { Text } from '@dxos/schema';
-import { Cell } from '@dxos/storybook-testing';
+import { Cell, addToRootCollection } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';
-import {
-  ModuleContainer,
-  addToRootCollection,
-  createDecorators,
-  findPromptEditor,
-  storyParameters,
-} from '../testing/index.ts';
+import { ModuleContainer, createDecorators, findPromptEditor, storyParameters } from '../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Documents',

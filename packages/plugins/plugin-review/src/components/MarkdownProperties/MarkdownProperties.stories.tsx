@@ -88,7 +88,7 @@ const meta = {
             }),
         }),
         // Contributes the versioning-state atom consumed by useVersioning.
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         MarkdownPlugin.make(),
       ],
     })),

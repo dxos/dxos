@@ -4,14 +4,16 @@
 
 import { describe, test } from 'vitest';
 
+import { type InstanceNode, type Node, type PlacedComposite, isInstanceNode } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
-import { reduceIntent } from '../engine/index.ts';
-import { type InstanceNode, type Node, type View, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import {
   composeSelection,
   compositeBounds,
   copyComposite,
   instanceCounts,
+  instancePlacement,
   instanceTransform,
   instanceView,
   libraryViews,
@@ -41,7 +43,7 @@ const counter = () => {
   return (prefix: string) => `${prefix}-${next++}`;
 };
 
-const instanceOf = (parent: View, id: string): InstanceNode => {
+const instanceOf = (parent: RenderList2D, id: string): PlacedComposite => {
   const node = parent.nodes[id];
   if (!node || !isInstanceNode(node)) {
     throw new Error(`no instance ${id}`);
@@ -55,14 +57,14 @@ describe('composeSelection', () => {
     if (!composition) {
       throw new Error('no composition');
     }
-    const { composite, intents } = composition;
+    const { composite, edit } = composition;
     expect(composite.kind).toBe('composite');
     expect(Object.keys(composite.nodes)).toEqual(['a', 'b']);
     expect(Object.keys(composite.links)).toEqual(['ab']);
     // Re-centred on the bounds of the selection, which ran from x 0 to 300.
     expect(compositeBounds(composite)).toEqual({ x: -150, y: -25, width: 300, height: 50 });
 
-    const parent = reduceIntent(scene, { kind: 'batch', intents });
+    const parent = edit(scene);
     expect(Object.keys(parent.nodes).sort()).toEqual(['c', 'i']);
     const instance = instanceOf(parent, 'i');
     expect(nodeBounds(instance)).toEqual({ x: 0, y: 0, width: 300, height: 50 });
@@ -70,12 +72,6 @@ describe('composeSelection', () => {
     expect(composite.nodes.b.exposed).toBe(true);
     expect(parent.links.bc.source).toEqual({ node: 'i', port: 'b' });
     expect(instance.ports).toEqual([{ id: 'b', side: 'e', offset: 0.5 }]);
-  });
-
-  test('keyed tracks of the grouped nodes move into the composite, in its coordinates', ({ expect }) => {
-    const timeline = setKey(createTimeline(), 'a', 'center', { t: 1, value: { x: 50, y: 25 } });
-    const composition = composeSelection({ ...scene, timeline }, ['a', 'b'], { compositeId: 'obj', instanceId: 'i' });
-    expect(composition?.composite.timeline?.tracks['a:center'].keys).toEqual([{ t: 1, value: { x: -100, y: 0 } }]);
   });
 
   test('a locked node is not grouped', ({ expect }) => {
@@ -94,7 +90,7 @@ describe('instances', () => {
   });
 
   test('overrides apply per field, style per key', ({ expect }) => {
-    const composite: View = {
+    const composite: RenderList2D = {
       id: 'obj',
       kind: 'composite',
       nodes: { a: { ...scene.nodes.a, style: { hue: 'red', rounded: true } } },
@@ -121,11 +117,8 @@ describe('compose and ungroup', () => {
     if (!composition) {
       throw new Error('no composition');
     }
-    const parent = reduceIntent(scene, { kind: 'batch', intents: composition.intents });
-    const restored = reduceIntent(parent, {
-      kind: 'batch',
-      intents: ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()),
-    });
+    const parent = composition.edit(scene);
+    const restored = ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()).edit(parent);
     const nodes = Object.values(restored.nodes).sort((left, right) => left.center.x - right.center.x);
     expect(nodes.map(nodeBounds)).toEqual([box(0), box(200), box(400)]);
     expect(restored.nodes.i).toBeUndefined();
@@ -143,37 +136,12 @@ describe('compose and ungroup', () => {
     ).toBe(true);
   });
 
-  test("ungrouping brings the Object's animation back out, on the new nodes and where the Instance drew them", ({
-    expect,
-  }) => {
-    // `a` slides from where it stands to 100 right of it; Group carries the track into the Object.
-    const centre = nodeCenter(scene.nodes.a);
-    const keyed = setKey(setKey(createTimeline(2), 'a', 'center', { t: 0, value: centre }), 'a', 'center', {
-      t: 1,
-      value: { x: centre.x + 100, y: centre.y },
-    });
-    const animated = { ...scene, timeline: keyed };
-    const composition = composeSelection(animated, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
-    if (!composition) {
-      throw new Error('no composition');
-    }
-    expect(Object.keys(composition.composite.timeline?.tracks ?? {})).toEqual(['a:center']);
-    const parent = reduceIntent(animated, { kind: 'batch', intents: composition.intents });
-    const restored = reduceIntent(parent, {
-      kind: 'batch',
-      intents: ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()),
-    });
-    const first = Object.values(restored.nodes).sort((left, right) => left.center.x - right.center.x)[0];
-    const track = restored.timeline?.tracks[`${first.id}:center`];
-    expect(track?.keys.map((key) => key.value)).toEqual([centre, { x: centre.x + 100, y: centre.y }]);
-  });
-
   test('make unique copies the definition under fresh ids and renames the overrides and ports', ({ expect }) => {
     const composition = composeSelection(scene, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
     if (!composition) {
       throw new Error('no composition');
     }
-    const parent = reduceIntent(scene, { kind: 'batch', intents: composition.intents });
+    const parent = composition.edit(scene);
     const instance = { ...instanceOf(parent, 'i'), overrides: { a: { style: { opacity: 0.5 } } } };
     const { composite, rename } = copyComposite(composition.composite, 'obj2', counter());
     const unique = retargetInstance(instance, 'obj2', rename);
@@ -207,10 +175,7 @@ describe('anonymous Objects', () => {
     if (!group || !named) {
       return;
     }
-    const parent = reduceIntent(reduceIntent(scene, { kind: 'batch', intents: group.intents }), {
-      kind: 'batch',
-      intents: named.intents,
-    });
+    const parent = named.edit(group.edit(scene));
     const scenes = { s: parent, g: group.composite, n: named.composite };
     const placed = promotedBy(scenes, [instanceOf(parent, 'i'), instanceOf(parent, 'j'), parent.nodes.i]);
     expect(Object.keys(placed)).toEqual(['g']);
@@ -235,7 +200,12 @@ describe('removeComposite', () => {
     size: { width: 100, height: 50 },
     composite,
   });
-  const view = (id: string, nodes: View['nodes'], links: View['links'] = {}, extra: Partial<View> = {}): View => ({
+  const view = (
+    id: string,
+    nodes: RenderList2D['nodes'],
+    links: RenderList2D['links'] = {},
+    extra: Partial<RenderList2D> = {},
+  ): RenderList2D => ({
     id,
     nodes,
     links,
@@ -272,5 +242,110 @@ describe('removeComposite', () => {
       'card-def',
       'root',
     ]);
+  });
+});
+
+describe('constrained parts', () => {
+  /** A card authored 288x192 about the origin: a glyph top-left, a body between, a footer on the bottom edge. */
+  const CARD: RenderList2D = {
+    id: 'card',
+    kind: 'composite',
+    nodes: {
+      frame: {
+        id: 'frame',
+        type: 'rect',
+        z: 'a0',
+        center: { x: 0, y: 0 },
+        size: { width: 288, height: 192 },
+        constrain: { x: 'stretch', y: 'stretch' },
+      },
+      icon: {
+        id: 'icon',
+        type: 'rect',
+        z: 'a1',
+        center: { x: -114, y: -66 },
+        size: { width: 36, height: 36 },
+        constrain: { x: 'min', y: 'min' },
+      },
+      footer: {
+        id: 'footer',
+        type: 'rect',
+        z: 'a2',
+        center: { x: 0, y: 75 },
+        size: { width: 264, height: 18 },
+        constrain: { x: 'stretch', y: 'max' },
+      },
+    },
+    links: {
+      rule: {
+        id: 'rule',
+        type: 'line',
+        z: 'b0',
+        source: { point: { x: -132, y: 72 } },
+        target: { point: { x: 132, y: 72 } },
+        constrain: { x: 'stretch', y: 'max' },
+      },
+    },
+  };
+
+  const PLAIN: RenderList2D = {
+    id: 'plain',
+    kind: 'composite',
+    nodes: { only: { id: 'only', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 100, height: 50 } } },
+    links: {},
+  };
+
+  const instance = (size: { width: number; height: number }): InstanceNode => ({
+    type: 'instance',
+    id: 'i',
+    z: 'c0',
+    center: { x: 0, y: 0 },
+    size,
+    composite: 'card',
+    fit: 'fit',
+  });
+
+  test('a composite with no constraint still draws through one uniform transform', ({ expect }) => {
+    const placement = instancePlacement({ ...instance({ width: 200, height: 100 }), composite: 'plain' }, PLAIN);
+    expect(placement.transform.scale).toEqual(2);
+    expect(placement.view.nodes.only?.size).toEqual({ width: 100, height: 50 });
+  });
+
+  test('a constrained composite places its parts in the scene and needs no transform', ({ expect }) => {
+    const placement = instancePlacement(instance({ width: 288, height: 192 }), CARD);
+    expect(placement.transform).toEqual({ scale: 1, offset: { x: 0, y: 0 } });
+    // Drawn at the size it was authored, every part is exactly where it was.
+    expect(placement.view.nodes.icon?.center).toEqual({ x: -114, y: -66 });
+    expect(placement.view.nodes.footer?.center).toEqual({ x: 0, y: 75 });
+  });
+
+  test('the footer stays on the bottom edge and the glyph in the corner as the instance grows', ({ expect }) => {
+    const { view } = instancePlacement(instance({ width: 576, height: 384 }), CARD);
+    // The instance is centred on the origin, so its frame runs -288..288 by -192..192.
+    expect(nodeBounds(view.nodes.icon!)).toEqual({ x: -276, y: -180, width: 36, height: 36 });
+    expect(nodeBounds(view.nodes.footer!)).toMatchObject({ y: 192 - 12 - 18, height: 18 });
+    expect(nodeBounds(view.nodes.frame!)).toEqual({ x: -288, y: -192, width: 576, height: 384 });
+  });
+
+  test("a hairline's ends keep their inset and follow the bottom edge", ({ expect }) => {
+    const { view } = instancePlacement(instance({ width: 576, height: 384 }), CARD);
+    const rule = view.links.rule!;
+    expect(rule.source).toEqual({ point: { x: -276, y: 168 } });
+    expect(rule.target).toEqual({ point: { x: 276, y: 168 } });
+  });
+
+  test('an overridden part is solved after the override, not before', ({ expect }) => {
+    const node = { ...instance({ width: 576, height: 384 }), overrides: { icon: { size: { width: 24, height: 24 } } } };
+    const { view } = instancePlacement(node, CARD);
+    // The smaller glyph keeps its own gap to the corner, measured in the definition's box, not the overridden one.
+    expect(nodeBounds(view.nodes.icon!)).toEqual({ x: -270, y: -174, width: 24, height: 24 });
+  });
+
+  test('ungrouping a constrained instance leaves its parts where they were drawn', ({ expect }) => {
+    const node = instance({ width: 576, height: 384 });
+    const { edit } = ungroupInstance(scene, node, CARD, counter());
+    const placed = edit(scene);
+    const footer = Object.values(placed.nodes).find((candidate) => candidate.size.height === 18);
+    expect(footer && nodeBounds(footer)).toMatchObject({ y: 192 - 12 - 18, height: 18 });
   });
 });

@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
+import * as Rpc from 'effect/rpc/Rpc';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, onTestFinished, test, vi } from 'vitest';
@@ -275,14 +277,14 @@ describe('Feed', () => {
 
       const queryResult = yield* Feed.query(feed, Filter.type(TestSchema.Person));
       const called = new Event();
-      const calledOnce = called.waitForCount(1);
       const unsubscribe = queryResult.subscribe(() => called.emit());
+      // The local append is in the results before the index answers with the rest of the feed.
+      const calledWithBoth = called.waitForCondition(() => queryResult.results.length === 2);
 
       const bob = Obj.make(TestSchema.Person, { name: 'bob' });
       yield* Feed.append(feed, [bob]);
 
-      yield* Effect.promise(() => calledOnce);
-      expect(queryResult.results).toHaveLength(2);
+      yield* Effect.promise(() => calledWithBoth);
       expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
       unsubscribe();
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
@@ -307,8 +309,40 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
-  // TODO(wittjosiah): Implement when queue retention is supported.
-  test.todo('setRetention configures feed retention policy');
+  test('feed options are object fields that replicate to another client', async ({ expect }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({ types: [Feed.Feed] });
+    await using db1 = await peer.createDatabase(spaceKey);
+    const sevenDays = Duration.toMillis(Duration.days(7));
+
+    const feed = await Effect.gen(function* () {
+      const feed = yield* Database.add(Obj.make(Feed.Feed, { name: 'log' }));
+      yield* Feed.setRetention(feed, { maxLength: 100, maxAge: Duration.days(7) });
+      yield* Feed.setIndexing(feed, { enabled: false });
+      yield* Database.flush();
+      return feed;
+    }).pipe(Effect.provide(Database.layer(db1)), EffectEx.runAndForwardErrors);
+
+    expect(feed.retention).toEqual({ maxLength: 100, maxAge: sevenDays });
+    expect(feed.indexing?.enabled).toBe(false);
+    expect(Obj.toJSON(feed)).toMatchObject({
+      retention: { maxLength: 100, maxAge: sevenDays },
+      indexing: { enabled: false },
+    });
+
+    const exit = await Effect.runPromiseExit(Feed.setRetention(feed, { maxLength: 0 }));
+    expect(Exit.isFailure(exit)).toBe(true);
+    expect(feed.retention).toEqual({ maxLength: 100, maxAge: sevenDays });
+
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl);
+    await using client2 = await peer.createClient();
+    await using db2 = await peer.openDatabase(spaceKey, rootUrl, { client: client2 });
+    const [replica] = await db2.query(Filter.id(feed.id)).run();
+    invariant(Obj.instanceOf(Feed.Feed, replica));
+    expect(replica.retention).toEqual({ maxLength: 100, maxAge: sevenDays });
+    expect(replica.indexing).toEqual({ enabled: false });
+  });
 
   describe('Live updates', () => {
     test('append retries after a failed insertIntoFeed RPC and eventually succeeds', async ({ expect }) => {
@@ -348,6 +382,96 @@ describe('Feed', () => {
       const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
       expect(results).toHaveLength(1);
       expect((results[0] as TestSchema.Person).name).toEqual('john');
+    });
+
+    // F-4.1: until the store names the branch of a fork base it would read as a root item, a retry included.
+    test('a fork whose first send fails stays out of root reads through its retry', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      let failNext = false;
+      const realHandlers = peer.host.feedService;
+      db._setFeedService(
+        await makeFeedClient({
+          ...realHandlers,
+          'FeedService.insertIntoFeed': (...args: Parameters<(typeof realHandlers)['FeedService.insertIntoFeed']>) => {
+            if (failNext) {
+              failNext = false;
+              return Effect.fail(new EchoClientError({ message: 'simulated insertIntoFeed failure' }));
+            }
+            return realHandlers['FeedService.insertIntoFeed'](...args);
+          },
+        }),
+      );
+      const feed = db.add(Feed.make({ name: 'flaky-fork' }));
+      const a1 = Obj.make(TestSchema.Person, { name: 'A1' });
+      await db.appendToFeed(feed, [a1]);
+      await db.flush();
+
+      const feedUri = Feed.getFeedUri(feed)?.toString() ?? '';
+      const query = db.query(Query.select(Filter.type(TestSchema.Person)).from(FeedScope.feed(feedUri)));
+      const seen = new Set<string>();
+      const unsubscribe = query.subscribe(() => query.results.forEach((item) => seen.add(item.name ?? '')), {
+        fire: true,
+      });
+      const b1 = Obj.make(TestSchema.Person, { name: 'B1' });
+      failNext = true;
+      await expect(db.forkFeed(feed, b1, { at: a1 })).rejects.toThrow();
+      expect(seen.has('B1')).toBe(false);
+
+      await db.flush();
+      expect(Feed.getBranch(b1)).toEqual(Feed.getBlockId(b1));
+      const all = await db
+        .query(Query.select(Filter.type(TestSchema.Person)).from(FeedScope.feed(feedUri, { branches: 'all' })))
+        .run();
+      expect(all.map((item) => item.name).sort()).toEqual(['A1', 'B1']);
+      await expect.poll(() => query.results.map((item) => item.name)).toEqual(['A1']);
+      expect(seen.has('B1')).toBe(false);
+      unsubscribe();
+    });
+
+    // F-4.1: an edit of a fork base made while the fork is in flight continues its branch, never the root.
+    test('an edit of a fork base during its send lands on the branch', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      let gate: Trigger | undefined;
+      const realHandlers = peer.host.feedService;
+      db._setFeedService(
+        await makeFeedClient({
+          ...realHandlers,
+          'FeedService.insertIntoFeed': (...args: Parameters<(typeof realHandlers)['FeedService.insertIntoFeed']>) => {
+            const held = gate;
+            return held === undefined
+              ? realHandlers['FeedService.insertIntoFeed'](...args)
+              : Rpc.wrapMap(realHandlers['FeedService.insertIntoFeed'](...args), (insert) =>
+                  Effect.promise(() => held.wait()).pipe(Effect.andThen(insert)),
+                );
+          },
+        }),
+      );
+      const feed = db.add(Feed.make({ name: 'held-fork' }));
+      const a1 = Obj.make(TestSchema.Person, { name: 'A1' });
+      await db.appendToFeed(feed, [a1]);
+      await db.flush();
+
+      gate = new Trigger();
+      const b1 = Obj.make(TestSchema.Person, { name: 'B1' });
+      const forked = db.forkFeed(feed, b1, { at: a1 });
+      Obj.update(b1, (b1) => {
+        b1.name = 'B1 v2';
+      });
+      const release = gate;
+      gate = undefined;
+      release.wake();
+      const branch = await forked;
+      await db.flush();
+
+      const feedUri = Feed.getFeedUri(feed)?.toString() ?? '';
+      const read = async (branches?: ReadonlyArray<Feed.BranchId | null>) =>
+        (await db.query(Query.select(Filter.type(TestSchema.Person)).from(FeedScope.feed(feedUri, { branches }))).run())
+          .map((item) => item.name)
+          .sort();
+      expect(await read()).toEqual(['A1']);
+      expect(await read([branch])).toEqual(['B1 v2']);
     });
 
     test('subscription deltas reposition and remove blocks without re-reading them', async ({ expect }) => {
@@ -617,6 +741,34 @@ describe('Feed', () => {
 
       await expect(db.flush()).rejects.toThrow('disposed with 1 unsent writes');
       await db.flush();
+    });
+
+    test('a write made while an append notifies is stored after that append', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+
+      // A live feed query hears the append inside it, and its subscriber answers with a second write.
+      const query = db.query(Query.select(Filter.type(TestSchema.Person)).from(feed));
+      onTestFinished(
+        query.subscribe(() => {
+          if (query.results.some((person) => person.id === john.id) && john.name === 'john') {
+            Obj.update(john, (john) => {
+              john.name = 'john v2';
+            });
+            void db.appendToFeed(feed, [john]);
+          }
+        }),
+      );
+      await db.appendToFeed(feed, [john]);
+      await db.flush();
+      await db.evictFeedHandle(feed);
+
+      const feedUri = Feed.getFeedUri(feed);
+      invariant(feedUri, 'Expected the feed to have a URI once added to the database.');
+      const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
+      expect(results.map((person) => (person as TestSchema.Person).name)).toEqual(['john v2']);
     });
 
     test('disposing the feed handle flushes a same-tick update instead of dropping it', async ({ expect }) => {

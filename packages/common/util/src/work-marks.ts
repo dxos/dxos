@@ -70,10 +70,33 @@ export const absoluteNow = (): number => performance.timeOrigin + performance.no
  */
 export const markWork = (name: string, detail?: string): void => {
   // Wrapped in an object: workerd's `performance.mark` rejects a primitive `detail`.
+  record(name, detail === undefined ? undefined : { text: detail });
+};
+
+/** Marks written by {@link markMilestone} carry this after {@link WORK_MARK_PREFIX}. */
+export const MILESTONE_PREFIX = 'milestone.';
+
+/**
+ * Records a phase of startup beginning or ending (`worker.started`, `network.connected`,
+ * `indexing.caught-up`): a {@link markWork} mark the DevTools Performance panel also draws as a
+ * vertical line across every track, so a recording shows where each phase sits against the work.
+ */
+export const markMilestone = (name: string, detail?: string): void => {
+  record(MILESTONE_PREFIX + name, {
+    ...(detail !== undefined && { text: detail }),
+    devtools: {
+      dataType: 'marker',
+      color: 'primary',
+      tooltipText: detail === undefined ? name : `${name}: ${detail}`,
+    },
+  });
+};
+
+const record = (name: string, detail: Record<string, unknown> | undefined): void => {
   if (detail === undefined) {
     performance.mark(WORK_MARK_PREFIX + name);
   } else {
-    performance.mark(WORK_MARK_PREFIX + name, { detail: { text: detail } });
+    performance.mark(WORK_MARK_PREFIX + name, { detail });
   }
   if (++written > CAPACITY * 2) {
     trim();

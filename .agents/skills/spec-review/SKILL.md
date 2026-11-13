@@ -3,11 +3,11 @@ name: spec-review
 description: >-
   Review how far the code meets a `.mdl` spec (`PLUGIN.mdl`, `SPEC.mdl`) and write the result as a
   `<SPEC>.review.mdl` beside it: one `verdict` per feature requirement, type, op, component and
-  service, each with a status (done, untested, partial, diverged, missing), a note, and `github:`
-  evidence keys that point at the code. Composer's spec viewer reads the latest review and marks
-  each item in the margin and on the definition graph. Use when asked to review a spec against its
-  code, check spec compliance, find what a spec promises that the code does not do, or refresh a
-  spec's review. For rule-driven code review use `agentic-review`; to change the spec itself use `mdl`.
+  service, and per binding, actor, route, keyspace and table of a worker spec, each with a status
+  (done, untested, partial, diverged, missing), a note, and `github:` evidence keys that point at the
+  code. Composer's spec viewer reads the latest review and marks each item in the margin and on the
+  definition graph. Use when asked to review a spec against its code, check spec compliance, find
+  what a spec promises that the code does not do, or refresh a spec's review. For rule-driven code review use `agentic-review`; to change the spec itself use `mdl`.
 ---
 
 # Spec review
@@ -28,8 +28,23 @@ decides whether the code or the spec changes.
    pnpm deus review items <path/to/PLUGIN.mdl>
    ```
 
+   The first column is the id the verdict must use. A `binding`, `actor`, `route`, `keyspace` or
+   `table` (the worker and SQL dialects) is named `<kind>:<id>`, as the spec cites it
+   (`verdict binding:DATA_SERVICE`, `verdict table:feeds`), since a worker's tables and actors often
+   share names with its types.
+
 2. **Map the package.** Read the package's `src/` layout, its `index.ts` exports, capabilities,
    operations and containers before judging anything. Most items map to one or two files.
+
+   For a `plugin` block, judge its `dependsOn` against `dx.config.ts`'s `plugin.dependsOn` beside the spec;
+   a mismatch is `diverged`, and `deus review check` errors if the verdict says otherwise.
+
+   For a worker spec, judge each block against what declares it: a `binding` against the worker's
+   `Env` type and its wrangler configuration (`type`, `envs`, `reads`); an `actor` against its Durable
+   Object class (key, storage, alarm, and each `op` against the method's signature); a `route` against
+   the router (`method`, `path`, mount prefix, and the `auth` the handler actually applies); a
+   `keyspace` against the code that writes each key; a `table` against its migrations (column types,
+   nullability, defaults, keys and indexes). Cite the evidence in the same `github:` form.
 
 3. **Judge each item against the code, not against names.** Find where the behaviour lives and read
    it. A symbol with the right name that does something else is `diverged`, not `done`.
@@ -64,7 +79,25 @@ decides whether the code or the spec changes.
    of its steps, `diverged` when the test runs something else, `missing` when nothing runs it (a manual
    QA run does not count). `untested` does not apply. `tests:` names the test files and is required
    unless the status is `missing`; `evidence:` may name the code the test drives. The viewer shows
-   exercised, partly exercised or not exercised, with a chip per test file.
+   tested, partly tested or not tested, with a chip per test file.
+
+   When an item is implemented **in more than one place**, add a `walkthrough:` of 1 to 5 steps
+   in reading order, each `- <one sentence>. github:<key>` naming the declaration it describes:
+
+   ```mdl
+   verdict importSpec: Links a checkout file to a new Spec.
+     status: done
+     evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ImportSpec, github:dxos/dxos/packages/plugins/plugin-code/src/operations/import-spec.ts]
+     walkthrough:
+       - The operation declares its key input and the Spec it returns. github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ImportSpec
+       - The handler resolves the checkout, reads the file and creates the Spec. github:dxos/dxos/packages/plugins/plugin-code/src/operations/import-spec.ts
+   ```
+
+   Say what each piece does for this item, not how it works line by line. A `type` or anything with
+   one implementation gets no walkthrough: hovering its code chip already shows the declaration. An
+   `op` walks its declaration, then each handler; a `feat` or `req` walks the pieces in the order a
+   request passes through them. The viewer shows the steps in the item's Review card and on hover
+   of its status chip.
 
 5. **Write the review** to the spec's directory as `<SPEC>.review.mdl` (`PLUGIN.mdl` →
    `PLUGIN.review.mdl`), replacing any previous one. Frontmatter:
@@ -73,13 +106,13 @@ decides whether the code or the spec changes.
    ---
    spec: github:dxos/dxos/packages/plugins/plugin-x/PLUGIN.mdl
    commit: <git rev-parse HEAD>
-   date: <YYYY-MM-DD>
+   date: <YYYY-MM-DDTHH:MMZ, the UTC time now>
    by: agent:claude-code
    ---
    ```
 
    Then `# Review: <spec name>`, a summary paragraph (what is solid, what is missing, the biggest
-   divergence), the `## Extensions` table declaring `verdict` (`org.dxos.mdl.verdict@1.0`), and
+   divergence; the Review view counts the statuses, so leave the counts out), the `## Extensions` table declaring `verdict` (`org.dxos.mdl.verdict@1.0`), and
    `## Verdicts` with one fenced `mdl` block per item, in spec order:
 
    ````markdown

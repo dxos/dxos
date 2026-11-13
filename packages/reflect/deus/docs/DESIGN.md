@@ -453,6 +453,10 @@ decision D-2: Bounds grow to the major grid. Fills in [D-1].
   restates what they said: references resolved, context included, wording fixed, but no
   information added or removed. What the agent filled in is
   in separate `agent:` entries. Approval of those entries is a later `user:` entry.
+- **Open questions live in the log too.** A `question Q-n` records a choice nobody has made yet.
+  Answering it appends a `decision` with `answers: Q-n`, decided by whoever answered, so the
+  question stays append-only and "answered" is derived. Composer lists open questions above the
+  decisions and answers them in place.
 
 ## Domain Dialects
 

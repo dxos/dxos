@@ -19,6 +19,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -156,7 +157,7 @@ op scrollToAnchor
   desc: Programmatically scrolls and highlights a cell range in an active grid instance.
   input:
     subject: string              # attendable ID of the target sheet
-    cursor: string               # A1-notation cell or range
+    cursor: string               # comment anchor (see [F-7.3])
     ref?: any                    # active refs for highlight overlay
   output: void
   effects: [ui:scroll]
@@ -175,7 +176,9 @@ op create
   output: { id: string }         # DXN of the created sheet
   effects: [echo:write]
   requires: [Database.Service]
+```
 
+```mdl
 op getRange
   key: org.dxos.operation.sheet.getRange
   desc: Reads cell values from a sheet as a 2D array. Omit `range` for the entire occupied area.
@@ -185,7 +188,9 @@ op getRange
   output: { values: any[][], range: string }
   effects: [echo:read]
   requires: [Database.Service]
+```
 
+```mdl
 op setRange
   key: org.dxos.operation.sheet.setRange
   desc: Sets multiple cell values in a sheet at once, keyed by A1 address.
@@ -251,6 +256,9 @@ feat F-5: Collaborative Editing
     then: the local grid re-renders with the updated value without full reload
 
   req F-5.3: ComputeGraphRegistry manages per-space HyperFormula instances so all peers share the same formula graph.
+  req F-5.4:
+    when: another member selects a cell or range in a sheet the reader has open
+    then: the reader sees that range outlined in the member's hue with their name, until the member selects elsewhere or closes the sheet
 ```
 
 ```mdl
@@ -269,7 +277,30 @@ feat F-7: Anchor Navigation
     when: op:scrollToAnchor is invoked with a sheet attendable ID and cursor
     then: the corresponding SheetArticle scrolls to the target cell and applies the active-ref highlight
 
-  req F-7.2: AnchorSort contributes a sort comparator so sheet anchors appear in canonical order in navigation menus.
+  req F-7.2: AnchorSort contributes a sort comparator so sheet anchors appear in canonical order in navigation menus: by the range's top-left cell, row first, with anchors that no longer resolve last.
+
+  req F-7.3:
+    when: a comment is added on a selected cell range
+    then:
+      - its anchor names the range's first and last cells by row and column id (`colId@rowId:colId@rowId`), so the thread stays on those cells as rows and columns are inserted, deleted or moved
+      - the anchor no longer resolves once a row or column it names is deleted
+      - anchors in A1 notation or `col,row,col,row` resolve to those positions in the current sheet
+
+  req F-7.4:
+    when: the reader moves the cell cursor into a commented range
+    then: that range's thread becomes the current comment
+```
+
+```mdl
+feat F-8: Chart Types
+
+  req F-8.1: Every chart type the Charts companion draws is a `SheetCapabilities.ChartType` contribution: the type a chart stores, a label, an icon and a component that draws the chart's range. The sheet contributes bar, pie, XY, scatter, heatmap, radar, map and timeline this way, and another plugin adds one the same way [D-5].
+  req F-8.2:
+    when: the reader edits a chart
+    then: the chart-type select lists every contributed type by its label and icon
+  req F-8.3:
+    when: a chart's type is not contributed by any enabled plugin
+    then: the chart shows a message naming the type in place of the chart, and keeps its settings
 ```
 
 ## Acceptance
@@ -326,7 +357,7 @@ scenario T-5: Real-time collaboration
 ```mdl
 scenario T-6: Scroll to anchor
   given: a SheetArticle is mounted with attendableId "sheet-1"
-  when: op:scrollToAnchor runs with subject="sheet-1", cursor="E10"
+  when: op:scrollToAnchor runs with subject="sheet-1" and the anchor of a comment on E10
   then:
     - the grid scrolls so that E10 is visible
     - E10 is highlighted via activeRefs
@@ -450,7 +481,9 @@ test QA-3: Chart a sales report in the Charts companion
     - name: Switch back to the bags sold chart
       do: Click "Bags sold by blend".
       expect: the bar chart returns and A1:D7 is selected in the sheet
+```
 
+```mdl
 test QA-4: Showcase clip
   desc: |
     The 10s showcase clip: Fill a sheet with values and formulas. Recorded light at 60 fps with no ident, captions or
@@ -468,6 +501,91 @@ test QA-4: Showcase clip
     - name: Enter values and formulas
       do: Type four rows of a label, a value and a formula.
       expect: the formulas compute as each row is entered
+```
+
+```mdl
+test QA-5: See a collaborator's selection
+  desc: Two members open the same sheet; each sees the other's selected range, and it goes when the other closes the sheet.
+  actors: human
+  covers: [F-5.4]
+  status: unverified
+  automated:
+    - composer-e2e:grid-selection.spec.ts#Grid selections › host and guest see each other's sheet selections until one leaves
+  given:
+    - two identities, host and guest, in two browsers
+    - space: a space of the host's with a Sheet in it, shared with the guest
+  steps:
+    - name: Both open the sheet
+      do: As host and as guest, open the sheet.
+      expect: both see the same empty grid
+    - name: The host selects a range
+      do: As host, click A2 and shift-click B3.
+      expect: the guest sees A2:B3 outlined in the host's colour, with the host's name above it
+    - name: The guest selects a cell
+      do: As guest, click B5.
+      expect: the host sees B5 outlined in the guest's colour, with the guest's name
+    - name: The guest leaves
+      do: As guest, close the sheet's plank.
+      expect: the guest's outline disappears from the host's grid
+```
+
+## Changelog
+
+```mdl
+decision D-1: A sheet comment anchors to its cells' row and column ids, not their positions, so it follows its cells when rows or columns are inserted, deleted or moved; the sheet's comment config builds the anchor from its A1 selection.
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.3, F-7.4, op:scrollToAnchor]
+  why: Positional anchors pointed at whatever cell moved into place, and the creation path, cell focus and scroll-to-anchor each parsed a different format, so none of them matched the stored A1 anchor.
+  rejected:
+    - Publish the sheet's selection as an index range: the range list, charts companion and assistant read it in A1 notation.
+```
+
+```mdl
+decision D-2: Anchors stored before [D-1], in A1 notation or `col,row,col,row`, are read as positions on every read and never rewritten. Fills in [D-1].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.3]
+  why: Anchors live on `AnchoredTo` relations the sheet does not own, so a sheet migration cannot reach them, and their position is all they ever recorded.
+  rejected:
+    - Rewrite legacy anchors to index ranges when the sheet opens: a read would write to every peer's copy of the comments.
+```
+
+```mdl
+decision D-3: Collaborators' selections are published by cell id on a `@dxos/protocols/Awareness` channel of their own, `awareness.selection.<id>`, and drawn in each member's hue with their name, the name and hue their Markdown cursor carries.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: Ids keep a selection on its cells when a peer inserts or moves rows; the shared channel brings sessions, heartbeats and expiry, and a channel id of its own keeps grid selections and text cursors on one object apart.
+  rejected:
+    - Publish A1 positions: they point at whatever cell moved into place on the other side.
+    - Reuse the Markdown cursors' `awareness.<id>` channel with cell ids written as JSON into the caret's anchor and head strings: the editor and the grid on one object read each other's values.
+```
+
+```mdl
+decision D-4: The published selection is what the member's grid shows, kept by cell id: focusing a header clears it, a row or column change moves the grid's highlight with it, and a selection whose row or column is gone keeps naming it, so the sheet's cursor is empty until the next click. Fills in [D-3].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: A header names no cell, so keeping the last one showed peers a cell the member had left; a deleted row cannot be told apart from one a filter hides, so renaming the selection to the row now in its place published records the member never chose.
+  rejected:
+    - Keep the last cell selected while a header has focus: peers keep seeing a cell the member left.
+    - Rename the selection to the row now at its position when its row is gone: a filter makes that a record the member never chose.
+```
+
+```mdl
+decision D-5: A chart's `type` is a string naming a `SheetCapabilities.ChartType` contribution, and the companion draws every chart through its type's component, which gets the chart's settings and its range as `PlotData` with the header row split off. The sheet's own types are contributions like any other plugin's; there is no built-in list. A new chart starts as the first contributed type. Contributed types add no settings of their own to the chart's form.
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [F-8.1, F-8.2, F-8.3]
+  why: One path for every chart type, with no split between a fixed list the companion draws itself and the types plugins add.
+  rejected:
+    - Built-in types as a literal list beside contributed ones: two ways to name and draw a chart type.
+    - A Sankey panel of its own beside every sheet: it leaves the chart out of the companion's list and out of documents and slides, which embed `Sheet.Chart` objects.
 ```
 
 ---

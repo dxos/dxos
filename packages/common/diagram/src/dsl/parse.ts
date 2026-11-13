@@ -11,9 +11,12 @@
 
 import type { SyntaxNode } from '@lezer/common';
 
+import { Shape } from '@dxos/scene';
+
 import * as Scene from '../scene.ts';
 import * as SemanticEngine from '../semantic-engine.ts';
 import * as Semantic from '../semantic.ts';
+import * as SequenceEngine from '../sequence-engine.ts';
 import { parser } from './gen/diagram.ts';
 import {
   type AttrSpec,
@@ -24,6 +27,7 @@ import {
   type ElementKind,
   GROUP_ATTRS,
   NODE_ATTRS,
+  NOTE_ATTRS,
   OBJECT_ATTRS,
   REF_SHAPE,
 } from './vocabulary.ts';
@@ -50,11 +54,11 @@ export type ParseResult = {
 
 const ESCAPES: Record<string, string> = { n: '\n', t: '\t', r: '\r' };
 
-const unquote = (raw: string): string =>
+export const unquote = (raw: string): string =>
   raw.slice(1, -1).replace(/\\(.)/g, (_match, character: string) => ESCAPES[character] ?? character);
 
 /** Spreads a field only when it is set, so an absent option never becomes an explicit `undefined`. */
-const optional = <K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } => {
+export const optional = <K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } => {
   const result: { [P in K]?: V } = {};
   if (value !== undefined) {
     result[key] = value;
@@ -77,7 +81,7 @@ const kindOf = (shapeName: string, keyword: string | undefined): ElementKind | u
   return ELEMENT_KINDS.find((kind) => kind === word);
 };
 
-const childrenOf = (node: SyntaxNode): SyntaxNode[] => {
+export const childrenOf = (node: SyntaxNode): SyntaxNode[] => {
   const children: SyntaxNode[] = [];
   for (let child = node.firstChild; child; child = child.nextSibling) {
     children.push(child);
@@ -134,7 +138,7 @@ export const read = (text: string): Reading => {
   // Error recovery can leave a `Point` or `Range` holding one number instead of two, so every
   // reader returns undefined rather than indexing past the end — `parse` reports problems, and a
   // reader that threw would take the whole document down with the line being typed.
-  const readPoint = (node: SyntaxNode): Scene.Point | undefined => {
+  const readPoint = (node: SyntaxNode): Shape.Point | undefined => {
     const [first, second] = childrenOf(node).filter((child) => child.name === 'Number');
     const [x, y] = [first && readNumber(first), second && readNumber(second)];
     return x !== undefined && y !== undefined ? { x, y } : undefined;
@@ -238,13 +242,13 @@ export const read = (text: string): Reading => {
 
   /** The four style fields every element shares. */
   const readStyle = (attrs: Map<string, Attr>) => ({
-    ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
-    ...optional('fill', enumAttr(attrs, 'fill', Scene.Fill.literals)),
-    ...optional('stroke', enumAttr(attrs, 'stroke', Scene.Stroke.literals)),
-    ...optional('weight', enumAttr(attrs, 'weight', Scene.Weight.literals)),
+    ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
+    ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
+    ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
+    ...optional('weight', enumAttr(attrs, 'weight', Shape.Weight.literals)),
   });
 
-  const readEndpoint = (node: SyntaxNode): { ref?: string; point?: Scene.Point } => {
+  const readEndpoint = (node: SyntaxNode): { ref?: string; point?: Shape.Point } => {
     const child = node.firstChild;
     if (!child) {
       return {};
@@ -268,13 +272,13 @@ export const read = (text: string): Reading => {
   };
 
   /** Point list with the incomplete ones dropped; the syntax error is already reported. */
-  const readPoints = (nodes: SyntaxNode[]): Scene.Point[] =>
+  const readPoints = (nodes: SyntaxNode[]): Shape.Point[] =>
     nodes.flatMap((node) => {
       const point = readPoint(node);
       return point ? [point] : [];
     });
 
-  const readElement = (node: SyntaxNode): Scene.Element | undefined => {
+  const readElement = (node: SyntaxNode): Shape.Element | undefined => {
     const shape = node.firstChild;
     if (!shape) {
       return undefined;
@@ -321,7 +325,7 @@ export const read = (text: string): Reading => {
           ...size,
           ...optional('rotation', numberAttr(attrs, 'rotation')),
           ...optional('text', text),
-          ...optional('corners', enumAttr(attrs, 'corners', Scene.Corners.literals)),
+          ...optional('corners', enumAttr(attrs, 'corners', Shape.Corners.literals)),
           ...style,
         };
       }
@@ -350,6 +354,7 @@ export const read = (text: string): Reading => {
           id,
           points: readPoints(points),
           ...optional('closed', booleanAttr(attrs, 'closed')),
+          ...optional('guide', booleanAttr(attrs, 'guide')),
           ...style,
         };
 
@@ -388,9 +393,9 @@ export const read = (text: string): Reading => {
           ...optional('start', from?.point),
           ...optional('end', to?.point),
           ...optional('text', text),
-          ...optional('head', enumAttr(attrs, 'head', Scene.ArrowHead.literals)),
-          ...optional('tail', enumAttr(attrs, 'tail', Scene.ArrowTail.literals)),
-          ...optional('relation', enumAttr(attrs, 'relation', Scene.Relation.literals)),
+          ...optional('head', enumAttr(attrs, 'head', Shape.ArrowHead.literals)),
+          ...optional('tail', enumAttr(attrs, 'tail', Shape.ArrowTail.literals)),
+          ...optional('relation', enumAttr(attrs, 'relation', Shape.Relation.literals)),
           ...style,
         };
       }
@@ -412,7 +417,7 @@ export const read = (text: string): Reading => {
     }
   };
 
-  const readElements = (body: SyntaxNode | null, objectId: string): Scene.Element[] =>
+  const readElements = (body: SyntaxNode | null, objectId: string): Shape.Element[] =>
     body
       ? childrenOf(body)
           .filter((child) => child.name === 'Element')
@@ -545,10 +550,11 @@ export const read = (text: string): Reading => {
       ...optional('group', group),
       ...optional('pin', pin),
       ...optional('ref', stringAttr(attrs, 'ref')),
-      ...optional('shape', enumAttr(attrs, 'shape', Scene.BoxKind.literals)),
-      ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
-      ...optional('fill', enumAttr(attrs, 'fill', Scene.Fill.literals)),
-      ...optional('stroke', enumAttr(attrs, 'stroke', Scene.Stroke.literals)),
+      ...optional('role', enumAttr(attrs, 'role', Semantic.ROLES)),
+      ...optional('shape', enumAttr(attrs, 'shape', Shape.BoxKind.literals)),
+      ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
+      ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
+      ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
     });
     ranges.set(id, rangeOf(statement));
   };
@@ -597,6 +603,11 @@ export const read = (text: string): Reading => {
   let statementIndex = 0;
   const pendingBuses: { edges: Semantic.Edge[]; name: string; node: SyntaxNode; label?: string; named: boolean }[] = [];
 
+  /** Where the messages, notes and fragments being read go; a fragment section swaps in its own. */
+  let steps: Semantic.Step[] = diagram.timeline;
+  /** Ranges of statements only a sequence diagram reads, checked once the kind is known. */
+  const sequenceOnly: { range: Range; what: string }[] = [];
+
   const readEdge = (statement: SyntaxNode): void => {
     statementIndex++;
     const lists = childrenOf(statement).filter((child) => child.name === 'EndList');
@@ -612,11 +623,15 @@ export const read = (text: string): Reading => {
     const op = opNode ? slice(opNode) : '->';
     const word = opNode?.getChild('RelationWord');
     const relation = word && Object.hasOwn(Semantic.RELATIONSHIPS, op) ? Semantic.RELATIONSHIPS[op] : undefined;
-    if (word && !relation) {
+    const message = word && Object.hasOwn(Semantic.MESSAGES, op) ? Semantic.MESSAGES[op] : undefined;
+    if (word && !relation && !message) {
       report(
         word,
-        `Unknown relationship "${op}"; use ->, <->, -- or one of: ${Object.keys(Semantic.RELATIONSHIPS).join(', ')}.`,
+        `Unknown relationship "${op}"; use ->, <->, -- or one of: ${[...Object.keys(Semantic.RELATIONSHIPS), ...Object.keys(Semantic.MESSAGES)].join(', ')}.`,
       );
+    }
+    if (word && message) {
+      sequenceOnly.push({ range: rangeOf(word), what: `"${op}"` });
     }
     const label = statement.getChild('Label');
     const text = label ? unquote(slice(label)) : undefined;
@@ -628,10 +643,10 @@ export const read = (text: string): Reading => {
     const busName = busNode?.getChild('Id');
     const style: Semantic.EdgeStyle = {
       ...optional('relation', relation),
-      ...optional('head', op === '--' ? 'none' : enumAttr(attrs, 'head', Scene.ArrowHead.literals)),
-      ...optional('tail', enumAttr(attrs, 'tail', Scene.ArrowTail.literals)),
-      ...optional('stroke', enumAttr(attrs, 'stroke', Scene.Stroke.literals)),
-      ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
+      ...optional('head', op === '--' ? 'none' : enumAttr(attrs, 'head', Shape.ArrowHead.literals)),
+      ...optional('tail', enumAttr(attrs, 'tail', Shape.ArrowTail.literals)),
+      ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
+      ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
     };
     const fan = sources.length > 1 || targets.length > 1;
     if (busNode && sources.length > 1 && targets.length > 1) {
@@ -656,10 +671,12 @@ export const read = (text: string): Reading => {
           via: position === 0 ? via : [...via].reverse(),
           range: rangeOf(statement),
           ...style,
+          ...optional('message', message),
           // A trunk carries the statement's label; the reverse of a two-way edge repeats nothing.
           ...optional('label', busTrunk || position > 0 ? undefined : text),
         };
         diagram.edges.push(edge);
+        steps.push({ kind: 'message', edge: edge.id });
         made.push(edge);
         ranges.set(`edges/${edge.id}`, rangeOf(statement));
         ranges.set(`edges/${edge.id}-path`, rangeOf(statement));
@@ -678,6 +695,95 @@ export const read = (text: string): Reading => {
         named: busName !== null,
         ...optional('label', busTrunk ? text : undefined),
       });
+    }
+  };
+
+  let noteIndex = 0;
+  const readNote = (statement: SyntaxNode): void => {
+    const list = statement.getChild('EndList');
+    const label = statement.getChild('Label');
+    if (!list || !label) {
+      return;
+    }
+    sequenceOnly.push({ range: rangeOf(statement), what: 'A note' });
+    const ends = childrenOf(list)
+      .filter((child) => child.name === 'EdgeEnd')
+      .flatMap((end) => readEnd(end) ?? []);
+    const sides = ends.flatMap((end) => end.sides ?? []);
+    const side = sides[0];
+    if (sides.length > 1 || (side !== undefined && side !== 'left' && side !== 'right')) {
+      report(
+        list,
+        'A note sits beside one participant (`note A:left` or `note A:right`) or over several (`note A, B`).',
+      );
+    } else if (side !== undefined && ends.length > 1) {
+      report(list, 'A note over several participants takes no side.');
+    }
+    const attrs = readAttrs(attributesOf(statement), NOTE_ATTRS, 'note');
+    steps.push({
+      kind: 'note',
+      note: {
+        id: `note-${noteIndex++}`,
+        over: ends.map((end) => end.node),
+        side: ends.length > 1 ? 'over' : side === 'left' ? 'left' : 'right',
+        text: unquote(slice(label)),
+        range: rangeOf(statement),
+        ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
+      },
+    });
+  };
+
+  let fragmentIndex = 0;
+  const readFragment = (statement: SyntaxNode): void => {
+    const kindNode = statement.getChild('FragmentKind');
+    if (!kindNode) {
+      return;
+    }
+    sequenceOnly.push({ range: rangeOf(statement), what: 'A fragment' });
+    const word = slice(kindNode);
+    const kind = Semantic.FRAGMENT_KINDS.find((candidate) => candidate === word);
+    if (!kind) {
+      report(kindNode, `Unknown fragment "${word}"; use one of: ${Semantic.FRAGMENT_KINDS.join(', ')}.`);
+    }
+    // Children alternate: [Label] FragmentBody, then Else [Label] FragmentBody per further section.
+    const sections: Semantic.Section[] = [];
+    let guard: string | undefined;
+    let elseNode: SyntaxNode | undefined;
+    for (const child of childrenOf(statement)) {
+      if (child.name === 'Label') {
+        guard = unquote(slice(child));
+      } else if (child.name === 'Else') {
+        elseNode = child;
+      } else if (child.name === 'FragmentBody') {
+        const outer = steps;
+        const section: Semantic.Section = { steps: [], range: rangeOf(child), ...optional('guard', guard) };
+        steps = section.steps;
+        for (const entry of childrenOf(child)) {
+          readStep(entry);
+        }
+        steps = outer;
+        sections.push(section);
+        guard = undefined;
+      }
+    }
+    if (elseNode && kind !== 'alt' && kind !== 'par') {
+      report(elseNode, `Only alt and par take \`else\`; a ${word} fragment has one section.`);
+    }
+    if (kind) {
+      steps.push({
+        kind: 'fragment',
+        fragment: { id: `fragment-${fragmentIndex++}`, kind, sections, range: rangeOf(statement) },
+      });
+    }
+  };
+
+  const readStep = (statement: SyntaxNode): void => {
+    if (statement.name === 'EdgeDecl') {
+      readEdge(statement);
+    } else if (statement.name === 'NoteDecl') {
+      readNote(statement);
+    } else if (statement.name === 'FragmentDecl') {
+      readFragment(statement);
     }
   };
 
@@ -713,7 +819,7 @@ export const read = (text: string): Reading => {
         ...optional('gap', gap),
         ...optional('maxWidth', maxWidth),
         ...optional('compact', compact),
-        ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
+        ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
       });
       ranges.set(id, rangeOf(statement));
     }
@@ -734,6 +840,10 @@ export const read = (text: string): Reading => {
     const point = statement.getChild('Origin')?.getChild('Point');
     const origin = point && readPoint(point);
     const flow = enumAttr(attrs, 'flow', Semantic.FLOWS);
+    const kind = enumAttr(attrs, 'kind', Semantic.DIAGRAM_KINDS);
+    if (kind) {
+      diagram.kind = kind;
+    }
     const grid = sizeAttr(attrs, 'grid');
     const box = sizeAttr(attrs, 'box');
     const aspect = ratioAttr(attrs, 'aspect');
@@ -756,7 +866,53 @@ export const read = (text: string): Reading => {
   };
 
   /** Drops what names nothing, then forms the buses; run once every statement is read. */
+  /** Statements and words one diagram kind reads and the others do not. */
+  const checkKind = (): void => {
+    const { kind } = diagram;
+    if (kind !== 'sequence') {
+      for (const { range, what } of sequenceOnly) {
+        report(range, `${what} belongs in a sequence diagram; declare \`diagram kind=sequence\`.`);
+      }
+    }
+    for (const node of diagram.nodes) {
+      const { role } = node;
+      if (role && !Semantic.ROLES_BY_KIND[kind].includes(role)) {
+        const owner = Semantic.DIAGRAM_KINDS.find((entry) => Semantic.ROLES_BY_KIND[entry].includes(role));
+        report(node.range, `role=${role} belongs in a ${owner} diagram; declare \`diagram kind=${owner}\`.`);
+      }
+    }
+    if (kind === 'sequence') {
+      // Participants are columns in declaration order and messages rows in source order, so the
+      // grid's placement and routing hints have nothing to steer.
+      const ignored = (range: Range, what: string) =>
+        report(range, `${what} is ignored in a sequence diagram: the order of statements is the layout.`, 'warning');
+      for (const node of diagram.nodes) {
+        if (node.pin) {
+          ignored(node.pin.range, 'A pin');
+        }
+        node.relations.forEach((relation) => ignored(relation.range, 'A placement relation'));
+      }
+      for (const group of diagram.groups) {
+        group.relations.forEach((relation) => ignored(relation.range, 'A placement relation'));
+      }
+      for (const edge of diagram.edges) {
+        if (edge.via.length > 0) {
+          ignored(edge.via[0].range, 'A waypoint');
+        } else if (edge.from.sides || edge.to.sides) {
+          ignored(edge.from.sides ? edge.from.range : edge.to.range, 'A side');
+        } else if (edge.relation) {
+          ignored(edge.range, `The relationship "${edge.relation}"`);
+        }
+      }
+      for (const entry of pendingBuses) {
+        ignored(rangeOf(entry.node), 'A bus');
+      }
+      pendingBuses.length = 0;
+    }
+  };
+
   const resolveSemantic = (): void => {
+    checkKind();
     // The layout sizes a frame from its members and fails on an empty one, which is what redeclaring
     // existing nodes inside a new group leaves behind.
     const occupied = new Set(diagram.nodes.flatMap((node) => (node.group === undefined ? [] : [node.group])));
@@ -776,6 +932,18 @@ export const read = (text: string): Reading => {
       return true;
     };
     diagram.edges = diagram.edges.filter((edge) => [edge.from, edge.to].map(known).every(Boolean));
+    const knownSteps = (steps: Semantic.Step[]): Semantic.Step[] =>
+      steps.filter((step) => {
+        if (step.kind === 'fragment') {
+          step.fragment.sections.forEach((section) => (section.steps = knownSteps(section.steps)));
+        } else if (step.kind === 'note') {
+          const unknown = step.note.over.filter((id) => !nodeIds.has(id));
+          unknown.forEach((id) => report(step.note.range, `Unknown node "${id}"; declare it with \`node ${id}\`.`));
+          return unknown.length === 0;
+        }
+        return true;
+      });
+    diagram.timeline = knownSteps(diagram.timeline);
     const checkTargets = (owner: string, relations: Semantic.Relation[], ids: Set<string>, kind: string) =>
       relations.filter((relation) => {
         if (relation.target === owner) {
@@ -947,6 +1115,12 @@ export const read = (text: string): Reading => {
         semantic = true;
         readEdge(statement);
         break;
+
+      case 'NoteDecl':
+      case 'FragmentDecl':
+        semantic = true;
+        readStep(statement);
+        break;
     }
   }
 
@@ -976,7 +1150,10 @@ export const read = (text: string): Reading => {
 };
 
 /** A reading with its semantic diagram laid out: the layout's commands first, then the scene statements. */
-export const withLayout = (reading: Reading, solution?: SemanticEngine.Solution): ParseResult => ({
+export const withLayout = (
+  reading: Reading,
+  solution?: Pick<SemanticEngine.Solution, 'commands' | 'issues'>,
+): ParseResult => ({
   commands: solution ? [...solution.commands, ...reading.commands] : reading.commands,
   problems: [...reading.problems, ...(solution?.issues ?? [])],
   ranges: reading.ranges,
@@ -988,7 +1165,11 @@ export const withLayout = (reading: Reading, solution?: SemanticEngine.Solution)
  */
 export const parse = (text: string): ParseResult => {
   const reading = read(text);
-  return withLayout(reading, reading.diagram && SemanticEngine.solve(reading.diagram));
+  const { diagram } = reading;
+  return withLayout(
+    reading,
+    diagram && (diagram.kind === 'sequence' ? SequenceEngine.solve(diagram) : SemanticEngine.solve(diagram)),
+  );
 };
 
 /** Applies commands in order, the same semantics `Scene.Command` documents. */

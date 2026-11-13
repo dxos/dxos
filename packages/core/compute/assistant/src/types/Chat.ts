@@ -32,8 +32,14 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      */
     remote: Schema.Boolean.pipe(Schema.annotate({ title: 'Remote' }), Schema.optional),
 
-    /** Message feed, owned by the chat so `SetParent` cascades it. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
+    /**
+     * Message feed. The chat owns a feed nothing else owns, so `SetParent` cascades it; a feed another object
+     * already owns (a comment thread's) stays with that owner while the chat runs on it.
+     */
+    feed: Ref.Ref(Feed.Feed).pipe(
+      Annotation.SetParent.set({ override: false }),
+      Annotation.FormInputAnnotation.set(false),
+    ),
 
     /**
      * Instructions steering this conversation, rendered into the system prompt at request time.
@@ -104,6 +110,15 @@ export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unkn
     }
   }
   Obj.setParent(chat, subject);
+};
+
+/** The subject a companion chat accompanies: its ECHO parent, when that names the chat in {@link CompanionChatAnnotation}. */
+export const getCompanionSubject = (chat: Chat): Obj.Unknown | undefined => {
+  const subject = Obj.getParent(chat);
+  const chats = subject
+    ? Annotation.get(subject, CompanionChatAnnotation).pipe(Option.getOrElse((): readonly Ref.Ref<Chat>[] => []))
+    : [];
+  return chats.some((ref) => ref.uri === Ref.make(chat).uri) ? subject : undefined;
 };
 
 /**

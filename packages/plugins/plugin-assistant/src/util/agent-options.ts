@@ -21,12 +21,14 @@ export type AgentOption = {
   description?: string;
   placements: AgentPlacement[];
   ownModel: boolean;
+  /** What the agent lets a chat choose; only for an `ownModel` agent. */
+  choices?: AssistantCapabilities.AgentChoices;
 };
 
 export type AgentOptionsProps = {
   agents: readonly Pick<
     AssistantCapabilities.Agent,
-    'id' | 'label' | 'icon' | 'locations' | 'variantOf' | 'ownModel'
+    'id' | 'label' | 'icon' | 'locations' | 'variantOf' | 'ownModel' | 'choices'
   >[];
   /** Availability of each agent, by index into `agents`. */
   availability: readonly AssistantCapabilities.AgentAvailability[];
@@ -36,6 +38,11 @@ export type AgentOptionsProps = {
 
 /** Reason shown for an agent a chat names that no plugin registers on this device. */
 export const NOT_INSTALLED = 'not installed here';
+
+const mergeChoices = (
+  base: AssistantCapabilities.AgentChoices | undefined,
+  preferred: AssistantCapabilities.AgentChoices | undefined,
+): AssistantCapabilities.AgentChoices | undefined => (base || preferred ? { ...base, ...preferred } : undefined);
 
 const DEFAULT_LOCATIONS: readonly AssistantCapabilities.AgentLocation[] = ['local'];
 
@@ -53,8 +60,12 @@ export const agentOptions = ({ agents, availability, current }: AgentOptionsProp
     const existing = options.get(key);
     if (existing) {
       existing.placements.push(...placements);
+      // The registration that is not a variant names the agent, and its choices win where both offer one.
       if (agent.variantOf === undefined) {
         Object.assign(existing, { label: agent.label, icon: agent.icon });
+        existing.choices = mergeChoices(existing.choices, agent.choices);
+      } else {
+        existing.choices = mergeChoices(agent.choices, existing.choices);
       }
     } else {
       options.set(key, {
@@ -64,6 +75,7 @@ export const agentOptions = ({ agents, availability, current }: AgentOptionsProp
         disabled: false,
         placements,
         ownModel: agent.ownModel ?? false,
+        ...(agent.choices && { choices: agent.choices }),
       });
     }
   });

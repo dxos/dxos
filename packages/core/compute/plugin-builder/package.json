@@ -1,0 +1,53 @@
+{
+  "name": "@dxos/plugin-builder",
+  "version": "0.16.0",
+  "private": true,
+  "description": "Builds and checks Composer plugin bundles for EDGE.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    }
+  },
+  "bin": {
+    "check-bundle": "dist/lib/bin/check-bundle.mjs",
+    "check-release": "dist/lib/bin/check-release.mjs",
+    "publish-release": "dist/lib/bin/publish-release.mjs"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {},
+  "dependencies": {
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/edge-compute": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/plugin-host-cloudflare": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "effect": "catalog:",
+    "miniflare": "catalog:",
+    "oxc-parser": "catalog:",
+    "vite": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/context": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

@@ -129,6 +129,7 @@ export interface IdentityServicePromise {
     options?: RequestOptions,
   ) => Promise<Presentation>;
   createAuthCredential: (request: void, options?: RequestOptions) => Promise<Credential>;
+  migrateHaloRoot: (request: void, options?: RequestOptions) => Promise<RpcIdentityService.MigrateHaloRootResponse>;
 }
 
 export interface InvitationsServicePromise {
@@ -320,6 +321,10 @@ export interface SpacesServicePromise {
   writeCredentials: (request: RpcSpacesService.WriteCredentialsRequest, options?: RequestOptions) => Promise<void>;
   queryCredentials: (request: RpcSpacesService.QueryCredentialsRequest, options?: RequestOptions) => Stream<Credential>;
   createEpoch: (request: RpcSpacesService.CreateEpochRequest, options?: RequestOptions) => Promise<CreateEpochResponse>;
+  migrateSpaceRoot: (
+    request: RpcSpacesService.MigrateSpaceRootRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcSpacesService.MigrateSpaceRootResponse>;
   exportSpace: (
     request: RpcSpacesService.ExportSpaceRequest,
     options?: RequestOptions,

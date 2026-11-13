@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { findSymbolLine } from '../CodeView/symbol.ts';
-import { parseReview, reviewAnnotations, statusOf, summarizeReview } from './review.ts';
+import { parseReview, reviewAnnotations } from '@dxos/deus/review';
+
 import { buildDefinitionGraph } from './spec-model.ts';
 
 const fence = (body: string) => ['```mdl', body, '```'].join('\n');
@@ -32,42 +32,7 @@ const REVIEW = [
   fence(['verdict Thing: Fields match.', '  status: bogus'].join('\n')),
 ].join('\n\n');
 
-describe('review', () => {
-  test('parses frontmatter and verdicts, dropping unknown statuses', ({ expect }) => {
-    const review = parseReview(REVIEW);
-    expect(review).toMatchObject({ commit: '0123456789abcdef', by: 'agent:claude-code' });
-    expect(review.verdicts).toEqual([
-      {
-        id: 'F-1.1',
-        status: 'done',
-        summary: 'The action is registered.',
-        evidence: ['github:dxos/dxos/packages/plugins/plugin-x/src/a.ts#openThing'],
-        tests: ['github:dxos/dxos/packages/plugins/plugin-x/src/a.test.ts#opens'],
-      },
-      {
-        id: 'F-1.2',
-        status: 'missing',
-        summary: 'No picker yet.',
-        evidence: [],
-        tests: [],
-        note: 'Nothing calls the dialog.',
-      },
-    ]);
-  });
-
-  test('reads evidence wrapped over several lines or as list items', ({ expect }) => {
-    const wrapped = fence(
-      ['verdict T: Ok.', '  status: done', '  evidence:', '    [github:o/r/a.ts#A,', '     github:o/r/b.ts#B]'].join(
-        '\n',
-      ),
-    );
-    const items = fence(['verdict U: Ok.', '  status: done', '  evidence:', '    - github:o/r/c.ts#C'].join('\n'));
-    expect(parseReview(`${wrapped}\n\n${items}`).verdicts.map(({ evidence }) => evidence)).toEqual([
-      ['github:o/r/a.ts#A', 'github:o/r/b.ts#B'],
-      ['github:o/r/c.ts#C'],
-    ]);
-  });
-
+describe('review annotations', () => {
   test('an item is tested by its tests or a done verdict, untested otherwise unless missing', ({ expect }) => {
     const review = parseReview(
       ['done', 'untested', 'partial', 'missing']
@@ -79,17 +44,6 @@ describe('review', () => {
       ['untested', 'untested'],
       ['partial', 'untested'],
       ['missing', undefined],
-    ]);
-  });
-
-  test('a feature takes the worst status of its requirements', ({ expect }) => {
-    const review = parseReview(REVIEW);
-    expect(statusOf(review, 'F-1')).toBe('missing');
-    expect(statusOf(review, 'F-1.1')).toBe('done');
-    expect(statusOf(review, 'F-2')).toBeUndefined();
-    expect(summarizeReview(review)).toEqual([
-      { status: 'done', count: 1 },
-      { status: 'missing', count: 1 },
     ]);
   });
 });
@@ -159,26 +113,5 @@ describe('implementation annotations', () => {
     });
     // Without annotations the spec text names no code, so there is no code box.
     expect(buildDefinitionGraph(spec).definitions.some(({ kind }) => kind === 'code')).toBe(false);
-  });
-});
-
-describe('symbol lookup', () => {
-  const source = [
-    'import x from "y";',
-    '',
-    'export class Spec {',
-    '  static make(): Spec {',
-    '    return new Spec();',
-    '  }',
-    '}',
-    '',
-    'export const make = () => Spec.make();',
-  ].join('\n');
-
-  test('finds declarations before mentions, and members after their owner', ({ expect }) => {
-    expect(findSymbolLine(source, 'Spec')).toBe(3);
-    expect(findSymbolLine(source, 'make')).toBe(9);
-    expect(findSymbolLine(source, 'Spec.make')).toBe(4);
-    expect(findSymbolLine(source, 'Missing')).toBeUndefined();
   });
 });

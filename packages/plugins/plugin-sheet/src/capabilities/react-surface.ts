@@ -22,6 +22,7 @@ export default Capability.makeModule(() =>
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
           AppSurface.object(AppSurface.Section, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
+          AppSurface.object(AppSurface.Slide, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
         ),
         component: SheetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),

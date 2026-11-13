@@ -1,0 +1,330 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-markdown/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: MarkdownPlugin
+
+The core editor is solid and well covered: the `Document` type, the agent-facing `create`, `open` and
+`update` operations, checkpoints/branches/merge (`versioning.test.ts`), suggestion branches
+(`suggest-edit.test.ts`) and durable accept/reject (`accept-change.test.ts`, `reject-change.test.ts`)
+all have tests. View modes persist per document through a ViewState aspect, the toolbar pulls
+toolbar-disposition actions from the app graph, and `@` link queries and link-following exist, though
+none of the UI paths is tested.
+
+The biggest divergence is ownership. The spec describes `MarkdownArticle` driving the review model and
+plugin-markdown contributing the `HistoryProvider`; in the code plugin-markdown only exposes an
+`EditorBindingHook` socket, and plugin-review contributes the binding (version toolbar, ambient
+suggestion overlay, Suggesting mode) and the `HistoryProvider`. The spec still names
+`plugin-comments`, which no longer exists, and `MarkdownCapabilities.SuggestionSourcesProvider`,
+which is not declared. Image upload is a toolbar dropzone button, not a drop onto the editor.
+
+Several spec items share one fenced block (`VersionToolbar`, `VersionBanner`, the cards, the other
+ops, `T-2` to `T-7`), and `deus review items` lists only the first item in each fence, so those items
+are not judged here.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict ViewMode: The view modes come from `EditorViewMode` in ui-editor.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/types/types.ts#EditorViewMode]
+  note: The plugin reuses the ui-editor schema rather than declaring its own; no plugin test checks it.
+```
+
+```mdl
+verdict DiffView: `DiffViewMode` has the four literals.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/types/Settings.ts#DiffViewMode]
+  note: The default `suggest` is not set in the schema; no test.
+```
+
+```mdl
+verdict Document: The type has name, fallbackName, description, content and history.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/types/Markdown.ts#Document]
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/types/Versioning.test.ts, github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/create.test.ts]
+```
+
+```mdl
+verdict Settings: All specified settings exist, plus an undocumented `snippets` field.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/types/Settings.ts#Settings]
+  note: |
+    `snippets` (input replay for testing) is not in the spec. Only a settings story renders the
+    form; no test reads the values.
+```
+
+```mdl
+verdict HistoryProvider: The markdown HistoryProvider exists, but plugin-review contributes it.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/markdown-binding.ts, github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#HistoryProvider]
+  note: |
+    The capability is `ReviewCapabilities.HistoryProvider` (not VersioningCapabilities) and is
+    contributed from plugin-review's `MarkdownBinding` module; plugin-markdown contributes nothing for it.
+```
+
+```mdl
+verdict SuggestionSourcesConsumer: Suggestion sources are consumed inside plugin-review's binding, not by MarkdownArticle.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/types/MarkdownCapabilities.ts#EditorBindingHook, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useMarkdownEditorBinding.tsx#useMarkdownEditorBinding]
+  note: |
+    There is no `MarkdownCapabilities.SuggestionSourcesProvider`. MarkdownArticle calls the first
+    contributed `EditorBindingHook`; plugin-review's hook mounts its own `SuggestionSourcesProvider` and overlay.
+```
+
+```mdl
+verdict MarkdownArticle: The article edits Document/Text with toolbar, view modes and upload, delegating review to a binding hook.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx#MarkdownArticle, github:dxos/dxos/packages/plugins/plugin-markdown/src/capabilities/MarkdownContainer.tsx#MarkdownContainer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-markdown/src/hooks/useExtensions.test.tsx]
+  walkthrough:
+    - The container resolves the per-document view mode and settings. github:dxos/dxos/packages/plugins/plugin-markdown/src/capabilities/MarkdownContainer.tsx#MarkdownContainer
+    - The article mounts the editor, toolbar, link query, upload and the contributed binding. github:dxos/dxos/packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx#MarkdownArticle
+  note: |
+    The review mode state, Suggesting binding and version toolbar live in plugin-review's
+    `useMarkdownEditorBinding`, not in this component; without plugin-review the default binding has no review model.
+```
+
+```mdl
+verdict create: The agent op creates a Document, files it under the default parent and returns its DXN.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/types/MarkdownOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/create.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/create.test.ts]
+  walkthrough:
+    - The op declares name/content input and an id output. github:dxos/dxos/packages/plugins/plugin-markdown/src/types/MarkdownOperation.ts#Create
+    - The handler adds the document, files it via DefaultParent and flushes. github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/create.ts
+```
+
+```mdl
+verdict F-1.1: The editor opens Document.content as a collaborative CodeMirror surface.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx]
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/hooks/useExtensions.test.tsx, github:dxos/dxos/packages/plugins/plugin-markdown/src/hooks/useDocumentContent.test.tsx]
+```
+
+```mdl
+verdict F-1.2: Edits replicate through ECHO Text; nothing here tests peers.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx]
+  note: Replication is the automerge binding's job; no plugin test runs two peers.
+```
+
+```mdl
+verdict F-1.3: The label annotation falls back from name to fallbackName.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/types/Markdown.ts#Document, github:dxos/dxos/packages/plugins/plugin-markdown/src/util.tsx#getFallbackName]
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/util.test.ts]
+```
+
+```mdl
+verdict F-2.1: A document opens in its per-document mode, else settings.defaultViewMode.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/capabilities/MarkdownContainer.tsx#MarkdownContainer]
+  note: No test checks the default.
+```
+
+```mdl
+verdict F-2.2: View mode changes persist per document in a local ViewState aspect.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/capabilities/editor-view-state.ts#editorViewModeAspect, github:dxos/dxos/packages/plugins/plugin-markdown/src/capabilities/MarkdownContainer.tsx#MarkdownContainer]
+  note: Persistence is per device (localStorage backend); no test toggles and reloads.
+```
+
+```mdl
+verdict F-2.3: Readonly makes the editor non-editable, but the toolbar is not hidden.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/components/MarkdownEditor/MarkdownEditorContent.tsx]
+  note: The toolbar renders whenever `settings.toolbar` is set, regardless of view mode (it carries the view-mode switch).
+```
+
+```mdl
+verdict F-3.1: The formatting toolbar renders above the editor when settings.toolbar is true.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/components/MarkdownEditor/MarkdownEditorToolbar.tsx]
+  note: No test or story asserts its actions.
+```
+
+```mdl
+verdict F-3.2: Toolbar custom actions come from app-graph actions filtered by `isToolbarAction`.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx#MarkdownArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-4.1: Typing `@` runs a link query over objects in the space.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/hooks/useLinkQuery.ts#useLinkQuery]
+  note: No test; the autocue flow QA-4 drives it by hand-run recording only.
+```
+
+```mdl
+verdict F-4.2: Selecting a result inserts a markdown link to the object URI.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/hooks/useLinkQuery.ts#useLinkQuery]
+  note: No test of `insertLink`.
+```
+
+```mdl
+verdict F-4.3: Clicking a reference invokes LayoutOperation.Open.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx#MarkdownArticle]
+  note: Internal links resolve through the graph first; no test.
+```
+
+```mdl
+verdict F-5.1: Images upload through FileUploader from a toolbar dropzone, not by dropping onto the editor.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/components/MarkdownEditor/FileUpload.tsx#FileUpload]
+  note: '`FileUpload` carries a TODO for drag into the document; the upload inserts an image link. No test.'
+```
+
+```mdl
+verdict F-6.1: The skill exposes create, open and update, plus branch, merge, checkpoint and selection tools.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/skills/MarkdownSkill.ts#make]
+  note: No test asserts the tool list.
+```
+
+```mdl
+verdict F-6.2: Update applies ordered oldString to newString edits.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/update-markdown.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/update-markdown.test.ts]
+```
+
+```mdl
+verdict F-7.1: Markdown declares anchored comments; the extension comes from plugin-review.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/capabilities/comment-config.ts, github:dxos/dxos/packages/plugins/plugin-markdown/src/types/MarkdownCapabilities.ts#ExtensionProvider]
+  note: The spec names plugin-comments; the provider is plugin-review's `markdown-extension.ts`. No test in this package.
+```
+
+```mdl
+verdict F-7.2: The comment agent follows plugin-review's commentAgentMode setting.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/Settings.ts#CommentAgentMode]
+  note: Lives entirely in plugin-review; no test here.
+```
+
+```mdl
+verdict F-8.1: Checkpoint, branch and merge operations work over Document.history.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/create-checkpoint.ts, github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/create-branch.ts, github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/merge-branch.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/versioning.test.ts]
+```
+
+```mdl
+verdict F-8.2: The HistoryProvider is contributed by plugin-review, not by this plugin.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/markdown-binding.ts]
+  note: The requirement says plugin-markdown MUST contribute it.
+```
+
+```mdl
+verdict F-8.3: VersionToolbar exists in plugin-review with branch view selection.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/components/Version/VersionToolbar.tsx#VersionToolbar]
+  note: Implemented in plugin-review and mounted through the binding's `banner`; no test checks selection or the default Diff view.
+```
+
+```mdl
+verdict F-8.4: Branch edits accrue to the branch Text and never mutate main.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.ts#useVersionedEditor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/versioning.test.ts, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.test.tsx]
+```
+
+```mdl
+verdict F-9.1: The ambient path overlays every suggestion branch against main, gated by the render policy.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useMarkdownEditorBinding.tsx#useMarkdownEditorBinding, github:dxos/dxos/packages/plugins/plugin-review/src/components/Suggestions/SuggestionSourcesProvider.tsx#SuggestionSourcesProvider]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/suggestion-sources.test.ts, github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/suggestions-overlay.test.ts]
+  walkthrough:
+    - The binding mounts the sources provider on the ambient path. github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useMarkdownEditorBinding.tsx#useMarkdownEditorBinding
+    - The provider enumerates suggestion branches per author. github:dxos/dxos/packages/plugins/plugin-review/src/components/Suggestions/SuggestionSourcesProvider.tsx#SuggestionSourcesProvider
+    - The overlay renders them diffed against main. github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/suggestions-overlay.ts#suggestionsOverlay
+```
+
+```mdl
+verdict F-9.2: The default render policy maps Editing and Viewing as specified and is a capability.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#defaultReviewRenderPolicy, github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#ReviewRenderPolicy]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.test.ts]
+```
+
+```mdl
+verdict F-9.3: The overlay is enabled only on the ambient path.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useMarkdownEditorBinding.tsx#useMarkdownEditorBinding]
+  note: '`enabled={ambient && policy.showSuggestions}`; no test selects a branch and checks the overlay is off.'
+```
+
+```mdl
+verdict F-9.4: Accept/reject route through CollaborationOperation handlers diffed against main.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/accept-change.ts, github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/reject-change.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/accept-change.test.ts, github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/reject-change.test.ts]
+```
+
+```mdl
+verdict F-10.1: Suggesting binds the user's own suggestion branch.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.ts#useVersionedEditor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.test.tsx]
+```
+
+```mdl
+verdict F-10.2: Other authors overlay against main excluding the user's own branch.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useReviewExtensions.ts#useReviewExtensions]
+  note: No test checks that the own branch is excluded from the overlay while Suggesting.
+```
+
+```mdl
+verdict F-10.3: Block deletions keep line breaks and undo re-instates them.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/track-changes.ts#trackChanges]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/track-changes.test.ts]
+```
+
+```mdl
+verdict F-11.1: plugin-markdown imports neither plugin-comments nor plugin-review.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/types/MarkdownCapabilities.ts#EditorBindingHook]
+  note: Searched `src/` and `package.json`; the wiring is via capability sockets only. No lint rule or test enforces it.
+```
+
+```mdl
+verdict T-1: create.test.ts invokes Create and checks name, content and filing.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/create.test.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/create.ts]
+```
+
+```mdl
+verdict QA-1: Create/place/open/edit is run only by agent or human QA.
+  status: missing
+  note: Status `passing` comes from a recording-driver QA run; no automated test in CI runs this flow. The `createDraft` and `update` steps are unit-tested separately.
+```
+
+```mdl
+verdict QA-2: Linking one page to another has no automated test.
+  status: missing
+  note: No e2e in composer-app or plugin-markdown drives it.
+```
+
+```mdl
+verdict QA-3: The contributed slash-command flow has no automated test.
+  status: missing
+  note: Status is unverified; nothing automates the popup.
+```

@@ -24,6 +24,7 @@ import { mx } from '@dxos/ui-theme';
 import { SheetRange, SheetUtil } from '#types';
 
 import { type SheetModel } from '../../model/index.ts';
+import { highlightForeground } from './highlight.ts';
 
 const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
   return model.sheet.columns.reduce(
@@ -65,7 +66,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   // TODO(wittjosiah): Update this to get threads via relations.
   // model.sheet.threads
   //   ?.filter((thread) => {
-  //     const range = thread.target?.anchor && parseThreadAnchorAsCellRange(thread.target!.anchor);
+  //     const range = thread.target?.anchor && SheetUtil.rangeFromAnchor(model.sheet, thread.target!.anchor);
   //     return thread && range ? inRange(range, address) : false;
   //   })
   //   .map((thread) => Obj.getURI(thread!))
@@ -77,10 +78,13 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   const classNames = ranges?.map(SheetRange.cellClassNameForRange).reverse();
 
   const value = parseValue({ type, format, value: rawValue });
+  const background = ranges && SheetRange.cellBackgroundForRanges(ranges);
   return {
     // A plain number reads in the viewer's locale (grouping, decimal mark); a formatted one keeps its format.
     value: typeof value === 'number' && !format ? value.toLocaleString() : value,
     className: mx(cellClassesForFieldType({ type, format }), threadRefs && commentedClassName, classNames),
+    background,
+    foreground: highlightForeground(background),
     dataRefs: threadRefs,
   };
 };

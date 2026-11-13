@@ -10,8 +10,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { Task } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { TasksNamespace } from '../../namespace.ts';
 import { ALL_STATUSES } from '../../util/index.ts';
 
 export type TaskStatusFilterProps = {
@@ -34,7 +33,7 @@ export type TaskStatusFilterProps = {
  * text cannot disagree about what the list is showing.
  */
 export const TaskStatusFilter = ({ value, onChange, active }: TaskStatusFilterProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
   const selected = useMemo(() => new Set(value), [value]);
   const filtered = selected.size < ALL_STATUSES.length;
   const narrowed = active || filtered;

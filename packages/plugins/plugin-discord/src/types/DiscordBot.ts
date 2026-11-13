@@ -18,6 +18,38 @@ import { BaseError } from '@dxos/errors';
 
 export class DiscordBotError extends BaseError.extend('DiscordBotError', 'Discord bot request failed.') {}
 
+/** A Discord user id (a snowflake), which a direct message needs: the message header names people by one. */
+export const isUserId = (value: string): boolean => /^\d{15,21}$/.test(value);
+
+/**
+ * The user id `value` gives unambiguously: one written bare, as the message header writes it, or as a mention
+ * (`<@id>`, `<@!id>`). `@` before digits is not one: it may be a numeric username.
+ */
+export const explicitUserId = (value: string): string | undefined => {
+  const bare = value.trim().replace(/^<@!?(\d+)>$/, '$1');
+  return isUserId(bare) ? bare : undefined;
+};
+
+/**
+ * A user id, handle or name as written, without a mention's markup (`<@id>`, `<@!id>`), a handle's `@` or
+ * surrounding space: the form a name is compared in.
+ */
+export const bareName = (value: string): string =>
+  value
+    .trim()
+    .replace(/^<@!?(\d+)>$/, '$1')
+    .replace(/^@/, '');
+
+/**
+ * A contact's Discord identities, as written: ids, or handles and display names an agent kept from a message. Only
+ * these name a Discord account; another platform's handle names someone else there.
+ */
+export const discordIdentities = (person: { identities?: readonly { label?: string; value: string }[] }): string[] =>
+  (person.identities ?? [])
+    .filter(({ label }) => label?.toLowerCase() === 'discord')
+    .map(({ value }) => value.trim())
+    .filter((value) => bareName(value).length > 0);
+
 /** Which bot acts, for which agent; the bot host refuses a space that does not own the bot. */
 export type Bot = {
   readonly applicationId: string;
@@ -26,12 +58,32 @@ export type Bot = {
   readonly channel: string;
 };
 
+/** Discord's upload cap for a bot in a server without boosts, per file. */
+export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+
+/** Discord's limit on files in one message. */
+export const MAX_ATTACHMENTS = 10;
+
+/**
+ * A file to attach, by its key in the host's content-addressed blob store (the hex SHA-256 an `ni:` blob URI names), so
+ * the bot fetches the bytes itself rather than receiving them over the call.
+ */
+export const Attachment = Schema.Struct({
+  key: Schema.String,
+  name: Schema.String,
+  type: Schema.optional(Schema.String),
+  size: Schema.optional(Schema.Number),
+});
+
+export interface Attachment extends Schema.Schema.Type<typeof Attachment> {}
+
 /** Posts in a channel or thread, optionally as a reply to one of its messages. */
 export const PostAction = Schema.Struct({
   kind: Schema.Literal('post'),
   channelId: Schema.String,
   text: Schema.String,
   replyTo: Schema.optional(Schema.String),
+  files: Schema.optional(Schema.Array(Attachment)),
 });
 
 /** Adds the bot's reaction to a message. */
@@ -48,6 +100,7 @@ export const DirectAction = Schema.Struct({
   kind: Schema.Literal('dm'),
   userId: Schema.String,
   text: Schema.String,
+  files: Schema.optional(Schema.Array(Attachment)),
 });
 
 export const Action = Schema.Union([PostAction, ReactAction, DirectAction]);

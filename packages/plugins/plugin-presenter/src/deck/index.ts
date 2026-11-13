@@ -3,4 +3,5 @@
 //
 
 export * from './SlideSource.ts';
+export * from './heading.ts';
 export * from './slideSourcesAtom.ts';

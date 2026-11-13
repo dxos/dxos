@@ -58,10 +58,12 @@ export const HierarchicalEdgeBundling = ({
   padding = 120,
   tension = 0.85,
   r = 4,
-  slots = defaultTreeLayoutSlots,
+  slots: slotsProp,
   onNodeHover,
 }: HierarchicalEdgeBundlingProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // A partial `slots` (e.g. only `nodeFill`) must extend the defaults, not drop their classes.
+  const slots = useMemo(() => ({ ...defaultTreeLayoutSlots, ...slotsProp }), [slotsProp]);
   const { setRef, width, height } = useContainerSize();
 
   const root = useMemo(() => buildBundleHierarchy(data, edges), [data, edges]);

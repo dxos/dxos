@@ -7,6 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { defineHiddenProperty } from './define-hidden-property.ts';
 import { createPropertyDeleteError, createPropertySetError } from './errors.ts';
 import { type ReactiveHandler } from './proxy-types.ts';
+import { EntityElementsId } from './symbols.ts';
 
 /**
  * Carries a proxy on its own target, so `value[symbolProxy] === value` identifies a proxy: read through
@@ -222,7 +223,12 @@ const normalizeForStorage = (value: any, seen = new Set<object>()): any => {
 const MUTABLE_PROXY_HANDLER: ProxyHandler<any> = {
   get: (target, property, receiver) => {
     const value = Reflect.get(target, property, receiver);
-    return isProxy(value) ? getMutableProxy(value) : value;
+    // An entity held by identity (e.g. a tag in `meta.tags`) is not part of this object, so editing
+    // the holder must not hand out write access to it.
+    if (isProxy(value) && !(Array.isArray(target) && Reflect.get(target, EntityElementsId) === true)) {
+      return getMutableProxy(value);
+    }
+    return value;
   },
   set: (target, property, value, receiver) => {
     const handler: ReactiveHandler<any> | undefined = Reflect.get(target, symbolReactiveHandler);

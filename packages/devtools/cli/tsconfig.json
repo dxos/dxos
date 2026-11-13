@@ -71,6 +71,12 @@
       "path": "../../core/compute/mcp-server"
     },
     {
+      "path": "../../core/compute/plugin-builder"
+    },
+    {
+      "path": "../../core/compute/plugin-host-cloudflare"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -84,6 +90,9 @@
     },
     {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../core/protocols"

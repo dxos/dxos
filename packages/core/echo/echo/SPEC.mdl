@@ -32,6 +32,7 @@ The following extension dialects are used in this document.
 | `module` | `org.dxos.mdl.module@1.0` |
 | `feat`   | `org.dxos.mdl.feat@1.0`   |
 | `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## Modules
 
@@ -332,15 +333,18 @@ module Collection
 
 ```mdl
 module Feed
-  desc: An append-only feed object with cursors, sync, and retention.
+  desc: An append-only feed object with cursors, sync, indexing and retention options.
   api:
-    Feed: objectType                   # org.dxos.type.feed.
+    Feed: objectType                   # org.dxos.type.feed; carries `indexing` and `retention`.
     make: (props) => Feed              # create a feed.
     append / remove: (feed, item) => Effect  # mutate the feed.
     query: (feed, ...) => ...          # read entries.
     sync / getSyncState: (...) => ...  # replication control and state.
     cursor / next / nextOption: ...    # cursor navigation.
-    setRetention: (feed, opts) => void # retention policy.
+    IndexingOptions: schema            # { enabled: boolean }.
+    RetentionOptions: schema           # { maxLength?: number; maxAge?: number (ms) }; setRetention takes a Duration.
+    setIndexing: (feed, opts) => Effect   # write `indexing` on the feed object.
+    setRetention: (feed, opts) => Effect  # write `retention` on the feed object.
     getFeedUri: (feed) => URI          # feed URI.
 ```
 
@@ -478,6 +482,41 @@ feat F-6: Effect Database service
           it for contexts without a db
 ```
 
+```mdl
+feat F-7: Feed options
+
+  desc: |
+    A feed's indexing and retention options are fields of its `Feed` object, so they replicate,
+    version and merge like any other property. The feed store never reads the object; the indexer
+    carries the options down to it (`org.dxos.feed`, `org.dxos.index-core`).
+
+  req F-7.1:
+    when: a Feed object is read
+    then: it has optional `indexing: IndexingOptions` and `retention: RetentionOptions` fields; an
+          absent field means the default — indexing enabled, nothing trimmed
+
+  req F-7.2:
+    when: `indexing.enabled` is false
+    then: indexing of the feed's items is fully disabled; there is no partial mode
+          (for example full-text only)
+
+  req F-7.3:
+    when: `retention` is set
+    then: it holds `maxLength` (a count of items, an integer of at least 1) and/or `maxAge` (a
+          positive number of milliseconds measured from an item's append timestamp; setRetention
+          takes a Duration and converts it); with both set, an item is dropped when it breaks
+          either limit; `retention: {}` means nothing is trimmed
+
+  req F-7.4:
+    when: Feed.setIndexing or Feed.setRetention is called
+    then: it writes the field on the feed object in one change and returns once the change is
+          applied locally; it does not wait for the feed store to apply it
+
+  req F-7.5:
+    when: Feed.setRetention is called with an invalid value (maxLength < 1, a negative maxAge)
+    then: it fails with a schema error and the object is unchanged
+```
+
 ## Acceptance
 
 ```mdl
@@ -521,6 +560,105 @@ scenario T-5: Missing ref target is catchable
   then: it fails with EntityNotFoundError, catchable via Effect.catchTag('EntityNotFoundError', ...)
 ```
 
+```mdl
+scenario T-6: Feed options are object fields
+  given: a feed created with Obj.make(Feed.Feed, { name: 'log' })
+  when: Feed.setRetention(feed, { maxLength: 100, maxAge: Duration.days(7) }) and
+        Feed.setIndexing(feed, { enabled: false }) run
+  then:
+    - feed.retention equals { maxLength: 100, maxAge: 7 days } and feed.indexing.enabled is false
+    - Obj.toJSON(feed) carries both fields, and a second peer sees them after replication
+    - Feed.setRetention(feed, { maxLength: 0 }) fails and leaves feed.retention unchanged
+```
+
+## Changelog
+
+```mdl
+decision D-1: A feed has indexing options and retention options.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [Feed, F-7]
+```
+
+```mdl
+decision D-2: Indexing of a feed can be fully disabled.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-7.2]
+```
+
+```mdl
+decision D-3: Retention is a maximum length and/or a maximum age.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-7.3]
+```
+
+```mdl
+decision D-4: Indexing and retention options are set on the Feed ECHO object and flow down to the feed in the feed store.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [Feed, F-7]
+```
+
+```mdl
+decision D-5: Indexing options are a struct `{ enabled: boolean }`, not a bare boolean. Fills in [D-2].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.1, F-7.2]
+  why: A struct lets later options (which indexes to build) be added without a schema migration of the field.
+  rejected:
+    - "`indexed: boolean` on the feed: simplest, but a second option would need a new top-level field."
+```
+
+```mdl
+decision D-6: `maxLength` counts items and `maxAge` is measured from the item's append timestamp; with both set, an item that breaks either limit is dropped. Fills in [D-3].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.3]
+  why: The feed store already keeps a per-block timestamp and counts blocks, so both limits are cheap to enforce; "either" is the only reading under which each limit is a guarantee.
+  rejected:
+    - "Drop only when both limits are broken: a feed with maxAge would then grow without bound until maxLength is also reached."
+```
+
+```mdl
+decision D-7: The retention stub `RetentionOptions { cursor }` is replaced by `{ maxLength, maxAge }`, and `setRetention` writes the object instead of being a no-op. Fills in [D-3] and [D-4].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Feed, F-7.4]
+  why: The stub has no callers, and a cursor-based policy is neither a length nor an age.
+```
+
+```mdl
+decision D-8: Setting an option returns once the object change is applied locally, not once the store has trimmed or stopped indexing. Fills in [D-4].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.4]
+  why: The store applies options on its own index pass, possibly on another device (EDGE); waiting would make a property write depend on the network.
+```
+
+```mdl
+decision D-9: `maxAge` is stored as milliseconds; Feed.setRetention takes a Duration and converts it. Fills in [D-6].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.3]
+  why: ECHO stores plain JSON in the object, and an Effect Duration is a class instance that does not survive that.
+```
+
+```mdl
+decision D-10: The Feed module's api lists maxAge as milliseconds, matching F-7.3. Fills in [D-9].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Feed]
+  why: The api still listed maxAge as a Duration after D-9 stored it as milliseconds, so the spec contradicted itself.
+```
+
 ---
 
 ## Appendix: Extension Definitions
@@ -547,6 +685,25 @@ ext feat
     desc?: Prose
     req: RequirementList
   nesting: self
+```
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true ("Bounds are derived, never stored."), not as the edit
+    that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    affects?: RefList           # block ids the decision constrains, e.g. [Scene, F-2.1]
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
 ```
 
 ```mdl

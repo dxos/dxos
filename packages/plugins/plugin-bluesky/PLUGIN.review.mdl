@@ -1,0 +1,402 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-bluesky/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: BlueskyPlugin
+
+Most of the spec is implemented, but nothing is tested: the package has no `*.test.ts` file, and its
+one story covers the read-only channel backend, not sync. Target discovery, the page walk with cursor
+stop, the page budgets and hard cap, PDS resolution for `did:plc` and `did:web`, and the Edge
+`/atproto/proxy` path all match the spec in code.
+
+The spec still describes the older `Integration.targets` model. The code runs on plugin-connector
+bindings: `Binding.syncAll` fans out over `Cursor` objects, the remote id is `spec.externalId`, the
+last seen URI is `cursor.max`, and errors go to `cursor.lastError`. The biggest behavioural
+divergence is F-4.2: the `Subscription.Feed` is created eagerly by a third operation,
+`MaterializeBlueskyTarget`, when a binding is made. Sync never creates it, and it skips a binding
+whose target is not a feed. Two more gaps matter. First, `runRequest` never filters non-2xx
+statuses, so an XRPC JSON error body fails schema decoding and is not retried, which leaves F-6.4
+unmet in practice. Second, `GetBlueskyTargets` swallows the missing-handle and PDS errors into its
+best-effort fallback instead of raising them.
+
+Of 51 items: 0 done, 34 untested, 3 partial, 3 diverged, 11 missing (all ten scenarios and QA-1).
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict BlueskyTargetOptions: Schema with optional maxPages, used as the connector's optionsSchema.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/types.ts#BlueskyTargetOptions]
+  note: Stored under the cursor's `spec.options`, not `IntegrationTarget.options`. No test.
+```
+
+```mdl
+verdict FeedViewPost: Schema with post and optional reason.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#FeedViewPostSchema]
+  note: No test decodes a response.
+```
+
+```mdl
+verdict FeedPost: Schema with uri, cid, author, record and indexedAt.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#FeedPostSchema]
+  note: No test.
+```
+
+```mdl
+verdict FeedAuthor: Schema with did, handle and optional displayName, avatar.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#FeedAuthorSchema]
+  note: No test.
+```
+
+```mdl
+verdict FeedRecord: Schema with optional text and createdAt.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#FeedRecordSchema]
+  note: No test.
+```
+
+```mdl
+verdict SavedFeed: Schema with value, type (feed | list | timeline) and optional pinned.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#SavedFeedSchema]
+  note: No test.
+```
+
+```mdl
+verdict SyncTarget: plugin-connector's RemoteTarget carries id, name and description (plus metadata).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorSpec.ts#RemoteTarget, github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/get-bluesky-targets.ts]
+  note: The type is shared from plugin-connector, not defined here. No test.
+```
+
+```mdl
+verdict GetBlueskyTargets: Returns three self-targets plus saved feeds and lists; credential errors are swallowed, not raised.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/definitions.ts#GetBlueskyTargets, github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/get-bluesky-targets.ts]
+  walkthrough:
+    - The definition takes a connection ref and returns plugin-connector's GetSyncTargetsOutput. github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/definitions.ts#GetBlueskyTargets
+    - The handler loads saved feeds through the credentials layer, falls back to none on any error, and appends them to the self-targets. github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/get-bluesky-targets.ts
+  note: |
+    Only `DatabaseMissingError` reaches the caller. `MissingBlueskyHandleError` and `PdsResolutionFailedError` happen
+    while building the credentials layer inside the `Effect.catch`, so they become a warning and self-targets only.
+    No test.
+```
+
+```mdl
+verdict SyncBlueskyTargets: Pull-syncs every binding of the connection and returns the appended total; the feed is not created here.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/definitions.ts#SyncBlueskyTargets, github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts, github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/materialize-target.ts]
+  walkthrough:
+    - The definition takes a connection ref and optional priority and returns appended. github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/definitions.ts#SyncBlueskyTargets
+    - The handler fans out over the connection's cursors with Binding.syncAll and syncs each through the credentials layer. github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts
+    - MaterializeBlueskyTarget creates the Subscription.Feed when a binding is made, before any sync. github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/materialize-target.ts
+  note: |
+    The page walk, cursor stop, budgets and per-binding error recording match. The difference is the first sync: the
+    spec says sync materializes the feed and pins it to `target.object`, but sync only loads `binding.spec.target`
+    and skips the binding if it is not a `Subscription.Feed`. No test.
+```
+
+```mdl
+verdict F-1.1: The connector's credentialForm asks for a handle or DID.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/capabilities/connector.ts]
+  note: "`AtprotoPreflightForm` has one `handle` field. No test."
+```
+
+```mdl
+verdict F-1.2: Submitting the form returns an oauth outcome with loginHint; the connector's provider is ATPROTO.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/capabilities/connector.ts]
+  note: plugin-connector re-enters the OAuth flow with the hint. No test.
+```
+
+```mdl
+verdict F-1.3: The connector's source is 'bsky.app'; plugin-connector mints the token and Connection.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/capabilities/connector.ts, github:dxos/dxos/packages/plugins/plugin-bluesky/src/constants.ts#BLUESKY_SOURCE]
+  note: The token lives on a `Connection` (not an `Integration`), created by the generic redirect flow. No test.
+```
+
+```mdl
+verdict F-1.4: The connector sets useRedirectFlow: true.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/capabilities/connector.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-1.5: The requested scope is ['transition:generic'].
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/capabilities/connector.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-2.1: Credentials construction resolves the handle to a DID and reads the #atproto_pds service from the DID document.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#resolvePds, github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#packageCredentials]
+  note: No test.
+```
+
+```mdl
+verdict F-2.2: did:plc documents are fetched from https://plc.directory/<did>.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#fetchDidDocument]
+  note: No test.
+```
+
+```mdl
+verdict F-2.3: did:web documents are fetched from /.well-known/did.json, or /<path>/did.json for path segments.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#fetchDidDocument]
+  note: No test.
+```
+
+```mdl
+verdict F-2.4: The PDS cache is a module-level Map that lives for the whole process, not one sync run.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#pdsCache]
+  note: "`pdsCache` is never cleared, so a user who moves PDS keeps the stale endpoint until reload. No test."
+```
+
+```mdl
+verdict F-2.5: An unresolvable PDS fails with PdsResolutionFailedError; there is no fallback host.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#resolvePds, github:dxos/dxos/packages/plugins/plugin-bluesky/src/errors.ts#PdsResolutionFailedError]
+  note: In `GetBlueskyTargets` the error is caught by the saved-feeds fallback. No test.
+```
+
+```mdl
+verdict F-3.1: Three self-targets are always returned (self:posts, self:likes, self:bookmarks).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/get-bluesky-targets.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-3.2: Each saved feed or list becomes a feed:<at-uri> target.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/get-bluesky-targets.ts, github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#getSavedFeeds]
+  note: Only `savedFeedsPrefV2` items are read. No test.
+```
+
+```mdl
+verdict F-3.3: Entries of type timeline are filtered out.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/get-bluesky-targets.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-3.4: Any saved-feeds failure is logged as a warning and yields self-targets only.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/get-bluesky-targets.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-4.1: Sync iterates the connection's cursors and skips any with no externalId.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts, github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll]
+  note: The spec's `integration.targets` / `remoteId` are `Cursor` objects and `spec.externalId` in code. No test.
+```
+
+```mdl
+verdict F-4.2: The feed is created at binding time by MaterializeBlueskyTarget, not on first sync.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/materialize-target.ts, github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts]
+  note: Sync skips a binding whose target is not a `Subscription.Feed`; materialize finds or creates one keyed by a `bsky.app` foreign key.
+```
+
+```mdl
+verdict F-4.3: The existing feed is reused (materialize finds it by foreign key; sync loads the cursor's target).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/materialize-target.ts, github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-4.4: Collected posts become Subscription.Post objects appended to the feed's backing ECHO feed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts, github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#toSubscriptionPostInput]
+  note: No test.
+```
+
+```mdl
+verdict F-4.5: After a run with new posts, Cursor.advance sets max to the newest URI and stamps lastTick.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts, github:dxos/dxos/packages/core/compute/link/src/Cursor.ts#advance]
+  note: The cursor is `cursor.max` / `lastTick`, and `Subscription.Feed.cursor` is also set. No test.
+```
+
+```mdl
+verdict F-4.6: With no new posts, Cursor.advance(binding) stamps lastTick and leaves max unchanged.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts, github:dxos/dxos/packages/core/compute/link/src/Cursor.ts#advance]
+  note: No test.
+```
+
+```mdl
+verdict F-4.7: A failing binding records lastError, and syncAll keeps the other bindings running.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts, github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll]
+  note: "`Cursor.recordError` runs in `tapError`; syncAll tags each outcome so one failure does not abort the fan-out. No test here."
+```
+
+```mdl
+verdict F-5.1: Self-targets default to DEFAULT_MAX_PAGES.SELF (5).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts#resolveMaxPages, github:dxos/dxos/packages/plugins/plugin-bluesky/src/constants.ts#DEFAULT_MAX_PAGES]
+  note: No test.
+```
+
+```mdl
+verdict F-5.2: feed: targets default to DEFAULT_MAX_PAGES.FEED (1).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts#resolveMaxPages]
+  note: No test.
+```
+
+```mdl
+verdict F-5.3: A positive options.maxPages overrides the default.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts#resolveMaxPages]
+  note: No test.
+```
+
+```mdl
+verdict F-5.4: The override is clamped to MAX_PAGES_HARD_CAP (20).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts#resolveMaxPages, github:dxos/dxos/packages/plugins/plugin-bluesky/src/constants.ts#MAX_PAGES_HARD_CAP]
+  note: No test.
+```
+
+```mdl
+verdict F-5.5: The walk breaks at the last seen URI and keeps only newer posts.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/operations/sync.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-6.1: getAuthorFeed uses the public XRPC base with no credentials.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#getAuthorFeed, github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#publicGet]
+  note: The self:posts branch still builds the credentials layer (for the handle), so it needs a resolvable PDS. No test.
+```
+
+```mdl
+verdict F-6.2: getActorLikes, getBookmarks, getFeed and getSavedFeeds go through authedGet to Edge.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#authedGet]
+  note: No test.
+```
+
+```mdl
+verdict F-6.3: The proxy body carries spaceId, accessTokenId and a request with the PDS endpoint and a DPoP Authorization header.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#authedGet, github:dxos/edge/packages/services/kms-service/src/api.ts]
+  walkthrough:
+    - authedGet posts { spaceId, accessTokenId, request } to /atproto/proxy on the Edge URL. github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#authedGet
+    - Edge's kms-service route loads the space secrets and signs and forwards the call. github:dxos/edge/packages/services/kms-service/src/api.ts
+  note: No test in either repo exercises this plugin's request shape.
+```
+
+```mdl
+verdict F-6.4: Retry is exponential with jitter, but HTTP status errors are never raised, so 429/5xx are not retried.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#runRequest, github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#shouldRetry]
+  note: |
+    `runRequest` calls `httpClient.execute` without `HttpClient.filterStatusOk`, so a 429 or 5xx response goes to
+    `res.json` and schema decode; a JSON error body then fails as `SchemaError`, which `shouldRetry` rejects. The
+    `StatusCodeError` branch is unreachable. `Schedule.upTo({ times: 3 })` also allows 3 retries (4 attempts), not 3
+    attempts. No test.
+```
+
+```mdl
+verdict F-6.5: Schema errors are not retried, but non-JSON error bodies surface as transport errors and are retried.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bluesky/src/services/BlueskyApi.ts#shouldRetry]
+  note: |
+    With no status filter, a 4xx with a JSON body fails decode and is not retried (as intended), but a 4xx with a
+    non-JSON body fails in `res.json` as an `HttpClientError` whose reason is not `StatusCodeError`, so it is retried.
+    No test.
+```
+
+```mdl
+verdict T-1: No automated test runs the OAuth setup.
+  status: missing
+  note: The package has no test files.
+```
+
+```mdl
+verdict T-2: No test invokes GetBlueskyTargets.
+  status: missing
+  note: The package has no test files.
+```
+
+```mdl
+verdict T-3: No test covers saved feeds; targets also carry no type field to assert.
+  status: missing
+  note: "`RemoteTarget` has no `type`, so the scenario's \"feed entries have type 'feed'\" cannot hold as written."
+```
+
+```mdl
+verdict T-4: No test covers the preferences failure fallback.
+  status: missing
+  note: The package has no test files.
+```
+
+```mdl
+verdict T-5: No test covers first sync; the feed is created by MaterializeBlueskyTarget, not by sync.
+  status: missing
+  note: The scenario describes sync creating the feed, which the code does not do (see F-4.2).
+```
+
+```mdl
+verdict T-6: No test covers the cursor stop.
+  status: missing
+  note: The package has no test files.
+```
+
+```mdl
+verdict T-7: No test covers an empty incremental sync.
+  status: missing
+  note: The package has no test files.
+```
+
+```mdl
+verdict T-8: No test covers a failing binding.
+  status: missing
+  note: The package has no test files; plugin-connector's Binding tests are generic.
+```
+
+```mdl
+verdict T-9: No test covers the feed page budget.
+  status: missing
+  note: The package has no test files.
+```
+
+```mdl
+verdict T-10: No test covers the hard page cap.
+  status: missing
+  note: The package has no test files.
+```
+
+```mdl
+verdict QA-1: Manual QA only; no automation.
+  status: missing
+  note: No composer-app e2e spec covers Bluesky.
+```

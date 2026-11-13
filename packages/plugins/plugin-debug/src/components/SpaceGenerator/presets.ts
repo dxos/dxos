@@ -78,9 +78,8 @@ export const generator = () => ({
           );
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
-          const tagRef = Ref.make(tag);
           Obj.update(doc, (doc) => {
-            Obj.getMeta(doc).tags = [tagRef];
+            Obj.getMeta(doc).tags = [tag];
           });
 
           // space.db.add(
@@ -92,7 +91,7 @@ export const generator = () => ({
           // );
 
           space.db.add(
-            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagRef] }, fullName: 'Rich', organization: Ref.make(org) }),
+            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tag] }, fullName: 'Rich', organization: Ref.make(org) }),
           );
           space.db.add(
             Obj.make(Person.Person, {
@@ -282,7 +281,7 @@ export const generator = () => ({
               input: 'items',
             });
 
-            functionTrigger = triggerShape.functionTrigger!.target!;
+            functionTrigger = triggerShape.data?.functionTrigger?.target;
           }
 
           const computeModel = createComputeGraph(canvasModel);
@@ -543,10 +542,10 @@ export const generator = () => ({
 
           {
             const sourceCurrency = canvasModel.createNode(
-              createConstant({ value: 'USD', ...position({ x: -10, y: -5 }) }),
+              createConstant({ data: { value: 'USD' }, ...position({ x: -10, y: -5 }) }),
             );
             const targetCurrency = canvasModel.createNode(
-              createConstant({ value: 'EUR', ...position({ x: -10, y: 5 }) }),
+              createConstant({ data: { value: 'EUR' }, ...position({ x: -10, y: 5 }) }),
             );
             const converter = canvasModel.createNode(createFunction(position({ x: 0, y: 0 })));
             const view = canvasModel.createNode(createSurface(position({ x: 12, y: 0 })));
@@ -596,13 +595,13 @@ export const generator = () => ({
             // DXOS dev-null channel.
             const channelId = canvasModel.createNode(
               createConstant({
-                value: '1088569858767212554',
+                data: { value: '1088569858767212554' },
                 ...position({ x: -10, y: 0 }),
               }),
             );
             const queueId = canvasModel.createNode(
               createConstant({
-                value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }),
+                data: { value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }) },
                 ...position({ x: -10, y: 5 }),
               }),
             );
@@ -640,7 +639,7 @@ export const generator = () => ({
               input: 'input',
             });
 
-            functionTrigger = triggerShape.functionTrigger!.target!;
+            functionTrigger = triggerShape.data?.functionTrigger?.target;
           }
 
           const computeModel = createComputeGraph(canvasModel);
@@ -715,7 +714,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
 
   const template = canvasModel.createNode(
     createTemplate({
-      valueType: 'object',
+      data: { valueType: 'object' },
       ...rawPosition({ centerX: -64, centerY: -79, width: 320, height: 320 }),
     }),
   );
@@ -753,7 +752,8 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
       input: 'changeId',
     });
 
-    functionTrigger = triggerShape.functionTrigger!.target!;
+    functionTrigger = triggerShape.data?.functionTrigger?.target;
+    invariant(functionTrigger, 'No function trigger.');
     const triggerSpec = functionTrigger.spec;
     invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
     Obj.update(functionTrigger, (functionTrigger) => {
@@ -763,7 +763,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
 
   const computeModel = createComputeGraph(canvasModel);
 
-  const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
+  const templateComputeNode = computeModel.nodes.find((n) => n.id === template.data?.node);
   invariant(templateComputeNode, 'Template compute node was not created.');
   // NOTE: These are plain object mutations during model construction, not ECHO object mutations.
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
@@ -792,7 +792,7 @@ const setupQueue = (
 ) => {
   const queueId = canvasModel.createNode(
     createConstant({
-      value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }),
+      data: { value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }) },
       ...(args?.idPosition ? rawPosition(args.idPosition) : position({ x: -18, y: 5, width: 8, height: 6 })),
     }),
   );

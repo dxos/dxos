@@ -15,7 +15,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
@@ -25,8 +25,9 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { Channel, Event } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
-import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+import { Meeting, MeetingActivity, MeetingCapabilities, MeetingOperation } from '#types';
+
+import { MeetingNamespace } from '../namespace.ts';
 
 /**
  * Atom families to derive meeting state properties.
@@ -38,10 +39,6 @@ const activeMeetingFamily = Atom.family((store: MeetingCapabilities.MeetingState
 
 const activeMeetingOrPlaceholderFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
   Atom.make((get) => get(store.stateAtom).activeMeeting ?? ('meeting' as const)),
-);
-
-const transcriptionManagerFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
-  Atom.make((get) => get(store.stateAtom).transcriptionManager),
 );
 
 export default Capability.makeModule(
@@ -75,7 +72,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['share-call-link.label', { ns: meta.profile.key }],
+                label: ['share-call-link.label', { ns: MeetingNamespace.key }],
                 icon: 'ph--share-network--regular',
               },
             },
@@ -111,7 +108,7 @@ export default Capability.makeModule(
                 variant: 'meeting',
                 label: [
                   data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label',
-                  { ns: meta.profile.key },
+                  { ns: MeetingNamespace.key },
                 ],
                 icon: 'ph--handshake--regular',
                 data,
@@ -131,15 +128,17 @@ export default Capability.makeModule(
             if (!store) {
               return [];
             }
-            const transcriptionManager = get(transcriptionManagerFamily(store));
-            const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
+            const [callManager] = get(callManagerAtom);
+            const enabled = callManager
+              ? MeetingActivity.isTranscriptionEnabled(get(callManager.activityAtom(MeetingActivity.TRANSCRIPTION_KEY)))
+              : false;
             return [
               {
                 id: 'action.startStopTranscription',
                 data: Effect.fnUntraced(function* () {
                   const store = yield* Capability.get(MeetingCapabilities.State);
-                  let meeting = store.state.activeMeeting;
-                  if (!meeting) {
+                  // The transcript is written to the call's active meeting, so one has to exist before it is kept.
+                  if (!store.state.activeMeeting) {
                     const db = Obj.getDatabase(channel);
                     invariant(db);
                     const createResult = yield* Operation.invoke(MeetingOperation.Create, { channel });
@@ -150,21 +149,10 @@ export default Capability.makeModule(
                     );
                     invariant(Obj.instanceOf(Meeting.Meeting, addResult.object));
                     yield* Operation.invoke(MeetingOperation.SetActive, { object: addResult.object });
-                    meeting = addResult.object as Meeting.Meeting;
                   }
 
-                  const callManager = yield* Capability.get(CallsCapabilities.Manager);
-                  const transcript = yield* Effect.promise(() => meeting.transcript.load());
-                  const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
-                  const transcriptFeedUri = Feed.getFeedUri(transcriptFeed);
-                  invariant(transcriptFeedUri, 'Transcript feed has no feed URI');
                   const transcriptionEnabled = !enabled;
-                  callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-                    meetingId: Obj.getURI(meeting),
-                    transcriptDxn: transcriptFeedUri.toString(),
-                    transcriptionEnabled,
-                  });
-
+                  yield* Operation.invoke(MeetingOperation.SetTranscription, { enabled: transcriptionEnabled });
                   if (!transcriptionEnabled) {
                     log.warn('transcription disabled');
                   } else {
@@ -174,8 +162,8 @@ export default Capability.makeModule(
                 }),
                 properties: {
                   label: enabled
-                    ? ['stop-transcription.label', { ns: meta.profile.key }]
-                    : ['start-transcription.label', { ns: meta.profile.key }],
+                    ? ['stop-transcription.label', { ns: MeetingNamespace.key }]
+                    : ['start-transcription.label', { ns: MeetingNamespace.key }],
                   icon: 'ph--subtitles--regular',
                   disposition: 'toolbar',
                 },
@@ -196,7 +184,7 @@ export default Capability.makeModule(
             return [
               AppNode.makeCompanion({
                 variant: 'transcript',
-                label: ['transcript-companion.label', { ns: meta.profile.key }],
+                label: ['transcript-companion.label', { ns: MeetingNamespace.key }],
                 icon: 'ph--subtitles--regular',
                 data: get(Obj.atom(meeting.transcript)),
                 position: Position.first,
@@ -226,7 +214,7 @@ export default Capability.makeModule(
             return [
               AppNode.makeCompanion({
                 variant: 'meeting',
-                label: ['meeting-companion.label', { ns: meta.profile.key }],
+                label: ['meeting-companion.label', { ns: MeetingNamespace.key }],
                 icon: 'ph--handshake--regular',
                 data: meeting,
                 position: Position.first,
@@ -269,7 +257,7 @@ export default Capability.makeModule(
                     });
                   }),
                   properties: {
-                    label: ['open-meeting-for-event.label', { ns: meta.profile.key }],
+                    label: ['open-meeting-for-event.label', { ns: MeetingNamespace.key }],
                     icon: 'ph--handshake--regular',
                     // Surface in the Event article toolbar (not just the node context menu).
                     disposition: 'toolbar',
@@ -284,7 +272,7 @@ export default Capability.makeModule(
                   yield* invoker.invoke(MeetingOperation.Create, { name: event.title, event: Ref.make(event) });
                 }),
                 properties: {
-                  label: ['create-meeting-for-event.label', { ns: meta.profile.key }],
+                  label: ['create-meeting-for-event.label', { ns: MeetingNamespace.key }],
                   icon: 'ph--handshake--regular',
                   // Surface in the Event article toolbar (not just the node context menu).
                   disposition: 'toolbar',

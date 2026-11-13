@@ -34,6 +34,7 @@ import {
   getEchoRoot,
   getOwner,
   getRawTarget,
+  hasEntityElements,
   hasForeignOwner,
   notifyOwnerChain,
   setOwnerRecursive,
@@ -49,8 +50,8 @@ import {
   symbolReactivePrototype,
 } from './proxy-utils.ts';
 import { ReactiveArray } from './reactive-array.ts';
-import { SchemaValidator, assertsWithDetail } from './schema-validator.ts';
-import { ChangeId, ChangeKeyId, EventId } from './symbols.ts';
+import { SchemaValidator, assertsWithDetail, isEntityArrayAst } from './schema-validator.ts';
+import { ChangeId, ChangeKeyId, EntityElementsId, EventId } from './symbols.ts';
 
 // Re-export for external consumers.
 export { getEchoRoot, setMetaOwner } from './ownership.ts';
@@ -105,6 +106,14 @@ const deepCopy = <T>(value: T, visited = new Map<object, object>()): T => {
     return visited.get(actualValue) as T;
   }
 
+  // Entities held by identity are shared, not copied.
+  if (hasEntityElements(actualValue)) {
+    const copy = toEntityArray(actualValue);
+    visited.set(actualValue, copy);
+    copyHiddenProperties(actualValue, copy);
+    return copy as T;
+  }
+
   // Handle ReactiveArray specially to preserve reactivity.
   if (actualValue instanceof ReactiveArray) {
     const copy = new ReactiveArray<any>();
@@ -157,6 +166,16 @@ const setDeepOnRawTargets = (target: object, path: readonly (string | number)[],
   parent[path[path.length - 1]] = value;
 };
 
+/** A fresh reactive array of the given entities, marked so they stay held by identity. */
+const toEntityArray = (items: readonly unknown[]): ReactiveArray<unknown> => {
+  const array = new ReactiveArray<unknown>();
+  for (const item of items) {
+    array[array.length] = item;
+  }
+  defineHiddenProperty(array, EntityElementsId, true);
+  return array;
+};
+
 /**
  * Copy hidden properties (SchemaId, SchemaAstId, TypeId) from source to target.
  */
@@ -172,6 +191,20 @@ const copyHiddenProperties = (source: any, target: any): void => {
   }
 };
 
+/**
+ * Node inspector for typed targets. Forces `showHidden: false` so a target's hidden metadata, including its owner and
+ * through it unrelated fields of the root, never prints.
+ */
+function inspectTypedTarget(
+  this: ProxyTarget,
+  _depth: number,
+  options: InspectOptionsStylized,
+  inspectFn: (value: any, options?: InspectOptionsStylized) => string,
+): string {
+  const inspected = inspectFn(getRawTarget(this), { ...options, showHidden: false, customInspect: false });
+  return `Typed ${inspected}`;
+}
+
 //
 // Object layering for an in-memory typed reactive object (`TypedReactiveHandler`).
 //
@@ -183,7 +216,7 @@ const copyHiddenProperties = (source: any, target: any): void => {
 //     │         set/has/... traps run here; there is no `get` trap, so reads land on the target
 //     ▼
 //   target            the user's object. OWN enumerable props = user data ({ name, age, ... });
-//     │ [[Prototype]] OWN symbol props are removed by `compactMetadataToInstanceState` after init.
+//     │ [[Prototype]] a root's OWN symbol props are removed by `compactMetadataToInstanceState` after init.
 //     ▼
 //   instanceState     `Object.create(TypedObjectPrototype)`. Holds the relocated symbol-keyed
 //     │ [[Prototype]] metadata as hidden props: [EventId] (root only), [ObjectDeletedId], [SchemaId],
@@ -200,7 +233,9 @@ const copyHiddenProperties = (source: any, target: any): void => {
 //
 // Root vs nested: a root object owns an `[EventId]`; nested records share their root's reactivity
 // and have none. That presence is the "is this an initialized root" signal (it replaced an earlier
-// `[ChangeId] === true` marker).
+// `[ChangeId] === true` marker). Only a root gets an instanceState: a nested record never changes
+// handler, so it keeps its metadata as own properties and points straight at TypedObjectPrototype
+// (`shareTypedObjectPrototype`).
 //
 // `this` in the accessors below: the get trap calls `Reflect.get(target, prop, receiver)`, so
 // `this` is the PROXY (receiver) on the common path, or the raw target when read directly.
@@ -208,11 +243,12 @@ const copyHiddenProperties = (source: any, target: any): void => {
 // metadata chain both hang off the raw target, and `executeChange` keys the change context by it.
 //
 /**
- * Behaviour prototype for typed reactive records. A record's per-object metadata is moved onto an
+ * Behaviour prototype for typed reactive records. A root's per-object metadata is moved onto an
  * intermediate instance-state object whose prototype is this, so that swapping the handler that
  * backs an object (e.g. an in-memory object becoming database-backed) is a prototype re-point that
- * doesn't perturb the target's own-property shape. Marked as a reactive prototype so the "plain
- * object" gates (`isValidProxyTarget` / `deepCopy`) still treat such targets as data records.
+ * doesn't perturb the target's own-property shape. A nested record never swaps handler, so it points
+ * here directly and keeps its metadata as own properties. Marked as a reactive prototype so the
+ * "plain object" gates (`isValidProxyTarget` / `deepCopy`) still treat such targets as data records.
  */
 const TypedObjectPrototype: object = Object.create(Object.prototype);
 defineHiddenProperty(TypedObjectPrototype, symbolReactivePrototype, true);
@@ -256,6 +292,8 @@ Object.defineProperties(TypedObjectPrototype, {
         : (that: unknown) => getRawTarget(that) === target;
     },
   },
+  // One shared inspector rather than a bound function per record: a nested JSON Schema alone is dozens of records.
+  [inspectCustom]: { value: inspectTypedTarget },
   [StaticTypeSchemaSlot]: {
     // Lazily rebuild the source Effect Schema from `jsonSchema` and cache it as an own (hidden)
     // property so subsequent reads short-circuit this accessor; the set-trap deletes the cache when
@@ -306,6 +344,22 @@ const compactMetadataToInstanceState = (target: ProxyTarget): void => {
 };
 
 /**
+ * Point a nested record straight at {@link TypedObjectPrototype}, keeping its metadata as own properties.
+ *
+ * Unlike {@link compactMetadataToInstanceState} this keeps the record in V8's fast-property mode: deleting the moved
+ * properties would turn the target into a dictionary, and so would making the per-record state a prototype. Both
+ * cost ~0.5 KiB a record, which for an object holding JSON Schema (one record per schema node) is most of its heap.
+ */
+const shareTypedObjectPrototype = (target: ProxyTarget): void => {
+  // `isValidProxyTarget` admits only records rooted at `Object.prototype` or at a prototype carrying
+  // `symbolReactivePrototype`, which only `TypedObjectPrototype` sets, so a record skipped here already inherits it.
+  if (Array.isArray(target) || Object.getPrototypeOf(target) !== Object.prototype) {
+    return;
+  }
+  Object.setPrototypeOf(target, TypedObjectPrototype);
+};
+
+/**
  * Typed in-memory reactive store (with Schema).
  * Reactivity is based on Event subscriptions, not signals.
  */
@@ -328,8 +382,8 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     // Default to not-deleted, but preserve a deletion marker already stamped on the target (e.g. by
-    // `objectFromJSON` when hydrating a tombstone snapshot).
-    if (!(ObjectDeletedId in target)) {
+    // `objectFromJSON` when hydrating a tombstone snapshot). Only entities are deleted, never a nested record.
+    if (!hasOwner && !(ObjectDeletedId in target)) {
       defineHiddenProperty(target, ObjectDeletedId, false);
     }
 
@@ -358,16 +412,17 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    // Maybe have been set by `create`.
-    Object.defineProperty(target, inspectCustom, {
-      enumerable: false,
-      configurable: true,
-      value: this._inspect.bind(target),
-    });
-
-    // Relocate per-object metadata onto an instance-state prototype, leaving only user data as own
-    // properties on the target. Done last so all metadata set above (and by `prepareTypedTarget`) moves.
-    compactMetadataToInstanceState(target);
+    // Relocate a root's metadata onto an instance-state prototype, leaving only user data as own properties on the
+    // target. Done last so all metadata set above (and by `prepareTypedTarget`) moves. A nested record never changes
+    // handler, so it needs no state of its own: see `shareTypedObjectPrototype`.
+    if (Array.isArray(target)) {
+      // Arrays keep their `ReactiveArray` prototype, so they carry the shared inspector themselves.
+      defineHiddenProperty(target, inspectCustom, inspectTypedTarget);
+    } else if (hasOwner) {
+      shareTypedObjectPrototype(target);
+    } else {
+      compactMetadataToInstanceState(target);
+    }
 
     // After compaction and ownership, so each child is stamped and owned before it gets a proxy of its
     // own. Recursive: wrapping a child runs its `init`, which wraps that child's children.
@@ -519,6 +574,17 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return { echoRoot, preparedValue: value };
     }
 
+    // An element of an entity array is a reference to another root: validated, never owned or copied.
+    if (hasEntityElements(target)) {
+      return { echoRoot, preparedValue: this._validateValue(target, prop, value) };
+    }
+    if (Array.isArray(value) && isEntityArrayAst(SchemaValidator.getTargetPropertyAst(target, prop))) {
+      const entities = toEntityArray(value);
+      const validated = this._validateValue(target, prop, entities);
+      setOwnerRecursive(validated, echoRoot);
+      return { echoRoot, preparedValue: createProxy(validated, this) };
+    }
+
     // Check for cycles before assignment.
     if (isValidProxyTarget(value) || isProxy(value)) {
       if (wouldCreateCycle(echoRoot, value)) {
@@ -587,20 +653,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     return value;
   }
-
-  private _inspect(
-    _: number,
-    options: InspectOptionsStylized,
-    inspectFn: (value: any, options?: InspectOptionsStylized) => string,
-  ): string {
-    const inspected = inspectFn(this, {
-      ...options,
-      showHidden: false,
-      customInspect: false,
-    });
-
-    return `Typed ${inspected}`;
-  }
 }
 
 /**
@@ -668,6 +720,9 @@ const setNestedSchema = (obj: any, ast: SchemaAST.AST) => {
 };
 
 const setChildSchemas = (obj: any, ast: SchemaAST.AST) => {
+  if (hasEntityElements(obj)) {
+    return;
+  }
   if (Array.isArray(obj)) {
     for (let index = 0; index < obj.length; index++) {
       if (isValidProxyTarget(obj[index])) {
@@ -722,7 +777,21 @@ export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T>
     assertsWithDetail(schema, target);
     SchemaValidator.assertExactProperties(schema.ast, target, (path) => getDeep(target, path));
   }
+  markEntityArrays(target, schema.ast);
   makeArraysReactive(target);
+};
+
+/** Marks the target's top-level entity-array properties (e.g. `meta.tags`) as held by identity. */
+const markEntityArrays = (target: any, ast: SchemaAST.AST) => {
+  if (!SchemaAST.isObjects(ast)) {
+    return;
+  }
+  for (const property of ast.propertySignatures) {
+    const value = target[property.name];
+    if (Array.isArray(value) && !hasEntityElements(value) && isEntityArrayAst(property.type)) {
+      target[property.name] = toEntityArray(value);
+    }
+  }
 };
 
 /**
@@ -748,6 +817,9 @@ const makeArraysReactive = (target: any) => {
   for (const key in target) {
     const value = target[key];
     if (value == null || typeof value !== 'object' || isProxy(value)) {
+      continue;
+    }
+    if (hasEntityElements(value)) {
       continue;
     }
     if (Array.isArray(value) && !(value instanceof ReactiveArray)) {

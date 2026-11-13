@@ -19,10 +19,10 @@ export const diagramLanguage = LRLanguage.define({
   parser: parser.configure({
     props: [
       styleTags({
-        'object elements move remove diagram group node edge': tags.definitionKeyword,
-        'cell via bus compact': tags.keyword,
+        'object elements move remove diagram group node edge note fragment': tags.definitionKeyword,
+        'cell via bus compact else': tags.keyword,
         // Relation words and sides are plain names the reader checks, so they are tagged by position.
-        'RelationKind Side': tags.keyword,
+        'RelationKind Side FragmentKind': tags.keyword,
         'Soft': tags.modifier,
         'rect ellipse diamond triangle circle line curve arc text arrow portal': tags.keyword,
         // A quoted id is still an id, not a string.
@@ -43,7 +43,7 @@ export const diagramLanguage = LRLanguage.define({
         // keywords, so without the path they would colour as keywords while every other enum value
         // colours as a value. Listed in full, like the grammar's own `Word` alternation, so a
         // literal that starts colliding later is already covered.
-        'Word/object Word/elements Word/move Word/remove Word/rect Word/ellipse Word/diamond Word/triangle Word/circle Word/line Word/curve Word/arc Word/text Word/arrow Word/portal Word/diagram Word/group Word/node Word/edge Word/cell Word/via Word/bus Word/compact':
+        'Word/object Word/elements Word/move Word/remove Word/rect Word/ellipse Word/diamond Word/triangle Word/circle Word/line Word/curve Word/arc Word/text Word/arrow Word/portal Word/diagram Word/group Word/node Word/edge Word/cell Word/via Word/bus Word/compact Word/note Word/fragment Word/else':
           tags.attributeValue,
         '_': tags.null,
         'Comment': tags.lineComment,

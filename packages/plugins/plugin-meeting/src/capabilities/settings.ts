@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { MeetingCapabilities, Settings } from '#types';
+
+import { MeetingNamespace } from '../namespace.ts';
 
 // Meeting has no user-configurable settings, so it does NOT contribute
 // `AppCapabilities.Settings` (an empty schema renders a blank settings article).
@@ -17,7 +18,7 @@ import { MeetingCapabilities, Settings } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = KvsStore.make({
-      key: meta.profile.key,
+      key: MeetingNamespace.key,
       schema: Settings.Settings,
       defaultValue: () => ({}),
     });

@@ -49,7 +49,7 @@ type Settings
     chatView?: ChatView
     modelProvider?: ModelProvider
     modelDefaults?: ModelDefaults
-    codeMode?: boolean
+    disableCodeMode?: boolean
     reportStruggles?: boolean
     tracePanelDebug?: boolean
 ```
@@ -281,10 +281,10 @@ feat F-5: Tool Execution
   req F-5.3:
     when: AI invokes a tool during a conversation
     then: operation is dispatched via the compute runtime and result returned to the model
-  req F-5.4: Code mode is opt-in via `Settings.codeMode`, off by default; the host supplies the engine
+  req F-5.4: Code mode is on by default and opt-out via `Settings.disableCodeMode`; the host supplies the engine
              through the `codeModeTurnProducer` plugin option, and without it the setting has no effect.
   req F-5.5:
-    when: Settings.codeMode is enabled, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
+    when: Settings.disableCodeMode is false or absent, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
     then: agent processes spawned afterwards run turns through the code-mode producer (one `eval` tool)
           instead of AiSession
 ```
@@ -319,6 +319,17 @@ feat F-8: Agent Struggle Reports
     then: the trajectory is uploaded to the feedback-logs bucket under `trajectories/` and an `agent_struggle` event is captured
           carrying the cause, model DXN, code mode, and enabled skills
   req F-8.4: A review that fails is logged and dropped; it never surfaces to the user.
+```
+
+```mdl
+feat F-9: Token Labels
+
+  req F-9.1: Labels are opt-in via `Settings.showTokens`, off by default.
+  req F-9.2:
+    when: labels are on
+    then: each block of the thread (a prompt, a paragraph of the answer, a tool run) shows its estimated token count in
+          a gutter beside it, level with its first line
+  req F-9.3: The count is an estimate (tokenx, the estimator the preprocessor budgets with), since per-request usage covers a whole turn and cannot be attributed to one block; status and stats blocks count zero.
 ```
 
 ## Acceptance
@@ -504,7 +515,9 @@ test QA-3: The prompt carries context, commands and the agent's settings
     - name: Remove an object from context
       do: Click the x beside Rich Burdon in the context drawer.
       expect: Rich Burdon leaves Context; the message that mentioned them is unchanged
+```
 
+```mdl
 test QA-4: A chat's MCP servers come from connections and built-in servers
   desc: |
     MCP tools reach a chat from two places: the built-in servers plugins ship (Browser), which start
@@ -542,6 +555,59 @@ test QA-4: A chat's MCP servers come from connections and built-in servers
       expect: it shows unchecked here, while it stays listed in the space's Connections
 ```
 
+```mdl
+test QA-5: A working agent marks its chat and its companion's subject in the navtree
+  desc: |
+    While an agent process runs for a chat, the chat's navtree row shows the agent star in its
+    attention glyph: a sparkle in the text colour that pulses in place of the presence dots (still,
+    under reduced motion). A companion chat marks the object it is a companion to instead, so a
+    document shows that the assistant is working on it. The star stays while you look at something
+    else and clears when the turn ends.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - chat: a chat "Trip ideas" in the space, open in a plank
+    - subject: a document "Launch plan" in the space
+  steps:
+    - name: The chat's row shows the agent star
+      do: In "Trip ideas", send a prompt that takes the agent several seconds to answer.
+      expect: the chat's navtree glyph shows the agent star while the agent works
+    - name: The star stays while you look elsewhere
+      do: Open "Launch plan" from the navtree and hover the chat's glyph.
+      expect: the chat's row keeps the star; its tooltip reads "Assistant is working"; the star
+        clears when the reply finishes
+    - name: The companion's subject shows the agent star
+      do: Open the companion's Assistant tab on "Launch plan" and send a prompt about the document.
+      expect: the document's navtree glyph shows the agent star
+    - name: The subject keeps the star while you look elsewhere
+      do: Open "Trip ideas" from the navtree and hover the document's glyph.
+      expect: the document's row keeps the star; its tooltip reads "Assistant is working on this";
+        the star clears when the reply finishes
+```
+
+
+```mdl
+test QA-6: Token labels beside each block
+  desc: The opt-in gutter that shows the estimated token count of each block in the thread.
+  actors: human
+  covers: [F-9.1, F-9.2, F-9.3]
+  status: unverified
+  given:
+    - a chat thread with prompts, answers and a tool run
+  steps:
+    - name: Labels are off by default
+      do: Open the chat with `showTokens` unset.
+      expect: no token labels; the blocks use the full width of the column
+    - name: Turn the labels on
+      do: Turn on "Show token counts" in the assistant settings.
+      expect: a muted count shows in a right-hand gutter beside every prompt, answer paragraph and tool run, level
+        with its first line
+    - name: Labels follow a streaming turn
+      do: Send a prompt and let the answer stream.
+      expect: each block of the answer gets its label as it arrives, and the labels never move a row
+```
 
 ## Changelog
 
@@ -677,6 +743,94 @@ decision D-16: A connection's name in a tool prefix is its own name, or its endp
   rejected:
     - Prefix only tools whose names clash: a tool's name then changed whenever another server came or went.
     - Keep the last set of servers read when a read fails: the agent process ends with each turn, so the set never outlived one.
+```
+
+```mdl
+decision D-17: Every chat prompt reads the buttons other plugins add to it from a hidden prompt node under the node that hosts it: a chat, the assistant companion, or a space's home. The prompt node is keyed by its host, not its chat, so a draft chat that is stored or replaced keeps the same buttons and the same dictation session. Contributors file app-graph actions on it with the `prompt` disposition. Fills in [D-2].
+  date: 2026-10-23
+  by: user:wittjosiah
+  affects: [QA-3]
+  why: Most prompts have a draft chat with no graph node, so actions filed on the chat's node, the microphone among them, never reached them. Graph actions keep one way for a plugin to add a button to another plugin's surface. The command palette does not list a prompt node's actions yet: it walks only the attended node and its ancestors.
+  rejected:
+    - A surface role for prompt buttons: a contribution would be a component, not an action other parts of the app can list.
+    - An `ObjectAction` capability: it has no custom render, which the microphone needs, and keeps actions out of the app graph. `ObjectAction` is deprecated in favour of graph actions.
+```
+
+```mdl
+decision D-18: Code mode is the default turn engine; the setting becomes `disableCodeMode`, an opt-out.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-5.4, F-5.5]
+```
+
+```mdl
+decision D-19: A running agent shows on the navtree as the agent star in the attention glyph's mark, in place of presence, on its chat's row and, for a companion chat, on the row of the object it is a companion to. It reaches the glyph through the progress registry.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [QA-5]
+```
+
+```mdl
+decision D-20: An agent turn reports its progress as trace status updates from the runtime it runs on, not through a capability of its own, so a turn in a cloud session shows as well.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [QA-5]
+```
+
+```mdl
+decision D-21: Each turn sends a status update keyed `<uri>#agent` on the chat and on a companion chat's subject when it starts, every 30 seconds while it runs, and with its outcome when it ends; the progress trace sink makes it a monitor, and plugin-space's glyph draws running progress as the star. Both agents (the assistant and Claude Code) wrap their turns in the same helper. Fills in [D-19] and [D-20].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-5]
+  why: A turn's own trace reaches the progress registry wherever it runs (the local sink, or swarm broadcasts from EDGE), so nothing in the app has to watch for agents. The sink fails a meter that hears nothing for 90 seconds, which a long model call can outlast, hence the heartbeat. The star says an agent is on it, where an outline only says something is busy. One treatment on both rows keeps it consistent.
+  rejected:
+    - Project busy chats from the process tree in plugin-assistant: a second source beside the trace for the same signal, tied to the app watching processes.
+    - A still amber outline on the edge: it kept presence visible but read as generic busy work and had no natural finished state.
+    - The star on chats and the outline on companion subjects: kept a document's viewers visible, at the cost of two symbols for one thing.
+    - An `ActivitySource` capability the glyph merges: a second channel beside the progress registry for the same signal.
+```
+
+```mdl
+decision D-22: The thread can show the estimated token count of each block in a gutter beside it, opt-in via `Settings.showTokens`. The count is estimated per block, since provider usage covers a whole request.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [F-9.1, F-9.2, F-9.3, QA-6]
+```
+
+```mdl
+decision D-23: plugin-assistant's operations must not require an atom registry; EDGE hosts do not provide one.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [CreateChat, RunPromptInNewChat]
+```
+
+```mdl
+decision D-24: CreateChat, BindChatContext and RunPromptInNewChat pass the atom registry to the context binder only when one is contributed; without one the binder uses a registry of its own. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [CreateChat, RunPromptInNewChat]
+  why: The registry only carries the binder's atoms to UI subscribers, and a headless host has none.
+  rejected:
+    - Contribute an atom registry on the EDGE hosts: the registry is a UI concept, and [D-23] keeps it off them.
+```
+
+```mdl
+decision D-25: GenerateHomeSuggestions reads and writes its suggestions cache only when both the atom registry and the cache are contributed; without them it generates prompts on every call. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The cache is per-client UI state, so a host without it has nothing to reuse.
+```
+
+```mdl
+decision D-26: RunPromptInNewChat binds context through the database it is given rather than looking the space up through the client. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [RunPromptInNewChat]
+  why: EDGE hosts contribute no client either, and the handler already provides that database.
 ```
 
 ---

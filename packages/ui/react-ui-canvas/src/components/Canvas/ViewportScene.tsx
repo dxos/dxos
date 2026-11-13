@@ -5,11 +5,13 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useMemo } from 'react';
 
+import { frameTimeAttribute } from '@dxos/animation';
+import { type Bounds, type ElementId, MAJOR_GRID_RATIO } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { isMoving } from '../../engine/index.ts';
-import { PREVIEW_NODE_ID } from '../../hooks/index.ts';
-import { type Bounds, type Camera, type ElementId, MAJOR_GRID_RATIO, frameTimeAttribute } from '../../model/index.ts';
+import { PREVIEW_NODE_ID, useRegistry } from '../../hooks/index.ts';
+import { type Camera } from '../../model/index.ts';
 import { MIN_ZOOM, cameraTransform, visibleView } from '../../utils/index.ts';
 import { ControlFrame } from '../ControlFrame/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
@@ -37,7 +39,7 @@ export type ViewportSceneProps = {
 
 /** The scene under the camera: the lattice, the layer and the control frame, sampled at the clock's time. */
 export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay }: ViewportSceneProps) => {
-  const { atoms, store, capabilities, readonly, projection, nodeRegistry, grid } = useCanvasServices('Canvas.Viewport');
+  const { atoms, store, capabilities, readonly, draw, nodeRegistry, grid } = useCanvasServices('Canvas.Viewport');
   const {
     displayScene,
     blocked,
@@ -54,7 +56,9 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
     onPointContextMenu,
     onVertexPointerDown,
     onVertexMidpointPointerDown,
+    onBendPointerDown,
   } = useCanvasGesture('Canvas.Viewport');
+  const registry = useRegistry();
   const tools = useCanvasTools('Canvas.Viewport');
   const selectionAspect = useCanvasSelection('Canvas.Viewport');
   const editingAspect = useCanvasEditing('Canvas.Viewport');
@@ -69,7 +73,23 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
   const active = useAtomValue(editingAspect.atoms.active);
   const time = useAtomValue(timeAspect.atoms.time);
   const drag = useAtomValue(atoms.drag);
+  const inside = useAtomValue(atoms.inside);
   const { generated } = timeAspect;
+  // Inside an Object the drawing around it goes back: what the scene holds that is not one of its parts. The parts
+  // are the elements the composite contributes, which the draw scene has already put in place of the Instance.
+  const faded = useMemo(() => {
+    if (!inside) {
+      return undefined;
+    }
+    const composite = registry.get(store.views)[inside.composite];
+    if (!composite) {
+      return undefined;
+    }
+    const parts = new Set<string>([...Object.keys(composite.nodes), ...Object.keys(composite.links)]);
+    return new Set(
+      [...Object.keys(displayScene.nodes), ...Object.keys(displayScene.links)].filter((id) => !parts.has(id)),
+    );
+  }, [inside, displayScene, registry, store]);
 
   /** One screen pixel in scene units, for chrome that should not grow with the camera. */
   const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);
@@ -84,12 +104,12 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
       data-frame-time={frameTimeAttribute(time)}
     >
       {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
-      {guides && !readonly && projection.lattice && (
-        <LatticeGrid spec={projection.lattice} bounds={latticeBounds} unit={frameUnit} />
+      {guides && !readonly && draw.lattice && (
+        <LatticeGrid spec={draw.lattice} bounds={latticeBounds} unit={frameUnit} />
       )}
       <div className='pointer-events-auto'>
         <SceneLayer
-          store={store}
+          lists={store}
           scene={displayScene}
           registry={nodeRegistry}
           zoom={camera.zoom}
@@ -101,6 +121,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           hoveredLink={linkHover}
           opening={opening}
           focus={focus}
+          faded={faded}
           editing={editing?.kind === 'label' ? editing : undefined}
           dimmed={editing?.kind === 'vertices' ? editing.id : undefined}
           active={active}
@@ -108,7 +129,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           debug={debug}
           handlers={handlers}
           // Routes follow the gutters in lattice mode, whether or not snap is on.
-          lattice={projection.lattice}
+          lattice={draw.lattice}
           cell={grid * MAJOR_GRID_RATIO}
           generated={generated}
         />
@@ -129,7 +150,8 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           createFrame={createFrame}
           landing={landing}
           blocked={blocked}
-          lattice={projection.lattice}
+          lattice={draw.lattice}
+          grid={grid}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}
@@ -139,6 +161,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           vertexEditing={editing?.kind === 'vertices' ? editing : undefined}
           onVertexPointerDown={onVertexPointerDown}
           onVertexMidpointPointerDown={onVertexMidpointPointerDown}
+          onBendPointerDown={onBendPointerDown}
         />
       )}
       {overlay}

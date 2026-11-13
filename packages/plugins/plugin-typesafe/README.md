@@ -32,7 +32,7 @@ Cloudflare's own decision models, [Clef](https://blog.cloudflare.com/clef-decisi
 `@cf/cloudflare/clef-flash`), speak the same System One wire and take the same Workers AI route.
 
 **Default model.** A caller with no reason to pin a model asks for `Model.defaultDecisionModel`; the
-plugin's **Default decision model** setting picks which of the four it resolves to (Jev on TypeSafe
-when unset).
+plugin's **Default decision model** setting picks which of the four it resolves to (Clef on Cloudflare
+Workers AI when unset: it needs no key, and answers in about 0.3 s).
 
 See [docs/DESIGN.md](./docs/DESIGN.md); the provider itself lives in `@dxos/ai/resolvers`.

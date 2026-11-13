@@ -49,6 +49,9 @@
       "path": "../../core/compute/assistant"
     },
     {
+      "path": "../../core/compute/assistant-toolkit"
+    },
+    {
       "path": "../../core/compute/brain"
     },
     {
@@ -64,10 +67,16 @@
       "path": "../../core/compute/pipeline-rdf"
     },
     {
+      "path": "../../core/compute/plugin-builder"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-protocol"
     },
     {
       "path": "../../core/echo/echo-react"

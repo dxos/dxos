@@ -7,15 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { MagazinePlugin } from '#plugin';
+import * as MagazinePlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { MagazineNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), MagazinePlugin.make()] });
+
+const moduleId = (name: string) => `${MagazineNamespace.key}.module.${name}`;
 
 describe('MagazinePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), MagazinePlugin()],
+      plugins: [ClientPlugin.make({}), MagazinePlugin.make()],
     });
 
     expect(harness.manager.getActive()).toEqual(

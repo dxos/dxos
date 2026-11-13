@@ -19,7 +19,8 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
-import { KEY_BINDING, meta } from '#meta';
+import { KEY_BINDING } from '../../constants.ts';
+import { NavTreeNamespace } from '../../namespace.ts';
 
 export type CommandsDialogContentProps = {
   selected?: string;
@@ -28,7 +29,7 @@ export type CommandsDialogContentProps = {
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
-    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(NavTreeNamespace.key);
     const { invokePromise } = Hooks.useOperationInvoker();
     const runAction = GraphHooks.useActionRunner();
     const { graph } = ToolkitHooks.useAppGraph();
@@ -74,7 +75,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
     return (
       <Dialog.Content ref={forwardedRef}>
-        <Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.profile.key })}</Dialog.Title>
+        <Dialog.Title srOnly>{t('commands-dialog.title', { ns: NavTreeNamespace.key })}</Dialog.Title>
         <Dialog.Body>
           <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
             {/* Focused on mount, and marked so the dialog's own focus pass agrees: without either, the

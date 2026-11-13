@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
+import { formatSourceKey } from '@dxos/deus/review';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 
-import { formatSourceKey, resolveRoots } from '#sync';
+import { resolveRoots } from '#sync';
 import { CodeOperation } from '#types';
 
 import { CodeOperationError } from '../errors.ts';
@@ -23,8 +24,8 @@ const handler: Operation.WithHandler<typeof CodeOperation.ListLocalSpecs> = Code
           Effect.mapError((cause) => new CodeOperationError({ cause })),
           Effect.map((paths) =>
             paths
-              // Reviews sit beside their spec; they are read with it rather than listed as specs.
-              .filter((path) => !path.endsWith('.review.mdl'))
+              // Reviews are read with the spec beside them, and fixtures are test inputs, so neither is listed as a spec.
+              .filter((path) => !path.endsWith('.review.mdl') && !/(^|\/)__fixtures__\//.test(path))
               .map((path) => {
                 const [owner, repo] = root.repo.split('/');
                 return formatSourceKey({ owner, repo, path });

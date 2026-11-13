@@ -16,14 +16,47 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { DXN } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { withClientProvider } from '@dxos/react-client/testing';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 
 import { type SlideSource } from '#deck';
 import { useSlideIndex } from '#hooks';
 import { translations } from '#translations';
 
-import { Deck, type DeckProps } from './Deck.tsx';
+import * as Deck from './Deck.tsx';
+
+type DeckPanelProps = Omit<Deck.RootProps, 'children'>;
+
+/** The single-slide deck as `DocumentArticle` composes it: toolbar, viewport and pager; fullscreen is the slide alone. */
+const DeckPanel = (props: DeckPanelProps) => (
+  <Deck.Root {...props}>
+    <Panel.Root asChild>
+      <Deck.Content>
+        {!props.fullscreen && (
+          <Panel.Header>
+            <Toolbar.Root>
+              <div className='grow' />
+              <Deck.PlayButton />
+            </Toolbar.Root>
+          </Panel.Header>
+        )}
+        <Panel.Body asChild>
+          <Deck.Viewport />
+        </Panel.Body>
+        {!props.fullscreen && (
+          <Panel.Footer>
+            <div className='flex items-center justify-center gap-4'>
+              <Deck.Pager />
+              <Deck.PageNumber />
+            </div>
+          </Panel.Footer>
+        )}
+      </Deck.Content>
+    </Panel.Root>
+  </Deck.Root>
+);
 
 const createTextSlides = (count: number): SlideSource[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -32,12 +65,69 @@ const createTextSlides = (count: number): SlideSource[] =>
     text: Text.make({ content: `# Slide ${index + 1}` }),
   }));
 
-const DefaultStory = ({ count = 5, ...props }: Partial<DeckProps> & { count?: number }) => {
+const createClickSlides = (): SlideSource[] =>
+  [['# Clicks', '', '<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'].join('\n'), '# Plain'].map(
+    (content, index) => ({ kind: 'text' as const, id: `click-${index}`, text: Text.make({ content }) }),
+  );
+
+const ClickStepsStory = () => {
+  const slides = useMemo(() => createClickSlides(), []);
+  const [index, setIndex] = useState(0);
+  return <DeckPanel slides={slides} index={index} onIndexChange={setIndex} />;
+};
+
+/** The click slide comes last, so advancing past it has no next slide to go to. */
+const ClickStepsLastStory = () => {
+  const slides = useMemo(() => createClickSlides().reverse(), []);
+  const [index, setIndex] = useState(0);
+  return <DeckPanel slides={slides} index={index} onIndexChange={setIndex} />;
+};
+
+const CLICKS_MARKDOWN = ['<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'].join('\n');
+
+/** A previewed document whose current slide is replaced in place, as a live edit does; ids stay positional. */
+const EditedSlideStory = () => {
+  const [content, setContent] = useState(`# Before\n\n${CLICKS_MARKDOWN}`);
+  const slides = useMemo((): SlideSource[] => [{ kind: 'markdown', id: 'doc:0', content }], [content]);
+  const [index, setIndex] = useState(0);
+  return (
+    <div className='contents'>
+      <button data-testid='replace-slide' onClick={() => setContent(`# After\n\n${CLICKS_MARKDOWN}`)}>
+        Replace
+      </button>
+      <DeckPanel slides={slides} index={index} onIndexChange={setIndex} />
+    </div>
+  );
+};
+
+/** The thumbnail grid as `PresentationArticle` composes it, over a first slide with click steps. */
+const GridStory = () => {
+  const slides = useMemo(() => [...createClickSlides(), ...createTextSlides(8)], []);
+  const [index, setIndex] = useState(0);
+  const [fullscreen, setFullscreen] = useState(false);
+  return (
+    <Deck.Root
+      slides={slides}
+      index={index}
+      onIndexChange={setIndex}
+      fullscreen={fullscreen}
+      onFullscreenChange={setFullscreen}
+    >
+      <Panel.Root asChild>
+        <Deck.Content>
+          <Panel.Body asChild>{fullscreen ? <Deck.Viewport /> : <Deck.Grid />}</Panel.Body>
+        </Deck.Content>
+      </Panel.Root>
+    </Deck.Root>
+  );
+};
+
+const DefaultStory = ({ count = 5, ...props }: Partial<DeckPanelProps> & { count?: number }) => {
   const slides = useMemo(() => createTextSlides(count), [count]);
   const [index, setIndex] = useState(0);
   const [fullscreen, setFullscreen] = useState(props.fullscreen ?? false);
   return (
-    <Deck
+    <DeckPanel
       {...props}
       slides={slides}
       index={index}
@@ -62,14 +152,28 @@ const EditableStory = () => {
     [],
   );
   const [index, setIndex] = useState(0);
-  return <Deck slides={slides} index={index} onIndexChange={setIndex} />;
+  return <DeckPanel slides={slides} index={index} onIndexChange={setIndex} />;
+};
+
+/** Markdown slides whose first slide names a theme in its headmatter; `theme` props override it. */
+const ThemedStory = ({ theme }: Pick<DeckPanelProps, 'theme'>) => {
+  const slides = useMemo(
+    (): SlideSource[] =>
+      [
+        ['---', 'theme: light', '---', '', '# Light theme', '', 'Named by the first slide.'].join('\n'),
+        ['# Every slide', '', '```ts', "const deck = 'themed';", '```'].join('\n'),
+      ].map((content, index) => ({ kind: 'markdown', id: `themed-${index}`, content })),
+    [],
+  );
+  const [index, setIndex] = useState(0);
+  return <DeckPanel slides={slides} index={index} onIndexChange={setIndex} theme={theme} />;
 };
 
 /** Index is far past the end, as when slides were deleted since the view state was saved. */
 const StaleIndexStory = () => {
   const slides = useMemo(() => createTextSlides(3), []);
   const [, setIndex] = useSlideIndex('stale-index-story', slides.length);
-  return <Deck slides={slides} index={9} onIndexChange={setIndex} />;
+  return <DeckPanel slides={slides} index={9} onIndexChange={setIndex} />;
 };
 
 const InputSlide = () => (
@@ -130,7 +234,8 @@ export const Default: Story = {
   decorators: [withEmptyPlugins],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const deck = await canvas.findByTestId('presenter.deck');
+    // The client identity is created before the first story renders, which can outlast the default timeout.
+    const deck = await canvas.findByTestId('presenter.deck', undefined, { timeout: 10_000 });
     deck.focus();
     await userEvent.keyboard('{ArrowRight}{ArrowRight}');
     await expect(await canvas.findByText('3 / 5')).toBeVisible();
@@ -143,25 +248,13 @@ export const Default: Story = {
 
 export const Empty: Story = {
   decorators: [withEmptyPlugins],
-  args: { count: 0, onAddSlide: fn() },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => expect(canvas.getByText('Add slide')).toBeVisible());
-    await expect(await canvas.findByText('0 / 0')).toBeVisible();
-    for (const label of ['Jump to first', 'Previous', 'Next', 'Jump to last']) {
-      await expect(canvas.getByLabelText(label)).toBeDisabled();
-    }
-  },
-};
-
-/** Without `onAddSlide` the empty deck offers no button that would do nothing. */
-export const EmptyReadonly: Story = {
-  decorators: [withEmptyPlugins],
   args: { count: 0 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText('0 / 0')).toBeVisible();
-    await expect(canvas.queryByText('Add slide')).toBeNull();
+    for (const label of ['Jump to first', 'Previous', 'Next', 'Jump to last']) {
+      await expect(canvas.getByLabelText(label)).toBeDisabled();
+    }
   },
 };
 
@@ -192,7 +285,7 @@ export const Fullscreen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const overlay = await canvas.findByTestId('presenter.overlay');
-    await expect(canvas.queryByTestId('presenter.fullscreen')).toBeNull();
+    await expect(canvas.queryByTestId('presenter.play')).toBeNull();
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
     await sleep(1500);
     window.dispatchEvent(new PointerEvent('pointermove'));
@@ -201,6 +294,22 @@ export const Fullscreen: Story = {
     await waitFor(() => expect(overlay).toHaveAttribute('data-visible', 'false'), { timeout: 3_000 });
     window.dispatchEvent(new PointerEvent('pointermove'));
     await waitFor(() => expect(overlay).toHaveAttribute('data-visible', 'true'));
+  },
+};
+
+/** The overlay pager stays while the pointer rests on it, and fades once the pointer leaves. */
+export const FullscreenHover: Story = {
+  decorators: [withEmptyPlugins],
+  args: { fullscreen: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const overlay = await canvas.findByTestId('presenter.overlay');
+    await userEvent.hover(overlay);
+    // Longer than the idle time, after which an unhovered pager has faded.
+    await new Promise((resolve) => setTimeout(resolve, 2_500));
+    await expect(overlay).toHaveAttribute('data-visible', 'true');
+    await userEvent.unhover(overlay);
+    await waitFor(() => expect(overlay).toHaveAttribute('data-visible', 'false'), { timeout: 3_000 });
   },
 };
 
@@ -252,5 +361,320 @@ export const StaleIndex: Story = {
   render: StaleIndexStory,
   play: async ({ canvasElement }) => {
     await expect(await within(canvasElement).findByText('3 / 3')).toBeVisible();
+  },
+};
+
+/** Up and down reveal items before the slide advances; going back lands on the previous slide fully revealed. */
+export const ClickSteps: Story = {
+  render: ClickStepsStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    await waitFor(() => expect(hidden()).toBe(3));
+    deck.focus();
+    for (const remaining of [2, 1, 0]) {
+      await userEvent.keyboard('{ArrowDown}');
+      await waitFor(() => expect(hidden()).toBe(remaining));
+      await expect(canvas.getByText('1 / 2')).toBeVisible();
+    }
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await userEvent.keyboard('{ArrowUp}');
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(0));
+    await expect(canvasElement.querySelectorAll('li')).toHaveLength(3);
+    await userEvent.keyboard('{End}{Home}{ArrowDown}');
+    await waitFor(() => expect(hidden()).toBe(2));
+    await expect(canvas.getByText('1 / 2')).toBeVisible();
+  },
+};
+
+/** The columns the grid laid out, read as a row move does; a tile grid measures itself a frame after it mounts. */
+const gridColumns = (canvasElement: HTMLElement) =>
+  waitFor(async () => {
+    const tiles = Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="option"]'));
+    const columns = tiles.filter((tile) => tile.offsetTop === tiles[0].offsetTop).length;
+    await expect(columns).toBeGreaterThan(1);
+    return columns;
+  });
+
+const expectSelected = (canvas: ReturnType<typeof within>, index: number) =>
+  waitFor(() => expect(canvas.getByTestId(`presenter.slide-grid.${index}`)).toHaveAttribute('aria-selected', 'true'));
+
+/** In the grid Up and Down move between rows and stop at the first and last, and the keys survive presenting. */
+export const GridKeys: Story = {
+  render: GridStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    await canvas.findByTestId('presenter.slide-grid.9');
+    const columns = await gridColumns(canvasElement);
+    deck.focus();
+    await expectSelected(canvas, 0);
+    await userEvent.keyboard('{ArrowUp}');
+    await expectSelected(canvas, 0);
+    await userEvent.keyboard('{ArrowDown}');
+    await expectSelected(canvas, columns);
+    await userEvent.keyboard('{ArrowUp}');
+    await expectSelected(canvas, 0);
+    await userEvent.keyboard('{End}{ArrowDown}');
+    await expectSelected(canvas, 9);
+    await userEvent.keyboard('{Home}');
+    await expectSelected(canvas, 0);
+    await userEvent.keyboard(' ');
+    await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
+    const columnsAfterExit = await gridColumns(canvasElement);
+    await userEvent.keyboard('{ArrowDown}');
+    await expectSelected(canvas, columnsAfterExit);
+  },
+};
+
+/** With a clicked thumbnail holding focus, every key moves the one current tile, and no other tile stays marked. */
+export const GridKeysOnTile: Story = {
+  render: GridStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByTestId('presenter.slide-grid.0'));
+    await canvas.findByTestId('presenter.slide-grid.9');
+    const columns = await gridColumns(canvasElement);
+    await expectSelected(canvas, 0);
+    await userEvent.keyboard('{ArrowDown}');
+    await expectSelected(canvas, columns);
+    await userEvent.keyboard('{ArrowUp}');
+    await expectSelected(canvas, 0);
+    await userEvent.keyboard('{ArrowRight}');
+    await expectSelected(canvas, 1);
+    await expect(canvasElement.querySelectorAll('[data-highlighted]:not([aria-selected="true"])')).toHaveLength(0);
+    await userEvent.keyboard('{ArrowLeft}');
+    await expectSelected(canvas, 0);
+    await userEvent.keyboard(']');
+    await expectSelected(canvas, 1);
+    await userEvent.keyboard('[[');
+    await expectSelected(canvas, 0);
+  },
+};
+
+/** Space on a clicked thumbnail presents from it, rather than the listbox selecting it again. */
+export const GridSpaceOnTile: Story = {
+  render: GridStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByTestId('presenter.slide-grid.1'));
+    await waitFor(() => expect(canvas.getByTestId('presenter.slide-grid.1')).toHaveAttribute('aria-selected', 'true'));
+    await userEvent.keyboard(' ');
+    await expect(await canvas.findByRole('heading', { name: 'Plain' })).toBeInTheDocument();
+    await expect(canvas.queryByTestId('presenter.slide-grid.1')).toBeNull();
+  },
+};
+
+/** Left, right and the brackets move whole slides past any build; Cmd or Ctrl with left or right jumps to the deck's ends. */
+export const SlideKeys: Story = {
+  render: ClickStepsStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    await waitFor(() => expect(hidden()).toBe(3));
+    deck.focus();
+    for (const [key, page] of [
+      ['{ArrowRight}', '2 / 2'],
+      ['{ArrowLeft}', '1 / 2'],
+      [']', '2 / 2'],
+      // A doubled bracket is a literal `[` in userEvent's key syntax.
+      ['[[', '1 / 2'],
+    ] as const) {
+      await userEvent.keyboard(key);
+      await expect(await canvas.findByText(page)).toBeVisible();
+    }
+    // Back through the slide keys lands on the slide fully revealed, as left does.
+    await waitFor(() => expect(hidden()).toBe(0));
+
+    await userEvent.keyboard('{Meta>}{ArrowRight}{/Meta}');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await userEvent.keyboard('{Control>}{ArrowLeft}{/Control}');
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(3));
+
+    // Cmd with any other key stays with the browser.
+    await userEvent.keyboard('{Meta>}]{/Meta}');
+    await expect(canvas.getByText('1 / 2')).toBeVisible();
+  },
+};
+
+/** The slide keys stop at the deck's ends without dropping what is revealed there. */
+export const SlideKeysAtEnd: Story = {
+  render: ClickStepsLastStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    deck.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(3));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(hidden()).toBe(2));
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(canvas.getByText('2 / 2')).toBeVisible();
+    await expect(hidden()).toBe(2);
+
+    // The brackets land on a slide fully built, and Right at its first step.
+    await userEvent.keyboard('[[');
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await userEvent.keyboard(']');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(0));
+    await userEvent.keyboard('{ArrowLeft}{ArrowRight}');
+    await waitFor(() => expect(hidden()).toBe(3));
+  },
+};
+
+/** Advancing past the last slide keeps its revealed steps. */
+export const ClickStepsAtEnd: Story = {
+  render: ClickStepsLastStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    deck.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(3));
+    for (const remaining of [2, 1, 0]) {
+      await userEvent.keyboard('{ArrowDown}');
+      await waitFor(() => expect(hidden()).toBe(remaining));
+    }
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(canvas.getByText('2 / 2')).toBeVisible();
+    await expect(hidden()).toBe(0);
+  },
+};
+
+/** Replacing the current slide's content in place starts it again at step 0. */
+export const ClickStepsEdited: Story = {
+  render: EditedSlideStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    await waitFor(() => expect(hidden()).toBe(3));
+    deck.focus();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(hidden()).toBe(1));
+    await userEvent.click(canvas.getByTestId('replace-slide'));
+    // The replaced slide remounts under a fresh frame, which shows once its size is measured.
+    const after = await canvas.findByRole('heading', { name: 'After' });
+    await waitFor(() => expect(after).toBeVisible());
+    await waitFor(() => expect(hidden()).toBe(3));
+  },
+};
+
+/** Leaving a slide through the pager drops its revealed steps, so coming back starts it at step 0. */
+export const ClickStepsPager: Story = {
+  render: ClickStepsStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    await waitFor(() => expect(hidden()).toBe(3));
+    deck.focus();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(hidden()).toBe(1));
+    await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Previous' }));
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(3));
+  },
+};
+
+/** Space activates a focused pager button natively and does not also advance the deck. */
+export const SpaceOnButton: Story = {
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('presenter.deck');
+    const [next] = canvas.getAllByRole('button', { name: /next/i });
+    next.focus();
+    await userEvent.keyboard(' ');
+    await expect(await canvas.findByText('2 / 5')).toBeVisible();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(canvas.queryByText('3 / 5')).toBeNull();
+  },
+};
+
+/** Printing renders every slide, fully revealed, into a container scoped by an attribute that clears afterwards. */
+export const Print: Story = {
+  render: ClickStepsStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    await waitFor(() => expect(canvasElement.querySelectorAll('li.invisible')).toHaveLength(3));
+    await expect(document.querySelector('[data-print-deck]')).toBeNull();
+    await expect(document.documentElement.hasAttribute('data-printing-deck')).toBe(false);
+
+    deck.focus();
+    window.dispatchEvent(new Event('beforeprint'));
+    await waitFor(() => expect(document.querySelector('[data-print-deck]')).not.toBeNull());
+    const container = document.querySelector('[data-print-deck]');
+    if (!container) {
+      throw new Error('print container missing');
+    }
+    await expect(document.documentElement.hasAttribute('data-printing-deck')).toBe(true);
+    await waitFor(() => expect(container.querySelectorAll('[data-print-slide]')).toHaveLength(2));
+    await waitFor(() => expect(container.querySelectorAll('li')).toHaveLength(3));
+    await expect(container.querySelectorAll('.invisible')).toHaveLength(0);
+
+    window.dispatchEvent(new Event('afterprint'));
+    await waitFor(() => expect(document.querySelector('[data-print-deck]')).toBeNull());
+    await expect(document.documentElement.hasAttribute('data-printing-deck')).toBe(false);
+  },
+};
+
+/** A deck without focus does not claim a print. */
+export const PrintUnfocused: Story = {
+  render: ClickStepsStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByTestId('presenter.deck');
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    window.dispatchEvent(new Event('beforeprint'));
+    await expect(document.querySelector('[data-print-deck]')).toBeNull();
+    await expect(document.documentElement.hasAttribute('data-printing-deck')).toBe(false);
+  },
+};
+
+/** The first slide's `theme: light` headmatter themes the whole deck. */
+export const ThemeHeadmatter: Story = {
+  render: () => <ThemedStory />,
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector<HTMLElement>('[data-slide]')?.style.colorScheme).toBe('light'),
+    );
+  },
+};
+
+/** A Presentation-style `theme` setting wins over headmatter. */
+export const ThemeOverride: Story = {
+  render: () => <ThemedStory theme={{ base: 'dark', accent: '#f97316' }} />,
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector<HTMLElement>('[data-slide]')?.style.colorScheme).toBe('dark'),
+    );
   },
 };

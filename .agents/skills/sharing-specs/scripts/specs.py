@@ -15,6 +15,8 @@ MANIFEST = 'specs/manifest.json'
 KEY_PREFIX = 'github:dxos/dxos/'
 # The publisher infers no type for `.mdl` and accepts no parameters; `Response.text()` decodes UTF-8 regardless.
 CONTENT_TYPE = 'text/plain'
+# Base texts for diff mode live beside the specs, so the check sees a missing one as a failed `specs/` fetch.
+BASE_DIR = '@base'
 
 
 def repo_root():
@@ -29,6 +31,18 @@ def read_manifest(out):
     if not os.path.exists(path):
         return {}
     return {key.removeprefix(KEY_PREFIX): served for key, served in json.load(open(path)).items()}
+
+
+def add_to_manifest(out, paths):
+    """Lists repo paths in `out`'s manifest, served at `specs/<path>`, so `refresh` copies them."""
+    if not paths:
+        return
+    path = os.path.join(out, MANIFEST)
+    manifest = json.load(open(path)) if os.path.exists(path) else {}
+    for spec in paths:
+        manifest[KEY_PREFIX + spec] = f'specs/{spec}'
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    json.dump(manifest, open(path, 'w'), indent=2)
 
 
 def refresh(out, only=None):

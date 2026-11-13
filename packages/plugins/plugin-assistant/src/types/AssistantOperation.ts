@@ -13,7 +13,7 @@ import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Obj, Ref, Registry, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ContentBlock, Task } from '@dxos/types';
 
@@ -33,6 +33,11 @@ export const CreateChat = Operation.make({
      * Held by reference so the chat follows later edits to them.
      */
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions)),
+    /**
+     * A stored feed the chat runs on instead of a new one, owned by something else (a comment thread). The chat
+     * then reads and writes that owner's messages.
+     */
+    feed: Schema.optional(Type.getSchema(Feed.Feed)),
   }),
   output: Schema.Struct({
     object: Type.getSchema(Chat.Chat),
@@ -156,6 +161,11 @@ export const RunPromptInChat = Operation.make({
      * @default 'user'
      */
     disposition: Schema.optional(ContentBlock.Disposition),
+    /**
+     * Returns once the turn has settled (its reply is complete) rather than as soon as the prompt is submitted, for a
+     * caller that acts on the outcome (the comment agent clears its pending message).
+     */
+    wait: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,
 });

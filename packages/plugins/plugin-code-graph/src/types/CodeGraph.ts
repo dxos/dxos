@@ -38,7 +38,7 @@ export const Node = Schema.Struct({
   id: Schema.String,
   label: Schema.String,
   kind: NodeKind,
-  /** The package the resource belongs to, which the illustrator layout draws as a frame. */
+  /** The package the resource belongs to, which the illustrator layout frames when the graph is grouped. */
   group: Schema.optional(Schema.String),
   /** Where the user dragged the box; a box without one is laid out automatically. */
   position: Schema.optional(Position),
@@ -64,6 +64,8 @@ export class CodeGraph extends Type.makeObject<CodeGraph>(DXN.make(TYPENAME, '0.
   Schema.Struct({
     name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
     layout: Schema.optional(Layout.pipe(Annotation.FormInputAnnotation.set(false))),
+    /** Frame each package's boxes together; the illustrator layout and drawing honour it. */
+    grouped: Schema.optional(Schema.Boolean.pipe(Annotation.FormInputAnnotation.set(false))),
     nodes: Schema.Array(Node).pipe(Annotation.FormInputAnnotation.set(false)),
     edges: Schema.Array(Edge).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(

@@ -2,6 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DXN } from '@dxos/keys';
+
+import { GitHubNamespace } from './namespace.ts';
 /** Source string used in `AccessToken.source` and `Obj.Meta.keys[i].source` for GitHub. */
 export const GITHUB_SOURCE = 'github.com';
 
@@ -22,3 +25,6 @@ export const GITHUB_API_BASE = 'https://api.github.com';
  * as whoever the connection signs in as.
  */
 export const GITHUB_MCP_ENDPOINT = { url: 'https://api.githubcopilot.com/mcp/', protocol: 'http' } as const;
+
+/** The dialog behind the "Import pull request" command. */
+export const IMPORT_PULL_REQUEST_DIALOG = DXN.make(`${GitHubNamespace.key}.importPullRequestDialog`);

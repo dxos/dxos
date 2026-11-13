@@ -8,6 +8,8 @@ export type AiPreset = {
   label: string;
   /** Served on this device (a local runtime), so an agent running on EDGE cannot use it. */
   local?: boolean;
+  /** The model vendor's logo. */
+  icon?: string;
 };
 
 export type ChatPresetProps = {

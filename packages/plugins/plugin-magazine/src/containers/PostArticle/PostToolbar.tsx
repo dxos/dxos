@@ -9,8 +9,9 @@ import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu'
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { postReadAtom, postTagsAtom } from '#atoms';
-import { meta } from '#meta';
 import { Subscription } from '#types';
+
+import { MagazineNamespace } from '../../namespace.ts';
 
 export type PostToolbarProps = {
   post: Subscription.Post;
@@ -53,7 +54,7 @@ export const PostToolbar = ({
           .action(
             'star',
             {
-              label: [starred ? 'unstar-post.label' : 'star-post.label', { ns: meta.profile.key }],
+              label: [starred ? 'unstar-post.label' : 'star-post.label', { ns: MagazineNamespace.key }],
               icon: starred ? 'ph--star--fill' : 'ph--star--regular',
               iconOnly: true,
             },
@@ -62,7 +63,7 @@ export const PostToolbar = ({
           .action(
             'archive',
             {
-              label: [archived ? 'unarchive-post.label' : 'archive-post.label', { ns: meta.profile.key }],
+              label: [archived ? 'unarchive-post.label' : 'archive-post.label', { ns: MagazineNamespace.key }],
               icon: archived ? 'ph--archive--fill' : 'ph--archive--regular',
               iconOnly: true,
             },
@@ -71,7 +72,7 @@ export const PostToolbar = ({
           .action(
             'mark-unread',
             {
-              label: ['mark-unread.label', { ns: meta.profile.key }],
+              label: ['mark-unread.label', { ns: MagazineNamespace.key }],
               icon: 'ph--envelope--regular',
               iconOnly: true,
               hidden: !read,
@@ -83,7 +84,10 @@ export const PostToolbar = ({
           .action(
             'refresh',
             {
-              label: [refreshing ? 'refresh-content-pending.label' : 'refresh-content.label', { ns: meta.profile.key }],
+              label: [
+                refreshing ? 'refresh-content-pending.label' : 'refresh-content.label',
+                { ns: MagazineNamespace.key },
+              ],
               icon: 'ph--arrows-clockwise--regular',
               iconClassNames: refreshing ? 'animate-spin' : undefined,
               iconOnly: true,
@@ -95,7 +99,7 @@ export const PostToolbar = ({
           .action(
             'open-original',
             {
-              label: ['open-original.label', { ns: meta.profile.key }],
+              label: ['open-original.label', { ns: MagazineNamespace.key }],
               icon: 'ph--arrow-square-out--regular',
               iconOnly: true,
               hidden: !hasLink,

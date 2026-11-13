@@ -96,3 +96,12 @@ export class GetReactiveError extends BaseError.extend(
     super({ context: { reason: options.reason, snapshotId: options.snapshotId }, ...options });
   }
 }
+
+/**
+ * Thrown when a migration transaction cannot read or write the documents it stages.
+ */
+export class MigrationError extends BaseError.extend('MigrationError', 'Migration failed') {
+  constructor(context: { operation: string; id?: string }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}

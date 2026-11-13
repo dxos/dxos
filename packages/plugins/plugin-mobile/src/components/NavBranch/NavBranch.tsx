@@ -24,8 +24,7 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { MobileNamespace } from '../../namespace.ts';
 import { useExpandPath } from '../hooks.ts';
 
 export type NavBranchProps = {
@@ -96,7 +95,7 @@ const useEmptyGroupIds = (graph: AppGraph.ExpandableGraph, nodes: AppGraphNode.N
  * spaces, collection sections, type sections, and schema nodes.
  */
 export const NavBranch = ({ id }: NavBranchProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MobileNamespace.key);
   const { graph } = ToolkitHooks.useAppGraph();
 
   useExpandPath(id);
@@ -143,7 +142,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
 const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MobileNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const ref = useRef<HTMLDivElement>(null);
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
@@ -165,13 +164,6 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
 
     return () => unregisterItem(data.id);
   }, [data.id, handleSelect, registerItem, unregisterItem]);
-
-  // Scroll into view when selected.
-  useEffect(() => {
-    if (isSelected && ref.current) {
-      ref.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
-  }, [isSelected]);
 
   return (
     <Card.Root

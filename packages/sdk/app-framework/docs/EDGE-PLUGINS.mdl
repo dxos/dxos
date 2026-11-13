@@ -1,0 +1,1956 @@
+---
+id: org.dxos.app-framework.edge-plugins
+name: EdgePlugins
+version: 0.1.0
+---
+
+The Composer plugins that run in the browser also run on EDGE. A plugin is defined once, in its
+`dx.config.ts` with `Plugin.config`, and built once: its vite build emits one bundle and one
+manifest for every runtime. The CLI publishes that bundle to the registry; the browser loads it as
+it does today, and EDGE loads the same bundle on demand into a Dynamic Worker through the Worker
+Loader API. Its ECHO types, skills and operations become visible in the registry, and its
+operations are callable through compute-service like any other EDGE operation.
+
+Today a plugin reaches EDGE only by being compiled into operation-service: a static list of
+`@dxos/plugin-*` imports, activated by one `PluginManager` per isolate and republished as a KV
+catalog. Adding or changing a plugin needs a dxos catalog bump and a redeploy of a 12 MiB worker,
+plugins from outside the dxos repository cannot run on EDGE at all, and every plugin shares one
+isolate. This spec replaces that worker with plugin bundles that are stored, versioned and loaded
+independently.
+
+The design reuses three things that already exist:
+
+- **The plugin manifest** (`Plugin.Manifest`, `Plugin.fromManifest`). A `Plugin.config` evaluates at
+  build time to data: plugin metadata plus one `ManifestModule` per module, with capability tags as
+  `{identifier, arity}`, activation events as data, one URL per module body and the module's
+  `environments`. At load, `Plugin.fromModules` keeps only the modules whose `environments` include
+  the runtime's `Environment.current`, so the same manifest serves the browser and EDGE.
+- **The registry** (registry-service). `/upload` already stores immutable plugin bundles in R2 under
+  `modules/<slug>/<version>/` with their `manifest.json`, keeps private releases in D1, and indexes
+  public ones from ATProto records. The bundle EDGE runs is that bundle.
+- **Worker Loader in compute-service** (`WorkerLoaderRuntime`, the code-mode script runner). Bundles
+  in R2 are already loaded into Dynamic Workers with space-agnostic service stubs in `env`, loopback
+  entrypoints from `ctx.exports` for per-caller services, and a tail worker for logs.
+
+## Loading in the browser and on EDGE
+
+One bundle runs in both places, but the two load it differently, because they share packages
+differently.
+
+- **Browser.** Every plugin runs in one JS context with Composer. A plugin bundle keeps every
+  package Composer shares (`DEFAULT_PACKAGES`: `@dxos/*`, Effect, React, ...) external, as bare
+  imports, and Composer's import map fills them in. All plugins therefore share one copy of each
+  package, at the version Composer was built with.
+- **EDGE.** A Dynamic Worker has no import map, and Worker Loader resolves a bare specifier against
+  the importing file's directory, never against a package registry. So the build also writes a
+  `vendor/` directory into the bundle: one build of every package it kept external, and of every
+  shared package those import, built for `workerd`, at the version the plugin was built with, and
+  `vendor/manifest.json` mapping each specifier to its file. Vendored packages keep importing each
+  other bare, so `vendor/manifest.json` is an import map. When compute-service loads the bundle, it
+  rewrites each bare import in the bundle, `vendor/` included, to the file the map names. That is a
+  textual rewrite of import specifiers, not a second build: no plugin code is recompiled.
+
+The browser ignores `vendor/`; EDGE never loads a module whose `environments` exclude `workerd`, so
+browser-only modules and their stylesheets are in the bundle but are never read. The `WorkerCode` holds
+only what the `workerd` modules, their adapters and `PluginHost` reach by literal imports [D-74].
+
+## Bundle format
+
+A plugin bundle is a directory of files that a host loads as is. `composerPlugin` writes it,
+`dx registry publish` uploads it, the browser and EDGE load it, and `check-bundle`
+(`@dxos/plugin-builder`) checks it. This is what the vite build of `plugin-markdown`
+emits: 130 files at the root (0.7 MiB of code) and a 37 MiB `vendor/` of 282 modules for 155
+specifiers.
+
+```
+dist/plugin/
+├── manifest.json                      what every host loads the plugin from (see below)
+├── index.mjs                          the compiled dx.config.ts; shared code bodies import, never loaded as the entry
+├── operation-handler-varxbE3e.mjs     module body, environments [browser, node, tauri, workerd]
+├── schema-D3Oofm5R.mjs                module body, adapter @dxos/app-toolkit/SchemaAdapter
+├── react-surface-L_9dYgXp.mjs         module body, environments [browser, tauri]
+├── chunk-MarkdownOperation-Dw8KGlKE.mjs  code shared between bodies
+├── *.mjs.map                          source maps; never loaded, never in the manifest
+└── vendor/                            EDGE only
+    ├── manifest.json                  the import map: specifier → file, and the build conditions
+    ├── effect.mjs, effect/Schema.mjs, …
+    ├── @dxos/echo.mjs, @dxos/echo/Obj.mjs, …
+    ├── @dxos/plugin-host-cloudflare.mjs   PluginHost, when the build is given its entry
+    ├── chunk-22FD6CXA.mjs, …          code shared between vendored packages
+    └── asset-automerge_wasm_bg-X4OLCNJ7.wasm
+```
+
+### Files
+
+1. **Flat root.** The plugin's own files sit at the bundle root as `<name>-<hash>.mjs`, ESM, and
+   import each other relatively (`./chunk-…mjs`). Nothing of the plugin lives in a subdirectory.
+2. **No entry module.** A host builds the plugin from `manifest.json` alone (`PluginManifest.toDefinition`,
+   `Plugin.fromManifest`) and imports each module body by its `url` when the module activates. `index.mjs`
+   remains as the compiled `dx.config.ts`, because bodies import `meta` from it, but no host imports it to
+   get the plugin. Only a plugin built from `src/plugin.tsx`, whose manifest lists no modules, still loads
+   through `index.mjs`.
+3. **Module bodies.** Each `Plugin.config` module is its own chunk, named after its source file.
+   Code two bodies share goes to a `chunk-*` file. A body's `environments` say which hosts run it;
+   all bodies are in the one bundle.
+4. **CommonJS shim.** Every chunk starts with a banner that imports `react`, `react-dom` and
+   `react/jsx-runtime` and defines a module-local `require` for bundled CommonJS code.
+5. **Stylesheets and assets** sit beside the chunks that import them; only browser-only bodies may
+   reach them.
+
+### `manifest.json`
+
+The plugin's `Config2.Plugin` metadata flat at the top level (`key`, `name`, `description`,
+`author`, `source`, `icon`, `tags`, `screenshots`, `dependsOn`), plus:
+
+| Field          | Content                                                                                 |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `version`      | The package version.                                                                    |
+| `dependencies` | Resolved versions of the packages the plugin depends on.                                |
+| `assets`       | Every file of the bundle except source maps and `vendor/`, for the browser's offline cache; `index.mjs` is required only when `modules` is absent. |
+| `modules`      | One `ManifestModule` per module, in `Plugin.config` order.                              |
+
+A `ManifestModule` is `{ id, url, requires, provides, activatesOn?, environments?, adapter? }`:
+`url` is the body's file (`./<name>-<hash>.mjs`); `requires` and `provides` are capability tags
+`{ identifier, arity }`; `activatesOn` is the activation event as data; an absent `environments`
+means every host; `adapter.url` is a bare specifier of a shared package
+(`@dxos/app-toolkit/SurfaceAdapter`) that turns the body's export into a module.
+
+### `vendor/manifest.json`
+
+```json
+{
+  "specifiers": { "effect": "effect.mjs", "@dxos/echo/Obj": "@dxos/echo/Obj.mjs" },
+  "conditions": ["workerd", "worker", "browser", "import", "module", "default"]
+}
+```
+
+`specifiers` maps a bare specifier to its file, relative to `vendor/`. `conditions` are the package
+export conditions `vendor/` was built with.
+
+### Rules
+
+1. **Shared packages stay bare.** A plugin file imports every package in Composer's shared set
+   (`DEFAULT_PACKAGES`) by its bare specifier and never bundles a copy.
+2. **`vendor/` holds what EDGE loads.** It holds each shared package that a body running on
+   `workerd` reaches, and every shared package those import; browser- and node-only bodies need not
+   resolve on EDGE.
+3. **Vendored packages import each other bare,** never a copy, so `vendor/manifest.json` is an
+   import map. A `require` keeps its package inside the vendored file.
+4. **Self-contained.** Every bare import a `workerd` host can reach is in `vendor/manifest.json`, and
+   every relative import and manifest URL names a file of the bundle. `vendor/` imports nothing
+   outside itself but `node:*` and `cloudflare:*`.
+5. **Environments hold statically.** A module that runs on `workerd` never imports a browser-only
+   body or a stylesheet statically.
+6. **Built once.** The bundle is one build: a runtime-specific body is its own module with its
+   `environments`, never an import that picks a `workerd` variant by condition (pkg-lint
+   `plugin-runtime-condition` warns). The package keeps its per-runtime `dx.config.ts` entries
+   (`dx-env`, with `workerd` and `node` conditions) for consumers that bundle the config statically;
+   they are not part of the bundle ([D-42]).
+
+### Loading
+
+- **Browser.** Composer fetches `manifest.json`, builds the plugin from its modules and imports each
+  body, through the plugin asset cache, when its module activates. Composer's import map supplies every
+  bare specifier at the version Composer was built with; `vendor/` is never read.
+- **CLI.** `dx` reads the installed bundle's `manifest.json` the same way and imports each body from
+  the install directory when its module activates.
+- **EDGE.** PluginLoader puts the bundle alone in a Worker Loader module map, rewrites every bare
+  import in every file to a relative path by its `vendor/manifest.json`, drops vendored files nothing
+  reaches, and adds a main module that starts `PluginHost` from `vendor/`. The main module embeds the
+  bundle's `manifest.json` with one literal `import()` per module body and adapter (Worker Loader
+  cannot resolve a computed specifier), and `PluginHost.fromManifest` builds the plugin from them,
+  without its `dependsOn`: a plugin runs alone on EDGE ([D-41]). Worker Loader resolves a bare specifier against the importing file's directory, never a
+  package registry, which is why the rewrite is needed. The rewrite changes only specifiers; no
+  code is recompiled.
+
+## Plugin interface
+
+A built plugin meets EDGE at three boundaries. Plugin code sees only the first.
+
+### Module body and host
+
+The app-framework contract, the same as in the browser. A module body's default export is a
+`Capability.makeModule(...)`: an Effect that returns capability contributions. `PluginHost` activates
+the bundle's plugins with `Environment.current` set to `workerd`, so only modules whose `environments`
+include `workerd` load, on the usual events (Startup, Idle, AssistantStart). EDGE reads four
+contributions: operation handlers (served by `invoke`), schemas (catalog types), skill definitions
+(catalog skills) and layer specs (services the handlers get).
+
+### Host and EDGE
+
+The bundle's main module exports a `WorkerEntrypoint` that implements `PluginProtocol.Entrypoint` from
+`@dxos/protocols`, the one contract both repositories compile against. EDGE calls it over Workers RPC;
+there is no HTTP protocol.
+
+```ts
+interface Entrypoint {
+  describe(): Promise<Catalog>; // { plugin, operations, skills, types, failures, protocolVersion }
+  invoke(request: InvokeRequest, scope?: InvocationScope): Promise<InvokeResult>;
+  protocolVersion(): Promise<number>; // the vendored host's PROTOCOL_VERSION, 1 before versioning
+}
+
+type InvokeRequest = { operationKey: string; input?: unknown; spaceId?: string };
+type InvocationScope = {
+  accessTokenService?: AccessTokenService;
+  conversation?: string; // version 2: the agent turn's chat or feed
+  origin?: string; // version 2: where a channel reply is routed
+  caller?: Caller; // version 2
+  traceSink?: TraceSink; // version 2, with pid, parentPid and runId
+  cancellation?: CancellationSignal; // version 2
+  idSeed?: IdSeed; // version 2, tests only
+  services?: HostServices; // version 2: services only EDGE holds
+  operations?: OperationHost; // version 2: other plugins' operations
+};
+type InvokeResult = { ok: true; output: unknown } | { ok: false; error: Failure };
+type Failure = {
+  code: 'operation-not-found' | 'invalid-request' | 'failed';
+  message: string;
+  name?: string;
+  stack?: string;
+  encoded?: SerializedError; // version 2: the handler's error as `ErrorCodec` encodes it
+};
+```
+
+- **Failures are data.** Workers RPC drops an error's class and stack, so `invoke` returns them in
+  `InvokeResult` rather than throwing. `describe` rejects only when the host itself cannot start;
+  modules that fail to activate are listed in `Catalog.failures`.
+- **`env`** holds the space-agnostic bindings `DATA_SERVICE`, `QUEUE_SERVICE`,
+  `FUNCTIONS_AI_SERVICE` and `TYPE_REGISTRY` (`PluginProtocol.Env`). Everything that differs per call travels in `scope`
+  ([D-6]).
+- **The space travels in `InvokeRequest.spaceId` today.** The snippet above is what the host
+  implements now; the [InvocationScope](#types) type below is the target, in which `scope.spaceId`
+  is authoritative and `InvokeRequest.spaceId` is removed.
+- **Operation keys** may be bare or DXNs; they are matched in bare form ([D-22]).
+- **Isolation.** The entrypoint serves only its own plugin's operations; no other plugin is loaded
+  beside it ([D-41]).
+
+### Host services
+
+What operation-service gives a handler, and where a bundle's handler gets it. A service only EDGE
+holds is served per invocation through `InvocationScope.services`: the host provides a proxy under
+the service's own key, each method a JSON call to EDGE (streams arrive as arrays), and EDGE binds the
+call to the invocation's space, caller and reply origin.
+
+| Service                                  | operation-service                            | PluginHost                                               |
+| ---------------------------------------- | -------------------------------------------- | -------------------------------------------------------- |
+| Database, Feed, Registry, Hypergraph     | function context on DATA/QUEUE_SERVICE        | the same function context, on the same bindings         |
+| Credentials, AiService, OpaqueToolkit    | function context                             | the same function context                                |
+| `Trace.TraceService`                     | `traceSink`                                  | `scope.traceSink` ([F-5.6])                              |
+| `Cancellation.Service`                   | `cancellation`                               | `scope.cancellation` ([F-5.6])                           |
+| `HarnessService`                         | rebuilt from `conversation`                  | rebuilt from `scope.conversation` ([F-5.6])              |
+| `Capability.Service`                     | every plugin's capabilities                  | the bundle's own capabilities                            |
+| `Operation.Service`                      | local handlers, then its own FunctionsService | the bundle's handlers, then `scope.operations`           |
+| `DiscordBot.DiscordBotService`           | `DISCORD_AGENT` binding, with the origin      | `scope.services`                                         |
+| `AgentMailbox.AgentMailboxService`       | `AGENT_MAILBOX` binding                      | `scope.services`                                         |
+| `BrainService`                           | `BRAIN_SERVICE` binding, with the caller      | `scope.services`; TODO: methods whose arguments or results are ECHO objects (`subscribe`, `subscriptions`, `take`, `wake`) need EDGE to decode their JSON form |
+| `Space.Service` (`members`, `get`)       | db-service's member keys                     | `scope.services`, `members` as a stream                  |
+| `DiscordSource.Endpoint`                 | dev EDGEs only (`DISCORD_API_URL`)           | TODO: not carried                                        |
+| Blob backends                            | `BLOB_SERVICE`                               | TODO: inline storage only; compute-runtime's context has no backend option |
+| OTEL tracer for Effect spans             | `withOtelTracer`                             | not carried; logs and the trace sink only                |
+| Live objects in a nested call's input   | kept: the callee runs in process             | passed by reference: added and flushed by the caller, loaded by the callee, loaded back from the output ([D-71]); TODO: only a top-level field is loaded, so an array of objects (`space.setArchived`) is refused |
+
+### EDGE and Cloudflare
+
+PluginLoader calls `LOADER.get(id, () => WorkerCode)` with the bundle's content hash as `id`. The
+`WorkerCode` holds the rewritten module map ([Bundle format](#bundle-format)), the generated main
+module, compatibility date `2026-03-17` and flags `nodejs_compat`, `nodejs_als` and
+`no_handle_cross_request_promise_resolution`, the `env` above, and `globalOutbound: null`: the isolate
+reaches the network only through its bindings.
+
+## Architecture
+
+| Component          | Lives in                             | Role                                                                          |
+| ------------------ | ------------------------------------ | ----------------------------------------------------------------------------- |
+| `PluginBuilder`    | dxos: app-framework (`composerPlugin`) | The plugin's vite build: bundle, manifest and `vendor/`.                    |
+| `PluginStore`      | edge: registry-service               | The existing `/upload` store, plus an index of operation keys to versions.    |
+| `PluginRouter`     | edge: compute-service                | Resolves an operation key to the plugin version that implements it.          |
+| `PluginLoader`     | edge: compute-service, on a published dxos package | Rewrites bare imports to `vendor/` and loads the bundle into a Dynamic Worker. |
+| `PluginHost`       | dxos: `@dxos/plugin-host-cloudflare` | Shipped in `vendor/`: activates the plugin's workerd modules, serves RPC.     |
+| `PluginSupervisor` | edge: compute-service                | A Durable Object that runs a plugin's durable module as a facet (phase 3).    |
+
+An invocation of `org.dxos.operation.markdown.create` in space `S` flows:
+
+1. A caller (MCP `invokeOperation`, a trigger, an agent, the Composer client) asks compute-service to
+   invoke `dxn:org.dxos.operation.markdown.create` in `S`.
+2. `PluginRouter` looks the key up in the operation index and gets the version `S`'s channel
+   (`latest` unless `S` selects another) points to, `org.dxos.plugin.markdown@0.9.2`, with content
+   hash `h`.
+3. `PluginLoader` calls `LOADER.get("plugin:h", load)`. On a cold isolate `load` reads the bundle
+   from R2, rewrites its bare imports to `vendor/`, adds a main module that starts `PluginHost`,
+   and returns the `WorkerCode`; on a warm one nothing is read.
+4. compute-service calls `PluginEntrypoint.invoke(request, scope)` on the stub. `scope` is an RPC
+   target that carries `S`, the caller, the trace sink and cancellation for this one call.
+5. `PluginHost` activates the plugin's `workerd` modules once per isolate, finds the handler, runs it
+   with an ECHO client for `S` that `scope` grants, and returns the result.
+
+## Dependencies
+
+```mdl
+uses org.dxos.echo: Plugin types are ECHO schemas, and handlers read and write a space through its Database.
+```
+
+```mdl
+uses org.dxos.app.composer: Its QA-17 is the browser half of loading a published bundle by its manifest.
+```
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`      |
+| `service`  | `org.dxos.mdl.service@1.0`   |
+| `op`       | `org.dxos.mdl.op@1.1`        |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+| `uses`     | `dxos.spec.core/uses`        |
+
+## Types
+
+```mdl
+type PluginBundle
+  desc: |
+    One published version of one plugin: the output of its vite build, uploaded as is through
+    `/upload` and stored in R2 under `modules/<slug>/<version>/`. Immutable once uploaded. The same
+    bundle is loaded by the browser and by EDGE; see the Bundle format section.
+  fields:
+    pluginKey: NSID              # Config2.Plugin.key, e.g. org.dxos.plugin.markdown
+    version: SemVer
+    hash: string                 # sha-256 over the bundle's files; the Worker Loader id
+    owner: DID | realm:dxos      # from the ATProto release record, or PrivatePlugin.ownerDid
+    manifest: Plugin.Manifest    # manifest.json
+    catalog: PluginCatalog       # from describe() during publish; TODO: written at build time
+    vendor: VendorMap            # vendor/manifest.json
+```
+
+```mdl
+type VendorMap
+  desc: |
+    `vendor/manifest.json`: an import map. Every specifier the plugin's files import bare, and every
+    shared package a vendored package imports, mapped to the file under `vendor/` that PluginLoader
+    rewrites the import to. A bare import with no entry, in the plugin or in `vendor/`, is a build
+    error, not a runtime one.
+  fields:
+    specifiers: Record<string, string>   # e.g. "@dxos/echo/Obj" → "@dxos/echo/Obj.mjs"
+    conditions: string[]                 # the conditions vendor/ was built with, e.g. [workerd, worker, import]
+```
+
+```mdl
+type PluginCatalog
+  desc: |
+    What a bundle contributes on EDGE: what `describe()` returns after activating its workerd modules
+    (the same activation `activateHeadlessPlugins` runs: Startup, Idle, AssistantStart). Produced
+    during publish; TODO: written at build time. Lets the registry, the router and MCP answer queries
+    without starting an isolate.
+  fields:
+    operations: PersistentOperation[]   # key, name, description, inputSchema, outputSchema, services
+    skills: SkillRecord[]               # key, name, description, instructions, tools
+    types: TypeRecord[]                 # typename, version, JSON Schema of each AppCapabilities.Schema entry
+    protocolVersion?: number            # the PROTOCOL_VERSION of the host that produced it; absent before versioning
+```
+
+```mdl
+type OperationRoute
+  desc: |
+    One row of the operation index: which plugin version implements an operation key. A key belongs
+    to exactly one plugin key; each published version adds rows, and the router picks the version the
+    space's channel points to.
+  fields:
+    operationKey: NSID
+    pluginKey: NSID
+    version: SemVer
+    hash: string
+```
+
+```mdl
+type Channel
+  desc: |
+    A named, movable pointer from a plugin key to one published version, like an npm dist-tag.
+    `latest` always exists: publishing a version that is not a prerelease moves it. Other channels
+    (`next`, `dev`, ...) move only when a publish or a `channel set` names them. Moving a channel
+    rebuilds nothing; it points at bytes already published.
+  fields:
+    pluginKey: NSID
+    name: string                 # e.g. latest, next, dev
+    version: SemVer
+```
+
+```mdl
+type SpacePluginChannel
+  desc: |
+    The channel a space runs its plugins from: an annotation on the space's `Properties` object,
+    `latest` when absent. It applies to every plugin the space invokes; a plugin with no version on
+    that channel runs its `latest`.
+  fields:
+    channel: string              # default latest
+```
+
+```mdl
+type InvocationScope
+  desc: |
+    The per-call capability compute-service passes as an RPC argument to `PluginEntrypoint.invoke`.
+    Everything that differs between two calls to the same isolate lives here, never in `env`, so one
+    isolate serves every space.
+  fields:
+    spaceId: SpaceId
+    caller: Actor
+    traceSink: RpcTarget
+    cancellation: AbortSignal
+    database(): EchoDatabase    # scoped to spaceId; built on DATA_SERVICE and QUEUE_SERVICE
+    accessToken(source): string # through the props-bound AccessTokenService
+    invoke(key, input): unknown # nested operation, re-enters compute-service
+```
+
+## Services
+
+```mdl
+service PluginBuilder
+  desc: |
+    The plugin's own vite build (`composerPlugin`), with no separate build for EDGE. It emits the
+    plugin's files flat at the bundle root, `manifest.json` with every module and its
+    `environments`, and `vendor/`: one build, for `workerd`, of every package the plugin build kept
+    external, with `vendor/manifest.json`. TODO: write the bundle's catalog at build time; until then
+    it is produced by `describe()` during publish.
+  ops:
+    build(configPath: string, options: { version }) → PluginBundle
+  errors:
+    UnvendoredImport: a plugin file imports a bare specifier that vendor/ does not provide
+```
+
+```mdl
+service PluginStore
+  desc: |
+    registry-service's existing plugin store (`/upload`, `/private/upload`, `GET /modules/...`). On
+    upload it loads a bundle whose `vendor/` carries the host once through Worker Loader and calls
+    `describe()`, which is how publish produces the bundle's catalog until the build writes it (TODO);
+    it stores the catalog as returned (`PluginProtocol.Catalog`) and adds the bundle's operation keys
+    to the operation index, in D1 (`PluginBundle`, `PluginChannel`, `PluginOperation`). A bundle whose
+    `describe()` fails, or lists any activation failure, is refused before its files are written; one
+    without the host is stored for browsers and never indexed. Private uploads are not indexed, so
+    no private plugin is routed to ([D-43]). Revoking a version leaves the channels that point at it
+    in place; resolution skips a revoked version and falls back to `latest`.
+  ops:
+    upload(bundle: PluginBundle) → PluginBundle
+    getManifest(pluginKey: NSID, version?: SemVer) → Plugin.Manifest
+    getCatalog(pluginKey: NSID, version?: SemVer) → PluginCatalog
+    query(filter: { text?, pluginKey?, operationKey?, typename?, skillKey? }) → PluginBundle[]
+    resolveOperation(operationKey: NSID, channel: string) → OperationRoute
+    resolveType(typename: NSID, version?: SemVer) → TypeRecord | undefined
+    setChannel(pluginKey: NSID, channel: string, version: SemVer) → Channel
+    revoke(pluginKey: NSID, version: SemVer) → void
+  errors:
+    VersionExists: the version is uploaded with a different hash
+    KeyConflict: an operation key in the catalog belongs to another plugin key
+    NotOwner: the uploader is not the plugin key's owner
+```
+
+```mdl
+service PluginLoader
+  desc: |
+    compute-service's Worker Loader client for plugin bundles. Uses `LOADER.get` with the bundle hash
+    as the id, so one warm isolate serves every space and every caller of that version, and the
+    callback reads R2 only on a cold start. The callback loads the bundle alone ([D-41]), rewrites
+    every bare import by its VendorMap, drops vendored files nothing reaches, and adds a main module
+    that starts `PluginHost` from `vendor/`. `env` holds only space-agnostic
+    bindings: DATA_SERVICE, QUEUE_SERVICE, an AI service, TYPE_REGISTRY (PluginStore.resolveType) and
+    loopback entrypoints from `ctx.exports`
+    whose props name the plugin, never a space. `tails` routes logs to FunctionsLoggerEntrypoint.
+  loading: lazy
+  ops:
+    entrypoint(route: OperationRoute) → PluginEntrypoint
+  errors:
+    PluginLoadError: the bundle failed to load or to activate; carries the plugin version and the cause
+```
+
+```mdl
+service PluginEntrypoint
+  desc: |
+    The RPC surface `PluginHost` exports from inside the Dynamic Worker, as a WorkerEntrypoint
+    implementing `PluginProtocol.Entrypoint` (see the Plugin interface section). It activates and
+    serves its one plugin alone ([D-41]). `describe()` returns `PluginProtocol.Catalog`, which
+    PluginStore stores as the bundle's PluginCatalog. Failures are returned as data in
+    `InvokeResult`, since Workers RPC drops an error's class and stack.
+  ops:
+    describe() → PluginProtocol.Catalog
+    invoke(request: { operationKey, input, spaceId? }, scope: InvocationScope) → InvokeResult
+    protocolVersion() → number
+  errors:
+    OperationNotFound: the primary plugin has no handler for the key (code `operation-not-found`)
+```
+
+```mdl
+service PluginRouter
+  desc: |
+    compute-service's resolution of a `dxn:<operation key>[@<version>]` target to a plugin version,
+    from PluginStore's operation index: an explicit version wins, otherwise the version the invoking
+    space's channel (SpacePluginChannel, `latest` by default) points to, otherwise `latest`. Falls back
+    to operation-service while operation-service still runs ([F-6.6]). TODO: an override per DXN.
+  ops:
+    route(target: string, spaceId?: SpaceId) → OperationRoute
+  errors:
+    OperationNotFound: no published version implements the key
+```
+
+```mdl
+service PluginSupervisor
+  desc: |
+    A SQLite Durable Object, one per (space, plugin key), that runs a plugin's durable module as a
+    Durable Object facet: `ctx.facets.get(<module id>, () => ({ class:
+    worker.getDurableObjectClass(<export>) }))`. The facet owns its own SQLite database; the
+    supervisor keeps the bundle hash, access control and billing counters in its own, which the
+    facet cannot read. An upgrade aborts the facet and restarts it with the new version's class;
+    its storage survives.
+  ops:
+    start(spaceId: SpaceId, pluginKey: NSID) → FacetStub
+    upgrade(hash: string) → void
+    delete() → void
+```
+
+## Operations
+
+```mdl
+op publishPlugin
+  desc: |
+    CLI `dx registry publish [--private] [--channel <name>]`, the command that already publishes a
+    plugin's bundle, and moves `latest` (for a version that is not a prerelease) or the named channel: it
+    runs the plugin's vite build with `DX_PLUGIN_HOST_ENTRY` naming the CLI's `PluginHost`, so the
+    build vendors the host whatever the plugin's own vite config says, loads the bundle in a local
+    workerd and calls `describe()`, and
+    uploads the one bundle, `vendor/` included, through `/upload/multipart` (one part per file, streamed
+    into R2) with a verifiable presentation, API token or admin key; PluginStore calls `describe()` again
+    on upload. Publishing fails when either
+    call fails. Nothing is built or uploaded separately for EDGE.
+  status: unimplemented
+  input:
+    configPath: string
+  output: PluginBundle
+  errors:
+    VersionExists: the version is already uploaded with another hash
+    KeyConflict: the catalog claims an operation key owned by another plugin
+    PluginLoadError: the bundle failed to load or activate when the registry described it
+```
+
+```mdl
+op queryPlugins
+  desc: |
+    Registry query over published plugins, by text, plugin key, operation key, typename or skill key.
+    Exposed as `GET /registry/plugins` and as an operation so agents can call it.
+  status: unimplemented
+  input:
+    text?: string
+    operationKey?: NSID
+    typename?: string
+    skillKey?: NSID
+  output: PluginBundle[]
+```
+
+```mdl
+op invokeOperation
+  desc: |
+    The existing `ComputeServiceEntrypoint.invokeOperation`, with `dxn:` targets routed by
+    PluginRouter to a PluginEntrypoint instead of to operation-service.
+  input:
+    key: NSID
+    input: unknown
+    spaceId: SpaceId
+    version?: SemVer
+  output: unknown
+  errors:
+    OperationNotFound: no published version implements the key
+    PluginLoadError: the bundle failed to load
+  requires: [PluginRouter, PluginLoader]
+```
+
+## Features
+
+```mdl
+feat F-1: Publish a plugin from the CLI
+  `dx registry publish` publishes a plugin's one bundle, which the browser and EDGE both load.
+
+  req F-1.1:
+    when: a developer runs `dx registry publish` in a plugin package
+    then: the plugin's vite build emits one bundle with one manifest, and the bundle is uploaded to
+          PluginStore as one R2 prefix
+
+  req F-1.2: A plugin package publishes one bundle for every runtime; a module's `environments`
+    decide at load whether it runs. Its per-runtime `dx.config.ts` entries serve only static
+    consumers and are not part of the bundle ([D-42]).
+
+  req F-1.3:
+    when: a bundle is uploaded
+    then: registry-service loads it in a fresh isolate and stores what `describe()` returns as its
+          catalog; a bundle that fails to load, or whose catalog lists an activation failure, is
+          refused
+
+  req F-1.4: The bundle carries `vendor/`, so a Dynamic Worker loads it from its `modules` map alone:
+    after PluginLoader's rewrite, its files import nothing but each other, `vendor/`, `node:*` and
+    `cloudflare:*`.
+
+  req F-1.5:
+    when: a plugin file imports a bare specifier that `vendor/` does not provide
+    then: the build fails with UnvendoredImport and nothing is uploaded
+
+  req F-1.6: Upload is authorized by the plugin key's owner (DID or realm:dxos); the first upload of
+    a key sets its owner.
+```
+
+```mdl
+feat F-2: Versioning
+  Bundles are immutable and addressed by plugin key, semver and content hash.
+
+  req F-2.1: A (plugin key, version) pair holds one bundle; uploading it again with another hash
+    fails with VersionExists, with the same hash it is a no-op.
+
+  req F-2.2: An invocation runs the version that the invoking space's channel points to for the
+    plugin implementing its operation key; a space with no channel set uses `latest`, and a plugin
+    with no version on the space's channel runs its `latest`.
+
+  req F-2.3: An invocation may name a version (`dxn:<key>@<version>`); it then runs that version.
+
+  req F-2.4: Revoking a version stops new invocations of it; channels that point at it stay, and
+    resolution skips it and falls back to the plugin's `latest`.
+
+  req F-2.5: The isolate id is the bundle hash, so a changed bundle never reuses an isolate of the
+    old one and an unchanged bundle always can.
+
+  req F-2.6: Channels are npm-style dist-tags: publishing moves `latest` (or the channel the publish
+    names), and `dx registry channel set <key>@<version> <channel>` moves a channel to a version
+    already published, without rebuilding.
+
+  req F-2.7: A space selects its channel with an annotation on its `Properties` object; changing it
+    takes effect on the space's next invocation.
+```
+
+```mdl
+feat F-3: Types are exposed
+  The ECHO types a plugin contributes are visible on EDGE and usable by its operations.
+
+  req F-3.1: A bundle's catalog lists the JSON Schema of every `AppCapabilities.Schema` entry of its
+    workerd modules.
+
+  req F-3.2: PluginHost registers those types in the space registry of every invocation, so a
+    handler needs no per-operation `types`.
+
+  req F-3.3: PluginStore.query finds the bundle that contributes a typename.
+
+  req F-3.4: The types an operation declares (`Operation.make({ types })`) are bundled with its plugin
+    and registered before the operation runs.
+
+  req F-3.5: A type the invocation has not registered, named by a query, by an object it loads or by
+    a generic operation such as `space.queryObjects`, is resolved by DXN from EDGE's type registry,
+    to which every published plugin contributes the types in its catalog. The resolved type is
+    registered for the rest of the invocation.
+
+  req F-3.6: When several plugins contribute a type with one DXN, the type registry returns the
+    first one contributed.
+
+  req F-3.7: The DXN of every type a plugin contributes extends the plugin's key; PluginStore
+    refuses an upload whose catalog holds a type outside it. TODO: not enforced yet.
+
+  req F-3.8: An isolate asks the type registry for a published type once: PluginHost caches each
+    record it resolves, bounded, for the isolate's lifetime, so later invocations needing it make no
+    registry call. An unknown type and a failed lookup are not cached.
+```
+
+```mdl
+feat F-4: Skills are exposed
+  The skills a plugin contributes are listed on EDGE and loadable over MCP.
+
+  req F-4.1: A bundle's catalog lists every `AppCapabilities.SkillDefinition`, with resolved
+    instructions and its tool keys.
+
+  req F-4.2: The MCP server's `loadSkill` and the skill list of compute-service's agents read skills
+    from each enabled plugin's bundle on the `latest` channel, merged with the skills
+    operation-service still serves. The enabled set is named in compute-service's EDGE config
+    ([D-77]); the registry holds every plugin anyone published, so an unscoped union would offer
+    skills nobody enabled.
+
+  req F-4.3: PluginHost seeds the registry of every space-scoped invocation with the plugin's own
+    skills and operation records, as operation-service does, so a skill the bundle binds by registry
+    URI resolves and its tools project from those records. No other plugin's skills or operations
+    are seeded ([D-92]).
+```
+
+```mdl
+feat F-5: Operations are exposed and callable
+  Every operation a published plugin handles can be found and invoked on EDGE.
+
+  req F-5.1: The MCP server's `queryOperations` lists the operations of each enabled plugin's bundle
+    on the `latest` channel, merged with the operations operation-service still serves;
+    operation-service's record wins for a plugin `OPERATION_SERVICE_PLUGINS` holds back, which is the
+    plugin whose handler that list also routes the key to ([F-6.6]). The enabled set is named in
+    compute-service's EDGE config ([D-77]) and becomes per-caller once Composer can express it
+    ([D-78]).
+
+  req F-5.1.1: Enumeration is not space-scoped: `listOperations`, `listSkills` and `listRegistry`
+    carry no space, so they read the `latest` channel while an invocation runs the version the
+    invoking space's channel points at ([F-2.2]). A space pinned to another channel is therefore
+    described by `latest`'s surface and runs its own ([D-79]).
+
+  req F-5.2:
+    when: compute-service receives `invokeOperation` for a key a published plugin implements
+    then: the operation runs in that plugin's Dynamic Worker, in the scope of the given space, and
+          its result or typed error is returned to the caller
+
+  req F-5.3: A handler's nested `Operation.invoke` re-enters compute-service through a service
+    binding, so a call chain across plugins never holds more than one Dynamic Worker per I/O context.
+
+  req F-5.4: An operation key belongs to exactly one plugin key; an upload whose catalog claims a key
+    of another plugin fails with KeyConflict.
+
+  req F-5.5: An operation's output reaches the caller in the JSON form its schema describes: every
+    live ECHO object as `Entity.toJSON` (with `@uri` and `@type`) and every ref as `{ '/': uri }`,
+    as operation-service returns it.
+
+  req F-5.6: A handler sees the request context operation-service gives it: the trace sink receives its
+    trace events between `operation.start` and `operation.end` envelopes (none when the caller minted
+    the pid), the caller's cancellation aborts `Cancellation.signal`, a test's id seed pins the ids it
+    mints, and a conversation provides its `HarnessService`. The caller and the reply origin bind the
+    host services EDGE serves to the invocation ([F-5.7]).
+
+  req F-5.7: A handler gets every service operation-service gives it (the inventory in the Host
+    services section): its function context's, the request context's ([F-5.6]), services only EDGE
+    holds, served per invocation through `InvocationScope.services`, and `Operation.Service`, which
+    runs the bundle's own operations in process and re-enters EDGE's router for any other through
+    `InvocationScope.operations`.
+
+  req F-5.8: An invocation runs a published bundle only where the bundle's plugin is in scope: the
+    plugins the space names on its own `properties`, else the globally enabled set, else unscoped
+    ([D-90], [D-91]). A plugin outside it is not routed, and the key falls back to operation-service
+    as any other unroutable key does.
+```
+
+```mdl
+feat F-6: compute-service routes invocations to published plugins
+  compute-service is the single entry for running plugin code on EDGE.
+
+  req F-6.1: PluginRouter resolves a `dxn:` target from the operation index without starting an
+    isolate.
+
+  req F-6.2: PluginLoader loads a bundle with `LOADER.get(hash, ...)`; `env` holds no space id,
+    caller or token, and the per-call InvocationScope arrives as an RPC argument.
+
+  req F-6.3: A bundle that fails to load or activate returns PluginLoadError naming the plugin
+    version; it does not affect other plugins.
+
+  req F-6.4: Triggers, processes, agents and code-mode scripts invoke plugin operations through the
+    same route as `invokeOperation`.
+
+  req F-6.5: Logs and traces of a Dynamic Worker reach the same sinks as other compute-service
+    functions, tagged with the plugin key and version.
+
+  req F-6.6: While both run, PluginRouter prefers the published bundle, except for the plugins
+    `OPERATION_SERVICE_PLUGINS` names, which operation-service keeps serving however their bundle is
+    published — that list is how plugins are converted in batches, and how a broken bundle is
+    withdrawn ([D-79]). It falls back to operation-service for a key no published bundle implements,
+    a bundle that does not handle the key, and a bundle whose protocol version it cannot serve
+    ([F-6.9]).
+
+  req F-6.7: operation-service is removed entirely, and no caller binds `OPERATION_SERVICE`: every
+    plugin in its static list is published, and the base types its BasePlugin registers come from
+    plugin-ontology's bundle ([D-87]).
+
+  req F-6.8: The KV operation catalog is rebuilt from bundle catalogs on every upload or revoke, not
+    by a cron that activates plugins.
+
+  req F-6.9: A bundle keeps the host it was published with, so PluginRouter asks each bundle its
+    protocol version (`Entrypoint.protocolVersion`, answered by the loader's main module from the
+    vendored host, 1 when the host predates versioning) and speaks that version: a scope trimmed to
+    the fields the host reads (`PluginProtocol.scopeFor`), and operation-service for a bundle whose
+    version it cannot serve (`PluginProtocol.isSupported`). The catalog records the version too.
+```
+
+```mdl
+feat F-8: Durable plugin state through facets
+  A plugin module that needs its own storage runs as a Durable Object facet.
+
+  req F-8.1: A module that exports a Durable Object class runs as a facet of a PluginSupervisor, one
+    per (space, plugin key), with a SQLite database the supervisor cannot read and the facet cannot
+    leave.
+
+  req F-8.2: Upgrading the plugin aborts the facet and restarts it with the new class; its storage
+    is kept.
+
+  req F-8.3: Uninstalling the plugin from a space deletes its facets and their storage.
+```
+
+```mdl
+feat F-9: Continuous delivery from DXOS
+  First-party plugins reach EDGE from the dxos repository without a catalog bump.
+
+  req F-9.1: A dxos release publishes every first-party plugin whose bundle changed, at the released
+    version, owned by realm:dxos.
+
+  req F-9.2: The workflow runs in dxos CI with an admin credential; edge needs no redeploy.
+```
+
+```mdl
+feat F-10: Readable manifests and registry query
+  Anyone can read what a published plugin contains before running it.
+
+  req F-10.1: `GET /registry/modules/:slug/:version/manifest.json` returns the bundle's manifest, and
+    `GET /registry/plugins/:key/:version/catalog` the catalog the registry derived at upload.
+
+  req F-10.2: queryPlugins finds published plugins by text, plugin key, operation key, typename or
+    skill key.
+
+  req F-10.3: Private plugins are returned only to their owner and to members of spaces they are
+    shared with. They are not indexed for EDGE, so no invocation routes to one ([D-43]).
+```
+
+```mdl
+feat F-12: Tested end to end
+  Every publishable plugin, the host and the EDGE path are tested in the runtime they run in.
+
+  req F-12.1: CI loads the bundle of each plugin tagged `edge-release` through Worker Loader in
+    workerd, as PluginLoader does, and fails when an import is not vendored, a workerd module fails
+    to activate, or the plugin contributes no operations, skills or types.
+
+  req F-12.2: The host is tested inside workerd: describe, invoke, standalone activation and errors.
+
+  req F-12.3: EDGE end-to-end tests publish a bundle, route and invoke its operations in a real space,
+    and cover scenarios T-1 to T-4, upgrade and revocation.
+```
+
+## Scenarios
+
+```mdl
+scenario T-1: Publish and call a plugin
+  given: plugin-markdown at version 0.9.2, never published
+  when: a developer runs `dx registry publish`, then MCP invokeOperation calls
+        org.dxos.operation.markdown.create in space S
+  then:
+    - registry-service holds one bundle for org.dxos.plugin.markdown@0.9.2, which the browser loads too
+    - queryOperations lists org.dxos.operation.markdown.create
+    - the document is created in S by the Dynamic Worker, not by operation-service
+```
+
+```mdl
+scenario T-2: One isolate serves two spaces
+  given: a published bundle with hash h
+  when: the same operation is invoked in space S1, then in space S2
+  then:
+    - both calls use the Worker Loader id `plugin:h`
+    - each handler sees only its own space's database
+```
+
+```mdl
+scenario T-3: Upgrade a plugin
+  given: version 0.9.2 is the newest published version
+  when: 0.9.3 is published
+  then:
+    - new invocations run 0.9.3 in a new isolate
+    - an invocation naming @0.9.2 still runs 0.9.2
+```
+
+```mdl
+scenario T-4: Operation key conflict
+  given: org.dxos.plugin.markdown owns org.dxos.operation.markdown.create
+  when: another plugin key uploads a catalog that contains the same operation key
+  then:
+    - the upload fails with KeyConflict
+    - the operation index is unchanged
+```
+
+### Tested flows
+
+Each scenario below is run by a test that exists today ([D-59]), except T-20 and T-21, which are planned ([D-65]). The table names the test by package, file and
+`describe` › test title; the edge tests live in the dxos/edge repository. A scenario states the behaviour this spec
+requires; where the test expects the opposite today, the table says so ([D-62]).
+
+| Scenario | Repository | Test                                                                                                                                      | Note                                                                                       |
+| -------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| T-5      | dxos       | `check-edge-release` (`plugin-builder` `check-release`), the "Check EDGE plugin releases" step of the `Check` workflow                    | Runs for every package tagged `edge-release`.                                              |
+| T-6      | dxos       | `plugin-space` `edge-bundle.test.ts` › space plugin bundle on EDGE: the first four tests                                                  |                                                                                            |
+| T-7      | dxos       | `plugin-space` `edge-bundle.test.ts` › space plugin bundle on EDGE › returns an ECHO object in its JSON form, with its `@uri`              | Passes: the host returns the object's JSON form, with its `@uri` ([D-66]).               |
+| T-8      | dxos       | `plugin-host-cloudflare` `PluginHost.workerd.test.ts` › PluginHost (4 tests)                                                              |                                                                                            |
+| T-9      | dxos       | `echo-client-e2e` `type-source.test.ts` › type sources (11 tests)                                                                         |                                                                                            |
+| T-10     | edge       | `registry-service` `plugin-store.workerd.test.ts` › plugin store; `plugin-store-multipart.workerd.test.ts` › plugin store: multipart upload |                                                                                            |
+| T-11     | edge       | `registry-service` `plugin-store.workerd.test.ts` › plugin store: the immutability, ownership and refusal tests                           |                                                                                            |
+| T-12     | edge       | `registry-service` `plugin-store.workerd.test.ts` › plugin store › channels are dist-tags: prereleases skip `latest`, a space channel falls back to it |                                                                               |
+| T-13     | edge       | `registry-service` `plugin-type.workerd.test.ts` › type registry (6 tests); `plugin-store.workerd.test.ts` › plugin store › lists every plugin key with its channels and versions, revoked ones included |                     |
+| T-14     | edge       | `edge` `plugin-store.node.test.ts` › EDGE plugins (8 tests)                                                                               |                                                                                            |
+| T-15     | edge       | `edge` `plugin-store.node.test.ts` › EDGE plugins: a plugin published with the dx CLI › serves its operation once published               | Skipped unless a `dx` binary is installed or named by `DX_CLI`.                            |
+| T-16     | edge       | `edge` `plugin-seed.node.test.ts` › first-party plugins seeded into the registry (2 tests)                                                | Skipped unless first-party bundles are available; `plugins-mode.yml` provides them.        |
+| T-17     | edge       | `edge` `operation-fallbacks.node.test.ts` › operations without a bundle in plugins mode (2 tests)                                         | Same condition as T-16.                                                                    |
+| T-18     | edge       | `edge` `plugin-isolation.node.test.ts` › operations that read another plugin’s capabilities                                               | Passes: plugin-space's bundle answers `{ groups: [] }` without plugin-inbox's rule ([D-88]). |
+| T-19     | edge       | `plugins-mode.yml`: the edge suite with `DX_TEST_OPERATION_ROUTING=plugins`                                                               | Advisory; per-test failures are recorded in edge's operation-fallbacks plan.               |
+| T-20     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B invokes A's operation                                      | Planned: not in edge yet. Will need a `dx` binary, as T-15 does.                           |
+| T-21     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B uses A's type                                              | Planned: not in edge yet. Will need a `dx` binary, as T-15 does.                           |
+
+The browser half of loading a bundle, Composer building a remote plugin from its `manifest.json` and importing a module
+body only when the module activates, is Composer's QA flow `org.dxos.app.composer#QA-17` ([D-61]).
+
+```mdl
+scenario T-5: Every plugin tagged edge-release loads alone in workerd
+  given: a plugin package tagged `edge-release`
+  when: CI runs `check-edge-release` for it
+  then:
+    - its one bundle is built with `composerPlugin`, with `PluginHost` added to `vendor/`, as `dx registry publish` builds it
+    - every bare import that a workerd module reaches is vendored, and every relative import and manifest URL names a file of the bundle
+    - its workerd modules import in workerd through Worker Loader, with no other plugin loaded, as PluginLoader loads them
+    - `describe()` lists no activation failure, and at least one operation, skill or type
+    - otherwise the check fails and names the file and the cause
+  tags: [dxos, ci, workerd]
+```
+
+```mdl
+scenario T-6: A bundle runs space operations on its own types and on another plugin's
+  given:
+    - plugin-space's bundle, built as `check-edge-release` builds it and loaded alone in workerd
+    - a space served from memory in place of db-service, and a TYPE_REGISTRY that holds plugin-markdown's document type
+  when: `space.addObject` and `space.queryObjects` are invoked through the bundle's entrypoint
+  then:
+    - addObject of `org.dxos.type.collection`, a type the bundle declares, returns the new object's `echo:` id
+    - queryObjects of `org.dxos.type.document`, a type only plugin-markdown declares, asks TYPE_REGISTRY for it and answers with no results
+    - addObject of a document creates it with the type TYPE_REGISTRY returned
+    - queryObjects of a typename no plugin publishes fails with "Schema not found"
+  tags: [dxos, workerd]
+```
+
+```mdl
+scenario T-7: A bundle returns an ECHO object in its JSON form
+  given: plugin-space's bundle, as in T-6
+  when: `space.addObject` creates a collection
+  then: the output holds the object as operation-service returns it, with its `@uri`, its `@type` and its fields
+  tags: [dxos, workerd]
+```
+
+```mdl
+scenario T-8: The host describes its plugin and returns failures as data
+  given: `PluginHost` running a test plugin that contributes a type, a skill and operations, in workerd
+  when: EDGE calls `describe()` and `invoke()`
+  then:
+    - describe lists the plugin, the type with its JSON Schema, the skill with its tool, the operations, and no failures
+    - invoke runs an operation of the plugin by its DXN key and by its bare key
+    - the plugin activates once, however many calls arrive at the same time
+    - an unknown key returns `operation-not-found`, and an invalid space id or a space without the data bindings returns `invalid-request`; neither throws
+  tags: [dxos, workerd]
+```
+
+```mdl
+scenario T-9: A type the registry lacks resolves from a type source
+  given: an ECHO database whose registry lacks a type, and a type source that knows it
+  when: a registry query by key, or the load of an object of that type, needs the type
+  then:
+    - the type resolves from the source, is registered, and creates objects
+    - the source is not asked for a type the registry holds, for a query outside the registry, or for a registry query for something other than types
+    - an unknown type, a failing source and a source that stalls past its timeout each read as a missing type
+    - a reactive query updates once the source answers; with no source, or once the source is unregistered, the type is missing
+  tags: [dxos]
+```
+
+```mdl
+scenario T-10: The store takes a bundle as JSON or as streamed multipart
+  given: registry-service with the plugin store bound
+  when: a bundle whose `vendor/` carries the host is uploaded through `/upload` or through `/upload/multipart`, one part per file
+  then:
+    - its files are written under `modules/<key>/<version>/`, where `GET /modules` serves them, its catalog is indexed and `latest` moves to it
+    - a 40 MB stylesheet streams into R2 as a multipart upload and is served back whole
+    - the same files hash alike by either route, so uploading them again is a no-op
+    - a refused or truncated multipart upload deletes what it wrote
+    - a bundle without the host is stored for browsers and never indexed
+  tags: [edge, workerd]
+```
+
+```mdl
+scenario T-11: The store refuses a bundle it cannot index
+  given: registry-service with the plugin store bound
+  when: a bundle is uploaded
+  then:
+    - the store loads it through Worker Loader and calls `describe()`; a bundle that lists an activation failure, describes another plugin or names other coordinates than its manifest is refused
+    - an operation key that another plugin key owns fails with KeyConflict
+    - other files under an uploaded version fail with VersionExists, and the same files only move channels
+    - a plugin key accepts uploads only from its first uploader
+  tags: [edge, workerd]
+```
+
+```mdl
+scenario T-12: Channels are dist-tags and revoking falls back to latest
+  given: a plugin key with release 1.0.0 and prerelease 1.1.0-beta.1 on `next`
+  when: operations are resolved on `latest`, `next` and `dev`, a channel is moved, and a version is revoked
+  then:
+    - `latest` stays on 1.0.0, since a prerelease moves only the channel its upload names
+    - `dev`, which points at no version, resolves to `latest`
+    - the owner moves `dev` to 1.1.0-beta.1 through `PUT /edge/plugins/<key>/channels/dev`; anyone else gets 403
+    - once 1.1.0-beta.1 is revoked, `next` resolves to `latest`
+  tags: [edge, workerd]
+```
+
+```mdl
+scenario T-13: The store resolves types and lists plugins
+  given: bundles uploaded to the plugin store, some contributing the same typename
+  when: resolveType and listPlugins are called
+  then:
+    - resolveType returns the type of the earliest-uploaded bundle that contributes it, and matches the version when one is given
+    - a revoked bundle is skipped, and a version replaced with `replace: true` (the store's owner overwrite, not a publish) drops the types it no longer lists
+    - an unknown typename resolves to undefined
+    - listPlugins lists every plugin key with its channels and versions, revoked versions included, and a revoked version keeps its catalog
+  tags: [edge, workerd]
+```
+
+```mdl
+scenario T-14: EDGE routes an uploaded bundle's operation to a Dynamic Worker
+  given: the edge test stack with operations routed to plugins and no seeded bundles
+  when: a bundle in the bundle format is uploaded through edge's `/registry/upload` and its operation key is invoked as a `dxn:` target
+  then:
+    - the registry lists the bundle by operation key, and browsers read its manifest from `GET /modules`
+    - compute-service runs the operation in the bundle's Dynamic Worker, with DATA_SERVICE, QUEUE_SERVICE, FUNCTIONS_AI_SERVICE and TYPE_REGISTRY bound
+    - an invocation in a space gives the bundle the space id and an access token service
+    - a type another bundle publishes resolves through TYPE_REGISTRY, and an unpublished one does not
+    - a multipart upload with a 12 MB stylesheet runs the same way
+    - a prerelease on `next` leaves `latest` in place, a new release moves it, the owner moves it back, and a revoked version is never loaded again
+    - the operation's own error reaches the caller
+    - other files under an uploaded version, and an operation key another plugin owns, answer 409
+    - a key no bundle implements is served by operation-service
+  tags: [edge]
+```
+
+```mdl
+scenario T-15: A plugin published with dx runs without operation-service
+  given: edge's sample plugin, never published, and a stack without operation-service
+  when: `dx registry publish --upload-only --edge-url <stack>` publishes it
+  then:
+    - before the publish, invoking its operation fails
+    - after it, `org.dxos.operation.edgeSample.reply` answers from the bundle
+  tags: [edge]
+```
+
+```mdl
+scenario T-16: A seeded first-party bundle creates a document
+  given: the first-party bundles built from dxos and seeded into the registry, on a stack without operation-service
+  when: `org.dxos.operation.markdown.create` is invoked in a space
+  then:
+    - every bundle the store accepts is indexed, and seeding again uploads nothing
+    - plugin-markdown's bundle creates the document and returns its id
+  tags: [edge]
+```
+
+```mdl
+scenario T-17: Every operation that falls back to operation-service is inventoried
+  given: the first-party bundles seeded into the registry, with operations routed to plugins
+  when: the keys operation-service serves are compared with the keys the registry routes
+  then:
+    - every key no bundle implements is in the fallback inventory, with its owner and proposed resolution
+    - every key in the inventory still falls back, so a key that gains a bundle leaves the inventory
+  tags: [edge]
+```
+
+```mdl
+scenario T-18: An operation that reads another plugin's capability sees only its own plugin's on EDGE
+  given: three Persons in a space, two of them with emails that differ only in case
+  when: `space.findDuplicates` runs on Person in plugin-space's bundle, alone on EDGE
+  then: it returns `{ groups: [] }`, since the identity rule plugin-inbox contributes does not reach the bundle ([D-88])
+  tags: [edge]
+```
+
+```mdl
+scenario T-19: The agent and MCP suites pass with operations routed to bundles
+  given: the edge suite with `DX_TEST_OPERATION_ROUTING=plugins` and the first-party bundles seeded into the registry
+  when: the discord-agent, brain, brain-admin, agent, functions, mcp-space-service and agent-sessions suites run
+  then:
+    - each test passes as it does with operation-service
+    - each operation that falls back to operation-service is reported with its reason
+  tags: [edge, ci]
+```
+
+```mdl
+scenario T-20: A published plugin invokes another published plugin's operation
+  given:
+    - edge's sample plugins A (`edge-sample-notes`) and B (`edge-sample-notebook`), on a stack without operation-service, with only B published so far (`dx registry publish --upload-only --edge-url <stack>`)
+    - A implements `org.dxos.operation.edgeSample.createNote`, which adds an `org.dxos.type.edgeSample.note` to the space and returns its id
+    - B implements `org.dxos.operation.edgeSample.addNoteVia`, which calls A's operation with `Operation.invoke` and returns its output
+  when: `org.dxos.operation.edgeSample.addNoteVia` is invoked in a space, then A is published the same way and it is invoked again
+  then:
+    - the first invoke fails with A's operation key in the error
+    - after A is published, A's bundle runs the nested invoke, and B returns A's output
+    - the note exists in the space, and the caller reads it as a live object of its database
+  tags: [edge]
+```
+
+```mdl
+scenario T-21: A published plugin uses a type another published plugin owns
+  given:
+    - plugins A and B as in T-20, both published, with a note A created in a space
+    - B does not import A and declares no `org.dxos.type.edgeSample.note`
+    - B implements `org.dxos.operation.edgeSample.listNotes`, which queries `Filter.and(Filter.type(Type.Type), Filter.key('org.dxos.type.edgeSample.note'))` from `Scope.registry()` and then the space's objects of the type it resolves
+  when: `org.dxos.operation.edgeSample.listNotes` is invoked in the space
+  then:
+    - the type resolves from A's published TypeRecord through `TYPE_REGISTRY` ([D-47])
+    - B returns the note A created, with its fields
+  tags: [edge]
+```
+
+## Versions
+
+Channels work like npm dist-tags. Each plugin key has named channels, each pointing at one published
+version; `latest` always exists and moves when a version that is not a prerelease is published.
+Publishing with `--channel next` moves `next` instead, and `dx registry channel set` moves any
+channel to a version already published.
+
+Which version runs for an invocation, in order:
+
+1. the version the target names (`dxn:<key>@<version>`);
+2. the version the invoking space's channel points to (an annotation on the space's `Properties`
+   object, `latest` by default);
+3. the plugin's `latest`, when it has no version on the space's channel.
+
+TODO: an override per DXN.
+
+## Rollout
+
+1. **One bundle.** Plugin builds publish one bundle, with `vendor/` ([F-1]); the per-runtime
+   `dx-env` config entries stay for consumers that bundle the config statically ([D-42]).
+2. **Store and index.** registry-service indexes the operation keys of uploaded bundles and serves
+   their catalogs ([F-2], [F-10]).
+3. **Load and route.** compute-service routes `dxn:` targets to published plugins, with
+   operation-service as the fallback; dxos releases publish first-party plugins ([F-5], [F-6], [F-9]).
+4. **Retire operation-service** once every plugin in its list is published ([F-6.7]).
+5. **Durable state** ([F-8]).
+
+## Open questions
+
+- **Isolate reuse.** compute-service gives every function invocation a random loader id today, to
+  work around WASM memory growth. [F-2.5] needs the reuse that workaround disables; the cause has to
+  be fixed or bounded per bundle.
+- **Bundle size.** Each bundle carries its own `vendor/` copy of `@dxos/echo`, Effect and the rest.
+  Its size and cold-start cost, and any Worker Loader size limit, need measuring against
+  operation-service's 3.9 MiB gzip; identical vendor files could be stored once by content hash.
+- **Concurrency.** A Durable Object may have 10 Dynamic Workers in flight, a Worker request 4. An
+  agent process that calls operations of many plugins must spread them across I/O contexts.
+- **Sandboxing options.** Whether a plugin's egress, CPU and subrequest limits become configurable.
+  Any such option applies to every plugin alike, whoever publishes it.
+- **Facet scope.** Whether one supervisor per (space, plugin) is the right grain, or per plugin
+  instance object.
+- **Data-plane compatibility.** `vendor/` carries the ECHO client the plugin was built with, so a
+  plugin opens a space only when that client speaks the protocol of the db-service it runs
+  against. A bundle built from dxos `main` one day ahead of the dxos EDGE pins already timed out
+  opening a space root. Whether a manifest records the SDK version it was built from, and
+  compute-service refuses a bundle the data plane cannot serve, or the data service protocol is
+  versioned instead.
+
+- **Other plugins' capabilities (answered, [D-88]).** A plugin reading other plugins' capabilities
+  — skills, subject contexts, schemas, hooks, delegation strategies, model resolvers, operation
+  handlers — is out of scope for EDGE for now. A bundle sees only what its own plugin contributes,
+  so hooks do not reach an agent turn on EDGE, no other plugin's contributions reach a bundle, and
+  plugin-agent's `ensureReplySent` does not find other plugins' operation handlers there. These were
+  the open questions of [D-85].
+
+## Changelog
+
+```mdl
+decision D-1: The same plugins that run in Composer run on EDGE. Plugins are deployed from the CLI and stored on EDGE; they are versioned; their types and skills are exposed; their operations are exposed and callable; compute-service executes and routes invocations to deployed plugins; operation-service is deprecated and removed; first-party plugins are delivered continuously from DXOS; and plugin manifests and the registry can be read and queried.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [F-1, F-2, F-3, F-4, F-5, F-6, F-7, F-9, F-10]
+```
+
+```mdl
+decision D-2: EDGE loads plugin code with the Worker Loader API, and potentially with Durable Object facets. The design builds on the `Plugin.config` definition and manifest of dxos/dxos#13893.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [PluginLoader, PluginSupervisor, EdgeManifest]
+  source: https://github.com/dxos/dxos/pull/13893
+```
+
+```mdl
+decision D-3: An EDGE release is the `dx-env=workerd` build of a plugin's `dx.config.ts`, bundled with its `dependsOn` plugins and a generated PluginHost entry into one self-contained module graph. Fills in [D-1] and [D-2].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [EdgeRelease, EdgeManifest, PluginBuilder, F-1.4]
+  why: A Dynamic Worker resolves imports only from its own `modules` map, so a release cannot share `@dxos/*` modules with the host or with other releases; bundling the dependsOn closure lets the plugin activate with the capabilities it requires.
+  rejected:
+    - One isolate for all plugins, rebuilt on each deploy — it keeps operation-service's coupling, where one plugin's change reloads and can break every other.
+    - Ship `@dxos/*` as separate shared modules in each WorkerCode — the bytes are loaded per isolate either way, and version skew between releases becomes possible.
+```
+
+```mdl
+decision D-4: Each release carries a catalog of its operations, skills and types, written at build time by activating the release headless; registry, router and MCP read the catalog and never start an isolate to answer a query. Fills in [D-1].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginCatalog, F-3, F-4, F-10, F-1.3]
+  why: Readable manifests and registry query need the contributions as data; checking `describe()` against the catalog at upload keeps the two from drifting.
+  rejected:
+    - Activate releases on a cron to rebuild the catalog, as operation-service does — it costs an isolate per release per minute and fails silently.
+```
+
+```mdl
+decision D-5: Releases are stored by registry-service beside the browser bundle of the same PluginRelease (R2 prefix `workerd/`, one D1 row), are immutable per (key, version), and sit on a channel (stable, next, dev); the uploader of a key's first release owns the key. Fills in [D-1].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [EdgeRelease, PluginStore, F-2]
+  why: registry-service already owns plugin bundles, versions and private releases; a second store would split one plugin's identity in two.
+  rejected:
+    - Store releases in compute-service's functions registry — it models single functions with no manifest, types or skills.
+```
+
+```mdl
+decision D-6: The Worker Loader id of a release is its content hash, shared by every space and caller; per-call state (space, caller, trace sink, cancellation) reaches the isolate as an InvocationScope RPC argument, never in `env`. Fills in [D-2].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginLoader, InvocationScope, F-2.5, F-6.2]
+  why: Worker Loader caches and bills by (id, code); `env` is part of the code, so per-space env would start and bill one isolate per space.
+  rejected:
+    - A random id per invocation, as functions use today — no warm isolates, and a new billed Dynamic Worker on every call.
+    - One id per (release, space) — a cold start and a billed worker per space with no isolation gain, since InvocationScope already scopes data access.
+```
+
+```mdl
+decision D-7: compute-service resolves `dxn:` operation targets through an operation index that maps each key to exactly one plugin key, falling back to operation-service until it is removed; nested invocations re-enter compute-service through a service binding. Fills in [D-1].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginRouter, OperationRoute, F-5.3, F-5.4, F-6, F-7.1]
+  why: The index lets routing skip isolate start-up; exclusive key ownership keeps a third-party plugin from shadowing a first-party operation; re-entry keeps each call within the per-I/O-context Dynamic Worker limit.
+```
+
+```mdl
+decision D-8: Durable Object facets host only modules that need their own storage, one PluginSupervisor per (space, plugin key); stateless operations run in a plain WorkerEntrypoint. Fills in [D-2].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginSupervisor, F-8]
+  why: Facets add a Durable Object hop and are in beta; operations hold their state in ECHO and need neither.
+```
+
+```mdl
+decision D-9: First-party plugins are delivered by a dxos CI workflow that deploys changed releases to `dev` on merge to main and to `stable` on a dxos release, as realm:dxos. Fills in [D-1].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9]
+  why: The release hash tells CI which plugins changed, so edge needs no catalog bump or redeploy.
+```
+
+```mdl
+decision D-10: Plugins not owned by realm:dxos load with a filtered `globalOutbound` that allows only the hostnames their manifest declares, with custom CPU and subrequest limits. Fills in [D-1].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [EdgeManifest, F-11]
+  why: Deploying from the CLI opens EDGE to code DXOS did not write; egress and limits are the controls Worker Loader offers.
+```
+
+```mdl
+decision D-11: DXOS plugins get no permissions that other plugins lack; drop the sandboxing that applied only to plugins not owned by realm:dxos ([F-11]).
+  date: 2026-10-29
+  by: user:dmaretskyi
+  supersedes: D-10
+  affects: [EdgeManifest]
+```
+
+```mdl
+decision D-12: Putting a plugin on EDGE is publishing, not deploying: it pushes static assets up to a service.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [publishPlugin, F-1]
+```
+
+```mdl
+decision D-13: `dx registry publish`, which already publishes the browser bundle, publishes the `workerd` release of the same version with it; there is no separate deploy command. Fills in [D-12].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [publishPlugin, F-1.1]
+  why: The two artifacts belong to one PluginRelease, and a browser bundle published without its workerd release would call operations EDGE cannot run.
+  rejected:
+    - A `dx plugin deploy` command next to `dx registry publish` — two commands for one version, and they can drift.
+```
+
+```mdl
+decision D-14: Retiring operation-service is a task, not a feature; at most it is a requirement of another feature.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-6]
+```
+
+```mdl
+decision D-15: The operation-service requirements move into F-6 as F-6.6 to F-6.8, and feature F-7 is removed. Fills in [D-14].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.6, F-6.7, F-6.8]
+  why: Removing operation-service is the last step of compute-service routing to published plugins, so its fallback and removal conditions belong with that routing.
+```
+
+```mdl
+decision D-16: A channel (stable, next, dev) is a movable tag on one published version, like an npm dist-tag. Publishing with `--channel` or `promote` moves it without rebuilding; CI builds are `<version>-dev.<sha>` on `dev`; the EDGE environment picks the channel a call uses unless the call names a version; Composer passes the version of the browser plugin it runs with each invocation. This replaces the per-release channel of [D-5].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Channel, EdgeRelease, OperationRoute, PluginStore, F-2.2, F-2.4, F-2.6, F-9]
+  why: A tag lets the release that reaches stable be the exact bytes tested on next, makes rollback a pointer move, and lets the UI and EDGE run the same version of a plugin.
+  rejected:
+    - A channel fixed on each release at upload — promotion would mean a rebuild, so stable would never run the bytes that were tested.
+    - Each space picks its channel — Composer already chooses the plugin version per client, and a second choice per space could disagree with it.
+```
+
+```mdl
+decision D-17: Treat all plugins the same. Sandboxing options may become configurable, but they never single out DXOS plugins.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  supersedes: D-11
+```
+
+```mdl
+decision D-18: Edge-side plugins have quality end-to-end tests on EDGE, and dxos has checks and workerd tests for plugins.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [F-12]
+```
+
+```mdl
+decision D-19: CI runs a `check-edge-release` task for each plugin tagged `edge-release`, starting with the fifteen plugins operation-service hosts; the host's own tests run in workerd, and releases are loaded through Worker Loader from Node with Miniflare. Fills in [D-18].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-12.1, F-12.2]
+  why: Every plugin already ships a workerd build since dxos/dxos#13893, but most contribute nothing on EDGE, so the check is opt-in per plugin; Node drives the loader because a multi-MiB bundle overflows the vitest workerd pool's message limit.
+```
+
+```mdl
+decision D-20: `PluginHost` lives in the private package `@dxos/plugin-host-cloudflare`, not in `@dxos/app-framework`, and builds its function context with `@dxos/functions-runtime-cloudflare`. Fills in [D-3].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginHost, PluginEntrypoint]
+  why: The host needs the compute runtime (ECHO over the data bindings, the function wrapper), which app-framework must not depend on; reusing the functions runtime keeps one way to build an invocation's context.
+```
+
+```mdl
+decision D-21: A release serves only its primary plugin's operations, skills and types, attributed by the module that contributed them; the plugins of its `dependsOn` closure are bundled and activated but not served. Fills in [D-3].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginEntrypoint, PluginCatalog, F-5.4]
+  why: plugin-agent, plugin-discord and plugin-projects fail to activate without their dependencies, and serving a dependency's operations would claim keys its own release owns.
+```
+
+```mdl
+decision D-22: Operation keys are stored, resolved and matched in their bare form (`org.example.op`); an operation's own `dxn:` key and an invocation's bare key name the same operation. Data-plane compatibility is recorded as an open question. Fills in [D-3].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginRouter, PluginEntrypoint, F-5, F-6]
+  why: The EDGE e2e test with a real bundled release failed to resolve: catalogs carry `dxn:` keys while compute-service invokes bare ones. The same test showed a release built ahead of EDGE's pinned dxos cannot open a space.
+```
+
+```mdl
+decision D-23: A plugin has one bundle and one manifest for every runtime. There is no separate browser and workerd build; each module's `environments` decides at load whether it runs. Supersedes the `dx-env=workerd` release of [D-3].
+  date: 2026-10-30
+  by: user:dmaretskyi
+  supersedes: D-3
+  affects: [PluginBundle, PluginBuilder, F-1.2]
+```
+
+```mdl
+decision D-24: In the browser all plugins run in one JS context and Composer's import map fills in the packages a plugin keeps external. Cloudflare has no import map, and EDGE runs no package CDN for now, so the plugin's build writes a `vendor/` directory with builds of every dependency it kept external (e.g. `vendor/effect`, `vendor/@dxos/echo`), and on Cloudflare the loader rewrites the external imports to `vendor/`. Plugins are never re-bundled after their build. Fills in [D-23].
+  date: 2026-10-30
+  by: user:dmaretskyi
+  affects: [VendorMap, PluginBuilder, PluginLoader, F-1.4, F-1.5]
+```
+
+```mdl
+decision D-25: EDGE uses registry-service's existing plugin store, the one that serves bundles to the browser, adding only an operation index. There are no channels: an invocation runs the newest published version unless it names one; a per-space setting with an override per DXN is a TODO. Supersedes [D-5] and [D-16].
+  date: 2026-10-30
+  by: user:dmaretskyi
+  supersedes: D-16
+  affects: [PluginStore, PluginRouter, OperationRoute, F-2, F-9, F-10]
+```
+
+```mdl
+decision D-26: The plugin's own files sit flat at the bundle root, `vendor/manifest.json` maps each bare specifier to its vendored file, `PluginHost` ships in `vendor/` at the plugin's dxos version, and a `dependsOn` plugin's bundle is rewritten to the primary's `vendor/` so the isolate holds one copy of each package. Fills in [D-24].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [VendorMap, PluginLoader, PluginEntrypoint]
+  why: Worker Loader resolves a bare specifier against the importing file's directory (probed in Miniflare), so the rewrite needs an explicit map; a flat root keeps the browser loading the same files unchanged.
+  rejected:
+    - Name the shared packages as bare modules in the Worker Loader map and skip the rewrite — that resolves only from files at the bundle root, so every chunk directory breaks it.
+```
+
+```mdl
+decision D-27: A light script in Composer checks a built plugin directory before it is published: the manifest, that every module parses and its imports resolve inside the bundle, that every bare import is vendored, that no workerd module reaches a stylesheet, and that the workerd modules import. Fills in [D-24].
+  date: 2026-10-30
+  by: user:dmaretskyi
+  affects: [PluginBuilder, F-12.1]
+```
+
+```mdl
+decision D-28: A bundle carries no `catalog.json`; registry-service derives a bundle's catalog by calling `describe()` when it loads the bundle at upload, and stores it. Fills in [D-24].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginBundle, PluginBuilder, PluginStore, F-1.3, F-10.1]
+  why: The registry already loads every uploaded bundle once in workerd; deriving the catalog there keeps the plugin build from running plugin code and leaves nothing in the bundle to drift from its modules.
+  rejected:
+    - Write `catalog.json` at build time by activating the workerd modules headless — the build would need workerd, and the store would have to check the file against `describe()` anyway.
+```
+
+```mdl
+decision D-29: A plugin's catalog belongs at build time; that is a TODO. Until then `describe()` runs during publish: the CLI calls it on the built bundle before upload, and the registry calls it on upload, and a failure fails the publish. Supersedes the upload-only catalog of [D-28].
+  date: 2026-10-30
+  by: user:dmaretskyi
+  supersedes: D-28
+  affects: [PluginBundle, PluginBuilder, PluginStore, publishPlugin, F-1.3]
+```
+
+```mdl
+decision D-30: `vendor/manifest.json` is an import map: the vendor build keeps every shared package a vendored package imports as a bare import and vendors it too, and PluginLoader rewrites every bare import of the bundle and its `dependsOn` bundles through one map joined from their `vendor/` directories, the primary's entry first. Supersedes the single-`vendor/` rewrite of [D-26]; the flat root and the vendored `PluginHost` stand.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-26
+  affects: [VendorMap, PluginBuilder, PluginLoader, F-1.4]
+  why: A `dependsOn` bundle imports shared packages its primary does not, and a vendored package that inlines another shared package carries a second instance of it; plugin-agent's dependencies failed to activate for both reasons until each package was vendored once and resolved by name.
+  rejected:
+    - Rewrite a dependency only to the primary's `vendor/` — fails for every package only the dependency imports (`@dxos/ai/resolvers` for plugin-assistant).
+    - Load each bundle against its own `vendor/` — two copies of Effect and ECHO in one isolate, whose services and schemas no longer match.
+```
+
+```mdl
+decision D-31: The CLI vendors `PluginHost` into a published bundle by naming its entry in `DX_PLUGIN_HOST_ENTRY` while it runs the plugin's own build command, and the plugin's `composerPlugin` adds it to `vendor/`; a bundle without the host fails `describe()` and is not published. Fills in [D-29].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginBuilder, publishPlugin]
+  why: `dx registry publish` runs whatever build the plugin's `dx.config.ts` names, so the environment is the one channel into it, and the host is private to the monorepo, so a plugin cannot depend on it.
+  rejected:
+    - Add the host to `vendor/` after the build — a second vendor build would carry its own copies of the packages the plugin's `vendor/` already has.
+```
+
+```mdl
+decision D-32: The spec states the plugin bundle format: its files, `manifest.json`, `vendor/manifest.json`, the rules a bundle meets and how each host loads it.
+  date: 2026-10-30
+  by: user:dmaretskyi
+  affects: [PluginBundle, VendorMap, PluginBuilder, PluginLoader]
+```
+
+```mdl
+decision D-33: `vendor/` holds only what a `workerd` host can reach: the entry, the bodies of modules that run on `workerd`, and what they import. The bundle check reports an unresolved import only in those files. Fills in [D-30].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [VendorMap, PluginBuilder, F-1.4, F-12.1]
+  why: A plugin that bundles another plugin's definition (plugin-assistant through plugin-registry's operations) carries that plugin's node-only bodies, whose imports (Vite, the CLI) cannot build for workerd and never run there.
+```
+
+```mdl
+decision D-34: The spec states the interface between a built plugin and EDGE. The host is reached only through typed Workers RPC, `PluginProtocol.Entrypoint` in `@dxos/protocols`, which both repositories compile against; the functions fetch protocol is dropped, and `invoke` returns failures as data.
+  date: 2026-10-30
+  by: user:dmaretskyi
+  affects: [PluginEntrypoint, PluginHost, PluginLoader]
+  rejected:
+    - Keep the functions `fetch` protocol beside RPC: a second, untyped way in that nothing on EDGE calls.
+    - A copy of the types in each repository (edge-protocol's `PluginReleaseService.Entrypoint`): they drift.
+```
+
+```mdl
+decision D-35: Every host builds a plugin from its `manifest.json` and imports each module body when the module activates; no host imports the bundle's `index.mjs` to get the plugin. Composer, the `dx` CLI and EDGE share `PluginManifest.toDefinition` and `Plugin.fromManifest`. A plugin built from `src/plugin.tsx`, whose manifest lists no modules, still loads through its entry. Fills in [D-32].
+  date: 2026-10-30
+  by: user:dmaretskyi
+  affects: [PluginBundle, PluginLoader, PluginHost, F-1.1]
+  why: The manifest already carries every module's spec and body URL, so an entry module that re-encodes it as code is a second source of truth and the one file every host had to execute first.
+```
+
+```mdl
+decision D-36: Plugin versions sit on channels, like npm dist-tags, and a space selects its channel with an annotation on its `Properties` object, defaulting to `latest`. Supersedes the channel-less routing of [D-25]; EDGE still uses the existing plugin store.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  supersedes: D-25
+  affects: [Channel, SpacePluginChannel, PluginStore, PluginRouter, publishPlugin, F-2.2, F-2.6, F-2.7]
+```
+
+```mdl
+decision D-37: `latest` moves on every publish of a version that is not a prerelease; `--channel <name>` moves another channel instead; `dx registry channel set` moves a channel to a version already published. A space's channel applies to every plugin it invokes, and a plugin with no version on that channel runs its `latest`. Fills in [D-36].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Channel, PluginRouter, publishPlugin, F-2.2, F-2.6]
+  why: The npm model the decision names: `latest` is what a plain install gets, other tags are opt-in, and moving a tag never rebuilds; falling back to `latest` lets a space on `next` keep running plugins that have no `next`.
+  rejected:
+    - A channel per plugin per space: a space would have to list every plugin to opt into a preview.
+```
+
+```mdl
+decision D-38: The loader code EDGE runs — the rewrite of bare imports through the joined `vendor/` import map and the main module that builds each plugin from its manifest — lives in a published dxos package that compute-service imports, not in a copy in edge.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  affects: [PluginLoader, PluginHost]
+```
+
+```mdl
+decision D-39: The edge repository installs the `dx` CLI as a dev dependency from pkg.pr.new, like its other `@dxos` packages, and its end-to-end tests build and publish a sample plugin with it; local work links a dxos checkout over it. Fills in [D-18].
+  date: 2026-11-02
+  by: user:dmaretskyi
+  affects: [publishPlugin, F-12.3]
+```
+
+```mdl
+decision D-40: [F-1.4] allows bundle files to import `node:*`, as Bundle format rule 4 already does. `PluginProtocol.Entrypoint` carries the space in `InvokeRequest.spaceId` today; the `InvocationScope` type, with `scope.spaceId` authoritative, is the target that replaces it. Fills in [D-6] and [D-34].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4, InvocationScope, PluginEntrypoint]
+  why: Review found [F-1.4] stricter than rule 4 although the loader sets `nodejs_compat`, and the entrypoint snippet and the `InvocationScope` type giving two shapes with no statement of which holds.
+```
+
+```mdl
+decision D-41: A plugin runs alone on EDGE. Its bundle is loaded without the bundles of its `dependsOn` plugins, and `PluginHost` activates it without resolving `dependsOn`. A plugin can import another plugin's package for its types, schemas and operation definitions; those imports are vendored like any other package. Plugins on EDGE share no runtime state or capabilities, and contribute only operations, skills and types.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  supersedes: D-21
+  affects: [PluginLoader, PluginEntrypoint, PluginStore, PluginCatalog, F-12.2]
+  why: Plugins on EDGE are independent; bundling and activating dependencies coupled their versions and loaded code a plugin only needed types from.
+```
+
+```mdl
+decision D-42: A plugin package keeps its per-runtime `dx.config.ts` entries (`dx-env`, with `workerd` and `node` conditions on its config export) for consumers that bundle the config statically. The published bundle is still one build from the full entry, and a body is still never picked by condition.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: edge's operation-service bundles plugin configs with the `workerd` condition and the `dx` CLI imports them with `node`; without those entries both reach browser-only bodies, which broke the CLI's module-structure check and edge's worker build. Narrows [D-23].
+```
+
+```mdl
+decision D-43: PluginStore refuses a bundle whose catalog lists any activation failure, stores `describe()`'s `PluginProtocol.Catalog` as the bundle's catalog, leaves channels in place when their version is revoked (resolution falls back to `latest`), and indexes only `/upload`, never private uploads.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3, F-2.4, F-10.3, PluginStore, PluginEntrypoint]
+  why: Review asked for the refusal rule, the catalog projection, the revoke outcome for channels and the invocation boundary of private plugins; this is what the store implements.
+```
+
+```mdl
+decision D-44: Building and checking a bundle (`buildBundle`, `verifyBundle`, `check-bundle`, `check-release`) lives in the private Node package `@dxos/plugin-builder`, with its own binaries; `@dxos/plugin-host-cloudflare` keeps only the runtime vendored into a bundle. Narrows [D-20].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginHost]
+  why: Review asked why the host package carries the build; the builder needs Vite, Miniflare and oxc-parser, which the workerd runtime must not depend on.
+```
+
+```mdl
+decision D-45: `dx registry publish` uploads a public bundle through `/upload/multipart`, one part per file named by its path in the bundle; `/private/upload` keeps the JSON body.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [publishPlugin]
+  why: The JSON body holds the whole bundle base64-encoded in the worker's memory, which a 56 MB bundle (presenter) exceeds; the multipart route streams each part into R2.
+```
+
+```mdl
+decision D-46: The types an operation declares in `Operation.make({ types })` are bundled with its plugin and registered before the operation is invoked on EDGE.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [F-3.4, PluginHost]
+```
+
+```mdl
+decision D-47: A type that is not registered when a query names it or an object of it is loaded is resolved on EDGE by an async query, by DXN, into a global EDGE type registry to which every plugin contributes its types. This covers the places that may hold any type: generic operations such as `space.queryObjects`, a task's artifacts, relations, the agents' database toolkit and dynamic schema, none of which an operation can list in `types`.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [F-3.5, PluginStore, PluginHost]
+```
+
+```mdl
+decision D-48: Once resolving types from the EDGE type registry proves consistent and reliable, it can replace operations declaring their types, and `Operation.make({ types })` can be deprecated.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-3.4, F-3.5]
+```
+
+```mdl
+decision D-49: For now several plugins may contribute a type with the same DXN, and the type registry picks the first one.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [F-3.6, PluginStore]
+```
+
+```mdl
+decision D-50: A type that several plugins export today, such as the message type exported by both the inbox and the review plugin, moves to one canonical place: a plugin they both depend on, which may hold nothing but types and is enabled automatically with the plugins that depend on it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  why: Two definitions with one DXN can differ, and then neither is authoritative; plugins can now depend on other plugins and enable them automatically, which they could not when these types were placed.
+```
+
+```mdl
+decision D-51: As a short-term follow-up, the DXN of every type a plugin contributes must extend the plugin's key, and this is enforced when the plugin is deployed, so no two plugins contribute the same DXN.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [F-3.7, PluginStore]
+```
+
+```mdl
+decision D-52: The type registry is PluginStore.resolveType, reached from a bundle through the `TYPE_REGISTRY` binding in `PluginProtocol.Env`; it returns the catalog's `TypeRecord` (JSON Schema). ECHO's hypergraph takes an async type source that resolution tries after the registry and the space; PluginHost installs one that calls `TYPE_REGISTRY` and rebuilds the record as a static type (`Type.makeObject`, or `Type.makeRelation` with any-object endpoints), which the hypergraph adds to the invocation's registry. Fills in [D-47].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.5, PluginStore, PluginHost, PluginLoader]
+  why: The hypergraph already resolves a type URI asynchronously (registry, then the space), so a third source reaches every typed query and loaded object with one hook; the catalog already carries each type's JSON Schema. A type rebuilt from JSON Schema in memory (`Type.makeObjectFromJsonSchema`) reports no object or relation kind until it is persisted, which `space.addObject` requires.
+  rejected:
+    - Shipping every published type into each bundle at load time — an isolate is shared by every space and would hold types it never uses, and a newly published type would need the bundle reloaded.
+```
+
+```mdl
+decision D-53: The "first one" of [D-49] is the type from the earliest-uploaded unrevoked bundle whose catalog lists the DXN, matching its version when the DXN names one. Fills in [D-49].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.6, PluginStore]
+  why: Upload order is the only order the store records that does not change when a channel moves.
+```
+
+```mdl
+decision D-54: `space.queryObjects`, `space.addObject` and `space.addRelation` resolve a typename they do not find among the registry's and the space's types through the hypergraph (`Database.resolveType`) before reporting it missing. Fills in [D-47].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.5]
+  why: These operations list the declared types rather than resolving one URI, so they do not pass through the hypergraph's resolver on their own.
+```
+
+```mdl
+decision D-55: Resolving a typename is a registry query: a query that filters types by typename reaches the remote registry, so `space.queryObjects`, `space.addObject` and similar code each make one query over the space and the registries, and `Database.resolveType` is removed.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  supersedes: D-54
+  affects: [F-3.5]
+  source: https://github.com/dxos/dxos/pull/14389#discussion_r4457642602
+```
+
+```mdl
+decision D-56: `Scope.registry('remote')` is the remote registry. A query including it that filters by key (`Filter.key(typename)`) asks the hypergraph's type sources for each key the in-process registry lacks, adds what they return to that registry and answers from it; concurrent requests for one key share one lookup. Fills in [D-55].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.5]
+  why: The scope existed in the query AST unimplemented, and caching remote answers in the local registry lets the reactive and one-shot paths read them the same way.
+  rejected:
+    - A remote query source revalidated against the working set — registry entries have no document to revalidate.
+```
+
+```mdl
+decision D-57: Type resolution does not use `Scope.registry('remote')`, which would mean different things on a client and on EDGE: the same registry query (`Scope.registry()`) reaches published types wherever a type source is installed, so the same code runs in both places.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  supersedes: D-56
+  affects: [F-3.5]
+  source: https://github.com/dxos/dxos/pull/14389#discussion_r4459081379
+```
+
+```mdl
+decision D-58: A query over `Scope.registry()` that selects type entities (`Filter.type(Type.Type)`) and filters by key asks the hypergraph's type sources for each key the in-process registry lacks, adds what they return to it, and answers from it; concurrent requests for one key share a lookup, and with no source installed nothing is asked. Fills in [D-57].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.5]
+  why: Limiting it to queries for types keeps operation and skill lookups from reaching the type registry.
+```
+
+```mdl
+decision D-59: The spec includes the end-to-end flows and scenarios that existing tests run.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [F-12]
+```
+
+```mdl
+decision D-60: Each tested flow is a `scenario` (T-5 to T-21), and one table names the test that runs it by package, file and test title, with the repository it lives in. Fills in [D-59].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-5, T-6, T-7, T-8, T-9, T-10, T-11, T-12, T-13, T-14, T-15, T-16, T-17, T-18, T-19]
+  why: These flows are vitest, workerd and CI checks, and half of them are in dxos/edge. A scenario is the criterion such a test is written against; a QA `test` is a script of operations against the running app.
+  rejected:
+    - QA `test` blocks with `automated:` naming the tests — `automated:` names composer-e2e Playwright specs as `<package>:<file>#<title>` and has no form for a vitest test or another repository.
+```
+
+```mdl
+decision D-61: The browser half of loading a bundle by its manifest is Composer's QA-17, which the spec refers to as `org.dxos.app.composer#QA-17` and does not restate. Fills in [D-59].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The app spec owns that flow and its Playwright binding; a second copy here would drift from it.
+```
+
+```mdl
+decision D-62: A scenario states the behaviour the spec requires even where its test expects the opposite today, and the table says so: T-7, whose test is `test.fails` until the host encodes ECHO output, and T-18, which fails with operations routed to plugins because a bundle runs alone ([D-41]). Fills in [D-59].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-7, T-18]
+  why: The scenario is what the test turns into once the gap closes; a scenario that described the current failure would have to be rewritten by the fix.
+```
+
+```mdl
+decision D-63: The plugins-routing run of the agent and MCP suites is one scenario (T-19) whose criterion is that every test passes as it does with operation-service; per-test failures are not part of the spec. Fills in [D-59].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-19]
+  why: The seven suites share one condition and one pass criterion, and their failures change with every run.
+```
+
+```mdl
+decision D-64: Calling another plugin's operation and using another plugin's type are tested with two sample plugins edge owns and publishes with `dx` (T-20, T-21), not with first-party plugins.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [T-20, T-21]
+  why: Both plugins are published the way a third party would publish them, and neither depends on a first-party bundle being built or on operation-service.
+  rejected:
+    - Only first-party plugins (T-6, T-18): those exercise the dxos build and seeding as well, and cannot show that two independently published bundles interoperate.
+```
+
+```mdl
+decision D-65: T-20 publishes B first and A between its two invokes; T-13's dropped types come from the store's owner overwrite (`replace: true`), not a publish; T-20 and T-21 are marked planned until their test exists, an exception to [D-59]. Fills in [D-64].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-13, T-20, T-21]
+  why: As first written, T-20 published both plugins yet expected a failure before A was published, and T-13 implied a published version can change, which F-2.1 forbids.
+```
+
+```mdl
+decision D-66: PluginHost encodes a handler's output before returning it over Workers RPC: live ECHO entities become their JSON form and refs `{ '/': uri }`, by the same walk as operation-service's `snapshotEntities`; plain objects and arrays are walked, any other class instance is returned as is. Fills in [D-34].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.5, PluginEntrypoint, T-7]
+  why: Structured clone copies none of a live entity's properties and cannot clone a `Ref`, so `space.addObject` returned `{ id }` without its object; the router cannot recover what the clone dropped, so the host has to encode.
+  rejected:
+    - Encode in compute-service's router — the entity is already gone by the time the result crosses the RPC boundary.
+```
+
+```mdl
+decision D-67: The `InvocationScope` carries every per-call field operation-service's `InvokeOperationRequest` does (conversation, origin, caller, trace sink with pid, parentPid and runId, cancellation, id seed), and PluginHost consumes each as operation-service does: trace envelopes, `Cancellation.Service`, `EntityId` seeding, and a `HarnessService` rebuilt from the conversation. A conversation without a space is refused as `invalid-request`. Fills in [D-6].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.6, InvocationScope, PluginEntrypoint]
+  why: `agent.ensureReplySent` reads the conversation's chat and `agent.resetBrain` checks the caller; without these fields a bundle ran both as if no agent turn and no caller existed.
+  rejected:
+    - Put the per-call fields in `env` — `env` is shared by every space and caller of an isolate ([D-6]).
+    - Import `@dxos/assistant` statically in the host — only invocations with a conversation need it, so it is imported when one arrives.
+```
+
+```mdl
+decision D-68: A service only EDGE holds reaches a bundle as a per-invocation `ServiceHost` stub with a list of descriptors (service key, and which methods return streams); PluginHost provides a proxy under each key whose methods call EDGE with JSON arguments. Nested operations run in process when the bundle handles them and otherwise re-enter EDGE's router through an `OperationHost` stub, inheriting the space, conversation and pid. Fills in [D-6].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3, F-5.7, InvocationScope]
+  why: Effect resolves a service by its key, so one generic proxy serves every plugin's tag without the host importing plugins; binding the stub per call lets EDGE apply the caller and origin, which are per call ([D-6]).
+  rejected:
+    - Typed bindings in `env` per service (BRAIN_SERVICE, DISCORD_AGENT) — the adapters would move from EDGE into the host, which would then import plugin-agent and plugin-discord, and `env` cannot carry the caller.
+    - Provide a proxy for every service a handler declares — it would shadow the services the function context provides.
+```
+
+```mdl
+decision D-69: PluginHost caches resolved `TypeRecord`s per isolate in a least-recently-used map of 256 entries keyed by `typename@version`, holding settled records only; an unknown type or a failure is asked again next time, and concurrent first lookups in different requests each ask the registry. Fills in [D-52].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.8]
+  why: Each invocation builds a fresh EchoClient, so without an isolate cache every invocation fetched the same foreign type; a promise shared across requests is dropped by workerd (`no_handle_cross_request_promise_resolution`), so only values are shared.
+  rejected:
+    - Cache the in-flight promise — a request awaiting another request's promise hangs when the first request ends.
+    - Cache unknown types — a type published after the first miss would stay unknown for the isolate's lifetime.
+```
+
+```mdl
+decision D-70: The plugin protocol has a version (`PluginProtocol.PROTOCOL_VERSION`, now 2; 1 is every host before it). The loader's generated main module, which is EDGE's code rather than the bundle's, reports the vendored host's `PROTOCOL_VERSION` (1 when absent) without activating the plugin; the router sends a host only the scope fields its version reads and falls back to operation-service for a version newer than it serves. The catalog records the version for the registry. Fills in [D-34].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.9, PluginRouter, PluginEntrypoint, PluginCatalog]
+  why: Bundles keep the dxos version they were published with, so EDGE talks to several host versions at once; asking the live main module works for bundles published before versioning, which a catalog field alone cannot describe.
+  rejected:
+    - Read the version from the stored catalog only — catalogs stored before versioning have none, and registry-service would need a migration to serve it with the route.
+    - Refuse version 1 bundles — they lose only the request context and encoded output, which they never had; refusing them would send every published bundle back to operation-service.
+```
+
+```mdl
+decision D-71: A nested call to another plugin's operation passes ECHO objects by reference, as operation-service's in-process call passes them live: the caller's host adds any object in the input it has not saved to the invocation's database (cascading the graph the object heads), flushes, and sends `{ '/': uri }`; the callee's host loads a reference left where the input schema takes an object (`resolveObjectReferences`), and the caller's host loads every entity in the output back from its database. `space.addObject` and `space.addRelation` also accept a draft typed by versioned DXN. Fills in [D-68].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3, F-5.7]
+  why: Bundles run alone ([D-41]), so `projects.create` handed `space.addObject` an unsaved project graph that arrived as JSON and was refused; the caller then expects the live project back.
+  rejected:
+    - Send an unsaved object as a JSON draft — a draft cannot carry the owned objects and parent links of the graph it heads, and the caller would get a copy rather than its own object back.
+```
+
+```mdl
+decision D-72: A failure carries the handler's error as `ErrorCodec` encodes it (`Failure.encoded`, version 2), and EDGE rethrows `ErrorCodec.decode` of it, as it rethrows operation-service's errors; a nested call rethrows it too. A failure without it raises `PluginInvocationError`, as before. Fills in [D-34].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.2, PluginEntrypoint]
+  why: A tool error's text reached the agent wrapped as `PluginInvocationError: …` on the plugin path, so the same turn read differently on the two routings and its recorded conversation no longer matched.
+```
+
+```mdl
+decision D-73: TEST-ONLY. An in-process nested call pins a child seed drawn from its caller's stream and mints its pid, as operation-service does for every nested call; an agent's tool call carries a test seed from its chat and a per-process call count (`testIdSeed(spaceId, 'tool', conversation, index)`), on both routings. Fills in [D-67].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.6]
+  why: An unseeded tool call took its ids from whatever seed the serving isolate was last given. That state lives in operation-service's isolate and no plugin bundle has it, so ids no longer depend on leftover generator state in another isolate. The process pid is minted unseeded, so the chat names the stream instead.
+```
+
+```mdl
+decision D-74: A Dynamic Worker is given only the files the `workerd` modules, their adapters and the vendored `PluginHost` reach by literal imports, and `check-edge-release` fails a bundle that gives it over 32 MB of modules or takes over 15 s to load and activate.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4, F-6.3]
+  why: The isolate holds every module it is given; shipping browser-only bodies put presenter's 49 MB of UI code against the isolate's 128 MB heap and the 20 s activation limit.
+```
+
+```mdl
+decision D-75: An operation that writes a type its plugin does not contribute lists that type in `Operation.make({ types })`, which the host registers before the handler runs; `db.add` of an unregistered type fails with `Schema not registered`, with or without a type source. plugin-agent's `agent.create`, which writes plugin-assistant's `Instructions`, `Agent` and `Chat`, is the first case. Fills in [D-41] and [D-46].
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [F-3.4]
+  why: The operation states what it writes where it is defined, and `db.add` stays synchronous and independent of the type registry. Rejected: registering an added object's own static type in `db.add` whenever a type source is installed, which hides a missing declaration in every plugin running on EDGE.
+```
+
+```mdl
+decision D-76: Enumeration — `listOperations`, `listSkills` and `listRegistry` — moves off operation-service and is answered from the registry, scoped to a named set of plugins rather than everything the registry holds. The registry is the whole published world, so an unscoped enumeration would offer a caller every plugin anyone ever uploaded; the scope is what makes the move possible at all. Fills in [D-37].
+  date: 2026-11-06
+  by: user:dmaretskyi
+  affects: [F-4.2, F-5.1]
+  why: operation-service is the only catalog today, so no plugin can be removed from its `makePlugins` without vanishing from discovery while its bundle sits in the registry ready to run. Scoped enumeration is the unlock for retiring it.
+```
+
+```mdl
+decision D-77: The immediate scope is a structured list of globally enabled plugins in compute-service's EDGE config, and enumeration queries the registry for those plugin keys only. The value is an object, not the comma-separated string the routing table uses, because Cloudflare vars carry JSON and a list of plugin keys has no reason to be parsed out of a string. The field is `EDGE_CONFIG.plugins.enabled`; registry-service answers a `catalogs(pluginKeys, channel)` RPC scoped to those keys, and compute-service merges the result with what operation-service serves, operation-service's records winning for a plugin it still holds. Fills in [D-76].
+  date: 2026-11-06
+  by: user:dmaretskyi
+  affects: [F-4.2, F-5.1]
+  why: It needs no new UX and no per-caller state, so it unblocks the migration now. Explicitly a stopgap: one list for every caller, edited by deploying.
+```
+
+```mdl
+decision D-78: The eventual scope is per-caller: a user's enabled plugins come from their settings space, which Composer already syncs to EDGE, and a space's and an agent's from their own enabled lists once Composer has UX to install plugins per space and per agent. An invocation running for a user reads the user's list; one running in a space reads the space's; one running as an agent reads the agent's. Fills in [D-76], supersedes [D-77] when the UX exists.
+  date: 2026-11-06
+  by: user:dmaretskyi
+  affects: [F-4.2, F-5.1]
+  why: Enabling a plugin is a per-user and per-space choice, and the data for the user case already travels to EDGE. The global list cannot express "this agent has these plugins", which is what the three running contexts — user, space, agent — each need.
+```
+
+```mdl
+decision D-79: `OPERATION_SERVICE_PLUGINS` decides both halves of a key: the plugins it names are served by operation-service and described by operation-service's catalog record, and every other key runs in its bundle and is described by that bundle's catalog. One list rather than two, so `queryOperations` cannot describe a handler other than the one an invocation reaches. Enumeration stays unscoped by space: it carries no space id and reads the `latest` channel, so a space pinned to another channel ([F-2.2]) runs a version whose surface may differ from the one listed. Fills in [D-76].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.2, F-5.1, F-6.6]
+  why: Reviewing [D-76] showed [F-6.6] still promised a published bundle always wins, which the holdback list contradicts, and that nothing said which channel enumeration reads. The space-scoped case needs a space id on the enumeration RPC and is not worth it while the held set is shrinking to nothing.
+```
+
+```mdl
+decision D-80: Durable operations (`Operation.Durable`, such as the agent process) are not contributed by plugins yet: compute-service registers them in its built-in process registry and hosts them in its `Process` Durable Object. Plugins may later contribute durable operations that run through the Worker Loader in a Durable Object facet. Fills in [D-8].
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-8]
+```
+
+```mdl
+decision D-81: The `agentSession.ensureChat` operation, which finds or creates an agent's chat for an MCP client's session, belongs in plugin-agent rather than in an EDGE-owned plugin, so it reaches EDGE through plugin-agent's bundle like the agent's other operations.
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-6.7]
+```
+
+```mdl
+decision D-82: The operation is renamed `org.dxos.operation.agent.ensureSessionChat`, plugin-agent exports the chat's foreign-key source, and compute-service's MCP sessions call the new key. Fills in [D-81].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.7]
+  why: Every other plugin-agent key is `org.dxos.operation.agent.*`, and a new key cannot collide with the EDGE-owned handler while both are deployed during the switch.
+  rejected: Keeping `org.dxos.operation.agentSession.ensureChat`, which two handlers would register at once until the EDGE-owned plugin is removed.
+```
+
+```mdl
+decision D-83: mcp-space-service lists operations, skills and types from compute-service's merged catalog rather than from operation-service's, so a plugin that runs in its bundle stays discoverable over MCP. Fills in [D-76].
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-4.2, F-5.1]
+```
+
+```mdl
+decision D-84: compute-service provides a file storage backend by default, so no plugin has to contribute one on EDGE.
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-6.4]
+```
+
+```mdl
+decision D-85: An operation that needs other plugins' contributions — plugin-space's templates, exporters and identity specs, plugin-assistant's home suggestions — may not work on EDGE until those contributions reach a bundle. How hooks reach an agent turn on EDGE, how other plugins' contributions reach a bundle, and how plugin-agent's `ensureReplySent` finds other plugins' operation handlers stay open questions.
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-6.4, F-6.7]
+```
+
+```mdl
+decision D-86: operation-service is removed entirely.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-6.7]
+```
+
+```mdl
+decision D-87: The base types operation-service's BasePlugin registers — `AccessToken`, `Cursor`, `Blob`, `Collection`, `Expando`, `SpaceProperties`, `Message`, `Organization` and `Person` — live in a new dxos plugin named plugin-ontology.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-6.7]
+```
+
+```mdl
+decision D-88: A plugin reading other plugins' capabilities (skills, subject contexts, schemas, hooks, delegation strategies, model resolvers, operation handlers) is out of scope for EDGE for now. This answers the open questions of [D-85]: how hooks reach an agent turn on EDGE, how other plugins' contributions reach a bundle, and how plugin-agent's `ensureReplySent` finds other plugins' operation handlers.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-6.4]
+```
+
+```mdl
+decision D-89: T-18 and its row in the tested-flows table expect plugin-space's bundle, running alone on EDGE, to answer `space.findDuplicates` on Person with `{ groups: [] }`, no longer the group plugin-inbox's identity rule would find. Follows from [D-88].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-18]
+  why: Under [D-88] no other plugin's capability reaches a bundle on EDGE, so plugin-inbox's identity rule is absent there; edge's `plugin-isolation.node.test.ts` asserts `{ groups: [] }` for the bundle (dxos/edge#1507).
+  rejected: Keeping the cross-plugin answer as the requirement, which [D-88] puts out of scope.
+```
+
+```mdl
+decision D-90: A space names the plugins it runs on its OWN `properties`: `plugins`, a map of plugin NSID to the semver range the space accepts, a system field of `org.dxos.type.spaceProperties`. EDGE reads it from the space, with one index query of the type (`DataService.execQuery`, as mcp-space-service already reads properties) — the indexer covers every space, so this costs a type lookup rather than opening the space's Automerge document. registry-service stores nothing about which plugins anyone runs. Fills in [D-78].
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-4.2, F-5.1, F-5.8]
+  why: Which plugins a space runs decides which types exist, which operations resolve and which version of each runs — the space's own structure, not a user preference, and not registry-service's to hold. One record, in the space, so EDGE and the members cannot disagree and nothing has to be published or kept in step. The range rather than a pin lets a patch release reach every space without a write to each one, and it is what `channelOf` needs: until now every space resolved to `latest`. Rejected: a projection published to registry-service's D1, which puts user state in the registry and can go stale against the space; a boolean enablement map, which carries no version and so cannot answer which bundle to load; storing it in the space's `AppSettings` object, which files core structure as a setting.
+```
+
+```mdl
+decision D-91: Scope precedence is the space's list, else `EDGE_CONFIG.plugins.enabled`, else unscoped; there is no identity scope on EDGE. A space that names nothing falls through, exactly as a space that has never been configured does — "this space runs nothing" is not expressible, since a space with no plugins can do nothing. The user's own enabled set stays in Composer (the settings space's `AppSettings`, with its device pins) and is never sent to EDGE.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-5.8]
+  why: A space states what it runs, and a member who has not enabled a plugin personally does not stop the space running it — which is what installing a plugin into a shared space means, so precedence rather than intersection. Dropping the identity scope keeps every record of who-runs-what inside a space: EDGE would otherwise need to resolve an identity to its settings space, which it cannot do (space tags are client-side metadata), and the only way to give it one was to publish a copy into registry-service. Almost every EDGE invocation carries a space, and the MCP gateway's grant carries one too, so the space-less case falls back to the deployment's own list rather than needing user state.
+```
+
+```mdl
+decision D-92: PluginHost seeds each space-scoped invocation's registry with the primary plugin's skills and operation records, beside its types. Follows from [D-88].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.3]
+  why: A skill bound by `Skill.registryURI` resolves only through the invocation's registry, so a bundle found none of its own skills (plugin-agent's `listSkills` returned `[]`); the tool resolver projects a skill's tools from `Operation.PersistentOperation` records in the same registry, so an agent session running in the bundle needs the primary's records too.
+  rejected: Seeding the skills alone, which leaves a bundled agent session unable to resolve its skills' tools by registry record; seeding other plugins' skills or the operations a skill definition lists, which [D-88] puts out of scope.
+```

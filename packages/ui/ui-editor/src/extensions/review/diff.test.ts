@@ -6,16 +6,16 @@ import { describe, test } from 'vitest';
 
 import {
   type DiffHunk,
-  cherryPickHunk,
   computeCharHunks,
   computeHunks,
   diffHunks,
   groupHunks,
+  lineDiff,
   pairMarkupHunks,
   rebaseHunks,
   rebaseHunksWith,
-  revertHunk,
 } from './diff.ts';
+import { cherryPickHunk, revertHunk } from './hunks.ts';
 
 describe('diff hunks', () => {
   const original = ['# Title', '', 'Line one.', 'Line two.', ''].join('\n');
@@ -401,5 +401,28 @@ describe('overlay hunks after the reader edits', () => {
         expect(splitsWord(doc, hunk.to)).toBe(false);
       }
     }
+  });
+});
+
+describe('lineDiff', () => {
+  const apply = (original: string, modified: string) =>
+    lineDiff(original, modified).map(({ fromA, toA, fromB, toB }) => [
+      original.slice(fromA, toA),
+      modified.slice(fromB, toB),
+    ]);
+
+  test('a block inserted above a long unchanged paragraph is one insertion', ({ expect }) => {
+    const paragraph = Array.from({ length: 200 }, (_, index) => `line ${index} of the unchanged prose`).join('\n');
+    const original = `# Title\n\n${paragraph}\n`;
+    const modified = `# Title\n\nnew block\nwith two lines\n\n${paragraph}\n`;
+    expect(apply(original, modified)).toEqual([['', 'new block\nwith two lines\n\n']]);
+  });
+
+  test('a changed line marks only the words that changed', ({ expect }) => {
+    expect(apply('a\nthe quick fox\nb\n', 'a\nthe slow fox\nb\n')).toEqual([['quick', 'slow']]);
+  });
+
+  test('removed lines are one deletion', ({ expect }) => {
+    expect(apply('a\nb\nc\n', 'a\nc\n')).toEqual([['b\n', '']]);
   });
 });

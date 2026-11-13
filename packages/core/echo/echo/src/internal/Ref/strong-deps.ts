@@ -5,7 +5,7 @@
 import { EID, type SpaceId, type URI } from '@dxos/keys';
 
 import { EntityKind } from '../common/types/entity.ts';
-import { RelationSourceDXNId, RelationTargetDXNId } from '../common/types/model-symbols.ts';
+import { MetaId, RelationSourceDXNId, RelationTargetDXNId } from '../common/types/model-symbols.ts';
 import { ParentId, TypeId } from '../common/types/typename.ts';
 import { getObjectEchoUri } from '../Entity/util.ts';
 
@@ -24,11 +24,13 @@ export interface StrongDepRefs {
   target?: URI.URI;
   /** Parent reference URI. */
   parent?: URI.URI;
+  /** Reference URIs of the {@link Tag}s in `meta.tags`. */
+  tags?: readonly URI.URI[];
 }
 
 /**
  * Direct strong-dependency URIs of an entity: the schema (only when stored as an object), the
- * relation source/target, and the parent. Returns URIs (cross-space `echo:` EIDs and queue-item
+ * relation source/target, the parent, and the tags. Returns URIs (cross-space `echo:` EIDs and queue-item
  * EIDs included); a persisted schema is an `echo:` URI, a static/registry type is a `dxn:` URI.
  *
  * A static/registry type (`dxn:`) is intentionally NOT a strong dep: it is always synchronously
@@ -55,6 +57,10 @@ export const getStrongDependencyUris = (refs: StrongDepRefs, owningSpaceId?: Spa
     res.push(qualifyToSpace(refs.parent, owningSpaceId));
   }
 
+  for (const tag of refs.tags ?? []) {
+    res.push(qualifyToSpace(tag, owningSpaceId));
+  }
+
   return res;
 };
 
@@ -73,6 +79,18 @@ const qualifyToSpace = (uri: URI.URI, owningSpaceId: SpaceId | undefined): URI.U
   }
   const entityId = EID.getEntityId(eid);
   return entityId != null ? EID.make({ spaceId: owningSpaceId, entityId }) : uri;
+};
+
+/** URIs of the tags a decoded entity's meta holds, which are resolved entities like its parent. */
+const getTagUris = (meta: unknown): URI.URI[] => {
+  const tags = meta != null && typeof meta === 'object' ? Reflect.get(meta, 'tags') : undefined;
+  if (!Array.isArray(tags)) {
+    return [];
+  }
+  return tags.flatMap((tag) => {
+    const uri = getObjectEchoUri(tag);
+    return uri != null ? [uri] : [];
+  });
 };
 
 /**
@@ -101,6 +119,7 @@ export const getStrongDependencies = (entity: unknown): URI.URI[] => {
       target: props[RelationTargetDXNId] as URI.URI | undefined,
       // A parent is held as the resolved entity; derive its absolute URI for the dependency edge.
       parent: parent != null ? getObjectEchoUri(parent) : undefined,
+      tags: getTagUris(props[MetaId]),
     },
     owningSpaceId,
   );

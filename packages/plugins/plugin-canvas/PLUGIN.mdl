@@ -4,15 +4,68 @@ name: CanvasPlugin
 version: 0.1.0
 ---
 
+```mdl
+plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at multiple depths.
+  id: org.dxos.plugin.canvas
+  dependsOn: [org.dxos.plugin.illustrator]
+  modules:
+    - AnimatorStage: the Canvas and 3D Canvas stages an animation shot plays on
+    - AppGraphBuilder: the lock and unlock actions on a canvas drawing
+    - CanvasSettings: whether the toolbar and palette overlays show
+    - DrawingVariant: the canvas drawing variant and its article, for the illustrator
+    - Exporter: print and save a 2D canvas drawing as SVG
+    - ExtensionNodeTypes: the plugin's own extension tools for the canvas, the space graph first
+    - LegacyMigration: moves a space's legacy scene drawings onto `Canvas`es when the space loads
+    - Library: the library objects the editor's library tool offers
+    - MarkdownExtension: a `diagram` fence in a markdown document, drawn as the canvas would draw it
+    - Migrations: the Scene type migrations
+    - OperationHandler: the canvas operations
+    - PluginAsset: this document, served as the plugin's own spec
+    - ReactSurface: the canvas properties panel of a drawing
+    - Schema: the canvas generator types
+    - SkillDefinition: the canvas generators skill
+    - SpaceTemplates: the architecture space template
+    - TldrawConverter: the illustrator converter from a tldraw drawing to a canvas
+    - Translations: the plugin's strings
+    - UndoMappings: undo for canvas edits
+```
+
 An infinite, zoomable canvas of typed nodes and links at multiple depths, contributed to the illustrator
-plugin as a drawing variant (`dxos.org/scene/1`). A drawing is a scene graph stored in ECHO as one record
-per scene, node and link; a frame holds a child scene that opens in place and can show its contents live.
+plugin as two drawing variants, Canvas and 3D Canvas (`dxos.org/scene/2`). A drawing is a `Canvas` over the scene
+model's ECHO objects (a model, layouts and scenes); its article and card render the shared scene editor with the
+dimension config its scene asks for, as one set of surfaces (`CanvasArticle`, `CanvasCard`, `CanvasStage`). A drawing
+saved before `Canvas` is moved onto one when its space loads; no surface or operation reads the legacy format, and only
+the migration does.
+
+This plugin is the ECHO host between the illustrator plugin, a runtime dependency that provides the
+`Drawing` type, the variant contract and the converters this plugin registers with, and the scene editor
+below.
+
+## Dependencies
+
+```mdl
+uses org.dxos.ui.react-ui-canvas: The shared scene editor the article renders — its parts, commands, history, clipboard, lock, roles, panels, inspectors and timeline, which this spec does not restate.
+```
+
+```mdl
+uses org.dxos.ui.react-ui-canvas.2d: The 2D variant — the canvas engine's links, portals and modes — which a 2D drawing shows.
+```
+
+```mdl
+uses org.dxos.ui.react-ui-canvas.3d: The 3D variant, which a 3D Canvas drawing shows.
+```
+
+```mdl
+uses org.dxos.scene: The data a drawing stores — models, layouts and scenes as ECHO objects — and the migration target of its legacy content.
+```
 
 ## Extensions
 
-| Term   | URI                        |
-|--------|----------------------------|
-| `test` | `org.dxos.mdl.test@1.0`    |
+| Term       | URI                         |
+|------------|-----------------------------|
+| `plugin`   | `org.dxos.mdl.plugin@1.1`   |
+| `uses`     | `dxos.spec.core/uses`       |
+| `test`     | `org.dxos.mdl.test@1.0`     |
 | `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## QA
@@ -50,7 +103,9 @@ test QA-1: Draw, connect, and nest a scene on a canvas
     - name: Zoom back out and show the frame's contents
       do: Click Up, select the Storage frame, and turn on "Show contents" in the Properties panel.
       expect: the frame draws its nested scene live inside it
+```
 
+```mdl
 test QA-2: Draw a nested architecture diagram of composer-app
   desc: |
     A complex diagram across three scenes — composer-app's top level, with the plugins and the client each
@@ -94,7 +149,9 @@ test QA-2: Draw a nested architecture diagram of composer-app
     - name: Go up and show both nested scenes live
       do: Click Up, then select each frame and turn on "Show contents" in the Properties panel.
       expect: each frame draws its own nested scene live inside it, alongside the top-level diagram
+```
 
+```mdl
 test QA-4: Showcase clip
   desc: |
     The 20s showcase clip: Select a shape in the Composer architecture drawing, read its properties, and rename it. Recorded light at 60 fps with no ident, captions or
@@ -115,7 +172,9 @@ test QA-4: Showcase clip
     - name: Rename it
       do: Turn off read-only, double-click the box, and type React components.
       expect: the box shows its new label
+```
 
+```mdl
 test QA-5: Copy a tldraw drawing as a canvas
   desc: |
     The illustrator's "Copy as Canvas" action converts a tldraw drawing through the converter plugin-canvas registers:
@@ -185,4 +244,202 @@ decision D-2: plugin-canvas registers the hybrid conversion as an illustrator `C
   why: The illustrator's Convert operation already resolves variants and files the result, so a per-pair converter reuses it rather than duplicating it.
   rejected:
     - A separate plugin-canvas import operation, which would offer a second, conflicting menu action.
+```
+
+```mdl
+decision D-3: plugin-canvas builds on `org.dxos.plugin.illustrator` and `org.dxos.ui.react-ui-canvas`, and its spec references both rather than restating them.
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-4: The spec declares its dependencies rather than listing them in prose: `org.dxos.plugin.illustrator` in the `plugin` block's `dependsOn`, exactly as dx.config.ts declares it, and `org.dxos.ui.react-ui-canvas` under `## Dependencies`. Fills in [D-3].
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-5: The `plugin CanvasPlugin` block lists the twelve modules plugin.tsx adds, one line each, and the `uses` reason keeps the prose list's wording. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  why: The plugin dialect requires `modules:` on every `plugin` block; reusing the prose keeps what the spec says about the engine unchanged.
+```
+
+```mdl
+decision D-6: The plugin's detail page links to this spec: dx.config.ts names `PLUGIN.mdl` as the plugin's spec.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-7: The plugin serves this document with a `PluginAsset` module, listed in the `plugin` block, and the package exports `./assets/PLUGIN.mdl`, as other plugins with a spec do. Fills in [D-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The registry's open-spec action appears only when a plugin's asset module supplies the spec named by its profile.
+```
+
+```mdl
+decision D-8: Migrating a scene drawing turns the timelines its Views stored into one animator `Animation`, a shot per View with keyed tracks, staging that View's migrated scene: the same duration and keys, node tracks keying the element of the same id at its element path (`style.*` becomes `overrides.*`, `text` becomes `label`), camera tracks unchanged. The plugin registers `Animation` and `StyleCatalog` so the migration and its models can store them. Fills in COMMON-CORE decision 16.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: Canvas animation moved to the animator and Views stopped storing timelines, so a drawing saved before that keeps its animation only if the migration carries it over.
+```
+
+```mdl
+decision D-9: The plugin contributes a Canvas and a 3D Canvas variant over the scene model's ECHO objects; a drawing's article and card render the shared scene editor with the 2D or 3D config its scene asks for, and a drawing saved before `Canvas` keeps a hidden legacy variant that renders the 2D engine on its own until its article migrates it. Fills in [D-3].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The canvas engine is now the 2D viewport of a shared editor rather than the whole of a drawing's model, so the plugin builds on the editor, its two variants and the scene model.
+```
+
+```mdl
+decision D-10: A Canvas's mode (lattice, constrained, dynamic) is each 2D layout's own field, which the shared editor applies; the canvas settings' `lattice` and `projection` are read only to move the mode onto the layouts, when a legacy drawing migrates or its article opens. `CanvasOperation.Apply` on a Canvas takes `LayoutIntent`s in its layout's dimension, recorded over every layout the canvas lists; the tldraw importer writes `Element2D`s through create intents. Fills in [D-9].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: A mode the settings named for every View cannot travel with a layout or differ between layouts, and agents, the importer and the editor then share one write path and one undo.
+```
+
+```mdl
+decision D-11: Approve [D-10].
+  date: 2026-10-30
+  by: user:richburdon
+```
+
+```mdl
+decision D-12: CanvasOperation.Apply on a Canvas snaps an agent's edits to its layout's mode, and an undo patch recorded before layouts held the mode is dropped rather than migrated.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-13: `CanvasOperation.Apply` runs the shared editor's 2D mode rule (`constrain2D`) with snapping on over the whole batch of intents, and fails with `InvalidIntentError`, writing nothing, when the mode refuses it; the rule lives in react-ui-scene's `canvas` entry, which the plugin's operations already load. Fills in [D-12].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: One rule keeps an agent's edit and a person's drag on the same cells, and checking the batch whole matches how the editor refuses a drag; the `canvas` entry keeps the editor and the 3D renderer out of the operation handlers.
+  rejected:
+    - Importing `constrain2D` from react-ui-scene's root, which would load the editor's React components and the 3D renderer into every operation handler.
+    - Dropping only the refused intents, which would apply part of a batch the agent meant as one edit.
+```
+
+```mdl
+decision D-14: A legacy scene canvas (a `Drawing.Canvas` in the `dxos.org/scene/2` format) is read only through the scene migration: its article migrates it onto a `Canvas` on open (`migrateSceneDrawing`), while its section, slide, card and animator stage draw `legacyDocument` read-only through the 2D scene view, and a canvas a newer plugin saved stays read-only under its banner. `CanvasOperation.Apply` and `AddGenerator` migrate a legacy drawing before writing, `InspectGenerator` reads it as the migration does without writing, and `CanvasOperation.Patch` refuses a legacy canvas. Fills in [D-9].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The canvas engine's View model, intents and store are being retired (COMMON-CORE E.6), so one migration path must be the only reader of legacy records.
+  rejected:
+    - Keeping a writable legacy engine view, which would keep the View model and its store alive for one dialect.
+    - Migrating on any surface, which would write a document a slide or card only looks at.
+```
+
+```mdl
+decision D-15: `CanvasOperation.Apply` takes `constrain2D` from react-ui-canvas's root, which loads neither the editor nor the 3D renderer, and a 3D Canvas drawing shows the 3D variant `org.dxos.ui.react-ui-canvas.3d`. Fills in [D-13] and [org.dxos.ui.react-ui-canvas#D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: react-ui-scene, whose `canvas` entry held the rule, is removed; react-ui-canvas's root keeps the editor and Babylon out of the operation handlers, as that entry did, which its entries test checks.
+  rejected:
+    - Moving `constrain2D` into react-ui-canvas's `/headless` entry now, which needs the modes freed of the utilities barrel first.
+```
+
+```mdl
+decision D-16: Migrate old drawings when a space loads; delete every legacy surface and the hidden legacy variant; rename `SceneArticle` and `SceneStage` to `CanvasArticle` and `CanvasStage`, so the plugin has one set of surfaces that picks 2D or 3D by config.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  supersedes: D-14
+```
+
+```mdl
+decision D-17: The migration is a `LegacyMigration` module that runs `migrateLegacyDrawings` once per space per session, after the space is ready: every current-revision legacy scene drawing moves onto a `Canvas` (`migrateSceneDrawing`), copies two peers made at once fold into one (`reconcileMigrations`), animation shots staged on a legacy canvas restage on its migrated scene, and a mode a canvas's settings still name moves onto its layouts. The pass is idempotent and logs what it changed; a drawing that fails keeps its legacy canvas until the next pass, and a canvas a newer plugin saved is left unmigrated, with no variant to open it. Operations refuse any canvas that is not a `Canvas`. Fills in [D-16].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: Only plugin-canvas can tell a scene drawing from a tldraw or excalidraw one sharing `Drawing.Canvas`, and a migration creates a graph of objects whose duplicates across peers must be reconciled, which ordinary writes and the `CreatedFrom` relation already do.
+  rejected:
+    - An ECHO object migration (`Migration.define`), which runs over every object of one type and cannot tell scene canvases from tldraw ones, nor create the model, layouts and scenes idempotently.
+    - An ECHO transaction migration (`Migration.defineTransaction`), which runs on every pass, starts a new space epoch and rewrites documents as forks, to move a handful of drawings.
+    - Migrating when the article opens, which leaves the section, slide, card and stage reading the legacy format.
+```
+
+```mdl
+decision D-18: The Canvas and 3D Canvas variants render `CanvasArticle` and `CanvasCard`, which choose the 2D or 3D editor config by the open scene's dimension, and contribute `canvasStage2D` and `canvasStage3D` over `CanvasStage`; the 2D stage keeps the row and ring layouts. The rename carries through folders, hooks (`useCanvasEditor`, `CanvasEditCommands`) and story titles. Fills in [D-16].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  supersedes: D-9
+  why: With the legacy set gone, the scene surfaces are the only canvas surfaces, so they take the plugin's names and the stage gains the layouts the legacy stage offered.
+```
+
+```mdl
+decision D-19: `CanvasOperation.Apply` takes `constrain2D` from react-ui-canvas's `/headless` entry, and every canvas operation imports react-ui-canvas only through it; the entries test checks that `/headless` reaches no React module. A 3D Canvas drawing still shows the 3D variant `org.dxos.ui.react-ui-canvas.3d`. Fills in [D-13].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  supersedes: D-15
+  why: The modes no longer reach React through the utilities barrel, so the headless entry can hold the rule, and the operation handlers then load nothing of the UI.
+```
+
+```mdl
+decision D-20: The plugin contributes library objects through `CanvasCapabilities.LibraryItem` (an editor `LibraryItem` and its dimension), and `CanvasArticle` passes each dimension's items to its config. The plugin contributes the three `MeshPresets` as "Race car", "Fire engine" and "Taxi" for 3D, activated with the canvas variant on the illustrator's start; each `make` imports the presets when first picked. Fills in [org.dxos.scene#D-57].
+  date: 2026-10-31
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: Another plugin can add library objects as it adds node types; the OBJ sources (~400KB) stay out of boot.
+
+decision D-21: A canvas drawing saves and prints as SVG with every shape in the open 2D view, not only those the diagram language manages, and its links along the routes the canvas engine draws them (lattice gutters and lanes included). The diagram renderer draws the shapes, so polygons, clouds, polylines and images draw as boxes, and hand-drawn nodes have no fill. Only a 2D canvas offers the actions; other drawing formats and 3D canvases do not.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: A printed or saved drawing must match what the user sees, so links keep the engine's routes; the diagram renderer is the only headless SVG renderer, so shapes it has no form for are approximated.
+```
+
+```mdl
+decision D-22: A `diagram` fence in a markdown document draws as a canvas diagram, in the editor's light or dark mode.
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-23: The space graph is an extension tool that plugin-canvas itself provides, and extension tools are offered in a group of their own in the tools panel.
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-24: The `ExtensionNodeTypes` module contributes the plugin's extension kinds through `CanvasCapabilities.NodeType`, as another plugin contributes its own; the space graph (`components/Graph`) is the first. The host offers a contributed kind in the `Extensions` group, beside the canvas's own card (react-ui-canvas's `EXTENSIONS_GROUP`), unless its spec names a group, and a kind that replaces a built-in stays where the built-in was. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: One contribution path means the canvas treats the plugin's own tools and another plugin's alike, and the host names the group so a contributor does not have to know how the rail is laid out.
+
+decision D-25: A contributed kind keeps its own fields under its element's `data` (`Schema.Struct({ ...Scene.Element2D.fields, type, data: Schema.Struct({ … }) })`), not at the element's top. `kindNodeDef` refuses a kind that declares a field of its own at the top unless the kind extends a core prototype, whose fields its frame reads there (a card's `icon`, `body` and `footer`). The space graph's fields are its `data`, so its object radius is `size`, the name the element's frame also has.
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  why: Only core shapes keep properties at an element's top; an extension's own go in one common sub-object so they cannot collide with the base's or another extension's (COMMON-CORE.md decision 21).
+  rejected:
+    - Fields at the element's top (COMMON-CORE.md decision 13 as first built): the space graph had to call its radius `objectSize` because `size` was taken.
 ```

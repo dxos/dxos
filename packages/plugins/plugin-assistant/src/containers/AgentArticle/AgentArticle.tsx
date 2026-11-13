@@ -16,7 +16,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from '../../namespace.ts';
 
 export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
 
@@ -26,7 +26,7 @@ export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
  * Project; automation (subscriptions/schedule) is edited in the properties panel.
  */
 export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const db = Obj.getDatabase(agent);
   // Resolve reactively: a sync `.target` read never resolves on a cold/deep-link load.
   const [instructionsSnapshot] = useObject(agent.instructions);

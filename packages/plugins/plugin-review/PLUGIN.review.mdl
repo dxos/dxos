@@ -1,0 +1,345 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-review/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ReviewPlugin
+
+The plugin is close to its spec and well tested. The pure lifecycle model (`deriveBinding`,
+`applyViewModeSelection`) has table tests. The binding pipeline has a headless suite. The shared
+scenarios run both headless (`testing/scenarios.test.tsx`) and as storybook plays
+(`DocumentVersioning.stories.tsx`), which also carry the same-view swap and author-visibility plays.
+The diff layer is covered by `ui-editor`'s review tests, and comment threads by the composer e2e
+suite. The one real gap is F-3.2: `Branch.archiveIfEmpty` exists and is tested in
+`@dxos/versioning`, but nothing calls it, so the accept and reject handlers in plugin-markdown never
+archive an emptied suggestion branch. The comment operations beyond the trigger gate
+(RespondToThread, delete/restore, failure notice) have no unit tests. The prohibition on comments on
+suggestion branches and the shared current-change selection are untested. QA-1's resolve step is
+not automated.
+
+Of 44 items: 36 done, 6 untested, 2 partial, 0 diverged, 0 missing. (The spec's T-2 to T-8 blocks are not listed as reviewable items by `deus review items`, so they carry no verdict.)
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict ReviewMode: editing | suggesting | viewing, held per object in the session-local viewAspect.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#ReviewMode]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/review-view-state.test.ts]
+```
+
+```mdl
+verdict VersionSelection: current, branch, fork and checkpoint selections as specified.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#VersionSelection]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.test.ts]
+```
+
+```mdl
+verdict VersioningView: selection, view, mode, suggestion and hiddenAuthors in a memory-backed ViewState aspect.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#VersioningView, github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#viewAspect]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/review-view-state.test.ts]
+```
+
+```mdl
+verdict ReviewRenderConfig: showSuggestions, showComments and editable; the default policy matches GDocs parity.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#ReviewRenderConfig, github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#defaultReviewRenderPolicy]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.test.ts]
+```
+
+```mdl
+verdict ViewModeSelection: builtin or contributed, applied atomically by applyViewModeSelection.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.ts#ViewModeSelection, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.ts#applyViewModeSelection]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.test.ts]
+```
+
+```mdl
+verdict BindingDescriptor: deriveBinding returns subject, editorKey, effectiveViewMode, loading and ambient flags.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.ts#BindingDescriptor, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.ts#deriveBinding]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.test.ts]
+```
+
+```mdl
+verdict ResolvedSuggestionBranch: author, live content, fork-anchor base and hue.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/suggestion-sources.ts#ResolvedSuggestionBranch, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/suggestion-sources.ts#buildSuggestionSources]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/suggestion-sources.test.ts]
+```
+
+```mdl
+verdict SuggestionGroup: A DiffHunk with author and colour, one card per change.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/suggestion-sources.ts#SuggestionGroup, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/suggestion-sources.ts#suggestionGroups]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/suggestion-sources.test.ts]
+```
+
+```mdl
+verdict AgentMode: auto | mention, defined in @dxos/types.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Thread.ts#AgentMode]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/should-trigger-agent.test.ts]
+```
+
+```mdl
+verdict AgentConfig: { enabled, mode } stored as Thread.agent in @dxos/types.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Thread.ts#AgentConfig]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/should-trigger-agent.test.ts]
+```
+
+```mdl
+verdict AgentIdentity: A singleton capability with name, identityDid and avatar, defaulting to Kai.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/AgentIdentity.ts#AgentIdentity, github:dxos/dxos/packages/plugins/plugin-review/src/types/AgentIdentity.ts#DEFAULT_AGENT_IDENTITY]
+  note: The trigger-gate tests pass a name directly; no test resolves the capability or its settings-backed default.
+```
+
+```mdl
+verdict CommentsState: The comment state atom holds toolbar, drafts and current, under the name CommentState.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#CommentState, github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/state.ts]
+  note: Declared as `CommentState` with Records rather than Maps and an extra `saving` map of in-flight draft saves. No test reads the atom.
+```
+
+```mdl
+verdict EditorBindingHook: useMarkdownEditorBinding is contributed as MarkdownCapabilities.EditorBindingHook.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/markdown-binding.ts, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useMarkdownEditorBinding.tsx#useMarkdownEditorBinding, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.ts#useVersionedEditor, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useReviewExtensions.ts#useReviewExtensions]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.test.tsx, github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenarios.test.tsx, github:dxos/dxos/packages/plugins/plugin-review/src/stories/DocumentVersioning.stories.tsx]
+  walkthrough:
+    - The module contributes the hook (and the Markdown HistoryProvider). github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/markdown-binding.ts
+    - The hook derives the bound subject and swaps the source in place. github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.ts#useVersionedEditor
+    - Review extensions add tracked changes, overlays and change bars filtered by hidden authors. github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useReviewExtensions.ts#useReviewExtensions
+```
+
+```mdl
+verdict ExtensionProvider: commentSync is contributed, branch-scoped, policy-aware and blocks creation on suggestion branches.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/markdown-extension.ts, github:dxos/dxos/packages/plugins/plugin-review/src/extensions/comment-sync.ts#commentSync]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/comments.spec.ts]
+```
+
+```mdl
+verdict ViewModeExtension: A Suggesting entry with reviewMode suggesting is contributed to the view-mode dropdown.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/markdown-extension.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/stories/DocumentVersioning.stories.tsx]
+```
+
+```mdl
+verdict ReviewRenderPolicy: The plugin contributes defaultReviewRenderPolicy.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#ReviewRenderPolicy, github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/review-state.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.test.ts]
+```
+
+```mdl
+verdict HistoryProvider: A per-type provider capability; the plugin contributes one for Markdown.Document.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewCapabilities.ts#HistoryProvider, github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/markdown-binding.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/containers/ObjectHistory/ObjectHistory.stories.tsx]
+```
+
+```mdl
+verdict CommentAgentRunner: Consumed by AddMessage/RespondToThread; plugin-assistant contributes it and tests may pass a stub.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/operations/respond-to-thread.ts, github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewPluginOptions.ts#ReviewPluginOptions, github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/comment-agent-runner.ts]
+  note: Only the CommentsArticle story wires a stub runner; no test runs a turn or the 3-minute timeout.
+```
+
+```mdl
+verdict Create: Creates a staged or, with a first message, persisted thread anchored to a subject.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/CommentOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-review/src/operations/create.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/comments.spec.ts]
+  note: Input also accepts `range`, `text` and `sender`, and the output returns `threadId` and `anchorId`, beyond the spec.
+```
+
+```mdl
+verdict CommentsArticle: The companion lists threads and suggestion cards with author chips, tabs and the shared current change.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/containers/CommentsArticle/CommentsArticle.tsx#CommentsArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/containers/CommentsArticle/CommentsArticle.stories.tsx, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/comments.spec.ts]
+```
+
+```mdl
+verdict F-1.1: The binding is contributed through MarkdownCapabilities.EditorBindingHook.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/markdown-binding.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.test.tsx]
+```
+
+```mdl
+verdict F-1.2: Ambient postures share one editor key; the source swaps through a compartment.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.ts#deriveBinding, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.ts#useVersionedEditor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/stories/DocumentVersioning.stories.tsx, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.test.ts]
+```
+
+```mdl
+verdict F-1.3: Binding decisions go through deriveBinding and applyViewModeSelection.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.ts#deriveBinding, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.ts#applyViewModeSelection]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/review-lifecycle.test.ts]
+```
+
+```mdl
+verdict F-1.4: Suggesting binds the user's own branch, fast-forwards or merges main in, and edits land on it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.ts#useVersionedEditor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.test.tsx, github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenarios.test.tsx]
+```
+
+```mdl
+verdict F-1.5: The storybook executor asserts editor focus after each dropdown selection.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.ts#useVersionedEditor, github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenario-executor-storybook.ts#selectViewMode]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/stories/DocumentVersioning.stories.tsx]
+```
+
+```mdl
+verdict F-2.1: Suggestions render in the author's colour with strike-through, change bars and cards.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useReviewExtensions.ts#useReviewExtensions, github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/suggestions-overlay.ts]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/suggestions-overlay.test.ts, github:dxos/dxos/packages/plugins/plugin-review/src/stories/DocumentVersioning.stories.tsx]
+```
+
+```mdl
+verdict F-2.2: Proposals are diffed against the fork-anchor base and rebased; already-present changes are filtered.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/diff.ts, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/suggestion-sources.ts#suggestionGroups]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/diff.test.ts]
+```
+
+```mdl
+verdict F-2.3: Hunks are minimal and delimiter pairs coalesce into one atomic change.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/diff.ts]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/diff.test.ts, github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenarios.test.tsx]
+```
+
+```mdl
+verdict F-2.4: Text typed at a trailing suggestion's anchor lands after the proposal.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/diff.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenarios.test.tsx, github:dxos/dxos/packages/ui/ui-editor/src/extensions/review/diff.test.ts]
+```
+
+```mdl
+verdict F-2.5: Hidden authors are filtered from overlays, change bars and cards, session-locally.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/components/Suggestions/SuggestionAuthors.tsx#SuggestionAuthors, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useReviewExtensions.ts#useReviewExtensions]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/stories/DocumentVersioning.stories.tsx]
+```
+
+```mdl
+verdict F-3.1: Accept and reject route through CollaborationOperation, which cherry-picks or reverts one hunk.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useReviewExtensions.ts#useReviewExtensions, github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/accept-change.ts, github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/reject-change.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/src/operations/accept-change.test.ts]
+```
+
+```mdl
+verdict F-3.2: archiveIfEmpty exists but nothing calls it when a change is resolved.
+  status: partial
+  evidence: [github:dxos/dxos/packages/sdk/versioning/src/internal/model.ts#archiveIfEmpty]
+  tests: [github:dxos/dxos/packages/sdk/versioning/src/Branch.test.ts]
+  note: The accept/reject handlers in plugin-markdown never call `Branch.archiveIfEmpty`, and a repo-wide search finds no caller outside its own test, so an emptied suggestion branch stays active.
+```
+
+```mdl
+verdict F-3.3: The editor and companion read and write viewAspect.suggestion.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/containers/CommentsArticle/CommentsArticle.tsx#CommentsArticle, github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useReviewExtensions.ts#useReviewExtensions]
+  note: No test or play clicks a card and checks the editor reveals the change, or the reverse.
+```
+
+```mdl
+verdict F-4.1: Historical views render from detached contentAt snapshots.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/hooks/useVersionedEditor.ts#useVersionedEditor, github:dxos/dxos/packages/sdk/versioning/src/Version.ts]
+  tests: [github:dxos/dxos/packages/sdk/versioning/src/model.test.ts]
+```
+
+```mdl
+verdict F-4.2: The History companion shows the git-graph timeline with create/merge/discard actions.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/containers/ObjectHistory/ObjectHistory.tsx#ObjectHistory, github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/history-surface.tsx]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/containers/ObjectHistory/timeline.test.ts, github:dxos/dxos/packages/plugins/plugin-review/src/containers/ObjectHistory/ObjectHistory.stories.tsx]
+```
+
+```mdl
+verdict F-5.1: commentSync creates anchored threads, keeps cursors in sync, scopes by branch and honours showComments.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/extensions/comment-sync.ts#commentSync]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/comments.spec.ts, github:dxos/dxos/packages/plugins/plugin-review/src/anchor-preservation.test.ts]
+```
+
+```mdl
+verdict F-5.2: commentSync takes a suggestionBranch flag that disables inline creation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/extensions/comment-sync.ts#commentSync]
+  note: No test binds a suggestion branch and checks that creation is refused.
+```
+
+```mdl
+verdict F-5.3: Mutations go through comment operations; Delete and DeleteMessage have undo mappings.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/undo-mappings.ts, github:dxos/dxos/packages/plugins/plugin-review/src/operations/delete.ts, github:dxos/dxos/packages/plugins/plugin-review/src/operations/delete-message.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/comments.spec.ts, github:dxos/dxos/packages/plugins/plugin-review/src/thread-feed.test.ts]
+```
+
+```mdl
+verdict F-6.1: The trigger gate fires only on user messages in unresolved threads, by mode and @mention.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/should-trigger-agent.ts#shouldTriggerAgent, github:dxos/dxos/packages/plugins/plugin-review/src/operations/add-message.ts, github:dxos/dxos/packages/plugins/plugin-review/src/operations/respond-to-thread.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/should-trigger-agent.test.ts, github:dxos/dxos/packages/plugins/plugin-review/src/util/pending.test.ts]
+  note: The gate is fully tested; the failure path that keeps the user's message is implemented in RespondToThread but not unit-tested.
+```
+
+```mdl
+verdict F-6.2: New threads take their config from commentAgentMode (default mention); an unconfigured thread follows the setting.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-review/src/comment-agent-config.ts#commentAgentConfig]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/should-trigger-agent.test.ts]
+```
+
+```mdl
+verdict F-7.1: Wiring is through capabilities, but CommentsArticle imports plugin-markdown's Markdown type and MarkdownOperation directly.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/markdown-binding.ts, github:dxos/dxos/packages/plugins/plugin-review/src/capabilities/markdown-extension.ts]
+  note: Only public package exports are imported (no source paths), so the rule holds in its narrow reading; nothing enforces it automatically.
+```
+
+```mdl
+verdict F-7.2: The shared scenarios run headless and as storybook plays.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenarios.ts#reviewScenarios, github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenario-executor.tsx#runScenarioHeadless, github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenario-executor-storybook.ts#runScenarioStorybook]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenarios.test.tsx, github:dxos/dxos/packages/plugins/plugin-review/src/stories/DocumentVersioning.stories.tsx]
+```
+
+```mdl
+verdict T-1: Both tiers run every shared scenario.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenarios.ts#reviewScenarios]
+  tests: [github:dxos/dxos/packages/plugins/plugin-review/src/testing/scenarios.test.tsx, github:dxos/dxos/packages/plugins/plugin-review/src/stories/DocumentVersioning.stories.tsx]
+```
+
+```mdl
+verdict QA-1: The e2e suite creates, edits, deletes and undoes, but never resolves a thread.
+  status: partial
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/comments.spec.ts]
+  note: `comments.spec.ts` has no step that resolves a thread (SetResolved).
+```

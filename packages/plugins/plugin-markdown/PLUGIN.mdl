@@ -73,7 +73,6 @@ type Settings
     numberedHeadings?: boolean
     folding?: boolean
     editorInputMode?: string    # default | vim | vscode
-    commentAgentMode?: off | auto | mention
     diffView?: DiffView         # branch compare variant (default suggest)
     experimental?: boolean
     debug?: boolean
@@ -124,7 +123,9 @@ component MarkdownArticle
     uploadFile(file: File) → Ref<Image>
   emits:
     onSelectObject(id: string)  # follow @ref or link
+```
 
+```mdl
 component VersionToolbar
   desc: |
     The version-review banner row shown above the editor while off "main @ now": a slim strip for the
@@ -132,7 +133,9 @@ component VersionToolbar
     view-select / close handlers. (Renamed from VersionBanners.)
   props:
     versioning: UseVersioningResult
+```
 
+```mdl
 component VersionBanner
   desc: |
     A single banner (checkpoint | branch | fork). Branch mode carries the Base/Diff/Branch view
@@ -143,12 +146,16 @@ component VersionBanner
     view?: BranchView
   emits:
     restore, branchFrom, viewChange, close
+```
 
+```mdl
 component MarkdownCard
   desc: Read-only preview card for embedding a Document in other surfaces.
   props:
     subject: Document | Text
+```
 
+```mdl
 component EditableMarkdownCard
   desc: Inline-editable card variant used when data.editable is true.
   props:
@@ -165,7 +172,9 @@ op create
   output: { id: string }        # DXN of created Document
   effects: [echo:write]
   requires: [Database.Service]
+```
 
+```mdl
 op createDraft
   key: org.dxos.operation.markdown.createDraft
   desc: |
@@ -175,7 +184,9 @@ op createDraft
   input: { name?: string, content?: string }
   output: { object: Document }
   requires: [Capability.Service]
+```
 
+```mdl
 op open
   key: org.dxos.operation.markdown.open
   desc: Reads the current contents of a markdown Document.
@@ -183,7 +194,9 @@ op open
   output: { content: string }
   effects: [echo:read]
   requires: [Database.Service]
+```
 
+```mdl
 op update
   key: org.dxos.operation.markdown.update
   desc: Applies a set of find/replace edits to a markdown Document (optionally on a branch).
@@ -192,22 +205,30 @@ op update
   errors: { NotFound: oldString not present in document }
   effects: [echo:write]
   requires: [Database.Service]
+```
 
+```mdl
 op CreateBranch
   desc: Fork a core branch off main (or a checkpoint), returning the branch's canonical content DXN.
   input: { doc: Ref<Document>, name?: string, from?: { target, heads } }
   effects: [echo:write]
+```
 
+```mdl
 op MergeBranch
   desc: CRDT-merge a branch back into main and archive its registry entry.
   input: { doc: Ref<Document>, branchId: string }
   effects: [echo:write]
+```
 
+```mdl
 op CreateCheckpoint
   desc: Record a named checkpoint (Version) of main or the selected branch's heads.
   input: { doc: Ref<Document>, name?: string, target?: Ref<Text> }
   effects: [echo:write]
+```
 
+```mdl
 op SuggestEdit
   desc: |
     Find-or-create the caller's per-author `kind:'suggestion'` branch and apply edits to it, so the
@@ -215,7 +236,9 @@ op SuggestEdit
     identity when absent.
   input: { doc: Ref<Document>, edits: Edit[], creator?: string }
   effects: [echo:write]
+```
 
+```mdl
 op scrollToAnchor
   desc: Scrolls the editor for the attendable surface to a cursor position.
   input: { subject: string, cursor: string, id?: Ref<Thread> }
@@ -229,7 +252,9 @@ feat F-1: Edit Document
   req F-1.1: Editor opens Document.content as a collaborative CodeMirror surface.
   req F-1.2: Edits replicate to all peers via ECHO Text.
   req F-1.3: Document.name renders as the surface title; fallbackName used when name is empty.
+```
 
+```mdl
 feat F-2: View Modes
 
   req F-2.1: Document opens in settings.defaultViewMode (source | preview | readonly).
@@ -239,14 +264,18 @@ feat F-2: View Modes
   req F-2.3:
     when: viewMode is readonly
     then: editor is non-editable; toolbar hidden
+```
 
+```mdl
 feat F-3: Formatting Toolbar
 
   req F-3.1:
     when: settings.toolbar is true
     then: formatting toolbar shown above editor with bold, italic, headings, lists, links
   req F-3.2: Toolbar surfaces toolbar-disposition actions from the app graph for the current attendable.
+```
 
+```mdl
 feat F-4: Inline References
 
   req F-4.1:
@@ -258,31 +287,35 @@ feat F-4: Inline References
   req F-4.3:
     when: user clicks a reference
     then: LayoutOperation.Open invoked for the linked object
+```
 
+```mdl
 feat F-5: File Upload
 
   req F-5.1:
     when: user drops an image onto the editor
     then: file uploaded via AppCapabilities.FileUploader and inserted as a markdown image
+```
 
+```mdl
 feat F-6: AI Editing
 
   req F-6.1: Plugin contributes a Skill exposing op:create, op:open, op:update as tools.
   req F-6.2:
     when: agent invokes op:update
     then: edits applied as ordered oldString → newString diffs against Document.content
+```
 
+```mdl
 feat F-7: Comments
 
   req F-7.1: Editor supports anchored comment threads on text ranges (via plugin-comments'
     ExtensionProvider).
-  req F-7.2:
-    when: settings.commentAgentMode is `auto`
-    then: every new user message in a thread triggers the comment agent
-  req F-7.3:
-    when: settings.commentAgentMode is `mention`
-    then: agent responds only when the message contains its @name
+  req F-7.2: Whether the comment agent answers a thread follows plugin-review's `commentAgentMode`
+    setting, which applies to comment threads on every subject.
+```
 
+```mdl
 feat F-8: Versioning (checkpoints, branches, merge)
 
   req F-8.1: The plugin MUST support named checkpoints (CreateCheckpoint), per-object branches
@@ -293,7 +326,9 @@ feat F-8: Versioning (checkpoints, branches, merge)
     with a Base/Diff/Branch view selector for a selected branch (default Diff on toolbar switch).
   req F-8.4: Selecting a branch/checkpoint/fork MUST NOT mutate main; edits on a branch accrue to
     that branch's Text via a per-surface BranchBinding.
+```
 
+```mdl
 feat F-9: Ambient review (Editing / Viewing)
 
   req F-9.1: In the default view (selection === current) the editor MUST overlay every active
@@ -304,7 +339,9 @@ feat F-9: Ambient review (Editing / Viewing)
   req F-9.3: The advanced (explicit-selection) path MUST be unaffected by the ambient overlay.
   req F-9.4: Accept/reject of a suggestion MUST route through the durable CollaborationOperation
     AcceptChange / RejectChange (diffed against main), never a direct splice.
+```
 
+```mdl
 feat F-10: Suggesting mode (authoring)
 
   req F-10.1:
@@ -316,7 +353,9 @@ feat F-10: Suggesting mode (authoring)
     current user's own branch (shown as tracked changes, not doubled).
   req F-10.3: A multi-line/block deletion MUST render its removed text with line breaks preserved;
     undo MUST re-instate a deleted region (no bespoke un-delete affordance).
+```
 
+```mdl
 feat F-11: Independence
 
   req F-11.1: plugin-markdown MUST NOT import plugin-comments source; the comment + suggestion-source
@@ -333,34 +372,44 @@ scenario T-1: Create document
     - new Document persisted to ECHO
     - Document.name === "Notes"
     - Document.content target contains "# Hello"
+```
 
+```mdl
 scenario T-2: Apply edit
   given: Document.content is "There is a tyop."
   when: op:update invoked with edits [{ oldString: "tyop", newString: "typo" }]
   then:
     - Document.content becomes "There is a typo."
+```
 
+```mdl
 scenario T-3: Toggle view mode
   given: Document open, settings.defaultViewMode === source
   when: user toggles view mode
   then:
     - editor renders preview
     - reload restores preview mode for this Document
+```
 
+```mdl
 scenario T-4: Reference autocomplete
   given: Document open, space contains object "ProjectX"
   when: user types `@Proj`
   then:
     - link query shows ProjectX
     - selecting it inserts a DXN link at the cursor
+```
 
+```mdl
 scenario T-5: Branch, edit, merge
   given: A document on main
   when: A branch is created, edited, and merged back
   then:
     - the branch edit lands on main after merge; a `merge:` checkpoint is recorded
     - the branch edit never appeared on main before merge
+```
 
+```mdl
 scenario T-6: Ambient overlay + mode
   given: A document with two seeded suggestion branches, selection === current
   when: mode is Editing
@@ -369,7 +418,9 @@ scenario T-6: Ambient overlay + mode
   when: mode switches to Viewing
   then:
     - suggestions are hidden, comments remain, the editor is read-only
+```
 
+```mdl
 scenario T-7: Suggesting mode authors on the user's branch
   given: A document, selection === current, mode === suggesting
   when: the user types
@@ -581,6 +632,13 @@ decision D-2: The flow spec is `autocue/AUTOCUE.mdl`, beside the flows that reco
   affects: [QA-4, QA-5]
   why: Upper case matches the repo's other spec files (SPEC.mdl, STORIES.mdl); keeping the ids leaves `markdown QA-4` and the flows' `@mdl` headers addressing the same tests.
   rejected: A lower-case `autocue.mdl` at the plugin root.
+```
+
+```mdl
+decision D-3: The `commentAgentMode` setting moves to plugin-review, which applies it to comment threads on every subject; the default stays `mention`.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [F-7.2]
 ```
 
 ---

@@ -8,7 +8,7 @@ import * as String from 'effect/String';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
+import { type AnyProperties, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -35,8 +35,10 @@ import {
   RefArrayField,
   RefField,
   SelectField,
+  type SelectFieldOption,
   TextAreaField,
   TextField,
+  VectorField,
   getArrayPresentation,
 } from './fields/index.ts';
 import { FormFieldRow } from './FormField.tsx';
@@ -85,7 +87,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     name,
     label: labelProp,
     path,
-    required,
+    required: requiredProp,
     projection,
     fieldMap,
     fieldProvider,
@@ -103,6 +105,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     onCreate,
     resolveCreateEntry,
     refInline,
+    defaultOpen,
   } = props;
   const { t } = Hooks.useTranslation(translationKey);
   const { variant, form } = useFormContext(FormFieldDispatch.displayName);
@@ -111,14 +114,16 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
   const description = override?.description ?? SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
-  const label = useMemo(
-    () =>
-      override?.hideLabel
-        ? ''
-        : (override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name))),
-    [override?.hideLabel, override?.label, labelProp, title, name],
+  // The field's name even when its label is hidden, for a control that still needs one (a list's accessible name).
+  const accessibleLabel = useMemo(
+    () => override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
+    [override?.label, labelProp, title, name],
   );
+  const label = override?.hideLabel ? '' : accessibleLabel;
   const readonly = override?.readonly ?? readonlyProp;
+  // The override's presentation applies to this field alone; nested fields keep the form's layout.
+  const presentation = override?.presentation ?? layout;
+  const required = override?.required ?? requiredProp;
   // A settings row shows its description beside the control, so the description never doubles as the placeholder.
   const placeholder = useMemo(
     () =>
@@ -133,6 +138,13 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const fieldState = useFormFieldState(FormFieldDispatch.displayName, path);
   const jsonPath = SchemaEx.createJsonPath(path ?? []);
   const indeterminate = fieldState.getStatus().indeterminate;
+  // A field with no value shows the default its schema declares (`default`), which is what a reader of the value
+  // uses in its place; the form holds none until the field is edited. A value the selection disagrees on is not unset.
+  const fallback = SchemaEx.getAnnotation<unknown>(SchemaAST.DefaultAnnotationId)(type);
+  const getValue = useMemo(
+    () => (fallback === undefined || indeterminate ? fieldState.getValue : () => fieldState.getValue() ?? fallback),
+    [fieldState, fallback, indeterminate],
+  );
   const fieldProps: FormFieldRendererProps = {
     type,
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
@@ -140,11 +152,15 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     label,
     description,
     jsonPath,
+    path,
+    collaborative: override?.collaborative ?? false,
     // An indeterminate value reads as none, so its placeholder says why rather than naming the field.
     placeholder: indeterminate
       ? (override?.placeholder ?? t('indeterminate.placeholder'))
       : (override?.placeholder ?? placeholder),
-    presentation: layout,
+    icon: override?.icon,
+    presentation,
+    action: override?.action,
     required,
     indeterminate,
     min: override?.min,
@@ -152,9 +168,10 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     step: override?.step,
     db,
     ...fieldState,
+    getValue,
   };
 
-  if (override?.hidden || ((readonly || layout === 'static') && hideEmpty && fieldState.getValue() == null)) {
+  if (override?.hidden || ((readonly || presentation === 'static') && hideEmpty && fieldState.getValue() == null)) {
     return null;
   }
 
@@ -179,13 +196,27 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   if (resolution.kind === 'provided') {
     return resolution.element;
   }
+  // A vector names its group and labels each axis itself, so it takes no field row.
+  if (resolution.kind === 'vector') {
+    return <VectorField {...fieldProps} />;
+  }
   // An array of refs the form does not own (`FormCreateAnnotation` targets render inline per element) is a
   // RefArrayField: chips (`tag`) in a field row, or (`title`) rows under a header of their own.
   const refProps = resolution.kind === 'array' ? getRefProps(type) : undefined;
   const refArray =
     refProps?.isArray && Option.isNone(Annotation.FormCreateAnnotation.getFromAst(type)) ? refProps : undefined;
   if (resolution.kind === 'array' && !refArray) {
-    return <ArrayField fieldProps={fieldState} label={label} {...props} />;
+    return (
+      <ArrayField
+        fieldProps={fieldState}
+        label={accessibleLabel}
+        hideLabel={override?.hideLabel}
+        section={presentation === 'section'}
+        placeholder={override?.placeholder}
+        {...props}
+        readonly={readonly || presentation === 'static'}
+      />
+    );
   }
   const refArrayField = refArray && (
     <RefArrayField
@@ -231,7 +262,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   }
 
   if (resolution.kind === 'ref' && resolution.inline) {
-    return <InlineRefField {...fieldProps} db={db} useType={useType} onCreate={onCreate} />;
+    return <InlineRefField {...fieldProps} db={db} useType={useType} onCreate={onCreate} defaultOpen={defaultOpen} />;
   }
 
   const control = renderControl(resolution);
@@ -251,7 +282,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     indeterminate,
     required: fieldProps.required,
     readonly,
-    presentation: layout,
+    presentation,
   };
   const scalar = resolution.kind === 'scalar' ? scalarField(resolution.scalar) : undefined;
   return (
@@ -262,7 +293,9 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       binding={binding}
       standalone={refArray ? true : scalar?.standalone}
       labelPlacement={scalar?.labelPlacement}
-      renderStatic={resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name) : undefined}
+      renderStatic={
+        resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name, type) : undefined
+      }
     >
       {control}
     </FormFieldRow>
@@ -282,7 +315,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         return ScalarField ? <ScalarField {...fieldProps} /> : undefined;
       }
       case 'select':
-        return <SelectField {...fieldProps} options={selectOptions(resolution.options, projection, name)} />;
+        return <SelectField {...fieldProps} options={selectOptions(resolution.options, projection, name, type)} />;
       case 'lookup':
         return resolution.combobox ? (
           <ComboboxField {...fieldProps} lookup={resolution.lookup} />
@@ -317,23 +350,39 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
 
 FormFieldDispatch.displayName = 'Form.FieldDispatch';
 
-/** The literal options, labelled by the projection's option titles where it has them. */
+type SingleSelectOption = { id: string; title?: string; color?: string; icon?: string };
+
 const selectOptions = (
   options: Format.Options[],
   projection: FormFieldDispatchProps['projection'],
   name: string | null,
-) => {
+  type: SchemaAST.AST,
+): SelectFieldOption[] => {
   const titles = projection?.getFieldProjections().find((candidate) => candidate.field.path === name)?.props.options;
-  return options.map((option) => ({
-    value: option,
-    label: titles?.find((candidate) => candidate.id === globalThis.String(option))?.title ?? option.toString(),
-  }));
+  const annotated =
+    SchemaEx.getAnnotation<{ singleSelect?: { options?: SingleSelectOption[] } }>(PropertyMetaAnnotationId)(type)
+      ?.singleSelect?.options ?? [];
+  return options.map((option) => {
+    const id = globalThis.String(option);
+    const meta = annotated.find((candidate) => candidate.id === id);
+    return {
+      value: option,
+      label: titles?.find((candidate) => candidate.id === id)?.title ?? meta?.title ?? option.toString(),
+      icon: meta?.icon,
+      iconHue: meta?.color,
+    };
+  });
 };
 
 const renderSelectStatic =
-  (options: Format.Options[], projection: FormFieldDispatchProps['projection'], name: string | null) =>
+  (
+    options: Format.Options[],
+    projection: FormFieldDispatchProps['projection'],
+    name: string | null,
+    type: SchemaAST.AST,
+  ) =>
   (value: unknown) =>
-    selectOptions(options, projection, name).find((candidate) => candidate.value === value)?.label ??
+    selectOptions(options, projection, name, type).find((candidate) => candidate.value === value)?.label ??
     globalThis.String(value ?? '');
 
 //

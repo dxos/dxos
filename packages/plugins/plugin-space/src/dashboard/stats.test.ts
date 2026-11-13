@@ -28,8 +28,10 @@ describe('toSpaceStats', () => {
     db.add(Obj.make(TestSchema.Expando, { value: 1 }));
     await db.flush({ indexes: true });
 
-    const rows = await db.query(SPACE_STATS_QUERY).run();
-    expect(toSpaceStats(rows, 7)).toEqual({ objects: 3, feeds: 2, types: 2, plugins: 7 });
+    // The index can answer before it has caught up with the flush; poll until it has.
+    await expect
+      .poll(async () => toSpaceStats(await db.query(SPACE_STATS_QUERY).run(), 7))
+      .toEqual({ objects: 3, feeds: 2, types: 2, plugins: 7 });
   });
 
   test('typeUrisWithObjects names each type with objects by its Type.getURI', async ({ expect }) => {
@@ -37,8 +39,12 @@ describe('toSpaceStats', () => {
     db.add(Obj.make(TestSchema.Expando, { value: 1 }));
     await db.flush({ indexes: true });
 
+    await expect
+      .poll(async () =>
+        typeUrisWithObjects(await db.query(SPACE_STATS_QUERY).run()).has(Type.getURI(TestSchema.Expando)),
+      )
+      .toBe(true);
     const uris = typeUrisWithObjects(await db.query(SPACE_STATS_QUERY).run());
-    expect(uris.has(Type.getURI(TestSchema.Expando))).toBe(true);
     expect(uris.has(Type.getURI(Feed.Feed))).toBe(false);
   });
 

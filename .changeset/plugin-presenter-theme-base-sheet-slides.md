@@ -1,0 +1,7 @@
+---
+'@dxos/plugin-presenter': minor
+---
+
+A presentation's `theme` sub-object names its base theme `base` (breaking: was `name`, with no migration), its fields sit in one nested, collapsible Theme group in the presentation's properties, and its description is multi-line text. `@dxos/react-ui-form` hides a field whose `optional` wrapper is annotated `FormInputAnnotation.set(false)`, so the theme no longer shows twice, and a nested group's legend is a block-tall row so its disclosure clears the border.
+
+Sheets (`@dxos/plugin-sheet`) share one formatting toolbar between the sheet and each formatted range in its properties: alignment, wrap, and a highlight color from the theme's swatches (tones 100 to 900), with black text up to tone 500 and white beyond; the header style is no longer a toolbar toggle, and contributed actions such as comment sit at the toolbar's end. The properties' Formatting list shows each range with its toolbar; selecting a row selects its range in the sheet, and a row's formatting can move to the sheet's selection. A sheet on a slide (`role=slide`) shows only its used range, scaled down to fit and never past 1:1, with no status bar, and is inert. Sheets have a multi-line description, and the cell editor keeps a cell's text in place when editing starts. `@dxos/react-ui`'s `ColorPicker.Trigger` takes `views` to offer swatches or the wheel alone, and `@dxos/lit-grid` cells take a `background` and `foreground` color.

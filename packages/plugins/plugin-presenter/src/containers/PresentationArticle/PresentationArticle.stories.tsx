@@ -60,38 +60,80 @@ type Story = StoryObj<typeof meta>;
 
 const LOAD_TIMEOUT = { timeout: 10_000 };
 
+const tile = (canvas: ReturnType<typeof within>, index: number) =>
+  canvas.findByTestId(`presenter.slide-grid.${index}`, undefined, LOAD_TIMEOUT);
+
+/** Every slide is a thumbnail; the toolbar's add button and the ghost tile after the last slide each add a tile. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT)).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Add slide' }));
-    await expect(await canvas.findByText('1 / 5')).toBeVisible();
+    await tile(canvas, 3);
+    await expect(canvas.queryByTestId('presenter.slide-grid.4')).toBeNull();
+    await userEvent.click(canvas.getByTestId('presenter.add-slide'));
+    await tile(canvas, 4);
+    await userEvent.click(canvas.getByTestId('presenter.slide-grid.add'));
+    await tile(canvas, 5);
   },
 };
 
-/** Arrow keys turn the page on mount, with no click into the deck first. */
+/** Each tile names its slide's graph node, so the app's context menu (plugin-navtree) shows that node's actions. */
+export const SlideMenu: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const first = await tile(canvas, 0);
+    await waitFor(() => expect(first.getAttribute('data-dx-context')).toMatch(/\/[^/]+$/));
+    const ids = [0, 1, 2, 3].map((index) =>
+      canvas.getByTestId(`presenter.slide-grid.${index}`).getAttribute('data-dx-context'),
+    );
+    await expect(new Set(ids).size).toBe(4);
+  },
+};
+
+/** Arrow keys move the current slide on mount, with no click into the grid first. */
 export const FocusOnMount: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT);
+    await expect(await tile(canvas, 0)).toHaveAttribute('aria-selected', 'true');
     await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
     await userEvent.keyboard('{ArrowRight}');
-    await expect(await canvas.findByText('2 / 4')).toBeVisible();
+    await waitFor(async () => expect(await tile(canvas, 1)).toHaveAttribute('aria-selected', 'true'));
   },
 };
 
-/** The toolbar button enters fullscreen; ESC returns inline with the keys still live. */
+/** The toolbar button presents fullscreen; ESC returns to the grid with the keys still live. */
 export const Fullscreen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT);
-    await userEvent.click(canvas.getByTestId('presenter.fullscreen'));
+    await tile(canvas, 3);
+    await userEvent.click(canvas.getByTestId('presenter.play'));
     await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(canvas.queryByTestId('presenter.overlay')).toBeNull());
     await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
     await userEvent.keyboard('{ArrowRight}');
-    await expect(await canvas.findByText('2 / 4')).toBeVisible();
+    await waitFor(async () => expect(await tile(canvas, 1)).toHaveAttribute('aria-selected', 'true'));
+  },
+};
+
+/** The fullscreen pager ends with an exit button, which returns to the grid. */
+export const ExitButton: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await tile(canvas, 3);
+    await userEvent.click(canvas.getByTestId('presenter.play'));
+    await userEvent.click(await canvas.findByTestId('presenter.pager.exit'));
+    await waitFor(() => expect(canvas.queryByTestId('presenter.overlay')).toBeNull());
+    await tile(canvas, 0);
+  },
+};
+
+/** Double-clicking a thumbnail opens that slide rather than presenting it. */
+export const OpenFromTile: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.dblClick(await tile(canvas, 2));
+    await waitFor(async () => expect(await tile(canvas, 2)).toHaveAttribute('aria-selected', 'true'));
+    await expect(canvas.queryByTestId('presenter.overlay')).toBeNull();
   },
 };
 
@@ -99,13 +141,15 @@ export const Fullscreen: Story = {
 export const LinkSection: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT);
+    await tile(canvas, 3);
     await userEvent.click(canvas.getByTestId('presenter.section-picker'));
     const option = await screen.findByRole('option', { name: /Appendix/ }, { timeout: 5_000 });
-    await expect(screen.queryByRole('option', { name: /Notes/ })).toBeNull();
-    await expect(screen.queryByRole('option', { name: /Demo/ })).toBeNull();
+    // Scoped to the picker, since the grid's thumbnails are options too.
+    const picker = within(option.closest<HTMLElement>('[role="listbox"]') ?? document.body);
+    await expect(picker.queryByRole('option', { name: /Notes/ })).toBeNull();
+    await expect(picker.queryByRole('option', { name: /Demo/ })).toBeNull();
     await userEvent.click(option);
-    await expect(await canvas.findByText('1 / 5')).toBeVisible();
+    await tile(canvas, 4);
   },
 };
 
@@ -116,7 +160,7 @@ export const Unattended: Story = {
     const canvas = within(canvasElement);
     const input = await canvas.findByTestId('other-input');
     await waitFor(() => expect(input).toHaveFocus());
-    await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT);
+    await tile(canvas, 3);
     await new Promise((resolve) => setTimeout(resolve, 300));
     await expect(input).toHaveFocus();
     await expect(canvas.getByTestId('presenter.deck')).not.toHaveFocus();

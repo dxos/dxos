@@ -13,12 +13,12 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
+import * as Fieldset from '@dxos/react-ui/Fieldset';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../../namespace.ts';
 import { type ActionStash, switchActionKind, wireTriggers } from '../../util/index.ts';
 import { InstructionsEditor } from '../InstructionsEditor/index.ts';
 import {
@@ -84,6 +84,8 @@ export type RoutineFormProps = {
   routine: Routine.Routine;
   /** Render the form for display only (e.g. an enabled routine, locked until disabled). */
   readonly?: boolean;
+  /** Scroll in a pane of its own (the article); a host that scrolls it (a dialog body) passes `false` to keep its surface. */
+  scroll?: boolean;
   /**
    * Commit the edit session; when set, the form renders a Save/Cancel action row (the companion's create
    * flow). A returned promise keeps the Save button disabled until it settles (double-click guard).
@@ -144,13 +146,14 @@ const RoutineFormImpl = ({
   routine,
   trigger,
   readonly = false,
+  scroll = true,
   onSave,
   onCancel,
   actionStash,
   forwardedRef,
   ...props
 }: RoutineFormImplProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const [auto, updateAuto] = useObject(routine);
   const operations = useOperations(db);
 
@@ -237,7 +240,7 @@ const RoutineFormImpl = ({
       onCancel={onCancel}
       testId='routine-form'
     >
-      <Form.Viewport scroll {...Util.composableProps(props)} ref={forwardedRef}>
+      <Form.Viewport scroll={scroll} {...Util.composableProps(props)} ref={forwardedRef}>
         <Form.Content>
           <Form.Fields schema={GeneralForm} />
 
@@ -258,9 +261,12 @@ const RoutineFormImpl = ({
   );
 };
 
-/** Lightweight labelled grouping for a section (no `Settings` chrome). */
+/** A group headed by a field-style label, not `Form.FieldSet`'s section heading, so it reads as one of the form's fields. */
 const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
-  <Form.FieldSet label={title}>{children}</Form.FieldSet>
+  <Fieldset.Root gutter='inherit'>
+    <Fieldset.Legend>{title}</Fieldset.Legend>
+    {children}
+  </Fieldset.Root>
 );
 
 //
@@ -284,7 +290,7 @@ const ActionSection = ({
   routine: Routine.Routine;
   readonly?: boolean;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const action = useFormValues<ActionFormInput>('RoutineForm.ActionSection', ACTION_PATH);
   const trigger = useFormValues<TriggerFormInput>('RoutineForm.ActionSection', TRIGGER_PATH);
   const kind = action?.kind ?? 'runnable';
@@ -308,7 +314,7 @@ const ActionSection = ({
 };
 
 const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: (kind: Routine.Kind) => void }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   return (
     // `type='single'` emits `''` when the selected item is clicked again (toggled off); ignore that and any
     // other non-kind value so it can't fall through and overwrite the current action.

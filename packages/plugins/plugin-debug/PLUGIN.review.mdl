@@ -1,0 +1,170 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-debug/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: DebugPlugin
+
+The debug panel is solid and well covered: the hidden `root/debug` category has a unit test, and the
+panel's stories play the drawer toggle, the dock/float switch, the console-first default and the restored
+view state. The other features (Generate objects, the object Debug companion, the space-objects companion,
+the wireframe overlay and the stats cards) are all contributed as the spec describes but have no test or
+story that drives them. The QA section is the weak spot for automation: QA-1 and QA-2 have nothing, QA-3
+has only the template's seed test, and QA-4 to QA-9 are walked by autocue demo flows that record the steps
+rather than assert their `expect` lines. No divergences found. The spec declares both a `component` and a `feat` named `DebugPanel`; one verdict covers both, since
+the checker keys verdicts by id. Of 21 items (20 distinct ids): 5 done, 7 untested, 7 partial, 0 diverged,
+2 missing, counting the shared verdict once per item.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Settings: The settings schema has wireframe and traceAll.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/types/Settings.ts#Settings]
+  note: The DebugSettings story renders the form but has no play function; no test toggles either field.
+```
+
+```mdl
+verdict DebugPluginOptions: The options type has logStore and persistStats (default true in the stats store).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/types/Debug.ts#DebugPluginOptions, github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/stats-panel.ts]
+  note: No test builds the plugin with these options or checks that stats persist.
+```
+
+```mdl
+verdict DebugPanelMode: The mode is docked or floating, absent read as docked.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanel/view-state.ts#DebugPanelMode]
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanelDrawer/DebugPanelDrawer.stories.tsx, github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanelStatus/DebugPanelStatus.stories.tsx]
+```
+
+```mdl
+verdict DebugPanelViewState: The view state holds nodeId, open, mode, position and size, persisted to localStorage.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanel/view-state.ts#DebugPanelViewState, github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanel/view-state.ts#debugPanelAspect]
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanel/DebugPanel.stories.tsx]
+```
+
+```mdl
+verdict DebugCategory: root/debug is a hidden root child, and the Debug node holds console, logs and the generator.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-debug/src/types/DebugNodes.ts#DEBUG_ROOT_ID]
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/app-graph-builder.test.ts]
+```
+
+```mdl
+verdict DebugPanel: The panel is in parts with one Root context, a drawer host, a floating host and a shared header; the status button and dock/float switch work and state persists.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanel/DebugPanel.tsx#DebugPanel, github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanel/DebugPanelHeader.tsx#DebugPanelHeader, github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanelDrawer/DebugPanelDrawer.tsx#DebugPanelDrawer, github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanelStatus/DebugPanelStatus.tsx#DebugPanelStatus]
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanel/DebugPanel.stories.tsx, github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanelDrawer/DebugPanelDrawer.stories.tsx, github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanelStatus/DebugPanelStatus.stories.tsx]
+  walkthrough:
+    - Root owns the selection, the open branches and the mode in the persisted view state. github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanel/DebugPanel.tsx#DebugPanel
+    - The drawer host renders the panel in AppSurface.Drawer and closes the drawer when floating. github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanelDrawer/DebugPanelDrawer.tsx#DebugPanelDrawer
+    - The status host toggles the drawer, or opens a FloatingPanel when the mode is floating. github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanelStatus/DebugPanelStatus.tsx#DebugPanelStatus
+    - The header carries the dock/float switch and the drawer's close. github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugPanel/DebugPanelHeader.tsx#DebugPanelHeader
+```
+
+```mdl
+verdict GenerateObjects: The generator page is contributed on the Debug space node.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/DebugSurfaces.tsx#SpaceGeneratorSurface, github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/react-surface.ts]
+  note: The SpaceGenerator stories render it, but the only play function exercises the progress-monitor row, not object generation.
+```
+
+```mdl
+verdict ObjectDebugCompanion: A debug companion on every object shows its JSON with refs as DXNs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/DebugSurfaces.tsx#ObjectDebugSurface, github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugObjectPanel/DebugObjectPanel.tsx#DebugObjectPanel]
+  note: The companion node is added in `app-graph-builder.ts`; the app-graph test covers only the debug category, and no story mounts the panel.
+```
+
+```mdl
+verdict SpaceObjectsBrowser: A spaceObjects deck companion lists the active space's objects by live query.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/DebugSurfaces.tsx#SpaceObjectsSurface, github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugSpaceObjectsPanel/DebugSpaceObjectsPanel.tsx#DebugSpaceObjectsPanel]
+  note: No test or story mounts it.
+```
+
+```mdl
+verdict Wireframe: A first-position surface wraps article and section surfaces with a labelled border when the setting is on.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/Wireframe/Wireframe.tsx#Wireframe, github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/react-surface.ts]
+  note: No test or story mounts the overlay.
+```
+
+```mdl
+verdict StatsPanel: The store is rendered on the stats role and on DevtoolsOverview at position 20 without the empty card.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/StatsPanel/StatsPanel.tsx#StatsPanel, github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/stats-panel.ts, github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/react-surface.ts]
+  note: No test covers the store's compartments or the two surfaces.
+```
+
+```mdl
+verdict QA-1: No automated test inserts Lorem ipsum from the slash menu.
+  status: missing
+  note: `capabilities/markdown-menu.ts` contributes the action; no test, story or e2e spec runs it.
+```
+
+```mdl
+verdict QA-2: No automated test generates objects into a collection.
+  status: missing
+  note: The spec calls it a human-only check; the SpaceGenerator stories do not generate objects.
+```
+
+```mdl
+verdict QA-3: The Review template's seed is unit-tested; nothing walks the space.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/samples/review/ReviewSpace.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/src/samples/review/ReviewSpace.test.ts]
+  note: `ReviewSpace.test.ts` checks the seeded objects (the `before` step). The walk itself was a recorded agent run, with no flow or test checked in.
+```
+
+```mdl
+verdict QA-4: An autocue demo flow walks the customer follow-up and the Fieldstone seed is unit-tested.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/autocue/fieldstone-customer-followup.mjs, github:dxos/dxos/packages/plugins/plugin-debug/src/samples/fieldstone/FieldstoneSpace.test.ts]
+  note: The autocue flow drives the steps for a recording and does not assert each `expect`; `FieldstoneSpace.test.ts` checks only the seeded space.
+```
+
+```mdl
+verdict QA-5: An autocue demo flow walks the agents' week and the Fieldstone seed is unit-tested.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/autocue/fieldstone-agents-week.mjs, github:dxos/dxos/packages/plugins/plugin-debug/src/samples/fieldstone/FieldstoneSpace.test.ts]
+  note: As for QA-4, the flow is a recording, not a test with pass/fail checks.
+```
+
+```mdl
+verdict QA-6: An autocue demo flow walks the customer pipeline and the pipeline seed is unit-tested.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/autocue/fieldstone-customer-pipeline.mjs, github:dxos/dxos/packages/plugins/plugin-debug/src/samples/fieldstone/inbox-crm/pipeline.test.ts]
+  note: As for QA-4, the flow is a recording, not a test with pass/fail checks.
+```
+
+```mdl
+verdict QA-7: An autocue demo flow walks the post-incident review and the Fieldstone seed is unit-tested.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/autocue/fieldstone-after-the-incident.mjs, github:dxos/dxos/packages/plugins/plugin-debug/src/samples/fieldstone/FieldstoneSpace.test.ts]
+  note: As for QA-4, the flow is a recording, not a test with pass/fail checks.
+```
+
+```mdl
+verdict QA-8: An autocue demo flow walks Cairn on DXOS and the docs seed is unit-tested.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/autocue/fieldstone-cairn-on-dxos.mjs, github:dxos/dxos/packages/plugins/plugin-debug/src/samples/fieldstone/docs/partial.test.ts]
+  note: As for QA-4, the flow is a recording, not a test with pass/fail checks.
+```
+
+```mdl
+verdict QA-9: An autocue demo flow walks the Hello Worker run and the template seed is unit-tested.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/autocue/hello-worker.mjs, github:dxos/dxos/packages/plugins/plugin-debug/src/samples/worker/WorkerSpace.test.ts]
+  note: The flow depends on a live model and a real deploy and records rather than asserts; `WorkerSpace.test.ts` checks the seeded tasks, features and spec.
+```

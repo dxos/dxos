@@ -183,6 +183,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/blob": "workspace:*",
@@ -200,7 +203,8 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/semver": "catalog:"
+    "@types/semver": "catalog:",
+    "typedoc": "catalog:"
   },
   "publishConfig": {
     "access": "public"

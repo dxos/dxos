@@ -4,18 +4,22 @@
 
 import { type EditorView } from '@codemirror/view';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { memo, useMemo } from 'react';
+import React, { type ReactNode, memo, useMemo } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import {
   type ActionGraphProps,
+  ActionMenu,
   ActionToolbar,
   type MenuAction,
   MenuBuilder,
+  TOOLBAR_OVERFLOW_ID,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 import type * as Util from '@dxos/react-ui/Util';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
+
+import { translationKey } from '#translations';
 
 import { addBlocks } from './blocks.ts';
 import { addFormatting } from './formatting.ts';
@@ -27,6 +31,9 @@ import { type EditorToolbarState } from './types.ts';
 import { type ViewModeItem, addViewMode } from './view-mode.ts';
 
 // TODO(burdon): Enable toolbar variants (e.g., markdown, code).
+
+/** Named group, after the editor's own blocks, that consumers extend with `MenuBuilder.extend` to insert content. */
+export const EDITOR_TOOLBAR_INSERT_GROUP = 'insert';
 
 // Local copy of AppSurface.Section.role — react-ui-editor cannot depend on app-toolkit without a circular dep.
 const SECTION_ROLE = 'org.dxos.role.section';
@@ -48,7 +55,7 @@ export type EditorToolbarFeatureFlags = Partial<{
 export type EditorToolbarActionGraphProps = {
   state: Atom.Atom<EditorToolbarState>;
   getView: () => EditorView;
-  // TODO(wittjosiah): Control positioning.
+  /** Added to the toolbar's graph; root items follow the editor's own, or extend {@link EDITOR_TOOLBAR_INSERT_GROUP}. */
   customActions?: Atom.Atom<ActionGraphProps>;
 };
 
@@ -65,6 +72,22 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
   const menuActions = useMarkdownMenuActions(props);
 
   return <ActionToolbar {...menuActions} attendableId={attendableId} onAction={onAction} classNames={classNames} />;
+});
+
+export type EditorToolbarMenuProps = Omit<EditorToolbarProps, 'role' | 'attendableId' | 'classNames'> & {
+  /** The trigger. */
+  children: ReactNode;
+};
+
+/** The toolbar's actions as a menu, built from the same graph: groups become submenus, toggles checkable items. */
+export const EditorToolbarMenu = memo(({ onAction, children, ...props }: EditorToolbarMenuProps) => {
+  const menuActions = useMarkdownMenuActions(props);
+
+  return (
+    <ActionMenu {...menuActions} onAction={onAction}>
+      {children}
+    </ActionMenu>
+  );
 });
 
 type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> &
@@ -104,16 +127,24 @@ const createMarkdownActions = ({
   return Atom.make((get) => {
     // Subscribe to state changes.
     const stateSnapshot = get(state);
+    // Lists, blocks and image carry collapse ranks, so a narrow plank folds them before contributed actions (comments,
+    // recording) that a tour or a user reaches for.
     return MenuBuilder.make()
       .subgraph(features?.showHeadings !== false && addHeadings(stateSnapshot, getView))
       .subgraph(features?.showFormatting !== false && addFormatting(stateSnapshot, getView))
       .subgraph(features?.showLists !== false && addLists(stateSnapshot, getView))
       .subgraph(features?.showBlocks !== false && addBlocks(stateSnapshot, getView))
       .subgraph(features?.onImageUpload && addImageUpload(features.onImageUpload))
+      .group(
+        EDITOR_TOOLBAR_INSERT_GROUP,
+        { label: ['insert.label', { ns: translationKey }], icon: 'ph--plus--regular' },
+        () => {},
+      )
       .separator('gap')
       .subgraph(customActions && get(customActions))
       .subgraph(features?.showSearch !== false && addSearch(getView))
       .subgraph(features?.onViewModeChange && addViewMode(stateSnapshot, features.onViewModeChange, features.viewModes))
+      .menu(TOOLBAR_OVERFLOW_ID, () => {})
       .build();
   });
 };

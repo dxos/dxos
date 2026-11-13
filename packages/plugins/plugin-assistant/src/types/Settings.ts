@@ -60,6 +60,12 @@ export const Settings = Schema.Struct({
         'Controls which message blocks are shown in the chat: normal hides reasoning, thinking shows reasoning, debug shows raw blocks, summary shows only conversational text.',
     }),
   ),
+  showTokens: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Show token counts',
+      description: 'Show the estimated number of tokens each block of the chat consumes, beside the block.',
+    }),
+  ),
   modelProvider: Schema.optional(
     ModelProvider.annotate({
       title: 'LLM provider',
@@ -67,18 +73,38 @@ export const Settings = Schema.Struct({
     }),
   ),
   modelDefaults: Schema.optional(ModelDefaults.annotate({ title: 'Model defaults' })),
-  codeMode: Schema.optional(
+  disableCodeMode: Schema.optional(
     Schema.Boolean.annotate({
-      title: 'Code mode (experimental)',
+      title: 'Disable code mode',
       description:
-        'Run agent turns in code mode: the model writes code against the workspace instead of calling a tool per action. The code runs off the page but can read your workspace data, make network requests, and access browser storage for this origin, so enable it only for trusted content. Applies to agents started after the change.',
+        'Code mode is on by default: the model writes code against the workspace instead of calling a tool per action. The code runs off the page but can read your workspace data, make network requests, and access browser storage for this origin. Disable it to have agents call one tool per action instead. Applies to agents started after the change.',
+    }),
+  ),
+  parallelThreads: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Parallel threads (experimental)',
+      description:
+        'A prompt sent while the agent is working starts a new thread that runs in parallel instead of waiting. Each thread sees what the others have done so far, and finished threads join the conversation. Applies to agents started after the change.',
+    }),
+  ),
+  parallelThreadLimit: Schema.optional(
+    Schema.Number.annotate({
+      title: 'Parallel thread limit',
+      description: 'How many parallel threads run at once; further prompts wait their turn. Defaults to 3.',
+    }),
+  ),
+  parallelThreadAgents: Schema.optional(
+    Schema.mutable(Schema.Array(Schema.String)).annotate({
+      title: 'Agents sharing parallel threads',
+      description:
+        'Other installed agents (by id, e.g. claude-code) that work in the same chat: a prompt starting with @<id> runs on that agent in its own thread. Requires parallel threads.',
     }),
   ),
   defaultAgent: Schema.optional(
     Schema.String.annotate({
       title: 'Default agent',
       description:
-        'Agent that one-click "Assign to agent" hands tasks to, by id: composer, or another installed agent such as claude-code. Falls back to Composer where that agent is unavailable.',
+        'Agent that "Default agent" in a task\'s assignee picker hands the task to, by id: composer, or another installed agent such as claude-code. Falls back to Composer where that agent is unavailable.',
     }),
   ),
   reportStruggles: Schema.optional(

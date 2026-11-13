@@ -26,10 +26,10 @@ describe('Alien Labs template', () => {
     expect(countOf('type.agent:')).toBe(4);
     expect(countOf('type.project:')).toBe(4);
     expect(countOf('type.event')).toBe(171);
-    // 15 Alien Labs documents, 5 project artifacts, 3 architecture guides.
-    expect(countOf('type.document')).toBe(23);
-    // 5 Alien Labs drawings and 12 architecture diagrams.
-    expect(countOf('type.drawing')).toBe(17);
+    // 15 Alien Labs documents, 5 project artifacts, 3 architecture guides and the ECHO design document.
+    expect(countOf('type.document')).toBe(24);
+    // 5 Alien Labs drawings and 15 architecture diagrams.
+    expect(countOf('type.drawing')).toBe(20);
     expect(Object.keys(result.docs.docs)).toHaveLength(15);
 
     // Links across partials resolve to an object or a feed entry in the same space.

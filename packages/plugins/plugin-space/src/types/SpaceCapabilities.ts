@@ -14,20 +14,18 @@ import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type Space } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
-import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
-import { type ComplexMap } from '@dxos/util';
 import type * as Position from '@dxos/util/Position';
 
 import { type SpaceDashboard } from '#dashboard';
-import { meta } from '#meta';
 
+import { SpaceNamespace } from '../namespace.ts';
 import * as Settings from './Settings.ts';
 import * as SpaceEvents from './SpaceEvents.ts';
 import * as SpaceSchema from './SpaceSchema.ts';
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${SpaceNamespace.key}.capability.settings`,
 );
 
 /** Schema for persisted space plugin state. */
@@ -39,7 +37,7 @@ export const StateSchema = Schema.Struct({
 export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
 
 /** Persisted state (stored in KVS/localStorage). */
-export const State = Capability.makeSingleton<Atom.Writable<SpaceState>>()(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<SpaceState>>()(`${SpaceNamespace.key}.capability.state`);
 
 /**
  * A proposed merge awaiting confirmation. `preview` is detached (never added to the database),
@@ -57,8 +55,8 @@ export type MergePreview = {
 export type SpaceEphemeralState = {
   sdkMigrationRunning: Record<string, boolean>;
   navigableCollections: boolean;
-  viewersByObject: Record<string, ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>>;
-  viewersByIdentity: ComplexMap<PublicKey, Set<string>>;
+  /** Peers viewing each object, keyed by the object's EID and then by the peer's hex identity key. */
+  viewersByObject: Record<string, Record<string, SpaceSchema.ObjectViewerProps>>;
   mergePreview: MergePreview | undefined;
   /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
   lastMergeAt: number | undefined;
@@ -66,7 +64,7 @@ export type SpaceEphemeralState = {
 
 /** Transient/ephemeral state (not persisted). */
 export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEphemeralState>>()(
-  `${meta.profile.key}.capability.ephemeralState`,
+  `${SpaceNamespace.key}.capability.ephemeralState`,
 );
 
 /**
@@ -77,7 +75,7 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEpheme
  * facts, and slot counts, truncation and icon resolution stay with the hardware that has them.
  */
 export const Dashboard = Capability.makeSingleton<Atom.Atom<SpaceDashboard>>()(
-  `${meta.profile.key}.capability.dashboard`,
+  `${SpaceNamespace.key}.capability.dashboard`,
 );
 
 /**
@@ -88,11 +86,11 @@ export const Dashboard = Capability.makeSingleton<Atom.Atom<SpaceDashboard>>()(
  * "which space is the default right now" must use `AppSpace.getDefaultSpace`, which reads the
  * designation the user can change in settings.
  */
-export const DefaultSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.defaultSpace`);
+export const DefaultSpace = Capability.makeSingleton<Space>()(`${SpaceNamespace.key}.capability.defaultSpace`);
 
 export type SettingsSection = { id: string; label: Label; position?: Position.Position };
 export const SettingsSection = Capability.makeSingleton<SettingsSection>()(
-  `${meta.profile.key}.capability.settingsSection`,
+  `${SpaceNamespace.key}.capability.settingsSection`,
 );
 
 export type OnCreateSpace = (params: {
@@ -100,7 +98,7 @@ export type OnCreateSpace = (params: {
   isDefault: boolean;
   rootCollection: Collection.Collection;
 }) => Effect.Effect<void, Error, Operation.Service>;
-export const OnCreateSpace = Capability.make<OnCreateSpace>()(`${meta.profile.key}.capability.onSpaceCreated`);
+export const OnCreateSpace = Capability.make<OnCreateSpace>()(`${SpaceNamespace.key}.capability.onSpaceCreated`);
 
 export type OnTypeAdded = (params: {
   db: Database.Database;
@@ -108,7 +106,7 @@ export type OnTypeAdded = (params: {
   // TODO(wittjosiah): This is leaky.
   show?: boolean;
 }) => Effect.Effect<void, Error, Operation.Service>;
-export const OnTypeAdded = Capability.make<OnTypeAdded>()(`${meta.profile.key}.capability.onTypeAdded`);
+export const OnTypeAdded = Capability.make<OnTypeAdded>()(`${SpaceNamespace.key}.capability.onTypeAdded`);
 
 /**
  * Tells the plugins a type was added (plugin-table makes a table for it). Activation first, since it is
@@ -128,7 +126,7 @@ export const notifyTypeAdded = Effect.fnUntraced(function* (
 
 // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
 export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
-export const Repair = Capability.makeSingleton<HandleRepair>()(`${meta.profile.key}.capability.repair`);
+export const Repair = Capability.makeSingleton<HandleRepair>()(`${SpaceNamespace.key}.capability.repair`);
 
 /** Typed creation entry contributed per typename by plugins that support creating objects. */
 export type CreateObjectEntry = Readonly<{
@@ -146,7 +144,7 @@ export type CreateObjectEntry = Readonly<{
    */
   customPanel?: ComponentType<CreateObjectCustomPanelProps>;
 }>;
-export const CreateObjectEntry = Capability.make<CreateObjectEntry>()(`${meta.profile.key}.capability.createObject`);
+export const CreateObjectEntry = Capability.make<CreateObjectEntry>()(`${SpaceNamespace.key}.capability.createObject`);
 
 /**
  * The identity rule for a type — how to key an object for duplicate detection and how to merge
@@ -154,7 +152,7 @@ export const CreateObjectEntry = Capability.make<CreateObjectEntry>()(`${meta.pr
  * article only offers its Duplicates tab for types that have one.
  */
 export const IdentitySpec = Capability.make<import('@dxos/extractor').IdentitySpec<any>>()(
-  `${meta.profile.key}.capability.identitySpec`,
+  `${SpaceNamespace.key}.capability.identitySpec`,
 );
 
 /** Props passed to a `CreateObjectEntry.customPanel`. */

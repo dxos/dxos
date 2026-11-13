@@ -8,7 +8,7 @@ import { KindId } from '../types/index.ts';
 import { queueOwnerNotification } from './change-context.ts';
 import { defineHiddenProperty } from './define-hidden-property.ts';
 import { getProxyTarget, isProxy, isValidProxyTarget } from './proxy-utils.ts';
-import { EventId } from './symbols.ts';
+import { EntityElementsId, EventId } from './symbols.ts';
 
 /**
  * Symbol to store the owning ECHO object reference on nested JS objects (records).
@@ -19,6 +19,13 @@ import { EventId } from './symbols.ts';
  * - Centralized reactivity for entire ECHO object.
  */
 const EchoOwner = Symbol.for('@dxos/echo/Owner');
+
+/**
+ * Whether the array holds root entities by identity (see {@link EntityElementsId}); its elements are
+ * never owned, copied or walked as nested data.
+ */
+export const hasEntityElements = (value: unknown): boolean =>
+  Array.isArray(value) && Reflect.get(value, EntityElementsId) === true;
 
 /**
  * Get the raw target from a value, unwrapping proxy if needed.
@@ -113,6 +120,9 @@ export const setOwnerRecursive = (
     depth: depth + 1,
     allowedPreviousOwner: newAllowedPreviousOwner,
   };
+  if (hasEntityElements(actualValue)) {
+    return;
+  }
   if (Array.isArray(actualValue)) {
     for (const item of actualValue) {
       if (isValidProxyTarget(item) || isProxy(item)) {
@@ -159,6 +169,9 @@ export const traverseObjectGraph = (
     return true;
   }
 
+  if (hasEntityElements(actualValue)) {
+    return false;
+  }
   if (Array.isArray(actualValue)) {
     for (const item of actualValue) {
       if (traverseObjectGraph(item, visitor, visited)) {

@@ -15,8 +15,9 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { Devtools } from '#types';
+
+import { DevtoolsNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -38,7 +39,7 @@ export default Capability.makeModule(
                   window.location.href = '/reset.html';
                 }),
               properties: {
-                label: ['reset-data.label', { ns: meta.profile.key }],
+                label: ['reset-data.label', { ns: DevtoolsNamespace.key }],
                 icon: 'ph--warning--regular',
               },
             }),
@@ -56,7 +57,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: 'devtoolsOverview',
-              label: ['devtools-overview.label', { ns: meta.profile.key }],
+              label: ['devtools-overview.label', { ns: DevtoolsNamespace.key }],
               icon: 'ph--equalizer--regular',
               data: 'devtoolsOverview' as const,
               position: Position.last,
@@ -84,7 +85,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
             data: null,
             type: Devtools.id,
             properties: {
-              label: ['devtools.label', { ns: meta.profile.key }],
+              label: ['devtools.label', { ns: DevtoolsNamespace.key }],
               icon: 'ph--toolbox--regular',
               // After Debug (0), whichever plugin registers first.
               position: 10,
@@ -92,10 +93,10 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
             nodes: [
               AppGraphNode.make({
                 id: Devtools.nodeId(Devtools.AppGraph),
-                type: `${meta.profile.key}.app-graph`,
+                type: `${DevtoolsNamespace.key}.app-graph`,
                 data: { graph: graph?.graph, root: GraphNode.RootId },
                 properties: {
-                  label: ['debug-app-graph.label', { ns: meta.profile.key }],
+                  label: ['debug-app-graph.label', { ns: DevtoolsNamespace.key }],
                   icon: 'ph--graph--regular',
                 },
               }),
@@ -104,7 +105,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                 data: Devtools.ToolsExplorer,
                 type: Devtools.id,
                 properties: {
-                  label: ['debug-tools-explorer.label', { ns: meta.profile.key }],
+                  label: ['debug-tools-explorer.label', { ns: DevtoolsNamespace.key }],
                   icon: 'ph--toolbox--regular',
                 },
               }),
@@ -113,7 +114,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                 data: Devtools.Cli,
                 type: Devtools.id,
                 properties: {
-                  label: ['cli.label', { ns: meta.profile.key }],
+                  label: ['cli.label', { ns: DevtoolsNamespace.key }],
                   icon: 'ph--terminal-window--regular',
                 },
               }),
@@ -122,7 +123,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                 data: null,
                 type: Devtools.id,
                 properties: {
-                  label: ['client.label', { ns: meta.profile.key }],
+                  label: ['client.label', { ns: DevtoolsNamespace.key }],
                   icon: 'ph--users--regular',
                 },
                 nodes: [
@@ -131,7 +132,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Client.Config,
                     type: Devtools.id,
                     properties: {
-                      label: ['config.label', { ns: meta.profile.key }],
+                      label: ['config.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--gear--regular',
                     },
                   }),
@@ -140,7 +141,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Client.Storage,
                     type: Devtools.id,
                     properties: {
-                      label: ['storage.label', { ns: meta.profile.key }],
+                      label: ['storage.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--hard-drives--regular',
                     },
                   }),
@@ -149,7 +150,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Client.Sqlite,
                     type: Devtools.id,
                     properties: {
-                      label: ['sqlite.label', { ns: meta.profile.key }],
+                      label: ['sqlite.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--database--regular',
                     },
                   }),
@@ -158,7 +159,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Client.Logs,
                     type: Devtools.id,
                     properties: {
-                      label: ['logging.label', { ns: meta.profile.key }],
+                      label: ['logging.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--file-text--regular',
                     },
                   }),
@@ -167,7 +168,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Client.Diagnostics,
                     type: Devtools.id,
                     properties: {
-                      label: ['diagnostics.label', { ns: meta.profile.key }],
+                      label: ['diagnostics.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--chart-line--regular',
                     },
                   }),
@@ -178,7 +179,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                 data: null,
                 type: Devtools.id,
                 properties: {
-                  label: ['halo.label', { ns: meta.profile.key }],
+                  label: ['halo.label', { ns: DevtoolsNamespace.key }],
                   icon: 'ph--identification-badge--regular',
                 },
                 nodes: [
@@ -187,7 +188,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Halo.Identity,
                     type: Devtools.id,
                     properties: {
-                      label: ['identity.label', { ns: meta.profile.key }],
+                      label: ['identity.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--identification-badge--regular',
                     },
                   }),
@@ -196,7 +197,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Halo.Devices,
                     type: Devtools.id,
                     properties: {
-                      label: ['devices.label', { ns: meta.profile.key }],
+                      label: ['devices.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--devices--regular',
                     },
                   }),
@@ -205,7 +206,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Halo.Keyring,
                     type: Devtools.id,
                     properties: {
-                      label: ['keyring.label', { ns: meta.profile.key }],
+                      label: ['keyring.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--key--regular',
                     },
                   }),
@@ -214,7 +215,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Halo.Credentials,
                     type: Devtools.id,
                     properties: {
-                      label: ['credentials.label', { ns: meta.profile.key }],
+                      label: ['credentials.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--credit-card--regular',
                     },
                   }),
@@ -225,7 +226,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                 data: null,
                 type: Devtools.id,
                 properties: {
-                  label: ['echo.label', { ns: meta.profile.key }],
+                  label: ['echo.label', { ns: DevtoolsNamespace.key }],
                   icon: 'ph--database--regular',
                 },
                 nodes: [
@@ -234,7 +235,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Spaces,
                     type: Devtools.id,
                     properties: {
-                      label: ['spaces.label', { ns: meta.profile.key }],
+                      label: ['spaces.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--graph--regular',
                     },
                   }),
@@ -243,7 +244,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Space,
                     type: Devtools.id,
                     properties: {
-                      label: ['space.label', { ns: meta.profile.key }],
+                      label: ['space.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--planet--regular',
                     },
                   }),
@@ -252,7 +253,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Feeds,
                     type: Devtools.id,
                     properties: {
-                      label: ['feeds.label', { ns: meta.profile.key }],
+                      label: ['feeds.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--list-bullets--regular',
                     },
                   }),
@@ -261,7 +262,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Objects,
                     type: Devtools.id,
                     properties: {
-                      label: ['objects.label', { ns: meta.profile.key }],
+                      label: ['objects.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--cube--regular',
                     },
                   }),
@@ -270,7 +271,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Queries,
                     type: Devtools.id,
                     properties: {
-                      label: ['queries.label', { ns: meta.profile.key }],
+                      label: ['queries.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--tree-view--regular',
                     },
                   }),
@@ -279,7 +280,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Schema,
                     type: Devtools.id,
                     properties: {
-                      label: ['schema.label', { ns: meta.profile.key }],
+                      label: ['schema.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--database--regular',
                     },
                   }),
@@ -288,7 +289,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Registry,
                     type: Devtools.id,
                     properties: {
-                      label: ['registry.label', { ns: meta.profile.key }],
+                      label: ['registry.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--books--regular',
                     },
                   }),
@@ -297,7 +298,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Automerge,
                     type: Devtools.id,
                     properties: {
-                      label: ['automerge.label', { ns: meta.profile.key }],
+                      label: ['automerge.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--gear-six--regular',
                     },
                   }),
@@ -306,7 +307,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Queues,
                     type: Devtools.id,
                     properties: {
-                      label: ['queues.label', { ns: meta.profile.key }],
+                      label: ['queues.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--queue--regular',
                     },
                   }),
@@ -315,7 +316,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Members,
                     type: Devtools.id,
                     properties: {
-                      label: ['members.label', { ns: meta.profile.key }],
+                      label: ['members.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--users--regular',
                     },
                   }),
@@ -324,7 +325,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Echo.Metadata,
                     type: Devtools.id,
                     properties: {
-                      label: ['metadata.label', { ns: meta.profile.key }],
+                      label: ['metadata.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--hard-drive--regular',
                     },
                   }),
@@ -335,7 +336,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                 data: null,
                 type: Devtools.id,
                 properties: {
-                  label: ['mesh.label', { ns: meta.profile.key }],
+                  label: ['mesh.label', { ns: DevtoolsNamespace.key }],
                   icon: 'ph--graph--regular',
                 },
                 nodes: [
@@ -344,7 +345,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Mesh.Signal,
                     type: Devtools.id,
                     properties: {
-                      label: ['signal.label', { ns: meta.profile.key }],
+                      label: ['signal.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--wifi-high--regular',
                     },
                   }),
@@ -353,7 +354,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Mesh.Swarm,
                     type: Devtools.id,
                     properties: {
-                      label: ['swarm.label', { ns: meta.profile.key }],
+                      label: ['swarm.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--users-three--regular',
                     },
                   }),
@@ -362,8 +363,28 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Mesh.Network,
                     type: Devtools.id,
                     properties: {
-                      label: ['network.label', { ns: meta.profile.key }],
+                      label: ['network.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--polygon--regular',
+                    },
+                  }),
+                ],
+              }),
+              AppGraphNode.make({
+                id: Devtools.nodeId(Devtools.Agent.id),
+                data: null,
+                type: Devtools.id,
+                properties: {
+                  label: ['agent.label', { ns: DevtoolsNamespace.key }],
+                  icon: 'ph--robot--regular',
+                },
+                nodes: [
+                  AppGraphNode.make({
+                    id: Devtools.nodeId(Devtools.Agent.Halo),
+                    data: Devtools.Agent.Halo,
+                    type: Devtools.id,
+                    properties: {
+                      label: ['halo.label', { ns: DevtoolsNamespace.key }],
+                      icon: 'ph--identification-badge--regular',
                     },
                   }),
                 ],
@@ -373,7 +394,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                 data: null,
                 type: Devtools.id,
                 properties: {
-                  label: ['edge.label', { ns: meta.profile.key }],
+                  label: ['edge.label', { ns: DevtoolsNamespace.key }],
                   icon: 'ph--cloud--regular',
                 },
                 nodes: [
@@ -382,7 +403,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Edge.Dashboard,
                     type: Devtools.id,
                     properties: {
-                      label: ['dashboard.label', { ns: meta.profile.key }],
+                      label: ['dashboard.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--computer-tower--regular',
                     },
                   }),
@@ -391,7 +412,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Edge.Workflows,
                     type: Devtools.id,
                     properties: {
-                      label: ['workflows.label', { ns: meta.profile.key }],
+                      label: ['workflows.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--function--regular',
                     },
                   }),
@@ -400,7 +421,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Edge.Traces,
                     type: Devtools.id,
                     properties: {
-                      label: ['traces.label', { ns: meta.profile.key }],
+                      label: ['traces.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--line-segments--regular',
                     },
                   }),
@@ -409,7 +430,7 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     data: Devtools.Edge.Testing,
                     type: Devtools.id,
                     properties: {
-                      label: ['testing.label', { ns: meta.profile.key }],
+                      label: ['testing.label', { ns: DevtoolsNamespace.key }],
                       icon: 'ph--flask--regular',
                     },
                   }),

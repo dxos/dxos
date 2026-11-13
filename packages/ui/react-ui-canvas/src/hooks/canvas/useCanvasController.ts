@@ -4,24 +4,26 @@
 
 import { useMemo, useRef } from 'react';
 
+import { type Bounds, type Size } from '@dxos/scene';
+
 import {
   type CameraMotion,
   type CanvasAtoms,
   type CanvasController,
   type CanvasHistory,
   type ControllerGrid,
+  type DrawScene,
+  type DrawState,
   type LookHandlers,
-  type Projection,
   type ViewFit,
   createCanvasController,
 } from '../../engine/index.ts';
-import { type Bounds, type NodeRegistry, type Size, type ViewStore } from '../../model/index.ts';
+import { type NodeRegistry } from '../../model/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 
 /** What the controller's commands read of the view when they run. */
 export type CanvasControllerLive = {
-  projection: Projection;
-  baseProjection: Projection;
+  draw: DrawScene;
   nodeRegistry: NodeRegistry;
   readonly: boolean;
   grid: ControllerGrid;
@@ -37,7 +39,7 @@ export type CanvasControllerLive = {
 export type UseCanvasControllerOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  store: ViewStore;
+  store: DrawState;
   /** The view as this render has it. */
   live: CanvasControllerLive;
 };
@@ -52,8 +54,7 @@ export const useCanvasController = ({ registry, atoms, store, live }: UseCanvasC
         registry,
         atoms,
         store,
-        projection: () => liveRef.current.projection,
-        baseProjection: () => liveRef.current.baseProjection,
+        draw: () => liveRef.current.draw,
         nodeRegistry: () => liveRef.current.nodeRegistry,
         readonly: () => liveRef.current.readonly,
         grid: () => liveRef.current.grid,

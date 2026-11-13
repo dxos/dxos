@@ -1,0 +1,917 @@
+---
+id: org.dxos.plugin.animator
+name: AnimatorPlugin
+version: 0.1.0
+---
+
+Animation as a capability of Composer rather than a feature of one plugin. An **Animation** is a sequence of
+**shots**; each shot plays one object that another plugin owns (a canvas scene, a 3D scene) for a duration, with
+properties keyed on a timeline, scripted by declarative beats, and decorated by **effects**: sandboxed, agent-written
+code that draws what keys cannot (packets on links, particle bursts, conversations). Plugins that own objects
+contribute a **stage** that renders them; the animator never learns their object model. Rendering is deterministic,
+so playback, scrubbing and export show the same frame for the same time, and an export reaches plugin-studio as a
+video clip.
+
+The neutral engine (timelines, easing, clock, script compiler, effect runtime) lives in `@dxos/animation`, and its
+timeline UI in `@dxos/react-ui-animation`; both are factored out of react-ui-canvas. The design and its reasons are
+in the package's `docs/DESIGN.md`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term         | URI                             |
+|--------------|---------------------------------|
+| `type`       | `org.dxos.mdl.type@1.0`         |
+| `capability` | `org.dxos.mdl.capability@1.0`   |
+| `component`  | `org.dxos.mdl.component@1.0`    |
+| `op`         | `org.dxos.mdl.op@1.1`           |
+| `feat`       | `org.dxos.mdl.feat@1.0`         |
+| `scenario`   | `org.dxos.mdl.scenario@1.0`     |
+| `decision`   | `org.dxos.mdl.decision@1.0`     |
+
+### Existing types used by this plugin
+
+| Type                 | Source                   | Notes                                                              |
+| -------------------- | ------------------------ | ------------------------------------------------------------------ |
+| `Easing`, `Keyframe`, `Track`, `Timeline` | `@dxos/animation` | Moved from react-ui-canvas; tracks keyed by `${target}:${property}`. |
+| `Drawing.Canvas`     | `@dxos/plugin-canvas`    | Stage object of the canvas stage.                                  |
+| `Scene.Scene3D`      | `@dxos/scene`            | Stage object of the 3D stage (plugin-canvas's 3D canvas).          |
+| `MediaArtifact`, `Variant` | `@dxos/plugin-studio` | Where an exported animation lands as a clip.                     |
+| `GenerationService`  | `@dxos/plugin-studio`    | The provider contract the exporter implements.                     |
+
+## Types
+
+```mdl
+type Animation
+  desc: >
+    A film made of shots played one after another. Each shot references the object it animates, so one Animation can
+    span objects from several plugins and one object can appear in several Animations without being edited.
+  typename: org.dxos.type.animator.animation
+  fields:
+    name?: string
+    fps: number                     # export rate; playback samples by time at display rate
+    size?: Size                     # export frame size in pixels
+    shots: Shot[]
+  annotations:
+    icon: ph--film-strip--regular
+    hue: violet
+    label: [name]
+```
+
+```mdl
+type Shot
+  desc: >
+    One stage object played for a duration. `timeline` holds hand-placed keys; `script` holds declarative beats the
+    animator compiles to keys. Where both set the same property at the same time, the hand key wins.
+  fields:
+    id: string
+    stage: Ref<Obj.Unknown>         # an object some Stage renders
+    duration: number                # seconds
+    timeline: Timeline
+    script?: Beat[]
+    camera?: Track                  # shape owned by the stage (2D pan/zoom, orbit)
+    effects: EffectInstance[]
+    transition?: Transition
+    markers?: Marker[]
+    screen?: ScreenText[]           # screen text placed by hand; beats add more
+```
+
+```mdl
+type Beat
+  desc: >
+    One state in a declarative shot script. Targets are stage-local ids; `layout` names an arranger the stage
+    contributes, so the script states intent and the stage computes positions.
+  fields:
+    at?: number                     # seconds into the shot; default: after the previous beat
+    duration: number                # length of the move into this state
+    ease?: Easing
+    show?: string[]
+    hide?: string[]
+    set?: Record<string, Record<string, unknown>>   # target → property → value
+    layout?: { kind: string, targets: string[], params?: Record<string, unknown> }
+    merge?: { from: string[], into: string }
+    camera?: Record<string, unknown>
+    effects?: { add?: EffectInstance[], remove?: string[] }
+    caption?: string                # replaces the caption; lines after the first stagger in; '' clears it
+    captionImage?: string           # an image URL in place of the caption's headline
+    captionColor?: string
+    sideTitle?: string              # replaces the side title; '' clears it
+    curtain?: { color?: string, fade?: number, hold?: number }   # fades to colour, holds, fades back
+```
+
+```mdl
+type ScreenText
+  desc: >
+    Text or a curtain the animator draws above any stage over a span of the shot: a caption (a headline, or an image in
+    its place, then lines fading in `stagger` seconds apart), a side title, or a full-frame curtain. Every opacity is a
+    function of the time, so an exported frame matches playback.
+  fields:
+    kind: caption | side-title | curtain
+    at: number
+    duration: number
+    text?: string                   # lines separated by newlines
+    image?: string
+    color?: string
+    fade?: number                   # seconds to fade in and out
+    stagger?: number                # seconds between a caption's lines
+```
+
+```mdl
+type Transition
+  fields:
+    kind: cut | fade | dissolve
+    duration: number
+```
+
+```mdl
+type Marker
+  fields:
+    t: number
+    label: string
+    caption?: string
+```
+
+```mdl
+type AnimatableKind
+  desc: >
+    The value kind recorded by `AnimatableAnnotation` on a schema property, which fixes how it interpolates.
+    `rotation` interpolates by quaternion slerp and is stored as Euler degrees; `color` interpolates in OKLab;
+    `discrete` holds until the next key.
+  literals: number | point | size | vec3 | rotation | color | discrete
+```
+
+```mdl
+type Effect
+  desc: >
+    Agent-written code that draws what keys cannot. One TypeScript module exporting a stateless `sample` or a
+    stateful `init`/`step`/`draw`; compiled once per version and run in a worker with no DOM, network or space
+    access, at a fixed step with seeded random, checkpoints and a per-step budget. Replaces the canvas Generator type.
+  typename: org.dxos.type.animator.effect
+  fields:
+    name: string
+    description: string
+    renderer: 2d | 3d | overlay
+    source: string
+    params: JsonSchema              # bindings via `x-binding` (node, link, object); numeric params are animatable
+    version: number
+  annotations:
+    icon: ph--sparkle--regular
+    hue: violet
+    label: [name]
+```
+
+```mdl
+type EffectInstance
+  fields:
+    id: string
+    effect: Ref<Effect>
+    params: Record<string, unknown>
+    seed?: number
+```
+
+```mdl
+type Sample
+  desc: The value of every keyed target property at one time in a shot.
+  fields:
+    t: number
+    values: Record<string, Record<string, unknown>>   # target → property → value
+    camera?: Record<string, unknown>
+```
+
+```mdl
+type EffectFrame
+  desc: >
+    What one effect drew at one time: `Shape2D[]` (circle, rect, path) for `2d`, `Instance3D[]` (sphere or cube,
+    position, scale, colour, opacity) for `3d`, `OverlayItem[]` (threads, cards, lines, text, each anchored to a
+    target or to a point of the frame) for `overlay`. The item types are renderer-neutral data in `@dxos/animation`.
+  fields:
+    instance: string                # EffectInstance id
+    renderer: 2d | 3d | overlay
+    items: Shape2D[] | Instance3D[] | OverlayItem[]
+    status?: EffectStatus           # running, or paused by an error or the step budget
+    stepMs?: number
+```
+
+```mdl
+type StageBinding
+  desc: >
+    What effects bind to in a stage at one time, in the stage's coordinates (a 2D stage sets `z` to 0): its objects
+    by id and its links. The animator samples it across a shot ahead of time, so an effect reads it in a worker.
+  fields:
+    objects: Record<string, { id: string, position: Vec3, radius: number, color?: string, opacity: number }>
+    links: { id: string, from: string, to: string, points: Vec3[] }[]
+```
+
+```mdl
+type StageProjection
+  desc: Where a stage drew its targets for one time, in pixels from the stage's top left; overlay items anchor to it.
+  fields:
+    t: number
+    anchors: Record<string, { x: number, y: number, radius: number }>
+```
+
+```mdl
+type EffectReport
+  desc: What `CheckEffect` returns.
+  fields:
+    errors?: string[]               # compile or load errors; nothing else is reported with them
+    status?: EffectStatus
+    timing?: { meanMs: number, budgetMs: number }
+    deterministic?: boolean         # each time gave the same frame reached forward and backward
+    mismatch?: number               # the first time the two runs differed at
+    frames?: { t: number, items: number, summary: string }[]
+```
+
+## Capabilities
+
+```mdl
+capability AnimatorCapabilities.Stage
+  desc: |
+    Contributed by a plugin that owns objects, one per stage object type. Lists the targets of a stage object and
+    their animatable properties (from `AnimatableAnnotation`), names the layouts its scripts may use and the effect
+    renderers it can draw, and renders the stage for a `Sample` and the frame's `EffectFrame`s. It applies samples to
+    a view of its objects and never writes them to ECHO; it reports edits made at a time so the animator can key
+    them, and calls `onFrameDrawn(t)` once the frame for `t` is on screen. A stage that hosts effects implements
+    `bind(stage, sample)`, returning a `StageBinding`, and reports a `StageProjection` through `onProjection` once a
+    frame is drawn, which the animator's overlay layer anchors to.
+  type: StageDef
+  multi: true
+```
+
+## Components
+
+```mdl
+component AnimatorArticle
+  desc: >
+    Article surface for an Animation. The stage of the current shot fills the article; below it the timeline from
+    `@dxos/react-ui-animation` shows the shot list, per-shot track rows with key diamonds, effect rows and the
+    script's beats, with play, scrub and timecode. The toolbar adds a shot, adds an effect and exports.
+  props:
+    role: string
+    attendableId: string
+    subject: Animation
+  state:
+    shot: string                    # current shot id
+    time: number                    # clock time within the animation
+    playing: boolean
+  actions:
+    play()
+    pause()
+    seek(t: number)
+    addShot(stage: Ref<Obj.Unknown>)
+    addEffect(effect: Ref<Effect>)
+    export()
+  layout: |
+    ┌──────────────────────────────────────────────┐
+    │ [+ Shot][+ Effect][Export]                [⋮] │
+    ├──────────────────────────────────────────────┤
+    │ stage (contributed by the shot's plugin)     │
+    ├──────────────────────────────────────────────┤
+    │ ▶ 00:12.40  shots | tracks ◆ | effects | beats│
+    └──────────────────────────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op CreateAnimation
+  key: org.dxos.operation.animator.createAnimation
+  desc: Creates an Animation with one shot per given stage object, each with an empty timeline.
+  input:
+    name?: string
+    stages: Ref<Obj.Unknown>[]
+    fps?: number
+    target: Database | Collection
+  output: Ref<Animation>
+  effects: [echo:write]
+```
+
+```mdl
+op SetKey
+  key: org.dxos.operation.animator.setKey
+  desc: Keys a target property, an effect parameter or the camera at a time in a shot.
+  input:
+    animation: Ref<Animation>
+    shot: string
+    t: number
+    path: string                    # `${target}:${property}`, `effect:${id}:${param}` or `camera:${property}`
+    value: unknown
+    ease?: Easing
+  output: Ref<Animation>
+  errors:
+    UnknownTargetError: the stage does not list the target or the property is not animatable
+  effects: [echo:write]
+```
+
+```mdl
+op SetScript
+  key: org.dxos.operation.animator.setScript
+  desc: Replaces a shot's script and compiles it to keys, returning compile errors by beat.
+  input:
+    animation: Ref<Animation>
+    shot: string
+    script: Beat[]
+  output: Ref<Animation>
+  errors:
+    ScriptError: a beat names an unknown target, layout or effect
+  effects: [echo:write]
+```
+
+```mdl
+op CreateEffect
+  key: org.dxos.operation.animator.createEffect
+  desc: Writes a new Effect's source and parameter schema at version 1, compiles it, and returns compile errors.
+  input:
+    name: string
+    description: string
+    renderer: 2d | 3d | overlay
+    source: string
+    params: JsonSchema
+  output: { effect: Ref<Effect>, version: number, errors?: string[] }
+  effects: [echo:write]
+```
+
+```mdl
+op UpdateEffect
+  key: org.dxos.operation.animator.updateEffect
+  desc: Replaces an Effect's source, schema or description, bumps its version, recompiles, and returns compile errors.
+  input:
+    effect: Ref<Effect>
+    source?: string
+    params?: JsonSchema
+    description?: string
+  output: { effect: Ref<Effect>, version: number, errors?: string[] }
+  effects: [echo:write]
+```
+
+```mdl
+op CheckEffect
+  key: org.dxos.operation.animator.checkEffect
+  desc: >
+    Runs an Effect headless over a duration with given parameters; returns step timings, a determinism check (the
+    same time reached from two checkpoints) and a summary of what each frame drew. It binds to the given shot's
+    stage, or to a ring of four linked objects.
+  input:
+    effect: Ref<Effect>
+    params: Record<string, unknown>
+    duration: number
+    animation?: Ref<Animation>
+    shot?: string
+    seed?: number
+  output: EffectReport
+  effects: [echo:read]
+```
+
+```mdl
+op PlaceEffect
+  key: org.dxos.operation.animator.placeEffect
+  desc: >
+    Adds an Effect to a shot for its whole length, with parameters and bindings to the shot's targets; a binding left
+    unset binds every object or link.
+  input:
+    animation: Ref<Animation>
+    shot: string
+    effect: Ref<Effect>
+    params: Record<string, unknown>
+    seed?: number
+  output: { animation: Ref<Animation>, instance: string }
+  errors:
+    RendererError: the shot's stage cannot draw the effect's renderer
+  effects: [echo:write]
+```
+
+```mdl
+op InstallEffects
+  key: org.dxos.operation.animator.installEffects
+  desc: >
+    Adds the built-in effects (packet flow and burst, each for `2d` and `3d`, conversations and callout) to the space
+    as Effect objects, skipping any already there by name, and returns them all.
+  output: { effects: Ref<Effect>[] }
+  effects: [echo:read, echo:write]
+```
+
+```mdl
+op Render
+  key: org.dxos.operation.animator.render
+  desc: >
+    Renders a time range of an Animation to H.264 MP4 and records it as a `video/mp4` Variant on a MediaArtifact
+    with the request, so it can be re-rendered. Runs in the app by default and on EDGE when `where` is `edge`.
+  input:
+    animation: Ref<Animation>
+    from?: number
+    to?: number
+    fps?: number
+    size?: Size
+    where?: app | edge
+  output: Ref<Variant>
+  effects: [echo:write]
+```
+
+## Features
+
+```mdl
+feat F-1: Neutral animation core
+
+  req F-1.1: Timelines, keys, easing, interpolation, the clock and the effect runtime live in `@dxos/animation`, and the timeline UI and clock hooks in `@dxos/react-ui-animation`; neither depends on any plugin.
+  req F-1.2: react-ui-canvas imports both packages and keeps no copy or re-export of what moved.
+  req F-1.3: `AnimatableAnnotation` is a serializable ECHO annotation recording an `AnimatableKind`, so it survives stored and dynamic schemas.
+  req F-1.4: `animatableProperties(schema)` lists the keyable property paths and kinds of any schema, including one the animator has never seen.
+  req F-1.5: Each `AnimatableKind` interpolates as its type states: `vec3` per axis, `rotation` by slerp, `color` in OKLab, `discrete` held.
+```
+
+```mdl
+feat F-2: Animations and shots
+
+  req F-2.1: An Animation is an ECHO object whose shots reference stage objects; playing it never writes to those objects.
+  req F-2.2: Shots play in order, each for its duration, joined by its transition.
+  req F-2.3: Every canvas animation is an Animation; canvas documents hold no timeline of their own.
+  req F-2.4: A track target is a stage-local id that the stage resolves; the animator stores it opaquely.
+  req F-2.5: Editing a stage property at a time other than the shot's start writes a key at that time.
+```
+
+```mdl
+feat F-3: Declarative scripts
+
+  req F-3.1: A shot's script compiles to keys; the same script and stage objects always produce the same keys.
+  req F-3.2: Where a hand key and a compiled key set the same property at the same time, the hand key wins.
+  req F-3.3: A beat's `layout` is computed by an arranger the stage contributes; the script never holds positions it did not set explicitly.
+  req F-3.4: A script that names an unknown target, layout or effect fails to compile with an error naming the beat.
+```
+
+```mdl
+feat F-4: Stages
+
+  req F-4.1: A plugin becomes animatable by contributing an `AnimatorCapabilities.Stage`; the animator holds no knowledge of its object model.
+  req F-4.2: The canvas stage renders `Drawing.Canvas` scenes with a 2D pan and zoom camera and draws `2d` and `overlay` effects.
+  req F-4.3: The 3D scene stage renders a `Scene3D` with Babylon.js and an orbit camera, and draws `3d` and `overlay` effects.
+  req F-4.4: Every 3D stage uses Babylon.js.
+  req F-4.5: The 3D scene stage offers a presentation material for primitives (lit sphere with a rim glow, dithered so gradients do not band) and a lattice background, alongside its CAD materials.
+```
+
+```mdl
+feat F-5: Effects
+
+  req F-5.1: An effect runs in a worker with no DOM, network or space access, under a per-step budget.
+  req F-5.2: An effect's output is a pure function of time, parameters, bindings and seed; reaching a time from any checkpoint gives the same frame.
+  req F-5.3: Effects do not read live ECHO data.
+  req F-5.4: `3d` effects return instance lists, which the stage draws with instanced meshes; they own no Babylon nodes.
+  req F-5.5: Numeric effect parameters are animatable on the shot's timeline.
+  req F-5.6: Packet flow, burst, conversations and merge ship as built-in effects.
+  req F-5.7: An effect binds to a stage through `bind`, which the animator samples across the shot ahead of time, so an effect never reads the stage object.
+  req F-5.8: Overlay effects name the target they hang from; the animator places them through the stage's projection.
+```
+
+```mdl
+feat F-6: Playback and export
+
+  req F-6.1: The animator owns the clock; no stage or effect reads wall-clock time.
+  req F-6.2: Export sets the clock to `n / fps` for each frame and captures it only after the stage reports `onFrameDrawn` for that time.
+  req F-6.3: Export runs in the app with WebCodecs by default, needing no native dependency.
+  req F-6.4: Long renders run on EDGE in the existing sandbox containers, with progress reported and the result stored as a blob.
+  req F-6.5: A local CLI renders an Animation by DXN for CI and development.
+  req F-6.6: Encoding settings preserve the stage's dither so gradients do not band.
+  req F-6.7: The animator renders picture only; audio is composed in plugin-studio.
+```
+
+```mdl
+feat F-7: plugin-studio
+
+  req F-7.1: The animator contributes a studio `GenerationService` provider of kind `video` whose result is a `video/mp4` Variant.
+  req F-7.2: A long render uses studio's enqueue and await with a persisted job id, so it survives a reload.
+  req F-7.3: A Variant of type `application/vnd.dxos.animation` plays the Animation live in studio before it is rendered.
+```
+
+```mdl
+feat F-8: Text and overlays
+
+  req F-8.1: A stage draws a label beside each target that has one, in a style the shot sets per target (`hero`, `title`, `inside`, plain) or hides; labels fade with their target.
+  req F-8.2: A label's text is animatable as `discrete`, and a change of text can morph by sliding the words that differ.
+  req F-8.3: A shot shows screen text above the stage on the timeline: captions with staggered lines, a side title, an image headline, and a full-frame curtain that fades to a colour and back.
+  req F-8.4: Callout panels and message threads anchored to targets are an `overlay` effect.
+  req F-8.5: Screen text is drawn by the animator, not the stage, so every stage gets it.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Canvas animation is unchanged by the extraction
+  given: the canvas generator tests and stories from before the extraction
+  then: they pass with react-ui-canvas importing `@dxos/animation`
+```
+
+```mdl
+scenario T-2: A film across two canvas scenes
+  given: two canvas drawings
+  when:
+    - CreateAnimation over both
+    - Key a node's position in the first shot and SetScript a show-and-layout beat in the second
+  then:
+    - playback runs both shots in order
+    - neither drawing changed in ECHO
+```
+
+```mdl
+scenario T-3: Deterministic effects
+  given: each built-in effect with fixed parameters and seed
+  then: CheckEffect reports the same frame for the same time from two checkpoints
+```
+
+```mdl
+scenario T-4: The echo3d story as an Animation
+  given: 3D canvas scenes holding the echo3d presentation's objects
+  then:
+    - an Animation scripted from its scenes plays with packet flow, burst, conversations and merge
+    - its labels, captions, curtain, panels and sphere look match the echo3d video, apart from sound
+```
+
+```mdl
+scenario T-5: Export matches playback
+  given: an Animation with a camera move and an effect
+  when: Render two seconds at 60 fps in the app
+  then:
+    - the MP4 has 120 frames and lands as a `video/mp4` Variant
+    - each frame matches the live frame sampled at the same time
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: A new plugin, plugin-animator, provides 2D and 3D animation; the animation engine is plugin-neutral, factored out of plugin-canvas's animation rather than written anew.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-1]
+```
+
+```mdl
+decision D-2: Animations have timeline controls, and are made of scenes that reference objects whose parameters are set or tweened at key points.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [Animation, Shot, F-2]
+```
+
+```mdl
+decision D-3: The plugins that own the target objects provide the objects and their renderer, and object schemas mark the properties that can be tweened.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [AnimatorCapabilities.Stage, AnimatableKind, F-1.3, F-4]
+```
+
+```mdl
+decision D-4: Custom objects are generated code that performs effects, such as data communication and particles.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [Effect, F-5]
+```
+
+```mdl
+decision D-5: An animation renders locally or on EDGE, and the result can be included as a plugin-studio clip.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-6, F-7]
+```
+
+```mdl
+decision D-6: Every canvas animation is an Animation; canvas documents have no separate timeline. No migration is needed because canvas animation has not shipped.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-2.3]
+  why: Canvas animation has not shipped, so there is no stored data to migrate.
+```
+
+```mdl
+decision D-7: 3D stages use Babylon.js only; there is no Three.js stage.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-4.3, F-4.4]
+```
+
+```mdl
+decision D-8: Shots can be authored declaratively, as scene states compiled to keys, from the first version.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [Beat, F-3]
+```
+
+```mdl
+decision D-9: `3d` effects return instance lists; effects that own Babylon nodes are deferred.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-5.4]
+```
+
+```mdl
+decision D-10: EDGE renders run in the existing sandbox containers before any dedicated media service is considered.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-6.4]
+```
+
+```mdl
+decision D-11: Effects are purely visual and do not read live ECHO data.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-5.3]
+```
+
+```mdl
+decision D-12: Audio stays in plugin-studio and is not placed on the animator timeline.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-6.7]
+```
+
+```mdl
+decision D-13: The neutral core is two packages, `@dxos/animation` (model, clock, script compiler, effect runtime) and `@dxos/react-ui-animation` (timeline UI, clock hooks), moved out of react-ui-canvas with no re-exports. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.1, F-1.2]
+  why: The canvas engine already works; moving it keeps canvas behaviour and avoids a second engine. Splitting UI from model keeps the model usable headless (export, EDGE).
+  rejected:
+    - One package: forces React on headless renderers.
+```
+
+```mdl
+decision D-14: An Animation is its own ECHO object made of shots, each referencing one stage object, and playback never writes to the referenced objects. Fills in [D-2].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Animation, Shot, F-2.1, F-2.2, F-2.4]
+  why: A film can span objects from several plugins, and one object can appear in several films without being edited.
+  rejected:
+    - Timeline data inside each plugin's document: cannot span plugins.
+```
+
+```mdl
+decision D-15: Stage plugins contribute an `AnimatorCapabilities.Stage` that lists targets and properties, renders a `Sample` and `EffectFrame`s, and reports `onFrameDrawn`; the animatable marker is a serializable `Annotation.make` annotation recording an `AnimatableKind`. Fills in [D-3].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [AnimatorCapabilities.Stage, AnimatableKind, F-1.3, F-1.4, F-1.5, F-4.1, F-6.2]
+  why: The raw annotation key in react-ui-canvas does not survive stored schemas; the frame handshake makes export capture the frame that was asked for.
+```
+
+```mdl
+decision D-16: Effects generalise canvas generators: one sandboxed, seeded, checkpointed runtime with three renderers (`2d`, `3d`, `overlay`), animatable numeric parameters, and packet flow, burst, conversations and merge ported from echo3d as built-ins. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Effect, EffectInstance, EffectFrame, F-5.1, F-5.2, F-5.5, F-5.6]
+  why: One sandbox and one determinism contract serve every renderer, and the generator runtime already provides them.
+```
+
+```mdl
+decision D-17: Export runs in the app with WebCodecs by default, on EDGE for long renders, and through a local CLI for CI, all driven by the animator's clock. Fills in [D-5].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:Render, F-6.1, F-6.2, F-6.3, F-6.5, F-6.6]
+  why: WebCodecs needs no native dependency in the browser or the desktop webview; EDGE takes renders too long for a tab.
+  rejected:
+    - A native desktop sidecar: only worth adding if WebCodecs proves too slow.
+```
+
+```mdl
+decision D-18: A rendered animation reaches plugin-studio through a `GenerationService` provider of kind `video` producing a `video/mp4` Variant, and a live `application/vnd.dxos.animation` Variant previews it before rendering. Fills in [D-5].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7]
+  why: Studio already models clips as Variants and long jobs as enqueue and await with a persisted job id.
+```
+
+```mdl
+decision D-19: A script is a list of beats (show, hide, set, layout, merge, camera, effects, caption); layouts come from arrangers the stage contributes, and hand keys win over compiled keys. Fills in [D-8].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Beat, op:SetScript, F-3.1, F-3.2, F-3.3, F-3.4]
+  why: The beat shape is the one echo3d's views proved over 28 slides; letting hand keys win keeps fine adjustments when a script is recompiled.
+```
+
+```mdl
+decision D-20: Phase 3 reproduces the echo3d presentation's look as well as its motion: on-screen text (labels, captions, title cards, the curtain), callout panels, and a presentation material in the spacetime stage, so the rebuilt video matches the original apart from sound.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-4.5, F-8]
+```
+
+```mdl
+decision D-21: Screen text (captions, side title, image headline, curtain) belongs to the animator and draws above any stage, while target labels belong to the stage and panels are an overlay effect. Fills in [D-20].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8.1, F-8.3, F-8.4, F-8.5]
+  why: Screen text is independent of the object model, so one implementation serves every stage; labels need the stage's projection; panels follow targets as effects already do.
+  rejected:
+    - All text as overlay effects: captions would need bindings they do not use.
+```
+
+---
+
+```mdl
+decision D-22: The implemented operation keys take the repository's `<root>.operation.<package>.<verbNoun>` shape: `animator.createAnimation`, `animator.setKey` (the `Key` operation renamed `SetKey`) and `animator.setScript`. Fills in [D-2].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:CreateAnimation, op:SetKey, op:SetScript]
+  why: The `operation-key-shape` lint rule rejects dotted subject paths such as `animator.timeline.key`, and a red lint fails CI.
+  rejected: Keeping the dotted keys and disabling the rule for this package.
+```
+
+```mdl
+decision D-23: A stage target carries its resting values, which a script compiles from, and a stage reports an edit made at the sample's time through an `onEdit` callback, which the animator writes as keys on the shot. Fills in [D-15].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [AnimatorCapabilities.Stage, F-2.5, F-3.1]
+  why: A script states targets' end states, so the compiler needs where each starts; keeping the write in the animator leaves the stage unable to write a timeline it does not own.
+  rejected: A separate `values(stage)` function on the stage, which would read the stage object twice.
+```
+
+```mdl
+decision D-24: The canvas stage receives each sample as held keys on its scene engine's animated projection, and a canvas View holds no timeline: the engine takes the timeline from its host, and composite objects carry no animation of their own. Fills in [D-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.3, F-4.2]
+  why: Reusing the animated projection keeps hit testing, generators and the camera drawing the sampled scene without a second sampling path.
+  rejected: Keeping `View.timeline` beside `Animation` as a second place animation lives.
+```
+
+```mdl
+decision D-25: Effects run in a worker as jobs over the shot: placed instances for the whole shot and script-added ones over their spans, each stepped in its own time from its span's start, with keyed parameters applied per step and bindings read from a `StageBinding` track the animator samples ahead at 30 per second from the stage's `bind` hook. Fills in [D-16].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [StageBinding, EffectFrame, AnimatorCapabilities.Stage, F-5.1, F-5.2, F-5.7]
+  why: The stage object cannot cross to a worker, and binding geometry sampled on a fixed grid keeps every time reading the same positions however it was reached.
+  rejected:
+    - Binding at the requested frame time only: a step would see geometry that depends on which frame was asked for, breaking determinism.
+    - Sampling the stage per step in the worker: needs the stage's object model there.
+```
+
+```mdl
+decision D-26: Effect output items are renderer-neutral data in `@dxos/animation`: `Shape2D` (the canvas generator's circle, rect and path, which the canvas `Shape` now extends), `Instance3D` and `OverlayItem`; one effect module may serve `2d` and `3d` by reading `ctx.renderer`. Fills in [D-16].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [EffectFrame, F-5.4, F-5.6]
+  why: The spacetime stage (3D) and the canvas stage both consume them without depending on each other, and the built-in packet flow and burst share one source across renderers.
+```
+
+```mdl
+decision D-27: Overlay items anchor to a target id (at an angle and gap beyond its projected radius) or to a point of the frame; a stage reports a `StageProjection` per drawn frame and the animator's overlay layer places items through it. Fills in [D-21].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [StageProjection, AnimatorCapabilities.Stage, F-5.8, F-8.4]
+  why: Only the mounted stage knows its camera and size, and keeping projection out of the worker keeps overlay effects deterministic.
+  rejected:
+    - A pure `project` function on the stage definition: it cannot see the live camera or element size.
+```
+
+```mdl
+decision D-28: Screen text is data on the shot: `ScreenText` spans placed by hand plus beats' `caption`, `captionImage`, `captionColor`, `sideTitle` and `curtain`, timed by the same beat times as the script, with every opacity computed from the time. Fills in [D-21].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Shot, Beat, ScreenText, F-8.3, F-8.5]
+  why: Beats already carry captions, so the other screen text reads the same way in a script, and opacity from time (not CSS transitions) makes export frames match playback.
+  rejected:
+    - A separate screen track of keys: text and curtains are spans, not interpolated values.
+```
+
+```mdl
+decision D-29: The effect operations take the verbNoun keys `createEffect`, `updateEffect`, `checkEffect` and `placeEffect`; `CheckEffect` binds to a named shot's stage or to a synthetic ring and reports frame summaries in place of a contact sheet; built-ins are installed into a space by `InstallEffects` as ordinary Effect objects. Fills in [D-22].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:CreateEffect, op:UpdateEffect, op:CheckEffect, op:PlaceEffect, op:InstallEffects, EffectReport, F-5.6]
+  why: The `operation-key-shape` lint rule rejects dotted keys; a summary per frame is readable by an agent where an image is not; installed built-ins are versioned and editable like any effect.
+  rejected:
+    - Seeding built-ins on first use: hidden writes to a space when an article opens.
+```
+
+```mdl
+decision D-30: A label's style is a discrete `labelStyle` property per target, stored as the object's resting style and keyed per shot; a label morph is two stage-only properties, `labelFrom` (discrete) and `labelMorph` (a number eased from 0 to 1), which a pair of beats writes, so the stage draws the morph from the sample alone. Fills in [D-21].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8.1, F-8.2]
+  why: A sample holds only the values at one time, so the text a label is morphing from and how far the morph has gone must be values too for a scrubbed or exported frame to match playback.
+  rejected:
+    - The stage remembering the previous text: the frame would depend on which frames came before it.
+    - The morph as an overlay effect: labels belong to the stage [D-21].
+```
+
+```mdl
+decision D-31: The spacetime stage renders on demand: a Babylon engine with no render loop draws once per sample and reports `onFrameDrawn` after the render; overlay anchors and labels come from orbit-camera projection computed to match Babylon's `ArcRotateCamera`; `3d` frames draw as thin instances of a unit sphere and cube with per-instance colour and opacity. Fills in [D-15], [D-9].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-4.3, F-5.4, F-6.1, F-6.2]
+  why: A render per sample keeps the frame on screen the frame for the clock's time; one projection serves the overlay layer and the labels, and is tested against Babylon headless.
+  rejected:
+    - Reusing the editor's render loop: it renders on its own clock.
+```
+
+```mdl
+decision D-32: The presentation material is chosen per scene (`style: cad | presentation` on `Spacetime.Scene`, CAD when unset): lit PBR spheres dithered by the scene's image processing, see-through shells (resting opacity below 1) with a Fresnel rim shader carrying per-pixel noise and a geodesic lattice in the shell's darkened colour, over echo3d's night blue with a faint lattice sphere. Spacetime scenes carry `links` for effects to bind to, and the stage's arrangers are ring, orbit, grid and containment. Fills in [D-20].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.3, F-4.5, F-5.7]
+  why: Every echo3d slide uses one look throughout, so a scene-level choice covers it; packet flow needs named links, which a scene of free objects does not otherwise have.
+  rejected:
+    - A per-object style: no slide mixes the looks.
+```
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext capability
+  uri: org.dxos.mdl.capability@1.0
+  desc: |
+    A typed slot in the app-framework Capability registry. Single-instance
+    by default; `multi: true` marks contributable collections.
+  fields:
+    desc?: Prose
+    type: TypeRef
+    events?: EventList
+    multi?: boolean
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.1
+  desc: A named operation with typed inputs, outputs, and declared errors.
+  fields:
+    key?: NSID
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+`decision` is defined in `org.dxos.spec.changelog`.
+
+```mdl
+decision D-33: plugin-spacetime is deleted; the 3D stage is plugin-canvas's scene stage over a `Scene3D`, which already draws the presentation material, labels and effects.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [F-4.3, F-4.5, T-4]
+```

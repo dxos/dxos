@@ -7,3 +7,4 @@ export * from './echo/index.ts';
 export * from './halo/index.ts';
 export * from './mesh/index.ts';
 export * from './edge/index.ts';
+export * from './agent/index.ts';

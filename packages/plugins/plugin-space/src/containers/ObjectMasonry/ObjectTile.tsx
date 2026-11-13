@@ -21,7 +21,8 @@ import { CardAnnotation } from '@dxos/schema';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useArchiveMenuItem } from '#hooks';
-import { meta } from '#meta';
+
+import { SpaceNamespace } from '../../namespace.ts';
 
 /** Callbacks are absent on a read-only tile (e.g. a staged merge result). */
 export type TileData = {
@@ -42,14 +43,14 @@ export const TileAdapter = ({ data }: { data: TileData | undefined; index: numbe
 
 /** Selectable header-only card for a single object. */
 export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
   const typename = Obj.getTypename(live);
   const label =
     Obj.getLabel(live) ||
-    t('object-name.placeholder', { ns: typename ?? meta.profile.key, defaultValue: t('object-name.placeholder') });
+    t('object-name.placeholder', { ns: typename ?? SpaceNamespace.key, defaultValue: t('object-name.placeholder') });
 
   // Render a content preview body only for types that opt in via `CardAnnotation`.
   const type = Obj.getType(object);
@@ -65,7 +66,7 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
             {
               icon: 'ph--arrow-square-out--regular',
               label: t('open-object.label', {
-                ns: typename ?? meta.profile.key,
+                ns: typename ?? SpaceNamespace.key,
                 defaultValue: t('open-object.label'),
               }),
               onClick: () => onOpen(object),
@@ -87,7 +88,7 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
             {
               icon: 'ph--trash--regular',
               label: t('delete-object.label', {
-                ns: typename ?? meta.profile.key,
+                ns: typename ?? SpaceNamespace.key,
                 defaultValue: t('delete-object.label'),
               }),
               onClick: () => onDelete(object),
