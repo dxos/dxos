@@ -80,7 +80,7 @@ export type Drag =
    * Drawing a node in one stroke (`NodeDef.freehand`): `points` are the pointer's path since the press, in scene
    * coordinates. It ends with the press, when the stroke lands as a node.
    */
-  | { kind: 'freehand'; type: NodeType; points: Point[] }
+  | { kind: 'freehand'; type: NodeType; points: Point[]; times: number[] }
   /** Moving one vertex of a node in vertex edit mode; `points` are all its vertices, in scene coordinates. */
   | { kind: 'vertex'; id: NodeId; index: number; points: Point[] }
   /** Moving one control point of a spline; `points` is the transient list. */

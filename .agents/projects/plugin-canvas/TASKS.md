@@ -378,7 +378,15 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] **Draw shape tool** (W, folded with Draw): `utils/recognize.ts` reads a closed stroke as a rectangle, an
       ellipse, a triangle (four ways up) or a diamond by how near it runs to each outline; the shape lands on the
       grid, favouring major lines and the last or default size. An unread stroke lands as a line.
-- [ ] Draw shape: no right-angled triangle, pentagon or hexagon, and no straight line or arrow from an open stroke.
+- [x] **Draw shape reads segments**: `readStroke` in `utils/recognize.ts` takes the samples' times, finds the pauses
+      (`strokePauses`), fits each run as a line or a parabola, and lands a stroke that is no shape as a polyline with
+      `bends`. Straight sides are biased level or upright (`squared`), and corners nearly in line are put in line
+      (`aligned`). Covers a pentagon, a straight line and an arc; `Draw.stories.tsx` Shapes Test draws all three
+      of the user's examples.
+- [ ] Draw shape: no right-angled triangle or arrow, and a regular pentagon or hexagon lands as a polyline, not a
+      polygon.
+- [ ] Polyline `bends`: hit testing, ports and the `.dx` / SVG export treat a bent segment as straight; the vertex
+      editor has no handle for a bend's control, and 3D does not draw one.
 - [x] Text colour for notes: `style.textHue` / `style.textTone`, a 9 by 3 grid in Properties.
 - [ ] Text colour is offered for notes alone; a shape's label still takes its shape's colour.
 - [x] The icon picker offers the DXOS mark (`dx--dxos--regular`), first in its list.

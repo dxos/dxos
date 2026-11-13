@@ -396,14 +396,24 @@ export const PolylineParams = Schema.Struct({
 export type PolylineParams = Schema.Schema.Type<typeof PolylineParams>;
 
 /**
- * An irregular line of straight segments through `points`, in the frame's unit space (0..1 of its size, origin
- * top-left) so a resize scales it; closed, it is a filled outline like a polygon. Labelled like a box.
+ * A segment of a polyline that runs as a parabola rather than straight: `segment` is the index of the point it leaves
+ * (a closed line's last runs back to the first), and `control` is where its two end tangents meet, in the frame's unit
+ * space as the points are, though it may lie outside the frame.
+ */
+export const PolylineBend = Schema.Struct({ segment: Schema.Number, control: Point });
+export type PolylineBend = Schema.Schema.Type<typeof PolylineBend>;
+
+/**
+ * An irregular line of segments through `points`, in the frame's unit space (0..1 of its size, origin top-left) so a
+ * resize scales it; closed, it is a filled outline like a polygon. Each segment is straight unless `bends` names it.
+ * Labelled like a box.
  */
 export const PolylineNode = Schema.Struct({
   type: Schema.Literal('polyline'),
   ...nodeBase,
   ...boxFields,
   points: Schema.Array(Point),
+  bends: Schema.optional(Schema.Array(PolylineBend)),
   params: Schema.optional(PolylineParams),
 });
 export type PolylineNode = Schema.Schema.Type<typeof PolylineNode>;

@@ -1,7 +1,8 @@
-import { type Bounds, type Point, type PolylineNode, type Size } from '@dxos/scene';
 //
 // Copyright 2026 DXOS.org
 //
+
+import { type Bounds, type Point, type PolylineBend, type PolylineNode, type Size } from '@dxos/scene';
 
 /** How near a placed vertex a press must be, in screen px, to land on it: on the first, it closes the line. */
 export const VERTEX_SNAP_PX = 8;
@@ -30,29 +31,62 @@ const span = (values: readonly number[], minimum: number): [number, number] => {
   return [(low + high) / 2 - extent / 2, extent];
 };
 
+/** Where on a parabola from `from` to `to` about `control` one axis turns back, as a share of the way along it. */
+const turning = (from: number, control: number, to: number): number[] => {
+  const bend = from - 2 * control + to;
+  const share = bend === 0 ? -1 : (from - control) / bend;
+  return share > 0 && share < 1 ? [share] : [];
+};
+
+/** The point `share` of the way along the parabola from `from` to `to` about `control`. */
+export const parabolaPoint = (from: Point, control: Point, to: Point, share: number): Point => {
+  const [head, middle, tail] = [(1 - share) ** 2, 2 * share * (1 - share), share ** 2];
+  return {
+    x: head * from.x + middle * control.x + tail * to.x,
+    y: head * from.y + middle * control.y + tail * to.y,
+  };
+};
+
+/** The points a bent segment reaches furthest out on each axis, which its ends alone do not bound. */
+const bendReach = (points: readonly Point[], { segment, control }: PolylineBend): Point[] => {
+  const from = points[segment];
+  const to = points[(segment + 1) % points.length];
+  if (!from || !to) {
+    return [];
+  }
+  return [...turning(from.x, control.x, to.x), ...turning(from.y, control.y, to.y)].map((share) =>
+    parabolaPoint(from, control, to, share),
+  );
+};
+
 /**
  * The frame of a polyline drawn through scene `points` and those points in its unit space (0..1 of the frame, origin
- * top-left). Each side is at least `minimum`, so a straight line still has a frame to scale.
+ * top-left). Each side is at least `minimum`, so a straight line still has a frame to scale. A bent segment bulges
+ * past its ends, so the frame covers where each of `bends` reaches; their controls come back in unit space too.
  */
 export const polylineFrame = (
   points: readonly Point[],
   minimum = 0,
-): { bounds: Bounds; points: Point[] } | undefined => {
+  bends: readonly PolylineBend[] = [],
+): { bounds: Bounds; points: Point[]; bends: PolylineBend[] } | undefined => {
   if (points.length === 0) {
     return undefined;
   }
+  const covered = [...points, ...bends.flatMap((bend) => bendReach(points, bend))];
   const [x, width] = span(
-    points.map(({ x }) => x),
+    covered.map(({ x }) => x),
     minimum,
   );
   const [y, height] = span(
-    points.map(({ y }) => y),
+    covered.map(({ y }) => y),
     minimum,
   );
   const unit = (value: number, origin: number, extent: number) => (extent > 0 ? (value - origin) / extent : 0.5);
+  const place = (point: Point): Point => ({ x: unit(point.x, x, width), y: unit(point.y, y, height) });
   return {
     bounds: { x, y, width, height },
-    points: points.map((point) => ({ x: unit(point.x, x, width), y: unit(point.y, y, height) })),
+    points: points.map(place),
+    bends: bends.map(({ segment, control }) => ({ segment, control: place(control) })),
   };
 };
 
@@ -71,7 +105,7 @@ const turn = (point: Point, center: Point, degrees: number): Point => {
 };
 
 /** What a node edited by its vertices carries (`NodeDef.editor`): a frame and unit-space `points` in it. */
-export type VertexShape = Pick<PolylineNode, 'center' | 'size' | 'rotation' | 'points'>;
+export type VertexShape = Pick<PolylineNode, 'center' | 'size' | 'rotation' | 'points' | 'bends'>;
 
 /** Whether `node` carries unit-space `points` to edit as vertices. */
 export const hasVertices = <T extends object>(node: T): node is T & VertexShape => {
@@ -83,29 +117,64 @@ export const hasVertices = <T extends object>(node: T): node is T & VertexShape 
 export const minPolylineVertices = (closed: boolean): number => (closed ? 3 : 2);
 
 /** A polyline's vertices in scene coordinates: its unit-space points placed in its frame and turned by its rotation. */
-export const polylineVertices = (node: VertexShape): Point[] => {
-  const { center, size } = node;
-  const left = center.x - size.width / 2;
-  const top = center.y - size.height / 2;
-  return node.points.map(({ x, y }) =>
-    turn({ x: left + x * size.width, y: top + y * size.height }, center, node.rotation ?? 0),
+export const polylineVertices = (node: VertexShape): Point[] => node.points.map((point) => inScene(node, point));
+
+/** A unit-space point of a polyline in scene coordinates: placed in its frame and turned by its rotation. */
+const inScene = ({ center, size, rotation }: VertexShape, { x, y }: Point): Point =>
+  turn(
+    { x: center.x - size.width / 2 + x * size.width, y: center.y - size.height / 2 + y * size.height },
+    center,
+    rotation ?? 0,
   );
-};
+
+/** A polyline's bends with their controls in scene coordinates, as `polylineVertices` gives its vertices. */
+export const polylineBends = (node: VertexShape): PolylineBend[] =>
+  (node.bends ?? []).map(({ segment, control }) => ({ segment, control: inScene(node, control) }));
+
+/**
+ * `bends` once a vertex is put in at `index`: the segment it splits is two straight ones, and those after it are one
+ * further on.
+ */
+export const bendsAfterInsert = (bends: readonly PolylineBend[], index: number): PolylineBend[] =>
+  bends
+    .filter(({ segment }) => segment !== index - 1)
+    .map((bend) => (bend.segment >= index ? { ...bend, segment: bend.segment + 1 } : bend));
+
+/**
+ * `bends` once the vertex at `index` of `count` is taken out: the two segments that met there are one straight one,
+ * and those after it are one nearer.
+ */
+export const bendsAfterDelete = (bends: readonly PolylineBend[], index: number, count: number): PolylineBend[] =>
+  bends
+    .filter(({ segment }) => segment !== index && segment !== (index - 1 + count) % count)
+    .map((bend) => (bend.segment > index ? { ...bend, segment: bend.segment - 1 } : bend));
 
 /**
  * The `update` values that put a polyline's vertices at scene `vertices`: its frame refitted to them in its own axes
- * (each side at least `minimum`) and turned as before, and its points renormalised to that frame.
+ * (each side at least `minimum`) and turned as before, and its points renormalised to that frame. Its bends stay
+ * where they are in the scene; one vertex more or fewer than it has is the one put in or taken out `at` that index.
  */
 export const refitPolyline = (
   node: VertexShape,
   vertices: readonly Point[],
   minimum = 0,
-): Pick<PolylineNode, 'center' | 'size' | 'points'> | undefined => {
+  at?: number,
+): Pick<PolylineNode, 'center' | 'size' | 'points' | 'bends'> | undefined => {
   const rotation = node.rotation ?? 0;
+  const unturned = (point: Point) => turn(point, node.center, -rotation);
+  const count = node.points.length;
+  const kept = polylineBends(node);
+  const bends =
+    at === undefined || vertices.length === count
+      ? kept
+      : vertices.length > count
+        ? bendsAfterInsert(kept, at)
+        : bendsAfterDelete(kept, at, count);
   // Fitted unturned about the old centre, so a rotated line keeps its rotation rather than growing a tilted frame.
   const frame = polylineFrame(
-    vertices.map((vertex) => turn(vertex, node.center, -rotation)),
+    vertices.map(unturned),
     minimum,
+    bends.map(({ segment, control }) => ({ segment, control: unturned(control) })),
   );
   if (!frame) {
     return undefined;
@@ -115,6 +184,8 @@ export const refitPolyline = (
     center: turn({ x: x + width / 2, y: y + height / 2 }, node.center, rotation),
     size: { width, height },
     points: frame.points,
+    // Written only where the line has any, so a line of straight segments stays as it was stored.
+    ...(node.bends !== undefined ? { bends: frame.bends } : {}),
   };
 };
 
@@ -172,6 +243,8 @@ export type PolylinePathOptions = {
   inset?: number;
   /** Px each corner is rounded by, no larger than half of either adjacent edge allows. */
   radius?: number;
+  /** The segments that run as parabolas, their controls in unit space; a line with any has no rounded corners. */
+  bends?: readonly PolylineBend[];
 };
 
 type Corner = { start: Point; end: Point; arc: number; sweep: 0 | 1 } | undefined;
@@ -209,12 +282,27 @@ const corner = (from: Point, vertex: Point, to: Point, radius: number): Corner =
 export const polylinePath = (
   size: Size,
   points: readonly Point[],
-  { closed = false, smooth = false, inset = 0, radius = 0 }: PolylinePathOptions = {},
+  { closed = false, smooth = false, inset = 0, radius = 0, bends = [] }: PolylinePathOptions = {},
 ): string => {
   const width = Math.max(0, size.width - 2 * inset);
   const height = Math.max(0, size.height - 2 * inset);
+  const place = ({ x, y }: Point): Point => ({ x: inset + x * width, y: inset + y * height });
+  if (bends.length > 0 && points.length > 1) {
+    // Every vertex is kept, a repeated one too: a bend names its segment by the index of the point it leaves.
+    const controls = new Map(bends.map(({ segment, control }) => [segment, place(control)]));
+    const vertices = points.map(place);
+    // Two vertices close into a shape where a bend holds the two runs apart: a lens, or a crescent.
+    const loop = closed && vertices.length > 1;
+    const to = ({ x, y }: Point) => `${round(x)} ${round(y)}`;
+    const segments = Array.from({ length: loop ? vertices.length : vertices.length - 1 }, (_, index) => {
+      const control = controls.get(index);
+      const end = vertices[(index + 1) % vertices.length];
+      return control ? `Q ${to(control)}, ${to(end)}` : `L ${to(end)}`;
+    });
+    return [`M ${to(vertices[0])}`, ...segments, ...(loop ? ['Z'] : [])].join(' ');
+  }
   const placed = points
-    .map(({ x, y }) => ({ x: inset + x * width, y: inset + y * height }))
+    .map(place)
     // A repeated vertex is a segment of no length, which has no direction to round a corner by.
     .filter((point, index, all) => index === 0 || point.x !== all[index - 1].x || point.y !== all[index - 1].y);
   if (closed && placed.length > 1) {

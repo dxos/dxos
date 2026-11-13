@@ -236,6 +236,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
             closed: node.params?.closed,
             smooth: node.params?.smooth,
             radius,
+            bends: node.bends,
           })
         : '',
     filled: (node) => isPolylineNode(node) && node.params?.closed === true,

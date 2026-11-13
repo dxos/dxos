@@ -106,6 +106,7 @@ const HIDDEN = [
   'z',
   'ports',
   'points',
+  'bends',
   'source',
   'target',
   'element',

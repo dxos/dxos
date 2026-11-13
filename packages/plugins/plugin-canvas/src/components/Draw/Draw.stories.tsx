@@ -76,7 +76,7 @@ const HINT: NoteNode = {
   z: 'a-hint',
   center: { x: 0, y: -264 },
   size: { width: 480, height: 180 },
-  text: 'Press W, then draw a box, a ring, a triangle or a diamond in one stroke.\n\nA stroke that is none of them stays a line.',
+  text: 'Press W, then draw a box, a ring, a triangle or a diamond in one stroke.\n\nPause at each corner of anything else: it lands as straight sides and even curves.',
 };
 
 const SHAPES: RenderList2D = { id: 'board', name: 'Board', links: {}, nodes: { [HINT.id]: HINT } };
@@ -167,8 +167,54 @@ const pointer = async (canvasElement: HTMLElement) => {
     await expect(await canvas.findByTestId('freehand-stroke')).toBeInTheDocument();
     await fireEvent.pointerUp(view, at(path[path.length - 1]));
   };
-  return { view, stroke };
+  /** A stroke drawn leg by leg, the hand resting between one and the next: where it rests is read as a corner. */
+  const strokeLegs = async (legs: readonly Path[]) => {
+    await fireEvent.pointerDown(view, at(legs[0][0]));
+    for (const leg of legs) {
+      for (const point of leg.slice(1)) {
+        await fireEvent.pointerMove(view, at(point));
+        await rest(SAMPLE_MS);
+      }
+      await rest(REST_MS);
+    }
+    const last = legs[legs.length - 1];
+    await fireEvent.pointerUp(view, at(last[last.length - 1]));
+  };
+  return { view, stroke, strokeLegs };
 };
+
+/** How long the hand takes between two samples of a stroke, and how long it rests at a corner, in ms. */
+const [SAMPLE_MS, REST_MS] = [4, 220];
+
+/** Real time passing: a stroke's pauses are read from when its samples were taken. */
+const rest = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** A straight leg of a stroke from `from` to `to`, a sample every twentieth of the way. */
+const side = (from: readonly [number, number], to: readonly [number, number]): Path =>
+  Array.from({ length: 21 }, (_, step): [number, number] => [
+    from[0] + ((to[0] - from[0]) * step) / 20,
+    from[1] + ((to[1] - from[1]) * step) / 20,
+  ]);
+
+/** A leg that bows from `from` to `to` about `control`, as a parabola does. */
+const bow = (
+  from: readonly [number, number],
+  control: readonly [number, number],
+  to: readonly [number, number],
+): Path =>
+  Array.from({ length: 21 }, (_, step): [number, number] => {
+    const share = step / 20;
+    const at = (axis: 0 | 1) =>
+      (1 - share) ** 2 * from[axis] + 2 * share * (1 - share) * control[axis] + share ** 2 * to[axis];
+    return [at(0), at(1)];
+  });
+
+/** How many of each command a path has. */
+const commands = (path: string) => ({
+  lines: path.match(/L /g)?.length ?? 0,
+  bows: path.match(/Q /g)?.length ?? 0,
+  shut: path.endsWith('Z'),
+});
 
 /**
  * 1. The Draw tools share one button in the tools panel, straight after Polyline.
@@ -219,12 +265,15 @@ export const Test: Story = {
  * 2. Draw a rough box in one stroke: a rectangle lands, its frame on the grid.
  * 3. Draw a rough ring: an ellipse lands.
  * 4. Draw a rough triangle: a polygon lands, with three sides.
- * 5. Draw a wave: it is no shape, so it lands as the line it is.
+ * 5. Draw a wave: it is no shape, so it lands as a line of even curves.
+ * 6. Draw a house, resting at each of its five corners: it lands as five straight sides, its walls upright.
+ * 7. Draw a box whose top dips, resting at its corners: three straight sides and one curve.
+ * 8. Draw a crescent, resting at its two tips: two curves and no straight side.
  */
 export const ShapesTest: Story = {
   args: { board: 'shapes' },
   play: async ({ canvasElement }) => {
-    const { view, stroke } = await pointer(canvasElement);
+    const { view, stroke, strokeLegs } = await pointer(canvasElement);
 
     /** Whether every edge of a node's frame is a whole number of 12 px grid cells. */
     const onGrid = (node: HTMLElement) =>
@@ -267,8 +316,41 @@ export const ShapesTest: Story = {
       160 + 40 * Math.sin(index / 5),
     ]);
     await stroke(wave);
-    await waitFor(() => expect(drawn(canvasElement, 'freehandShape')).toHaveLength(1));
-    await expect(pathOf(drawn(canvasElement, 'freehandShape')[0])).toContain('C ');
+    await waitFor(() => expect(drawn(canvasElement, 'polyline')).toHaveLength(1));
+    await expect(commands(pathOf(drawn(canvasElement, 'polyline')[0])).bows).toBeGreaterThan(1);
+    await expect(drawn(canvasElement, 'freehandShape')).toHaveLength(0);
+
+    // A house: walls that lean a little as a hand draws them, a floor, and a roof to a point.
+    await strokeLegs([
+      side([-560, 330], [-556, 250]),
+      side([-556, 250], [-500, 200]),
+      side([-500, 200], [-440, 252]),
+      side([-440, 252], [-444, 328]),
+      side([-444, 328], [-556, 332]),
+    ]);
+    await waitFor(() => expect(drawn(canvasElement, 'polyline')).toHaveLength(2));
+    const house = pathOf(drawn(canvasElement, 'polyline')[1]);
+    await expect(commands(house)).toEqual({ lines: 5, bows: 0, shut: true });
+    // The path sets out up the left wall, which the hand drew leaning: its two ends are in one column.
+    const [, startX, wallX] = house.match(/^M (-?[\d.]+) -?[\d.]+ L (-?[\d.]+) /) ?? [];
+    await expect(startX).toBeDefined();
+    await expect(startX).toBe(wallX);
+
+    // A box whose top dips.
+    await strokeLegs([
+      bow([-380, 210], [-310, 330], [-240, 212]),
+      side([-240, 212], [-242, 330]),
+      side([-242, 330], [-378, 328]),
+      side([-378, 328], [-380, 214]),
+    ]);
+    await waitFor(() => expect(drawn(canvasElement, 'polyline')).toHaveLength(3));
+    await expect(commands(pathOf(drawn(canvasElement, 'polyline')[2]))).toEqual({ lines: 3, bows: 1, shut: true });
+
+    // A crescent: out round one arc and back by a shallower one.
+    await strokeLegs([bow([-60, 210], [-260, 270], [-56, 332]), bow([-56, 332], [-150, 270], [-62, 214])]);
+    await waitFor(() => expect(drawn(canvasElement, 'polyline')).toHaveLength(4));
+    await expect(commands(pathOf(drawn(canvasElement, 'polyline')[3]))).toEqual({ lines: 0, bows: 2, shut: true });
+
     await expect([
       drawn(canvasElement, 'rect').length,
       drawn(canvasElement, 'ellipse').length,

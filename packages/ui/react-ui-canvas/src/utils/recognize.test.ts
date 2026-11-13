@@ -6,7 +6,8 @@ import { describe, test } from 'vitest';
 
 import { type Point } from '@dxos/scene';
 
-import { favorMajor, nearestSize, recognizeShape } from './recognize.ts';
+import { parabolaPoint } from './polyline.ts';
+import { favorMajor, nearestSize, readStroke, recognizeShape, strokePauses } from './recognize.ts';
 
 /** A hand's wobble: a few px off the line, the same every run. */
 const wobble = (index: number, reach: number): Point => ({
@@ -180,5 +181,272 @@ describe('favorMajor', () => {
     expect(favorMajor(-20, 12, 48)).toBe(-24);
     // Another grid: minor 16, major 64.
     expect([70, 90, 120].map((value) => favorMajor(value, 16, 64))).toEqual([64, 96, 128]);
+  });
+});
+
+/** A stroke with the time each sample was taken. */
+type Timed = { points: Point[]; times: number[] };
+
+/** How long the hand rests at a corner, and between two samples on the move, in ms. */
+const [REST, STEP] = [250, 8];
+
+/**
+ * A stroke drawn as `legs`, each a run of samples a few px apart, the hand resting between one leg and the next and
+ * wobbling as it goes. The last leg ends a little short of where the next would begin.
+ */
+const timedStroke = (legs: readonly ((share: number) => Point)[], reach = 1.5): Timed => {
+  const points: Point[] = [];
+  const times: number[] = [];
+  let now = 0;
+  legs.forEach((leg, index) => {
+    const samples = 24;
+    for (let step = 0; step < samples; step++) {
+      const off = wobble(points.length, reach);
+      const at = leg(step / samples);
+      points.push({ x: at.x + off.x, y: at.y + off.y });
+      // The first sample of a leg is where the hand rested, so the wait is before the one after it.
+      now += step === 1 && index > 0 ? REST : STEP;
+      times.push(now);
+    }
+  });
+  return { points, times };
+};
+
+const straight =
+  (from: Point, to: Point) =>
+  (share: number): Point => ({ x: from.x + (to.x - from.x) * share, y: from.y + (to.y - from.y) * share });
+
+const bowed =
+  (from: Point, control: Point, to: Point) =>
+  (share: number): Point =>
+    parabolaPoint(from, control, to, share);
+
+/** The legs of a stroke round `corners` and back to the first. */
+const round = (corners: readonly Point[]) =>
+  corners.map((corner, index) => straight(corner, corners[(index + 1) % corners.length]));
+
+const GRID = { minimum: 24, minor: 12, major: 48 };
+
+describe('strokePauses', () => {
+  test('the hand resting between two legs is a pause, at the corner', ({ expect }) => {
+    const { points, times } = timedStroke(
+      round([
+        { x: 0, y: 0 },
+        { x: 200, y: 0 },
+        { x: 200, y: 120 },
+        { x: 0, y: 120 },
+      ]),
+    );
+    const pauses = strokePauses(points, times);
+    expect(pauses).toHaveLength(3);
+    // Each is within a sample of where a leg began.
+    expect(pauses.map((index) => Math.round(index / 24))).toEqual([1, 2, 3]);
+  });
+
+  test('a stroke drawn at one speed, or with no times, has none', ({ expect }) => {
+    const points = strokeEllipse(0, 0, 200, 140);
+    expect(
+      strokePauses(
+        points,
+        points.map((_, index) => index * STEP),
+      ),
+    ).toEqual([]);
+    expect(strokePauses(points, [])).toEqual([]);
+  });
+});
+
+describe('readStroke', () => {
+  const path = (stroke: Timed) => {
+    const read = readStroke(stroke.points, stroke.times, GRID);
+    return read?.kind === 'path' ? read.path : undefined;
+  };
+  const shape = (stroke: Timed) => {
+    const read = readStroke(stroke.points, stroke.times, GRID);
+    return read?.kind === 'shape' ? read.shape : undefined;
+  };
+
+  test('five straight sides drawn with a pause at each corner are a closed line of five points', ({ expect }) => {
+    // A house: two walls, a floor, and a roof to a point.
+    const found = path(
+      timedStroke(
+        round([
+          { x: 2, y: 242 },
+          { x: 5, y: 98 },
+          { x: 146, y: -3 },
+          { x: 290, y: 95 },
+          { x: 286, y: 238 },
+        ]),
+      ),
+    );
+    expect(found?.closed).toBe(true);
+    expect(found?.bends).toEqual([]);
+    // Each corner on the grid, a major line where one was near.
+    expect(found?.points).toEqual([
+      { x: 0, y: 240 },
+      { x: 0, y: 96 },
+      { x: 144, y: 0 },
+      { x: 288, y: 96 },
+      { x: 288, y: 240 },
+    ]);
+  });
+
+  test('three straight sides and one that bows are a box with a bend, not a rectangle', ({ expect }) => {
+    const [nw, ne, se, sw] = [
+      { x: 0, y: 0 },
+      { x: 288, y: 0 },
+      { x: 288, y: 192 },
+      { x: 0, y: 192 },
+    ];
+    const found = path(
+      timedStroke([bowed(nw, { x: 144, y: 190 }, ne), straight(ne, se), straight(se, sw), straight(sw, nw)]),
+    );
+    expect(found?.closed).toBe(true);
+    expect(found?.points).toEqual([nw, ne, se, sw]);
+    expect(found?.bends).toHaveLength(1);
+    const [bend] = found?.bends ?? [];
+    expect(bend.segment).toBe(0);
+    // Centred on its side, its depth on the grid.
+    expect(bend.control.x).toBe(144);
+    expect(Math.abs(bend.control.y - 190)).toBeLessThanOrEqual(12);
+    expect(bend.control.y % 12).toBe(0);
+  });
+
+  test('two arcs between the same two points are a crescent: two points and two bends', ({ expect }) => {
+    const [top, bottom] = [
+      { x: 240, y: 0 },
+      { x: 240, y: 336 },
+    ];
+    const found = path(timedStroke([bowed(top, { x: -240, y: 168 }, bottom), bowed(bottom, { x: 48, y: 168 }, top)]));
+    expect(found?.closed).toBe(true);
+    expect(found?.points).toEqual([top, bottom]);
+    expect(found?.bends.map(({ segment }) => segment)).toEqual([0, 1]);
+    const [outer, inner] = found?.bends ?? [];
+    expect(outer.control.x).toBeLessThan(inner.control.x);
+    expect(inner.control.x).toBeLessThan(240);
+  });
+
+  test('a straight side that leans a little is made level or upright, and one that slopes is left', ({ expect }) => {
+    // The walls lean and the floor tilts, each by a few degrees; the roof slopes as a roof does.
+    const found = path(
+      timedStroke(
+        round([
+          { x: 22, y: 250 },
+          { x: 2, y: 98 },
+          { x: 146, y: -3 },
+          { x: 280, y: 95 },
+          { x: 300, y: 230 },
+        ]),
+      ),
+    );
+    const [floorLeft, eaveLeft, peak, eaveRight, floorRight] = found?.points ?? [];
+    expect(floorLeft.x).toBe(eaveLeft.x);
+    expect(floorRight.x).toBe(eaveRight.x);
+    expect(floorLeft.y).toBe(floorRight.y);
+    expect(peak.y).toBeLessThan(eaveLeft.y);
+    expect(peak.x).toBeGreaterThan(eaveLeft.x);
+    // A line drawn alone, nearly level: both ends on the major line it ran along.
+    const line = path(timedStroke([straight({ x: 3, y: 2 }, { x: 190, y: 20 })]));
+    expect(line?.points.map(({ y }) => y)).toEqual([0, 0]);
+  });
+
+  test('corners drawn nearly in line are put in line, so two walls are one height', ({ expect }) => {
+    // The right wall is drawn shorter than the left: its eave is a little lower.
+    const found = path(
+      timedStroke(
+        round([
+          { x: 2, y: 242 },
+          { x: 5, y: 98 },
+          { x: 146, y: -3 },
+          { x: 290, y: 118 },
+          { x: 286, y: 238 },
+        ]),
+      ),
+    );
+    const [floorLeft, eaveLeft, peak, eaveRight, floorRight] = found?.points ?? [];
+    expect(eaveLeft.y).toBe(eaveRight.y);
+    expect(floorLeft.y - eaveLeft.y).toBe(floorRight.y - eaveRight.y);
+    // The peak is far from either, and stays its own height.
+    expect(peak.y).toBeLessThan(eaveLeft.y);
+    // A corner well out of line is left where it was drawn.
+    const lopsided = path(
+      timedStroke(
+        round([
+          { x: 2, y: 242 },
+          { x: 5, y: 98 },
+          { x: 146, y: -3 },
+          { x: 290, y: 170 },
+          { x: 286, y: 238 },
+        ]),
+      ),
+    );
+    expect(lopsided?.points[1].y).toBeLessThan(lopsided?.points[3].y ?? 0);
+  });
+
+  test('a shape drawn side by side is still that shape', ({ expect }) => {
+    expect(
+      shape(
+        timedStroke(
+          round([
+            { x: 0, y: 0 },
+            { x: 200, y: 0 },
+            { x: 200, y: 120 },
+            { x: 0, y: 120 },
+          ]),
+        ),
+      )?.shape,
+    ).toBe('rect');
+    expect(
+      shape(
+        timedStroke(
+          round([
+            { x: 100, y: 0 },
+            { x: 200, y: 160 },
+            { x: 0, y: 160 },
+          ]),
+        ),
+      )?.shape,
+    ).toBe('triangle');
+  });
+
+  test('a stroke drawn in one go is read against every shape, as before', ({ expect }) => {
+    const read = readStroke(strokeEllipse(0, 0, 200, 140), [], GRID);
+    expect(read?.kind === 'shape' && read.shape.shape).toBe('ellipse');
+  });
+
+  test('an open stroke is a line: straight, or one bow', ({ expect }) => {
+    const line = path(timedStroke([straight({ x: 3, y: 2 }, { x: 190, y: 98 })]));
+    expect(line).toEqual({
+      points: [
+        { x: 0, y: 0 },
+        { x: 192, y: 96 },
+      ],
+      bends: [],
+      closed: false,
+    });
+    const arc = path(timedStroke([bowed({ x: 0, y: 0 }, { x: 96, y: 150 }, { x: 192, y: 0 })]));
+    expect(arc?.closed).toBe(false);
+    expect(arc?.points).toHaveLength(2);
+    expect(arc?.bends).toHaveLength(1);
+  });
+
+  test('a pause where the line runs straight on is not a corner', ({ expect }) => {
+    const found = path(
+      timedStroke([straight({ x: 0, y: 0 }, { x: 96, y: 0 }), straight({ x: 96, y: 0 }, { x: 192, y: 0 })]),
+    );
+    expect(found?.points).toHaveLength(2);
+  });
+
+  test('a stroke too small, or a scribble of too many turns, is not read', ({ expect }) => {
+    const small = timedStroke([straight({ x: 0, y: 0 }, { x: 10, y: 4 })]);
+    expect(readStroke(small.points, small.times, GRID)).toBeUndefined();
+    const zigzag = timedStroke(
+      Array.from({ length: 12 }, (_, index) =>
+        straight(
+          { x: index * 40, y: index % 2 === 0 ? 0 : 120 },
+          { x: (index + 1) * 40, y: index % 2 === 0 ? 120 : 0 },
+        ),
+      ),
+    );
+    expect(readStroke(zigzag.points, zigzag.times, GRID)).toBeUndefined();
   });
 });

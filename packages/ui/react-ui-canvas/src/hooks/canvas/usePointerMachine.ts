@@ -56,6 +56,7 @@ import {
   FREEHAND_STEP_PX,
   FREEHAND_TOLERANCE_PX,
   NOMINAL_SIZES,
+  type RecognizedPath,
   type RecognizedShape,
   type SceneEdit,
   VERTEX_SNAP_PX,
@@ -89,7 +90,7 @@ import {
   portAccepts,
   portPoint,
   pressSelects,
-  recognizeShape,
+  readStroke,
   refitPolyline,
   resizeBounds,
   resizeTo,
@@ -362,6 +363,40 @@ export const usePointerMachine = ({
     [nodeRegistry, minor, major, cell, scene, draw, registry, atoms.layer],
   );
 
+  /**
+   * Lands a stroke read as segments as a polyline through their ends, which are on the grid already; a segment that
+   * bows is one of its bends. False where the registry has no polyline to draw it.
+   */
+  const landPath = useCallback(
+    ({ points, bends, closed }: RecognizedPath): boolean => {
+      const def = nodeRegistry.polyline;
+      const frame = polylineFrame(points, minor, bends);
+      if (!def?.createFromPoints || !frame) {
+        return false;
+      }
+      const { bounds } = frame;
+      const node = def.createFromPoints(
+        {
+          id: createId('polyline'),
+          z: topOfView(scene),
+          center: boundsCenter(bounds),
+          size: { width: bounds.width, height: bounds.height },
+        },
+        frame.points,
+        closed,
+      );
+      draw.apply(
+        insertNode({
+          ...node,
+          ...(frame.bends.length > 0 ? { bends: frame.bends } : {}),
+          layer: activeLayer(scene, registry.get(atoms.layer)),
+        }),
+      );
+      return true;
+    },
+    [nodeRegistry, minor, scene, draw, registry, atoms.layer],
+  );
+
   /** The type the tool in hand draws in one stroke (`NodeDef.freehand`), where it is such a tool and may draw. */
   const strokeType = useCallback(
     (tool: Tool): NodeType | undefined =>
@@ -373,7 +408,7 @@ export const usePointerMachine = ({
   const startStroke = useCallback(
     (type: NodeType, event: PointerEvent) => {
       select([]);
-      startDrag({ kind: 'freehand', type, points: [toScene(event)] }, event);
+      startDrag({ kind: 'freehand', type, points: [toScene(event)], times: [event.timeStamp] }, event);
     },
     [select, startDrag, toScene],
   );
@@ -721,6 +756,7 @@ export const usePointerMachine = ({
         node,
         vertices.filter((_, i) => i !== index),
         minor,
+        index,
       );
       if (values) {
         draw.apply(updateElement(id, values));
@@ -977,7 +1013,7 @@ export const usePointerMachine = ({
           const last = current.points[current.points.length - 1];
           const step = FREEHAND_STEP_PX / registry.get(atoms.camera).zoom;
           if (Math.hypot(point.x - last.x, point.y - last.y) >= step) {
-            setDrag({ ...current, points: [...current.points, point] });
+            setDrag({ ...current, points: [...current.points, point], times: [...current.times, event.timeStamp] });
           }
           break;
         }
@@ -1278,10 +1314,14 @@ export const usePointerMachine = ({
           // Thinned to the points the line needs, so it has few enough vertices to edit; a press with no travel
           // leaves one point, which makes nothing.
           const tolerance = FREEHAND_TOLERANCE_PX / registry.get(atoms.camera).zoom;
-          // Read from every sample, not the thinned ones: how near the stroke runs to a shape is in the samples.
-          const shape =
-            nodeRegistry[current.type]?.freehand === 'shape' ? recognizeShape(current.points, 2 * minor) : undefined;
-          if (!shape || !landShape(shape)) {
+          // Read from every sample, not the thinned ones: how near the stroke runs to a shape is in the samples, and
+          // where the hand paused is in their times.
+          const read =
+            nodeRegistry[current.type]?.freehand === 'shape'
+              ? readStroke(current.points, current.times, { minimum: 2 * minor, minor, major })
+              : undefined;
+          const landed = read?.kind === 'shape' ? landShape(read.shape) : read?.kind === 'path' && landPath(read.path);
+          if (!landed) {
             landPoints(current.type, simplifyPath(current.points, tolerance), false, true);
           }
           break;
@@ -1301,7 +1341,7 @@ export const usePointerMachine = ({
           const moved =
             before.length !== current.points.length ||
             current.points.some((point, index) => point.x !== before[index].x || point.y !== before[index].y);
-          const values = moved ? refitPolyline(node, current.points, minor) : undefined;
+          const values = moved ? refitPolyline(node, current.points, minor, current.index) : undefined;
           if (values) {
             draw.apply(updateElement(current.id, values));
           }
@@ -1344,6 +1384,7 @@ export const usePointerMachine = ({
       rootRef,
       landPoints,
       landShape,
+      landPath,
       atoms.camera,
     ],
   );
