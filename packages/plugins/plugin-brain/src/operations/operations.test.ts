@@ -183,6 +183,23 @@ describe('entity names', () => {
     expect(facts.map((fact) => fact.assertion.object)).toEqual([{ kind: 'literal', literal: 'new_name' }]);
   });
 
+  test('leaves out a superseded graph even when its replacement does not match the query', async ({ expect }) => {
+    const statement = (object: string, supersedes?: string): RDF.Fact => ({
+      ...makeFact({ id: '', subject: 'alice', predicate: 'works for', object }),
+      ...(supersedes ? { supersedes: [supersedes] } : {}),
+    });
+    const [acme] = RDF.Graph.assign([statement('acme')]);
+    const [contoso] = RDF.Graph.assign([statement('contoso', RDF.Mapping.graphOf(acme))]);
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts([acme, contoso]);
+        return yield* queryResolvedFacts({ entity: 'acme' });
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(facts).toEqual([]);
+  });
+
   test('summarizes a subject named by its label', async ({ expect }) => {
     const result = await EffectEx.runPromise(
       Effect.gen(function* () {

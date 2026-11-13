@@ -70,10 +70,15 @@ export const resolveEntityKeys = (name: string): Effect.Effect<string[], Semanti
     return [...new Set([key, ...iris])];
   });
 
+/** Every graph another graph supersedes or retracts, stated about the replacing graph in the default graph. */
+const replacedGraphsSparql = `SELECT DISTINCT ?graph WHERE {
+  { ?replacing <${RDF.Vocab.sx('supersedes').value}> ?graph } UNION { ?replacing <${RDF.Vocab.sx('retracts').value}> ?graph }
+}`;
+
 /**
  * Runs a structured query with its entity names resolved through {@link resolveEntityKeys}: one store query per
- * combination of the keys they resolve to, merged by fact id in first-seen order, without the graphs another result
- * supersedes or retracts.
+ * combination of the keys they resolve to, merged by fact id in first-seen order, without any graph another graph in
+ * the store supersedes or retracts.
  */
 export const queryResolvedFacts = (query: SemanticQuery): Effect.Effect<RDF.Fact[], SemanticIndexError, FactStore> =>
   Effect.gen(function* () {
@@ -96,8 +101,12 @@ export const queryResolvedFacts = (query: SemanticQuery): Effect.Effect<RDF.Fact
         }
       }
     }
-    // The store keeps every version of a graph; only the current ones answer, so a replaced profile is not read twice.
-    const merged = [...byId.values()];
-    const statuses = RDF.Graph.status(merged);
-    return merged.filter((fact) => statuses.get(RDF.Mapping.graphOf(fact)) === 'active');
+    // The store keeps every version of a graph and only current ones answer. A replacement need not match the query
+    // (Alice moving from Acme to Contoso answers a query for Acme with the old graph alone), so look up store-wide.
+    const replaced = new Set(
+      (yield* store.rows(replacedGraphsSparql)).flatMap(({ graph }) =>
+        graph?.termType === 'NamedNode' ? [graph.value] : [],
+      ),
+    );
+    return [...byId.values()].filter((fact) => !replaced.has(RDF.Mapping.graphOf(fact)));
   });
