@@ -1485,7 +1485,7 @@ see and the operations it can call on them. The section has only Start here, Cor
 
 ```mdl
 page sage-overview: Overview
-  What SAGE is, and how an agent runs.
+  What SAGE is, and where it runs.
   section: SAGE
   route: /docs/sage/overview/
   group: Start here
@@ -1493,7 +1493,6 @@ page sage-overview: Overview
   status: spike
   covers:
     - What SAGE is in one paragraph, on its own: durable agent processes with an identity of their own, typed tools, skills and any model [D-275]
-    - One diagram of a chat, the agent's turn, the operations it calls, and the objects they change
     - A table of where SAGE runs, in Composer's assistant, in agents on EDGE and behind the MCP server, each linking its concept page
     - After the table, one sentence each on operations as the agent's actions and on memory as objects in the user's spaces [D-275]
     - Where to go next: Why SAGE?, then Agents
@@ -1538,7 +1537,7 @@ page sage-agents: Agents
   template: concept
   status: spike
   covers:
-    - An agent as a process: a turn, the operations it calls, then the next turn, linking EDGE's Processes
+    - An agent as a process: a turn, the operations it calls, then the next turn, linking EDGE's Processes, with one diagram of a chat, the turn, the operations it calls and the objects they change [D-279]
     - An agent's identity, linking HALO
     - Agents in Composer's assistant and on EDGE, and one agent delegating to another
     - Hosting an outside agent loop, such as the Claude Agent SDK, with its output kept as ECHO objects
@@ -1654,11 +1653,9 @@ page app-framework-welcome: Overview
   template: narrative
   status: spike
   covers:
-    - What PLEX is, in one screen: plugins made of modules that contribute capabilities, and an app that is the plugins it loads
-    - Composer as the app built on it: a local-first workspace where everything, including the core UI, is a plugin, so a third-party plugin has the same powers as a built-in one
-    - What a plugin gets for free: its data syncs as ECHO objects, its operations and skills are tools for agents, and TILE gives it the same look as every other plugin [D-275]
-    - What a reader can build: anything a built-in plugin can, shown by the demos rather than listed
-    - What PLEX apps look like: the four live demos from `/echo`, each with a narrative about the plugins that render it [F-7.10]
+    - What PLEX is, in one short intro: an app is the plugins it loads, and Composer is the app built on it, where a third-party plugin has the same powers as a built-in one [D-279]
+    - What a reader can build, right after the intro: the four live demos from `/echo`, each with a narrative about the plugins that render it, then anything a built-in plugin can [F-7.10] [D-279]
+    - How it works, in one section: plugins made of modules that contribute capabilities, the two packages, and what a plugin gets for free (ECHO sync, operations and skills as agent tools, TILE's look) [D-275] [D-279]
     - Where to go next: Why PLEX?, Build with a coding agent, or the learning path
 ```
 
@@ -5535,6 +5532,14 @@ decision D-278: SAGE Models says only that telemetry records each model call wit
   by: user:wittjosiah
   affects: [sage-models]
   why: Josiah said the page does not need that much detail.
+```
+
+```mdl
+decision D-279: SAGE's Overview no longer walks through a turn; the turn and its diagram move to Agents. PLEX's Overview puts the demos right after a short intro that names Composer, and merges how an app is put together, the packages and what a plugin gets for free into one section.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [sage-overview, sage-agents, app-framework-welcome]
+  why: Josiah said a turn loop is detail, not overview content, and that PLEX's Overview was a run of small sections a reader would stop before reaching the demos.
 ```
 
 ## Appendix: Extension Definitions

@@ -1,26 +1,16 @@
 ---
 title: Overview
-description: What SAGE is, and how an agent runs.
+description: What SAGE is, and where it runs.
 welcome:
   section: SAGE
   tagline: Durable agents with their own identity, tools and skills.
   background: sage
 ---
 
-import Diagram from '../../../../components/Diagram.astro';
-
 SAGE runs AI agents as durable processes. An agent has an identity of its own, uses any model, local or hosted, and
 calls typed operations as its tools. It loads skills when a task needs them, sleeps between turns, hands work to
 sub-agents, and wakes on messages, triggers or rules over what it knows, without polling a model. People and agents
 plan work in shared specs that record who decided what and can be checked against the code.
-
-## How a turn works
-
-A person writes in a chat. The agent's process takes the message, calls the model with the chat so far, the agent's
-instructions and the skills it has enabled, and the model answers or asks for operations. The process runs those
-operations against the space, hands their results back to the model, and repeats until the model answers.
-
-<Diagram name="sage-turn" alt="A person writes in a chat; the agent process calls the model, the model asks for an operation, the process invokes it on the space's ECHO objects, returns the result, and the model answers in the chat." />
 
 ## Where SAGE runs
 
