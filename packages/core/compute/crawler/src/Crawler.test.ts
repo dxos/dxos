@@ -14,7 +14,7 @@ import { FactStore } from '@dxos/pipeline-rdf';
 import * as AgentRegistry from './AgentRegistry.ts';
 import * as Crawler from './Crawler.ts';
 import { CrawlError, StageError } from './errors.ts';
-import { Source } from './Source.ts';
+import * as Source from './Source.ts';
 import { tapStage } from './Stage.ts';
 import { agentProfileStage } from './stages/agent-profile.ts';
 import { extractFactsStage } from './stages/extract-facts.ts';
@@ -39,16 +39,27 @@ const runCrawl = (config: Type.Config, options?: Crawler.StreamOptions) =>
   });
 
 /** A source whose fetch fails with a typed error — exercises per-target failure isolation. */
-const FAILING_SOURCE = Layer.succeed(Source, {
+const FAILING_SOURCE = Layer.succeed(Source.Source, {
   listChannels: () => Effect.succeed([{ id: 'chan-1' }]),
   fetchMessages: () => Effect.fail(new CrawlError({ message: 'Missing Access' })),
 });
 
 /** A source whose fetch DIES (defect) — exercises defect isolation (dfx can surface a 403 this way). */
-const DYING_SOURCE = Layer.succeed(Source, {
+const DYING_SOURCE = Layer.succeed(Source.Source, {
   listChannels: () => Effect.succeed([{ id: 'chan-1' }]),
   fetchMessages: () => Effect.die(new Error('Missing Access')),
 });
+
+/** A source with no messages that records every fetch, to observe what the crawl asks for. */
+const recordingSource = (fetches: Source.Fetch[]) =>
+  Layer.succeed(Source.Source, {
+    listChannels: () => Effect.succeed([]),
+    fetchMessages: (request: Source.Fetch) =>
+      Effect.sync(() => {
+        fetches.push(request);
+        return { messages: [], threads: [] };
+      }),
+  });
 
 describe('Crawler', () => {
   it.effect(
@@ -185,6 +196,35 @@ describe('Crawler', () => {
       expect(retried.done).toBe(true);
       expect(targets.find((target) => target.id === 'chan-1')?.status).toBe('done');
       expect(targets.find((target) => target.id === 'chan-1')?.cursor).toBe('1001');
+    }, Effect.provide(servicesLayer)),
+  );
+
+  it.effect(
+    'applies per-channel lookback over the crawl-wide one',
+    Effect.fnUntraced(function* () {
+      const fetches: Source.Fetch[] = [];
+      yield* runCrawl({
+        channels: ['chan-1', 'chan-2'],
+        descendThreads: false,
+        seed: { maxDays: 30 },
+        channelSettings: { 'chan-2': { maxDays: 180 } },
+      }).pipe(Effect.provide(recordingSource(fetches)));
+      expect(fetches.find((fetch) => fetch.channelId === 'chan-1')?.maxDays).toBe(30);
+      expect(fetches.find((fetch) => fetch.channelId === 'chan-2')?.maxDays).toBe(180);
+    }, Effect.provide(servicesLayer)),
+  );
+
+  it.effect(
+    'a channel added to the config joins an existing crawl',
+    Effect.fnUntraced(function* () {
+      const fetches: Source.Fetch[] = [];
+      yield* runCrawl({ channels: ['chan-1'], descendThreads: false }).pipe(Effect.provide(recordingSource(fetches)));
+      yield* runCrawl({ channels: ['chan-1', 'chan-2'], descendThreads: false }).pipe(
+        Effect.provide(recordingSource(fetches)),
+      );
+      const targets = yield* StateStore.listTargets();
+      expect(targets.map((target) => target.id).sort()).toEqual(['chan-1', 'chan-2']);
+      expect(fetches.map((fetch) => fetch.channelId)).toContain('chan-2');
     }, Effect.provide(servicesLayer)),
   );
 

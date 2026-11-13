@@ -32,6 +32,7 @@ tasks:
       cache: false
 
   # Crawl seed channels via DiscordPipeline into persistent SQLite: messages and crawl state in DISCORD_CRAWL_DB,
+  # channels as `id[:days]` in DISCORD_CRAWL_CHANNELS (DISCORD_CRAWL_REWIND=id,… re-reads a channel further back),
   # extracted RDF facts in DISCORD_FACTS_DB. Requires DISCORD_TOKEN; tunable via DISCORD_CRAWL_CHANNELS /
   # DISCORD_MAX_DAYS / DISCORD_LIST_FACTS and DX_ANTHROPIC_API_KEY. Re-running resumes.
   crawl-demo:

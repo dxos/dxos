@@ -5,8 +5,12 @@
 // Live crawl demo (node): seeds a set of Discord channels and runs the basic pipeline into persistent SQLite
 // files — messages and crawl state in one, the RDF fact store in another — so subsequent runs resume, extracting
 // facts only from messages not yet committed, and the questions demo replays over the messages.
-//   DISCORD_TOKEN=…  [DISCORD_CRAWL_CHANNELS=id,id,…] [DISCORD_CRAWL_DB=path] [DISCORD_FACTS_DB=path]
-//   [DISCORD_MAX_DAYS=30] [DISCORD_LIST_FACTS=1] [DX_ANTHROPIC_API_KEY=…]  moon run plugin-discord:crawl-demo
+// Each DISCORD_CRAWL_CHANNELS entry is `id` or `id:days`, the latter overriding DISCORD_MAX_DAYS for that channel. A
+// channel's lookback applies only while it has no cursor, so to reach further back on one already crawled, list it in
+// DISCORD_CRAWL_REWIND: it restarts from its lookback window, and messages already stored are skipped.
+//   DISCORD_TOKEN=…  [DISCORD_CRAWL_CHANNELS=id[:days],…] [DISCORD_CRAWL_REWIND=id,…] [DISCORD_CRAWL_DB=path]
+//   [DISCORD_FACTS_DB=path] [DISCORD_MAX_DAYS=30] [DISCORD_CRAWL_TIMEOUT_MIN=60] [DISCORD_LIST_FACTS=1]
+//   [DX_ANTHROPIC_API_KEY=…]  moon run plugin-discord:crawl-demo
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import type * as ConfigError from 'effect/Config';
@@ -30,10 +34,23 @@ import { discordSourceLayer } from '../services/index.ts';
 
 const token = process.env.DISCORD_TOKEN;
 // Defaults: DXOS #general, #composer-vip, #dxos-team.
-const channels = (process.env.DISCORD_CRAWL_CHANNELS ?? '837138313172353098,1364277975645945948,837690136044503110')
-  .split(',')
-  .map((id) => id.trim())
-  .filter((id) => id.length > 0);
+const list = (value: string | undefined): string[] =>
+  (value ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+const entries = list(
+  process.env.DISCORD_CRAWL_CHANNELS ?? '837138313172353098,1364277975645945948,837690136044503110',
+).map((entry) => {
+  const [id, days] = entry.split(':');
+  return { id, ...(days ? { maxDays: Number(days) } : {}) };
+});
+const channels = entries.map(({ id }) => id);
+const channelSettings = Object.fromEntries(
+  entries.flatMap(({ id, maxDays }) => (maxDays === undefined ? [] : [[id, { maxDays }] as const])),
+);
+const rewind = list(process.env.DISCORD_CRAWL_REWIND);
+const timeoutMinutes = Number(process.env.DISCORD_CRAWL_TIMEOUT_MIN ?? 60);
 const dbPath = process.env.DISCORD_CRAWL_DB ?? join(tmpdir(), 'dxos-discord-crawl.db');
 // A file of its own: the fact store needs synchronous SQLite (`node:sqlite`), a different driver from the stores' client.
 const factsPath = process.env.DISCORD_FACTS_DB ?? join(tmpdir(), 'dxos-discord-facts.db');
@@ -96,7 +113,15 @@ describe('crawl demo', () => {
       );
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
-          const summary = yield* DiscordPipeline.run({ channels, descendThreads: true, seed: { maxDays } });
+          if (rewind.length > 0) {
+            yield* StateStore.resetTargets(rewind);
+          }
+          const summary = yield* DiscordPipeline.run({
+            channels,
+            descendThreads: true,
+            seed: { maxDays },
+            channelSettings,
+          });
           const stored = yield* MessageStore.count();
           const agents = yield* AgentRegistry.list();
           const targets = yield* StateStore.listTargets();
@@ -129,6 +154,7 @@ describe('crawl demo', () => {
       expect(result.summary.done).toBe(true);
       expect(result.stored).toBeGreaterThan(0);
     },
-    600_000,
+    // A long lookback can outlast this; the crawl resumes from its cursors on the next run.
+    timeoutMinutes * 60_000,
   );
 });
