@@ -204,7 +204,7 @@ export const CommentThreadList = ({ subject, attendableId, anchors, reviewBranch
 
   const stateAtom = Hooks.useCapability(CommentCapabilities.State);
   const state = useAtomValue(stateAtom);
-  const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
+  const locators = Hooks.useCapabilities(AppCapabilities.Locator);
   // Read on every edit of the subject, so a thread whose field goes away reads as detached at once.
   useObject(subject);
   const anchorResolvers = Hooks.useCapabilities(AppCapabilities.AnchorResolver);
@@ -252,16 +252,16 @@ export const CommentThreadList = ({ subject, attendableId, anchors, reviewBranch
       // This is what tells the editor which thread is current, so skipping it leaves the previous
       // comment highlighted while the app selection moves on.
       const typename = Obj.getTypename(subject);
-      const commentConfig = commentConfigs.find(({ id }) => id === typename);
-      if (commentConfig?.scrollToAnchor) {
-        void invokePromise(commentConfig.scrollToAnchor, {
+      const locator = locators.find(({ id }) => id === typename);
+      if (locator) {
+        void invokePromise(locator.reveal, {
           subject: attendableId ?? subjectId,
-          cursor: anchor.anchor,
-          id: Ref.make(thread),
+          anchor: anchor.anchor,
+          thread: Ref.make(thread),
         });
       }
     },
-    [handleAttend, invokePromise, attendableId, subjectId, subject, commentConfigs],
+    [handleAttend, invokePromise, attendableId, subjectId, subject, locators],
   );
 
   const handleComment = useCallback(

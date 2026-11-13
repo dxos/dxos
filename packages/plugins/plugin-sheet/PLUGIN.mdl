@@ -154,11 +154,11 @@ op restoreAxis
 ```mdl
 op scrollToAnchor
   key: org.dxos.operation.sheet.scrollToAnchor
-  desc: Programmatically scrolls and highlights a cell range in an active grid instance.
+  desc: Programmatically scrolls and highlights a cell range in an active grid instance; it is the sheet's `Locator` reveal.
   input:
     subject: string              # attendable ID of the target sheet
-    cursor: string               # comment anchor (see [F-7.3])
-    ref?: any                    # active refs for highlight overlay
+    anchor: string               # cell-range anchor (see [F-7.3])
+    thread?: any                 # active refs for highlight overlay
   output: void
   effects: [ui:scroll]
 ```
@@ -274,7 +274,7 @@ feat F-6: Markdown Integration
 feat F-7: Anchor Navigation
 
   req F-7.1:
-    when: op:scrollToAnchor is invoked with a sheet attendable ID and cursor
+    when: op:scrollToAnchor is invoked with a sheet attendable ID and anchor
     then: the corresponding SheetArticle scrolls to the target cell and applies the active-ref highlight
 
   req F-7.2: AnchorSort contributes a sort comparator so sheet anchors appear in canonical order in navigation menus: by the range's top-left cell, row first, with anchors that no longer resolve last.
@@ -589,6 +589,22 @@ decision D-5: A chart's `type` is a string naming a `SheetCapabilities.ChartType
 ```
 
 ---
+
+```mdl
+decision D-6: Revealing an anchor moves out of the comment config into a per-type `Locator`, which comments and peer presence both use.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [op:scrollToAnchor, F-7.1]
+```
+
+```mdl
+decision D-7: The sheet publishes the anchor of its cell selection to the `ViewLocation` view-state aspect, and no viewport. Fills in [D-6].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: The selection anchor is the same form comments use, so the reveal needs no new case.
+```
 
 ## Appendix: Extension Definitions
 

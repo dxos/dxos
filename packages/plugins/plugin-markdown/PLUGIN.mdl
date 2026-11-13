@@ -240,8 +240,8 @@ op SuggestEdit
 
 ```mdl
 op scrollToAnchor
-  desc: Scrolls the editor for the attendable surface to a cursor position.
-  input: { subject: string, cursor: string, id?: Ref<Thread> }
+  desc: Reveals an anchor in the editor for the attendable surface; it is the document type's `Locator` reveal, used for comments and peers alike.
+  input: { subject: string, anchor: string, thread?: Ref<Thread> }
 ```
 
 ## Features
@@ -642,6 +642,23 @@ decision D-3: The `commentAgentMode` setting moves to plugin-review, which appli
 ```
 
 ---
+
+```mdl
+decision D-4: Revealing an anchor moves out of the comment config into a per-type `Locator`, which comments and peer presence both use.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [op:scrollToAnchor]
+```
+
+```mdl
+decision D-5: The editor publishes its selection and the top of its viewport, as cursors, to the `ViewLocation` view-state aspect for the document. Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: Peers need a location to reveal; an aspect keeps the editor ignorant of presence.
+  rejected: Have plugin-space read editor state directly; it would couple presence to CodeMirror.
+```
 
 ## Appendix: Extension Definitions
 

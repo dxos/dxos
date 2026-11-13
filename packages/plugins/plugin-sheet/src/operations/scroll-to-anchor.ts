@@ -11,15 +11,16 @@ import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 
 const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = SheetOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, cursor, id }) {
+    Effect.fnUntraced(function* ({ subject, anchor, thread }) {
       const gridInstances = yield* Capability.get(SheetCapabilities.GridInstances);
       const entry = gridInstances.get(subject);
       if (!entry) {
         return;
       }
 
-      entry.setActiveRefs(id);
-      const range = SheetUtil.rangeFromAnchor(entry.sheet, cursor);
+      // Cells mark their threads by URI, so the grid highlights the cells whose `data-refs` hold this one.
+      entry.setActiveRefs(thread?.uri.toString() ?? '');
+      const range = SheetUtil.rangeFromAnchor(entry.sheet, anchor);
       if (range) {
         entry.grid.setFocus({ ...range.to, plane: 'grid' }, true);
       }

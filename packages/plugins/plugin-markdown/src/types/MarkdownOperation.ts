@@ -131,9 +131,9 @@ export const ScrollToAnchor = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    subject: Schema.String.annotate({ description: 'Attendable ID of the markdown editor.' }),
-    cursor: Schema.String.annotate({ description: 'Cursor position to scroll to.' }),
-    id: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to mark current.' })),
+    subject: Schema.String.annotate({ description: 'Attendable ID of the markdown editor, or the document URI.' }),
+    anchor: Schema.String.annotate({ description: 'Cursor range to reveal.' }),
+    thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to mark current.' })),
   }),
   output: Schema.Void,
 });

@@ -24,7 +24,13 @@ import {
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { useAttention, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import {
+  ViewLocation,
+  useAttention,
+  useSelection,
+  useSelectionActions,
+  useViewStateActions,
+} from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
   type DxGridElement,
@@ -181,6 +187,13 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
       dxGrid.setSelection({ start: { ...from, plane: 'grid' }, end: { ...to, plane: 'grid' } });
     }
   }, [dxGrid, selection?.from, selection?.to]);
+
+  // Peers' presence reveals this sheet at the selection, so publish it as a comment-style anchor too.
+  const { set: setViewLocation } = useViewStateActions(ViewLocation.aspect, selectionContextId);
+  useEffect(() => {
+    const anchor = selection && SheetUtil.anchorFromSelection(model.sheet, { mode: 'range', ...selection });
+    setViewLocation({ selection: anchor });
+  }, [model.sheet, selection?.from, selection?.to, setViewLocation]);
 
   const handleSelect = useCallback<NonNullable<GridContentProps['onSelect']>>(
     ({ minCol, maxCol, minRow, maxRow }) => {
