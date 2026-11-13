@@ -29,7 +29,7 @@ import { CanvasCapabilities } from '#types';
 import types from '../../capabilities/schema.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import { STUDIO_KINDS } from '../../testing/studio/kinds.ts';
-import { STUDIO_SLIDES, seedSlide, type StudioSlide, studioSlide } from '../../testing/studio/slides.ts';
+import { STUDIO_SLIDES, type StudioSlide, seedSlide, studioSlide } from '../../testing/studio/slides.ts';
 import { STUDIO_CANVAS } from '../../testing/studio/studio.ts';
 
 /** Every kind the deck's slides use, contributed once for all of them. */
