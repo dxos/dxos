@@ -134,6 +134,36 @@ describe('extractFactsStage', () => {
     }).pipe(Effect.provide(layer(prompts)));
   });
 
+  it.effect('a profile rewritten with the same hash still has exactly one current graph', () => {
+    const prompts: string[] = [];
+    const target: Type.Target = { id: 'chan-1', channelId: 'chan-1', depth: 0, status: 'active' };
+    const say = (id: string, displayName: string): Type.Event => ({
+      _tag: 'Message',
+      target,
+      message: {
+        id,
+        text: 'Automerge compaction reduces OPFS growth.',
+        author: { id: '111', source: 'discord', displayName, username: 'alice_w' },
+      },
+    });
+    return Effect.gen(function* () {
+      const store = yield* FactStore;
+      yield* Stream.fromIterable([say('1', 'Alice')]).pipe(agentProfileStage(), extractFactsStage(), Stream.runDrain);
+      // As if `setCursor` had failed after the write: the retry writes the same profile hash again.
+      yield* store.setCursor('https://discord.com/users/111', 'stale');
+      yield* Stream.fromIterable([say('2', 'Alice')]).pipe(agentProfileStage(), extractFactsStage(), Stream.runDrain);
+
+      // Supersession is part of a graph's provenance, so the rewrite is a new graph superseding the first, not itself.
+      const profiles = (yield* store.query({ subjectEntity: 'https://discord.com/users/111' })).filter(
+        (fact) => fact.extractor.id === 'agent-registry',
+      );
+      const statuses = RDF.Graph.status(profiles);
+      const graphs = [...new Set(profiles.map((fact) => RDF.Mapping.graphOf(fact)))];
+      expect(graphs.length).toBeGreaterThan(1);
+      expect(graphs.filter((graph) => statuses.get(graph) === 'active')).toHaveLength(1);
+    }).pipe(Effect.provide(layer(prompts)));
+  });
+
   it.effect('passes every event through unchanged and in order', () => {
     const prompts: string[] = [];
     return Effect.gen(function* () {

@@ -6,7 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
 import { Stage } from '@dxos/pipeline';
-import { DEFAULT_INDEX_BATCH_SIZE, FactStore, RDF, hashText, indexFactsBatch } from '@dxos/pipeline-rdf';
+import {
+  DEFAULT_INDEX_BATCH_SIZE,
+  FactStore,
+  FactStoreUnsupportedError,
+  RDF,
+  hashText,
+  indexFactsBatch,
+} from '@dxos/pipeline-rdf';
 
 import * as AgentRegistry from '../AgentRegistry.ts';
 import { type StateError } from '../errors.ts';
@@ -139,10 +146,14 @@ export const extractFactsStage = (
     for (const profile of new Set(authors.values())) {
       const [first] = profileFacts(profile);
       if (first && (yield* store.cursor(first.attribution.source)) !== first.sourceHash) {
-        // A write-only store (an ECHO fact feed) cannot be read back, so its profile graphs supersede nothing.
-        const earlier = (yield* store
-          .query({ source: first.attribution.source })
-          .pipe(Effect.orElseSucceed((): RDF.Fact[] => [])))
+        // A write-only store (an ECHO fact feed) cannot be read back, so its profile graphs supersede nothing; any other
+        // failure propagates, so the profile is not written without superseding the one it replaces.
+        const earlier = (yield* store.query({ source: first.attribution.source }).pipe(
+          Effect.catchIf(
+            (error): error is FactStoreUnsupportedError => error instanceof FactStoreUnsupportedError,
+            (): Effect.Effect<RDF.Fact[]> => Effect.succeed([]),
+          ),
+        ))
           .filter((fact) => fact.extractor.id === first.extractor.id)
           .map((fact) => RDF.Mapping.graphOf(fact));
         yield* store.putFacts(profileFacts(profile, [...new Set(earlier)]));
