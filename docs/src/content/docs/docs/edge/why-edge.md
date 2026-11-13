@@ -5,7 +5,8 @@ description: Why a local-first system runs servers at all.
 
 A local-first app keeps its data on the user's devices and works offline. It still needs a peer that is always online,
 because the user's devices are rarely online together. EDGE is that peer: it holds a copy of each space that
-replicates through it, not the original, and every device can sync, query and recover through that copy. A space can
+replicates through it, not the original, and every device can sync and recover through that copy. Devices can also
+query through it when EDGE can read the space. A space can
 turn this off with `Space.setEdgeReplication`; it then syncs only between devices online at the same time.
 
 ## The pattern
@@ -35,8 +36,9 @@ syncs with it whenever it is online. See [Replication and backup](/docs/edge/con
 
 ### Queries over objects this device has not loaded
 
-A device loads only the documents it needs. A query that should match the whole space also asks EDGE, which has
-indexed all of it. See [Indexing and queries](/docs/edge/concepts/indexing/).
+A device loads only the documents it needs. When EDGE can read the space, a query that should match the whole space
+also asks EDGE, which has indexed all of it. A space that gives EDGE only `pull` access is relayed unread and not
+indexed. See [Indexing and queries](/docs/edge/concepts/indexing/).
 
 ### Recovery when every device is lost
 

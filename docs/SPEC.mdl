@@ -5042,11 +5042,11 @@ decision D-249: EDGE and MESH pages, including every section of Why MESH?, say E
 ```
 
 ```mdl
-decision D-250: EDGE's Indexing and queries page says EDGE indexes only the spaces it can read; a space that grants EDGE only `pull` access has no index there.
+decision D-250: EDGE's Indexing and queries page and Why EDGE? say EDGE indexes and answers queries only for the spaces it can read; a space that grants EDGE only `pull` access has no index there.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [edge-indexing]
+  affects: [edge-indexing, why-edge]
   why: With only `pull` access EDGE relays a space unread, so it cannot index it.
 ```
 
