@@ -591,14 +591,14 @@ decision D-5: A chart's `type` is a string naming a `SheetCapabilities.ChartType
 ---
 
 ```mdl
-decision D-3: Revealing an anchor moves out of the comment config into a per-type `Locator`, which comments and peer presence both use.
+decision D-6: Revealing an anchor moves out of the comment config into a per-type `Locator`, which comments and peer presence both use.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [op:scrollToAnchor, F-7.1]
 ```
 
 ```mdl
-decision D-4: The sheet publishes the anchor of its cell selection to the `ViewLocation` view-state aspect, and no viewport. Fills in [D-3].
+decision D-7: The sheet publishes the anchor of its cell selection to the `ViewLocation` view-state aspect, and no viewport. Fills in [D-6].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
