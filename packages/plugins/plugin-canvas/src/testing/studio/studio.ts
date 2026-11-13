@@ -1179,8 +1179,14 @@ const balanceColumns = (content: ContentMap, balance: boolean, grid: number): nu
         if (!isNodeRecord(record)) {
           continue;
         }
-        const left = onGrid(center - node.size.width / 2, grid);
-        content[key] = { ...record, node: { ...node, center: { ...node.center, x: left + node.size.width / 2 } } };
+        // A box centred on the grid has to be an even number of cells wide, or its own edges land half a cell off and
+        // the two gaps beside it differ by one.
+        const width = near === far ? Math.ceil(node.size.width / (2 * grid)) * 2 * grid : node.size.width;
+        const left = center - width / 2;
+        content[key] = {
+          ...record,
+          node: { ...node, center: { ...node.center, x: left + width / 2 }, size: { ...node.size, width } },
+        };
         moved++;
       }
     }
@@ -1205,14 +1211,16 @@ const spreadColumns = (content: ContentMap, model: StudioModel, spread: number, 
   if (spread === 1 || xs.length === 0) {
     return 0;
   }
-  const center = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const middle = (Math.min(...xs) + Math.max(...xs)) / 2;
   let moved = 0;
   for (const [key, record] of Object.entries(content)) {
     if (!isNodeRecord(record)) {
       continue;
     }
     const { node } = record;
-    const left = onGrid(center + (node.center.x - node.size.width / 2 - center) * spread, grid);
+    // Centres, not edges: scaling an edge drags a wide shape sideways by half of what it keeps, which would walk the
+    // middle column off the centre the balance just put it on.
+    const left = onGrid(middle + (node.center.x - middle) * spread - node.size.width / 2, grid);
     if (left === onGrid(node.center.x - node.size.width / 2, grid)) {
       continue;
     }

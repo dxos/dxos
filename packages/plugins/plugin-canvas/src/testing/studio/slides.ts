@@ -71,8 +71,9 @@ const slide = (id: string, source: string, model: string, rest: Omit<StudioSlide
  * scale: a card on one slide is the size of a card on another.
  */
 export const STUDIO_SLIDES: readonly StudioSlide[] = [
-  // The deck fitted three columns to one page; a drawing is not a page, so its columns take the air they read better with.
-  slide('hyperspace', hyperspaceSource, hyperspaceModel, { spread: 1.12 }),
+  // The deck fitted three columns to one page; a drawing is not a page, so its columns take the air they read better
+  // with, and the field sits in the middle of the two rather than where the deck's own margins left it.
+  slide('hyperspace', hyperspaceSource, hyperspaceModel, { balance: true, spread: 1.12 }),
   slide('echo-layers', echoLayersSource, echoLayersModel),
   slide('plugins', pluginsSource, pluginsModel, {
     labels: false,
