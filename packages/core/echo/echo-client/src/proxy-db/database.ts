@@ -57,7 +57,13 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import {
+  type ExportWorkingSetOptions,
+  RpcClosedError,
+  type WorkingSetRow,
+  runServiceCall,
+  subscribeStream,
+} from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { type EventAttributes, trace } from '@dxos/tracing';
 
@@ -67,10 +73,8 @@ import {
   type BranchStore,
   type DocumentRetention,
   EntityManager,
-  type ExportWorkingSetOptions,
   type LoadObjectOptions,
   type SpaceDocumentHeads,
-  type WorkingSetRow,
 } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
@@ -1370,6 +1374,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** Objects written locally that the index may not reflect yet; see `EntityManager.unindexedWrites`. */
   unindexedWrites(): Iterable<string> {
     return this._entityManager.unindexedWrites();
+  }
+
+  /** Objects another client wrote that the index may not reflect yet; see `EntityManager.noteUnindexedWrites`. */
+  noteUnindexedWrites(ids: Iterable<string>): void {
+    this._entityManager.noteUnindexedWrites(ids);
   }
 
   areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {

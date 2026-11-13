@@ -284,6 +284,7 @@ const makeContext = async (
     contextSpaceId: spaceId,
     serviceScope,
     accessTokenService: scope.accessTokenService,
+    workingSetService: scope.workingSet,
   });
   return { context, serviceContainer };
 };

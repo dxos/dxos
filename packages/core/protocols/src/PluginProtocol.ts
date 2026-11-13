@@ -18,8 +18,9 @@ import { type EdgeFunctionEnv, type SerializedError } from './edge/index.ts';
  *
  * - 1: `describe` and `invoke`; the scope holds `accessTokenService` only; output as structured clone returns it.
  * - 2: the scope's request context, host services and nested operations; output encoded as JSON.
+ * - 3: the scope's working set.
  */
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 
 /** The version of a host that reports none, which predates versioning. */
 export const UNVERSIONED = 1;
@@ -29,8 +30,16 @@ export const isSupported = (version: number): boolean =>
   Number.isInteger(version) && version >= UNVERSIONED && version <= PROTOCOL_VERSION;
 
 /** The scope a host speaking `version` reads: fields it does not know are left out, so no stub it never releases is sent. */
-export const scopeFor = (version: number, scope: InvocationScope): InvocationScope =>
-  version >= 2 ? scope : scope.accessTokenService === undefined ? {} : { accessTokenService: scope.accessTokenService };
+export const scopeFor = (version: number, scope: InvocationScope): InvocationScope => {
+  if (version >= 3) {
+    return scope;
+  }
+  if (version >= 2) {
+    const { workingSet: _workingSet, ...rest } = scope;
+    return rest;
+  }
+  return scope.accessTokenService === undefined ? {} : { accessTokenService: scope.accessTokenService };
+};
 
 /**
  * The bindings EDGE gives a bundle's isolate. They are the same for every space and caller, so one isolate serves them
@@ -101,6 +110,8 @@ export type InvocationScope = {
   readonly services?: HostServices;
   /** Runs an operation the bundle does not handle, re-entering EDGE's router. Version 2. */
   readonly operations?: OperationHost;
+  /** The working set of the caller that started the invocation; the host seeds the invocation's database from it. Version 3. */
+  readonly workingSet?: EdgeFunctionEnv.WorkingSetService;
 };
 
 /** An identity EDGE verified. */

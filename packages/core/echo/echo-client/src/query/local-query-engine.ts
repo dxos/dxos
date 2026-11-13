@@ -487,11 +487,15 @@ export class LocalQueryEngine implements QueryContext {
       return kept;
     }
     const { orders, limit } = plan.window;
+    // A short remote window is the whole result, so every local match belongs; a full one bounds admission.
+    const full = remote.length >= limit;
+    if (full && orders.length === 0) {
+      // A full window with no order of its own has no boundary to admit against, so local evidence only drops.
+      return kept;
+    }
     // Sort data is read once per candidate, since a comparison against the live document re-reads it on
     // every step of the sort, and only local matches that land inside the window are built into entries.
     const candidates: WindowCandidate[] = kept.map((entry) => ({ id: entry.id, data: windowData(entry), entry }));
-    // A short remote window is the whole result, so every local match belongs; a full one bounds admission.
-    const full = remote.length >= limit;
     const boundary = full ? windowData(remote[remote.length - 1]) : undefined;
     const admit = full ? (data: EntityStructure['data']) => compareWindowData(orders, data, boundary) <= 0 : undefined;
     const seen = new Set(kept.map((entry) => entry.id));
