@@ -263,7 +263,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
   // A tool rather than a type of its own: the stroke it draws is a polyline, run as a curve through its points.
   freehand: {
     ...strokeTool,
-    name: 'Draw',
+    name: 'Freehand',
     icon: 'ph--scribble--regular',
     key: 'S',
     freehand: 'stroke',
@@ -272,7 +272,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
   // The same stroke, read before it lands: one drawn round a shape becomes that shape, on the grid.
   freehandShape: {
     ...strokeTool,
-    name: 'Draw shape',
+    name: 'Magic',
     icon: 'ph--shapes--regular',
     key: 'W',
     freehand: 'shape',

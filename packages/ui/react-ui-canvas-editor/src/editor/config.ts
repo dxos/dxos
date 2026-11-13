@@ -40,6 +40,8 @@ export type ToolDef = {
   group?: string;
   /** Adjacent tools of a group naming the same fold share one flyout button (e.g. the link types). */
   fold?: string;
+  /** The tool draws its element point by point or in a stroke, so it has no shape to drag onto the canvas. */
+  drawn?: boolean;
 };
 
 /** Moving, measuring and snapping elements, in the dimension's units. */

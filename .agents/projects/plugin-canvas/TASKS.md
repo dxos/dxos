@@ -389,6 +389,13 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       per segment (`smoothBends`, Catmull-Rom); a bend's `second` control makes it a cubic. Vertex edit mode shows
       each bend's controls (`bend-handle`) and drags them (`Drag` `vertex` with `bend` and `handle`); a vertex put
       in or taken out keeps the curve (`bendsAfterInsert`, `bendsAfterDelete`). `Draw.stories.tsx` Spline Test.
+- [x] **Views list front first** (user: "the operations work, but the view list is reversed"): `buildViewTree` and
+      `layoutTree` list a View's rows from the element drawn last to the one drawn first, and a drop above a row
+      puts the element in front of it (`dropPosition`). The Layers list is still bottom first.
+- [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Magic`; the registry keys
+      (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
+- [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)
+      carries no drag payload (`ToolDef.drawn`, `toolDragData2D`, `ToolsPanel`).
 - [ ] **Drawing DSL data binding** (user, 2026-11-12): a `.dx` drawing names a data file (a JSON object) or holds
       a JSON object of its own, and a custom shape binds its fields to that data by JSONPath; e.g. the Graph shape
       draws the graph the data describes. Not designed yet: where the data is declared, how a bind is written

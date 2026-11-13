@@ -80,8 +80,11 @@ const endLabel = (scenes: RenderLists2D, scene: RenderList2D, end: Endpoint): st
   return node ? nodeLabel(scenes, node) : end.node;
 };
 
+/** Elements from the one drawn last, which is on top, to the one drawn first. */
+const frontFirst = <T extends { id: string; z?: string }>(elements: readonly T[]): T[] => sortByZ(elements).reverse();
+
 /**
- * The views tree under `root` (VIEWS.md §4, decision 3): each View's nodes in drawing order, then its links (a link
+ * The views tree under `root` (VIEWS.md §4, decision 3): each View's nodes front first, then its links (a link
  * lives in its container, as its endpoints may change); a frame is the View it opens, with that View's contents as its
  * children; an instance shows its object's contents, read-only. A scene reached twice on one branch is not expanded
  * again, so a cycle cannot recurse.
@@ -96,7 +99,8 @@ export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem
   ): ViewTreeItem[] => {
     const readonly = object !== undefined;
     const inObject = object ? { readonly, object } : {};
-    const nodes = sortByZ(Object.values(scene.nodes)).map((node): ViewTreeItem => {
+    // Front first, as a list of what is drawn reads: the row at the top is what is on top.
+    const nodes = frontFirst(Object.values(scene.nodes)).map((node): ViewTreeItem => {
       const id = `${prefix}${node.id}`;
       if (isViewNode(node)) {
         const child = scenes[node.scene];
@@ -157,7 +161,7 @@ export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem
         children: [],
       };
     });
-    const links = sortByZ(Object.values(scene.links)).map((link): ViewTreeItem => ({
+    const links = frontFirst(Object.values(scene.links)).map((link): ViewTreeItem => ({
       id: `${prefix}${link.id}`,
       kind: 'link',
       element: link.id,
@@ -179,6 +183,13 @@ export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem
     children: scene ? contents(scene, [root], '', undefined, new Set([root])) : [],
   };
 };
+
+/**
+ * Where a drop above or below a row puts an element in the drawing order: the rows list front first, so above a row
+ * is in front of its element, which is drawn after it.
+ */
+const dropPosition = (instruction: string): 'before' | 'after' =>
+  instruction === 'reorder-above' ? 'after' : 'before';
 
 /**
  * The `z` that moves `id` just before or after `target` in its scene's drawing order (nodes among nodes, links among
@@ -332,7 +343,7 @@ export const viewMove = (from: ViewTreeItem, to: ViewTreeItem, instruction: stri
         element: from.element,
         ...(to.group !== undefined ? { group: to.group } : {}),
         target: to.element,
-        position: instruction === 'reorder-above' ? 'before' : 'after',
+        position: dropPosition(instruction),
       };
 };
 
@@ -346,6 +357,6 @@ export const viewReorder = (from: ViewTreeItem, to: ViewTreeItem, instruction: s
         container: from.container,
         element: from.element,
         target: to.element,
-        position: instruction === 'reorder-above' ? 'before' : 'after',
+        position: dropPosition(instruction),
       }
     : undefined;

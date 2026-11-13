@@ -123,9 +123,10 @@ export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): Vi
   ): ViewTreeItem[] => {
     const resolved = resolveLayout(doc, layout);
     const inObject = object ? { readonly: true, object } : {};
-    // Rows list in drawing order, so a drag among them restacks as it looks.
+    // Rows list front first, as a list of what is drawn reads: the row at the top is what is on top.
     return Object.values(layout.elements)
       .sort(byZ)
+      .reverse()
       .map((element): ViewTreeItem => {
         const item = resolved[element.id];
         const parts = item?.parts === undefined || seen.has(item.parts) ? undefined : findLayout(doc, item.parts);

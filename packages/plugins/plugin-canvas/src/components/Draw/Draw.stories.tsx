@@ -108,7 +108,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** An empty board to draw shapes on with Draw shape (W). */
+/** An empty board to draw shapes on with Magic (W). */
 export const Shapes: Story = { args: { board: 'shapes' } };
 
 type Path = readonly (readonly [number, number])[];
@@ -261,7 +261,7 @@ export const Test: Story = {
 };
 
 /**
- * 1. Press W: the Draw button in the tools panel shows Draw shape.
+ * 1. Press W: the Draw button in the tools panel shows Magic.
  * 2. Draw a rough box in one stroke: a rectangle lands, its frame on the grid.
  * 3. Draw a rough ring: an ellipse lands.
  * 4. Draw a rough triangle: a polygon lands, with three sides.
