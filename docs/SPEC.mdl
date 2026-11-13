@@ -6325,6 +6325,14 @@ decision D-288: `/echo` draws its hero from the same ECHO art as the docs heroes
 ```
 
 ```mdl
+decision D-289: PLEX's Overview calls PLEX a framework for building apps out of plugins, not an agentic one. What agents get from a plugin, its operations and skills as tools, stays in "How it works".
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [app-framework-welcome]
+  why: Josiah asked what makes PLEX agentic; nothing in the framework itself does.
+```
+
+```mdl
 decision D-290: Each live demo is a Storybook story, built with the story harness in `@dxos/storybook-testing`, and the docs site embeds the story itself rather than a copy of it. The ECHO demos live in `@dxos/stories-echo`. `@dxos/storybook-testing` is a namespace package with one entry point per namespace, each plugin its own namespace. A story asks for peers; it is not always two. A page of stories can hand them one shared set of peers and one space so the page starts two clients, not two per demo.
   date: 2026-11-13
   by: user:wittjosiah
