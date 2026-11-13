@@ -23069,6 +23069,9 @@ importers:
       '@dxos/react-ui-chat':
         specifier: workspace:*
         version: link:../../ui/react-ui-chat
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -23108,6 +23111,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -23163,6 +23169,9 @@ importers:
       '@dxos/plugin-debug':
         specifier: workspace:*
         version: link:../../plugins/plugin-debug
+      '@dxos/plugin-dev-shell':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-dev-shell
       '@dxos/plugin-game':
         specifier: workspace:*
         version: link:../../plugins/plugin-game
@@ -28070,6 +28079,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../packages/common/log
+      '@dxos/plugin-dev-shell':
+        specifier: workspace:*
+        version: link:../../packages/plugins/plugin-dev-shell
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui

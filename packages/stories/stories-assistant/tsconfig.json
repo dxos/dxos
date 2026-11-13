@@ -101,6 +101,9 @@
       "path": "../../plugins/plugin-debug"
     },
     {
+      "path": "../../plugins/plugin-dev-shell"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
@@ -198,6 +201,9 @@
     },
     {
       "path": "../../ui/react-ui-debug"
+    },
+    {
+      "path": "../../ui/react-ui-dnd"
     },
     {
       "path": "../../ui/react-ui-editor"

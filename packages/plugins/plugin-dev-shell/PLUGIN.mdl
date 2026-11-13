@@ -207,6 +207,45 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       note: The autocue flow's setup steps do this and the Disable before each take.
 ```
 
+```mdl
+test QA-3: A scripted agent builds the World Clock plugin in storybook
+  desc: |
+    The story `stories/stories-assistant/PluginBuild` (Manual) walked by a person: the Composer Plugin project from
+    this plugin's template, its tasks on the chat's checklist, worked by the `buildPlugin` scripted model with this
+    plugin's real harness. The agent hands the work to three subagents, each in a column of its own: a planner
+    first, then a diagram subagent and a code subagent in parallel. Storybook mounts the shell route rooted at the
+    Composer app, so the plugin lands in `temp/plugins/world-clock` as it does in QA-2. Walked by the autocue flow
+    `packages/stories/stories-assistant/autocue/plugin-build.mjs`.
+  actors: human
+  status: draft
+  given:
+    - storybook serves `stories/stories-assistant` with the Dev Shell route mounted (`storybook dev`)
+    - the plugin's Vite dev server serves `temp/plugins/world-clock` on :3967
+  steps:
+    - name: Start the build
+      do: Click the "Build." chip above the prompt.
+      expect: the agent reads its checklist and a Plan column opens beside the agent's
+    - name: Watch the plan
+      do: Wait for the planner to report.
+      expect: |
+        the Plan column reads the guide with bash and writes the "World Clock plan" document, shown as a card, with
+        its memory below; the column closes after it reports
+    - name: Watch the diagram and the code in parallel
+      do: Wait while the Diagram and Code columns work side by side.
+      expect: |
+        the Diagram column draws the architecture as a drawing card; the Code column writes the plugin's files with
+        bash heredocs on this machine
+    - name: Keep talking
+      do: Select the agent's column and click the side-question chip.
+      expect: the agent answers the question while the subagents work
+    - name: Read the result
+      do: Wait for the agent to finish.
+      expect: |
+        the subagent columns are closed, the agent's typecheck prints `typecheck: ok`, the dev server serves the
+        manifest and answers 200 for the entry, all five tasks are done, and the agent's last message offers World
+        Clock with the plan and the diagram as cards
+```
+
 ## Changelog
 
 ```mdl
@@ -252,4 +291,12 @@ decision D-5: The World Clock QA step names the projects toolbar button by its c
   by: agent:claude-code
   for: user:wittjosiah
   why: The step is read verbatim by people and by `composer-qa`; the button it named no longer exists.
+```
+
+```mdl
+decision D-6: `test QA-3` walks the World Clock build in storybook with a scripted model and this plugin's real harness, which storybook now mounts in dev, through a plan subagent and then a diagram and a code subagent in parallel; QA-2 stays the live-model run in Composer.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: A scripted run takes a minute rather than twenty, never depends on a model's choices, and still exercises the harness, the template and the guide's code for real.
 ```

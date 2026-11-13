@@ -44,7 +44,8 @@ export const EMPTY_VIEW: TrajectoryView = {
 
 /**
  * The view of one thread of the chat. Main (no `thread`) leaves out every fork, which never joins main on its own; a
- * fork shows main up to the message it forks at, then its own messages. Lanes are those of the selection.
+ * fork shows main up to the message it forks at, then its own messages; a subagent's thread shows only its own. Lanes
+ * are those of the selection.
  */
 export const selectThread = (view: TrajectoryView, thread?: Trajectory.ThreadId): TrajectoryView => {
   // A fork merged whole is part of main now; any other fork stays out of it.
@@ -64,6 +65,15 @@ export const selectThread = (view: TrajectoryView, thread?: Trajectory.ThreadId)
       ...view,
       messages: view.messages.filter(onMain),
       lanes: view.lanes.filter((lane) => !forks.has(lane.id)),
+    };
+  }
+  // A subagent's thread starts with nothing but its task, so none of main comes with it.
+  if (fork.kind === 'fresh') {
+    return {
+      ...view,
+      messages: view.messages.filter((message) => view.laneOf.get(message.id) === fork.id),
+      // Shown alone, the lane is the foreground rather than a card in the background.
+      lanes: [{ ...fork, overlapped: false, backgrounded: false }],
     };
   }
   const forkPoint = view.messages.findIndex((message) => message.id === fork.from);

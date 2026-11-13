@@ -36,6 +36,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-chat": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
@@ -49,6 +50,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
@@ -69,6 +71,7 @@
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",
+    "@dxos/plugin-dev-shell": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-higgsfield": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",

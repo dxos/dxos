@@ -10,6 +10,7 @@ export * from './data.ts';
 export * from './decorators.tsx';
 export * from './prompt.ts';
 export * from './schema.ts';
+export * from './scripted.ts';
 export * from './agent-claude-plugin.ts';
 export * from './busy-space.ts';
 export * from './helpdesk-space.ts';

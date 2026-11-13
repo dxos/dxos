@@ -13,7 +13,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
-import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
+import { ScriptedLanguageModel, ScriptedScene, SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -152,6 +152,11 @@ type DecoratorsProps = Merge<
      * (supervisor + sub-agents).
      */
     scripted?: ScriptedLanguageModel.Script;
+    /**
+     * Serve each script as a model of its own (see `ScriptedLanguageModel.resolver`), offered in the chat's model picker
+     * beside the real models; the chat starts on `select`. Unlike `scripted`, every other model still resolves as usual.
+     */
+    scriptedModels?: { scenes: Readonly<Record<string, ScriptedScene.Scene>>; select?: string };
     /** Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. */
     assistantSettings?: Partial<Assistant.Settings>;
   },
@@ -233,6 +238,7 @@ const toStoryDecoratorsProps = ({
   config: configProp = config.remote,
   skills,
   scripted,
+  scriptedModels,
   createAgent,
   types = [],
   plugins = [],
@@ -269,7 +275,12 @@ const toStoryDecoratorsProps = ({
       scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
     ),
     TranscriptionPlugin.make(),
-    StoryPlugin({ onChatCreated, createAgent, onReady }),
+    StoryPlugin({
+      onChatCreated: scriptedModels?.select ? onScriptedChat(scriptedModels.select, onChatCreated) : onChatCreated,
+      createAgent,
+      onReady,
+    }),
+    ...(scriptedModels ? [ScriptedModelPlugin({ scenes: scriptedModels.scenes })] : []),
     ...plugins,
   ],
   Wrapper:
@@ -320,6 +331,45 @@ type StoryPluginOptions = {
    */
   onReady?: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;
 };
+
+/** Starts the chat on the scripted model, then runs the story's own hook. */
+const onScriptedChat =
+  (name: string, next: StoryPluginOptions['onChatCreated']): NonNullable<StoryPluginOptions['onChatCreated']> =>
+  async (props) => {
+    Obj.update(props.chat, (chat) => {
+      chat.session = { ...chat.session, model: ScriptedLanguageModel.modelId(name) };
+    });
+    await next?.(props);
+  };
+
+/** Serves scripts as models of their own, beside the models the assistant resolves, and offers them in the picker. */
+const ScriptedModelPlugin = Plugin.define<{ scenes: Readonly<Record<string, ScriptedScene.Scene>> }>(
+  Plugin.makeMeta({ key: DXN.make('com.example.plugin.scriptedModel'), name: 'Scripted model' }),
+).pipe(
+  Plugin.addModule(({ scenes }) => ({
+    id: 'com.example.plugin.scriptedModel.module.resolver',
+    // Startup: the AI service reads every resolver once, when its layer is first built.
+    activatesOn: ActivationEvents.Startup,
+    provides: [AppCapabilities.AiModelResolver, AssistantCapabilities.ModelPreset],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(
+          AppCapabilities.AiModelResolver,
+          ScriptedLanguageModel.resolver(
+            Object.fromEntries(Object.entries(scenes).map(([name, scene]) => [name, ScriptedScene.play(scene)])),
+          ),
+        ),
+        ...Object.keys(scenes).map((name) =>
+          Capability.contribute(AssistantCapabilities.ModelPreset, {
+            model: ScriptedLanguageModel.modelId(name),
+            provider: ScriptedLanguageModel.provider.id,
+            label: `Scripted · ${name}`,
+          }),
+        ),
+      ]),
+  })),
+  Plugin.make,
+);
 
 /** Marks the chat this harness creates, so a reload finds it among any chats a story seeded. */
 const HARNESS_CHAT_KEY = { source: 'com.example.plugin.testing', id: 'chat' };

@@ -21,8 +21,11 @@ const ENTRY_URL = `http://localhost:${PluginManifest.DEV_SERVER_PORT}/src/plugin
 /** Run by the reader from the Composer app directory: the dev shell kills scripts that outlive its timeout. */
 const DEV_SERVER_COMMAND = `node_modules/.bin/vite temp/plugins/${FOLDER}`;
 
-// Loading the plugin is the reader's click, not a task, so a chat can run the plan end to end on its own.
-const DEV_SHELL: Templates.Variant = {
+/**
+ * The template's variant for a Composer served by a vite dev server: the run's instructions, skill and tasks. Loading the
+ * plugin is the reader's click, not a task, so a chat can run the plan end to end on its own.
+ */
+export const variant: Templates.Variant = {
   id: 'org.dxos.project.composerPluginDevServer',
   label: 'Composer Plugin (Dev Server)',
   skill: SKILL_KEY,
@@ -63,4 +66,4 @@ ${Templates.IDS}`,
  */
 export const composerPlugin: ProjectCapabilities.Template | undefined = isTauri()
   ? undefined
-  : Templates.makeComposerPlugin(DEV_SHELL);
+  : Templates.makeComposerPlugin(variant);

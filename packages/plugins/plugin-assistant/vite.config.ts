@@ -10,6 +10,7 @@ export default defineConfig({
     'ns/Hooks': 'src/Hooks.ts',
     'ns/Extensions': 'src/Extensions.ts',
     'ns/Chat': 'src/Chat.ts',
+    'ns/ChatPlane': 'src/ChatPlane.ts',
     'Chat': 'src/components/Chat/index.ts',
     'TracePanel': 'src/containers/TracePanel/TracePanel.tsx',
     'AssistantSkill': 'src/skills/assistant/AssistantSkill.ts',

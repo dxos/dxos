@@ -5,14 +5,18 @@
 import { describe, it, test } from '@effect/vitest';
 import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { getWorkMarks, resetWorkMarks } from '@dxos/util';
 
+import * as AiModelResolver from '../AiModelResolver.ts';
+import * as AiService from '../AiService.ts';
 import * as AiTelemetry from '../AiTelemetry.ts';
+import { AiModelNotAvailableError } from '../errors.ts';
 import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
 
-const { text, reasoning, toolCall, promptIncludes, layer, __testing } = ScriptedLanguageModel;
+const { text, reasoning, toolCall, promptIncludes, layer, modelId, resolver, __testing } = ScriptedLanguageModel;
 
 describe('ScriptedLanguageModel', () => {
   describe('encoders', () => {
@@ -221,6 +225,29 @@ describe('ScriptedLanguageModel', () => {
         });
         expect(response.text).toEqual('sub-1');
       }, Effect.provide(routedLayer())),
+    );
+  });
+
+  describe('resolver', () => {
+    const service = AiModelResolver.buildAiService.pipe(
+      Layer.provide(resolver({ hello: [{ parts: [text('Hello from a script.')] }] })),
+    );
+
+    it.effect(
+      'serves a script as a model of its own and leaves every other model to the resolvers below',
+      Effect.fnUntraced(function* ({ expect }) {
+        const ai = yield* AiService.AiService;
+        const reply = yield* LanguageModel.generateText({ prompt: 'Hi' }).pipe(
+          Effect.provide(ai.languageModel(modelId('hello'))),
+        );
+        expect(reply.text).toEqual('Hello from a script.');
+
+        const other = yield* LanguageModel.generateText({ prompt: 'Hi' }).pipe(
+          Effect.provide(ai.languageModel(modelId('unknown'))),
+          Effect.flip,
+        );
+        expect(other).toBeInstanceOf(AiModelNotAvailableError);
+      }, Effect.provide(service)),
     );
   });
 });
