@@ -201,14 +201,22 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
         .join(','),
     [lanes],
   );
+  // One timer per lane, started when that lane finishes, so another lane finishing does not restart its delay.
+  const timersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   useEffect(() => {
-    const ids = done.split(',').filter((id) => id.length > 0 && !closed.has(id));
-    if (ids.length === 0) {
-      return;
+    for (const id of done.split(',')) {
+      if (id.length > 0 && !timersRef.current.has(id)) {
+        timersRef.current.set(
+          id,
+          setTimeout(() => setClosed((previous) => new Set([...previous, id])), CLOSE_DELAY),
+        );
+      }
     }
-    const timer = setTimeout(() => setClosed((previous) => new Set([...previous, ...ids])), CLOSE_DELAY);
-    return () => clearTimeout(timer);
-  }, [done, closed]);
+  }, [done]);
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => timers.forEach((timer) => clearTimeout(timer));
+  }, []);
 
   const open = useMemo(() => lanes.filter(({ id }) => !closed.has(id)), [lanes, closed]);
   const items = useMemo(() => [{ id: chat.id }, ...open.map(({ id }) => ({ id }))], [chat, open]);

@@ -12,16 +12,20 @@ import { CalculatorSkill, ModuleContainer, createDecorators, storyParameters } f
 type StoryArgs = ComponentProps<typeof ModuleContainer> & { script: ScriptName };
 
 /**
- * A chat on a scripted model: every script in `src/scripts` is served as a model of its own and offered in the model
- * picker, and the chat starts on the one the `script` arg names.
+ * A chat on a scripted model: every script in `src/scripts` that needs no seeded project is served as a model of its
+ * own and offered in the model picker, and the chat starts on the one the `script` arg names.
  */
 const meta: Meta<StoryArgs> = {
   title: 'stories/stories-assistant/ScriptedModel',
   render: ModuleContainer,
   parameters: storyParameters,
   decorators: createDecorators<StoryArgs>(({ args }) => ({
-    // Every script is offered in the model picker; the chat starts on the one the `script` arg names.
-    scriptedModels: { scenes: Scripts, select: args.script },
+    // Every script but `buildPlugin`, which needs the project PluginBuild seeds, is offered in the model picker; the
+    // chat starts on the one the `script` arg names.
+    scriptedModels: {
+      scenes: Object.fromEntries(Object.entries(Scripts).filter(([name]) => name !== 'buildPlugin')),
+      select: args.script,
+    },
     skills: [CalculatorSkill.key],
   })),
   args: { layout: [[StoryRole.Chat]] },

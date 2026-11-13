@@ -93,6 +93,37 @@ describe('ScriptedScene', () => {
     expect(reply).toMatchObject({ parts: [{ _tag: 'text', text: `Launch plan is ${OBJECT}.` }] });
   });
 
+  test('keeps each placeholder on its own capture, and matches a global expression on every call', ({ expect }) => {
+    const request = (value: string): ScriptedLanguageModel.ScriptedRequest => ({
+      system: '',
+      text: '',
+      prompt: Prompt.make([user(value)]),
+      tools: [],
+    });
+    const nested = ScriptedScene.play(
+      ScriptedScene.make([
+        ScriptedScene.conversation('nested', [
+          ScriptedScene.turn(
+            'user',
+            `${ScriptedScene.capture('first', /(foo|bar)/)} ${ScriptedScene.capture('second', /\d+/)}`,
+          ),
+          ScriptedScene.turn('assistant', [
+            ScriptedScene.text(`${ScriptedScene.capture('first')}=${ScriptedScene.capture('second')}`),
+          ]),
+        ]),
+      ]),
+    );
+    expect(nested(request('foo 42'), 0)).toMatchObject({ parts: [{ _tag: 'text', text: 'foo=42' }] });
+
+    const echo = ScriptedScene.play(
+      ScriptedScene.make([
+        ScriptedScene.generated('echo', /^echo /g, () => ({ parts: [ScriptedScene.text('again')] })),
+      ]),
+    );
+    expect(echo(request('echo one'), 0)).toMatchObject({ parts: [{ _tag: 'text', text: 'again' }] });
+    expect(echo(request('echo one'), 1)).toMatchObject({ parts: [{ _tag: 'text', text: 'again' }] });
+  });
+
   it.effect(
     'fails loudly on a prompt no conversation expects',
     Effect.fnUntraced(function* ({ expect }) {

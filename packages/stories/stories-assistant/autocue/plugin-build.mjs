@@ -3,7 +3,7 @@
 //
 
 import { spawn } from 'node:child_process';
-import { openSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, openSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,6 +30,9 @@ const COMPOSER_APP = fileURLToPath(new URL('../../../apps/composer-app/', import
 
 const MANIFEST = 'http://localhost:3967/manifest.json';
 
+/** The World Clock fixture, whose config seeds the plugin's folder on a fresh checkout. */
+const FIXTURE = fileURLToPath(new URL('../fixtures/world-clock/', import.meta.url));
+
 const answers = (url) =>
   fetch(url, { signal: AbortSignal.timeout(2_000) }).then(
     (response) => response.ok,
@@ -41,6 +44,15 @@ const ensureDevServer = async () => {
   if (await answers(MANIFEST)) {
     return;
   }
+  // Vite loads its config once, at startup, so a fresh checkout gets the fixture's config before the server starts;
+  // the code subagent writes the same files again, with the source, during the take.
+  const plugin = join(COMPOSER_APP, 'temp/plugins/world-clock');
+  if (!existsSync(join(plugin, 'vite.config.ts'))) {
+    mkdirSync(plugin, { recursive: true });
+    for (const file of ['dx.config.ts', 'vite.config.ts', 'tsconfig.json']) {
+      copyFileSync(join(FIXTURE, file), join(plugin, file));
+    }
+  }
   const log = openSync(join(tmpdir(), 'autocue-plugin-build.vite.log'), 'w');
   const vite = join(COMPOSER_APP, 'node_modules/vite/bin/vite.js');
   spawn(process.execPath, [vite, 'temp/plugins/world-clock'], {
@@ -50,6 +62,9 @@ const ensureDevServer = async () => {
   }).unref();
   for (let attempt = 0; attempt < 60 && !(await answers(MANIFEST)); attempt++) {
     await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
+  if (!(await answers(MANIFEST))) {
+    throw new Error(`The plugin's dev server did not answer at ${MANIFEST}; see its log in ${tmpdir()}.`);
   }
 };
 

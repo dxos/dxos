@@ -201,19 +201,19 @@ const agent = ScriptedScene.conversation('agent', [
     ],
     { delay: '1 second' },
   ),
+  // The scene goes no further than a check that passed: a failed one stops it with the output in its report.
+  ScriptedScene.turn('tool', /typecheck: ok/),
   ScriptedScene.turn(
     'assistant',
     [
       ScriptedScene.text('Checking that the dev server serves the manifest and compiles the entry.'),
       bash(
-        [
-          `curl -sf ${ComposerPluginTemplate.MANIFEST_URL} || echo 'The dev server is not running: start node_modules/.bin/vite ${DIR} from the Composer app directory.'`,
-          `echo; echo "entry: $(curl -s -o /dev/null -w '%{http_code}' ${ENTRY_URL})"`,
-        ].join('\n'),
+        `curl -sf ${ComposerPluginTemplate.MANIFEST_URL} && echo && echo "entry: $(curl -s -o /dev/null -w '%{http_code}' ${ENTRY_URL})"`,
       ),
     ],
     { delay: '1 second' },
   ),
+  ScriptedScene.turn('tool', /entry: 200/),
   ScriptedScene.turn('assistant', [status({ check: 'done', offer: 'done', parent: 'done' })], { delay: '1 second' }),
   ScriptedScene.turn(
     'assistant',

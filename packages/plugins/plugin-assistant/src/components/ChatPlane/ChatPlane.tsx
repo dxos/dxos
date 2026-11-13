@@ -285,6 +285,16 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
     });
   }, [viewport, scrollToColumn]);
 
+  // Whether every column fits changes with the viewport's width as well as with the columns.
+  useEffect(() => {
+    if (!viewport) {
+      return;
+    }
+    const observer = new ResizeObserver(() => recenter());
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [viewport, recenter]);
+
   const navigation = useListNavigation({ mode: 'listbox', axis: 'horizontal' });
   const selection = useListSelection({
     mode: 'single',

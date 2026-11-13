@@ -69,12 +69,13 @@ const seedProject = async ({
 
 const decorators = createDecorators({
   lazyPlugins: async () => {
-    const [{ Drawing }, DevShellPlugin, IllustratorPlugin, ProjectsPlugin, TasksPlugin, TldrawPlugin] =
+    const [{ Drawing }, DevShellPlugin, IllustratorPlugin, ProjectsPlugin, SpacePlugin, TasksPlugin, TldrawPlugin] =
       await Promise.all([
         import('@dxos/plugin-illustrator'),
         import('@dxos/plugin-dev-shell/DevShellPlugin'),
         import('@dxos/plugin-illustrator/IllustratorPlugin'),
         import('@dxos/plugin-projects/ProjectsPlugin'),
+        import('@dxos/plugin-space/SpacePlugin'),
         import('@dxos/plugin-tasks/TasksPlugin'),
         import('@dxos/plugin-tldraw/TldrawPlugin'),
       ]);
@@ -87,6 +88,8 @@ const decorators = createDecorators({
         DevShellPlugin.make(),
         IllustratorPlugin.make(),
         TldrawPlugin.make(),
+        // Files the plan and code documents the subagents create.
+        SpacePlugin.make({}),
       ],
       types: [Project.Project, TaskSet.TaskSet, Task.Task, Drawing.Drawing, Drawing.Canvas],
     };

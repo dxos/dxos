@@ -110,8 +110,10 @@ type Matcher = (value: string) => Record<string, string> | undefined;
 /** Compiles a pattern into a test that returns what it captured, or nothing when it does not match. */
 const compile = (pattern: Pattern): Matcher => {
   if (pattern instanceof RegExp) {
+    // A global or sticky expression keeps `lastIndex` between calls, so a copy without those flags matches every call.
+    const regex = new RegExp(pattern.source, pattern.flags.replace(/[gy]/g, ''));
     return (value) => {
-      const match = pattern.exec(value);
+      const match = regex.exec(value);
       return match ? { ...match.groups } : undefined;
     };
   }
@@ -121,7 +123,8 @@ const compile = (pattern: Pattern): Matcher => {
   for (const match of pattern.matchAll(PLACEHOLDER)) {
     source += escape(pattern.slice(last, match.index));
     const { kind, name, source: own } = parsePlaceholder(match[1]);
-    source += `(${own ?? KINDS[kind]})`;
+    // Named, so a group nested in a placeholder's own expression does not shift the placeholders after it.
+    source += `(?<p${names.length}>${own ?? KINDS[kind]})`;
     names.push(name);
     last = match.index + match[0].length;
   }
@@ -129,7 +132,9 @@ const compile = (pattern: Pattern): Matcher => {
   const regex = new RegExp(source);
   return (value) => {
     const match = regex.exec(value);
-    return match ? Object.fromEntries(names.map((name, index) => [name, match[index + 1]])) : undefined;
+    return match
+      ? Object.fromEntries(names.map((name, index) => [name, match.groups?.[`p${index}`] ?? '']))
+      : undefined;
   };
 };
 

@@ -6,7 +6,7 @@ import { ScriptedLanguageModel, ScriptedScene } from '@dxos/ai/testing';
 
 /** A line the runtime writes about other threads or an earlier tool call; never the request itself. */
 const isRuntimeNote = (value: string) =>
-  /^Thread \S+ .* is (running|done)/.test(value) || value.startsWith('[Result of the earlier');
+  /^Thread \S+ (?:\(".*"\) )?is (?:running|done)/.test(value) || value.startsWith('[Result of the earlier');
 
 /**
  * The prompt a thread answers: the last text of the last user message that is neither a runtime status line nor a

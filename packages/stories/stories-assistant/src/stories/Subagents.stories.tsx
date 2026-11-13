@@ -73,6 +73,11 @@ export const Demo: Story = {
 //
 
 const columnsDecorators = createDecorators({
+  lazyPlugins: async () => {
+    const SpacePlugin = await import('@dxos/plugin-space/SpacePlugin');
+    // Files the documents the subagents create.
+    return { plugins: [SpacePlugin.make({})] };
+  },
   skills: [MarkdownSkill.key, PlanningSkill.key],
   scriptedModels: { scenes: { launchKit: Scripts.launchKit }, select: 'launchKit' },
   assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },

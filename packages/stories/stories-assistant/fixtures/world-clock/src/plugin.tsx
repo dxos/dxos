@@ -182,17 +182,24 @@ const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
   // The selection lives in the view state under the clock's URI, where the map surface reads it.
   const contextId = clock ? Obj.getURI(clock) : undefined;
   const selected = useSelection(contextId, 'single');
-  const select = (timezone: string) =>
-    contextId && void invokePromise(LayoutOperation.Select, { contextId, subject: { mode: 'single', id: timezone } });
-
   // Created on the first change rather than on first view: the query is empty until it has loaded.
-  const save = (next: ClockEntry[]) => {
+  const save = (next: readonly ClockEntry[]) => {
     if (clock) {
       Obj.update(clock, (clock) => {
-        clock.clocks = next;
+        clock.clocks = [...next];
       });
-    } else {
-      db?.add(Obj.make(Clock, { clocks: next }));
+      return clock;
+    }
+    return db?.add(Obj.make(Clock, { clocks: [...next] }));
+  };
+  // Selecting is a change too: the selection is keyed by the clock's URI, so the first one creates it.
+  const select = (timezone: string) => {
+    const target = clock ?? save(clocks);
+    if (target) {
+      void invokePromise(LayoutOperation.Select, {
+        contextId: Obj.getURI(target),
+        subject: { mode: 'single', id: timezone },
+      });
     }
   };
   const add = (timezone: string) =>
