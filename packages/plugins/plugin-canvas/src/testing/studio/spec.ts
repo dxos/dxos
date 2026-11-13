@@ -66,6 +66,10 @@ export type SlideMetrics = {
   headerWidth: number;
   headerHeight: number;
   headerGap: number;
+  /** Between one band and the next, and the column a band's own name stands in. */
+  bandGap: number;
+  bandLabelWidth: number;
+  bandLabelGap: number;
 };
 
 export const SLIDE_METRICS: SlideMetrics = {
@@ -83,12 +87,30 @@ export const SLIDE_METRICS: SlideMetrics = {
   headerWidth: 336,
   headerHeight: 112,
   headerGap: 96,
+  bandGap: 96,
+  bandLabelWidth: 288,
+  bandLabelGap: 48,
+};
+
+/**
+ * A band: a row of the slide, holding one cell per column. Where groups divide a slide left to right, bands divide
+ * it top to bottom, and the two together make a grid — which is what the Agent slide is.
+ */
+export type SlideBand = {
+  id: string;
+  /** Named to the left of the row, since a band's columns are already the slide's. */
+  label?: string;
+  box?: boolean;
+  columns: readonly SlideColumn[];
 };
 
 export type SlideSpec = {
   id: string;
   title: string;
-  groups: readonly SlideGroup[];
+  /** Columns side by side. A slide declares these or {@link bands}, never both. */
+  groups?: readonly SlideGroup[];
+  /** Rows stacked down the slide, their columns aligned. */
+  bands?: readonly SlideBand[];
   edges?: readonly SlideEdge[];
   metrics?: Partial<SlideMetrics>;
 };
@@ -100,8 +122,8 @@ export type SlideLayout = {
   cards: ReadonlyMap<string, Box & { card: SlideCard }>;
   /** The trunks a group's header makes: its card and the first card of each of that group's columns. */
   trunks: readonly { from: string; to: string }[];
-  boxes: readonly (Box & { group: SlideGroup })[];
-  headings: readonly (Box & { text: string })[];
+  boxes: readonly (Box & { id: string })[];
+  headings: readonly (Box & { text: string; align?: 'center' | 'right' })[];
 };
 
 const columnHeight = (column: SlideColumn, { cardHeight, rowGap }: SlideMetrics) =>
@@ -115,23 +137,74 @@ const groupWidth = (group: SlideGroup, { cardWidth, columnGap }: SlideMetrics) =
  * Every column is centred on one horizontal axis, so a column of one (Person) sits level with the middle of a column
  * of six without anything measuring anything.
  */
+/**
+ * Bands: rows down the slide, their columns on one pitch so a cell lines up with the cell above it. Each band is as
+ * tall as its own longest cell, and its cards sit centred in it.
+ */
+const layoutBands = (bands: readonly SlideBand[], metrics: SlideMetrics): SlideLayout => {
+  const { cardWidth, cardHeight, rowGap, columnGap, boxPadding, bandGap, bandLabelWidth, bandLabelGap } = metrics;
+  const { headingSize } = metrics;
+  const cards = new Map<string, Box & { card: SlideCard }>();
+  const boxes: (Box & { id: string })[] = [];
+  const headings: (Box & { text: string; align?: 'center' | 'right' })[] = [];
+  const lanes = Math.max(...bands.map(({ columns }) => columns.length));
+  const width = lanes * cardWidth + (lanes - 1) * columnGap;
+  let top = 0;
+  for (const band of bands) {
+    const tallest = Math.max(...band.columns.map((column) => columnHeight(column, metrics)));
+    band.columns.forEach((column, index) => {
+      const lane = index * (cardWidth + columnGap);
+      // Centred in the band, so a cell of one card sits level with the middle of a cell of two.
+      let y = top + (tallest - columnHeight(column, metrics)) / 2;
+      for (const card of column) {
+        cards.set(card.id, { x: lane, y, width: cardWidth, height: cardHeight, card });
+        y += cardHeight + rowGap;
+      }
+    });
+    if (band.box) {
+      boxes.push({
+        x: -boxPadding,
+        y: top - boxPadding,
+        width: width + 2 * boxPadding,
+        height: tallest + 2 * boxPadding,
+        id: band.id,
+      });
+    }
+    if (band.label) {
+      // To the left of the row and against it, since the columns are the slide's rather than this band's.
+      headings.push({
+        x: -boxPadding - bandLabelGap - bandLabelWidth,
+        y: top + (tallest - headingSize) / 2,
+        width: bandLabelWidth,
+        height: headingSize,
+        text: band.label,
+        align: 'right',
+      });
+    }
+    top += tallest + bandGap;
+  }
+  return { cards, boxes, trunks: [], headings };
+};
+
 export const layoutSlide = (spec: SlideSpec): SlideLayout => {
   const metrics = { ...SLIDE_METRICS, ...spec.metrics };
+  if (spec.bands) {
+    return layoutBands(spec.bands, metrics);
+  }
+  const groups = spec.groups ?? [];
   const { cardWidth, cardHeight, rowGap, columnGap, groupGap, boxPadding, headingGap, headingSize } = metrics;
   const { headerWidth, headerHeight, headerGap } = metrics;
   const cards = new Map<string, Box & { card: SlideCard }>();
   const trunks: { from: string; to: string }[] = [];
-  const boxes: (Box & { group: SlideGroup })[] = [];
-  const headings: (Box & { text: string })[] = [];
+  const boxes: (Box & { id: string })[] = [];
+  const headings: (Box & { text: string; align?: 'center' | 'right' })[] = [];
   // The axis every column is centred on, and the box every group's own box is drawn around.
   const axis = 0;
   // ONE height for every box, taken from the longest column on the slide: a box drawn around its own group would be
   // a different height in each, while the cards inside keep the one gap between them.
-  const tallest = Math.max(
-    ...spec.groups.flatMap(({ columns }) => columns.map((column) => columnHeight(column, metrics))),
-  );
+  const tallest = Math.max(...groups.flatMap(({ columns }) => columns.map((column) => columnHeight(column, metrics))));
   let left = 0;
-  for (const group of spec.groups) {
+  for (const group of groups) {
     const width = groupWidth(group, metrics);
     group.columns.forEach((column, index) => {
       const lane = left + index * (cardWidth + columnGap);
@@ -164,7 +237,7 @@ export const layoutSlide = (spec: SlideSpec): SlideLayout => {
         y: axis - tallest / 2 - boxPadding,
         width: width + 2 * boxPadding,
         height: tallest + 2 * boxPadding,
-        group,
+        id: group.id,
       });
     }
     if (group.heading) {
@@ -218,13 +291,13 @@ export const seedSlideSpec =
   (content: ContentMap, root: string): void => {
     const { headingSize } = { ...SLIDE_METRICS, ...spec.metrics };
     const { cards, boxes, trunks, headings } = layoutSlide(spec);
-    for (const { group, ...box } of boxes) {
-      content[nodeKey(elementId(group.id, 'frame'))] = {
+    for (const { id: boxId_, ...box } of boxes) {
+      content[nodeKey(elementId(boxId_, 'frame'))] = {
         kind: 'node',
         scene: root,
         node: {
           type: 'rect',
-          id: elementId(group.id, 'frame'),
+          id: elementId(boxId_, 'frame'),
           z: 'a0',
           center: { x: box.x + box.width / 2, y: box.y + box.height / 2 },
           size: { width: box.width, height: box.height },
@@ -232,7 +305,7 @@ export const seedSlideSpec =
         },
       };
     }
-    headings.forEach(({ text, ...box }, index) => {
+    headings.forEach(({ text, align, ...box }, index) => {
       const id = elementId(`heading-${index}`, 'label');
       content[nodeKey(id)] = {
         kind: 'node',
@@ -247,7 +320,7 @@ export const seedSlideSpec =
           style: {
             fill: false,
             border: false,
-            alignHorizontal: 'center',
+            alignHorizontal: align ?? 'center',
             alignVertical: 'middle',
             fontSize: headingSize,
           },

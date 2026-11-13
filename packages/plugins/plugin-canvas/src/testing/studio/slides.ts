@@ -13,6 +13,7 @@
 
 import agentSource from './agent.diagram?raw';
 import agentModel from './agent.json?raw';
+import { AGENT } from './agent.spec.ts';
 import agentsSource from './agents.diagram?raw';
 import agentsModel from './agents.json?raw';
 import architectureSource from './architecture.diagram?raw';
@@ -142,7 +143,7 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     links: 'ortho',
   }),
   slide('chat', chatSource, chatModel, { spec: CHAT, title: CHAT.title }),
-  slide('agent', agentSource, agentModel, { links: 'ortho' }),
+  slide('agent', agentSource, agentModel, { spec: AGENT, title: AGENT.title }),
 ];
 
 export const studioSlide = (id: string): StudioSlide => {
