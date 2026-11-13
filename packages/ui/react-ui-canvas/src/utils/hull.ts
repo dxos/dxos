@@ -12,6 +12,7 @@
 import {
   type Bounds,
   DEFAULT_GRID,
+  DEFAULT_HULL_SHAPE,
   type HullNode,
   type HullShape,
   type Node,
@@ -219,7 +220,7 @@ export const hullTiles = (nodes: readonly Node[], hull: HullNode, spec: LatticeS
   if (tiles.size === 0) {
     return tiles;
   }
-  if (hull.shape === 'box') {
+  if ((hull.shape ?? DEFAULT_HULL_SHAPE) === 'box') {
     const all = [...tiles].map(tileOf);
     const [minCol, maxCol] = [Math.min(...all.map(({ col }) => col)), Math.max(...all.map(({ col }) => col))];
     const [minRow, maxRow] = [Math.min(...all.map(({ row }) => row)), Math.max(...all.map(({ row }) => row))];
@@ -419,7 +420,7 @@ export const hullOutline = (
   }
   const margin = Math.max(0, HULL_MARGIN - insetOf(hull, grid));
   const points = frames.flatMap((frame) => boundsCorners(grown(frame, margin)));
-  return hull.shape === 'box' ? boundsCorners(boundsOf(points)) : convexHull(points);
+  return (hull.shape ?? DEFAULT_HULL_SHAPE) === 'box' ? boundsCorners(boundsOf(points)) : convexHull(points);
 };
 
 const samePoints = (left: readonly Point[] | undefined, right: readonly Point[]): boolean =>
@@ -518,7 +519,7 @@ export type EncloseOptions = {
   lattice?: LatticeSpec;
   /** The drawing's grid pitch, which a hull's inset counts in. */
   grid?: number;
-  /** Unset, `perimeter`. */
+  /** Unset, `DEFAULT_HULL_SHAPE`. */
   shape?: HullShape;
 };
 

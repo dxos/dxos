@@ -422,6 +422,8 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       `moveToHull`), a shape in an inner hull is found in that hull's group (`selectedElement`), and deleting an
       inner hull leaves its shapes in the outer (`deleteElements`).
       `Hull.stories.tsx` Nested Test. The story host now makes a new layout on the document's model, as the app's does.
+- [x] **A hull is a Box by default** (user, 2026-11-13): a hull that names no border is a box
+      (`DEFAULT_HULL_SHAPE`), so the Hull tool and command make one; a hull stored as `perimeter` stays one.
 - [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Sketch`; the registry keys
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)

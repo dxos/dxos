@@ -14,6 +14,7 @@
 //
 
 import {
+  DEFAULT_HULL_SHAPE,
   type Endpoint,
   HULL_SHAPES,
   type HullNode,
@@ -250,7 +251,7 @@ const collapseGroup = (
     ports: instancePorts(bounds, composite),
     // Still inside the hull that holds it, whose own group it is then a part of.
     ...(hull.parent !== undefined ? { parent: hull.parent } : {}),
-    hull: hull.shape ?? 'perimeter',
+    hull: hull.shape ?? DEFAULT_HULL_SHAPE,
     ...(insetOf(hull) !== undefined ? { hullInset: insetOf(hull) } : {}),
     ...shared(hull),
   };

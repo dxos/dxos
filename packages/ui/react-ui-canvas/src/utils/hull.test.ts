@@ -44,9 +44,11 @@ const cell = (id: string, col: number, row: number, parent?: string): Node => {
   };
 };
 
-const hull = (id: string, shape?: HullShape, parent?: string): Node => ({
+/** A hull that names its border: a perimeter unless told, which is what most of these tests are about. */
+const hull = (id: string, shape: HullShape = 'perimeter', parent?: string): HullNode => ({
   ...createNode({ type: 'hull', id, z: `0${id}`, center: { x: 0, y: 0 }, size: { width: 10, height: 10 } }),
-  ...(shape ? { shape } : {}),
+  type: 'hull',
+  shape,
   ...(parent ? { parent } : {}),
 });
 
@@ -180,6 +182,18 @@ describe('hull', () => {
     expect(isHullNode(perimeter) && perimeter.points?.some((point) => point.x === 1 && point.y === 1)).toBe(false);
     // A scene already fitted is the same scene, so nothing downstream redraws.
     expect(fitHulls(fitted)).toBe(fitted);
+  });
+
+  test('a hull that names no border is a box, and so is one made of a selection', ({ expect }) => {
+    const { shape: _shape, ...unnamed } = hull('h');
+    const nodes = [unnamed, ...corner().slice(1)];
+    // The L's three tiles and the free one in its corner, as a box takes them.
+    expect(hullTiles(nodes, unnamed, spec).size).toBe(4);
+    const made = enclose(sceneOf([cell('a', 0, 0), cell('b', 1, 0), cell('c', 0, 1)]), ['a', 'b', 'c'], 'new', {
+      lattice: spec,
+    });
+    const border = made?.nodes.new;
+    expect(border && isHullNode(border) && [border.shape, border.points?.length]).toEqual([undefined, 4]);
   });
 
   test('a hull with nothing inside it keeps the frame it was given', ({ expect }) => {
