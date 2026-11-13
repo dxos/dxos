@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { ReducerInput, ReducerOutput } from '@dxos/conductor';
+import { MAJOR_GRID } from '@dxos/scene';
 
 import { ReducerComponent } from './Array.tsx';
 import { createFunctionPorts, defineComputeNode, getHeight } from './common/index.ts';
@@ -30,10 +31,10 @@ export type ReducerShape = Schema.Schema.Type<typeof ReducerShape>;
 // Defs
 //
 
-export type CreateReduceProps = CreateShapeProps<ReducerShape> & { reduce?: string };
+export type CreateReduceProps = CreateShapeProps<ReducerShape>;
 
 export const createReducer = ({
-  size = { width: 192, height: getHeight(ReducerInput) },
+  size = { width: 3 * MAJOR_GRID, height: getHeight(ReducerInput) },
   ...rest
 }: CreateReduceProps): ReducerShape =>
   createShape<ReducerShape>({

@@ -12,36 +12,20 @@ import { Resource } from '@dxos/context';
 import { Database, Feed, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { Transcriber } from '@dxos/pipeline-transcription';
-import { MediaStreamRecorder } from '@dxos/react-ui-transcription/capture';
+import { type Transcriber, TranscriptionNotConfiguredError } from '@dxos/pipeline-transcription';
+import { type JoinTranscription, createRealtimeKitTranscriber } from '@dxos/react-ui-transcription/capture';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { TranscriptionCapabilities } from '#types';
-
-/**
- * Length of the chunk in ms.
- */
-const RECORD_INTERVAL = 200;
-
-/**
- * Number of chunks to save before the user starts speaking.
- */
-const PREFIXED_CHUNKS_AMOUNT = 10;
-
-/**
- * Number of chunks to transcribe automatically after.
- * Combined should be mess than 25MB or whisper would fail.
- */
-const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
 export type TranscriptionManagerOptions = {
   registry: Registry.AtomRegistry;
 
   /**
-   * Transcription service base URL, normally `<edge>/calls` (the worker that serves `/transcribe`).
-   * Transcription fails with a clear error when absent — there is no built-in endpoint.
+   * Joins this identity's RealtimeKit transcription meeting (`CallsServiceClient.joinTranscription`).
+   * Transcription fails with {@link TranscriptionNotConfiguredError} when absent, i.e. when EDGE is not configured.
    */
-  transcriptionEndpoint?: string;
+  join?: JoinTranscription;
 
   /**
    * Enrich the message before it is written to the transcription feed.
@@ -56,12 +40,13 @@ export type TranscriptionManagerOptions = {
  */
 export class TranscriptionManagerImpl extends Resource implements TranscriptionCapabilities.TranscriptionManager {
   private readonly _registry: Registry.AtomRegistry;
-  private readonly _transcriptionEndpoint?: string;
+  private readonly _join?: JoinTranscription;
   private readonly _messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
   private _identityDid?: string = undefined;
-  private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
+  /** The track {@link _transcriber} was opened on; a different track means a new session. */
+  private _transcriberTrack?: MediaStreamTrack = undefined;
   private _feed?: Feed.Feed = undefined;
   private _feedServiceLayer?: Layer.Layer<Database.Service> = undefined;
   private _enabledAtom = Atom.make(false);
@@ -69,7 +54,7 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
   constructor(options: TranscriptionManagerOptions) {
     super();
     this._registry = options.registry;
-    this._transcriptionEndpoint = options.transcriptionEndpoint;
+    this._join = options.join;
     this._messageEnricher = options.messageEnricher;
   }
 
@@ -100,9 +85,9 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     }
 
     if (recording) {
-      this._transcriber?.startChunksRecording();
+      this._transcriber?.start();
     } else {
-      this._transcriber?.stopChunksRecording();
+      this._transcriber?.stop();
     }
     return this;
   }
@@ -113,7 +98,7 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     }
 
     // Set first because `_maybeRestartTranscriber` gates on it, but roll back on failure: an
-    // endpoint-less enable throws, and a latched atom would show "Stop transcription" — and tell
+    // unconfigured enable throws, and a latched atom would show "Stop transcription" — and tell
     // remote peers transcription is on — while nothing records, with the equality guard above
     // blocking any retry in the same direction.
     this._registry.set(this._enabledAtom, enabled);
@@ -156,51 +141,33 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
   }
 
   private async _maybeRestartTranscriber(): Promise<void> {
-    if (!this._audioStreamTrack || !this.getEnabled() || !this.isOpen) {
+    const track = this._audioStreamTrack;
+    if (!track || !this.getEnabled() || !this.isOpen || track === this._transcriberTrack) {
       return;
     }
-
-    // Reinitialize transcriber if feed or media stream track has changed.
-    let needReinit = false;
-    if (this._audioStreamTrack !== this._mediaRecorder?.mediaStreamTrack) {
-      // Retire the old transcriber before latching the new recorder: assigning first would bind a
-      // surviving transcriber to a recorder it never opened, and the track equality above would
-      // then read as unchanged for the rest of the session.
-      await this.#closeTranscriber();
-      this._mediaRecorder = new MediaStreamRecorder({
-        mediaStreamTrack: this._audioStreamTrack,
-        config: { interval: RECORD_INTERVAL },
-      });
-      needReinit = true;
+    if (!this._join) {
+      throw new TranscriptionNotConfiguredError();
     }
-    if (needReinit) {
-      const transcriber = new Transcriber({
-        config: {
-          transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
-          prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
-          endpoint: this._transcriptionEndpoint,
-        },
-        recorder: this._mediaRecorder,
-        onSegments: (segments) => this._onSegments(segments),
-      });
 
-      try {
-        await transcriber.open();
-      } catch (err) {
-        // Drop the recorder as well: latching an unopened transcriber would leave `needReinit`
-        // false, so every later enable/track update would silently no-op for this session.
-        this._mediaRecorder = undefined;
-        throw err;
-      }
-      this._transcriber = transcriber;
+    // Retire the old session before opening one on the new track, so two never publish at once.
+    await this.#closeTranscriber();
+    const transcriber = createRealtimeKitTranscriber({ audioStreamTrack: track, join: this._join })({
+      onSegments: (segments) => this._onSegments(segments),
+      // The meeting ended for good: turning transcription off closes this session and shows it as stopped.
+      onEnded: () => void this.setEnabled(false).catch((err) => log.catch(err)),
+    });
+    try {
+      await transcriber.open();
+    } catch (err) {
+      await transcriber.close().catch((closeErr) => log.warn('failed to close transcriber', { err: closeErr }));
+      throw err;
     }
+    this._transcriber = transcriber;
+    this._transcriberTrack = track;
   }
 
   private async _stopTranscriber(): Promise<void> {
     await this.#closeTranscriber();
-    // Drop the recorder too: a closed transcriber left latched keeps the track comparison equal, so
-    // re-enabling without a device change would resume nothing.
-    this._mediaRecorder = undefined;
   }
 
   /**
@@ -210,6 +177,7 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
   async #closeTranscriber(): Promise<void> {
     const transcriber = this._transcriber;
     this._transcriber = undefined;
+    this._transcriberTrack = undefined;
     await transcriber?.close().catch((err) => log.warn('failed to close transcriber', { err }));
   }
 

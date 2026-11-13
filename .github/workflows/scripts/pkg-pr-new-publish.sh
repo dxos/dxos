@@ -11,7 +11,7 @@ echo "Finding public packages..."
 # --filter-prod filters out packages with "private": true
 # --depth=-1 gets all nested packages
 # --json outputs JSON format
-PUBLIC_PACKAGES=$(pnpm list --filter-prod="./packages/**" --filter-prod="./vendor/**" --depth=-1 --json 2>/dev/null | \
+PUBLIC_PACKAGES=$(pnpm list --filter-prod="./packages/**" --filter-prod="./tools/**" --filter-prod="./vendor/**" --depth=-1 --json 2>/dev/null | \
   node -e "
     const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
     const packages = Array.isArray(data) ? data : [data];
@@ -73,6 +73,13 @@ done < <(node -p "Object.keys(require('./$CLI_DIST/cli/package.json').optionalDe
 
 echo "Found ${#CLI_PACKAGES[@]} generated CLI packages to publish"
 
+# The @dxos packages need these patches at runtime, and pnpm applies patches only inside this workspace,
+# so the patched installs are published beside them and pkg-pr-new points the dependencies at them.
+PATCHED_DIR=$(mktemp -d)
+mapfile -t PATCHED_PACKAGES < <(node .github/workflows/scripts/stage-patched-packages.mjs "$PATCHED_DIR" \
+  @automerge/automerge-repo @automerge/automerge-subduction)
+echo "Staged ${#PATCHED_PACKAGES[@]} patched third-party packages"
+
 # Run pkg-pr-new publish with all public packages
-pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}"
+pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}" "${PATCHED_PACKAGES[@]}"
 

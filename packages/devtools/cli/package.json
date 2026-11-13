@@ -45,6 +45,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/mcp-server": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-builder": "workspace:*",

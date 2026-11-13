@@ -39,6 +39,15 @@ const config: Plugin.PluginConfig = Plugin.config({
       name: 'Brain',
       environments: ['browser', 'node', 'tauri'],
     }),
+    Capability.lazyModule(
+      'EdgeBrain',
+      {
+        provides: [Capabilities.HostServiceAdapter],
+        activatesOn: ActivationEvents.Startup,
+        environments: ['workerd'],
+      },
+      () => import('./src/capabilities/edge-brain.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [AgentCapabilities.Settings],

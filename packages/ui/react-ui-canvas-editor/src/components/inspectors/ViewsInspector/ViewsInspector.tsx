@@ -6,6 +6,7 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useSta
 
 import {
   type RenderLists2D,
+  type ViewMove,
   type ViewPlace,
   type ViewReorder,
   type ViewRowSelection,
@@ -17,6 +18,7 @@ import {
   samePlace,
   selectRows,
   useRegistry,
+  viewMove,
   viewReorder,
 } from '@dxos/react-ui-canvas';
 import { SelectControl } from '@dxos/react-ui-form';
@@ -54,6 +56,8 @@ export type ViewsInspectorProps = InspectorProps & {
   scenes?: RenderLists2D;
   /** The canvas's root View. */
   root?: ViewId;
+  /** A row's icon by element type, as the rail's create tools draw them. */
+  icons?: Readonly<Record<string, string>>;
   /** The rows to show, built by the caller; otherwise built from `scenes` under `root`. */
   tree?: ViewTreeItem;
   /** What the canvas shows: the open View's path, or the Object open in isolation and the path within it. */
@@ -66,26 +70,21 @@ export type ViewsInspectorProps = InspectorProps & {
   onOpen?: (path: ViewId[]) => void;
   /** A row was dragged before or after a sibling in the open View: restack its element in `container`'s drawing order. */
   onReorder?: (event: ViewReorder) => void;
+  /** A row was dragged onto a hull, or beside a row another hull (or none) holds: its element joins that hull. */
+  onMove?: (event: ViewMove) => void;
 };
 
-const ICONS: Record<string, string> = {
-  rect: 'ph--square--regular',
-  ellipse: 'ph--circle--regular',
-  cloud: 'ph--cloud--regular',
-  polygon: 'ph--hexagon--regular',
-  polyline: 'ph--line-segments--regular',
-  note: 'ph--note--regular',
-  path: 'ph--pen-nib--regular',
-  view: 'ph--frame-corners--regular',
-  instance: 'ph--cube--regular',
-};
-
-const iconFor = (item: ViewTreeItem): string =>
-  item.kind === 'view'
+/**
+ * A row draws its type's own tool icon, so a text node reads as the T the palette draws rather than as a second idea
+ * of what a text node looks like; `icons` comes from the dimension's tools, which the registry builds.
+ */
+const iconFor = (item: ViewTreeItem, icons: ViewsInspectorProps['icons']): string =>
+  (item.type && icons?.[item.type]) ??
+  (item.kind === 'view'
     ? 'ph--frame-corners--regular'
     : item.kind === 'link'
       ? 'ph--line-segment--regular'
-      : ((item.type && ICONS[item.type]) ?? 'ph--shapes--regular');
+      : 'ph--shapes--regular');
 
 const EMPTY_TREE: ViewTreeItem = { id: 'empty', kind: 'view', path: [], label: '', children: [] };
 
@@ -114,12 +113,14 @@ export const ViewsInspector = ({
   readonly,
   scenes,
   root,
+  icons,
   tree: treeProp,
   place,
   selected,
   onSelect,
   onOpen,
   onReorder,
+  onMove,
 }: ViewsInspectorProps) => {
   const registry = useRegistry();
   const treeRef = useRef<TreeRootHandle>(null);
@@ -163,7 +164,7 @@ export const ViewsInspector = ({
             isItem(row)
               ? {
                   label: row.label,
-                  icon: iconFor(row),
+                  icon: iconFor(row, icons),
                   testId: `views-row-${row.id}`,
                   ...(row.kind === 'view' ? { count: row.children.length } : {}),
                   draggable: row.container !== undefined,
@@ -249,21 +250,39 @@ export const ViewsInspector = ({
     [rows, onOpen],
   );
 
-  // A row moves only among its siblings, as a restack of their container's drawing order.
-  const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
-    const from: Row = source.item;
-    const to: Row = target.item;
-    return isItem(from) && isItem(to) && canRestack(from, to);
-  }, []);
+  // A row moves among its siblings, as a restack of their container's drawing order, or into, out of and between
+  // hulls of the one drawing; which of the two a drop is depends on where on the target row it lands.
+  const dropOf = useCallback(
+    (from: Row, to: Row, instruction: string): { move: ViewMove } | { reorder: ViewReorder } | undefined => {
+      if (!isItem(from) || !isItem(to)) {
+        return undefined;
+      }
+      const move = onMove ? viewMove(from, to, instruction) : undefined;
+      if (move) {
+        return { move };
+      }
+      const reorder = onReorder && canRestack(from, to) ? viewReorder(from, to, instruction) : undefined;
+      return reorder && { reorder };
+    },
+    [onMove, onReorder],
+  );
+  const canDrop = useCallback(
+    ({ source, target }: { source: TreeData; target: TreeData }) =>
+      ['reorder-above', 'reorder-below', 'make-child'].some(
+        (instruction) => dropOf(source.item, target.item, instruction) !== undefined,
+      ),
+    [dropOf],
+  );
   const handleDrop = useCallback(
     ({ instruction, source, target }: TreeDropEvent<Row>) => {
-      const from: Row = source.item;
-      const to: Row = target.item;
-      const reorder =
-        isItem(from) && isItem(to) && canRestack(from, to) ? viewReorder(from, to, instruction.type) : undefined;
-      reorder && onReorder?.(reorder);
+      const drop = dropOf(source.item, target.item, instruction.type);
+      if (drop && 'move' in drop) {
+        onMove?.(drop.move);
+      } else if (drop) {
+        onReorder?.(drop.reorder);
+      }
     },
-    [onReorder],
+    [dropOf, onMove, onReorder],
   );
 
   return (
@@ -313,11 +332,11 @@ export const ViewsInspector = ({
         id={TREE_ID}
         selectionMode='multiple'
         columns={COLUMNS}
-        draggable={onReorder !== undefined}
+        draggable={onReorder !== undefined || onMove !== undefined}
         canSelect={({ item }) => isItem(item) && (isSelectableRow(item) || item.kind === 'view')}
         canDrop={canDrop}
-        getDropKind={({ instruction }) =>
-          instruction.type === 'reorder-above' || instruction.type === 'reorder-below' ? 'move' : 'reject'
+        getDropKind={({ instruction, source, target }) =>
+          dropOf(source.item, target.item, instruction.type) ? 'move' : 'reject'
         }
         onOpenChange={onOpenChange}
         onSelect={handleSelect}

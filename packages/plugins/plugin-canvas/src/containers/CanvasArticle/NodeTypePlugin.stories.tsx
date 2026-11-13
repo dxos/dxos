@@ -15,7 +15,7 @@ import { DXN } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { type ElementKindSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
+import { type ElementKindSpec, type NodeViewProps, TextPart, kindData } from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
@@ -35,27 +35,30 @@ import { addTestCanvas } from '../../testing/canvas.ts';
 // drawing shows its task as the core base, a box with the task's label.
 //
 
-const taskFields = {
+/** The task's own fields, kept under `data`. */
+const TaskData = Schema.Struct({
+  done: Schema.optional(Schema.Boolean.annotate({ title: 'Done' })),
+});
+
+const TaskNode = Schema.Struct({
+  ...Scene.Element2D.fields,
+  type: Schema.Literal('task'),
   /** The task's title, in the core base's `label`, so it still reads where the type is unknown. */
   label: Schema.String,
-  done: Schema.optional(Schema.Boolean.annotate({ title: 'Done' })),
-};
-
-const TaskNode = Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal('task'), ...taskFields });
-
-const isTaskNode = (
-  node: NodeViewProps['node'],
-): node is NodeViewProps['node'] & Schema.Struct.Type<typeof taskFields> => node.type === 'task';
+  data: Schema.optional(TaskData),
+});
 
 const TaskNodeView = ({ node, editing }: NodeViewProps) => {
-  if (!isTaskNode(node)) {
+  const data = kindData(TaskData, node);
+  if (node.type !== 'task' || !data) {
     return null;
   }
+  const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
   return (
     <div className='dx-cover flex items-center gap-2 px-3' data-testid='task-node'>
-      <Icon.Icon icon={node.done ? 'ph--check-square--regular' : 'ph--square--regular'} size='lg' />
-      <TextPart part='label' text={node.label} editing={editing} classNames={mx('grow', node.done && 'line-through')}>
-        {node.label}
+      <Icon.Icon icon={data.done ? 'ph--check-square--regular' : 'ph--square--regular'} size='lg' />
+      <TextPart part='label' text={label} editing={editing} classNames={mx('grow', data.done && 'line-through')}>
+        {label}
       </TextPart>
     </div>
   );
@@ -97,7 +100,7 @@ const seed = (content: ContentMap, root: string) => {
   content[nodeKey('t1')] = {
     kind: 'node',
     scene: root,
-    node: { id: 't1', type: 'task', z: 'a2', ...frame(0), label: 'Write the spec', done: true },
+    node: { id: 't1', type: 'task', z: 'a2', ...frame(0), label: 'Write the spec', data: { done: true } },
   };
   content[nodeKey('t2')] = {
     kind: 'node',
@@ -141,6 +144,18 @@ export const WithPlugin: Story = {
     const canvas = within(canvasElement);
     await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
     await expect((await canvas.findAllByTestId('task-node')).length).toBe(2);
+    // A contributed kind's tool stands apart from the canvas's own: the task shares a group of the rail with the
+    // plugin's own extension tools, and the select tool and the shapes are in other groups. Folded, a group shows
+    // one of its tools, so either may be the one in the rail.
+    const palette = await canvas.findByTestId('palette');
+    const extension = palette.querySelector(
+      '[data-testid="canvas.tool.node:task"], [data-testid="canvas.tool.node:space-graph"]',
+    );
+    const group = extension?.closest('[data-testid="palette"] > *');
+    await expect(group).toBeTruthy();
+    await expect(
+      group?.querySelector('[data-testid="canvas.tool.node:rect"], [data-testid="canvas.tool.select"]'),
+    ).toBeNull();
   },
 };
 

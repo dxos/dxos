@@ -48,6 +48,7 @@ const ChartArticleInner = ({ role, chart, space }: { role?: string; chart: Sheet
 const ChartContent = ({ role, chart: chartProp, model }: { role?: string; chart: Sheet.Chart; model: SheetModel }) => {
   const [chart] = useObject(chartProp);
   const getValues = useRangeValues(model);
+  const chartTypes = Hooks.useCapabilities(SheetCapabilities.ChartType);
   const handleUpdate = useCallback(
     (props: Partial<Sheet.ChartProperties>) => Sheet.updateChart(chartProp, props),
     [chartProp],
@@ -65,6 +66,7 @@ const ChartContent = ({ role, chart: chartProp, model }: { role?: string; chart:
           getValues={getValues}
           onUpdate={handleUpdate}
           chrome={role !== AppSurface.Slide.role}
+          chartTypes={chartTypes}
         />
       </Panel.Body>
     </Panel.Root>

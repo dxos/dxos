@@ -42,6 +42,15 @@ export type ViewTreeItem = {
   readonly?: boolean;
   /** For an object's contents, where the element is drawn inside the (innermost) object, which is where it is edited. */
   object?: ViewPlace;
+  /** The row is a hull: its children are the shapes inside it, and a row dropped on it joins them. */
+  hull?: boolean;
+  /**
+   * The hull that holds the row's element, and the scene that hull is drawn in. A hull's shapes are stored in its
+   * group (their `container`) but drawn, selected and moved in the scene that places it, so two rows are in one
+   * drawing when their scenes agree, whatever holds each.
+   */
+  group?: ElementId;
+  scene?: ViewId;
   children: ViewTreeItem[];
 };
 
@@ -71,8 +80,11 @@ const endLabel = (scenes: RenderLists2D, scene: RenderList2D, end: Endpoint): st
   return node ? nodeLabel(scenes, node) : end.node;
 };
 
+/** Elements from the one drawn last, which is on top, to the one drawn first. */
+const frontFirst = <T extends { id: string; z?: string }>(elements: readonly T[]): T[] => sortByZ(elements).reverse();
+
 /**
- * The views tree under `root` (VIEWS.md §4, decision 3): each View's nodes in drawing order, then its links (a link
+ * The views tree under `root` (VIEWS.md §4, decision 3): each View's nodes front first, then its links (a link
  * lives in its container, as its endpoints may change); a frame is the View it opens, with that View's contents as its
  * children; an instance shows its object's contents, read-only. A scene reached twice on one branch is not expanded
  * again, so a cycle cannot recurse.
@@ -87,7 +99,8 @@ export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem
   ): ViewTreeItem[] => {
     const readonly = object !== undefined;
     const inObject = object ? { readonly, object } : {};
-    const nodes = sortByZ(Object.values(scene.nodes)).map((node): ViewTreeItem => {
+    // Front first, as a list of what is drawn reads: the row at the top is what is on top.
+    const nodes = frontFirst(Object.values(scene.nodes)).map((node): ViewTreeItem => {
       const id = `${prefix}${node.id}`;
       if (isViewNode(node)) {
         const child = scenes[node.scene];
@@ -148,7 +161,7 @@ export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem
         children: [],
       };
     });
-    const links = sortByZ(Object.values(scene.links)).map((link): ViewTreeItem => ({
+    const links = frontFirst(Object.values(scene.links)).map((link): ViewTreeItem => ({
       id: `${prefix}${link.id}`,
       kind: 'link',
       element: link.id,
@@ -170,6 +183,13 @@ export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem
     children: scene ? contents(scene, [root], '', undefined, new Set([root])) : [],
   };
 };
+
+/**
+ * Where a drop above or below a row puts an element in the drawing order: the rows list front first, so above a row
+ * is in front of its element, which is drawn after it.
+ */
+const dropPosition = (instruction: string): 'before' | 'after' =>
+  instruction === 'reorder-above' ? 'after' : 'before';
 
 /**
  * The `z` that moves `id` just before or after `target` in its scene's drawing order (nodes among nodes, links among
@@ -282,6 +302,51 @@ export const canRestack = (from: ViewTreeItem, to: ViewTreeItem): boolean =>
   from.container === to.container &&
   (from.kind === 'link') === (to.kind === 'link');
 
+/** A row dropped into, out of or between hulls: `element` joins `group` (none: no hull), beside `target` if given. */
+export type ViewMove = {
+  /** The scene both rows are drawn in. */
+  scene: ViewId;
+  element: ElementId;
+  group?: ElementId;
+  target?: ElementId;
+  position?: 'before' | 'after';
+};
+
+/** The scene a row's element is drawn in: its hull's, where a hull holds it, else its own container. */
+const drawnIn = (item: ViewTreeItem): ViewId | undefined => item.scene ?? item.container;
+
+/**
+ * The move a drop of `from` on `to` asks for, where it changes which hull holds `from`: dropped on a hull it joins
+ * it; dropped beside a row it takes that row's hull (or none) and its place in the drawing order. Undefined for a
+ * drop that leaves it where it is (a restack, {@link viewReorder}), for a link, a View or a hull, which no hull
+ * holds, and for rows of two drawings.
+ */
+export const viewMove = (from: ViewTreeItem, to: ViewTreeItem, instruction: string): ViewMove | undefined => {
+  const scene = drawnIn(from);
+  const movable = (from.kind === 'node' || from.kind === 'instance') && !from.hull && !from.readonly;
+  if (!movable || from.element === undefined || to.element === undefined || scene === undefined) {
+    return undefined;
+  }
+  if (scene !== drawnIn(to) || to.readonly || from.element === to.element) {
+    return undefined;
+  }
+  if (instruction === 'make-child') {
+    return to.hull && from.group !== to.element ? { scene, element: from.element, group: to.element } : undefined;
+  }
+  if ((instruction !== 'reorder-above' && instruction !== 'reorder-below') || to.kind === 'link') {
+    return undefined;
+  }
+  return from.group === to.group
+    ? undefined
+    : {
+        scene,
+        element: from.element,
+        ...(to.group !== undefined ? { group: to.group } : {}),
+        target: to.element,
+        position: dropPosition(instruction),
+      };
+};
+
 /** The restack a drop above or below `to` asks for; undefined for any other drop. */
 export const viewReorder = (from: ViewTreeItem, to: ViewTreeItem, instruction: string): ViewReorder | undefined =>
   from.container !== undefined &&
@@ -292,6 +357,6 @@ export const viewReorder = (from: ViewTreeItem, to: ViewTreeItem, instruction: s
         container: from.container,
         element: from.element,
         target: to.element,
-        position: instruction === 'reorder-above' ? 'before' : 'after',
+        position: dropPosition(instruction),
       }
     : undefined;

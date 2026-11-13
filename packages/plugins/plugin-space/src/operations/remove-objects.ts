@@ -32,8 +32,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         `Every object must belong to space ${db.spaceId}.`,
       );
 
+      // A space created outside Composer (EDGE, `dx`) can have no root collection; the objects are
+      // still removed, there is just no collection to unlink them from.
       const parentCollection = input.target ?? (yield* loadRootCollection());
-      invariant(parentCollection, 'No parent collection found for space — cannot remove objects.');
 
       // Type entities (persisted schemas) live outside collections — `findIndex` will
       // return -1 for them and the splice/active-tracking branches are skipped.

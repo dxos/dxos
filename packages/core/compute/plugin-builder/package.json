@@ -22,7 +22,8 @@
   },
   "bin": {
     "check-bundle": "dist/lib/bin/check-bundle.mjs",
-    "check-release": "dist/lib/bin/check-release.mjs"
+    "check-release": "dist/lib/bin/check-release.mjs",
+    "publish-release": "dist/lib/bin/publish-release.mjs"
   },
   "files": [
     "dist",
@@ -45,6 +46,8 @@
     "vite": "catalog:"
   },
   "devDependencies": {
+    "@dxos/context": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "vitest": "catalog:"
   }
 }

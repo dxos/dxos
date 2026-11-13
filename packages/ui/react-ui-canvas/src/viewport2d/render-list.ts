@@ -8,18 +8,22 @@ import {
   type ElementEndpoint,
   type Endpoint,
   type Link,
+  LINK_TYPES,
   type LinkType,
   type NamedStyle2D,
   type Node,
+  NODE_TYPES,
   type NodeStyle,
   type Resolved2D,
-  type Scene,
+  Scene,
+  type Size,
   type Style2D,
   STYLE_HUES,
   type StyleHue,
   type StyleMap,
   type ViewId,
   findLayout,
+  isInstanceNode,
   nodeFrame,
   resolveLayout2D,
   rootScene,
@@ -27,15 +31,19 @@ import {
 } from '@dxos/scene';
 
 import { type RenderList2D } from '../model/index.ts';
-import { DEFAULT_LAYER, createNode, initialKeys } from '../utils/index.ts';
+import { DEFAULT_LAYER, createNode, fitHulls, gridPitch, initialKeys } from '../utils/index.ts';
 
 /** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */
-const NODE_TYPES: Readonly<Record<string, BuiltinNodeType>> = {
-  rect: 'rect',
-  ellipse: 'ellipse',
-  polygon: 'polygon',
-  note: 'note',
-};
+/**
+ * The kinds a layout may hold that the 2D engine draws, by name: its own built-ins and the editor's own types (a
+ * card, a glyph). A kind outside this set — a 3D one, or one a newer editor wrote — is left undrawn rather than
+ * guessed at.
+ */
+const DRAWN_KINDS: Readonly<Record<string, string>> = Object.fromEntries(
+  Scene.kindsOf('2d')
+    .filter((kind) => kind !== 'link' && kind !== 'group')
+    .map((kind) => [kind, kind]),
+);
 
 const MARKERS = ['arrow', 'circle', 'triangle'] as const;
 
@@ -89,28 +97,49 @@ const scaledFrame = (doc: Scene.SceneDocument, element: Resolved2D): ScaledFrame
   };
 };
 
-/** A composite element (its object has parts) is a `view` node over its parts layout's render list. */
+/** The size a kind the engine has no factory for falls back to, when the element gives none. */
+const FALLBACK_SIZE: Size = { width: 96, height: 48 };
+
+/** An element's text, where its node keeps it: a text node's `text`, every other kind's `label`. */
+const elementText = (type: string, label: string | undefined, stored: Fields): Fields =>
+  label === undefined
+    ? {}
+    : type === 'note' && stored.text === undefined
+      ? { text: label }
+      : type === 'note'
+        ? {}
+        : { label };
+
+/**
+ * A composite element (its object has parts) is a `view` node over its parts layout's render list, or an `instance`
+ * where its object says it is an Object. Every other kind of this dimension is drawn as itself: the engine has a
+ * factory for its own built-ins, and a kind the editor adds (a card, a glyph) is the element's own fields.
+ */
 const toNode = (doc: Scene.SceneDocument, element: Resolved2D, z: string, layer: string): Node | undefined => {
-  const type = element.parts !== undefined ? 'view' : NODE_TYPES[element.type];
+  const type =
+    element.parts !== undefined ? (element.type === 'instance' ? 'instance' : 'view') : DRAWN_KINDS[element.type];
   if (!type || !element.center) {
     return undefined;
   }
   const style = nodeStyle(element.overrides);
   const scaled = scaledFrame(doc, element);
+  const center = scaled?.center ?? element.center;
+  const size = scaled?.size ?? element.size;
+  const builtin = (NODE_TYPES as readonly string[]).includes(type);
+  const { canvas: _canvas, ...props } = element.props ?? {};
   return {
-    ...createNode({
-      type,
-      id: element.id,
-      z,
-      center: scaled?.center ?? element.center,
-      size: scaled?.size ?? element.size,
-      scene: element.parts,
-    }),
+    // The type's own defaults first, then what the element actually wrote: a template that gives a note its text or a
+    // polyline its points keeps them, rather than having `createNode`'s placeholder put back over the top.
+    ...(builtin
+      ? createNode({ type: type as BuiltinNodeType, id: element.id, z, center, size, scene: element.parts })
+      : { type, id: element.id, z, center, size: size ?? FALLBACK_SIZE }),
+    ...props,
     ...(scaled ? { frame: scaled.frame } : {}),
     layer,
     ...(element.style !== undefined ? { class: element.style } : {}),
-    ...(element.label !== undefined ? { label: element.label } : {}),
+    ...elementText(type, element.label, props),
     ...(element.rotation !== undefined ? { rotation: element.rotation } : {}),
+    ...(element.constrain !== undefined ? { constrain: element.constrain } : {}),
     ...(style ? { style } : {}),
   };
 };
@@ -221,11 +250,13 @@ const nodeElement = (node: Node, objects: Map<string, Scene.Object2D>): Scene.El
     objects.set(object.id, object);
     placed = { object: object.id };
     extra.type = 'view';
-  } else if (node.type === 'instance' && typeof fields.composite === 'string') {
-    const object = { id: `${INSTANCE_PREFIX}${fields.composite}`, type: 'rect', parts: fields.composite };
+  } else if (isInstanceNode(node)) {
+    const object = { id: `${INSTANCE_PREFIX}${node.composite}`, type: 'rect', parts: node.composite };
     objects.set(object.id, object);
     placed = { object: object.id };
-    extra.type = 'instance';
+    // Its own name, not `instance`: a type that draws a composite (a card, a UML class) reads back as that type,
+    // with its typed fields, and is an Object because it names one — not because it is called `instance`.
+    extra.type = node.type;
   } else {
     placed = { type: node.type };
   }
@@ -304,12 +335,14 @@ const canvasNode = (doc: Scene.SceneDocument, element: Resolved2D, canvas: Field
     return undefined;
   }
   const { style: extraStyle, type: storedType, ...extra } = canvas;
-  const type =
-    storedType === 'view' || storedType === 'instance'
-      ? storedType
-      : element.parts === undefined
-        ? element.type
-        : 'view';
+  // A placed composite is a portal unless its object says it is an Object: a `view` node is a place to drill into and
+  // an Instance is a symbol repeated, and only the object knows which of the two its parts are meant to be.
+  const placed = element.parts === undefined ? element.type : element.type === 'instance' ? 'instance' : 'view';
+  // A type of its own that draws a composite kept its own name, so anything stored wins over what the object says.
+  const type = typeof storedType === 'string' && storedType.length > 0 ? storedType : placed;
+  // An Object is a symbol repeated and a `view` is a place to drill into: a node naming a composite is the first,
+  // however it is spelled, and only a portal takes the parts as a scene.
+  const isObject = type === 'instance' || typeof extra.composite === 'string';
   const style = canvasStyle(element.overrides, extraStyle);
   return {
     ...extra,
@@ -320,16 +353,18 @@ const canvasNode = (doc: Scene.SceneDocument, element: Resolved2D, canvas: Field
     size,
     ...(scaled ? { frame: scaled.frame } : {}),
     ...(element.rotation !== undefined ? { rotation: element.rotation } : {}),
-    ...(element.label !== undefined ? { label: element.label } : {}),
+    // A text node keeps its text in `text`, and an element writes its text in one place whatever its kind, so the
+    // element's label is the note's text unless the node already carries one.
+    ...(type === 'note' && element.label !== undefined && extra.text === undefined
+      ? { text: element.label }
+      : element.label !== undefined
+        ? { label: element.label }
+        : {}),
     ...(element.layer !== undefined ? { layer: element.layer } : {}),
     ...(element.locked !== undefined ? { locked: element.locked } : {}),
     ...(element.style !== undefined ? { class: element.style } : {}),
     ...(style ? { style } : {}),
-    ...(element.parts === undefined
-      ? {}
-      : type === 'instance'
-        ? { composite: element.parts }
-        : { scene: element.parts }),
+    ...(element.parts === undefined ? {} : isObject ? { composite: element.parts } : { scene: element.parts }),
   };
 };
 
@@ -342,12 +377,10 @@ const toEndpoint = (end: ElementEndpoint | undefined, stored: unknown): Endpoint
     ? { point: { x: stored.point.x, y: stored.point.y } }
     : undefined);
 
-const LINK_TYPES_BY_NAME: Readonly<Record<string, LinkType>> = {
-  line: 'line',
-  curve: 'curve',
-  spline: 'spline',
-  smart: 'smart',
-};
+/** Every link type by name, so one a newer editor wrote reads back as itself rather than as the default. */
+const LINK_TYPES_BY_NAME: Readonly<Record<string, LinkType>> = Object.fromEntries(
+  LINK_TYPES.map((type) => [type, type]),
+);
 
 const isStyleHue = (hue: string | undefined): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
 
@@ -390,11 +423,16 @@ const canvasLink = (element: Resolved2D, canvas: Fields): Link | undefined => {
  * other (a `.dx` document's) is drawn with the default layer and the scene kinds react-ui-canvas has nodes for.
  */
 export const toRenderList2D = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderList2D =>
-  layout.layers !== undefined ||
-  layout.kind !== undefined ||
-  Object.values(layout.elements).some((element) => isRecord(element.props?.canvas))
-    ? storedView(doc, layout)
-    : toView(doc, layout);
+  // A hull's frame is wherever the nodes inside it are, so it is set as the list is read rather than trusted as stored.
+  fitHulls(
+    layout.layers !== undefined ||
+      layout.kind !== undefined ||
+      Object.values(layout.elements).some((element) => isRecord(element.props?.canvas))
+      ? storedView(doc, layout)
+      : toView(doc, layout),
+    layout.lattice,
+    gridPitch(layout),
+  );
 
 /** An element's layer when its layout declares it; otherwise the default layer, which the list then declares. */
 const layerOf = (layout: Scene.LayoutRecord2D, element: Resolved2D): string =>

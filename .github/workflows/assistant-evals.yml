@@ -60,6 +60,11 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/claude" @anthropic-ai/claude-code@2.1.259
           echo "$RUNNER_TEMP/claude/node_modules/.bin" >> "$GITHUB_PATH"
 
+      # The Composer plugin eval plays the user's Composer tab in a headless Chromium.
+      - name: Install Chromium
+        working-directory: packages/core/compute/assistant-evals
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Run evals
         id: evals
         continue-on-error: true

@@ -9,6 +9,7 @@ import { type ElementId } from '@dxos/scene';
 import {
   type CanvasAtoms,
   type CanvasHistory,
+  type DocumentEditCommands,
   type DrawScene,
   type EditingCommands,
   type NavigationCommands,
@@ -42,6 +43,7 @@ export type UseSceneKeysOptions = {
   /** Minor grid spacing in scene px; an arrow nudges by it. */
   grid: number;
   select: (ids: Iterable<ElementId>) => void;
+  toggleGrid: () => void;
   toggleSnap: () => void;
   toggleGuides: () => void;
   toggleDebug: () => void;
@@ -49,6 +51,8 @@ export type UseSceneKeysOptions = {
   onRedo: () => void;
   /** Copies the selection one step aside, as one undo step, and selects the copy. */
   duplicate: () => void;
+  /** Restacks the selection to the top or the bottom of the drawing order, as one undo step. */
+  order: DocumentEditCommands['order'];
   /** Runs an edit as an undo step; a run of nudges of one selection is one step. */
   commit: CanvasHistory['commit'];
 } & Pick<SceneSnap, 'major'> &
@@ -74,12 +78,14 @@ export const useSceneKeys = ({
   navigation,
   grid,
   select,
+  toggleGrid,
   toggleSnap,
   toggleGuides,
   toggleDebug,
   onUndo,
   onRedo,
   duplicate,
+  order,
   commit,
   major,
   copy,
@@ -220,6 +226,19 @@ export const useSceneKeys = ({
           duplicate();
           event.preventDefault();
           break;
+        // Restacking is an update, so without it the chord is left to whatever else would take it.
+        case 'bringToFront':
+          if (capabilities.update) {
+            order(selected, 'front');
+            event.preventDefault();
+          }
+          break;
+        case 'sendToBack':
+          if (capabilities.update) {
+            order(selected, 'back');
+            event.preventDefault();
+          }
+          break;
         case 'undo':
           onUndo();
           event.preventDefault();
@@ -239,6 +258,10 @@ export const useSceneKeys = ({
           break;
         case 'selectAll':
           select([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
+          event.preventDefault();
+          break;
+        case 'grid':
+          toggleGrid();
           event.preventDefault();
           break;
         case 'snap':
@@ -283,12 +306,14 @@ export const useSceneKeys = ({
       grid,
       major,
       setTool,
+      toggleGrid,
       toggleSnap,
       toggleGuides,
       toggleDebug,
       onUndo,
       onRedo,
       duplicate,
+      order,
       commit,
       copy,
       cut,

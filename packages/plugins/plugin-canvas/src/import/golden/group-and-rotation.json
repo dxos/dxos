@@ -8,12 +8,12 @@
         "type": "rect",
         "z": "zV",
         "center": {
-          "x": -64,
-          "y": -32
+          "x": -48,
+          "y": -24
         },
         "size": {
-          "width": 128,
-          "height": 64
+          "width": 96,
+          "height": 48
         },
         "rotation": 180,
         "overrides": {
@@ -29,11 +29,11 @@
         "z": "zl",
         "center": {
           "x": 768,
-          "y": 192
+          "y": 144
         },
         "size": {
-          "width": 128,
-          "height": 128
+          "width": 96,
+          "height": 96
         },
         "overrides": {
           "tone": 0
@@ -48,11 +48,11 @@
         "z": "V",
         "center": {
           "x": 960,
-          "y": 160
+          "y": 168
         },
         "size": {
-          "width": 128,
-          "height": 320
+          "width": 96,
+          "height": 240
         },
         "props": {
           "canvas": {
@@ -74,14 +74,14 @@
         "z": "l",
         "source": {
           "point": {
-            "x": 896,
+            "x": 912,
             "y": 0
           }
         },
         "target": {
           "point": {
-            "x": 896,
-            "y": 128
+            "x": 912,
+            "y": 96
           }
         },
         "overrides": {
@@ -100,14 +100,14 @@
         "z": "t",
         "source": {
           "point": {
-            "x": 896,
-            "y": 128
+            "x": 912,
+            "y": 96
           }
         },
         "target": {
           "point": {
-            "x": 832,
-            "y": 128
+            "x": 816,
+            "y": 96
           }
         },
         "overrides": {
@@ -146,7 +146,6 @@
     {
       "id": "group-object",
       "dim": "2d",
-      "name": "Object",
       "layers": {
         "layer": {
           "id": "layer",
@@ -154,8 +153,6 @@
           "z": "V"
         }
       },
-      "kind": "composite",
-      "anonymous": true,
       "elements": {
         "member": {
           "id": "member",
@@ -163,11 +160,11 @@
           "z": "V",
           "center": {
             "x": 0,
-            "y": -128
+            "y": -96
           },
           "size": {
-            "width": 128,
-            "height": 64
+            "width": 96,
+            "height": 48
           },
           "rotation": 90,
           "layer": "layer",
@@ -186,11 +183,11 @@
           "z": "x",
           "center": {
             "x": 0,
-            "y": 128
+            "y": 96
           },
           "size": {
-            "width": 128,
-            "height": 64
+            "width": 96,
+            "height": 48
           },
           "rotation": 90,
           "layer": "layer",
@@ -221,7 +218,10 @@
             }
           }
         }
-      }
+      },
+      "name": "Object",
+      "kind": "composite",
+      "anonymous": true
     }
   ],
   "objects": [
@@ -239,12 +239,12 @@
         "type": "rect",
         "z": "zV",
         "center": {
-          "x": -64,
-          "y": -32
+          "x": -48,
+          "y": -24
         },
         "size": {
-          "width": 128,
-          "height": 64
+          "width": 96,
+          "height": 48
         },
         "rotation": 180,
         "overrides": {
@@ -263,11 +263,11 @@
         "z": "zl",
         "center": {
           "x": 768,
-          "y": 192
+          "y": 144
         },
         "size": {
-          "width": 128,
-          "height": 128
+          "width": 96,
+          "height": 96
         },
         "overrides": {
           "tone": 0
@@ -285,11 +285,11 @@
         "z": "V",
         "center": {
           "x": 960,
-          "y": 160
+          "y": 168
         },
         "size": {
-          "width": 128,
-          "height": 320
+          "width": 96,
+          "height": 240
         },
         "props": {
           "canvas": {
@@ -314,14 +314,14 @@
         "z": "l",
         "source": {
           "point": {
-            "x": 896,
+            "x": 912,
             "y": 0
           }
         },
         "target": {
           "point": {
-            "x": 896,
-            "y": 128
+            "x": 912,
+            "y": 96
           }
         },
         "overrides": {
@@ -343,14 +343,14 @@
         "z": "t",
         "source": {
           "point": {
-            "x": 896,
-            "y": 128
+            "x": 912,
+            "y": 96
           }
         },
         "target": {
           "point": {
-            "x": 832,
-            "y": 128
+            "x": 816,
+            "y": 96
           }
         },
         "overrides": {

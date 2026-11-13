@@ -64,4 +64,5 @@ const toSkillRecord = (key: string, skill: Skill.Skill): PluginProtocol.SkillRec
   mcpPrompt: Skill.isMcpPrompt(skill),
   // A plain array, so branded tool ids survive structured clone.
   tools: Array.from(skill.tools ?? []).map(String),
+  ...(skill.agentCanEnable ? { agentCanEnable: true } : {}),
 });

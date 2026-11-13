@@ -4,15 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 import * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Dsl, MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
 import { Collection, Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
 import { CreatedFrom } from '@dxos/types';
 
 import { SvgBuilder, bindArrowEnds, makeBuilder } from '#model';
@@ -87,10 +92,38 @@ describe('convert', () => {
     drawing: Drawing.Drawing,
     variant: string,
     { copy = false, converters = [] }: { copy?: boolean; converters?: IllustratorCapabilities.DrawingConverter[] } = {},
-  ) =>
-    convertHandler
+  ) => {
+    const manager = capabilities(converters);
+    // A copy is filed by plugin-space, so nested invocations run `SpaceOperation.AddObject` through its own handler.
+    const operations: Operation.OperationService = {
+      invoke: (operation, ...args) => {
+        const input = args[0];
+        const handle: Effect.Effect<unknown, unknown, Capability.Service | Database.Service> =
+          operation.meta.key === SpaceOperation.AddObject.meta.key && Schema.is(SpaceOperation.AddObject.input)(input)
+            ? OperationHandlerSet.getHandler(SpaceOperationHandlerSet.handlers, SpaceOperation.AddObject).pipe(
+                Effect.flatMap((addObject) => addObject.handler(input)),
+              )
+            : Effect.fail(new Operation.NoHandlerError(operation.meta.key));
+        return handle.pipe(
+          Effect.flatMap((output) =>
+            Schema.is(operation.output)(output) ? Effect.succeed(output) : Effect.die('unexpected output'),
+          ),
+          Effect.orDie,
+          Effect.provideService(Capability.Service, manager),
+          Effect.provide(Database.layer(db)),
+        );
+      },
+      schedule: () => Effect.void,
+      invokePromise: async () => ({ error: new Error('unused') }),
+    };
+    return convertHandler
       .handler({ drawing: Ref.make(drawing), variant, ...(copy ? {} : { replace: true }) })
-      .pipe(Effect.provideService(Capability.Service, capabilities(converters)), Effect.provide(Database.layer(db)));
+      .pipe(
+        Effect.provideService(Capability.Service, manager),
+        Effect.provideService(Operation.Service, operations),
+        Effect.provide(Database.layer(db)),
+      );
+  };
 
   test('replays the scene onto a fresh canvas of the target variant and drops the old canvas', async ({ expect }) => {
     const drawing = await addSvgDrawing();

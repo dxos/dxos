@@ -70,4 +70,11 @@ describe('movePreview', () => {
       y: 199,
     });
   });
+
+  test('the landing box is drawn on every move, not only on one that would be refused', ({ expect }) => {
+    // A shape under the pointer hides its own extent, so the box is what says how much room the drop takes.
+    expect(movePreview(scene, move({ x: 13, y: 7 }), {}, DETENT).landing).toEqual([
+      { x: -115, y: 135, width: 256, height: 128 },
+    ]);
+  });
 });

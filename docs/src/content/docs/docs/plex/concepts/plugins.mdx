@@ -1,0 +1,56 @@
+---
+title: Plugins and modules
+description: A plugin is metadata plus modules, and an app is the plugins it loads.
+---
+
+import Diagram from '../../../../../components/Diagram.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+A plugin is metadata plus a set of modules, and a PLEX app is the plugins it loads.
+
+## Model
+
+A plugin's **metadata** names it: a key that no other plugin uses, a display name, a description and an icon. Its
+**modules** do the work. Each module activates on an event, runs once, and contributes
+[capabilities](/docs/plex/concepts/capabilities/): typed values, such as a surface component or an operation handler,
+that other modules look up.
+
+`Plugin.define` takes the metadata, `Plugin.addModule` adds each module, and `Plugin.make` returns a function that the
+app's plugin manager calls to create the plugin.
+
+<Snippet file="app-framework-guide-plugin" region="define" />
+
+A plugin you publish describes itself in a `dx.config.ts` **manifest** instead. `Plugin.config` takes the same
+metadata, plus registry fields such as tags, and the list of modules. It returns the plugin's `meta` and its `make`
+function, so the registry can read the plugin without loading its code.
+
+<Snippet file="plex-tutorial/dx.config" region="config" />
+
+The Stash plugin from the [learning path](/docs/plex/learn/the-plex-plugin/) has seven modules. Each waits on an
+event and contributes one capability. Five of them:
+
+<Diagram
+  name="plex-stash-modules"
+  alt="Startup activates the translations, schema and operation-handler modules; Article requested activates react-surface; Idle activates app-graph-builder. Each module contributes the capability of the same name."
+/>
+
+## Behavior
+
+- A module is **inline** or **lazy**. `Capability.inlineModule` carries its body with it. `Capability.lazyModule`
+  names a loader, and the plugin manager imports the body only when the module's event fires. A module whose event
+  never fires never loads, so a plugin costs nothing until it is used.
+
+<Snippet file="app-framework-guide-plugin" region="lazy" />
+
+- The module makers in `AppCapability`, such as `AppCapability.surface`, fix a module's capability and its event, so a
+  manifest names only the file to load. The loader's default export is checked against the capability at compile time.
+- Every module declares what it `provides` and what it `requires`. The plugin manager uses them to order activation;
+  [Activation](/docs/plex/concepts/activation/) covers the rules.
+- Plugins never import each other's modules. A plugin that extends another contributes to a capability the other
+  reads.
+
+## Limits
+
+- A plugin's key is a reverse-domain name, and its last segment must be camelCase. Keep the key once the plugin has
+  users: settings and enabled state are stored under it.
+- A module keeps no state between activations. What it needs to keep, it contributes or stores.

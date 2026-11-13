@@ -7,6 +7,7 @@
 import * as Effect from 'effect/Effect';
 
 import type { OpaqueToolkit } from '@dxos/ai';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Capability from '@dxos/app-framework/Capability';
@@ -21,6 +22,8 @@ import type * as Skill from '@dxos/compute/Skill';
 import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
+
+import * as FileStorage from './FileStorage.ts';
 
 /** The plugin a bundle publishes. It runs alone on EDGE: plugins share types and definitions, never capabilities. */
 export type Plugins = {
@@ -49,12 +52,14 @@ export type Activation = {
 
 /**
  * Activates a release's plugins the way a headless host does: Startup, Idle and AssistantStart, with no React tree.
+ * The host's own plugins activate beside the primary and contribute only what EDGE provides every bundle, such as its
+ * default file storage; the catalog reads the primary's contributions alone.
  *
  * Must run inside a request: the plugin manager schedules Effect fibers that use timers, which workerd disallows in
  * global scope.
  */
 export const activate = async (release: Plugins): Promise<Activation> => {
-  const plugins = [release.primary];
+  const plugins = [release.primary, FileStorage.makePlugin()];
   const manager = PluginManager.make({
     pluginLoader: (id: string) =>
       Effect.sync(() => {
@@ -73,6 +78,10 @@ export const activate = async (release: Plugins): Promise<Activation> => {
       manager.activate(ActivationEvents.Idle),
       // Skills default to AssistantStart; without it a headless host registers none.
       manager.activate(AppActivationEvents.AssistantStart),
+      // A plugin's own start event, which Composer fires and nothing here did: plugin-thread registers its local
+      // channel backend on it, so without it `thread.appendChannelMessage` finds no backend for a channel the same
+      // bundle just created.
+      manager.activate(ActivationEvent.pluginStart(release.primary.meta.profile.key)),
     ]).pipe(Effect.scoped),
   );
 

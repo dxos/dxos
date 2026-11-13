@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { mergeReviews, parseReview, statusOf, summarizeReview, walkthroughOf } from './review.ts';
+import { mergeReviews, parseReview, reviewItemId, statusOf, summarizeReview, walkthroughOf } from './review.ts';
 
 const fence = (body: string) => ['```mdl', body, '```'].join('\n');
 
@@ -78,6 +78,21 @@ describe('review', () => {
       ['github:o/r/a.ts#A', 'github:o/r/b.ts#B'],
       ['github:o/r/c.ts#C'],
     ]);
+  });
+
+  test('reads a qualified id with its summary, as the worker and SQL dialects name items', ({ expect }) => {
+    const review = parseReview(
+      [
+        fence(['verdict table:feeds: Created by a migration.', '  status: done'].join('\n')),
+        fence(['verdict route:listFeeds', '  status: missing', '  note: No such route.'].join('\n')),
+      ].join('\n\n'),
+    );
+    expect(review.verdicts.map(({ id, summary }) => ({ id, summary }))).toEqual([
+      { id: 'table:feeds', summary: 'Created by a migration.' },
+      { id: 'route:listFeeds', summary: undefined },
+    ]);
+    expect(statusOf(review, reviewItemId('table', 'feeds'))).toBe('done');
+    expect(reviewItemId('type', 'Feed')).toBe('Feed');
   });
 
   test("a walkthrough is the reviewer's steps, or one per evidence key when there are several", ({ expect }) => {

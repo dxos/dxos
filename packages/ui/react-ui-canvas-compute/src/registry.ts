@@ -73,8 +73,9 @@ export const computeNodeRegistry: NodeRegistry = {
 };
 
 /**
- * The compute element kinds (COMMON-CORE.md decision 13): a board's element of a compute type is checked against its
- * shape's schema, which reads the kind's own fields (its compute `node`, a value) at the top of the element.
+ * The compute element kinds (COMMON-CORE.md decisions 13 and 21): a board's element of a compute type is checked
+ * against its shape's schema, which reads the kind's own fields (its compute `node`, a value) under the element's
+ * `data`.
  */
 export const computeKinds: KindRegistry = Object.values(computeNodeRegistry).reduce(
   (kinds, def) => kinds.register(def.type, def.schema),

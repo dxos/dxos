@@ -4,11 +4,12 @@
 
 import { markdown } from '@codemirror/lang-markdown';
 import { ensureSyntaxTree } from '@codemirror/language';
-import { EditorState } from '@codemirror/state';
+import { Compartment, EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
 import { diagramBlockDescription } from './language.ts';
-import { buildDiagramPreviews, renderDiagram } from './preview.ts';
+import { buildDiagramPreviews, diagramPreview, renderDiagram } from './preview.ts';
 
 const SOURCE = 'diagram flow=right\nnode A "Alpha"\nnode B "Beta"\nedge A -> B "calls"\n';
 
@@ -72,6 +73,40 @@ describe('diagram preview', () => {
     expect('svg' in result && result.svg).toContain('Alpha');
     // The widget reserves this size before the image decodes, so it must match the SVG's own.
     expect('svg' in result && result.width > 0 && result.height > 0).toBe(true);
+  });
+
+  test('a dark editor draws the dark palette, and each theme keeps its own render', async ({ expect }) => {
+    const light = await renderDiagram(SOURCE);
+    const dark = await renderDiagram(SOURCE, 'dark');
+    expect('svg' in light && light.svg).toContain('color: #262626');
+    expect('svg' in dark && dark.svg).toContain('color: #e5e5e5');
+    // The host's surface shows behind the picture in both, so neither paints a ground of its own.
+    expect('svg' in light && light.svg).toContain('background: transparent');
+    expect('svg' in dark && dark.svg).toContain('background: transparent');
+    expect(await renderDiagram(SOURCE, 'dark')).toBe(dark);
+  });
+
+  test('a colour-mode switch redraws the fences without an edit', ({ expect }) => {
+    const mode = new Compartment();
+    const start = EditorState.create({
+      doc: DOCUMENT,
+      extensions: [
+        markdown({ codeLanguages: [diagramBlockDescription] }),
+        diagramPreview(),
+        mode.of(EditorView.darkTheme.of(false)),
+      ],
+    });
+    ensureSyntaxTree(start, start.doc.length, 5_000);
+    const themes = (state: EditorState) => {
+      const found: string[] = [];
+      buildDiagramPreviews(state).between(0, state.doc.length, (_from, _to, decoration) => {
+        found.push(decoration.spec.widget.theme);
+      });
+      return found;
+    };
+    expect(themes(start)).toEqual(['light', 'light']);
+    const dark = start.update({ effects: mode.reconfigure(EditorView.darkTheme.of(true)) }).state;
+    expect(themes(dark)).toEqual(['dark', 'dark']);
   });
 
   test('reports an error instead of an image for an empty source', async ({ expect }) => {

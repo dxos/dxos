@@ -35,6 +35,54 @@ export const theme = {
     inlineCode: 'px-2 rounded-sm bg-(--slide-code) text-info-text font-(family-name:--slide-font-mono)',
   },
 
+  /**
+   * Named styles selected with `<List variant="…">` and `<Table variant="…">`, keyed by the part each class lands on;
+   * a part replaces that tag's plain markdown classes, so a variant owns the whole block. `steps` numbers its rows
+   * from a counter, which puts the number inside the row's box rather than outside it as a list marker.
+   */
+  variants: {
+    list: {
+      cards: {
+        list: 'flex flex-col gap-6 my-[16px] list-none',
+        li: 'px-10 py-6 rounded-[20px] bg-(--slide-code) text-[48px]',
+      },
+      steps: {
+        list: 'flex flex-col gap-6 my-[16px] list-none [counter-reset:slide-step]',
+        // The counter is positioned, not a flex item: a flex `li` would break `**bold**`, a nested list or a second
+        // paragraph out of the text's flow and space them with the row's gap.
+        li:
+          'relative ps-28 pe-10 py-6 rounded-[20px] bg-(--slide-code) text-[48px] [counter-increment:slide-step] ' +
+          'before:absolute before:start-10 before:content-[counter(slide-step)] before:text-(color:--slide-accent)',
+      },
+      outline: {
+        list: 'flex flex-col gap-6 my-[16px] list-none',
+        li: 'px-10 py-8 rounded-[20px] border-4 border-(--slide-accent) text-[48px]',
+      },
+    },
+    box: {
+      card: { box: 'p-12 rounded-[24px] bg-(--slide-code)' },
+      outline: { box: 'p-12 rounded-[24px] border-4 border-(--slide-accent)' },
+    },
+    table: {
+      // Rules between rows only, as a printed table sets them.
+      rows: {
+        table: 'w-full my-[32px] text-[40px] border-collapse',
+        th: 'px-6 py-6 border-b-4 border-(--slide-accent) text-left uppercase text-(color:--slide-accent)',
+        td: 'px-6 py-6 border-b border-(--slide-separator)',
+      },
+      cards: {
+        table: 'w-full my-[32px] text-[40px] border-separate border-spacing-y-4',
+        th: 'px-10 py-4 text-left uppercase text-(color:--slide-accent)',
+        td: 'px-10 py-6 bg-(--slide-code) first:rounded-s-[20px] last:rounded-e-[20px]',
+      },
+      outline: {
+        table: 'w-full my-[32px] text-[40px] border-collapse',
+        th: 'px-8 py-6 border-4 border-(--slide-accent) text-left uppercase',
+        td: 'px-8 py-6 border-4 border-(--slide-accent)',
+      },
+    },
+  } as Record<string, Record<string, Record<string, string> | undefined> | undefined>,
+
   /** Static `{2,4-5}` line highlights; other lines are dimmed as in Slidev. */
   line: {
     highlighted: 'block bg-hover-surface',

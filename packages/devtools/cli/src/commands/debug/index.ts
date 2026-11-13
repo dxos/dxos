@@ -7,8 +7,9 @@ import * as Command from 'effect/cli/Command';
 import { diagnostics } from './diagnostics.ts';
 import { generate } from './generate.ts';
 import { inspector } from './inspector.ts';
+import { webrtc } from './webrtc.ts';
 
 export const debug = Command.make('debug').pipe(
   Command.withDescription('Debug commands.'),
-  Command.withSubcommands([diagnostics, generate, inspector]),
+  Command.withSubcommands([diagnostics, generate, inspector, webrtc]),
 );

@@ -34,13 +34,6 @@ export const Settings = Schema.Struct({
     }),
   ),
 
-  transcribeAfterMs: Schema.optional(
-    Schema.Number.annotate({
-      title: 'Initial buffering (ms)',
-      description: 'How long to accumulate audio before producing the first transcription.',
-    }),
-  ).pipe(Schema.withConstructorDefault(Effect.succeed(4000))),
-
   streamMode: Schema.optional(
     Schema.Literals(['batch', 'word']).annotate({
       title: 'Reveal mode',

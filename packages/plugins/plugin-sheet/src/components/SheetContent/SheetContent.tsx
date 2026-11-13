@@ -98,8 +98,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     attendableId,
     model,
     editing,
-    setCursor,
-    setRange,
+    addressing,
     cursor,
     cursorFallbackRange,
     activeRefs,
@@ -122,16 +121,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     (event: FocusEvent) => {
       if (!editing) {
         const cell = closestCell(event.target);
-        if (cell) {
-          if (cell.plane === 'grid') {
-            setCursor({ col: cell.col, row: cell.row });
-            setExtraplanarFocus(null);
-          } else {
-            setExtraplanarFocus(cell);
-          }
-        } else {
-          setExtraplanarFocus(null);
-        }
+        setExtraplanarFocus(cell && cell.plane !== 'grid' ? cell : null);
       }
     },
     [editing],
@@ -215,8 +205,6 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
         // Update range selection in formula.
         rangeController.current?.setRange(rangeToA1Notation(range));
       } else {
-        // Setting range while editing causes focus to move to null, avoid doing so.
-        setRange(range.to ? range : undefined);
         const from = addressToA1Notation(range.from);
         const to = addressToA1Notation(range.to ?? range.from);
         publishedSelection.current = `${from}:${to}`;
@@ -404,6 +392,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
       activeRefs={activeRefs}
       frozen={frozen}
       overscroll='trap'
+      addressing={addressing}
       onAxisResize={handleAxisResize}
       onSelect={handleSelect}
       onFocus={handleFocus}

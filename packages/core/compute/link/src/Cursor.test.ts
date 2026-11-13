@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -484,6 +484,28 @@ describe('token accessors', () => {
     ) as Cursor.ExternalCursor;
     return cursor;
   };
+
+  // A plugin bundle on EDGE resolves `Cursor` rebuilt from its published JSON Schema, as a stored type is rebuilt.
+  test('a sync writes the cursor through its type rebuilt from JSON Schema', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [AccessToken.AccessToken, Expando.Expando] });
+    const StoredCursor = await db.addType(Cursor.Cursor);
+    const token = db.add(AccessToken.make({ source: 'gmail.com', token: 'secret' }));
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(
+      Obj.make(StoredCursor, { spec: { kind: 'external', source: Ref.make(token), target: Ref.make(target) } }),
+    );
+    assert(Cursor.isExternal(cursor));
+
+    Cursor.recordError(cursor, 'boom');
+    Cursor.extendRange(cursor, { maxKey: 20, minKey: 5 });
+    Cursor.writeSyncState(cursor, { token: 't1', deltaIds: ['m1'] });
+    Cursor.writeSyncState(cursor, { token: 't2' });
+
+    expect(cursor.lastError).toBeUndefined();
+    expect(cursor.max).toBe('20');
+    expect(Cursor.readToken(cursor)).toBe('t2');
+    expect(Cursor.readDeltaIds(cursor)).toEqual([]);
+  });
 
   test('round-trips the delta token, independently of max/min', async ({ expect }) => {
     const cursor = await makeExternalCursor();

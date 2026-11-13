@@ -1,0 +1,41 @@
+---
+import Default from '@astrojs/starlight/components/Footer.astro';
+import config from 'virtual:starlight/user-config';
+
+import logoBlack from '../../node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-block.svg?url';
+import logoWhite from '../../node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-white.svg?url';
+import { siteLinks } from './site-links.ts';
+---
+<Default />
+<footer class="site-footer">
+  <div>
+    <a href="/" aria-label="DXOS home">
+      <img class="logo on-light" src={logoBlack} alt="DXOS" />
+      <img class="logo on-dark" src={logoWhite} alt="DXOS" />
+    </a>
+  </div>
+  <div>
+    <h4 class="label-mono">DXOS</h4>
+    <ul>
+      {siteLinks.map(({ label, href }) => <li><a href={href}>{label}</a></li>)}
+    </ul>
+  </div>
+  <div>
+    <h4 class="label-mono">Docs</h4>
+    <ul>
+      <li><a href="/docs/echo/overview/">ECHO</a></li>
+      <li><a href="/docs/halo/overview/">HALO</a></li>
+      <li><a href="/docs/plex/overview/">PLEX</a></li>
+    </ul>
+  </div>
+  <div>
+    <h4 class="label-mono">Community</h4>
+    <ul>
+      {/* The same links as the header's social icons. */}
+      {config.social?.map(({ label, href }) => <li><a href={href}>{label}</a></li>)}
+    </ul>
+  </div>
+  <div class="legal">
+    FSL-1.1-Apache-2.0. Copyright DXOS.org. <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+  </div>
+</footer>

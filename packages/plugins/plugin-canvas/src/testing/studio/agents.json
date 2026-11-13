@@ -1,0 +1,398 @@
+{
+  "id": "agents",
+  "title": "Agents",
+  "subtitle": "Feeds route work to agents; agents delegate through feeds of their own",
+  "size": {
+    "w": 300,
+    "h": 138
+  },
+  "nodes": {
+    "email": {
+      "cx": 220,
+      "cy": 273,
+      "w": 300,
+      "h": 138,
+      "kind": "feed-card",
+      "icon": "envelope",
+      "title": "Email",
+      "footer": "plugin-inbox · JMAP",
+      "feed": {
+        "n": 9,
+        "marks": {
+          "8": "accent"
+        }
+      }
+    },
+    "discord": {
+      "cx": 220,
+      "cy": 433,
+      "w": 300,
+      "h": 138,
+      "kind": "feed-card",
+      "icon": "discord-logo",
+      "title": "Discord",
+      "footer": "plugin-discord",
+      "feed": {
+        "n": 9,
+        "marks": {
+          "8": "accent"
+        }
+      }
+    },
+    "chat": {
+      "cx": 220,
+      "cy": 659,
+      "w": 300,
+      "h": 138,
+      "kind": "feed-card",
+      "icon": "chat-circle-dots",
+      "title": "Chat",
+      "footer": "plugin-thread",
+      "feed": {
+        "n": 9,
+        "marks": {
+          "8": "accent"
+        }
+      }
+    },
+    "triage": {
+      "cx": 600,
+      "cy": 336,
+      "w": 300,
+      "h": 176,
+      "kind": "feed-card",
+      "icon": "robot",
+      "title": "Triage agent",
+      "footer": "Agent DO · ProcessObject",
+      "tone": "ink",
+      "feed": {
+        "n": 9,
+        "label": "feed",
+        "marks": {
+          "5": "accent",
+          "6": "accent"
+        }
+      },
+      "body": "Delegates tasks; each opens a child feed."
+    },
+    "planner": {
+      "cx": 600,
+      "cy": 660,
+      "w": 300,
+      "h": 176,
+      "kind": "feed-card",
+      "icon": "robot",
+      "title": "Planner agent",
+      "footer": "Agent DO · ProcessObject",
+      "tone": "ink",
+      "feed": {
+        "n": 9,
+        "label": "feed",
+        "marks": {
+          "4": "accent",
+          "5": "accent"
+        }
+      },
+      "body": "Delegates tasks; each opens a child feed."
+    },
+    "research": {
+      "cx": 946,
+      "cy": 266,
+      "w": 300,
+      "h": 120,
+      "kind": "feed-card",
+      "icon": "magnifying-glass",
+      "title": "Research",
+      "footer": "parent: triage agent",
+      "feed": {
+        "n": 6,
+        "label": "task",
+        "marks": {
+          "0": "accent"
+        }
+      }
+    },
+    "reply": {
+      "cx": 946,
+      "cy": 406,
+      "w": 300,
+      "h": 120,
+      "kind": "feed-card",
+      "icon": "pencil-simple-line",
+      "title": "Draft reply",
+      "footer": "parent: triage agent",
+      "feed": {
+        "n": 6,
+        "label": "task",
+        "marks": {
+          "0": "accent"
+        }
+      }
+    },
+    "calendar": {
+      "cx": 946,
+      "cy": 590,
+      "w": 300,
+      "h": 120,
+      "kind": "feed-card",
+      "icon": "calendar-blank",
+      "title": "Calendar",
+      "footer": "parent: planner agent",
+      "feed": {
+        "n": 6,
+        "label": "task",
+        "marks": {
+          "0": "accent"
+        }
+      }
+    },
+    "travel": {
+      "cx": 946,
+      "cy": 730,
+      "w": 300,
+      "h": 120,
+      "kind": "feed-card",
+      "icon": "airplane-tilt",
+      "title": "Travel",
+      "footer": "parent: planner agent",
+      "feed": {
+        "n": 6,
+        "label": "task",
+        "marks": {
+          "0": "accent"
+        }
+      }
+    }
+  },
+  "edges": [
+    [
+      "email",
+      "triage",
+      "",
+      {
+        "route": "curve-h"
+      }
+    ],
+    [
+      "discord",
+      "triage",
+      "",
+      {
+        "route": "curve-h"
+      }
+    ],
+    [
+      "chat",
+      "planner",
+      "",
+      {
+        "route": "curve-h"
+      }
+    ],
+    [
+      "triage",
+      "research",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "color": "accent"
+      }
+    ],
+    [
+      "triage",
+      "reply",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "color": "accent"
+      }
+    ],
+    [
+      "planner",
+      "calendar",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "color": "accent"
+      }
+    ],
+    [
+      "planner",
+      "travel",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "color": "accent"
+      }
+    ],
+    [
+      "research",
+      "space",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "color": "accent",
+        "arrow": "none",
+        "halo": true,
+        "width": 1.8,
+        "tap": {
+          "nodes": [28, 37],
+          "toward": {
+            "x": 1328.2,
+            "y": 321.5
+          }
+        }
+      }
+    ],
+    [
+      "reply",
+      "space",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "color": "accent",
+        "arrow": "none",
+        "halo": true,
+        "width": 1.8,
+        "tap": {
+          "nodes": [80, 15],
+          "toward": {
+            "x": 1387,
+            "y": 426.5
+          }
+        }
+      }
+    ],
+    [
+      "calendar",
+      "space",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "color": "accent",
+        "arrow": "none",
+        "halo": true,
+        "width": 1.8,
+        "tap": {
+          "nodes": [63, 96],
+          "toward": {
+            "x": 1328.2,
+            "y": 564.5
+          }
+        }
+      }
+    ],
+    [
+      "travel",
+      "space",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "color": "accent",
+        "arrow": "none",
+        "halo": true,
+        "width": 1.8,
+        "tap": {
+          "nodes": [38, 20],
+          "toward": {
+            "x": 1387,
+            "y": 669.5
+          }
+        }
+      }
+    ]
+  ],
+  "components": [
+    {
+      "id": "space",
+      "kind": "space-graph",
+      "cx": 1338,
+      "cy": 488,
+      "r": 196,
+      "params": {
+        "seed": 7,
+        "pitch": 26,
+        "fill": 0.6,
+        "extra": 0.45,
+        "size": 24
+      },
+      "lit": {
+        "15": "accent",
+        "20": "accent",
+        "28": "accent",
+        "37": "accent",
+        "38": "accent",
+        "63": "accent",
+        "80": "accent",
+        "96": "accent"
+      }
+    }
+  ],
+  "frames": [
+    {
+      "id": "subagents",
+      "x": 778,
+      "y": 160,
+      "w": 336,
+      "h": 648,
+      "label": "Sub-agents · child feeds"
+    },
+    {
+      "id": "space-frame",
+      "x": 1108,
+      "y": 258,
+      "w": 460,
+      "h": 484
+    }
+  ],
+  "texts": [
+    {
+      "id": "l-inbound",
+      "x": 70,
+      "y": 172,
+      "w": 300,
+      "text": "Inbound feeds",
+      "role": "label"
+    },
+    {
+      "id": "l-space",
+      "x": 1142,
+      "y": 702,
+      "w": 392,
+      "text": "One space · its graph",
+      "role": "label",
+      "align": "center"
+    },
+    {
+      "id": "l-triggers",
+      "x": 287,
+      "y": 543,
+      "w": 230,
+      "text": "triggers route each new message",
+      "role": "link-label",
+      "for": ["email-triage", "discord-triage", "chat-planner"]
+    },
+    {
+      "id": "footnote",
+      "x": 70,
+      "y": 842,
+      "w": 1460,
+      "text": "Feeds are append-only. A delegation is a block in the parent’s feed that opens a child feed, so every sub-agent’s work is attributable and replayable.",
+      "role": "note"
+    }
+  ],
+  "controls": {
+    "subagents": true,
+    "graph": true,
+    "labels": true,
+    "seed": 7
+  }
+}

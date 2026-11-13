@@ -6,6 +6,8 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Yaml from 'yaml';
 
+import { SlideTheme } from '#types';
+
 /** Layout names supported by the Slidev subset. */
 export const LAYOUTS = [
   'default',
@@ -35,6 +37,13 @@ export const BLEED_SIDES = ['left', 'right'] as const;
 
 export type BleedSide = (typeof BLEED_SIDES)[number];
 
+/** Theme colors a slide may override for itself, on top of the deck's theme. */
+export const SLIDE_COLORS = ['accent', 'foreground', 'code', 'separator'] as const;
+
+export type SlideColor = (typeof SLIDE_COLORS)[number];
+
+const Color = Schema.String.check(Schema.isPattern(SlideTheme.COLOR_PATTERN));
+
 /** A problem found while parsing or validating a slide; the slide still renders. */
 export type SlideIssue = {
   kind: 'frontmatter' | 'layout' | 'theme' | 'html';
@@ -53,6 +62,10 @@ const fields = {
   bleed: Schema.Literals(BLEED_SIDES),
   hide: Schema.Boolean,
   theme: Schema.String,
+  accent: Color,
+  foreground: Color,
+  code: Color,
+  separator: Color,
 };
 
 /** Per-slide frontmatter; unknown keys are dropped. */
@@ -71,6 +84,11 @@ export const SlideFrontmatter = Schema.Struct({
   hide: Schema.optionalKey(fields.hide),
   /** Deck theme; read only from the first slide (Slidev headmatter). */
   theme: Schema.optionalKey(fields.theme),
+  /** DXOS: theme colors this slide overrides for itself; a deck-wide change belongs in the deck's theme settings. */
+  accent: Schema.optionalKey(fields.accent),
+  foreground: Schema.optionalKey(fields.foreground),
+  code: Schema.optionalKey(fields.code),
+  separator: Schema.optionalKey(fields.separator),
 });
 
 export type SlideFrontmatter = Schema.Schema.Type<typeof SlideFrontmatter>;

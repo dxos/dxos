@@ -25,7 +25,8 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
-    "./styles/graph.css": "./styles/graph.css"
+    "./styles/graph.css": "./styles/graph.css",
+    "./styles/graph-standalone.css": "./styles/graph-standalone.css"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -44,7 +45,6 @@
     "@dxos/node-std": "workspace:*",
     "@types/topojson-specification": "catalog:",
     "d3": "catalog:",
-    "js-clipper": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "topojson-client": "catalog:"
   },
@@ -61,6 +61,7 @@
     "@types/react-dom": "catalog:",
     "@types/topojson-client": "catalog:",
     "immutability-helper": "catalog:",
+    "js-clipper": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

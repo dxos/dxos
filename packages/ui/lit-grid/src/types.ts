@@ -47,6 +47,13 @@ export type DxGridPointer =
 
 export type DxGridReadonlyValue = boolean | 'no-text-select' | 'text-select';
 
+/**
+ * How a focused cell shows content that does not fit: `true` grows it sideways over its neighbours
+ * on one line, `block` keeps the column's width and wraps downward over the rows beneath (a list of
+ * values, an address), `false` leaves it clipped.
+ */
+export type DxGridFocusUnfurl = boolean | 'block';
+
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
 
@@ -94,7 +101,7 @@ export type DxGridCellValue = {
   /**
    * Controls whether the cell content should unfurl when the cell has focus.
    */
-  focusUnfurl?: boolean;
+  focusUnfurl?: DxGridFocusUnfurl;
 };
 
 export type DxGridAxisMetaProps = {
@@ -102,7 +109,7 @@ export type DxGridAxisMetaProps = {
   description?: string;
   resizeable?: boolean;
   readonly?: DxGridReadonlyValue;
-  focusUnfurl?: boolean;
+  focusUnfurl?: DxGridFocusUnfurl;
   minSize?: number;
   maxSize?: number;
 };
@@ -191,7 +198,20 @@ export class DxEditRequest extends Event {
 export type DxGridPlaneRange = { start: DxGridPlanePosition; end: DxGridPlanePosition };
 export type DxGridRange = { start: DxGridPosition; end: DxGridPosition };
 
+/**
+ * Another user's selection, drawn as an outlined range with their name on it. Both ends are in `start`'s plane.
+ */
+export type DxGridRemoteSelection = DxGridRange & {
+  /** Identifies whose selection it is, e.g. a peer id. */
+  id: string;
+  label: string;
+  /** CSS colors for the outline and label background, and for the label text. */
+  color: string;
+  textColor?: string;
+};
+
 export class DxGridCellsSelect extends Event {
+  public readonly range: DxGridRange;
   public readonly start: string;
   public readonly end: string;
   public readonly minCol: number;
@@ -200,6 +220,7 @@ export class DxGridCellsSelect extends Event {
   public readonly maxRow: number;
   constructor({ start, end }: DxGridRange) {
     super('dx-grid-cells-select');
+    this.range = { start, end };
     this.start = toPlaneCellIndex(start);
     this.end = toPlaneCellIndex(end);
     this.minCol = Math.min(start.col, end.col);

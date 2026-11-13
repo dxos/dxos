@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { type CallState } from './call-swarm-synchronizer.ts';
 import { type MediaState } from './media-manager.ts';
-import { type EncodedTrackName, TrackNameCodec, type UserState } from './types.ts';
+import { type RemoteTrackKey, type UserState, remoteTrackKey } from './types.ts';
 
 export type SimulatedParticipantProps = {
   /** Display name on the participant's tile. */
@@ -48,8 +48,8 @@ export type SimulatedUtterance = {
 
 type SimulatedParticipant = {
   user: UserState;
-  videoTrackName: EncodedTrackName;
-  audioTrackName: EncodedTrackName;
+  videoTrackName: RemoteTrackKey;
+  audioTrackName: RemoteTrackKey;
   video: HTMLVideoElement;
   stream: MediaStream;
   audioTrack: MediaStreamTrack;
@@ -57,7 +57,7 @@ type SimulatedParticipant = {
   avatar?: { stream: MediaStream; close: () => void };
   screenshare?: {
     start: number;
-    trackName: EncodedTrackName;
+    trackName: RemoteTrackKey;
     video: HTMLVideoElement;
     stream: MediaStream;
     on: boolean;
@@ -66,7 +66,6 @@ type SimulatedParticipant = {
   };
 };
 
-const SESSION_ID = 'simulated';
 const CLOCK_INTERVAL = 100;
 
 /**
@@ -229,10 +228,10 @@ export class CallSimulation extends Resource {
     const pulledVideoStreams = { ...media.pulledVideoStreams };
     const pulledAudioTracks = { ...media.pulledAudioTracks };
     for (const { videoTrackName, audioTrackName, stream, audioTrack, screenshare } of this.#participants) {
-      pulledVideoStreams[videoTrackName] = { stream, ctx: this._ctx };
-      pulledAudioTracks[audioTrackName] = { track: audioTrack, ctx: this._ctx };
+      pulledVideoStreams[videoTrackName] = stream;
+      pulledAudioTracks[audioTrackName] = audioTrack;
       if (screenshare) {
-        pulledVideoStreams[screenshare.trackName] = { stream: screenshare.stream, ctx: this._ctx };
+        pulledVideoStreams[screenshare.trackName] = screenshare.stream;
       }
     }
 
@@ -269,17 +268,14 @@ export class CallSimulation extends Resource {
     await monitor.open();
 
     const id = `simulated-${index}`;
-    const trackName = (kind: string) =>
-      TrackNameCodec.encode({ sessionId: SESSION_ID, trackName: `${id}-${kind}`, mid: id });
-    const videoTrackName = trackName('video');
-    const audioTrackName = trackName('audio');
-    const screenshareTrackName = trackName('screenshare');
+    // Keyed as a transport would key the participant's tracks: by its id (a device key for a real peer) and kind.
+    const videoTrackName = remoteTrackKey(id, 'video');
+    const audioTrackName = remoteTrackKey(id, 'audio');
+    const screenshareTrackName = remoteTrackKey(id, 'screenshare');
     const tracks: NonNullable<UserState['tracks']> = {
-      video: videoTrackName,
       videoEnabled: true,
-      audio: audioTrackName,
       audioEnabled: true,
-      ...(share ? { screenshare: screenshareTrackName, screenshareEnabled: false } : {}),
+      ...(share ? { screenshareEnabled: false } : {}),
     };
     const screenshare = share && {
       start: share.start,
