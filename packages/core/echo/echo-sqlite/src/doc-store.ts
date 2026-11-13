@@ -111,8 +111,15 @@ export class DocStore {
       const written = new Map<string, Doc>();
       const results = new Map<string, WriteResult>();
       for (const { id, structure, heads } of objects) {
-        const before = written.get(id) ?? docs.get(id) ?? this.#create();
+        const stored = written.get(id) ?? docs.get(id);
+        const before = stored ?? A.init<DatabaseDirectory>();
+        const spaceId = this.#spaceId;
         const edit = (doc: DatabaseDirectory) => {
+          if (!stored) {
+            // A new document's header goes in the object's first change: one change per new object.
+            doc.version = SpaceDocVersion.CURRENT;
+            doc.access = { spaceId };
+          }
           doc.objects ??= {};
           const existing = doc.objects[id];
           // `createdAt` is set once, by the first writer, and survives every later write.
@@ -179,13 +186,6 @@ export class DocStore {
     for (const id of ids) {
       this.#cache.delete(id);
     }
-  }
-
-  #create(): Doc {
-    return A.change(A.init<DatabaseDirectory>(), (doc) => {
-      doc.version = SpaceDocVersion.CURRENT;
-      doc.access = { spaceId: this.#spaceId };
-    });
   }
 
   #touch(id: string): Doc | undefined {

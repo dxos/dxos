@@ -70,53 +70,62 @@ const seed = (spaceId: SpaceId, count: number) =>
     { spaceId },
   );
 
-describe('Memory residency', () => {
-  it.effect('opening a large space reads no object rows (T-1)', () =>
-    Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      yield* seed(spaceId, 2_000);
-      yield* session(
-        (db) =>
-          Effect.promise(async () => {
-            expect(db.diagnostics()).toMatchObject({ hydrated: 0, resident: 0, queries: 0, loads: 0 });
+/** Seeding writes one Automerge document per object (about a millisecond each), which slow CI runners stretch. */
+const SEED_TIMEOUT = 30_000;
 
-            const page = await db.query(Query.select(Filter.type(TestSchema.Person)).limit(10)).run();
-            expect(page).toHaveLength(10);
-            expect(db.diagnostics()).toMatchObject({ hydrated: 10, queries: 1, loads: 0 });
-          }),
-        { spaceId },
-      );
-    }),
+describe('Memory residency', () => {
+  it.effect(
+    'opening a large space reads no object rows (T-1)',
+    () =>
+      Effect.gen(function* () {
+        const spaceId = SpaceId.random();
+        yield* seed(spaceId, 2_000);
+        yield* session(
+          (db) =>
+            Effect.promise(async () => {
+              expect(db.diagnostics()).toMatchObject({ hydrated: 0, resident: 0, queries: 0, loads: 0 });
+
+              const page = await db.query(Query.select(Filter.type(TestSchema.Person)).limit(10)).run();
+              expect(page).toHaveLength(10);
+              expect(db.diagnostics()).toMatchObject({ hydrated: 10, queries: 1, loads: 0 });
+            }),
+          { spaceId },
+        );
+      }),
+    SEED_TIMEOUT,
   );
 
-  it.effect('query results nobody holds are released (T-2)', () =>
-    Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      yield* seed(spaceId, 1_000);
-      yield* session(
-        (db) =>
-          Effect.promise(async () => {
-            // Held only through WeakRefs once this function returns.
-            const refs = await (async () => {
-              const people = await db.query(Filter.type(TestSchema.Person)).run();
-              expect(people).toHaveLength(1_000);
-              return people.map((person) => new WeakRef(person));
-            })();
-            expect(db.diagnostics().hydrated).toBe(1_000);
+  it.effect(
+    'query results nobody holds are released (T-2)',
+    () =>
+      Effect.gen(function* () {
+        const spaceId = SpaceId.random();
+        yield* seed(spaceId, 1_000);
+        yield* session(
+          (db) =>
+            Effect.promise(async () => {
+              // Held only through WeakRefs once this function returns.
+              const refs = await (async () => {
+                const people = await db.query(Filter.type(TestSchema.Person)).run();
+                expect(people).toHaveLength(1_000);
+                return people.map((person) => new WeakRef(person));
+              })();
+              expect(db.diagnostics().hydrated).toBe(1_000);
 
-            await collect();
+              await collect();
 
-            expect(refs.filter((ref) => ref.deref() !== undefined)).toHaveLength(0);
-            expect(db.diagnostics().resident).toBe(0);
+              expect(refs.filter((ref) => ref.deref() !== undefined)).toHaveLength(0);
+              expect(db.diagnostics().resident).toBe(0);
 
-            // A later lookup re-reads the rows.
-            const again = await db.query(Query.select(Filter.type(TestSchema.Person)).limit(5)).run();
-            expect(again).toHaveLength(5);
-            expect(db.diagnostics().hydrated).toBe(1_005);
-          }),
-        { spaceId },
-      );
-    }),
+              // A later lookup re-reads the rows.
+              const again = await db.query(Query.select(Filter.type(TestSchema.Person)).limit(5)).run();
+              expect(again).toHaveLength(5);
+              expect(db.diagnostics().hydrated).toBe(1_005);
+            }),
+          { spaceId },
+        );
+      }),
+    SEED_TIMEOUT,
   );
 
   it.effect('held objects stay resident and keep their identity', () =>

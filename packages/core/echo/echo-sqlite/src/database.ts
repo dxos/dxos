@@ -129,6 +129,8 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   /** A delete or restore in the pending batch: the cascade can hide rows of any type. */
   #deletionChanged = false;
   #scheduled = false;
+  /** Set while the database writes a derived meta field, whose change notification is not an edit. */
+  #stamping = false;
   #writes: Promise<void> = Promise.resolve();
   #writeError: unknown = undefined;
   #closed = false;
@@ -943,6 +945,9 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   }
 
   #onChanged(id: string): void {
+    if (this.#stamping) {
+      return;
+    }
     const entity = this.#live.get(id)?.deref();
     if (entity) {
       this.#adoptReferences(entity);
@@ -1038,15 +1043,22 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
               this.#heads.set(entity, result.heads);
               if (result.updatedAt !== undefined && Obj.isObject(entity)) {
                 const updatedAt = result.updatedAt;
-                Obj.update(entity, (entity) => {
-                  Obj.getMeta(entity).updatedAt = updatedAt;
-                });
+                // A derived field: setting it is not an edit, so it must not schedule another write.
+                this.#stamping = true;
+                try {
+                  Obj.update(entity, (entity) => {
+                    Obj.getMeta(entity).updatedAt = updatedAt;
+                  });
+                } finally {
+                  this.#stamping = false;
+                }
               }
             }
           }
           // A merged write, or blocks another writer appended meanwhile, leave documents ahead of
-          // their live objects.
-          await this.#refreshStale(indexed);
+          // their live objects; an object this batch wrote unmerged already shows its document.
+          const current = new Set([...results].filter(([, result]) => !result.merged).map(([id]) => id));
+          await this.#refreshStale([...indexed].filter((id) => !current.has(id)));
           // Deletion cascades and purges reach rows of any type, so they invalidate every query.
           const everything = deletionChanged || purged.length > 0;
           this.#committed.emit(
