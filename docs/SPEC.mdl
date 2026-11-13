@@ -5599,6 +5599,14 @@ decision D-286: On a wide screen the dxos.org Webflow nav puts its links beside 
   why: This branch had already moved the links beside the logo to match the docs header when main centred the menu; merging keeps the docs layout and main's overflow fixes.
 ```
 
+```mdl
+decision D-287: `/echo` uses ECHO's green from the alt 4 suite [D-273]. The hero's rays are the suite's green, and the eyebrow, the headline's underline, the primary button, the copied check and the selected tabs, which were the site's purple, are green too. Text in green uses a lighter tint of it so it stays legible on the dark ground.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [D-220]
+  why: Josiah asked for `/echo` to match the colors ECHO got when the section colors were swapped around; its purple and maroon now read as PLEX and TILE.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

@@ -323,6 +323,12 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
 </script>
 
 <style>
+  /* ECHO's green from the alt 4 suite [D-287]; text takes a lighter tint to stay legible on the dark ground. */
+  :global(:root) {
+    --echo-green: rgb(20 117 79);
+    --echo-green-text: color-mix(in oklab, rgb(20 117 79), white 40%);
+  }
+
   .echo-hero {
     position: relative;
     overflow: hidden;
@@ -350,11 +356,11 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   }
 
   .echo-eyebrow {
-    color: var(--base-color-system--purple);
+    color: var(--echo-green-text);
   }
 
   .echo-highlight {
-    border-bottom: 2px solid var(--base-color-system--purple);
+    border-bottom: 2px solid var(--echo-green);
   }
 
   .echo-install {
@@ -411,12 +417,12 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
 
   .echo-copy[data-copied] .echo-copied-icon {
     visibility: visible;
-    color: var(--base-color-system--purple);
+    color: var(--echo-green-text);
   }
 
   .button.echo-primary {
-    border-color: var(--base-color-system--purple);
-    background-color: var(--base-color-system--purple);
+    border-color: var(--echo-green);
+    background-color: var(--echo-green);
   }
 
   /* The icon keeps a bounded size in the column beside the copy; its rays run out past it and fade. */
@@ -430,7 +436,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   }
 
   .echo-mark-rays {
-    stroke: rgb(150 37 79);
+    stroke: var(--echo-green);
   }
 
   .echo-mark-icon {
@@ -541,7 +547,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   }
 
   .echo-tablist [role='tab'][aria-selected='true'] {
-    border-bottom-color: var(--base-color-system--purple);
+    border-bottom-color: var(--echo-green);
     color: #fff;
   }
 
@@ -584,7 +590,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   }
 
   .echo-card-tabs .echo-tablist [role='tab'][aria-selected='true'] {
-    border-color: var(--base-color-system--purple);
+    border-color: var(--echo-green);
     background-color: #ffffff0a;
   }
 
@@ -619,7 +625,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
     }
     .echo-card-tabs .echo-tablist [role='tab'][aria-selected='true'] {
       border-color: transparent;
-      border-bottom-color: var(--base-color-system--purple);
+      border-bottom-color: var(--echo-green);
       background-color: transparent;
     }
     .echo-card-tabs .echo-tab-summary {
