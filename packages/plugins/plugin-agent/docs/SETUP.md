@@ -11,18 +11,16 @@ everything on this page.
 
 | Piece                                                                            | Repo                                                   | Runs in                                          |
 | -------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------ |
-| Agent UI, agent objects, `ensureChannelChat` and the other agent operations      | dxos `plugin-agent`, `plugin-discord`, `plugin-thread` | Composer (UI) and edge operation-service (tools) |
+| Agent UI, agent objects, `ensureChannelChat` and the other agent operations      | dxos `plugin-agent`, `plugin-discord`, `plugin-thread` | Composer (UI) and EDGE (tools; see below)        |
 | Agent process and brain (`ProcessObject`, `BrainObject`)                         | edge `compute-service`                                 | EDGE                                             |
 | Discord bot (`DiscordBot` Durable Object, one per app, holds the Gateway socket) | edge `discord-service`                                 | EDGE                                             |
 | Agent mailbox (`AgentMailbox` Durable Object, one per handle)                    | edge `compute-service` (`src/email/`)                  | EDGE                                             |
 | Model calls                                                                      | edge `ai-service` (holds `ANTHROPIC_API_KEY`)          | EDGE                                             |
 | Discord sign-in, Google OAuth (`/oauth/*`)                                       | edge `kms-service`                                     | EDGE                                             |
 
-Composer-only changes need nothing on the EDGE side. On EDGE, operations run in two places:
-
-- Local EDGE runs every operation on operation-service, at the `@dxos/*` build edge's catalog pins.
-- Deployed EDGE (dev, preview, production) runs each plugin's operations from the plugin bundle published to that
-  environment's registry. Only plugin-agent and plugin-assistant stay on operation-service, at the catalog's build.
+Composer-only changes need nothing on the EDGE side. EDGE, local and deployed alike, runs each plugin's operations from
+the plugin bundle in that environment's registry. Only plugin-agent and plugin-assistant stay on operation-service, at
+the `@dxos/*` build edge's catalog pins. Locally the registry holds the bundles `pnpm dev:setup` builds.
 
 To run local changes to dxos code that runs on EDGE, see [Link local dxos into edge](#link-local-dxos-into-edge).
 
@@ -111,13 +109,24 @@ Agent work touches these workers:
 | compute-service   | 8798 | agent processes, brain, mailboxes                           |
 | discord-service   | 8801 | Discord bot                                                 |
 
-operation-service should list the `org.dxos.operation.agent.*` keys, `ensureChannelChat` among them.
+operation-service should list the `org.dxos.operation.agent.*` keys, `ensureChannelChat` among them. The other plugins'
+operations run from their bundles, so a stack seeded with none fails them with `MissingPluginBundleError`.
 
 ### Link local dxos into edge
 
-Only needed to run local changes to dxos code that runs on EDGE: plugin-agent operations and skills,
-`agent-runtime`, `assistant`. Link the **whole** workspace; linking a few packages mixes the pinned version with
-newer local builds and fails to bundle.
+Only needed to run local changes to dxos code that runs on EDGE. Two paths reach it:
+
+- **Plugin bundles:** every plugin's operations but plugin-agent's and plugin-assistant's. Rebuild them from `<dxos>`
+  and upload them to the running stack (the registry replaces a local bundle whose content changed):
+
+  ```bash
+  node scripts/plugin-bundles.mjs build --dxos <dxos>
+  node scripts/stack.mjs seed
+  ```
+
+- **The link:** plugin-agent's and plugin-assistant's operations and skills, `agent-runtime`, `assistant`, and
+  everything else edge imports. Link the **whole** workspace; linking a few packages mixes the pinned version with
+  newer local builds and fails to bundle.
 
 1. Build everything in `<dxos>` (the link packs each package's `dist/`):
 
