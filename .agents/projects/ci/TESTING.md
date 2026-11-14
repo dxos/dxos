@@ -20,6 +20,10 @@ Basin on R2 is the fallback if we want one event per test.
 ### Blocking vs nightly
 
 - Untagged tests are **blocking**: they run on every PR and in the merge queue.
+- Every fast, stable test is blocking, integration tests included. A test goes `nightly` only when
+  it is slow (over ~5 s per file, with whole packages exempted where we choose, e.g. ECHO) or needs
+  something outside the repo (live services, recorded LLM
+  runs, real browsers end to end).
 - `nightly` tests run only in the nightly full run and on demand (a dispatched full run on a PR).
 - The nightly run executes everything, uncached and unscoped.
 - Already done: knip and the boot budget run nightly only.
@@ -55,12 +59,13 @@ T3 Local runtime
 ├─ B  dxos workerd                                           9 min
 └─ B  edge workerd, D1, Miniflare in node                    in edge node unit above
 T4 Integration
-├─ B  dxos ECHO (except echo-client-e2e)                    11 min
+├─ B  dxos ECHO, incl. echo-client-e2e                      18 min
 ├─ B  dxos process manager                                   3 min
+├─ B  dxos client/SDK (client, client-services, …)           6 min
+├─ N  dxos client-e2e (invitations, multi-peer)              6 min
 ├─ B  dxos plugins, light (≤5 s per file)                   45 min
 ├─ N  dxos plugins, heavy                                   65 min
-├─ N  dxos echo-client-e2e, memory                           7 min
-├─ N  dxos client/SDK, AI and agent packages                23 min
+├─ N  dxos AI and agent packages                            11 min
 └─ N  edge harness (edge:test, incl. sync)                  57 min
 T5 Browser
 ├─ B  dxos vitest browser mode                               5 min
@@ -77,8 +82,8 @@ T8 Evals                                                 N   not measured
 T9 Live services                                         N   not measured; most never run today
 T10 Perf and benchmarks                                  N   not measured
 
-Blocking total  ~320 min per full run   (PRs: affected packages only)
-Nightly total   ~290 min per full run
+Blocking total  ~335 min per full run   (PRs: affected packages only)
+Nightly total   ~275 min per full run
 ```
 
 The rest of this document is the evidence behind these decisions.
@@ -289,14 +294,19 @@ Untagged, and so blocking on PRs:
 - **T0, T1:** all static, compile and whole-repo checks.
 - **T2, T3:** unit, workerd and D1 tests in both repos. Edge measures 70 s, 88 s and 18 s of test
   time with 0–0.4% flake candidates.
-- **T4, selected integration tests** (per-file medians from the nightlies):
-  - Most ECHO tests: every `packages/core/echo/*` package except `echo-client-e2e`. That keeps
-    echo-client (199 s), echo-host (124 s) and the small packages, ~370 s of test time in 175 files.
-    `echo-client-e2e` (281 s, 614 tests, the memory suites) gets `// @module-tag nightly`.
-  - Process manager: all 8 files are cheap and have not failed: `compute-runtime`
+- **T4, every fast and stable integration test.** The rule: an integration test file is blocking
+  unless it takes over ~5 s (per-file median from the nightlies), replays model fixtures, or has a
+  flake rate that needs the `flaky` tag. Packages can be exempted as a whole (ECHO is). That gives:
+  - **ECHO, all of it:** every `packages/core/echo/*` package, including `echo-client-e2e` (281 s,
+    614 tests, 0.3% flake candidates; its `memory` suites keep their own opt-in tag). ~650 s of test
+    time in 190 files, exempt from the 5 s rule.
+  - **Process manager:** all 8 files are cheap and have not failed: `compute-runtime`
     `ProcessManager.test.ts` (11 s) and `RemoteProcessManager*` (<1 s), `edge-compute`
     `EdgeProcessManager` and `app-framework` `plugin-process-manager` (<1.2 s each).
-  - Light Composer plugin tests: plugin test files that replay no model fixtures and take ≤5 s.
+  - **Client/SDK, about half:** `client`, `client-services`, `network-manager` and `react-client`
+    (~6.5 min of task time, no failures) stay blocking. `client-e2e` (5.6 min, 1.1% flake
+    candidates from the subduction invitation timeouts) goes `nightly`.
+  - **Light Composer plugin tests:** plugin test files that replay no model fixtures and take ≤5 s.
     That is 838 of 937 plugin node files and 751 s of their 2,091 s. The other 99 files cost the
     remaining 1,340 s (64%) and get `// @module-tag nightly`.
 - **T5, storybook: keep blocking.** A full run is 2,520 stories and 30 min of test time, but PRs run
@@ -309,10 +319,10 @@ Untagged, and so blocking on PRs:
 
 Tagged `nightly`:
 
-- The rest of T4: full-stack client and SDK integration (`client-e2e` 3.5 min per full run,
-  `sdk/client*`, `client-services`, `network-manager`), AI and agent packages (`plugin-agent`
-  3.4 min), and the edge harness (`edge:test`), which costs ~33 min of test time per run and fails
-  21.9% of PR runs.
+- The slow or unstable part of T4: `client-e2e`, the heavy plugin files, the AI and agent packages
+  (`agent-runtime`, `assistant-toolkit`, `agent-code-mode`, `stories-brain`; `plugin-agent` 3.4 min),
+  and the edge harness (`edge:test`), which costs ~33 min of test time per run and fails 21.9% of
+  PR runs.
 - T6 to T9: model fixtures, e2e, evals, live tests. Composer e2e alone is ~2,180 runner-hours a
   month, the largest line in either repo.
 
