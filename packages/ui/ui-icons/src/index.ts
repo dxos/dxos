@@ -28,6 +28,11 @@ export const PxIcons = {
   'bar-low': 'px--bar-low--regular',
   'bar-medium': 'px--bar-medium--regular',
   'context-panel': 'px--context-panel--regular',
+
+  // Line ends.
+  'line-arrow': 'px--line-arrow--regular',
+  'line-circle': 'px--line-circle--regular',
+  'line-triangle': 'px--line-triangle--regular',
 } as const;
 
 export type PxIconName = keyof typeof PxIcons;

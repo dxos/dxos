@@ -456,6 +456,9 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       link's plain menu, and on an unselected link's end the shape's port took it. The pointer machine now
       resolves the end by position (`linkEndAt`): within 20 px of it along the link, or 8 px off the link.
       Story `Links` › End Press Test.
+- [x] **Icons for the link ends** (user, 2026-11-13): `px--line-arrow--regular` (Phosphor's `arrow-right`, as
+      strokes), `px--line-triangle--regular` and `px--line-circle--regular` in `@dxos/ui-icons`, one shaft with the
+      head each marker draws. Nothing uses them yet: the end's menu and the Properties marker field list names only.
 - [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
       Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the

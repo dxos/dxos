@@ -26,6 +26,8 @@ const reference = [
   // Logos
   'ph--github-logo--regular',
   'ph--google-logo--regular',
+  // Line ends
+  'ph--arrow-right--regular',
 ];
 
 /**
