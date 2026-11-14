@@ -1,0 +1,14 @@
+---
+interface Props {
+  name: string;
+  alt: string;
+}
+
+const { name, alt } = Astro.props;
+const sources = import.meta.glob<string>('../assets/diagrams/*.dx.svg', { query: '?url', import: 'default', eager: true });
+const src = sources[`../assets/diagrams/${name}.dx.svg`];
+if (!src) {
+  throw new Error(`Unknown diagram: ${name}`);
+}
+---
+<img class="diagram" src={src} alt={alt} />

@@ -388,6 +388,7 @@
     "@dxos/composer-app",
     "@dxos/composer-crx",
     "@dxos/docs",
+    "@dxos/echo-site",
     "@dxos/todomvc",
     "tasks",
     "@dxos/testbench-app",

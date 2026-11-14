@@ -2,6 +2,15 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "echo-site",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && cd packages/apps/echo-site && pnpm run dev"
+      ],
+      "port": 4321
+    },
+    {
       "name": "composer-crx",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "composer-crx:serve"],

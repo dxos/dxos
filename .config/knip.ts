@@ -484,6 +484,14 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     '@dxos/web-context-react',
     'decode-named-character-reference',
   ],
+  'packages/apps/echo-site': [
+    // Read through `node_modules/@dxos/brand` paths for its fonts and logos, never imported.
+    '@dxos/brand',
+    // Astro's default image service imports it from the emitted prerender chunk, as for `docs`.
+    'sharp',
+    // A peer of `expressive-code-twoslash`, which `ec.config.mjs` loads outside knip's graph.
+    'twoslash',
+  ],
   // `@opentui/core` reaches its native library through a dynamic import interpolating
   // `process.platform`/`process.arch`, which bun folds into a constant per `--compile` target, so
   // cross-compiling the CLI resolves all five at bundle time. pnpm installs them for the host
