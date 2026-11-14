@@ -24,6 +24,11 @@
   }
 }
 
+/* Safari moves the fixed header aside while the page bounces past either end. */
+html {
+  overscroll-behavior-y: none;
+}
+
 body {
   background: var(--c-bg);
 }
