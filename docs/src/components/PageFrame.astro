@@ -73,7 +73,7 @@ const { hasSidebar } = Astro.locals.starlightRoute;
       background-color: var(--sl-color-bg-nav);
     }
 
-    /* Centered in the bar, below the safe area that `--sl-nav-height` includes. */
+    /* Centered in the bar, below the safe area. */
     .sidebar :global(.sl-menu-button) {
       top: calc(env(safe-area-inset-top, 0px) + (var(--dx-nav-bar) - var(--sl-menu-button-size)) / 2);
     }

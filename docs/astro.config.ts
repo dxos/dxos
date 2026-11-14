@@ -50,14 +50,12 @@ const browserNodeStd = (): Plugin => ({
   },
 });
 
-/** The browsers Composer targets; Safari does not parse the `using` declarations in the `@dxos/*` sources. */
+/** Lowers the `using` declarations in `@dxos/*` sources, which Safari cannot parse. */
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
 
 /**
- * Safari has no `Symbol.dispose`. `@dxos/util` polyfills it on import, but a chunk that runs first (e.g. `Mutex`) keys
- * its dispose method under `undefined`, and the lowered `using` then throws "Object is not disposable". Every chunk
- * starts with the same polyfill, so the symbol exists before any class reads it. It reads `globalThis.Symbol` because a
- * chunk that imports a binding named `Symbol` (Effect's `Schema.Symbol`) would otherwise rename the global.
+ * Safari has no `Symbol.dispose`, and a chunk evaluated before `@dxos/util` polyfills it keys dispose methods under
+ * `undefined`, so every chunk starts with this. `globalThis.Symbol` survives chunks that bind `Symbol` (`Schema.Symbol`).
  */
 const disposePolyfill = `{
   const S = globalThis.Symbol;
@@ -65,7 +63,7 @@ const disposePolyfill = `{
   typeof S.asyncDispose !== 'symbol' && Object.defineProperty(S, 'asyncDispose', { value: S.for('asyncDispose') });
 }`;
 
-/** Astro builds the client for `esnext` and its environment config wins over `build.target`, so set it per environment. */
+/** Astro's per-environment `esnext` target overrides `build.target`. */
 const browserBuildTarget = (): Plugin => ({
   name: 'docs:browser-build-target',
   configEnvironment: (name) =>
@@ -79,7 +77,7 @@ const browserBuildTarget = (): Plugin => ({
       : undefined,
 });
 
-/** One `import()` per chunk URL, shared by every caller, and each starts only once the previous one settles. */
+/** Dedupes `import()` by URL and runs one at a time; see {@link shareDynamicImports}. */
 const sharedImport = `globalThis.__dxImport ??= (() => {
   const loads = new Map();
   let last = Promise.resolve();
@@ -97,22 +95,21 @@ const sharedImport = `globalThis.__dxImport ??= (() => {
 type Node = { type: string; start: number; end: number; source?: Node };
 
 /**
- * Safari 26 can settle an `import()` while another one in flight is still evaluating a chunk they share, so the caller
- * sees `undefined` exports. Demo peers and story cards load overlapping chunks at once, so every dynamic import goes
- * through {@link sharedImport}, resolved against the importing chunk.
+ * Safari 26 can settle an `import()` while another still evaluates a chunk they share, leaving `undefined` exports, so
+ * every dynamic import goes through {@link sharedImport}.
  */
 const shareDynamicImports = (): Plugin => ({
   name: 'docs:share-dynamic-imports',
   applyToEnvironment: (environment) => environment.name === 'client',
   generateBundle: {
-    // Last, so Vite's preload helper has already listed the CSS each import pulls in, which it finds by `import(`.
+    // After Vite's preload helper, which finds each import's CSS by matching `import(`.
     order: 'post',
     handler(_options, bundle) {
       for (const chunk of Object.values(bundle)) {
         if (chunk.type !== 'chunk' || !chunk.code.includes('import(')) {
           continue;
         }
-        // The minifier renames the helper's parameter, so find the helper's own `import()` by where it sits.
+        // The minifier renames the helper's parameter, so its own `import()` is found by position.
         const helper = chunk.code.indexOf('__dxImport??=');
         const isHelper = (node: Node) => helper >= 0 && node.start > helper && node.start < helper + 200;
         const imports: Node[] = [];
@@ -139,13 +136,10 @@ const shareDynamicImports = (): Plugin => ({
   },
 });
 
-/** Astro's island loader, which Astro inlines into each page as the text of this module's default export. */
+/** The `import()` in Astro's minified island loader. */
 const islandImport = 'return await import(e)}catch';
 
-/**
- * Islands on one page load their components at once, so the island loader shares {@link sharedImport} too. The loader
- * runs before any chunk, so it installs the helper itself.
- */
+/** Routes Astro's island loader through {@link sharedImport}, inlined because the loader runs before any chunk. */
 const shareIslandImports = (): Plugin => ({
   name: 'docs:share-island-imports',
   transform(code, id) {
@@ -367,8 +361,7 @@ export default defineConfig({
       title: 'DXOS Documentation',
       lastUpdated: true,
       favicon: '/favicon.ico',
-      // `viewport-fit=cover` lays the page out under Safari's status bar and collapsed toolbar, so the fixed header's
-      // `env(safe-area-inset-top)` padding covers that strip instead of the content scrolling through it.
+      // `viewport-fit=cover` extends the page under Safari's status bar so the header's safe-area padding fills it.
       head: [
         {
           tag: 'meta',

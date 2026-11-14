@@ -54,9 +54,8 @@ export type RootProps = ThemedClassName<{
 }>;
 
 /**
- * Renders a composed story in place. Story layouts are `fixed inset-0`; a transform makes them fill this element
- * instead of the viewport, and it needs a height from its container. Safari lays them out inside layout containment
- * but composites them against the viewport, so after a scroll it leaves them blank or black.
+ * Renders a composed story in place; needs a height from its container. The transform makes the story's `fixed inset-0`
+ * layout fill this element; under layout containment Safari composites it against the viewport and blanks it on scroll.
  */
 export const Root = ({ story: Story, args, shared, classNames }: RootProps) => {
   const content = (

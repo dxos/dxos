@@ -31,10 +31,7 @@ const shouldRenderSearch =
 
 <!-- Outside Starlight's layer so the page revert does not undo it. -->
 <style>
-  /*
-   * `--dx-nav-bar` is the bar itself; `--sl-nav-height` adds the safe area above it, which `viewport-fit=cover` puts
-   * under the header, so everything Starlight offsets by the nav height clears both.
-   */
+  /* `--sl-nav-height` adds the safe area to the bar so everything Starlight offsets by it clears both. */
   :global(:root) {
     --dx-nav-bar: 3.5rem;
     --sl-nav-height: calc(var(--dx-nav-bar) + env(safe-area-inset-top, 0px));
