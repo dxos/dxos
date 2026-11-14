@@ -19,7 +19,7 @@ const cards = SUITE_ORDER.map((id) => {
     wide: id === WIDE,
     label: topic?.label ?? id.toUpperCase(),
     href: topic?.href,
-    description: topic?.description,
+    description: [topic?.description, topic?.detail].filter(Boolean).join(' '),
     art: crop(SUITE_MARKS[id], id === WIDE),
     color: SUITE_COLORS[id],
   };

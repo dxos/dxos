@@ -20,6 +20,8 @@ export type Topic = {
   /** Unset for a topic with no pages yet. */
   href?: string;
   description: string;
+  /** A further sentence for where there is room for one: the docs home's card, not the section picker. */
+  detail?: string;
   logotype?: string;
 };
 
@@ -29,7 +31,8 @@ export const TOPICS: Topic[] = [
     id: 'echo',
     label: 'ECHO',
     href: '/docs/echo/overview/',
-    description: 'Realtime graph database that syncs peer to peer and works offline.',
+    description: 'Peer-to-peer realtime graph database.',
+    detail: 'Extensible with plugins for CRDTs, blobs, hierarchical feeds and RDF.',
     logotype: inherit(echo),
   },
   {
