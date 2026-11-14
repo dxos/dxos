@@ -41,6 +41,14 @@ tasks:
       runInCI: false
       cache: false
 
+  # Run the basic pipeline over a DiscordChatExporter JSON export (skipping bots) into persistent SQLite, e.g.
+  # `moon run plugin-discord:crawl-export`. Set DX_ANTHROPIC_API_KEY for the LLM extractor. See the test header.
+  crawl-export:
+    command: 'pnpm exec vitest run src/testing/crawl-export.test.ts'
+    options:
+      runInCI: false
+      cache: false
+
   # Export channels (and their threads) as DiscordChatExporter JSON with DISCORD_EXPORT_TOKEN, e.g.
   # `moon run plugin-discord:export -- --guild <id> --days 30`. See the script header for flags.
   export:
