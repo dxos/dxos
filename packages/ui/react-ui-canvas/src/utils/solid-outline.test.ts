@@ -101,6 +101,16 @@ describe('nodeRings', () => {
     expect(Math.max(...turned.map(({ x }) => x))).toBeCloseTo(30, 5);
   });
 
+  test("a parametric shape is its recipe's outline, so a join or a cut takes the arrow and not its frame", ({
+    expect,
+  }) => {
+    // A 200 by 100 arrow with a 50 px head and a 60 px shaft: the shaft's box and the head's triangle.
+    const arrow = node('a', 'shape', 0, 0, 200, 100, { recipe: 'arrow', params: { head: 0.5, shaft: 0.6 } });
+    expect(area(nodeRings(arrow))).toBeCloseTo(150 * 60 + (50 * 100) / 2);
+    // A recipe this build does not have is its frame.
+    expect(area(nodeRings(node('b', 'shape', 0, 0, 200, 100, { recipe: 'unknown' })))).toBeCloseTo(20000);
+  });
+
   test('an ellipse, a polygon and a cloud are their own outlines, inside their frames', ({ expect }) => {
     expect(area(nodeRings(node('e', 'ellipse', 0, 0, 100, 60)))).toBeCloseTo(Math.PI * 50 * 30, -2);
     const triangle = nodeRings(node('p', 'polygon', 0, 0, 100, 100, { params: { sides: 3 } }));

@@ -289,9 +289,10 @@ export const boxFields = {
  * in `label` still reads as itself.
  */
 /**
- * Space between a shape's frame and the text it draws, in scene px. Unset, a text box pads itself by a minor grid
- * cell either side, which is what puts a label's own lines on the grid; zero puts the text on the frame's edge, as a
- * part of a composite card must be to sit where the card's own regions sit.
+ * Space between a shape's frame and the text it draws, in scene px, as a font size is. Unset, a text box pads
+ * itself by a minor grid cell either side, which is what puts its lines on the grid, and above and below by half a
+ * cell for a label, a hull's name included (12 and 6 at the default grid), or a whole one for a text node. Zero puts
+ * the text on the frame's edge, as a part of a composite card must be to sit where the card's own regions sit.
  */
 export const Padding = Schema.Struct({
   x: Schema.optional(Schema.Number.annotate({ title: 'X' })),
@@ -299,7 +300,7 @@ export const Padding = Schema.Struct({
 }).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }));
 export type Padding = Schema.Schema.Type<typeof Padding>;
 
-/** The fields of a shape whose text is inset from its frame: the rectangle and the text node. */
+/** The fields of a shape whose text is inset from its frame: every shape that draws a label, and the text node. */
 export const paddingFields = {
   padding: Schema.optional(Padding.annotate({ title: 'Padding' })),
 };
@@ -336,6 +337,7 @@ export const EllipseNode = Schema.Struct({
   type: Schema.Literal('ellipse'),
   ...nodeBase,
   label: Schema.optional(Schema.String),
+  ...paddingFields,
 });
 export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
 
@@ -353,6 +355,7 @@ export const CloudNode = Schema.Struct({
   type: Schema.Literal('cloud'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   params: Schema.optional(CloudParams),
 });
 export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
@@ -382,9 +385,27 @@ export const PolygonNode = Schema.Struct({
   type: Schema.Literal('polygon'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   params: Schema.optional(PolygonParams),
 });
 export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
+
+/**
+ * A shape a recipe draws (an arrow, a callout, a star): `recipe` names it, and the recipe makes the outline from the
+ * frame and `params`, each parameter measured against what the recipe says (a side of the frame, or scene px), so a
+ * part keeps its proportions however the frame is resized. A recipe unknown to a build is drawn as its frame.
+ * Labelled like a box.
+ */
+export const ShapeNode = Schema.Struct({
+  type: Schema.Literal('shape'),
+  ...nodeBase,
+  ...boxFields,
+  ...paddingFields,
+  recipe: Schema.String,
+  /** The recipe's parameters by id; one unset takes the recipe's default. */
+  params: Schema.optional(Schema.Record(Schema.String, Schema.Number)),
+});
+export type ShapeNode = Schema.Schema.Type<typeof ShapeNode>;
 
 /** A polyline's own settings, in its `params`. */
 export const PolylineParams = Schema.Struct({
@@ -418,6 +439,7 @@ export const PolylineNode = Schema.Struct({
   type: Schema.Literal('polyline'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   points: Schema.Array(Point),
   bends: Schema.optional(Schema.Array(PolylineBend)),
   params: Schema.optional(PolylineParams),
@@ -444,6 +466,7 @@ export const HullNode = Schema.Struct({
   type: Schema.Literal('hull'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   /** Unset, `DEFAULT_HULL_SHAPE`. */
   shape: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
   /**
@@ -711,6 +734,7 @@ export const BuiltinNode = Schema.Union([
   EllipseNode,
   CloudNode,
   PolygonNode,
+  ShapeNode,
   PolylineNode,
   HullNode,
   NoteNode,
@@ -727,6 +751,7 @@ export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'ellipse',
   'polygon',
   'cloud',
+  'shape',
   'polyline',
   'hull',
   'note',
@@ -746,6 +771,7 @@ export type NodeType = string;
 export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
 export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
+export const isShapeNode = (node: NodeBase): node is ShapeNode => node.type === 'shape';
 export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
 export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.type === 'polyline';
 export const isHullNode = (node: NodeBase): node is HullNode => node.type === 'hull';

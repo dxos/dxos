@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { MAJOR_GRID, type NodeBase, NoteNode, RectNode, isBuiltinNode, nodeBase } from '@dxos/scene';
+import { MAJOR_GRID, type NodeBase, NoteNode, RectNode, isBuiltinNode, isShapeNode, nodeBase } from '@dxos/scene';
 
 import { type CreateProps, type NodeDef, type NodeRegistry, createNodeRegistry, nodeDef } from '../../model/index.ts';
-import { createNode, nodeBounds, nodePorts, nominalSize } from '../../utils/index.ts';
+import { SHAPE_FOLD, SHAPE_RECIPES, createNode, nodeBounds, nodePorts, nominalSize } from '../../utils/index.ts';
 import { boxPrototype, defaultNodeRegistry } from './registry.ts';
 import { UnknownNodeView } from './SceneLayer.tsx';
 
@@ -70,6 +70,42 @@ describe('registry', () => {
 });
 
 describe('node registry', () => {
+  test('each recipe has a tool that drags out a shape naming it, and the shape type itself has none', ({ expect }) => {
+    const { shape } = defaultNodeRegistry;
+    // The type draws every recipe's node; the palette offers the recipes, not the type.
+    expect(shape.palette).toBe(false);
+    for (const recipe of SHAPE_RECIPES) {
+      const tool = defaultNodeRegistry[recipe.id];
+      expect([tool.name, tool.icon, tool.fold, tool.palette]).toEqual([
+        recipe.name,
+        recipe.icon,
+        SHAPE_FOLD,
+        undefined,
+      ]);
+      const node = tool.create({ id: 'a', z: 'a', center: { x: 96, y: 48 }, size: { width: 192, height: 96 } });
+      expect(Schema.is(shape.schema)(node)).toBe(true);
+      expect(isShapeNode(node) && [node.type, node.recipe, node.params]).toEqual(['shape', recipe.id, undefined]);
+      // A shape to drag out to a size, not one placed point by point.
+      expect(tool.createFromPoints).toBeUndefined();
+    }
+    expect(defaultNodeRegistry.arrow.key).toBe('A');
+  });
+
+  test("a shape's outline is its recipe's, in its frame and with its parameters", ({ expect }) => {
+    const { shape } = defaultNodeRegistry;
+    const node = {
+      ...defaultNodeRegistry.arrow.create({
+        id: 'a',
+        z: 'a',
+        center: { x: 100, y: 50 },
+        size: { width: 200, height: 100 },
+      }),
+      params: { head: 0.5, shaft: 0.6 },
+    };
+    // The shaft's top edge, the head's back corner, the tip: square corners with no radius.
+    expect(shape.silhouette?.(node, 0, 0)).toBe('M 0 20 L 150 20 L 150 0 L 200 50 L 150 100 L 150 80 L 0 80 Z');
+  });
+
   test('rectangle and view share the box prototype and differ only where they say so', ({ expect }) => {
     const { rect, view } = defaultNodeRegistry;
     expect(rect.component).toBe(boxPrototype.component);

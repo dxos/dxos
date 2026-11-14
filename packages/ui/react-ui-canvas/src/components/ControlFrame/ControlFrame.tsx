@@ -23,6 +23,7 @@ import {
   endpointNode,
   isPointEndpoint,
   isPolylineNode,
+  isShapeNode,
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
@@ -53,6 +54,7 @@ import {
   polylinePath,
   polylineVertices,
   portPoint,
+  shapeNodeHandles,
   smoothBends,
   viewLinkGeometry,
 } from '../../utils/index.ts';
@@ -97,6 +99,8 @@ export type ControlFrameProps = {
   /** The node in vertex edit mode: its vertices are drawn to drag, and its resize handles are not. */
   vertexEditing?: Extract<Editing, { kind: 'vertices' }>;
   onVertexPointerDown?: (node: Node, index: number, event: React.PointerEvent) => void;
+  /** A press on an adjust handle of a parametric shape, which sets the parameter `param` names. */
+  onParamPointerDown?: (node: Node, param: string, event: React.PointerEvent) => void;
   /** `index` is where in the node's vertices one inserted at `point` would go. */
   onVertexMidpointPointerDown?: (node: Node, index: number, point: Point, event: React.PointerEvent) => void;
   /** `segment` is the bent segment whose control was pressed, and `handle` which of its controls. */
@@ -117,6 +121,9 @@ const PORT_RADIUS = 5;
 
 /** A resize handle's side on screen, in px. */
 const HANDLE_SIZE = 8;
+
+/** An adjust handle's radius in screen px: a dot, larger than a port, so it is not taken for one. */
+const SHAPE_HANDLE_RADIUS = 5.5;
 
 /**
  * Whether a frame has room for its resize handles at `zoom`: three to a side, a handle's width apart. On a shape
@@ -152,6 +159,7 @@ export const ControlFrame = memo(
     onEndContextMenu,
     vertexEditing,
     onVertexPointerDown,
+    onParamPointerDown,
     onVertexMidpointPointerDown,
     onBendPointerDown,
   }: ControlFrameProps) => {
@@ -359,6 +367,27 @@ export const ControlFrame = memo(
               })}
             </g>
           )}
+        {/* A parametric shape's adjust handles, over its resize handles: a dot of another colour sets a parameter. */}
+        {single && isShapeNode(single) && capabilities.update && !single.locked && (
+          <g data-testid='shape-handles'>
+            {shapeNodeHandles(single).map(({ param, at }) => (
+              <circle
+                key={param}
+                data-testid='shape-handle'
+                data-param={param}
+                cx={at.x}
+                cy={at.y}
+                r={SHAPE_HANDLE_RADIUS * unit}
+                className={mx(
+                  'stroke-base-surface pointer-events-auto cursor-move hover:fill-rose-400',
+                  drag?.kind === 'param' && drag.param === param ? 'fill-rose-400' : 'fill-rose-500',
+                )}
+                strokeWidth={1.5 * unit}
+                onPointerDown={(event) => onParamPointerDown?.(single, param, event)}
+              />
+            ))}
+          </g>
+        )}
         {edited && hasVertices(edited) && (
           <VertexHandles
             node={edited}

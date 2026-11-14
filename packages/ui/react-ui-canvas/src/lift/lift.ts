@@ -11,6 +11,8 @@ import { type Scene, flattenStyle, liftStyle } from '@dxos/scene';
 
 // Type-only, so the root entry that exports lifting loads none of the 3D renderer.
 import type { Viewport } from '../three/index.ts';
+import { DEFAULT_SIZES, shapeNodeOutline } from '../utils/index.ts';
+import { prismMesh } from './prism.ts';
 
 /** Canvas pixels per scene unit when a 2D scene is lifted. */
 export const PIXELS_PER_UNIT = 100;
@@ -52,6 +54,47 @@ export const camera2DTo3D = (camera: Scene.Camera2D, viewport: Viewport): Scene.
 
 const liftKind = (kind: string): string => KINDS[kind] ?? kind;
 
+type Props = Readonly<Record<string, unknown>>;
+
+const isParams = (value: unknown): value is Record<string, number> =>
+  typeof value === 'object' &&
+  value !== null &&
+  !Array.isArray(value) &&
+  Object.values(value).every((item) => typeof item === 'number');
+
+/**
+ * A parametric shape stood up as a solid: the `mesh` over its recipe's outline in a frame of `size`, keeping the
+ * recipe and parameters it was drawn from so it flattens back to the shape. Undefined for any other kind.
+ */
+const liftShape = (
+  type: string | undefined,
+  props: Props | undefined,
+  size: Scene.Size2 | undefined,
+): { type: string; props: Props } | undefined => {
+  const recipe = props?.recipe;
+  if (type !== 'shape' || typeof recipe !== 'string') {
+    return undefined;
+  }
+  const frame = size && size.width > 0 && size.height > 0 ? size : DEFAULT_SIZES.shape;
+  const params = isParams(props?.params) ? props.params : undefined;
+  const mesh = prismMesh(
+    shapeNodeOutline({ recipe, size: frame, params }).map(({ x, y }) => ({ x: x / frame.width, y: y / frame.height })),
+  );
+  return mesh ? { type: 'mesh', props: { ...props, mesh } } : undefined;
+};
+
+/** A solid that was lifted from a parametric shape, as that shape again: its mesh is the recipe's to remake. */
+const flattenShape = (
+  type: string | undefined,
+  props: Props | undefined,
+): { type: string; props: Props } | undefined => {
+  if (type !== 'mesh' || typeof props?.recipe !== 'string') {
+    return undefined;
+  }
+  const { mesh: _mesh, ...kept } = props;
+  return { type: 'shape', props: kept };
+};
+
 const liftSize = ({ width, height }: Scene.Size2): Scene.Vec3 => ({
   x: width / PIXELS_PER_UNIT,
   y: DEPTH,
@@ -67,7 +110,8 @@ const liftElement = ({
   ...element
 }: Scene.Element2D): Scene.Element3D => ({
   ...element,
-  ...(element.type !== undefined ? { type: liftKind(element.type) } : {}),
+  ...(liftShape(element.type, element.props, size) ??
+    (element.type !== undefined ? { type: liftKind(element.type) } : {})),
   ...(overrides ? { overrides: liftStyle(overrides) } : {}),
   ...(center ? { center: toGround(center) } : {}),
   ...(size ? { scale: liftSize(size) } : {}),
@@ -77,7 +121,7 @@ const liftElement = ({
 const liftObject = ({ size, overrides, ...object }: Scene.Object2D): Scene.Object3D => ({
   ...object,
   ...(overrides ? { overrides: liftStyle(overrides) } : {}),
-  type: liftKind(object.type),
+  ...(liftShape(object.type, object.props, size) ?? { type: liftKind(object.type) }),
   ...(size ? { scale: liftSize(size) } : {}),
 });
 
@@ -139,7 +183,8 @@ const flattenElement = ({ center, scale, rotation, overrides, ...element }: Scen
   const shape = element.type !== undefined && element.type !== 'link' && element.type !== 'group';
   return {
     ...element,
-    ...(element.type !== undefined ? { type: FLAT_KINDS[element.type] ?? element.type } : {}),
+    ...(flattenShape(element.type, element.props) ??
+      (element.type !== undefined ? { type: FLAT_KINDS[element.type] ?? element.type } : {})),
     ...(overrides ? { overrides: flattenStyle(overrides) } : {}),
     ...(center ? { center: toCanvas(center) } : {}),
     ...(shape ? { size: { width: (scale?.x ?? 1) * PIXELS_PER_UNIT, height: (scale?.z ?? 1) * PIXELS_PER_UNIT } } : {}),

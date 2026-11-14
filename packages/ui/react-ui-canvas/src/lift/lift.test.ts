@@ -8,7 +8,7 @@ import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { type Scene, resolveLayout3D } from '@dxos/scene';
 
-import { project, renderList } from '../three/index.ts';
+import { meshProps, project, renderList } from '../three/index.ts';
 import { PIXELS_PER_UNIT, camera2DTo3D, flattenLayout, liftLayout, liftScene } from './lift.ts';
 
 const viewport = { width: 800, height: 600 };
@@ -42,6 +42,58 @@ describe('liftScene', () => {
     expect(at(0, 0)?.y).toBeCloseTo(300);
     expect(at(100, 0)?.x).toBeCloseTo(500, 0);
     expect(at(0, 100)?.y).toBeCloseTo(400, 0);
+  });
+});
+
+describe('a parametric shape', () => {
+  const layout: Scene.LayoutRecord2D = {
+    id: 'l',
+    dim: '2d',
+    elements: {
+      arrow: {
+        id: 'arrow',
+        type: 'shape',
+        center: { x: 100, y: 200 },
+        size: { width: 200, height: 100 },
+        props: { recipe: 'arrow', params: { head: 0.5 } },
+      },
+      box: { id: 'box', type: 'rect', center: { x: 0, y: 0 }, size: { width: 100, height: 100 } },
+    },
+  };
+
+  test('lifts to a solid over its outline, sized by its frame, and keeps the recipe it was drawn from', () => {
+    const { arrow, box } = liftLayout(layout).elements;
+    expect(arrow).toMatchObject({
+      type: 'mesh',
+      center: { x: 1, z: -2 },
+      scale: { x: 2, z: 1 },
+      props: { recipe: 'arrow', params: { head: 0.5 } },
+    });
+    const mesh = meshProps(arrow.props);
+    // An arrow's seven vertices, on a top ring and a bottom one.
+    expect(mesh?.positions).toHaveLength(14 * 3);
+    // The tip is half way down the right edge: +x, and z at the middle.
+    expect(mesh?.positions.slice(3 * 3, 4 * 3)).toEqual([0.5, 0.5, 0]);
+    // Any other kind lifts to its primitive, as before.
+    expect(box.type).toBe('cube');
+  });
+
+  test('flattens back to the shape, without the solid it was stood up as', () => {
+    const flat = flattenLayout(liftLayout(layout)).elements.arrow;
+    expect(flat).toMatchObject({
+      type: 'shape',
+      center: { x: 100, y: 200 },
+      size: { width: 200, height: 100 },
+      props: { recipe: 'arrow', params: { head: 0.5 } },
+    });
+    expect(flat.props).not.toHaveProperty('mesh');
+    // A mesh that never was a shape stays a mesh.
+    const imported: Scene.LayoutRecord3D = {
+      id: 'm',
+      dim: '3d',
+      elements: { taxi: { id: 'taxi', type: 'mesh', props: { mesh: { key: 'k', positions: [], indices: [] } } } },
+    };
+    expect(flattenLayout(imported).elements.taxi.type).toBe('mesh');
   });
 });
 

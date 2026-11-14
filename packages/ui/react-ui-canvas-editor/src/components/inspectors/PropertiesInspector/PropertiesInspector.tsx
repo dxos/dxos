@@ -24,6 +24,8 @@ import {
   NO_STYLES,
   type NodeRegistry,
   SCENE_OVERLAY_ATTRIBUTE,
+  SHAPE_RECIPES,
+  type ShapeRecipe,
   type ViewOption,
   bareNode,
   chainEdits,
@@ -41,6 +43,7 @@ import {
   portsPerSideOf,
   resolveStyle,
   retypeLink,
+  shapeRecipe,
   splitClassEdit,
   templateComposite,
   updateElement,
@@ -59,6 +62,7 @@ import * as Input from '@dxos/react-ui/Input';
 import {
   BaseNode,
   CurveLink,
+  DEFAULT_GRID,
   type Element,
   type Layer,
   LineLink,
@@ -67,6 +71,7 @@ import {
   type Node,
   type NodeStyle,
   OrthoLink,
+  ShapeNode,
   SmartLink,
   SplineLink,
   type StyleClass,
@@ -75,7 +80,9 @@ import {
   isInstanceNode,
   isLink,
   isNoteNode,
+  isShapeNode,
   isViewNode,
+  nodePadding,
   showsContents,
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
@@ -196,9 +203,66 @@ const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
 const isLinkType = Schema.is(LinkVariant);
 const isLinkEnds = Schema.is(LinkEnds);
 
+/**
+ * A parametric shape's form: its recipe as a choice among those known, and the recipe's parameters as numbers of
+ * their own, where the stored schema has them as a record the form could not name.
+ */
+const shapeSchema = (recipe: ShapeRecipe): Schema.Codec<any, any> =>
+  Schema.Struct({
+    ...ShapeNode.fields,
+    recipe: Schema.Literals(SHAPE_RECIPES.map(({ id }) => id)).annotate({ title: 'Shape' }),
+    params: Schema.optional(
+      Schema.Struct(
+        Object.fromEntries(
+          recipe.params.map((param) => [param.id, Schema.optional(Schema.Number.annotate({ title: param.title }))]),
+        ),
+      ).annotate({ title: recipe.name }),
+    ),
+  });
+
+/** The recipe of a shape this build can draw; undefined for any other element. */
+const recipeOf = (element: Element): ShapeRecipe | undefined =>
+  !isLink(element) && isShapeNode(element) ? shapeRecipe(element.recipe) : undefined;
+
 /** An element's own schema; a type the registry does not know gets the core base's (`BaseNode`, or a line). */
-const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> =>
-  isLink(element) ? (LINK_SCHEMAS[element.type] ?? LINK_SCHEMAS.line) : (nodeDef(nodes, element)?.schema ?? BaseNode);
+const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> => {
+  const recipe = recipeOf(element);
+  return recipe
+    ? shapeSchema(recipe)
+    : isLink(element)
+      ? (LINK_SCHEMAS[element.type] ?? LINK_SCHEMAS.line)
+      : (nodeDef(nodes, element)?.schema ?? BaseNode);
+};
+
+/** A shape's parameters as its recipe reads them: those stored, and the recipe's default for each that is not. */
+const shapeParams = (recipe: ShapeRecipe, params: Readonly<Record<string, number>> | undefined) =>
+  Object.fromEntries(recipe.params.map((param) => [param.id, params?.[param.id] ?? param.default]));
+
+/** A shape's `params` as the form shows them: a parameter left to its recipe's default shows that default, not an empty field. */
+const shownParams = (element: Node): { params?: Record<string, number> } => {
+  const recipe = recipeOf(element);
+  return recipe && isShapeNode(element) ? { params: shapeParams(recipe, element.params) } : {};
+};
+
+/**
+ * A node's text padding as it is drawn, in scene px: unless set, a minor grid cell either side, and above and below
+ * half a cell for a label or a whole one for a text node, whose lines start at its frame's top. The cell shown is
+ * the default grid's, which is the drawing's unless it sets another.
+ */
+const shownPadding = (element: Node): { x: number; y: number } => ({
+  x: DEFAULT_GRID,
+  y: isNoteNode(element) ? DEFAULT_GRID : DEFAULT_GRID / 2,
+  ...nodePadding(element),
+});
+
+/** The range and step the panel offers for each of a recipe's parameters: a share steps finely, a length or count by one. */
+const shapeOverrides = (recipe: ShapeRecipe): Record<string, FormFieldOverride> =>
+  Object.fromEntries(
+    recipe.params.map(({ id, unit, min, max }) => [
+      `params.${id}`,
+      { min, max, step: unit === 'px' || unit === 'count' ? 1 : 0.05 },
+    ]),
+  );
 
 /**
  * Where a type places its text unless styled otherwise: a note from the top left, a hull's name in its corner, a
@@ -238,6 +302,8 @@ const formValues = (
         },
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isViewNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
+        ...shownParams(element),
+        padding: shownPadding(element),
       };
 
 /**
@@ -254,6 +320,9 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   // Drawn beside the rotation by `FrameField`, and beside the centre by `GeometryField`.
   'portsPerSide': { hidden: true },
   'size': { hidden: true },
+  // Points, stepped as a font size is.
+  'padding.x': { min: 0, max: 96, step: 1 },
+  'padding.y': { min: 0, max: 96, step: 1 },
   // Drawn beside the hull's border by `HullField`.
   'inset': { hidden: true },
   'scene': { label: 'View' },
@@ -319,7 +388,16 @@ export const PropertiesInspector = ({
   const layers = useMemo(() => viewLayers(scene), [scene]);
 
   // Keyed by the selected types, so the schema (and the form built on it) holds while values change under it.
-  const typesKey = [...new Set(elements.map((element) => element.type))].sort().join();
+  // A shape's form is its recipe's, so two recipes are two types here.
+  const typesKey = [
+    ...new Set(
+      elements.map((element) =>
+        !isLink(element) && isShapeNode(element) ? `${element.type}:${element.recipe}` : element.type,
+      ),
+    ),
+  ]
+    .sort()
+    .join();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const schema = useMemo(() => commonSchema(elements.map((element) => schemaOf(nodes, element))), [typesKey, nodes]);
   // A shape's text names it, so its label leads, ahead of the shared fields (style) its type's own fields follow.
@@ -336,11 +414,22 @@ export const PropertiesInspector = ({
             ...names.slice(style).filter((name) => name !== 'label'),
           ]
         : names;
-    const ordered = [...labelled.filter((name) => name !== 'data'), ...labelled.filter((name) => name === 'data')];
+    const last = [...labelled.filter((name) => name !== 'data'), ...labelled.filter((name) => name === 'data')];
+    // The space round a label is a setting of the label, so it follows it.
+    const label = last.indexOf('label');
+    const ordered =
+      label >= 0 && last.includes('padding')
+        ? [
+            ...last.slice(0, label + 1).filter((name) => name !== 'padding'),
+            'padding',
+            ...last.slice(label + 1).filter((name) => name !== 'padding'),
+          ]
+        : last;
     return ordered.some((name, index) => name !== names[index]) ? ordered : undefined;
   }, [schema]);
   const { values, fieldOverrides } = useMemo(() => {
     const shown = elements.map((element) => formValues(nodes, element, styleMap, layers));
+    const recipes = [...new Set(elements.map(recipeOf))].flatMap((recipe) => (recipe ? [recipe] : []));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
     const fieldOverrides: Record<string, FormFieldOverride> = {
@@ -354,6 +443,8 @@ export const PropertiesInspector = ({
       ...(elements.every((element) => !isLink(element) && isNoteNode(element))
         ? {}
         : { 'style.textHue': { hidden: true } }),
+      // Shapes of one recipe share its parameters' ranges; of several, each parameter is offered as the form finds it.
+      ...(recipes.length === 1 ? shapeOverrides(recipes[0]) : {}),
       ...overrides?.(elements),
     };
     for (const path of mixed) {

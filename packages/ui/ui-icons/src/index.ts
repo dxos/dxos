@@ -22,6 +22,7 @@ export const PxIcons = {
 
   // Misc.
   'context-panel': 'px--context-panel--regular',
+  'trapezoid': 'px--trapezoid--regular',
 
   // Estimate.
   'bar-high': 'px--bar-high--regular',

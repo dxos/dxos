@@ -609,7 +609,8 @@ const MINOR_GRID = '--dx-minor-grid';
 
 /**
  * The space a text box leaves between the frame's edge and its text, set per node by the `padding` field of the types
- * that carry it. Unset, a text box pads itself by a minor grid cell, which is what puts its lines on the grid.
+ * that carry it, in scene px. Unset, a text box pads itself by a minor grid cell, which is what puts its lines on
+ * the grid.
  */
 const TEXT_PAD_X = '--dx-text-pad-x';
 const TEXT_PAD_Y = '--dx-text-pad-y';
@@ -624,6 +625,12 @@ const TEXT_PAD_Y = '--dx-text-pad-y';
 // so the text does not move when editing starts.
 const TEXT_BOX =
   'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>*]:px-[var(--dx-text-pad-x,var(--dx-minor-grid))]';
+
+/**
+ * A label is one run of lines placed by its alignment; unless its node says otherwise it keeps half a minor grid cell
+ * above and below, so a label aligned to the top or the bottom (a hull's name is) stands that far in from the edge.
+ */
+const LABEL_LINES = '[&>*]:py-[var(--dx-text-pad-y,calc(var(--dx-minor-grid)/2))]';
 
 /**
  * A text node's lines are a paragraph's, and its block is padded so the text sits a minor grid cell from the top and
@@ -1459,6 +1466,7 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
       TEXT_BOX,
       'whitespace-pre-wrap',
       LINE_ON_GRID,
+      LABEL_LINES,
       alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
       // `DEFAULT_FONT_SIZE`, as a static class so Tailwind generates it.
       sizeClass(node, 'text-[24px]'),
@@ -1501,6 +1509,7 @@ export const HullNodeView = ({ node, editing }: NodeViewProps) => {
         TEXT_BOX,
         'whitespace-pre-wrap',
         LINE_ON_GRID,
+        LABEL_LINES,
         alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
         // `HULL_FONT_SIZE`, as a static class so Tailwind generates it.
         sizeClass(node, 'text-sm'),

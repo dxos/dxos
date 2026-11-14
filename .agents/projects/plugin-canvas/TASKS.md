@@ -474,6 +474,26 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       shapes (`toolGroups` puts the links ahead of the first tool with `createFromPoints` or `freehand`), and
       Polyline and Spline share one flyout (`PATH_FOLD`). Create group: Rectangle, Ellipse, Polygon, Cloud, Link
       fold, Path fold, Draw fold, Text, Icon.
+- [x] **Parametric shapes** (user, 2026-11-13; five decisions asked one by one): a `shape` node names a `recipe`
+      and stores its `params`; the recipe makes the outline from the frame, and each parameter says what it is
+      measured against (`px`, `width`, `height`, `min`, `count`), which is what holds a part's proportions on a
+      resize (`shape-recipe.ts`). Recipes: arrow, double arrow, chevron, callout, parallelogram, trapezoid, cross,
+      star, cog; one flyout in the palette (`SHAPE_FOLD`), Arrow on `A`. A selected shape shows an adjust handle
+      per control (`shapeNodeHandles`, the `param` drag); Properties lists the recipe's parameters and its Shape
+      field turns the node into another recipe. Join and Subtract take the outline (`nodeRings`); 2D to 3D lifts a
+      shape as a `mesh` prism over its outline that flattens back to the shape (`prismMesh`). Replaces the Arrow
+      tool that drew a polyline, which never merged.
+- [x] **Text padding on every labelled shape** (user, 2026-11-14): `paddingFields` is on ellipse, cloud, polygon,
+      shape, polyline, hull and solid as well as rect and note, in scene px ("points, like font size"; cells of
+      the minor grid were tried first and dropped, since the stored field was px already). A label takes
+      `padding.y` (`LABEL_LINES`), and its default is 12 across and 6 down (a minor cell and half of one), a hull's
+      name included; a text node keeps a whole cell down. Properties places Padding after Label and shows the
+      drawn default.
+- [ ] **Convert a shape to a polyline**: a parametric shape has no vertices to drag; a command that swaps it for
+      the closed polyline of its outline would free it.
+- [ ] **Shape recipes, later**: a cog's hub hole needs an outline of more than one ring; the Shape field in
+      Properties lists recipe ids, not names; adjust handles are 2D only (3D edits parameters in Properties);
+      `SPEC-2D.mdl` does not yet record the `shape` type.
 - [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
       Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the

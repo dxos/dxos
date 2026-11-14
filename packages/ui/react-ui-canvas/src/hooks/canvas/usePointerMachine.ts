@@ -27,6 +27,7 @@ import {
   isInstanceNode,
   isPointEndpoint,
   isPolylineNode,
+  isShapeNode,
   isViewNode,
 } from '@dxos/scene';
 
@@ -74,6 +75,7 @@ import {
   createId,
   createLink,
   createNode,
+  dragShapeNodeParam,
   drawnLinkEnds,
   favorMajor,
   handlePoint,
@@ -228,6 +230,7 @@ export type PointerMachine = {
   onEndContextMenu: (link: Link, end: LinkEnd, event: MouseEvent) => void;
   /** A vertex of the node in vertex edit mode: press marks it, drag moves it, alt-click removes it. */
   onVertexPointerDown: (node: Node, index: number, event: PointerEvent) => void;
+  onParamPointerDown: (node: Node, param: string, event: PointerEvent) => void;
   /** A segment's midpoint in vertex edit mode: pressing it adds a vertex there, `index`, and moves it. */
   onVertexMidpointPointerDown: (node: Node, index: number, point: Point, event: PointerEvent) => void;
   /** The control of a bent segment in vertex edit mode: dragging it changes how the segment bows. */
@@ -827,6 +830,18 @@ export const usePointerMachine = ({
     [capabilities.update, deleteVertex, registry, atoms.editing, startDrag],
   );
 
+  /** Dragging an adjust handle of a parametric shape sets the parameter the handle stands for. */
+  const onParamPointerDown = useCallback(
+    (node: Node, param: string, event: PointerEvent) => {
+      if (event.button !== 0 || !capabilities.update || node.locked || !isShapeNode(node)) {
+        return;
+      }
+      event.stopPropagation();
+      startDrag({ kind: 'param', id: node.id, param, params: node.params ?? {} }, event);
+    },
+    [capabilities.update, startDrag],
+  );
+
   const onVertexMidpointPointerDown = useCallback(
     (node: Node, index: number, point: Point, event: PointerEvent) => {
       if (event.button !== 0 || !capabilities.update || !hasVertices(node)) {
@@ -1140,6 +1155,18 @@ export const usePointerMachine = ({
           const step = FREEHAND_STEP_PX / registry.get(atoms.camera).zoom;
           if (Math.hypot(point.x - last.x, point.y - last.y) >= step) {
             setDrag({ ...current, points: [...current.points, point], times: [...current.times, event.timeStamp] });
+          }
+          break;
+        }
+        case 'param': {
+          // The handle lands on the minor grid, as a vertex does, and the parameter is read from where it lands.
+          const node = scene.nodes[current.id];
+          if (node && isShapeNode(node)) {
+            const point = toScene(event);
+            setDrag({
+              ...current,
+              params: dragShapeNodeParam(node, current.param, { x: snap(point.x), y: snap(point.y) }),
+            });
           }
           break;
         }
@@ -1474,6 +1501,19 @@ export const usePointerMachine = ({
           draw.apply(updateElement(current.id, { points: current.points }));
           break;
         }
+        case 'param': {
+          const node = scene.nodes[current.id];
+          // A node locked while its handle was dragged keeps the shape it had.
+          if (!node || node.locked || !isShapeNode(node)) {
+            break;
+          }
+          const before = node.params ?? {};
+          const keys = new Set([...Object.keys(before), ...Object.keys(current.params)]);
+          if ([...keys].some((key) => before[key] !== current.params[key])) {
+            draw.apply(updateElement(current.id, { params: { ...current.params } }));
+          }
+          break;
+        }
         case 'vertex': {
           // The frame refits to the vertices in the same update, so the edit is one undo step.
           const node = scene.nodes[current.id];
@@ -1556,6 +1596,7 @@ export const usePointerMachine = ({
     onPointContextMenu,
     onEndContextMenu,
     onVertexPointerDown,
+    onParamPointerDown,
     onVertexMidpointPointerDown,
     onBendPointerDown,
     deleteVertex,

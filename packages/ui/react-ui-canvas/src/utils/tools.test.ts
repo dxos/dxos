@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { defaultLinkRegistry, defaultNodeRegistry } from '../components/index.ts';
+import { SHAPE_RECIPES } from './shape-recipe.ts';
 import {
   CONTAINERS_GROUP,
   CREATE_GROUP,
@@ -12,6 +13,7 @@ import {
   EXTENSIONS_GROUP,
   LINK_FOLD,
   PATH_FOLD,
+  SHAPE_FOLD,
   TOOLS_GROUP,
   foldRuns,
   pressSelects,
@@ -47,12 +49,13 @@ describe('toolGroups', () => {
     expect(groups.map((group) => group.name)).toEqual([TOOLS_GROUP, CREATE_GROUP, CONTAINERS_GROUP, EXTENSIONS_GROUP]);
     expect(types(CONTAINERS_GROUP)).toEqual(['hull', 'view']);
     expect(types(EXTENSIONS_GROUP)).toEqual(['card']);
-    // Spline and Draw are tools beside the polyline, which is the shape they make.
+    // The recipes' shapes follow the closed shapes; Spline and Draw are tools beside the polyline they make.
     expect(types(CREATE_GROUP)).toEqual([
       'rect',
       'ellipse',
       'polygon',
       'cloud',
+      ...SHAPE_RECIPES.map(({ id }) => id),
       'polyline',
       'spline',
       'freehand',
@@ -62,7 +65,7 @@ describe('toolGroups', () => {
     ]);
   });
 
-  test('the polyline and the spline share one flyout, and the two tools that draw in one stroke the next', () => {
+  test('the recipes share one flyout, the polyline and the spline another, and the two stroke tools a third', () => {
     const capabilities = { create: true, link: true, update: true, delete: true };
     const create = toolGroups(defaultNodeRegistry, defaultLinkRegistry, capabilities).find(
       (group) => group.name === CREATE_GROUP,
@@ -73,7 +76,9 @@ describe('toolGroups', () => {
         ? [[run.fold.name, run.fold.entries.map((entry) => (entry.tool.kind === 'node' ? entry.tool.type : 'link'))]]
         : [],
     );
-    expect(folds.slice(1)).toEqual([
+    expect(folds.map(([name]) => name)).toEqual([SHAPE_FOLD, LINK_FOLD, PATH_FOLD, DRAW_FOLD]);
+    expect(folds[0][1]).toEqual(SHAPE_RECIPES.map(({ id }) => id));
+    expect(folds.slice(2)).toEqual([
       [PATH_FOLD, ['polyline', 'spline']],
       [DRAW_FOLD, ['freehand', 'freehandShape']],
     ]);
@@ -97,7 +102,9 @@ describe('toolGroups', () => {
       const run = runs[at];
       return run && 'entry' in run && run.entry.tool.kind === 'node' ? run.entry.tool.type : undefined;
     };
-    expect(typeAt(index - 1)).toBe('cloud');
+    const shapes = runs[index - 1];
+    expect(shapes && 'fold' in shapes && shapes.fold.name).toBe(SHAPE_FOLD);
+    expect(typeAt(index - 2)).toBe('cloud');
     const paths = runs[index + 1];
     expect(paths && 'fold' in paths && paths.fold.name).toBe(PATH_FOLD);
     // Every other run is a node tool: alone, or folded with its variants.

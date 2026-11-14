@@ -194,6 +194,26 @@ The model on the wire between the layers is the render list (SPEC-2D.mdl `type:V
 
 Data flow for one gesture: pointer-down hit-tests the positioned scene in scene coordinates → the surface writes a `Drag` atom → each move updates the drag's transient geometry (snapped for a node gesture; a link band follows the pointer and snaps on release) and the surface previews the gesture's `SceneEdit` through the layout's mode (`DrawScene.constrain`) → pointer-up applies the edit to the draw state → the change leaves as `LayoutIntent`s through the host's `constrain`, which stores, rewrites or refuses it → the host's document change is read back into the draw state → the surface re-renders. The undo unit is the committed edit (SPEC.mdl [F-4.1]).
 
+## 4b-2. Parametric shapes (designed and built 2026-11-13)
+
+A `shape` node is drawn by a **recipe**: `{ type: 'shape', recipe: 'arrow', params: { head, shaft } }`. The recipe
+(`utils/shape-recipe.ts`) is code: it lists its parameters, makes the outline from the frame's size and those
+parameters, and lists its controls. One stored type covers every recipe, so a new shape is a recipe and nothing else.
+
+- **A parameter's unit is the constraint.** Each parameter is measured against scene `px`, the frame's `width`, its
+  `height`, the shorter of the two (`min`), or is a `count`. An arrow's head is a share of the height, so the head
+  keeps its aspect ratio at any size and widening the arrow lengthens only the shaft; a callout's tail is in px, so a
+  larger callout keeps its tail. `fit` then keeps a part inside a frame too small for it.
+- **A control is a handle that sets one parameter.** It says where it sits in the frame and what its parameter is
+  for a drag to a point. The canvas draws a dot per control on a shape selected alone, turned as the shape is; the
+  `param` drag previews by applying the parameters to a copy, as every drag does, and writes them once on release.
+- **Everything that reads an outline reads the recipe's**: the silhouette (fill, border, corner radius), Join and
+  Subtract, and the 2D to 3D lift, which stands the outline up as a `mesh` prism and keeps `recipe` and `params` on
+  it so it flattens back.
+- **Unknown recipes degrade**: a recipe id a build does not have is drawn as its frame, with no handles.
+
+A parametric shape has no vertices to edit; converting one to a closed polyline is the way to free it (not built).
+
 ## 4c. Prototypes (designed 2026-10-07; type prototypes built)
 
 Shapes that look and behave alike should share one definition and differ only where they say so. There is

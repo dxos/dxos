@@ -26,8 +26,9 @@ describe('2D tools', () => {
     );
     expect(drawn.every((tool) => tool !== undefined)).toBe(true);
     expect(drawn.map((tool) => tool && toolDragData2D(tool))).toEqual([undefined, undefined, undefined, undefined]);
-    // A shape still drags.
-    expect(tools.filter((tool) => toolDragData2D(tool) !== undefined).map((tool) => tool.id)).toContain('node:ellipse');
+    // A shape still drags, the arrow among them: it is a polyline, but dragged out to a size like a box.
+    const dragged = tools.filter((tool) => toolDragData2D(tool) !== undefined).map((tool) => tool.id);
+    expect(dragged).toEqual(expect.arrayContaining(['node:ellipse', 'node:arrow']));
   });
 
   test('the link tools share one flyout in the create group', () => {

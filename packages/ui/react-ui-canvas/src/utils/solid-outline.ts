@@ -16,13 +16,16 @@ import {
   isPathNode,
   isPolygonNode,
   isPolylineNode,
+  isShapeNode,
   nodeBase,
+  paddingFields,
   solidBounds2D,
   solidOperands,
 } from '@dxos/scene';
 
 import { flattenPath } from './path.ts';
 import { polylinePath } from './polyline.ts';
+import { shapeNodeOutline } from './shape-recipe.ts';
 import { cloudPath, polygonPath } from './silhouette.ts';
 
 /** The operations a 2D solid draws: its operands joined, or the first with the rest cut from it. */
@@ -41,6 +44,7 @@ export const SolidNode = Schema.Struct({
   type: Schema.Literal('solid'),
   ...nodeBase,
   label: Schema.optional(Schema.String),
+  ...paddingFields,
   op: Schema.optional(Schema.String),
   operands: Schema.optional(Schema.String),
   rings: Schema.optional(Schema.Array(Schema.Array(Point))),
@@ -131,6 +135,9 @@ const frameRings = (node: NodeBase, lookup: NodeLookup, path: readonly string[])
   }
   if (isCloudNode(node)) {
     return flattenPath(cloudPath(node.size, 0, node.params?.bumps));
+  }
+  if (isShapeNode(node)) {
+    return [shapeNodeOutline(node)];
   }
   if (isPolylineNode(node)) {
     // An open line encloses nothing, so it neither adds to a shape nor cuts from one.

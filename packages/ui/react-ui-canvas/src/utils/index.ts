@@ -28,6 +28,7 @@ export * from './order.ts';
 export * from './parts.ts';
 export * from './path.ts';
 export * from './polyline.ts';
+export * from './shape-recipe.ts';
 export * from './ports.ts';
 export * from './properties.ts';
 export * from './recognize.ts';
