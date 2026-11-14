@@ -50,6 +50,112 @@ const browserNodeStd = (): Plugin => ({
   },
 });
 
+/** Lowers the `using` declarations in `@dxos/*` sources, which Safari cannot parse. */
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
+
+/**
+ * Safari has no `Symbol.dispose`, and a chunk evaluated before `@dxos/util` polyfills it keys dispose methods under
+ * `undefined`, so every chunk starts with this. `globalThis.Symbol` survives chunks that bind `Symbol` (`Schema.Symbol`).
+ */
+const disposePolyfill = `{
+  const S = globalThis.Symbol;
+  typeof S.dispose !== 'symbol' && Object.defineProperty(S, 'dispose', { value: S.for('dispose') });
+  typeof S.asyncDispose !== 'symbol' && Object.defineProperty(S, 'asyncDispose', { value: S.for('asyncDispose') });
+}`;
+
+/** Astro's per-environment `esnext` target overrides `build.target`. */
+const browserBuildTarget = (): Plugin => ({
+  name: 'docs:browser-build-target',
+  configEnvironment: (name) =>
+    name === 'client'
+      ? {
+          build: {
+            target: browserTargets,
+            rolldownOptions: { output: { intro: `${disposePolyfill}\n${sharedImport}` } },
+          },
+        }
+      : undefined,
+});
+
+/** Dedupes `import()` by URL and runs one at a time; see {@link shareDynamicImports}. */
+const sharedImport = `globalThis.__dxImport ??= (() => {
+  const loads = new Map();
+  let last = Promise.resolve();
+  return (url) => {
+    let load = loads.get(url);
+    if (!load) {
+      load = last.then(() => import(url));
+      last = load.catch(() => {});
+      loads.set(url, load);
+    }
+    return load;
+  };
+})();`;
+
+type Node = { type: string; start: number; end: number; source?: Node };
+
+/**
+ * Safari 26 can settle an `import()` while another still evaluates a chunk they share, leaving `undefined` exports, so
+ * every dynamic import goes through {@link sharedImport}.
+ */
+const shareDynamicImports = (): Plugin => ({
+  name: 'docs:share-dynamic-imports',
+  applyToEnvironment: (environment) => environment.name === 'client',
+  generateBundle: {
+    // After Vite's preload helper, which finds each import's CSS by matching `import(`.
+    order: 'post',
+    handler(_options, bundle) {
+      for (const chunk of Object.values(bundle)) {
+        if (chunk.type !== 'chunk' || !chunk.code.includes('import(')) {
+          continue;
+        }
+        // The minifier renames the helper's parameter, so its own `import()` is found by position.
+        const helper = chunk.code.indexOf('__dxImport??=');
+        const isHelper = (node: Node) => helper >= 0 && node.start > helper && node.start < helper + 200;
+        const imports: Node[] = [];
+        const walk = (value: unknown) => {
+          if (Array.isArray(value)) {
+            value.forEach(walk);
+          } else if (value && typeof value === 'object') {
+            const node = value as Node;
+            if (node.type === 'ImportExpression' && !isHelper(node)) {
+              imports.push(node);
+            }
+            Object.values(node).forEach(walk);
+          }
+        };
+        walk(this.parse(chunk.code));
+        let code = chunk.code;
+        for (const { start, end, source } of imports.sort((left, right) => right.start - left.start)) {
+          const specifier = chunk.code.slice(source!.start, source!.end);
+          code = `${code.slice(0, start)}__dxImport(new URL(${specifier}, import.meta.url).href)${code.slice(end)}`;
+        }
+        chunk.code = code;
+      }
+    },
+  },
+});
+
+/** The `import()` in Astro's minified island loader. */
+const islandImport = 'return await import(e)}catch';
+
+/** Routes Astro's island loader through {@link sharedImport}, inlined because the loader runs before any chunk. */
+const shareIslandImports = (): Plugin => ({
+  name: 'docs:share-island-imports',
+  transform(code, id) {
+    if (!/astro-island\.prebuilt(-dev)?\.js$/.test(id)) {
+      return;
+    }
+    if (!code.includes(islandImport)) {
+      throw new Error(`docs:share-island-imports: Astro's island loader no longer has \`${islandImport}\`.`);
+    }
+    return code.replace(
+      islandImport,
+      `${sharedImport.replace(/;$/, '')};return await globalThis.__dxImport(new URL(e,document.baseURI).href)}catch`,
+    );
+  },
+});
+
 const rootDir = path.resolve(import.meta.dirname, '..');
 const phosphorIconsCore = path.join(rootDir, 'node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, 'packages/ui/brand/assets/icons');
@@ -190,6 +296,9 @@ export default defineConfig({
     plugins: [
       // Replaces each plugin's `dx.config.ts` with its manifest, as in the apps.
       pluginConfigPlugin(),
+      browserBuildTarget(),
+      shareDynamicImports(),
+      shareIslandImports(),
       importSource({ include: ['@dxos/**', '#*'] }),
       browserNodeStd(),
       DxosLogPlugin(),
@@ -232,6 +341,7 @@ export default defineConfig({
     // Workers the demos start load wasm with top-level await, which only an ES module worker supports.
     worker: {
       format: 'es',
+      rolldownOptions: { output: { intro: disposePolyfill } },
       plugins: () => [importSource({ include: ['@dxos/**', '#*'] }), browserNodeStd(), DxosLogPlugin(), wasm()],
     },
   },
@@ -251,6 +361,13 @@ export default defineConfig({
       title: 'DXOS Documentation',
       lastUpdated: true,
       favicon: '/favicon.ico',
+      // `viewport-fit=cover` extends the page under Safari's status bar so the header's safe-area padding fills it.
+      head: [
+        {
+          tag: 'meta',
+          attrs: { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        },
+      ],
       customCss: ['./src/styles/tokens.generated.css', './src/styles/fonts.css', './src/styles/theme.css'],
       components: {
         Footer: './src/components/Footer.astro',

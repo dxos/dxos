@@ -158,7 +158,7 @@ absolute. A page with status `later` is in scope but not yet in the sidebar. The
 no section and has no sidebar [F-16.5].
 
 ```mdl
-page docs-home: DXOS Docs
+page docs-home: The DXOS Stack
   What DXOS is, and where to start in each of its sections.
   section: none
   route: /docs/
@@ -3765,7 +3765,7 @@ feat F-16: Docs sections
 
   req F-16.5:
     when: a reader opens `/docs/`
-    then: they land on the docs home: the title DXOS Docs, a short neutral paragraph on what DXOS is, and a grid of
+    then: they land on the docs home: the title The DXOS Stack, a short neutral paragraph on what DXOS is, and a grid of
           every section's hero art with its mark and name, in which ECHO spans two columns where there are four; each
           card links to its section's Overview [D-272]
 
@@ -6570,6 +6570,49 @@ decision D-314: The topic switcher loads its Kumbh Sans stylesheet without block
   by: user:wittjosiah
   affects: [F-16.1]
   why: The stylesheet sat in the header, so the parser stopped at the next script until Google Fonts answered, and Firefox, which has no paint holding or cross-document view transitions, painted a page with only the header between navigations.
+```
+
+```mdl
+decision D-315: The docs client build targets the browsers Composer targets, not `esnext`, adds `Symbol.dispose` and `Symbol.asyncDispose` where the browser has none, and loads every dynamic import and every island component through one shared loader that imports each URL once and one at a time.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.5, F-12, F-21]
+  why: On iPad Safari 26 every demo was empty. Safari does not parse `using`, has no `Symbol.dispose`, and can settle an `import()` before a module that another import in flight shares has finished evaluating, so a demo or an island got `undefined` exports.
+```
+
+```mdl
+decision D-316: Pages lay out under Safari's status bar and collapsed toolbar (`viewport-fit=cover`), and the fixed header pads its top by the safe area, so page text never shows above the header.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.1]
+  why: On iPad, scrolling collapsed Safari's toolbar and the page scrolled through the strip above the header.
+```
+
+```mdl
+decision D-317: An embedded story's frame contains the story's fixed-position layout with a transform rather than layout containment.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-12, F-21]
+  why: Safari lays fixed descendants out inside layout containment but composites them against the viewport, so after a scroll the Canvas, Markdown editor, Force graph and Map cards stayed black or blank on iPad.
+```
+
+```mdl
+decision D-318: The docs home is titled The DXOS Stack, and its intro paragraph sits right under the title with no blank line, so the section grid starts above the fold on a laptop. Amends [D-272].
+  date: 2026-11-14
+  by: user:richburdon
+  affects: [F-16.5]
+  why: Review of the docs home asked for a title naming the stack rather than the docs, and an empty paragraph above the intro pushed the grid below the fold on a MacBook Pro.
+```
+
+```mdl
+decision D-319: SAGE's one line is "Autonomous agents, tools, skills and models.", and its Overview tagline is "Autonomous agents with their own identity, tools and skills.". Amends [D-282].
+  date: 2026-11-14
+  by: user:richburdon
+  affects: [F-16.5]
+  why: Review of the docs home suggested "Autonomous" or "Long lived" in place of "Durable".
 ```
 
 ## Appendix: Extension Definitions
