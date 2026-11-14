@@ -107,10 +107,6 @@ const SOLIDS: RenderList2D = {
   links: {},
   nodes: Object.fromEntries(
     [
-      {
-        ...HINT,
-        text: 'Select the box and the disc, then Join.\n\nSelect the plate, then the hole and the notch with Shift, then Subtract: every other shape is cut from the first selected.\n\nDelete either to get its shapes back.',
-      },
       shape('box', 'rect', 'b0', [-264, 36], [192, 144]),
       shape('disc', 'ellipse', 'b1', [-168, 108], [144, 144]),
       shape('plate', 'rect', 'b2', [192, 72], [240, 192]),
