@@ -7,8 +7,8 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
+import { SOFTWARE_DIALECT } from '@dxos/deus/schema';
 import { Annotation, type Entity, Obj, Ref } from '@dxos/echo';
 
 import * as Feature from './Feature.ts';
@@ -19,10 +19,13 @@ import * as FeatureEmbed from './FeatureEmbed.ts';
  * them. A feature belongs to one spec (its ECHO parent), and nests by owning a spec of its own that breaks it down.
  */
 
-/** The software dialect, which extends the features, app, code, plugin, QA and storage dialects. */
-export const SOFTWARE_DIALECT = 'org.dxos.spec.software';
+/** The dialect whose `feat` blocks were feature objects; the fold moves a spec from it to {@link SOFTWARE_DIALECT}. */
+export const DIALECT = 'org.dxos.spec.features';
 
-/** Whether the spec uses the software dialect, which its board, its feature embeds and `/feature` need. */
+/** The software dialect, which extends the code, app, plugin, QA and storage dialects. */
+export { SOFTWARE_DIALECT };
+
+/** Whether the spec uses the software dialect, whose `feat` blocks its map views draw. */
 export const usesDialect = (spec: Pick<Spec.Spec, 'dialects'>): boolean => spec.dialects.includes(SOFTWARE_DIALECT);
 
 /** Where a feature's card sits on its spec's canvas. */
@@ -186,23 +189,6 @@ export const getAncestry = (spec: Spec.Spec | undefined): Spec.Spec[] => {
   return chain;
 };
 
-/** The features from the top-level spec down to `feature`, each owning the spec the next one is on. */
-export const getLineage = (feature: Feature.Feature): Feature.Feature[] => [
-  ...getAncestry(getContainer(feature))
-    .flatMap((spec) => getOwner(spec) ?? [])
-    .reverse(),
-  feature,
-];
-
 /** Whether `spec` is the breakdown of `feature` or lies anywhere beneath it. */
 export const isWithin = (spec: Spec.Spec, feature: Feature.Feature): boolean =>
   getAncestry(spec).some((current) => getOwner(current)?.id === feature.id);
-
-/** The top-level spec above the feature: the one a project owns, if any. */
-export const findRoot = (feature: Feature.Feature): Spec.Spec | undefined => getAncestry(getContainer(feature)).at(-1);
-
-/** The project that tracks the feature's work: the one owning the top-level spec above it. */
-export const findProject = (feature: Feature.Feature): Project.Project | undefined => {
-  const root = findRoot(feature);
-  return root && Project.getOwner(root);
-};

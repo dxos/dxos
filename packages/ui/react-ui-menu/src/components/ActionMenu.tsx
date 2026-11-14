@@ -4,6 +4,7 @@
 
 import React, {
   type CSSProperties,
+  Fragment,
   type MouseEvent,
   type ReactNode,
   type RefObject,
@@ -194,6 +195,9 @@ const isMenuRow = (item: MenuItem): boolean =>
     item.properties?.variant !== 'text' &&
     item.properties?.variant !== 'custom');
 
+/** A toggle group is a set of options, which a menu lists in place, ruled off from its neighbours. */
+const isOptionSet = (item: MenuItem): boolean => isMenuGroup(item) && item.properties.variant === 'toggleGroup';
+
 type Segment = { kind: 'item'; item: MenuItem } | { kind: 'radio'; id: string; actions: MenuAction[] };
 
 /**
@@ -213,6 +217,8 @@ const segment = (items: MenuItem[], multiple: boolean): Segment[] =>
     return segments;
   }, []);
 
+const isOptionSetSegment = (segment: Segment): boolean => segment.kind === 'item' && isOptionSet(segment.item);
+
 const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuItem; group?: MenuGroupContext }) => {
   if (isSeparator(item)) {
     return <Menu.Separator />;
@@ -221,6 +227,9 @@ const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuI
     // A toolbar's overflow items are already "more" in a menu, so they follow the other items rather than nest.
     if (item.id === TOOLBAR_OVERFLOW_ID) {
       return <OverflowSection menu={menu} group={item} />;
+    }
+    if (isOptionSet(item)) {
+      return <ActionMenuItems menu={menu} group={item} />;
     }
     // A graph group's properties are an open record, validated by the plugin that contributed them.
     return item.properties.variant ? (
@@ -266,7 +275,7 @@ const ActionMenuItems = ({
   const segments = useMemo(() => segment(items ?? [], isMultiSelect(group)), [items, group]);
   return (
     <>
-      {segments.map((entry) =>
+      {segments.map((entry, index) =>
         entry.kind === 'radio' ? (
           <Menu.RadioItemGroup
             key={entry.id}
@@ -279,7 +288,10 @@ const ActionMenuItems = ({
               ))}
           </Menu.RadioItemGroup>
         ) : (
-          <ActionMenuEntry key={entry.item.id} menu={menu} item={entry.item} group={group} />
+          <Fragment key={entry.item.id}>
+            {index > 0 && (isOptionSet(entry.item) || isOptionSetSegment(segments[index - 1])) && <Menu.Separator />}
+            <ActionMenuEntry menu={menu} item={entry.item} group={group} />
+          </Fragment>
         ),
       )}
     </>

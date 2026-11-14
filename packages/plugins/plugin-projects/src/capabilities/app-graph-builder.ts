@@ -34,7 +34,7 @@ import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT } from '../paths.ts';
 import * as ProjectGraph from '../ProjectGraph.ts';
 import * as SpecSession from '../SpecSession.ts';
 import { inboxResearch } from '../templates/index.ts';
-import { nestSpecs } from '../util/spec-tree.ts';
+import { readSpecTree } from '../util/spec-tree.ts';
 
 /**
  * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —
@@ -118,8 +118,7 @@ const createSpecCompanionExtension = Effect.fnUntraced(function* () {
     type: Project.Project,
     connector: (project, get) => {
       const specs = get(Obj.atomReactive(get(Obj.atom(project)).specs ?? [])).filter(Spec.instanceOf);
-      const db = Obj.getDatabase(project);
-      const tree = nestSpecs(specs, db ? get(db.query(Filter.type(Spec.Spec)).atom) : []);
+      const tree = readSpecTree(specs, get);
       const [viewState] = get(viewStateAtom);
       const picked = viewState ? get(viewState.atom(ProjectView.aspect, project.id)).spec : undefined;
       const shown = (tree.find(({ spec }) => spec.id === picked) ?? tree[0])?.spec;

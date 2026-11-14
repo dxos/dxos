@@ -52,11 +52,13 @@ import { ObjectGallery, ProjectPipeline } from '#components';
 import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
 import {
+  SpecToolbarProvider,
   useFieldExtensions,
   useProjectSpecTree,
   useRefTargets,
   useSelectedSpec,
   useSelectSpec,
+  useSpecToolbarSlot,
 } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
@@ -210,15 +212,18 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     onSelect: selectSpec,
     onAdd: () => void handleAddSpec(),
   });
-  // The Specs tab's tools: which spec, and its dialects.
+  // The spec section's editor tools, which it puts here rather than in a second toolbar of its own.
+  const { slot: specToolbarSlot, actions: editorActions } = useSpecToolbarSlot();
+  // The Specs tab's tools: which spec, its editor's, and its dialects.
   const specActions = useCallback<ActionGroupBuilderFn>(
     (group) => {
       pickerActions(group);
       if (spec) {
+        group.subgraph(editorActions);
         dialectActions(group);
       }
     },
-    [spec, pickerActions, dialectActions],
+    [spec, pickerActions, editorActions, dialectActions],
   );
 
   const menuActions = useToolbarActions({
@@ -441,7 +446,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             spec && (
               // A section rather than an article: the spec's own page is for opening it. Its other views are companions.
               <div className='grid min-h-0 h-full' data-testid='projectsPlugin.spec.document'>
-                <Surface.Surface type={AppSurface.Section} data={{ subject: spec, attendableId }} limit={1} />
+                <SpecToolbarProvider value={specToolbarSlot}>
+                  <Surface.Surface type={AppSurface.Section} data={{ subject: spec, attendableId }} limit={1} />
+                </SpecToolbarProvider>
               </div>
             )}
           {tab === 'spec' && !spec && <AddSpec onAdd={() => void handleAddSpec()} />}
@@ -583,7 +590,7 @@ const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerAc
           );
         },
       );
-      group.separator();
+      group.separator('line');
     },
     [specs, selected, onSelect, onAdd, t],
   );
@@ -817,7 +824,8 @@ const useToolbarActions = ({
           },
           () => {},
         )
-        .separator()
+        // The spec's tools sit beside the tabs, its editor's own gap pushing view and search to the end.
+        .separator(tab === 'spec' ? 'line' : 'gap')
         .subgraph(tab === 'spec' ? specActions : undefined)
         .subgraph(
           tab === 'tasks'

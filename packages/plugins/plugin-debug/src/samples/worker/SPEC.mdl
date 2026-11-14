@@ -72,6 +72,21 @@ decision D-2: The seeded spec states `type:Greeting` and [F-1] in full and only 
   rejected: Seeding every feat block with placeholder requirements, which the dialect would accept but which reads as a finished spec.
 ```
 
+```mdl
+decision D-3: The template writes the feature map into this text: each feat block carries its status and its needs, and the endpoint's block cites the spec that breaks it down. The appendix defines `feat` at 1.1 so those fields parse. Revises [D-1].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The spec's text is the source of truth for its features; there are no feature objects to file against it.
+```
+
+```mdl
+decision D-4: The appendix's `feat` carries the role, label, icon and hue the software dialect gives it, so a feature is labelled by its position ([F-1]) and a requirement added from its card is numbered after the others. Amends [D-3].
+  date: 2026-11-13
+  by: user:wittjosiah
+  why: The appendix replaced the dialect's `feat` without its `label`, so the card took `F-1` for a plain id and gave a new requirement a random key as its label.
+```
+
 ---
 
 ## Appendix: Extension Definitions
@@ -92,12 +107,18 @@ ext type
 
 ```mdl
 ext feat
-  uri: org.dxos.mdl.feat@1.0
+  uri: org.dxos.mdl.feat@1.1
   desc: A named feature grouping one or more requirements.
+  role: anchor
+  label: F
+  icon: ph--star--regular
+  hue: emerald
   fields:
+    status?: planned | in-progress | prototype | operational | failing
     desc?: Prose
-    req: RequirementList
-  nesting: self              # feat blocks may contain feat blocks
+    depends?: Ref<feat>[]       # features this one needs first; no cycles
+    spec?: Ref<spec>            # the spec that breaks this feature down
+    req: RequirementList        # req <key>: one testable sentence
 ```
 
 ```mdl

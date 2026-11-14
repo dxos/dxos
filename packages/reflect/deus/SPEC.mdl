@@ -102,6 +102,21 @@ feat F-8: Dialects declare roles and links
   req F-8.8: A name in a field with no link, or in prose, is not a link.
 ```
 
+```mdl
+feat F-9: Block schemas
+  A dialect's `ext` blocks are the schemas tools build from: the spec editor's block forms and slash commands, maps and
+  the linter all read them, and a form edits a block's text without disturbing the rest of it.
+
+  req F-9.1: `resolveBlockSchemas` returns every block kind a spec can use: the `ext` blocks of the dialects it extends, transitively, then its own appendix's, a later definition of a kind replacing an earlier one. `extends` on an `ext` block inherits the parent's fields; a field it redeclares replaces the parent's.
+  req F-9.2: `lang/code.mdl` (`org.dxos.spec.code`) defines the standard package blocks: `type`, `op`, `feat`, `scenario`, `component`, `service` and `module`.
+  req F-9.3: An `ext` block may state `role` (`anchor`, `structure`, `verification`, `context`), `label`, `hue` and `icon`. A field typed `Ref<kind>` or `Ref<kind>[]` is a reference to blocks of that kind; `Ref<spec>` is a reference to a spec. A union of single references (`NodeRef | TypeRef`) is a reference to a block of any of its kinds, and a `<Kind>RefChain` field (a deck's `chain`) is an ordered list written `A > B` however many items it holds.
+  req F-9.4: A block's fields decode to a form value and patch back as text changes, each confined to the source range of the field, row, list item or keyed line that changed. Lines outside it keep their bytes; a note stays in its column; wrapped prose keeps its unchanged lines and rewraps the rest at the source's width and indent.
+  req F-9.5: A field no codec reads is edited as its source text, verbatim. So is a list whose items are mappings (a test's `steps`), which one line of text per item cannot hold.
+  req F-9.6: A kind with a `label` is numbered: its blocks and keyed lines carry a stable key as their id, and tools draw the positional label (`F-3`, `F-3.2`) from document order. `rekey` gives a key to each item with no id, a positional id, or a duplicate one, and rewrites references and `<spec id>#<id>` citations to it.
+  req F-9.7: A spec's `## Extensions` table is derived from the kinds it resolves.
+  req F-9.8: Every block of every `.mdl` file in the repository decodes, patches back unchanged as no change, and takes a prose, row and keyed-line edit that reads back as made.
+```
+
 ## Changelog
 
 Backfilled on 2026-10-20 from the session that built the changelog,
@@ -691,4 +706,75 @@ decision D-68: `feat` gains `uses`, a `depends-on` link to the blocks it needs o
   rejected:
     - Keeping typed `op:x` references in prose as links; they stay in prose, where a structured editor cannot keep them in step.
     - Lint reading the dialects a spec extends; `deus lint` runs the sources under node, which cannot import the dialect texts the browser bundles.
+```
+
+```mdl
+decision D-69: A spec's text is the source of truth for every block, and the editor enhances each block where it sits with a form built from the schema its dialect declares. The schemas are the existing `ext` blocks, parsed, which keeps every spec readable as it is; schemas registered in code, which an `ext` block points at by id, are later work.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-9, F-9.1]
+```
+
+```mdl
+decision D-70: A form reads and writes a block through deus's own field parser, extended with source offsets and a codec per field type. MDL is not made a YAML subset.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-9.4]
+```
+
+```mdl
+decision D-71: Numbered items carry a stable random key as their id, and the number is a positional label tools draw, never written. A spec's numbered ids are rewritten to keys when Composer takes ownership of it; specs in the repository keep their numbered ids.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-9.6]
+```
+
+```mdl
+decision D-72: `extends` is the only extension a spec's frontmatter states; its `## Extensions` table is derived from the kinds the dialects and its own `ext` blocks resolve.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-9.7]
+```
+
+```mdl
+decision D-73: An `ext` block may state `role`, `label`, `hue` and `icon`, and a reference field is typed `Ref<kind>`. Fills in [D-69].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-9.3]
+```
+
+```mdl
+decision D-74: A spec extends the dialect that defines the standard package blocks, the `code` dialect, instead of copying the definitions into its appendix. `feat` is defined at 1.1: numbered (`label: F`), with `status` and `spec` beside `depends` and `uses`, and keyed `req` lines. Fills in [D-69].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.2]
+  why: 74 specs repeated the same `feat` definition in their appendix and 52 the same `op`; one definition keeps the forms and maps of every spec the same.
+```
+
+```mdl
+decision D-75: A key is five characters from lowercase letters and digits without `l`, `o`, `0` and `1`, starting with a letter. Fills in [D-71].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: Short enough to read in a citation, never mistaken for a positional label or a number, and unambiguous to type.
+```
+
+```mdl
+decision D-76: A union of single references is a reference to any of its kinds; a deck's `chain` is a `PlankRefChain`, an ordered list that decodes from `A > B` and is always written with arrows; a list of mappings is edited as text; `Date` is a one-line value and lowercase `number` and `boolean` are scalars; SQL `columns` are a `ColumnMap`, so their SQL types are not read as spec types. Fills in [D-69].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.3, F-9.5]
+  why: A form drew every standard block kind in turn; these were the field types it drew as the wrong control, and folding a step's lines into one item would have lost them on the next edit.
+```
+
+```mdl
+decision D-77: Block schemas resolve from the dialect texts the `dialect` module imports, the same texts every other reader uses, so no generated copy of `lang/` exists. An `ext` block whose `extends` names its own kind extends the last earlier definition of that kind, which is how the QA dialect adds `key` to the code dialect's `op`. `BlockRef` is a reference to a block of any kind. `feat` names the features it depends on in `depends`, as the code dialect declares it. Fills in [D-74].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.3]
+  why: The code dialect and the umbrella software dialect landed with their own bundler; two copies of the dialect texts could disagree, and matching by URI let a same-version `op` extend itself to nothing.
 ```
