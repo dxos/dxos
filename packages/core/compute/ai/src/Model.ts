@@ -130,8 +130,15 @@ export const claudeSonnet5: Model = make('com.anthropic.model.claude-sonnet-5.de
 export const claudeHaiku45: Model = make('com.anthropic.model.claude-haiku-4-5.default', {
   provider: Provider.edge.id,
   backend: 'claude-haiku-4-5',
-  label: 'Claude Haiku',
+  label: 'Claude Haiku 4.5',
   characteristics: { maxTokens: 16_384, tools: true },
+});
+
+export const claudeHaiku55: Model = make('com.anthropic.model.claude-haiku-5-5.default', {
+  provider: Provider.edge.id,
+  backend: 'claude-haiku-5-5',
+  label: 'Claude Haiku 5.5',
+  characteristics: { maxTokens: 16_384, thinking: true, tools: true },
 });
 
 export const deepseekV4Flash: Model = make('com.deepseek.model.deepseek-v4-flash.default', {
@@ -220,6 +227,7 @@ export const all: readonly Model[] = [
   // Edge — Anthropic Claude via the DXOS edge intermediary.
   claudeOpus5,
   claudeSonnet5,
+  claudeHaiku55,
   claudeHaiku45,
 
   // Edge — DeepSeek via the DXOS edge intermediary (OpenAI-compatible chat completions). Both V4

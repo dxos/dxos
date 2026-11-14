@@ -24,7 +24,7 @@ import {
   Ontology,
 } from '../../types/index.ts';
 
-export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
+export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-5-5.default';
 
 // Optional enrichment field: models routinely emit `null` (not omission) for "not present", so
 // accept null as absent. A plain `Schema.optional(String)` rejects null and would discard the whole

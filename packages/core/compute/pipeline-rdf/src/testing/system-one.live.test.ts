@@ -47,7 +47,7 @@ const layer = () =>
   );
 
 /** Input prices in USD per million tokens (output is free); Clef has no price in the repo, so Clairic's stands in. */
-const PRICE = { clairic: 0.1, clef: 0.1, haikuIn: 1, haikuOut: 5 };
+const PRICE = { clairic: 0.1, clef: 0.1, haikuIn: 0.1, haikuOut: 0.5 };
 
 /** A fallback request: the rule prompt plus the clauses, and the JSON facts it writes, at Haiku's rates. */
 const FALLBACK_COST = (4_000 * PRICE.haikuIn + 400 * PRICE.haikuOut) / 1_000_000;
