@@ -177,11 +177,15 @@ interface TaskSegment {
  * of `started` and only while no other task holds the stretch: a task merely dismissed
  * (`todo` → `blocked`) claims nothing, a second close (`review` → `done`) mints nothing, and a close
  * arriving while other work is open leaves that work alone rather than overlapping it.
+ *
+ * While the run is live, `inFlight` names the task that stretch will close on, and holds it open from
+ * the last boundary, so its work is drawn as it happens rather than once the task closes.
  */
 const buildTaskSegments = (
   events: readonly Trace.FlatEvent[],
   sessionStart: number | undefined,
   taskIds: ReadonlySet<string>,
+  inFlight?: string,
 ): TaskSegment[] => {
   const segments: TaskSegment[] = [];
   const open = new Map<string, TaskSegment>();
@@ -216,6 +220,9 @@ const buildTaskSegments = (
       });
       boundary = event.timestamp;
     }
+  }
+  if (inFlight !== undefined && open.size === 0 && boundary !== undefined) {
+    segments.push({ taskId: inFlight, laneId: taskLaneId(inFlight), start: boundary });
   }
   return segments;
 };
@@ -505,7 +512,20 @@ export const buildSessionTimeline = ({
           source.pids.has(event.meta.parentPid) &&
           !(event.meta.pid !== undefined && subAgentPids.has(event.meta.pid))),
     );
-    const segments = buildTaskSegments(ownEvents, begins[0]?.timestamp, chatTaskIds);
+    // Delegation starts every task it hands over and the agent works its checklist in order, so in a
+    // live run the first task still started, and not yet cut, is the one being worked.
+    const inFlight = open
+      ? chatTasks.find(
+          (task) =>
+            task.status === 'started' &&
+            !ownEvents.some(
+              (event) =>
+                event.type === Trace.TaskStatusChanged.key &&
+                decode(Trace.TaskStatusChanged.schema, event.data)?.taskId === task.id,
+            ),
+        )?.id
+      : undefined;
+    const segments = buildTaskSegments(ownEvents, begins[0]?.timestamp, chatTaskIds, inFlight);
     segmentsBySession.set(laneId, segments);
     for (const segment of segments) {
       const taskLane = taskLanes.get(segment.taskId);

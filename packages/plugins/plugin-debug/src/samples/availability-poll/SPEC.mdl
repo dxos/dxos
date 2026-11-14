@@ -1,0 +1,321 @@
+---
+id: com.example.availability-poll
+name: Availability Poll
+version: 0.1.0
+---
+
+A When2meet-style poll on one Cloudflare Worker. Someone creates a poll with candidate time slots and shares its
+link; each person who opens it gives their name and marks the slots they are free for, in their own time zone; the page shades a heat map of where
+people overlap and names the best slot. Each poll lives in a Durable Object of its own. The pages are a React app
+bundled by Vite into the Worker's static assets; from M-2 they are built from DXOS UI components, `@dxos/react-ui` on
+the `@dxos/ui-theme` theme. The work ships in four milestones: the core poll on plain pages, then the page design, then
+time zones and daylight-saving time, then flight options, which `FLIGHTS.mdl` specifies.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                           |
+| ----------- | ----------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
+
+## Types
+
+```mdl
+type Slot
+  desc: One candidate meeting time, as the API returns it.
+  fields:
+    id: string             # s1, s2, … in time order
+    start: string          # UTC instant, ISO 8601 with a Z
+    minutes: number        # length
+    free: string[]         # names of the respondents free for it, in respondent order
+```
+
+```mdl
+type Respondent
+  desc: Someone who has marked their availability on the poll.
+  fields:
+    name: string           # unique within the poll, as they typed it
+    zone?: string          # IANA zone, set with their marks (M-2)
+```
+
+```mdl
+type Poll
+  desc: The JSON body of `GET /api/polls/:id`.
+  fields:
+    id: string             # the Durable Object id, hex
+    title: string
+    zone: string           # the organizer's IANA zone; `UTC` until M-2
+    slots: Slot[]
+    respondents: Respondent[]   # in the order they first saved
+    best?: string          # id of the best slot; absent while nobody has marked
+```
+
+```mdl
+type NewPoll
+  desc: The JSON body of `POST /api/polls`.
+  fields:
+    title: string
+    zone?: string          # IANA zone; defaults to `UTC`
+    slots: string[] | SlotPlan   # UTC instants, or (M-2) a plan in `zone`
+    minutes: number        # length of every slot, 15 to 240
+```
+
+```mdl
+type SlotPlan
+  desc: Slots by the organizer's wall clock (M-2).
+  fields:
+    dates: string[]        # local dates, YYYY-MM-DD
+    hours: number[]        # local start hours, 0 to 23
+```
+
+```mdl
+type LocalRange
+  desc: A free stretch in a respondent's own zone (M-2).
+  fields:
+    date: string           # local date, YYYY-MM-DD
+    from: string           # HH:MM, inclusive
+    to: string             # HH:MM, exclusive; 24:00 is the end of the day
+```
+
+## Interface
+
+From M-2 both pages follow these rules; F-4 and F-5 say what each page holds. M-1's pages are bare HTML: no DXOS UI
+components, no theme and no stylesheet, so they show the browser's defaults; the grid is a `<table>` whose cells take
+literal colours.
+
+- The pages use DXOS UI components only: `Card` for every panel, `Button` for every action, `Input` and `Field` for every
+  form control, `Tag` for names and counts, and `Tooltip` for hover detail. The grid's cells are the only plain elements.
+- The theme is DXOS dark. Colours come from the theme's tokens and `Tag` hues, never literal values, except the heat
+  map's five shades, which are one hue at rising strength.
+- Content sits in one centred column, 64rem at most, with the theme's spacing between cards. Below 48rem the two grids
+  stack.
+- Every page has a header row: the poll's title (or "New poll") on the left and its actions on the right.
+- Times read as `Mon 1 Jun` for a day and `09:00` for a start time, in UTC until M-3. No ISO strings appear on a page.
+- A page that is loading says so in one line; a poll that does not exist says "Poll not found" with a link to `/`.
+
+## Features
+
+```mdl
+feat F-1: Create a poll
+  desc: A poll is created once and lives in a Durable Object of its own.
+
+  req F-1.1: `POST /api/polls` with `type:NewPoll` creates the poll in a new Durable Object (`newUniqueId`) and answers 201 with `{ id, url }`, where `url` is the poll's page.
+  req F-1.2: A poll needs a title and 1 to 100 slots; any other body is 400 with `{ error }` naming the field.
+  req F-1.3: Slots are stored as UTC instants, listed in time order, with ids `s1`, `s2`, … in that order.
+  req F-1.4: `GET /` serves a form that creates a poll from a title, a slot length and its slots, then opens the poll's page.
+```
+
+```mdl
+feat F-2: Mark availability
+  desc: Whoever opens the link gives their name and the slots they can make.
+
+  req F-2.1: The poll page `/p/:id` asks the reader for their name, then shows a grid with one column per day and one row per start time.
+  req F-2.2: Clicking or dragging across cells toggles them, and each change is saved with `PUT /api/polls/:id/marks/:name` and `{ slots: string[] }`, which replaces that name's marks; a name's first save adds it to the poll's respondents.
+  req F-2.3: An empty name, or one over 40 characters, is 400; so is a slot id not on the poll.
+```
+
+```mdl
+feat F-3: Heat map and best slot
+  desc: Where people overlap, at a glance, and the one slot to pick.
+
+  req F-3.1: Each cell is shaded by the share of respondents free for it, in five steps from none to all; hovering a cell lists who is free.
+  req F-3.2: The best slot is the one the most respondents are free for; on a tie, the earliest. With no marks there is no best slot.
+  req F-3.3: Above the grid the page names the best slot, its time and how many are free, and outlines its cell.
+  req F-3.4: The page shows another respondent's change within 5 seconds, without a reload.
+```
+
+```mdl
+feat F-4: New poll page
+  desc: The form an organizer fills in, laid out to the Interface rules.
+
+  req F-4.1: The New poll page has one card with fields for the title, and the slot length in minutes (60 by default), then a card for the slots, then a primary Create poll button, disabled until the form is valid.
+  req F-4.2: Slots are picked as days by start hours: a date field adds each day as a removable tag, and two hour fields set the first and last start hour; the card states how many slots that makes, and every day gets every hour.
+  req F-4.3: A 400 shows its `error` under the field it names; a 201 opens the poll's page.
+```
+
+```mdl
+feat F-5: Poll page
+  desc: The page every respondent marks and reads, laid out to the Interface rules.
+
+  req F-5.1: The poll page asks the reader for their name in a field, with one button per respondent so someone returning on another device can pick theirs; it remembers the name for that poll in the browser and offers "Not you?" to change it.
+  req F-5.2: The reader's grid is a card titled "Your availability": one column per day, headed by the day, and one row per start time, labelled by the time; cells are at least 2rem tall and fill their column, a marked cell takes the accent colour, and the header says how many slots the reader has marked.
+  req F-5.3: A drag paints every cell it crosses to the opposite of the first cell's state and saves once, when the pointer is released; the card shows "Saving…" until the save answers, then "Saved".
+  req F-5.4: Beside the reader's grid, a card titled "Group availability" shows the same grid read-only, each cell shaded by the share of respondents free for it in five steps from none to all, with a legend from "0 of n" to "n of n"; hovering a cell shows a tooltip listing who is free and who is not.
+  req F-5.5: Above the grids a card names the best slot as its day and time range, says how many of how many are free, and shows each free respondent as a tag; the best cell is outlined in both grids. With no marks the card says "Nobody has marked yet".
+  req F-5.6: Below the grids a roster lists every respondent as a tag with how many slots they marked, and marks the reader; before anyone answers it says "Nobody has answered yet".
+  req F-5.7: The page's accent colour is the theme's: marked cells, the heat map's five shades and the best cell's outline use `--color-accent-bg`.
+```
+
+```mdl
+feat F-6: Time zones
+  desc: The organizer plans by their own clock, and everyone reads the grid by theirs.
+
+  req F-6.1: `NewPoll.slots` may be a `type:SlotPlan`: one slot starts at each listed hour on each listed date, by the wall clock in the poll's `zone`.
+  req F-6.2: The page lays the grid out in the reader's zone, taken from the browser, with a picker to change it; columns are local dates and rows local start times.
+  req F-6.3: A respondent's zone is saved with their marks and shown beside their name.
+```
+
+```mdl
+feat F-7: Daylight-saving time
+  desc: A poll may span a clock change in any of its zones, and every count stays right.
+
+  req F-7.1: A planned slot's instant uses the zone's offset on that slot's own date and hour, never one offset for the whole poll.
+  req F-7.2: A planned local time that a change skips makes no slot (hour 2 on 2026-03-08 in `America/New_York`); one that occurs twice takes its first occurrence (hour 1 on 2026-11-01 there is 05:00Z).
+  req F-7.3: `PUT /api/polls/:id/marks/:name` also takes `{ zone, ranges: LocalRange[] }`: a slot is marked when its start falls inside a range, read in `zone` on the range's date.
+  req F-7.4: The grid places each slot by its local date and time, so a day on which the reader's offset differs shows its slots an hour off the other days; no slot is dropped or shown twice.
+```
+
+```mdl
+feat F-8: Flight options
+  desc: Flights overlaid on the poll for respondents who travel to it. Left for the reader to build.
+
+  req F-8.1: A poll can carry a trip, search flights for it under the poll's limits and let each traveler pick one, as `FLIGHTS.mdl` specifies.
+```
+
+## Milestones
+
+The work ships in this order; each milestone is done when its scenario passes on the Worker run in a sandbox, which is then deployed.
+
+| Milestone                                | Delivers                                                                                                                              | Features      | Done when                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------- |
+| M-1: Core poll                           | Create a poll, mark availability, see the heat map and the best slot, one Durable Object per poll, on plain pages. Every time is UTC. | F-1, F-2, F-3 | T-1 passes, then the Worker is deployed.                             |
+| M-2: Page design                         | Both pages laid out to the Interface rules: cards, a slot picker, two grids side by side, the best slot and the respondents.          | F-4, F-5      | T-2 passes, then the Worker is deployed.                             |
+| M-3: Time zones and daylight-saving time | Plan by the organizer's wall clock, mark and read by each respondent's, across a clock change.                                        | F-6, F-7      | T-3 passes, then the Worker is deployed.                             |
+| M-4: Flight options                      | Search Duffel for flights to the meeting under the poll's limits and let travelers pick. Not started.                                 | F-8           | Every scenario in `FLIGHTS.mdl` passes, then the Worker is deployed. |
+
+## Acceptance
+
+```mdl
+scenario T-1: One zone
+  given: a poll "Design review" with slots 2026-06-01T09:00Z, 10:00Z, 11:00Z and 12:00Z and the same hours on 2026-06-02, 60 minutes each, and nobody marked yet
+  when:
+    - Ana marks s1, s2 and s3
+    - Ben marks s2, s3, s6 and s7
+    - Chika marks s3, s6 and s7
+  then:
+    - the respondents are Ana, Ben and Chika, in that order
+    - s1 to s8 have 1, 2, 3, 0, 0, 2, 2 and 0 respondents free
+    - the best slot is s3, 2026-06-01T11:00Z
+```
+
+```mdl
+scenario T-2: Page design
+  given: T-1's poll after its marks, with the pages rendered from that poll for Ben
+  then:
+    - the New poll page has a Poll card with Title and Slot length fields, a Slots card with a Day field and First and Last start hour fields, and a Create poll button that is disabled while the form is empty
+    - the poll page shows the cards Best slot, Your availability, Group availability and Respondents, in that order
+    - Best slot reads "Mon 1 Jun, 11:00–12:00" and "3 of 3 free", with the tags Ana, Ben and Chika
+    - each grid has the columns Mon 1 Jun and Tue 2 Jun and the rows 09:00 to 12:00, eight cells in all
+    - Your availability has four cells marked and its header says 4 marked
+    - Respondents lists Ana with 3 marked, Ben with 4 and Chika with 3, and marks Ben as the reader
+    - no text on either page is an ISO instant
+```
+
+```mdl
+scenario T-3: Three zones across a clock change
+  given:
+    - a poll "Launch review" in `America/New_York`, planned for dates 2026-10-30 and 2026-11-02 at hours 8, 9, 10, 11 and 12, 60 minutes each
+    - respondents Ana in `America/New_York`, Ben in `Europe/London` and Chika in `Asia/Tokyo`
+    - London left summer time on 2026-10-25 and New York leaves it on 2026-11-01, so New York is 4 hours behind London on the Friday and 5 on the Monday
+  when:
+    - Ana marks 09:00 to 12:00 on 2026-10-30 and on 2026-11-02, in `America/New_York`
+    - Ben marks 14:00 to 17:00 on 2026-10-30 and on 2026-11-02, in `Europe/London`
+    - Chika marks 23:00 to 24:00 on 2026-10-30 and 00:00 to 02:00 on 2026-11-03, in `Asia/Tokyo`
+  then:
+    - s1 to s5 start at 12:00Z, 13:00Z, 14:00Z, 15:00Z and 16:00Z on 2026-10-30
+    - s6 to s10 start at 13:00Z, 14:00Z, 15:00Z, 16:00Z and 17:00Z on 2026-11-02
+    - s1 to s10 have 0, 1, 3, 2, 1, 0, 2, 3, 3 and 0 respondents free
+    - the best slot is s3, 10:00 on Friday in New York
+    - read in `Europe/London`, the grid shows Friday's slots at 12:00 to 16:00 and Monday's at 13:00 to 17:00
+    - read in `Asia/Tokyo`, the grid has four columns, 30 and 31 October and 2 and 3 November
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: The Availability Poll template seeds this spec written in full, with its feature map and the flight options spec, and no milestones or tasks; the assistant plans each milestone from the spec, works the tasks it files and sets each feature's status from the Worker it runs and deploys.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The demo is the development loop at the spec and feature level; planning the tasks is part of what it shows.
+  rejected: Seeding the milestones and tasks, which would skip the step where the agent derives them from the spec.
+
+decision D-2: Every page is built from DXOS UI components, `@dxos/react-ui` on the `@dxos/ui-theme` theme, bundled by Vite into the Worker's static assets, with the Worker answering only `/api`.
+  date: 2026-11-05
+  by: user:wittjosiah
+  why: The poll is built by a Composer agent, so its pages should use the same components and theme as Composer.
+  rejected: Hand-written HTML and CSS served from the Worker, which skips the build step but looks unlike the rest of DXOS.
+
+decision D-3: The spec describes both pages: an Interface section with the rules they share, and requirements for each page's layout, controls and states (F-1.4 to F-1.7, F-2.1, F-2.4, F-2.5, F-3.1, F-3.3 and F-3.5).
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: With only the API specified, the agent built bare pages: ISO strings typed into inputs, a name typed to sign in, and half-width grid cells.
+  rejected: Leaving the layout to the agent, which meets every requirement with the least UI it can.
+
+decision D-4: A poll has no guest list: whoever opens its link gives their name with their marks, and the name's first save adds it to the poll's respondents (`type:Respondent`, which replaces `Invitee`). `NewPoll` loses `invitees`, the New poll page loses its invitees field (F-1.6 is folded into F-1.4), and an unknown name is no longer 404.
+  date: 2026-11-05
+  by: user:wittjosiah
+  why: The organizer does not know everyone who will answer, and a link shared in a channel should work for anyone who has it.
+  rejected: Naming every invitee when the poll is created, which turns away anyone the organizer left off.
+
+decision D-5: The page design is its own milestone. M-1 ships the core poll on plain pages; M-2 lays both pages out to the Interface rules, as F-4 (New poll page) and F-5 (Poll page), which take the layout requirements from F-1 to F-3 and are done when T-2 passes. Time zones and daylight-saving time become M-3 (F-6 and F-7, scenario T-3), and flight options M-4 (F-8).
+  date: 2026-11-05
+  by: user:wittjosiah
+  why: M-1 should build in about 5 minutes, and the design work is a step of its own that the demo can show.
+  rejected: Keeping the layout in M-1, which makes the first milestone the slowest.
+
+decision D-6: M-1's pages are bare HTML with the browser's default styles, and the Poll page's accent colour is a requirement of its own (F-5.7). D-2's DXOS UI components and theme arrive with M-2.
+  date: 2026-11-06
+  by: user:wittjosiah
+  why: Each milestone should look different on screen: M-1 working but plain, M-2 designed, and a change to F-5.7 recolours the page.
+  rejected: DXOS UI components from M-1, which made M-1's and M-2's pages look nearly the same.
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+`decision` is defined in [`changelog.mdl`](https://github.com/dxos/dxos/blob/main/packages/reflect/deus/lang/changelog.mdl).

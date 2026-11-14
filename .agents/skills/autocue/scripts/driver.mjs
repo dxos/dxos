@@ -543,6 +543,7 @@ const flow = {
   next: 0,
   aborted: false,
   interrupt: undefined,
+  run: 0,
   state: 'idle',
   step: undefined,
   result: undefined,
@@ -627,19 +628,26 @@ const runFlow = async (command) => {
 
   // Steps call the same handlers as the HTTP ops, so the cursor and pills behave identically. The
   // quiet variant is for replay: no cursor, no pills, no captions, since none of it is the demo.
+  // A step abandoned by `abort` keeps running, so its calls throw once its run is aborted or superseded.
+  const run = ++flow.run;
   const makeDemo = (quiet) =>
     Object.fromEntries(
       Object.entries(handlers)
         .filter(([op]) => !['run', 'abort', 'steps', 'status', 'stop'].includes(op))
         .map(([op, handler]) => [
           op,
-          quiet && (op === 'caption' || op === 'title')
-            ? async () => ({})
-            : (args = {}) => handler({ op, ...args, ...(quiet ? { hud: false } : {}) }),
+          async (args = {}) => {
+            if (flow.aborted || flow.run !== run) {
+              throw new Aborted('aborted');
+            }
+            return quiet && (op === 'caption' || op === 'title')
+              ? {}
+              : handler({ op, ...args, ...(quiet ? { hud: false } : {}) });
+          },
         ]),
     );
-  const demo = makeDemo(false);
   flow.aborted = false;
+  const demo = makeDemo(false);
 
   const replayed = [];
   if (command.restart || command.replay) {

@@ -367,7 +367,9 @@ spaceId }`. Report the new project id.
    visual change. Attach it to the task (`tasks-add-artifact`) before setting `review`, so the
    reviewer finds it on the task. Work with nothing to check (a question answered, data filed,
    a merged change) goes straight to `done`. Move a `review` task to `done` once the review is
-   through, e.g. its PR merged.
+   through, e.g. its PR merged. A task a person answers for (a delegated task) is the exception:
+   `done` on it is stored as `review` whatever you send, and only that person closes it, so set
+   `review` and move on rather than retrying `done`.
 5. **Before claiming done** — reconcile the ledger against reality: every `done` task is
    actually complete, every `review` task has its reviewable output attached, and no completed
    work is still `todo` or `started`.

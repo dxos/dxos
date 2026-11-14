@@ -13,6 +13,7 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 | ------------------- | ---------------------------------------------------------- | ------------ |
 | AI Briefing         | `plugin-magazine/src/samples/ai-briefing/CONTENT.md`       | `partial.ts` |
 | Architecture        | `plugin-canvas/src/samples/architecture/CONTENT.md`        | `partial.ts` |
+| Availability Poll   | `plugin-debug/src/samples/availability-poll/CONTENT.md`    | `spec.ts`, `features.ts`, `docs.ts`, `project.ts` |
 | Bramble             | `plugin-onboarding/src/samples/bramble/CONTENT.md`         | `partial.ts` |
 | Alien Labs team     | `plugin-debug/src/samples/fieldstone/team/CONTENT.md`      | `partial.ts` |
 | Alien Labs inbox    | `plugin-debug/src/samples/fieldstone/inbox-crm/CONTENT.md` | `partial.ts` |
@@ -27,6 +28,7 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 | ----------------- | ------------------------------------------------------------- | --------------------------------------------- |
 | AI Briefing       | `plugin-magazine/src/samples/ai-briefing/AiBriefingSpace.ts`  | AI Briefing                                   |
 | DXOS Architecture | `plugin-canvas/src/samples/architecture/ArchitectureSpace.ts` | Architecture                                  |
+| Availability Poll | `plugin-debug/src/samples/availability-poll/AvailabilityPollSpace.ts` | Availability Poll                    |
 | Bramble           | `plugin-onboarding/src/samples/bramble/BrambleSpace.ts`       | Bramble                                       |
 | Alien Labs   | `plugin-debug/src/samples/fieldstone/FieldstoneSpace.ts`      | team, inbox-crm, projects, docs, metrics, Architecture |
 | Reading Room      | `plugin-magazine/src/samples/reading-room/ReadingRoomSpace.ts` | Reading Room                                  |
