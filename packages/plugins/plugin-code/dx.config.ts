@@ -86,7 +86,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
-    // Narrower than the `appGraphBuilder` family default: the feature nodes open levels through the app shell.
+    // Narrower than the `appGraphBuilder` family default: the spec section and the feature companion serve the app shell.
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/feature-graph-builder.ts', { with: { type: 'module-url' } }),
       {
@@ -132,13 +132,12 @@ const config: Plugin.PluginConfig = Plugin.config({
         AppSurface.CardContent,
         AppSurface.Dialog,
         AppSurface.Section,
-        ProjectSurface.LevelOverview,
         ProjectSurface.SpecView,
       ],
       name: 'FeatureSurface',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppSurface.Article, AppSurface.Section],
+      roles: [AppSurface.Article, AppSurface.Section, ProjectSurface.SpecToolbar, ProjectSurface.SpecView],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
@@ -159,7 +158,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'SpecExtensions',
       {
-        provides: [ProjectCapabilities.SpecExtensions, ProjectCapabilities.SpecPackage, ProjectCapabilities.SpecView],
+        provides: [
+          ProjectCapabilities.SpecExtensions,
+          ProjectCapabilities.SpecPackage,
+          ProjectCapabilities.SpecSourcesProvider,
+          ProjectCapabilities.SpecView,
+        ],
         activatesOn: ActivationEvents.Idle,
         environments: ['browser', 'tauri'],
       },

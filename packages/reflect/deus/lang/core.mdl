@@ -127,6 +127,7 @@ ext uses
   uri: dxos.spec.core/uses
   desc: Declares that this spec builds on another spec, identified by its frontmatter id.
   inline-prose: true
+  role: context
   fields:
     id: URI                     # the depended-on spec's id (the block identifier)
   syntax: |
@@ -154,9 +155,69 @@ ext ext
     adds-fields?:   FieldMap      # additional fields merged into parent (use with extends)
     nesting?:       self | none   # whether instances may contain same-type blocks
     inline-prose?:  Boolean       # first non-key line treated as prose value
+    role?:          Role          # what instances are to the spec's structure (see Roles and Links)
+    links?:         LinkMap       # fields whose values name other blocks, and how (see Roles and Links)
+    icon?:          Icon          # how tools draw instances (see Roles and Links)
+    hue?:           Hue           # the colour tools tag instances with (see Roles and Links)
     syntax?:        CodeBlock     # reference syntax (non-normative)
     example?:       CodeBlock     # usage example (non-normative)
 ```
+
+---
+
+## Roles and Links
+
+A dialect says how its blocks relate, so a tool can group a spec and draw it without knowing the
+dialect. Each `ext` block may give a `role` and `links`.
+
+A **role** says what instances are to the spec:
+
+| Role           | Instances                                                     |
+|----------------|---------------------------------------------------------------|
+| `anchor`       | state intent, and name the blocks that serve it               |
+| `structure`    | are what the subject is built from                            |
+| `verification` | check anchors and structure                                   |
+| `context`      | are what the spec relies on from outside it                   |
+
+A block type with no role is `structure`, except for a block outside the spec, which is `context`.
+
+**Links** map each field whose values name other blocks to its relationship, one per line:
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure.
+  fields:
+    fields?: FieldMap
+    extends?: TypeRef[]
+  links:
+    fields: composes
+    extends: extends
+```
+
+| Relationship  | The block…                               | UML            |
+|---------------|------------------------------------------|----------------|
+| `extends`     | is a kind of the named block             | generalization |
+| `generalizes` | is what the named blocks are kinds of    | generalization, from the named block |
+| `implements`  | meets the named block's contract         | realization    |
+| `composes`    | owns the named blocks as its parts       | composition    |
+| `part-of`     | is a part of the named block             | composition, from the named block |
+| `aggregates`  | holds the named blocks without owning them | aggregation  |
+| `references`  | points at the named block                | association    |
+| `depends-on`  | needs the named block to work            | dependency     |
+| `verifies`    | checks the named block                   | dependency     |
+
+1. `generalizes` and `part-of` are read from the other end: `scene: SC-1` on a shot with
+   `scene: part-of` is the same link as `SC-1` composing the shot.
+2. In a `composes` or `aggregates` field, a value written as a reference (`Ref<X>`, `Ref(X)`)
+   points at X without holding it, so it is `references`.
+3. An `ext` that `extends` another takes the parent's role and links; its own override them.
+4. A spec's own `ext` block for a type its dialect declares overrides the dialect's role, and its
+   links override the dialect's field by field.
+5. A name in a field with no link, or in prose, is not a link: tools relate blocks only through linked fields.
+
+An `ext` may also give an `icon` and a `hue`, which tools that draw the spec use for its instances. An `ext`
+that extends another takes the parent's icon and hue unless it gives its own.
 
 ---
 
@@ -179,6 +240,10 @@ They are the vocabulary of the meta-language.
 | `CodeBlock`  | Literal indented or fenced text                              |
 | `ExtRef`     | Reference to a declared extension name                       |
 | `TagList`    | Space or comma-separated tag identifiers                     |
+| `Role`       | `anchor \| structure \| verification \| context`              |
+| `LinkMap`    | Field names to relationships: `field: relationship`, one per line |
+| `Icon`       | A Phosphor icon name, e.g. `ph--star--regular`               |
+| `Hue`        | A theme hue, e.g. `emerald`, or `neutral`                    |
 
 ---
 

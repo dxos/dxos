@@ -24,6 +24,7 @@ export const translations = [
       },
       [VideoNamespace.key]: {
         'plugin.name': 'Video',
+        'video-package.label': 'Video',
         'transcribe.label': 'Transcribe via worker',
         'fetch-description-error.message': 'Failed to fetch description.',
         'fetch-transcript.label': 'Fetch transcript (captions)',

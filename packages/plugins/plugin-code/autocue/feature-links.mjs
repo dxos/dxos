@@ -20,7 +20,7 @@ const SUBTITLE = 'from plugin-code/spec/FEATURE-LINKS.mdl';
 const BEAT = 1_500;
 
 const story = (id) => `${STORYBOOK}/iframe.html?id=${id}&viewMode=story`;
-const CARDS = story('plugins-plugin-code-containers-specfeatures--canvas');
+const CARDS = story('plugins-plugin-code-containers-specfeatures--kanban');
 const CODE_LINKS = story('plugins-plugin-code-containers-featurearticle--code-links');
 // The SetKey story's play function sets the key itself, so the take types into the story without one.
 const WITHOUT_KEY = story('plugins-plugin-code-containers-featurearticle--without-key');
@@ -41,7 +41,7 @@ export const steps = [
     setup: true,
     run: async ({ page }) => {
       await open(page, CODE_LINKS, '[data-testid="feature-card.link"]');
-      await open(page, CARDS, '[data-testid="feature-canvas-node"]');
+      await open(page, CARDS, '[data-testid="feature-kanban.card"]');
     },
   },
   {
@@ -49,9 +49,9 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.title({ value: 'Feature links', subtitle: 'dxn:<meta.key>#<mnemonic> and @feature tags' });
       await caption(demo, 1, "Open the spec's feature map as cards");
-      // The canvas card is a summary; the test count is on the feature's own card, opened in the next step.
+      // The board card is a summary; the test count is on the feature's own card, opened in the next step.
       await demo.hover({
-        selector: '[data-testid="feature-canvas-node"]:has-text("Provider sync")',
+        selector: '[data-testid="feature-kanban.card"]:has-text("Provider sync")',
         label: 'Provider sync',
       });
       await demo.sleep({ ms: BEAT });

@@ -13,7 +13,7 @@ import { formatSourceKey, isSpecKey, parseSourceKey } from '@dxos/deus/review';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 
-import { getSpecKey, resolvePath, resolveRoots, toMetaKey } from '#sync';
+import { FrontMatter, getSpecKey, resolvePath, resolveRoots, toMetaKey } from '#sync';
 import { CodeCapabilities, CodeOperation } from '#types';
 
 import { CodeOperationError } from '../errors.ts';
@@ -57,7 +57,12 @@ const handler: Operation.WithHandler<typeof CodeOperation.ImportSpec> = CodeOper
         return yield* Effect.fail(new CodeOperationError({ message: `File not found: ${path}` }));
       }
 
-      const spec = Spec.make({ name: key.path, content });
+      if (!FrontMatter.readable(content)) {
+        return yield* Effect.fail(new CodeOperationError({ message: `Front matter does not parse in ${path}` }));
+      }
+      // The file's front matter is the spec's fields, not its text.
+      const spec = Spec.make({ name: key.path, content: FrontMatter.body(content) });
+      FrontMatter.read(spec, content);
       Obj.update(spec, (spec) => {
         Obj.getMeta(spec).keys.push(toMetaKey(key));
       });

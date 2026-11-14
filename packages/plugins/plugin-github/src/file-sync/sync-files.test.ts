@@ -574,6 +574,27 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
     expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
   });
 
+  test('a path whose pull failed is retried and not exported until it pulls, so changes not pulled are not overwritten', async ({
+    expect,
+  }) => {
+    const { git, sync, edit, fileOn, textAt } = await setup();
+    await sync();
+    await edit('spec/PLUGIN.mdl', (content) => content.replace('F-2: two', 'F-2: second'));
+    push(git, 'main', { 'spec/PLUGIN.mdl': SPEC_V1.replace('F-3: three', 'F-3: third') });
+    const failing = [{ ...MAPPING, import: Unhandled }];
+
+    for (let pass = 0; pass < 2; pass++) {
+      const { result } = await sync(failing);
+      expect(result.skipped).toEqual([{ path: 'spec/PLUGIN.mdl', reason: 'import failed' }]);
+      expect(fileOn('composer/edits', 'spec/PLUGIN.mdl')).toBeUndefined();
+    }
+
+    await sync();
+    expect((await textAt('spec/PLUGIN.mdl'))?.content).toBe(
+      SPEC_V1.replace('F-2: two', 'F-2: second').replace('F-3: three', 'F-3: third'),
+    );
+  });
+
   test('F-3.5: a failed import keeps the path bound but unexported, and the next pass retries the head', async ({
     expect,
   }) => {

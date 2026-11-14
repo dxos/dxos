@@ -16,7 +16,7 @@ import { FactoryAnnotation, Text } from '@dxos/schema';
  * front matter is the spec's fields and meta rather than its text: `name` is `name`, `id` and `version` are the
  * meta's `key` and `version`.
  */
-export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects.spec', '0.3.0'))(
+export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects.spec', '0.4.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
 

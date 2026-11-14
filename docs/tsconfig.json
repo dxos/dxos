@@ -100,12 +100,6 @@
       "path": "../packages/core/halo/halo-react"
     },
     {
-      "path": "../packages/core/protocols"
-    },
-    {
-      "path": "../packages/plugins/plugin-client"
-    },
-    {
       "path": "../packages/plugins/plugin-inspector"
     },
     {
@@ -142,9 +136,6 @@
       "path": "../packages/sdk/schema"
     },
     {
-      "path": "../packages/sdk/types"
-    },
-    {
       "path": "../packages/stories/stories-echo"
     },
     {
@@ -164,9 +155,6 @@
     },
     {
       "path": "../packages/ui/react-ui-calendar"
-    },
-    {
-      "path": "../packages/ui/react-ui-canvas-editor"
     },
     {
       "path": "../packages/ui/react-ui-dnd"

@@ -135,6 +135,7 @@ op resignGame
 
 ```mdl
 feat F-5: Move Validation
+  uses: [getLegalMoves, submitMove, validateMove]
 
   req F-5.1:
     when: Gameboard calls submitMove
@@ -151,6 +152,7 @@ feat F-5: Move Validation
 
 ```mdl
 feat F-6: Game Persistence
+  uses: [startGame, submitMove]
 
   req F-6.1:
     when: op:startGame completes

@@ -4,6 +4,7 @@
 
 import { type ReadWorldObject, type Scene, SvgFile } from '@dxos/diagram';
 import {
+  SceneHandler,
   defaultNodeRegistry,
   diagramLinkElements,
   flattenPath,
@@ -12,24 +13,46 @@ import {
   viewLinkGeometry,
   visibleView,
 } from '@dxos/react-ui-canvas';
+import { canvasRecordOf, isNodeRecord, linkKey, readViews } from '@dxos/react-ui-canvas/headless';
 import { type DiagramConnector, type Link, fromEcho } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 
 import { CanvasLayoutBuilder, readCanvasContent } from './canvas-content.ts';
 import { openScene } from './canvas-document.ts';
-import { canvasRecordOf, isNodeRecord, linkKey, readViews } from './content.ts';
-import { SceneHandler } from './handler.ts';
 
 /** The diagram a canvas's open Layout2D draws, as the command protocol's world objects. */
 export const canvasWorld = (canvas: Canvas.Canvas): ReadWorldObject[] => CanvasLayoutBuilder.read(canvas).scene.objects;
 
-/** How the canvas ends a plain link, in the markers the diagram renderer has at each end: an arrow where it has no match. */
-const connectorOf = ({ connector, ends }: Link): DiagramConnector =>
-  connector ?? {
-    head: ends?.end === 'circle' ? 'arrow' : ends?.end === 'many' ? 'crowsfoot' : (ends?.end ?? 'none'),
-    tail: ends?.start === 'triangle' || ends?.start === 'many' ? 'arrow' : (ends?.start ?? 'none'),
-  };
+/**
+ * How the canvas ends a plain link, in the markers the diagram renderer has at each end: an arrow where it has no match.
+ * The renderer draws a diamond only from a relation, so a diamond at the source becomes aggregation or composition.
+ */
+const connectorOf = ({ connector, ends }: Link): DiagramConnector => {
+  if (connector) {
+    return connector;
+  }
+
+  const head =
+    ends?.end === undefined
+      ? 'none'
+      : ends.end === 'many'
+        ? 'crowsfoot'
+        : ends.end === 'triangle' || ends.end === 'arrow'
+          ? ends.end
+          : 'arrow';
+  switch (ends?.start) {
+    case 'diamond':
+      return { relation: 'aggregation', head };
+    case 'diamond-filled':
+      return { relation: 'composition', head };
+    case 'many':
+    case 'triangle':
+      return { head, tail: 'arrow' };
+    default:
+      return { head, tail: ends?.start ?? 'none' };
+  }
+};
 
 /**
  * The open view as it draws on screen: its links along the routes the canvas engine gives them, since the diagram

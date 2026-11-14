@@ -4,6 +4,7 @@
 
 import React, { Fragment, useMemo } from 'react';
 
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -13,7 +14,7 @@ import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
 import { CodeNamespace } from '../../namespace.ts';
-import { type ApiGroupModel, type EndpointModel, buildApiModel, kindStyle } from '../SpecModel/index.ts';
+import { type ApiGroupModel, type EndpointModel, buildApiModel } from '../SpecModel/index.ts';
 
 const TYPE_TOKEN = /([A-Za-z][\w.]*)/g;
 
@@ -62,7 +63,7 @@ type GroupRowsProps = { group: ApiGroupModel; effects: string[]; types: Readonly
 /** An op is one row; a service is a heading row then one row per method or event, all sharing its effects. */
 const GroupRows = ({ group, effects, types }: GroupRowsProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { icon } = kindStyle(group.kind);
+  const { icon } = SpecModel.kindStyle(group.kind);
   const effectCells = (dim: boolean) =>
     effects.map((effect) => (
       <Layout.Flex key={effect} role='cell' justify='center' align='start' classNames='pt-1'>

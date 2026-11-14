@@ -19,13 +19,13 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
+import { withDialects } from '@dxos/deus/dialect';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as TaskSetView from '@dxos/plugin-tasks/TaskSetView';
-import * as TasksUtil from '@dxos/plugin-tasks/TasksUtil';
 import { useSpace } from '@dxos/react-client/echo';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form, type FormFieldOverride, type FormUpdateMeta, useCreateObject } from '@dxos/react-ui-form';
@@ -49,12 +49,18 @@ import * as Typography from '@dxos/react-ui/Typography';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
-import { ProjectCapabilities, ProjectOperation, ProjectSurface, ProjectView } from '#types';
+import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
-import { useFieldExtensions, useProjectSpecs, useRefTargets, useSelectedSpec } from '../../hooks/index.ts';
+import {
+  useFieldExtensions,
+  useProjectSpecTree,
+  useRefTargets,
+  useSelectedSpec,
+  useSelectSpec,
+} from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
-import * as ProjectGraph from '../../ProjectGraph.ts';
+import { type SpecTreeEntry } from '../../util/spec-tree.ts';
 import { ConfigSection } from './ConfigSection.tsx';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
@@ -69,37 +75,19 @@ const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
 const ARTIFACT_LIMIT = 6;
 
 /** The Specs tab's own view of its spec: the text. */
-const DOCUMENT_VIEW = 'document';
 
 /** The pipeline pane's initial height in rem: a handful of lanes and the axis. */
 const PIPELINE_SIZE = 14;
 
-export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project> &
-  Pick<ProjectSurface.LevelData, 'taskScope' | 'onTaskCreated' | 'onAddSpec'> & {
-    /** The spec the plank shows, as a level of the nav tree names it; the Specs tab's pick when absent. */
-    spec?: Spec.Spec;
-    /** The level another plugin nests beneath a spec, whose breakdown `spec` is; the project's own level when absent. */
-    level?: Obj.Unknown;
-  };
+export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 /**
- * Article surface for a {@link Project}, at one level of its specs: one of the project's specs, or a level another
- * plugin nests beneath one. The tabs keep their meaning at every level and narrow to it. At the project's level, the
- * overview is one form-styled body (header fields, the owned instructions sub-form, the outline, and a card gallery of
- * the project's artifacts), and `Form.Viewport` owns the scroll and gutter so fields stay inset from the panel edges; at
- * a nested level, it is what the nesting plugin renders. Specs is the level's spec, as text or a view other plugins
- * offer, its toolbar picking among the project's specs at the top, and Tasks the tasks the level scopes.
+ * Article surface for a {@link Project}. The overview is one form-styled body (header fields, the owned instructions
+ * sub-form, the outline, and a card gallery of the project's artifacts), and `Form.Viewport` owns the scroll and gutter
+ * so fields stay inset from the panel edges. Specs is one spec, as text or a view other plugins offer, its toolbar
+ * picking among the project's specs and those nested beneath them. Tasks is the project's task set.
  */
-export const ProjectArticle = ({
-  role,
-  subject,
-  attendableId,
-  spec: levelSpec,
-  level,
-  taskScope: scope,
-  onTaskCreated: handleTaskCreated,
-  onAddSpec,
-}: ProjectArticleProps) => {
+export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
@@ -134,29 +122,13 @@ export const ProjectArticle = ({
     [updateTaskView, setTab],
   );
   const settings = useAtomValue(Hooks.useCapability(ProjectCapabilities.Settings));
-  // The level's spec: the selected one of the project's, or the one breaking a nested level down; the Specs tab offers
-  // to add it.
-  const specs = useProjectSpecs(subject);
-  const selectedSpec = useSelectedSpec(subject, level ? undefined : levelSpec);
-  const spec = level ? levelSpec : selectedSpec;
-  // At a spec's own level of the nav tree, picking another spec opens that one's level instead.
-  const selectSpec = useCallback(
-    (next: Spec.Spec) => {
-      updateView((prev) => ({ ...prev, tab: 'spec', spec: next.id }));
-      if (levelSpec && next.id !== levelSpec.id && db) {
-        void invokePromise(LayoutOperation.Open, {
-          subject: [ProjectGraph.getSpecLevelPath(db.spaceId, subject.id, next.id)],
-          pivotId: attendableId,
-          disposition: 'auto',
-        });
-      }
-    },
-    [updateView, levelSpec, db, invokePromise, subject.id, attendableId],
-  );
-  const { view, actions: viewActions } = useSpecViewActions({ spec, viewId: subject.id });
+  // The spec the Specs tab shows: the reader's pick among the project's specs and those nested beneath them.
+  const specTree = useProjectSpecTree(subject);
+  const spec = useSelectedSpec(subject);
+  const selectSpec = useSelectSpec(subject);
   const dialectActions = useSpecPackageActions(spec);
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
-  const { tasks, delegatableTasks, uncheck } = useCheckedTasks(taskSet, scope);
+  const { tasks, delegatableTasks, uncheck } = useCheckedTasks(taskSet);
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -233,30 +205,27 @@ export const ProjectArticle = ({
   }, [subject, attendableId, invokePromise, updateProject, selectSpec]);
 
   const pickerActions = useSpecPickerActions({
-    specs,
-    selected: level ? undefined : spec,
+    specs: specTree,
+    selected: spec,
     onSelect: selectSpec,
     onAdd: () => void handleAddSpec(),
   });
-  // The Specs tab's tools: which spec, its views, and its dialects. A nested level is inside one spec already.
-  const levelActions = useCallback<ActionGroupBuilderFn>(
+  // The Specs tab's tools: which spec, and its dialects.
+  const specActions = useCallback<ActionGroupBuilderFn>(
     (group) => {
-      if (!level) {
-        pickerActions(group);
-      }
+      pickerActions(group);
       if (spec) {
-        viewActions(group);
         dialectActions(group);
       }
     },
-    [level, spec, pickerActions, viewActions, dialectActions],
+    [spec, pickerActions, dialectActions],
   );
 
   const menuActions = useToolbarActions({
     project: subject,
     tab,
     tabs,
-    specActions: spec ? levelActions : undefined,
+    specActions: spec ? specActions : undefined,
     checkedTasks: delegatableTasks,
     showPipeline,
     onDelegated: uncheck,
@@ -384,15 +353,7 @@ export const ProjectArticle = ({
           {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
               hidden for a frame, and the artifact gallery's masonry measures zero there and
               never recovers. The tablist still owns the switching. */}
-          {tab === 'overview' && level && (
-            <Surface.Surface
-              type={ProjectSurface.LevelOverview}
-              data={{ subject: level, project: subject, attendableId }}
-              limit={1}
-            />
-          )}
-
-          {tab === 'overview' && !level && (
+          {tab === 'overview' && (
             <Form.Root
               db={db}
               schema={HeaderValues}
@@ -477,21 +438,13 @@ export const ProjectArticle = ({
           )}
 
           {tab === 'spec' &&
-            spec &&
-            view === DOCUMENT_VIEW && (
-              // A section rather than an article: the spec's own page is for opening it.
+            spec && (
+              // A section rather than an article: the spec's own page is for opening it. Its other views are companions.
               <div className='grid min-h-0 h-full' data-testid='projectsPlugin.spec.document'>
                 <Surface.Surface type={AppSurface.Section} data={{ subject: spec, attendableId }} limit={1} />
               </div>
             )}
-          {tab === 'spec' && spec && view !== DOCUMENT_VIEW && (
-            <Surface.Surface
-              type={ProjectSurface.SpecView}
-              data={{ subject: spec, view, project: subject, level, attendableId }}
-              limit={1}
-            />
-          )}
-          {tab === 'spec' && !spec && <AddSpec nested={!!level} onAdd={onAddSpec ?? (() => void handleAddSpec())} />}
+          {tab === 'spec' && !spec && <AddSpec onAdd={() => void handleAddSpec()} />}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
           {tab === 'tasks' && !taskSet && <Status.Empty>{t('no-task-set.message')}</Status.Empty>}
@@ -513,8 +466,6 @@ export const ProjectArticle = ({
                     subject: taskSet,
                     attendableId,
                     showDescription: settings.showTaskDescriptions ?? false,
-                    scope,
-                    onTaskCreated: handleTaskCreated,
                   }}
                   limit={1}
                 />
@@ -563,14 +514,12 @@ const MilestoneList = ({ refs, tasks, onOpen }: MilestoneListProps) => (
   </Layout.Container>
 );
 
-/** The Specs tab of a level without a spec: the offer to add one. */
-const AddSpec = ({ nested, onAdd }: { nested: boolean; onAdd: () => void }) => {
+/** The Specs tab of a project without a spec: the offer to add one. */
+const AddSpec = ({ onAdd }: { onAdd: () => void }) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   return (
     <Layout.Flex column center gap='sm' classNames='h-full' data-testid='projectsPlugin.spec.empty'>
-      <Status.Empty icon='ph--blueprint--regular'>
-        {t(nested ? 'level-spec.empty.message' : 'spec.empty.message')}
-      </Status.Empty>
+      <Status.Empty icon='ph--blueprint--regular'>{t('spec.empty.message')}</Status.Empty>
       <Button.Root icon='ph--plus--regular' data-testid='projectsPlugin.addSpec' onClick={onAdd}>
         {t('add-spec.label')}
       </Button.Root>
@@ -579,14 +528,17 @@ const AddSpec = ({ nested, onAdd }: { nested: boolean; onAdd: () => void }) => {
 };
 
 type SpecPickerActionsProps = {
-  specs: readonly Spec.Spec[];
+  specs: readonly SpecTreeEntry[];
   /** The spec shown; no picker without one. */
   selected?: Spec.Spec;
   onSelect: (spec: Spec.Spec) => void;
   onAdd: () => void;
 };
 
-/** A dropdown of the project's specs, named after the one shown and checking it, ending in an action to add another. */
+/**
+ * A dropdown of the project's specs, each with the specs nested beneath it indented under it, named after the one shown
+ * and checking it, ending in an action to add another.
+ */
 const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerActionsProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   return useCallback<ActionGroupBuilderFn>(
@@ -608,13 +560,14 @@ const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerAc
           testId: 'projectsPlugin.specPicker',
         },
         (group) => {
-          specs.forEach((spec) =>
+          specs.forEach(({ spec, depth }) =>
             group.action(
               spec.id,
               {
                 label: spec.name || t('untitled-spec.label'),
                 icon: 'ph--blueprint--regular',
                 checked: spec.id === selected.id,
+                indent: depth,
               },
               () => onSelect(spec),
             ),
@@ -637,57 +590,8 @@ const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerAc
 };
 
 /**
- * The Specs tab's view toggle for a host toolbar: the spec's text, then each view other plugins offer for the dialects
- * the spec uses. Offered only when there is more than the text; a view the spec does not offer reads as its text.
- */
-const useSpecViewActions = ({ spec, viewId }: { spec?: Spec.Spec; viewId: string }) => {
-  const contributed = Hooks.useCapabilities(ProjectCapabilities.SpecView);
-  const [dialects] = useObject(spec, 'dialects');
-  const { view: chosen } = useViewState(ProjectView.aspect, viewId);
-  const { update } = useViewStateActions(ProjectView.aspect, viewId);
-  const views = useMemo(
-    () => contributed.filter((view) => view.dialects.every((id) => dialects?.includes(id))),
-    [contributed, dialects],
-  );
-  const view = views.find(({ id }) => id === chosen)?.id ?? DOCUMENT_VIEW;
-  const setView = useCallback((view: string | undefined) => update((prev) => ({ ...prev, view })), [update]);
-  const actions = useCallback<ActionGroupBuilderFn>(
-    (group) => {
-      if (views.length === 0) {
-        return;
-      }
-      group.group(
-        'view',
-        {
-          label: ['spec-view.label', { ns: ProjectsNamespace.key }],
-          variant: 'toggleGroup',
-          selectCardinality: 'single',
-          value: view,
-        },
-        (viewGroup) => {
-          viewGroup.action(
-            DOCUMENT_VIEW,
-            {
-              label: ['spec-view.document.label', { ns: ProjectsNamespace.key }],
-              icon: 'ph--file-text--regular',
-              testId: `projectsPlugin.specView.${DOCUMENT_VIEW}`,
-            },
-            () => setView(undefined),
-          );
-          views.forEach(({ id, label, icon }) =>
-            viewGroup.action(id, { label, icon, testId: `projectsPlugin.specView.${id}` }, () => setView(id)),
-          );
-        },
-      );
-    },
-    [view, views, setView],
-  );
-  return { view, actions };
-};
-
-/**
  * A multi-select of the extension packages plugins offer, checking those whose dialects the spec all uses; checking one
- * adds its dialects, whose views then show, and unchecking removes them.
+ * adds its dialects, whose companion views then show, and unchecking removes them, leaving the base dialects for none.
  */
 const useSpecPackageActions = (spec: Spec.Spec | undefined) => {
   const packages = Hooks.useCapabilities(ProjectCapabilities.SpecPackage);
@@ -696,14 +600,14 @@ const useSpecPackageActions = (spec: Spec.Spec | undefined) => {
     (dialects: readonly string[], checked: boolean) =>
       spec &&
       Obj.update(spec, (spec) => {
-        for (const id of dialects) {
-          const index = spec.dialects.indexOf(id);
-          if (checked && index !== -1) {
+        // One edit per id, so toggles of different packages on two peers merge.
+        const next = withDialects(spec.dialects, dialects, !checked);
+        for (let index = spec.dialects.length - 1; index >= 0; index--) {
+          if (!next.includes(spec.dialects[index])) {
             spec.dialects.splice(index, 1);
-          } else if (!checked && index === -1) {
-            spec.dialects.push(id);
           }
         }
+        next.filter((id) => !spec.dialects.includes(id)).forEach((id) => spec.dialects.push(id));
       }),
     [spec],
   );
@@ -787,7 +691,7 @@ const MilestoneRow = ({
  * neither owns it. Ordered by the tree walk rather than by tick order: what a reader means by
  * "these tasks" is the order they read them in, not the order they happened to tick them.
  */
-const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly string[]) => {
+const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
   const ids = useSelection(taskSet?.id, 'multi');
   const { multi } = useSelectionActions(taskSet?.id);
 
@@ -814,13 +718,7 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
       return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
   }, [taskSet]);
-  const setTasks = useAtomValue(atom);
-  // The level's tasks as its ledger shows them, so a row checked on another level is neither charted nor delegated.
-  const scopeKey = scope?.join(',');
-  const tasks = useMemo(
-    () => (scopeKey === undefined ? setTasks : TasksUtil.withinScope(setTasks, new Set(scopeKey.split(',')))),
-    [setTasks, scopeKey],
-  );
+  const tasks = useAtomValue(atom);
 
   const checkedTasks = useMemo(() => {
     const checked = new Set(ids);
@@ -830,7 +728,7 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
   // A row the agent is already working on is left out rather than handed to a second session.
   const delegatableTasks = useMemo(() => checkedTasks.filter((task) => !Task.isAgentWorking(task)), [checkedTasks]);
 
-  // Only the given rows, since rows checked on another level stay checked while this one shows.
+  // Only the given rows: the others stay checked.
   const uncheck = useCallback(
     (done: readonly Task.Task[]) => {
       const doneIds = new Set(done.map(({ id }) => id));
@@ -840,21 +738,6 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
   );
 
   return { tasks, checkedTasks, delegatableTasks, uncheck };
-};
-
-export type LevelArticleProps = ProjectSurface.LevelData & { role?: string };
-
-/** The project article at a level another plugin nests beneath one of its specs. */
-export const LevelArticle = ({ project, ...props }: LevelArticleProps) => (
-  <ProjectArticle {...props} subject={project} />
-);
-
-export type SpecLevelArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
-
-/** A spec's level of the project owning it: the project article on that spec. */
-export const SpecLevelArticle = ({ subject, ...props }: SpecLevelArticleProps) => {
-  const project = Project.getOwner(subject);
-  return project ? <ProjectArticle {...props} subject={project} spec={subject} /> : null;
 };
 
 export type ToolbarActionsProps = {

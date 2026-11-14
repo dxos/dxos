@@ -170,7 +170,7 @@ const specText = (page) =>
 /** Opens the feature's spec from its article, which opens the Spec object in the deck. */
 const openSpec = async (demo, page) => {
   await demo.click({ selector: '[data-testid="projectsPlugin.tab.features"] >> nth=0', label: 'Features' });
-  await demo.click({ selector: '[data-testid="projectsPlugin.featureMap.kanban"] >> nth=0', label: 'Kanban' });
+  await demo.click({ selector: '[data-testid="spec-companion.view.kanban"] >> nth=0', label: 'Board' });
   const card = page.locator(`[data-testid="feature-card"]:has-text("${FEATURE}")`).first();
   await card.waitFor({ state: 'visible', timeout: 15_000 });
   await demo.click({

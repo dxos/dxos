@@ -364,6 +364,7 @@ component GeometryField
 
 ```mdl
 feat F-10: One editor, configured per dimension
+  uses: [DimensionConfig, org.dxos.scene]
   req F-10.1: Both dimensions render `SceneEditor` over the same document types; the dimension's `DimensionConfig`
     supplies the dimension's aspects and viewport, tools, geometry, display options, property form, sections,
     animatable fields and extra commands, and nothing else differs.
@@ -379,6 +380,7 @@ feat F-10: One editor, configured per dimension
 
 ```mdl
 feat F-11: Edits are intents
+  uses: [org.dxos.scene]
   req F-11.1: A gesture — drag, resize, rotate, orbit, drag-to-create — runs in memory and commits one intent on
     release, in both dimensions; while it runs, the in-flight intent is the store's `preview`, drawn and not written.
   req F-11.2: The editor writes a layout only through `onIntent` and a model only through `onModelIntent`; a model
@@ -391,6 +393,7 @@ feat F-11: Edits are intents
 
 ```mdl
 feat F-12: Selection and tools
+  uses: [DimensionConfig, org.dxos.scene]
   req F-12.1: Elements and links are selected together in one set of ids of the open layout; Delete removes the
     selection (the viewport's own key, since it knows a face from an element).
   req F-12.2: The rail groups tools alike in both dimensions: the select tools (Select, the hand), the transform
@@ -411,6 +414,7 @@ feat F-12: Selection and tools
 
 ```mdl
 feat F-13: Commands and the context menu
+  uses: [org.dxos.scene]
   req F-13.1: One command table serves the actions bar, the context menu, the shortcuts and the app: Cut, Copy,
     Paste, Duplicate, Group, Ungroup, Make object, Delete, Undo and Redo, then the dimension's extras.
   req F-13.2: Right-clicking the view or a selection opens the shared menu with the commands that apply there and
@@ -423,6 +427,7 @@ feat F-13: Commands and the context menu
 
 ```mdl
 feat F-14: Undo and the clipboard
+  uses: [org.dxos.scene]
   req F-14.1: Every edit is one undo step, recorded by the root: a layout edit as field-level inverse patches, a
     model edit as the document before and after it.
   req F-14.2: Undo writes a field back only while it still holds the value the step wrote; a field a peer changed
@@ -439,6 +444,7 @@ feat F-14: Undo and the clipboard
 
 ```mdl
 feat F-15: Display, snapping and axes
+  uses: [org.dxos.scene]
   req F-15.1: The display panel's choices are the viewer's view state: the look (a default style catalog), the grid,
     snapping, the axes and the dimension's guides.
   req F-15.2: Snapping moves, turns and scales by the config's steps; holding Alt frees one gesture.
@@ -451,6 +457,7 @@ feat F-15: Display, snapping and axes
 
 ```mdl
 feat F-16: The lock and roles
+  uses: [org.dxos.scene]
   req F-16.1: Only the article edits a scene (the role `article`, a namespaced `….article`, or no role); a card,
     section or slide draws the viewport alone as a picture of the authored view, with no chrome.
   req F-16.2: One read-only lock per canvas, shared by both dimensions and toggled on the rail; locked, only the
@@ -459,6 +466,7 @@ feat F-16: The lock and roles
 
 ```mdl
 feat F-17: Camera
+  uses: [org.dxos.scene]
   req F-17.1: The camera bar moves this viewer's camera, never the scene's authored camera
     ([org.dxos.scene#D-47]).
   req F-17.2: Fit frames the open layout's elements; actual size takes the authored camera's scale, centred on the
@@ -469,6 +477,7 @@ feat F-17: Camera
 
 ```mdl
 feat F-18: Panels and inspectors
+  uses: [org.dxos.scene]
   req F-18.1: The panels float over the viewport in the same places in both dimensions: the breadcrumbs top left,
     the rail at the left below them, the actions bar at the bottom centre with the Timeline above it, the camera bar bottom left, the display panel bottom
     right.
@@ -489,6 +498,7 @@ feat F-18: Panels and inspectors
 
 ```mdl
 feat F-19: Styles
+  uses: [org.dxos.scene]
   req F-19.1: An element names a style by `style` and carries its own `overrides`; its look resolves nearest first,
     field by field: overrides, the layout's override of the style, the model's definition, each catalog in order,
     then the look's default catalog ([org.dxos.scene#D-92]).

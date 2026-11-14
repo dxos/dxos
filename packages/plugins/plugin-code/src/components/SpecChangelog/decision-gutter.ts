@@ -5,7 +5,7 @@
 import { type EditorState, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 
-import { type DecisionModel, type QuestionModel, githubAvatarUrl } from '../ChangelogGraph/index.ts';
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
 
 /** A block declaration line, `feat F-1: …` or `  req F-1.2: …`, captured as its id. */
 const BLOCK_DECLARATION = /^\s*[a-z]+\s+([A-Za-z][\w.-]*)\s*:/;
@@ -20,7 +20,7 @@ const CHIP_CLASSES = {
 const QUESTION_CHIP_CLASSES = 'border border-warning-border text-warning-fg';
 
 /** A changelog entry that can annotate a block: a decision, or a question about it. */
-export type GutterItem = DecisionModel | QuestionModel;
+export type GutterItem = SpecModel.DecisionModel | SpecModel.QuestionModel;
 
 /** Struck through: a decision something replaced, or a question that has its answer. */
 const isSettled = (item: GutterItem): boolean =>
@@ -66,7 +66,7 @@ class DecisionsWidget extends WidgetType {
         question ? QUESTION_CHIP_CLASSES : actor ? CHIP_CLASSES[actor] : '',
         isSettled(item) ? 'line-through opacity-60' : '',
       ].join(' ');
-      const avatar = actor === 'user' && handle ? githubAvatarUrl(handle) : undefined;
+      const avatar = actor === 'user' && handle ? SpecModel.githubAvatarUrl(handle) : undefined;
       if (avatar) {
         const image = document.createElement('img');
         image.src = avatar;

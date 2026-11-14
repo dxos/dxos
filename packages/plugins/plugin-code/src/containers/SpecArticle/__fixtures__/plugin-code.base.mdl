@@ -392,6 +392,7 @@ type CoderSkill
 
 ```mdl
 feat F-1: Rename plugin-spec → plugin-code
+  uses: [CodeArticle, Spec, SpecArticle]
 
   req F-1.1: Package renamed `@dxos/plugin-spec` → `@dxos/plugin-code`.
   req F-1.2: Directory renamed `packages/plugins/plugin-spec` → `packages/plugins/plugin-code`.
@@ -405,6 +406,7 @@ feat F-1: Rename plugin-spec → plugin-code
 
 ```mdl
 feat F-2: CodeProject type
+  uses: [CodeProject, Spec]
 
   req F-2.1: New ECHO type `CodeProject` with typename `org.dxos.type.codeProject`.
   req F-2.2: Fields `name?: string`, `spec: Ref<Spec>`; both reactive.
@@ -416,6 +418,7 @@ feat F-2: CodeProject type
 
 ```mdl
 feat F-3: CodeArticle uses react-ui-editor
+  uses: [CodeArticle, Spec]
 
   req F-3.1: CodeArticle uses `Editor.Root` + `Editor.Toolbar` + `Editor.Content`
              from `@dxos/react-ui-editor` instead of a bespoke `useTextEditor` setup.
@@ -436,6 +439,7 @@ feat F-3: CodeArticle uses react-ui-editor
 
 ```mdl
 feat F-4: Settings + credentials
+  uses: [CodeSettings, Settings]
 
   req F-4.1: `Settings` schema mutable, with optional `endpoint: string`.
   req F-4.2: Settings registered via `AppPlugin.addSettingsModule`.
@@ -452,6 +456,7 @@ feat F-4: Settings + credentials
 
 ```mdl
 feat F-5: Coder skill
+  uses: [runBuildAgent, verifySpec]
 
   req F-5.1: A skill with key `org.dxos.skill.coder` is contributed
              via `addSkillDefinitionModule`.
@@ -462,6 +467,7 @@ feat F-5: Coder skill
 
 ```mdl
 feat F-6: Stub operations
+  uses: [runBuildAgent, verifySpec]
 
   req F-6.1: op:verifySpec defined and handler returns `{ ok: true, messages: [] }`.
   req F-6.2: op:runBuildAgent defined and handler returns `{ status: "queued" }`.
@@ -471,6 +477,7 @@ feat F-6: Stub operations
 
 ```mdl
 feat F-7: Source files in ECHO
+  uses: [CodeProject, SourceFile]
 
   req F-7.1: New ECHO type SourceFile with typename `org.dxos.type.sourceFile`.
   req F-7.2: CodeProject extended with optional `files: Ref<SourceFile>[]`.
@@ -486,6 +493,7 @@ feat F-7: Source files in ECHO
 
 ```mdl
 feat F-8: File CRUD operations
+  uses: [CoderSkill, deleteFile, listFiles, readFile, scaffoldProject, writeFile]
 
   req F-8.1: op:listFiles returns the project's files sorted by path.
   req F-8.2: op:readFile resolves a file by exact-path match and returns its content.
@@ -501,6 +509,7 @@ feat F-8: File CRUD operations
 
 ```mdl
 feat F-9: CodeArticle file tree + editor
+  uses: [CodeArticle, FileTree, SourceFile, writeFile]
 
   req F-9.1: CodeArticle renders a two-pane layout: FileTree on the left,
              editor on the right.
@@ -522,6 +531,7 @@ feat F-9: CodeArticle file tree + editor
 
 ```mdl
 feat F-10: Coder integrates introspect-mcp
+  uses: [CoderSkill]
 
   req F-10.1: CoderSkill declares a remote MCP server entry pointing at the
               introspect-mcp HTTP endpoint.
@@ -536,6 +546,7 @@ feat F-10: Coder integrates introspect-mcp
 
 ```mdl
 feat F-11: Sanity + reset operations
+  uses: [CoderSkill, FileTree, helloWorld, resetProject, SourceFile]
 
   req F-11.1: op:helloWorld writes (or overwrites) `src/hello.ts` containing a
               minimal Hello World program; idempotent.
@@ -555,6 +566,7 @@ feat F-11: Sanity + reset operations
 
 ```mdl
 feat F-12a: Local build & run — single-file entry
+  uses: [buildProject, CodeArticle, CodeProject, CoderSkill, runBuild]
 
   req F-12a.1: A `Compiler` module wraps `@typescript/vfs`'s virtual TS
                environment. lib.d.ts files are fetched lazily from the
@@ -596,6 +608,7 @@ feat F-12a: Local build & run — single-file entry
 
 ```mdl
 feat F-12b: Local build & run — multi-file bundling
+  uses: [buildProject, runBuild, SourceFile]
 
   req F-12b.1: `esbuild-wasm` is added as a workspace catalog dependency.
                Esbuild is initialized lazily on first multi-file build; the

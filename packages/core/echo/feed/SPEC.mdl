@@ -104,6 +104,7 @@ table trimmed_blocks: One block deleted by retention whose index rows are not re
 
 ```mdl
 feat F-1: Options in the feed store
+  uses: [blocks, feeds, FeedStore]
 
   req F-1.1:
     when: FeedStore.setFeedOptions({ spaceId, feedId, namespace, indexing, retention }) is called
@@ -131,6 +132,7 @@ feat F-1: Options in the feed store
 
 ```mdl
 feat F-2: Retention
+  uses: [blocks, trimmed_blocks]
 
   req F-2.1:
     when: a feed has retention.maxLength = N

@@ -9,8 +9,11 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
+import { fileURLToPath } from 'node:url';
 
+import { dialectBlockTypes, fileDialects } from '../dialect/resolve.ts';
 import { lintMdl } from '../extension/check.ts';
+import { frontmatter } from '../spec-index/parse.ts';
 import { LintError } from './errors.ts';
 import { git } from './git.ts';
 import { buildSpecIndex } from './spec-index.ts';
@@ -19,9 +22,32 @@ const INDEXED_CHECKS = ['mdl/ref', 'mdl/uses'];
 
 export type LintOptions = {
   files: readonly string[];
-  /** Keep one check, e.g. `mdl/decision`; the block-type check still knows only the built-in types. */
+  /** Keep one check, e.g. `mdl/decision`. */
   only: Option.Option<string>;
 };
+
+/**
+ * The dialects in `lang/`, by frontmatter id: those a bundle inlines, else, run from source under node, which cannot
+ * import them, read from disk.
+ */
+const langDialects = Effect.fnUntraced(function* () {
+  const bundled = yield* Effect.promise(() =>
+    import('../dialect/bundled.ts').catch((error) => {
+      if (error?.code === 'ERR_UNKNOWN_FILE_EXTENSION') {
+        return undefined;
+      }
+      throw error;
+    }),
+  );
+  if (bundled) {
+    return bundled.default;
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const dir = fileURLToPath(new URL('../../lang/', import.meta.url));
+  const names = (yield* fs.readDirectory(dir)).filter((name) => name.endsWith('.mdl') && !name.includes('template'));
+  const texts = yield* Effect.forEach(names, (name) => fs.readFileString(`${dir}${name}`));
+  return new Map(texts.map((text) => [frontmatter(text).id, text] as const));
+});
 
 /** Lints .mdl files with the checks the editor runs; fails when any diagnostic is an error. */
 export const lintFiles = Effect.fnUntraced(function* ({ files, only }: LintOptions) {
@@ -41,11 +67,13 @@ export const lintFiles = Effect.fnUntraced(function* ({ files, only }: LintOptio
     yield* Console.log('warning: not inside a git checkout; the mdl/ref and mdl/uses checks were skipped.');
   }
   const index = root === undefined ? undefined : yield* buildSpecIndex(root);
+  const dialects = yield* langDialects();
   let errors = 0;
   for (const file of files) {
     const text = yield* fs.readFileString(file);
     for (const { from, severity, source, message } of lintMdl(text, {
       index: file.endsWith('.review.mdl') ? undefined : index,
+      types: dialectBlockTypes(fileDialects(text, dialects), dialects),
     })) {
       if (Option.isSome(only) && source !== only.value) {
         continue;

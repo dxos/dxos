@@ -33,6 +33,7 @@ type Greeting
 
 ```mdl
 feat F-1: Greeting endpoint
+  uses: [Greeting]
   desc: One fetch handler, with no router, dependencies or build step beyond wrangler's own.
 
   req F-1.1: Every request, whatever its method or path, is answered with `type:Greeting` as JSON.

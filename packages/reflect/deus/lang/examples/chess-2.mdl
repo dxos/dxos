@@ -114,6 +114,7 @@ component Gameboard
 
 ```mdl
 feat F-3: Lobby
+  uses: [Game, Gameboard, Lobby, Player]
 
   req F-3.1: Player sees list of open games on entering the Lobby.
   req F-3.2:
@@ -131,6 +132,7 @@ feat F-3: Lobby
 
 ```mdl
 feat F-4: Gameboard
+  uses: [Game, Gameboard]
 
   req F-4.1:
     when: player selects a square containing their piece
