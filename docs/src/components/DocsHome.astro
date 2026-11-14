@@ -41,6 +41,11 @@ const cards = SUITE_ORDER.map((id) => {
 </ul>
 
 <style>
+  /* The title panel's padding already separates the title from the intro [D-320]. */
+  :global(.content-panel:has(.docs-home)) {
+    padding-top: 0;
+  }
+
   .docs-home {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
