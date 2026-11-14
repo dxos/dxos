@@ -13,7 +13,8 @@
 //   [DISCORD_CLOSED_ONTOLOGY=1]
 //   [DISCORD_LIST_FACTS=1] [DX_ANTHROPIC_API_KEY=…]  moon run plugin-discord:crawl-export
 //
-// The export dir default is unset in CI (runInCI: false); without it the test skips.
+// It writes to persistent databases, so it runs only from its moon task (which sets DISCORD_CRAWL_EXPORT), never as
+// part of the package's test suite.
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import type * as ConfigError from 'effect/Config';
@@ -48,7 +49,7 @@ const dumpFacts = Boolean(process.env.DISCORD_LIST_FACTS);
 const useRealLlm = Boolean(process.env.DX_ANTHROPIC_API_KEY);
 
 describe('crawl export', () => {
-  test.skipIf(!dir)(
+  test.skipIf(!process.env.DISCORD_CRAWL_EXPORT || !dir)(
     'runs the basic pipeline over an exported corpus into the SQLite working set',
     async ({ expect }) => {
       // SQLite creates the file but not its directory, and a configured location may not exist yet.

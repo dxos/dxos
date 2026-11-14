@@ -45,6 +45,8 @@ tasks:
   # `moon run plugin-discord:crawl-export`. Set DX_ANTHROPIC_API_KEY for the LLM extractor. See the test header.
   crawl-export:
     command: 'pnpm exec vitest run src/testing/crawl-export.test.ts'
+    env:
+      DISCORD_CRAWL_EXPORT: '1'
     options:
       runInCI: false
       cache: false
