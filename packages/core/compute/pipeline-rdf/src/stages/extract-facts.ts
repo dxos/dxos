@@ -32,6 +32,7 @@ import {
   Graph,
   type KnownEntity,
   Ontology,
+  Vocabularies,
 } from '../types/index.ts';
 
 const EMAIL = /^(?:mailto:)?([^\s@]+@[^\s@]+\.[^\s@]+)$/i;
@@ -116,7 +117,7 @@ const factContext = (options: ExtractOptions | undefined) =>
     const recordedAt = new Date(yield* Clock.currentTimeMillis).toISOString();
     return {
       recordedAt,
-      ontology: options?.ontology ?? Ontology.DEFAULT,
+      ontology: options?.ontology ?? Vocabularies.DEFAULT,
       closed: options?.closed ?? false,
       known: indexEntities(options?.entities ?? []),
     } satisfies FactContext;
@@ -420,7 +421,7 @@ export const extractFactsStage = (
  * The ontology a stage extracts with, grown by the predicates each document mints, so the next document is shown
  * them and reuses them instead of minting a variant. It lives as long as the stage.
  */
-export const growingOntology = (initial: Ontology.Ontology = Ontology.DEFAULT) => {
+export const growingOntology = (initial: Ontology.Ontology = Vocabularies.DEFAULT) => {
   let ontology = initial;
   return {
     current: () => ontology,

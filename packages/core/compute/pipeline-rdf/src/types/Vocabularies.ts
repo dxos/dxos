@@ -173,7 +173,14 @@ export const compose = (packs: ReadonlyArray<Pack>, base: Ontology.Ontology = On
   base.include(packs.flatMap(({ entries }) => entries));
 
 /**
- * The packs a comma-separated list of ids names (`schema,foaf,sioc`; `all` for every pack).
+ * The ontology extraction uses when the caller names none: the seed plus every pack, so facts land on
+ * published predicates (schema.org, FOAF, …) rather than freshly minted ones.
+ */
+export const DEFAULT: Ontology.Ontology = compose(ALL);
+
+/**
+ * The packs a comma-separated list of ids names (`schema,foaf,sioc`; `all` for every pack; `none` for
+ * the bare seed).
  * @throws Error naming an unknown id.
  */
 export const parse = (ids: string): Pack[] => {
@@ -183,6 +190,9 @@ export const parse = (ids: string): Pack[] => {
     .filter((id) => id.length > 0);
   if (names.includes('all')) {
     return [...ALL];
+  }
+  if (names.includes('none')) {
+    return [];
   }
   return names.map((id) => {
     const found = get(id);

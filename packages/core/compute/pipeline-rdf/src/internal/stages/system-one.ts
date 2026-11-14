@@ -22,6 +22,7 @@ import {
   type KnownEntity,
   Ontology,
   type SystemOneThresholds,
+  Vocabularies,
 } from '../../types/index.ts';
 import { chunk } from './chunk.ts';
 import { type ExtractedFact, extractChunk } from './extract.ts';
@@ -484,7 +485,7 @@ export const extractSystemOne = (
     const thresholds = { ...DEFAULT_THRESHOLDS, ...systemOne?.thresholds };
     const counters: Counters = { dropped: 0, extractionTokens: 0, decisionTokens: 0, reasons: {} };
     const context = {
-      predicates: predicateChoices(options?.ontology ?? Ontology.DEFAULT),
+      predicates: predicateChoices(options?.ontology ?? Vocabularies.DEFAULT),
       entities: entityChoices(options?.entities ?? []),
       thresholds,
       closed: options?.closed ?? false,

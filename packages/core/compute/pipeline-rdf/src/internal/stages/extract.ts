@@ -22,6 +22,7 @@ import {
   FactualityValue,
   type KnownEntity,
   Ontology,
+  Vocabularies,
 } from '../../types/index.ts';
 
 export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-5-5.default';
@@ -191,7 +192,7 @@ export const buildExtractionPrompt = (options?: ExtractOptions): string => {
   const rules = [...DEFAULT_EXTRACTION_RULES, ...(options?.rules ?? [])];
   return [
     `${BASE_PROMPT}\nRules:\n${rules.map((rule, index) => `${index + 1}. ${rule}`).join('\n')}`,
-    predicateSection(options?.ontology ?? Ontology.DEFAULT, { closed: options?.closed }),
+    predicateSection(options?.ontology ?? Vocabularies.DEFAULT, { closed: options?.closed }),
     ...(options?.entities?.length ? [entitySection(options.entities)] : []),
   ].join('\n\n');
 };

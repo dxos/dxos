@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { buildExtractionPrompt } from '../internal/stages/extract.ts';
 import * as Ontology from './Ontology.ts';
 import * as Vocab from './Vocab.ts';
 import * as Vocabularies from './Vocabularies.ts';
@@ -31,5 +32,18 @@ describe('Vocabularies', () => {
     expect(Vocabularies.parse('schema, sioc').map(({ id }) => id)).toEqual(['schema', 'sioc']);
     expect(Vocabularies.parse('all')).toHaveLength(Vocabularies.ALL.length);
     expect(() => Vocabularies.parse('nope')).toThrow(/Unknown vocabulary/);
+  });
+
+  test('parse("none") names no pack, so composing it gives the bare seed', () => {
+    expect(Vocabularies.parse('none')).toEqual([]);
+    expect(Vocabularies.compose(Vocabularies.parse('none')).entries).toHaveLength(Ontology.DEFAULT.entries.length);
+  });
+
+  test('extraction defaults to every pack on top of the seed', () => {
+    expect(Vocabularies.DEFAULT.entries).toHaveLength(Vocabularies.compose(Vocabularies.ALL).entries.length);
+    expect(Vocabularies.DEFAULT.find('replies to')?.iri).toBe(`${Vocab.SIOC}reply_of`);
+    // A pack predicate reaches the model's prompt only through the default ontology.
+    expect(buildExtractionPrompt()).toContain('reply to');
+    expect(buildExtractionPrompt({ ontology: Ontology.DEFAULT })).not.toContain('reply to');
   });
 });
