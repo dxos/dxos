@@ -6590,6 +6590,15 @@ decision D-316: Pages lay out under Safari's status bar and collapsed toolbar (`
   why: On iPad, scrolling collapsed Safari's toolbar and the page scrolled through the strip above the header.
 ```
 
+```mdl
+decision D-317: An embedded story's frame contains the story's fixed-position layout with a transform rather than layout containment.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-12, F-21]
+  why: Safari lays fixed descendants out inside layout containment but composites them against the viewport, so after a scroll the Canvas, Markdown editor, Force graph and Map cards stayed black or blank on iPad.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

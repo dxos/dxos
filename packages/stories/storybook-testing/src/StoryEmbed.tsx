@@ -54,12 +54,13 @@ export type RootProps = ThemedClassName<{
 }>;
 
 /**
- * Renders a composed story in place. Story layouts are `fixed inset-0`; layout containment makes them fill this
- * element instead of the viewport, and it needs a height from its container.
+ * Renders a composed story in place. Story layouts are `fixed inset-0`; a transform makes them fill this element
+ * instead of the viewport, and it needs a height from its container. Safari lays them out inside layout containment
+ * but composites them against the viewport, so after a scroll it leaves them blank or black.
  */
 export const Root = ({ story: Story, args, shared, classNames }: RootProps) => {
   const content = (
-    <div className={mx('relative overflow-hidden contain-layout', classNames)}>
+    <div className={mx('relative overflow-hidden [transform:translateZ(0)]', classNames)}>
       <Story {...args} />
     </div>
   );
