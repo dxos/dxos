@@ -262,6 +262,7 @@
       "@dxos/plugin-assistant",
       "@dxos/plugin-atproto",
       "@dxos/plugin-attention",
+      "@dxos/plugin-autocue",
       "@dxos/plugin-blogger",
       "@dxos/plugin-bluesky",
       "@dxos/plugin-board",

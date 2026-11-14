@@ -7,6 +7,7 @@
 
 export { type FormatId, FORMATS, FPS, SPOT_SECONDS, TIMING } from './brand.ts';
 export { ComposerIntro } from './ComposerIntro.tsx';
+export { IdentPlayer, type IdentPlayerProps } from './IdentPlayer.tsx';
 export { loadBrandFont } from './fonts.ts';
 export { PROVOCATIONS } from './provocations.ts';
 export { EndOnly, OpenOnly, Spot10, Spot30 } from './Spots.tsx';
