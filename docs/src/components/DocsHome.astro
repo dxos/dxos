@@ -68,13 +68,16 @@ const cards = SUITE_ORDER.map((id) => {
     }
   }
 
+  /* A card's ground is a step off the page's, in the art as around it, so the card stands off without a border. */
   a {
+    --card-ground: color-mix(in oklab, var(--c-bg), var(--c-fg) 4%);
+    --dx-bg-fill: var(--card-ground);
     display: flex;
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    border-radius: 0;
-    background: rgb(29, 31, 32);
+    border-radius: 0.5rem;
+    background: var(--card-ground);
     color: inherit;
     text-decoration: none;
   }
@@ -84,15 +87,6 @@ const cards = SUITE_ORDER.map((id) => {
     outline-color: var(--card-color);
   }
 
-  /* The art's lines take the drawing's text color, so a card pointed at or focused shows it by deepening them. */
-  .art :global(svg) {
-    color: var(--card-color);
-  }
-
-  /* Deeper on the dark ground is more color at the same lightness: a darker line would sink into the ground. */
-  a:is(:hover, :focus-visible) .art :global(svg) {
-    color: oklch(from var(--card-color) l calc(c * 2) h);
-  }
 
   .art {
     aspect-ratio: 16 / 10;
@@ -152,16 +146,9 @@ const cards = SUITE_ORDER.map((id) => {
     color: rgb(255 255 255 / 0.7);
   }
 
-  /* Light: the art's ground is the page's own, as on the Overview heroes [D-253]; the rays keep the section's color. */
+  /* Light: the mark is drawn in the page's text color, as on the Overview heroes [D-253]; the rays keep the section's. */
   :global(:root[data-theme='light']) a {
-    --dx-bg-fill: var(--c-bg);
     --dx-bg-icon: var(--c-fg);
-    background: var(--c-bg);
-  }
-
-  /* On the light ground there is room below, so the line goes darker as well. */
-  :global(:root[data-theme='light']) a:is(:hover, :focus-visible) .art :global(svg) {
-    color: oklch(from var(--card-color) calc(l * 0.75) calc(c * 1.5) h);
   }
 
   :global(:root[data-theme='light']) .name {
@@ -172,9 +159,16 @@ const cards = SUITE_ORDER.map((id) => {
     color: var(--c-muted);
   }
 
+  /* A card pointed at or focused flickers: its rays dim once and come back, and the mark stays lit. */
   @media (prefers-reduced-motion: no-preference) {
-    .art :global(svg) {
-      transition: color 0.3s;
+    a:is(:hover, :focus-visible) .art :global(#lines) {
+      animation: docs-home-flicker 0.2s ease-in-out;
+    }
+  }
+
+  @keyframes docs-home-flicker {
+    35% {
+      opacity: 0.2;
     }
   }
 </style>
