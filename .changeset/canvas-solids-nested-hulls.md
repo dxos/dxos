@@ -17,3 +17,5 @@ The context menu opened on a link's end leads with that end's marker (None, Arro
 Breaking: the actions bar no longer has a create menu, and `EditorTools.commands.create` is removed; a shape is made with its tool or dragged from the tools panel.
 
 The rules between the groups of the editor's horizontal bars (camera, actions, display) run from edge to edge, as the tool palette's do (`FLOATING_BAR_RULE`); before, each was half a control tall.
+
+A link's end may draw `many`, a crow's foot (`Marker` in `@dxos/scene`): two toes spread from the line onto the connection point (`MANY_SPREAD`), the line running on between them. It is offered beside the other markers, with its icon (`px--line-many--regular`). A diagram connector's crow's foot now reads as `many`, where it read as an arrow, and a `many` end exports as the diagram renderer's crow's foot at a target; at a source, which the renderer has none for, as an arrow.

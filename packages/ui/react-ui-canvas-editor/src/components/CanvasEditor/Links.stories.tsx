@@ -270,6 +270,7 @@ export const EndMarkerTest: Story = {
     await waitFor(() => expect(glyph('arrow')).toBe('#px--line-arrow--regular'));
     await waitFor(() => expect(glyph('circle')).toBe('#px--line-circle--regular'));
     await waitFor(() => expect(glyph('triangle')).toBe('#px--line-triangle--regular'));
+    await waitFor(() => expect(glyph('many')).toBe('#px--line-many--regular'));
     await expect(marker(link())).toBe('');
 
     // 2. By keyboard, since the menu ignores the synthetic pointer events a test can send.

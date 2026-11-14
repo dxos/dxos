@@ -97,6 +97,17 @@ describe('marker ends', () => {
     const circle = markerFrame('circle', 16, 2);
     expect(markerTrim('circle', 16, 2, { width: 8, round: true })).toBeCloseTo(circle.size * (4 / 10) + 1);
   });
+
+  test("a crow's foot's toes reach the anchor, and the line runs on between them", ({ expect }) => {
+    for (const stroke of [1, 2, 6]) {
+      const many = markerFrame('many', 16, stroke);
+      // The toes end at 10 view units; their round caps reach half a stroke past, to the anchor.
+      expect((many.refX - 10) * (many.size / many.view)).toBeCloseTo(stroke / 2);
+      expect(many.size).toBe(markerFrame('arrow', 16, stroke).size);
+    }
+    expect(markerTrim('many', 16, 2, { width: 8, round: false })).toBe(0);
+    expect(markerTrim('many', 16, 2, { width: 8, round: true })).toBe(0);
+  });
 });
 
 describe('groove heads', () => {
@@ -127,6 +138,26 @@ describe('groove heads', () => {
     expect(head).toContain('A 12 12');
     expect(head.startsWith('M 72 0')).toBe(true);
     expect(100 - grooveTrim('circle', 8, 16)).toBeCloseTo(72);
+  });
+
+  test("a crow's foot opens onto the end: its toes are there, its vertex back along the route, and the track runs on", ({
+    expect,
+  }) => {
+    const head = grooveHeads('M 0 0 L 100 0', { end: 'many' }, 8, 16);
+    const [upper, vertex, lower] = corners(head.outline);
+    // The toes' caps, half the channel out, reach the end; the vertex is a head's length back, on the route.
+    expect(upper.x + 4).toBeCloseTo(100);
+    expect(lower.x).toBeCloseTo(upper.x);
+    expect(upper.y).toBeCloseTo(-lower.y);
+    // Each toe spreads three quarters of the foot's length from the route.
+    expect(Math.abs(upper.y)).toBeCloseTo((upper.x - vertex.x) * 0.75);
+    expect(vertex.y).toBeCloseTo(0);
+    expect(vertex.x).toBeLessThan(upper.x);
+    expect(head.hollow).toBe('');
+    expect(grooveTrim('many', 8, 16)).toBeCloseTo(4);
+    // At a start, the toes are at the route's first point.
+    const [first] = corners(grooveHeads('M 0 0 L 0 100', { start: 'many' }, 8, 16).outline);
+    expect(first.y).toBeCloseTo(4);
   });
 
   test('a degenerate route draws no heads', ({ expect }) => {

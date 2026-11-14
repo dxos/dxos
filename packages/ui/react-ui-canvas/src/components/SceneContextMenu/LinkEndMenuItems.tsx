@@ -22,6 +22,7 @@ export const MARKER_ITEMS: readonly { value: string; label: string; icon: string
   { value: 'arrow', label: 'Arrow', icon: 'px--line-arrow--regular' },
   { value: 'circle', label: 'Circle', icon: 'px--line-circle--regular' },
   { value: 'triangle', label: 'Triangle', icon: 'px--line-triangle--regular' },
+  { value: 'many', label: 'Many', icon: 'px--line-many--regular' },
 ];
 
 const isMarker = Schema.is(Marker);

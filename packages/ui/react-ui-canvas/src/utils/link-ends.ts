@@ -19,6 +19,12 @@ const HALF_ANGLE = Math.atan2(5, 10);
 const SIN = Math.sin(HALF_ANGLE);
 const TAN = Math.tan(HALF_ANGLE);
 
+/**
+ * How far each toe of a crow's foot spreads from the line, as a share of the foot's length: wider than an arrow's
+ * arms, so the toes stay apart at a heavy line's width.
+ */
+export const MANY_SPREAD = 0.75;
+
 /** How far a mitred tip of a stroke `width` wide reaches past its vertex. */
 const miter = (width: number) => width / 2 / SIN;
 
@@ -43,12 +49,18 @@ export const markerFrame = (marker: Marker, box: number, stroke: number): Marker
       const size = (box * 10) / 8;
       return { size, view: 10, refX: 9 + stroke / 2 / (size / 10), refY: 5 };
     }
+    case 'many': {
+      // The toes' round caps reach the anchor, where an arrow's tip does.
+      const size = (box * 12) / 10;
+      return { size, view: 12, refX: 10 + stroke / 2 / (size / 12), refY: 5 };
+    }
   }
 };
 
 /**
  * How far back from the anchor the line stops under an end drawn as a marker: inside the arrow's arms, where its edges
- * meet them; at the triangle's base and the circle's centre, which their canvas fill covers.
+ * meet them; at the triangle's base and the circle's centre, which their canvas fill covers. A crow's foot is toes
+ * beside the line, which runs on to the anchor between them.
  */
 export const markerTrim = (marker: Marker, box: number, stroke: number, shaft: ShaftStroke): number => {
   const { size } = markerFrame(marker, box, stroke);
@@ -59,12 +71,14 @@ export const markerTrim = (marker: Marker, box: number, stroke: number, shaft: S
       return miter(stroke) + (size / 12) * 10;
     case 'circle':
       return (size / 10) * 4 + stroke / 2;
+    case 'many':
+      return 0;
   }
 };
 
 /** A groove head's length for an end `size` long, at least a few channels so it reads as a head. */
 const grooveLength = (marker: Marker, width: number, size: number) =>
-  marker === 'arrow'
+  marker === 'arrow' || marker === 'many'
     ? Math.max(size, width * 2.5)
     : marker === 'triangle'
       ? Math.max(size * 1.25, width * 4)
@@ -72,7 +86,8 @@ const grooveLength = (marker: Marker, width: number, size: number) =>
 
 /**
  * How far back from the anchor a groove's track stops under its head, where the head's channel covers its round cap:
- * at the arrow's vertex, the triangle's base and the ring's near side.
+ * at the arrow's vertex, the triangle's base and the ring's near side. Between a crow's foot's toes it runs on, its
+ * cap reaching the route's end as theirs do.
  */
 export const grooveTrim = (marker: Marker, width: number, size: number): number => {
   const length = grooveLength(marker, width, size);
@@ -83,6 +98,8 @@ export const grooveTrim = (marker: Marker, width: number, size: number): number 
       return miter(width) + length;
     case 'circle':
       return length * 2 + width / 2;
+    case 'many':
+      return width / 2;
   }
 };
 
@@ -112,7 +129,8 @@ export type GrooveHeads = {
 
 /**
  * The groove heads for a link's ends: an open chevron for `arrow`, a hollow triangle and a ring for `triangle` and
- * `circle`. A pointed head's mitred tip, and the ring's far side, are at the route's end.
+ * `circle`, and for `many` a chevron opening onto the end. A pointed head's mitred tip, the ring's far side and a
+ * crow's foot's toes are at the route's end.
  */
 export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: number): GrooveHeads => {
   const points = flattenPath(path)[0] ?? [];
@@ -154,6 +172,13 @@ export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: n
         const ring = `M ${side(-1)} A ${radius} ${radius} 0 1 0 ${side(1)} A ${radius} ${radius} 0 1 0 ${side(-1)} Z`;
         outline.push(ring);
         hollow.push(ring);
+        break;
+      }
+      case 'many': {
+        const toe = width / 2;
+        outline.push(
+          `M ${at(local(toe, length * MANY_SPREAD))} L ${at(local(toe + length, 0))} L ${at(local(toe, -length * MANY_SPREAD))}`,
+        );
         break;
       }
     }

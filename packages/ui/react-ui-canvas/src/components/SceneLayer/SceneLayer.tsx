@@ -74,6 +74,7 @@ import {
   GROOVE_FILLS,
   type GrooveHeads,
   type LatticeSpec,
+  MANY_SPREAD,
   type MarkerFrame,
   NEU_CANVAS_FILL,
   type PartEditing,
@@ -654,10 +655,11 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
   const arrow = markerFrame('arrow', box, width);
   const triangle = markerFrame('triangle', box, width);
   const circle = markerFrame('circle', box, width);
+  const many = markerFrame('many', box, width);
   // An outline matches the line's width, in its marker's view units.
   const outline = ({ size, view }: MarkerFrame) => (width * view) / size;
   const ends = ['start', 'end'] as const;
-  // The mitred tip and the circle's far side sit at the anchor, so a marker reaches past its view box.
+  // The mitred tip, the circle's far side and a crow's foot's toes sit at the anchor, so a marker reaches past its view box.
   const frame = ({ size, refX, refY }: MarkerFrame, end: 'start' | 'end') => ({
     refX,
     refY,
@@ -696,6 +698,18 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
       {ends.map((end) => (
         <marker key={`circle-${end}`} id={`${id}-circle-${end}`} viewBox='0 0 10 10' {...frame(circle, end)}>
           <circle cx={5} cy={5} r={4} className={mx(canvasFill, line.stroke)} strokeWidth={outline(circle)} />
+        </marker>
+      ))}
+      {/* Many (a crow's foot): two toes spread from the line onto the connection point, the line running between them. */}
+      {ends.map((end) => (
+        <marker key={`many-${end}`} id={`${id}-many-${end}`} viewBox='-1 -1 12 12' {...frame(many, end)}>
+          <path
+            d={`M 10 ${5 - 10 * MANY_SPREAD} L 0 5 L 10 ${5 + 10 * MANY_SPREAD}`}
+            className={mx('fill-none', line.stroke)}
+            strokeWidth={outline(many)}
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
         </marker>
       ))}
     </>
