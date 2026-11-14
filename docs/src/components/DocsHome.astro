@@ -180,20 +180,18 @@ const cards = SUITE_ORDER.map((id) => {
     color: var(--c-muted);
   }
 
-  /* A card pointed at or focused flickers: its rays fade out once and come back, and the mark stays lit. */
+  /* A card pointed at or focused dims its rays and holds them there, so the mark stands alone until the pointer leaves. */
+  a:is(:hover, :focus-visible) .art :global(#lines) {
+    opacity: 0.2;
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     a {
       transition: border-color 0.15s;
     }
 
-    a:is(:hover, :focus-visible) .art :global(#lines) {
-      animation: docs-home-flicker 1.5s ease-in-out;
-    }
-  }
-
-  @keyframes docs-home-flicker {
-    50% {
-      opacity: 0;
+    .art :global(#lines) {
+      transition: opacity 0.75s ease-in-out;
     }
   }
 </style>
