@@ -41,10 +41,9 @@ const cards = SUITE_ORDER.map((id) => {
 </ul>
 
 <style>
-  :global(.docs-home-intro) {
-    max-width: 46rem;
-    font-size: var(--sl-text-lg);
-    color: var(--sl-color-gray-2);
+  /* The title panel's padding already separates the title from the intro [D-320]. */
+  :global(.content-panel:has(.docs-home)) {
+    padding-top: 0;
   }
 
   .docs-home {
