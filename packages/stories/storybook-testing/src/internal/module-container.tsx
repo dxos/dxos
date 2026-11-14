@@ -212,7 +212,7 @@ const ObjectCell = ({ space, cell }: { space: Space; cell: NormalizedObjectCell 
   const [replica] = useQuery(space.db, foreign ? Filter.id(cell.object.id) : Filter.nothing());
   const object = foreign ? replica : cell.object;
   if (!object) {
-    return <div className='absolute inset-0 grid place-items-center text-description'>Syncing…</div>;
+    return <div className='dx-cover grid place-items-center text-description'>Syncing…</div>;
   }
 
   return cell.component ? (
