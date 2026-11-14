@@ -27,7 +27,14 @@ const OperationHandler = Capability.inlineModule(
 
 const SpecEditing = Capability.inlineModule(
   'FeatureEditingSpecExtensions',
-  { provides: [ProjectCapabilities.SpecExtensions, ProjectCapabilities.SpecPackage, ProjectCapabilities.SpecView] },
+  {
+    provides: [
+      ProjectCapabilities.SpecExtensions,
+      ProjectCapabilities.SpecPackage,
+      ProjectCapabilities.SpecSourcesProvider,
+      ProjectCapabilities.SpecView,
+    ],
+  },
   () => SpecExtensions(),
 );
 

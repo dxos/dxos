@@ -6,22 +6,22 @@
  * A project owns several specs: the Overview is one form in which each spec is a folded row that unfolds to its fields,
  * and whose + adds one. The Specs tab shows one spec at a time, picked from a dropdown in its toolbar: a feature map
  * whose prose and features sit together, where `/feature` turns a line of prose into a feature, and a spec of prose.
- * The toolbar follows the tab, a spec offers the views its packages give, another plugin's package adds slash
- * commands that write its blocks, and the feature map's canvas adds a feature in the empty cell under the pointer.
+ * The toolbar follows the tab, a spec's Structure companion offers the views its packages give, another plugin's
+ * package adds slash commands that write its blocks, and the software dialect's Board sorts the features by status.
  *
  * @mdl packages/plugins/plugin-code/PLUGIN.mdl test QA-5
  * @app storybook-react, narrowed to plugin-code, on :9009
  *
  *   DX_STORIES=plugins/plugin-code VITE_DX_DISABLE_ANIMATIONS=true moon run storybook-react:serve-nodeps
  *   node .agents/skills/autocue/scripts/driver.mjs --port 7333 --out /tmp/demo \
- *     --url 'http://localhost:9009/iframe.html?id=plugins-plugin-code-containers-featurelevel--default&viewMode=story'
+ *     --url 'http://localhost:9009/iframe.html?id=plugins-plugin-code-containers-featurespecview--default&viewMode=story'
  *   node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm --out /tmp/demo/project-specs.webm \
  *     --max-static 3 --upload off
  */
 
 const STORYBOOK = 'http://localhost:9009';
 const SUBTITLE = 'from plugin-code/PLUGIN.mdl QA-5';
-const STORY = `${STORYBOOK}/iframe.html?id=plugins-plugin-code-containers-featurelevel--default&viewMode=story`;
+const STORY = `${STORYBOOK}/iframe.html?id=plugins-plugin-code-containers-featurespecview--default&viewMode=story`;
 
 /** Time to read a caption before the gesture it describes. */
 const READ = 3_000;
@@ -40,7 +40,7 @@ const IDEA_DESCRIPTION = 'Each morning, one note lists what agents closed, opene
 const PICKER = '[data-testid="projectsPlugin.specPicker"]';
 const DOCUMENT = '[data-testid="projectsPlugin.spec.document"]';
 const ADD_ARTIFACT = '[data-testid="projectsPlugin.addArtifact"]';
-const CANVAS_TOGGLE = '[data-testid="projectsPlugin.specView.canvas"]';
+const BOARD_TOGGLE = '[data-testid="spec-companion.view.kanban"]';
 const EXTENSIONS = '[data-testid="projectsPlugin.specExtensions"]';
 const EDITOR = `${DOCUMENT} .cm-content`;
 // A listbox option's children are presentational to role selectors, so its rows are found by their legend.
@@ -57,22 +57,6 @@ const expectCount = async (page, selector, count, what) => {
   }
 };
 
-/**
- * Points at the empty cell right of the top row's last card, where the canvas then shows its `+`. The top row keeps the
- * new card clear of the caption at the bottom of the frame.
- */
-const showAdd = async (page) => {
-  const boxes = await page
-    .locator('[data-testid="feature-canvas-node"]')
-    .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().toJSON()));
-  const top = Math.min(...boxes.map((box) => box.y));
-  const { x, y, width, height } = boxes
-    .filter((box) => box.y - top < box.height / 2)
-    .reduce((right, box) => (box.x > right.x ? box : right));
-  await page.mouse.move(x + width / 2 + width * 1.25, y + height / 2, { steps: 12 });
-  await page.getByTestId('feature-canvas.add').waitFor({ state: 'visible', timeout: 5_000 });
-};
-
 const openExtensions = async (demo, page) => {
   await demo.click({ selector: EXTENSIONS, label: 'Extensions' });
   await page.getByRole('menu').waitFor({ state: 'visible', timeout: 5_000 });
@@ -81,15 +65,17 @@ const openExtensions = async (demo, page) => {
 const checkPackage = (demo, label) =>
   demo.click({ selector: `[role="menu"] >> [role="menuitemcheckbox"]:has-text("${label}")`, label });
 
-/** Scrolls the spec's document a notch at a time, so the camera can follow, until `selector` is up in view or the end. */
-/** Whether a feature embed named `name` is drawn; its name is an input's value, not its text. */
+/** Whether a feature embed named `name` is drawn. */
 const hasFeature = (page, name) =>
   page.evaluate(
     ([name]) =>
-      [...document.querySelectorAll('[data-testid="markdown.embed"] input')].some((input) => input.value === name),
+      [...document.querySelectorAll('[data-testid="markdown.embed"]')].some((embed) =>
+        embed.textContent.includes(name),
+      ),
     [name],
   );
 
+/** Scrolls the spec's document a notch at a time, so the camera can follow, until `selector` is up in view or the end. */
 const scrollDocumentTo = async (page, selector) => {
   const box = await page.locator(DOCUMENT).boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -187,7 +173,7 @@ export const steps = [
       await waitForDocument(page, MAP_SPEC);
       await page.locator('[data-testid="markdown.embed"]').first().waitFor({ state: 'visible', timeout: 10_000 });
       await expectCount(page, ADD_ARTIFACT, 0, 'Create artifact buttons');
-      await expectCount(page, CANVAS_TOGGLE, 1, 'view toggles');
+      await expectCount(page, BOARD_TOGGLE, 1, 'view toggles');
       await expectCount(page, EXTENSIONS, 1, 'Extensions menus');
       await demo.sleep({ ms: LOOK });
       await scrollDocumentTo(page, `${EDITOR} .cm-line:has-text("${IDEA}")`);
@@ -211,7 +197,9 @@ export const steps = [
       await demo.press({ key: 'Enter' });
       await page.waitForFunction(
         ([name]) =>
-          [...document.querySelectorAll('[data-testid="markdown.embed"] input')].some((input) => input.value === name),
+          [...document.querySelectorAll('[data-testid="markdown.embed"]')].some((embed) =>
+            embed.textContent.includes(name),
+          ),
         [IDEA],
         { timeout: 5_000 },
       );
@@ -236,7 +224,7 @@ export const steps = [
       await demo.click({ selector: `[role="menu"] >> [role^="menuitem"]:has-text("${TALK_SPEC}")`, label: TALK_SPEC });
       await waitForDocument(page, TALK_SPEC);
       await expectCount(page, '[data-testid="markdown.embed"]', 0, 'feature sections');
-      await expectCount(page, CANVAS_TOGGLE, 0, 'view toggles');
+      await expectCount(page, BOARD_TOGGLE, 0, 'view toggles');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -248,9 +236,9 @@ export const steps = [
       await expectCount(page, '[role="menu"] >> [role="menuitemcheckbox"]', 2, 'packages');
       await demo.sleep({ ms: 1_500 });
       await checkPackage(demo, 'Software');
-      await page.locator(CANVAS_TOGGLE).waitFor({ state: 'visible', timeout: 5_000 });
+      await page.locator(BOARD_TOGGLE).waitFor({ state: 'visible', timeout: 5_000 });
       await demo.press({ key: 'Escape' });
-      await caption(demo, 8, 'With Software checked, the canvas and board views appear');
+      await caption(demo, 8, 'With Software checked, Data model, API and Board appear');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -258,13 +246,13 @@ export const steps = [
     name: 'Give the new spec the video package',
     done: async ({ page }) => (await page.locator(`${EDITOR}:has-text("scene SC-1:")`).count()) > 0,
     run: async ({ demo, page }) => {
-      await caption(demo, 9, `"${NEW_SPEC}" starts empty; Video is another plugin's package, with no views`);
+      await caption(demo, 9, `"${NEW_SPEC}" starts empty; the Video package adds no views`);
       await pickSpec(demo, page, NEW_SPEC);
       await openExtensions(demo, page);
       await checkPackage(demo, 'Video');
       await demo.press({ key: 'Escape' });
       await page.getByRole('menu').waitFor({ state: 'hidden', timeout: 5_000 });
-      await expectCount(page, CANVAS_TOGGLE, 0, 'view toggles');
+      await expectCount(page, BOARD_TOGGLE, 0, 'view toggles');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -290,23 +278,11 @@ export const steps = [
   {
     name: 'Go back to the feature map',
     run: async ({ demo, page }) => {
-      await caption(demo, 11, `Back on "${MAP_SPEC}", the canvas draws its features, the new one too`);
+      await caption(demo, 11, `Back on "${MAP_SPEC}", the Board sorts its features by status, the new one too`);
       await pickSpec(demo, page, MAP_SPEC);
-      await demo.click({ selector: CANVAS_TOGGLE, label: 'Canvas' });
-      await page.getByTestId('feature-card').nth(8).waitFor({ state: 'visible', timeout: 10_000 });
-      await expectCount(page, '[data-testid="feature-card"]', 9, 'feature cards');
-      await demo.sleep({ ms: LOOK });
-    },
-  },
-  {
-    name: 'Add a feature on the canvas',
-    done: async ({ page }) => (await page.getByTestId('feature-card').count()) > 9,
-    run: async ({ demo, page }) => {
-      await caption(demo, 12, 'Pointing at an empty cell shows a + that adds a feature there');
-      await showAdd(page);
-      await demo.click({ selector: '[data-testid="feature-canvas.add"]', label: 'Add a feature here' });
-      await demo.click({ selector: '[data-testid="feature-map.new-feature"]', label: 'New feature' });
-      await page.getByTestId('feature-card').nth(9).waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.click({ selector: BOARD_TOGGLE, label: 'Board' });
+      await page.getByTestId('feature-kanban.card').nth(8).waitFor({ state: 'visible', timeout: 10_000 });
+      await expectCount(page, '[data-testid="feature-kanban.card"]', 9, 'feature cards');
       await demo.clearCaption();
       await demo.sleep({ ms: 6_000 });
     },

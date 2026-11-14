@@ -338,6 +338,7 @@ module mcp/Sparql
 
 ```mdl
 feat F-1: One directory, two databases
+  uses: [Ontology, Store]
   desc: |
     A store is initialized from a directory path; `index.sqlite` (migrated) and `native/` are created
     inside it. Both are opened by `Store.layer` and closed when the scope ends.

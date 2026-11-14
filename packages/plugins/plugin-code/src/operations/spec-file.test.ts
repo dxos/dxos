@@ -14,6 +14,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Doc } from '@dxos/echo-doc';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
+import * as TextMerge from '@dxos/plugin-github/TextMerge';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { Text } from '@dxos/schema';
 import { Repo } from '@dxos/types';
@@ -103,6 +104,76 @@ describe('Spec file mapping (plugin-github spec/FILE-SYNC.mdl F-6)', () => {
     expect(exported.content).toBe(file);
   });
 
+  test("a file from a checkout is read as software, as a plugin's bundled spec is", async ({ expect }) => {
+    const { repo, run } = await setup();
+    const path = 'packages/plugins/plugin-mail/PLUGIN.mdl';
+    const created = await run(importSpecFile.handler({ repository: Ref.make(repo), path, content: '# Mail\n' }));
+    const spec = await run(Database.load(created.object));
+    invariant(Spec.instanceOf(spec), 'Missing spec.');
+    expect(spec.dialects).toEqual([FeatureMap.SOFTWARE_DIALECT]);
+  });
+
+  test('an export first takes the fields the spec has not set from the file as GitHub holds it', async ({ expect }) => {
+    const { db, run } = await setup();
+    const spec = db.add(Spec.make({ name: 'Launch', content: 'Body\n' }));
+    const base = '---\nid: org.example.launch\nextends: [org.dxos.spec.video]\n---\nBody\n';
+    const exported = await run(exportSpecFile.handler({ object: Ref.make(spec), path: 'launch.mdl', base }));
+    expect(exported.content).toBe(base);
+    expect([[...spec.dialects], Obj.getMeta(spec).key]).toEqual([['org.dxos.spec.video'], 'org.example.launch']);
+  });
+
+  test('a file whose front matter does not parse is neither imported nor exported', async ({ expect }) => {
+    const { db, repo, run } = await setup();
+    const broken = '---\nname: Launch: v2\n---\n\nBody\n';
+    await expect(
+      run(importSpecFile.handler({ repository: Ref.make(repo), path: 'launch.mdl', content: broken })),
+    ).rejects.toThrow(/does not parse/);
+    const spec = db.add(Spec.make({ name: 'Launch', content: 'Body\n' }));
+    await expect(
+      run(exportSpecFile.handler({ object: Ref.make(spec), path: 'launch.mdl', base: broken })),
+    ).rejects.toThrow(/does not parse/);
+  });
+
+  test("an import into a text that still holds its file's front matter moves it into the fields first", async ({
+    expect,
+  }) => {
+    const { db, repo, run } = await setup();
+    const file = '---\nid: org.example.launch\nname: Launch\nversion: 0.1.0\n---\n\nBody\n';
+    const spec = db.add(Spec.make({ name: 'a/launch.mdl', content: file }));
+    const { text } = await run(loadSpecText(Ref.make(spec)));
+    const remote = file.replace('0.1.0', '0.2.0').replace('Body', 'Body, remote');
+    await run(
+      importSpecFile.handler({
+        repository: Ref.make(repo),
+        path: 'a/launch.mdl',
+        content: remote,
+        base: file,
+        object: Ref.make(spec),
+        heads: TextMerge.currentHeads(text),
+      }),
+    );
+    expect([spec.name, Obj.getMeta(spec).version, text.content]).toEqual(['Launch', '0.2.0', 'Body, remote\n']);
+    const exported = await run(exportSpecFile.handler({ object: Ref.make(spec), path: 'a/launch.mdl', base: remote }));
+    expect(exported.content).toBe(remote);
+  });
+
+  test('an export writes a block at the top of the text as body, after the front matter', async ({ expect }) => {
+    const { db, run } = await setup();
+    const spec = db.add(Spec.make({ name: 'Launch', content: '---\nname: X\n---\n\nBody\n' }));
+    const base = '---\nname: Launch\nid: org.x\n---\n\nBody\n';
+    const exported = await run(exportSpecFile.handler({ object: Ref.make(spec), path: 'launch.mdl', base }));
+    expect([exported.content, spec.name]).toEqual([base.replace('Body', '---\nname: X\n---\n\nBody'), 'Launch']);
+  });
+
+  test('a file from a checkout keeps the dialects its frontmatter extends', async ({ expect }) => {
+    const { repo, run } = await setup();
+    const content = '---\nid: org.example.launch\nextends:\n  - org.dxos.spec.video\n---\n# Launch\n';
+    const created = await run(importSpecFile.handler({ repository: Ref.make(repo), path: 'launch.mdl', content }));
+    const spec = await run(Database.load(created.object));
+    invariant(Spec.instanceOf(spec), 'Missing spec.');
+    expect(spec.dialects).toEqual(['org.dxos.spec.video']);
+  });
+
   test('a file of feat blocks becomes a spec of features, and a remote change merges with a local edit', async ({
     expect,
   }) => {
@@ -134,6 +205,39 @@ describe('Spec file mapping (plugin-github spec/FILE-SYNC.mdl F-6)', () => {
     expect([sync.name, compose.name]).toEqual(['Sync, local', 'Compose, remote']);
     const exported = await run(exportSpecFile.handler({ object: merged.object, path, base: remote }));
     expect(exported.content).toBe(remote.replace('feat F-1: Sync', 'feat F-1: Sync, local'));
+  });
+
+  test("an import into a spec of features whose text still holds its file's front matter moves it into the fields", async ({
+    expect,
+  }) => {
+    const { db, repo, run } = await setup();
+    const path = 'packages/plugins/plugin-mail/PLUGIN.mdl';
+    const head = '---\nid: org.example.mail\nname: Mail\n---\n\n';
+    const file = head + FEATURES;
+    const spec = db.add(Spec.make({ name: 'plugin-mail/PLUGIN.mdl', content: '' }));
+    await SpecText.codec.read(spec, FEATURES, { path });
+    const { text } = await run(loadSpecText(Ref.make(spec)));
+    Doc.updateText(text, ['content'], head + text.content);
+    const remote = file.replace('feat F-2: Compose', 'feat F-2: Compose, remote');
+    await run(
+      importSpecFile.handler({
+        repository: Ref.make(repo),
+        path,
+        content: remote,
+        base: file,
+        object: Ref.make(spec),
+        heads: TextMerge.currentHeads(text),
+      }),
+    );
+    const [, compose] = await Ref.loadAll(FeatureMap.getFeatures(spec));
+    expect([spec.name, Obj.getMeta(spec).key, compose.name, text.content.startsWith('---')]).toEqual([
+      'Mail',
+      'org.example.mail',
+      'Compose, remote',
+      false,
+    ]);
+    const exported = await run(exportSpecFile.handler({ object: Ref.make(spec), path, base: remote }));
+    expect(exported.content).toBe(remote);
   });
 
   test('a spec of features is not exported without the file as GitHub holds it, so its blocks keep their form', async ({

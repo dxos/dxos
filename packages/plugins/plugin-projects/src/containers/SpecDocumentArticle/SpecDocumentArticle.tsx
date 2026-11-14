@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomSet } from '@effect/atom-react';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useMemo } from 'react';
+import React, { useId, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -17,6 +18,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { SpecDocumentEditor } from '../../components/SpecDocumentEditor/index.ts';
 import { useSpecExtensions } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
+import * as SpecSession from '../../SpecSession.ts';
 
 export type SpecDocumentArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
 
@@ -30,7 +32,14 @@ export const SpecDocumentArticle = ({ role, subject, attendableId }: SpecDocumen
   // The spec's text, which comments on the document anchor into.
   const text = useResolveRef(subject.content);
   const binding = useMemo(() => (text ? { object: text, path: ['content'] } : undefined), [text]);
-  const extensions = useSpecExtensions(subject, { attendableId, t, binding });
+  const specExtensions = useSpecExtensions(subject, { attendableId, t, binding });
+  // The companion's views follow this editor's cursor and move it to a block, as they do plugin-code's spec editor.
+  const setCursor = useAtomSet(SpecSession.cursor(subject.id));
+  const owner = useId();
+  const extensions = useMemo(
+    () => [...specExtensions, SpecSession.editor(subject.id, owner, setCursor)],
+    [specExtensions, subject.id, owner, setCursor],
+  );
 
   return (
     <Editor.Root>

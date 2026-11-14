@@ -52,6 +52,7 @@ type Forecast
 
 ```mdl
 feat F-1: Go / no-go
+  uses: [Hour]
   desc: The answer first, in one word a rider can read across the room.
 
   req F-1.1: The verdict covers the next three hours of `type:Hour`.

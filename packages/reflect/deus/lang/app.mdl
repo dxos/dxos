@@ -66,6 +66,7 @@ ext node
     expands. Children declared inline become child nodes (e.g. folders).
     Actions reference `op:` blocks and surface as menu/toolbar items wherever
     the node appears.
+  role: structure
   fields:
     desc?: Prose
     source?: NodeRef | TypeRef   # parent node or the type this connector expands
@@ -74,6 +75,12 @@ ext node
     children?: NodeList          # inline child node declarations (folders etc.)
     actions?: OpRefList          # operations contributed to this node
     article?: SurfaceRef | ComponentRef  # what an article surface renders for it
+  links:
+    actions: depends-on
+    article: references
+    children: composes
+    source: part-of
+    subject: references
   nesting: self
 ```
 
@@ -85,9 +92,12 @@ ext deck
     Each level names the plank that opens at that depth; opening at a level
     reuses that level's plank and closes deeper ones. Modifier gestures
     (meta/ctrl) opt out and open a free plank instead.
+  role: structure
   fields:
     desc?: Prose
     chain: PlankRefList          # ordered, e.g. Mailbox > Message > Attachment
+  links:
+    chain: aggregates
 ```
 
 ```mdl
@@ -97,12 +107,18 @@ ext plank
     One deck plank kind: which subject it presents and through which article.
     `parent` places it in a level chain (equivalently declared via `deck`);
     `companions` lists the companion variants available on it.
+  role: structure
   fields:
     desc?: Prose
     subject: TypeRef             # the graph node data this plank presents
     article: SurfaceRef | ComponentRef
     parent?: PlankRef            # the level above in the chain
     companions?: CompanionRefList
+  links:
+    article: references
+    companions: composes
+    parent: part-of
+    subject: references
 ```
 
 ```mdl
@@ -111,12 +127,16 @@ ext companion
   desc: |
     A plank companion: a child node (`~variant` linked segment) rendered as a
     plank attached to its context plank, sharing its attention context.
+  role: structure
   fields:
     desc?: Prose
     of: TypeRef | NodeRef        # the context plank's subject
     variant: Identifier          # the `~variant` segment / tab id
     component?: ComponentRef | SurfaceRef
     properties?: FieldMap        # label, icon, position, ...
+  links:
+    component: references
+    of: references
 ```
 
 ```mdl
@@ -132,6 +152,7 @@ ext surface
     `last` are the sentinels; equal positions keep registration order). A
     role-only contribution therefore competes with a subject-specific one,
     and the subject-specific one must claim an earlier position to win.
+  role: structure
   fields:
     desc?: Prose
     role: Identifier             # role token (article | section | card | dialog | ...)
@@ -139,6 +160,9 @@ ext surface
     component: ComponentRef
     variant?: Identifier
     position?: number | first | last  # tie-break among all matching contributions
+  links:
+    component: references
+    subject: references
 ```
 
 ```mdl
@@ -149,11 +173,15 @@ ext menu
     operations and action groups. Menus carry no behavior of their own —
     every item resolves to an `op:` (directly or through a graph-node
     action).
+  role: structure
   fields:
     desc?: Prose
     of: TypeRef | NodeRef        # what the menu attaches to
     disposition?: toolbar | context | list-item
     items: OpRefList             # ordered; groups as nested lists
+  links:
+    items: depends-on
+    of: references
 ```
 
 ## Example
