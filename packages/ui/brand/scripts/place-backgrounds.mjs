@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-// Rewrites the other half of a background pair from the half you edited: `bg-echo-left.svg` gives `bg-echo-right.svg`.
+// Rewrites the other placements of a background from the one you edited: `bg-echo-left.svg` gives `bg-echo-center.svg`
+// and `bg-echo-right.svg`.
 // The icon moves without mirroring, so asymmetric marks such as KUBE keep their orientation, and the lines move with it.
 // A line that reached the edge of the frame is extended back to the frame after the move, so no edge is left bare.
-// Usage: node scripts/flip-backgrounds.mjs <bg-name-left.svg | bg-name-right.svg>...
+// Usage: node scripts/place-backgrounds.mjs <bg-name-left.svg | bg-name-center.svg | bg-name-right.svg>...
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
@@ -13,15 +14,16 @@ import { fileURLToPath } from 'node:url';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '../assets/backgrounds');
 
-const WIDTH = 1920;
+/** Where the icon's centre sits in the 1920-wide frame, by the placement in the file's name. */
+const PLACEMENTS = { left: 480, center: 960, right: 1440 };
 
 /** Lines in the sources run 20 units past the 1920×1080 frame, so their caps never show. */
 const BOUNDS = { left: -20, right: 1940, top: -20, bottom: 1100 };
 
 const EPSILON = 0.5;
 
-/** Icons this far from the centre are on a side; a centred icon has no other side to move to. */
-const MIN_OFFSET = 100;
+/** How far an icon's centre may be from where its file's name puts it. */
+const TOLERANCE = 100;
 
 const isOnEdge = ([x, y]) =>
   Math.abs(x - BOUNDS.left) < EPSILON ||
@@ -129,43 +131,47 @@ const iconCentre = (group) => {
   return (Math.min(...xs) + Math.max(...xs)) / 2;
 };
 
-const SIDES = { left: 'right', right: 'left' };
-
 const files = process.argv.slice(2).map((arg) => basename(arg));
 if (files.length === 0) {
-  console.error('Usage: node scripts/flip-backgrounds.mjs <bg-name-left.svg | bg-name-right.svg>...');
+  console.error(
+    'Usage: node scripts/place-backgrounds.mjs <bg-name-left.svg | bg-name-center.svg | bg-name-right.svg>...',
+  );
   process.exit(1);
 }
 
 for (const file of files) {
-  const [, name, side] = file.match(/^(bg-[a-z]+)-(left|right)\.svg$/) ?? [];
+  const [, name, placement] = file.match(/^(bg-[a-z]+)-(left|center|right)\.svg$/) ?? [];
   if (!name) {
-    throw new Error(`${file}: expected a pair file named bg-<name>-left.svg or bg-<name>-right.svg.`);
+    throw new Error(`${file}: expected a file named bg-<name>-left.svg, bg-<name>-center.svg or bg-<name>-right.svg.`);
   }
 
   const svg = readFileSync(join(DIR, file), 'utf8');
   const icon = readGroup(svg, 'icon');
   const lines = readGroup(svg, 'lines');
   const centre = iconCentre(icon);
-  if (Math.abs(centre - WIDTH / 2) < MIN_OFFSET) {
-    throw new Error(`${file}: icon is centred (x=${centre.toFixed(1)}), so it has no other side.`);
-  }
-  // The name, not the art, says which half the user edited, so a misnamed file must not overwrite its partner.
-  if ((centre < WIDTH / 2 ? 'left' : 'right') !== side) {
-    throw new Error(`${file}: icon is on the other side (x=${centre.toFixed(1)}) from what the name says.`);
+  // The name, not the art, says which placement the user edited, so a misnamed file must not overwrite the others.
+  if (Math.abs(centre - PLACEMENTS[placement]) > TOLERANCE) {
+    throw new Error(
+      `${file}: icon is at x=${centre.toFixed(1)}, not where the name puts it (${PLACEMENTS[placement]}).`,
+    );
   }
 
-  const offset = WIDTH - 2 * centre;
-  const output = svg
-    .replace(
-      lines,
-      replacePaths(lines, (subpath) => moveLine(subpath, offset)),
-    )
-    .replace(
-      icon,
-      replacePaths(icon, ({ points, closed }) => ({ points: points.map(([x, y]) => [x + offset, y]), closed })),
-    );
-  const target = `${name}-${SIDES[side]}.svg`;
-  writeFileSync(join(DIR, target), output);
-  console.log(`${file} -> ${target}: icon moved ${offset > 0 ? '+' : ''}${offset.toFixed(1)}.`);
+  for (const [other, x] of Object.entries(PLACEMENTS)) {
+    if (other === placement) {
+      continue;
+    }
+    const offset = x - centre;
+    const output = svg
+      .replace(
+        lines,
+        replacePaths(lines, (subpath) => moveLine(subpath, offset)),
+      )
+      .replace(
+        icon,
+        replacePaths(icon, ({ points, closed }) => ({ points: points.map(([x, y]) => [x + offset, y]), closed })),
+      );
+    const target = `${name}-${other}.svg`;
+    writeFileSync(join(DIR, target), output);
+    console.log(`${file} -> ${target}: icon moved ${offset > 0 ? '+' : ''}${offset.toFixed(1)}.`);
+  }
 }

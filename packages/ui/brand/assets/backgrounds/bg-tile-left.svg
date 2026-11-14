@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1920 1080" color="rgb(150,37,79)">
+  <rect id="background" width="1920" height="1080" style="fill: var(--dx-bg-fill, rgb(29,31,32))"/>
+  <g id="lines" fill="none" stroke-width="14" style="stroke: var(--dx-bg-lines, currentColor)">
+    <path d="M611.2,671.2 L611.2,1100.0"/>
+    <path d="M217.5,540.0 L-20.0,777.5"/>
+    <path d="M480.0,802.5 L182.5,1100.0"/>
+    <path d="M480.0,277.5 L777.5,-20.0"/>
+    <path d="M480.0,277.5 L182.5,-20.0"/>
+    <path d="M217.5,540.0 L-20.0,302.5"/>
+    <path d="M480.0,802.5 L777.5,1100.0"/>
+    <path d="M742.5,540.0 L1302.5,1100.0"/>
+    <path d="M480.0,802.5 L480.0,1100.0"/>
+    <path d="M480.0,277.5 L480.0,-20.0"/>
+    <path d="M611.2,671.2 L1302.4,-20.0"/>
+    <path d="M611.2,408.8 L611.2,-20.0"/>
+    <path d="M611.2,671.2 L182.4,1100.0"/>
+    <path d="M611.2,408.8 L182.4,-20.0"/>
+    <path d="M611.2,671.2 L1940.0,671.2"/>
+    <path d="M742.5,540.0 L1302.5,-20.0"/>
+    <path d="M611.2,408.8 L1302.4,1100.0"/>
+  </g>
+  <g id="icon" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--dx-bg-icon, rgb(249,246,241))">
+    <path d="M217.5,540.0 L480.0,802.5 L480.0,540.0 Z"/>
+    <path d="M217.5,540.0 L480.0,540.0 L480.0,277.5 Z"/>
+    <path d="M611.2,671.2 L742.5,540.0 L611.2,408.8 Z"/>
+    <path d="M480.0,802.5 L611.2,671.2 L480.0,671.2 Z"/>
+    <path d="M480.0,540.0 L480.0,671.2 L611.2,671.2 L611.2,540.0 Z"/>
+    <path d="M480.0,540.0 L611.2,540.0 L480.0,408.8 Z"/>
+    <path d="M480.0,277.5 L480.0,408.8 L611.2,540.0 L611.2,408.8 Z"/>
+  </g>
+</svg>
