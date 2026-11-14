@@ -4,6 +4,7 @@
 
 import { type DataService } from '@dxos/protocols/rpc';
 
+/** Per-peer replication state of a space. */
 export type SpaceSyncState = DataService.SpaceSyncState;
 export namespace SpaceSyncState {
   export type PeerState = DataService.SpaceSyncState.PeerState;
