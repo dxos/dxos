@@ -12,45 +12,46 @@ collected. When and where each tier runs is decided separately (see [Run policy]
 
 ### T0 — Static checks (no build)
 
-| Kind                                                                                                                                                                                             | Repo | What it covers                        | Scope      | Runs today                                | Blocks today | Cost    | Flake   |
-| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--- | :------------------------------------ | :--------- | :---------------------------------------- | :----------- | :------ | :------ |
-| Repo scripts (13): format, import cycles, publish config, changesets, spec changelog and decisions, version sync, cache wiring, `pkg-lint`, public deps, QA coverage, peer deps, package exports | dxos | Repo hygiene                          | Whole repo | `check` stage 1, on every PR, MQ, nightly | Yes          | pending | pending |
-| Format, cache wiring, dev-stack config, `check:bindings` (wrangler binding parity), hub styles                                                                                                   | edge | Repo hygiene, Cloudflare config drift | Whole repo | `lint` job                                | Yes          | pending | pending |
+| Kind                                                                                                                                                                                             | Repo | What it covers                        | Scope      | Runs today                                | Blocks today | Cost                                               | Flake   |
+| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--- | :------------------------------------ | :--------- | :---------------------------------------- | :----------- | :------------------------------------------------- | :------ |
+| Repo scripts (13): format, import cycles, publish config, changesets, spec changelog and decisions, version sync, cache wiring, `pkg-lint`, public deps, QA coverage, peer deps, package exports | dxos | Repo hygiene                          | Whole repo | `check` stage 1, on every PR, MQ, nightly | Yes          | pending                                            | pending |
+| Format, cache wiring, dev-stack config, `check:bindings` (wrangler binding parity), hub styles                                                                                                   | edge | Repo hygiene, Cloudflare config drift | Whole repo | `lint` job                                | Yes          | ~25 s of steps (lint job 4.5 min incl. 87 s setup) | 0–0.3%  |
 
 ### T1 — Compile and whole-repo analysis
 
-| Kind                                                            | Repo | What it covers                                | Scope                    | Runs today                        | Blocks today                | Cost    | Flake   |
-| :-------------------------------------------------------------- | :--- | :-------------------------------------------- | :----------------------- | :-------------------------------- | :-------------------------- | :------ | :------ |
-| Lint (oxlint), build (tsc), type tests (tstyche, 8 files)       | dxos | Types and lint rules                          | Affected                 | `check` stage 2                   | Yes                         | pending | pending |
-| Module structure, edge-release (plugin bundle loads in workerd) | dxos | Import bans, bundle loads                     | Affected                 | `check` stage 2                   | Yes                         | pending | pending |
-| knip, plugin-set check, docs bundle (link check)                | dxos | Dead code, plugin wiring, docs                | Whole repo, never scoped | `check` stage 3                   | Yes                         | pending | pending |
-| Boot budget                                                     | dxos | Static boot-graph size of the Composer bundle | Whole repo               | `boot-budget` job, PR and nightly | Fails its job, not required | pending | pending |
-| Lint, build, Solid typecheck, `watch_dir` sync, bundle budgets  | edge | Types, worker bundle sizes                    | All                      | `lint`, `build` jobs              | Yes                         | pending | pending |
+| Kind                                                            | Repo | What it covers                                | Scope                    | Runs today                        | Blocks today                | Cost                                                                                          | Flake                                     |
+| :-------------------------------------------------------------- | :--- | :-------------------------------------------- | :----------------------- | :-------------------------------- | :-------------------------- | :-------------------------------------------------------------------------------------------- | :---------------------------------------- |
+| Lint (oxlint), build (tsc), type tests (tstyche, 8 files)       | dxos | Types and lint rules                          | Affected                 | `check` stage 2                   | Yes                         | pending                                                                                       | pending                                   |
+| Module structure, edge-release (plugin bundle loads in workerd) | dxos | Import bans, bundle loads                     | Affected                 | `check` stage 2                   | Yes                         | pending                                                                                       | pending                                   |
+| knip, plugin-set check, docs bundle (link check)                | dxos | Dead code, plugin wiring, docs                | Whole repo, never scoped | `check` stage 3                   | Yes                         | pending                                                                                       | pending                                   |
+| Boot budget                                                     | dxos | Static boot-graph size of the Composer bundle | Whole repo               | `boot-budget` job, PR and nightly | Fails its job, not required | pending                                                                                       | pending                                   |
+| Lint, build, Solid typecheck, `watch_dir` sync, bundle budgets  | edge | Types, worker bundle sizes                    | All                      | `lint`, `build` jobs              | Yes                         | build 112 s, lint 55 s, bundle budgets 84 s, `watch_dir` 68 s, Solid 29 s; jobs 6.4 + 4.5 min | build 3.6% on PRs, 0% on main; rest ≤0.4% |
 
 ### T2 — Unit tests (node, no external state)
 
-| Kind         | Repo | Size                                                                                                            | Runner             | Runs today            | Blocks today | Cost    | Flake   |
-| :----------- | :--- | :-------------------------------------------------------------------------------------------------------------- | :----------------- | :-------------------- | :----------- | :------ | :------ |
-| Node unit    | dxos | ~1,900 files (the ~76% of 2,499 node test files that start no stack); `common/*` and `ui/*` are almost all unit | vitest `node`      | `test-node`, every PR | Yes          | pending | pending |
-| Node unit    | edge | 188 files, 32 packages (+3 in edge)                                                                             | vitest `node`      | `test-packages`       | Yes          | pending | pending |
-| Script tests | edge | 4 `node --test`, 4 `bun test`, 1 cargo                                                                          | node / bun / cargo | **none**              | —            | —       | —       |
+| Kind         | Repo | Size                                                                                                            | Runner             | Runs today            | Blocks today | Cost                                                                                                                                      | Flake   |
+| :----------- | :--- | :-------------------------------------------------------------------------------------------------------------- | :----------------- | :-------------------- | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :------ |
+| Node unit    | dxos | ~1,900 files (the ~76% of 2,499 node test files that start no stack); `common/*` and `ui/*` are almost all unit | vitest `node`      | `test-node`, every PR | Yes          | pending                                                                                                                                   | pending |
+| Node unit    | edge | 188 files, 32 packages (+3 in edge)                                                                             | vitest `node`      | `test-packages`       | Yes          | 1,467 tests, 70 s of test time; `test-packages` job 23 min, of which ~20 min is moon running tasks one at a time and per-package start-up | 0.1%    |
+| Script tests | edge | 4 `node --test`, 4 `bun test`, 1 cargo                                                                          | node / bun / cargo | **none**              | —            | —                                                                                                                                         | —       |
 
 ### T3 — Local runtime tests (workerd, D1, Miniflare)
 
-| Kind                         | Repo | Size                                               | Runner                        | Runs today      | Blocks today | Cost    | Flake   |
-| :--------------------------- | :--- | :------------------------------------------------- | :---------------------------- | :-------------- | :----------- | :------ | :------ |
-| Workerd                      | dxos | 28 files, 23 packages                              | vitest-pool-workers           | `test-node`     | Yes          | pending | pending |
-| Workerd                      | edge | 108 files, 17 packages (db-service 27, router 17)  | vitest-pool-workers           | `test-packages` | Yes          | pending | pending |
-| D1                           | edge | 18 files, hub-service                              | vitest-pool-workers `node-d1` | `test-packages` | Yes          | pending | pending |
-| Hand-built Miniflare in node | edge | mcp-space-service, sandbox-service, worker-bundler | vitest `node`                 | `test-packages` | Yes          | pending | pending |
+| Kind                         | Repo | Size                                               | Runner                        | Runs today      | Blocks today | Cost                                        | Flake   |
+| :--------------------------- | :--- | :------------------------------------------------- | :---------------------------- | :-------------- | :----------- | :------------------------------------------ | :------ |
+| Workerd                      | dxos | 28 files, 23 packages                              | vitest-pool-workers           | `test-node`     | Yes          | pending                                     | pending |
+| Workerd                      | edge | 108 files, 17 packages (db-service 27, router 17)  | vitest-pool-workers           | `test-packages` | Yes          | 1,024 tests, 88 s                           | 0.4%    |
+| D1                           | edge | 18 files, hub-service                              | vitest-pool-workers `node-d1` | `test-packages` | Yes          | 347 tests, 18 s                             | 0%      |
+| Hand-built Miniflare in node | edge | mcp-space-service, sandbox-service, worker-bundler | vitest `node`                 | `test-packages` | Yes          | mcp-space-service 24 s, sandbox-service 5 s | 0%      |
 
 ### T4 — Integration tests (in-process stack)
 
-| Kind             | Repo | Size                                                                                                            | What it starts                                                                         | Runs today            | Blocks today | Cost    | Flake   |
-| :--------------- | :--- | :-------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- | :-------------------- | :----------- | :------ | :------ |
-| Node integration | dxos | ~600 files (~24% of node tests); concentrated in `core/echo`, `sdk/client*`, `*-e2e` packages, AI/agent plugins | Full client stack, several peers, sqlite, child processes; 161 files use real timers   | `test-node`           | Yes          | pending | pending |
-| Edge harness     | edge | 90 files in `edge:test`                                                                                         | Whole edge worker plus ~13 services in Miniflare, fakes for Discord, Google, mail, RSS | `test-edge`, 4 shards | Yes          | pending | pending |
-| Memory and leak  | dxos | 2 files, echo-client-e2e                                                                                        | `--expose-gc`, `DX_DEBUG_LEAKS`                                                        | `advisory` job        | No           | pending | pending |
+| Kind             | Repo | Size                                                                                                            | What it starts                                                                         | Runs today            | Blocks today | Cost                                                                                               | Flake                                               |
+| :--------------- | :--- | :-------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- | :-------------------- | :----------- | :------------------------------------------------------------------------------------------------- | :-------------------------------------------------- |
+| Node integration | dxos | ~600 files (~24% of node tests); concentrated in `core/echo`, `sdk/client*`, `*-e2e` packages, AI/agent plugins | Full client stack, several peers, sqlite, child processes; 161 files use real timers   | `test-node`           | Yes          | pending                                                                                            | pending                                             |
+| Edge harness     | edge | 90 files in `edge:test`                                                                                         | Whole edge worker plus ~13 services in Miniflare, fakes for Discord, Google, mail, RSS | `test-edge`, 4 shards | Yes          | 505 tests, ~33 min of test time over 4 shards; `test-edge` 16 min per shard, ~48k runner-min/month | 1.2% of tests; job fails 21.9% on PRs, 6.5% on main |
+| Edge sync subset | edge | 66 tests in `edge:test` (automerge, subduction, feed, signal)                                                   | Same harness                                                                           | `test-edge`           | Yes          | 515 s; `automerge.node.test.ts` alone 206 s                                                        | 1.5% of tests                                       |
+| Memory and leak  | dxos | 2 files, echo-client-e2e                                                                                        | `--expose-gc`, `DX_DEBUG_LEAKS`                                                        | `advisory` job        | No           | pending                                                                                            | pending                                             |
 
 ### T5 — Browser tests (headless Chromium)
 
@@ -61,20 +62,20 @@ collected. When and where each tier runs is decided separately (see [Run policy]
 
 ### T6 — Model-fixture tests (recorded LLM replay)
 
-| Kind                        | Repo | Size                                       | Fixtures                                               | Runs today                      | Blocks today | Cost    | Flake   |
-| :-------------------------- | :--- | :----------------------------------------- | :----------------------------------------------------- | :------------------------------ | :----------- | :------ | :------ |
-| Model fixture               | dxos | 15 files, 8 packages (tag `model-fixture`) | `.store/`, 469 recordings                              | `advisory` job                  | No           | pending | pending |
-| Edge harness with fixtures  | edge | 7 files in `edge:test`                     | `.store/conversations`, 484 recordings                 | `test-edge`                     | Yes          | pending | pending |
-| Discord agent with fixtures | edge | 6 files                                    | Recordings plus plugin bundles from R2 or a dxos build | `test-discord-agent` (no Trunk) | Yes          | pending | pending |
+| Kind                        | Repo | Size                                       | Fixtures                                               | Runs today                      | Blocks today | Cost                                    | Flake        |
+| :-------------------------- | :--- | :----------------------------------------- | :----------------------------------------------------- | :------------------------------ | :----------- | :-------------------------------------- | :----------- |
+| Model fixture               | dxos | 15 files, 8 packages (tag `model-fixture`) | `.store/`, 469 recordings                              | `advisory` job                  | No           | pending                                 | pending      |
+| Edge harness with fixtures  | edge | 7 files in `edge:test`                     | `.store/conversations`, 484 recordings                 | `test-edge`                     | Yes          | 35 tests, 470 s; 16.5 s median per test | 29% of tests |
+| Discord agent with fixtures | edge | 6 files                                    | Recordings plus plugin bundles from R2 or a dxos build | `test-discord-agent` (no Trunk) | Yes          | 35 tests, 186 s; job 12 min             | 20% of tests |
 
 ### T7 — End-to-end tests (real app, live EDGE preview)
 
-| Kind                 | Repo | Size                                           | Depends on                                                              | Runs today                                   | Blocks today | Cost    | Flake   |
-| :------------------- | :--- | :--------------------------------------------- | :---------------------------------------------------------------------- | :------------------------------------------- | :----------- | :------ | :------ |
-| Composer e2e         | dxos | 17 specs, ~79 tests × 3 browsers               | `vite preview` bundle, EDGE preview                                     | `e2e-composer`, ready PR, main push, nightly | No           | pending | pending |
-| Other Playwright e2e | dxos | The other 9 `e2e`-tagged packages × 3 browsers | Storybook server or app bundle                                          | `e2e-rest`                                   | No           | pending | pending |
-| Deployed edge e2e    | edge | 5 files                                        | preview.dxos.network after deploy, admin key, real LLM via the AI proxy | `deploy-main` `e2e`, after merge             | No           | pending | pending |
-| CLI packaging smoke  | dxos | 1 task                                         | npm pack and install                                                    | `cli`, `cli-foreign`                         | No           | pending | pending |
+| Kind                 | Repo | Size                                           | Depends on                                                              | Runs today                                   | Blocks today | Cost                        | Flake                                                                                                               |
+| :------------------- | :--- | :--------------------------------------------- | :---------------------------------------------------------------------- | :------------------------------------------- | :----------- | :-------------------------- | :------------------------------------------------------------------------------------------------------------------ |
+| Composer e2e         | dxos | 17 specs, ~79 tests × 3 browsers               | `vite preview` bundle, EDGE preview                                     | `e2e-composer`, ready PR, main push, nightly | No           | pending                     | pending                                                                                                             |
+| Other Playwright e2e | dxos | The other 9 `e2e`-tagged packages × 3 browsers | Storybook server or app bundle                                          | `e2e-rest`                                   | No           | pending                     | pending                                                                                                             |
+| Deployed edge e2e    | edge | 5 files                                        | preview.dxos.network after deploy, admin key, real LLM via the AI proxy | `deploy-main` `e2e`, after merge             | No           | 10 tests, 341 s; job 12 min | Red in 34 of 34 runs: the same 4 tests fail on the preview environment (auth, registry, webhook upload), not flakes |
+| CLI packaging smoke  | dxos | 1 task                                         | npm pack and install                                                    | `cli`, `cli-foreign`                         | No           | pending                     | pending                                                                                                             |
 
 ### T8 — Scripted model tests and evals (live LLM)
 
@@ -117,9 +118,40 @@ collected. When and where each tier runs is decided separately (see [Run policy]
 
 ## Run policy
 
-Two labels per test, independent of its tier. Both live in code, so a PR shows any change to them.
+Two labels per test, independent of its tier. Both are vitest tags in code, so a PR shows any change
+to them, and CI selects tests with `--tagsFilter`.
 
-**Blocking or non-blocking** decides _when_ a test runs:
+### Tags
+
+| Tag       | Meaning                                                                      | Where declared                                        |
+| :-------- | :--------------------------------------------------------------------------- | :---------------------------------------------------- |
+| _(none)_  | Blocking: runs on every PR, merge queue and nightly, and must pass           | —                                                     |
+| `nightly` | Non-blocking: runs nightly and on demand, not on PRs                         | `vitest.tags.ts` (new); edge `vitest.shared.ts` (new) |
+| `flaky`   | Runs where its blocking label says; failures are reported but do not fail CI | `vitest.tags.ts` (exists, unused); edge (new)         |
+
+Untagged means blocking, so the ~1,900 unit test files need no change; only what leaves the PR run is
+tagged. The existing opt-in tags (`model-fixture`, `sync`, `sync-e2e`, `functions-e2e`, `manual`,
+`memory`) keep their current gates and are all non-blocking.
+
+A tag applies at three levels:
+
+- **Whole file:** a `// @module-tag nightly` comment at the top of the file (vitest 4.1, which both
+  repos use, reads it before the file runs). A script can add it to every file in a package.
+- **Suite or test:** `describe('…', { tags: ['nightly'] }, …)` or the same option on `test`.
+- **Stories and Playwright:** a `nightly` or `flaky` story tag, filtered through the storybook
+  addon's tag include and exclude lists; a `@nightly` or `@flaky` Playwright tag, selected with
+  `--grep` and `--grep-invert`.
+
+CI filters:
+
+| Run                | Must pass                                                     | Reported only       |
+| :----------------- | :------------------------------------------------------------ | :------------------ |
+| PR, merge queue    | `!nightly && !flaky` (plus the existing opt-in tags excluded) | `flaky && !nightly` |
+| Nightly, on demand | `!flaky`                                                      | `flaky`             |
+
+### Blocking or non-blocking
+
+This label decides _when_ a test runs:
 
 - **PR and merge queue** run blocking tests only.
 - **Nightly** runs everything, blocking and non-blocking, on `main`, with no affected scoping and no
@@ -130,24 +162,41 @@ Two labels per test, independent of its tier. Both live in code, so a PR shows a
   itself: that run posts skipped check runs over the PR's real results, and branch protection reads
   skipped as passing (`check.yml:9-11`).
 
-**Stable or flaky** decides whether a failure _counts_:
+### Stable or flaky
+
+This label decides whether a failure _counts_:
 
 - A flaky test still runs wherever its blocking label says, and its result is still recorded, but
-  its failure does not fail CI.
-- The flaky mark is in code, with an owner and a linked issue:
-  - vitest (dxos and edge): `tags: ['flaky']`. dxos already declares the tag; edge needs it added
-    to `vitest.shared.ts`. CI runs the suite twice: `--tagsFilter='!flaky'` must pass, and
-    `--tagsFilter=flaky` runs with its failures reported but not failing the job.
-  - Storybook: a `flaky` story tag, filtered the same way.
-  - Playwright: a `@flaky` tag, with `--grep-invert @flaky` for the run that must pass and
-    `--grep @flaky` for the reported run.
-- The results store shows each flaky test's failure rate, so the mark can be removed once a test
-  has passed for a set number of nightly runs, and a test that keeps failing becomes a fix or a
-  delete.
+  its failure does not fail CI. CI runs the suite twice with the filters above.
+- Every `flaky` tag carries an owner and a linked issue in a comment next to it.
+- The results store shows each flaky test's failure rate, so the tag can be removed once a test has
+  passed for a set number of nightly runs, and a test that keeps failing becomes a fix or a delete.
 - This replaces Trunk's dashboard quarantine.
 
-Which tiers are blocking is still to decide from the cost and flake data. The current direction is
-T0, T1 and T2 blocking, everything else nightly.
+### What stays blocking
+
+Untagged, and so blocking on PRs:
+
+- **T0, T1:** all static, compile and whole-repo checks.
+- **T2, T3:** unit, workerd and D1 tests in both repos. Edge measures 70 s, 88 s and 18 s of test
+  time with 0–0.4% flake candidates.
+- **T4, selected integration tests:**
+  - Most ECHO tests: `packages/core/echo/*`. Candidates for `nightly` within them are the heavy
+    suites only (`echo-client-e2e` and the multi-peer replication tests), to confirm against the
+    per-file cost data.
+  - Process manager: `compute-runtime` (`ProcessManager`, `RemoteProcessManager`), `edge-compute`
+    (`EdgeProcessManager`) and `app-framework` `plugin-process-manager`.
+  - Light Composer plugin tests: plugin tests that start no full client stack, replay no model
+    fixtures and stay under a per-file time budget (to set from the data, e.g. 5 s). Heavier plugin
+    suites get `// @module-tag nightly`.
+- **T5, storybook:** blocking if the measured cost allows it; to decide once the dxos data is in.
+
+Tagged `nightly`:
+
+- The rest of T4: full-stack client and SDK integration (`sdk/client*`, `client-services`,
+  `*-e2e` packages, `network-manager`), AI and agent packages, and the edge harness (`edge:test`),
+  which costs ~33 min of test time per run and fails 21.9% of PR runs.
+- T6 to T9: model fixtures, e2e, evals, live tests.
 
 ## Problems
 
@@ -226,7 +275,10 @@ not skipped. That denominator needs to know which tests were skipped in each run
 events are sent on every run, not only nightly. Without them the rate is only an estimate: a test
 that failed once and was then skipped in nine runs would read as 1 failure in 10 runs, not 1 in 1.
 Tests filtered out before they are collected (`--tagsFilter`, `-t`) do not appear as skips, so the
-file event carries the filter, and runs with a different filter are counted separately.
+file event carries the filter, and runs with a different filter are counted separately. A file's
+test list also changes when tests are added, renamed or removed, so the nightly file event carries
+the full list of test names in that file, and a test's denominator starts at the first nightly that
+lists it. Between nightlies the rate is an estimate.
 
 Only files whose moon task actually executed are sent. Cache replays are dropped, using moon's
 task status (JUnit does not know a result came from cache).
