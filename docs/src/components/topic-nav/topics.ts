@@ -31,8 +31,8 @@ export const TOPICS: Topic[] = [
     id: 'echo',
     label: 'ECHO',
     href: '/docs/echo/overview/',
-    description: 'Peer-to-peer realtime graph database.',
-    detail: 'Extensible with plugins for CRDTs, blobs, hierarchical feeds and RDF.',
+    description: 'Realtime graph database: the context memory for teams and agents.',
+    detail: 'Plugins add CRDTs, blobs, hierarchical feeds and RDF.',
     logotype: inherit(echo),
   },
   {
