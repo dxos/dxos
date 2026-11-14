@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 
-import { type AiModelNotAvailableError, AiService } from '@dxos/ai';
+import { type AiModelNotAvailableError, AiService, AiUsage } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -308,8 +308,8 @@ const LENIENT_SUFFIX = 'Respond with ONLY a JSON object of the form {"facts": [ 
 /** The strict-then-lenient generation both request shapes share; `source` labels its logs. */
 const generatePayload = <P extends { readonly facts: ReadonlyArray<unknown> }, StrictError, LenientError>({
   source,
-  strict: strictAttempt,
-  lenient: lenientAttempt,
+  strict: strictCall,
+  lenient: lenientCall,
   options,
 }: {
   readonly source: string;
@@ -318,7 +318,10 @@ const generatePayload = <P extends { readonly facts: ReadonlyArray<unknown> }, S
   readonly options?: ExtractOptions;
 }): Effect.Effect<P, SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
-    const lenient = Effect.timed(lenientAttempt);
+    // A caller's stage (the System One fallback) wins; the lenient retry is its own stage so its wasted spend shows.
+    const stage = (yield* AiUsage.Stage) ?? 'extract-facts';
+    const strictAttempt = strictCall.pipe(AiUsage.withStage(stage));
+    const lenient = Effect.timed(lenientCall.pipe(AiUsage.withStage(`${stage}:lenient`)));
 
     // Strong hosted models honor the schema; local providers (Ollama) reliably fail structured
     // output, so callers targeting them pass `strict: false` to skip the wasted strict pass.

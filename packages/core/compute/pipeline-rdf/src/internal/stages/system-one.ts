@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService, ExtractionModel, Model } from '@dxos/ai';
+import { AiService, AiUsage, ExtractionModel, Model } from '@dxos/ai';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -526,7 +526,10 @@ export const extractSystemOne = (
                 { ...options, rules: [...(options?.rules ?? []), claimsRule(analysis.text)] },
               )
             : extractChunk({ ...doc, text: analysis.text }, options);
-        return request.pipe(Effect.map(({ facts }) => facts));
+        return request.pipe(
+          AiUsage.withStage('system-one-fallback'),
+          Effect.map(({ facts }) => facts),
+        );
       }),
     );
 

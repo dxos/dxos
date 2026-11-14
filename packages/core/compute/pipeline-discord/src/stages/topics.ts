@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService } from '@dxos/ai';
+import { AiService, AiUsage } from '@dxos/ai';
 import { type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -72,6 +72,7 @@ export const summarizeSegment = (
 ): Effect.Effect<{ name: string; summary: string }, never, AiService.AiService> =>
   LanguageModel.generateObject({ schema: TopicShape, prompt: topicPrompt(segment, messages) }).pipe(
     Effect.provide(AiService.languageModel(DEFAULT_MODEL).pipe(Layer.orDie)),
+    AiUsage.withStage('topics'),
     Effect.map(({ value }) => value),
     Effect.catch(() => Effect.succeed({} as { name?: string; summary?: string })),
     Effect.map(({ name, summary }) => ({

@@ -10,7 +10,8 @@
 // DISCORD_CRAWL_REWIND: it restarts from its lookback window, and messages already stored are skipped.
 //   DISCORD_TOKEN=…  [DISCORD_CRAWL_CHANNELS=id[:days],…] [DISCORD_CRAWL_REWIND=id,…] [DISCORD_CRAWL_DB=path]
 //   [DISCORD_FACTS_DB=path] [DISCORD_MAX_DAYS=30] [DISCORD_CRAWL_TIMEOUT_MIN=60] [DISCORD_LIST_FACTS=1]
-//   [DX_ANTHROPIC_API_KEY=…]  moon run plugin-discord:crawl-demo
+//   [DISCORD_TRACE_LOG=path] [DX_ANTHROPIC_API_KEY=…]  moon run plugin-discord:crawl-demo
+// Every model call is metered: the run prints its cost and appends its trace to DISCORD_TRACE_LOG (JSON lines).
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import type * as ConfigError from 'effect/Config';
@@ -31,6 +32,7 @@ import { storesLayer } from '@dxos/pipeline-discord/testing';
 import { FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { discordSourceLayer } from '../services/index.ts';
+import { costReport, meter } from './metering.ts';
 import { extractOptionsFromEnv } from './vocabularies.ts';
 
 const token = process.env.DISCORD_TOKEN;
@@ -55,6 +57,7 @@ const timeoutMinutes = Number(process.env.DISCORD_CRAWL_TIMEOUT_MIN ?? 60);
 const dbPath = process.env.DISCORD_CRAWL_DB ?? join(tmpdir(), 'dxos-discord-crawl.db');
 // A file of its own: the fact store needs synchronous SQLite (`node:sqlite`), a different driver from the stores' client.
 const factsPath = process.env.DISCORD_FACTS_DB ?? join(tmpdir(), 'dxos-discord-facts.db');
+const tracePath = process.env.DISCORD_TRACE_LOG ?? join(dirname(dbPath), 'dxos-discord-trace.jsonl');
 const dumpFacts = Boolean(process.env.DISCORD_LIST_FACTS);
 // SQLite creates the file but not its directory, and a configured location may not exist yet.
 for (const path of [dbPath, factsPath]) {
@@ -107,16 +110,18 @@ describe('crawl demo', () => {
       const aiLayer: Layer.Layer<AiService.AiService, ConfigError.ConfigError> = useRealLlm
         ? DirectAiServiceLayer
         : deterministicAiService();
+      const metering = meter(aiLayer, tracePath);
       const layer = Layer.mergeAll(
         storesLayer(SqliteClient.layer({ filename: dbPath }).pipe(Layer.orDie), FactStoreLive.layerFile(factsPath)),
         discordSourceLayer(token!),
-        aiLayer,
+        metering.layer,
       );
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
           if (rewind.length > 0) {
             yield* StateStore.resetTargets(rewind);
           }
+          const before = yield* MessageStore.count();
           const summary = yield* DiscordPipeline.run(
             {
               channels,
@@ -130,11 +135,11 @@ describe('crawl demo', () => {
           const agents = yield* AgentRegistry.list();
           const targets = yield* StateStore.listTargets();
           const facts = yield* listFacts();
-          return { summary, stored, agents, targets, facts };
+          return { summary, stored, added: stored - before, agents, targets, facts };
         }).pipe(Effect.provide(layer)),
       );
 
-      console.log(`\nExtractor: ${useRealLlm ? 'LLM (claude-haiku-4-5)' : 'deterministic (no LLM)'}`);
+      console.log(`\nExtractor: ${useRealLlm ? 'LLM (claude-haiku-5-5)' : 'deterministic (no LLM)'}`);
       console.log(`db:       ${dbPath}`);
       console.log(`channels: ${channels.join(', ')}`);
       console.log(
@@ -145,6 +150,10 @@ describe('crawl demo', () => {
       console.log(`facts:    ${result.facts.length}`);
       console.log(`targets:  ${result.targets.map((target) => `${target.id}(${target.status})`).join(', ')}`);
       console.log(`agents:   ${result.agents.length}`);
+      console.log(`trace:    ${tracePath}`);
+      for (const line of costReport(metering.events(), result.added)) {
+        console.log(line);
+      }
       for (const agent of result.agents.slice(0, 10)) {
         console.log(`  ${String(agent.messageCount).padStart(4)}  ${agent.label ?? agent.id}`);
       }

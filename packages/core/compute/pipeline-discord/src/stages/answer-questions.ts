@@ -6,7 +6,7 @@ import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AiService } from '@dxos/ai';
+import { AiService, AiUsage } from '@dxos/ai';
 import { type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
 import { type Stage } from '@dxos/pipeline';
 import { FactStore, RDF, generateQuery } from '@dxos/pipeline-rdf';
@@ -75,7 +75,7 @@ export const answerOpenQuestions = (
         const { value } = yield* LanguageModel.generateObject({
           schema: AnswerShape,
           prompt: answerPrompt(question.text, facts),
-        }).pipe(Effect.provide(AiService.languageModel(DEFAULT_MODEL)));
+        }).pipe(Effect.provide(AiService.languageModel(DEFAULT_MODEL)), AiUsage.withStage('answer-questions'));
         const text = value.answer?.trim();
         if (!text) {
           return false;

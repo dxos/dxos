@@ -4,15 +4,16 @@
 
 // Re-extraction demo (node): replays the messages crawl-demo cached (no Discord token needed) through question and
 // fact extraction into DISCORD_FACTS_DB, so a fresh fact store can be rebuilt after the extractors change. Point it at
-// an empty or missing facts file to start over; an existing one is extended. Needs DX_ANTHROPIC_API_KEY.
-//   [DISCORD_CRAWL_DB=path] [DISCORD_FACTS_DB=path]  moon run plugin-discord:reextract
+// an empty or missing facts file to start over; an existing one is extended. Needs DX_ANTHROPIC_API_KEY. Prints the
+// replay's cost and appends its trace to DISCORD_TRACE_LOG (JSON lines, next to the crawl db).
+//   [DISCORD_CRAWL_DB=path] [DISCORD_FACTS_DB=path] [DISCORD_TRACE_LOG=path]  moon run plugin-discord:reextract
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { DirectAiServiceLayer } from '@dxos/ai/testing';
@@ -23,19 +24,22 @@ import { MessageStore, extractQuestionsStage, replayStream } from '@dxos/pipelin
 import { storesLayer } from '@dxos/pipeline-discord/testing';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
+import { costReport, meter } from './metering.ts';
 import { extractOptionsFromEnv } from './vocabularies.ts';
 
 const dbPath = process.env.DISCORD_CRAWL_DB ?? join(tmpdir(), 'dxos-discord-crawl.db');
 const factsPath = process.env.DISCORD_FACTS_DB ?? join(tmpdir(), 'dxos-discord-facts.db');
+const tracePath = process.env.DISCORD_TRACE_LOG ?? join(dirname(dbPath), 'trace.jsonl');
 const hasKey = Boolean(process.env.DX_ANTHROPIC_API_KEY);
 
 describe('re-extract', () => {
   test.skipIf(!existsSync(dbPath) || !hasKey)(
     'replays cached messages through question and fact extraction',
     async ({ expect }) => {
+      const metering = meter(DirectAiServiceLayer, tracePath);
       const layer = Layer.mergeAll(
         storesLayer(SqliteClient.layer({ filename: dbPath }).pipe(Layer.orDie), FactStoreLive.layerFile(factsPath)),
-        DirectAiServiceLayer,
+        metering.layer,
       );
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
@@ -72,6 +76,10 @@ describe('re-extract', () => {
       console.log(`messages: ${result.messages}`);
       console.log(`facts:    ${result.facts.length} (${questions.length / 3} questions as ${questions.length} facts)`);
       console.log(`predicates: ${result.predicates.length} (${minted.length} minted)`);
+      console.log(`trace:    ${tracePath}`);
+      for (const line of costReport(metering.events(), result.messages)) {
+        console.log(line);
+      }
       for (const predicate of minted) {
         console.log(`  ${predicate.label}  <${predicate.iri}>`);
       }

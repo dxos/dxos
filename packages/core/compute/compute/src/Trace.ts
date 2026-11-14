@@ -764,6 +764,32 @@ export const DelegationCompleted = EventType('assistant.delegationCompleted', {
 });
 
 /**
+ * One language-model call's token usage, written by the metered `AiService` (see `AiMetering`).
+ * Durable so a run's cost can be read back from its trace; dollars are applied at read time from the
+ * model catalog's prices, which change.
+ */
+export const ModelCall = EventType('ai.modelCall', {
+  schema: Schema.Struct({
+    /** Catalog id of the model (a DXN string). */
+    modelId: Schema.optional(Schema.String),
+    /** The provider's name for the model. */
+    model: Schema.String,
+    provider: Schema.optional(Schema.String),
+    /** The pipeline or agent stage that made the call. */
+    stage: Schema.optional(Schema.String),
+    spanName: Schema.optional(Schema.String),
+    inputTokens: Schema.Number,
+    outputTokens: Schema.Number,
+    cacheReadTokens: Schema.Number,
+    cacheWriteTokens: Schema.Number,
+    /** Epoch milliseconds. */
+    start: Schema.Number,
+    end: Schema.Number,
+  }),
+  isEphemeral: false,
+});
+
+/**
  * Emitted when an MCP server connection fails for a request turn.
  * Ephemeral so that misconfigured/unreachable servers don't pollute the durable feed,
  * but can still be surfaced to the user via the live ephemeral event stream.

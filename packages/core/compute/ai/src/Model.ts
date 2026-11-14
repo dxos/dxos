@@ -24,6 +24,17 @@ export type Characteristics = {
   readonly thinking?: boolean;
 };
 
+/**
+ * List price in USD per million tokens. Cache prices are optional: a model the catalog does not price
+ * them for is charged its input price for cache tokens, an upper bound.
+ */
+export type Pricing = {
+  readonly input: number;
+  readonly output: number;
+  readonly cacheRead?: number;
+  readonly cacheWrite?: number;
+};
+
 /** Options applied when resolving a model: the subset of {@link Characteristics} a caller can toggle. */
 export type Options = Pick<Characteristics, 'thinking'>;
 
@@ -43,6 +54,8 @@ export type Model = {
   readonly label: string;
   /** Characteristics, which may vary between providers serving the same model. */
   readonly characteristics?: Characteristics;
+  /** List price on this provider; unset for local models and where the price is not known. */
+  readonly pricing?: Pricing;
 };
 
 type MakeOptions = Omit<Model, 'id'>;
@@ -118,6 +131,7 @@ export const claudeOpus5: Model = make('com.anthropic.model.claude-opus-5.defaul
   backend: 'claude-opus-5',
   label: 'Claude Opus 5',
   characteristics: { maxTokens: 16_384, thinking: true, tools: true },
+  pricing: { input: 5, output: 25 },
 });
 
 export const claudeSonnet5: Model = make('com.anthropic.model.claude-sonnet-5.default', {
@@ -125,6 +139,7 @@ export const claudeSonnet5: Model = make('com.anthropic.model.claude-sonnet-5.de
   backend: 'claude-sonnet-5',
   label: 'Claude Sonnet 5',
   characteristics: { maxTokens: 16_384, thinking: true, tools: true },
+  pricing: { input: 2, output: 10 },
 });
 
 export const claudeHaiku45: Model = make('com.anthropic.model.claude-haiku-4-5.default', {
@@ -132,6 +147,7 @@ export const claudeHaiku45: Model = make('com.anthropic.model.claude-haiku-4-5.d
   backend: 'claude-haiku-4-5',
   label: 'Claude Haiku 4.5',
   characteristics: { maxTokens: 16_384, tools: true },
+  pricing: { input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1.25 },
 });
 
 export const claudeHaiku55: Model = make('com.anthropic.model.claude-haiku-5-5.default', {
@@ -139,6 +155,8 @@ export const claudeHaiku55: Model = make('com.anthropic.model.claude-haiku-5-5.d
   backend: 'claude-haiku-5-5',
   label: 'Claude Haiku 5.5',
   characteristics: { maxTokens: 16_384, thinking: true, tools: true },
+  // Prompts over 100K tokens are billed at $0.50 / $2.50; this catalog prices the short-prompt tier.
+  pricing: { input: 0.1, output: 0.5 },
 });
 
 export const deepseekV4Flash: Model = make('com.deepseek.model.deepseek-v4-flash.default', {
