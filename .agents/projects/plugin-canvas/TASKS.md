@@ -436,6 +436,10 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       the fewest right-angled bends that cross neither shape (`orthoRoute`, a search over the lines of the two
       frames' clearances and the gap between them). An end on no port, and shapes that overlap, keep the one-corner
       rule. Story `Links` draws twelve cases (facing, corner, same side, facing away) in any variant.
+- [x] **Orthogonal is the default link** (user, 2026-11-13): it leads `defaultLinkRegistry` (the tools rail's link
+      fold, the Variant list) and is the type a port drag draws until a link tool is picked (`atoms.linkType`). A
+      stored link naming no type still reads as `smart` (`DEFAULT_LINK_TYPE`), as do graph-mode and generated links,
+      which take a lattice's gutters.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the
       shape, and the part of it, under the pointer, ahead of the commands every element has. First case: a right
       click on the end of a line offers that end's marker (arrow, circle, triangle, none). Others to decide as it is

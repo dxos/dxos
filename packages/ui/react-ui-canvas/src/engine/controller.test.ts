@@ -587,6 +587,8 @@ describe('CanvasController', () => {
       controller.selection.select(['a']);
       controller.tools.setTool({ kind: 'select' });
       expect(registry.get(atoms.selection).size).toBe(1);
+      // Until a link tool is picked, a link drawn from a port is orthogonal.
+      expect(registry.get(atoms.linkType)).toBe('ortho');
       controller.tools.setTool({ kind: 'link', type: 'curve' });
       expect(registry.get(atoms.selection).size).toBe(0);
       expect(registry.get(atoms.linkType)).toBe('curve');

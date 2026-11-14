@@ -91,6 +91,8 @@ describe('toolGroups', () => {
     expect(last && 'fold' in last && last.fold.entries.map((entry) => entry.tool.kind)).toEqual(
       Object.values(defaultLinkRegistry).map(() => 'link'),
     );
+    // The fold leads with the default variant.
+    expect(last && 'fold' in last && last.fold.entries[0].tool).toEqual({ kind: 'link', type: 'ortho' });
     // Before it, the node tools: each alone, or folded with its variants.
     expect(
       runs
