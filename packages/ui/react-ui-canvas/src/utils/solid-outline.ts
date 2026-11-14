@@ -18,6 +18,7 @@ import {
   isPolylineNode,
   isShapeNode,
   nodeBase,
+  paddingFields,
   solidBounds2D,
   solidOperands,
 } from '@dxos/scene';
@@ -43,6 +44,7 @@ export const SolidNode = Schema.Struct({
   type: Schema.Literal('solid'),
   ...nodeBase,
   label: Schema.optional(Schema.String),
+  ...paddingFields,
   op: Schema.optional(Schema.String),
   operands: Schema.optional(Schema.String),
   rings: Schema.optional(Schema.Array(Schema.Array(Point))),

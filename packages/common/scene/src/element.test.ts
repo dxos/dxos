@@ -2,9 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { NodeStyle, NoteNode, RectNode, boxFields, linkBase, nodeBase, nodePadding } from './element.ts';
+import {
+  CloudNode,
+  EllipseNode,
+  NodeStyle,
+  NoteNode,
+  PolygonNode,
+  PolylineNode,
+  RectNode,
+  ShapeNode,
+  boxFields,
+  linkBase,
+  nodeBase,
+  nodePadding,
+} from './element.ts';
 
 describe('element base', () => {
   test('the scene element base has every react-ui-canvas node and link field', () => {
@@ -76,5 +90,19 @@ describe('element base', () => {
     expect(nodePadding(none)).toEqual({ x: 0, y: 0 });
     const across: NoteNode = { ...node, padding: { x: 8 } };
     expect(nodePadding(across)).toEqual({ x: 8 });
+  });
+
+  test('every shape that draws a label carries padding, in minor grid cells', () => {
+    const frame = { id: 'a', z: 'a0', center: { x: 0, y: 0 }, size: { width: 96, height: 48 } };
+    const padded = { ...frame, label: 'A', padding: { x: 2, y: 1 } };
+    expect(Schema.is(RectNode)({ ...padded, type: 'rect' })).toBe(true);
+    expect(Schema.is(EllipseNode)({ ...padded, type: 'ellipse' })).toBe(true);
+    expect(Schema.is(CloudNode)({ ...padded, type: 'cloud' })).toBe(true);
+    expect(Schema.is(PolygonNode)({ ...padded, type: 'polygon' })).toBe(true);
+    expect(Schema.is(ShapeNode)({ ...padded, type: 'shape', recipe: 'arrow' })).toBe(true);
+    expect(Schema.is(PolylineNode)({ ...padded, type: 'polyline', points: [] })).toBe(true);
+    // The value is a number of cells, read back as it was stored, a part of a cell included.
+    expect(nodePadding({ ...padded, type: 'ellipse', padding: { x: 0.5 } })).toEqual({ x: 0.5 });
+    expect(Schema.is(EllipseNode)({ ...padded, type: 'ellipse', padding: { x: 'wide' } })).toBe(false);
   });
 });

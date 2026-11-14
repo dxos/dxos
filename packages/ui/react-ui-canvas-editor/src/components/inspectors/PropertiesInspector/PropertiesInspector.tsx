@@ -81,6 +81,7 @@ import {
   isNoteNode,
   isShapeNode,
   isViewNode,
+  nodePadding,
   showsContents,
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
@@ -242,6 +243,16 @@ const shownParams = (element: Node): { params?: Record<string, number> } => {
   return recipe && isShapeNode(element) ? { params: shapeParams(recipe, element.params) } : {};
 };
 
+/**
+ * A node's text padding as it is drawn, in minor grid cells: one cell either side unless set, and above and below
+ * too for a text node, whose lines start at its frame's top; a label is placed by its alignment and has none there.
+ */
+const shownPadding = (element: Node): { x: number; y: number } => ({
+  x: 1,
+  y: isNoteNode(element) ? 1 : 0,
+  ...nodePadding(element),
+});
+
 /** The range and step the panel offers for each of a recipe's parameters: a share steps finely, a length or count by one. */
 const shapeOverrides = (recipe: ShapeRecipe): Record<string, FormFieldOverride> =>
   Object.fromEntries(
@@ -290,6 +301,7 @@ const formValues = (
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isViewNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
         ...shownParams(element),
+        padding: shownPadding(element),
       };
 
 /**
@@ -306,6 +318,9 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   // Drawn beside the rotation by `FrameField`, and beside the centre by `GeometryField`.
   'portsPerSide': { hidden: true },
   'size': { hidden: true },
+  // Whole cells of the minor grid by the stepper; a template may hold a part of one.
+  'padding.x': { min: 0, max: 16, step: 1 },
+  'padding.y': { min: 0, max: 16, step: 1 },
   // Drawn beside the hull's border by `HullField`.
   'inset': { hidden: true },
   'scene': { label: 'View' },

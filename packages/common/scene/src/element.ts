@@ -289,9 +289,10 @@ export const boxFields = {
  * in `label` still reads as itself.
  */
 /**
- * Space between a shape's frame and the text it draws, in scene px. Unset, a text box pads itself by a minor grid
- * cell either side, which is what puts a label's own lines on the grid; zero puts the text on the frame's edge, as a
- * part of a composite card must be to sit where the card's own regions sit.
+ * Space between a shape's frame and the text it draws, in cells of the drawing's minor grid, so the text stays on
+ * the grid and the space follows the grid's size. Unset, a text box pads itself by one cell either side (a text
+ * node above and below too); zero puts the text on the frame's edge, as a part of a composite card must be to sit
+ * where the card's own regions sit.
  */
 export const Padding = Schema.Struct({
   x: Schema.optional(Schema.Number.annotate({ title: 'X' })),
@@ -299,7 +300,7 @@ export const Padding = Schema.Struct({
 }).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }));
 export type Padding = Schema.Schema.Type<typeof Padding>;
 
-/** The fields of a shape whose text is inset from its frame: the rectangle and the text node. */
+/** The fields of a shape whose text is inset from its frame: every shape that draws a label, and the text node. */
 export const paddingFields = {
   padding: Schema.optional(Padding.annotate({ title: 'Padding' })),
 };
@@ -336,6 +337,7 @@ export const EllipseNode = Schema.Struct({
   type: Schema.Literal('ellipse'),
   ...nodeBase,
   label: Schema.optional(Schema.String),
+  ...paddingFields,
 });
 export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
 
@@ -353,6 +355,7 @@ export const CloudNode = Schema.Struct({
   type: Schema.Literal('cloud'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   params: Schema.optional(CloudParams),
 });
 export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
@@ -382,6 +385,7 @@ export const PolygonNode = Schema.Struct({
   type: Schema.Literal('polygon'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   params: Schema.optional(PolygonParams),
 });
 export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
@@ -396,6 +400,7 @@ export const ShapeNode = Schema.Struct({
   type: Schema.Literal('shape'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   recipe: Schema.String,
   /** The recipe's parameters by id; one unset takes the recipe's default. */
   params: Schema.optional(Schema.Record(Schema.String, Schema.Number)),
@@ -434,6 +439,7 @@ export const PolylineNode = Schema.Struct({
   type: Schema.Literal('polyline'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   points: Schema.Array(Point),
   bends: Schema.optional(Schema.Array(PolylineBend)),
   params: Schema.optional(PolylineParams),

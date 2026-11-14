@@ -26,8 +26,8 @@ const TOP = -SIZE.height / 2;
  * methods the bottom, so a class resized taller grows its attribute list rather than stretching its name.
  */
 export const TEMPLATE = `composite class size=${SIZE.width}x${SIZE.height} name="Class" {
-  element name note @ 0,${TOP + ROW / 2} size=${SIZE.width}x${ROW} constrain=stretch,min bind=label border=true padding=4,2
-  element attributes note @ 0,0 size=${SIZE.width}x${MIDDLE} constrain=stretch bind="data.attributes" border=true padding=4,2
-  element methods note @ 0,${-TOP - ROW / 2} size=${SIZE.width}x${ROW} constrain=stretch,max bind="data.methods" border=true padding=4,2
+  element name note @ 0,${TOP + ROW / 2} size=${SIZE.width}x${ROW} constrain=stretch,min bind=label border=true padding=0.33,0.17
+  element attributes note @ 0,0 size=${SIZE.width}x${MIDDLE} constrain=stretch bind="data.attributes" border=true padding=0.33,0.17
+  element methods note @ 0,${-TOP - ROW / 2} size=${SIZE.width}x${ROW} constrain=stretch,max bind="data.methods" border=true padding=0.33,0.17
 }
 `;
