@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type Bounds, type Endpoint, type Point, isPointEndpoint } from '@dxos/scene';
+import { type Bounds, type Endpoint, type Point, isPointEndpoint, isShapeNode } from '@dxos/scene';
 
 import { type Drag, type DrawScene } from '../../engine/index.ts';
 import { type RenderList2D } from '../../model/index.ts';
@@ -23,7 +23,7 @@ import {
   topZ,
   updateElement,
 } from '../../utils/index.ts';
-import { type PointerMachine, PREVIEW_NODE_ID, isLinkDrawn } from './usePointerMachine.ts';
+import { type PointerMachine, PREVIEW_NODE_ID, isLinkDrawn, paramDrop } from './usePointerMachine.ts';
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -103,6 +103,16 @@ export const movePreview = (
   return { displayScene: { ...followed, nodes }, blocked: false, landing };
 };
 
+/**
+ * The edit an adjust handle in flight previews: the one its release will make, so the shape drawn while dragging is
+ * the shape that lands. Nothing where the release writes nothing (a press that has not moved, a locked shape).
+ */
+export const paramPreview = (scene: RenderList2D, drag: Extract<Drag, { kind: 'param' }>): SceneEdit | undefined => {
+  const node = scene.nodes[drag.id];
+  const params = node && !node.locked && isShapeNode(node) ? paramDrop(drag, node.params) : undefined;
+  return params ? updateElement(drag.id, { params }) : undefined;
+};
+
 /** What the gesture in flight draws: the scene as it would be once the gesture lands. */
 export const useGesturePreview = ({
   scene,
@@ -145,7 +155,8 @@ export const useGesturePreview = ({
       };
     }
     if (drag?.kind === 'param') {
-      return preview(updateElement(drag.id, { params: drag.params }));
+      const edit = paramPreview(scene, drag);
+      return edit ? preview(edit) : { displayScene: scene, blocked: false };
     }
     if (drag?.kind === 'vertex') {
       // Refitted as the release will land it, so the frame and its outline follow the vertex.

@@ -129,7 +129,17 @@ const liftElement = (
     ...(shape
       ? {
           ...(element.type !== undefined ? { type: shape.type } : {}),
-          props: { ...element.props, mesh: shape.props.mesh },
+          props: {
+            ...element.props,
+            mesh: shape.props.mesh,
+            // A kind of its own flattens by its own recipe, so one taken from the object is kept on the element.
+            ...(element.type !== undefined
+              ? {
+                  recipe: shape.props.recipe,
+                  ...(shape.props.params !== undefined ? { params: shape.props.params } : {}),
+                }
+              : {}),
+          },
         }
       : element.type !== undefined
         ? { type: liftKind(element.type) }

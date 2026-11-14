@@ -123,6 +123,28 @@ describe('a parametric shape', () => {
     expect(flat.elements.long.props).toEqual({ params: { head: 1 } });
   });
 
+  test("an element with a kind of its own, drawn by its object's recipe, flattens back to the shape", () => {
+    const objects: Record<string, Scene.Object2D> = {
+      arrow: { id: 'arrow', type: 'shape', props: { recipe: 'arrow', params: { head: 0.5 } } },
+    };
+    const typed: Scene.LayoutRecord2D = {
+      id: 'l',
+      dim: '2d',
+      elements: {
+        own: { id: 'own', type: 'shape', object: 'arrow', size: { width: 200, height: 100 } },
+        placed: { id: 'placed', object: 'arrow', size: { width: 200, height: 100 } },
+      },
+    };
+    const lifted = liftLayout(typed, objects);
+    expect(lifted.elements.own).toMatchObject({ type: 'mesh', props: { recipe: 'arrow', params: { head: 0.5 } } });
+    const flat = flattenLayout(lifted);
+    expect(flat.elements.own.type).toBe('shape');
+    expect(flat.elements.own.props).toEqual({ recipe: 'arrow', params: { head: 0.5 } });
+    // One that takes its kind from the object keeps only what it had: the recipe stays the object's.
+    expect(flat.elements.placed.type).toBeUndefined();
+    expect(flat.elements.placed.props ?? {}).toEqual({});
+  });
+
   test('flattens back to the shape, without the solid it was stood up as', () => {
     const flat = flattenLayout(liftLayout(layout)).elements.arrow;
     expect(flat).toMatchObject({
