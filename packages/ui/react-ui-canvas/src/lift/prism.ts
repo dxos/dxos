@@ -56,6 +56,33 @@ export const triangulate = (points: readonly Point[]): number[] => {
   return ring.length === 3 ? [...triangles, ...ring] : triangles;
 };
 
+const EPSILON = 1e-9;
+
+/**
+ * The outline as a ring fit to cut: without a vertex that repeats the one before it (the first after the last too),
+ * and without one on the line between its neighbours. A recipe fitted to a small frame gives both, and neither is a
+ * corner an ear could be cut at; the outline drawn is the same.
+ */
+const ring = (points: readonly Point[]): Point[] => {
+  const kept = [...points];
+  // One vertex at a time: taking two neighbours out in one pass could take a corner with them.
+  while (kept.length >= 3) {
+    const spare = kept.findIndex((point, index) => {
+      const before = kept[(index + kept.length - 1) % kept.length];
+      const after = kept[(index + 1) % kept.length];
+      return (
+        Math.hypot(point.x - before.x, point.y - before.y) <= EPSILON ||
+        Math.abs(cross(before, point, after)) <= EPSILON
+      );
+    });
+    if (spare < 0) {
+      break;
+    }
+    kept.splice(spare, 1);
+  }
+  return kept;
+};
+
 const round = (value: number) => Math.round(value * 1e6) / 1e6 + 0;
 
 /** FNV-1a over the numbers, so two prisms of one outline share a key and a cached mesh. */
@@ -73,16 +100,17 @@ const contentKey = (positions: readonly number[], indices: readonly number[]): s
  * outline stood on the ground plane (canvas y is −z) and as thick as the unit cube, its faces wound outward.
  */
 export const prismMesh = (outline: readonly Point[]): PrismMesh | undefined => {
-  if (outline.length < 3) {
-    return undefined;
-  }
   // Each vertex on the ground plane: the scene's x, and its z, which runs against the canvas's y.
-  const ground = outline.map(({ x, y }) => ({ x: x - 0.5, y: 0.5 - y }));
-  const caps = triangulate(ground);
-  if (caps.length === 0) {
+  const ground = ring(outline.map(({ x, y }) => ({ x: x - 0.5, y: 0.5 - y })));
+  if (ground.length < 3) {
     return undefined;
   }
   const count = ground.length;
+  const caps = triangulate(ground);
+  // A cap cut only part of the way would leave the solid open.
+  if (caps.length !== (count - 2) * 3) {
+    return undefined;
+  }
   // The top ring, then the bottom ring.
   const positions = [0.5, -0.5].flatMap((height) => ground.flatMap(({ x, y }) => [round(x), height, round(y)]));
   // A face is wound counter-clockwise seen from outside; on the ground's x and z that is clockwise for the top.

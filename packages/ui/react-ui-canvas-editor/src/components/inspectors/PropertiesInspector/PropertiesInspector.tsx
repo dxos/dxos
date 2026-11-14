@@ -245,13 +245,12 @@ const shownParams = (element: Node): { params?: Record<string, number> } => {
 };
 
 /**
- * A node's text padding as it is drawn, in scene px: unless set, a minor grid cell either side, and above and below
- * half a cell for a label or a whole one for a text node, whose lines start at its frame's top. The cell shown is
- * the default grid's, which is the drawing's unless it sets another.
+ * A node's text padding as it is drawn, in scene px: unless set, a cell of the drawing's minor `grid` either side,
+ * and above and below half a cell for a label or a whole one for a text node, whose lines start at its frame's top.
  */
-const shownPadding = (element: Node): { x: number; y: number } => ({
-  x: DEFAULT_GRID,
-  y: isNoteNode(element) ? DEFAULT_GRID : DEFAULT_GRID / 2,
+const shownPadding = (element: Node, grid: number): { x: number; y: number } => ({
+  x: grid,
+  y: isNoteNode(element) ? grid : grid / 2,
   ...nodePadding(element),
 });
 
@@ -289,6 +288,7 @@ const formValues = (
   element: Element,
   styles: StyleMap,
   layers: readonly Layer[],
+  grid: number,
 ): Record<string, unknown> =>
   isLink(element)
     ? { ...element, layer: elementLayer(element, layers), style: classedLink(element, styles).style }
@@ -303,7 +303,7 @@ const formValues = (
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isViewNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
         ...shownParams(element),
-        padding: shownPadding(element),
+        padding: shownPadding(element, grid),
       };
 
 /**
@@ -357,6 +357,8 @@ export type PropertiesInspectorProps = InspectorProps & {
   viewOptions?: readonly ViewOption[];
   /** The drawing's style classes (`DrawState.styles`); without them elements take no class. */
   styles?: Atom.Writable<StyleMap>;
+  /** The drawing's minor grid pitch in scene px, which a text's unset padding is drawn by; the default grid's unset. */
+  grid?: number;
   /** Whether each group (`style`, `center`, …) is open, by path, for a host that keeps it; unset, a group is open. */
   groups?: Readonly<Record<string, boolean>>;
   onGroupsChange?: (groups: Record<string, boolean>) => void;
@@ -376,6 +378,7 @@ export const PropertiesInspector = ({
   overrides,
   viewOptions,
   styles,
+  grid = DEFAULT_GRID,
   groups,
   onGroupsChange,
 }: PropertiesInspectorProps) => {
@@ -428,7 +431,7 @@ export const PropertiesInspector = ({
     return ordered.some((name, index) => name !== names[index]) ? ordered : undefined;
   }, [schema]);
   const { values, fieldOverrides } = useMemo(() => {
-    const shown = elements.map((element) => formValues(nodes, element, styleMap, layers));
+    const shown = elements.map((element) => formValues(nodes, element, styleMap, layers, grid));
     const recipes = [...new Set(elements.map(recipeOf))].flatMap((recipe) => (recipe ? [recipe] : []));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
@@ -461,7 +464,7 @@ export const PropertiesInspector = ({
       }
     }
     return { values, fieldOverrides };
-  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers, groups, onGroupsChange]);
+  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers, grid, groups, onGroupsChange]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -471,7 +474,7 @@ export const PropertiesInspector = ({
       // The markers set here are the ones the next link drawn takes.
       let ends: LinkEnds | undefined;
       const edits = elements.map((element) => {
-        const shown = formValues(nodes, element, styleMap, layers);
+        const shown = formValues(nodes, element, styleMap, layers, grid);
         // The element's own style as the base, so a field the panel shows resolved (an unset corner as on) is not written.
         const { type: picked, ...patch } = patchValues({ ...shown, style: element.style }, values, paths);
         if (isLink(element) && 'ends' in patch) {
@@ -505,7 +508,7 @@ export const PropertiesInspector = ({
         registry.set(atoms.linkEnds, ends);
       }
     },
-    [draw, elements, nodes, styles, styleMap, layers, registry, atoms.linkEnds],
+    [draw, elements, nodes, styles, styleMap, layers, grid, registry, atoms.linkEnds],
   );
 
   // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.
