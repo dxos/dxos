@@ -57,6 +57,8 @@ type Channel = {
   parent_id?: string | null;
   name?: string;
   topic?: string | null;
+  last_message_id?: string | null;
+  thread_metadata?: { archive_timestamp?: string };
 };
 type Guild = { id: string; name: string };
 type ThreadSearch = { threads: Channel[]; has_more: boolean };
@@ -179,41 +181,61 @@ const messagesOf = (client: Client, channelId: string, after: string, before: st
     return all;
   });
 
+/** A thread's last activity as a snowflake, so it compares to the window's `after` id: its last message, else its archive time. */
+const threadActivity = (thread: Channel): string =>
+  thread.last_message_id ??
+  (thread.thread_metadata?.archive_timestamp
+    ? snowflakeForTimestamp(Date.parse(thread.thread_metadata.archive_timestamp))
+    : '0');
+
+/** A thread whose last activity predates the window has nothing to export, so enumeration can stop at it. */
+const inWindow = (thread: Channel, after: string): boolean => BigInt(threadActivity(thread)) >= BigInt(after);
+
 /**
- * A channel's threads, active and archived. A user token reaches them through the client's thread search, which pages
- * by offset; a bot uses the guild's active list plus the channel's archived public threads, paged by archive time.
+ * A channel's threads whose last activity is within the window. A user token reaches them through the client's thread
+ * search, which pages by offset; a bot uses the guild's active list plus the channel's archived public threads, paged
+ * by archive time. Both archived lists are newest-first, so enumeration stops at the first thread older than `after`
+ * instead of walking a forum's entire history.
  */
-const threadsOf = (client: Client, kind: 'user' | 'bot', channel: Channel) =>
+const threadsOf = (client: Client, kind: 'user' | 'bot', channel: Channel, after: string) =>
   Effect.gen(function* () {
     const found = new Map<string, Channel>();
+    const keep = (threads: readonly Channel[]): boolean => {
+      // `false` once a thread falls before the window, so a newest-first page stops the walk.
+      let within = true;
+      for (const thread of threads) {
+        if (inWindow(thread, after)) {
+          found.set(thread.id, thread);
+        } else {
+          within = false;
+        }
+      }
+      return within;
+    };
     if (kind === 'user') {
+      // Active threads first (recent by definition), then archived newest-first until one predates the window.
       for (const archived of [false, true]) {
         for (let offset = 0; ; offset += THREAD_PAGE) {
           const page = yield* client.get<ThreadSearch>(
             `channels/${channel.id}/threads/search?archived=${archived}&sort_by=last_message_time&sort_order=desc&limit=${THREAD_PAGE}&offset=${offset}`,
           );
-          page.threads.forEach((thread) => found.set(thread.id, thread));
-          if (!page.has_more || page.threads.length === 0) {
+          const within = keep(page.threads);
+          if (!page.has_more || page.threads.length === 0 || (archived && !within)) {
             break;
           }
         }
       }
     } else {
       const active = yield* client.get<{ threads: Channel[] }>(`guilds/${channel.guild_id}/threads/active`);
-      active.threads
-        .filter((thread) => thread.parent_id === channel.id)
-        .forEach((thread) => found.set(thread.id, thread));
+      keep(active.threads.filter((thread) => thread.parent_id === channel.id));
       let before: string | undefined;
       while (true) {
-        const page = yield* client.get<{
-          threads: (Channel & { thread_metadata?: { archive_timestamp: string } })[];
-          has_more: boolean;
-        }>(
+        const page = yield* client.get<{ threads: Channel[]; has_more: boolean }>(
           `channels/${channel.id}/threads/archived/public?limit=100${before ? `&before=${encodeURIComponent(before)}` : ''}`,
         );
-        page.threads.forEach((thread) => found.set(thread.id, thread));
+        const within = keep(page.threads);
         const last = page.threads[page.threads.length - 1]?.thread_metadata?.archive_timestamp;
-        if (!page.has_more || !last) {
+        if (!page.has_more || !last || !within) {
           break;
         }
         before = last;
@@ -315,6 +337,19 @@ const { values: args } = parseArgs({
   },
 });
 
+/** A channel the token cannot read (Discord answers 401/403, or 404 for one hidden from it); those are skipped. */
+const accessDenied = (error: ExportError | Cause.UnknownError): boolean =>
+  error._tag === 'ExportError' && [401, 403, 404].includes(error.status ?? 0);
+
+/** The effect's result, or `undefined` when the token has no access — a public guild has channels most members cannot read. */
+const orSkip = <A>(effect: Effect.Effect<A, ExportError | Cause.UnknownError>, what: string) =>
+  effect.pipe(
+    Effect.catchIf(accessDenied, () => {
+      process.stdout.write(`\r  (no access to ${what}, skipped)\n`);
+      return Effect.succeed(undefined);
+    }),
+  );
+
 const program = Effect.gen(function* () {
   const token = readToken();
   if (!token) {
@@ -362,15 +397,19 @@ const program = Effect.gen(function* () {
     console.log(`#${channel.name} (${channel.id})`);
     // A forum holds no messages of its own, only threads.
     if (channel.type !== 15) {
-      write(channel, undefined, yield* messagesOf(client, channel.id, range.after, range.before));
+      const messages = yield* orSkip(messagesOf(client, channel.id, range.after, range.before), 'messages');
+      if (messages) {
+        write(channel, undefined, messages);
+      }
     }
     if (!args['no-threads']) {
-      const threads = (yield* threadsOf(client, kind, channel)).filter((thread) => THREAD_TYPES.has(thread.type));
+      const found = yield* orSkip(threadsOf(client, kind, channel, range.after), 'threads');
+      const threads = (found ?? []).filter((thread) => THREAD_TYPES.has(thread.type));
       for (const thread of threads) {
         console.log(` ↳ ${thread.name} (${thread.id})`);
-        const messages = yield* messagesOf(client, thread.id, range.after, range.before);
+        const messages = yield* orSkip(messagesOf(client, thread.id, range.after, range.before), 'thread messages');
         // An old thread usually has nothing in the window; a file per such thread would bury the ones that do.
-        if (messages.length > 0) {
+        if (messages && messages.length > 0) {
           write(thread, channel, messages);
         }
       }
