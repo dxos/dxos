@@ -19,6 +19,21 @@ describe('mdl lint', () => {
     ]);
   });
 
+  test('a block type the Extensions table lists or an ext block declares is known', ({ expect }) => {
+    const table = ['## Extensions', '', '| Term | URI |', '| --- | --- |', '| `widget` | `x.widget@1` |', ''].join(
+      '\n',
+    );
+    expect(messages(`${table}\n## Widgets\n\n${block('widget W-1')}`)).toEqual([]);
+    expect(messages(block('ext gadget\n  uri: x.gadget@1\n  desc: A gadget.') + block('gadget G-1'))).toEqual([]);
+  });
+
+  test("a block type the spec's dialects declare is known", ({ expect }) => {
+    const errors = lintMdl(block('scene SC-1: Opening'), { types: ['scene'] }).filter(
+      ({ source }) => source === 'mdl/block-type',
+    );
+    expect(errors).toEqual([]);
+  });
+
   test('the worker dialect blocks are known', ({ expect }) => {
     expect(
       messages(

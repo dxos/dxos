@@ -396,6 +396,7 @@ op RevertWorkspace
 
 ```mdl
 feat F-1: Deck Presentations
+  uses: [UpdateTilingSize]
 
   req F-1.1:
     when: the active deck changes length or the breakpoint changes
@@ -446,6 +447,7 @@ feat F-1: Deck Presentations
 
 ```mdl
 feat F-2: Fullscreen
+  uses: [AdjustPlank, EphemeralDeckState]
 
   req F-2.1:
     when: user triggers AdjustPlank with type=fullscreen for a plank
@@ -463,6 +465,7 @@ feat F-2: Fullscreen
 
 ```mdl
 feat F-3: Sidebar & Complementary Sidebar
+  uses: [UpdateComplementary, UpdateDrawer, UpdateSidebar]
 
   req F-3.1:
     when: UpdateSidebar is dispatched with a new state
@@ -489,6 +492,7 @@ feat F-3: Sidebar & Complementary Sidebar
 
 ```mdl
 feat F-4: Dialog & Popover Overlay
+  uses: [UpdateDialog, UpdatePopover]
 
   req F-4.1:
     when: UpdateDialog is dispatched with a subject component
@@ -505,6 +509,7 @@ feat F-4: Dialog & Popover Overlay
 
 ```mdl
 feat F-5: URL Navigation & Deep Linking
+  uses: [Open]
 
   desc: |
     The URL is a pair chain (`/w/<workspace>/<key>/<id>/…`) with one pair per plank path segment;
@@ -537,6 +542,7 @@ feat F-5: URL Navigation & Deep Linking
 
 ```mdl
 feat F-6: Toast Notifications
+  uses: [AddToast]
 
   req F-6.1:
     when: AddToast is dispatched
@@ -549,6 +555,7 @@ feat F-6: Toast Notifications
 
 ```mdl
 feat F-7: Navigation Model
+  uses: [Open]
 
   desc: |
     Interaction model replacing the former `navigationDefault` setting and replace-the-attended-plank
@@ -615,6 +622,7 @@ feat F-7: Navigation Model
 
 ```mdl
 feat F-8: Flat Navigation (breadcrumbs)
+  uses: [Close]
 
   desc: |
     The `flatten` setting (on by default) collapses the scrolling deck into a single-plank view whose

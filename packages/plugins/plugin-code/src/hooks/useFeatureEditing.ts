@@ -28,8 +28,6 @@ export type FeatureEditing = {
   removeFeature: (featureId: string) => void;
   /** Creates a planned feature under `parentId`, else on the map's spec; resolves to its id. */
   createFeature: (name: string, parentId?: string) => Promise<string | undefined>;
-  /** Moves the feature under `parentId`, else onto the map's spec. */
-  moveFeature: (featureId: string, parentId?: string) => void;
 };
 
 /**
@@ -115,29 +113,6 @@ export const useFeatureEditing = (db: Database.Database | undefined, spec?: Spec
         const result = await run(CodeOperation.CreateFeature, parent ? { name, parent } : { name, spec: specRef });
         return result?.feature.id;
       },
-      moveFeature: (featureId, parentId) =>
-        void (async () => {
-          const [feature, parent] = await Promise.all([
-            featureRef(featureId),
-            parentId ? featureRef(parentId) : undefined,
-          ]);
-          // A parent that does not resolve moves nothing, rather than falling back to the map's own spec.
-          if (!feature || (parentId && !parent)) {
-            return;
-          }
-          // A parent without a breakdown gets one: `CreateSpec` returns the one it has, else makes it.
-          let target = specRef;
-          if (parent) {
-            const created = await run(CodeOperation.CreateSpec, {
-              name: parent.target?.name ?? '',
-              feature: parent,
-            });
-            target = created ? await refOf(created.spec.id, Spec.instanceOf) : undefined;
-          }
-          if (target) {
-            await run(CodeOperation.UpdateFeature, { feature, spec: target });
-          }
-        })(),
     };
   }, [db, spec, invokePromise]);
 };

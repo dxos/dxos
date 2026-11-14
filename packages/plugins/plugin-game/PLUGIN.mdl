@@ -154,6 +154,7 @@ op createGame
 
 ```mdl
 feat F-1: Variant Registration
+  uses: [GameVariant]
 
   req F-1.1:
     when: a variant plugin loads
@@ -166,6 +167,7 @@ feat F-1: Variant Registration
 
 ```mdl
 feat F-2: Game Creation
+  uses: [createGame, CreateGamePanel, Game]
 
   req F-2.1:
     when: user opens the create-object flow for type `org.dxos.type.game`
@@ -186,6 +188,7 @@ feat F-2: Game Creation
 
 ```mdl
 feat F-3: Game Article / Card Rendering
+  uses: [Game, GameArticle, GameCard]
 
   req F-3.1:
     when: Composer navigates to a Game object

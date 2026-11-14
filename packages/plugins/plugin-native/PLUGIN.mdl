@@ -137,6 +137,7 @@ feat F-1: Spotlight Window Integration
 
 ```mdl
 feat F-2: Over-the-Air Updates
+  uses: [Settings]
 
   req F-2.1:
     when: the Updater module activates on a supported platform (macOS, Linux, Windows) in production

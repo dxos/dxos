@@ -7,6 +7,8 @@ import { useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Spec from '@dxos/compute/Spec';
+import { dialectBlockTypes, resolveDialects } from '@dxos/deus/dialect';
+import { mdlSpec } from '@dxos/deus/extension';
 import { Obj } from '@dxos/echo';
 import { type Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
@@ -21,9 +23,9 @@ export type UseSpecExtensionsOptions = Omit<ProjectCapabilities.SpecExtensionOpt
 };
 
 /**
- * A spec editor's extensions besides MDL's own: object links and embeds and what other plugins give Markdown documents,
- * such as diagrams and comments, then the editing the spec's packages add. Rebuilt when the spec takes or drops a
- * package.
+ * A spec editor's extensions besides MDL's own: the spec's id and its dialects' block types for the lint, object links
+ * and embeds and what other plugins give Markdown documents, such as diagrams and comments, then the editing the spec's
+ * packages add. Rebuilt when the spec takes or drops a package.
  */
 export const useSpecExtensions = (
   spec: Spec.Spec | undefined,
@@ -33,16 +35,23 @@ export const useSpecExtensions = (
   const providers = Hooks.useCapabilities(MarkdownCapabilities.ExtensionProvider);
   const factories = Hooks.useCapabilities(ProjectCapabilities.SpecExtensions);
   const [dialects = EMPTY] = useObject(spec, 'dialects');
+  // Kept while the id and dialects hold, since a new value relints the text.
+  const key = spec && Obj.getMeta(spec).key;
+  const facts = useMemo(
+    () => mdlSpec.of({ id: key, types: dialectBlockTypes(resolveDialects(dialects)) }),
+    [key, dialects],
+  );
   return useMemo(
     () =>
       spec
         ? [
+            facts,
             objectEmbeds?.({ db: Obj.getDatabase(spec), attendableId }),
             ...providers.flat().map((provider) => provider({ subject: spec, binding })),
             ...factories.flatMap((factory) => factory(spec, { attendableId, dialects, t })),
           ].filter(isTruthy)
         : [],
-    [objectEmbeds, providers, factories, spec, attendableId, dialects, t, binding],
+    [facts, objectEmbeds, providers, factories, spec, attendableId, dialects, t, binding],
   );
 };
 

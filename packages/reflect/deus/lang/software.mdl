@@ -1,0 +1,16 @@
+---
+id: org.dxos.spec.software
+name: DSL.Software
+version: 1.0
+extends:
+  - org.dxos.spec.features
+  - org.dxos.spec.app
+  - org.dxos.spec.code
+  - org.dxos.spec.plugin
+  - org.dxos.spec.qa
+  - org.dxos.spec.sql
+---
+
+The software dialect: the one dialect a software project's specs use. It declares no blocks of its
+own; it takes the feature map, app, code, plugin, QA and storage dialects together, so a spec names
+one dialect and tools offer one set of views and slash commands for it.

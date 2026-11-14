@@ -159,6 +159,7 @@ component StackSettings
 
 ```mdl
 feat F-1: Stack Rendering
+  uses: [StackArticle, StackSection]
 
   req F-1.1: StackPlugin registers a surface for the article role filtered to Collection objects.
   req F-1.2: StackArticle renders each item in the collection as a StackSection in document order.
@@ -185,6 +186,7 @@ feat F-2: Section Management
 
 ```mdl
 feat F-3: Collapse / Expand
+  uses: [StackArticle]
 
   req F-3.1: Each section can be individually collapsed via the dropdown menu or caret trigger.
   req F-3.2:
@@ -198,6 +200,7 @@ feat F-3: Collapse / Expand
 
 ```mdl
 feat F-4: Settings
+  uses: [StackSettings]
 
   req F-4.1: StackPlugin exposes a settings panel via the StackSettings component.
   req F-4.2: The separation setting controls whether visual separators appear between sections.
@@ -205,6 +208,7 @@ feat F-4: Settings
 
 ```mdl
 feat F-5: Schema Registration
+  uses: [StackViewType]
 
   req F-5.1: StackPlugin registers StackViewType with the ECHO schema module on activation.
   req F-5.2: StackViewType stores per-section metadata (height, custom data) keyed by object id.

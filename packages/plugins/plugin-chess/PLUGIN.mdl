@@ -290,6 +290,7 @@ op resignGame
 
 ```mdl
 feat F-1: Start Game
+  uses: [Board, Game]
 
   req F-1.1: New Board created with pieces in standard starting positions.
   req F-1.2: White moves first.
@@ -297,6 +298,7 @@ feat F-1: Start Game
 
 ```mdl
 feat F-2: Make Move
+  uses: [Board, Move]
 
   req F-2.1:
     when: player submits a Move on their turn
@@ -318,6 +320,7 @@ feat F-2: Make Move
 
 ```mdl
 feat F-3: Lobby
+  uses: [Game, Gameboard, Lobby, Player]
 
   req F-3.1: Player sees list of open games on entering the Lobby.
   req F-3.2:
@@ -335,6 +338,7 @@ feat F-3: Lobby
 
 ```mdl
 feat F-4: Gameboard
+  uses: [Game, Gameboard, Move, submitMove]
 
   req F-4.1:
     when: player selects a square containing their piece
@@ -355,6 +359,7 @@ feat F-4: Gameboard
 
 ```mdl
 feat F-5: Move Validation
+  uses: [Game, Gameboard, getLegalMoves, Move, submitMove, validateMove]
 
   req F-5.1:
     when: Gameboard calls submitMove
@@ -371,6 +376,7 @@ feat F-5: Move Validation
 
 ```mdl
 feat F-6: Game Persistence
+  uses: [Board, Game, Gameboard, Lobby, startGame, submitMove]
 
   req F-6.1:
     when: op:startGame completes

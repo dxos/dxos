@@ -13,7 +13,21 @@ import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
-import { type RenderList2D, type RenderLists2D, createNode, toRenderList2D } from '@dxos/react-ui-canvas/headless';
+import {
+  type RenderList2D,
+  type RenderLists2D,
+  clone,
+  createNode,
+  migrateContent,
+  migrateLayers,
+  pruneOrphanedViews,
+  readViews,
+  rootOf,
+  toRenderList2D,
+  updateCanvasRecord,
+  writeStyles,
+  writeViews,
+} from '@dxos/react-ui-canvas/headless';
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -33,17 +47,6 @@ import { Canvas } from '#types';
 import types from '../capabilities/schema.ts';
 import { LegacyCanvasBuilder, makeLegacyCanvas } from '../testing/legacy-drawing.ts';
 import { addScene, openScene } from './canvas-document.ts';
-import {
-  clone,
-  migrateContent,
-  migrateLayers,
-  pruneOrphanedViews,
-  readViews,
-  rootOf,
-  updateCanvasRecord,
-  writeStyles,
-  writeViews,
-} from './content.ts';
 import { makeLayoutWriter } from './layout-writer.ts';
 import { legacyDocument, migrateLegacyDrawings, migrateSceneDrawing, reconcileMigrations } from './legacy-migration.ts';
 

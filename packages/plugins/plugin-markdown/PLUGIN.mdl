@@ -248,6 +248,7 @@ op scrollToAnchor
 
 ```mdl
 feat F-1: Edit Document
+  uses: [Document]
 
   req F-1.1: Editor opens Document.content as a collaborative CodeMirror surface.
   req F-1.2: Edits replicate to all peers via ECHO Text.
@@ -256,6 +257,7 @@ feat F-1: Edit Document
 
 ```mdl
 feat F-2: View Modes
+  uses: [Document]
 
   req F-2.1: Document opens in settings.defaultViewMode (source | preview | readonly).
   req F-2.2:
@@ -299,6 +301,7 @@ feat F-5: File Upload
 
 ```mdl
 feat F-6: AI Editing
+  uses: [create, Document, open, update]
 
   req F-6.1: Plugin contributes a Skill exposing op:create, op:open, op:update as tools.
   req F-6.2:
@@ -317,6 +320,7 @@ feat F-7: Comments
 
 ```mdl
 feat F-8: Versioning (checkpoints, branches, merge)
+  uses: [CreateBranch, CreateCheckpoint, Document, HistoryProvider, MergeBranch, VersionToolbar]
 
   req F-8.1: The plugin MUST support named checkpoints (CreateCheckpoint), per-object branches
     (CreateBranch), and CRDT merge-back (MergeBranch) over Document.history (@dxos/versioning).

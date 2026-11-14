@@ -16,8 +16,6 @@ import {
 import { BLOCK_TYPES } from './constants.ts';
 import { findSpecKeys, findSpecRefs, specDependencies } from './refs.ts';
 
-const KNOWN_BLOCK_TYPES = new Set(BLOCK_TYPES);
-
 const USER_REF = /^user:\S+$/;
 const AGENT_REF = /^agent:\S+$/;
 
@@ -56,6 +54,8 @@ export type LintOptions = {
   index?: SpecIndex;
   /** The spec's own id; defaults to the frontmatter `id`. */
   selfId?: string;
+  /** Block types the spec's dialects declare, known besides the built-in ones and those the spec declares. */
+  types?: Iterable<string>;
 };
 
 const namespace = (id: string): string => id.split('.').slice(0, 2).join('.');
@@ -153,15 +153,20 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
  * Lints the text of a Spec .mdl document.
  *
  * Checks:
- *   - Unknown block types (first body line of ```mdl blocks) → error
+ *   - Block types that are not built in, in the `## Extensions` table, declared by an `ext` block, or in `types` → error
  *   - `decision` and `question` attribution (`by:` / `for:` actor prefixes) → error
  *   - `mdl/block`: a second block header inside one fence, which every tool reads as body → error
  *   - `mdl/ref` and `mdl/uses`: spec references and dependencies, when an index is given → error
  */
-export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: LintOptions = {}): Diagnostic[] => {
+export const lintMdl = (
+  text: string,
+  { index, selfId = frontmatter(text).id, types: dialectTypes = [] }: LintOptions = {},
+): Diagnostic[] => {
   const diagnostics: Diagnostic[] = [];
+  const declared = parseMdlBlocks(text).flatMap(({ type, id }) => (type === 'ext' && id ? [id] : []));
+  const types = new Set<string>([...BLOCK_TYPES, ...extensionTerms(text), ...declared, ...dialectTypes]);
   for (const { type, from, to, body } of parseBlockHeaders(text)) {
-    if (type && !KNOWN_BLOCK_TYPES.has(type as (typeof BLOCK_TYPES)[number])) {
+    if (type && !types.has(type)) {
       diagnostics.push({
         from,
         to,
@@ -175,7 +180,6 @@ export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: 
       }
     }
   }
-  const types = new Set<string>([...BLOCK_TYPES, ...extensionTerms(text)]);
   for (const { type, id, from, to } of findInnerBlockHeaders(text, types)) {
     diagnostics.push({
       from,

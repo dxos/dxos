@@ -146,6 +146,7 @@ op createResearchProject
 
 ```mdl
 feat F-1: Create Pipeline
+  uses: [Pipeline]
 
   req F-1.1: A new Pipeline is created with an empty columns array.
   req F-1.2: The Pipeline is added to the active space via SpaceOperation.AddObject (hidden=true).
@@ -155,6 +156,7 @@ feat F-1: Create Pipeline
 
 ```mdl
 feat F-2: Manage Columns
+  uses: [Column, PipelineProperties, ViewModel]
 
   req F-2.1:
     when: user clicks "+" in the pipeline toolbar
@@ -179,6 +181,7 @@ feat F-2: Manage Columns
 
 ```mdl
 feat F-3: Column Query
+  uses: [Column]
 
   req F-3.1:
     when: user changes the query in ViewEditor
@@ -195,6 +198,7 @@ feat F-3: Column Query
 
 ```mdl
 feat F-4: Drag and Drop
+  uses: [Column, Pipeline]
 
   req F-4.1:
     when: user drags a Column tile
@@ -220,6 +224,7 @@ feat F-5: Research Template
 
 ```mdl
 feat F-6: Invocation Companion
+  uses: [Pipeline]
 
   req F-6.1:
     when: Pipeline article is open

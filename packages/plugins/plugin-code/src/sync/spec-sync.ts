@@ -151,17 +151,23 @@ export const syncSpec = Effect.fnUntraced(
       return { status: 'missing', path } satisfies SyncResult;
     }
 
+    // Front matter that does not parse is neither the spec's fields nor its text, so nothing syncs until it parses.
+    if (!FrontMatter.readable(disk)) {
+      return { status: 'error', path, error: 'front matter does not parse' } satisfies SyncResult;
+    }
+
     const base = yield* bases.get(spec.id);
     // The file's front matter is the spec's fields, so codecs and the text see only what follows it.
-    const form = FrontMatter.fileForm(text.content);
-    const local = form.write(
+    FrontMatter.finishMigration(spec, text, base, disk);
+    FrontMatter.fill(spec, disk);
+    const local = FrontMatter.write(
       spec,
-      (yield* writeThrough(codecs, spec, base === undefined ? undefined : form.body(base))) ?? text.content,
+      (yield* writeThrough(codecs, spec, base === undefined ? undefined : FrontMatter.body(base))) ?? text.content,
       base,
     );
     const { action, status } = reconcile({ local, disk, base });
     if (action === 'pull') {
-      const next = form.read(spec, disk);
+      const next = FrontMatter.read(spec, disk, base);
       if (!(yield* readThrough(codecs, spec, next, key.path))) {
         Doc.updateText(text, ['content'], next);
       }

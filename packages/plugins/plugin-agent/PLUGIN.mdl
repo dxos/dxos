@@ -625,6 +625,7 @@ surface AccountAgents
 
 ```mdl
 feat F-1: Agents
+  uses: [createAgent, listAgents]
 
   req F-1.1: A space's Settings › Agents lists every Agent in the space; Add agent creates an autonomous agent.
   req F-1.2:
@@ -637,6 +638,7 @@ feat F-1: Agents
 
 ```mdl
 feat F-2: Channel conversations
+  uses: [ensureChannelChat]
 
   req F-2.1:
     when: op:ensureChannelChat is called twice for the same agent, channel and thread
@@ -650,6 +652,7 @@ feat F-2: Channel conversations
 
 ```mdl
 feat F-3: Agent channels and delivery
+  uses: [AgentChannels, sendMessage]
 
   req F-3.1: An Agent's Activity companion shows a channel picker; the first save creates an AgentChannels parented to the agent.
   req F-3.2: The list is deleted with its agent and found from it by AgentChannels.loadForAgent.
@@ -668,6 +671,7 @@ feat F-3: Agent channels and delivery
 
 ```mdl
 feat F-4: Knowledge graph
+  uses: [recordFacts, resolveEntity, retrieveFacts, setGoalStatus, suggestGoal, updateProfile]
 
   req F-4.1: op:resolveEntity matches a Person by handle first, then case-insensitively by name, and creates one only when nothing matches.
   req F-4.2: op:recordFacts writes each fact in a named graph of its own, stated by the agent, and rejects an empty list, a fact without exactly one of object and value, and a prose predicate.
@@ -699,6 +703,7 @@ feat F-6: One brain per agent
 
 ```mdl
 feat F-7: An agent's own space
+  uses: [ensureIdentity, inviteAgent]
 
   req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other member who may write to it (an admin or an editor, not a reader) becomes one of the agent's admins. EDGE checks the admin role against the `IdentityAdmin` credentials the agent's identity issues, one per admin and kept in its HALO (`dxos.halo.credentials.IdentityAdmin { identity_key, admin_key }`), not against the space, and the admins' clients ask EDGE for one for each member who may write (F-7.9). Admins are only added: a member made a reader or removed stays an admin, since space membership has no revocation yet.
   req F-7.2: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, as an editor named after the agent, and the members panel admits it to the spaces it is added to, as any contact (F-8.1). Only a space's admins can admit members, and a locked space (a personal or private one, `MembershipPolicy.LOCKED`) admits no one after its genesis, an agent no more than a person: an agent created there, or by anyone but an admin, works without the membership, and no one can add one to such a space.
@@ -713,6 +718,7 @@ feat F-7: An agent's own space
 
 ```mdl
 feat F-8: An agent in several spaces
+  uses: [AgentAdmission, inviteAgent]
 
   req F-8.1: While the plugin's setting creates agents with identities (F-7.4), an agent is added to a space like any contact: a space's Members panel offers, in its "Add from contacts" picker, the agents the member administers, as contacts, and leaves out the agents the member does not (`AppSpace.agentsNotAdministeredBy`); Add admits the agent's identity, and AgentAdmission then brings the agent into the space (op:inviteAgent), including one whose home space the member cannot reach.
   req F-8.2:

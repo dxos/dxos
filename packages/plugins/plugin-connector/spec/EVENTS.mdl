@@ -333,6 +333,7 @@ service EventGrants
 
 ```mdl
 feat F-1: Provider registry
+  uses: [Provider]
 
   req F-1.1: Every provider is one module implementing Provider, registered in kms-service; kms-service looks providers up in Providers and contains no per-provider branch, and compute-service contains no provider code at all.
 
@@ -343,6 +344,7 @@ feat F-1: Provider registry
 
 ```mdl
 feat F-2: Event trigger and grant
+  uses: [EventGrants, Provider]
 
   req F-2.1:
     when: a connector with `events` binds a target
@@ -357,6 +359,7 @@ feat F-2: Event trigger and grant
 
 ```mdl
 feat F-3: Ingress
+  uses: [EventRouter, Provider]
 
   req F-3.1: One endpoint per provider, `POST /events/<provider id>`, served by kms-service, which holds the webhook secrets; after verify, dedupe, parse and route it calls EventRouter.dispatch over its service binding to compute-service.
 
@@ -371,6 +374,7 @@ feat F-3: Ingress
 
 ```mdl
 feat F-4: Routing and delivery
+  uses: [Provider]
 
   req F-4.1: A route matches when its resource is one of Provider.webhook.route(event), or an ancestor of one at a `/` boundary (`github.com` matches `github.com/o/r`; `github.com/o` does not match `github.com/ob/r`), and its events, if set, include the event name or name.action.
 
@@ -383,6 +387,7 @@ feat F-4: Routing and delivery
 
 ```mdl
 feat F-5: Revocation
+  uses: [EventRouter, Provider]
 
   req F-5.1:
     when: Provider.webhook.revokes returns revocations

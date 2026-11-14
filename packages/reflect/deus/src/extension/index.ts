@@ -19,7 +19,7 @@ export {
   specReferenceFilter,
   unknownSpecMessage,
 } from './check.ts';
-export { mdlLint } from './lint.ts';
+export { type MdlSpec, mdlLint, mdlSpec } from './lint.ts';
 export { mdlComplete } from './complete.ts';
 export { mdlTerms } from './syntax.ts';
 export { type Dependency, type SpecRef, findSpecRefs, specDependencies } from './refs.ts';

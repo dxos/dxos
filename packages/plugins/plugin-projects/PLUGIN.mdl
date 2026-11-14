@@ -38,22 +38,25 @@ feat F-4: A project's specs
   req F-4.4: What a dialect reads out of a document is kept as typed annotations on the spec, defined by the plugin
              that contributes the dialect.
   req F-4.5: The project article's Specs tab shows one spec, picked from a dropdown in its toolbar that also offers Add
-             spec. It opens on the spec picked last, or the project's first.
-  req F-4.6: The nav tree lists each spec under the project's Specs branch at `project/<id>/specs/<spec>`, and a spec a
-             project owns opens as the project's article on that spec. Another plugin nests levels of its own beneath a
-             spec with `ProjectGraph.makeLevelNode`, at `…/specs/<spec>/<level>/…`, each node holding its object. A
-             level opens as the project's article narrowed to it, through the `ProjectSurface.Level` surface; its
-             Overview tab is the nesting plugin's `ProjectSurface.LevelOverview` surface, and its Specs tab shows the
-             level's own spec, or offers Add spec when it has none.
-  req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: the spec dropdown, the
-             view toggle and the Extensions menu on the Specs tab; Delegate to agent and the Gantt toggle on the Tasks
+             spec. The dropdown lists the project's specs in order, each followed by the specs nested beneath it,
+             indented, by name, to any depth; its trigger names the spec shown. It opens on the spec picked last, or
+             the project's first.
+  req F-4.6: A spec nests beneath the nearest spec among its ECHO ancestors, whatever object lies between, such as
+             another plugin's feature. The nav tree lists no specs beneath a project: the Specs tab's dropdown is
+             where a project's specs are picked. A spec opened on its own shows its own article.
+  req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: the spec dropdown and
+             the Extensions menu on the Specs tab; Delegate to agent and the Gantt toggle on the Tasks
              tab. The Overview has no tools there. It has no overflow menu and no button to start a session, which is
              the assistant companion's.
-  req F-4.8: A spec offers its text, and each view a plugin contributes (`ProjectCapabilities.SpecView`) for a dialect
-             the spec uses, drawn by that plugin's `ProjectSurface.SpecView` surface. A package is a set of dialects a
-             plugin contributes (`ProjectCapabilities.SpecPackage`). The view toggle shows only when a spec has more
-             than one view. The Extensions menu lists the packages and checks each one whose dialects the spec all uses;
-             checking one adds its dialects and unchecking removes them.
+  req F-4.8: The Specs tab shows the spec's text. The spec's other views are in its companion tabs, Structure,
+             Decisions and Review, beside the spec and beside a project with specs: each view a plugin contributes
+             (`ProjectCapabilities.SpecView`) to a tab's group for dialects the spec uses, drawn by that plugin's
+             `ProjectSurface.SpecView` surface. A tab with no view for the spec's dialects is not offered; beside a
+             project, the spec is the one its Specs tab shows. A tab shows a toggle between its views when it has more than one, and
+             the toolbar a plugin draws through `ProjectSurface.SpecToolbar`. A package is a set of dialects a
+             plugin contributes (`ProjectCapabilities.SpecPackage`). The Extensions menu lists the packages and checks each one whose dialects the spec all uses;
+             checking one adds its dialects and unchecking removes them; unchecking the last leaves the core and
+             changelog dialects, since a spec that lists none has its dialects unset.
   req F-4.10: A spec's text offers a slash command for each block its packages' dialects define. A command writes the
               block's structure in place, fenced as `mdl`, with its fields empty and its id numbered after the blocks
               of its kind already in the text; text before the slash becomes the block's title.
@@ -92,6 +95,86 @@ feat F-5: A project's overview
              that sets its value.
   req F-5.9: The project's name and description, the overview's Notes and the agent's instructions show the carets of
              the other peers editing them, each with the peer's name.
+```
+
+```mdl
+feat F-6: Definitions
+  req F-6.1: Definitions groups a spec by what names its blocks: each anchor is a group of the structure it names, and
+             groups gather into clusters around the block most of them share.
+  req F-6.2: Definitions draws the whole spec as a canvas, with no layout of its own to pick.
+  req F-6.3: The canvas opens a level at a time: a card per cluster, then one cluster's groups, then one block and
+             everything it touches. Double-clicking a card opens its level, and the canvas's trail goes back up.
+  req F-6.4: Every block draws with the icon and colour its dialect declares, and every link with the ends of the
+             relationship its field declares. A package may style a field's values on the cards (`SpecPackage.facts`).
+  req F-6.5: Related, Structure's second view, centres on the block nearest the editor's cursor, with what names it
+             above and what it names below, and moves to another block as the cursor does.
+  req F-6.6: A spec's blocks are read with the dialects in its `dialects` and no others, ignoring ids that name no
+             dialect. A spec that names none uses the core and changelog blocks only. A file shown with no spec, such as
+             a plugin's bundled spec, is read with the dialects its front matter's `extends` names, else the software
+             dialect, as `deus lint` reads it and an import fills `dialects`.
+  req F-6.7: The companion views read the spec's text. A plugin that knows where a spec comes from gives them the rest
+             through `ProjectCapabilities.SpecSourcesProvider`: the base text diff mode compares with, the specs its
+             source keys name, the source index, and its files.
+  req F-6.8: An anchor's group is what its linked fields name. Structure one group names is owned by it, and structure
+             several groups name is shared, counted by how many name it. Context it names is its context, and an anchor
+             it names is one it builds on. A verification block is in no group, and only structure is shared.
+  req F-6.9: A group's hub is the shared block it names that the most groups name, the one declared first on a tie. A
+             group that names no shared block takes the hub of an anchor it builds on that has one, its own or taken
+             this way: the nearest such anchor, and of those the one declared first.
+  req F-6.10: Groups with the same hub form one cluster, named after its hub; groups with no hub form "Sharing nothing".
+              An anchor or block is in at most one cluster: a hub in its own, an owned block in its group's, and another
+              shared block or a context block in the cluster that holds most of the groups naming it, the first of
+              them on a tie. Clusters are ordered by their number of groups, "Sharing nothing" last.
+  req F-6.11: The spec level draws a card per cluster, and one arrow per pair of clusters whose blocks link, labelled
+              with how many links there are between them and headed at each end that a link points to.
+  req F-6.12: A cluster level draws each group that owns or frames context as a frame around its anchor, owned blocks
+              and context; an anchor with neither as a card of its own; the cluster's shared blocks outside the
+              frames, each with its count; and, with a dashed "builds on" arrow, each anchor its groups build on or are
+              built on by, marked outside when it is in another cluster. A context block is framed with the first of
+              the cluster's groups that names it and linked from the others. A link to a shared or context block in
+              another cluster is not drawn there.
+  req F-6.13: A block level draws the block, what names it above ("Names it"), what it names below ("It names"), and
+              the verification blocks that name it in a frame of their own ("Checked by"), each link labelled with its
+              field. Verification blocks appear on no other level.
+  req F-6.14: A cluster level's card opens its block's level when the block touches more than one block and is neither
+              outside the cluster nor another spec's. A block level opens nothing.
+  req F-6.15: Structure that no group names appears on neither the spec level nor a cluster level; the level of a block
+              that names it and Related ([F-6.5]) reach it.
+  req F-6.16: When the spec has no anchor block, the structure that names other blocks and that no structure names
+              stands in as the anchors.
+```
+
+```mdl
+feat F-7: Decisions
+  desc: |
+    Decisions mirrors Structure: At cursor reads the changelog for the block at the editor's cursor, and the Ledger
+    reads all of it, a level at a time. Both are built from react-ui's existing components.
+  req F-7.1: At cursor, Decisions' first and default view, shows what holds on the item at the editor's cursor, each
+             with the decisions that fill it in, then what holds on its block or on the block's items, and moves as
+             the cursor does. On a decision it shows that decision; on an approval, the decisions it approves; on a
+             question, the question.
+  req F-7.2: The Ledger opens on a card per block the changelog affects, the most recently decided first. A block
+             opens its threads, the decisions on it that cite one another; a thread opens with what holds now, then
+             its decisions by day. The trail goes back up.
+  req F-7.3: The Ledger filters by status (holds, replaced, not approved, questions), by who decided, and by text.
+  req F-7.4: Every level offers to approve the agent decisions in it that hold, that nobody has approved, and that the
+             Ledger's filter shows, with the count on the button. On a thread it sits at the top, and each such
+             decision's step offers it alone. Approving records one decision by the person, `Approve [D-a] and [D-b].`
+  req F-7.5: A decision shows how it relates to each decision it cites (fills in, replaces, replaces part of,
+             refines, builds on), read from the prose before the citation.
+  req F-7.6: An answer to a question, or an approval, goes through the spec's open editor, else into its text.
+  req F-7.7: A decision's chip in the editor's margin opens the Ledger at the decision's thread.
+```
+
+```mdl
+feat F-8: Review
+  req F-8.1: Review is offered for a spec of any dialect and shows its `SpecReview`s.
+  req F-8.2: The Review view picks a review from the spec's history; it shows the current status by default.
+  req F-8.3: The Review view shows the review's summary as markdown: its first paragraph, with the rest behind a
+             disclosure. Below it, a filter of each status with its count, worst first, stays pinned above the cards
+             and shows only that status's verdicts; each status is a button of its own, its icon beside its count.
+             The summary, filter and cards scroll together under the picker, and the current card shows its note in
+             full.
 ```
 
 ## QA
@@ -338,6 +421,48 @@ test QA-5: Showcase clip
 ```
 
 ```mdl
+test QA-6: Read a spec in its companion tabs
+  desc: |
+    A project's Specs tab shows a spec's text alone, and its other views are in three companion tabs: Structure,
+    Decisions and Review. The spec is plugin-code's, whose types, components and decisions fill every view. Walked by
+    the autocue flow `packages/plugins/plugin-projects/autocue/spec-companion.mjs`.
+  actors: human
+  covers: [F-4.7, F-4.8]
+  status: unverified
+  given:
+    - an identity exists, with a space open
+    - plugin-code and plugin-projects enabled
+    - a project "Code plugin" owns one spec, "CodePlugin", whose text is plugin-code's PLUGIN.mdl without its front
+      matter
+  steps:
+    - name: Open the Specs tab
+      do: Open the project "Code plugin" on its Specs tab.
+      expect: the tab shows the spec's text and no view toggle, and the toolbar holds the spec dropdown and Extensions
+    - name: Open the Structure tab
+      do: Open the companion and its Structure tab.
+      expect: the companion's tabs include Structure, Decisions and Review, and Structure draws the spec's definitions
+        with a toggle of Definitions, Data model and API
+    - name: Switch the Structure views
+      do: Click Data model, then API.
+      expect: each draws in the tab, and the spec's text stays in the main area
+    - name: Give the spec the software package
+      do: Open Extensions on the Specs tab and check Software.
+      expect: the Structure toggle offers Canvas and Board after API
+    - name: Show the canvas and the board
+      do: Click Canvas, then Board.
+      expect: each draws in the Structure tab
+    - name: Open the Decisions tab
+      do: Click the Decisions tab, then Decisions in its toggle.
+      expect: the tab lists the spec's changelog and then draws its decisions
+    - name: Show a decision from the margin
+      do: Click the first decision chip in the margin.
+      expect: the Decisions tab shows that decision selected
+    - name: Open the Review tab
+      do: Click the Review tab.
+      expect: the tab says the spec has no review yet, with a toggle of Review and Code
+```
+
+```mdl
 test QA-9: Two peers edit a project's notes
   desc: |
     Two peers already sharing a space open the same project, and each sees the other's caret in the overview's Notes,
@@ -397,6 +522,36 @@ test QA-10: Two peers see each other's carets in every project editor
     - name: Feature requirement
       do: Alice types at the end of the feature's requirement, then Bob puts his cursor there.
       expect: each requirement row shows the other peer's caret with that peer's name
+```
+
+```mdl
+test QA-11: Pick a nested spec from the Specs tab
+  desc: |
+    The Ride Check project owns one spec, and its "Go / no-go" feature is broken down in a spec of its own. The Specs
+    tab's dropdown lists that spec indented under the project's, the nav tree lists no specs, and showing the
+    feature's subfeatures picks the breakdown. Walked by the autocue flow
+    `packages/plugins/plugin-projects/autocue/nested-specs.mjs`.
+  actors: human
+  covers: [F-4.5, F-4.6]
+  status: unverified
+  given:
+    - an identity exists
+    - plugin-code, plugin-debug and plugin-projects enabled
+    - a space made from the Ride Check template
+  steps:
+    - name: Open the Specs tab
+      do: Expand the project "Ride Check" in the nav tree and open it on its Specs tab.
+      expect: the project's row holds Sessions and Artifacts but no specs, and the tab shows the spec "Ride Check"
+    - name: Open the spec dropdown
+      do: Click the spec dropdown in the toolbar.
+      expect: it lists "Ride Check", then "Go / no-go" indented beneath it, then Add spec
+    - name: Pick the nested spec
+      do: Click "Go / no-go".
+      expect: the dropdown's trigger reads "Go / no-go" and the tab shows that spec's features, Rain rule and Wind rule
+    - name: Show a feature's subfeatures
+      do: Pick "Ride Check" again, open the Structure companion's Board, click the "Go / no-go" card and click Show
+        subfeatures on the map.
+      expect: the dropdown's trigger reads "Go / no-go" and the tab shows that spec again
 ```
 
 ## Changelog
@@ -2212,4 +2367,303 @@ decision D-209: QA-9 starts once the peers share the space and both have checked
   supersedes: D-203
   affects: [QA-9]
   why: A project made after the document check did not open on the host. Made first, it sits in its own section, so the guest's document list and the host's first object stay as the document steps expect.
+```
+
+```mdl
+decision D-210: The Specs tab always shows the spec's text. Every other view of a spec moves to its companion, in three tabs this plugin owns: Structure, Decisions and Review. A plugin adds a view to one of them, and the tab switches between its views. Replaces the view toggle of [D-65] and [D-100].
+  date: 2026-11-05
+  by: user:wittjosiah
+  supersedes: D-100
+  affects: [F-4.7, F-4.8]
+  rejected:
+    - Views in both the Specs tab and the companion, which leaves a reader two places to look for the same thing.
+```
+
+```mdl
+decision D-211: `ProjectCapabilities.SpecView` gains `group`, the tab it is one of, and stays the one registry of views. `SpecSession` holds what a spec's editor and its views share: the view each tab shows, the evidence the Review tab opened, the selections, the diff mode, and the open editor, which a view scrolls to an item. A tab's toolbar ends with the `ProjectSurface.SpecToolbar` surface, where the plugin that knows a spec's source draws it, and `ProjectSurface.SpecCompanion` draws a tab for a plank whose subject is not the spec, such as a feature's level. Fills in [D-210].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: The editor and the views can be in different plugins and on different planks, so the state they share belongs to the plugin that owns both seams; plugins never import each other's components.
+  rejected:
+    - A registry per tab, which makes a plugin with views in several tabs contribute to several capabilities.
+```
+
+```mdl
+decision D-212: QA-6 walks a spec through its companion tabs, and the autocue flow `spec-companion` records it, so the move of [D-210] has a demo a reviewer can watch.
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+```
+
+```mdl
+decision D-213: A project's companion tabs follow the spec its Specs tab shows, read from the project's view state, as a spec's own tabs follow its dialects. It carries out plugin-code's D-95 beside a project.
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: The project offered every group any spec could use, so a video script kept a Review tab with nothing in it.
+```
+
+```mdl
+decision D-214: A companion view that reads any dialect belongs to this plugin: Definitions, Related, At cursor, the Ledger and Review.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-6, F-7, F-8]
+```
+
+```mdl
+decision D-215: Review is generic: a spec of any dialect is offered it. The code a verdict cites stays with the software dialect.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-216: F-6, F-7 and F-8 take plugin-code's F-25 (without the Video package, now plugin-video's), F-26, and F-24.6 and F-24.7. The views get the checkout through `ProjectCapabilities.SpecSourcesProvider`, and a package styles its field values on cards through `SpecPackage.facts`. Fills in [D-214] and [D-215].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.4, F-6.7]
+  why: The views read the checkout through plugin-code's hooks, and only plugin-code knows a file service or a GitHub source.
+```
+
+```mdl
+decision D-217: A spec that names no dialects is read with the core and changelog blocks only, not as software. A bundled spec names its dialects. Fills in [D-214].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.6, F-4.3]
+  why: A software fallback in a generic view made every dialect-less spec look like software, which F-4.3 already rules out.
+```
+
+```mdl
+decision D-218: Definitions' grouping and levels are stated in full: what an anchor's group holds and what is shared (F-6.8), how a group picks its hub (F-6.9), how hubs make clusters and where each block sits (F-6.10), what each level draws by role (F-6.11 to F-6.13), which cards open (F-6.14), what no level shows (F-6.15), and the stand-in anchors (F-6.16). They state what `groupDefinitions` and the level scenes do. Fills in [F-6.1] and [F-6.3].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.8, F-6.9, F-6.10, F-6.11, F-6.12, F-6.13, F-6.14, F-6.15, F-6.16]
+  why: F-6.1 and F-6.3 gave only the outline, so a change to how blocks cluster or what a level draws needed no spec decision.
+```
+
+```mdl
+decision D-219: A group's hub and every block's cluster do not depend on the order things are declared or named in: a tie between shared blocks goes to the one declared first, a hub taken through builds-on comes from the nearest anchor that has one, and context several groups name sits in the cluster most of them are in, framed once there. Stand-in anchors are used when the spec has no anchor block. Fills in [D-218].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.9, F-6.10, F-6.12, F-6.16]
+  why: The hub went to the block an anchor named first and a borrowed hub to whichever group was visited first, so reordering a field moved a group between clusters; context named in two clusters was drawn in both and its links counted in neither.
+  rejected: Treating context several groups name as shared, which F-6.8 rules out.
+```
+
+```mdl
+decision D-220: Structure no group names is left off the spec and cluster levels only; a block level that names it draws it under "It names", as F-6.13 says. Fills in [D-218].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.15]
+  why: F-6.15 said such structure appears on no level, which contradicted F-6.13 and what the block level draws.
+  rejected: Leaving it off block levels, which would hide a block's own fields from its level.
+```
+
+```mdl
+decision D-221: Every approve action in the Ledger, a step's own included, offers only the decisions the Ledger's filter shows; Decisions at the cursor, which has no filter, offers every decision awaiting approval. Fills in [D-214].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.4]
+  why: A filtered Ledger approved decisions it did not show: a thread's steps offered a replaced or unmatched decision.
+  rejected: Leaving a step's own button unfiltered, since the filter then hides the banner while the step still approves.
+```
+
+```mdl
+decision D-222: The editor, the companion views and `deus lint` read a spec's dialects with one rule from Deus: the spec's `dialects`, else the dialects its front matter's `extends` names, else core and changelog; an id that names no dialect, such as another spec, is ignored.
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.6]
+  why: The views, the editor's lint and the CLI each resolved a spec's dialects their own way, so a block one accepted another flagged, and `extends` naming another spec read the spec with no dialect at all.
+  rejected: Keeping the rule in this plugin, which the CLI cannot import.
+```
+
+```mdl
+decision D-223: The editor, the companion views and `deus lint` read dialects with Deus's two rules: a spec by its `dialects`, else core and changelog; a file by the dialects its front matter's `extends` names, else software, the rule an import fills `dialects` with. An id that names no dialect is ignored.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-222
+  affects: [F-6.6]
+  why: A spec's front matter now lives in its fields, so its text has no `extends` to fall back on; and `deus lint` read a plugin spec that names no dialect with core and changelog, flagging the app blocks the editor accepts.
+  rejected: One rule over a spec's text and its field, which reads a spec through its text where its fields are the store.
+```
+
+```mdl
+decision D-224: At cursor on an approval shows the decisions it approves, as the Ledger shows an approval on what it approves, and on a question shows the question.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.1]
+  why: It looked the cursor's block up among the Ledger's decisions, which leave out approvals and questions, so it said there were no decisions on either.
+```
+
+```mdl
+decision D-225: A spec in Composer has no front matter: what front matter holds goes into the object's structured data. Its name is the object's name, edited in the nav tree or the overview, and the rest of the front matter is editable from the overview. A migration moves the front matter left in older specs' text into their fields, and newly created specs never get it.
+  date: 2026-11-13
+  by: user:wittjosiah
+  supersedes: D-86
+  affects: [F-4.2, F-4.11]
+```
+
+```mdl
+decision D-226: Unchecking the last package in the Extensions menu leaves the core and changelog dialects in `dialects`, not an empty list. Fills in [D-225].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: An empty list means the spec's dialects are unset, so a push left the file's `extends` naming the removed dialects and the next pull put them back.
+  rejected: Writing `extends: []` for an empty list, which a file reads as software.
+```
+
+```mdl
+decision D-227: A project's spec editor lints with the spec's id and the block types of its dialects, as plugin-code's editor does, through the extensions every spec editor shares. Fills in [D-223].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.6]
+  why: The project's editor gave its lint no dialects, so the blocks of a spec's packages were flagged as unknown types.
+```
+
+```mdl
+decision D-228: Taking front matter into a spec adds the dialects its `extends` names to those the spec lists, and leaves front matter that does not parse in the text. Fills in [D-225].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.2]
+  why: The dialects were taken only into a spec that listed none, so the block that named them was deleted with them; a block that did not parse was deleted with nothing taken from it.
+```
+
+```mdl
+decision D-229: Checking or unchecking a package first moves front matter still in the spec's text into its fields. Fills in [D-225].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: A synced spec whose text keeps its front matter takes its fields from that front matter on every pass, which would undo the toggle.
+```
+
+```mdl
+decision D-230: The Extensions menu edits only `dialects`; front matter left in a spec's text moves into its fields on the sync pass, not on a click. Fills in [D-225].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-229
+  affects: [F-4.8]
+  why: Moving it on a click raced a sync pass that had already chosen to sync the text as it is, and left renames and other field edits to be undone.
+```
+
+```mdl
+decision D-231: Taking front matter into a spec adds the dialects its `extends` names that the spec's dialects do not already extend, and leaves front matter that does not parse in the text. Fills in [D-225].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-228
+  affects: [F-4.2]
+  why: The software dialect extends the package dialects the 0.3.0 migration folds into it, so adding every named dialect put them back.
+```
+
+```mdl
+decision D-232: Taking front matter into a spec adds the dialects its `extends` names that the spec's dialects do not already extend. The text's first block always leaves the text, as a file's first block is its front matter; one that does not parse gives the spec nothing, and a linked file still holds it. Fills in [D-225].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-231
+  affects: [F-4.2]
+  why: Left in the text, a block that does not parse became part of the spec's text, which a sync writes after the file's own front matter, so the file held it twice.
+```
+
+```mdl
+decision D-233: The Extensions menu edits only `dialects`. Fills in [D-225].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-230
+  affects: [F-4.8]
+  why: Front matter no longer moves out of a text on a sync pass except where a migration left a copy of the file's, so the clause about moving it on the pass no longer held.
+```
+
+```mdl
+decision D-234: Taking front matter into a spec adds the dialects its `extends` names as 0.4.0 lists them: the one software dialect in place of the software package's dialects where they include the features dialect. Fills in [D-232].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.2]
+  why: A 0.3.0 spec that listed no dialects took its file's package dialects one by one, so it was never a software spec.
+```
+
+```mdl
+decision D-235: Of the editors a spec is open in, the views follow the one the user last moved in, by selection, typing or focus, else the one opened last; only that one moves the shared cursor. Fills in [F-6.5] and [F-7.1].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.5, F-7.1]
+  why: With a spec open twice, both editors wrote the cursor, and a reconfigure made whichever editor it recreated the one a view revealed into.
+```
+
+```mdl
+decision D-236: Each editor a spec is open in registers under its own owner id; the views follow the editor last opened or focused, and only that one moves the shared cursor. An editor rebuilt or reconfigured under the same owner keeps its place, and closing the followed editor hands the views to the last other one open. Fills in [F-6.5] and [F-7.1].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-235
+  affects: [F-6.5, F-7.1]
+  why: Following the last selection let a sync or a restored selection in a background editor take the views, and a rebuild under the same spec dropped the editor the views followed.
+  rejected: Ignoring sync and restore transactions by user event, which each new source of a programmatic selection would need again.
+```
+
+```mdl
+decision D-237: Each editor a spec is open in registers under its own owner id; the views follow the editor last opened or focused, and only that one moves the shared cursor. An editor rebuilt or reconfigured under the same owner keeps its place, and closing the followed editor hands the views to the one opened or focused before it. Fills in [F-6.5] and [F-7.1].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-236
+  affects: [F-6.5, F-7.1]
+  why: Handing over in open order sent the views to an editor the user had not used since, where the rule they follow is the last opened or focused.
+```
+
+```mdl
+decision D-238: A project's specs leave the nav tree. The Specs tab's spec picker lists the specs nested beneath each of the project's specs under it, indented, and names only the spec shown, with no breadcrumb.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-4.5, F-4.6]
+```
+
+```mdl
+decision D-239: A spec nests beneath the nearest spec among its ECHO ancestors, so this plugin builds the picker's tree without knowing the nesting plugin's types; nested specs list by name. Fills in [D-238].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.5, F-4.6]
+  why: A breakdown spec's parent is the feature it breaks down, whose parent is the spec the feature is on, so the parent chain already holds the nesting.
+  rejected: A capability through which a plugin names a spec's nested specs, which would restate the parent edges.
+```
+
+```mdl
+decision D-240: The Specs branch, the levels beneath it and the level surfaces (`ProjectSurface.Level`, `ProjectSurface.LevelOverview`, `ProjectGraph.makeLevelNode`) are removed. A spec a project owns, opened on its own, shows its own article, and the Tasks tab always shows the whole project. Fills in [D-238].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.6]
+  why: A level opened the whole project article pinned to one spec while the breadcrumb named the spec, and the picker could then show another spec than the tree had selected.
+  rejected: Scoping the Tasks tab to the spec picked, which hides the project's other tasks behind a choice made on another tab.
+```
+
+```mdl
+decision D-241: QA-11 walks a nested spec on the Ride Check template: the nav tree without specs, the indented dropdown, and Show subfeatures picking the breakdown. Fills in [D-238].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.5, F-4.6]
+  why: The Ride Check template's project already holds a spec nested beneath another, so the test needs no setup past the template.
 ```

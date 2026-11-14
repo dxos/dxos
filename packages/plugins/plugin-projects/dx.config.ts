@@ -98,7 +98,13 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppSurface.Article, AppSurface.Dialog, AppSurface.Section, ProjectSurface.Level],
+      roles: [
+        AppSurface.Article,
+        AppSurface.Dialog,
+        AppSurface.Section,
+        ProjectSurface.SpecCompanion,
+        ProjectSurface.SpecView,
+      ],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
@@ -107,6 +113,15 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'SpecViews',
+      {
+        provides: [ProjectCapabilities.SpecView],
+        activatesOn: ActivationEvents.Idle,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/spec-views.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'SubjectContext',

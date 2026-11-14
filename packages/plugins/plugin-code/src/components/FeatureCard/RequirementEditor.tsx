@@ -7,6 +7,7 @@ import React, { useMemo, useState } from 'react';
 
 import { type Verdict } from '@dxos/deus/review';
 import { useObject } from '@dxos/echo-react';
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
 import { InputEditor } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -19,7 +20,6 @@ import { Feature } from '#types';
 
 import { CodeNamespace } from '../../namespace.ts';
 import * as FeatureAnchor from '../../util/feature-anchor.ts';
-import { STATUS_STYLE } from '../SpecModel/review.ts';
 import { RequirementIcon, RequirementId, RowIcon } from './fields.tsx';
 
 /** Extensions for the editor of the feature's string at `path`: the binding to it, and others such as comments on it. */
@@ -142,7 +142,7 @@ export const RequirementEditor = ({
 
 /** A requirement's newest review verdict, naming its review in a tooltip on hover or keyboard focus. */
 const RequirementVerdict = ({ verdict }: { verdict: Verdict }) => {
-  const { label, hue, icon } = STATUS_STYLE[verdict.status];
+  const { label, hue, icon } = SpecModel.STATUS_STYLE[verdict.status];
   const reviewed = [verdict.review?.date, verdict.review?.commit?.slice(0, 7)].filter(Boolean).join(' · ');
   const details = [verdict.summary, verdict.note, reviewed].filter(Boolean).join('\n\n');
   return (

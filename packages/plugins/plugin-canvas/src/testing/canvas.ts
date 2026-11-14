@@ -4,13 +4,13 @@
 
 import { type ContentMap } from '@dxos/diagram';
 import { type Database, Obj } from '@dxos/echo';
+import { rootOf } from '@dxos/react-ui-canvas/headless';
 import { Scene } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 
 import { editCanvasContent } from '../model/canvas-content.ts';
 import { makeCanvas } from '../model/canvas-document.ts';
-import { rootOf } from '../model/content.ts';
 import { applyLayoutIntent } from '../model/layout-source.ts';
 
 /**

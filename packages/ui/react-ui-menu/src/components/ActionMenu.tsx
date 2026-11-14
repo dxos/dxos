@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type CSSProperties,
   type MouseEvent,
   type ReactNode,
   type RefObject,
@@ -94,12 +95,17 @@ const ItemIcon = ({ menu, action }: { menu: MenuActions; action: MenuAction | Me
     <Menu.ItemIcon spin={action.properties.spin} size={menu.iconSize} classNames={action.properties.iconClassNames} />
   ) : null;
 
+/** A row's indent within a menu listing a tree, added to the row's own inset. */
+const indentStyle = ({ indent }: MenuAction['properties']): CSSProperties | undefined =>
+  indent ? { paddingInlineStart: `calc(var(--dx-gap-size) * 1.5 + ${indent}rem)` } : undefined;
+
 const ActionMenuItem = ({ menu, action, group }: ActionItemProps) => {
   const item = useItemData(action.id, action.properties);
   const handleClick = useInvoke(menu, action, group);
   return (
     <Menu.Item
       item={item}
+      style={indentStyle(action.properties)}
       onClick={handleClick}
       // Picking several values from a multi-select group should not close the menu after the first.
       closeOnSelect={!isMultiSelect(group)}
@@ -118,6 +124,7 @@ const ActionCheckboxItem = ({ menu, action, group }: ActionItemProps) => {
   return (
     <Menu.CheckboxItem
       item={item}
+      style={indentStyle(action.properties)}
       // The graph owns the state: the action flips it and the item re-renders from `checked`.
       checked={!!action.properties.checked}
       onClick={handleClick}
@@ -137,6 +144,7 @@ const ActionRadioItem = ({ menu, action, group }: ActionItemProps) => {
   return (
     <Menu.RadioItem
       item={item}
+      style={indentStyle(action.properties)}
       onClick={handleClick}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >

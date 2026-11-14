@@ -56,7 +56,7 @@ const DRAWN_KINDS: Readonly<Record<string, string>> = Object.fromEntries(
     .map((kind) => [kind, kind]),
 );
 
-const MARKERS = ['arrow', 'circle', 'triangle', 'many'] as const;
+const MARKERS = ['arrow', 'circle', 'diamond', 'diamond-filled', 'many', 'triangle'] as const;
 
 /** A 2D style as react-ui-canvas's node style: the diagram-only values (sketchy, pattern, weight) have no node field. */
 const nodeStyle = (style: Style2D | undefined): NodeStyle | undefined => {

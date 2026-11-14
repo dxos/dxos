@@ -205,6 +205,7 @@ op toggleMapView
 
 ```mdl
 feat F-1: Map Creation
+  uses: [Map]
 
   req F-1.1: User can create a Map object from the space or collection create menu.
   req F-1.2:
@@ -218,6 +219,7 @@ feat F-1: Map Creation
 
 ```mdl
 feat F-2: Geospatial Rendering
+  uses: [GeoPoint, Map, MapArticle, MapState]
 
   req F-2.1:
     when: a Map object is opened as article or section
@@ -235,6 +237,7 @@ feat F-2: Geospatial Rendering
 
 ```mdl
 feat F-3: View Toggle
+  uses: [MapState]
 
   req F-3.1:
     when: the toggle operation is invoked
@@ -244,6 +247,7 @@ feat F-3: View Toggle
 
 ```mdl
 feat F-4: Object Properties
+  uses: [Map, MapViewEditor]
 
   req F-4.1:
     when: Map object properties are opened
@@ -260,6 +264,7 @@ feat F-5: Skill
 
 ```mdl
 feat F-6: Pluggable marker providers & companion
+  uses: [Map, MarkerProvider]
 
   req F-6.1: MapPlugin registers a built-in MarkerProvider for Map objects (view rows → pins).
   req F-6.2: Other plugins can contribute a MarkerProvider for their own object types.

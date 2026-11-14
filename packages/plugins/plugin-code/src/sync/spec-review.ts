@@ -4,14 +4,11 @@
 
 import type * as Spec from '@dxos/compute/Spec';
 import * as SpecReview from '@dxos/compute/SpecReview';
-import { type ReviewModel, mergeReviews, parseReview } from '@dxos/deus/review';
+import { parseReview } from '@dxos/deus/review';
 import { Obj } from '@dxos/echo';
 
 /** A review file's fields as a SpecReview's, without the spec. */
 export type ReviewFields = Omit<SpecReview.MakeProps, 'spec'>;
-
-/** What the editor and panel read of a review: a live object or its snapshot. */
-export type ReviewData = Pick<SpecReview.SpecReview, 'id' | 'commit' | 'date' | 'by' | 'summary' | 'verdicts'>;
 
 /**
  * Whether `value` is a calendar date written `YYYY-MM-DD`, or one with a UTC time (`YYYY-MM-DDTHH:MMZ`, no
@@ -43,25 +40,6 @@ export const fromText = (text: string): ReviewFields | string => {
     verdicts: Object.fromEntries(verdicts.map(({ id, review: _, ...verdict }) => [id, verdict])),
   };
 };
-
-/** A review as the review model the editor and panel read. */
-export const toModel = (review: Omit<ReviewData, 'id'>): ReviewModel => ({
-  commit: review.commit,
-  date: review.date,
-  by: review.by,
-  ...(review.summary && { summary: review.summary }),
-  verdicts: Object.entries(review.verdicts).map(([id, verdict]) => ({
-    id,
-    ...verdict,
-    evidence: [...verdict.evidence],
-    tests: [...verdict.tests],
-    walkthrough: [...verdict.walkthrough],
-  })),
-});
-
-/** Each item's newest verdict across a spec's reviews; undefined when it has none. */
-export const currentModel = (reviews: readonly Omit<ReviewData, 'id'>[]): ReviewModel | undefined =>
-  mergeReviews(reviews.map(toModel));
 
 /**
  * Records a review of `spec`: one with the same commit, date and reviewer as an existing review replaces its summary

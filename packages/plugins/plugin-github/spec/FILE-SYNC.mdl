@@ -411,6 +411,7 @@ feat F-2: Change detection
 
 ```mdl
 feat F-3: Pull
+  uses: [FileMarker]
 
   req F-3.1:
     when: a matched path is added
@@ -435,6 +436,7 @@ feat F-3: Pull
 
 ```mdl
 feat F-4: Push
+  uses: [VersionLink]
 
   req F-4.1:
     when: a bound object's content differs from its content at marker.heads
@@ -459,8 +461,9 @@ feat F-4: Push
 
 ```mdl
 feat F-5: Markers and version tracking
+  uses: [FileMarker, VersionLink]
 
-  req F-5.1: Cursor.spec.token and every FileMarker the pass wrote advance in one Obj.update, so a crash leaves either the old state or the new one.
+  req F-5.1: Cursor.spec.token and every FileMarker the pass wrote advance in one Obj.update, so a crash leaves either the old state or the new one. A pass with a failed pull keeps the token where it was and drops the stored ETag, so the next pass compares from it again and retries the path; until it pulls, the path is not exported.
 
   req F-5.2: Each pull and push appends a VersionLink pairing the commit with the object's heads; the newest 50 are kept per file.
 
@@ -469,6 +472,7 @@ feat F-5: Markers and version tracking
 
 ```mdl
 feat F-6: Deus specs
+  uses: [ExportSpecFile, ImportSpecFile, org.dxos.plugin.code]
 
   req F-6.1: plugin-code contributes the mapping `org.dxos.plugin.code.spec` for `**/*.mdl`, typed `Spec`, with ImportSpecFile and ExportSpecFile.
 
@@ -802,4 +806,24 @@ decision D-30: While a re-claimed path's import keeps failing, the old mapping d
   why: The kept marker names the old mapping and holds the blob of its last good pull, so exporting through it pushes through a mapping that no longer claims the file, and retrying its blob imports stale content.
   rejected:
     - A pending-blob field on the marker, which changes FileMarker for a state one tree read recovers.
+```
+
+```mdl
+decision D-31: A path whose pull fails in a pass is not exported in that pass. Fills in [F-4.1].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.1]
+  why: F-4.1 renders an export after the pass's pulls; exported after a failed pull, the object's content would overwrite the remote change it did not take.
+```
+
+```mdl
+decision D-32: A pass in which a path's pull fails keeps the token at the last commit fully synced and drops the stored ETag, so every later pass retries the path; until it pulls, the path is not exported ([F-5.1]).
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-31
+  affects: [F-4.1, F-5.1]
+  why: Held back for one pass only, the path was exported on the next, against the base from before the failed pull, since a token past the failure listed no change to retry.
+  rejected: A pending-blob field on the marker, which D-30 rejected for the same state; reading the head's tree every pass, a request even a quiet pass would pay.
 ```

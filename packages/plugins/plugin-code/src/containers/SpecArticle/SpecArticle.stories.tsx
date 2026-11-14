@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { forEachDiagnostic } from '@codemirror/lint';
+import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
@@ -10,6 +12,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Spec from '@dxos/compute/Spec';
 import * as SpecReview from '@dxos/compute/SpecReview';
+import { Obj } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -81,6 +84,83 @@ export default meta;
 type Story = StoryObj;
 
 export const Default: Story = {};
+
+/** The id of the launch spec, held in its meta: its text has no front matter. */
+const LAUNCH_ID = 'org.dxos.plugin.launch';
+
+/** A scene, which the video dialect declares, a surface, which it does not, and a reference to the spec's own scene. */
+const LAUNCH_SPEC = [
+  '# Launch',
+  '',
+  `Opens on ${LAUNCH_ID}#SC-1.`,
+  '',
+  '```mdl',
+  'scene SC-1: Opening',
+  '```',
+  '',
+  '```mdl',
+  'surface article',
+  '  role: article',
+  '  component: LaunchArticle',
+  '```',
+  '',
+].join('\n');
+
+/** A spec of video blocks, linted before and after it takes the video dialect. */
+const DialectLintStory = () => {
+  const [space] = useSpaces();
+  const [spec, setSpec] = useState<Spec.Spec | undefined>();
+
+  useEffect(() => {
+    if (space && !spec) {
+      const launch = Spec.make({ name: 'launch.mdl', dialects: [], content: LAUNCH_SPEC });
+      Obj.update(launch, (launch) => {
+        Obj.getMeta(launch).key = LAUNCH_ID;
+      });
+      setSpec(space.db.add(launch));
+    }
+  }, [space, spec]);
+
+  if (!spec) {
+    return <Loading />;
+  }
+
+  return (
+    <Layout.Flex column classNames='dx-fill'>
+      <button
+        data-testid='story.use-video'
+        onClick={() => Obj.update(spec, (spec) => void spec.dialects.push('org.dxos.spec.video'))}
+      >
+        Use video
+      </button>
+      <SpecArticle role='article' subject={spec} attendableId='story' />
+    </Layout.Flex>
+  );
+};
+
+/**
+ * Taking a dialect lints the spec again with its block types, with no edit to the text; a reference to the spec's own
+ * item resolves by the id in its meta.
+ */
+export const DialectLint: Story = {
+  render: () => <DialectLintStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The diagnostics sit on fence lines, which the markdown decorations hide, so read them from the editor's state.
+    const unknown = () => {
+      const editor = canvasElement.querySelector<HTMLElement>('.cm-editor');
+      const view = editor ? EditorView.findFromDOM(editor) : null;
+      const messages: string[] = [];
+      if (view) {
+        forEachDiagnostic(view.state, ({ message }) => void messages.push(message));
+      }
+      return messages.map((message) => message.match(/^Unknown block type "(\w+)"/)?.[1] ?? message);
+    };
+    await waitFor(() => expect(unknown()).toEqual(['scene', 'surface']), { timeout: 5_000 });
+    await userEvent.click(await canvas.findByTestId('story.use-video'));
+    await waitFor(() => expect(unknown()).toEqual(['surface']), { timeout: 5_000 });
+  },
+};
 
 /** plugin-code's spec with two of its reviews from the repository's history, recorded as the spec's SpecReviews. */
 const ReviewsStory = () => {
@@ -170,6 +250,55 @@ export const Diff: Story = {
   ),
 };
 
+/** A spec's file, whose front matter its spec holds in fields, and a line since removed. */
+const NOTES_FILE = [
+  '---',
+  'id: org.dxos.plugin.notes',
+  'name: Notes',
+  '---',
+  '',
+  '# Notes',
+  '',
+  'Kept.',
+  'Removed.',
+  '',
+].join('\n');
+
+/** A text without front matter is compared with its file's text after the front matter: only the removed line shows. */
+export const DiffWithoutFrontMatter: Story = {
+  render: () => (
+    <SpecArticle
+      role='article'
+      attendableId='story'
+      content={'# Notes\n\nKept.\n'}
+      base={NOTES_FILE}
+      defaultDiff='base'
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const deleted = () => [...canvasElement.querySelectorAll('.cm-deletedChunk')].map((chunk) => chunk.textContent);
+    await waitFor(() => expect(deleted()).toEqual(['Removed.']), { timeout: 5_000 });
+  },
+};
+
+/** A file shown with no spec keeps its front matter, so it is compared with its file whole: only the removed line shows. */
+export const DiffWithFrontMatter: Story = {
+  render: () => (
+    <SpecArticle
+      role='article'
+      attendableId='story'
+      content={NOTES_FILE.replace('Removed.\n', '')}
+      base={NOTES_FILE}
+      defaultDiff='base'
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const deleted = () => [...canvasElement.querySelectorAll('.cm-deletedChunk')].map((chunk) => chunk.textContent);
+    await waitFor(() => expect(deleted()).toEqual(['Removed.']), { timeout: 5_000 });
+    await expect(canvasElement.querySelectorAll('.cm-changedLine')).toHaveLength(0);
+  },
+};
+
 /** The spec a packaged page selects for its open tab (sharing-specs `package.py --spec`); unset outside one. */
 type SpecTab = { path: string; base: boolean; review: boolean };
 
@@ -234,8 +363,8 @@ export const Companion: Story = {
     const chips = await waitFor(() => canvas.getAllByTestId('spec-changelog.gutter-chip'), { timeout: 10_000 });
     await userEvent.click(chips[0]);
     await waitFor(() =>
-      expect(canvasElement.querySelector('[data-testid="spec-article.panel"]')?.getAttribute('data-view')).toMatch(
-        /^(decisions|log)$/,
+      expect(canvasElement.querySelector('[data-testid="spec-article.panel"]')?.getAttribute('data-view')).toBe(
+        'ledger',
       ),
     );
   },

@@ -123,6 +123,7 @@ feat F-1: SolidJS Surface Registration
 
 ```mdl
 feat F-2: Reactive Marker Derivation
+  uses: [GeoMarker]
 
   req F-2.1:
     when: the Map's linked View changes
@@ -137,6 +138,7 @@ feat F-2: Reactive Marker Derivation
 
 ```mdl
 feat F-3: View Toggle
+  uses: [GlobeControl, MapControl]
 
   req F-3.1:
     when: the user triggers onToggle on MapControl

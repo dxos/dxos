@@ -75,9 +75,8 @@ export type LatticeGraphProps = PropsWithChildren<{
 }>;
 
 /**
- * A read-only graph on a lattice, as `FeatureCanvas` lays out features: ranked along its edges, one card per
- * cell, with each arrow routed through the gutters so none crosses a card. Boxes can be dragged; children
- * float over the canvas (e.g. a legend).
+ * A read-only graph on a lattice: ranked along its edges, one card per cell, with each arrow routed through the gutters
+ * so none crosses a card. Boxes can be dragged; children float over the canvas (e.g. a legend).
  */
 export const LatticeGraph = ({ graph, renderNode, lattice, arrange = 'crossings', children }: LatticeGraphProps) => {
   const layout = useMemo<GraphLayoutOptions>(

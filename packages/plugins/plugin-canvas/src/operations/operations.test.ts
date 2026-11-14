@@ -12,9 +12,10 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
+import { readViews, rootOf } from '@dxos/react-ui-canvas/headless';
 import { Scene } from '@dxos/scene';
 
-import { addCanvas, openScene, readViews, rootOf } from '#model';
+import { addCanvas, openScene } from '#model';
 import { CanvasOperationHandlerSet } from '#operations';
 import { Canvas, CanvasOperation } from '#types';
 
