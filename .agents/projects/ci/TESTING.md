@@ -1,50 +1,78 @@
 # CI testing — gating, test ontology and result tracking
 
-Discussion notes for moving PR gating to fast tests only and making flakiness visible. Status: draft
-for discussion; nothing here is implemented yet.
+Draft for discussion. Only the knip and boot-budget change is implemented.
 
-## Proposed structure at a glance
+## Problem
 
-`B` runs on every PR and blocks; `N` runs nightly (and on demand). The number is the estimated
-minutes of work for one full, uncached run of that item; a PR runs only affected packages, so it pays
-a fraction of the `B` total.
+- PRs are gated on many tests that are slow, costly and flaky.
+- There is no shared ontology of tests: nothing says what a test touches or what CI does with it.
+- Trunk quarantines tests in a dashboard: no record in git, no owner, no expiry, and its stats
+  probably count cached results again as new runs.
+
+## Decisions
+
+### Trunk → tags
+
+Whether a test runs and whether its failure counts are vitest tags in code, reviewed in PRs. They
+replace Trunk's dashboard quarantine. Results go to PostHog (existing infrastructure); Cloudflare
+Basin on R2 is the fallback if we want one event per test.
+
+### Blocking vs nightly
+
+- Untagged tests are **blocking**: they run on every PR and in the merge queue.
+- `nightly` tests run only in the nightly full run and on demand (a dispatched full run on a PR).
+- The nightly run executes everything, uncached and unscoped.
+- Already done: knip and the boot budget run nightly only.
+
+### Stable, flaky, advisory
+
+- **Stable** (untagged): a failure fails CI.
+- `flaky`: runs and is recorded, never fails CI. Temporary: has an owner and an issue, and goes back
+  to stable once fixed.
+- `advisory`: runs and is recorded, never fails CI. Permanent: the result is information (budgets,
+  trends, live environments, evals).
+
+### Proposed structure
+
+`B` blocks every PR; `N` runs nightly. Each item shows the estimated minutes of work for one full,
+uncached run; a PR runs only affected packages, so it pays a fraction of the `B` total.
 
 ```text
 T0 Static checks
-├─ B  dxos repo scripts (format, cycles, peer deps, …)       3
-└─ B  edge config checks (format, bindings, dev stack)       0.5
+├─ B  dxos repo scripts (format, cycles, peer deps, …)       3 min
+└─ B  edge config checks (format, bindings, dev stack)       0.5 min
 T1 Compile and analysis
-├─ B  dxos lint, build, type tests                          25
-├─ B  dxos module structure, edge release                   25   rebuilds what the line above built
-├─ B  dxos plugin set, docs links                           10
-├─ N  dxos knip                                              3.5
-├─ N  dxos boot budget                                       4
-└─ B  edge lint, build, bundle checks                        6
+├─ B  dxos lint, build, type tests                          25 min
+├─ B  dxos module structure, edge release                   25 min   rebuilds what the line above built
+├─ B  dxos plugin set, docs links                           10 min
+├─ N  dxos knip                                              3.5 min
+├─ N  dxos boot budget                                       4 min
+└─ B  edge lint, build, bundle checks                        6 min
 T2 Unit
-├─ B  dxos node unit (common, ui, the rest)                 70
-└─ B  edge node unit                                        20   ~1 min of tests; the rest is serial task start-up
+├─ B  dxos node unit (common, ui, the rest)                 70 min
+└─ B  edge node unit                                        20 min   ~1 min of tests; the rest is serial task start-up
 T3 Local runtime
-├─ B  dxos workerd                                           9
+├─ B  dxos workerd                                           9 min
 └─ B  edge workerd, D1, Miniflare in node                    in edge node unit above
 T4 Integration
-├─ B  dxos ECHO (except echo-client-e2e)                    11
-├─ B  dxos process manager                                   3
-├─ B  dxos plugins, light (≤5 s per file)                   45
-├─ N  dxos plugins, heavy                                   65
-├─ N  dxos echo-client-e2e, memory                           7
-├─ N  dxos client/SDK, AI and agent packages                23
-└─ N  edge harness (edge:test, incl. sync)                  57
+├─ B  dxos ECHO (except echo-client-e2e)                    11 min
+├─ B  dxos process manager                                   3 min
+├─ B  dxos plugins, light (≤5 s per file)                   45 min
+├─ N  dxos plugins, heavy                                   65 min
+├─ N  dxos echo-client-e2e, memory                           7 min
+├─ N  dxos client/SDK, AI and agent packages                23 min
+└─ N  edge harness (edge:test, incl. sync)                  57 min
 T5 Browser
-├─ B  dxos vitest browser mode                               5
-└─ B  dxos storybook                                        91
+├─ B  dxos vitest browser mode                               5 min
+└─ B  dxos storybook                                        91 min
 T6 Model fixtures
-├─ N  dxos model-fixture replay                              1
-└─ N  edge fixtures, Discord agent                          18
+├─ N  dxos model-fixture replay                              1 min
+└─ N  edge fixtures, Discord agent                          18 min
 T7 End-to-end
-├─ N  dxos Composer e2e (3 browsers)                        75
-├─ N  dxos other Playwright (3 browsers)                    25
-├─ N  dxos CLI smoke                                         1
-└─ N  edge deployed e2e (after deploy)                       6
+├─ N  dxos Composer e2e (3 browsers)                        75 min
+├─ N  dxos other Playwright (3 browsers)                    25 min
+├─ N  dxos CLI smoke                                         1 min
+└─ N  edge deployed e2e (after deploy)                       6 min
 T8 Evals                                                 N   not measured
 T9 Live services                                         N   not measured; most never run today
 T10 Perf and benchmarks                                  N   not measured
@@ -52,6 +80,8 @@ T10 Perf and benchmarks                                  N   not measured
 Blocking total  ~320 min per full run   (PRs: affected packages only)
 Nightly total   ~290 min per full run
 ```
+
+The rest of this document is the evidence behind these decisions.
 
 ## Test ontology
 
@@ -69,7 +99,7 @@ on the next run of the same trigger within 48 h. CI never retries, so these are 
 "Test time" is the sum of JUnit times; moon task wall time is 2–3× higher because of per-task
 start-up. Raw data and scripts are kept outside the repo; the method is reproducible from the
 Actions API and artifacts (kept 7 days). When and where each tier runs is decided separately (see
-[Run policy](#run-policy)).
+[Run policy details](#run-policy-details)).
 
 ### T0 — Static checks (no build)
 
@@ -177,7 +207,7 @@ Actions API and artifacts (kept 7 days). When and where each tier runs is decide
   `!test` stories; edge has 60 `.skip`/`skipIf` in edge itself. None carries a reason a tool can
   read. The `flaky` tag is declared in `vitest.tags.ts` and used by no test.
 
-## Run policy
+## Run policy details
 
 Two labels per test, independent of its tier. Both are vitest tags in code, so a PR shows any change
 to them, and CI selects tests with `--tagsFilter`.
@@ -252,13 +282,6 @@ This label decides whether a failure _counts_:
 The difference between `flaky` and `advisory` is intent: a flaky test is a stable test that is
 broken for now, so it has an owner and an exit; an advisory test is meant to inform and has neither.
 
-### Decided
-
-- **knip and the boot budget run nightly only** (and on dispatch), not on PRs or the merge queue.
-  knip is never cached and costs ~3.5 min on every PR run; the boot budget rebuilds affected packages
-  (~4 min) to report a budget that does not gate the merge. `boot-trend.yml` still measures every push
-  to main. Done in `check.yml`.
-
 ### What stays blocking
 
 Untagged, and so blocking on PRs:
@@ -312,15 +335,6 @@ These cost as much as the tests, and no tag fixes them:
 - **Two suites give no signal today:** edge's deployed e2e has failed all 34 runs on the same 4
   preview-environment errors, and composer-e2e `tour.spec.ts` fails in Firefox every nightly. Both
   should be fixed or tagged `flaky` with an owner, not left red.
-
-## Problems
-
-- PRs are gated on many tests that are slow, costly to run, and flaky.
-- Direction: move more tests off PRs into nightly jobs. PRs keep only unit tests (plus check:
-  lint, build, types).
-- We have no ontology of tests: what tier a test is, and what CI does with it.
-- A test can be blocking or non-blocking, but that is not recorded anywhere a reviewer can see.
-- Trunk's quarantine and stats are hard to see and hard to trust.
 
 ## What Trunk does for us today
 
