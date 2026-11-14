@@ -515,7 +515,7 @@ const CanvasEngine = ({
   // pointer; the view's menu never shows.
   useLayoutEffect(() => {
     if (menu && onHostContextMenu) {
-      onHostContextMenu(menu.at, menu.kind === 'canvas' ? 'canvas' : 'element');
+      onHostContextMenu(menu.at, menu.kind === 'canvas' ? 'canvas' : 'element', menu.end);
       closeMenu();
     }
   }, [menu, onHostContextMenu, closeMenu]);

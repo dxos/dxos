@@ -8,7 +8,7 @@ import { type ModuleCompiler, type Timeline } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Bounds, type Point, type Scene } from '@dxos/scene';
 
-import { type CanvasAtoms } from '../../engine/index.ts';
+import { type CanvasAtoms, type MenuLinkEnd } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import { type SceneDisplay } from '../../hooks/index.ts';
 import {
@@ -88,7 +88,7 @@ export type CanvasRootProps = Util.ThemedClassName<{
    */
   hostKeys?: ReadonlySet<KeyAction>;
   /** Opens the host's context menu in place of the view's own, at a point in the view, over an element or the canvas. */
-  onContextMenu?: (at: Point, kind: 'element' | 'canvas') => void;
+  onContextMenu?: (at: Point, kind: 'element' | 'canvas', end?: MenuLinkEnd) => void;
   /** Called when the palette's read-only toggle is pressed; the toggle shows only when given, as the host owns `readonly`. */
   onReadonlyChange?: (readonly: boolean) => void;
   /**

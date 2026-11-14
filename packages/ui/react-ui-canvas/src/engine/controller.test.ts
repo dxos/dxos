@@ -581,6 +581,34 @@ describe('CanvasController', () => {
     });
   });
 
+  describe('link ends', () => {
+    test('a marker set on one end leaves the other, and is what the next link drawn takes', ({ expect }) => {
+      const { registry, atoms, controller, scene, linkId } = setup();
+      expect(registry.get(atoms.linkEnds)).toBeUndefined();
+      expect(controller.document.setEndMarker(linkId, 'target', 'arrow')).toBe(true);
+      expect(scene().links[linkId].ends).toEqual({ end: 'arrow' });
+      expect(controller.document.setEndMarker(linkId, 'source', 'circle')).toBe(true);
+      expect(scene().links[linkId].ends).toEqual({ start: 'circle', end: 'arrow' });
+      expect(registry.get(atoms.linkEnds)).toEqual({ start: 'circle', end: 'arrow' });
+    });
+
+    test('clearing the last marker stores none, and the next link drawn takes none', ({ expect }) => {
+      const { registry, atoms, controller, scene, linkId } = setup();
+      controller.document.setEndMarker(linkId, 'target', 'arrow');
+      expect(controller.document.setEndMarker(linkId, 'target', undefined)).toBe(true);
+      expect(scene().links[linkId].ends).toBeUndefined();
+      expect(registry.get(atoms.linkEnds)).toEqual({});
+    });
+
+    test('a link that is not there, or a drawing that cannot be changed, is left alone', ({ expect }) => {
+      const { controller } = setup();
+      expect(controller.document.setEndMarker('missing', 'target', 'arrow')).toBe(false);
+      const locked = setup({ readonly: true });
+      expect(locked.controller.document.setEndMarker(locked.linkId, 'target', 'arrow')).toBe(false);
+      expect(locked.scene().links[locked.linkId].ends).toBeUndefined();
+    });
+  });
+
   describe('tools', () => {
     test('a creation tool clears the selection and a link tool sets the link type', ({ expect }) => {
       const { registry, atoms, controller } = setup();

@@ -182,7 +182,7 @@ export type SceneEditorServices = {
   tools: EditorTools;
   commands: EditorCommands;
   time: EditorTime;
-} & Pick<Dimension, 'Root' | 'Viewport' | 'shortcuts' | 'aids' | 'inspector'>;
+} & Pick<Dimension, 'Root' | 'Viewport' | 'shortcuts' | 'aids' | 'inspector' | 'MenuLead'>;
 
 export const [SceneEditorServicesProvider, useSceneServices] = createContext<SceneEditorServices>('SceneEditor.Root');
 

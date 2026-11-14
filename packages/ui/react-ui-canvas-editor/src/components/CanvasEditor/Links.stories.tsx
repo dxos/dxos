@@ -227,3 +227,78 @@ export const EndMenuTest: Story = {
     await expect(corners()).toBe(2);
   },
 };
+
+/**
+ * A right-click on a link's end offers that end's marker, and the markers last set are what the next link takes.
+ *
+ * 1. Right-click the end of the Far side link on its second shape: the menu leads with End, and None is checked.
+ * 2. Pick Arrow: the link draws an arrow at that end, and the menu closes.
+ * 3. Right-click the end again: Arrow is checked.
+ * 4. With the Orthogonal tool, drag from the Straight pair's first shape to the Step pair's second: the new link
+ *    draws an arrow at its end too.
+ */
+export const EndMarkerTest: Story = {
+  args: { type: 'ortho', select: 'far-side' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    const marker = (path: Element | null | undefined) => path?.getAttribute('marker-end') ?? '';
+    // A link's markers are on a path of their own, over its line.
+    const link = () => view.querySelector('path[data-link-ends="far-side"]');
+    const end = () => view.querySelector('[data-link-end="target"]');
+    await waitFor(() => expect(end()).not.toBeNull());
+    const centreOf = (element: Element) => {
+      const { left, top, width, height } = element.getBoundingClientRect();
+      return { clientX: left + width / 2, clientY: top + height / 2 };
+    };
+    const openMenu = async () => {
+      const handle = end();
+      if (handle) {
+        await fireEvent.contextMenu(handle, { ...centreOf(handle), button: 2 });
+      }
+      const none = await screen.findByTestId('menu-end-none');
+      // Keys reach the menu only once it has focus.
+      await waitFor(() => expect(none.closest('[role="menu"]')).toHaveFocus());
+      return none;
+    };
+
+    // 1. The end's own section leads the menu.
+    const none = await openMenu();
+    await expect(none).toHaveAttribute('aria-checked', 'true');
+    await expect(marker(link())).toBe('');
+
+    // 2. By keyboard, since the menu ignores the synthetic pointer events a test can send.
+    const arrow = screen.getByTestId('menu-end-arrow');
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(arrow).toHaveAttribute('data-highlighted'));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(marker(link())).toContain('arrow-end'));
+    await waitFor(() => expect(screen.queryByTestId('menu-end-none')).toBeNull());
+
+    // 3. The menu shows what the end now draws.
+    await openMenu();
+    await expect(screen.getByTestId('menu-end-arrow')).toHaveAttribute('aria-checked', 'true');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByTestId('menu-end-none')).toBeNull());
+
+    // 4. A link drawn next takes the same markers.
+    const known = new Set(CASES.map(({ id }) => id));
+    const drawn = () =>
+      [...view.querySelectorAll('path[data-link-ends]')].filter(
+        (path) => !known.has(path.getAttribute('data-link-ends') ?? ''),
+      );
+    const [from, to] = [
+      view.querySelector('[data-node-id="straight-a"]'),
+      view.querySelector('[data-node-id="step-b"]'),
+    ];
+    if (!from || !to) {
+      throw new Error('The shapes to link are not drawn.');
+    }
+    await userEvent.click(await canvas.findByRole('button', { name: /^Orthogonal/ }));
+    await fireEvent.pointerDown(from, { ...centreOf(from), button: 0, pointerId: 1 });
+    await fireEvent.pointerMove(view, { ...centreOf(to), buttons: 1, pointerId: 1 });
+    await fireEvent.pointerUp(view, { ...centreOf(to), button: 0, pointerId: 1 });
+    await waitFor(() => expect(drawn()).toHaveLength(1));
+    await expect(marker(drawn()[0])).toContain('arrow-end');
+  },
+};

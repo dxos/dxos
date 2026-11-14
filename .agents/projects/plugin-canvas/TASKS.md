@@ -444,6 +444,15 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       gesture its press began without applying it (`openMenu`; a control-click is button 0, so it started an end
       drag), an end drag that never moved is not a drop (`endDrop`, `moved`), and an end's menu is its link's
       (`onEndContextMenu`), not the node's under it. Story `Links` › End Menu Test.
+- [x] **A link end's menu offers its marker** (user, 2026-11-13): a right-click on a link's end opens the link's
+      menu led by a radio group for that end (None, Arrow, Circle, Triangle), in the canvas's own menu and the
+      editor's (`MenuLinkEnd`, `CanvasLinkEndMenu`, `Dimension.MenuLead`), written by
+      `controller.document.setEndMarker`. Story `Links` › End Marker Test.
+- [x] **A new link takes the markers last set** (user, 2026-11-13): set from the end's menu or in Properties, they
+      are kept per canvas (`atoms.linkEnds`) and given to the next link drawn (`drawnLinkEnds`); cleared markers
+      count, so the next link then has none even between directed ports. Only the markers are kept, not the style.
+- [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
+      Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the
       shape, and the part of it, under the pointer, ahead of the commands every element has. First case: a right
       click on the end of a line offers that end's marker (arrow, circle, triangle, none). Others to decide as it is

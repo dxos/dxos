@@ -62,6 +62,7 @@ import {
   type Element,
   type Layer,
   LineLink,
+  LinkEnds,
   type LinkType,
   type Node,
   type NodeStyle,
@@ -193,6 +194,7 @@ const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
 };
 
 const isLinkType = Schema.is(LinkVariant);
+const isLinkEnds = Schema.is(LinkEnds);
 
 /** An element's own schema; a type the registry does not know gets the core base's (`BaseNode`, or a line). */
 const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> =>
@@ -375,10 +377,15 @@ export const PropertiesInspector = ({
       const paths = Object.keys(changed).filter((path) => changed[path as keyof typeof changed]);
       // A classed element's look is its class's: an edit of it restyles the class, and so every element deriving it.
       const classes: Record<string, StyleClass> = {};
+      // The markers set here are the ones the next link drawn takes.
+      let ends: LinkEnds | undefined;
       const edits = elements.map((element) => {
         const shown = formValues(nodes, element, styleMap, layers);
         // The element's own style as the base, so a field the panel shows resolved (an unset corner as on) is not written.
         const { type: picked, ...patch } = patchValues({ ...shown, style: element.style }, values, paths);
+        if (isLink(element) && 'ends' in patch) {
+          ends = isLinkEnds(patch.ends) ? patch.ends : {};
+        }
         // A link drawn another way is a different link type, which a field update never changes.
         const retype = isLink(element) && isLinkType(picked) ? [retypeLink(element.id, picked)] : [];
         const write = (next: Record<string, unknown>) =>
@@ -403,8 +410,11 @@ export const PropertiesInspector = ({
         registry.set(styles, { ...styleMap, ...classes });
       }
       draw.apply(chainEdits(edits));
+      if (ends) {
+        registry.set(atoms.linkEnds, ends);
+      }
     },
-    [draw, elements, nodes, styles, styleMap, layers, registry],
+    [draw, elements, nodes, styles, styleMap, layers, registry, atoms.linkEnds],
   );
 
   // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.

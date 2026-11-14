@@ -4,11 +4,47 @@
 
 import { describe, test } from 'vitest';
 
-import { grooveBounds, grooveHeads, grooveTrim, markerFrame, markerTrim, trimPath } from './link-ends.ts';
+import {
+  drawnLinkEnds,
+  endMarker,
+  grooveBounds,
+  grooveHeads,
+  grooveTrim,
+  markerFrame,
+  markerTrim,
+  trimPath,
+  withEndMarker,
+} from './link-ends.ts';
 import { flattenPath } from './path.ts';
 
 /** How far a mitred tip reaches past its vertex, for arms at the ends' half-angle. */
 const miter = (width: number) => width / 2 / Math.sin(Math.atan2(5, 10));
+
+describe("a link end's marker", () => {
+  test('the source end is the start marker and the target end the end marker', ({ expect }) => {
+    const ends = { start: 'circle', end: 'arrow' } as const;
+    expect(endMarker(ends, 'source')).toBe('circle');
+    expect(endMarker(ends, 'target')).toBe('arrow');
+    expect(endMarker(undefined, 'target')).toBeUndefined();
+  });
+
+  test('setting one end keeps the other, and clearing one drops only it', ({ expect }) => {
+    expect(withEndMarker(undefined, 'target', 'arrow')).toEqual({ end: 'arrow' });
+    expect(withEndMarker({ end: 'arrow' }, 'source', 'triangle')).toEqual({ start: 'triangle', end: 'arrow' });
+    expect(withEndMarker({ start: 'circle', end: 'arrow' }, 'target', undefined)).toEqual({ start: 'circle' });
+    expect(withEndMarker({ end: 'arrow' }, 'target', undefined)).toEqual({});
+  });
+
+  test('a link drawn takes the markers last set, and before any were an arrow where it has a direction', ({
+    expect,
+  }) => {
+    expect(drawnLinkEnds(undefined, false)).toBeUndefined();
+    expect(drawnLinkEnds(undefined, true)).toEqual({ end: 'arrow' });
+    expect(drawnLinkEnds({ start: 'circle' }, true)).toEqual({ start: 'circle' });
+    // Markers cleared are a choice too: the next link has none, directed or not.
+    expect(drawnLinkEnds({}, true)).toBeUndefined();
+  });
+});
 
 describe('marker ends', () => {
   test("a pointed marker's mitred tip and a circle's far side are at the anchor, at any stroke", ({ expect }) => {

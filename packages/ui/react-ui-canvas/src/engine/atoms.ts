@@ -15,6 +15,7 @@ import {
   type ElementId,
   type Endpoint,
   type LayerId,
+  type LinkEnds,
   type LinkId,
   type LinkType,
   type NodeId,
@@ -31,6 +32,9 @@ import { type Clipboard, type Inside, type PartKey } from '../utils/index.ts';
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 
 export type LinkEnd = 'source' | 'target';
+
+/** The link end a menu was opened on, which it offers a marker for ahead of the link's own commands. */
+export type MenuLinkEnd = { link: LinkId; end: LinkEnd };
 
 /**
  * The pointer machine's state. A node gesture (move, resize, create, a spline point) shows its geometry
@@ -151,6 +155,8 @@ export type CanvasAtoms = {
   tool: Atom.Writable<Tool>;
   /** The link type a port drag creates under the select tool: orthogonal until a link tool is picked, then the last one. */
   linkType: Atom.Writable<LinkType>;
+  /** The end markers the next link drawn takes: those last set on a link (none, if they were cleared); unset until then. */
+  linkEnds: Atom.Writable<LinkEnds | undefined>;
   /** The background grid drawn. */
   grid: Atom.Writable<boolean>;
   /** Grid shown and moves/resizes snapped to it. */
@@ -196,6 +202,7 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   point: Atom.keepAlive(Atom.make<ControlPointRef | undefined>(undefined)),
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
   linkType: Atom.keepAlive(Atom.make<LinkType>('ortho')),
+  linkEnds: Atom.keepAlive(Atom.make<LinkEnds | undefined>(undefined)),
   grid: Atom.keepAlive(Atom.make<boolean>(true)),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
   guides: Atom.keepAlive(Atom.make<boolean>(true)),

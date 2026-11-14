@@ -602,14 +602,19 @@ const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: 
 
 SceneEditorDisplay.displayName = 'SceneEditor.Display';
 
-/** The right-click menu: the command table's items over an element or empty space. */
+/**
+ * The right-click menu: the dimension's items for the part that was pressed, then the command table's items over an
+ * element or empty space.
+ */
 const SceneEditorContextMenu = () => {
   const { atoms, commands } = useSceneCommands('SceneEditor.ContextMenu');
+  const { MenuLead } = useSceneServices('SceneEditor.ContextMenu');
   const menu = useAtomValue(atoms.menu);
   const table = useAtomValue(atoms.table);
   return (
     <SceneContextMenu
       at={menu?.at}
+      lead={menu && MenuLead ? <MenuLead anchor={menu} /> : undefined}
       items={menu ? table.menuItems(menu.kind) : []}
       onCommand={(id) => table.get(id)?.run()}
       onClose={() => commands.setMenu(undefined)}

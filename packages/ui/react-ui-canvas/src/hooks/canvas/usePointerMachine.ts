@@ -40,6 +40,7 @@ import {
   type DrawState,
   type Handle,
   type LinkEnd,
+  type MenuLinkEnd,
   type ToolsCommands,
 } from '../../engine/index.ts';
 import {
@@ -73,6 +74,7 @@ import {
   createId,
   createLink,
   createNode,
+  drawnLinkEnds,
   favorMajor,
   handlePoint,
   hasVertices,
@@ -168,7 +170,7 @@ const isDirected = (scene: RenderList2D, registry: NodeRegistry, source: Endpoin
     return port !== undefined && port.accepts !== undefined && port.accepts !== 'any';
   });
 
-export type ContextMenu = { at: Point; scene: Point; kind: 'point' | 'element' | 'canvas' };
+export type ContextMenu = { at: Point; scene: Point; kind: 'point' | 'element' | 'canvas'; end?: MenuLinkEnd };
 
 export type UsePointerMachineOptions = {
   registry: ReturnType<typeof useRegistry>;
@@ -216,7 +218,7 @@ export type PointerMachine = {
   onMidpointPointerDown: (link: SplineLink, index: number, point: Point, event: PointerEvent) => void;
   onPointContextMenu: (link: SplineLink, index: number, event: MouseEvent) => void;
   /** The menu of a link pressed on one of its ends, which would else be the menu of the node the end is on. */
-  onEndContextMenu: (link: Link, event: MouseEvent) => void;
+  onEndContextMenu: (link: Link, end: LinkEnd, event: MouseEvent) => void;
   /** A vertex of the node in vertex edit mode: press marks it, drag moves it, alt-click removes it. */
   onVertexPointerDown: (node: Node, index: number, event: PointerEvent) => void;
   /** A segment's midpoint in vertex edit mode: pressing it adds a vertex there, `index`, and moves it. */
@@ -870,7 +872,7 @@ export const usePointerMachine = ({
   const [menu, setMenu] = useState<ContextMenu | undefined>(undefined);
   const closeMenu = useCallback(() => setMenu(undefined), []);
   const openMenu = useCallback(
-    (event: MouseEvent, kind: ContextMenu['kind']) => {
+    (event: MouseEvent, kind: ContextMenu['kind'], end?: MenuLinkEnd) => {
       event.preventDefault();
       event.stopPropagation();
       // A press that opens the menu is no gesture: a control-click is the primary button, and has begun one.
@@ -883,6 +885,7 @@ export const usePointerMachine = ({
         at: { x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) },
         scene: toScene(event),
         kind,
+        ...(end ? { end } : {}),
       });
     },
     [toScene, rootRef, registry, atoms.drag, setDrag],
@@ -912,7 +915,15 @@ export const usePointerMachine = ({
     [onElementContextMenu],
   );
 
-  const onEndContextMenu = onLinkContextMenu;
+  const onEndContextMenu = useCallback(
+    (link: Link, end: LinkEnd, event: MouseEvent) => {
+      if (!registry.get(atoms.selection).has(link.id)) {
+        select([link.id]);
+      }
+      openMenu(event, 'element', { link: link.id, end });
+    },
+    [registry, atoms.selection, select, openMenu],
+  );
 
   const onContextMenu = useCallback(
     (event: MouseEvent) => {
@@ -1377,8 +1388,12 @@ export const usePointerMachine = ({
                 z: created ? nextZ() : z,
                 source: current.source,
                 target,
-                // A link between ports that declare a direction is drawn with one.
-                ends: isDirected(scene, nodeRegistry, current.source, target) ? { end: 'arrow' } : undefined,
+                // The markers last set on a link; before any were, a link between ports that declare a direction
+                // is drawn with one.
+                ends: drawnLinkEnds(
+                  registry.get(atoms.linkEnds),
+                  isDirected(scene, nodeRegistry, current.source, target),
+                ),
               });
               edits.push(insertLink({ ...link, layer: activeLayer(scene, registry.get(atoms.layer)) }));
               draw.apply(edits.length === 1 ? edits[0] : chainEdits(edits));

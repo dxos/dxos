@@ -304,3 +304,26 @@ export const trimPath = (path: string, start: number, end: number): string => {
     `${segment.length === 2 ? 'L' : segment.length === 3 ? 'Q' : 'C'} ${segment.slice(1).map(at).join(', ')}`;
   return [`M ${at(pieces[0][0])}`, ...pieces.map(command)].join(' ');
 };
+
+/** The marker a link draws at the end on its `source` or its `target`. */
+export const endMarker = (ends: LinkEnds | undefined, end: 'source' | 'target'): Marker | undefined =>
+  end === 'source' ? ends?.start : ends?.end;
+
+/** A link's markers once the one at `end` is `marker` (none where it is undefined), the other end's as it was. */
+export const withEndMarker = (
+  ends: LinkEnds | undefined,
+  end: 'source' | 'target',
+  marker: Marker | undefined,
+): LinkEnds => {
+  const [start, finish] = end === 'source' ? [marker, ends?.end] : [ends?.start, marker];
+  return { ...(start ? { start } : {}), ...(finish ? { end: finish } : {}) };
+};
+
+/**
+ * The markers a link just drawn takes: those last set on a link, where any were; otherwise an arrow where its ports
+ * give it a direction.
+ */
+export const drawnLinkEnds = (remembered: LinkEnds | undefined, directed: boolean): LinkEnds | undefined => {
+  const { start, end }: LinkEnds = remembered ?? (directed ? { end: 'arrow' } : {});
+  return start || end ? { ...(start ? { start } : {}), ...(end ? { end } : {}) } : undefined;
+};
