@@ -16,7 +16,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { type RenderList2D, createLink, fromRenderLists2D, portId } from '@dxos/react-ui-canvas';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
@@ -112,13 +112,15 @@ const documentOf = (type: LinkType): Scene.SceneDocument => fromRenderLists2D([b
 type StoryArgs = {
   /** The variant every link is drawn as. */
   type: LinkType;
+  /** The link selected as the editor opens, so its ends show. */
+  select?: string;
 };
 
-const DefaultStory = ({ type }: StoryArgs) => {
+const DefaultStory = ({ type, select }: StoryArgs) => {
   const document = useMemo(() => documentOf(type), [type]);
   return (
     // Keyed, so a control change opens the new drawing rather than editing the old one.
-    <SceneEditorStory key={type} document={document} docked>
+    <SceneEditorStory key={type} document={document} docked select={select ? [select] : undefined}>
       <FullEditor dim='2d' />
     </SceneEditorStory>
   );
@@ -169,5 +171,59 @@ export const Test: Story = {
       // A route's corners are rounded, each one curve between two straight runs.
       await expect((pathOf(id) ?? '').split('Q').length - 1, id).toBe(bends);
     }
+  },
+};
+
+/**
+ * A press on a link's end that opens its menu, or that goes nowhere, leaves the end on its port.
+ *
+ * 1. Control-click the end of the Far side link on its second shape: the link's menu opens and the link keeps its
+ *    two corners (an end off its port would draw one).
+ * 2. Click that end without moving: the link is unchanged.
+ * 3. Right-click that end: the menu opens, and the link is still selected and unchanged.
+ */
+export const EndMenuTest: Story = {
+  args: { type: 'ortho', select: 'far-side' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    const corners = () =>
+      (view.querySelector('path[data-link-id="far-side"]')?.getAttribute('d') ?? '').split('Q').length - 1;
+    const end = () => view.querySelector('[data-link-end="target"]');
+    await waitFor(() => expect(end()).not.toBeNull());
+    await expect(corners()).toBe(2);
+    const handle = end();
+    if (!handle) {
+      return;
+    }
+    const { left, top, width, height } = handle.getBoundingClientRect();
+    const at = { clientX: left + width / 2, clientY: top + height / 2 };
+    const closeMenu = async () => {
+      const item = await screen.findByTestId('menu-delete');
+      // Keys reach the menu only once it has focus.
+      await waitFor(() => expect(item.closest('[role="menu"]')).toHaveFocus());
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(screen.queryByTestId('menu-delete')).toBeNull());
+    };
+
+    // 1. A control-click is the primary button with the key held, then the menu's own event.
+    await fireEvent.pointerDown(handle, { ...at, button: 0, ctrlKey: true, pointerId: 1 });
+    await fireEvent.contextMenu(handle, { ...at, button: 0, ctrlKey: true });
+    await fireEvent.pointerUp(view, { ...at, button: 0, ctrlKey: true, pointerId: 1 });
+    await closeMenu();
+    await expect(corners()).toBe(2);
+
+    // 2. A press released where it began.
+    await fireEvent.pointerDown(handle, { ...at, button: 0, pointerId: 1 });
+    await fireEvent.pointerUp(view, { ...at, button: 0, pointerId: 1 });
+    await expect(corners()).toBe(2);
+
+    // 3. The secondary button.
+    await fireEvent.pointerDown(handle, { ...at, button: 2, pointerId: 1 });
+    await fireEvent.contextMenu(handle, { ...at, button: 2 });
+    await fireEvent.pointerUp(view, { ...at, button: 2, pointerId: 1 });
+    await closeMenu();
+    await expect(end()).not.toBeNull();
+    await expect(corners()).toBe(2);
   },
 };

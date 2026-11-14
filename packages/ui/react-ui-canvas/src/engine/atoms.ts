@@ -99,7 +99,17 @@ export type Drag =
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
-  | { kind: 'end'; id: LinkId; end: LinkEnd; fixed: Point; fixedSide: Side; to: Point; target?: Endpoint };
+  /** `moved` is set once the pointer moves, so a press released where it began is not a drop. */
+  | {
+      kind: 'end';
+      id: LinkId;
+      end: LinkEnd;
+      fixed: Point;
+      fixedSide: Side;
+      to: Point;
+      target?: Endpoint;
+      moved?: boolean;
+    };
 
 /**
  * Whether a move has left where it was pressed: until it does, a press on a selected node is a click, and the

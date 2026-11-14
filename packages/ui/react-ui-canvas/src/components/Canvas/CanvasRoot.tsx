@@ -385,6 +385,7 @@ const CanvasEngine = ({
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onEndContextMenu,
     onVertexPointerDown,
     onVertexMidpointPointerDown,
     onBendPointerDown,
@@ -622,6 +623,7 @@ const CanvasEngine = ({
               onPointPointerDown={onPointPointerDown}
               onMidpointPointerDown={onMidpointPointerDown}
               onPointContextMenu={onPointContextMenu}
+              onEndContextMenu={onEndContextMenu}
               onVertexPointerDown={onVertexPointerDown}
               onVertexMidpointPointerDown={onVertexMidpointPointerDown}
               onBendPointerDown={onBendPointerDown}

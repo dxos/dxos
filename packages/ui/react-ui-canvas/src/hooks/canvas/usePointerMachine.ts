@@ -132,6 +132,20 @@ export const isLinkDrawn = ({ press, pointer }: { press: Point; pointer: Point }
   Math.hypot(pointer.x - press.x, pointer.y - press.y) >= minimum;
 
 /**
+ * Where a dragged link end lands: on what the pointer was over, else as a free end at the point it was dropped. Nothing
+ * for a press released where it began, so pressing an end does not detach it from its port.
+ */
+export const endDrop = ({
+  to,
+  target,
+  moved,
+}: {
+  to: Point;
+  target?: Endpoint;
+  moved?: boolean;
+}): Endpoint | undefined => (moved ? (target ?? { point: to }) : undefined);
+
+/**
  * Whether the pointer is over the canvas itself: not over a panel the view hosts, nor over a popup portalled from one,
  * whose events React still bubbles to the view. Content embedded in a node is part of the canvas.
  */
@@ -201,6 +215,8 @@ export type PointerMachine = {
   onPointPointerDown: (link: SplineLink, index: number, event: PointerEvent) => void;
   onMidpointPointerDown: (link: SplineLink, index: number, point: Point, event: PointerEvent) => void;
   onPointContextMenu: (link: SplineLink, index: number, event: MouseEvent) => void;
+  /** The menu of a link pressed on one of its ends, which would else be the menu of the node the end is on. */
+  onEndContextMenu: (link: Link, event: MouseEvent) => void;
   /** A vertex of the node in vertex edit mode: press marks it, drag moves it, alt-click removes it. */
   onVertexPointerDown: (node: Node, index: number, event: PointerEvent) => void;
   /** A segment's midpoint in vertex edit mode: pressing it adds a vertex there, `index`, and moves it. */
@@ -857,6 +873,11 @@ export const usePointerMachine = ({
     (event: MouseEvent, kind: ContextMenu['kind']) => {
       event.preventDefault();
       event.stopPropagation();
+      // A press that opens the menu is no gesture: a control-click is the primary button, and has begun one.
+      if (registry.get(atoms.drag)?.kind !== 'vertices') {
+        pendingRef.current = undefined;
+        setDrag(undefined);
+      }
       const rect = rootRef.current?.getBoundingClientRect();
       setMenu({
         at: { x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) },
@@ -864,7 +885,7 @@ export const usePointerMachine = ({
         kind,
       });
     },
-    [toScene, rootRef],
+    [toScene, rootRef, registry, atoms.drag, setDrag],
   );
 
   const onPointContextMenu = useCallback(
@@ -890,6 +911,8 @@ export const usePointerMachine = ({
     (link: Link, event: MouseEvent) => onElementContextMenu(link.id, event),
     [onElementContextMenu],
   );
+
+  const onEndContextMenu = onLinkContextMenu;
 
   const onContextMenu = useCallback(
     (event: MouseEvent) => {
@@ -1105,7 +1128,7 @@ export const usePointerMachine = ({
           const other = link ? endpointNode(current.end === 'source' ? link.target : link.source) : undefined;
           const target = linkTarget(point, other, current.end === 'source' ? 'out' : 'in');
           // As a new link's far end: where it will land, on what is under the pointer or else on the grid.
-          setDrag({ ...current, to: target ? point : { x: snap(point.x), y: snap(point.y) }, target });
+          setDrag({ ...current, to: target ? point : { x: snap(point.x), y: snap(point.y) }, target, moved: true });
           break;
         }
       }
@@ -1415,8 +1438,10 @@ export const usePointerMachine = ({
         }
         case 'end': {
           // Dropped on a node it attaches there; dropped on empty canvas it becomes a free end at that point.
-          const end: Endpoint = current.target ?? { point: current.to };
-          draw.apply(updateElement(current.id, { [current.end]: end }));
+          const end = endDrop(current);
+          if (end) {
+            draw.apply(updateElement(current.id, { [current.end]: end }));
+          }
           break;
         }
         case 'pan':
@@ -1473,6 +1498,7 @@ export const usePointerMachine = ({
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onEndContextMenu,
     onVertexPointerDown,
     onVertexMidpointPointerDown,
     onBendPointerDown,

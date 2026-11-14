@@ -4,7 +4,20 @@
 
 import { describe, test } from 'vitest';
 
-import { isLinkDrawn } from './usePointerMachine.ts';
+import { endDrop, isLinkDrawn } from './usePointerMachine.ts';
+
+describe('endDrop', () => {
+  const to = { x: 40, y: 20 };
+
+  test('an end pressed and released where it was stays attached as it was', ({ expect }) => {
+    expect(endDrop({ to })).toBeUndefined();
+  });
+
+  test('an end dragged lands on what the pointer was over, else free at the point', ({ expect }) => {
+    expect(endDrop({ to, moved: true, target: { node: 'a', port: 'e2' } })).toEqual({ node: 'a', port: 'e2' });
+    expect(endDrop({ to, moved: true })).toEqual({ point: to });
+  });
+});
 
 describe('isLinkDrawn', () => {
   const grid = 16;

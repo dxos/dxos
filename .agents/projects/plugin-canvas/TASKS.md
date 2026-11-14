@@ -440,6 +440,10 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       fold, the Variant list) and is the type a port drag draws until a link tool is picked (`atoms.linkType`). A
       stored link naming no type still reads as `smart` (`DEFAULT_LINK_TYPE`), as do graph-mode and generated links,
       which take a lattice's gutters.
+- [x] **A menu press on a link's end leaves it attached** (user, 2026-11-13): opening the context menu ends the
+      gesture its press began without applying it (`openMenu`; a control-click is button 0, so it started an end
+      drag), an end drag that never moved is not a drop (`endDrop`, `moved`), and an end's menu is its link's
+      (`onEndContextMenu`), not the node's under it. Story `Links` › End Menu Test.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the
       shape, and the part of it, under the pointer, ahead of the commands every element has. First case: a right
       click on the end of a line offers that end's marker (arrow, circle, triangle, none). Others to decide as it is
