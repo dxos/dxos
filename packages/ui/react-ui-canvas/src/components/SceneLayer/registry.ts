@@ -436,10 +436,10 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
 export const defaultNodeRegistry: NodeRegistry = createNodeRegistry(defaultNodeTypes, defaultNodePrototypes);
 
 /**
- * The link variants, in the order the palette and the Properties panel list them, the default (orthogonal) first. A
- * link's stored `type` is the variant: `orthogonal` leaves each port along its normal and turns at right angles,
- * `elbow` leaves each port along its normal and joins the two with one segment, and `straight` runs between the ends
- * as they are.
+ * The link variants, in the order the palette and the Properties panel list them, the default (Orthogonal) first. A
+ * link's stored `type` is the variant: `ortho` leaves each port along its normal and turns at right angles, `smart`
+ * (named Elbow) leaves each port along its normal and joins the two with one segment, and `line` (named Straight)
+ * runs between the ends as they are.
  */
 export const defaultLinkRegistry: LinkRegistry = {
   ortho: { type: 'ortho', name: 'Orthogonal', icon: 'ph--arrow-elbow-right-up--regular', key: 'H' },

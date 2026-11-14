@@ -36,6 +36,10 @@ const linkPoints = (scene: RenderList2D, registry: NodeRegistry, link: Link): Po
   if (!geometry) {
     return undefined;
   }
+  // A diagram connector is drawn along its own route, whatever its type.
+  if (geometry.diagram) {
+    return geometry.diagram.points;
+  }
   const { source, target } = geometry;
   switch (link.type) {
     case 'line':
