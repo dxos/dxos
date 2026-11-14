@@ -1449,6 +1449,24 @@ describe('QueryPlanner', () => {
     `);
   });
 
+  test('known versions resolve the whole result once, before it is ordered and limited', () => {
+    const versions = ['dxn:com.example.type.task:0.1.0', 'dxn:com.example.type.task:0.2.0'];
+    const query = Query.select(Filter.or(Filter.type(TestSchema.Task), Filter.type(TestSchema.Person))).limit(10);
+    const plan = planner.createPlan({ type: 'options', query: withSpaceIdOptions(query.ast), options: { versions } });
+
+    const tags = plan.steps.map((step) => step._tag);
+    expect(tags.filter((tag) => tag === 'ResolveVersionsStep')).toHaveLength(1);
+    const resolve = tags.indexOf('ResolveVersionsStep');
+    expect(plan.steps[resolve]).toEqual({ _tag: 'ResolveVersionsStep', versions });
+    expect(tags.slice(resolve + 1)).toEqual(['OrderStep']);
+    const select = plan.steps.find((step) => step._tag === 'SelectStep');
+    invariant(select?._tag === 'SelectStep');
+    expect(select.limit).toBeUndefined();
+    const order = plan.steps[resolve + 1];
+    invariant(order._tag === 'OrderStep');
+    expect(order.limit).toBe(10);
+  });
+
   test('ordered and limited results', () => {
     const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(10);
 

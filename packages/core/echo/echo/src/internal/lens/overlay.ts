@@ -5,7 +5,9 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, type Entity, Obj } from '@dxos/echo';
+import * as Annotation from '../../Annotation.ts';
+import type * as Entity from '../../Entity.ts';
+import * as Obj from '../../Obj.ts';
 
 //
 // Target properties with no counterpart in the source live in the base object's annotation

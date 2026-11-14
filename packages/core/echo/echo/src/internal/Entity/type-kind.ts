@@ -25,6 +25,60 @@ export type EchoTypeKindSchema<
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > = EchoTypeSchema<Self, {}, EntityKind.Type, Fields>;
 
+/** Lens-kind schema marker — produced by {@link EchoLensKindSchema}. */
+export type EchoLensKindSchema<
+  Self extends Schema.Top,
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
+> = EchoTypeSchema<Self, {}, EntityKind.Lens, Fields>;
+
+type KindSchemaFactory<K extends EntityKind.Type | EntityKind.Lens> = (
+  dxn: DXN.DXN,
+  options?: EchoTypeOptions,
+) => <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  self: Self & { fields?: Fields },
+) => EchoTypeSchema<Self, {}, K, Fields>;
+
+/** A pipeable that brands a schema as describing entities of `kind` rather than objects. */
+const kindSchema =
+  <K extends EntityKind.Type | EntityKind.Lens>(kind: K): KindSchemaFactory<K> =>
+  (dxn, options) => {
+    const typename = DXN.getName(dxn);
+    const version = DXN.getVersion(dxn);
+    invariant(version, `${kind}-kind schemas require a versioned DXN: ${dxn}`);
+
+    return <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+      self: Self & { fields?: Fields },
+    ): EchoTypeSchema<Self, {}, K, Fields> => {
+      invariant(SchemaAST.isObjects(self.ast), 'Schema must be a TypeLiteral.');
+
+      const fields = ((self as any).fields ?? {}) as Fields;
+
+      // The id is prepended to the existing object node rather than rebuilt from `.fields`:
+      // rebuilding drops index signatures, which is how record-shaped types are declared.
+      const schemaWithId = new SchemaAST.Objects(
+        self.ast.propertySignatures.some((property) => property.name === 'id')
+          ? self.ast.propertySignatures
+          : [...self.ast.propertySignatures, new SchemaAST.PropertySignature('id', Schema.String.ast)],
+        self.ast.indexSignatures,
+      );
+      const ast = SchemaAST.annotate(schemaWithId, {
+        ...self.ast.annotations,
+        [TypeAnnotationId]: { kind, typename, version } satisfies TypeAnnotation,
+        ...makeTypeJsonSchemaAnnotation({ kind, typename, version }),
+      });
+
+      return makeEchoTypeSchema<Self, K, Fields>(
+        fields,
+        ast,
+        typename,
+        version,
+        kind,
+        () => toJsonSchema(Schema.make(ast)),
+        options?.id,
+      );
+    };
+  };
+
 /**
  * Pipeable that brands a schema as a type-kind ECHO entity. Mirrors
  * {@link EchoObjectSchema} / {@link EchoRelationSchema}, but stamps the
@@ -32,51 +86,10 @@ export type EchoTypeKindSchema<
  * `TypeAnnotation.kind = 'type'` so meta-schemas surface uniformly through
  * `Type.isTypeKind`, `Filter.type`, etc.
  */
-export const EchoTypeKindSchema: {
-  (
-    dxn: DXN.DXN,
-    options?: EchoTypeOptions,
-  ): <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
-    self: Self & { fields?: Fields },
-  ) => EchoTypeKindSchema<Self, Fields>;
-} = (dxn, options) => {
-  const typename = DXN.getName(dxn);
-  const version = DXN.getVersion(dxn);
-  invariant(version, `Type-kind schemas require a versioned DXN: ${dxn}`);
+export const EchoTypeKindSchema: KindSchemaFactory<EntityKind.Type> = kindSchema(EntityKind.Type);
 
-  return <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
-    self: Self & { fields?: Fields },
-  ): EchoTypeKindSchema<Self, Fields> => {
-    invariant(SchemaAST.isObjects(self.ast), 'Schema must be a TypeLiteral.');
-
-    const fields = ((self as any).fields ?? {}) as Fields;
-
-    // The id is prepended to the existing object node rather than rebuilt from `.fields`:
-    // rebuilding drops index signatures, which is how record-shaped types are declared.
-    const schemaWithId = new SchemaAST.Objects(
-      self.ast.propertySignatures.some((property) => property.name === 'id')
-        ? self.ast.propertySignatures
-        : [...self.ast.propertySignatures, new SchemaAST.PropertySignature('id', Schema.String.ast)],
-      self.ast.indexSignatures,
-    );
-    const ast = SchemaAST.annotate(schemaWithId, {
-      ...self.ast.annotations,
-      [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
-      ...makeTypeJsonSchemaAnnotation({
-        kind: EntityKind.Type,
-        typename,
-        version,
-      }),
-    });
-
-    return makeEchoTypeSchema<Self, EntityKind.Type, Fields>(
-      fields,
-      ast,
-      typename,
-      version,
-      EntityKind.Type,
-      () => toJsonSchema(Schema.make(ast)),
-      options?.id,
-    );
-  };
-};
+/**
+ * Pipeable that brands a schema as describing lenses: its instances, stored lenses, are entities of
+ * `EntityKind.Lens`.
+ */
+export const EchoLensKindSchema: KindSchemaFactory<EntityKind.Lens> = kindSchema(EntityKind.Lens);

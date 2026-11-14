@@ -1,29 +1,30 @@
 # ECHO Lenses — API
 
-The `Lens` (object lens) namespace of this package: **one live ECHO object viewed through a second
-declared type**. There is never a second object — reads project the base object and writes invert
-onto it. Rationale and roadmap: [DESIGN.md](../../../../.agents/projects/lenses/DESIGN.md).
+The `Lens` (object lens) namespace, now in `@dxos/echo`: **one live ECHO object viewed through a
+second declared type**. There is never a second object — reads project the base object and writes
+invert onto it. Rationale and roadmap: [DESIGN.md](../../../../.agents/projects/lenses/DESIGN.md).
 
-Sibling of the `Panproto` **wire** lens in this package, which instead crosses the serialization
-boundary to a foreign record (`wire-lens.ts` holds its schema). Shaped to match the neighbouring ECHO
-modules (`Obj`, `Type`, `View`, `Annotation`), so promotion into `@dxos/echo` is an import-path change.
+Sibling of the `Panproto` **wire** lens in this package (`@dxos/echo-panproto`), which instead
+crosses the serialization boundary to a foreign record (`wire-lens.ts` holds its schema). Shaped to
+match the neighbouring ECHO modules (`Obj`, `Type`, `View`, `Annotation`), which is what made
+promotion into `@dxos/echo` an import-path change rather than a redesign.
 
 **Status: implemented, proof of concept.** The mapping, overlay storage, live handle, law check,
 registry, and persistence below all work and are covered by `Lens.test.ts`. Known gaps are listed in
-§9. `Obj.lens` reads `Lens.of` until the module moves into core.
+§9. `Obj.lens` reads `Lens.of` still, pending its own entry point (a later follow-up: adding it today
+would create an `Obj` ↔ `Lens` import cycle).
 
 **Scope:** the near-term goal is a proof of concept — _multiple interfaces, each written against its
 own schema, driving the same object_. Foreign-type adaptation and migration support are long-term
 payoffs this shape enables; they are explicitly not being built first.
 
-**Where it ships:** `@dxos/echo-panproto` (existing, from PR #12395), as a new `Lens` namespace
-export beside the existing `Panproto` wire lens — a lens is just another object, so nothing here
-needs to be inside core to work. The existing `Panproto.Lens` (ECHO ↔ foreign wire record,
-snapshot encode/decode for publishing) is, in §1 terms, the degenerate case where the target is a
-plain `Schema.Schema.Any` and only the snapshot tier exists; converging it onto this interface
-later is a refactor, not a rewrite (project DESIGN.md §2.1). Signatures are written as if the module were
-already `Lens` in core, so promotion is an import-path change. `Obj.lens` below reads `Lens.of`
-until then.
+**Where it ships:** `@dxos/echo`, beside `Type`/`View`/`Annotation` (promoted from
+`@dxos/echo-panproto`, where it first landed in PR #12395) — a lens is just another object, so
+nothing here needs to be inside core to work. The existing `Panproto.Lens` (ECHO ↔ foreign wire
+record, snapshot encode/decode for publishing), which stays in `@dxos/echo-panproto`, is, in §1
+terms, the degenerate case where the target is a plain `Schema.Schema.Any` and only the snapshot
+tier exists; converging it onto this interface later is a refactor, not a rewrite (project
+DESIGN.md §2.1).
 
 ## 0. What "first-class" does and doesn't require
 
@@ -31,23 +32,26 @@ until then.
 static-or-persisted duality types already have; a registry; React hooks with the same shape as
 `useObject`.
 
-**It does not require a new entity kind.** `EntityKind` is a closed set (`Object`, `Relation`,
-`Type`), and `Type` earns its own kind because it _is_ schema — the database validates and indexes
-against it. A lens is metadata _about_ two types; it can be an ordinary ECHO object of type
-`org.dxos.type.lens`, added with `db.add()` and queried with `Filter.type(Lens.Lens)`. Additive and
-reversible. If lenses later need to participate in indexing or query planning, promoting them to a
-kind is a separate, evidence-backed decision.
+**A lens is an entity kind of its own.** `EntityKind` is `Object`, `Relation`, `Type` and `Lens`
+(stored as `system.kind: 'lens'`): a lens is an edge between two types, as a relation is between two
+objects, and the host translates version documents with the lenses a space stores, so it has to find
+them without loading every object. A lens is stored with `db.addLens(lens)` (`db.add` rejects one) and
+registered in code with `registry.add`.
 
 ## 1. One shape: a lens binds two declared types
 
 ```ts
-export const make: <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Schema.Any>(
-  id: string,
+export const make: <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>(
   source: S,
   target: T,
   mapping?: Mapping<Type.InstanceType<S>, TargetOf<T>>,
+  options?: { defaults?: Record<string, unknown> },
 ) => Lens<Type.InstanceType<S>, TargetOf<T>>;
 ```
+
+A lens takes no id. It is named by its two types (`lens.name`, `<source> -> <target>`; at most one lens
+per pair) and identified by a digest of what it does (`lens.digest`), which changes whenever its
+translation would.
 
 Both ends are always written out. There is no mode where the target is computed from the mapping —
 that was an earlier proposal and it is dropped. Consequences, all good:
@@ -78,7 +82,7 @@ Source properties that no target property consumes are **dropped** from the view
 `put` from the live object.
 
 ```ts
-export const IssueAsTask = Lens.make('org.dxos.lens.issue-as-task', Linear.Issue, DataType.Task, {
+export const IssueAsTask = Lens.make(Linear.Issue, DataType.Task, {
   // 2. `title` and `description` match by name and type — omitted entirely.
 
   // Rename shorthand: a bare string names the source property.
@@ -160,7 +164,7 @@ For transformations no per-property mapping can express (parsing, tree construct
 serialization), the mapping is a whole-object `get`/`put` pair. Everything else is identical.
 
 ```ts
-export const RichText = Lens.coded('org.dxos.lens.rich-text', DataType.Text, BlockTree, {
+export const RichText = Lens.coded(DataType.Text, BlockTree, {
   get: (text) => parseBlocks(text.content), // remark -> mdast -> blocks, each carrying its source range
   put: (next, prev) =>
     diffBlocks(prev, next).map(({ block, markdown }) => ({
@@ -243,7 +247,8 @@ the source properties that feed it, so a peer editing `title` doesn't re-render 
 ## 5. Overlay storage
 
 Target properties with no source counterpart live in the object's annotation dictionary
-(`EntityMeta.annotations`), keyed by lens DXN then property, and validated against the target
+(`EntityMeta.annotations`), keyed by the lens's name (its two type URIs, versions included) then
+property, and validated against the target
 schema's declaration for that property — which always exists, since the target is always written
 out.
 
@@ -284,21 +289,20 @@ There is deliberately no `replace`. `splice` is what the rich-text lens needs an
 
 ## 7. Persistence and registry
 
-A lens object is an ordinary ECHO object, mirroring stored types:
+A stored lens mirrors a stored type: its declarative plan is persisted, and it rehydrates against the
+two types it names.
 
 ```ts
-export const Lens: Type.Obj<Lens>; // org.dxos.type.lens
+const stored: Lens.Stored = await db.addLens(IssueAsTask); // Lens.toStored(lens) is the data it holds
+const runtime = Lens.fromStored(stored, Linear.Issue, DataType.Task);
 
-await db.add(Lens.toObject(IssueAsTask));
-const runtime = Lens.fromObject(stored);
-
-export const register: (lens: Lens.Any) => void;
-export const lensesFor: (source: Type.AnyObj | string) => readonly Lens.Any[];
-export const sourcesFor: (target: Type.AnyObj | string) => readonly Lens.Any[];
+registry.add(IssueAsTask);
+registry.lenses(); // every registered lens
+registry.lensBetween(sourceUri, targetUri); // the lens for one pair
+registry.lensesFrom(sourceUri); // "how else can I view this object"
 ```
 
-`lensesFor` answers "how else can I view this object"; `sourcesFor` answers "what can this
-interface accept" — the reverse lookup that makes one UI serve many source types.
+`Lens.findPath` and `Lens.resolveView` take the lenses to walk and compose a chain between two types.
 
 Unlike stored _types_, a persisted lens still yields static types when its target is a statically
 declared type (§1), so this path is less lossy than the stored-schema analogue.

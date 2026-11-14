@@ -119,12 +119,13 @@ export interface UnknownTypeSchema<A, K extends EntityKind> extends Schema.Codec
 }
 
 /**
- * Kinds of entities stored in ECHO: objects, relations, and types.
+ * Kinds of entities stored in ECHO: objects, relations, types, and lenses (edges between two types).
  */
 export enum EntityKind {
   Object = 'object',
   Relation = 'relation',
   Type = 'type',
+  Lens = 'lens',
 }
 
 export const EntityKindSchema = Schema.Enum(EntityKind);
