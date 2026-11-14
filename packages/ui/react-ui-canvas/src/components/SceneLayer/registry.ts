@@ -38,6 +38,7 @@ import {
   templateCompositeId,
 } from '../../model/index.ts';
 import {
+  ARROW_POINTS,
   CONTAINERS_GROUP,
   DRAW_FOLD,
   EXTENSIONS_GROUP,
@@ -219,6 +220,20 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     parts: [{ field: 'label' }],
     resizable: true,
     minSize: MIN_SIZE,
+  },
+  // A tool rather than a type of its own: the arrow it draws is a closed polyline, so its vertices are there to drag.
+  arrow: {
+    schema: PolylineNode,
+    component: PolylineNodeView,
+    name: 'Arrow',
+    icon: 'ph--arrow-fat-right--regular',
+    key: 'A',
+    create: (props) => ({
+      ...createNode({ type: 'polyline', ...props }),
+      points: [...ARROW_POINTS],
+      params: { closed: true },
+    }),
+    defaultSize: NOMINAL_SIZES.rect,
   },
   polyline: {
     name: 'Polyline',

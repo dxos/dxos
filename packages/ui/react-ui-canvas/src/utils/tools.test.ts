@@ -47,12 +47,13 @@ describe('toolGroups', () => {
     expect(groups.map((group) => group.name)).toEqual([TOOLS_GROUP, CREATE_GROUP, CONTAINERS_GROUP, EXTENSIONS_GROUP]);
     expect(types(CONTAINERS_GROUP)).toEqual(['hull', 'view']);
     expect(types(EXTENSIONS_GROUP)).toEqual(['card']);
-    // Spline and Draw are tools beside the polyline, which is the shape they make.
+    // Arrow, Spline and Draw are tools beside the polyline, which is the shape they make.
     expect(types(CREATE_GROUP)).toEqual([
       'rect',
       'ellipse',
       'polygon',
       'cloud',
+      'arrow',
       'polyline',
       'spline',
       'freehand',
@@ -97,7 +98,7 @@ describe('toolGroups', () => {
       const run = runs[at];
       return run && 'entry' in run && run.entry.tool.kind === 'node' ? run.entry.tool.type : undefined;
     };
-    expect(typeAt(index - 1)).toBe('cloud');
+    expect(typeAt(index - 1)).toBe('arrow');
     const paths = runs[index + 1];
     expect(paths && 'fold' in paths && paths.fold.name).toBe(PATH_FOLD);
     // Every other run is a node tool: alone, or folded with its variants.

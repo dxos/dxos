@@ -474,6 +474,11 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       shapes (`toolGroups` puts the links ahead of the first tool with `createFromPoints` or `freehand`), and
       Polyline and Spline share one flyout (`PATH_FOLD`). Create group: Rectangle, Ellipse, Polygon, Cloud, Link
       fold, Path fold, Draw fold, Text, Icon.
+- [x] **An Arrow shape tool** (user, 2026-11-13): `arrow` in the node registry, after Cloud, key `A`, icon
+      `ph--arrow-fat-right--regular`. A tool rather than a type, as Spline and Freehand are: it lands a closed
+      polyline with `ARROW_POINTS` (shaft two thirds of the height, head over the last 28% of the width), so
+      nothing is stored that a build without the tool cannot read, and 3D lifts it as it lifts any closed polyline.
+      A resize stretches the head with the frame; a head of fixed size would need a type of its own.
 - [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
       Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the

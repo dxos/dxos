@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { MAJOR_GRID, type NodeBase, NoteNode, RectNode, isBuiltinNode, nodeBase } from '@dxos/scene';
+import { MAJOR_GRID, type NodeBase, NoteNode, RectNode, isBuiltinNode, isPolylineNode, nodeBase } from '@dxos/scene';
 
 import { type CreateProps, type NodeDef, type NodeRegistry, createNodeRegistry, nodeDef } from '../../model/index.ts';
 import { createNode, nodeBounds, nodePorts, nominalSize } from '../../utils/index.ts';
@@ -70,6 +70,28 @@ describe('registry', () => {
 });
 
 describe('node registry', () => {
+  test('the arrow tool draws a closed polyline in the outline of a block arrow pointing right', ({ expect }) => {
+    const { arrow, polyline } = defaultNodeRegistry;
+    const node = arrow.create({ id: 'a', z: 'a', center: { x: 96, y: 48 }, size: { width: 192, height: 96 } });
+    // No type of its own: what lands is a polyline, drawn and edited as one.
+    expect(Schema.is(polyline.schema)(node)).toBe(true);
+    expect(node.type).toBe('polyline');
+    expect(isPolylineNode(node) && node.params).toEqual({ closed: true });
+    const points = isPolylineNode(node) ? node.points : [];
+    expect(points).toHaveLength(7);
+    // The tip is the only vertex on the right edge, half way down; the head spans the frame's height.
+    expect(points.filter(({ x }) => x === 1)).toEqual([{ x: 1, y: 0.5 }]);
+    expect([Math.min(...points.map(({ y }) => y)), Math.max(...points.map(({ y }) => y))]).toEqual([0, 1]);
+    // The outline is the same above and below the middle.
+    const mirrored = [...points].reverse();
+    points.forEach(({ x, y }, index) => {
+      expect(mirrored[index].x).toBeCloseTo(x);
+      expect(mirrored[index].y).toBeCloseTo(1 - y);
+    });
+    // A shape to drag out to a size, not one placed point by point.
+    expect(arrow.createFromPoints).toBeUndefined();
+  });
+
   test('rectangle and view share the box prototype and differ only where they say so', ({ expect }) => {
     const { rect, view } = defaultNodeRegistry;
     expect(rect.component).toBe(boxPrototype.component);
