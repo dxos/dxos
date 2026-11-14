@@ -6111,7 +6111,7 @@ decision D-263: The Overlays reference says Popover holds focus only with `modal
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [tile-api-dialog, tile-api-popover, tile-api-tooltip, tile-api-hover-card, tile-api-toast]
+  affects: [tile-api-overlays]
   why: Review checked the page against the code, which does not support the earlier statement.
 ```
 
