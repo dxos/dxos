@@ -23,5 +23,3 @@ A link's end may draw `many`, a crow's foot (`Marker` in `@dxos/scene`): two toe
 The actions bar shows its commands in named groups (`ACTION_GROUPS`): Cut, Copy, Paste, Duplicate, Delete; Group, Ungroup, Hull, Make object; Join, Subtract; then a dimension's other commands, and Undo and Redo. Before, Delete followed Make object in one group with the clipboard commands, and Hull sat with Join and Subtract.
 
 In the tool palette the link types now sit above the tools that draw a line of their own, after the closed shapes (`toolGroups`), where they ended the create group; Polyline and Spline share one flyout (`PATH_FOLD`), as the link types and the two stroke tools do.
-
-The tool palette has an Arrow tool (`A`), after Cloud: dragged out, it makes a block arrow pointing right. It is a tool rather than a type: what lands is a closed `polyline` in the arrow's outline (`ARROW_POINTS`), so it is resized, rotated, filled, labelled, joined and edited by its vertices as any closed polyline is.
