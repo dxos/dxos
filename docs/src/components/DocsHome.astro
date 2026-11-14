@@ -76,6 +76,8 @@ const cards = SUITE_ORDER.map((id) => {
     flex-direction: column;
     height: 100%;
     overflow: hidden;
+    /* Clear at rest, so the card does not shift when the border shows. */
+    border: 1px solid transparent;
     border-radius: 0.5rem;
     background: var(--card-ground);
     color: inherit;
@@ -83,6 +85,10 @@ const cards = SUITE_ORDER.map((id) => {
   }
 
   /* A card is marked in its own section's color, the one its rays are drawn in, over the site's accent. */
+  a:is(:hover, :focus-visible) {
+    border-color: var(--card-color);
+  }
+
   a:focus-visible {
     outline-color: var(--card-color);
   }
@@ -161,6 +167,10 @@ const cards = SUITE_ORDER.map((id) => {
 
   /* A card pointed at or focused flickers: its rays dim once and come back, and the mark stays lit. */
   @media (prefers-reduced-motion: no-preference) {
+    a {
+      transition: border-color 0.15s;
+    }
+
     a:is(:hover, :focus-visible) .art :global(#lines) {
       animation: docs-home-flicker 0.2s ease-in-out;
     }
