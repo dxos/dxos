@@ -17,7 +17,7 @@ in-memory to a persistent backend without touching consumers.
 
 On top of the store, the plugin contributes:
 
-- Two visible operations, `QueryFacts` and `SummarizeSubject`, exposed to the assistant through the
+- Three visible operations, `QueryFacts`, `QuerySparql` and `SummarizeSubject`, exposed to the assistant through the
   `org.dxos.skill.brain` skill. Skill instructions describe HOW to use the tools (entity-slug
   conventions, confidence filtering, iterative narrowing) — task-specific behavior lives in the
   operations themselves.
@@ -38,6 +38,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -53,7 +54,7 @@ type Fact
 type SemanticQueryInput
   desc: |
     The structured (browser-safe) query surface over the triple store. Mirrors
-    SemanticQuery from @dxos/pipeline-rdf; no raw SPARQL is exposed to the LLM.
+    SemanticQuery from @dxos/pipeline-rdf; raw SPARQL goes through op:querySparql instead.
   fields:
     subjectEntity?: string     # Entity slug the fact's subject must match
     predicate?: string         # Exact predicate string
@@ -61,6 +62,7 @@ type SemanticQueryInput
     source?: string            # Source DXN the fact was extracted from
     minConfidence?: number     # 0..1 lower bound on factuality confidence
     limit?: number             # Maximum facts returned (default 50)
+    offset?: number            # Matching facts to skip, for windowed reads (default 0)
 ```
 
 ```mdl
@@ -88,6 +90,18 @@ type SummaryResult
 ```
 
 ```mdl
+type AgentTrim
+  desc: |
+    How every fact tool bounds what it returns to the model: at most 50 rows and 500
+    characters per value. When anything is cut, the response carries a `note` saying the
+    output was truncated ("Output truncated: showing N of M rows.") and that the model must
+    read the rest in windows with LIMIT/OFFSET (limit/offset for QueryFacts); a SPARQL query
+    without a LIMIT is also told to add one.
+  fields:
+    note?: string              # Present only when rows or values were cut
+```
+
+```mdl
 type FactStoreRegistry
   desc: |
     Contributed capability (BrainCapabilities.FactStoreRegistry). One shared FactStore
@@ -108,11 +122,29 @@ op queryFacts
     facts for LLM consumption. Visible; listed as a tool of the brain skill.
   input:
     query: SemanticQueryInput
-  output: { facts: CompactFact[] }
+  output: { facts: CompactFact[], total: number, note?: string }
   requires: [FactStore]
   effects: [factstore:read]
   errors:
     SemanticIndexError: the underlying triple-store query failed
+  note: The output is trimmed for the model (type:AgentTrim); `total` counts every match.
+```
+
+```mdl
+op querySparql
+  key: org.dxos.operation.brain.querySparql
+  desc: |
+    Runs a raw SPARQL SELECT against the space FactStore and returns its solutions, each
+    bound variable rendered as text (IRIs as `<iri>`, blank nodes as `_:id`, literals
+    verbatim). Visible; listed as a tool of the brain skill.
+  input:
+    sparql: string             # A SPARQL SELECT; should carry LIMIT and OFFSET
+  output: { rows: Record<string, string>[], total: number, note?: string }
+  requires: [FactStore]
+  effects: [factstore:read]
+  errors:
+    SemanticIndexError: the query is not a SELECT (an update included) or fails to run
+  note: The output is trimmed for the model (type:AgentTrim); `total` counts every solution.
 ```
 
 ```mdl
@@ -183,8 +215,8 @@ feat F-2: Assistant access via the brain skill
 
   req F-2.1:
     when: the plugin activates
-    then: the org.dxos.skill.brain skill is contributed with tools QueryFacts and
-          SummarizeSubject
+    then: the org.dxos.skill.brain skill is contributed with tools QueryFacts,
+          QuerySparql and SummarizeSubject
 
   req F-2.2:
     when: the skill instructions are rendered
@@ -194,6 +226,16 @@ feat F-2: Assistant access via the brain skill
   req F-2.3:
     when: the assistant invokes QueryFacts
     then: results are compact single-line facts bounded by limit (default 50)
+
+  req F-2.4:
+    when: the assistant invokes QuerySparql with a SELECT
+    then: the solutions are returned as rows of text; any other query form is refused
+          with SemanticIndexError and the store is unchanged
+
+  req F-2.5:
+    when: a fact tool's result exceeds 50 rows or a value exceeds 500 characters
+    then: the response is trimmed and carries a note telling the model the output was
+          cut and to read the rest in windows with LIMIT/OFFSET (type:AgentTrim)
 ```
 
 ```mdl
@@ -243,6 +285,17 @@ scenario T-2: QueryFacts returns matching facts
     - the entity query returns facts where alice is subject or object
     - the confidence query excludes facts below the bound
     - results are CompactFact-shaped and bounded by limit
+```
+
+```mdl
+scenario T-6: QuerySparql runs raw SELECTs and trims for the model
+  given: a memory FactStore seeded with facts
+  when: QuerySparql runs a SELECT, an update, and a SELECT with more than 50 solutions
+  then:
+    - the SELECT returns its solutions as text rows
+    - the update fails with SemanticIndexError and every fact remains
+    - the large result returns 50 rows with a truncation note; without a LIMIT the note
+      says to add one
 ```
 
 ```mdl
@@ -311,6 +364,35 @@ test QA-1: Query and summarize facts already in the store
         open its Facts companion panel.
       expect: FactViewer lists the space's facts, filterable by entity/predicate text
       note: NO `invoke` — FactsCompanion is a read-only React surface, not backed by an operation.
+```
+
+## Changelog
+
+```mdl
+decision D-1: An agent tool runs a raw SPARQL query against the fact store, and the fact tools' responses to the agent are trimmed with a note that makes the model use LIMIT and windowed reads.
+  date: 2026-11-14
+  by: user:dmaretskyi
+  affects: [querySparql, queryFacts, AgentTrim, F-2.4, F-2.5]
+```
+
+```mdl
+decision D-2: `QuerySparql` accepts only a SELECT, renders each bound term as text, and fails with `SemanticIndexError` on anything else. Fills in [D-1].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [querySparql, F-2.4]
+  why: The store's `rows` already refuses updates with that error, so the tool reads and never writes; text terms keep rows small and pasteable back into SPARQL.
+```
+
+```mdl
+decision D-3: Every fact tool returns at most 50 rows and 500 characters per value; a cut response carries a note naming N of M rows and how to page, and QueryFacts gains `offset` and `total` so it pages the same way. Fills in [D-1].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [AgentTrim, queryFacts, F-2.5]
+  why: 50 rows matches QueryFacts' default limit and keeps one tool result within a few thousand tokens.
+  rejected:
+    - A total character budget alone: it cuts rows unpredictably and gives the model no window to resume from.
 ```
 
 Extension block types used in this document are defined below using

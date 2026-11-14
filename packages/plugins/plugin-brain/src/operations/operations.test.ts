@@ -10,11 +10,13 @@ import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive, RDF } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, RDF, SemanticIndexError } from '@dxos/pipeline-rdf';
 
 import { queryResolvedFacts } from './facts.ts';
 import { queryCompactFacts } from './query-facts.ts';
+import { querySparql } from './query-sparql.ts';
 import { summarizeSubject } from './summarize-subject.ts';
+import { AGENT_MAX_ROWS, AGENT_MAX_VALUE_CHARS } from './trim.ts';
 
 const makeFact = (options: {
   id: string;
@@ -71,7 +73,7 @@ describe('QueryFacts', () => {
     const facts = await EffectEx.runPromise(
       Effect.gen(function* () {
         yield* seededStore;
-        return yield* queryCompactFacts({ entity: 'acme' });
+        return (yield* queryCompactFacts({ entity: 'acme' })).facts;
       }).pipe(Effect.provide(FactStoreLive.layerMemory)),
     );
     expect(facts.map((fact) => fact.id).sort()).toEqual(['f-1', 'f-3']);
@@ -83,13 +85,126 @@ describe('QueryFacts', () => {
     const { confident, bounded } = await EffectEx.runPromise(
       Effect.gen(function* () {
         yield* seededStore;
-        const confident = yield* queryCompactFacts({ entity: 'alice', minConfidence: 0.9 });
-        const bounded = yield* queryCompactFacts({ limit: 1 });
+        const confident = (yield* queryCompactFacts({ entity: 'alice', minConfidence: 0.9 })).facts;
+        const bounded = (yield* queryCompactFacts({ limit: 1 })).facts;
         return { confident, bounded };
       }).pipe(Effect.provide(FactStoreLive.layerMemory)),
     );
     expect(confident.map((fact) => fact.id)).toEqual(['f-1']);
     expect(bounded).toHaveLength(1);
+  });
+});
+
+/** `count` facts about one subject, so a result outgrows what the tools return to the model. */
+const manyFacts = (count: number): RDF.Fact[] =>
+  Array.from({ length: count }, (_, index) =>
+    makeFact({ id: `m-${index}`, subject: 'carol', predicate: 'knows', object: `person-${index}` }),
+  );
+
+describe('QueryFacts trimming', () => {
+  test('cuts a large result to a window with a note, and offset reads the next window', async ({ expect }) => {
+    const { first, second } = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts(manyFacts(60));
+        return {
+          first: yield* queryCompactFacts({ entity: 'carol', limit: 100 }),
+          second: yield* queryCompactFacts({ entity: 'carol', limit: 50, offset: 50 }),
+        };
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(first.facts).toHaveLength(AGENT_MAX_ROWS);
+    expect(first.total).toBe(60);
+    expect(first.note).toContain('Output truncated: showing 50 of 60 rows');
+    expect(first.note).toContain('offset 50');
+    expect(second.facts).toHaveLength(10);
+    expect(second.note).toBeUndefined();
+    expect(new Set([...first.facts, ...second.facts].map((fact) => fact.id)).size).toBe(60);
+  });
+
+  test('has no note when the whole result fits', async ({ expect }) => {
+    const result = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        yield* seededStore;
+        return yield* queryCompactFacts({ entity: 'acme' });
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(result).toMatchObject({ total: 2 });
+    expect(result.note).toBeUndefined();
+  });
+});
+
+describe('QuerySparql', () => {
+  test('runs a raw SELECT and returns its solutions as text', async ({ expect }) => {
+    const result = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        yield* seededStore;
+        return yield* querySparql({
+          sparql: `SELECT DISTINCT ?label WHERE {
+            GRAPH ?g { ?entity <${RDF.Vocab.RDFS_LABEL}> ?label }
+            FILTER(STR(?label) IN ("alice", "bob", "acme", "paris", "nobody"))
+          } ORDER BY ?label LIMIT 10`,
+        });
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(result.note).toBeUndefined();
+    expect(result.rows.map((row) => row.label)).toEqual(['acme', 'alice', 'bob', 'paris']);
+    expect(result.total).toBe(result.rows.length);
+  });
+
+  test('renders IRIs in angle brackets', async ({ expect }) => {
+    const result = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        yield* seededStore;
+        return yield* querySparql({ sparql: 'SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } } LIMIT 1' });
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(result.rows[0]?.g).toMatch(/^<.+>$/);
+  });
+
+  test('refuses an update with a typed error and leaves the store intact', async ({ expect }) => {
+    const { error, remaining } = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        yield* seededStore;
+        const error = yield* querySparql({ sparql: 'DELETE WHERE { GRAPH ?g { ?s ?p ?o } }' }).pipe(Effect.flip);
+        const remaining = (yield* queryCompactFacts({})).total;
+        return { error, remaining };
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(error).toBeInstanceOf(SemanticIndexError);
+    expect(remaining).toBe(FACTS.length);
+  });
+
+  test('truncates a large result and tells the model to add a LIMIT', async ({ expect }) => {
+    const { unlimited, limited } = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts(manyFacts(60));
+        const select = 'SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }';
+        return {
+          unlimited: yield* querySparql({ sparql: select }),
+          limited: yield* querySparql({ sparql: `${select} LIMIT 200` }),
+        };
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(unlimited.rows).toHaveLength(AGENT_MAX_ROWS);
+    expect(unlimited.total).toBeGreaterThan(AGENT_MAX_ROWS);
+    expect(unlimited.note).toContain(`Output truncated: showing ${AGENT_MAX_ROWS} of ${unlimited.total} rows.`);
+    expect(unlimited.note).toContain('no LIMIT');
+    expect(limited.note).toContain('Re-run with LIMIT/OFFSET');
+    expect(limited.note).not.toContain('no LIMIT');
+  });
+
+  test('cuts long values and says so', async ({ expect }) => {
+    const long = 'x'.repeat(AGENT_MAX_VALUE_CHARS + 100);
+    const result = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        yield* FactStore;
+        return yield* querySparql({ sparql: `SELECT ?text WHERE { BIND("${long}" AS ?text) } LIMIT 1` });
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(result.rows[0]?.text).toHaveLength(AGENT_MAX_VALUE_CHARS + 1);
+    expect(result.note).toContain(`longer than ${AGENT_MAX_VALUE_CHARS} characters`);
   });
 });
 
@@ -121,9 +236,9 @@ describe('entity names', () => {
         const store = yield* FactStore;
         yield* store.putFacts([...FACTS, ...DISCORD_FACTS]);
         return {
-          byLabel: yield* queryCompactFacts({ entity: 'dmaretskyi' }),
-          bySubject: yield* queryCompactFacts({ subjectEntity: 'DMaretskyi' }),
-          byIri: yield* queryCompactFacts({ entity: DISCORD_USER }),
+          byLabel: (yield* queryCompactFacts({ entity: 'dmaretskyi' })).facts,
+          bySubject: (yield* queryCompactFacts({ subjectEntity: 'DMaretskyi' })).facts,
+          byIri: (yield* queryCompactFacts({ entity: DISCORD_USER })).facts,
         };
       }).pipe(Effect.provide(FactStoreLive.layerMemory)),
     );
@@ -147,7 +262,7 @@ describe('entity names', () => {
             },
           },
         ]);
-        return yield* queryCompactFacts({ entity: did });
+        return (yield* queryCompactFacts({ entity: did })).facts;
       }).pipe(Effect.provide(FactStoreLive.layerMemory)),
     );
     expect(facts.map((fact) => fact.id)).toEqual(['k-1']);
