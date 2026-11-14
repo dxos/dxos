@@ -38,52 +38,76 @@ Basin on R2 is the fallback if we want one event per test.
 
 ### Proposed structure
 
-`B` blocks every PR; `N` runs nightly. Each item shows the estimated minutes of work for one full,
-uncached run; a PR runs only affected packages, so it pays a fraction of the `B` total.
+`B` blocks every PR; `N` runs nightly. Each item shows the minutes of moon task time for one full,
+uncached run (nightly of 2026-11-13; edge from its Check jobs). A PR runs only affected packages and
+mostly hits the cache, so it pays a fraction of the `B` total: today about 56 runner-minutes per PR
+run and 76 per merge-queue run for the blocking jobs.
 
 ```text
 T0 Static checks
-├─ B  dxos repo scripts (format, cycles, peer deps, …)       3 min
-└─ B  edge config checks (format, bindings, dev stack)       0.5 min
+├─ B  dxos repo scripts (format, cycles, peer deps, …)          3 min
+└─ B  edge config checks (format, bindings, dev stack)          0.5 min
 T1 Compile and analysis
-├─ B  dxos lint, build, type tests                          25 min
-├─ B  dxos module structure, edge release                   25 min   rebuilds what the line above built
-├─ B  dxos plugin set, docs links                           10 min
-├─ N  dxos knip                                              3.5 min
-├─ N  dxos boot budget                                       4 min
-└─ B  edge lint, build, bundle checks                        6 min
+├─ B  dxos lint (oxlint)                                        36 min
+├─ B  dxos build (tsc)                                          40 min
+├─ B  dxos type tests (tstyche)                                  1 min
+├─ B  dxos module-structure check                                4 min
+├─ B  dxos edge-release check (bundles load in workerd)          7 min
+├─ B  dxos plugin set, docs bundle (link check)                  4 min
+├─ N  dxos knip                                                  3.5 min
+├─ N  dxos boot budget                                           4 min
+├─ N  dxos rebuilds in later check stages (forced nightly)      80 min   waste: same builds again, 3 times
+├─ B  edge build                                                 2 min
+├─ B  edge bundle budgets, watch_dir sync                        2.5 min
+└─ B  edge lint, Solid typecheck, format, hub assets             1.7 min
 T2 Unit
-├─ B  dxos node unit (common, ui, the rest)                 70 min
-└─ B  edge node unit                                        20 min   ~1 min of tests; the rest is serial task start-up
+├─ B  dxos common                                               12 min
+├─ B  dxos ui                                                   21 min
+├─ B  dxos core/compute (except AI and agent)                   13 min
+├─ B  dxos sdk (except client)                                  10 min
+├─ B  dxos devtools, mesh, halo, apps, the rest                 19 min
+├─ B  edge node unit (tests)                                     1.2 min
+└─ B  edge test-packages start-up (tasks run one at a time)     17 min
 T3 Local runtime
-├─ B  dxos workerd                                           9 min
-└─ B  edge workerd, D1, Miniflare in node                    in edge node unit above
+├─ B  dxos workerd                                               9 min
+├─ B  edge workerd                                               1.5 min
+└─ B  edge D1                                                    0.3 min
 T4 Integration
-├─ B  dxos ECHO, incl. echo-client-e2e                      18 min
-├─ B  dxos process manager                                   3 min
-├─ B  dxos client/SDK (client, client-services, …)           6 min
-├─ N  dxos client-e2e (invitations, multi-peer)              6 min
-├─ B  dxos plugins, light (≤5 s per file)                   45 min
-├─ N  dxos plugins, heavy                                   65 min
-├─ N  dxos AI and agent packages                            11 min
-└─ N  edge harness (edge:test, incl. sync)                  57 min
+├─ B  dxos ECHO, incl. echo-client-e2e                          19 min
+├─ B  dxos process manager                                      <1 min
+├─ B  dxos client/SDK (client, client-services, …)               6.5 min
+├─ N  dxos client-e2e (invitations, multi-peer)                  5.6 min
+├─ B  dxos plugins, light (≤5 s per file)                       45 min
+├─ N  dxos plugins, heavy (agent, space, canvas, assistant, …)  64 min
+├─ N  dxos AI and agent packages                                11 min
+├─ N  edge harness tests                                        33 min
+├─ N  edge sync tests (automerge, subduction)                    9 min
+└─ N  edge harness shard start-up (4 shards)                    15 min
 T5 Browser
-├─ B  dxos vitest browser mode                               5 min
-└─ B  dxos storybook                                        91 min
+├─ B  dxos vitest browser mode                                   5 min
+├─ B  dxos storybook: plugins                                   53 min
+├─ B  dxos storybook: ui                                        24 min
+├─ B  dxos storybook: stories packages                          12 min
+└─ B  dxos storybook: sdk                                        2.4 min
 T6 Model fixtures
-├─ N  dxos model-fixture replay                              1 min
-└─ N  edge fixtures, Discord agent                          18 min
+├─ N  dxos model-fixture replay                                  1 min
+├─ N  edge harness with fixtures                                 8 min
+└─ N  edge Discord agent                                        10 min
 T7 End-to-end
-├─ N  dxos Composer e2e (3 browsers)                        75 min
-├─ N  dxos other Playwright (3 browsers)                    25 min
-├─ N  dxos CLI smoke                                         1 min
-└─ N  edge deployed e2e (after deploy)                       6 min
-T8 Evals                                                 N   not measured
-T9 Live services                                         N   not measured; most never run today
-T10 Perf and benchmarks                                  N   not measured
+├─ N  dxos Composer e2e: chromium                               29 min
+├─ N  dxos Composer e2e: firefox                                27 min
+├─ N  dxos Composer e2e: webkit                                 20 min
+├─ N  dxos react-ui-canvas-editor e2e (3 browsers)              19 min
+├─ N  dxos todomvc e2e (3 browsers)                              7 min
+├─ N  dxos other Playwright                                      2 min
+├─ N  dxos CLI smoke                                             1 min
+└─ N  edge deployed e2e (after deploy)                           6 min
+T8 Evals                                                    N   not measured
+T9 Live services                                            N   not measured; most never run today
+T10 Perf and benchmarks                                     N   not measured
 
-Blocking total  ~335 min per full run   (PRs: affected packages only)
-Nightly total   ~275 min per full run
+Blocking total  ~370 min per full run   (PRs: affected packages only)
+Nightly total   ~275 min per full run   (plus ~80 min of forced rebuilds to remove)
 ```
 
 The rest of this document is the evidence behind these decisions.
@@ -334,9 +358,12 @@ These cost as much as the tests, and no tag fixes them:
   of moon task time per full run; edge `test-packages` takes 23 min for 3 min of test time, because
   it runs tasks one at a time (`--concurrency=1`). Fewer, larger vitest runs (one run across
   packages) would cut more than moving tests to nightly.
-- **Cold `check` builds everything twice.** Module structure and edge-release re-run ~680 builds the
-  compile gate just made, 16–28 min of every nightly; 3 of the last 5 nightly `check` jobs hit the
-  75-min timeout.
+- **The nightly `check` builds everything four times.** The nightly forces every moon task
+  (`MOON_FORCE`), so each later stage rebuilds what the compile gate just built: module structure
+  (~30 min of build tasks), edge release (~18 min) and plugin set plus docs (~31 min), on top of the
+  compile gate's own ~38 min. That is ~80 min of duplicate work per nightly, and why 3 of the last 5
+  nightly `check` jobs hit the 75-min timeout. PRs and the merge queue are not affected: the later
+  stages hit the cache there.
 - **knip is never cached:** ~3.5 min on every run, the longest step on a warm PR. Now nightly only.
 - **Cancelled runs are spent minutes.** A new push cancels the running Check: 49% of PR
   `e2e-composer` runs and 33% of `test-browser` runs, and 12% of edge `test-edge` minutes.
