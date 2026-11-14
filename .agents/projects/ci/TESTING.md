@@ -132,33 +132,38 @@ Actions API and artifacts (kept 7 days). When and where each tier runs is decide
 Two labels per test, independent of its tier. Both are vitest tags in code, so a PR shows any change
 to them, and CI selects tests with `--tagsFilter`.
 
+- **When it runs:** blocking (untagged) or `nightly`.
+- **Whether a failure counts:** stable (untagged), `flaky` or `advisory`.
+
 ### Tags
 
-| Tag       | Meaning                                                                      | Where declared                                        |
-| :-------- | :--------------------------------------------------------------------------- | :---------------------------------------------------- |
-| _(none)_  | Blocking: runs on every PR, merge queue and nightly, and must pass           | —                                                     |
-| `nightly` | Non-blocking: runs nightly and on demand, not on PRs                         | `vitest.tags.ts` (new); edge `vitest.shared.ts` (new) |
-| `flaky`   | Runs where its blocking label says; failures are reported but do not fail CI | `vitest.tags.ts` (exists, unused); edge (new)         |
+| Tag        | Label              | Meaning                                                                                                                                          | Where declared                                        |
+| :--------- | :----------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------- |
+| _(none)_   | When: blocking     | Runs on every PR, merge queue and nightly                                                                                                        | —                                                     |
+| `nightly`  | When: non-blocking | Runs nightly and on demand, not on PRs                                                                                                           | `vitest.tags.ts` (new); edge `vitest.shared.ts` (new) |
+| _(none)_   | Counts: stable     | A failure fails CI                                                                                                                               | —                                                     |
+| `flaky`    | Counts: flaky      | Runs and is recorded; a failure does not fail CI. Temporary: carries an owner and an issue, and is expected to return to stable                  | `vitest.tags.ts` (exists, unused); edge (new)         |
+| `advisory` | Counts: advisory   | Runs and is recorded; a failure never fails CI. Permanent by design: the result is information (budgets, trends, environment checks), not a gate | `vitest.tags.ts` (new); edge (new)                    |
 
-Untagged means blocking, so the ~1,900 unit test files need no change; only what leaves the PR run is
-tagged. The existing opt-in tags (`model-fixture`, `sync`, `sync-e2e`, `functions-e2e`, `manual`,
-`memory`) keep their current gates and are all non-blocking.
+Untagged means blocking and stable, so the ~1,900 unit test files need no change; only what leaves
+the PR run or the gate is tagged. The existing opt-in tags (`model-fixture`, `sync`, `sync-e2e`,
+`functions-e2e`, `manual`, `memory`) keep their current gates and are all non-blocking.
 
 A tag applies at three levels:
 
 - **Whole file:** a `// @module-tag nightly` comment at the top of the file (vitest 4.1, which both
   repos use, reads it before the file runs). A script can add it to every file in a package.
 - **Suite or test:** `describe('…', { tags: ['nightly'] }, …)` or the same option on `test`.
-- **Stories and Playwright:** a `nightly` or `flaky` story tag, filtered through the storybook
-  addon's tag include and exclude lists; a `@nightly` or `@flaky` Playwright tag, selected with
-  `--grep` and `--grep-invert`.
+- **Stories and Playwright:** `nightly`, `flaky` and `advisory` story tags, filtered through the
+  storybook addon's tag include and exclude lists; `@nightly`, `@flaky` and `@advisory` Playwright
+  tags, selected with `--grep` and `--grep-invert`.
 
 CI filters:
 
-| Run                | Must pass                                                     | Reported only       |
-| :----------------- | :------------------------------------------------------------ | :------------------ |
-| PR, merge queue    | `!nightly && !flaky` (plus the existing opt-in tags excluded) | `flaky && !nightly` |
-| Nightly, on demand | `!flaky`                                                      | `flaky`             |
+| Run                | Must pass                                                                  | Reported only                       |
+| :----------------- | :------------------------------------------------------------------------- | :---------------------------------- |
+| PR, merge queue    | `!nightly && !flaky && !advisory` (plus the existing opt-in tags excluded) | `(flaky \|\| advisory) && !nightly` |
+| Nightly, on demand | `!flaky && !advisory`                                                      | `flaky \|\| advisory`               |
 
 ### Blocking or non-blocking
 
@@ -173,16 +178,29 @@ This label decides _when_ a test runs:
   itself: that run posts skipped check runs over the PR's real results, and branch protection reads
   skipped as passing (`check.yml:9-11`).
 
-### Stable or flaky
+### Stable, flaky or advisory
 
 This label decides whether a failure _counts_:
 
-- A flaky test still runs wherever its blocking label says, and its result is still recorded, but
-  its failure does not fail CI. CI runs the suite twice with the filters above.
-- Every `flaky` tag carries an owner and a linked issue in a comment next to it.
-- The results store shows each flaky test's failure rate, so the tag can be removed once a test has
-  passed for a set number of nightly runs, and a test that keeps failing becomes a fix or a delete.
-- This replaces Trunk's dashboard quarantine.
+- **Stable** (untagged): a failure fails CI.
+- **Flaky:** the test runs wherever its blocking label says and its result is recorded, but a
+  failure does not fail CI. CI runs the suite twice with the filters above. Every `flaky` tag
+  carries an owner and a linked issue in a comment next to it. The results store shows each flaky
+  test's failure rate, so the tag can be removed once a test has passed for a set number of nightly
+  runs, and a test that keeps failing becomes a fix or a delete. This replaces Trunk's dashboard
+  quarantine.
+- **Advisory:** the test runs and its result is recorded and shown (a PR comment, a non-required
+  check, a dashboard), but it never blocks and is not expected to become stable. It is for results
+  that are information, not a gate. Candidates from the ontology:
+  - dxos `advisory` job suites (`memory`, `model-fixture` replay) and the boot budget, which
+    already report without gating;
+  - perf, benchmarks and bundle-size trends (T10);
+  - e2e against live environments (T7: composer e2e, edge's post-deploy e2e), which today report
+    without gating;
+  - evals (T8).
+
+The difference between `flaky` and `advisory` is intent: a flaky test is a stable test that is
+broken for now, so it has an owner and an exit; an advisory test is meant to inform and has neither.
 
 ### What stays blocking
 
