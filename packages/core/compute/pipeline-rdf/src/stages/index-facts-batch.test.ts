@@ -11,7 +11,7 @@ import { TRANSCRIPT_RULE } from '../internal/stages/extract.ts';
 import { FactPipeline } from '../pipeline.ts';
 import { FactStore, FactStoreLive } from '../store/index.ts';
 import { queuedAiService } from '../testing/index.ts';
-import { type ExtractDocument } from '../types/index.ts';
+import { type ExtractDocument, Vocab } from '../types/index.ts';
 import { extractTranscriptFacts, normalizeEntityId } from './extract-facts.ts';
 import { DEFAULT_INDEX_BATCH_SIZE, indexFactsBatch } from './index-facts.ts';
 
@@ -34,6 +34,19 @@ const layer = (payloads: readonly unknown[], prompts: unknown[]) =>
   FactStoreLive.layerMemory.pipe(Layer.provideMerge(queuedAiService(payloads, prompts)));
 
 describe('batched extraction', () => {
+  it.effect(
+    'shows the model every vocabulary pack when the caller names no ontology',
+    Effect.fnUntraced(function* () {
+      const prompts: unknown[] = [];
+      const [, , answer] = yield* indexFactsBatch(DOCS).pipe(
+        Effect.provide(layer([{ facts: [fact('Carol', 'replies to', 'Bob', { message: 'm3' })] }], prompts)),
+      );
+      // SIOC's "reply to" is in no seed predicate, so it reaches the prompt only through the packs.
+      expect(String(prompts[0])).toContain('"reply to"');
+      expect(answer.facts.map(({ assertion }) => assertion.predicateIri)).toEqual([`${Vocab.SIOC}reply_of`]);
+    }),
+  );
+
   it.effect(
     'extracts a batch in one request and attributes each fact to the message it cites',
     Effect.fnUntraced(function* () {

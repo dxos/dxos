@@ -10,7 +10,7 @@ import { Stage } from '@dxos/pipeline';
 import { type SemanticIndexError } from '../errors.ts';
 import { hashText } from '../internal/stages/reconcile.ts';
 import { FactStore } from '../store/index.ts';
-import { type ExtractDocument, type ExtractOptions, Ontology } from '../types/index.ts';
+import { type ExtractDocument, type ExtractOptions, Vocabularies } from '../types/index.ts';
 import { type DocumentFacts, extractDocFacts, extractTranscriptFacts } from './extract-facts.ts';
 
 /**
@@ -33,7 +33,7 @@ export const indexFactsStage = (
         return undefined;
       }
       // The predicates the store has learned are shown to the extractor, so each document reuses earlier ones.
-      const ontology = (options?.ontology ?? Ontology.DEFAULT).include(yield* store.predicates());
+      const ontology = (options?.ontology ?? Vocabularies.DEFAULT).include(yield* store.predicates());
       const facts = yield* extractDocFacts(doc, { ...options, ontology });
       yield* store.putFacts(facts);
       yield* store.setCursor(doc.source, hash);
@@ -73,7 +73,7 @@ export const indexFactsBatch = (
     if (pending.length === 0) {
       return [];
     }
-    const ontology = (options?.ontology ?? Ontology.DEFAULT).include(yield* store.predicates());
+    const ontology = (options?.ontology ?? Vocabularies.DEFAULT).include(yield* store.predicates());
     // A lone document needs no transcript: the single-document request is the same one indexFactsStage makes.
     const results =
       pending.length === 1
