@@ -13,12 +13,15 @@ import { type LinkEnd } from '../../engine/index.ts';
 /** The choice of no marker, which a link stores as no value. */
 export const NO_MARKER = 'none';
 
-/** What a link's end may draw, as a menu and the properties form list it, none first. */
-export const MARKER_ITEMS: readonly { value: string; label: string }[] = [
-  { value: NO_MARKER, label: 'None' },
-  { value: 'arrow', label: 'Arrow' },
-  { value: 'circle', label: 'Circle' },
-  { value: 'triangle', label: 'Triangle' },
+/**
+ * What a link's end may draw, as a menu and the properties form list it, none first. Each icon is the line with that
+ * end on it, named whole so the sprite's scan of the sources finds it.
+ */
+export const MARKER_ITEMS: readonly { value: string; label: string; icon: string }[] = [
+  { value: NO_MARKER, label: 'None', icon: 'ph--minus--regular' },
+  { value: 'arrow', label: 'Arrow', icon: 'px--line-arrow--regular' },
+  { value: 'circle', label: 'Circle', icon: 'px--line-circle--regular' },
+  { value: 'triangle', label: 'Triangle', icon: 'px--line-triangle--regular' },
 ];
 
 const isMarker = Schema.is(Marker);

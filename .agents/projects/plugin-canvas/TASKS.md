@@ -458,7 +458,8 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       Story `Links` › End Press Test.
 - [x] **Icons for the link ends** (user, 2026-11-13): `px--line-arrow--regular` (Phosphor's `arrow-right`, as
       strokes), `px--line-triangle--regular` and `px--line-circle--regular` in `@dxos/ui-icons`, one shaft with the
-      head each marker draws. Nothing uses them yet: the end's menu and the Properties marker field list names only.
+      head each marker draws. The end's menu and the Properties marker field show them beside each choice
+      (`MARKER_ITEMS`), with Phosphor's `minus` for None. They all point right, for a Start end too.
 - [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
       Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the

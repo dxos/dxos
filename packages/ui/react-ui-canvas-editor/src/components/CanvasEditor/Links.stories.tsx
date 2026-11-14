@@ -265,6 +265,11 @@ export const EndMarkerTest: Story = {
     // 1. The end's own section leads the menu.
     const none = await openMenu();
     await expect(none).toHaveAttribute('aria-checked', 'true');
+    // Each choice shows the line with that end on it.
+    const glyph = (value: string) => screen.getByTestId(`menu-end-${value}`).querySelector('use')?.getAttribute('href');
+    await waitFor(() => expect(glyph('arrow')).toBe('#px--line-arrow--regular'));
+    await waitFor(() => expect(glyph('circle')).toBe('#px--line-circle--regular'));
+    await waitFor(() => expect(glyph('triangle')).toBe('#px--line-triangle--regular'));
     await expect(marker(link())).toBe('');
 
     // 2. By keyboard, since the menu ignores the synthetic pointer events a test can send.
