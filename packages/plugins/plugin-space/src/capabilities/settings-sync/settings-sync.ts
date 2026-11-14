@@ -13,6 +13,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { type Client } from '@dxos/client';
 import { Annotation, Obj } from '@dxos/echo';
 import * as KvsStore from '@dxos/effect/KvsStore';
 import { log } from '@dxos/log';
@@ -46,6 +47,25 @@ const makeStore = (
 });
 
 /**
+ * Resolve once the client has an identity. The space list can be observable before the identity
+ * loads (existing profile, device join, recovery), and only `CreateIdentity` re-fires
+ * `IdentityCreated`, so the module cannot rely on activation order to see it.
+ */
+const awaitIdentity = (client: Client) =>
+  Effect.callback<void>((resume) => {
+    if (client.halo.identity.get()) {
+      resume(Effect.void);
+      return;
+    }
+    const subscription = client.halo.identity.subscribe((identity) => {
+      if (identity) {
+        resume(Effect.void);
+      }
+    });
+    return Effect.sync(() => subscription.unsubscribe());
+  });
+
+/**
  * Binds every settings surface the app already has — each plugin's settings atom, the enabled
  * plugin set, and the remote plugin install list — to the {@link AppSettings.AppSettings} object in
  * the settings space, so they follow the identity across devices with per-key device pins.
@@ -56,11 +76,6 @@ export default Capability.makeModule(
     const manager = yield* Capabilities.PluginManager;
     const registry = yield* Capabilities.AtomRegistry;
 
-    if (!client.halo.identity.get()) {
-      log.warn('no identity; settings will not sync');
-      return [];
-    }
-
     // This device's pins. One per device, so the key names no device.
     const device = KvsStore.make({
       key: 'org.dxos.app-toolkit.settings-scope',
@@ -69,6 +84,7 @@ export default Capability.makeModule(
     });
 
     // Copied out: the atom compares by identity, and the stored value keeps its identity across a write.
+    const ready = Atom.make(false).pipe(Atom.keepAlive);
     const unsynced = Atom.make<readonly string[]>([]).pipe(Atom.keepAlive);
     const pinned = Atom.make<AppSettings.DeviceSettings>(structuredClone(registry.get(device))).pipe(Atom.keepAlive);
 
@@ -76,6 +92,7 @@ export default Capability.makeModule(
     const unsubscribe: (() => void)[] = [];
 
     const bind = Effect.gen(function* () {
+      yield* awaitIdentity(client);
       const space = yield* resolveSettingsSpace(client);
       let settings = yield* resolveAppSettings(space);
       const store = makeStore(() => settings, device, registry);
@@ -145,6 +162,7 @@ export default Capability.makeModule(
         () => unsubscribeSettings(),
       );
       bound = { store, sync };
+      registry.set(ready, true);
       refresh();
     });
 
@@ -176,6 +194,7 @@ export default Capability.makeModule(
     };
 
     return Capability.contribute(AppCapabilities.SettingsSync, {
+      ready,
       unsynced,
       pinned,
       takeLocal: (namespace) =>
