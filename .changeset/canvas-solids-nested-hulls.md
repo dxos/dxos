@@ -19,3 +19,7 @@ Breaking: the actions bar no longer has a create menu, and `EditorTools.commands
 The rules between the groups of the editor's horizontal bars (camera, actions, display) run from edge to edge, as the tool palette's do (`FLOATING_BAR_RULE`); before, each was half a control tall.
 
 A link's end may draw `many`, a crow's foot (`Marker` in `@dxos/scene`): two toes spread from the line onto the connection point (`MANY_SPREAD`), the line running on between them. It is offered beside the other markers, with its icon (`px--line-many--regular`). A diagram connector's crow's foot now reads as `many`, where it read as an arrow, and a `many` end exports as the diagram renderer's crow's foot at a target; at a source, which the renderer has none for, as an arrow.
+
+The actions bar shows its commands in named groups (`ACTION_GROUPS`): Cut, Copy, Paste, Duplicate, Delete; Group, Ungroup, Hull, Make object; Join, Subtract; then a dimension's other commands, and Undo and Redo. Before, Delete followed Make object in one group with the clipboard commands, and Hull sat with Join and Subtract.
+
+In the tool palette the link types now sit above the tools that draw a line of their own, after the closed shapes (`toolGroups`), where they ended the create group; Polyline and Spline share one flyout (`PATH_FOLD`), as the link types and the two stroke tools do.

@@ -467,6 +467,13 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       which runs on to the connection point (`markerFrame`, `markerTrim` 0, `MANY_SPREAD`), and as a chevron
       opening onto the end in a groove. Icon `px--line-many--regular`; listed in the end's menu and Properties.
       The plugin reads a diagram's `crowsfoot` as `many` and writes it back at a target. 2D only, as every end is.
+- [x] **The actions bar's groups** (user, 2026-11-13): Cut, Copy, Paste, Duplicate, Delete | Group, Ungroup, Hull,
+      Make object | Join, Subtract | the dimension's others (2D: auto layout, debug) | Undo, Redo
+      (`ACTION_GROUPS`). A group's ids are named, so a dimension's command (Hull) can sit among the shared ones.
+- [x] **The palette's lines together** (user, 2026-11-13): the link fold sits above Polyline, after the closed
+      shapes (`toolGroups` puts the links ahead of the first tool with `createFromPoints` or `freehand`), and
+      Polyline and Spline share one flyout (`PATH_FOLD`). Create group: Rectangle, Ellipse, Polygon, Cloud, Link
+      fold, Path fold, Draw fold, Text, Icon.
 - [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
       Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the

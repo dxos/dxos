@@ -43,6 +43,7 @@ import {
   EXTENSIONS_GROUP,
   HULL_STYLE,
   NOMINAL_SIZES,
+  PATH_FOLD,
   SolidNode,
   cloudPath,
   createNode,
@@ -223,6 +224,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     name: 'Polyline',
     icon: 'ph--line-segments--regular',
     key: 'Y',
+    fold: PATH_FOLD,
     schema: PolylineNode,
     component: PolylineNodeView,
     create: (props) => createNode({ type: 'polyline', ...props }),
@@ -256,6 +258,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     name: 'Spline',
     icon: 'ph--bezier-curve--regular',
     key: 'U',
+    fold: PATH_FOLD,
     createFromPoints: (props, points, closed) => ({
       ...createNode({ type: 'polyline', ...props }),
       points: [...points],

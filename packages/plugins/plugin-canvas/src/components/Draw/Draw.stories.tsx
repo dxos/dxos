@@ -271,7 +271,7 @@ export const Test: Story = {
   play: async ({ canvasElement }) => {
     const { view, stroke } = await pointer(canvasElement);
 
-    // Draw and Draw shape share one button in the tools panel, which stands straight after Polyline.
+    // Draw and Draw shape share one button in the tools panel, which stands straight after Polyline's and Spline's.
     const fold = await within(canvasElement).findByTestId('palette-group-Draw');
     const polyline = canvasElement.querySelector('[data-testid="canvas.tool.node:polyline"]');
     await expect(

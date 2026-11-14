@@ -11,6 +11,7 @@ import {
   DRAW_FOLD,
   EXTENSIONS_GROUP,
   LINK_FOLD,
+  PATH_FOLD,
   TOOLS_GROUP,
   foldRuns,
   pressSelects,
@@ -28,7 +29,7 @@ describe('toolGroups', () => {
     expect(groups[0].name).toBe(TOOLS_GROUP);
     const create = groups.find((group) => group.name === CREATE_GROUP);
     expect(create?.entries.some((entry) => entry.tool.kind === 'node')).toBe(true);
-    expect(create?.entries.at(-1)?.tool.kind).toBe('link');
+    expect(create?.entries.some((entry) => entry.tool.kind === 'link')).toBe(true);
     expect(groups.filter((group) => group.entries.some((entry) => entry.tool.kind === 'link'))).toHaveLength(1);
   });
 
@@ -61,45 +62,66 @@ describe('toolGroups', () => {
     ]);
   });
 
-  test('the two tools that draw in one stroke share one flyout, after the polyline and the spline', () => {
+  test('the polyline and the spline share one flyout, and the two tools that draw in one stroke the next', () => {
     const capabilities = { create: true, link: true, update: true, delete: true };
     const create = toolGroups(defaultNodeRegistry, defaultLinkRegistry, capabilities).find(
       (group) => group.name === CREATE_GROUP,
     );
     const runs = foldRuns(create?.entries ?? []);
-    const typeAt = (index: number) => {
-      const run = runs[index];
-      return run && 'entry' in run && run.entry.tool.kind === 'node' ? run.entry.tool.type : undefined;
-    };
-    const polyline = runs.findIndex((_, index) => typeAt(index) === 'polyline');
-    expect(typeAt(polyline + 1)).toBe('spline');
-    const draw = runs[polyline + 2];
-    expect(draw && 'fold' in draw && draw.fold.name).toBe(DRAW_FOLD);
-    expect(
-      draw && 'fold' in draw && draw.fold.entries.map((entry) => entry.tool.kind === 'node' && entry.tool.type),
-    ).toEqual(['freehand', 'freehandShape']);
+    const folds = runs.flatMap((run) =>
+      'fold' in run
+        ? [[run.fold.name, run.fold.entries.map((entry) => (entry.tool.kind === 'node' ? entry.tool.type : 'link'))]]
+        : [],
+    );
+    expect(folds.slice(1)).toEqual([
+      [PATH_FOLD, ['polyline', 'spline']],
+      [DRAW_FOLD, ['freehand', 'freehandShape']],
+    ]);
   });
 
-  test('the link types share one flyout at the end of the create group', () => {
+  test('the link types share one flyout above the polyline, after the closed shapes', () => {
     const capabilities = { create: true, link: true, update: true, delete: true };
     const create = toolGroups(defaultNodeRegistry, defaultLinkRegistry, capabilities).find(
       (group) => group.name === CREATE_GROUP,
     );
     const runs = foldRuns(create?.entries ?? []);
-    const last = runs.at(-1);
-    expect(last && 'fold' in last && last.fold.name).toBe(LINK_FOLD);
-    expect(last && 'fold' in last && last.fold.entries.map((entry) => entry.tool.kind)).toEqual(
+    const index = runs.findIndex((run) => 'fold' in run && run.fold.name === LINK_FOLD);
+    const links = runs[index];
+    expect(links && 'fold' in links && links.fold.entries.map((entry) => entry.tool.kind)).toEqual(
       Object.values(defaultLinkRegistry).map(() => 'link'),
     );
     // The fold leads with the default variant.
-    expect(last && 'fold' in last && last.fold.entries[0].tool).toEqual({ kind: 'link', type: 'ortho' });
-    // Before it, the node tools: each alone, or folded with its variants.
+    expect(links && 'fold' in links && links.fold.entries[0].tool).toEqual({ kind: 'link', type: 'ortho' });
+    // The lines are together: the links, then the tools that draw a line of their own.
+    const typeAt = (at: number) => {
+      const run = runs[at];
+      return run && 'entry' in run && run.entry.tool.kind === 'node' ? run.entry.tool.type : undefined;
+    };
+    expect(typeAt(index - 1)).toBe('cloud');
+    const paths = runs[index + 1];
+    expect(paths && 'fold' in paths && paths.fold.name).toBe(PATH_FOLD);
+    // Every other run is a node tool: alone, or folded with its variants.
     expect(
       runs
-        .slice(0, -1)
+        .filter((_, at) => at !== index)
         .flatMap((run) => ('entry' in run ? [run.entry] : run.fold.entries))
         .every((entry) => entry.tool.kind === 'node'),
     ).toBe(true);
+  });
+
+  test('with no tool that draws a line, the link types end the create group', () => {
+    const { rect, ellipse } = defaultNodeRegistry;
+    const create = toolGroups({ rect, ellipse }, defaultLinkRegistry, {
+      create: true,
+      link: true,
+      update: true,
+      delete: true,
+    }).find((group) => group.name === CREATE_GROUP);
+    expect(create?.entries.map((entry) => entry.tool.kind)).toEqual([
+      'node',
+      'node',
+      ...Object.values(defaultLinkRegistry).map(() => 'link'),
+    ]);
   });
 
   test('a press on an element selects it with Select and with a create tool; the hand only moves the view', () => {
