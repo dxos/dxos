@@ -23,6 +23,7 @@ import {
   type ActiveTool,
   CREATE_GROUP,
   FLOATING_BAR,
+  FLOATING_BAR_RULE,
   SceneContextMenu,
   type ToolGroup,
   TOOLS_GROUP,
@@ -430,7 +431,7 @@ const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' 
       <Toolbar.Root classNames={mx('w-full', FLOATING_BAR)} data-testid='scene-actions'>
         {groups.map((group, index) => (
           <Fragment key={index}>
-            {index > 0 && <Toolbar.Separator variant='line' />}
+            {index > 0 && <Toolbar.Separator variant='line' classNames={FLOATING_BAR_RULE} />}
             {group}
           </Fragment>
         ))}

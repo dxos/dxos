@@ -460,6 +460,9 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       strokes), `px--line-triangle--regular` and `px--line-circle--regular` in `@dxos/ui-icons`, one shaft with the
       head each marker draws. The end's menu and the Properties marker field show them beside each choice
       (`MARKER_ITEMS`), with Phosphor's `minus` for None. They all point right, for a Start end too.
+- [x] **Bar rules run edge to edge** (user, 2026-11-13): the separators of the horizontal floating bars (camera,
+      actions, display) are the bar's full height with the palette's 4 px either side (`FLOATING_BAR_RULE`), where
+      a toolbar's own rule is half a control tall. The primitive is unchanged.
 - [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
       Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the
