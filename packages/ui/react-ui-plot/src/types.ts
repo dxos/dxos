@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 export const PlotType = Schema.Literals(['bar', 'pie', 'xy', 'scatter', 'heatmap', 'radar', 'map']);
 export type PlotType = Schema.Schema.Type<typeof PlotType>;
 
+/** Every chart type, in the order a picker lists them. */
 export const PLOT_TYPES: readonly PlotType[] = PlotType.literals;
 
 /** Presentation options; persisted alongside the data source by the host. */
