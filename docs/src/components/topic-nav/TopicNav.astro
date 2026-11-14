@@ -33,7 +33,13 @@ const isHome = Astro.url.pathname.replace(/\/$/, '') === '/docs';
   }
 </div>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400&display=swap" />
+<!-- Non-blocking: a pending stylesheet here stalls the parser, and Firefox paints the half-parsed page. -->
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400&display=swap"
+  media="print"
+  onload="this.media='all'"
+/>
 
 <script>
   // Closes the picker on a click outside it or on Escape.

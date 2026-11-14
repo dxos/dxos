@@ -6564,6 +6564,14 @@ decision D-313: A core API page sets its story's frame size in the page, `height
   why: Measured on load, the frame showed at the full width and height until the story arrived, then jumped.
 ```
 
+```mdl
+decision D-314: The topic switcher loads its Kumbh Sans stylesheet without blocking the parser, as a print stylesheet that switches to all media once it loads. Fills in [D-225].
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-16.1]
+  why: The stylesheet sat in the header, so the parser stopped at the next script until Google Fonts answered, and Firefox, which has no paint holding or cross-document view transitions, painted a page with only the header between navigations.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
