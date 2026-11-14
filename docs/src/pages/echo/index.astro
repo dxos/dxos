@@ -3,7 +3,7 @@ import { Code } from 'astro-expressive-code/components';
 
 import Diagram from '../../components/Diagram.astro';
 import SpecCite from '../../components/SpecCite.astro';
-import { SUITE_BACKGROUNDS, suiteColor } from '../../components/topic-nav/suite.ts';
+import { SUITE_BACKGROUNDS, SUITE_COLORS } from '../../components/topic-nav/suite.ts';
 import { StoryDemo } from '../../demos/StoryDemo.tsx';
 import WebflowFooter from '../../components/WebflowFooter.astro';
 import WebflowNav from '../../components/WebflowNav.astro';
@@ -16,14 +16,12 @@ import '../../styles/fonts.css';
 
 // ECHO's art and color come from the section suite, as on the docs heroes, so the two cannot diverge [D-288].
 const art = SUITE_BACKGROUNDS.echo;
-const OFFSET = Number(art.match(/translate\((-?[\d.]+),/)?.[1] ?? 0);
-const RAY_COLOR = suiteColor('echo') ?? 'currentColor';
+const RAY_COLOR = SUITE_COLORS.echo;
 const pointsOf = (d: string) =>
-  [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map(([, x, y]) => ({ x: Number(x) + OFFSET, y: Number(y) }));
+  [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map(([, x, y]) => ({ x: Number(x), y: Number(y) }));
 const pathsOf = (group: string) =>
   [...(art.match(new RegExp(`<g id="${group}"[\\s\\S]*?</g>`))?.[0] ?? '').matchAll(/\sd="([^"]+)"/g)].map(([, d]) => d);
-const shift = (d: string) => d.replace(/(-?[\d.]+),(-?[\d.]+)/g, (_, x, y) => `${(Number(x) + OFFSET).toFixed(1)},${y}`);
-const icon = pathsOf('icon').map(shift);
+const icon = pathsOf('icon');
 // The icon's box; the hero's view box and the rays' fade are sized from it.
 const iconPoints = pathsOf('icon').flatMap(pointsOf);
 const ICON = {
@@ -34,7 +32,7 @@ const ICON = {
 };
 const CENTER = { x: ICON.x + ICON.width / 2, y: ICON.y + ICON.height / 2 };
 // The suite's rays already run past the art's edges.
-const rays = pathsOf('lines').map(shift);
+const rays = pathsOf('lines');
 const FADE = 1.05 * ICON.height;
 
 /** The live demos shown, in order, by id in `STORIES`. */

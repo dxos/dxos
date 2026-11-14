@@ -1,14 +1,14 @@
 ---
-// The docs home: one card per section, each its suite hero art cropped to the mark, with the section's name [D-272].
-import { SUITE_BACKGROUNDS, SUITE_ORDER, suiteColor } from './topic-nav/suite.ts';
+// The docs home: one card per section, each the brand's art cropped to the mark, with the section's name [D-272].
+import { SUITE_COLORS, SUITE_MARKS, SUITE_ORDER } from './topic-nav/suite.ts';
 import { TOPICS } from './topic-nav/topics.ts';
 
-// Every suite mark is centred at (1440, 540) of the 1920 x 1080 art. A window around it keeps the mark whole, with room
-// for the rays to run out to the card's edges; ECHO's two-wide card gets a window twice as wide [D-272].
+// Every mark is centred at (960, 540) of the 1920 x 1080 art. A window around it keeps the mark whole, with room for
+// the rays to run out to the card's edges; ECHO's two-wide card gets a window twice as wide [D-272].
 const WIDE = 'echo';
 const crop = (svg: string, wide: boolean) =>
   svg
-    .replace(/viewBox="[^"]*"/, wide ? 'viewBox="0 90 2880 900"' : 'viewBox="720 90 1440 900"')
+    .replace(/viewBox="[^"]*"/, wide ? 'viewBox="-480 90 2880 900"' : 'viewBox="240 90 1440 900"')
     .replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" aria-hidden="true" ');
 
 const cards = SUITE_ORDER.map((id) => {
@@ -19,8 +19,8 @@ const cards = SUITE_ORDER.map((id) => {
     label: topic?.label ?? id.toUpperCase(),
     href: topic?.href,
     description: topic?.description,
-    art: crop(SUITE_BACKGROUNDS[id], id === WIDE),
-    color: suiteColor(id),
+    art: crop(SUITE_MARKS[id], id === WIDE),
+    color: SUITE_COLORS[id],
   };
 });
 ---
@@ -29,7 +29,7 @@ const cards = SUITE_ORDER.map((id) => {
   {
     cards.map((card) => (
       <li class:list={{ wide: card.wide }}>
-        <a href={card.href} style={card.color ? `--card-color: ${card.color}` : undefined}>
+        <a href={card.href} style={`--card-color: ${card.color}`}>
           <div class="art" set:html={card.art} />
           <div class="text">
             <span class="name">{card.label}</span>
@@ -73,7 +73,6 @@ const cards = SUITE_ORDER.map((id) => {
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    border: 1px solid var(--sl-color-hairline);
     border-radius: 0;
     background: rgb(29, 31, 32);
     color: inherit;
@@ -81,12 +80,18 @@ const cards = SUITE_ORDER.map((id) => {
   }
 
   /* A card is marked in its own section's color, the one its rays are drawn in, over the site's accent. */
-  a:hover {
-    border-color: var(--card-color, var(--sl-color-accent));
+  a:focus-visible {
+    outline-color: var(--card-color);
   }
 
-  a:focus-visible {
-    outline-color: var(--card-color, var(--sl-color-accent));
+  /* The art's lines take the drawing's text color, so a card pointed at or focused shows it by deepening them. */
+  .art :global(svg) {
+    color: var(--card-color);
+  }
+
+  /* Deeper on the dark ground is more color at the same lightness: a darker line would sink into the ground. */
+  a:is(:hover, :focus-visible) .art :global(svg) {
+    color: oklch(from var(--card-color) l calc(c * 2) h);
   }
 
   .art {
@@ -154,6 +159,11 @@ const cards = SUITE_ORDER.map((id) => {
     background: var(--c-bg);
   }
 
+  /* On the light ground there is room below, so the line goes darker as well. */
+  :global(:root[data-theme='light']) a:is(:hover, :focus-visible) .art :global(svg) {
+    color: oklch(from var(--card-color) calc(l * 0.75) calc(c * 1.5) h);
+  }
+
   :global(:root[data-theme='light']) .name {
     color: var(--c-fg);
   }
@@ -163,8 +173,8 @@ const cards = SUITE_ORDER.map((id) => {
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    a {
-      transition: border-color 0.15s;
+    .art :global(svg) {
+      transition: color 0.3s;
     }
   }
 </style>
