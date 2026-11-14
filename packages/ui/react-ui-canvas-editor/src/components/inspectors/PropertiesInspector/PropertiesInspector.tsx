@@ -62,6 +62,7 @@ import * as Input from '@dxos/react-ui/Input';
 import {
   BaseNode,
   CurveLink,
+  DEFAULT_GRID,
   type Element,
   type Layer,
   LineLink,
@@ -244,12 +245,13 @@ const shownParams = (element: Node): { params?: Record<string, number> } => {
 };
 
 /**
- * A node's text padding as it is drawn, in minor grid cells: one cell either side unless set, and above and below
- * too for a text node, whose lines start at its frame's top; a label is placed by its alignment and has none there.
+ * A node's text padding as it is drawn, in scene px: unless set, a minor grid cell either side, and above and below
+ * half a cell for a label or a whole one for a text node, whose lines start at its frame's top. The cell shown is
+ * the default grid's, which is the drawing's unless it sets another.
  */
 const shownPadding = (element: Node): { x: number; y: number } => ({
-  x: 1,
-  y: isNoteNode(element) ? 1 : 0,
+  x: DEFAULT_GRID,
+  y: isNoteNode(element) ? DEFAULT_GRID : DEFAULT_GRID / 2,
   ...nodePadding(element),
 });
 
@@ -318,9 +320,9 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   // Drawn beside the rotation by `FrameField`, and beside the centre by `GeometryField`.
   'portsPerSide': { hidden: true },
   'size': { hidden: true },
-  // Whole cells of the minor grid by the stepper; a template may hold a part of one.
-  'padding.x': { min: 0, max: 16, step: 1 },
-  'padding.y': { min: 0, max: 16, step: 1 },
+  // Points, stepped as a font size is.
+  'padding.x': { min: 0, max: 96, step: 1 },
+  'padding.y': { min: 0, max: 96, step: 1 },
   // Drawn beside the hull's border by `HullField`.
   'inset': { hidden: true },
   'scene': { label: 'View' },
@@ -412,7 +414,17 @@ export const PropertiesInspector = ({
             ...names.slice(style).filter((name) => name !== 'label'),
           ]
         : names;
-    const ordered = [...labelled.filter((name) => name !== 'data'), ...labelled.filter((name) => name === 'data')];
+    const last = [...labelled.filter((name) => name !== 'data'), ...labelled.filter((name) => name === 'data')];
+    // The space round a label is a setting of the label, so it follows it.
+    const label = last.indexOf('label');
+    const ordered =
+      label >= 0 && last.includes('padding')
+        ? [
+            ...last.slice(0, label + 1).filter((name) => name !== 'padding'),
+            'padding',
+            ...last.slice(label + 1).filter((name) => name !== 'padding'),
+          ]
+        : last;
     return ordered.some((name, index) => name !== names[index]) ? ordered : undefined;
   }, [schema]);
   const { values, fieldOverrides } = useMemo(() => {

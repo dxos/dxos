@@ -289,10 +289,10 @@ export const boxFields = {
  * in `label` still reads as itself.
  */
 /**
- * Space between a shape's frame and the text it draws, in cells of the drawing's minor grid, so the text stays on
- * the grid and the space follows the grid's size. Unset, a text box pads itself by one cell either side (a text
- * node above and below too); zero puts the text on the frame's edge, as a part of a composite card must be to sit
- * where the card's own regions sit.
+ * Space between a shape's frame and the text it draws, in scene px, as a font size is. Unset, a text box pads
+ * itself by a minor grid cell either side, which is what puts its lines on the grid, and above and below by half a
+ * cell for a label, a hull's name included (12 and 6 at the default grid), or a whole one for a text node. Zero puts
+ * the text on the frame's edge, as a part of a composite card must be to sit where the card's own regions sit.
  */
 export const Padding = Schema.Struct({
   x: Schema.optional(Schema.Number.annotate({ title: 'X' })),
@@ -466,6 +466,7 @@ export const HullNode = Schema.Struct({
   type: Schema.Literal('hull'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   /** Unset, `DEFAULT_HULL_SHAPE`. */
   shape: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
   /**

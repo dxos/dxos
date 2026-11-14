@@ -19,7 +19,6 @@ import {
   nodeTitle,
   partText,
   partValues,
-  textPadLength,
 } from './parts.ts';
 import { cornerRadius, frameClasses, hueClasses, resolveStyle, textColor } from './style.ts';
 
@@ -28,12 +27,6 @@ const classicFrame = (node: Parameters<typeof frameClasses>[0], selected: boolea
   frameClasses(node, selected, hovered, false, CLASSIC_LOOK);
 
 describe('parts', () => {
-  test("a node's text padding is a number of minor grid cells, so it follows the grid's size", ({ expect }) => {
-    expect(textPadLength(2)).toBe('calc(var(--dx-minor-grid) * 2)');
-    expect(textPadLength(0)).toBe('calc(var(--dx-minor-grid) * 0)');
-    expect(textPadLength(0.5)).toBe('calc(var(--dx-minor-grid) * 0.5)');
-  });
-
   const box = { x: 0, y: 0, width: 256, height: 128 };
   // A host type with a list part, the way a contributed type declares its text.
   const ListNode = Schema.Struct({

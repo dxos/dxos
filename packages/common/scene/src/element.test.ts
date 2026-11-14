@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 import {
   CloudNode,
   EllipseNode,
+  HullNode,
   NodeStyle,
   NoteNode,
   PolygonNode,
@@ -92,17 +93,20 @@ describe('element base', () => {
     expect(nodePadding(across)).toEqual({ x: 8 });
   });
 
-  test('every shape that draws a label carries padding, in minor grid cells', () => {
+  test('every shape that draws a label carries padding, in scene px', () => {
     const frame = { id: 'a', z: 'a0', center: { x: 0, y: 0 }, size: { width: 96, height: 48 } };
-    const padded = { ...frame, label: 'A', padding: { x: 2, y: 1 } };
+    const padded = { ...frame, label: 'A', padding: { x: 24, y: 12 } };
     expect(Schema.is(RectNode)({ ...padded, type: 'rect' })).toBe(true);
     expect(Schema.is(EllipseNode)({ ...padded, type: 'ellipse' })).toBe(true);
     expect(Schema.is(CloudNode)({ ...padded, type: 'cloud' })).toBe(true);
     expect(Schema.is(PolygonNode)({ ...padded, type: 'polygon' })).toBe(true);
     expect(Schema.is(ShapeNode)({ ...padded, type: 'shape', recipe: 'arrow' })).toBe(true);
     expect(Schema.is(PolylineNode)({ ...padded, type: 'polyline', points: [] })).toBe(true);
-    // The value is a number of cells, read back as it was stored, a part of a cell included.
-    expect(nodePadding({ ...padded, type: 'ellipse', padding: { x: 0.5 } })).toEqual({ x: 0.5 });
+    // A hull's name is a label too.
+    expect(Schema.is(HullNode)({ ...padded, type: 'hull' })).toBe(true);
+    // One side alone may be set; the other then keeps its default.
+    const across: EllipseNode = { ...padded, type: 'ellipse', padding: { x: 6 } };
+    expect(nodePadding(across)).toEqual({ x: 6 });
     expect(Schema.is(EllipseNode)({ ...padded, type: 'ellipse', padding: { x: 'wide' } })).toBe(false);
   });
 });

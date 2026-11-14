@@ -107,7 +107,6 @@ import {
   portalScale,
   portalTransform,
   sortByZ,
-  textPadLength,
   trimPath,
   viewLayers,
   viewLinkGeometry,
@@ -610,8 +609,8 @@ const MINOR_GRID = '--dx-minor-grid';
 
 /**
  * The space a text box leaves between the frame's edge and its text, set per node by the `padding` field of the types
- * that carry it, in minor grid cells. Unset, a text box pads itself by one cell, which is what puts its lines on the
- * grid.
+ * that carry it, in scene px. Unset, a text box pads itself by a minor grid cell, which is what puts its lines on
+ * the grid.
  */
 const TEXT_PAD_X = '--dx-text-pad-x';
 const TEXT_PAD_Y = '--dx-text-pad-y';
@@ -628,10 +627,10 @@ const TEXT_BOX =
   'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>*]:px-[var(--dx-text-pad-x,var(--dx-minor-grid))]';
 
 /**
- * A label is one run of lines placed by its alignment, so it needs space above and below only where its node asks
- * for some: a label aligned to the top or the bottom then stands that far in from the edge.
+ * A label is one run of lines placed by its alignment; unless its node says otherwise it keeps half a minor grid cell
+ * above and below, so a label aligned to the top or the bottom (a hull's name is) stands that far in from the edge.
  */
-const LABEL_LINES = '[&>*]:py-[var(--dx-text-pad-y,0px)]';
+const LABEL_LINES = '[&>*]:py-[var(--dx-text-pad-y,calc(var(--dx-minor-grid)/2))]';
 
 /**
  * A text node's lines are a paragraph's, and its block is padded so the text sits a minor grid cell from the top and
@@ -1135,8 +1134,8 @@ const NodeFrame = memo(
       ...(drawn.rotation ? { transform: `rotate(${drawn.rotation}deg)` } : {}),
       [FRAME_BORDER]: chromeFade || borderless ? '0px' : `${border}px`,
       [MINOR_GRID]: `${cell / MAJOR_GRID_RATIO}px`,
-      ...(padding?.x !== undefined ? { [TEXT_PAD_X]: textPadLength(padding.x) } : {}),
-      ...(padding?.y !== undefined ? { [TEXT_PAD_Y]: textPadLength(padding.y) } : {}),
+      ...(padding?.x !== undefined ? { [TEXT_PAD_X]: `${padding.x}px` } : {}),
+      ...(padding?.y !== undefined ? { [TEXT_PAD_Y]: `${padding.y}px` } : {}),
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...(borderless ? { borderWidth: 0, borderRadius: 0 } : {}),
       // An outline, so the frame's layout is untouched; a screen pixel at any zoom.
@@ -1510,6 +1509,7 @@ export const HullNodeView = ({ node, editing }: NodeViewProps) => {
         TEXT_BOX,
         'whitespace-pre-wrap',
         LINE_ON_GRID,
+        LABEL_LINES,
         alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
         // `HULL_FONT_SIZE`, as a static class so Tailwind generates it.
         sizeClass(node, 'text-sm'),

@@ -102,6 +102,3 @@ export const withTitle = <N extends Node>(registry: NodeRegistry, node: N, text:
   const [first] = nodeParts(registry, node);
   return first ? { ...node, ...partValues(registry, node, first.field, text) } : node;
 };
-
-/** A node's text padding of `cells` minor grid cells as a CSS length, read against the frame's minor grid. */
-export const textPadLength = (cells: number): string => `calc(var(--dx-minor-grid) * ${cells})`;

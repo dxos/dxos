@@ -483,12 +483,12 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       field turns the node into another recipe. Join and Subtract take the outline (`nodeRings`); 2D to 3D lifts a
       shape as a `mesh` prism over its outline that flattens back to the shape (`prismMesh`). Replaces the Arrow
       tool that drew a polyline, which never merged.
-- [x] **Text padding in minor grid cells, on every labelled shape** (user, 2026-11-14): `Padding` is cells of the
-      minor grid (`textPadLength` writes `calc(var(--dx-minor-grid) * n)`), where it was scene px, and
-      `paddingFields` is on ellipse, cloud, polygon, shape, polyline and solid as well as rect and note. A label
-      takes `padding.y` (`LABEL_LINES`). Properties shows the drawn default (1 across; 1 down for a note, 0 for a
-      label). A hull's name has none. A stored non-zero px padding now reads as cells: only the UML class
-      template had one, converted in place.
+- [x] **Text padding on every labelled shape** (user, 2026-11-14): `paddingFields` is on ellipse, cloud, polygon,
+      shape, polyline, hull and solid as well as rect and note, in scene px ("points, like font size"; cells of
+      the minor grid were tried first and dropped, since the stored field was px already). A label takes
+      `padding.y` (`LABEL_LINES`), and its default is 12 across and 6 down (a minor cell and half of one), a hull's
+      name included; a text node keeps a whole cell down. Properties places Padding after Label and shows the
+      drawn default.
 - [ ] **Convert a shape to a polyline**: a parametric shape has no vertices to drag; a command that swaps it for
       the closed polyline of its outline would free it.
 - [ ] **Shape recipes, later**: a cog's hub hole needs an outline of more than one ring; the Shape field in
