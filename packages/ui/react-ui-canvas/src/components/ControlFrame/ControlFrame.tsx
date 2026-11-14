@@ -93,6 +93,7 @@ export type ControlFrameProps = {
   /** `index` is where in the link's points a control point at `point` would be inserted. */
   onMidpointPointerDown?: (link: SplineLink, index: number, point: Point, event: React.PointerEvent) => void;
   onPointContextMenu?: (link: SplineLink, index: number, event: React.MouseEvent) => void;
+  onEndContextMenu?: (link: Link, end: LinkEnd, event: React.MouseEvent) => void;
   /** The node in vertex edit mode: its vertices are drawn to drag, and its resize handles are not. */
   vertexEditing?: Extract<Editing, { kind: 'vertices' }>;
   onVertexPointerDown?: (node: Node, index: number, event: React.PointerEvent) => void;
@@ -148,6 +149,7 @@ export const ControlFrame = memo(
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onEndContextMenu,
     vertexEditing,
     onVertexPointerDown,
     onVertexMidpointPointerDown,
@@ -246,6 +248,8 @@ export const ControlFrame = memo(
               )}
               strokeWidth={portStroke}
               onPointerDown={(event) => onEndPointerDown?.(link, end, event)}
+              onContextMenu={(event) => onEndContextMenu?.(link, end, event)}
+              data-link-end={end}
               onPointerEnter={hoverOnly ? () => onLinkHover?.(link.id) : undefined}
               onPointerLeave={hoverOnly ? () => onLinkHover?.(undefined) : undefined}
             />

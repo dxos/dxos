@@ -12,7 +12,12 @@ import { type LayoutIntent } from '@dxos/scene';
 export type EditorPreview = { layout: string; intent: LayoutIntent };
 
 /** Where the context menu opened, and over what. */
-export type MenuAnchor = { at: { x: number; y: number }; kind: 'element' | 'canvas' };
+export type MenuAnchor = {
+  at: { x: number; y: number };
+  kind: 'element' | 'canvas';
+  /** The end of a link that was pressed, which the dimension's own section of the menu is for. */
+  end?: { link: string; end: 'source' | 'target' };
+};
 
 /**
  * A dimension's own view state, for one that keeps it outside an engine (3D, a test viewport): what is selected, the

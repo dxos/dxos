@@ -12,6 +12,7 @@
 import {
   type Bounds,
   DEFAULT_GRID,
+  DEFAULT_HULL_SHAPE,
   type HullNode,
   type HullShape,
   type Node,
@@ -22,7 +23,7 @@ import {
 
 import { type RenderList2D } from '../model/index.ts';
 import { type LatticeSpec, onLattice, toCell } from './lattice.ts';
-import { between, sortByZ, topZ } from './order.ts';
+import { initialKeys, keyBetween, sortByZ, topZ } from './order.ts';
 import { createNode, nodeBounds } from './shapes.ts';
 import { restackZ } from './view-tree.ts';
 
@@ -117,7 +118,7 @@ export const hullMembers = (nodes: readonly Node[], hullId: string): Node[] => {
 };
 
 /** How many hulls a node is inside, counting each once. */
-const depthOf = (nodes: Readonly<Record<string, Node>>, node: Node): number => {
+export const hullDepth = (nodes: Readonly<Record<string, Node>>, node: Node): number => {
   const seen = new Set<string>([node.id]);
   let depth = 0;
   for (let parent = node.parent; parent !== undefined && !seen.has(parent); parent = nodes[parent]?.parent) {
@@ -213,13 +214,17 @@ const bridge = (
  * through tiles no other node stands on where there is such a run.
  */
 export const hullTiles = (nodes: readonly Node[], hull: HullNode, spec: LatticeSpec): Set<string> => {
-  const members = hullMembers(nodes, hull.id).filter(onLattice);
+  // A hull inside it that holds nothing has no shapes to stand for it, so it counts by the tiles its own frame is on.
+  const empty = hullDescendants(nodes, hull.id).filter(
+    (node) => isHullNode(node) && hullMembers(nodes, node.id).length === 0,
+  );
+  const members = [...hullMembers(nodes, hull.id).filter(onLattice), ...empty];
   const inside = new Set(members.map((member) => member.id));
   const tiles = new Set(members.flatMap((member) => nodeTiles(member, spec)).map(tileKey));
   if (tiles.size === 0) {
     return tiles;
   }
-  if (hull.shape === 'box') {
+  if ((hull.shape ?? DEFAULT_HULL_SHAPE) === 'box') {
     const all = [...tiles].map(tileOf);
     const [minCol, maxCol] = [Math.min(...all.map(({ col }) => col)), Math.max(...all.map(({ col }) => col))];
     const [minRow, maxRow] = [Math.min(...all.map(({ row }) => row)), Math.max(...all.map(({ row }) => row))];
@@ -419,7 +424,7 @@ export const hullOutline = (
   }
   const margin = Math.max(0, HULL_MARGIN - insetOf(hull, grid));
   const points = frames.flatMap((frame) => boundsCorners(grown(frame, margin)));
-  return hull.shape === 'box' ? boundsCorners(boundsOf(points)) : convexHull(points);
+  return (hull.shape ?? DEFAULT_HULL_SHAPE) === 'box' ? boundsCorners(boundsOf(points)) : convexHull(points);
 };
 
 const samePoints = (left: readonly Point[] | undefined, right: readonly Point[]): boolean =>
@@ -439,7 +444,7 @@ export const fitHulls = (scene: RenderList2D, lattice?: LatticeSpec, grid = DEFA
   }
   const nodes: Record<string, Node> = { ...scene.nodes };
   let changed = false;
-  for (const hull of [...hulls].sort((left, right) => depthOf(nodes, right) - depthOf(nodes, left))) {
+  for (const hull of [...hulls].sort((left, right) => hullDepth(nodes, right) - hullDepth(nodes, left))) {
     const outline = hullOutline(Object.values(nodes), hull, lattice, grid);
     if (!outline || outline.length < 3) {
       continue;
@@ -518,15 +523,99 @@ export type EncloseOptions = {
   lattice?: LatticeSpec;
   /** The drawing's grid pitch, which a hull's inset counts in. */
   grid?: number;
-  /** Unset, `perimeter`. */
+  /** Unset, `DEFAULT_HULL_SHAPE`. */
   shape?: HullShape;
 };
 
+/** Every node inside the hull `id`, through any hull inside it, those hulls among them. */
+export const hullDescendants = (nodes: readonly Node[], id: string): Node[] => {
+  const children = childrenOf(nodes);
+  const seen = new Set<string>([id]);
+  const found: Node[] = [];
+  for (const queue = [id]; queue.length > 0;) {
+    for (const child of children.get(queue.pop() ?? id) ?? []) {
+      if (!seen.has(child.id)) {
+        seen.add(child.id);
+        found.push(child);
+        queue.push(child.id);
+      }
+    }
+  }
+  return found;
+};
+
 /**
- * The scene with a new hull `id` round the nodes `ids`, drawn under everything so a press on a node inside it reaches
- * the node. A node already inside a hull leaves it for the new one, and a hull is not put inside another: a hull is
- * stored as a group of its nodes, which holds shapes and not other hulls' borders. Undefined when none of `ids` is
- * such a node of the scene, or `id` is taken.
+ * The scene with `node` put in at place `at` of the order it is painted in (0 is under everything): keyed between its
+ * neighbours where a key fits, else with the whole stack renumbered as it is painted, since a stored key may be one
+ * no key fits beside and a key made up there could land on the wrong side of the other neighbour.
+ */
+export const insertInStack = (scene: RenderList2D, node: Node, at: number): RenderList2D => {
+  const stack = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]).filter(
+    (entry) => entry.id !== node.id,
+  );
+  const key = keyBetween(stack[at - 1]?.z, stack[at]?.z);
+  if (key !== undefined) {
+    return { ...scene, nodes: { ...scene.nodes, [node.id]: { ...node, z: key } } };
+  }
+  const order = [...stack.slice(0, at).map(({ id }) => id), node.id, ...stack.slice(at).map(({ id }) => id)];
+  const keys = initialKeys(order.length);
+  const zOf = new Map(order.map((id, index) => [id, keys[index]]));
+  const rekeyed = <T extends { id: string; z: string }>(entry: T): T => ({ ...entry, z: zOf.get(entry.id) ?? entry.z });
+  return {
+    ...scene,
+    nodes: Object.fromEntries(
+      Object.values({ ...scene.nodes, [node.id]: node }).map((entry): [string, Node] => [entry.id, rekeyed(entry)]),
+    ),
+    links: Object.fromEntries(Object.values(scene.links).map((link) => [link.id, rekeyed(link)])),
+  };
+};
+
+/**
+ * The nodes of `ids` a hull made round them holds itself: a node inside a hull that is going in too stays inside
+ * that hull, which carries it.
+ */
+const encloseUnits = (scene: RenderList2D, ids: readonly string[]): Node[] => {
+  const chosen = new Set(ids);
+  const carried = (node: Node): boolean => {
+    const seen = new Set<string>([node.id]);
+    for (let parent = node.parent; parent !== undefined && !seen.has(parent); parent = scene.nodes[parent]?.parent) {
+      if (chosen.has(parent)) {
+        return true;
+      }
+      seen.add(parent);
+    }
+    return false;
+  };
+  return [...chosen].flatMap((id) => scene.nodes[id] ?? []).filter((node) => !carried(node));
+};
+
+/**
+ * The scene with `hull` put in round the nodes `ids`: how a hull is made, whether it is drawn round them with the
+ * Hull tool or made of a selection. A hull among them goes in whole, with what is inside it. Where they all stand in
+ * one hull the new one stands in it too, between it and them; nodes of different hulls leave theirs for it. It is
+ * drawn under what it holds, so a press on a node inside it reaches the node. Undefined when none of `ids` is a
+ * node of the scene.
+ */
+export const encloseIn = (scene: RenderList2D, hull: HullNode, ids: readonly string[]): RenderList2D | undefined => {
+  const members = encloseUnits(scene, ids).filter((member) => member.id !== hull.id);
+  if (members.length === 0) {
+    return undefined;
+  }
+  const parents = new Set(members.map((member) => member.parent));
+  const [parent] = parents.size === 1 ? [...parents] : [undefined];
+  const holder = parent === undefined ? undefined : scene.nodes[parent];
+  const stack = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
+  // Inside a hull it is drawn just over that hull, and so under everything else the hull holds; in none, at the bottom.
+  const at = holder ? stack.findIndex((entry) => entry.id === holder.id) + 1 : 0;
+  const { parent: _parent, ...rest } = hull;
+  const placed: HullNode = { ...rest, ...(holder ? { parent: holder.id } : {}) };
+  const inside = Object.fromEntries(members.map((member) => [member.id, { ...member, parent: hull.id }]));
+  return insertInStack({ ...scene, nodes: { ...scene.nodes, ...inside } }, placed, at);
+};
+
+/**
+ * The scene with a new hull `id` round the nodes `ids` ({@link encloseIn}), fitted to them. Undefined when none of
+ * `ids` is a node of the scene, or `id` is taken.
  */
 export const enclose = (
   scene: RenderList2D,
@@ -534,17 +623,16 @@ export const enclose = (
   id: string,
   { lattice, grid, shape }: EncloseOptions = {},
 ): RenderList2D | undefined => {
-  const members = ids.flatMap((member) => scene.nodes[member] ?? []).filter((member) => !isHullNode(member));
+  const members = encloseUnits(scene, ids);
   if (members.length === 0 || scene.nodes[id] !== undefined || scene.links[id] !== undefined) {
     return undefined;
   }
-  const [lowest] = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
   const bounds = boundsOf(members.flatMap((member) => boundsCorners(nodeBounds(member))));
   const hull: HullNode = {
     ...createNode({
       type: 'hull',
       id,
-      z: between(undefined, lowest?.z),
+      z: topZ(Object.values(scene.nodes)),
       center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },
       size: { width: bounds.width, height: bounds.height },
     }),
@@ -552,14 +640,14 @@ export const enclose = (
     style: HULL_STYLE,
     ...(shape ? { shape } : {}),
   };
-  const inside = Object.fromEntries(members.map((member) => [member.id, { ...member, parent: id }]));
-  return fitHulls({ ...scene, nodes: { ...scene.nodes, ...inside, [id]: hull } }, lattice, grid);
+  const held = encloseIn(scene, hull, ids);
+  return held && fitHulls(held, lattice, grid);
 };
 
 /**
  * The scene with the node `id` inside the hull `hull`, or inside none: beside `beside.target` in the drawing order
- * where one is given, else over everything. Undefined when `id` is no node that a hull may hold (a hull itself), or
- * `hull` is no hull of the scene.
+ * where one is given, else over everything (a hull, under its own shapes). Undefined when `id` is no node, `hull`
+ * is no hull of the scene, or the move would put a hull inside itself.
  */
 export const moveToHull = (
   scene: RenderList2D,
@@ -569,10 +657,23 @@ export const moveToHull = (
 ): RenderList2D | undefined => {
   const node = scene.nodes[id];
   const holder = hull === undefined ? undefined : scene.nodes[hull];
-  if (!node || isHullNode(node) || (hull !== undefined && !(holder && isHullNode(holder)))) {
+  // A hull goes inside another, but not inside itself or a hull it holds.
+  const within =
+    hull !== undefined &&
+    (hull === id || hullDescendants(Object.values(scene.nodes), id).some((inner) => inner.id === hull));
+  if (!node || within || (hull !== undefined && !(holder && isHullNode(holder)))) {
     return undefined;
   }
-  const z = beside ? (restackZ(scene, id, beside.target, beside.position) ?? node.z) : topZ(Object.values(scene.nodes));
+  const all = Object.values(scene.nodes);
+  // A hull stays under what it holds: over the hull it goes into where a key fits between that one and its own
+  // shapes, else where it was, which is already under them.
+  const [lowest] = sortByZ(hullDescendants(all, id));
+  const under = holder ? (keyBetween(holder.z, lowest?.z) ?? node.z) : node.z;
+  const z = beside
+    ? (restackZ(scene, id, beside.target, beside.position) ?? node.z)
+    : isHullNode(node)
+      ? under
+      : topZ(all);
   const { parent: _parent, ...rest } = node;
   const moved: Node = { ...rest, z, ...(hull !== undefined ? { parent: hull } : {}) };
   return { ...scene, nodes: { ...scene.nodes, [id]: moved } };

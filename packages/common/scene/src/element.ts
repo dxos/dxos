@@ -431,6 +431,9 @@ export type PolylineNode = Schema.Schema.Type<typeof PolylineNode>;
 export const HULL_SHAPES = ['perimeter', 'box'] as const;
 export type HullShape = (typeof HULL_SHAPES)[number];
 
+/** The border a hull that names none takes, and so the one a new hull is made with. */
+export const DEFAULT_HULL_SHAPE: HullShape = 'box';
+
 /**
  * A border drawn round the nodes that name it as their `parent`: a hull's group as the 2D editor draws it, opened out
  * (see `parent`). Its frame and `points` (the border, in the frame's unit space as a polyline's are) follow those
@@ -441,7 +444,7 @@ export const HullNode = Schema.Struct({
   type: Schema.Literal('hull'),
   ...nodeBase,
   ...boxFields,
-  /** Unset, `perimeter`. */
+  /** Unset, `DEFAULT_HULL_SHAPE`. */
   shape: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
   /**
    * How far inside its line the border is drawn, in cells of the drawing's grid: on a lattice the line is the centre
@@ -584,8 +587,8 @@ export const rebindEndpoint = <E extends Endpoint | ElementEndpoint>(end: E, map
   'node' in end && end.node !== undefined ? { ...end, node: map(end.node) } : end;
 
 /** What is drawn at a link end. */
-/** An end marker: a filled `arrow`, a `circle`, or a hollow `triangle` (inheritance). */
-export const Marker = Schema.Literals(['arrow', 'circle', 'triangle']);
+/** An end marker: a filled `arrow`, a `circle`, a hollow `triangle` (inheritance), or `many` (a crow's foot). */
+export const Marker = Schema.Literals(['arrow', 'circle', 'triangle', 'many']);
 export type Marker = Schema.Schema.Type<typeof Marker>;
 
 /** Markers at the source (`start`) and target (`end`) of a link. */

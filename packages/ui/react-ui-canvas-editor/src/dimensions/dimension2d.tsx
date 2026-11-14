@@ -22,6 +22,7 @@ import {
   Canvas,
   type CanvasAtoms,
   type CanvasController,
+  CanvasLinkEndMenu,
   type CanvasRootProps,
   type CanvasServices,
   type Capabilities,
@@ -30,6 +31,7 @@ import {
   type GeneratorSource,
   type KeyAction,
   type Kinds,
+  type MenuLinkEnd,
   type NodeRegistry,
   SceneLayer,
   type ViewPlace,
@@ -68,6 +70,7 @@ import {
   type DimensionInspector,
   type EditorNavigation,
   type EngineEdit,
+  type MenuAnchor,
   drawnGrid,
   keep,
   useSceneLook,
@@ -174,6 +177,9 @@ export type Dimension2DOptions = {
 const PICTURE_MARGIN = 0.25;
 
 const NO_PATH: readonly string[] = [];
+
+/** The context menu's section for what was pressed: a link end's marker, set by the engine the link is drawn by. */
+const MenuLead = ({ anchor }: { anchor: MenuAnchor }) => (anchor.end ? <CanvasLinkEndMenu {...anchor.end} /> : null);
 
 const useStoredDocument = (document: Scene.SceneDocument) => document;
 
@@ -446,7 +452,8 @@ export const createDimension2D =
     };
     // The engine restores only the camera it opened with; a picture opens fitted, under its own zoom bar.
     const initialCamera = registry.get(atoms.picture) ? undefined : registry.get(camera.host);
-    const onContextMenu = (at: { x: number; y: number }, kind: 'element' | 'canvas') => setMenu({ at, kind });
+    const onContextMenu = (at: { x: number; y: number }, kind: 'element' | 'canvas', end?: MenuLinkEnd) =>
+      setMenu({ at, kind, ...(end ? { end } : {}) });
 
     /** Binds the engine's controller to the editor's commands while the root is mounted. */
     const Bind = () => {
@@ -546,7 +553,6 @@ export const createDimension2D =
         atoms: { tool },
         commands: {
           setTool: (next) => registry.set(tool, next),
-          create: (kind) => registry.get(services)?.document.create(kind),
         },
       },
       Root,
@@ -555,6 +561,7 @@ export const createDimension2D =
       commands,
       edits,
       inspector,
+      MenuLead,
       aids: {
         snap: canvas.snap,
         guides: canvas.guides,

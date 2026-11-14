@@ -95,13 +95,18 @@ test.describe('create sizing', () => {
     expect(moved === 0 || moved > cell / 2).toBe(true);
   });
 
-  test('a toolbar create is the default size in scene units whatever the zoom', async () => {
-    const createFromToolbar = async () => {
-      await page.getByTestId('toolbar-create').click();
-      await page.getByRole('menuitem').first().click();
+  test('a node dragged from the palette is the default size in scene units whatever the zoom', async () => {
+    const dragFromPalette = async () => {
+      const view = await scene.box(scene.root);
+      const entry = await scene.box(page.getByTestId('canvas.tool.node:rect'));
+      await page.mouse.move(entry.x + entry.width / 2, entry.y + entry.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(entry.x + 40, entry.y + 40, { steps: 4 });
+      await page.mouse.move(view.x + view.width * 0.5, view.y + view.height * 0.6, { steps: 10 });
+      await page.mouse.up();
     };
     const widthAt = async (): Promise<number> => {
-      const id = await added(createFromToolbar);
+      const id = await added(dragFromPalette);
       expect(id).toBeDefined();
       return (await scene.box(scene.node(id!))).width;
     };

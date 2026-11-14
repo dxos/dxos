@@ -385,6 +385,7 @@ const CanvasEngine = ({
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onEndContextMenu,
     onVertexPointerDown,
     onVertexMidpointPointerDown,
     onBendPointerDown,
@@ -514,7 +515,7 @@ const CanvasEngine = ({
   // pointer; the view's menu never shows.
   useLayoutEffect(() => {
     if (menu && onHostContextMenu) {
-      onHostContextMenu(menu.at, menu.kind === 'canvas' ? 'canvas' : 'element');
+      onHostContextMenu(menu.at, menu.kind === 'canvas' ? 'canvas' : 'element', menu.end);
       closeMenu();
     }
   }, [menu, onHostContextMenu, closeMenu]);
@@ -622,6 +623,7 @@ const CanvasEngine = ({
               onPointPointerDown={onPointPointerDown}
               onMidpointPointerDown={onMidpointPointerDown}
               onPointContextMenu={onPointContextMenu}
+              onEndContextMenu={onEndContextMenu}
               onVertexPointerDown={onVertexPointerDown}
               onVertexMidpointPointerDown={onVertexMidpointPointerDown}
               onBendPointerDown={onBendPointerDown}

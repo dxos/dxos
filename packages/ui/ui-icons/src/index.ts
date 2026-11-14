@@ -17,17 +17,26 @@
  * painting and not).
  */
 export const PxIcons = {
-  'circle': 'px--circle--regular', // Reference icon
+  // Reference icon.
+  'circle': 'px--circle--regular',
 
-  // Logos
-  'anthropic': 'px--anthropic--regular',
-  'deepseek': 'px--deepseek--regular',
+  // Misc.
+  'context-panel': 'px--context-panel--regular',
 
-  // Icons
+  // Estimate.
   'bar-high': 'px--bar-high--regular',
   'bar-low': 'px--bar-low--regular',
   'bar-medium': 'px--bar-medium--regular',
-  'context-panel': 'px--context-panel--regular',
+
+  // Line ends.
+  'line-arrow': 'px--line-arrow--regular',
+  'line-circle': 'px--line-circle--regular',
+  'line-many': 'px--line-many--regular',
+  'line-triangle': 'px--line-triangle--regular',
+
+  // Vendor logos.
+  'anthropic': 'px--anthropic--regular',
+  'deepseek': 'px--deepseek--regular',
 } as const;
 
 export type PxIconName = keyof typeof PxIcons;

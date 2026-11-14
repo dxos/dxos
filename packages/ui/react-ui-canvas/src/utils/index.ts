@@ -35,6 +35,7 @@ export * from './resize.ts';
 export * from './route.ts';
 export * from './views.ts';
 export * from './shapes.ts';
+export * from './solid-outline.ts';
 export * from './scene-menu.ts';
 export * from './style.ts';
 export * from './surfaces.ts';

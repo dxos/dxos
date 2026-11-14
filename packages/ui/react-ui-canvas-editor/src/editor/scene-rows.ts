@@ -74,28 +74,67 @@ const isHull = (element: Scene.Element): boolean => {
 /** A selected element as its layout resolves it, and the layout that stores it. */
 export type SelectedElement = { element: ReturnType<typeof resolveLayout>[string]; layout: string };
 
+/** The layout a holder's parts are, where it has any the walk has not been through. */
+const partsOf = (
+  doc: Scene.SceneDocument,
+  layout: Scene.LayoutRecord,
+  holder: Scene.Element,
+  seen: ReadonlySet<string>,
+): Scene.LayoutRecord | undefined => {
+  const parts = resolveLayout(doc, layout)[holder.id]?.parts;
+  return parts === undefined || seen.has(parts) ? undefined : findLayout(doc, parts);
+};
+
+/** The groups of the hulls a layout places, and of the hulls inside those: every list whose shapes it draws as its own. */
+const hullGroups = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord): Scene.LayoutRecord[] => {
+  const seen = new Set([layout.id]);
+  const groups: Scene.LayoutRecord[] = [];
+  for (const queue = [layout]; queue.length > 0;) {
+    const current = queue.shift();
+    for (const holder of current ? Object.values(current.elements).filter(isHull) : []) {
+      const group = current && partsOf(doc, current, holder, seen);
+      if (group) {
+        seen.add(group.id);
+        groups.push(group);
+        queue.push(group);
+      }
+    }
+  }
+  return groups;
+};
+
 /**
  * The element `id` selected in `layout`, and the layout it is stored in: `layout` itself, or the parts of something it
  * places. A hull's shapes are drawn and selected in the scene but stored with its group, and so is a part of an Object
- * edited in place, which is stored in the Object's definition. A hull is looked in first: its shapes' ids are the
- * scene's own, where two Objects may each have a part of one name.
+ * edited in place, which is stored in the Object's definition. Every hull is looked in first, through the hulls inside
+ * it, and only then any Object: a hull's shapes' ids are the scene's own, where two Objects may each have a part of
+ * one name.
  */
 export const selectedElement = (
   doc: Scene.SceneDocument,
   layout: Scene.LayoutRecord,
   id: string,
 ): SelectedElement | undefined => {
-  const resolved = resolveLayout(doc, layout);
+  const found = (stored: Scene.LayoutRecord): SelectedElement | undefined => {
+    const element = stored.elements[id] && resolveLayout(doc, stored)[id];
+    return element ? { element, layout: stored.id } : undefined;
+  };
   if (layout.elements[id]) {
-    return resolved[id] && { element: resolved[id], layout: layout.id };
+    return found(layout);
   }
-  const holders = Object.values(layout.elements);
-  for (const holder of [...holders.filter(isHull), ...holders.filter((element) => !isHull(element))]) {
-    const parts = resolved[holder.id]?.parts;
-    const group = parts === undefined ? undefined : findLayout(doc, parts);
-    const element = group?.elements[id] && resolveLayout(doc, group)[id];
-    if (group && element) {
-      return { element, layout: group.id };
+  const groups = hullGroups(doc, layout);
+  const inHull = groups.flatMap((group) => found(group) ?? [])[0];
+  if (inHull) {
+    return inHull;
+  }
+  const drawn = new Set([layout.id, ...groups.map((group) => group.id)]);
+  for (const scope of [layout, ...groups]) {
+    for (const holder of Object.values(scope.elements).filter((element) => !isHull(element))) {
+      const definition = partsOf(doc, scope, holder, drawn);
+      const part = definition && found(definition);
+      if (part) {
+        return part;
+      }
     }
   }
   return undefined;

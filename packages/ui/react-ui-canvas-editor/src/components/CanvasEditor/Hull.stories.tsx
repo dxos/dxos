@@ -9,8 +9,8 @@
 // take and what a lattice adds to them: there the border runs along the gutters, and each link keeps to the side of
 // it its two ends are on.
 //
-// 1. Pick the Hull tool (B) and drag a frame round some shapes, or select them and run Enclose: a hull is drawn
-//    round them.
+// 1. Pick the Hull tool (B) and drag a frame round some shapes, or select them and press Hull in the actions bar:
+//    a hull is drawn round them. A hull among them goes in whole, so hulls nest.
 // 2. Select a hull and change Hull in Properties between Perimeter and Box, or restyle it as any shape.
 // 3. Move a shape inside a hull: the border follows it. Drag the hull: its shapes go with it. On the lattice the
 //    links re-route as they land.
@@ -21,6 +21,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import {
   DEFAULT_LATTICE,
@@ -202,4 +203,50 @@ export const Lattice: Story = {
 /** On the lattice the box takes the free cell in the corner of the L too, so Edge's link to Agent goes round it. */
 export const LatticeBox: Story = {
   args: { shape: 'box', lattice: true },
+};
+
+/**
+ * 1. Select all (Storage, its three shapes and the three outside it), then Hull in the actions bar: a second hull is
+ *    drawn round everything.
+ * 2. Open Views: Storage is a row inside the new hull, and Space, Queue and Index are still rows inside Storage.
+ */
+export const NestedTest: Story = {
+  args: { shape: 'box', lattice: false },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    const node = (id: string) => view.querySelector(`[data-node-id="${id}"]`);
+    await waitFor(() => expect(node(HULL)).not.toBeNull());
+
+    view.focus();
+    await userEvent.keyboard('{Meta>}a{/Meta}');
+    const command = await canvas.findByTestId('scene-action-hull');
+    await expect(command).toHaveAccessibleName('Hull');
+    await waitFor(() => expect(command).toBeEnabled());
+    await userEvent.click(command);
+    await waitFor(() => expect(node('hull-1')).not.toBeNull());
+    // Both hulls are drawn, and every shape with them.
+    await expect(node(HULL)).not.toBeNull();
+    for (const { id } of SHAPES) {
+      await expect(node(id)).not.toBeNull();
+    }
+
+    const row = (id: string) => canvasElement.querySelector<HTMLElement>(`[data-testid="views-row-${id}"]`);
+    const open = async (id: string) => {
+      const toggle = row(id)?.querySelector('svg');
+      await expect(toggle).toBeDefined();
+      toggle && (await userEvent.click(toggle));
+    };
+    await userEvent.click(await canvas.findByRole('button', { name: 'Views' }));
+    await waitFor(() => expect(row('hull-1')).not.toBeNull());
+    await open('hull-1');
+    await waitFor(() => expect(row(`hull-1/${HULL}`)).not.toBeNull());
+    await expect(row('hull-1/client')).not.toBeNull();
+    // Storage's own shapes are not the outer hull's rows: they are still Storage's.
+    await expect(row('hull-1/space')).toBeNull();
+    await open(`hull-1/${HULL}`);
+    await waitFor(() => expect(row(`hull-1/${HULL}/space`)).not.toBeNull());
+    await expect(row(`hull-1/${HULL}/queue`)).not.toBeNull();
+    await expect(row(`hull-1/${HULL}/index`)).not.toBeNull();
+  },
 };

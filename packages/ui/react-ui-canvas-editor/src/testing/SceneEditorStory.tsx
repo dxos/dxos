@@ -48,7 +48,11 @@ const isLayoutRecord = Schema.is(Schema.Union([Scene.LayoutRecord2D, Scene.Layou
 const isDocument = (value: unknown): value is Scene.SceneDocument =>
   typeof value === 'object' && value !== null && 'layouts' in value && Array.isArray(value.layouts);
 
-/** Applies `intent` to layout `key`, making the layout (empty, in the scene's dimension) when it is new. */
+/**
+ * Applies `intent` to layout `key`, making the layout when it is new: empty, in the scene's dimension, and on the
+ * document's model of that dimension, as the app's own host makes one, so an Object placed in it (a hull's group
+ * inside another's) is found there.
+ */
 const applyLayout = (
   document: Scene.SceneDocument,
   key: string,
@@ -56,7 +60,13 @@ const applyLayout = (
   intent: LayoutIntent,
 ): Scene.SceneDocument => {
   const existing = document.layouts.find((layout) => layout.id === key);
-  const layout: Scene.LayoutRecord = existing ?? { id: key, dim, elements: {} };
+  const model = document.models.find((candidate) => candidate.dim === dim)?.id;
+  const layout: Scene.LayoutRecord = existing ?? {
+    id: key,
+    dim,
+    ...(model !== undefined ? { model } : {}),
+    elements: {},
+  };
   const next = applyIntent(layout, intent);
   return next === existing
     ? document

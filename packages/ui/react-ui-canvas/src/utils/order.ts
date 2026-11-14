@@ -74,6 +74,21 @@ export const topZ = (elements: readonly MaybeOrdered[]): string => {
   return max.endsWith('0') ? `${max}1` : between(max === '' ? undefined : max, undefined);
 };
 
+/** Whether `between` can take `key` as an end: a stored key may be empty or end in a zero, which it cannot split. */
+const splits = (key: string): boolean => key !== '' && !key.endsWith('0');
+
+/**
+ * A key strictly between two stored keys (`undefined` is the open end on that side), or undefined where none fits: a
+ * stored key may be empty, end in a zero, or tie with its neighbour, none of which `between` can split. The caller
+ * then renumbers the stack, since any key made up beside such a one may land on the wrong side of the other.
+ */
+export const keyBetween = (below?: string, above?: string): string | undefined =>
+  (below === undefined || splits(below)) &&
+  (above === undefined || splits(above)) &&
+  (below === undefined || above === undefined || below < above)
+    ? between(below, above)
+    : undefined;
+
 /**
  * A key above every element of a view, nodes and links alike: one order paints them, so a new element of either kind
  * goes above both.

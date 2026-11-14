@@ -54,6 +54,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onEndContextMenu,
     onVertexPointerDown,
     onVertexMidpointPointerDown,
     onBendPointerDown,
@@ -158,6 +159,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           onPointPointerDown={onPointPointerDown}
           onMidpointPointerDown={onMidpointPointerDown}
           onPointContextMenu={onPointContextMenu}
+          onEndContextMenu={onEndContextMenu}
           vertexEditing={editing?.kind === 'vertices' ? editing : undefined}
           onVertexPointerDown={onVertexPointerDown}
           onVertexMidpointPointerDown={onVertexMidpointPointerDown}

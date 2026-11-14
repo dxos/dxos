@@ -43,10 +43,14 @@ import {
   EXTENSIONS_GROUP,
   HULL_STYLE,
   NOMINAL_SIZES,
+  PATH_FOLD,
+  SolidNode,
   cloudPath,
   createNode,
+  isSolidNode,
   polygonPath,
   polylinePath,
+  solidPath,
 } from '../../utils/index.ts';
 import { CARD_TEMPLATE } from './card-template.ts';
 import { CardNode, CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
@@ -149,10 +153,10 @@ const strokeTool: NodeDefSpec = {
   schema: PolylineNode,
   component: PolylineNodeView,
   create: (props) => createNode({ type: 'polyline', ...props }),
-  createFromPoints: (props, points) => ({
+  createFromPoints: (props, points, closed) => ({
     ...createNode({ type: 'polyline', ...props }),
     points: [...points],
-    params: { smooth: true },
+    params: { smooth: true, ...(closed ? { closed } : {}) },
   }),
   defaultSize: NOMINAL_SIZES.polyline,
 };
@@ -220,6 +224,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     name: 'Polyline',
     icon: 'ph--line-segments--regular',
     key: 'Y',
+    fold: PATH_FOLD,
     schema: PolylineNode,
     component: PolylineNodeView,
     create: (props) => createNode({ type: 'polyline', ...props }),
@@ -253,6 +258,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     name: 'Spline',
     icon: 'ph--bezier-curve--regular',
     key: 'U',
+    fold: PATH_FOLD,
     createFromPoints: (props, points, closed) => ({
       ...createNode({ type: 'polyline', ...props }),
       points: [...points],
@@ -278,7 +284,8 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     freehand: 'shape',
     fold: DRAW_FOLD,
   },
-  // Dragged out round the shapes it is to hold, which it takes as it lands; Enclose makes one round a selection.
+  // Dragged out round the shapes it is to hold, which it takes as it lands; the Hull command makes one of a
+  // selection, by the same operation (`encloseIn`).
   hull: {
     name: 'Hull',
     icon: 'ph--bounding-box--regular',
@@ -362,6 +369,23 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     palette: false,
     bare: true,
   },
+  // Shapes joined into one, or one cut from another: made from a selection (Join, Subtract), never drawn, and it
+  // stands for the shapes it is made of, which are hidden while it does.
+  solid: {
+    name: 'Solid',
+    icon: 'ph--unite--regular',
+    schema: SolidNode,
+    component: PolygonNodeView,
+    create: (props) => ({ type: 'solid', ...props }),
+    defaultSize: NOMINAL_SIZES.rect,
+    silhouette: (node, inset) => solidPath(node.size, isSolidNode(node) ? node.rings : undefined, inset),
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    // What is left of a cut may be a sliver.
+    minSize: { width: 3, height: 3 },
+    palette: false,
+  },
   card: {
     extends: 'object',
     name: 'Card',
@@ -415,14 +439,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
 export const defaultNodeRegistry: NodeRegistry = createNodeRegistry(defaultNodeTypes, defaultNodePrototypes);
 
 /**
- * The link variants, in the order the palette and the Properties panel list them, the default (elbow) first. A link's
- * stored `type` is the variant: `elbow` leaves each port along its normal and joins with one corner, `straight` runs
- * between the ends as they are, and `orthogonal` turns at right angles.
+ * The link variants, in the order the palette and the Properties panel list them, the default (Orthogonal) first. A
+ * link's stored `type` is the variant: `ortho` leaves each port along its normal and turns at right angles, `smart`
+ * (named Elbow) leaves each port along its normal and joins the two with one segment, and `line` (named Straight)
+ * runs between the ends as they are.
  */
 export const defaultLinkRegistry: LinkRegistry = {
+  ortho: { type: 'ortho', name: 'Orthogonal', icon: 'ph--arrow-elbow-right-up--regular', key: 'H' },
   smart: { type: 'smart', name: 'Elbow', icon: 'ph--flow-arrow--regular', key: 'O' },
   line: { type: 'line', name: 'Straight', icon: 'ph--line-segment--regular', key: 'L' },
-  ortho: { type: 'ortho', name: 'Orthogonal', icon: 'ph--arrow-elbow-right-up--regular', key: 'H' },
   curve: { type: 'curve', name: 'Curve', icon: 'ph--bezier-curve--regular', key: 'K' },
   spline: { type: 'spline', name: 'Spline', icon: 'ph--wave-sine--regular', key: 'P' },
 };

@@ -8,6 +8,8 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import {
   type Bounds,
   type ElementId,
+  type LinkId,
+  type Marker,
   type Node,
   type NodeId,
   type Point,
@@ -66,9 +68,10 @@ import {
   ungroupInstance,
   unionBounds,
   updateElement,
+  withEndMarker,
   zoomAt,
 } from '../utils/index.ts';
-import { type CanvasAtoms, type HistoryEntry } from './atoms.ts';
+import { type CanvasAtoms, type HistoryEntry, type LinkEnd } from './atoms.ts';
 import { type DrawState, drawStateVersions } from './draw-state.ts';
 import { type DrawScene, readonlyCapabilities } from './draw.ts';
 import { type CanvasHistory, createCommitter } from './history.ts';
@@ -217,6 +220,11 @@ export type DocumentEditCommands = {
    */
   /** Copies `ids` one step aside; without a `delta`, by the drawn major cell, as the duplicate shortcut does. */
   duplicate: (ids: Iterable<ElementId>, delta?: Point) => boolean;
+  /**
+   * Sets the marker a link of the open View draws at one end (none where `marker` is undefined), as one edit, and
+   * remembers the link's markers for the next link drawn; false when the link is not there or cannot be changed.
+   */
+  setEndMarker: (link: LinkId, end: LinkEnd, marker: Marker | undefined) => boolean;
 };
 
 /** Text editing and the clipboard (DESIGN.md §13.1, the Editing aspect). */
@@ -802,6 +810,16 @@ export const createCanvasController = ({
         Object.keys(records).length > 0 ? { ...views, ...records } : views,
       );
       select(copy.ids);
+      return true;
+    },
+    setEndMarker: (id, end, marker) => {
+      const link = currentScene().links[id];
+      if (!link || link.locked || !capabilities().update) {
+        return false;
+      }
+      const ends = withEndMarker(link.ends, end, marker);
+      draw().apply(updateElement(id, { ends: ends.start || ends.end ? ends : undefined }));
+      registry.set(atoms.linkEnds, ends);
       return true;
     },
   };

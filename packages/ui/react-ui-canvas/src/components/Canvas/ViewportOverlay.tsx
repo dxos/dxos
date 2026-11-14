@@ -20,6 +20,7 @@ import {
   useCanvasSelection,
   useCanvasServices,
 } from './CanvasContext.ts';
+import { CanvasLinkEndMenu } from './CanvasLinkEndMenu.tsx';
 
 /** How far a duplicate lands from what it copies, as Cmd+D does: one major grid step. */
 const DUPLICATE_STEP = { x: MAJOR_GRID, y: MAJOR_GRID };
@@ -112,6 +113,7 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
           }
         }}
         onClose={closeMenu}
+        lead={menu?.end && <CanvasLinkEndMenu {...menu.end} />}
         extra={
           <>
             {menu?.kind === 'point' && (

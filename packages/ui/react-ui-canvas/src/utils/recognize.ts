@@ -28,8 +28,11 @@ export type RecognizedShape = {
 /** A stroke shorter than this many samples says too little to read. */
 const MIN_POINTS = 8;
 
-/** How far from its start a stroke may end and still count as closed, as a share of its bounds' diagonal. */
+/** How far from its start a stroke read as a shape or as segments may end and still be closed, as a share of its bounds' diagonal. */
 const CLOSURE = 0.25;
+
+/** The same share for a stroke kept as drawn, which is tighter: nothing is redrawn to hide a side the hand did not draw. */
+const LINE_CLOSURE = 0.12;
 
 /** How far off a shape's outline a stroke may lie on average and still be that shape, as a share of the diagonal. */
 const TOLERANCE = 0.045;
@@ -142,6 +145,19 @@ const candidates = ({ x, y, width, height }: Bounds): (Omit<RecognizedShape, 'bo
 };
 
 /**
+ * Whether a stroke through `points` ends where it began: within `share` of its bounds' diagonal, so the gap a hand
+ * leaves closes a large stroke and a small one alike, where a fixed distance would close only one of them.
+ */
+export const strokeCloses = (points: readonly Point[], share = LINE_CLOSURE): boolean => {
+  if (points.length < 3) {
+    return false;
+  }
+  const bounds = boundsOf(points);
+  const diagonal = Math.hypot(bounds.width, bounds.height);
+  return diagonal > 0 && distance(points[0], points[points.length - 1]) <= share * diagonal;
+};
+
+/**
  * The shape a stroke through `points` draws, or none: a stroke left open, one too short or too small to read, and one
  * that lies near no shape's outline are all a line and nothing more. `minimum` is the smallest side worth a shape.
  */
@@ -159,7 +175,7 @@ export const recognizeShape = (
   if (bounds.width < minimum || bounds.height < minimum || diagonal === 0) {
     return undefined;
   }
-  if (distance(points[0], points[points.length - 1]) > CLOSURE * diagonal) {
+  if (!strokeCloses(points, CLOSURE)) {
     return undefined;
   }
   const scored = candidates(bounds)
@@ -514,7 +530,7 @@ export const readStroke = (
   if (diagonal === 0 || diagonal < minimum) {
     return undefined;
   }
-  const closed = distance(points[0], points[points.length - 1]) <= CLOSURE * diagonal;
+  const closed = strokeCloses(points, CLOSURE);
   const pauses = strokePauses(points, times);
   if (closed && pauses.length === 0) {
     const shape = recognizeShape(points, minimum);

@@ -12,6 +12,9 @@
 // triangle or a diamond becomes that shape, squared up on the grid, and any other stroke lands as the line it is.
 // The `Shapes` variant is an empty board to try it on.
 //
+// The `Solids` variant has shapes that overlap, to Join into one or Subtract one from another: the commands 3D has,
+// which here make an outline rather than a mesh.
+//
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
@@ -22,7 +25,7 @@ import { FullEditor, SceneEditorStory } from '@dxos/react-ui-canvas-editor/testi
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { type NoteNode, type Point, type PolylineNode, type Scene } from '@dxos/scene';
+import { type Node, type NoteNode, type Point, type PolylineNode, type Scene } from '@dxos/scene';
 
 const SIZE = { width: 288, height: 144 };
 
@@ -81,9 +84,46 @@ const HINT: NoteNode = {
 
 const SHAPES: RenderList2D = { id: 'board', name: 'Board', links: {}, nodes: { [HINT.id]: HINT } };
 
-const DOCUMENTS: Record<'lines' | 'shapes', Scene.SceneDocument> = {
+const shape = (
+  id: string,
+  type: 'rect' | 'ellipse',
+  z: string,
+  [x, y]: [number, number],
+  [width, height]: [number, number],
+  label?: string,
+): Node & { label?: string } => ({
+  type,
+  id,
+  z,
+  center: { x, y },
+  size: { width, height },
+  ...(label ? { label } : {}),
+});
+
+/** Shapes that overlap: a pair to join, and a plate with two shapes over it, one inside and one on its edge, to cut from it. */
+const SOLIDS: RenderList2D = {
+  id: 'board',
+  name: 'Board',
+  links: {},
+  nodes: Object.fromEntries(
+    [
+      {
+        ...HINT,
+        text: 'Select the box and the disc, then Join.\n\nSelect the plate, then the hole and the notch with Shift, then Subtract: every other shape is cut from the first selected.\n\nDelete either to get its shapes back.',
+      },
+      shape('box', 'rect', 'b0', [-264, 36], [192, 144]),
+      shape('disc', 'ellipse', 'b1', [-168, 108], [144, 144]),
+      shape('plate', 'rect', 'b2', [192, 72], [240, 192]),
+      shape('hole', 'ellipse', 'b3', [192, 72], [96, 96]),
+      shape('notch', 'rect', 'b4', [312, 72], [96, 48]),
+    ].map((node) => [node.id, node]),
+  ),
+};
+
+const DOCUMENTS: Record<'lines' | 'shapes' | 'solids', Scene.SceneDocument> = {
   lines: fromRenderLists2D([BOARD], { root: 'board' }),
   shapes: fromRenderLists2D([SHAPES], { root: 'board' }),
+  solids: fromRenderLists2D([SOLIDS], { root: 'board' }),
 };
 
 type StoryArgs = { board: keyof typeof DOCUMENTS };
@@ -110,6 +150,9 @@ export const Default: Story = {};
 
 /** An empty board to draw shapes on with Sketch (W). */
 export const Shapes: Story = { args: { board: 'shapes' } };
+
+/** Shapes that overlap, to Join and Subtract. */
+export const Solids: Story = { args: { board: 'solids' } };
 
 type Path = readonly (readonly [number, number])[];
 
@@ -220,13 +263,15 @@ const commands = (path: string) => ({
  * 1. The Draw tools share one button in the tools panel, straight after Polyline.
  * 2. Press S, then press, drag and release on the canvas: the stroke is drawn as it goes and lands as one line.
  * 3. The line is a curve, with far fewer points than the pointer passed, and none of it is cut off by its frame.
- * 4. The tool is still in hand: a second stroke needs no key.
+ * 4. The stroke ended near where it began, for its size, so the line is closed.
+ * 5. The tool is still in hand: a second stroke needs no key.
+ * 6. Draw three sides of a box: it ends far from where it began, so the line is left open.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const { view, stroke } = await pointer(canvasElement);
 
-    // Draw and Draw shape share one button in the tools panel, which stands straight after Polyline.
+    // Draw and Draw shape share one button in the tools panel, which stands straight after Polyline's and Spline's.
     const fold = await within(canvasElement).findByTestId('palette-group-Draw');
     const polyline = canvasElement.querySelector('[data-testid="canvas.tool.node:polyline"]');
     await expect(
@@ -245,6 +290,7 @@ export const Test: Story = {
     const spans = path.match(/C /g)?.length ?? 0;
     await expect(spans).toBeGreaterThan(2);
     await expect(spans).toBeLessThan(first.length / 2);
+    await expect(path.endsWith('Z')).toBe(true);
     // Every coordinate of the curve, its handles included, is inside the line's own frame. The path is in the line's
     // own px, as its frame's style is; on screen both are scaled by the zoom.
     const [width, height] = [Number.parseFloat(line.style.width), Number.parseFloat(line.style.height)];
@@ -257,6 +303,17 @@ export const Test: Story = {
 
     await stroke(box(-60, 110));
     await waitFor(() => expect(drawn(canvasElement, 'freehand')).toHaveLength(2));
+
+    await stroke(
+      through([
+        [140, 210],
+        [140, 110],
+        [300, 110],
+        [300, 210],
+      ]),
+    );
+    await waitFor(() => expect(drawn(canvasElement, 'freehand')).toHaveLength(3));
+    await expect(pathOf(drawn(canvasElement, 'freehand')[2]).endsWith('Z')).toBe(false);
   },
 };
 
@@ -422,5 +479,73 @@ export const SplineTest: Story = {
     await waitFor(() => expect(pathOf(drawn(canvasElement, 'spline')[0])).not.toBe(before));
     await expect(pathOf(drawn(canvasElement, 'spline')[0]).match(/C /g)).toHaveLength(3);
     await expect(canvas.getAllByTestId('bend-handle')).toHaveLength(6);
+  },
+};
+
+/** A node of the canvas by its id, as drawn. */
+const nodeOf = (root: HTMLElement, id: string) =>
+  root.querySelector<HTMLElement>(`[data-testid="scene-view"] [data-node-id="${id}"]`);
+
+/** A press and release on the middle of a node, as a click selects it; with `shift`, it adds to the selection. */
+const pick = async (root: HTMLElement, id: string, shift = false) => {
+  const node = nodeOf(root, id);
+  await expect(node).not.toBeNull();
+  const frame = node?.getBoundingClientRect();
+  const at = {
+    clientX: (frame?.left ?? 0) + (frame?.width ?? 0) / 2,
+    clientY: (frame?.top ?? 0) + (frame?.height ?? 0) / 2,
+    button: 0,
+    pointerId: 1,
+    shiftKey: shift,
+  };
+  node && (await fireEvent.pointerDown(node, at));
+  node && (await fireEvent.pointerUp(node, at));
+};
+
+/**
+ * 1. Select the box, then the disc with Shift. Join: one shape stands where the two did, with one outline.
+ * 2. Select the plate, then the hole and the notch with Shift. Subtract: both are cut from the plate.
+ * 3. With the cut plate selected, Delete: the plate, the hole and the notch are back.
+ */
+export const SolidsTest: Story = {
+  args: { board: 'solids' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    await waitFor(() => expect(nodeOf(canvasElement, 'box')).not.toBeNull());
+
+    await pick(canvasElement, 'box');
+    await pick(canvasElement, 'disc', true);
+    const join = await canvas.findByTestId('scene-action-join');
+    await waitFor(() => expect(join).toBeEnabled());
+    await userEvent.click(join);
+    await waitFor(() => expect(drawn(canvasElement, 'union')).toHaveLength(1));
+    await expect(nodeOf(canvasElement, 'box')).toBeNull();
+    await expect(nodeOf(canvasElement, 'disc')).toBeNull();
+    // One outline, of the box's corners and the disc's curve.
+    const joined = pathOf(drawn(canvasElement, 'union')[0]);
+    await expect(joined.match(/M /g)).toHaveLength(1);
+    await expect(joined.match(/L /g)?.length ?? 0).toBeGreaterThan(40);
+
+    await pick(canvasElement, 'plate');
+    await pick(canvasElement, 'hole', true);
+    await pick(canvasElement, 'notch', true);
+    const subtract = await canvas.findByTestId('scene-action-subtract');
+    await waitFor(() => expect(subtract).toBeEnabled());
+    await userEvent.click(subtract);
+    await waitFor(() => expect(drawn(canvasElement, 'difference')).toHaveLength(1));
+    // Two outlines: the hole's, and the plate's edge, which the notch bites eight corners into where it had four.
+    await expect(pathOf(drawn(canvasElement, 'difference')[0]).match(/M /g)).toHaveLength(2);
+    const cut = pathOf(drawn(canvasElement, 'difference')[0]).split('M ').filter(Boolean);
+    await expect(cut.map((ring) => ring.match(/L /g)?.length ?? 0).sort((left, right) => left - right)[0]).toBe(7);
+    await expect(nodeOf(canvasElement, 'hole')).toBeNull();
+    await expect(nodeOf(canvasElement, 'notch')).toBeNull();
+
+    await userEvent.click(await canvas.findByTestId('scene-action-delete'));
+    await waitFor(() => expect(drawn(canvasElement, 'difference')).toHaveLength(0));
+    await expect(nodeOf(canvasElement, 'plate')).not.toBeNull();
+    await expect(nodeOf(canvasElement, 'hole')).not.toBeNull();
+    await expect(nodeOf(canvasElement, 'notch')).not.toBeNull();
+    await expect(drawn(canvasElement, 'union')).toHaveLength(1);
   },
 };

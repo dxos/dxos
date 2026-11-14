@@ -395,10 +395,92 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] **A line keeps its colour** (user, 2026-11-12): a type edited by its vertices (`editor: 'vertices'`) is not
       drawn in the selection's colour while selected or edited (`SceneLayer`); a hover on one not selected still
       tints it.
+- [x] **A stroke kept as drawn closes** (user, 2026-11-13): a freehand line, and a Sketch stroke read as nothing,
+      lands closed where its ends are within 12% of its bounds' diagonal (`strokeCloses`, `LINE_CLOSURE`); before,
+      only a stroke read as a shape or as segments could close (25%, `CLOSURE`). `Draw.stories.tsx` Test.
+- [x] **Join and Subtract in 2D** (user, 2026-11-13): the commands 3D has (`SOLID_COMMANDS`, one definition for
+      both editors) write the same `join` / `subtract` intents, and a 2D layout now takes them: a `solid` element
+      over its operands, which are hidden while it stands and drawn again when it is deleted. The model frames it by
+      its operands' boxes (`solidBounds2D`); the 2D viewport works out its outline as it reads the layout
+      (`withSolidOutlines`, `solidRings`, js-clipper) and never stores it (`DERIVED_NODE_FIELDS`). A solid may be an
+      operand of another. `flattenPath` reads arcs. `Draw.stories.tsx` Solids, Solids Test.
+- [ ] **2D solids, open**: an operand's rounded corners are cut square; an open line joined adds nothing and is
+      hidden with the rest; a solid's operands cannot be edited
+      without deleting it; hit testing and ports use the solid's frame, not its outline; no `.dx` statement writes
+      a 2D solid; a solid copied to another layout has no operands there and draws as its frame.
+- [x] **No create button in the actions bar** (user, 2026-11-13): the bar's `+` menu ("Create in the middle of the
+      view") and `EditorTools.commands.create` are gone, in both dimensions; a shape is made with its tool or dragged
+      from the tools panel. The e2e specs draw their nodes (`scene.spec.ts`, `create.spec.ts`).
+- [x] **Hull: one name, one operation** (user, 2026-11-13: "we should not have two ways to do the same thing"): the
+      actions bar's Enclose is `Hull` (`scene-action-hull`), the Hull tool's name and icon, and the tool's landing
+      (`insertNode`) and the command (`enclose`) both make the hull with `encloseIn`.
+- [x] **Hulls nest** (user, 2026-11-13, bug: enclosing H1 and C emptied H1): a hull among the nodes enclosed goes
+      in whole, with what it holds (`encloseUnits`); nodes of one hull are enclosed inside it, and nodes of different
+      hulls leave theirs. Stored, the inner hull's group is a part of the outer's (`collapseHulls` innermost first,
+      `expandHulls` until none is left), a link into the inner hull keeps its way in (`PORT_PATH`), a hull moves with
+      everything inside it (`hullDescendants`), a hull row may be dropped into a hull in Views (`viewMove`,
+      `moveToHull`), a shape in an inner hull is found in that hull's group (`selectedElement`), and deleting an
+      inner hull leaves its shapes in the outer (`deleteElements`).
+      `Hull.stories.tsx` Nested Test. The story host now makes a new layout on the document's model, as the app's does.
+- [x] **A hull is a Box by default** (user, 2026-11-13): a hull that names no border is a box
+      (`DEFAULT_HULL_SHAPE`), so the Hull tool and command make one; a hull stored as `perimeter` stays one.
+- [x] **Subtract takes several** (user, 2026-11-13: "(A-B)-C"): with more than two selected the first is the base
+      and every other is cut from it, in 2D and 3D: the `subtract` intent's optional `tools` are further operands of
+      the one `difference` solid. `Draw.stories.tsx` Solids Test cuts a hole and a notch from the plate.
 - [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Sketch`; the registry keys
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)
       carries no drag payload (`ToolDef.drawn`, `toolDragData2D`, `ToolsPanel`).
+- [x] **Orthogonal links leave by their ports** (user, 2026-11-13): an `ortho` link between two ports leaves each
+      along its side's normal by a stub (half a major cell, or half the gap where the shapes stand closer), then takes
+      the fewest right-angled bends that cross neither shape (`orthoRoute`, a search over the lines of the two
+      frames' clearances and the gap between them). An end on no port, and shapes that overlap, keep the one-corner
+      rule. Story `Links` draws twelve cases (facing, corner, same side, facing away) in any variant.
+- [x] **Orthogonal is the default link** (user, 2026-11-13): it leads `defaultLinkRegistry` (the tools rail's link
+      fold, the Variant list) and is the type a port drag draws until a link tool is picked (`atoms.linkType`). A
+      stored link naming no type still reads as `smart` (`DEFAULT_LINK_TYPE`), as do graph-mode and generated links,
+      which take a lattice's gutters.
+- [x] **A menu press on a link's end leaves it attached** (user, 2026-11-13): opening the context menu ends the
+      gesture its press began without applying it (`openMenu`; a control-click is button 0, so it started an end
+      drag), an end drag that never moved is not a drop (`endDrop`, `moved`), and an end's menu is its link's
+      (`onEndContextMenu`), not the node's under it. Story `Links` › End Menu Test.
+- [x] **A link end's menu offers its marker** (user, 2026-11-13): a right-click on a link's end opens the link's
+      menu led by a radio group for that end (None, Arrow, Circle, Triangle), in the canvas's own menu and the
+      editor's (`MenuLinkEnd`, `CanvasLinkEndMenu`, `Dimension.MenuLead`), written by
+      `controller.document.setEndMarker`. Story `Links` › End Marker Test.
+- [x] **A new link takes the markers last set** (user, 2026-11-13): set from the end's menu or in Properties, they
+      are kept per canvas (`atoms.linkEnds`) and given to the next link drawn (`drawnLinkEnds`); cleared markers
+      count, so the next link then has none even between directed ports. Only the markers are kept, not the style.
+- [x] **A link's end is what is drawn there, not only its handle** (user, 2026-11-13): the end's menu opened
+      only for a press on the 5 px handle, which a link shows once selected; a press on the arrowhead got the
+      link's plain menu, and on an unselected link's end the shape's port took it. The pointer machine now
+      resolves the end by position (`linkEndAt`): within 20 px of it along the link, or 8 px off the link.
+      Story `Links` › End Press Test.
+- [x] **Icons for the link ends** (user, 2026-11-13): `px--line-arrow--regular` (Phosphor's `arrow-right`, as
+      strokes), `px--line-triangle--regular` and `px--line-circle--regular` in `@dxos/ui-icons`, one shaft with the
+      head each marker draws. The end's menu and the Properties marker field show them beside each choice
+      (`MARKER_ITEMS`), with Phosphor's `minus` for None. They all point right, for a Start end too.
+- [x] **Bar rules run edge to edge** (user, 2026-11-13): the separators of the horizontal floating bars (camera,
+      actions, display) are the bar's full height with the palette's 4 px either side (`FLOATING_BAR_RULE`), where
+      a toolbar's own rule is half a control tall. The primitive is unchanged.
+- [x] **A `many` end, a crow's foot** (user, 2026-11-13): `Marker` gains `many`; drawn as two toes beside the line,
+      which runs on to the connection point (`markerFrame`, `markerTrim` 0, `MANY_SPREAD`), and as a chevron
+      opening onto the end in a groove. Icon `px--line-many--regular`; listed in the end's menu and Properties.
+      The plugin reads a diagram's `crowsfoot` as `many` and writes it back at a target. 2D only, as every end is.
+- [x] **The actions bar's groups** (user, 2026-11-13): Cut, Copy, Paste, Duplicate, Delete | Group, Ungroup, Hull,
+      Make object | Join, Subtract | the dimension's others (2D: auto layout, debug) | Undo, Redo
+      (`ACTION_GROUPS`). A group's ids are named, so a dimension's command (Hull) can sit among the shared ones.
+- [x] **The palette's lines together** (user, 2026-11-13): the link fold sits above Polyline, after the closed
+      shapes (`toolGroups` puts the links ahead of the first tool with `createFromPoints` or `freehand`), and
+      Polyline and Spline share one flyout (`PATH_FOLD`). Create group: Rectangle, Ellipse, Polygon, Cloud, Link
+      fold, Path fold, Draw fold, Text, Icon.
+- [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
+      Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
+- [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the
+      shape, and the part of it, under the pointer, ahead of the commands every element has. First case: a right
+      click on the end of a line offers that end's marker (arrow, circle, triangle, none). Others to decide as it is
+      designed: a vertex (delete, corner or smooth), a segment (add a vertex, bend or straighten), a hull (Perimeter
+      or Box), a solid (its operands back).
 - [ ] **Drawing DSL data binding** (user, 2026-11-12): a `.dx` drawing names a data file (a JSON object) or holds
       a JSON object of its own, and a custom shape binds its fields to that data by JSONPath; e.g. the Graph shape
       draws the graph the data describes. Not designed yet: where the data is declared, how a bind is written

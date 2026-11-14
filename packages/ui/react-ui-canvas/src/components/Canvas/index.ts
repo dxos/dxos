@@ -3,6 +3,7 @@
 //
 
 export * from './Canvas.tsx';
+export * from './CanvasLinkEndMenu.tsx';
 export * from './CanvasRoot.tsx';
 export * from './CanvasRootProps.ts';
 export * from './CanvasViewport.tsx';

@@ -9,10 +9,12 @@
 // for the Instance: a part is then selected, moved and linked like any other node, a link from outside ends at the
 // part rather than at the group's frame, and every part is on the scene's own lattice. `expandHulls` opens the groups
 // of the lists read from a document and `collapseHulls` closes them again before a change is written, so what is
-// stored is always the group.
+// stored is always the group. A hull inside a hull is a group among another group's parts, and is opened and closed
+// with it.
 //
 
 import {
+  DEFAULT_HULL_SHAPE,
   type Endpoint,
   HULL_SHAPES,
   type HullNode,
@@ -30,6 +32,7 @@ import {
 import { type RenderList2D, type RenderLists2D } from '../model/index.ts';
 import { compositeBounds, instancePorts } from './compose.ts';
 import { unionBounds } from './hit.ts';
+import { hullDepth } from './hull.ts';
 import { between, sortByZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
@@ -62,6 +65,12 @@ const shared = (node: Node) => ({
   ...(node.layer !== undefined ? { layer: node.layer } : {}),
   ...(node.locked !== undefined ? { locked: node.locked } : {}),
 });
+
+/**
+ * Joins the hull a link's end is inside to what the end names there, in the port a group offers for it: a link into
+ * a hull inside a hull ends at the outer group on a port that names the way in.
+ */
+const PORT_PATH = '::';
 
 const moved = (point: Point, by: Point): Point => ({ x: point.x + by.x, y: point.y + by.y });
 
@@ -102,14 +111,25 @@ const expandGroup = (scene: RenderList2D, instance: PlacedComposite, shape: Hull
     size: instance.size,
     shape,
     group: instance.composite,
+    ...(instance.parent !== undefined ? { parent: instance.parent } : {}),
     ...(insetOf(instance) !== undefined ? { inset: insetOf(instance) } : {}),
     ...shared(instance),
   };
-  // A link from outside ended at the group, on the port named by the part it was drawn to: it ends at the part again.
-  const onPart = (end: Endpoint): Endpoint =>
-    'node' in end && end.node === instance.id && end.port !== undefined && composite.nodes[end.port] !== undefined
-      ? { node: end.port }
+  // A link from outside ended at the group, on the port named by the part it was drawn to: it ends at the part again,
+  // or at the hull inside that the port leads into, on the rest of the way.
+  const onPart = (end: Endpoint): Endpoint => {
+    if (!('node' in end) || end.node !== instance.id || end.port === undefined) {
+      return end;
+    }
+    if (composite.nodes[end.port] !== undefined) {
+      return { node: end.port };
+    }
+    const at = end.port.indexOf(PORT_PATH);
+    const inner = at > 0 ? end.port.slice(0, at) : undefined;
+    return inner !== undefined && composite.nodes[inner] !== undefined
+      ? { node: inner, port: end.port.slice(at + PORT_PATH.length) }
       : end;
+  };
   const outer = Object.values(scene.links).map((link): Link => {
     const [source, target] = [onPart(link.source), onPart(link.target)];
     return source === link.source && target === link.target ? link : { ...link, source, target };
@@ -126,10 +146,10 @@ const expandGroup = (scene: RenderList2D, instance: PlacedComposite, shape: Hull
 };
 
 /**
- * The lists with every hull's group opened out in the scene that places it, and the group's own list left out. A
- * group is left closed (and so drawn as any other Instance) where opening it would not be the same drawing: one
- * placed more than once, one placed inside another Object, or one whose parts share an id with the scene around it.
- * Lists with no hull come back as they are.
+ * The lists with every hull's group opened out in the scene that places it, and the group's own list left out; a
+ * hull's group among the parts opened is opened in turn. A group is left closed (and so drawn as any other
+ * Instance) where opening it would not be the same drawing: one placed more than once, one placed inside an Object
+ * that is no hull, or one whose parts share an id with the scene around it. Lists with no hull come back as they are.
  */
 export const expandHulls = (lists: RenderLists2D): RenderLists2D => {
   const placements = new Map<string, number>();
@@ -145,20 +165,26 @@ export const expandHulls = (lists: RenderLists2D): RenderLists2D => {
       continue;
     }
     let scene = list;
-    for (const node of Object.values(list.nodes)) {
-      const shape = groupHull(node);
-      const composite = isInstanceNode(node) ? lists[node.composite] : undefined;
-      if (!shape || !isInstanceNode(node) || !composite || placements.get(node.composite) !== 1) {
-        continue;
+    // Until none is left to open: opening a group puts the hulls inside it into the scene, each a group to open.
+    for (;;) {
+      const current = scene;
+      const open = Object.values(current.nodes).flatMap((node) => {
+        const shape = groupHull(node);
+        const composite = isInstanceNode(node) ? lists[node.composite] : undefined;
+        if (!shape || !isInstanceNode(node) || !composite || placements.get(node.composite) !== 1) {
+          return [];
+        }
+        const clashes = [...Object.keys(composite.nodes), ...Object.keys(composite.links)].some(
+          (id) => current.nodes[id] !== undefined || current.links[id] !== undefined,
+        );
+        return clashes ? [] : [{ node, shape, composite }];
+      });
+      const [first] = open;
+      if (!first) {
+        break;
       }
-      const clashes = [...Object.keys(composite.nodes), ...Object.keys(composite.links)].some(
-        (id) => scene.nodes[id] !== undefined || scene.links[id] !== undefined,
-      );
-      if (clashes) {
-        continue;
-      }
-      scene = expandGroup(scene, node, shape, composite);
-      delete next[composite.id];
+      scene = expandGroup(current, first.node, first.shape, first.composite);
+      delete next[first.composite.id];
       changed = true;
     }
     next[list.id] = scene;
@@ -223,13 +249,20 @@ const collapseGroup = (
     // The frame is the parts' own box, so they are drawn where they stand.
     fit: 'none',
     ports: instancePorts(bounds, composite),
-    hull: hull.shape ?? 'perimeter',
+    // Still inside the hull that holds it, whose own group it is then a part of.
+    ...(hull.parent !== undefined ? { parent: hull.parent } : {}),
+    hull: hull.shape ?? DEFAULT_HULL_SHAPE,
     ...(insetOf(hull) !== undefined ? { hullInset: insetOf(hull) } : {}),
     ...shared(hull),
   };
   const onGroup = (end: Endpoint): Endpoint => {
     const node = endpointNode(end);
-    return node !== undefined && inside.has(node) ? { node: hull.id, port: node } : end;
+    if (node === undefined || !inside.has(node)) {
+      return end;
+    }
+    // An end on a hull inside names a part of that hull, which the port keeps so the link finds it again.
+    const within = 'node' in end && end.port !== undefined && groupHull(scene.nodes[node]) !== undefined;
+    return { node: hull.id, port: within ? `${node}${PORT_PATH}${end.port}` : node };
   };
   const nodes = Object.fromEntries(
     Object.values(scene.nodes)
@@ -250,24 +283,32 @@ const collapseGroup = (
 /**
  * The lists with every hull closed into its group: the nodes naming it as their `parent`, and the links among them,
  * move into the group's own list about their centre, one Instance takes the hull's place over their box, and a link
- * that crosses the border ends at the Instance on the port named by the part. A hull with nothing inside it has no
- * group and stays a `hull` node; a node naming a hull that is not there names nothing. Lists with no hull come back
- * as they are.
+ * that crosses the border ends at the Instance on the port named by the part. Innermost first, so a hull inside a
+ * hull is its group's Instance by the time the outer one is closed, and a part of it like any other. A hull with
+ * nothing inside it has no group and stays a `hull` node; a node naming a hull that is not there names nothing.
+ * Lists with no hull come back as they are.
  */
 export const collapseHulls = (lists: RenderLists2D): RenderLists2D => {
   const next: Record<string, RenderList2D> = { ...lists };
   let changed = false;
   for (const list of Object.values(lists)) {
     let scene = list;
-    for (const hull of Object.values(list.nodes).filter(isHullNode)) {
-      const members = Object.values(scene.nodes).filter((node) => node.parent === hull.id && !isHullNode(node));
+    const innermost = Object.values(list.nodes)
+      .filter(isHullNode)
+      .sort((left, right) => hullDepth(list.nodes, right) - hullDepth(list.nodes, left));
+    for (const hull of innermost) {
+      // A hull that named a hull inside it as its own holder has already gone into that one's group.
+      if (scene.nodes[hull.id] === undefined) {
+        continue;
+      }
+      const members = Object.values(scene.nodes).filter((node) => node.parent === hull.id && node.id !== hull.id);
       const collapsed = members.length > 0 ? collapseGroup(scene, hull, members) : undefined;
       if (collapsed) {
         scene = collapsed.scene;
         next[collapsed.composite.id] = collapsed.composite;
       }
     }
-    // What is left naming a parent names a hull that has gone, or is a hull, which stands inside nothing.
+    // What is left naming a parent names a hull that has gone.
     if (Object.values(scene.nodes).some((node) => node.parent !== undefined)) {
       scene = {
         ...scene,

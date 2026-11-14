@@ -184,6 +184,7 @@ export type CanvasGesture = {
     | 'onPointPointerDown'
     | 'onMidpointPointerDown'
     | 'onPointContextMenu'
+    | 'onEndContextMenu'
     | 'onVertexPointerDown'
     | 'onVertexMidpointPointerDown'
     | 'onBendPointerDown'

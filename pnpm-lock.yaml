@@ -24721,6 +24721,9 @@ importers:
       d3:
         specifier: 'catalog:'
         version: 7.9.0
+      js-clipper:
+        specifier: 'catalog:'
+        version: 1.0.1(patch_hash=6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f)
       manifold-3d:
         specifier: 'catalog:'
         version: 3.4.1(esbuild-wasm@0.28.0)

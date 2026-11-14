@@ -22,8 +22,9 @@ import {
 } from '@dxos/scene';
 
 import { type LinkValues, type NodeValues, type RenderList2D } from '../model/index.ts';
+import { encloseIn, hullDescendants, insertInStack } from './hull.ts';
 import { layoutView } from './layout.ts';
-import { between, sortByZ } from './order.ts';
+import { sortByZ } from './order.ts';
 import { nodeBounds, resizeNode } from './shapes.ts';
 
 /** A change to the open scene; the same scene back when there is nothing to change. */
@@ -43,15 +44,12 @@ export const moveNodes =
   (ids: readonly NodeId[], delta: Point): SceneEdit =>
   (scene) => {
     const nodes = { ...scene.nodes };
-    const hulls = new Set(ids.filter((id) => scene.nodes[id] !== undefined && isHullNode(scene.nodes[id])));
-    const inside =
-      hulls.size === 0
-        ? []
-        : Object.values(scene.nodes).flatMap((node) =>
-            node.parent !== undefined && hulls.has(node.parent) && !ids.includes(node.id) ? [node.id] : [],
-          );
+    const hulls = ids.filter((id) => scene.nodes[id] !== undefined && isHullNode(scene.nodes[id]));
+    // Through every hull inside it: what a hull holds is all of it, however deep.
+    const all = Object.values(scene.nodes);
+    const inside = hulls.flatMap((hull) => hullDescendants(all, hull).map(({ id }) => id));
     let changed = false;
-    for (const id of [...ids, ...inside]) {
+    for (const id of new Set([...ids, ...inside])) {
       const node = nodes[id];
       if (node && !node.locked) {
         nodes[id] = { ...node, center: { x: node.center.x + delta.x, y: node.center.y + delta.y } };
@@ -85,7 +83,8 @@ export const insertLink =
 
 /**
  * Adds a node; an object's parts hold no view, as a view inside an object would be a place with no single path. A
- * hull takes the nodes its frame is drawn round: those wholly inside it that no hull holds yet.
+ * hull takes the nodes its frame is drawn round, those wholly inside it, as the Hull command takes a selection
+ * ({@link encloseIn}); round nothing, it stands empty where it was drawn.
  */
 export const insertNode =
   (node: Node): SceneEdit =>
@@ -106,21 +105,20 @@ export const insertNode =
         bounds.y + bounds.height <= frame.y + frame.height
       );
     };
-    const taken = Object.values(scene.nodes).filter(
-      (other) =>
-        other.parent === undefined && !other.locked && !isHullNode(other) && !isViewNode(other) && holds(other),
+    const taken = Object.values(scene.nodes).filter((other) => !other.locked && !isViewNode(other) && holds(other));
+    const held = encloseIn(
+      scene,
+      node,
+      taken.map(({ id }) => id),
     );
-    // Under everything, so a press on a node inside it reaches the node.
+    if (held) {
+      return held;
+    }
+    // Round nothing, it still goes under everything, so a press on a shape it overlaps reaches the shape.
     const [lowest] = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
-    const below = lowest === undefined || node.z < lowest.z ? node.z : between(undefined, lowest.z);
-    return {
-      ...scene,
-      nodes: {
-        ...scene.nodes,
-        ...Object.fromEntries(taken.map((other) => [other.id, { ...other, parent: node.id }])),
-        [node.id]: { ...node, z: below },
-      },
-    };
+    return lowest === undefined || node.z < lowest.z
+      ? { ...scene, nodes: { ...scene.nodes, [node.id]: node } }
+      : insertInStack(scene, node, 0);
   };
 
 /** Removes the nodes and links of `ids`, and every link that loses an end with them. */
@@ -128,7 +126,28 @@ export const deleteElements =
   (ids: readonly ElementId[]): SceneEdit =>
   (scene) => {
     const removed = new Set(ids);
-    const nodes = Object.fromEntries(Object.entries(scene.nodes).filter(([id]) => !removed.has(id)));
+    // What a deleted hull held is held by the hull that one stood in, if it stays: its shapes are where they were.
+    const holder = (parent: string | undefined): string | undefined => {
+      const seen = new Set<string>();
+      let current = parent;
+      while (current !== undefined && removed.has(current) && !seen.has(current)) {
+        seen.add(current);
+        current = scene.nodes[current]?.parent;
+      }
+      return current !== undefined && removed.has(current) ? undefined : current;
+    };
+    const nodes = Object.fromEntries(
+      Object.entries(scene.nodes)
+        .filter(([id]) => !removed.has(id))
+        .map(([id, node]): [string, Node] => {
+          if (node.parent === undefined || !removed.has(node.parent)) {
+            return [id, node];
+          }
+          const { parent: _parent, ...rest } = node;
+          const next = holder(node.parent);
+          return [id, next === undefined ? rest : { ...rest, parent: next }];
+        }),
+    );
     const links = Object.fromEntries(
       Object.entries(scene.links).filter(
         ([id, link]) =>

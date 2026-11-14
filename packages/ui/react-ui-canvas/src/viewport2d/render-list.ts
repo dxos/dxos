@@ -28,10 +28,21 @@ import {
   resolveLayout2D,
   rootScene,
   sceneLayout,
+  solidBounds2D,
+  solidOperands,
 } from '@dxos/scene';
 
 import { type RenderList2D } from '../model/index.ts';
-import { DEFAULT_LAYER, createNode, fitHulls, gridPitch, initialKeys } from '../utils/index.ts';
+import {
+  DEFAULT_LAYER,
+  DERIVED_NODE_FIELDS,
+  createNode,
+  fitHulls,
+  gridPitch,
+  initialKeys,
+  isSolidNode,
+  solidRings,
+} from '../utils/index.ts';
 
 /** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */
 /**
@@ -45,7 +56,7 @@ const DRAWN_KINDS: Readonly<Record<string, string>> = Object.fromEntries(
     .map((kind) => [kind, kind]),
 );
 
-const MARKERS = ['arrow', 'circle', 'triangle'] as const;
+const MARKERS = ['arrow', 'circle', 'triangle', 'many'] as const;
 
 /** A 2D style as react-ui-canvas's node style: the diagram-only values (sketchy, pattern, weight) have no node field. */
 const nodeStyle = (style: Style2D | undefined): NodeStyle | undefined => {
@@ -241,7 +252,8 @@ const canvasExtra = (fields: Fields, slots: readonly string[]): Fields => omit(f
 
 const nodeElement = (node: Node, objects: Map<string, Scene.Object2D>): Scene.Element2D => {
   const fields: Fields = { ...node };
-  const extra = canvasExtra(fields, NODE_SLOTS);
+  // What the list worked out as it was read (a solid's outline) is worked out again from what is stored.
+  const extra = canvasExtra(fields, [...NODE_SLOTS, ...DERIVED_NODE_FIELDS]);
   let placed: { object: string } | { type: string };
   // The node type and its scene or composite are kept too: a portal to a layout outside the drawing places an object
   // whose parts resolve to no layout, and must still read back as that portal.
@@ -434,6 +446,73 @@ export const toRenderList2D = (doc: Scene.SceneDocument, layout: Scene.LayoutRec
     gridPitch(layout),
   );
 
+/** A node of a layout by its element's id, hidden or not, as it would draw. */
+type OperandLookup = (id: string) => Node | undefined;
+
+/**
+ * The nodes a layout's elements draw as, each read once and only when asked for. A solid's operands are hidden while
+ * it stands for them, so they are in no list: they are read here, to frame the solid and to work out its outline.
+ */
+const operandNodes = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): OperandLookup => {
+  let resolved: Record<string, Resolved2D> | undefined;
+  const read = new Map<string, Node | undefined>();
+  const lookup: OperandLookup = (id) => {
+    if (!read.has(id)) {
+      // Set before it is read, so a solid named among its own operands finds nothing rather than itself.
+      read.set(id, undefined);
+      resolved ??= resolveLayout2D(doc, layout);
+      const element = resolved[id];
+      const stored = element?.props?.canvas;
+      read.set(
+        id,
+        element === undefined
+          ? undefined
+          : isRecord(stored)
+            ? canvasNode(doc, { ...element, overrides: layout.elements[id]?.overrides }, stored)
+            : toNode(doc, framedSolid(element, lookup), element.z ?? initialKeys(1)[0], DEFAULT_LAYER.id),
+      );
+    }
+    return read.get(id);
+  };
+  return lookup;
+};
+
+/**
+ * A solid the model made with no frame, framed: an operand that takes its size from the object it places cannot be
+ * measured from the layout alone, so its solid is framed here, by the box the model would have used
+ * (`solidBounds2D`) over the operands as they resolve. Any other element as it is.
+ */
+const framedSolid = (element: Resolved2D, lookup: OperandLookup): Resolved2D => {
+  if (element.type !== 'solid' || (element.center && element.size)) {
+    return element;
+  }
+  const bounds = solidBounds2D(element.props?.op, solidOperands(element.props?.operands).map(lookup));
+  return bounds && bounds.width > 0 && bounds.height > 0
+    ? {
+        ...element,
+        center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },
+        size: { width: bounds.width, height: bounds.height },
+      }
+    : element;
+};
+
+/** The nodes with each solid's outline set: what its operands make, joined or cut. */
+const withSolidOutlines = (nodes: Record<string, Node>, lookup: OperandLookup): Record<string, Node> => {
+  const solids = Object.values(nodes).filter(isSolidNode);
+  if (solids.length === 0) {
+    return nodes;
+  }
+  return {
+    ...nodes,
+    ...Object.fromEntries(
+      solids.flatMap((solid) => {
+        const rings = solidRings(solid, lookup);
+        return rings ? [[solid.id, { ...solid, rings }]] : [];
+      }),
+    ),
+  };
+};
+
 /** An element's layer when its layout declares it; otherwise the default layer, which the list then declares. */
 const layerOf = (layout: Scene.LayoutRecord2D, element: Resolved2D): string =>
   element.layer !== undefined && layout.layers?.[element.layer] !== undefined ? element.layer : DEFAULT_LAYER.id;
@@ -456,8 +535,9 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): Ren
     const node = canvasNode(doc, own(element), stored);
     node && (nodes[node.id] = node);
   }
+  const lookup = operandNodes(doc, layout);
   for (const element of native) {
-    const node = toNode(doc, element, keyOf(element), layerOf(layout, element));
+    const node = toNode(doc, framedSolid(element, lookup), keyOf(element), layerOf(layout, element));
     node && (nodes[node.id] = node);
   }
   for (const element of elements) {
@@ -482,7 +562,7 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): Ren
     ...(layout.anonymous !== undefined ? { anonymous: layout.anonymous } : {}),
     id: layout.id,
     ...(layout.name !== undefined ? { name: layout.name } : {}),
-    nodes,
+    nodes: withSolidOutlines(nodes, lookup),
     links,
   };
 };
@@ -491,8 +571,9 @@ const toView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderL
   const elements = Object.values(resolveLayout2D(doc, layout)).filter((element) => !element.hidden);
   const keys = initialKeys(elements.length);
   const nodes: Record<string, Node> = {};
+  const lookup = operandNodes(doc, layout);
   elements.forEach((element, index) => {
-    const node = toNode(doc, element, element.z ?? keys[index], DEFAULT_LAYER.id);
+    const node = toNode(doc, framedSolid(element, lookup), element.z ?? keys[index], DEFAULT_LAYER.id);
     node && (nodes[node.id] = node);
   });
   const links: Record<string, Link> = {};
@@ -500,7 +581,13 @@ const toView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderL
     const link = toLink(element, element.z ?? keys[index], DEFAULT_LAYER.id, nodes);
     link && (links[link.id] = link);
   });
-  return { id: layout.id, name: layout.name, nodes, links, layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } };
+  return {
+    id: layout.id,
+    name: layout.name,
+    nodes: withSolidOutlines(nodes, lookup),
+    links,
+    layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER },
+  };
 };
 
 /**

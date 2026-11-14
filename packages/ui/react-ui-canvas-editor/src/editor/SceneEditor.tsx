@@ -23,12 +23,12 @@ import {
   type ActiveTool,
   CREATE_GROUP,
   FLOATING_BAR,
+  FLOATING_BAR_RULE,
   SceneContextMenu,
   type ToolGroup,
   TOOLS_GROUP,
 } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
-import * as Menu from '@dxos/react-ui/Menu';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { findLayout } from '@dxos/scene';
@@ -61,7 +61,7 @@ import {
   useSceneTime,
   useSceneTools,
 } from './aspects/index.ts';
-import { type Command, MENU_ONLY_COMMANDS, SHARED_COMMANDS } from './commands.ts';
+import { ACTION_GROUPS, type Command, MENU_ONLY_COMMANDS } from './commands.ts';
 import { type DimensionConfig, type LibraryItem, type ToolCategory, type ToolDef } from './config.ts';
 import { SceneEditorInspector } from './sections.tsx';
 import { keySelection, placementFields } from './timeline.ts';
@@ -392,51 +392,37 @@ const LibraryTool = ({ items, prefix }: { items: readonly LibraryItem[]; prefix:
 };
 
 /**
- * The actions bar: the command table's commands, with the create menu and the dimension's own commands before undo;
- * locked, it hides, as every one edits the scene but Copy.
+ * The actions bar: the command table's commands in their groups (`ACTION_GROUPS`), then the dimension's others, then
+ * undo and redo; locked, it hides, as every one edits the scene but Copy.
  */
 const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: { classNames?: string }) => {
-  const { config, atoms } = useSceneDocument('SceneEditor.Actions');
+  const { atoms } = useSceneDocument('SceneEditor.Actions');
   const readonly = useAtomValue(atoms.readonly);
   const table = useAtomValue(useSceneCommands('SceneEditor.Actions').atoms.table);
   if (readonly) {
     return null;
   }
-  const shared = new Set<string>(SHARED_COMMANDS);
   const history = (command: Command) => command.id === 'undo' || command.id === 'redo';
-  const creates = config.tools.flatMap((tool) =>
-    tool.category === 'create' && tool.kind !== undefined ? [{ id: tool.id, kind: tool.kind, label: tool.label }] : [],
-  );
-  const own = table.commands.filter((command) => !shared.has(command.id) && command.id !== 'import');
+  const named = new Set(ACTION_GROUPS.flat());
+  const commands = new Map(table.commands.map((command) => [command.id, command]));
   const groups = [
-    <Fragment key='shared'>
-      {table.commands
-        .filter((command) => shared.has(command.id) && !history(command) && !MENU_ONLY_COMMANDS.has(command.id))
-        .map((command) => (
-          <CommandButton key={command.id} command={command} />
-        ))}
-    </Fragment>,
-    creates.length > 0 || own.length > 0 ? (
-      <Fragment key='own'>
-        {creates.length > 0 && <CreateMenu kinds={creates} />}
-        {own.map((command) => (
-          <CommandButton key={command.id} command={command} />
-        ))}
-      </Fragment>
-    ) : null,
-    <Fragment key='history'>
-      {table.commands.filter(history).map((command) => (
-        <CommandButton key={command.id} command={command} />
-      ))}
-    </Fragment>,
-  ].filter((group) => group !== null);
+    ...ACTION_GROUPS.map((ids) => ids.map((id) => commands.get(id)).filter((command) => command !== undefined)),
+    // The dimension's commands no group names (2D: auto layout, debug).
+    table.commands.filter(
+      (command) =>
+        !named.has(command.id) && !history(command) && !MENU_ONLY_COMMANDS.has(command.id) && command.id !== 'import',
+    ),
+    table.commands.filter(history),
+  ].filter((group) => group.length > 0);
   return (
     <div className={mx('absolute w-max', classNames)}>
       <Toolbar.Root classNames={mx('w-full', FLOATING_BAR)} data-testid='scene-actions'>
         {groups.map((group, index) => (
           <Fragment key={index}>
-            {index > 0 && <Toolbar.Separator variant='line' />}
-            {group}
+            {index > 0 && <Toolbar.Separator variant='line' classNames={FLOATING_BAR_RULE} />}
+            {group.map((command) => (
+              <CommandButton key={command.id} command={command} />
+            ))}
           </Fragment>
         ))}
       </Toolbar.Root>
@@ -503,35 +489,6 @@ const useSelectionActions = (): ReactNode => {
           onClick={command.run}
         />
       ));
-};
-
-/** The config's create tools: one makes its element in the middle of the view, or picks its tool where it cannot. */
-const CreateMenu = ({ kinds }: { kinds: readonly { id: string; kind: string; label: string }[] }) => {
-  const { commands } = useSceneTools('SceneEditor.CreateMenu');
-  return (
-    <Menu.Root positioning={{ placement: 'top', gutter: 4 }}>
-      <Menu.Trigger asChild>
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--plus--regular'
-          label={commands.create ? 'Create in the middle of the view' : 'Create'}
-          data-testid='toolbar-create'
-        />
-      </Menu.Trigger>
-      {/* Portalled: inside the bar's flex flow the items would sit under the canvas. */}
-      <Menu.Content>
-        {kinds.map((tool) => (
-          <Menu.Item
-            key={tool.id}
-            data-testid={`create-${tool.kind}`}
-            item={{ value: tool.id, label: tool.label }}
-            onSelect={() => (commands.create ? commands.create(tool.kind) : commands.setTool({ id: tool.id }))}
-          />
-        ))}
-      </Menu.Content>
-    </Menu.Root>
-  );
 };
 
 SceneEditorActions.displayName = 'SceneEditor.Actions';
@@ -636,14 +593,19 @@ const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: 
 
 SceneEditorDisplay.displayName = 'SceneEditor.Display';
 
-/** The right-click menu: the command table's items over an element or empty space. */
+/**
+ * The right-click menu: the dimension's items for the part that was pressed, then the command table's items over an
+ * element or empty space.
+ */
 const SceneEditorContextMenu = () => {
   const { atoms, commands } = useSceneCommands('SceneEditor.ContextMenu');
+  const { MenuLead } = useSceneServices('SceneEditor.ContextMenu');
   const menu = useAtomValue(atoms.menu);
   const table = useAtomValue(atoms.table);
   return (
     <SceneContextMenu
       at={menu?.at}
+      lead={menu && MenuLead ? <MenuLead anchor={menu} /> : undefined}
       items={menu ? table.menuItems(menu.kind) : []}
       onCommand={(id) => table.get(id)?.run()}
       onClose={() => commands.setMenu(undefined)}

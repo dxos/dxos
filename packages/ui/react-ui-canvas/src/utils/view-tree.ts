@@ -318,16 +318,17 @@ const drawnIn = (item: ViewTreeItem): ViewId | undefined => item.scene ?? item.c
 /**
  * The move a drop of `from` on `to` asks for, where it changes which hull holds `from`: dropped on a hull it joins
  * it; dropped beside a row it takes that row's hull (or none) and its place in the drawing order. Undefined for a
- * drop that leaves it where it is (a restack, {@link viewReorder}), for a link, a View or a hull, which no hull
- * holds, and for rows of two drawings.
+ * drop that leaves it where it is (a restack, {@link viewReorder}), for a link or a View, which no hull holds, for a
+ * hull dropped on a row inside itself, and for rows of two drawings.
  */
 export const viewMove = (from: ViewTreeItem, to: ViewTreeItem, instruction: string): ViewMove | undefined => {
   const scene = drawnIn(from);
-  const movable = (from.kind === 'node' || from.kind === 'instance') && !from.hull && !from.readonly;
+  const movable = (from.kind === 'node' || from.kind === 'instance') && !from.readonly;
   if (!movable || from.element === undefined || to.element === undefined || scene === undefined) {
     return undefined;
   }
-  if (scene !== drawnIn(to) || to.readonly || from.element === to.element) {
+  // A row's id is the path of rows down to it, so a row inside `from` begins with it.
+  if (scene !== drawnIn(to) || to.readonly || from.element === to.element || to.id.startsWith(`${from.id}/`)) {
     return undefined;
   }
   if (instruction === 'make-child') {

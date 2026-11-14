@@ -5,19 +5,10 @@
 import * as Schema from 'effect/Schema';
 import React, { createContext, useContext } from 'react';
 
+import { MARKER_ITEMS, NO_MARKER } from '@dxos/react-ui-canvas';
 import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import { Marker } from '@dxos/scene';
-
-/** Unset: the link draws no marker at that end, stored as no value. */
-const NONE_VALUE = 'none';
-
-const MARKER_ITEMS = [
-  { value: NONE_VALUE, label: 'None' },
-  { value: 'arrow', label: 'Arrow' },
-  { value: 'circle', label: 'Circle' },
-  { value: 'triangle', label: 'Triangle' },
-];
 
 const isMarker = Schema.is(Marker);
 
@@ -44,8 +35,8 @@ export const MarkerField: FormFieldRenderer = ({ jsonPath, label, readonly }) =>
   return (
     <Form.Field path={jsonPath} label={label} labelEnd={flip} readonly={readonly}>
       <SelectControl
-        items={MARKER_ITEMS}
-        value={isMarker(value) ? value : NONE_VALUE}
+        items={[...MARKER_ITEMS]}
+        value={isMarker(value) ? value : NO_MARKER}
         readonly={readonly}
         onValueChange={(next) => {
           // A pick never blurs, so it commits itself.
