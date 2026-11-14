@@ -1,6 +1,6 @@
 {
   "name": "@dxos/stories-agent",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "Storybook stories for agents on Discord: installing the DXOS Discord app and routing channels to agents, end to end with local EDGE.",
   "homepage": "https://dxos.org",

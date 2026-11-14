@@ -1,5 +1,118 @@
 # @dxos/client
 
+## 0.17.0
+
+### Minor Changes
+
+- d338edb: Calls and live transcription now run on Cloudflare RealtimeKit through EDGE's authenticated RealtimeKit proxy (`CallsServiceClient` in `@dxos/client/calls`): a room shares one meeting agreed over the swarm, and transcription outside a call streams through a one-person meeting instead of Whisper. Both join through one RealtimeKit session seam, `connectRealtimeKit` in `@dxos/av`. Breaking: the `/transcribe` endpoint, `EdgeServiceName.Transcription`, the Whisper `Transcriber` class and `MediaStreamRecorder` are removed (`Transcriber` is now an interface built by `createRealtimeKitTranscriber`); `MediaTransport`, `CallManager`'s constructor and the swarm `Tracks` message are reshaped, the `CallsCapabilities.EventHandler` capability is gone in favour of `CallManager` events, and clients need dxos/edge#1387 deployed before calls or transcription connect.
+- 782ee41: Add `ClientOptions.bootCache`: the client opens from the identity, spaces and working set its last session persisted to IndexedDB instead of waiting for its services, which bring it current once reachable; edits made before then stay pending until the services take them. Databases gain `exportWorkingSet` / `seedWorkingSet`, and `Client.waitUntilServicesOpen` resolves once the services are open.
+- d7dc2fc: `Client` names its two readiness signals: `initialized` / `waitUntilInitialized()` mean the client is ready to use, which a boot-cached client reaches from its cache, while the new `servicesReady` / `waitUntilServicesReady()` mean its services are open and answering, and reject when cached services fail to open or the client is destroyed first. Each marks a milestone (`client.ready`, `client.services-ready`). Breaking: `waitUntilServicesOpen()` is removed in favour of `waitUntilServicesReady()`.
+- 78e96da: Plugin bundles on EDGE now get what operation-service gives a handler. `PluginProtocol.InvocationScope` carries the request context (conversation, origin, caller, trace sink and pids, cancellation, test id seed), the services only EDGE holds (`services`, a `ServiceHost` stub with service descriptors) and other plugins' operations (`operations`, an `OperationHost` stub). The protocol is versioned: `PluginProtocol.PROTOCOL_VERSION` is 2, `isSupported` and `scopeFor` let EDGE speak each bundle's version, `Catalog.protocolVersion` records it, and the main module `PluginLoader.workerCode` generates answers `protocolVersion()` from the vendored host (1 for a host that predates versioning).
+
+  EDGE's plugin loader ships only the modules that run on workerd, leaving out browser-only bodies and the UI packages they vendor, and a plugin chunk that declares its own top-level `Map` (such as plugin-map's ECHO type) now loads instead of failing with "is not a constructor".
+
+  Agent operations declare the types they write but plugin-agent does not register, so they run on EDGE, where a plugin bundle registers only its own types; before this, `agent.create` on EDGE failed with `Schema not registered Schema: org.dxos.type.instructions`.
+
+  `dx` initializes the ECHO client only when a command first uses it, so a command that never uses it (such as `dx plugin list` or `dx registry publish --upload-only --edge-url <url>`) no longer waits for or fails with initialization. Breaking: `ClientService` now provides a handle rather than the client; resolve the client with `yield* ClientService.client`. `ClientService.layer` stays eager; the new `ClientService.layerLazy` initializes the client on first use. `ClientPlugin` gains `initializeOnUse`, which the CLI sets, and loses `awaitInitialization`.
+
+- 9471682: An identity can now be migrated off its HALO control feed onto an Automerge space root that EDGE mints, with `client.halo.migrateIdentityRoot()` or the new "Credential storage → Migrate" button in Composer's profile settings. Every other device of the identity adopts that same root the next time it opens, and HALO documents replicate through EDGE once the identity has a root. A migrated space, or identity, now keeps copying new credentials into its credentials document after a reload.
+- 97de470: A space can now be migrated off its hypercore control feed onto an Automerge space root that EDGE mints, with `space.internal.migrateSpaceRoot()` or the new "Credential storage → Migrate" button in Composer's space settings. Every other member adopts that same root the next time it opens the space, and `space.internal.data.spaceRootUrl` reports the root a device has adopted. `EdgeHttpClient` gains `migrateSpaceRoot` and `getSpaceRoot`.
+
+### Patch Changes
+
+- 04d5fb1: The agent debug port backs off to a 30s retry while no debug server is listening, so an idle port no longer floods the console with refused connections. The create-routine dialog keeps the dialog's surface and labels its Actions and Triggers groups like the other fields.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [a458aef]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [1ac444f]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [a245692]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [853af68]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [5ae589b]
+- Updated dependencies [392bed0]
+- Updated dependencies [c9c3867]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [f175a2d]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [3d06043]
+- Updated dependencies [b159f41]
+- Updated dependencies [ad3d5e0]
+- Updated dependencies [768db81]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+- Updated dependencies [9caabb2]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/network-manager@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/client-services@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/worker-framework@0.17.0
+  - @dxos/messaging@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/credentials@0.17.0
+  - @dxos/rpc@0.17.0
+  - @dxos/websocket-rpc@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/timeframe@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/rpc-tunnel@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,18 @@
 # @dxos/halo-react
 
+## 0.17.0
+
+### Minor Changes
+
+- 1a1012b: `@dxos/halo-react` adds `useContacts`, which returns everyone the local identity shares a ready space with, once each, with the spaces they share, and re-renders when a space is joined or left or its members change. The plugin inspector's Operations view passes a reference to the sample for a `Ref` input, leaves empty optional fields out, and shows the sample after an operation that returns nothing; its sample picker follows the sample's label as it is edited.
+
+### Patch Changes
+
+- Updated dependencies [3aef671]
+- Updated dependencies [768db81]
+  - @dxos/keys@0.17.0
+  - @dxos/halo@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

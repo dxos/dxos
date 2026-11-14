@@ -1,5 +1,32 @@
 # @dxos/pipeline-rdf
 
+## 0.17.0
+
+### Minor Changes
+
+- dd40958: Fact stores gain `FactStoreApi.rows(sparql)` for open-ended SPARQL SELECTs (`rows` and `select` refuse updates), a file-backed `FactStoreLive.layerFile`, and `FactStoreHttp` to serve a store over HTTP to pages on this machine; `generateSparql` writes full SPARQL from a question, newly minted predicates are named as written (`changed`, not `chang`), and `asked` / `has text` join the seed vocabulary. Discord crawls name each user by one `https://discord.com/users/<id>` IRI labelled from Discord, record detected questions as facts, take per-channel lookback settings, and retry channels that failed before; Brain's Query Facts and Summarize Subject find entities by name or by any absolute IRI and skip superseded or retracted facts. `Chat.Suggestions` shows premade prompts above the composer, and the entity browser, entity card and TriG snippet move from `@dxos/plugin-agent` to `@dxos/react-ui-rdf`.
+
+  Breaking: every `FactStoreApi` implementation must add `rows`, and `@dxos/plugin-agent/AgentKnowledge` no longer exports the moved components.
+
+### Patch Changes
+
+- Updated dependencies [498840b]
+- Updated dependencies [3aef671]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [c9c3867]
+- Updated dependencies [ad3d5e0]
+- Updated dependencies [768db81]
+  - @dxos/ai@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/sparql-sqlite@0.17.0
+  - @dxos/pipeline@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

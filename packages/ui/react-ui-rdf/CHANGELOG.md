@@ -1,5 +1,52 @@
 # @dxos/react-ui-rdf
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [cb058b9]
+- Updated dependencies [73ed632]
+- Updated dependencies [df16fba]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [dd40958]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [17a9e75]
+- Updated dependencies [09d8716]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [80818bc]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [c844016]
+- Updated dependencies [7da5d17]
+- Updated dependencies [4be51c3]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [7e07e49]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [a8e68c5]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [d00cc85]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [e67aa80]
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/pipeline-rdf@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/react-ui-graph@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/react-hooks@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

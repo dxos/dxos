@@ -1,5 +1,102 @@
 # @dxos/types
 
+## 0.17.0
+
+### Minor Changes
+
+- 7a8b279: Commenting on an object subscribes you to its comments, and each new comment reaches the other subscribers' messenger inbox. A bell in the Comments companion turns this off or back on for that object. Subscribers are stored on the object in the new `Subscription` annotation, read and written through the `Subscription` helpers in `@dxos/types`. Sending goes through `AppCapabilities.InboxSender` in `@dxos/app-toolkit`, which plugin-messenger contributes, so a plugin can notify people without depending on the messenger.
+- 59b9d5a: Features now live on specs instead of projects. A spec (`Spec.Spec` in `@dxos/plugin-projects`) is a feature map that the sidebar lists. A feature nests by owning one spec of its own, and a spec may name the project that tracks its tasks and hold one `SpecDocument` as its normative text. Breaking: `Spec` in `@dxos/types` is renamed `SpecDocument` (typename `org.dxos.type.specDocument`). `Feature` drops `project`, `parent` and `position`, and `FeatureOperation` inputs take a `spec` in place of a `project`. Migrations move existing data.
+- 2bba392: GitHub sync now binds each repository as a `Repo` and polls it every 3 minutes on EDGE: one conditional request when nothing changed, and one GraphQL batch for changed pull requests, which are stored as `PullRequest` objects (with repository, head commit, checks, review decision and closed issues) instead of Tasks. `PullRequest` gains the optional `repository`, `headSha`, `checks`, `reviewDecision` and `closes` fields. `SyncGitHubRepositories` now reports `{ bindings, notModified, requests, pulled, pushed }`.
+- 592fdad: The Hello Worker space template now starts from a partial plan for the assistant to finish. It seeds a `Spec` object holding a partly written `.mdl` spec (Deus), four planned features on the project's feature map that cite it, and three planning tasks: complete the spec, draw its architecture, and plan the implementation as tasks. A feature's spec row opens the spec in the space. The `Spec` type moves from plugin-code to `@dxos/types` so any plugin can create one; its typename (`org.dxos.type.spec`) is unchanged, so existing specs keep working.
+- 80818bc: A project's repositories are one ordered list, the `Repo.RepositoriesAnnotation` on the project, read with `Repo.getRepositories` and written with `Repo.setRepositories`. The first repository is the one bare issue numbers resolve against and the one a cloud coding agent starts in. plugin-code edits the list in the overview's Software group, above plugin-claude's code folder. A cloud session checks out the project's repositories in their order, then the repositories bound to the chat, each once. Agents edit the list with plugin-code's `CodeOperation.UpdateProjectRepositories` (tool `code-update-project-repositories`), the one tool of its new Project Repositories skill (`org.dxos.skill.code.repositories`).
+
+  The project overview puts the most-used parts first. The name and description are edited in place, with the status as a pill in the top right corner, and both line up with the section headings. `Project`'s status carries an option table (title, hue and icon), so the pill reads Active, Paused, Blocked or Ended in its colour. Then come Notes, Artifacts (six at most until Show all), Milestones (each with its tasks' progress, and a button that opens the Tasks tab filtered to that milestone) and Specs, then a Config section of folded groups, each with a summary of what it holds. The project's own Agent group holds the instructions, skills and context. Other plugins declare groups with `ProjectCapabilities.ConfigGroup`: each field is a schema plus a function from the project to a writable atom, and the overview's form renders and writes it with no UI of the plugin's own. plugin-code declares Software with the project's repositories, and plugin-claude adds the project's code folder on this device, which the desktop app can still choose with its folder picker. A config field's `order` sorts the fields of a group several plugins fill.
+
+  plugin-tasks' task list has a milestone filter beside its sort and grouping, kept per device with the rest of the list's view state. It keeps the tasks under the milestone, sub-tasks that inherit it included, with the ancestors of each.
+
+  react-ui-form's `FormPresentation` gains `title` and `plain`, which render a text field alone as a page's title or as body text, and `section`, which renders an array as a section of its own, its add button on the heading's row. A field override takes a `presentation` of its own in place of the form's `layout`. react-ui's Input has `title` and `plain` variants for it, and Textarea a `plain` one: no well and no inset, and a plain Textarea is as tall as its text. A form's sections leave a wider gap between each other than between their rows, and a form's array rows start on the form's edge. An array field whose label is hidden keeps the label as its list's accessible name, and a text field drawn with no label takes it as its control's. A field override also takes an `action` (`FormFieldAction`): a button at the end of a text control that sets the field's value from what its function returns.
+
+  Breaking:
+
+  - `Project` 0.8.0 drops `repo`, `repositories` and `session`. plugin-projects' migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. Migrated projects cannot be read by an older build.
+  - Delegating a task no longer seeds the chat's session config from its project, since `Project.session` is gone.
+  - `Project`'s schema no longer has a Repositories field. The overview shows the list, in its Software group, only while plugin-code is enabled, which enabling plugin-claude also does.
+  - A generic object update no longer reaches a project's repositories. The GitHub skill points an agent at the Project Repositories skill instead.
+  - `ProjectSurface.Settings` is gone. Declare a `ProjectCapabilities.ConfigGroup` instead.
+
+- aedf119: `Spec` moves to `@dxos/compute` (`@dxos/compute/Spec`, typename `org.dxos.type.projects.spec` 0.3.0) and holds its `.mdl` text as `content`, with the dialects it uses listed in `dialects`. A project owns any number of specs: `Project` 0.7.0 replaces `spec` with `specs`. The feature map moves from plugin-projects to plugin-code: the `Feature` type and its links, the canvas and board views, feature articles, companions and levels, the software package, the feature operations, task links, the feature templates and the feature and spec migrations. A spec's features and canvas layout are annotations on it. plugin-projects keeps projects, generic spec editing, extension packages and tasks, and gains the seams plugin-code fills: `ProjectCapabilities.SpecView`, the `ProjectSurface.SpecView`, `ProjectSurface.Level` and `ProjectSurface.LevelOverview` surface roles, and the `ProjectGraph`, `ProjectHooks`, `SpecCommands` and `LegacyProject` modules.
+
+  Breaking:
+
+  - `SpecDocument` is removed from `@dxos/types`. plugin-code's migrations fold each spec document into its spec, moving its text and file links, then delete it.
+  - `Project` 0.7.0 replaces `spec` with `specs`, and `Spec` 0.3.0 replaces `document`, `features` and `layout` with `content`, `dialects` and annotations. Migrated objects cannot be read by an older build.
+  - `@dxos/plugin-projects` no longer exports `Feature`, `FeatureEmbed`, `FeatureLink`, `FeatureMap`, `FeatureMapView`, `FeatureSpec`, `LegacyFeature`, `LegacyShowcase`, `LegacySpec`, `Showcase` or `SpecText`; import them from `@dxos/plugin-code/<Name>`. `FeatureOperation` is gone: its operations are in `@dxos/plugin-code/CodeOperation`, several renamed to name the feature (`Create` is `CreateFeature`, `ImportSpec` is `ImportSpecFeatures`). `FeatureSeed` and `FeatureEditingPlugin` move from `@dxos/plugin-projects/testing` to `@dxos/plugin-code/testing`.
+  - The feature operations are handled by `@dxos/plugin-code/CodeOperationHandlerSet`, not `ProjectOperationHandlerSet`; EDGE's operation-service must register it for feature operations to run there.
+  - Feature operation keys move from `org.dxos.operation.projects.*` to `org.dxos.operation.code.*` (`createFeature`, `updateFeature`, `deleteFeature`, `createSpec`, `updateSpec`, `addFeatureDependency`, `removeFeatureDependency`, `linkFeatureTask`, `createShowcase`, `getFeatures`, `importSpecFeatures`, `exportSpecFeatures`, `importFeatureLinks`), so their tool names change from `projects-*` to `code-*`. Skills saved with the old keys no longer name them.
+  - The project skill (`org.dxos.skill.project`) no longer declares the feature operations; the new Feature Map skill (`org.dxos.skill.code.featureMap`) does.
+  - Feature types, migrations, surfaces and operations are present only while plugin-code is enabled. plugin-code is not on by default in production or on mobile, so those users lose the feature map until they enable it.
+  - At the project's own level, Add spec on an empty Specs tab opens the object form instead of making a spec through a feature operation.
+  - Test ids: the Specs tab's view toggle is `projectsPlugin.specView.<id>` (was `projectsPlugin.featureMap.<mode>`), and the spec's text there is `projectsPlugin.spec.document` (was `feature-map.document`).
+  - The `scan-feature-links` task and the `FEATURE-LINKS` spec move to plugin-code; the spec's id is `org.dxos.plugin.code.featureLinks`.
+
+- ed0d367: `Repo` now also models repositories hosted by EDGE, marked by an `edge.dxos.network` foreign key (`Repo.EDGE_SOURCE`, `Repo.edgeId`, `Repo.makeEdge`), and `AiContext.boundObjects` reads the objects a conversation currently binds.
+- 8a66e4e: You can comment on the text of a Composer spec's features (name, description, each requirement) and on a project's name, description and notes, as well as on the whole object. A comment anchors to a span of one string field, written as an Automerge ref path such as `requirements/<key>/text/[a-b]` by the new `PathAnchor` helpers in `@dxos/types`. A plugin declares which objects a comments companion covers with `AppCapabilities.CommentScope`. `Form.Root` takes `object`, a live ECHO object: a field carrying the `CollaborativeAnnotation` (or `fieldOverrides.collaborative`) edits that object's string in place through Automerge, while other fields report through `onValuesChanged`. `Form.Root`'s `markdownExtensions` is now `extensions`, which also takes a function of the field's path, and a `MarkdownCapabilities.ExtensionProvider` receives the field as `binding`, which is how comment marks reach form fields. `Feature` 0.5.0 stores requirements by key, and the `featureRequirements` migration upgrades 0.4.0 features.
+- 841c4f7: A task now has a `delegate` beside its `assignee`: handing a task to an agent sets the delegate and leaves the person as assignee, who signs off a finished task from `review`. Breaking: `Task.reviewers` is removed, and `Task` moves to 0.7.0. `TaskMigration.migrations` converts a delegated task's agent assignee and reviewer to a delegate and an assignee. The task list follows Linear, with priority beside status, an assignee picker on every row, and an add-task form whose properties are pills.
+
+### Patch Changes
+
+- c9a38c1: Code mode records which operations each `eval` ran on its result (`ToolResult.invocations`: their keys, not their outputs), and `ensureReplySent` counts a channel send among them as the reply, so a reply sent from code is no longer followed by a reminder. Code mode's types section names a tagged union of more than four variants by its tags, and says to print an existing value to see a variant's fields.
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [392bed0]
+- Updated dependencies [c9c3867]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b159f41]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/random@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

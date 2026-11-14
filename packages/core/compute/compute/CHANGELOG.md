@@ -1,5 +1,117 @@
 # @dxos/compute
 
+## 0.17.0
+
+### Minor Changes
+
+- cb058b9: `AttentionGlyph` draws activity in four slots (fill, mark, edge, corner) from a `treatments` prop; each treatment names its slot, hue, mark, priority and whether it animates, and at most one slot animates. The navtree glyph shows the progress monitors keyed `<uri>#<suffix>` to an object (new `useObjectProgressMonitors` hook): a pulsing star while one runs, a red edge when one fails. Agent turns report themselves as trace status updates (`withTurnStatus` in `@dxos/agent-runtime`), on the chat and on a companion chat's subject (`Chat.getCompanionSubject`), so a turn shows wherever it runs; `@dxos/compute` exports the terminal status messages (`Trace.StatusComplete`, `StatusFailed`, `StatusError`, `StatusCancelled`), and `StatusError` (`Failed`) ends a run that is not a sync without calling it one. Breaking: the glyph's `presence` and `syncing` props are removed; pass `treatments`. `@dxos/ui-types` exports `Hue`, which `IconHue` aliases; `Icon` accepts the `primary` hue.
+- a18cb35: Lifecycle hooks are plugin capabilities (`AppCapabilities.HookDefinition`) instead of skill fields, and `Hook.SettingsAnnotation` on a space's properties or an agent's instructions turns each plugin's hooks on or off; space settings get an Assistant panel with one toggle per plugin. Breaking: `Skill.hooks`, `Skill.Hook`, `Skill.HookSpec`, `@dxos/assistant/SkillHooks` and the `begin-request` hook event are removed.
+- a843e27: Add opt-in operation permissions. `@dxos/permission` is the permission DSL and its pure evaluator, with the design document: principals (any URI), subjects, commands with prefix coverage, UCAN-style policies, permissions, requirements, content-addressed grants with attenuation, revocation, consent, and `Check.check` over a `GrantSource`; `Guard` turns a principal and its grants into a process guard. In `@dxos/compute`, an operation can declare requirements (`Operation.RequiresAnnotation`, set with `Guard.requires`), and a process can be spawned with a `Process.Guard` (`SpawnOptions.guard`) that its children, detached ones included, inherit and can only narrow. An operation that declares requirements is refused with `OperationDeniedError` unless the invoking process's guard admits it; operations that declare none are never checked. `AgentService.GetSessionOptions.guard` spawns an agent session under a guard, so the agent's tool calls are checked. Guards are not persisted and are not yet sent to EDGE.
+- 80818bc: A project's repositories are one ordered list, the `Repo.RepositoriesAnnotation` on the project, read with `Repo.getRepositories` and written with `Repo.setRepositories`. The first repository is the one bare issue numbers resolve against and the one a cloud coding agent starts in. plugin-code edits the list in the overview's Software group, above plugin-claude's code folder. A cloud session checks out the project's repositories in their order, then the repositories bound to the chat, each once. Agents edit the list with plugin-code's `CodeOperation.UpdateProjectRepositories` (tool `code-update-project-repositories`), the one tool of its new Project Repositories skill (`org.dxos.skill.code.repositories`).
+
+  The project overview puts the most-used parts first. The name and description are edited in place, with the status as a pill in the top right corner, and both line up with the section headings. `Project`'s status carries an option table (title, hue and icon), so the pill reads Active, Paused, Blocked or Ended in its colour. Then come Notes, Artifacts (six at most until Show all), Milestones (each with its tasks' progress, and a button that opens the Tasks tab filtered to that milestone) and Specs, then a Config section of folded groups, each with a summary of what it holds. The project's own Agent group holds the instructions, skills and context. Other plugins declare groups with `ProjectCapabilities.ConfigGroup`: each field is a schema plus a function from the project to a writable atom, and the overview's form renders and writes it with no UI of the plugin's own. plugin-code declares Software with the project's repositories, and plugin-claude adds the project's code folder on this device, which the desktop app can still choose with its folder picker. A config field's `order` sorts the fields of a group several plugins fill.
+
+  plugin-tasks' task list has a milestone filter beside its sort and grouping, kept per device with the rest of the list's view state. It keeps the tasks under the milestone, sub-tasks that inherit it included, with the ancestors of each.
+
+  react-ui-form's `FormPresentation` gains `title` and `plain`, which render a text field alone as a page's title or as body text, and `section`, which renders an array as a section of its own, its add button on the heading's row. A field override takes a `presentation` of its own in place of the form's `layout`. react-ui's Input has `title` and `plain` variants for it, and Textarea a `plain` one: no well and no inset, and a plain Textarea is as tall as its text. A form's sections leave a wider gap between each other than between their rows, and a form's array rows start on the form's edge. An array field whose label is hidden keeps the label as its list's accessible name, and a text field drawn with no label takes it as its control's. A field override also takes an `action` (`FormFieldAction`): a button at the end of a text control that sets the field's value from what its function returns.
+
+  Breaking:
+
+  - `Project` 0.8.0 drops `repo`, `repositories` and `session`. plugin-projects' migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. Migrated projects cannot be read by an older build.
+  - Delegating a task no longer seeds the chat's session config from its project, since `Project.session` is gone.
+  - `Project`'s schema no longer has a Repositories field. The overview shows the list, in its Software group, only while plugin-code is enabled, which enabling plugin-claude also does.
+  - A generic object update no longer reaches a project's repositories. The GitHub skill points an agent at the Project Repositories skill instead.
+  - `ProjectSurface.Settings` is gone. Declare a `ProjectCapabilities.ConfigGroup` instead.
+
+- aedf119: `Spec` moves to `@dxos/compute` (`@dxos/compute/Spec`, typename `org.dxos.type.projects.spec` 0.3.0) and holds its `.mdl` text as `content`, with the dialects it uses listed in `dialects`. A project owns any number of specs: `Project` 0.7.0 replaces `spec` with `specs`. The feature map moves from plugin-projects to plugin-code: the `Feature` type and its links, the canvas and board views, feature articles, companions and levels, the software package, the feature operations, task links, the feature templates and the feature and spec migrations. A spec's features and canvas layout are annotations on it. plugin-projects keeps projects, generic spec editing, extension packages and tasks, and gains the seams plugin-code fills: `ProjectCapabilities.SpecView`, the `ProjectSurface.SpecView`, `ProjectSurface.Level` and `ProjectSurface.LevelOverview` surface roles, and the `ProjectGraph`, `ProjectHooks`, `SpecCommands` and `LegacyProject` modules.
+
+  Breaking:
+
+  - `SpecDocument` is removed from `@dxos/types`. plugin-code's migrations fold each spec document into its spec, moving its text and file links, then delete it.
+  - `Project` 0.7.0 replaces `spec` with `specs`, and `Spec` 0.3.0 replaces `document`, `features` and `layout` with `content`, `dialects` and annotations. Migrated objects cannot be read by an older build.
+  - `@dxos/plugin-projects` no longer exports `Feature`, `FeatureEmbed`, `FeatureLink`, `FeatureMap`, `FeatureMapView`, `FeatureSpec`, `LegacyFeature`, `LegacyShowcase`, `LegacySpec`, `Showcase` or `SpecText`; import them from `@dxos/plugin-code/<Name>`. `FeatureOperation` is gone: its operations are in `@dxos/plugin-code/CodeOperation`, several renamed to name the feature (`Create` is `CreateFeature`, `ImportSpec` is `ImportSpecFeatures`). `FeatureSeed` and `FeatureEditingPlugin` move from `@dxos/plugin-projects/testing` to `@dxos/plugin-code/testing`.
+  - The feature operations are handled by `@dxos/plugin-code/CodeOperationHandlerSet`, not `ProjectOperationHandlerSet`; EDGE's operation-service must register it for feature operations to run there.
+  - Feature operation keys move from `org.dxos.operation.projects.*` to `org.dxos.operation.code.*` (`createFeature`, `updateFeature`, `deleteFeature`, `createSpec`, `updateSpec`, `addFeatureDependency`, `removeFeatureDependency`, `linkFeatureTask`, `createShowcase`, `getFeatures`, `importSpecFeatures`, `exportSpecFeatures`, `importFeatureLinks`), so their tool names change from `projects-*` to `code-*`. Skills saved with the old keys no longer name them.
+  - The project skill (`org.dxos.skill.project`) no longer declares the feature operations; the new Feature Map skill (`org.dxos.skill.code.featureMap`) does.
+  - Feature types, migrations, surfaces and operations are present only while plugin-code is enabled. plugin-code is not on by default in production or on mobile, so those users lose the feature map until they enable it.
+  - At the project's own level, Add spec on an empty Specs tab opens the object form instead of making a spec through a feature operation.
+  - Test ids: the Specs tab's view toggle is `projectsPlugin.specView.<id>` (was `projectsPlugin.featureMap.<mode>`), and the spec's text there is `projectsPlugin.spec.document` (was `feature-map.document`).
+  - The `scan-feature-links` task and the `FEATURE-LINKS` spec move to plugin-code; the spec's id is `org.dxos.plugin.code.featureLinks`.
+
+- 8d7d5e1: A run that continues with `Operation.runAgain()` shows as one run instead of one per invocation. `Trace.Meta.runId` holds the pid of the run's first invocation, and the trigger dispatcher stamps it on every retry. The routine's run history lists the chain as one run whose status follows its latest invocation, and labels a yielded run "Continuing". The trace graph draws a continuing run as a branch with one commit per invocation, then one commit once it finishes, or once the span timeout passes without a continuation. The sync progress meter keeps one bar across every run: mail sync sizes the remaining backfill on each run (Gmail's `resultSizeEstimate`, JMAP's `calculateTotal`), the progress sink holds that total across the gap between runs, and the count is the messages each run keeps.
+- 8e2f718: A spec's compliance reviews are ECHO objects: `@dxos/compute/SpecReview` holds one review of a spec, with the commit it read, its date, its reviewer and a verdict per spec item. plugin-code records them from `.review.mdl` files, through GitHub file sync or a local checkout, and with the `code-create-spec-review` operation, and shows each item's newest verdict beside the spec and on a feature's requirements. A spec lists its reviews in the `SpecReview.ReviewsAnnotation`, and a review's `date` may carry a UTC time to order two reviews of one day. A GitHub `FileMapping` can `exclude` globs within its `match`. GitHub file sync moves a file's marker and key when an import answers with another object, and re-imports a file through the mapping that now claims it, so review files a binding held as specs become reviews.
+- 901c1e4: Agent chats are now stored as an append-only log of `Trajectory.Event`s. Older feeds still load because their messages, bindings, alarms and fork links are converted to events in memory. Folded state is cached in SQLite, so reopening a chat reads only the events written since; the chat and an agent on the same device share that cache. Each thread and each agent turn is a branch of the chat's feed, so an agent never writes on the branch a person owns. `Feed.walk` takes `branch: 'all'` to walk every branch in local order and resume after a local cursor, and `Feed.setBranch` puts an item on a branch before it is appended. The trajectory modules are `@dxos/compute/Trajectory`, `@dxos/compute/Reducer` and `@dxos/compute/Transcript`. A durable operation can declare `optionalServices`, which a process receives when the runtime can resolve them and runs without otherwise. New chat feeds are created with indexing off (`TrajectoryStore.makeFeed`), so their events are not indexed or text-searchable. Breaking: chat feeds no longer receive new `Message`, `AiContext.Binding`, `Alarm` or `SessionLink` records, and `SessionStore.markInFlight` is removed.
+
+  Light threads: with the assistant's new **Parallel threads** setting on, a prompt sent while the agent works starts a thread that runs in parallel instead of waiting. The new thread starts with a transcript of every running thread and can wait for one with the `thread_wait` tool; finished threads join the conversation. The chat colours each thread's gutter; a thread a newer prompt sends to the background becomes a card in its original place, and its answer appears where it completes. Another installed agent can share the chat (**Parallel thread agents**): a prompt starting with `@<agent>` runs on that agent, in a lane of its own. The trace panel draws each thread as a lane of its own.
+
+  Forks: an answer's toolbar offers **Fork the conversation here**, which opens a thread that sees the chat up to that answer and then only what is sent in it. A fork stays apart from the main conversation, which shows it as a marker at the answer it forks at, until a person merges it (by default as a summary of its final answer). `TrajectoryStore.forkThread`, `forkOf` and `mergeFork` do the same from code, `AgentService.SubmitPromptOptions.thread` sends a prompt into a fork, and `ThreadingOptions.policy` sets which kinds of thread join main when they complete.
+
+### Patch Changes
+
+- Updated dependencies [c9a38c1]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [a458aef]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [7a8b279]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [3aef671]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [592fdad]
+- Updated dependencies [ece15ab]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [392bed0]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b159f41]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/types@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/vendor-kbn-handlebars@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes
