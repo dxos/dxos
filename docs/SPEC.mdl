@@ -6572,6 +6572,24 @@ decision D-314: The topic switcher loads its Kumbh Sans stylesheet without block
   why: The stylesheet sat in the header, so the parser stopped at the next script until Google Fonts answered, and Firefox, which has no paint holding or cross-document view transitions, painted a page with only the header between navigations.
 ```
 
+```mdl
+decision D-315: The docs client build targets the browsers Composer targets, not `esnext`, adds `Symbol.dispose` and `Symbol.asyncDispose` where the browser has none, and loads every dynamic import and every island component through one shared loader that imports each URL once and one at a time.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.5, F-12, F-21]
+  why: On iPad Safari 26 every demo was empty. Safari does not parse `using`, has no `Symbol.dispose`, and can settle an `import()` before a module that another import in flight shares has finished evaluating, so a demo or an island got `undefined` exports.
+```
+
+```mdl
+decision D-316: Pages lay out under Safari's status bar and collapsed toolbar (`viewport-fit=cover`), and the fixed header pads its top by the safe area, so page text never shows above the header.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.1]
+  why: On iPad, scrolling collapsed Safari's toolbar and the page scrolled through the strip above the header.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

@@ -67,8 +67,15 @@ const { hasSidebar } = Astro.locals.starlightRoute;
       height: var(--sl-nav-height);
       border-bottom: 1px solid var(--sl-color-hairline-shade);
       padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
+      padding-top: calc(var(--sl-nav-pad-y) + env(safe-area-inset-top, 0px));
+      padding-inline-start: calc(var(--sl-nav-pad-x) + env(safe-area-inset-left, 0px));
       padding-inline-end: var(--sl-nav-pad-x);
       background-color: var(--sl-color-bg-nav);
+    }
+
+    /* Centered in the bar, below the safe area that `--sl-nav-height` includes. */
+    .sidebar :global(.sl-menu-button) {
+      top: calc(env(safe-area-inset-top, 0px) + (var(--dx-nav-bar) - var(--sl-menu-button-size)) / 2);
     }
 
     :global([data-has-sidebar]) .header {
@@ -111,7 +118,9 @@ const { hasSidebar } = Astro.locals.starlightRoute;
 
     .main-frame {
       padding-top: calc(var(--sl-nav-height) + var(--sl-mobile-toc-height));
-      padding-inline-start: var(--sl-content-inline-start);
+      /* `viewport-fit=cover` also lays the page under a phone's notch in landscape. */
+      padding-inline-start: calc(var(--sl-content-inline-start) + env(safe-area-inset-left, 0px));
+      padding-inline-end: env(safe-area-inset-right, 0px);
     }
 
     @media (min-width: 72rem) {

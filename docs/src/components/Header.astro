@@ -31,10 +31,19 @@ const shouldRenderSearch =
 
 <!-- Outside Starlight's layer so the page revert does not undo it. -->
 <style>
+  /*
+   * `--dx-nav-bar` is the bar itself; `--sl-nav-height` adds the safe area above it, which `viewport-fit=cover` puts
+   * under the header, so everything Starlight offsets by the nav height clears both.
+   */
+  :global(:root) {
+    --dx-nav-bar: 3.5rem;
+    --sl-nav-height: calc(var(--dx-nav-bar) + env(safe-area-inset-top, 0px));
+  }
+
   /* The marketing nav is 72px tall; the extra pixel is the header's border, so the logo and Docs line up across both. */
   @media (min-width: 50rem) {
     :global(:root) {
-      --sl-nav-height: 73px;
+      --dx-nav-bar: 73px;
     }
   }
 

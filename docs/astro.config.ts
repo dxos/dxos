@@ -50,6 +50,118 @@ const browserNodeStd = (): Plugin => ({
   },
 });
 
+/** The browsers Composer targets; Safari does not parse the `using` declarations in the `@dxos/*` sources. */
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
+
+/**
+ * Safari has no `Symbol.dispose`. `@dxos/util` polyfills it on import, but a chunk that runs first (e.g. `Mutex`) keys
+ * its dispose method under `undefined`, and the lowered `using` then throws "Object is not disposable". Every chunk
+ * starts with the same polyfill, so the symbol exists before any class reads it. It reads `globalThis.Symbol` because a
+ * chunk that imports a binding named `Symbol` (Effect's `Schema.Symbol`) would otherwise rename the global.
+ */
+const disposePolyfill = `{
+  const S = globalThis.Symbol;
+  typeof S.dispose !== 'symbol' && Object.defineProperty(S, 'dispose', { value: S.for('dispose') });
+  typeof S.asyncDispose !== 'symbol' && Object.defineProperty(S, 'asyncDispose', { value: S.for('asyncDispose') });
+}`;
+
+/** Astro builds the client for `esnext` and its environment config wins over `build.target`, so set it per environment. */
+const browserBuildTarget = (): Plugin => ({
+  name: 'docs:browser-build-target',
+  configEnvironment: (name) =>
+    name === 'client'
+      ? {
+          build: {
+            target: browserTargets,
+            rolldownOptions: { output: { intro: `${disposePolyfill}\n${sharedImport}` } },
+          },
+        }
+      : undefined,
+});
+
+/** One `import()` per chunk URL, shared by every caller, and each starts only once the previous one settles. */
+const sharedImport = `globalThis.__dxImport ??= (() => {
+  const loads = new Map();
+  let last = Promise.resolve();
+  return (url) => {
+    let load = loads.get(url);
+    if (!load) {
+      load = last.then(() => import(url));
+      last = load.catch(() => {});
+      loads.set(url, load);
+    }
+    return load;
+  };
+})();`;
+
+type Node = { type: string; start: number; end: number; source?: Node };
+
+/**
+ * Safari 26 can settle an `import()` while another one in flight is still evaluating a chunk they share, so the caller
+ * sees `undefined` exports. Demo peers and story cards load overlapping chunks at once, so every dynamic import goes
+ * through {@link sharedImport}, resolved against the importing chunk.
+ */
+const shareDynamicImports = (): Plugin => ({
+  name: 'docs:share-dynamic-imports',
+  applyToEnvironment: (environment) => environment.name === 'client',
+  generateBundle: {
+    // Last, so Vite's preload helper has already listed the CSS each import pulls in, which it finds by `import(`.
+    order: 'post',
+    handler(_options, bundle) {
+      for (const chunk of Object.values(bundle)) {
+        if (chunk.type !== 'chunk' || !chunk.code.includes('import(')) {
+          continue;
+        }
+        // The minifier renames the helper's parameter, so find the helper's own `import()` by where it sits.
+        const helper = chunk.code.indexOf('__dxImport??=');
+        const isHelper = (node: Node) => helper >= 0 && node.start > helper && node.start < helper + 200;
+        const imports: Node[] = [];
+        const walk = (value: unknown) => {
+          if (Array.isArray(value)) {
+            value.forEach(walk);
+          } else if (value && typeof value === 'object') {
+            const node = value as Node;
+            if (node.type === 'ImportExpression' && !isHelper(node)) {
+              imports.push(node);
+            }
+            Object.values(node).forEach(walk);
+          }
+        };
+        walk(this.parse(chunk.code));
+        let code = chunk.code;
+        for (const { start, end, source } of imports.sort((left, right) => right.start - left.start)) {
+          const specifier = chunk.code.slice(source!.start, source!.end);
+          code = `${code.slice(0, start)}__dxImport(new URL(${specifier}, import.meta.url).href)${code.slice(end)}`;
+        }
+        chunk.code = code;
+      }
+    },
+  },
+});
+
+/** Astro's island loader, which Astro inlines into each page as the text of this module's default export. */
+const islandImport = 'return await import(e)}catch';
+
+/**
+ * Islands on one page load their components at once, so the island loader shares {@link sharedImport} too. The loader
+ * runs before any chunk, so it installs the helper itself.
+ */
+const shareIslandImports = (): Plugin => ({
+  name: 'docs:share-island-imports',
+  transform(code, id) {
+    if (!/astro-island\.prebuilt(-dev)?\.js$/.test(id)) {
+      return;
+    }
+    if (!code.includes(islandImport)) {
+      throw new Error(`docs:share-island-imports: Astro's island loader no longer has \`${islandImport}\`.`);
+    }
+    return code.replace(
+      islandImport,
+      `${sharedImport.replace(/;$/, '')};return await globalThis.__dxImport(new URL(e,document.baseURI).href)}catch`,
+    );
+  },
+});
+
 const rootDir = path.resolve(import.meta.dirname, '..');
 const phosphorIconsCore = path.join(rootDir, 'node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, 'packages/ui/brand/assets/icons');
@@ -190,6 +302,9 @@ export default defineConfig({
     plugins: [
       // Replaces each plugin's `dx.config.ts` with its manifest, as in the apps.
       pluginConfigPlugin(),
+      browserBuildTarget(),
+      shareDynamicImports(),
+      shareIslandImports(),
       importSource({ include: ['@dxos/**', '#*'] }),
       browserNodeStd(),
       DxosLogPlugin(),
@@ -232,6 +347,7 @@ export default defineConfig({
     // Workers the demos start load wasm with top-level await, which only an ES module worker supports.
     worker: {
       format: 'es',
+      rolldownOptions: { output: { intro: disposePolyfill } },
       plugins: () => [importSource({ include: ['@dxos/**', '#*'] }), browserNodeStd(), DxosLogPlugin(), wasm()],
     },
   },
@@ -251,6 +367,14 @@ export default defineConfig({
       title: 'DXOS Documentation',
       lastUpdated: true,
       favicon: '/favicon.ico',
+      // `viewport-fit=cover` lays the page out under Safari's status bar and collapsed toolbar, so the fixed header's
+      // `env(safe-area-inset-top)` padding covers that strip instead of the content scrolling through it.
+      head: [
+        {
+          tag: 'meta',
+          attrs: { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        },
+      ],
       customCss: ['./src/styles/tokens.generated.css', './src/styles/fonts.css', './src/styles/theme.css'],
       components: {
         Footer: './src/components/Footer.astro',
