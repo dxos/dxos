@@ -22,12 +22,14 @@ import {
   PolygonNode,
   PolylineNode,
   RectNode,
+  ShapeNode,
   type Size,
   ViewNode,
   isCloudNode,
   isHullNode,
   isPolygonNode,
   isPolylineNode,
+  isShapeNode,
 } from '@dxos/scene';
 
 import {
@@ -38,19 +40,21 @@ import {
   templateCompositeId,
 } from '../../model/index.ts';
 import {
-  ARROW_POINTS,
   CONTAINERS_GROUP,
   DRAW_FOLD,
   EXTENSIONS_GROUP,
   HULL_STYLE,
   NOMINAL_SIZES,
   PATH_FOLD,
+  SHAPE_FOLD,
+  SHAPE_RECIPES,
   SolidNode,
   cloudPath,
   createNode,
   isSolidNode,
   polygonPath,
   polylinePath,
+  shapeNodePath,
   solidPath,
 } from '../../utils/index.ts';
 import { CARD_TEMPLATE } from './card-template.ts';
@@ -162,6 +166,35 @@ const strokeTool: NodeDefSpec = {
   defaultSize: NOMINAL_SIZES.polyline,
 };
 
+/** What every parametric shape shares: its outline is its recipe's, in the frame and with the parameters it has. */
+const shapeSpec: NodeDefSpec = {
+  schema: ShapeNode,
+  component: PolygonNodeView,
+  create: (props) => createNode({ type: 'shape', ...props }),
+  defaultSize: NOMINAL_SIZES.shape,
+  silhouette: (node, inset, radius) => (isShapeNode(node) ? shapeNodePath(node, inset, radius) : ''),
+  portsPerSide: 1,
+  parts: [{ field: 'label' }],
+  resizable: true,
+  minSize: MIN_SIZE,
+};
+
+/** A tool per recipe, sharing one flyout: each drags out a `shape` node that names its recipe. */
+const shapeTools: Readonly<Record<NodeType, NodeDefSpec>> = Object.fromEntries(
+  SHAPE_RECIPES.map((recipe) => [
+    recipe.id,
+    {
+      ...shapeSpec,
+      name: recipe.name,
+      icon: recipe.icon,
+      ...(recipe.key !== undefined ? { key: recipe.key } : {}),
+      fold: SHAPE_FOLD,
+      create: (props) => ({ ...createNode({ type: 'shape', ...props }), recipe: recipe.id }),
+      defaultSize: recipe.defaultSize,
+    } satisfies NodeDefSpec,
+  ]),
+);
+
 export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
   rect: {
     extends: 'box',
@@ -221,20 +254,14 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-  // A tool rather than a type of its own: the arrow it draws is a closed polyline, so its vertices are there to drag.
-  arrow: {
-    schema: PolylineNode,
-    component: PolylineNodeView,
-    name: 'Arrow',
-    icon: 'ph--arrow-fat-right--regular',
-    key: 'A',
-    create: (props) => ({
-      ...createNode({ type: 'polyline', ...props }),
-      points: [...ARROW_POINTS],
-      params: { closed: true },
-    }),
-    defaultSize: NOMINAL_SIZES.rect,
+  // A recipe's shape, as its node is drawn; each recipe has a tool of its own, below.
+  shape: {
+    ...shapeSpec,
+    name: 'Shape',
+    icon: 'ph--shapes--regular',
+    palette: false,
   },
+  ...shapeTools,
   polyline: {
     name: 'Polyline',
     icon: 'ph--line-segments--regular',

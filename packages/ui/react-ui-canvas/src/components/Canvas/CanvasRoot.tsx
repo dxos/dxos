@@ -387,6 +387,7 @@ const CanvasEngine = ({
     onPointContextMenu,
     onEndContextMenu,
     onVertexPointerDown,
+    onParamPointerDown,
     onVertexMidpointPointerDown,
     onBendPointerDown,
     deleteVertex,
@@ -625,6 +626,7 @@ const CanvasEngine = ({
               onPointContextMenu={onPointContextMenu}
               onEndContextMenu={onEndContextMenu}
               onVertexPointerDown={onVertexPointerDown}
+              onParamPointerDown={onParamPointerDown}
               onVertexMidpointPointerDown={onVertexMidpointPointerDown}
               onBendPointerDown={onBendPointerDown}
               removePoint={removePoint}

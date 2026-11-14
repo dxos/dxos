@@ -474,11 +474,20 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       shapes (`toolGroups` puts the links ahead of the first tool with `createFromPoints` or `freehand`), and
       Polyline and Spline share one flyout (`PATH_FOLD`). Create group: Rectangle, Ellipse, Polygon, Cloud, Link
       fold, Path fold, Draw fold, Text, Icon.
-- [x] **An Arrow shape tool** (user, 2026-11-13): `arrow` in the node registry, after Cloud, key `A`, icon
-      `ph--arrow-fat-right--regular`. A tool rather than a type, as Spline and Freehand are: it lands a closed
-      polyline with `ARROW_POINTS` (shaft two thirds of the height, head over the last 28% of the width), so
-      nothing is stored that a build without the tool cannot read, and 3D lifts it as it lifts any closed polyline.
-      A resize stretches the head with the frame; a head of fixed size would need a type of its own.
+- [x] **Parametric shapes** (user, 2026-11-13; five decisions asked one by one): a `shape` node names a `recipe`
+      and stores its `params`; the recipe makes the outline from the frame, and each parameter says what it is
+      measured against (`px`, `width`, `height`, `min`, `count`), which is what holds a part's proportions on a
+      resize (`shape-recipe.ts`). Recipes: arrow, double arrow, chevron, callout, parallelogram, trapezoid, cross,
+      star, cog; one flyout in the palette (`SHAPE_FOLD`), Arrow on `A`. A selected shape shows an adjust handle
+      per control (`shapeNodeHandles`, the `param` drag); Properties lists the recipe's parameters and its Shape
+      field turns the node into another recipe. Join and Subtract take the outline (`nodeRings`); 2D to 3D lifts a
+      shape as a `mesh` prism over its outline that flattens back to the shape (`prismMesh`). Replaces the Arrow
+      tool that drew a polyline, which never merged.
+- [ ] **Convert a shape to a polyline**: a parametric shape has no vertices to drag; a command that swaps it for
+      the closed polyline of its outline would free it.
+- [ ] **Shape recipes, later**: a cog's hub hole needs an outline of more than one ring; the Shape field in
+      Properties lists recipe ids, not names; adjust handles are 2D only (3D edits parameters in Properties);
+      `SPEC-2D.mdl` does not yet record the `shape` type.
 - [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
       Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the

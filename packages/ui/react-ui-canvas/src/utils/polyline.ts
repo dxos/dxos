@@ -21,20 +21,6 @@ export const DEFAULT_POLYLINE_POINTS: readonly Point[] = [
   { x: 1, y: 0 },
 ];
 
-/**
- * The vertices of a block arrow pointing right, in unit space: a shaft two thirds of the frame's height, and a head
- * the frame's full height over its last quarter and a bit.
- */
-export const ARROW_POINTS: readonly Point[] = [
-  { x: 0, y: 1 / 6 },
-  { x: 0.72, y: 1 / 6 },
-  { x: 0.72, y: 0 },
-  { x: 1, y: 0.5 },
-  { x: 0.72, y: 1 },
-  { x: 0.72, y: 5 / 6 },
-  { x: 0, y: 5 / 6 },
-];
-
 const round = (value: number) => Math.round(value * 100) / 100;
 
 /** One axis of the frame: the points' extent, widened about its centre to `minimum`. */

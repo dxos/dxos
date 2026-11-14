@@ -39,6 +39,9 @@ export const EXTENSIONS_GROUP = 'Extensions';
 /** The fold the link types share, since a drawing mostly uses one of them. */
 export const LINK_FOLD = 'Link';
 
+/** The fold the parametric shapes share: each a recipe of its own, dragged out as a box is. */
+export const SHAPE_FOLD = 'Shape';
+
 /** The fold the tools that draw a line point by point share: its segments straight, or bent. */
 export const PATH_FOLD = 'Path';
 

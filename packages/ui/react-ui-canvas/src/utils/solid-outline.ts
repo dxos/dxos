@@ -16,6 +16,7 @@ import {
   isPathNode,
   isPolygonNode,
   isPolylineNode,
+  isShapeNode,
   nodeBase,
   solidBounds2D,
   solidOperands,
@@ -23,6 +24,7 @@ import {
 
 import { flattenPath } from './path.ts';
 import { polylinePath } from './polyline.ts';
+import { shapeNodeOutline } from './shape-recipe.ts';
 import { cloudPath, polygonPath } from './silhouette.ts';
 
 /** The operations a 2D solid draws: its operands joined, or the first with the rest cut from it. */
@@ -131,6 +133,9 @@ const frameRings = (node: NodeBase, lookup: NodeLookup, path: readonly string[])
   }
   if (isCloudNode(node)) {
     return flattenPath(cloudPath(node.size, 0, node.params?.bumps));
+  }
+  if (isShapeNode(node)) {
+    return [shapeNodeOutline(node)];
   }
   if (isPolylineNode(node)) {
     // An open line encloses nothing, so it neither adds to a shape nor cuts from one.

@@ -386,6 +386,22 @@ export const PolygonNode = Schema.Struct({
 });
 export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
 
+/**
+ * A shape a recipe draws (an arrow, a callout, a star): `recipe` names it, and the recipe makes the outline from the
+ * frame and `params`, each parameter measured against what the recipe says (a side of the frame, or scene px), so a
+ * part keeps its proportions however the frame is resized. A recipe unknown to a build is drawn as its frame.
+ * Labelled like a box.
+ */
+export const ShapeNode = Schema.Struct({
+  type: Schema.Literal('shape'),
+  ...nodeBase,
+  ...boxFields,
+  recipe: Schema.String,
+  /** The recipe's parameters by id; one unset takes the recipe's default. */
+  params: Schema.optional(Schema.Record(Schema.String, Schema.Number)),
+});
+export type ShapeNode = Schema.Schema.Type<typeof ShapeNode>;
+
 /** A polyline's own settings, in its `params`. */
 export const PolylineParams = Schema.Struct({
   /** Unset, the line is open: drawn as a stroke alone, with no fill. */
@@ -711,6 +727,7 @@ export const BuiltinNode = Schema.Union([
   EllipseNode,
   CloudNode,
   PolygonNode,
+  ShapeNode,
   PolylineNode,
   HullNode,
   NoteNode,
@@ -727,6 +744,7 @@ export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'ellipse',
   'polygon',
   'cloud',
+  'shape',
   'polyline',
   'hull',
   'note',
@@ -746,6 +764,7 @@ export type NodeType = string;
 export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
 export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
+export const isShapeNode = (node: NodeBase): node is ShapeNode => node.type === 'shape';
 export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
 export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.type === 'polyline';
 export const isHullNode = (node: NodeBase): node is HullNode => node.type === 'hull';

@@ -36,6 +36,8 @@ export const KINDS_2D: readonly string[] = [
   'ellipse',
   'cloud',
   'polygon',
+  // A shape a recipe draws from the frame and a few parameters (an arrow, a callout, a star).
+  'shape',
   'polyline',
   'hull',
   'path',
