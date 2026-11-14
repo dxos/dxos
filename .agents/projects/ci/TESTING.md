@@ -3,6 +3,56 @@
 Discussion notes for moving PR gating to fast tests only and making flakiness visible. Status: draft
 for discussion; nothing here is implemented yet.
 
+## Proposed structure at a glance
+
+`B` runs on every PR and blocks; `N` runs nightly (and on demand). The number is the estimated
+minutes of work for one full, uncached run of that item; a PR runs only affected packages, so it pays
+a fraction of the `B` total.
+
+```text
+T0 Static checks
+├─ B  dxos repo scripts (format, cycles, peer deps, …)       3
+└─ B  edge config checks (format, bindings, dev stack)       0.5
+T1 Compile and analysis
+├─ B  dxos lint, build, type tests                          25
+├─ B  dxos module structure, edge release                   25   rebuilds what the line above built
+├─ B  dxos plugin set, docs links                           10
+├─ N  dxos knip                                              3.5
+├─ N  dxos boot budget                                       4
+└─ B  edge lint, build, bundle checks                        6
+T2 Unit
+├─ B  dxos node unit (common, ui, the rest)                 70
+└─ B  edge node unit                                        20   ~1 min of tests; the rest is serial task start-up
+T3 Local runtime
+├─ B  dxos workerd                                           9
+└─ B  edge workerd, D1, Miniflare in node                    in edge node unit above
+T4 Integration
+├─ B  dxos ECHO (except echo-client-e2e)                    11
+├─ B  dxos process manager                                   3
+├─ B  dxos plugins, light (≤5 s per file)                   45
+├─ N  dxos plugins, heavy                                   65
+├─ N  dxos echo-client-e2e, memory                           7
+├─ N  dxos client/SDK, AI and agent packages                23
+└─ N  edge harness (edge:test, incl. sync)                  57
+T5 Browser
+├─ B  dxos vitest browser mode                               5
+└─ B  dxos storybook                                        91
+T6 Model fixtures
+├─ N  dxos model-fixture replay                              1
+└─ N  edge fixtures, Discord agent                          18
+T7 End-to-end
+├─ N  dxos Composer e2e (3 browsers)                        75
+├─ N  dxos other Playwright (3 browsers)                    25
+├─ N  dxos CLI smoke                                         1
+└─ N  edge deployed e2e (after deploy)                       6
+T8 Evals                                                 N   not measured
+T9 Live services                                         N   not measured; most never run today
+T10 Perf and benchmarks                                  N   not measured
+
+Blocking total  ~320 min per full run   (PRs: affected packages only)
+Nightly total   ~290 min per full run
+```
+
 ## Test ontology
 
 Every check and test in dxos and edge, ordered from fast and stable to slow and expensive. The
