@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import { contentCaptureAllowed } from '@dxos/observability/AiObservability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { Message, Subscription, Thread } from '@dxos/types';
 
 import { CommentOperation } from '#types';
@@ -65,7 +66,8 @@ const handler: Operation.WithHandler<typeof CommentOperation.SendNotifications> 
           sender: { identityDid: identity.did, name: identity.profile?.displayName },
           blocks: [{ _tag: 'text', text: edgeCanRead ? excerpt : REDACTED_TEXT }],
           attachments: [{ ref: Ref.make(subject), name: title }],
-          properties: title ? { subject: title } : undefined,
+          // Opening the notification shows the subject with its comments.
+          properties: { ...(title ? { subject: title } : {}), companion: Attention.linkedSegment('comments') },
         });
 
         yield* Effect.forEach(

@@ -18,6 +18,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | Term        | URI                            |
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
@@ -201,7 +202,7 @@ op Open
     navigation?: immediate        # skip validation; expand path only
     scrollIntoView?: boolean      # default true; set false to suppress auto-scroll
     state?: any
-    variant?: string
+    variant?: string              # a linked companion (`~comments`) opens beside the last opened plank
   output: string[]
   effects: [echo:read, layout:state]
   requires: [AppGraph, AttentionCapabilities, ClientCapabilities, DeckCapabilities]
@@ -911,6 +912,17 @@ test QA-2: Sidebar and companion toggles
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: `Open`'s `variant`, when it is a linked segment (`~comments`), opens that companion beside the plank the open lands on, in the same navigation.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [op Open]
+  why: Opening an object with a companion took `Open` and then `UpdateCompanion`, two navigations where `UpdateCompanion` read a deck that `Open`'s navigation may not have applied yet.
+  rejected: A new `companion` field, since `variant` was unread.
+```
 
 ## Appendix: Extension Definitions
 

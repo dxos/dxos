@@ -37,6 +37,7 @@ describe('CommentOperation.SendNotifications', () => {
     expect(sent.map(({ recipientDid }) => recipientDid)).toEqual([bobDid]);
     const [{ message: notification }] = sent;
     expect(notification.properties?.subject).toBe('Requirements');
+    expect(notification.properties?.companion).toBe('~comments');
     expect(Message.extractText(notification)).toBe('Should this cover JMAP too?');
     expect(notification.attachments?.map(({ ref, name }) => [ref.uri, name])).toEqual([
       [Ref.make(subject).uri, 'Requirements'],

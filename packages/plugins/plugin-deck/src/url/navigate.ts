@@ -61,6 +61,8 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   workspace: string;
   active: readonly string[];
   companionPlanks?: readonly string[];
+  /** The plank the companion opens beside, when it is rendered; the attended plank otherwise. */
+  companionAnchor?: string;
 }) {
   const { workspace, active, companionPlanks = [] } = params;
   const builder = yield* Capability.get(AppCapabilities.AppGraph);
@@ -69,7 +71,10 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
   const rendered = getRenderedPlanks(active, flatten);
-  const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
+  const anchorId =
+    params.companionAnchor && rendered.includes(params.companionAnchor)
+      ? params.companionAnchor
+      : resolveCompanionAnchor(rendered, attention.getCurrent());
   const variant = viewState.get(CompanionViewState.aspect, CompanionViewState.CONTEXT).variant;
   const companionAnchor =
     anchorId && variant && isCompanionOpen(companionPlanks, flatten, anchorId) ? anchorId : undefined;
@@ -97,6 +102,7 @@ export const navigateDeck = Effect.fnUntraced(function* (params: {
   workspace: string;
   active: readonly string[];
   companionPlanks?: readonly string[];
+  companionAnchor?: string;
   method?: 'push' | 'replace';
   /** How this navigation lands; see {@link NavigationIntent}. */
   intent?: NavigationIntent;
