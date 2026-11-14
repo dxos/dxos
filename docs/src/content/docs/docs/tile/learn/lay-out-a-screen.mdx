@@ -1,0 +1,66 @@
+---
+title: Lay out a screen
+description: A list of contacts beside a detail panel, under a toolbar.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+By the end of this page the app shows a toolbar over two columns: the contacts on the left, and the selected contact's
+details on the right.
+
+## Before you start
+
+TILE lays out a screen with a few primitives that own their spacing, so you rarely write padding or flex classes:
+
+- `Panel` is a frame with a header, a body that takes the remaining height, and an optional footer.
+- `Toolbar` is a row of controls and text.
+- `Layout.Grid` and `Layout.Flex` place their children in tracks or a row, with gaps from the theme's scale.
+- `ScrollArea` scrolls its content with the theme's scrollbar.
+
+[Layout](/docs/tile/concepts/layout/) explains how they fit together.
+
+<Steps>
+
+1. **Add the data.** The contacts live in React state until the last page. Put their type and the starting list in
+   `src/contacts.ts`:
+
+   <Snippet file="tile-tutorial/contacts" region="contact" lang="ts" />
+
+2. **List the contacts.** `Listbox` draws one row per item, with the label and a second line from `description`. It
+   handles selection, arrow keys and typeahead. `Listbox.Viewport` makes the list scroll inside its column. Add
+   `src/layout/ContactsScreen.tsx`:
+
+   <Snippet file="tile-tutorial/layout/ContactsScreen" region="list" lang="tsx" />
+
+3. **Show the selected contact.** `Typography.Text` with `tone='muted'` reads as secondary text. When nothing is
+   selected, `Status.Empty` shows an icon and a hint in the middle of the column:
+
+   <Snippet file="tile-tutorial/layout/ContactsScreen" region="detail" lang="tsx" />
+
+4. **Put them in a panel.** The toolbar goes in `Panel.Header`. `Panel.Body asChild` makes the grid itself the body,
+   so the grid fills the height under the toolbar. `cols={['16rem', 'fill']}` gives the list a fixed width and the
+   detail the rest:
+
+   <Snippet file="tile-tutorial/layout/ContactsScreen" region="screen" lang="tsx" />
+
+5. **Render the screen.** In `src/main.tsx`, render `<ContactsScreen />` in place of `<App />`, imported from
+   `./layout/ContactsScreen.tsx`. Give it the window's height in `index.html`, so the panel fills it:
+
+   ```html title="index.html"
+   <div id="root" style="height: 100vh"></div>
+   ```
+
+</Steps>
+
+## Try it
+
+Click a contact, or move through the list with the arrow keys.
+
+<TilePreview id="learn-layout" height="22rem" />
+
+## What you can do now
+
+You can lay out a screen with a toolbar, a scrolling list and a detail column. Next,
+[Inputs and actions](/docs/tile/learn/inputs-and-actions/) makes the detail editable.

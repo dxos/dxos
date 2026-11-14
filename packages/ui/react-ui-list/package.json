@@ -29,6 +29,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@ark-ui/react": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
@@ -54,6 +57,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "resize-observer-polyfill": "catalog:",
+    "typedoc": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

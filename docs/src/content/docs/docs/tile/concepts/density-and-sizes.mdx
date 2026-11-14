@@ -1,0 +1,37 @@
+---
+title: Density and sizes
+description: One size scale, set on an element and inherited by everything inside it.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+Every TILE control takes its height, text size, icon size and spacing from one scale with five steps: `xs`, `sm`, `md`,
+`lg` and `xl`. Set a size on a container and everything inside it follows.
+
+## Model
+
+**A size is an attribute.** A component that takes a `size` prop sets `data-size` on its element. The theme defines,
+for each step, variables such as `--dx-block-size` (a control's height), `--dx-font-size`, `--dx-icon-size` and
+`--dx-gap-size`. Every control reads these variables instead of fixed values.
+
+**Sizes inherit.** A control without its own `size` uses the nearest one above it. `Panel.Root`, `Toolbar.Root`,
+`Layout.Container`, a field header, a dialog and a button all take `size`. Outside any of them, controls use `md`.
+
+<Snippet file="tile-components" region="sizes" lang="tsx" />
+
+<TilePreview id="sizes" />
+
+## Behavior
+
+- A popup takes the size of its trigger. A menu opened from a `sm` toolbar is `sm` too, though the menu renders in a
+  portal outside the toolbar.
+- A popup's content can name its own `size` to break from its trigger, such as a dialog that should be `lg` wherever it
+  opens.
+- Labels read one text step below the body at the same size, and helper text one step below that.
+
+## Limits
+
+- A fixed height or padding set with `classNames` does not follow the scale. Set a size instead.
+- `data-size` takes effect only on TILE's own elements. Set on a plain `<div>`, it changes nothing; use a
+  `Layout.Container` with `size`.

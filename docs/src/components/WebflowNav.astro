@@ -35,8 +35,9 @@ const accent = currentPage !== 'home' ? ' c' : '';
       </div>
       <nav role="navigation" id="w-node-a9f227b2-b35e-a924-c5e6-c57d658ccfe2-658ccfd6" class="nav-menu is-page-height-tablet w-nav-menu">
         <div class="div-block-9">
-          <a href="/" {...(currentPage === 'home' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'home' ? ' w--current' : ''}`}>
-            <div>Home</div>
+          <!-- Docs comes first and the logo is the way home, so Docs sits where the docs header has it. -->
+          <a href="/docs/" class={`nav-link${accent} w-inline-block`}>
+            <div>Docs</div>
           </a>
           <a href="/echo" {...(currentPage === 'echo' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'echo' ? ' w--current' : ''}`}>
             <div>ECHO</div>
@@ -52,9 +53,6 @@ const accent = currentPage !== 'home' ? ' c' : '';
               <div>Blog</div>
             </a>
           )}
-          <a href="/docs/echo/overview/" class={`nav-link${accent} w-inline-block`}>
-            <div>Docs</div>
-          </a>
         </div>
       </nav>
       <div id="w-node-a9f227b2-b35e-a924-c5e6-c57d658ccfea-658ccfd6" class="nav_button-wrap">
@@ -80,11 +78,15 @@ const accent = currentPage !== 'home' ? ' c' : '';
   </div>
 </div>
 
-<style>
-  /* The outer columns are never narrower than what they hold, so the buttons never run past the edge padding. */
-  @media (min-width: 992px) {
+<!-- The links sit beside the logo rather than centred, matching the docs header. -->
+<style is:inline>
+  @media screen and (min-width: 992px) {
     .nav_container {
-      grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+      display: flex;
+      gap: 1rem;
+    }
+    .nav_button-wrap {
+      margin-left: auto;
     }
   }
 

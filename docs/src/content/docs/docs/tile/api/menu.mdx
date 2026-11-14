@@ -1,0 +1,42 @@
+---
+title: Menu
+description: Dropdown and context menus.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+```ts
+import * as Menu from '@dxos/react-ui/Menu';
+```
+
+A menu opens a list of items from a trigger or, as a context menu, from a right click. The arrow keys move between items,
+Enter chooses one, and Escape closes the menu.
+
+<Snippet file="tile-components" region="menu" lang="tsx" />
+
+<TilePreview id="menu" />
+
+## Parts
+
+| Part                                     | What it is                                                              |
+| ---------------------------------------- | ----------------------------------------------------------------------- |
+| `Menu.Root`                              | Holds the state. `onSelect` receives `{ value }` for the chosen item    |
+| `Menu.Trigger`                           | Opens the menu. Use `asChild` around a button                           |
+| `Menu.ContextTrigger`                    | A region that opens the menu on a right click                           |
+| `Menu.Content`                           | The popup                                                               |
+| `Menu.Item`                              | One item, from `item={{ value, label, icon?, shortcut?, disabled? }}`   |
+| `Menu.ItemIcon`, `ItemText`, `ItemShortcut`, `ItemIndicator` | The parts of an item, to lay one out by hand        |
+| `Menu.ItemGroup`, `Menu.ItemGroupLabel`  | A labeled group of items                                                |
+| `Menu.Separator`                         | A rule between groups                                                   |
+| `Menu.CheckboxItem`                      | An item that is on or off                                               |
+| `Menu.RadioItemGroup`, `Menu.RadioItem`  | A set of items where one is chosen                                      |
+| `Menu.Sub`, `Menu.TriggerItem`           | A submenu, and the item that opens it                                   |
+
+An item given only `item` renders its icon, label and shortcut. Give it children to arrange the parts yourself.
+`shortcut` is display text only; it binds no key.
+
+## Menus built from actions
+
+`@dxos/react-ui-menu` builds menus and toolbars from an app's actions, so that plugins can add items to each other's
+menus. See [Menus and toolbars](/docs/tile/guides/menus-and-toolbars/).

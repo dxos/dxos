@@ -1,0 +1,18 @@
+diagram flow=down
+node Identity "Identity"
+node Topic "Swarm topic"
+node Space "Space"
+node Agent "Agent"
+group objects "Durable Objects" {
+  node Router "RouterObject"
+  node Swarm "SwarmObject"
+  node Automerge "Automerge replicator"
+  node Feeds "FeedReplicator"
+  node State "SpaceStateMachine"
+  node Indexer "Indexer"
+  node Process "Agent process"
+}
+edge Identity -> Router
+edge Topic -> Swarm
+edge Space -> Automerge, Feeds, State, Indexer bus
+edge Agent -> Process

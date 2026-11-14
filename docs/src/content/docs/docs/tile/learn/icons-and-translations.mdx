@@ -1,0 +1,56 @@
+---
+title: Icons and translations
+description: Icons beside each field, an Add button, and the screen's strings in a translation resource.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+By the end of this page every string the screen shows comes from a translation resource, the count says "1 contact"
+or "3 contacts" as it should, and icons mark the email and the role. An Add button creates a contact.
+
+## Before you start
+
+An icon is named in full: `ph--envelope--regular` is Phosphor's envelope in the regular weight. `IconsPlugin` finds the
+names in your code and puts those icons in the sprite, so there is nothing to import.
+
+A translation resource maps keys to strings for each language, under a namespace. `useTranslation(ns)` returns `t`,
+which looks a key up in the user's language. A key with `_one` and `_other` forms is chosen by the `count` you pass.
+See [Translations and icons](/docs/tile/concepts/translations-and-icons/).
+
+<Steps>
+
+1. **Write the resource.** Use a namespace no other code uses, such as a reverse domain. `as const` lets TypeScript
+   check the keys you pass to `t`. Add `src/icons/translations.ts`:
+
+   <Snippet file="tile-tutorial/icons/translations" region="resource" lang="ts" />
+
+2. **Register it.** `Theme.Provider` takes your resources beside react-ui's own. Replace the render in
+   `src/main.tsx`:
+
+   <Snippet file="tile-tutorial/main" region="provider" lang="tsx" />
+
+3. **Mark the fields with icons.** `Icon.Icon` draws a sprite icon at the text's size. The role's tooltip text now
+   comes from the resource, keyed by the role. Add `src/icons/ContactsScreen.tsx`:
+
+   <Snippet file="tile-tutorial/icons/ContactsScreen" region="detail" lang="tsx" />
+
+4. **Use the strings.** The toolbar reads its text from `t`. Add is an icon button whose label is both its tooltip and
+   its name for screen readers. Edit and Delete take their labels as props, so pass them in from `t` too. Add
+   this to the same file:
+
+   <Snippet file="tile-tutorial/icons/ContactsScreen" region="screen" lang="tsx" />
+
+</Steps>
+
+## Try it
+
+Delete contacts until one is left and watch the count. Press Add, then Edit to name the new contact.
+
+<TilePreview id="learn-icons" height="22rem" />
+
+## What you can do now
+
+You can use icons by name and keep a screen's strings in a resource. Next,
+[Connect to ECHO](/docs/tile/learn/connect-to-echo/) stores the contacts in a database that syncs.

@@ -76,6 +76,9 @@
       "path": "../packages/core/echo/echo-client"
     },
     {
+      "path": "../packages/core/echo/echo-doc"
+    },
+    {
       "path": "../packages/core/echo/echo-host"
     },
     {
@@ -178,6 +181,9 @@
       "path": "../packages/ui/react-ui-attention"
     },
     {
+      "path": "../packages/ui/react-ui-editor"
+    },
+    {
       "path": "../packages/ui/react-ui-form"
     },
     {
@@ -194,6 +200,9 @@
     },
     {
       "path": "../packages/ui/ui"
+    },
+    {
+      "path": "../packages/ui/ui-editor"
     },
     {
       "path": "../packages/ui/ui-theme"

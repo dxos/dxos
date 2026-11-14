@@ -1,0 +1,90 @@
+---
+title: Connect to ECHO
+description: Replace the screen's React state with ECHO's Person type, a live query and a schema form.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the contacts are ECHO objects. They are stored on the device, sync to your other devices and to
+anyone you share the space with, and the edit dialog is a form built from their schema.
+
+## Before you start
+
+This page uses ECHO, DXOS's database, through its React hooks. Add the bundler settings from step 2 of
+[ECHO's Installation](/docs/echo/learn/installation/) to `vite.config.ts`, so the database's worker and WebAssembly load.
+Then install the React client and the form package:
+
+```sh
+npm install @dxos/react-client @dxos/react-ui-form
+```
+
+Three things change from the last page:
+
+- A **type** replaces the `Contact` type. ECHO checks and syncs objects of a type it knows.
+- `useQuery` replaces `useState` for the list. It returns the objects that match, and renders again when one is
+  added or removed, here or on another device.
+- `useObject` reads one object. A component that reads an object's fields this way renders again when that object
+  changes.
+
+<Steps>
+
+1. **Use ECHO's Person type.** This is the `Person` from [ECHO's learning path](/docs/echo/learn/defining-types/),
+   with a name, an optional email and an optional employer. Add `src/echo/schema.ts`, with the `Organization` type
+   from the same page above it:
+
+   <Snippet file="tile-tutorial/echo/schema" region="person" lang="ts" />
+
+2. **Query the people.** The query selects every `Person`, sorted by name. Add `src/echo/ContactsScreen.tsx`:
+
+   <Snippet file="tile-tutorial/echo/ContactsScreen" region="query" lang="tsx" />
+
+3. **List them.** The list is the same `Listbox` as before. Each row reads its person with `useObject`, so a rename
+   shows in the list at once:
+
+   <Snippet file="tile-tutorial/echo/ContactsScreen" region="list" lang="tsx" />
+
+4. **Show the selected person.** The detail reads the person the same way:
+
+   <Snippet file="tile-tutorial/echo/ContactsScreen" region="detail" lang="tsx" />
+
+5. **Edit with a schema form.** `ObjectForm` builds its fields from `Person`'s schema: a text field for the name, an
+   email field, and a picker of organizations for the employer. It writes each change to the object as it is made, so
+   the dialog needs no Save button and the editor from [Inputs and actions](/docs/tile/learn/inputs-and-actions/) is
+   no longer needed. [Forms](/docs/tile/guides/forms/) covers the form in depth.
+
+   <Snippet file="tile-tutorial/echo/ContactsScreen" region="edit" lang="tsx" />
+
+6. **Write the screen.** Add puts a new object in the database with `db.add`, and Delete takes it out with
+   `db.remove`. Neither touches React state: the query sees the change and the list renders again.
+
+   <Snippet file="tile-tutorial/echo/ContactsScreen" region="screen" lang="tsx" />
+
+7. **Open a space.** A space is a database that its members share, and an identity owns the spaces it creates. The
+   first time the app runs, `setUp` creates an identity and then a space. `Contacts` shows the screen once the space
+   is there. Add `src/echo/main.tsx`, starting with the same stylesheet imports as the first entry point,
+   `import '@dxos-theme';` and `import '@dxos/react-ui/theme.css';`:
+
+   <Snippet file="tile-tutorial/echo/main" region="space" lang="tsx" />
+
+8. **Render it inside the client.** `ClientProvider` starts ECHO with the types the app uses, and runs `setUp`
+   once the client is ready. Its config is the one from ECHO's [Installation](/docs/echo/learn/installation/) page: it
+   keeps the data across reloads and reaches other devices through EDGE, which the next section needs. The theme provider goes inside it, and now also registers
+   `@dxos/react-ui-form`'s strings. Point `index.html` at `src/echo/main.tsx`:
+
+   <Snippet file="tile-tutorial/echo/main" region="provider" lang="tsx" />
+
+</Steps>
+
+## Try it
+
+Run the app and add a few contacts. Reload, and they are still there. Open the app in a second browser profile and
+join the space as [Sharing](/docs/echo/learn/sharing/) shows, and edits in one window appear in the other.
+
+## What you can do now
+
+You have a screen built with TILE whose data lives in ECHO. From here:
+
+- The [guides](/docs/tile/guides/lists/) cover lists, forms, menus and the text editor.
+- [TILE in a PLEX plugin](/docs/tile/guides/tile-in-a-plex-plugin/) shows how this screen would become a Composer
+  plugin.

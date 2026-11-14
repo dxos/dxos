@@ -1,0 +1,35 @@
+---
+title: Build with a coding agent
+description: Point Claude Code, Codex or Cursor at the skills DXOS uses to build with TILE.
+---
+
+DXOS builds Composer's UI with coding agents, and keeps what they need to know about TILE in two skills. A skill is a
+folder with a `SKILL.md` file that tells an agent how to do one kind of work. Claude Code, Codex and Cursor all read
+them.
+
+| Skill | What it covers |
+| --- | --- |
+| [`composer-ui`](https://github.com/dxos/dxos/tree/main/.agents/skills/composer-ui) | Using the components: tokens, layout, lists, forms, toolbars, translations and stories |
+| [`composite-components`](https://github.com/dxos/dxos/tree/main/.agents/skills/composite-components) | Writing a component of your own as a namespace of parts, the way TILE's are written |
+
+`composer-ui` is written for Composer plugins, and most of it applies to any app that uses TILE.
+
+## Add the skills to your project
+
+Copy each skill's folder into the folder your agent loads project skills from:
+
+| Agent | Skills folder |
+| --- | --- |
+| Claude Code | `.claude/skills/` |
+| Codex | `.agents/skills/` |
+| Cursor | `.cursor/skills/` |
+
+Then ask your agent for what you want built. It reads a skill when the work matches the skill's description.
+
+## Give it the docs
+
+[`/tile/llms-full.txt`](/tile/llms-full.txt) holds every TILE page as Markdown, code samples included. Ask your agent
+to read it when it needs more than the skills say. [llms.txt](/docs/tile/resources/llms-txt/) lists the other files
+for agents.
+
+To build the contacts screen yourself instead, start with [The TILE component](/docs/tile/learn/the-tile-component/).

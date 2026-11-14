@@ -12,7 +12,7 @@ const allSiteLinks = [
   { id: 'plugins', label: 'Plugins', href: '/plugins' },
   { id: 'blog', label: 'Blog', href: '/blog' },
   // Links to the first page, so the redirect from `/docs` is never a hop; `section` marks every docs page current.
-  { id: 'docs', label: 'Docs', href: '/docs/echo/overview/', section: '/docs' },
+  { id: 'docs', label: 'Docs', href: '/docs/', section: '/docs' },
 ] as const satisfies readonly { id: string; label: string; href: string; section?: string }[];
 
 /** The main site's pages, as the Webflow nav lists them; the Starlight header and footer link the same set. */

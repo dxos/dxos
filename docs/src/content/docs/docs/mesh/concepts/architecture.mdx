@@ -1,0 +1,40 @@
+---
+title: Architecture
+description: The layers of MESH, from the transport up to the extensions ECHO and HALO run.
+---
+
+import Diagram from '../../../../../components/Diagram.astro';
+
+MESH is a stack of five layers. Each layer uses the one below it, and protocols plug in at the top as extensions; ECHO
+and HALO's protocols are extensions too.
+
+## Model
+
+<Diagram name="mesh-layers" alt="A swarm finds peers through signaling and opens Teleport sessions; extensions run on a session, and a transport carries it." />
+
+| Layer      | What it does                                                                    | Package in `packages/core/mesh`                     | Page                                                   |
+| ---------- | ------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
+| Transport  | Moves bytes between two devices                                                 | `network-manager` (`transport/`)                    | [Transports](/docs/mesh/concepts/transports/)          |
+| Teleport   | Multiplexes streams over one connection and runs extensions on them             | `teleport`                                          | [Teleport](/docs/mesh/concepts/teleport/)              |
+| Signaling  | Introduces peers on a topic and relays the messages that set up a connection    | `messaging`, `network-manager` (`signal/`)          | [Signaling and discovery](/docs/mesh/concepts/signaling/) |
+| Swarm      | Keeps the set of connections for one topic, as its topology decides             | `network-manager` (`swarm/`, `topology/`)           | [Swarms and topology](/docs/mesh/concepts/swarms/)     |
+| Extensions | The protocols ECHO and HALO run over a connection: replication, Automerge, gossip, admission, notarization, invitations | `teleport-extension-*`, and the client's own        | [Teleport](/docs/mesh/concepts/teleport/)              |
+
+`edge-client` sits beside the stack. It keeps the device's WebSocket to EDGE, which carries signaling and the
+replication to EDGE's copy of each space. See [Connecting](/docs/edge/concepts/connecting/).
+
+## Behavior
+
+- The client's services own MESH. An app never constructs a swarm or a transport; it opens a space, and the space joins
+  its swarm.
+- In the browser the client's services run in a worker. A worker cannot open a WebRTC connection, so the tab opens it on
+  the worker's behalf and forwards the bytes.
+- Every space connection is authenticated: each side proves it holds a key the space or identity admitted. The session's
+  owner decides what to do with a peer that fails; the space manager disconnects it. Extensions open alongside the auth extension, not after it.
+
+## Limits
+
+- The packages `rpc`, `rpc-tunnel` and `websocket-rpc` also live in `packages/core/mesh`, but they connect a worker to
+  its tabs, not one device to another. These pages leave them out.
+- Iroh, in `packages/core/mesh/iroh`, is a design for a further transport, not code. See
+  [Transports](/docs/mesh/concepts/transports/).

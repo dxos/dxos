@@ -1,0 +1,64 @@
+---
+title: Compute
+description: How EDGE runs work over ECHO objects, with operations, processes and triggers, and where agents and plugins run.
+---
+
+import Diagram from '../../../../../components/Diagram.astro';
+
+Compute runs typed work wherever it fits: in the app, in a worker, or on an always-online server. Each piece of work is
+an operation: a typed action with a key, an input schema and an output schema. A person runs one from a button or the command palette, an agent calls one
+as a tool, and a trigger runs one when something happens in the space or outside it. The same operation reads and writes
+the space's objects the same way wherever it runs.
+
+<Diagram name="edge-compute" alt="A person, an agent and a trigger each start an operation; the process manager runs it as a process in the app or on EDGE; the process reads and writes ECHO objects and writes its trace to the space." />
+
+## Model
+
+**[Operations](/docs/edge/concepts/operations/).** An operation is defined once, by its key and its schemas, and a
+handler does the work. Callers find it by key, and the invoker checks the input and output against the schemas.
+
+**[Processes](/docs/edge/concepts/processes/).** Each run of an operation is a process. A process gets the services its
+operation declares, such as the space's database, its own storage and the space's credentials, and it has a state that
+the app can watch. A process that waits for input, a timer or a child process can be suspended and picked up again
+later, on the same device or on EDGE.
+
+**[Triggers](/docs/edge/concepts/triggers/).** A trigger is an ECHO object that starts an operation without anyone
+asking: on a schedule, when objects matching a query change, when a feed gets new items, when an email or an HTTP
+request arrives, or when something invokes it directly.
+
+**[Traces](/docs/edge/concepts/traces/).** Every process records what it did as trace events. Durable events are kept
+in a feed in the space; live progress goes to the devices watching.
+
+**Agents.** An agent is a process too: a model in a loop that calls operations as tools. An agent's chats run on EDGE,
+so the agent keeps working while every device is offline, and it reaches models through EDGE's AI service. See SAGE's
+[Agents](/docs/sage/concepts/agents/) and [Models](/docs/sage/concepts/models/).
+
+**Sandbox builds and the registry.** When a plugin is published, EDGE can build it in a sandbox with the `@dxos/*`
+packages installed. The registry service indexes published plugins and hosts their bundles, which Composer loads. See
+[Publishing plugins](/docs/plex/publishing-plugins/).
+
+## Where compute runs
+
+| Where               | What runs there                                                              | While                         |
+| ------------------- | ---------------------------------------------------------------------------- | ----------------------------- |
+| The app             | Operations people invoke, local triggers, and chats that are not an agent's  | The app is open               |
+| A worker in the app | Code that agents write in code mode, on its own ECHO client                  | The app is open               |
+| EDGE                | Remote triggers, operations deployed to EDGE, and every agent's chats        | Always, whether a device is online or not |
+
+The app shows local and EDGE processes in one list. Each control, such as cancel, goes to the runtime that holds the
+process.
+
+## Behavior
+
+- Operations and agents act through the same APIs as a device. Their changes replicate to members like anyone else's.
+- A trigger marked remote fires on EDGE whether or not any device is online. A local trigger fires only while an app
+  that has the space open is running.
+- On EDGE, operations run in EDGE's operation workers, and each agent's process runs in a
+  [Durable Object](/docs/edge/concepts/architecture/) of its own. A process waiting on an alarm or a child is written to
+  storage, the object sleeps, and the process resumes when the alarm fires or the child finishes.
+
+## Limits
+
+- Compute on EDGE reads space content, so it runs only for spaces that give EDGE more than `pull` access.
+- The AI service sends prompts and space content to the model provider a request names.
+- An operation that runs on EDGE needs every ECHO type it uses to be known there; its definition lists them.

@@ -1,0 +1,53 @@
+---
+title: Text editor
+description: A text editor with @dxos/react-ui-editor.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+`@dxos/react-ui-editor` is the text editor Composer uses for documents. It is built on CodeMirror. The React package
+draws the editor and its toolbar, and `@dxos/ui-editor` holds the extensions, which decide what it does: markdown,
+formatting, themes, and binding the text to an ECHO object.
+
+```sh
+npm install @dxos/react-ui-editor @dxos/ui-editor
+```
+
+## Plain text
+
+`Editor.Root` holds the extensions, and `Editor.View` draws the text. `createBasicExtensions` gives the editor its
+editing behavior, with options such as a placeholder and line wrapping. `createThemeExtensions` matches the app's light
+or dark theme; read the mode with `useThemeMode` and rebuild the extensions when it changes. Rebuilding recreates the
+editor, so keep its text in state and pass it as `value` with `onChange`:
+
+<Snippet file="tile-guide-editor" region="plain" lang="tsx" />
+
+<TilePreview id="editor-plain" height="8rem" />
+
+## Markdown with a toolbar
+
+`createMarkdownExtensions` parses markdown, and `decorateMarkdown` styles it as you type: headings are larger, and
+links show their text. `Editor.Toolbar` adds the formatting actions; it is an `ActionToolbar` from
+[Menus and toolbars](/docs/tile/guides/menus-and-toolbars/), so the app needs a `RegistryProvider` and react-ui-menu's
+strings, and react-ui-editor's from `@dxos/react-ui-editor/translations`. The toolbar is dimmed until its surface has
+the user's attention. Outside Composer, which tracks attention for you, put a `RootAttentionProvider` around the app and
+an `AttendableContainer` around the toolbar and the editor, both from `@dxos/react-ui-attention`, and pass the
+container's id to the toolbar. `listener` calls you back on each change:
+
+<Snippet file="tile-guide-editor" region="markdown" lang="tsx" />
+
+<TilePreview id="editor-markdown" height="16rem" />
+
+## Bind the text to ECHO
+
+An ECHO `Text` object from `@dxos/schema` holds a document's text. The `automerge` extension binds the editor to one
+of its properties: each edit goes into the object, and each change to the object, from another window or another
+device, shows in the editor. With the binding, the editor takes its text from the object, so `Editor.View` needs no
+`value`:
+
+<Snippet file="tile-guide-editor" region="echo" lang="tsx" />
+
+This preview binds to a `Text` object that is not in a database, so its edits stay in this page:
+
+<TilePreview id="editor-shared" height="8rem" />

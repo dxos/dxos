@@ -1,0 +1,45 @@
+---
+title: Overview
+description: What MESH is, and what ECHO and HALO run over it.
+welcome:
+  section: MESH
+  tagline: Peer-to-peer networking and replication.
+  background: mesh
+---
+
+import Diagram from '../../../../components/Diagram.astro';
+
+MESH is peer-to-peer networking for devices that share a topic. The devices on a topic find each other, prove they
+belong, and open direct links, then run any number of protocols side by side over each link. MESH treats every route as
+a transport: a direct WebRTC link and a WebSocket through a server are both ways to reach a peer, and it uses both at
+once.
+
+## How devices reach each other
+
+Every device keeps one WebSocket to a signaling server, which introduces the peers on a topic to each other. After the
+introduction, two devices open a direct WebRTC link and exchange data over it. When no direct link can be made, or the
+other device is offline, a server that is a peer on the topic can still carry the data. In DXOS that server is
+[EDGE](/docs/edge/overview/), which plays both parts: it introduces peers, and it holds a copy of each space that
+replicates through it.
+
+<Diagram name="mesh-links" alt="Device A and Device B share a direct WebRTC link through Teleport, and each also holds a WebSocket to EDGE." />
+
+## Where ECHO and HALO use MESH
+
+| What                    | Who uses it | How                                                                                                                              |
+| ----------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Space replication       | ECHO        | Each open space joins a [swarm](/docs/mesh/concepts/swarms/) and replicates its documents and feeds over every link in it        |
+| Presence                | ECHO, HALO  | Peers in a swarm [announce](/docs/mesh/concepts/presence/) that they are online                                                  |
+| Device sync             | HALO        | An identity's devices join a swarm of their own and replicate the identity's state                                               |
+| Invitations             | HALO        | Host and guest of an interactive [invitation](/docs/halo/concepts/invitations/) meet in a swarm keyed by the invitation          |
+| Going offline           | Apps        | `client.mesh.updateConfig(ConnectionState.OFFLINE)` leaves every swarm; the tutorials' offline switch calls it                   |
+
+## How these pages are organized
+
+Apps rarely call MESH directly; the protocols that run over it do. These pages explain how it works, so there is no
+learning path, API group or guides.
+
+- [Why MESH?](/docs/mesh/why-mesh/) argues for direct links between devices, with a server as one more route.
+- [Architecture](/docs/mesh/concepts/architecture/) shows the layers, from the transport up to the extensions ECHO and
+  HALO run. The other concept pages take one layer each.
+- The [glossary](/docs/mesh/resources/glossary/) defines every MESH term.

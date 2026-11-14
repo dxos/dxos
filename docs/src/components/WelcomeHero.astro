@@ -1,13 +1,9 @@
 ---
 import dxos from '../../../packages/ui/brand/assets/backgrounds/bg-dxos.svg?raw';
-// The hero puts its art on the right, so each background is the variant with its icon on the right, clear of the title.
-import echo from '../../../packages/ui/brand/assets/backgrounds/bg-echo-right.svg?raw';
-import halo from '../../../packages/ui/brand/assets/backgrounds/bg-halo-right.svg?raw';
-import kube from '../../../packages/ui/brand/assets/backgrounds/bg-kube-right.svg?raw';
-import mesh from '../../../packages/ui/brand/assets/backgrounds/bg-mesh-right.svg?raw';
+import { SUITE_BACKGROUNDS } from './topic-nav/suite.ts';
 
-/** Keyed by the `welcome.background` values that `content.config.ts` allows. */
-const BACKGROUNDS = { dxos, echo, halo, kube, mesh } as const;
+/** Keyed by the `welcome.background` values that `content.config.ts` allows; each suite hero has its mark on the right. */
+const BACKGROUNDS = { dxos, ...SUITE_BACKGROUNDS } as const;
 
 type Props = {
   /** Product name shown as the page's heading, e.g. `ECHO`; the frontmatter title only labels the sidebar and tab. */
@@ -83,6 +79,21 @@ const art = BACKGROUNDS[background].replace('<svg ', '<svg preserveAspectRatio="
     margin: 0.5rem 0 0;
     font-size: var(--sl-text-lg);
     color: rgb(255 255 255 / 0.85);
+  }
+
+  /* Light: the art's ground is the page's own, as the dark banner's is in dark mode, so the hero blends in; its lines keep the section's color. */
+  :global(:root[data-theme='light']) .welcome-hero {
+    --dx-bg-fill: var(--c-bg);
+    --dx-bg-icon: var(--c-fg);
+    background: var(--c-bg);
+  }
+
+  :global(:root[data-theme='light']) .welcome-hero #_top {
+    color: var(--c-fg);
+  }
+
+  :global(:root[data-theme='light']) .tagline {
+    color: var(--c-muted);
   }
 
   @media (max-width: 50rem) {

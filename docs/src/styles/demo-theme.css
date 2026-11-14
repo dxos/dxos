@@ -3,5 +3,7 @@
 
 @source '../plex-tutorial/**/*.{ts,tsx}';
 @source '../demos/**/*.{ts,tsx}';
+@source '../echo/snippets/tile-*.tsx';
 @source '../plex/**/*.{ts,tsx}';
 @source '../echo-tutorial/**/*.{ts,tsx}';
+@source '../tile-tutorial/**/*.{ts,tsx}';

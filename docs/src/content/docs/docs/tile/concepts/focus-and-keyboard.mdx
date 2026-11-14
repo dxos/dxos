@@ -1,0 +1,38 @@
+---
+title: Focus and keyboard
+description: The focus ring, arrow-key navigation, and focus inside overlays.
+---
+
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+Every TILE control works from the keyboard, and shows where the focus is with the same ring. Most of this comes with
+the components; this page says what to expect and what to keep intact.
+
+## Model
+
+**One focus ring.** A focused control draws a ring of `--dx-focus-ring-width` in `--dx-focus-ring-color`, which
+defaults to the theme's `focus-ring` token. The ring shows on `:focus-visible`, so it appears when the user moves by
+keyboard and not after every click.
+
+**Tab moves between groups, arrows move within one.** A toolbar, a menu, a radio or toggle group and a list are each one
+tab stop. Inside, the arrow keys move between items. Try it on the toolbars below: tab into one, then press the arrow
+keys.
+
+<TilePreview id="sizes" />
+
+**Overlays hold focus.** A dialog moves focus into itself when it opens, keeps Tab inside, closes on Escape, and returns
+focus to the element that opened it. A menu does the same, and closes when an item is chosen. A tooltip never takes
+focus; it shows while its trigger is focused or hovered.
+
+## Behavior
+
+- `Toolbar.Root` wraps from the last item to the first by default. Pass `loop={false}` to stop at the ends.
+- `Toolbar.Root disabled` disables every control in it.
+- A button with `iconOnly` still has an accessible name: its `label`, which is also its tooltip.
+- `Input.Checkbox` and `Input.Switch` take `label`, or `aria-label` when there is no visible label.
+
+## Limits
+
+- An element with `outline: none` or a `classNames` that hides the ring loses the only sign of focus. Keep it.
+- A custom control placed in a toolbar joins the arrow-key order only if it is a TILE control or reads the toolbar's
+  item context. A plain `<button>` is a separate tab stop.
