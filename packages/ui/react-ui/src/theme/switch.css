@@ -21,6 +21,10 @@
     opacity: 0.5;
     cursor: default;
   }
+  /* Read-only is not disabled: the switch reads as it does editable, and only stops taking presses. */
+  .dx-switch[data-readonly] {
+    cursor: default;
+  }
   /* Neither on nor off: the track is dimmed and the host's label says why. */
   .dx-switch[data-indeterminate] .dx-switch-control {
     opacity: 0.5;
@@ -41,7 +45,7 @@
     background: var(--color-input-surface);
     transition: background-color 120ms ease-out;
   }
-  .dx-switch:hover:not([data-disabled]) .dx-switch-control:not([data-state='checked']) {
+  .dx-switch:hover:not([data-disabled], [data-readonly]) .dx-switch-control:not([data-state='checked']) {
     background: var(--color-hover-surface);
   }
   .dx-switch-control[data-state='checked'] {

@@ -402,11 +402,11 @@ type Log = (id: string) => void;
 const record: Log = (id) => log.info('action', { id });
 
 /** The owner declares named groups and the overflow menu; it knows nothing of its contributors. */
-const ownerGraph = (log: Log): ActionGraphProps =>
+const ownerGraph = (log: Log, fold = false): ActionGraphProps =>
   MenuBuilder.make()
     .group(
       'formatting',
-      { label: 'Formatting', icon: 'ph--text-aa--regular', placement: { zone: 'start', collapse: 2 } },
+      { label: 'Formatting', icon: 'ph--text-aa--regular', placement: { zone: 'start', collapse: 2, fold } },
       (group) =>
         group
           .action('heading', { label: 'Heading', icon: 'ph--text-h--regular', placement: { order: 10 } }, () =>
@@ -420,7 +420,7 @@ const ownerGraph = (log: Log): ActionGraphProps =>
     )
     .group(
       'blocks',
-      { label: 'Blocks', icon: 'ph--list-bullets--regular', placement: { zone: 'start', collapse: 3 } },
+      { label: 'Blocks', icon: 'ph--list-bullets--regular', placement: { zone: 'start', collapse: 3, fold } },
       (group) =>
         group
           .action('list', { label: 'List', icon: 'ph--list-bullets--regular', placement: { order: 10 } }, () =>
@@ -513,16 +513,16 @@ const contributions: Record<Contributor, (log: Log) => ActionGraphProps[]> = {
   ],
 };
 
-type StoryProps = { contributors?: Contributor[]; narrow?: boolean; asMenu?: boolean };
+type StoryProps = { contributors?: Contributor[]; narrow?: boolean; fold?: boolean; asMenu?: boolean };
 
-const LayoutStory = ({ contributors = [], narrow, asMenu }: StoryProps) => {
+const LayoutStory = ({ contributors = [], narrow, fold, asMenu }: StoryProps) => {
   const menu = useMenuBuilder(
     () =>
       contributors
         .flatMap((contributor) => contributions[contributor](record))
-        .reduce((builder, graph) => builder.subgraph(graph), MenuBuilder.make().subgraph(ownerGraph(record)))
+        .reduce((builder, graph) => builder.subgraph(graph), MenuBuilder.make().subgraph(ownerGraph(record, fold)))
         .build(),
-    [contributors],
+    [contributors, fold],
   );
 
   return (
@@ -606,6 +606,17 @@ export const Narrow: Story = {
     const body = within(document.body);
     await userEvent.click(await body.findByRole('menuitem', { name: 'Blocks' }));
     await expect(await body.findByRole('menuitem', { name: 'Insert object' })).toBeVisible();
+  },
+};
+
+/** Groups that fold do so in place, into a dropdown in the row, before any item moves into ⋮. */
+export const Folding: Story = {
+  render: () => <LayoutStory contributors={['review', 'transcription', 'presenter']} narrow fold />,
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(labels(canvasElement)).not.toContain('List'));
+    await expect(labels(canvasElement)).toEqual(expect.arrayContaining(['Formatting', 'Blocks', 'Preview']));
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Blocks' }));
+    await expect(await within(document.body).findByRole('menuitem', { name: 'Insert object' })).toBeVisible();
   },
 };
 

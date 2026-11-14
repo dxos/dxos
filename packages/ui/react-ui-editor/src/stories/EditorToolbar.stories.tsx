@@ -136,6 +136,9 @@ export const Extended: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getByTestId('editor.toolbar.column')).toBeVisible());
+    // Format and Insert show their buttons while they fit.
+    await expect(canvas.getByTestId('editor.toolbar.strong')).toBeVisible();
+    await expect(canvas.queryByTestId('editor.toolbar.format')).toBeNull();
     await userEvent.click(canvas.getByTestId('toolbar.overflow'));
     await expect(await within(document.body).findByRole('menuitem', { name: 'Export' })).toBeVisible();
   },
@@ -147,7 +150,7 @@ export const Menu: Story = {
   play: async ({ canvasElement }) => {
     const body = within(document.body);
     await userEvent.click(await within(canvasElement).findByTestId('editor.menu'));
-    await userEvent.click(await body.findByRole('menuitem', { name: 'Formatting' }));
+    await userEvent.click(await body.findByRole('menuitem', { name: 'Format' }));
     await expect(await body.findByRole('menuitemcheckbox', { name: /Bold/ })).toBeVisible();
   },
 };

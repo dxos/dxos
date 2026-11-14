@@ -137,3 +137,90 @@ export const TestCompact: Story = {
     await expect(canvas.queryByRole('textbox', { name: 'From' })).toBeNull();
   },
 };
+
+const ROW_LAYOUT = trim`
+  <grid cols="3" header="true">
+    <field name="name"/>
+    <field name="type"/>
+    <field name="optional" width="auto"/>
+  </grid>
+`;
+
+const Row = Schema.Struct({
+  name: Schema.String.annotate({ title: 'Name' }),
+  type: Schema.String.annotate({ title: 'Type' }),
+  optional: Schema.optional(Schema.Boolean.annotate({ title: 'Optional' })),
+}).pipe(Annotation.FormLayoutAnnotation.set({ default: ROW_LAYOUT }));
+
+const Table = Schema.Struct({ fields: Schema.Array(Row).annotate({ title: 'Fields' }) });
+
+const TableStory = ({ readonly }: { readonly?: boolean }) => {
+  const [values, setValues] = useState<Schema.Schema.Type<typeof Table>>({
+    fields: [
+      { name: 'subject', type: 'string' },
+      { name: 'folder', type: 'Folder', optional: true },
+    ],
+  });
+  return (
+    <Panel.Root>
+      <Panel.Body asChild>
+        <Layout.Container>
+          <Form.Root
+            schema={Table}
+            values={values}
+            readonly={readonly}
+            onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+          >
+            <Form.Content>
+              <Form.Fields />
+            </Form.Content>
+          </Form.Root>
+        </Layout.Container>
+      </Panel.Body>
+      <Panel.Footer>
+        <Typography.Text truncate data-testid='values'>
+          {JSON.stringify(values)}
+        </Typography.Text>
+      </Panel.Footer>
+    </Panel.Root>
+  );
+};
+
+/**
+ * 1. TestTable: an array whose item struct lays out by a header grid is a table: the columns are named once, every row's
+ * cells share the tracks, and a `width="auto"` column fits its switch.
+ */
+export const TestTable: StoryObj<{ readonly?: boolean }> = {
+  render: TableStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 2. Each title shows once, above the rows, and the cells under it start where it does.
+    await expect(canvas.getAllByText('Optional')).toHaveLength(1);
+    const switches = canvas.getAllByRole('switch', { name: 'Optional' });
+    await expect(switches).toHaveLength(2);
+    const [first, second] = switches.map((input) => input.closest('.dx-switch')!.getBoundingClientRect());
+    await expect(second.left).toBeCloseTo(first.left, 0);
+    await expect(first.left).toBeGreaterThanOrEqual(canvas.getByText('Optional').getBoundingClientRect().left - 1);
+
+    // 3. A switch in a row edits its own row.
+    await userEvent.click(switches[0].closest('.dx-switch')!);
+    await waitFor(() =>
+      expect(JSON.parse(canvas.getByTestId('values').textContent ?? '{}').fields[0].optional).toBe(true),
+    );
+  },
+};
+
+/** 1. TestTableReadonly: read-only, a table's switches look as they do editable and take no press. */
+export const TestTableReadonly: StoryObj<{ readonly?: boolean }> = {
+  render: TableStory,
+  args: { readonly: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const root = canvas.getAllByRole('switch', { name: 'Optional' })[0].closest('.dx-switch')!;
+    await expect(root).toHaveAttribute('data-readonly');
+    await expect(root).not.toHaveAttribute('data-disabled');
+    await userEvent.click(root);
+    await expect(JSON.parse(canvas.getByTestId('values').textContent ?? '{}').fields[0].optional).toBeUndefined();
+  },
+};

@@ -427,7 +427,8 @@ export const FormOrderedAnnotationId = '@dxos/schema/annotation/FormOrdered';
 export const FormOrderedAnnotation = createAnnotationHelper<boolean>(FormOrderedAnnotationId);
 
 /**
- * How a form presents an array of references; the two options are independent.
+ * How a form presents an array of references, or (`tag` only) of the values its element's `OptionsLookup` offers. The
+ * two options are independent.
  */
 export type ArrayPresentation = {
   /** Rows (or chips) reorder by drag and keyboard, and the order is persisted; `false` by default. */

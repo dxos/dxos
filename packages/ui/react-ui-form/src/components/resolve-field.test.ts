@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Format } from '@dxos/echo';
+import { Annotation, Format } from '@dxos/echo';
 import { VectorAnnotationId } from '@dxos/ui-types';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { HueAnnotation } from '../annotations.ts';
+import { HueAnnotation, OptionsLookupAnnotation, optionsLookup } from '../annotations.ts';
 import { resolveFieldRenderer } from './resolve-field.ts';
 
 describe('resolveFieldRenderer', () => {
@@ -53,6 +54,17 @@ describe('resolveFieldRenderer', () => {
     expect(resolve(Schema.Literals(['a', 'b']))).toEqual({ kind: 'select', options: ['a', 'b'] });
     const nested = resolve(Schema.Struct({ street: Schema.String }));
     expect(nested?.kind).toBe('object');
+  });
+
+  test('an array of looked-up values is chips only when presented as tags', ({ expect }) => {
+    const lookup = optionsLookup<{}>()([], () => Effect.succeed([]));
+    const array = Schema.Array(Schema.String.pipe(OptionsLookupAnnotation.set(lookup)));
+    expect(resolve(array)).toEqual({ kind: 'array' });
+    expect(resolve(array.pipe(Annotation.ArrayPresentationAnnotation.set({ display: 'tag', ordered: true })))).toEqual({
+      kind: 'lookupArray',
+      lookup,
+      ordered: true,
+    });
   });
 
   test('a struct marked as a vector is a vector, not a nested group', ({ expect }) => {

@@ -12,29 +12,15 @@ import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
 
-import {
-  FeatureArticle,
-  FeatureCardContent,
-  FeatureCompanion,
-  FeatureSection,
-  FeatureSpecView,
-  ProjectFeatureCompanion,
-} from '#containers';
-import { Feature } from '#types';
+import { FeatureCompanion, FeatureSpecView, ProjectFeatureCompanion } from '#containers';
 
 import { FEATURE_COMPANION } from '../constants.ts';
 import { isFeatureView } from '../spec-views.ts';
 
-/** The feature map's surfaces: features, and the views a spec using the features dialect gains. */
+/** The feature map's surfaces: the views a spec using the software dialect gains, and the feature companion. */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'feature.article',
-        filter: AppSurface.object(AppSurface.Article, Feature.Feature),
-        component: FeatureArticle,
-        props: ({ role, data }) => ({ role, ...data }),
-      }),
       // The spec's feature companion (see the `feature` node in the graph builder).
       Surface.create({
         id: 'feature.companion',
@@ -60,18 +46,6 @@ export default Capability.makeModule(() =>
         filter: Surface.makeFilter(ProjectSurface.SpecView, ({ view }) => isFeatureView(view)),
         component: FeatureSpecView,
         props: ({ data }) => data,
-      }),
-      Surface.create({
-        id: 'feature.section',
-        filter: AppSurface.object(AppSurface.Section, Feature.Feature),
-        component: FeatureSection,
-        props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
-      }),
-      Surface.create({
-        id: 'feature.card',
-        filter: AppSurface.object(AppSurface.CardContent, Feature.Feature),
-        component: FeatureCardContent,
-        props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
   ),

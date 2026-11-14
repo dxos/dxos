@@ -5,7 +5,9 @@
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { comments, createComment } from './comments.ts';
+import { Cursor } from '../../util/index.ts';
+import { documentId } from '../state/selection.ts';
+import { comments, commentsState, createComment } from './comments.ts';
 
 describe('createComment', () => {
   test('collapses the selection to its start after creating a comment', ({ expect }) => {
@@ -66,6 +68,34 @@ describe('createComment', () => {
     view.dispatch({ selection: { anchor: 4, head: 9 } });
     expect(createComment(view)).to.eq(false);
     expect(created).to.have.length(0);
+
+    view.destroy();
+  });
+});
+
+describe('comments', () => {
+  test('holds a comment back until the editor holds the text its cursor resolves into', async ({ expect }) => {
+    const text = 'The quick brown fox.';
+    // Resolves against the full text, as a binding's converter does before the binding fills the editor.
+    const converter = {
+      toCursor: (position: number) => String(position),
+      fromCursor: (cursor: string) => Number(cursor),
+    };
+    const view = new EditorView({
+      doc: '',
+      extensions: [
+        documentId.of('test'),
+        Cursor.converter.of(converter),
+        comments({ id: 'test', getComments: () => [{ id: 'quick', cursor: '4:9' }] }),
+      ],
+    });
+
+    await Promise.resolve();
+    expect(view.state.field(commentsState).comments).to.have.length(0);
+
+    view.dispatch({ changes: { from: 0, insert: text } });
+    await Promise.resolve();
+    expect(view.state.field(commentsState).comments.map(({ range }) => range)).to.deep.eq([{ from: 4, to: 9 }]);
 
     view.destroy();
   });

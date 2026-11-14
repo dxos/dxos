@@ -46,7 +46,7 @@ export default Capability.makeModule(
       type: Spec.Spec,
       connector: () => Effect.succeed([makeFeatureCompanion()]),
     });
-    // The same companion beside a project, while it owns a spec: the project's Specs tab shows a spec's map.
+    // The project's Specs tab shows a spec's map while the project owns one.
     const projectFeatureCompanionExtensions = yield* AppGraphBuilder.createTypeExtension({
       id: 'projectFeatureCompanion',
       relation: AppNode.companion,

@@ -31,18 +31,21 @@ type FieldRootProps = ThemedClassName<FieldPrimitive.RootProps> & {
   /**
    * `stack` (default) puts the label above the control (decision 13). `row` joins the parent's `columns` as a subgrid
    * row (Phase 4 decision 3): the Header and HelperText take the tracks before the parent's interior `control` line,
-   * every other child the tracks after it; below the pane's collapse width the row stacks.
+   * every other child the tracks after it; below the pane's collapse width the row stacks. `inline` puts the label
+   * beside the control, in a `--dx-label-width` column, so a run of inline fields lines its controls up.
    */
-  layout?: 'stack' | 'row';
+  layout?: 'stack' | 'row' | 'inline';
   /** A surface rung for a `row` field, which then draws a separator border around itself (a settings card row). */
   level?: Level;
   /** Tracks the field spans in its parent Container (e.g. two columns of a multi-column form). */
   span?: Span;
+  /** The control's text colour, as Typography's `tone`. */
+  tone?: 'muted';
 };
 
 /** A part, not a container (decision 13): a flex stack in the content track with the label above its control. */
 const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
-  ({ classNames, invalid, validationValence, layout, level, span, style, ...props }, forwardedRef) => {
+  ({ classNames, invalid, validationValence, layout, level, span, tone, style, ...props }, forwardedRef) => {
     // Ark inherits only `disabled` from an enclosing Fieldset; an invalid set marks its fields invalid too.
     const fieldset = useFieldsetContext();
     const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
@@ -53,7 +56,8 @@ const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
         style={{ ...spanStyle, ...style }}
         invalid={invalid ?? (validationValence === 'error' || fieldset?.invalid)}
         data-valence={validationValence === 'neutral' ? undefined : validationValence}
-        data-layout={layout === 'row' ? layout : undefined}
+        data-layout={layout === 'stack' ? undefined : layout}
+        data-tone={tone}
         data-surface={layout === 'row' ? level : undefined}
         className={mx(recipes.field(), classNames)}
         ref={forwardedRef}

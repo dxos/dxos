@@ -318,8 +318,10 @@ export const commentsState = StateField.define<CommentsState>({
               return undefined;
             }
 
+            // A converter may resolve against text this editor does not hold yet (a binding fills the editor after
+            // it is created); such a comment waits for the retry once the text arrives.
             const range = Cursor.getRangeFromCursor(tr.state, comment.cursor);
-            return range && { comment, range };
+            return range && range.to <= tr.state.doc.length ? { comment, range } : undefined;
           })
           .filter(isNonNullable);
 

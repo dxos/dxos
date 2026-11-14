@@ -113,6 +113,13 @@ export const resolveFieldRenderer = ({
   }
 
   if (SchemaEx.isArrayType(type)) {
+    // An array of looked-up values presented as `tag` is one selection of chips rather than a row per element.
+    const element = SchemaEx.getArrayElementType(type);
+    const elementLookup = element && Option.getOrUndefined(OptionsLookupAnnotation.getFromAst(element));
+    const presentation = Option.getOrUndefined(Annotation.ArrayPresentationAnnotation.getFromAst(type));
+    if (elementLookup && presentation?.display === 'tag') {
+      return { kind: 'lookupArray', lookup: elementLookup, ordered: !!presentation.ordered };
+    }
     return { kind: 'array' };
   }
 
@@ -162,6 +169,7 @@ export type FieldRendererResolution =
   | { kind: 'custom'; component: FormFieldRenderer }
   | { kind: 'provided'; element: ReactNode }
   | { kind: 'lookup'; lookup: OptionsLookup; combobox: boolean }
+  | { kind: 'lookupArray'; lookup: OptionsLookup; ordered: boolean }
   | { kind: 'autofill'; autofill: Autofill }
   | { kind: 'hue' }
   | { kind: 'vector' }

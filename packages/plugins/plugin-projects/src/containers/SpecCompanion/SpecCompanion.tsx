@@ -10,8 +10,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
-import { Filter, Obj } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { useViewState } from '@dxos/react-ui-attention';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -22,9 +22,10 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { ProjectCapabilities, ProjectSurface, ProjectView } from '#types';
 
+import { useSpecNesting } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 import * as SpecSession from '../../SpecSession.ts';
-import { nestSpecs } from '../../util/spec-tree.ts';
+import { specTree } from '../../util/spec-tree.ts';
 
 export type SpecCompanionProps = {
   /** The spec, or the project whose Specs tab shows one of its specs. */
@@ -120,7 +121,7 @@ const useCompanionSpec = (subject: Spec.Spec | Project.Project): Spec.Spec | und
   const specs = useAtomValue(
     useMemo(() => Atom.make((get) => (refs ?? []).map((ref) => get(ref.atom)).filter(Spec.instanceOf)), [refs]),
   );
-  const all = useQuery(project && Obj.getDatabase(project), Filter.type(Spec.Spec));
-  const tree = useMemo(() => nestSpecs(specs, all), [specs, all]);
+  const nesting = useSpecNesting(specs);
+  const tree = useMemo(() => specTree(specs, nesting), [specs, nesting]);
   return Spec.instanceOf(subject) ? subject : (tree.find(({ spec }) => spec.id === picked) ?? tree[0])?.spec;
 };
