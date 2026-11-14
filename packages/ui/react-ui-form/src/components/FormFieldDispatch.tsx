@@ -29,6 +29,7 @@ import {
   GeoPointField,
   HueField,
   InlineRefField,
+  LookupArrayField,
   MarkdownField,
   NumberField,
   PasswordField,
@@ -213,6 +214,9 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         hideLabel={override?.hideLabel}
         section={presentation === 'section'}
         placeholder={override?.placeholder}
+        newItem={override?.newItem}
+        rowAlign={override?.rowAlign}
+        keepColumns={override?.keepColumns}
         {...props}
         readonly={readonly || presentation === 'static'}
       />
@@ -293,6 +297,8 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       binding={binding}
       standalone={refArray ? true : scalar?.standalone}
       labelPlacement={scalar?.labelPlacement}
+      inlineLabel={override?.inlineLabel}
+      tone={override?.tone}
       renderStatic={
         resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name, type) : undefined
       }
@@ -322,6 +328,8 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         ) : (
           <AsyncSelectField {...fieldProps} lookup={resolution.lookup} />
         );
+      case 'lookupArray':
+        return <LookupArrayField {...fieldProps} lookup={resolution.lookup} ordered={resolution.ordered} />;
       case 'autofill':
         return <AutofillField {...fieldProps} autofill={resolution.autofill} />;
       case 'hue':

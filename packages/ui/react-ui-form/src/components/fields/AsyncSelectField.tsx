@@ -10,7 +10,7 @@ import type * as Select from '@dxos/react-ui/Select';
 import { type FormFieldRendererProps } from '#types';
 
 import { type OptionsLookup, type OptionsLookupEntry } from '../../annotations.ts';
-import { pickValues, useAsyncFieldEffect, useFormValues } from '../../hooks/index.ts';
+import { lookupKey, pickValues, useAsyncFieldEffect, useFormValues } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
 import { SelectControl } from './SelectField.tsx';
@@ -37,7 +37,7 @@ export const AsyncSelectField = ({
 }: AsyncSelectFieldProps) => {
   const values = useFormValues<AnyProperties>('Form.AsyncSelectField');
   const subset = useMemo(() => pickValues(values, lookup.deps), [values, lookup.deps]);
-  const key = useMemo(() => JSON.stringify(subset), [subset]);
+  const key = useMemo(() => lookupKey(lookup, subset), [lookup, subset]);
   const { loading, data } = useAsyncFieldEffect<readonly OptionsLookupEntry[]>(() => lookup.load(subset), key);
   const items = useMemo<Select.Option[]>(
     () => (data ?? []).map(({ value, label, icon }) => ({ value, label: label ?? value, icon })),

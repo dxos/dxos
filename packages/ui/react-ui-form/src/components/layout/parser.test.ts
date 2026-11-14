@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { LayoutParseError, parseLayout } from './parser.ts';
+import { LayoutParseError, gridTracks, parseLayout } from './parser.ts';
 
 describe('parseLayout', () => {
   test('grid with two fields', ({ expect }) => {
@@ -23,6 +23,28 @@ describe('parseLayout', () => {
     const tree = parseLayout(`<grid cols="2" fixed="true"><field name="x"/><field name="y"/></grid>`);
     expect(tree).toMatchObject({ kind: 'grid', cols: 2, fixed: true });
     expect(parseLayout(`<grid cols="2"><field name="x"/></grid>`)).not.toHaveProperty('fixed');
+  });
+
+  test('header grid of fields, one sized to its content', ({ expect }) => {
+    const tree = parseLayout(
+      `<grid cols="3" header="true"><field name="a"/><field name="b"/><field name="c" width="auto"/></grid>`,
+    );
+    expect(tree).toMatchObject({ kind: 'grid', header: true, children: [{}, {}, { name: 'c', width: 'auto' }] });
+    expect(() => parseLayout(`<grid cols="1" header="true"><grid cols="1"><field name="a"/></grid></grid>`)).toThrow(
+      /holds only fields/,
+    );
+    expect(() => parseLayout(`<grid cols="1"><field name="a" width="2rem"/></grid>`)).toThrow(/expects "auto"/);
+  });
+
+  test('tracks are equal shares except where a field fits its content', ({ expect }) => {
+    const share = 'minmax(0, 1fr)';
+    expect(gridTracks(parseLayout(`<grid cols="2"><field name="a"/><field name="b"/></grid>`))).toBe(
+      `repeat(2, ${share})`,
+    );
+    const tracks = gridTracks(
+      parseLayout(`<grid cols="4"><field name="a" span="2"/><field name="b" width="auto"/></grid>`),
+    );
+    expect(tracks).toBe(`${share} ${share} auto ${share}`);
   });
 
   test('field with span attribute', ({ expect }) => {

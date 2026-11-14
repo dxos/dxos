@@ -6,9 +6,9 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
+import * as Spec from '@dxos/compute/Spec';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import * as Feature from '@dxos/plugin-code/Feature';
 import * as Showcase from '@dxos/plugin-code/Showcase';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
@@ -24,7 +24,7 @@ const testLayer = () =>
       Presentation.Presentation,
       Presentation.Slide,
       Showcase.Demonstrates,
-      Feature.Feature,
+      Spec.Spec,
       Task.Task,
       Text.Text,
       Markdown.Document,
@@ -35,7 +35,7 @@ const testLayer = () =>
 describe('CodeOperation.CreateShowcase', () => {
   it.effect('writes nothing when a target does not resolve', () =>
     Effect.gen(function* () {
-      const gone = yield* Database.add(Feature.make({ name: 'Gone', status: 'planned' }));
+      const gone = yield* Database.add(Task.make({ title: 'Gone' }));
       yield* Database.remove(gone);
       yield* Database.flush();
       const exit = yield* Effect.exit(
@@ -48,7 +48,7 @@ describe('CodeOperation.CreateShowcase', () => {
 
   it.effect('makes a deck: the write-up first, then a linked slide per artifact, demonstrating every target', () =>
     Effect.gen(function* () {
-      const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'operational' }));
+      const compose = yield* Database.add(Spec.make({ name: 'Compose' }));
       const task = yield* Database.add(Task.make({ title: 'Send through Gmail' }));
       const pullRequest = yield* Database.add(
         PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: 'Send', state: 'open' }),
@@ -57,7 +57,8 @@ describe('CodeOperation.CreateShowcase', () => {
       const { showcase } = yield* createShowcase.handler({
         name: 'Sending a reply',
         content: '# Sending a reply\n\nReply from the inbox.',
-        targets: [Ref.make(compose), Ref.make(task)],
+        targets: [Ref.make(task)],
+        items: [{ spec: Ref.make(compose), item: 'reply' }],
         artifacts: [Ref.make(notes), Ref.make(pullRequest)],
       });
 
@@ -84,6 +85,9 @@ describe('CodeOperation.CreateShowcase', () => {
           .run;
         expect(shown.map(({ id }) => id)).toEqual([showcase.id]);
       }
+      const [demonstrates] = yield* Database.query(Query.select(Filter.id(compose.id)).targetOf(Showcase.Demonstrates))
+        .run;
+      expect(demonstrates.item).toBe('reply');
     }).pipe(Effect.provide(testLayer())),
   );
 });

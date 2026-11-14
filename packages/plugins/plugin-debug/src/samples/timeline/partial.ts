@@ -12,7 +12,7 @@ import * as Spec from '@dxos/compute/Spec';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-code/Feature';
 import * as FeatureMap from '@dxos/plugin-code/FeatureMap';
-import * as SpecText from '@dxos/plugin-code/SpecText';
+import * as SpecItem from '@dxos/plugin-code/SpecItem';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
@@ -45,12 +45,13 @@ type FeatureSeed = {
   readonly key: string;
   readonly name: string;
   readonly description: string;
-  readonly status: Feature.Status;
-  readonly spec: string;
-  /** Its parts, each added as a feature whose parent is this one. */
-  readonly subfeatures?: readonly { readonly name: string; readonly status: Feature.Status }[];
+  readonly status: string;
+  /** The block that states it; one the text lacks is written from this seed. */
+  readonly feat: string;
+  /** Its parts, each a feature on the spec that breaks this one down. */
+  readonly subfeatures?: readonly { readonly name: string; readonly status: string }[];
   /** Keys of the features this one needs. */
-  readonly needs?: readonly string[];
+  readonly depends?: readonly string[];
 };
 
 const FEATURES: readonly FeatureSeed[] = [
@@ -59,7 +60,7 @@ const FEATURES: readonly FeatureSeed[] = [
     name: 'Chart objects',
     description: 'Each chart is its own object, owned by its sheet, so a document can embed it.',
     status: 'operational',
-    spec: `${SPEC_PATH}#F-1`,
+    feat: 'F-1',
     subfeatures: [
       { name: 'Chart type', status: 'operational' },
       { name: 'Sheet migration', status: 'operational' },
@@ -71,7 +72,7 @@ const FEATURES: readonly FeatureSeed[] = [
     name: 'Timeline chart',
     description: 'Events along a vertical spine: spine side, log, linear or compact spacing, and an event card.',
     status: 'prototype',
-    spec: `${SPEC_PATH}#F-2`,
+    feat: 'F-2',
     subfeatures: [
       { name: 'Spines and scales', status: 'operational' },
       { name: 'Category hierarchy and colors', status: 'operational' },
@@ -79,39 +80,39 @@ const FEATURES: readonly FeatureSeed[] = [
       { name: 'Event cards with images', status: 'operational' },
       { name: 'Text filter', status: 'operational' },
     ],
-    needs: ['charts'],
+    depends: ['charts'],
   },
   {
     key: 'embeds',
     name: 'Slide embeds',
     description: 'A presented deck shows an embedded object over the whole viewport, keeping its keys.',
     status: 'prototype',
-    spec: `${SPEC_PATH}#F-3`,
+    feat: 'F-3',
     subfeatures: [
       { name: 'Full-viewport embeds', status: 'operational' },
       { name: 'Keyboard isolation', status: 'operational' },
     ],
-    needs: ['charts'],
+    depends: ['charts'],
   },
   {
     key: 'presenter',
     name: 'Presenter space',
     description: 'A space template with the events sheet, its timeline chart and a deck built from markdown.',
     status: 'prototype',
-    spec: `${SPEC_PATH}#F-4`,
+    feat: 'F-4',
     subfeatures: [
       { name: 'Deck from a markdown template', status: 'operational' },
       { name: 'Events dataset', status: 'operational' },
     ],
-    needs: ['timeline', 'embeds'],
+    depends: ['timeline', 'embeds'],
   },
   {
     key: 'research',
     name: 'Timeline research skill',
     description: 'Researches the events for a range of years and a set of categories, and fills a sheet with them.',
     status: 'planned',
-    spec: `${SPEC_PATH}#F-5`,
-    needs: ['timeline'],
+    feat: 'F-5',
+    depends: ['timeline'],
   },
 ];
 
@@ -170,7 +171,8 @@ export type Provides = {
   project: Project.Project;
   /** The spec, which the project owns: its text and its feature map. */
   map: Spec.Spec;
-  features: Feature.Feature[];
+  /** The specs that break the features down, in the order of the features. */
+  breakdowns: Spec.Spec[];
   tasks: Task.Task[];
   /** The events sheet the fixture task produced. */
   fixture: Sheet.Sheet;
@@ -186,9 +188,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
     TaskSet.TaskSet,
     Task.Task,
     Spec.Spec,
-    Feature.Feature,
-    Feature.DependsOn,
-    Feature.Implements,
+    SpecItem.Implements,
     Sheet.Sheet,
     Sheet.Chart,
   ],
@@ -245,54 +245,62 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
       Obj.update(project, (project) => {
         project.specs.push(Ref.make(map));
       });
-      const byKey = new Map<string, Feature.Feature>();
+      const blockOf = new Map(FEATURES.map(({ key, feat }) => [key, feat]));
+      const breakdowns = new Map<string, Spec.Spec>();
       for (const seed of FEATURES) {
-        const feature = yield* Database.add(
-          Feature.make({
-            name: seed.name,
-            description: seed.description,
-            status: seed.status,
-          }),
-        );
-        Obj.update(feature, (feature) => {
-          Feature.setSources(feature, [seed.spec]);
-        });
         if (seed.subfeatures) {
-          const parts: Feature.Feature[] = [];
-          for (const subfeature of seed.subfeatures) {
-            parts.push(yield* Database.add(Feature.make({ ...subfeature })));
-          }
-          const breakdown = yield* Database.add(FeatureMap.make({ name: seed.name, features: parts }));
-          Obj.update(feature, (feature) => {
-            feature.spec = Ref.make(breakdown);
-          });
-        }
-        byKey.set(seed.key, feature);
-      }
-      FeatureMap.setFeatures(map, [...byKey.values()]);
-      // Each `feat` block in the text becomes an embed of the feature seeded from it.
-      yield* Effect.promise(() => SpecText.take(map, { path: SPEC_PATH, text: specContent }));
-
-      const featureOf = (key: string): Feature.Feature => {
-        const feature = byKey.get(key);
-        if (!feature) {
-          throw new Error(`Unknown feature: ${key}`);
-        }
-        return feature;
-      };
-      for (const seed of FEATURES) {
-        for (const need of seed.needs ?? []) {
-          yield* Database.add(
-            Feature.makeDependsOn({ [Relation.Source]: featureOf(seed.key), [Relation.Target]: featureOf(need) }),
+          const content = SpecItem.writeFeatures(
+            '',
+            seed.subfeatures.map(({ name, status }, index) => ({
+              key: `F-${index + 1}`,
+              title: name,
+              fields: { status },
+            })),
+          );
+          breakdowns.set(
+            seed.key,
+            yield* Database.add(Spec.make({ name: seed.name, dialects: [FeatureMap.SOFTWARE_DIALECT], content })),
           );
         }
       }
+      const content = SpecItem.writeFeatures(
+        specContent,
+        FEATURES.map((seed) => {
+          const breakdown = breakdowns.get(seed.key);
+          return {
+            key: seed.feat,
+            title: seed.name,
+            prose: seed.description,
+            fields: {
+              status: seed.status,
+              ...(seed.depends && { depends: seed.depends.map((name) => blockOf.get(name)!) }),
+              ...(breakdown && { spec: `echo:///${breakdown.id}` }),
+            },
+          };
+        }),
+      );
+      // Made by this template, so a text that will not load is a bug, not an outcome.
+      const text = yield* Database.load(map.content).pipe(Effect.orDie);
+      Obj.update(text, (text) => {
+        text.content = content;
+      });
+      Obj.update(map, (map) => {
+        map.dialects.splice(0, map.dialects.length, FeatureMap.SOFTWARE_DIALECT);
+      });
+      Obj.update(project, (project) => {
+        project.specs.push(...[...breakdowns.values()].map((breakdown) => Ref.make(breakdown)));
+      });
+
       for (const [index, seed] of TASKS.entries()) {
         yield* Database.add(
-          Feature.makeImplements({ [Relation.Source]: tasks[index], [Relation.Target]: featureOf(seed.feature) }),
+          SpecItem.makeImplements({
+            [Relation.Source]: tasks[index],
+            [Relation.Target]: map,
+            item: blockOf.get(seed.feature)!,
+          }),
         );
       }
 
-      return { project, map, features: [...byKey.values()], tasks, fixture };
+      return { project, map, breakdowns: [...breakdowns.values()], tasks, fixture };
     }),
 });

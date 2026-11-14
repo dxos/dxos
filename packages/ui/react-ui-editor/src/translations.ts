@@ -11,6 +11,7 @@ export const translations = [
     'en-US': {
       [translationKey]: {
         'comment.label': 'Create comment',
+        'format.label': 'Format',
         'image.label': 'Insert image',
         'insert.label': 'Insert',
         'search.label': 'Search',

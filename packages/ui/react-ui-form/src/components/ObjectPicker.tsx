@@ -66,10 +66,11 @@ const usePickerState = ({
   const [creating, setCreating] = useState<string>();
   const items = useMemo<Combobox.Option[]>(
     () =>
-      options.map(({ id, label, description, icon, iconHue }) => ({
+      options.map(({ id, label, description, detail, icon, iconHue }) => ({
         value: id,
         label,
         description,
+        detail,
         icon,
         iconHue: hues.find((hue) => hue === iconHue),
       })),

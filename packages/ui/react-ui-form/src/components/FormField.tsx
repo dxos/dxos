@@ -41,6 +41,10 @@ export type FormFieldProps<T = any> = PropsWithChildren<{
   labelEnd?: ReactNode;
   /** `beside`: the control carries its own label (a Switch), so the row draws no header. */
   labelPlacement?: FormFieldLabelPlacement;
+  /** The label sits beside the control rather than above it. */
+  inlineLabel?: boolean;
+  /** The value's text colour. */
+  tone?: 'muted';
   presentation?: FormPresentation;
   renderStatic?: (value: T | undefined) => ReactNode;
 }>;
@@ -119,6 +123,8 @@ export const FormFieldRow = <T,>({
   standalone,
   labelEnd,
   labelPlacement = 'above',
+  inlineLabel,
+  tone,
   presentation: presentationProp,
   renderStatic,
   format,
@@ -144,7 +150,8 @@ export const FormFieldRow = <T,>({
   const showHeader = resolved.showLabel && !!label && (labelPlacement !== 'beside' || settings);
   const row = (
     <Field.Root
-      layout={settings ? 'row' : 'stack'}
+      layout={settings ? 'row' : inlineLabel ? 'inline' : 'stack'}
+      tone={tone}
       level={settings ? '+1' : undefined}
       invalid={!!error}
       required={!!required}

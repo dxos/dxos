@@ -5,15 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import type * as Spec from '@dxos/compute/Spec';
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
-import * as Feature from '@dxos/plugin-code/Feature';
+import * as Spec from '@dxos/compute/Spec';
+import { Database, Obj, Ref, Relation, Text } from '@dxos/echo';
 import * as FeatureMap from '@dxos/plugin-code/FeatureMap';
-import * as SpecText from '@dxos/plugin-code/SpecText';
+import * as SpecItem from '@dxos/plugin-code/SpecItem';
 
 import { type ProjectResult } from './project.ts';
-import specContent from './SPEC.mdl?raw';
-import { SPEC_PATH, type SpecResult } from './spec.ts';
+import { type SpecResult } from './spec.ts';
 import { type TasksResult } from './tasks.ts';
 
 //
@@ -26,10 +24,10 @@ import { type TasksResult } from './tasks.ts';
 export type FeatureSeed = {
   readonly name: string;
   readonly description: string;
-  /** The spec block it is described by; F-1 is seeded, the agent writes the rest. */
+  /** The spec block it is described by; F-1 is in the text, the others are written from this seed. */
   readonly feat: string;
   /** Its parts, each added as a feature on the spec that breaks this one down. */
-  readonly subfeatures?: readonly { readonly name: string; readonly status: Feature.Status }[];
+  readonly subfeatures?: readonly { readonly name: string; readonly status: string }[];
   /** Indexes into the template's task list. */
   readonly tasks: readonly number[];
 };
@@ -68,58 +66,71 @@ export const FEATURES: readonly FeatureSeed[] = [
 
 export type FeaturesInput = { tasks: TasksResult; project: ProjectResult; spec: SpecResult };
 
-export type FeaturesResult = { map: Spec.Spec; features: Feature.Feature[] };
+export type FeaturesResult = { map: Spec.Spec; breakdowns: Spec.Spec[] };
 
 export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput> = SampleSpace.partial('features', {
-  schemas: [Feature.Feature, Feature.DependsOn, Feature.Implements],
+  schemas: [Spec.Spec, SpecItem.Implements],
   run: ({ tasks, project, spec }: FeaturesInput) =>
     Effect.gen(function* () {
-      // The imported spec is the map, which the project that tracks its tasks owns.
+      // The imported spec is the map, which the project that tracks its tasks owns; its feat blocks are the cards.
       const map = spec.spec;
-      Obj.update(project.project, (project) => {
-        project.specs.push(Ref.make(map));
-      });
-      const features: Feature.Feature[] = [];
+      const breakdowns = new Map<string, Spec.Spec>();
       for (const seed of FEATURES) {
-        const feature = yield* Database.add(
-          Feature.make({
-            name: seed.name,
-            description: seed.description,
-            status: 'planned',
-          }),
-        );
-        Obj.update(feature, (feature) => {
-          Feature.setSources(feature, [`${SPEC_PATH}#${seed.feat}`]);
-        });
         if (seed.subfeatures) {
-          const parts: Feature.Feature[] = [];
-          for (const subfeature of seed.subfeatures) {
-            parts.push(yield* Database.add(Feature.make({ ...subfeature })));
-          }
-          const breakdown = yield* Database.add(FeatureMap.make({ name: seed.name, features: parts }));
-          Obj.update(feature, (feature) => {
-            feature.spec = Ref.make(breakdown);
-          });
-        }
-        features.push(feature);
-      }
-      FeatureMap.setFeatures(map, features);
-      // Each `feat` block in the text becomes an embed of the feature seeded from it.
-      yield* Effect.promise(() => SpecText.take(map, { path: SPEC_PATH, text: specContent }));
-
-      for (const [index, feature] of features.entries()) {
-        if (index > 0) {
-          yield* Database.add(
-            Feature.makeDependsOn({ [Relation.Source]: feature, [Relation.Target]: features[index - 1] }),
+          const content = SpecItem.writeFeatures(
+            '',
+            seed.subfeatures.map(({ name, status }, index) => ({
+              key: `F-${index + 1}`,
+              title: name,
+              fields: { status },
+            })),
           );
-        }
-        for (const taskIndex of FEATURES[index].tasks) {
-          yield* Database.add(
-            Feature.makeImplements({ [Relation.Source]: tasks.tasks[taskIndex], [Relation.Target]: feature }),
+          breakdowns.set(
+            seed.feat,
+            yield* Database.add(Spec.make({ name: seed.name, dialects: [FeatureMap.SOFTWARE_DIALECT], content })),
           );
         }
       }
+      // Made by this template, so a text that will not load is a bug, not an outcome.
+      const text = yield* Database.load(map.content).pipe(Effect.orDie);
+      const content = SpecItem.writeFeatures(
+        text.content,
+        FEATURES.map((seed, index) => {
+          const breakdown = breakdowns.get(seed.feat);
+          return {
+            key: seed.feat,
+            title: seed.name,
+            prose: seed.description,
+            fields: {
+              status: 'planned',
+              ...(index > 0 && { depends: [FEATURES[index - 1].feat] }),
+              ...(breakdown && { spec: `echo:///${breakdown.id}` }),
+            },
+          };
+        }),
+      );
+      Obj.update(text, (text) => {
+        Text.update(text, 'content', content);
+      });
+      Obj.update(map, (map) => {
+        map.dialects.splice(0, map.dialects.length, FeatureMap.SOFTWARE_DIALECT);
+      });
+      Obj.update(project.project, (project) => {
+        project.specs.push(Ref.make(map), ...[...breakdowns.values()].map((breakdown) => Ref.make(breakdown)));
+      });
 
-      return { map, features };
+      for (const seed of FEATURES) {
+        for (const taskIndex of seed.tasks) {
+          yield* Database.add(
+            SpecItem.makeImplements({
+              [Relation.Source]: tasks.tasks[taskIndex],
+              [Relation.Target]: map,
+              item: seed.feat,
+            }),
+          );
+        }
+      }
+
+      return { map, breakdowns: [...breakdowns.values()] };
     }),
 });

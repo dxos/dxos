@@ -156,7 +156,8 @@ export const DialectLint: Story = {
       }
       return messages.map((message) => message.match(/^Unknown block type "(\w+)"/)?.[1] ?? message);
     };
-    await waitFor(() => expect(unknown()).toEqual(['scene', 'surface']), { timeout: 5_000 });
+    // The first lint waits for the editor and the dialect schemas to load.
+    await waitFor(() => expect(unknown()).toEqual(['scene', 'surface']), { timeout: 15_000 });
     await userEvent.click(await canvas.findByTestId('story.use-video'));
     await waitFor(() => expect(unknown()).toEqual(['surface']), { timeout: 5_000 });
   },
