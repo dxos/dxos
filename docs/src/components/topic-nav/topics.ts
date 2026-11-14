@@ -71,7 +71,7 @@ export const TOPICS: Topic[] = [
     id: 'tile',
     label: 'TILE',
     href: '/docs/tile/overview/',
-    description: 'Design system of accessible, themed React components.',
+    description: 'Design system of accessible, reactive components.',
     logotype: inherit(tile),
   },
 ];
