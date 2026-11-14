@@ -158,7 +158,8 @@ types; `VIEWS.md` keeps the reasoning behind the containers.
 - **Link routes** by type (`route.ts`): `line` straight, `curve` cubic leaving each port along its normal, `spline`
   the polyline through `[source, ...points, target]` with each interior point rounded by a quadratic whose
   control it is, so the route bends around a control point rather than through it and the radius shrinks on a
-  short segment; `ortho` (phase 2) from `@dxos/diagram`'s router. A selected spline shows its control points as
+  short segment; `ortho` leaves each port along its side's normal and takes the fewest right-angled bends that
+  cross neither shape (`orthoRoute`). A selected spline shows its control points as
   diamond handles and the midpoint of every span as a dot: drag a diamond to move a point, drag a dot to add
   one there and move it in the same gesture, double-click on the spline inserts one at the nearest segment,
   alt-click removes one; each is an `update` of `points`.

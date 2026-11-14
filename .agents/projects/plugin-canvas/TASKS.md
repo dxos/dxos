@@ -431,6 +431,11 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)
       carries no drag payload (`ToolDef.drawn`, `toolDragData2D`, `ToolsPanel`).
+- [x] **Orthogonal links leave by their ports** (user, 2026-11-13): an `ortho` link between two ports leaves each
+      along its side's normal by a stub (half a major cell, or half the gap where the shapes stand closer), then takes
+      the fewest right-angled bends that cross neither shape (`orthoRoute`, a search over the lines of the two
+      frames' clearances and the gap between them). An end on no port, and shapes that overlap, keep the one-corner
+      rule. Story `Links` draws twelve cases (facing, corner, same side, facing away) in any variant.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the
       shape, and the part of it, under the pointer, ahead of the commands every element has. First case: a right
       click on the end of a line offers that end's marker (arrow, circle, triangle, none). Others to decide as it is
