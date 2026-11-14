@@ -61,7 +61,7 @@ import {
   useSceneTime,
   useSceneTools,
 } from './aspects/index.ts';
-import { type Command, MENU_ONLY_COMMANDS, SHARED_COMMANDS } from './commands.ts';
+import { ACTION_GROUPS, type Command, MENU_ONLY_COMMANDS } from './commands.ts';
 import { type DimensionConfig, type LibraryItem, type ToolCategory, type ToolDef } from './config.ts';
 import { SceneEditorInspector } from './sections.tsx';
 import { keySelection, placementFields } from './timeline.ts';
@@ -392,8 +392,8 @@ const LibraryTool = ({ items, prefix }: { items: readonly LibraryItem[]; prefix:
 };
 
 /**
- * The actions bar: the command table's commands, with the dimension's own commands before undo; locked, it hides, as
- * every one edits the scene but Copy.
+ * The actions bar: the command table's commands in their groups (`ACTION_GROUPS`), then the dimension's others, then
+ * undo and redo; locked, it hides, as every one edits the scene but Copy.
  */
 const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: { classNames?: string }) => {
   const { atoms } = useSceneDocument('SceneEditor.Actions');
@@ -402,37 +402,27 @@ const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' 
   if (readonly) {
     return null;
   }
-  const shared = new Set<string>(SHARED_COMMANDS);
   const history = (command: Command) => command.id === 'undo' || command.id === 'redo';
-  const own = table.commands.filter((command) => !shared.has(command.id) && command.id !== 'import');
+  const named = new Set(ACTION_GROUPS.flat());
+  const commands = new Map(table.commands.map((command) => [command.id, command]));
   const groups = [
-    <Fragment key='shared'>
-      {table.commands
-        .filter((command) => shared.has(command.id) && !history(command) && !MENU_ONLY_COMMANDS.has(command.id))
-        .map((command) => (
-          <CommandButton key={command.id} command={command} />
-        ))}
-    </Fragment>,
-    own.length > 0 ? (
-      <Fragment key='own'>
-        {own.map((command) => (
-          <CommandButton key={command.id} command={command} />
-        ))}
-      </Fragment>
-    ) : null,
-    <Fragment key='history'>
-      {table.commands.filter(history).map((command) => (
-        <CommandButton key={command.id} command={command} />
-      ))}
-    </Fragment>,
-  ].filter((group) => group !== null);
+    ...ACTION_GROUPS.map((ids) => ids.map((id) => commands.get(id)).filter((command) => command !== undefined)),
+    // The dimension's commands no group names (2D: auto layout, debug).
+    table.commands.filter(
+      (command) =>
+        !named.has(command.id) && !history(command) && !MENU_ONLY_COMMANDS.has(command.id) && command.id !== 'import',
+    ),
+    table.commands.filter(history),
+  ].filter((group) => group.length > 0);
   return (
     <div className={mx('absolute w-max', classNames)}>
       <Toolbar.Root classNames={mx('w-full', FLOATING_BAR)} data-testid='scene-actions'>
         {groups.map((group, index) => (
           <Fragment key={index}>
             {index > 0 && <Toolbar.Separator variant='line' classNames={FLOATING_BAR_RULE} />}
-            {group}
+            {group.map((command) => (
+              <CommandButton key={command.id} command={command} />
+            ))}
           </Fragment>
         ))}
       </Toolbar.Root>
