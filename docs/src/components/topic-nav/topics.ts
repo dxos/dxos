@@ -57,7 +57,7 @@ export const TOPICS: Topic[] = [
     id: 'sage',
     label: 'SAGE',
     href: '/docs/sage/overview/',
-    description: 'Durable agents, tools, skills and models.',
+    description: 'Autonomous agents, tools, skills and models.',
     logotype: inherit(sage),
   },
   {
