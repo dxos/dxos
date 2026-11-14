@@ -12,7 +12,7 @@ import { Message } from '@dxos/types';
 
 import { findReferences, insertReferences } from '../quotes.ts';
 
-const EXTRACTION_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
+const EXTRACTION_MODEL = 'com.anthropic.model.claude-haiku-5-5.default';
 
 /**
  * Proper nouns extracted from transcript text.

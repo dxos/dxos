@@ -20,7 +20,7 @@ import { MessageStore } from '../stores/index.ts';
 import { type DetectOptions, type TopicSegment, detectTopics, salientTokens } from '../topics/detect-topics.ts';
 import { Topic } from '../types/index.ts';
 
-const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
+const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-5-5.default';
 
 // TODO(burdon): Reconcile with Topic.
 export type TopicsOptions = {

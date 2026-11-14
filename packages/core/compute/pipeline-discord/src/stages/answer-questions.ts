@@ -15,7 +15,7 @@ import { trim } from '@dxos/util';
 import { type StoreError } from '../errors.ts';
 import { QuestionStore } from '../stores/index.ts';
 
-const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
+const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-5-5.default';
 
 const AnswerShape = Schema.Struct({
   answer: Schema.optional(Schema.String),
