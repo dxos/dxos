@@ -157,6 +157,19 @@ export const endDrop = ({
 }): Endpoint | undefined => (moved ? (target ?? { point: to }) : undefined);
 
 /**
+ * The parameters a released adjust handle writes: the handle's own, over those the shape has now, so a change made to
+ * another while the handle was held (by a peer, or an undo) stays. Nothing for a press released where it began, or
+ * for a drag that left the parameter as it is.
+ */
+export const paramDrop = (
+  { param, params, moved }: { param: string; params: Readonly<Record<string, number>>; moved?: boolean },
+  stored: Readonly<Record<string, number>> | undefined,
+): Record<string, number> | undefined => {
+  const value = params[param];
+  return moved && value !== undefined && value !== stored?.[param] ? { ...stored, [param]: value } : undefined;
+};
+
+/**
  * Whether the pointer is over the canvas itself: not over a panel the view hosts, nor over a popup portalled from one,
  * whose events React still bubbles to the view. Content embedded in a node is part of the canvas.
  */
@@ -1166,6 +1179,7 @@ export const usePointerMachine = ({
             setDrag({
               ...current,
               params: dragShapeNodeParam(node, current.param, { x: snap(point.x), y: snap(point.y) }),
+              moved: true,
             });
           }
           break;
@@ -1507,10 +1521,9 @@ export const usePointerMachine = ({
           if (!node || node.locked || !isShapeNode(node)) {
             break;
           }
-          const before = node.params ?? {};
-          const keys = new Set([...Object.keys(before), ...Object.keys(current.params)]);
-          if ([...keys].some((key) => before[key] !== current.params[key])) {
-            draw.apply(updateElement(current.id, { params: { ...current.params } }));
+          const params = paramDrop(current, node.params);
+          if (params) {
+            draw.apply(updateElement(current.id, { params }));
           }
           break;
         }

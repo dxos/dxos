@@ -78,6 +78,73 @@ describe('a parametric shape', () => {
     expect(box.type).toBe('cube');
   });
 
+  test('an element placing a shape object stands as its own outline, in its own frame and with its own parameters', () => {
+    const doc: Scene.SceneDocument = {
+      scenes: [],
+      models: [
+        {
+          id: 'm',
+          dim: '2d',
+          objects: {
+            arrow: { id: 'arrow', type: 'shape', size: { width: 200, height: 100 }, props: { recipe: 'arrow' } },
+          },
+        },
+      ],
+      layouts: [
+        {
+          id: 'l',
+          dim: '2d',
+          model: 'm',
+          elements: {
+            same: { id: 'same', object: 'arrow', center: { x: 0, y: 0 } },
+            wide: { id: 'wide', object: 'arrow', center: { x: 0, y: 200 }, size: { width: 400, height: 100 } },
+            long: { id: 'long', object: 'arrow', center: { x: 0, y: 400 }, props: { params: { head: 1 } } },
+          },
+        },
+      ],
+    };
+    const lifted = liftScene(doc);
+    const layout = lifted.layouts[0];
+    const model = lifted.models[0];
+    const object = model.dim === '3d' ? model.objects.arrow : undefined;
+    expect(object?.type).toBe('mesh');
+    // Where the head begins, as a share of the frame's width: the second vertex's x, from −0.5.
+    const neck = (props: Scene.Element3D['props']) => (meshProps(props)?.positions[3] ?? 0) + 0.5;
+    // The object's own outline: a 50 px head in a 200 px frame.
+    expect(neck(object?.props)).toBeCloseTo(0.75);
+    expect(neck(layout.elements.same.props)).toBeCloseTo(0.75);
+    // Twice as wide, the head is still 50 px: a smaller share of the frame, which the object's solid would stretch.
+    expect(neck(layout.elements.wide.props)).toBeCloseTo(0.875);
+    // Its own parameter over the object's: a head as long as the frame is high.
+    expect(neck(layout.elements.long.props)).toBeCloseTo(0.5);
+    // Flattened, an element placing the object has no solid of its own again.
+    const flat = flattenLayout(layout);
+    expect(flat.elements.wide.props ?? {}).not.toHaveProperty('mesh');
+    expect(flat.elements.long.props).toEqual({ params: { head: 1 } });
+  });
+
+  test("an element with a kind of its own, drawn by its object's recipe, flattens back to the shape", () => {
+    const objects: Record<string, Scene.Object2D> = {
+      arrow: { id: 'arrow', type: 'shape', props: { recipe: 'arrow', params: { head: 0.5 } } },
+    };
+    const typed: Scene.LayoutRecord2D = {
+      id: 'l',
+      dim: '2d',
+      elements: {
+        own: { id: 'own', type: 'shape', object: 'arrow', size: { width: 200, height: 100 } },
+        placed: { id: 'placed', object: 'arrow', size: { width: 200, height: 100 } },
+      },
+    };
+    const lifted = liftLayout(typed, objects);
+    expect(lifted.elements.own).toMatchObject({ type: 'mesh', props: { recipe: 'arrow', params: { head: 0.5 } } });
+    const flat = flattenLayout(lifted);
+    expect(flat.elements.own.type).toBe('shape');
+    expect(flat.elements.own.props).toEqual({ recipe: 'arrow', params: { head: 0.5 } });
+    // One that takes its kind from the object keeps only what it had: the recipe stays the object's.
+    expect(flat.elements.placed.type).toBeUndefined();
+    expect(flat.elements.placed.props ?? {}).toEqual({});
+  });
+
   test('flattens back to the shape, without the solid it was stood up as', () => {
     const flat = flattenLayout(liftLayout(layout)).elements.arrow;
     expect(flat).toMatchObject({

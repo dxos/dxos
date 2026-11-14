@@ -489,6 +489,12 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       `padding.y` (`LABEL_LINES`), and its default is 12 across and 6 down (a minor cell and half of one), a hull's
       name included; a text node keeps a whole cell down. Properties places Padding after Label and shows the
       drawn default.
+- [x] **Shapes: review fixes** (CodeRabbit on dxos/dxos#14534, 2026-11-14): a handle drag previews through the
+      host's `constrain` and its release writes only its own parameter over the node's latest (`paramDrop`); a
+      prism is cut from the outline without repeated or in-line vertices and is refused where its cap is
+      incomplete (`ring`); a parallelogram's slant stops at half the width; an element placing a shape object is
+      lifted with a solid of its own (`liftLayout(layout, objects)`); Properties reads the default padding from
+      the drawing's grid.
 - [ ] **Convert a shape to a polyline**: a parametric shape has no vertices to drag; a command that swaps it for
       the closed polyline of its outline would free it.
 - [ ] **Shape recipes, later**: a cog's hub hole needs an outline of more than one ring; the Shape field in
