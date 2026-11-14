@@ -66,6 +66,10 @@ export type SpecPage = {
   section: string;
   route: string;
   group: string;
+  /** The component package a page documents. */
+  package?: string;
+  /** What the component does; it nests the page in a group of that name inside `group` [D-301]. */
+  family?: string;
   template: string;
   status: Status;
   covers: string[];
@@ -90,6 +94,9 @@ const field = (body: string, key: string): string => {
   return match[1];
 };
 
+const optionalField = (body: string, key: string): string | undefined =>
+  body.match(new RegExp(`^  ${key}: (.*)$`, 'm'))?.[1];
+
 /** The items of a block's list field, such as a page's `covers:`. */
 const listField = (body: string, key: string): string[] => {
   const match = body.match(new RegExp(`^  ${key}:\\n((?:    - .*\\n?)*)`, 'm'));
@@ -108,6 +115,8 @@ export const parsePages = (source: string): SpecPage[] =>
       section: field(body, 'section'),
       route: field(body, 'route'),
       group: field(body, 'group'),
+      package: optionalField(body, 'package'),
+      family: optionalField(body, 'family'),
       template: field(body, 'template'),
       status: parseStatus(field(body, 'status')),
       covers: listField(body, 'covers'),
@@ -145,18 +154,47 @@ export const assertContentExists = (pages: SpecPage[]): void => {
   }
 };
 
-/** The Starlight sidebar for one section of the spec's site map; group order is first appearance. */
+const sidebarLink = (page: SpecPage) => ({
+  label: page.label,
+  link: page.route,
+  ...(page.status === 'planned' ? { badge: { text: 'planned', variant: 'default' as const } } : {}),
+});
+
+const byLabel = (a: SpecPage, b: SpecPage) => a.label.localeCompare(b.label);
+
+/** Every section's sidebar groups in one order; a group not named here follows them [D-306]. */
+const GROUP_ORDER = ['Start here', 'Learning path', 'Core concepts', 'Guides', 'API', 'Resources'];
+
+const groupRank = (group: string) => {
+  const index = GROUP_ORDER.indexOf(group);
+  return index === -1 ? GROUP_ORDER.length : index;
+};
+
+/**
+ * The Starlight sidebar for one section of the spec's site map, its groups in `GROUP_ORDER`. A top-level group
+ * starts expanded; pages with a `family` follow the group's own pages in a nested group per family. Family groups,
+ * and every page in an API group, sort by label [D-298, D-301, D-302].
+ */
 export const sidebarFromSpec = (allPages: SpecPage[], section: string) => {
   const pages = allPages.filter((page) => page.section === section && page.status !== 'later');
-  const groups = [...new Set(pages.map((page) => page.group))];
-  return groups.map((label) => ({
-    label,
-    items: pages
-      .filter((page) => page.group === label)
-      .map((page) => ({
-        label: page.label,
-        link: page.route,
-        ...(page.status === 'planned' ? { badge: { text: 'planned', variant: 'default' as const } } : {}),
-      })),
-  }));
+  const groups = [...new Set(pages.map((page) => page.group))].sort((a, b) => groupRank(a) - groupRank(b));
+  return groups.map((label) => {
+    const inGroup = pages.filter((page) => page.group === label);
+    const families = [...new Set(inGroup.flatMap((page) => (page.family ? [page.family] : [])))].sort();
+    const own = inGroup.filter((page) => !page.family);
+    return {
+      label,
+      items: [
+        ...(label === 'API' ? own.sort(byLabel) : own).map(sidebarLink),
+        ...families.map((family) => ({
+          label: family,
+          collapsed: true,
+          items: inGroup
+            .filter((page) => page.family === family)
+            .sort(byLabel)
+            .map(sidebarLink),
+        })),
+      ],
+    };
+  });
 };

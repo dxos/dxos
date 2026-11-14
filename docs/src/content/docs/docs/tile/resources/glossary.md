@@ -60,7 +60,7 @@ A CSS custom property for a color, size or spacing, used by role. See
 ### `tx`
 
 The theme function, which maps a component and its props to classes. `Theme.defaultTx` is TILE's. See
-[Theme](/docs/tile/api/theme/).
+[Theme and tokens](/docs/tile/concepts/theme-and-tokens/).
 
 ### Valence
 

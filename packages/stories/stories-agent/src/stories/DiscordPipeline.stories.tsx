@@ -8,12 +8,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
 import { StoryRole, StorySettingsToolbar } from '../modules/index.ts';
 import {
   type FakeBrain,
-  ModuleContainer,
-  type ModuleLayout,
   addDiscordConnection,
   createDecorators,
   edgeFake,
@@ -26,14 +25,14 @@ import {
 } from '../testing/index.ts';
 
 type StoryArgs = {
-  layout?: ModuleLayout;
+  layout?: ModuleContainer.Layout;
   /** Keeps the profile (space, bindings, fact feed) across reloads; a change reboots the story. */
   persistent?: boolean;
 };
 
 const meta: Meta<StoryArgs> = {
   title: 'stories/stories-agent/DiscordPipeline',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   // The pipeline's timeline renders `@dxos/react-ui-debug`'s Logger, so its namespace must be registered.
   parameters: { ...storyParameters, translations: [...storyParameters.translations, ...debugTranslations] },
 };
@@ -72,9 +71,9 @@ export const Setup: Story = {
       <Panel.Header>
         <StorySettingsToolbar />
       </Panel.Header>
-      {/* `ModuleContainer` pins itself to its nearest positioned ancestor, so the body is that ancestor. */}
+      {/* `ModuleContainer.Root` pins itself to its nearest positioned ancestor, so the body is that ancestor. */}
       <Panel.Body classNames='relative'>
-        <ModuleContainer {...args} />
+        <ModuleContainer.Root {...args} />
       </Panel.Body>
     </Panel.Root>
   ),

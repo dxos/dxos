@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 import { type Mock, expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/theme.css';
+import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -16,12 +18,100 @@ import { translations } from '@dxos/react-ui/translations';
 
 import { filterTreeModel } from './filter-tree-model.ts';
 import { createStaticTreeModel } from './static-tree-model.ts';
-import { type TestItem, createTree, updateState } from './testing.ts';
 import { type TreeNode } from './tree-collection.ts';
+import { type TreeData } from './tree-data.ts';
 import { Tree, type TreeDropEvent, type TreeRootHandle, type TreeSelectEvent } from './Tree.tsx';
 import { type TreeVirtual } from './TreeContext.ts';
 
 random.seed(1234);
+
+type TestItem = {
+  id: string;
+  name: string;
+  icon?: string;
+  disposition?: string;
+  items: TestItem[];
+};
+
+const createTree = (n = 4, d = 4, { groups = false }: { groups?: boolean } = {}): TestItem => {
+  const children = d > 0 ? random.helpers.multiple(() => createTree(n, d - 1), { count: n }) : [];
+  return {
+    id: random.string.uuid(),
+    name: random.commerce.productName(),
+    icon:
+      d === 3
+        ? undefined
+        : random.helpers.arrayElement([
+            'ph--planet--regular',
+            'ph--sailboat--regular',
+            'ph--house--regular',
+            'ph--gear--regular',
+          ]),
+    // When groups is true, mark every direct child as a group section header (no icon).
+    items: groups ? children.map((child) => ({ ...child, disposition: 'group', icon: undefined })) : children,
+  };
+};
+
+const removeItem = (tree: TestItem, source: TreeData) => {
+  const parent = getTestItem(tree, source.path.slice(1, -1));
+  const index = parent.items!.findIndex(({ id }) => id === source.id);
+  const item = parent.items[index];
+  parent.items!.splice(index, 1);
+  return item;
+};
+
+const getTestItem = (tree: TestItem, path: string[]) => {
+  let item = tree;
+  for (const part of path) {
+    item = item.items!.find(({ id }) => id === part)!;
+  }
+  return item;
+};
+
+// TODO(wittjosiah): Reconcile with plugin-navtree/testing/vistor.
+const updateState = ({
+  state,
+  instruction,
+  source,
+  target,
+}: {
+  state: TestItem;
+  instruction: Instruction;
+  source: TreeData;
+  target: TreeData;
+}) => {
+  switch (instruction.type) {
+    case 'reorder-above': {
+      const item = removeItem(state, source);
+      const parent = getTestItem(state, target.path.slice(1, -1));
+      const index = parent.items!.findIndex(({ id }) => id === target.id);
+      parent.items!.splice(index, 0, item);
+      break;
+    }
+
+    case 'reorder-below': {
+      const item = removeItem(state, source);
+      const parent = getTestItem(state, target.path.slice(1, -1));
+      const index = parent.items!.findIndex(({ id }) => id === target.id);
+      parent.items!.splice(index + 1, 0, item);
+      break;
+    }
+
+    case 'make-child': {
+      const item = removeItem(state, source);
+      const parent = getTestItem(state, target.path.slice(1));
+      parent.items!.push(item);
+      break;
+    }
+
+    case 'instruction-blocked':
+      break;
+
+    default:
+      log.warn('Unsupported instruction', instruction);
+      break;
+  }
+};
 
 const ICONS = ['ph--folder--regular', 'ph--file--regular', 'ph--planet--regular', 'ph--gear--regular'];
 

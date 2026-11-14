@@ -17,7 +17,9 @@ import { random } from '@dxos/random';
 import { DEFAULT_CELL, fromRenderLists2D } from '@dxos/react-ui-canvas';
 import { createNestedDeepTree } from '@dxos/react-ui-canvas/testing';
 import { type Scene, toEcho } from '@dxos/scene';
-import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
 import * as CanvasPlugin from '#meta';
@@ -39,7 +41,7 @@ const withDrawing = (
   seed: Seed = () => {},
   role: typeof AppSurface.Article | typeof AppSurface.Slide = AppSurface.Article,
 ) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
     onInit: async ({ space }) => {
@@ -73,7 +75,7 @@ const addDocumentDrawing = (db: Database.Database, document: Scene.SceneDocument
 
 /** A canvas over a scene document, opened through the illustrator's article as the app opens it. */
 const withDocument = (document: Scene.SceneDocument) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
@@ -86,9 +88,9 @@ const withDocument = (document: Scene.SceneDocument) =>
 /** A canvas over scenes written in `.dx`. */
 const withScenes = (text: string) => withDocument(Dsl.readScenes(text).document);
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'plugins/plugin-canvas/containers/CanvasArticle',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -340,7 +342,7 @@ export const Image: Story = {
 let describeEmbedTarget: (() => Promise<string>) | undefined;
 
 export const MarkdownEmbed: Story = {
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
     onInit: async ({ space }) => {

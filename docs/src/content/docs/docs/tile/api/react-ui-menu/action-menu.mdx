@@ -1,0 +1,40 @@
+---
+title: ActionMenu
+description: A dropdown menu drawn from a list of actions.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../../components/TilePreview.astro';
+
+<ApiStory id="react-ui-menu/action-menu" height="18rem" />
+
+```ts
+import { ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu';
+```
+
+```sh
+npm install @dxos/react-ui-menu @effect/atom-react
+```
+
+`ActionMenu` draws a list of actions as a dropdown menu, with groups as submenus. Its child is the button that opens it. An action is a label, an icon and the function it runs. You build the list with `MenuBuilder` and
+`useMenuBuilder`, and because the list is data, other code can add to it, which is how Composer plugins add buttons to
+each other's toolbars. The actions live in an atom, so wrap your app in `RegistryProvider` from
+`@effect/atom-react/RegistryContext`, and register the strings from `@dxos/react-ui-menu/translations`.
+
+## Props
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `...menu` | `MenuActions` | The actions, from `useMenuBuilder` |
+| `actions` | `MenuItem[] | () => MenuItem[]` | Items in place of the group's own |
+| `group` | `MenuGroupContext` | The group whose items the menu shows |
+| `open` | `boolean` | Controls whether the menu is open, with `onOpenChange` |
+| `deferUntilOpen` | `boolean` | Builds the menu on the first click, for a menu on every row of a list |
+| `children` | `ReactNode` | The trigger |
+
+## Open a menu
+
+<Snippet file="tile-guide-menus" region="menu" lang="tsx" />
+
+<TilePreview id="row-menu" height="14rem" />

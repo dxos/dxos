@@ -16,7 +16,7 @@ import { Canvas, createCanvasAtoms, sampleDocument, useRegistry } from '@dxos/re
 import { type EditorDisplay, type EditorShot, SceneEditor, createConfig2D } from '@dxos/react-ui-canvas-editor';
 import { useDocumentHost } from '@dxos/react-ui-canvas/testing';
 import { Loading } from '@dxos/react-ui/testing';
-import { createStoryDecorators } from '@dxos/storybook-testing';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import * as CanvasPlugin from '#meta';
 import { generatorCompiler } from '#model';
@@ -140,7 +140,7 @@ const meta: Meta<FilmProps> = {
   title: 'plugins/plugin-canvas/samples/EndCard',
   render: (args) => <Film {...args} />,
   args: { chrome: false },
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, Generator.Generator],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
   }),

@@ -17,7 +17,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
-import { resolveStorySpace } from '@dxos/storybook-testing';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 /** Marks the chat this plugin creates, once its Brain skill is bound, so a reload reopens it rather than adding another. */
 export const BRAIN_CHAT_KEY = { source: 'org.dxos.plugin.stories.brain', id: 'chat' };
@@ -38,7 +38,7 @@ export const BrainChatPlugin = Plugin.define(
       const { invoke } = yield* Capabilities.OperationInvoker;
       const client = yield* ClientCapabilities.Client;
       const registry = yield* Capabilities.AtomRegistry;
-      const space = yield* resolveStorySpace(client);
+      const space = yield* StoryHarness.resolveSpace(client);
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
 
       const [existing] = yield* Effect.promise(() =>

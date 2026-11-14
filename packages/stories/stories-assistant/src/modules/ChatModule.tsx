@@ -20,7 +20,7 @@ import { MenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Popover from '@dxos/react-ui/Popover';
-import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
+import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 import { Person } from '@dxos/types';
 
 export type ChatModuleData = {
@@ -101,7 +101,7 @@ const ChatModuleContainer = ({
                 <Button.Root icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
               </Popover.Trigger>
               <Popover.Content>
-                <ExecutionGraphModule />
+                <StoryModules.ExecutionGraphModule />
               </Popover.Content>
             </Popover.Root>
           ))

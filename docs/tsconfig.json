@@ -103,37 +103,13 @@
       "path": "../packages/core/protocols"
     },
     {
-      "path": "../packages/plugins/plugin-canvas"
-    },
-    {
       "path": "../packages/plugins/plugin-client"
-    },
-    {
-      "path": "../packages/plugins/plugin-explorer"
-    },
-    {
-      "path": "../packages/plugins/plugin-illustrator"
     },
     {
       "path": "../packages/plugins/plugin-inspector"
     },
     {
-      "path": "../packages/plugins/plugin-kanban"
-    },
-    {
-      "path": "../packages/plugins/plugin-markdown"
-    },
-    {
-      "path": "../packages/plugins/plugin-mermaid"
-    },
-    {
-      "path": "../packages/plugins/plugin-preview"
-    },
-    {
       "path": "../packages/plugins/plugin-space"
-    },
-    {
-      "path": "../packages/plugins/plugin-table"
     },
     {
       "path": "../packages/plugins/plugin-testing"
@@ -169,6 +145,12 @@
       "path": "../packages/sdk/types"
     },
     {
+      "path": "../packages/stories/stories-echo"
+    },
+    {
+      "path": "../packages/stories/storybook-testing"
+    },
+    {
       "path": "../packages/ui/brand"
     },
     {
@@ -181,19 +163,43 @@
       "path": "../packages/ui/react-ui-attention"
     },
     {
+      "path": "../packages/ui/react-ui-calendar"
+    },
+    {
+      "path": "../packages/ui/react-ui-canvas-editor"
+    },
+    {
+      "path": "../packages/ui/react-ui-dnd"
+    },
+    {
       "path": "../packages/ui/react-ui-editor"
     },
     {
       "path": "../packages/ui/react-ui-form"
     },
     {
+      "path": "../packages/ui/react-ui-geo"
+    },
+    {
       "path": "../packages/ui/react-ui-graph"
+    },
+    {
+      "path": "../packages/ui/react-ui-grid"
     },
     {
       "path": "../packages/ui/react-ui-list"
     },
     {
+      "path": "../packages/ui/react-ui-masonry"
+    },
+    {
       "path": "../packages/ui/react-ui-menu"
+    },
+    {
+      "path": "../packages/ui/react-ui-mosaic"
+    },
+    {
+      "path": "../packages/ui/react-ui-plot"
     },
     {
       "path": "../packages/ui/react-ui-table"

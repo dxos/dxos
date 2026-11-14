@@ -1,6 +1,6 @@
 ---
 title: API reference
-description: Generated reference for TILE's core and the component packages with guides.
+description: Generated reference for TILE's core and its component packages.
 ---
 
 The core:
@@ -10,15 +10,15 @@ The core:
 - <a href='/typedoc/ui-theme/index.html' target='_blank'>`@dxos/ui-theme`</a>: hues, sizes, class fragments and
   `mx`, the class-merging helper.
 
-The component packages with guides:
+Component packages:
 
 - <a href='/typedoc/react-ui-list/index.html' target='_blank'>`@dxos/react-ui-list`</a>: `Listbox`, `OrderedList` and
-  `Tree`. See [Lists](/docs/tile/guides/lists/).
+  `Tree`. See [Listbox](/docs/tile/api/react-ui-list/listbox/).
 - <a href='/typedoc/react-ui-form/index.html' target='_blank'>`@dxos/react-ui-form`</a>: `Form` and `ObjectForm`. See
-  [Forms](/docs/tile/guides/forms/).
+  [Form](/docs/tile/api/react-ui-form/form/).
 - <a href='/typedoc/react-ui-menu/index.html' target='_blank'>`@dxos/react-ui-menu`</a>: `MenuBuilder`,
-  `ActionToolbar` and `ActionMenu`. See [Menus and toolbars](/docs/tile/guides/menus-and-toolbars/).
+  `ActionToolbar` and `ActionMenu`. See [ActionToolbar](/docs/tile/api/react-ui-menu/action-toolbar/).
 - <a href='/typedoc/react-ui-editor/index.html' target='_blank'>`@dxos/react-ui-editor`</a>: `Editor` and its
-  toolbar. See [Text editor](/docs/tile/guides/text-editor/).
+  toolbar. See [Editor](/docs/tile/api/react-ui-editor/editor/).
 
-The [API](/docs/tile/api/theme/) pages explain the core by family of components, with live previews.
+The [API](/docs/tile/api/accordion/) pages explain each core component on a page of its own, with a live preview.

@@ -19,18 +19,13 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as AcpAgent from '@dxos/plugin-claude/AcpAgent';
 import * as DrawingSkill from '@dxos/plugin-illustrator/DrawingSkill';
-import { Cell, addToRootCollection } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Message } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
-import {
-  Calculate,
-  CalculatorSkill,
-  ModuleContainer,
-  createDecorators,
-  storyParameters,
-  submitPrompt,
-} from '../testing/index.ts';
+import { Calculate, CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
 
 const { text, reasoning, toolCall } = ScriptedLanguageModel;
 
@@ -41,9 +36,9 @@ const { text, reasoning, toolCall } = ScriptedLanguageModel;
  * agents are scripted stand-ins: this sandbox has no Claude Code credentials, and storybook cannot host the ACP
  * adapter's process. See `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` QA-2.
  */
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/MultiTenantThreads',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 
@@ -291,7 +286,7 @@ export const Live: Story = {
       const drawing = space.db.add(
         Drawing.make({ name: 'Launch plan', canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }) }),
       );
-      addToRootCollection(space, [drawing]);
+      StoryHarness.addToRootCollection(space, [drawing]);
       return [[StoryRole.Chat], [Cell.article(drawing)]];
     },
     onChatCreated: async ({ db, chat, binder }) => {

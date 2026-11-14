@@ -1,0 +1,19 @@
+---
+title: Tooltip
+description: "A short name or hint for a control, on hover or focus."
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+<Snippet file="tile-components" region="tooltip" lang="tsx" />
+
+<TilePreview id="tooltip" />
+
+```ts
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+```
+
+Parts: `Root`, `Trigger` and `Content`. `Tooltip.Trigger` also takes `content` and `side` as a shorthand, with no
+`Content` part. `Tooltip.TextTooltip` shows a text's full value when it is cut off. An icon-only button shows its label
+as a tooltip without any of these.

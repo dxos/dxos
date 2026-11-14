@@ -1,0 +1,65 @@
+{
+  "name": "@dxos/stories-echo",
+  "version": "0.16.0",
+  "private": true,
+  "description": "ECHO demos as stories: two peers sharing one space, run in Storybook and embedded on dxos.org.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    "./stories/Diagram": {
+      "source": "./src/stories/Diagram.stories.tsx",
+      "types": "./dist/types/src/stories/Diagram.stories.d.ts",
+      "import": "./dist/lib/stories/Diagram.mjs"
+    },
+    "./stories/Editor": {
+      "source": "./src/stories/Editor.stories.tsx",
+      "types": "./dist/types/src/stories/Editor.stories.d.ts",
+      "import": "./dist/lib/stories/Editor.mjs"
+    },
+    "./stories/Explorer": {
+      "source": "./src/stories/Explorer.stories.tsx",
+      "types": "./dist/types/src/stories/Explorer.stories.d.ts",
+      "import": "./dist/lib/stories/Explorer.mjs"
+    },
+    "./stories/Views": {
+      "source": "./src/stories/Views.stories.tsx",
+      "types": "./dist/types/src/stories/Views.stories.d.ts",
+      "import": "./dist/lib/stories/Views.mjs"
+    }
+  },
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/plugin-canvas": "workspace:*",
+    "@dxos/plugin-explorer": "workspace:*",
+    "@dxos/plugin-illustrator": "workspace:*",
+    "@dxos/plugin-kanban": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-mermaid": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-table": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/storybook-testing": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "vite": "catalog:"
+  }
+}

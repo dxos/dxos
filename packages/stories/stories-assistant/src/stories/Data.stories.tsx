@@ -24,13 +24,14 @@ import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ViewModel } from '@dxos/schema';
-import { Cell, addToRootCollection } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline, ProfileOf } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';
 import {
-  ModuleContainer,
   ResearchInputQueue,
   addTestData,
   createDecorators,
@@ -40,9 +41,9 @@ import {
   storyParameters,
   testTypes,
 } from '../testing/index.ts';
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Data',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 
@@ -334,7 +335,7 @@ export const WithProject: Story = {
           ],
         }),
       );
-      addToRootCollection(space, [project]);
+      StoryHarness.addToRootCollection(space, [project]);
 
       return [
         [Cell.article(project)],

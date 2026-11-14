@@ -1,0 +1,20 @@
+---
+title: QrCode
+description: "A QR code that fills its host's width."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/qr-code" height="22.75rem" narrow />
+
+```ts
+import * as QrCode from '@dxos/react-ui/QrCode';
+```
+
+It draws in the current text colour on a transparent ground, so it reads on any surface.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `QrCode.QrCode` | The code |

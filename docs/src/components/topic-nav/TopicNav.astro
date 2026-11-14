@@ -33,7 +33,13 @@ const isHome = Astro.url.pathname.replace(/\/$/, '') === '/docs';
   }
 </div>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400&display=swap" />
+<!-- Non-blocking: a pending stylesheet here stalls the parser, and Firefox paints the half-parsed page. -->
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400&display=swap"
+  media="print"
+  onload="this.media='all'"
+/>
 
 <script>
   // Closes the picker on a click outside it or on Escape.
@@ -94,7 +100,7 @@ const isHome = Astro.url.pathname.replace(/\/$/, '') === '/docs';
   summary {
     align-items: center;
     border: 1px solid var(--sl-color-gray-5);
-    border-radius: 0.625rem;
+    border-radius: 0;
     color: var(--sl-color-white);
     cursor: pointer;
     display: flex;
@@ -119,7 +125,7 @@ const isHome = Astro.url.pathname.replace(/\/$/, '') === '/docs';
   .panel {
     background: var(--sl-color-bg-nav);
     border: 1px solid var(--sl-color-hairline-light);
-    border-radius: 0.75rem;
+    border-radius: 0;
     box-shadow: var(--sl-shadow-lg);
     left: 0;
     padding: 0.375rem;

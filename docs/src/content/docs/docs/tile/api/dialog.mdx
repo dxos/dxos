@@ -1,0 +1,22 @@
+---
+title: Dialog
+description: "A modal window for a task the user finishes or cancels before going on."
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+<Snippet file="tile-components" region="dialog" lang="tsx" />
+
+<TilePreview id="dialog" />
+
+```ts
+import * as Dialog from '@dxos/react-ui/Dialog';
+```
+
+A dialog opens above the page, in a portal, and the page behind it is inert until it closes.
+
+Parts: `Root`, `Trigger`, `Content`, `Header`, `Title`, `Description`, `Body`, `Footer` and `CloseTrigger`.
+`Dialog.Root` takes `open` and `onOpenChange` to open it from code. `Dialog.CloseTrigger` with no children is a close
+button; with `asChild` it makes its child close the dialog. `Dialog.Content` takes `size`. `Body` scrolls when the
+content is taller than the screen.

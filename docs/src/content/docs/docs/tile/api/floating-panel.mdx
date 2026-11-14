@@ -1,0 +1,29 @@
+---
+title: FloatingPanel
+description: "A window the user can drag, resize, minimize and maximize."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/floating-panel" />
+
+```ts
+import * as FloatingPanel from '@dxos/react-ui/FloatingPanel';
+```
+
+The panel keeps its own position, size and stage. Several open panels stack in the order they were last used.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `FloatingPanel.Root` | Holds the open state, position and size |
+| `FloatingPanel.Trigger` | Opens the panel |
+| `FloatingPanel.Content` | The window |
+| `FloatingPanel.Header` | The title row |
+| `FloatingPanel.DragTrigger` | The area the user drags the panel by |
+| `FloatingPanel.Title` | Names the window |
+| `FloatingPanel.Control` | The buttons at the end of the header |
+| `FloatingPanel.StageTrigger` | Minimizes, maximizes or restores |
+| `FloatingPanel.CloseTrigger` | Closes the panel |
+| `FloatingPanel.Body` | The content; it scrolls itself |

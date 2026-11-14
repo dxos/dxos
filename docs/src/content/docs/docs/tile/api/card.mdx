@@ -1,0 +1,33 @@
+---
+title: Card
+description: "A block of related content and actions, one surface above its host."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/card" />
+
+```ts
+import * as Card from '@dxos/react-ui/Card';
+```
+
+Header, Body and Footer share one content edge. With `grid`, rows put their icon in the start rail and trailing content in the end rail.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Card.Root` | The card |
+| `Card.Poster` | A full-width image at the top |
+| `Card.Tile` | A tall leading tile with a large icon, beside the rest of the card |
+| `Card.Header` | The row that holds the Title, with icons or buttons before and after it |
+| `Card.Title` | The heading; it can clamp to a number of lines |
+| `Card.Description` | Text under the title |
+| `Card.Body` | The main content |
+| `Card.Section` | Rows under an optional caption |
+| `Card.Row` | A row of icon, text and trailing content; a button when it has `onClick` |
+| `Card.Link` | A row that links out and opens in a new tab |
+| `Card.Text` | Card text |
+| `Card.Action` | An icon button for a Header or Row; its click never activates the card |
+| `Card.Menu` | A ⋮ button that opens a menu |
+| `Card.Footer` | A group of actions at the end |

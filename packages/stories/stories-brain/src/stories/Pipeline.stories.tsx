@@ -56,7 +56,8 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
-import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -410,7 +411,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         details,
       }}
     >
-      <ModuleContainer layout={[[StoryRole.Input], [StoryRole.Pipeline], [StoryRole.Output]]} />
+      <ModuleContainer.Root layout={[[StoryRole.Input], [StoryRole.Pipeline], [StoryRole.Output]]} />
     </PipelineStoryContext.Provider>
   );
 };
@@ -521,7 +522,7 @@ const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?
 const meta = {
   title: 'stories/stories-brain/Pipeline',
   render: DefaultStory,
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Thread],
     onInit: async ({ space }) => {
       // Seed a couple of entities so the transcription pipeline has something to link against

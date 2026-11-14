@@ -1,19 +1,17 @@
 ---
 title: Input
-description: Text fields, checkboxes, switches, fields and selects.
+description: "Text fields, checkboxes, switches, sliders and the frame they sit in."
 ---
 
 import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
 ```ts
-import * as Field from '@dxos/react-ui/Field';
 import * as Input from '@dxos/react-ui/Input';
-import * as Select from '@dxos/react-ui/Select';
 ```
 
-`Input` holds the controls. `Field` gives a control its label, help text and error. `Select` picks one value from a
-list.
+`Input` holds the controls. [Field](/docs/tile/api/field/) gives a control its label, help text and error, and
+[Select](/docs/tile/api/select/) picks one value from a list.
 
 <Snippet file="tile-components" region="inputs" lang="tsx" />
 
@@ -44,24 +42,4 @@ list.
 | `variant`    | `'default' \| 'subdued' \| 'mono'` | `subdued` drops the well; `mono` is for keys and ids           |
 | `noAutoFill` | boolean               | Ask password managers not to offer to fill it, such as for a search box     |
 
-Inside a `Field.Root`, a control takes the field's id, label and description, so it needs no `aria-label`.
-
-## `Field`
-
-| Part                       | What it is                                         |
-| -------------------------- | -------------------------------------------------- |
-| `Field.Root`               | Holds one control and its texts                    |
-| `Field.Header`             | A row above the control, for the label and extras  |
-| `Field.Label`              | The label. `srOnly` hides it but keeps it for screen readers |
-| `Field.RequiredIndicator`  | The mark for a required field                      |
-| `Field.HelperText`         | A hint under the control                           |
-| `Field.ErrorText`          | The error, shown when the field is invalid         |
-
-`Field.Root` takes `validationValence` to color the field by status, `layout='row'` to put the label beside the control,
-and Ark's `invalid`, `required`, `disabled` and `readOnly`.
-
-## `Select`
-
-`Select.Root` takes `items`, a list of `{ value, label, disabled?, icon? }`, and `value` with `onValueChange`, or
-`defaultValue`. `Select.Trigger` shows the chosen label, or its `placeholder`. `Select.Content` holds one `Select.Item`
-per item, each given its `item`.
+Inside a [`Field.Root`](/docs/tile/api/field/), a control takes the field's id, label and description, so it needs no `aria-label`.

@@ -9,7 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import type * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import * as SelectionModel from '@dxos/graph/SelectionModel';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
@@ -477,3 +477,58 @@ export const Empty = () => (
     </SVG.Zoom>
   </SVG.Root>
 );
+
+//
+// Docs
+//
+
+const TEAMS: Record<string, string[]> = {
+  Design: ['Ada', 'Grace', 'Linus'],
+  Platform: ['Alan', 'Barbara', 'Ken', 'Dennis'],
+  Research: ['Edsger', 'Donald', 'Tony'],
+};
+
+const makeTeamModel = () => {
+  const model = GraphModel.make();
+  for (const [team, people] of Object.entries(TEAMS)) {
+    model.addNode({ id: team, type: 'team', data: { label: team } });
+    for (const person of people) {
+      model.addNode({ id: person, type: 'person', data: { label: person } });
+      model.addEdge({ source: person, target: team });
+    }
+  }
+  return model;
+};
+
+const teamLabels: GraphProps['labels'] = {
+  text: (node) => node.data?.data?.label ?? node.id,
+};
+
+const teamAttributes: GraphProps['attributes'] = {
+  node: (node) => ({ data: { color: node.data?.type === 'team' ? 'sky' : 'amber' } }),
+};
+
+const TeamStory = () => {
+  const model = useMemo(makeTeamModel, []);
+  const svgRef = useRef<SVGContext>(null);
+  const [projector, setProjector] = useState<GraphForceProjector>();
+  useEffect(() => {
+    if (svgRef.current) {
+      setProjector(new GraphForceProjector(svgRef.current, { forces: { point: { strength: 0.05 } } }));
+    }
+  }, []);
+
+  return (
+    <div className='fixed inset-0 flex dx-base-surface'>
+      <SVG.Root ref={svgRef}>
+        <SVG.Markers />
+        <SVG.Zoom extent={[1 / 2, 2]}>
+          <GraphComponent model={model} projector={projector} drag labels={teamLabels} attributes={teamAttributes} />
+        </SVG.Zoom>
+      </SVG.Root>
+    </div>
+  );
+};
+
+/** The docs' graph: people and their teams, laid out by force, small enough for a card. */
+export const Docs = () => <TeamStory />;

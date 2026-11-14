@@ -45,7 +45,6 @@
     "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@storybook/react-vite": "catalog:",

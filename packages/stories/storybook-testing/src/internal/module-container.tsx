@@ -1,0 +1,313 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { type FC, useEffect, useState } from 'react';
+
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as Role from '@dxos/app-framework/Role';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import { Filter, Obj } from '@dxos/echo';
+import * as StorybookCapabilities from '@dxos/plugin-testing/StorybookCapabilities';
+import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { AttendableContainer } from '@dxos/react-ui-attention';
+import { Loading } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
+
+import * as StoryLayout from '../StoryLayout.ts';
+import { useStorySpaceId } from './story-space.ts';
+
+/** Props a resolved object cell's override component receives. */
+export type ResolvedCellProps = {
+  space: Space;
+  object: Obj.Unknown;
+  attendableId: string;
+};
+
+/** Object-bound cell: renders the real plugin surface for `object` (or `component`, if given). */
+export type ObjectCellSpec = {
+  object: Obj.Unknown;
+  /** Role token to dispatch (defaults to `AppSurface.Article`). */
+  token?: Role.Role<any>;
+  /** Extra surface data merged with `{ subject, attendableId }` (e.g. `companionTo`, `variant`). */
+  data?: Record<string, any>;
+  /** Story override: render this instead of dispatching the plugin surface. */
+  component?: FC<ResolvedCellProps>;
+  /** Attendable id override (defaults to the object's collections path). */
+  id?: string;
+};
+
+/** A single grid cell. */
+export type ModuleSpec =
+  | Role.Role<any>
+  | { type: Role.Role<any>; data?: Record<string, any>; id?: string }
+  | ObjectCellSpec;
+
+/** 2D layout: outer array = columns, inner array = stacked rows within a column. */
+export type ModuleLayout = ModuleSpec[][];
+
+export type ModuleContainerProps = {
+  /** Static layout; omit when a harness contributes a runtime layout via {@link StoryLayout.Atom}. */
+  layout?: ModuleLayout;
+  /**
+   * Column track sizes, underscore-separated as in a Tailwind arbitrary value (e.g. `2fr_1fr`);
+   * defaults to equal columns.
+   */
+  columns?: string;
+  /** Row track sizes per column, in the same form; a column without an entry has equal rows. */
+  rows?: readonly (string | undefined)[];
+  /**
+   * `separated` spaces bordered cells apart; `flush` abuts them with one divider between neighbours and none at
+   * the edge, for a frame that draws its own.
+   */
+  tiling?: Tiling;
+};
+
+export type Tiling = 'separated' | 'flush';
+
+/** Grid tracks from an underscore-separated size list, else `count` equal tracks. */
+const tracks = (sizes: string | undefined, count: number): string =>
+  sizes?.replaceAll('_', ' ') ?? `repeat(${count}, minmax(0, 1fr))`;
+
+/** Stable fallback so `useAtomValue` stays unconditional when no {@link StoryLayout.Atom} is contributed. */
+const emptyLayoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
+
+type NormalizedSurfaceCell = {
+  kind: 'surface';
+  type: Role.Role<any>;
+  id: string;
+  data?: Record<string, any>;
+};
+
+type NormalizedObjectCell = {
+  kind: 'object';
+  object: Obj.Unknown;
+  type: Role.Role<any>;
+  id: string;
+  data: Record<string, any>;
+  component?: FC<ResolvedCellProps>;
+  attendableId: string;
+};
+
+type NormalizedCell = NormalizedSurfaceCell | NormalizedObjectCell;
+
+// Structural discriminant: an object cell is the only `ModuleSpec` form carrying an `object` key
+// (a bare `Role` token or `{ type, data }` surface cell has none).
+const isObjectCell = (spec: ModuleSpec): spec is ObjectCellSpec =>
+  typeof spec === 'object' && spec !== null && 'object' in spec;
+
+/**
+ * Normalizes a `ModuleSpec` cell to a discriminated shape the container renders. Object cells derive
+ * their attendable id from the object's space-scoped collections path (the id the app-graph and
+ * attention system key object-scoped actions on), unless overridden.
+ */
+export const normalizeCell = (spec: ModuleSpec, spaceId: string, position = ''): NormalizedCell => {
+  if (isObjectCell(spec)) {
+    const attendableId = spec.id ?? GraphPath.getCollectionsPath(spaceId, spec.object.id);
+    return {
+      kind: 'object',
+      object: spec.object,
+      type: spec.token ?? AppSurface.Article,
+      id: attendableId,
+      data: spec.data ?? {},
+      component: spec.component,
+      attendableId,
+    };
+  }
+
+  if (typeof spec === 'object' && 'type' in spec) {
+    return {
+      kind: 'surface',
+      type: spec.type,
+      id: spec.id ?? `${spec.type.role}:${position}`,
+      data: spec.data,
+    };
+  }
+
+  return {
+    kind: 'surface',
+    type: spec,
+    id: `${spec.role}:${position}`,
+  };
+};
+
+/** Grace period before a still-unmatched binding is reported as a mistake, so surfaces registered
+ * during plugin activation after first paint are not misreported. */
+const BINDING_SETTLE_DELAY = 500;
+
+/** Describes a value compactly without stringifying large/circular objects (e.g. a `Space`). */
+const describeBinding = (value: unknown): string => {
+  if (Obj.isObject(value)) {
+    return `${Obj.getTypename(value) ?? 'Object'}(${value.id})`;
+  }
+  if (value === null || value === undefined || typeof value === 'string' || typeof value === 'number') {
+    return JSON.stringify(value) ?? String(value);
+  }
+  if (typeof value === 'object') {
+    return `[${value.constructor?.name ?? 'object'}]`;
+  }
+  return String(value);
+};
+
+/**
+ * Rendered in place of a surface cell whose binding matched no registered surface — surfaces the
+ * dispatch role and data so a story author can spot a wrong companion variant, an unloaded plugin,
+ * or an unregistered subject type instead of staring at a blank cell.
+ */
+const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> }) => (
+  <div className='grid place-items-center p-2 text-xs text-warning-text'>
+    <div className='grid gap-1 rounded-sm border border-dashed border-separator p-2 font-mono'>
+      <div className='font-medium'>⚠ No surface matched this binding</div>
+      <div>role: {role}</div>
+      {Object.entries(data).map(([key, value]) => (
+        <div key={key}>
+          {key}: {describeBinding(value)}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/**
+ * Dispatches a surface for a cell, falling back to {@link BindingDebug} while no registered surface
+ * matches the binding (after {@link BINDING_SETTLE_DELAY} to tolerate late surface registration).
+ *
+ * Subscribed to the role's candidates and its pending flag, because `useIsAvailable` reads them
+ * without subscribing and is itself what fires the demand that loads a role-gated module: the first
+ * miss is expected, and without the subscription nothing re-renders this cell when the contribution
+ * lands.
+ */
+const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string, any> }) => {
+  const isAvailable = Surface.useIsAvailable();
+  const surfaceManager = Surface.useSurfaceManager();
+  useAtomValue(surfaceManager.candidatesAtom(type.role));
+  const pending = useAtomValue(surfaceManager.pendingAtom(type.role));
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(true), BINDING_SETTLE_DELAY);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (settled && !pending && !isAvailable({ type, data })) {
+    return <BindingDebug role={type.role} data={data} />;
+  }
+
+  return <Surface.Surface type={type} data={data} limit={1} />;
+};
+
+/**
+ * An object cell, bound to this space's replica of its object: a harness running several peers seeds on one of them,
+ * so the others wait for the object to sync.
+ */
+const ObjectCell = ({ space, cell }: { space: Space; cell: NormalizedObjectCell }) => {
+  const foreign = Obj.getDatabase(cell.object) !== space.db;
+  const [replica] = useQuery(space.db, foreign ? Filter.id(cell.object.id) : Filter.nothing());
+  const object = foreign ? replica : cell.object;
+  if (!object) {
+    return <div className='dx-cover grid place-items-center text-description'>Syncing…</div>;
+  }
+
+  return cell.component ? (
+    <cell.component space={space} object={object} attendableId={cell.attendableId} />
+  ) : (
+    <SurfaceCell type={cell.type} data={{ subject: object, ...cell.data, attendableId: cell.attendableId }} />
+  );
+};
+
+/**
+ * Renders a columns×rows grid of app-framework surfaces from a {@link ModuleLayout}.
+ *
+ * Each cell resolves via `<Surface.Surface type={token} limit={1} />` and is wrapped in an
+ * `AttendableContainer` so its attendable id participates in the attention system. The active
+ * workspace is set to the first space so module surfaces resolve it via `useActiveSpace()` — done
+ * from the React tree because the plugin-module activation context resolves a different AtomRegistry
+ * than the UI reads. Each cell's attendable id is injected into its surface `data`.
+ *
+ * Storybook-agnostic: any storybook that contributes `Capabilities.ReactSurface` module surfaces can
+ * drive its layout with this container. Provide `withAttention()` (from `@dxos/react-ui-attention/testing`)
+ * in the story decorators to make attention actually track focus.
+ */
+export const ModuleContainer = ({ layout, columns, rows, tiling = 'separated' }: ModuleContainerProps) => {
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const layoutState = Hooks.useCapability(StorybookCapabilities.LayoutState);
+  const { graph } = ToolkitHooks.useAppGraph();
+  const spaces = useSpaces();
+  // A harness running several peers names the space they share; otherwise the story shows its first space.
+  const storySpaceId = useStorySpaceId();
+  const space = storySpaceId ? spaces.find((space) => space.id === storySpaceId) : spaces[0];
+
+  // A harness may contribute a runtime layout (built by `onInit`); prefer it over the static prop.
+  const [layoutAtom] = Hooks.useCapabilities(StoryLayout.Atom);
+  const resolvedLayout = useAtomValue(layoutAtom ?? emptyLayoutAtom) ?? layout ?? [];
+
+  // Falls back to the first space only while the workspace names none that exists: a story may own
+  // the workspace itself (a space picker, say), and pinning the first space would undo its choice.
+  useEffect(() => {
+    const activeId = AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace);
+    const active = activeId && spaces.find((space) => space.id === activeId);
+    if (space && (storySpaceId ? activeId !== space.id : !active)) {
+      atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: GraphPath.getSpacePath(space.id) });
+    }
+  }, [spaces, space, storySpaceId, layoutState, atomRegistry]);
+
+  // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve —
+  // the work the deck's navtree normally does on navigation.
+  const objectPaths = space
+    ? resolvedLayout
+        .flat()
+        .map((spec) => normalizeCell(spec, space.id))
+        .flatMap((cell) => (cell.kind === 'object' ? [cell.attendableId] : []))
+    : [];
+  useEffect(() => {
+    for (const path of objectPaths) {
+      AppGraph.expandPath(graph, path);
+    }
+  }, [graph, JSON.stringify(objectPaths)]);
+
+  if (!space) {
+    return <Loading data={{ space: !!space }} />;
+  }
+
+  return (
+    <div
+      className={mx('dx-fill dx-cover grid', tiling === 'flush' ? 'gap-px bg-separator' : 'gap-2 p-2')}
+      style={{ gridTemplateColumns: tracks(columns, resolvedLayout.length) }}
+    >
+      {resolvedLayout.map((column, columnIndex) => (
+        <div
+          key={columnIndex}
+          className={mx('dx-expand grid', tiling === 'flush' ? 'gap-px' : 'gap-2')}
+          style={{ gridTemplateRows: tracks(rows?.[columnIndex], column.length) }}
+        >
+          {column.map((spec, moduleIndex) => {
+            const cell = normalizeCell(spec, space.id, `${columnIndex}:${moduleIndex}`);
+            return (
+              <AttendableContainer
+                key={moduleIndex}
+                id={cell.id}
+                classNames={mx(
+                  'relative overflow-hidden',
+                  tiling === 'flush' ? 'bg-base-surface' : 'border border-separator rounded-sm',
+                )}
+              >
+                {cell.kind === 'object' ? (
+                  <ObjectCell space={space} cell={cell} />
+                ) : (
+                  <SurfaceCell type={cell.type} data={{ ...cell.data, attendableId: cell.id }} />
+                )}
+              </AttendableContainer>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+};

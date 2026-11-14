@@ -1,0 +1,20 @@
+---
+title: Toast
+description: "A notice that something happened, which goes away by itself."
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+<Snippet file="tile-components" region="toast" lang="tsx" />
+
+<TilePreview id="toast" />
+
+```ts
+import * as Toast from '@dxos/react-ui/Toast';
+```
+
+`Toast.Provider` goes once near the app's root, and `Toast.Toaster` is where toasts appear. Each `Toast.Root` is open
+while its `open` is true, and closes after its `duration` or when the user closes it, reporting through
+`onOpenChange`. Inside it: `Toast.Header` (with an `icon`), `Toast.Title`, `Toast.Description`, `Toast.Footer`,
+`Toast.ActionTrigger` for a button that acts, and `Toast.CloseTrigger`.

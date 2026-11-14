@@ -38,15 +38,15 @@ body {
   white-space: nowrap;
 }
 
-/* Prose. */
-.sl-markdown-content :is(h1, h2, h3, h4),
+/* Prose. Element rules skip islands, whose components carry their own type and whose portals render outside the prose. */
+.sl-markdown-content :is(h1, h2, h3, h4):not(.dx-island *),
 h1#_top {
   font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--c-fg);
 }
 
-.sl-markdown-content h2 {
+.sl-markdown-content h2:not(.dx-island *) {
   margin-top: 3rem;
 }
 
@@ -59,9 +59,9 @@ h1#_top {
   text-underline-offset: 0.2em;
 }
 
-.sl-markdown-content :not(pre) > code {
+.sl-markdown-content :not(pre) > code:not(.dx-island *) {
   border: 0;
-  border-radius: 4px;
+  border-radius: 0;
   background: var(--c-surface);
   font-size: 0.875em;
   padding: 0.1em 0.35em;
@@ -113,7 +113,7 @@ site-search button[data-open-modal] {
 }
 
 .sidebar-content a {
-  border-radius: 6px;
+  border-radius: 0;
   color: var(--c-fg);
   transition: background var(--c-dur);
 }
@@ -231,7 +231,7 @@ starlight-toc h2 {
 }
 
 /* Tables: strict tracks, hairlines only. */
-.sl-markdown-content table {
+.sl-markdown-content table:not(.dx-island *) {
   display: table;
   width: 100%;
   table-layout: fixed;
@@ -239,7 +239,7 @@ starlight-toc h2 {
   font-size: 0.9375rem;
 }
 
-.sl-markdown-content :is(th, td) {
+.sl-markdown-content :is(th, td):not(.dx-island *) {
   border: 0;
   border-bottom: 1px solid var(--c-hairline);
   background: transparent;
@@ -248,7 +248,7 @@ starlight-toc h2 {
   vertical-align: top;
 }
 
-.sl-markdown-content th {
+.sl-markdown-content th:not(.dx-island *) {
   font-family: var(--sl-font-mono);
   font-size: 0.6875rem;
   font-weight: 400;
@@ -521,4 +521,28 @@ a.card:hover {
     height: 48.7px;
     translate: calc(1vw - 14px) 2.6px;
   }
+}
+
+/*
+ * A wide block, such as a grid of live demos, breaks out of the text column into the whole content panel, centered on
+ * the column as the column is centered in the panel [F-21.5]. `cqi` is the panel's width, less its padding.
+ */
+.content-panel {
+  container-type: inline-size;
+}
+
+.sl-markdown-content .dx-wide {
+  --dx-wide-width: min(100cqi, 80rem);
+  width: var(--dx-wide-width);
+  max-width: none;
+  margin-inline: calc((100% - var(--dx-wide-width)) / 2);
+}
+
+/* Square corners on Starlight's and Expressive Code's own chrome, as on the marketing pages; demos keep theirs. */
+site-search :is(dialog, kbd),
+starlight-toc a,
+mobile-starlight-toc .toggle,
+.sl-menu-button,
+.expressive-code .copy :is(button, .feedback) {
+  border-radius: 0;
 }

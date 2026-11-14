@@ -1,0 +1,44 @@
+---
+title: Graph
+description: Nodes and edges in SVG, placed by a projector.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+
+<ApiStory id="react-ui-graph/graph" height="28rem" />
+
+```ts
+import { GraphForceProjector, SVG } from '@dxos/react-ui-graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
+```
+
+```sh
+npm install @dxos/react-ui-graph @dxos/graph
+```
+
+`Graph` draws the nodes and edges of a `GraphModel` from `@dxos/graph`, and a projector decides where each node goes.
+The force projector pulls linked nodes together and pushes the rest apart, which suits graphs with no natural order,
+such as people and the teams they belong to. The package has other projectors for trees, rings and layers. It draws
+inside [`SVG.Root`](/docs/tile/api/react-ui-graph/svg/).
+
+## Props
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `model` | `GraphModel` | The nodes and edges |
+| `projector` | `GraphProjector` | Places the nodes; make it after `SVG.Root` mounts |
+| `labels` | `{ text }` | What to write beside each node |
+| `drag` | `boolean` | The user can move a node |
+| `arrows` | `boolean` | Edges end in arrowheads |
+| `onSelect` | `(node, event) => void` | The user clicked a node |
+| `onInspect` | `(node | null, event) => void` | The pointer entered a node, or left it |
+
+## Draw a graph
+
+`addNode` takes an `id` and any `data`, and `addEdge` a `source` and a `target`. `SVG.Zoom` lets the user zoom and pan,
+and `SVG.Graph` draws the model. The projector needs the SVG context, so make it in an effect after `SVG.Root` mounts:
+
+<Snippet file="tile-guide-graph" region="graph" lang="tsx" />
+
+The story at the top of this page runs this example.

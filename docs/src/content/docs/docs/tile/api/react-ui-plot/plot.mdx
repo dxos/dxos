@@ -1,0 +1,40 @@
+---
+title: Plot
+description: A table of values as a bar, pie, line, scatter, heatmap, radar or map chart.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+
+<ApiStory id="react-ui-plot/plot" height="24rem" />
+
+```ts
+import { Plot, toPlotData } from '@dxos/react-ui-plot';
+```
+
+```sh
+npm install @dxos/react-ui-plot
+```
+
+`Plot` draws a table of values as a chart. It fills its container and redraws when the container changes size. A
+chart with more than one series has a legend.
+
+## Props
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `data` | `PlotData` | Columns and rows; the first column is the category or the x axis |
+| `options.type` | `'bar' | 'pie' | 'xy' | 'scatter' | 'heatmap' | 'radar' | 'map'` | The kind of chart |
+| `options.grid` | `boolean` | Grid lines |
+| `options.stacked` | `boolean` | Bars stack instead of standing side by side |
+| `options.horizontal` | `boolean` | Bars run across |
+| `options.regression` | `boolean` | A trend line on a scatter chart |
+
+## Chart a table
+
+`toPlotData` turns rows into the chart's data. With `header`, the first row names the columns. The same data works for
+every type, so switching is one option:
+
+<Snippet file="tile-guide-chart" region="chart" lang="tsx" />
+
+The story at the top of this page runs this example.

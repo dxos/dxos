@@ -10,13 +10,14 @@ import * as ChessSkill from '@dxos/plugin-chess/ChessSkill';
 import * as MapSkill from '@dxos/plugin-map/MapSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ViewModel } from '@dxos/schema';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
-const meta: Meta<typeof ModuleContainer> = {
+import { createDecorators, storyParameters } from '../testing/index.ts';
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Artifacts',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 

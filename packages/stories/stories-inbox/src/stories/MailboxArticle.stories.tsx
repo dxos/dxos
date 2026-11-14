@@ -16,13 +16,10 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin, initializeMailbox, seedSummaries } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import {
-  Cell,
-  ModuleContainer,
-  type ModuleContainerProps,
-  UpdateCompanionStubPlugin,
-  createStoryDecorators,
-} from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
+import * as StoryStagePlugin from '@dxos/storybook-testing/StoryStagePlugin';
 import { Message, Person } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
@@ -37,7 +34,7 @@ type StoryArgs = {
   conversations?: boolean;
   /** Attaches a real PDF blob to the first message and lays out the three deck planks. */
   attachments?: boolean;
-} & Pick<ModuleContainerProps, 'columns'>;
+} & Pick<ModuleContainer.Props, 'columns'>;
 
 // A minimal but structurally valid PDF, so the third column exercises the browser's real viewer
 // rather than the unsupported fallback.
@@ -79,15 +76,15 @@ const DefaultStory = ({ conversations, columns }: StoryArgs) => {
     }
   }, [registry, settingsAtom, conversations]);
 
-  return <ModuleContainer columns={columns} />;
+  return <ModuleContainer.Root columns={columns} />;
 };
 
 const meta = {
   title: 'stories/stories-inbox/MailboxArticle',
   render: DefaultStory,
-  decorators: createStoryDecorators<StoryArgs>(({ args: { count = 0, threads = 10, attachments = false } }) => ({
+  decorators: StoryHarness.decorators<StoryArgs>(({ args: { count = 0, threads = 10, attachments = false } }) => ({
     types: [Blob.Blob, Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
-    plugins: [InboxPlugin.make(), PreviewPlugin.make(), UpdateCompanionStubPlugin(), StoryModulesPlugin()],
+    plugins: [InboxPlugin.make(), PreviewPlugin.make(), StoryStagePlugin.make(), StoryModulesPlugin()],
     onInit: async ({ space }) => {
       const mailbox = await initializeMailbox(space.db, count, threads);
       await seedSummaries(space.db, mailbox);

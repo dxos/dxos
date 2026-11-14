@@ -6,12 +6,15 @@ import '@dxos-theme';
 import '../styles/island-base.generated.css';
 
 import { RegistryProvider } from '@effect/atom-react/RegistryContext';
-import React, { type ComponentType, useSyncExternalStore } from 'react';
+import React, { type ComponentType, Suspense, lazy, useState } from 'react';
 
 import '@dxos/react-ui/theme.css';
+import { translations as calendarTranslations } from '@dxos/react-ui-calendar/translations';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as geoTranslations } from '@dxos/react-ui-geo/translations';
 import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
+import { translations as mosaicTranslations } from '@dxos/react-ui-mosaic/translations';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations } from '@dxos/react-ui/translations';
 
@@ -38,11 +41,19 @@ import { ContactsScreen as InputsScreen } from '../tile-tutorial/inputs/Contacts
 import { ContactsScreen as LayoutScreen } from '../tile-tutorial/layout/ContactsScreen.tsx';
 import { ContactsScreen as OverlaysScreen } from '../tile-tutorial/overlays/ContactsScreen.tsx';
 import { App as ThemeApp } from '../tile-tutorial/theme/App.tsx';
+import { useNearViewport, useThemeMode } from './hooks.ts';
+
+/** A preview in its own chunk, loaded when its island first renders. */
+const lazyPreview = <M,>(load: () => Promise<M>, name: keyof M): ComponentType =>
+  // A module's export, named by key, cannot be narrowed to a component by its key type alone.
+  lazy(async () => ({ default: (await load())[name] as ComponentType }));
 
 /** The previews a page can show, by id; each is the snippet the page prints beside it. */
 const PREVIEWS: Record<string, ComponentType> = {
   'agenda': Agenda,
   'buttons': Buttons,
+  'calendar-picker': lazyPreview(() => import('../echo/snippets/tile-guide-calendar.tsx'), 'MonthPicker'),
+  'calendar-week': lazyPreview(() => import('../echo/snippets/tile-guide-calendar.tsx'), 'WeekPlanner'),
   'dialog': EditDialog,
   'editor-markdown': MarkdownEditor,
   'editor-plain': NotesEditor,
@@ -71,27 +82,26 @@ const PREVIEWS: Record<string, ComponentType> = {
 
 const RESOURCES = [
   ...translations,
+  ...calendarTranslations,
   ...editorTranslations,
   ...formTranslations,
+  ...geoTranslations,
   ...menuTranslations,
+  ...mosaicTranslations,
   ...contactsTranslations,
 ];
 
-const root = () => document.documentElement;
-
-const subscribe = (onChange: () => void) => {
-  const observer = new MutationObserver(onChange);
-  observer.observe(root(), { attributes: true, attributeFilter: ['class'] });
-  return () => observer.disconnect();
+export type TileDemoProps = {
+  id: string;
+  /** Mounts the preview, and loads its chunk, only once the island nears the viewport. */
+  deferred?: boolean;
 };
 
-/** Follows the `dark` class that the docs head mirrors from Starlight's theme picker. */
-const useThemeMode = () =>
-  useSyncExternalStore(subscribe, () => (root().classList.contains('dark') ? 'dark' : 'light'));
-
 /** A live TILE preview island: `<TileDemo id='buttons' client:only='react' />`. */
-export const TileDemo = ({ id }: { id: string }) => {
+export const TileDemo = ({ id, deferred = false }: TileDemoProps) => {
   const themeMode = useThemeMode();
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const near = useNearViewport(element, deferred);
   const Preview = PREVIEWS[id];
   if (!Preview) {
     throw new Error(`No TILE preview "${id}"`);
@@ -100,7 +110,19 @@ export const TileDemo = ({ id }: { id: string }) => {
   return (
     <RegistryProvider>
       <Theme.Provider tx={Theme.defaultTx} themeMode={themeMode} resourceExtensions={RESOURCES}>
-        <Preview />
+        {deferred ? (
+          <div className='h-full' ref={setElement}>
+            {near && (
+              <Suspense>
+                <Preview />
+              </Suspense>
+            )}
+          </div>
+        ) : (
+          <Suspense>
+            <Preview />
+          </Suspense>
+        )}
       </Theme.Provider>
     </RegistryProvider>
   );

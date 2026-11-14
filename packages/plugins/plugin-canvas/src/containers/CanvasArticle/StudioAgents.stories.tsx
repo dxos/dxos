@@ -19,7 +19,9 @@ import { DXN } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
@@ -56,7 +58,7 @@ const SPACE_PARAMS = { picks: 2, hue: 'blue' };
 type Options = { components?: ComponentMode; plugins?: Plugin.Plugin[] };
 
 const decorators = ({ components = 'kind', plugins = [StudioKindsPlugin()] }: Options = {}) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), ...plugins],
     onInit: async ({ space }) => {
@@ -91,9 +93,9 @@ const decorators = ({ components = 'kind', plugins = [StudioKindsPlugin()] }: Op
     },
   });
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'plugins/plugin-canvas/containers/StudioAgents',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     translations,
