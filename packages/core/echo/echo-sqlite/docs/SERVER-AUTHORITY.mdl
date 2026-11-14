@@ -1,0 +1,950 @@
+---
+id: org.dxos.echo-sqlite.server-authority
+name: EchoSqliteServerAuthority
+version: 0.1.0
+status: design
+---
+
+A design for making `org.dxos.echo-sqlite` a real ECHO backend: objects are Automerge documents,
+stored and replicated as blocks of the real feed store (`org.dxos.feed`), and indexed into SQLite by
+the real indexer (`org.dxos.index-core`). Everything runs over SQLite, on the device and on the server.
+This design is theoretical. No code implements it yet.
+
+Five properties define it:
+
+- **Local-first, with a server authority.** Every read and write is local. One Durable Object per
+  space holds the authoritative copy of the space's feeds and puts every block in one order. There is
+  no peer-to-peer replication: clients talk only to their space's object [F-1, F-4].
+- **Automerge travels as feed blocks.** Each object's Automerge changes are blocks of one feed in the
+  new `automerge` namespace. They sync exactly as queue blocks do: pull by position, push unpositioned
+  blocks, the server assigns positions [F-2, F-4].
+- **The server never reifies Automerge.** It stores and orders opaque blocks. Only clients load an
+  Automerge document, merge it and read objects out of it [F-3].
+- **The client is one process.** The app, the database, the indexer and the sync client run together.
+  There are no client-services and no RPC boundary between the app and its data [F-6].
+- **Out of scope:** end-to-end encryption, and access control beyond a simple server ACL.
+- **Queries run on the indexer's tables.** The indexer reifies each changed document and writes its
+  objects to SQLite; echo-sqlite's compiler runs every query against those rows [F-5].
+
+The sync protocol is new: Subduction does not run, and neither does the mesh replicator.
+
+## Packages
+
+- `@dxos/echo-sqlite` holds the database, the indexer wiring and the client sync, the last under its
+  `sync` subpath export (`@dxos/echo-sqlite/sync`).
+- `@dxos/echo-sync-worker` is the Cloudflare part: the worker and the SpaceAuthority Durable Object.
+- `@dxos/echo-sqlite/browser` opens a database in the browser over OPFS, behind the one-tab Web Lock.
+
+## Dependencies
+
+```mdl
+uses org.dxos.echo-sqlite: The database API, its bounded-memory rules and its SQL query compiler, which this design keeps.
+```
+
+```mdl
+uses org.dxos.feed: The feed store that holds every block on both sides, and the atomic replace that compaction will use.
+```
+
+```mdl
+uses org.dxos.index-core: The indexer that turns Automerge documents into the rows queries read.
+```
+
+```mdl
+uses org.dxos.echo-sync-worker: The worker that hosts the authority on Cloudflare.
+```
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `uses`     | `dxos.spec.core/uses`       |
+| `type`     | `org.dxos.mdl.type@1.0`     |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `service`  | `org.dxos.mdl.service@1.0`  |
+| `table`    | `org.dxos.mdl.table@1.0`    |
+| `binding`  | `org.dxos.mdl.binding@1.0`  |
+| `actor`    | `org.dxos.mdl.actor@1.0`    |
+| `route`    | `org.dxos.mdl.route@1.0`    |
+| `rule`     | `org.dxos.mdl.rule@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `question` | `org.dxos.mdl.question@1.0` |
+
+## Diagrams
+
+### Components
+
+```diagram
+diagram flow=right
+group client "Client (one process)" {
+  node App "App"
+  node DB "SqliteDatabase"
+  node Docs "DocumentCache"
+  node Engine "IndexEngine"
+  node CStore "FeedStore (replica)"
+  node Sync "SpaceSyncClient"
+}
+group server "Cloudflare" right-of client {
+  node Router "Worker"
+  node DO "SpaceAuthority DO"
+  node SStore "FeedStore (authority)"
+}
+edge App -> DB "query, Obj.update"
+edge DB -> Docs "change"
+edge Docs -> CStore "appendLocal"
+edge CStore -> Engine "blocks"
+edge Engine -> DB "rows"
+edge Sync -> CStore "pull, push"
+edge Sync -> Router "socket"
+edge Router -> DO "idFromName(spaceId)"
+edge DO owns SStore
+```
+
+### A local edit reaches another client
+
+```diagram
+diagram kind=sequence
+node A "client A"
+node DO "SpaceAuthority"
+node B "client B"
+note A "Obj.update: change c1 to doc x"
+note A "append c1 unpositioned; index x"
+edge A sends DO "push [c1]"
+note DO "position 41"
+edge DO sends A "ack [41]"
+edge DO sends B "blocks 40..41"
+note B "apply c1 to x; index x"
+```
+
+## Concepts
+
+```mdl
+service SpaceAuthority
+  desc: |
+    The Durable Object for one space. It owns a FeedStore over its own SQLite storage and is the
+    position authority for every namespace of the space. It reads block metadata and never decodes
+    block data in the `automerge` namespace.
+  ops:
+    connect(token: AuthToken) → WebSocket                        # [F-4.1, F-7]
+    pull(request: PullRequest) → BlocksMessage                   # [F-4.2]
+    push(request: PushRequest) → PushAck                         # [F-4.3]
+```
+
+```mdl
+service SpaceSyncClient
+  desc: |
+    One per open space on the client. It keeps one socket to the space's SpaceAuthority and, per
+    namespace, a pull cursor (the highest position applied) in the local FeedStore.
+  ops:
+    open(spaceId: SpaceId) → void        # pull from each cursor, then push unpositioned blocks [F-4.2, F-4.3]
+    onBlocks(message: BlocksMessage)     # insert, then schedule an index pass [F-5.2]
+    close() → void
+```
+
+```mdl
+service DocumentCache
+  desc: |
+    The client's resident Automerge documents, one per object, loaded on demand and released when
+    unheld, like echo-sqlite's working set. Loading a document reads every block of its feed,
+    concatenates their chunks and loads the result [F-2.4].
+  ops:
+    load(objectId: ObjectId) → Doc                               # [F-3.2]
+    change(objectId: ObjectId, fn: (doc) → void) → Block         # the change as a block to append [F-5.1]
+    apply(objectId: ObjectId, blocks: Block[]) → Doc             # remote blocks [F-5.2]
+```
+
+## Types
+
+```mdl
+type AutomergeBlockData
+  desc: |
+    The payload of a block in the `automerge` namespace. Its feed is the object's document: feedId is
+    the object id. The server stores it as bytes and never decodes it.
+  fields:
+    chunk: Uint8Array    # Automerge saveIncremental() of one write, or save() of the whole document after a compaction
+```
+
+```mdl
+type ClientMessage
+  desc: What a client sends over the socket.
+  literals: pull | push
+  fields:
+    pull: PullRequest
+    push: PushRequest
+```
+
+```mdl
+type PullRequest
+  desc: Asks for every block of a namespace above a position.
+  fields:
+    namespace: string          # automerge | data | trace
+    after: number              # the client's cursor for that namespace
+    limit?: number             # blocks per answer; the client pulls again while `more`
+```
+
+```mdl
+type PushRequest
+  desc: |
+    The client's unpositioned blocks of one namespace, in the order it appended them. The FeedProtocol
+    Block type is reused unchanged.
+  fields:
+    requestId: string
+    namespace: string
+    blocks: Block[]
+```
+
+```mdl
+type PushAck
+  desc: The answer to a push, to the pusher only.
+  fields:
+    requestId: string
+    positions: number[]        # one per pushed block, in push order
+    rejected?: string          # set when nothing was appended, with the reason [F-7.2]
+```
+
+```mdl
+type BlocksMessage
+  desc: |
+    Blocks of one namespace in position order: the answer to a pull, and the broadcast of another
+    client's push. A client that has applied up to `after` may move its cursor to `to`.
+  fields:
+    namespace: string
+    after: number
+    to: number
+    blocks: Block[]
+    more: boolean
+    epoch: string              # minted with the space's store; a new epoch means the client re-pulls from 0 [F-4.5]
+```
+
+## Server
+
+```mdl
+binding SPACE: The namespace of space authorities; the router addresses one per space.
+  type: DurableObjectNamespace<SpaceAuthority>
+  target: SpaceAuthority in this worker
+```
+
+```mdl
+actor SpaceAuthority: The authority for one space: it holds its feeds and orders their blocks.
+  binding: SPACE
+  key: the space id — `idFromName(spaceId)`
+  owns: every block of the space and its position
+  storage: sqlite
+  tables: [feeds, blocks, trimmed_blocks, members]
+  alarm: Runs FeedStore.trimAll for the space until it reports nothing more.
+  ops:
+    webSocketMessage(ClientMessage) → BlocksMessage | PushAck
+```
+
+`feeds`, `blocks` and `trimmed_blocks` are the feed store's tables, as `org.dxos.feed` defines them,
+under the feed store's own migrations.
+
+```mdl
+table members: One identity that may read and write the space.
+  store: SpaceAuthority storage (space_authority_migrations)
+  columns:
+    identityKey: TEXT PRIMARY KEY
+    role: TEXT                 # owner | editor | reader
+    addedAt: INTEGER
+  key: identityKey
+```
+
+```mdl
+route socket: The live connection to one space.
+  method: GET
+  path: /space/:spaceId/socket
+  auth: an identity token whose identity is a row of table:members
+  output: WebSocket of ClientMessage in, BlocksMessage | PushAck out
+```
+
+## Features
+
+```mdl
+feat F-1: Topology
+
+  req F-1.1:
+    when: a client syncs a space
+    then: it connects only to that space's SpaceAuthority; clients never connect to each other, and
+          no swarm, signaling or mesh replicator runs
+
+  req F-1.2:
+    when: a space is addressed on the server
+    then: one Durable Object holds it, keyed by idFromName(spaceId), with all of its namespaces in
+          one SQLite storage, so every write to a space is serialized by one object
+
+  req F-1.3:
+    when: a client is offline
+    then: reads and writes succeed locally; its blocks stay unpositioned in its FeedStore until a
+          push is acknowledged
+```
+
+```mdl
+feat F-2: Automerge in feeds
+
+  req F-2.1:
+    when: an object is created
+    then: it gets one Automerge document, whose blocks are one feed of the `automerge` namespace with
+          feedId `doc:<object id>`; the document holds that object only
+
+  req F-2.2:
+    when: an object changes
+    then: the client appends one block holding the Automerge chunk of that write
+          (saveIncremental()); the block's actorId is the device and its sequence the device's next for
+          that feed
+
+  req F-2.3:
+    when: blocks are delivered in position order
+    then: every change's Automerge dependencies are in an earlier position or the same block, because a
+          client pushes its blocks in append order and appends a change only on top of blocks it holds
+
+  req F-2.4:
+    when: a document is loaded
+    then: the chunks of every block of its feed, in position order with unpositioned blocks last, are
+          concatenated and loaded with Automerge.load; chunks that repeat changes are harmless
+
+  req F-2.5:
+    when: Automerge blocks sync
+    then: they sync as ordinary feed blocks with the protocol of [F-4]; there is no separate Automerge
+          sync protocol
+
+  req F-2.6:
+    when: a feed is compacted
+    then: the feed store replaces the feed's blocks with one new block in one transaction
+          (FeedStore.appendReplacing); garbage collection compacts each document of more than one
+          block into one full save, and the new block syncs like any other
+```
+
+```mdl
+feat F-3: The server never reifies Automerge
+
+  req F-3.1:
+    when: the server handles a block of the `automerge` namespace
+    then: it reads only the block's metadata (feedId, actorId, sequence, position, timestamp), never
+          its chunk; the server bundle imports no Automerge code
+
+  req F-3.2:
+    when: an object is read on the client
+    then: its document is loaded by DocumentCache from the local feed only; no Automerge state is
+          fetched from the server except as blocks
+
+  req F-3.3:
+    when: the server is asked about an object's contents
+    then: it cannot answer; any server-side work on objects (functions, agents) runs a client of this
+          design, which syncs the space and indexes it like any other client
+```
+
+```mdl
+feat F-4: The sync protocol
+
+  req F-4.1:
+    when: the socket opens
+    then: the client sends pull for each namespace it holds, from its cursor, then pushes its unpositioned
+          blocks of each namespace
+
+  req F-4.2:
+    when: the server answers a pull
+    then: it sends BlocksMessage frames in position order, at most `limit` blocks each, with more = true
+          until it reaches its highest position
+
+  req F-4.3:
+    when: the server receives a push
+    then: it appends the blocks in one transaction, assigns each the namespace's next position, answers
+          the pusher with PushAck, and sends the blocks to every other socket of the space as a
+          BlocksMessage
+
+  req F-4.4:
+    when: a push repeats blocks the server already holds (same feedId, actorId and sequence)
+    then: the server answers with their existing positions and appends nothing, so a client that lost
+          an ack can push again
+
+  req F-4.5:
+    when: a message names an epoch other than the one the client saved
+    then: the client keeps its unpositioned blocks, drops its positions and cursors, pulls every
+          namespace from 0 and pushes again
+
+  req F-4.6:
+    when: a BlocksMessage arrives whose `after` is above the client's cursor
+    then: the client does not move its cursor and pulls from its cursor
+```
+
+```mdl
+feat F-5: Indexing and queries on the client
+
+  req F-5.1:
+    when: the app changes an object
+    then: in one SQLite transaction the change block is appended to the local FeedStore and the
+          object's rows in the index tables are rewritten from the document, so the next query sees
+          the change (echo-sqlite's read-your-writes)
+
+  req F-5.2:
+    when: remote blocks are inserted
+    then: an IndexEngine pass reads them through an Automerge feed data source, applies them to each
+          touched document, writes the new rows and advances its cursor in one transaction
+
+  req F-5.3:
+    when: a query runs
+    then: it compiles to SQL over the index tables (objectSnapshot, reverseRef, fts), as echo-sqlite's
+          compiler does today, and hydrates only the result rows
+
+  req F-5.4:
+    when: blocks of the `data` and `trace` namespaces arrive
+    then: they are indexed by IndexEngine's feed data source as they are today; queue objects are
+          JSON blocks and are not Automerge documents
+```
+
+```mdl
+feat F-6: No client-services
+
+  req F-6.1:
+    when: an app opens a space
+    then: SqliteDatabase, FeedStore, IndexEngine, DocumentCache and SpaceSyncClient run in the app's
+          process; there is no services host, no services proxy and no RPC between the app and them
+
+  req F-6.2:
+    when: a second tab of the same origin opens the app
+    then: it waits on the database's Web Lock and does not open the database until the tab holding
+          the lock closes, so one tab per origin runs the app; no shared services process exists to
+          serve both
+
+  req F-6.3:
+    when: several processes of one device need the same spaces (CLI commands, Tauri windows, a
+          background agent)
+    then: each opens the same SQLite file directly, and F-8 makes that safe; the database file is the
+          only thing they share
+```
+
+```mdl
+feat F-9: Parity with echo-client
+
+  req F-9.1:
+    when: an app uses the Database API
+    then: echo-sqlite behaves as echo-client does for queries, refs, relations, parent and child,
+          deletion, types and the registry, reactivity, the text CRDT, feeds and queues, the
+          serializer, and convergence keys; each is shown by a copy of the echo-client end-to-end test
+          that passes against echo-sqlite
+
+  req F-9.3:
+    when: echo-sqlite implements a feature for parity
+    then: it uses its own object layer and query compiler, with no code from echo-client
+
+  req F-9.2:
+    when: an app uses branches, lenses (panproto), inline root objects or storage metrics
+    then: echo-sqlite fails with UnsupportedOperationError, as org.dxos.echo-sqlite#F-1.4 does
+```
+
+```mdl
+feat F-8: Several processes on one device
+
+  desc: |
+    On native platforms SQLite already coordinates several processes on one file: WAL mode lets
+    readers run beside one writer, and BEGIN IMMEDIATE serializes writers. So the database file,
+    not a services process, is the meeting point. The browser lacks this because OPFS gives one
+    handle per file.
+
+  req F-8.1:
+    when: the database is opened on node, bun or Tauri
+    then: it runs in WAL mode with a busy timeout, and every write transaction starts with
+          BEGIN IMMEDIATE
+
+  req F-8.2:
+    when: a process appends a change block
+    then: inside the write transaction it reads the feed's blocks with insertionId above the newest
+          one its DocumentCache applied, applies them, makes the change, and takes the block's
+          sequence from the feed's highest sequence for the device's actor; so two processes never
+          change a stale document or reuse a sequence
+
+  req F-8.3:
+    when: several processes have a space open
+    then: only the holder of the space's row in table:sync_leases runs SpaceSyncClient and remote
+          index passes; it renews the lease every LEASE_RENEW (5 s), and another process takes the
+          lease when it is older than LEASE_TTL (15 s)
+
+  req F-8.4:
+    when: a process that does not hold the lease writes
+    then: its block stays unpositioned until the leader pushes it; the leader pushes on each lease
+          renewal and on each change of PRAGMA data_version
+
+  req F-8.5:
+    when: another process commits
+    then: each process sees PRAGMA data_version change (checked every QUERY_POLL, 100 ms, while the
+          database is open), reads table:change_log above its last id, refreshes the resident objects
+          it names, and re-runs its subscribed queries
+
+  req F-8.6:
+    when: change_log rows are older than every open process's last id, or older than one hour
+    then: they are deleted; a process whose last id is below the oldest row re-runs every subscribed query
+
+  req F-8.7:
+    when: several Tauri windows run
+    then: SQLite is opened once in the Rust process and each webview reaches it through a SqlClient
+          over Tauri IPC; this transport carries SQL statements and results only, not a services API,
+          and the CLI opens the same file directly beside it
+```
+
+```mdl
+table sync_leases: Which process syncs a space.
+  store: client database (echo_sqlite_sync_leases)
+  columns:
+    spaceId: TEXT PRIMARY KEY
+    holder: TEXT               # random id of the holding process
+    renewedAt: INTEGER         # epoch ms
+  key: spaceId
+```
+
+```mdl
+table change_log: One committed change, so that other processes can invalidate their queries.
+  store: client database (echo_sqlite_change_log)
+  columns:
+    id: INTEGER PRIMARY KEY AUTOINCREMENT
+    spaceId: TEXT
+    objectId: TEXT
+    writer: TEXT               # random id of the writing store, which skips its own rows
+    at: INTEGER                # epoch ms; rows older than an hour are deleted
+  key: id
+```
+
+```mdl
+feat F-7: Access
+
+  desc: |
+    Access control is out of scope for this design. When it is needed, it starts as the simple
+    server-side ACL below.
+
+  req F-7.1:
+    when: a socket connects
+    then: the server checks the token's identity against table:members and closes the socket if it is
+          not a member
+
+  req F-7.2:
+    when: a reader pushes, or a push names a namespace the server does not know
+    then: the server appends nothing and answers with PushAck.rejected
+
+  req F-7.3:
+    when: access is decided
+    then: it is decided per space; the server cannot read objects, so it cannot grant or deny access to
+          one object
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Concurrent edits converge through the server
+  given: clients A and B hold object x at the same position
+  when: A sets x.name and B sets x.email, both offline, then both reconnect
+  then:
+    - the server positions both change blocks
+    - both clients hold x with A's name and B's email
+  tags: [F-2, F-4]
+```
+
+```mdl
+scenario T-2: A document loads from concatenated chunks
+  given: A wrote x three times and B wrote x once, each write one block
+  when: a new client C pulls from 0 and loads x
+  then: C concatenates the four chunks, loads them, and holds every write
+  tags: [F-2.4, F-2.5]
+```
+
+```mdl
+scenario T-3: The server bundle holds no Automerge
+  given: the server worker's production bundle
+  when: its modules are listed
+  then: no module from @automerge/* is in it
+  tags: [F-3.1]
+```
+
+```mdl
+scenario T-4: A lost ack is harmless
+  given: A pushes block b and the socket closes before the ack arrives
+  when: A reconnects and pushes b again
+  then: the server answers with b's first position and holds b once
+  tags: [F-4.4]
+```
+
+```mdl
+scenario T-5: Read-your-writes without the network
+  given: A is offline
+  when: A changes x and queries for it
+  then: the query returns x with the change, and the change block is unpositioned
+  tags: [F-1.3, F-5.1]
+```
+
+## Rules
+
+```mdl
+rule server-authority-no-automerge-on-server: The server never reifies Automerge
+  Flag any import of `@automerge/*`, or of a package that loads Automerge documents, in code that runs
+  in the SpaceAuthority Durable Object or its worker, and any server code that decodes the bytes of a
+  block in the `automerge` namespace.
+  scope: dir
+  files:
+    - src/**/*.ts
+  grep: automerge
+  severity: error
+  question: Does this server code import Automerge or decode Automerge block bytes?
+```
+
+## Changelog
+
+```mdl
+decision D-1: echo-sqlite runs on the real feed store and the real indexer, and all of it runs over SQLite.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-2, F-5]
+```
+
+```mdl
+decision D-2: There is no peer-to-peer replication. The system stays local-first, and the server is the authority.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-3: The sync protocol is new; Subduction does not run.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-4]
+```
+
+```mdl
+decision D-4: There is one Durable Object per space.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-1.2]
+```
+
+```mdl
+decision D-5: Automerge data syncs like feeds and is stored in a feed of a new namespace. The server never reifies Automerge; only the client does.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-2, F-3]
+```
+
+```mdl
+decision D-6: There are no client-services.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-6]
+```
+
+```mdl
+decision D-7: Each object is one Automerge document, and each document is one feed of the `automerge` namespace with feedId equal to the object id. Fills in [D-5].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1]
+  why: |
+    A document per object keeps loading bounded to the objects a caller holds, as echo-sqlite requires.
+    A feed per document lets compaction be an ordinary per-feed trim, while positions stay one counter
+    per namespace, so the client still keeps one cursor.
+  rejected: One feed per space with the document id inside each block, which makes the server decode blocks to trim them; documents holding many objects, as echo-host has.
+```
+
+```mdl
+decision D-8: The sync protocol is the feed store's model — pull by position, push unpositioned blocks, the server assigns positions — over one socket per space, with the server forwarding each push to the other sockets. Fills in [D-3] and [D-5].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4]
+  why: |
+    The feed store already has a position authority and a replica mode. Automerge needs no order to
+    converge, so the server's order is used only for cursors and for compaction.
+  rejected: Keeping the record protocol's compare-and-set, which would need the server to read records.
+```
+
+```mdl
+decision D-9: Clients compact a document by appending a snapshot block that names the position it covers; the server trims only blocks at or below that position. Fills in [D-5].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.4, F-2.5, F-2.6]
+  why: |
+    The server cannot build a snapshot because it never loads a document. Trimming up to `covers`
+    rather than up to the snapshot's own position keeps a concurrent change that the snapshot does not hold.
+  rejected: Never compacting; the server compacting by decoding changes.
+```
+
+```mdl
+decision D-10: The indexer's tables replace echo-sqlite's entity table, and a local change writes its block and its rows in one transaction. Fills in [D-1].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5]
+  why: |
+    Both tables would hold the same rows. Writing the rows in the change's transaction keeps
+    echo-sqlite's read-your-writes without waiting for an index pass.
+```
+
+```mdl
+decision D-11: Access is decided per space from a members table the server holds. Fills in [D-2].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7]
+  why: The server is the authority and cannot read objects, so it can only check who writes, not what.
+  rejected: Space membership as credentials in a control feed, which needs a HALO pipeline on every client.
+```
+
+```mdl
+decision D-12: In the browser, losing multiple tabs is acceptable. Without client-services, the CLI and Tauri must still support several clients on one device.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-6.2, F-6.3]
+```
+
+```mdl
+decision D-13: On native platforms, processes share the SQLite file directly. Writes serialize with BEGIN IMMEDIATE, one process holds a lease to sync, and the others learn of commits through PRAGMA data_version and a change log. Fills in [D-12].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8]
+  why: |
+    SQLite's file locking already does what the services host did for writes, so only sync and
+    query invalidation need coordination. Pushes are idempotent ([F-4.4]), so a lease handover that
+    briefly runs two sync clients pushes the same blocks twice and loses nothing.
+  rejected: A local daemon serving the database over RPC, which is client-services again; every process syncing on its own, which opens one socket per process and indexes every remote block more than once.
+```
+
+```mdl
+question Q-1: Are `automerge` blocks end-to-end encrypted?
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3, F-7]
+  options:
+    - Yes: the feed store's cypher encrypts block data with a space key; the server sees only metadata, and key distribution to members is new work.
+    - No: the server stores plaintext it never reads; a later server-side indexer stays possible.
+```
+
+```mdl
+question Q-2: Does the server check a snapshot's `covers` before it trims?
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.5]
+  options:
+    - Trust: any writer may compact; a bad snapshot loses history, as a bad change can already corrupt data.
+    - Bound: the server accepts covers only up to the highest position it has sent that client.
+```
+
+```mdl
+question Q-3: Where do space membership and identity tokens come from?
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7]
+  options:
+    - EDGE identity: the existing EDGE auth token; the DO keeps the members table and an owner route edits it.
+    - HALO: keep identity credentials and derive members from them, which brings back part of client-services.
+```
+
+```mdl
+question Q-4: Does the browser get several tabs back by sharing the SQL connection rather than services?
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.2]
+  options:
+    - No: one tab per origin, as now.
+    - Leader tab: Web Locks elect the tab that holds the OPFS file; other tabs send SQL statements to it over a BroadcastChannel and use the change log of [F-8.5] to invalidate. The boundary is the SqlClient, as with Tauri IPC.
+```
+
+```mdl
+decision D-14: Each tab takes a Web Lock on the database, and a second tab blocks until the lock is free, so the app runs in one tab only.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  answers: Q-4
+  affects: [F-6.2]
+```
+
+```mdl
+decision D-15: End-to-end encryption is out of scope for now.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  answers: Q-1
+  affects: [F-3]
+```
+
+```mdl
+decision D-16: Trust: the server trims on a snapshot's `covers` without checking it.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  answers: Q-2
+  affects: [F-2.5]
+```
+
+```mdl
+decision D-17: The server runs Automerge sync as another type of feed sync.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-4]
+```
+
+```mdl
+decision D-18: Access control is out of scope. If it is needed, it starts as a simple ACL on the server.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  answers: Q-3
+  affects: [F-7]
+```
+
+```mdl
+question Q-5: What does "Automerge sync as another type of feed sync" in [D-17] change in the protocol?
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3, F-4]
+  options:
+    - Hash sync: the `automerge` namespace gets its own feed-sync type that exchanges heads and missing change hashes per document instead of positions; the server reads only change headers (hash, deps), never document state.
+    - Automerge protocol: the server runs Automerge's own sync protocol per document, which loads documents on the server and supersedes [D-5].
+    - Same as now: the position-based feed sync of [F-4] already is this, applied to a new namespace.
+```
+
+```mdl
+decision D-19: Automerge does not get its own sync protocol. Each write is stored as a new Automerge chunk in a block of the object's feed, and the blocks sync as normal feed blocks. To load a document, the client loads all of its chunks, concatenates them and reifies the result.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  answers: Q-5
+  supersedes: D-9
+  affects: [F-2, F-4]
+```
+
+```mdl
+decision D-20: How compaction works on disk is not decided yet. The feed store gets an atomic operation that writes a block and deletes some earlier blocks.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-2.6]
+```
+
+```mdl
+decision D-21: Parity with echo-client covers queries, refs, relations, parent and child, deletion, types and the registry, reactivity, the text CRDT, feeds and queues, the serializer, and convergence keys, which come with the shared indexer. Branches, lenses, inline root objects and storage metrics are out.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-9]
+```
+
+```mdl
+decision D-22: The new sync replaces the record sync. Client sync moves into echo-sqlite under a `sync` subpath, and echo-sync-worker remains the Cloudflare part.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-4]
+```
+
+```mdl
+decision D-23: Parity is shown by running the same end-to-end tests against echo-client and echo-sqlite. Fills in [D-21].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1]
+  why: A test run against only the new backend shows that it works, not that it behaves like echo-client.
+```
+
+```mdl
+decision D-24: echo-sqlite keeps its own object layer and grows it to back each object with an Automerge document; it does not reuse echo-client.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-9.3]
+```
+
+```mdl
+decision D-25: echo-sync-worker depends on the workspace's feed store and deploys from the monorepo; it no longer deploys on its own.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-4]
+```
+
+```mdl
+decision D-26: The parity tests are copies of the portable echo-client end-to-end tests, run against echo-sqlite, and the echo-client tests stay unchanged.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  supersedes: D-23
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-27: Opening a database in the browser, with the one-tab Web Lock, moves into echo-sqlite under a `browser` subpath, so no separate client package remains. Fills in [D-14] and [D-22].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.2]
+  why: With sync in `@dxos/echo-sqlite/sync`, the browser opener was all the old client package still held.
+```
+
+```mdl
+decision D-28: An object's document feed is named `doc:<object id>`, not the bare object id. Fills in [D-7].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1]
+  why: |
+    The feed store keys feeds by id alone, across namespaces, and a `Feed` object's items already live
+    in a feed named by its object id, as EDGE expects; the two would be one feed.
+  rejected: Naming item feeds differently, which breaks the item protocol EDGE speaks.
+```
+
+```mdl
+decision D-29: A feed whose indexing is disabled keeps its index rows, and its items leave text search only; feed reads and space queries still return them.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1]
+  why: |
+    It gives the behaviour the feed-options parity tests check without a second, scanning read path
+    beside the index.
+  rejected: Deleting the rows and scanning the feed store for a disabled feed, as echo-host does.
+```
+
+```mdl
+decision D-30: Convergence-key merging runs on echo-sqlite's index pass, as a port of echo-host's merger over echo-sqlite's documents. Merge records survive object writes, and a redirect table lets queries judge a merged-away parent or endpoint at its survivor.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1, F-9.3]
+  why: |
+    Convergence keys are in the parity scope, and F-9.3 rules out depending on the echo-client stack.
+    Every peer merges the same way (the winner is the minimum id), so merges by different peers converge.
+  rejected: Depending on echo-host for the merger, which brings its Automerge-repo host along.
+```
+
+```mdl
+decision D-31: A connection follows other connections' commits by polling data_version while the database is open. The lease holder pushes on every commit it learns of, and FeedStore.appendLocal runs in one transaction. Fills in [F-8.3], [F-8.4] and [F-8.5].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.3, F-8.4, F-8.5]
+  why: |
+    Reading the last sequence and inserting outside a transaction let two connections take the same
+    sequence. Polling only with subscriptions would leave resident objects stale.
+```
+
+```mdl
+decision D-32: Obj.getChanges and Obj.getVersion read the object's document. Edits not flushed yet are first written into the cached document, which the next flush appends, and an object's creation is its own change.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1]
+  why: Both APIs are synchronous, and echo-client's history starts with the creation change.
+```
+
+```mdl
+decision D-33: Garbage collection compacts each document of more than one block into one block with FeedStore.appendReplacing. Fills in [D-20].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.6]
+  why: It is the one point where the app asks for storage to be reclaimed, and the replacing block syncs as an ordinary block.
+```
+
+```mdl
+decision D-34: Parity tests that drive echo-client internals (object cores, the space root, branches, retainObjects) are cut from the copies, and the rest run as written; multi-process tests run the other process as a real child process.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1, F-8.1]
+  why: |
+    Those tests check echo-client's object model, not behaviour an app sees. Two connections in one
+    thread cannot hold transactions at once, because node:sqlite busy-waits synchronously.
+```

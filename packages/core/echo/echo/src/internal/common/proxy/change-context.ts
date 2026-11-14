@@ -60,6 +60,11 @@ export const isInChangeContext = (key: object): boolean => {
 };
 
 /**
+ * Whether any object is in a change context; only one can be at a time, so a change entered now would end it.
+ */
+export const isAnyChangeContextActive = (): boolean => currentChangeContext !== null;
+
+/**
  * Queue a notification for the given key to be fired when the change context exits.
  *
  * @param key - The key to queue a notification for.

@@ -72,7 +72,7 @@ const session = <A>(spaceId: SpaceId, body: (db: Db, rows: Probe) => Promise<A>)
         const rows: Probe = () =>
           EffectEx.runPromise(
             sql<{ space_id: string; type_dxn: string; id: string }>`
-            SELECT space_id, type_dxn, id FROM echo_entities
+            SELECT spaceId AS space_id, typeDXN AS type_dxn, objectId AS id FROM objectMeta WHERE queueId = ''
           `.pipe(Effect.orDie),
           );
         return yield* Effect.promise(() => body(db, rows));

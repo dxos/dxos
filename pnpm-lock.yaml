@@ -189,6 +189,9 @@ catalogs:
     '@effect/sql-sqlite-bun':
       specifier: 4.0.4
       version: 4.0.4
+    '@effect/sql-sqlite-do':
+      specifier: 4.0.4
+      version: 4.0.4
     '@effect/sql-sqlite-node':
       specifier: 4.0.4
       version: 4.0.4
@@ -3466,9 +3469,6 @@ importers:
       '@dxos/echo-sqlite':
         specifier: workspace:*
         version: link:../../core/echo/echo-sqlite
-      '@dxos/echo-sqlite-sync':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-sqlite-sync
       '@dxos/echo-sync-worker':
         specifier: workspace:*
         version: link:../../core/echo/echo-sync-worker
@@ -3511,6 +3511,9 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
@@ -7022,15 +7025,30 @@ importers:
 
   packages/core/echo/echo-sqlite:
     dependencies:
+      '@automerge/automerge':
+        specifier: 3.5.0
+        version: 3.5.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/feed':
+        specifier: workspace:*
+        version: link:../feed
+      '@dxos/index-core':
+        specifier: workspace:*
+        version: link:../index-core
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -7040,16 +7058,34 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
+      cbor-x:
+        specifier: 'catalog:'
+        version: 1.5.4
       effect:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
-      '@dxos/effect':
+      '@dxos/compute':
         specifier: workspace:*
-        version: link:../../../common/effect
+        version: link:../../compute/compute
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../../common/test-utils
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../../sdk/types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)
@@ -7057,42 +7093,30 @@ importers:
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(vitest@4.1.10)
 
-  packages/core/echo/echo-sqlite-sync:
+  packages/core/echo/echo-sync-worker:
     dependencies:
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo
       '@dxos/echo-sqlite':
         specifier: workspace:*
         version: link:../echo-sqlite
-      '@dxos/echo-sync-worker':
-        specifier: workspace:*
-        version: link:../echo-sync-worker
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
-      '@dxos/sql-sqlite':
+      '@dxos/log':
         specifier: workspace:*
-        version: link:../../../common/sql-sqlite
+        version: link:../../../common/log
+      '@effect/sql-sqlite-do':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)
       effect:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
-      '@cloudflare/vitest-pool-workers':
-        specifier: 'catalog:'
-        version: 0.18.6(@cloudflare/workers-types@5.20260719.1)(@vitest/runner@4.1.10)(@vitest/snapshot@4.1.10)(vitest@4.1.10)
       '@cloudflare/workers-types':
         specifier: 'catalog:'
         version: 5.20260719.1
-
-  packages/core/echo/echo-sync-worker:
-    devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^5.20260717.1
-        version: 5.20260719.1
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
       wrangler:
         specifier: '>=4.112.0'
         version: 4.112.0(@cloudflare/workers-types@5.20260719.1)
@@ -29770,19 +29794,9 @@ packages:
     engines: {node: '>=20.11.0'}
     hasBin: true
 
-  '@cbor-extract/cbor-extract-darwin-arm64@2.2.0':
-    resolution: {integrity: sha512-P7swiOAdF7aSi0H+tHtHtr6zrpF3aAq/W9FXx5HektRvLTM2O89xCyXF3pk7pLc7QpaY7AoaE8UowVf9QBdh3w==}
-    cpu: [arm64]
-    os: [darwin]
-
   '@cbor-extract/cbor-extract-darwin-arm64@2.2.2':
     resolution: {integrity: sha512-ZKZ/F8US7JR92J4DMct6cLW/Y66o2K576+zjlEN/MevH70bFIsB10wkZEQPLzl2oNh2SMGy55xpJ9JoBRl5DOA==}
     cpu: [arm64]
-    os: [darwin]
-
-  '@cbor-extract/cbor-extract-darwin-x64@2.2.0':
-    resolution: {integrity: sha512-1liF6fgowph0JxBbYnAS7ZlqNYLf000Qnj4KjqPNW4GViKrEql2MgZnAsExhY9LSy8dnvA4C0qHEBgPrll0z0w==}
-    cpu: [x64]
     os: [darwin]
 
   '@cbor-extract/cbor-extract-darwin-x64@2.2.2':
@@ -29790,19 +29804,9 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@cbor-extract/cbor-extract-linux-arm64@2.2.0':
-    resolution: {integrity: sha512-rQvhNmDuhjTVXSPFLolmQ47/ydGOFXtbR7+wgkSY0bdOxCFept1hvg59uiLPT2fVDuJFuEy16EImo5tE2x3RsQ==}
-    cpu: [arm64]
-    os: [linux]
-
   '@cbor-extract/cbor-extract-linux-arm64@2.2.2':
     resolution: {integrity: sha512-wfqgzqCAy/Vn8i6WVIh7qZd0DdBFaWBjPdB6ma+Wihcjv0gHqD/mw3ouVv7kbbUNrab6dKEx/w3xQZEdeXIlzg==}
     cpu: [arm64]
-    os: [linux]
-
-  '@cbor-extract/cbor-extract-linux-arm@2.2.0':
-    resolution: {integrity: sha512-QeBcBXk964zOytiedMPQNZr7sg0TNavZeuUCD6ON4vEOU/25+pLhNN6EDIKJ9VLTKaZ7K7EaAriyYQ1NQ05s/Q==}
-    cpu: [arm]
     os: [linux]
 
   '@cbor-extract/cbor-extract-linux-arm@2.2.2':
@@ -29810,20 +29814,10 @@ packages:
     cpu: [arm]
     os: [linux]
 
-  '@cbor-extract/cbor-extract-linux-x64@2.2.0':
-    resolution: {integrity: sha512-cWLAWtT3kNLHSvP4RKDzSTX9o0wvQEEAj4SKvhWuOVZxiDAeQazr9A+PSiRILK1VYMLeDml89ohxCnUNQNQNCw==}
-    cpu: [x64]
-    os: [linux]
-
   '@cbor-extract/cbor-extract-linux-x64@2.2.2':
     resolution: {integrity: sha512-rpiLnVEsqtPJ+mXTdx1rfz4RtUGYIUg2rUAZgd1KjiC1SehYUSkJN7Yh+aVfSjvCGtVP0/bfkQkXpPXKbmSUaA==}
     cpu: [x64]
     os: [linux]
-
-  '@cbor-extract/cbor-extract-win32-x64@2.2.0':
-    resolution: {integrity: sha512-l2M+Z8DO2vbvADOBNLbbh9y5ST1RY5sqkWOg/58GkUPBYou/cuNZ68SGQ644f1CvZ8kcOxyZtw06+dxWHIoN/w==}
-    cpu: [x64]
-    os: [win32]
 
   '@cbor-extract/cbor-extract-win32-x64@2.2.2':
     resolution: {integrity: sha512-dI+9P7cfWxkTQ+oE+7Aa6onEn92PHgfWXZivjNheCRmTBDBf2fx6RyTi0cmgpYLnD1KLZK9ZYrMxaPZ4oiXhGA==}
@@ -31180,6 +31174,11 @@ packages:
 
   '@effect/sql-sqlite-bun@4.0.4':
     resolution: {integrity: sha512-Ae1qfvi7t7xmuP8EmuwgJ8IINNcgy7caF9dNndBYGOlKeuBTub8xeHnP16nZRhUyn2/h42oB3uyP/trSdaRlIQ==}
+    peerDependencies:
+      effect: 4.0.4
+
+  '@effect/sql-sqlite-do@4.0.4':
+    resolution: {integrity: sha512-6Uqa6zbm5GPTWjoIVVty8msQ5C+8coPQDzj8qZM9Mk4NXUWa/RVlaziW335mXZ/8tCnQsFj2iJ/CJdv54JXuew==}
     peerDependencies:
       effect: 4.0.4
 
@@ -39147,10 +39146,6 @@ packages:
 
   caseless@0.12.0:
     resolution: {integrity: sha512-4tYFyifaFfGacoiObjJegolkwSU4xQNGbVgUiNYVUxbQ2x2lUsFvY4hVgVzGiIe6WLOPqycWXA40l+PWsxthUw==}
-
-  cbor-extract@2.2.0:
-    resolution: {integrity: sha512-Ig1zM66BjLfTXpNgKpvBePq271BPOvu8MR0Jl080yG7Jsl+wAZunfrwiwA+9ruzm/WEdIV5QF/bjDZTqyAIVHA==}
-    hasBin: true
 
   cbor-extract@2.2.2:
     resolution: {integrity: sha512-hlSxxI9XO2yQfe9g6msd3g4xCfDqK5T5P0fRMLuaLHhxn4ViPrm+a+MUfhrvH2W962RGxcBwEGzLQyjbDG1gng==}
@@ -50300,37 +50295,19 @@ snapshots:
       node-forge: 1.4.0
       zod: 3.25.76
 
-  '@cbor-extract/cbor-extract-darwin-arm64@2.2.0':
-    optional: true
-
   '@cbor-extract/cbor-extract-darwin-arm64@2.2.2':
-    optional: true
-
-  '@cbor-extract/cbor-extract-darwin-x64@2.2.0':
     optional: true
 
   '@cbor-extract/cbor-extract-darwin-x64@2.2.2':
     optional: true
 
-  '@cbor-extract/cbor-extract-linux-arm64@2.2.0':
-    optional: true
-
   '@cbor-extract/cbor-extract-linux-arm64@2.2.2':
-    optional: true
-
-  '@cbor-extract/cbor-extract-linux-arm@2.2.0':
     optional: true
 
   '@cbor-extract/cbor-extract-linux-arm@2.2.2':
     optional: true
 
-  '@cbor-extract/cbor-extract-linux-x64@2.2.0':
-    optional: true
-
   '@cbor-extract/cbor-extract-linux-x64@2.2.2':
-    optional: true
-
-  '@cbor-extract/cbor-extract-win32-x64@2.2.0':
     optional: true
 
   '@cbor-extract/cbor-extract-win32-x64@2.2.2':
@@ -53825,6 +53802,10 @@ snapshots:
       - utf-8-validate
 
   '@effect/sql-sqlite-bun@4.0.4(effect@4.0.4)':
+    dependencies:
+      effect: 4.0.4
+
+  '@effect/sql-sqlite-do@4.0.4(effect@4.0.4)':
     dependencies:
       effect: 4.0.4
 
@@ -62307,18 +62288,6 @@ snapshots:
 
   caseless@0.12.0: {}
 
-  cbor-extract@2.2.0:
-    dependencies:
-      node-gyp-build-optional-packages: 5.1.1
-    optionalDependencies:
-      '@cbor-extract/cbor-extract-darwin-arm64': 2.2.0
-      '@cbor-extract/cbor-extract-darwin-x64': 2.2.0
-      '@cbor-extract/cbor-extract-linux-arm': 2.2.0
-      '@cbor-extract/cbor-extract-linux-arm64': 2.2.0
-      '@cbor-extract/cbor-extract-linux-x64': 2.2.0
-      '@cbor-extract/cbor-extract-win32-x64': 2.2.0
-    optional: true
-
   cbor-extract@2.2.2:
     dependencies:
       node-gyp-build-optional-packages: 5.1.1
@@ -62333,7 +62302,7 @@ snapshots:
 
   cbor-x@1.5.4:
     optionalDependencies:
-      cbor-extract: 2.2.0
+      cbor-extract: 2.2.2
 
   cbor-x@1.6.4:
     optionalDependencies:

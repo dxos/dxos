@@ -211,9 +211,6 @@
       "path": "packages/apps/echo-sqlite-demo/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-sqlite-sync/tsconfig.json"
-    },
-    {
       "path": "packages/core/echo/echo-sync-worker/tsconfig.json"
     },
     {

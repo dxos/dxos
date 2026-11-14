@@ -7,6 +7,9 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
+    sync: 'src/sync/index.ts',
+    browser: 'src/browser/index.ts',
+    testing: 'src/testing/index.ts',
   },
   test: {
     node: true,

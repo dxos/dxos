@@ -3,7 +3,7 @@
 //
 
 import { Entity, Obj, Relation, Type } from '@dxos/echo';
-import { ATTR_PARENT } from '@dxos/echo/internal';
+import { ATTR_DELETED, ATTR_PARENT } from '@dxos/echo/internal';
 import { EID, type SpaceId } from '@dxos/keys';
 
 /**
@@ -20,7 +20,12 @@ export type EntityRecord = {
   readonly body: Record<string, unknown>;
   readonly refs: readonly { readonly path: string; readonly targetId: string }[];
   readonly text: string;
+  /** When the entity was created, from its meta; written once into its document. */
+  readonly createdAt?: number;
 };
+
+/** Meta fields derived when read (creation, last change) and never stored. */
+const VIRTUAL_META = ['createdAt', 'updatedAt'];
 
 /** Top-level JSON keys that are system annotations, not data a reference or search should see. */
 const SYSTEM_KEYS = new Set(['id', '@type', '@uri', '@parent', '@relationSource', '@relationTarget', '@deleted']);
@@ -28,8 +33,26 @@ const SYSTEM_KEYS = new Set(['id', '@type', '@uri', '@parent', '@relationSource'
 /**
  * Serializes a live entity into the columns, reference rows and text the store writes.
  */
-export const toRecord = (entity: Entity.Unknown, spaceId: SpaceId): EntityRecord => {
+export const toRecord = (
+  entity: Entity.Unknown,
+  spaceId: SpaceId,
+  deleted: boolean = Entity.isDeleted(entity),
+): EntityRecord => {
   const body: Record<string, unknown> = { ...Entity.toJSON(entity) };
+  // The entity's own deletion is stored; one derived from a deleted dependency is not.
+  if (deleted) {
+    body[ATTR_DELETED] = true;
+  } else {
+    delete body[ATTR_DELETED];
+  }
+  const meta = body['@meta'];
+  let createdAt: number | undefined;
+  if (meta !== null && typeof meta === 'object') {
+    const stored: Record<string, unknown> = { ...meta };
+    createdAt = typeof stored.createdAt === 'number' ? stored.createdAt : undefined;
+    VIRTUAL_META.forEach((field) => delete stored[field]);
+    body['@meta'] = stored;
+  }
   const parent = Obj.isObject(entity) ? Obj.getParent(entity) : undefined;
   if (parent) {
     body[ATTR_PARENT] = EID.make({ entityId: parent.id });
@@ -74,13 +97,14 @@ export const toRecord = (entity: Entity.Unknown, spaceId: SpaceId): EntityRecord
     id: entity.id,
     kind: Type.isType(entity) ? Entity.Kind.Type : isRelation ? Entity.Kind.Relation : Entity.Kind.Object,
     typeDxn: Entity.getTypeURI(entity) ?? '',
-    deleted: Entity.isDeleted(entity),
+    deleted,
     parentId: parent?.id ?? null,
     sourceId: isRelation ? localEntityId(Relation.getSourceURI(entity), spaceId) : null,
     targetId: isRelation ? localEntityId(Relation.getTargetURI(entity), spaceId) : null,
     body,
     refs,
     text: strings.join('\n'),
+    createdAt,
   };
 };
 

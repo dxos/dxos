@@ -18,11 +18,9 @@ import { Annotation, Blob, Database, Entity, Filter, Obj, Order, Query, Ref, Rel
 import { TestSchema } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, SpaceId } from '@dxos/keys';
-import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import { type OpenOptions, SqliteDatabase } from './database.ts';
 import { UnsupportedOperationError, UnsupportedQueryError } from './errors.ts';
-import init from './migrations/0001_init.sql?raw';
 
 const TYPES = [
   TestSchema.Person,
@@ -121,12 +119,12 @@ describe('SqliteDatabase', () => {
     }),
   );
 
-  it.effect('runSync returns the last execution and never blocks (F-5.2)', () =>
+  it.effect('runSync answers from resident objects first, then the last execution, never blocking (F-5.2)', () =>
     session(async (db) => {
-      db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       const query = db.query(Filter.type(TestSchema.Person));
-      expect(query.runSync()).toEqual([]);
-      await until(() => query.runSync().length === 1);
+      expect(query.runSync()).toEqual([alice]);
+      expect(await query.run()).toEqual([alice]);
     }),
   );
 
@@ -624,6 +622,35 @@ describe('SqliteDatabase', () => {
     }),
   );
 
+  it.effect('garbage collection folds each document into one chunk, which loads as the object', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const id = yield* session(
+        async (db) => {
+          const person = db.add(Obj.make(TestSchema.Person, { name: 'v0' }));
+          for (let edit = 1; edit <= 3; edit++) {
+            Obj.update(person, (person) => {
+              person.name = `v${edit}`;
+            });
+            await db.flush();
+          }
+          expect((await db.runGarbageCollection()).purgedFeedBlocks).toBeGreaterThan(1);
+          // Nothing left to fold.
+          expect((await db.runGarbageCollection()).purgedFeedBlocks).toBe(0);
+          return person.id;
+        },
+        { spaceId },
+      );
+      yield* session(
+        async (db) => {
+          const [person] = await db.query(Filter.id(id)).run();
+          expect(person).toMatchObject({ name: 'v3' });
+        },
+        { spaceId },
+      );
+    }),
+  );
+
   it.effect('garbage-collects deleted rows with their side-table rows (F-6.3)', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
@@ -641,13 +668,15 @@ describe('SqliteDatabase', () => {
       const counts = yield* rawSql(
         Effect.gen(function* () {
           const sql = yield* SqlClient.SqlClient;
-          const [entities] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM echo_entities`;
-          const [refs] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM echo_refs`;
-          const [text] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM echo_fts`;
-          return [entities.count, refs.count, text.count].map(Number);
+          const [entities] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM objectMeta WHERE queueId = ''`;
+          const [refs] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM reverseRef`;
+          const [text] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM ftsIndex`;
+          const [feeds] = yield* sql<{ count: number }>`SELECT COUNT(DISTINCT feedPrivateId) AS count FROM blocks`;
+          return [entities.count, refs.count, text.count, feeds.count].map(Number);
         }),
       );
-      expect(counts).toEqual([1, 0, 1]);
+      // The kept object's row, text and document; nothing of the purged one.
+      expect(counts).toEqual([1, 0, 1, 1]);
     }),
   );
 
@@ -687,7 +716,7 @@ describe('SqliteDatabase', () => {
             rawSql(
               Effect.gen(function* () {
                 const sql = yield* SqlClient.SqlClient;
-                yield* sql`DROP TABLE echo_entities`;
+                yield* sql`ALTER TABLE blocks RENAME TO blocks_unavailable`;
               }),
             ),
           );
@@ -695,7 +724,14 @@ describe('SqliteDatabase', () => {
           db.remove(doomed);
           await expect(db.flush()).rejects.toBeDefined();
 
-          await EffectEx.runPromise(rawSql(SqlMigrations.apply(init)));
+          await EffectEx.runPromise(
+            rawSql(
+              Effect.gen(function* () {
+                const sql = yield* SqlClient.SqlClient;
+                yield* sql`ALTER TABLE blocks_unavailable RENAME TO blocks`;
+              }),
+            ),
+          );
           await db.flush();
         },
         { spaceId },
@@ -732,10 +768,9 @@ describe('SqliteDatabase', () => {
       expect(db.listBranches('x')).toEqual(['main']);
       await expect(db.createBranch()).rejects.toBeInstanceOf(UnsupportedOperationError);
       expect(() => db.retainObjects([])).toThrow(UnsupportedOperationError);
-      expect(() => db.getChanges(Obj.make(TestSchema.Person, {}))).toThrow(UnsupportedOperationError);
-      expect(() => db.query(Filter.key('com.example.key', { version: '^1.0.0' }))).toThrow(UnsupportedQueryError);
+      expect(await db.query(Filter.key('com.example.key', { version: '^1.0.0' })).run()).toEqual([]);
       expect(() => db.query(Filter.key('com.example.key', { version: '1.0.0' }))).not.toThrow();
-      expect(() => db.query(Filter.text('alice', { type: 'vector' }))).toThrow(UnsupportedQueryError);
+      await expect(db.query(Filter.text('alice', { type: 'vector' })).run()).rejects.toThrow(UnsupportedQueryError);
     }),
   );
 });

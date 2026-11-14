@@ -4,7 +4,6 @@
 
 import { Obj, Ref } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
-import { foreignKey } from '@dxos/echo-sqlite-sync';
 import { random } from '@dxos/random';
 
 import { Event, Organization, Person } from '../schema.ts';
@@ -14,8 +13,6 @@ export const OBJECT_LIMIT = 1_000;
 
 /** What one generation adds, in the order the budget is spent. */
 const MIX = { organizations: 5, people: 12, events: 3 };
-
-const meta = () => ({ [Obj.Meta]: { keys: [foreignKey(random.string.uuid())] } });
 
 /**
  * Seeds a graph with organizations, the people who work for them, and events those people attend.
@@ -39,7 +36,6 @@ export const generate = async (
     () =>
       db.add(
         Obj.make(Organization, {
-          ...meta(),
           name: random.company.name(),
           website: random.internet.url(),
         }),
@@ -51,7 +47,6 @@ export const generate = async (
     () =>
       db.add(
         Obj.make(Person, {
-          ...meta(),
           name: random.person.fullName(),
           email: random.helpers.multiple(() => random.internet.email(), { count: { min: 1, max: 2 } }),
           ...(organizations.length > 0 ? { employer: Ref.make(random.helpers.arrayElement(organizations)) } : {}),
@@ -64,7 +59,6 @@ export const generate = async (
     () =>
       db.add(
         Obj.make(Event, {
-          ...meta(),
           title: random.todo.title(),
           description: random.lorem.sentence({ min: 6, max: 12 }),
           // The second kind of edge: one event, many people.
