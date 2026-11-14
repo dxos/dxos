@@ -18,3 +18,7 @@ export type SuiteTopic = keyof typeof SUITE_BACKGROUNDS;
 
 /** The docs home's card order; ECHO's card is two wide, so seven cards fill two rows of four [D-272]. */
 export const SUITE_ORDER: SuiteTopic[] = ['echo', 'halo', 'mesh', 'plex', 'tile', 'edge', 'sage'];
+
+/** The color of a topic's rays, as its art declares it: what marks the topic wherever the art is not drawn. */
+export const suiteColor = (id: SuiteTopic): string | undefined =>
+  SUITE_BACKGROUNDS[id].match(/--dx-bg-lines, (rgb\([^)]+\))/)?.[1];
