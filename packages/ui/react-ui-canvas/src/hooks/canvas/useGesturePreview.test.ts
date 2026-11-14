@@ -82,34 +82,6 @@ describe('movePreview', () => {
 });
 
 describe('paramPreview', () => {
-  const arrow = (params: Record<string, number>, locked?: boolean): RenderList2D => {
-    const node: ShapeNode = {
-      type: 'shape',
-      id: 'arrow',
-      z: 'a0',
-      center: { x: 0, y: 0 },
-      size: { width: 192, height: 96 },
-      recipe: 'arrow',
-      params,
-      ...(locked ? { locked } : {}),
-    };
-    return { id: 'root', nodes: { arrow: node }, links: {} };
-  };
-
-  const drag = (moved?: boolean): Extract<Drag, { kind: 'param' }> => ({
-    kind: 'param',
-    id: 'arrow',
-    param: 'head',
-    // Pressed with a shaft of 0.6.
-    params: { head: 0.8, shaft: 0.6 },
-    ...(moved ? { moved } : {}),
-  });
-
-  const previewed = (scene: RenderList2D, moved?: boolean) => {
-    const node = paramPreview(scene, drag(moved))?.(scene).nodes.arrow;
-    return node && 'params' in node ? node.params : undefined;
-  };
-
   test("a dragged handle previews its own parameter over the shape's latest, as the release will write it", ({
     expect,
   }) => {
@@ -123,3 +95,31 @@ describe('paramPreview', () => {
     expect(paramPreview({ id: 'root', nodes: {}, links: {} }, drag(true))).toBeUndefined();
   });
 });
+
+const arrow = (params: Record<string, number>, locked?: boolean): RenderList2D => {
+  const node: ShapeNode = {
+    type: 'shape',
+    id: 'arrow',
+    z: 'a0',
+    center: { x: 0, y: 0 },
+    size: { width: 192, height: 96 },
+    recipe: 'arrow',
+    params,
+    ...(locked ? { locked } : {}),
+  };
+  return { id: 'root', nodes: { arrow: node }, links: {} };
+};
+
+const drag = (moved?: boolean): Extract<Drag, { kind: 'param' }> => ({
+  kind: 'param',
+  id: 'arrow',
+  param: 'head',
+  // Pressed with a shaft of 0.6.
+  params: { head: 0.8, shaft: 0.6 },
+  ...(moved ? { moved } : {}),
+});
+
+const previewed = (list: RenderList2D, moved?: boolean) => {
+  const node = paramPreview(list, drag(moved))?.(list).nodes.arrow;
+  return node && 'params' in node ? node.params : undefined;
+};
