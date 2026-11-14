@@ -110,7 +110,7 @@ const shareDynamicImports = (): Plugin => ({
           continue;
         }
         // The minifier renames the helper's parameter, so its own `import()` is found by position.
-        const helper = chunk.code.indexOf('__dxImport??=');
+        const helper = chunk.code.search(/__dxImport\s*\?\?=/);
         const isHelper = (node: Node) => helper >= 0 && node.start > helper && node.start < helper + 200;
         const imports: Node[] = [];
         const walk = (value: unknown) => {
@@ -136,8 +136,14 @@ const shareDynamicImports = (): Plugin => ({
   },
 });
 
-/** The `import()` in Astro's minified island loader. */
-const islandImport = 'return await import(e)}catch';
+/** The two `import()` calls in Astro's minified island loader, the first load and its retry, with their replacements. */
+const islandImports: [string, string][] = [
+  [
+    'return await import(e)}catch',
+    `${sharedImport.replace(/;$/, '')};return await globalThis.__dxImport(new URL(e,document.baseURI).href)}catch`,
+  ],
+  ['import(this.getRetryImportUrl(e))', 'globalThis.__dxImport(this.getRetryImportUrl(e))'],
+];
 
 /** Routes Astro's island loader through {@link sharedImport}, inlined because the loader runs before any chunk. */
 const shareIslandImports = (): Plugin => ({
@@ -146,13 +152,12 @@ const shareIslandImports = (): Plugin => ({
     if (!/astro-island\.prebuilt(-dev)?\.js$/.test(id)) {
       return;
     }
-    if (!code.includes(islandImport)) {
-      throw new Error(`docs:share-island-imports: Astro's island loader no longer has \`${islandImport}\`.`);
-    }
-    return code.replace(
-      islandImport,
-      `${sharedImport.replace(/;$/, '')};return await globalThis.__dxImport(new URL(e,document.baseURI).href)}catch`,
-    );
+    return islandImports.reduce((result, [from, to]) => {
+      if (!result.includes(from)) {
+        throw new Error(`docs:share-island-imports: Astro's island loader no longer has \`${from}\`.`);
+      }
+      return result.replace(from, to);
+    }, code);
   },
 });
 
