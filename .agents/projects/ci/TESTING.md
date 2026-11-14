@@ -160,9 +160,10 @@ T0, T1 and T2 blocking, everything else nightly.
 
 ## What Trunk does for us today
 
-Every test step runs inside `trunk-io/analytics-uploader@v1` with `quarantine: true`
-(`.github/actions/vitest/action.yml`, the `e2e-composer` and `e2e-rest` jobs in `check.yml`, and
-edge's `check.yml` and `deploy-main.yml`). The uploader runs the moon command, uploads the JUnit, asks
+When `TRUNK_TOKEN` is set, every test step runs inside `trunk-io/analytics-uploader@v1` with
+`quarantine: true` (`.github/actions/vitest/action.yml`, the `e2e-composer` and `e2e-rest` jobs in
+`check.yml`, and edge's `check.yml` and `deploy-main.yml`). When it is empty (fork PRs, which get no
+secrets), a fallback step runs moon directly, with no upload and no quarantine. The uploader runs the moon command, uploads the JUnit, asks
 Trunk which failures are quarantined, and rewrites the exit code to 0 if all failures are. From the
 nightly run of 2026-11-13, `test node (1/4)`:
 
@@ -194,7 +195,7 @@ So Trunk does three things:
   them skipped, and Trunk printed `Total: 57 Pass: 57`.
 - **Flake detection has little to work with.** CI never retries, so a flake shows only as different
   results for the same commit across runs. The `flaky` vitest tag that CI opts in to is used by no
-  test; instead there are about 145 `.skip` calls and 59 `!test` stories with no record of why.
+  test; instead there are 153 `.skip` calls and 59 `!test` stories with no record of why.
 - **dxos and edge share one Trunk org.** edge keeps `plugins-mode` out of Trunk on purpose so its
   known failures don't read as flakes, which shows how easily the data is polluted.
 
@@ -220,12 +221,15 @@ One event per test file, plus one event per failed or skipped test:
 - **Envelope** (from `ci-event.mjs`): commit, branch, run id, trigger, job, shard.
 
 A passing file implies each of its non-skipped tests passed, so the pair gives a per-test flake rate
-(failures of a test ÷ runs of its file) without a row for every passing test. A run whose counts
-differ from the usual (a different `--tagsFilter`, `-t`, or new `.skip`) is a different population.
+without a row for every passing test: failures of a test ÷ runs of its file in which that test was
+not skipped. That denominator needs to know which tests were skipped in each run, so skipped-test
+events are sent on every run, not only nightly. Without them the rate is only an estimate: a test
+that failed once and was then skipped in nine runs would read as 1 failure in 10 runs, not 1 in 1.
+Tests filtered out before they are collected (`--tagsFilter`, `-t`) do not appear as skips, so the
+file event carries the filter, and runs with a different filter are counted separately.
 
 Only files whose moon task actually executed are sent. Cache replays are dropped, using moon's
-task status (JUnit does not know a result came from cache). Skipped-test events are sent from the
-nightly run only, since skips are mostly the same every run.
+task status (JUnit does not know a result came from cache).
 
 ### Volume and cost
 
@@ -236,12 +240,12 @@ nightly run only, since skips are mostly the same every run.
 | Events per full dxos run                     | ~4k                                |
 | Check runs                                   | ~200 per weekday, ~4,500 per month |
 
-| Option                                                     | Events/month | Cost/month   |
-| :--------------------------------------------------------- | :----------- | :----------- |
-| Nightly full run only                                      | ~0.1M        | $0           |
-| **Every run, executed files only, skips nightly (chosen)** | **~2–3.5M**  | **~$50–120** |
-| Every run, every file row including cache replays          | ~7M          | ~$230        |
-| Every run treated as a full run (worst case)               | ~18M         | ~$600        |
+| Option                                                        | Events/month | Cost/month   |
+| :------------------------------------------------------------ | :----------- | :----------- |
+| Nightly full run only                                         | ~0.1M        | $0           |
+| **Every run, executed files only, with their skips (chosen)** | **~2.2–4M**  | **~$55–135** |
+| Every run, every file row including cache replays             | ~7M          | ~$230        |
+| Every run treated as a full run (worst case)                  | ~18M         | ~$600        |
 
 Prices assume PostHog's tiers for events without person profiles: first 1M free, $50 per 1M up to
 2M, $34.30 per 1M up to 15M. The `Composer` project shares its free 1M with product analytics, so
