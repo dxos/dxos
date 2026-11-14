@@ -46,9 +46,6 @@
       "path": "../../plugins/plugin-table"
     },
     {
-      "path": "../../sdk/app-framework"
-    },
-    {
       "path": "../../sdk/app-toolkit"
     },
     {

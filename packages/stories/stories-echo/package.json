@@ -36,7 +36,6 @@
     }
   },
   "dependencies": {
-    "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/plugin-canvas": "workspace:*",
