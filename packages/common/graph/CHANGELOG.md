@@ -1,5 +1,19 @@
 # @dxos/graph
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [c9c3867]
+- Updated dependencies [e50d1e5]
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,252 @@
 # @dxos/react-ui
 
+## 0.17.0
+
+### Minor Changes
+
+- 9a3313a: Workspace switches fade between two live decks instead of running a view transition, and objects open without one, so both settle several times faster in WebKit. `Hooks.createHeightMemory` and `Hooks.useReservedHeight` let a component hold the height it last rendered at while its content reloads; plugin-stack keeps section heights in `StackCapabilities.SectionHeights`, `mermaid()` takes a `cache` of rendered diagrams, and plugin-deck's `ShownDeckState` provides the deck state a non-live deck renders. CodeMirror themes are built once instead of per editor. `Carousel` mounts a slide's media only on its page (images on neighbouring slides too), and `Carousel.Root` no longer accepts `autoSize`, since a slide without its media would size to nothing.
+- 9d66bcd: Collections share one model for the current item, selection and arrow movement.
+
+  - **Current** is the item with keyboard focus, drawn only by the focus ring, whether it was reached by a click or the arrow keys. `Focus.Item` no longer writes `aria-current` on focus; `aria-current` is the caller's "you are here" (`current` prop).
+  - **Selected** is `aria-selected`, drawn by one shared neutral edge in `--dx-selected-color` (`.dx-focus-item[aria-selected='true']`, and `Card` `selected`), so a selection that has lost focus never reads as focus. `Focus.Item` takes `selected`; a selectable item is an `option` unless it names its own role. When an item is both, the focus ring is drawn.
+  - **One selection API.** Every collection takes `itemProps(id)`, a `Focus.ItemBinding` (`aria-selected`, `onClick`, `onFocus`, and `onActivate` for click or Enter), as `useListSelection`'s `bind(id).rowProps` gives it; `Focus.bindItem` maps a binding onto an element. `Masonry.Viewport`, `Mosaic.Container` and `Board.Root` take it, replacing masonry's `selectedIds`/`onSelect` and mosaic's `selectedIds`/`onSelectionChange` and the context's `setSelected`. `Mosaic.Tile` and `CardTile.Root` take a `binding`, which a stack passes each tile. A collection whose items carry `aria-selected` is a `listbox` of `option`s. `useListSelection` follows focus anywhere in the item's arrow-key group, so a board's columns select as one collection.
+  - **Masonry** tiles are `Focus.Item`s with no ring of their own, and no longer wrap their cards in a second `Focus.Item`.
+  - **Arrow movement by position**, as tabster's grid mode: `useFocusGroup`'s `grid` axis moves to the item on screen in the arrow's direction (`grid-linear` for up and down); both previously stepped in DOM order. A new `itemSelector` names targets at any depth, and `findNearest` is exported. `Focus.Group` takes `orientation='grid' | 'grid-linear'` and `itemSelector`. `Board.Root` takes `navigation='grid'` to move between cards across columns.
+  - A toolbar that starts or ends with a `Layout.Block` no longer adds edge padding, so a Board column without a drag handle aligns its title as one with a handle does.
+  - Feature maps:
+    - `FeatureCard` is a composite (`Root`, `Provider`, header parts and section parts) that each view composes.
+    - It takes two generic handlers, `onChange(feature, changes)` and `onOpen(target)`.
+    - Edit is in the card's menu.
+    - Long lists scroll inside the card.
+    - Kanban and masonry cards show the focus ring on click and follow the arrow keys by position, and both select the focused card, marking what it needs and fading the rest; Escape clears it.
+    - The cards view filters by text and status.
+    - Removing a feature from a project now takes its card off the project's views.
+
+- 17a9e75: `Listbox.Root` takes `tileWidth: { min, max }`: items lay out as tiles between those widths, as many columns as fit at `min`, measured before the first paint and reflowing as the container resizes instead of stretching to a debounced column count; the arrow keys move by the columns on screen. The presenter's slide grid uses it, with a small/large toggle and captions from each slide's title or first heading; presenting scales the slide in the frame its container changes and fades in fullscreen once its size settles, and the pager follows the light/dark theme. The assistant's agent picker shows each model's vendor logo.
+- 0166448: Presentations render slides written in a Slidev markdown subset (layouts, click steps, video backgrounds, embedded object surfaces) and print the whole deck, one slide per page; reveal.js is removed. A Presentation's article is a grid of slide thumbnails that can be dragged to reorder and double-clicked to present. A deck takes a theme (`default`, `light`, `dark`, `serif`) with color overrides and a named text and code font, whose web fonts load only when used. Slides open in an editor with a slide toolbar and a live preview, below it or in the companion, kept in step with the cursor both ways.
+
+  `Listbox` takes `tiles` (a column count) to lay items out as a grid of cards with two-dimensional arrow keys; a list's current row is now marked in a neutral color and its selection in the focus color, and draggable rows can be reordered in a grid (`useReorder` with `axis: 'horizontal'`). `SyntaxHighlighter` takes a `themeMode` prop and `react-ui-syntax-highlighter` exports `renderRows`.
+
+- f86f10e: Presenter shows speaker notes while presenting (subtitles or a separate window, chosen in its settings), gives each slide an optional desired length, and adds extension points for other plugins: a toolbar slot, an overlay slot and a presentation event handler. Studio renders `audio/*` variants. Adds the private `plugin-recorder`, which records a presentation's voice-over. react-ui adds a `SystemButton.Check` toggle preset (green while checked).
+- 80818bc: A project's repositories are one ordered list, the `Repo.RepositoriesAnnotation` on the project, read with `Repo.getRepositories` and written with `Repo.setRepositories`. The first repository is the one bare issue numbers resolve against and the one a cloud coding agent starts in. plugin-code edits the list in the overview's Software group, above plugin-claude's code folder. A cloud session checks out the project's repositories in their order, then the repositories bound to the chat, each once. Agents edit the list with plugin-code's `CodeOperation.UpdateProjectRepositories` (tool `code-update-project-repositories`), the one tool of its new Project Repositories skill (`org.dxos.skill.code.repositories`).
+
+  The project overview puts the most-used parts first. The name and description are edited in place, with the status as a pill in the top right corner, and both line up with the section headings. `Project`'s status carries an option table (title, hue and icon), so the pill reads Active, Paused, Blocked or Ended in its colour. Then come Notes, Artifacts (six at most until Show all), Milestones (each with its tasks' progress, and a button that opens the Tasks tab filtered to that milestone) and Specs, then a Config section of folded groups, each with a summary of what it holds. The project's own Agent group holds the instructions, skills and context. Other plugins declare groups with `ProjectCapabilities.ConfigGroup`: each field is a schema plus a function from the project to a writable atom, and the overview's form renders and writes it with no UI of the plugin's own. plugin-code declares Software with the project's repositories, and plugin-claude adds the project's code folder on this device, which the desktop app can still choose with its folder picker. A config field's `order` sorts the fields of a group several plugins fill.
+
+  plugin-tasks' task list has a milestone filter beside its sort and grouping, kept per device with the rest of the list's view state. It keeps the tasks under the milestone, sub-tasks that inherit it included, with the ancestors of each.
+
+  react-ui-form's `FormPresentation` gains `title` and `plain`, which render a text field alone as a page's title or as body text, and `section`, which renders an array as a section of its own, its add button on the heading's row. A field override takes a `presentation` of its own in place of the form's `layout`. react-ui's Input has `title` and `plain` variants for it, and Textarea a `plain` one: no well and no inset, and a plain Textarea is as tall as its text. A form's sections leave a wider gap between each other than between their rows, and a form's array rows start on the form's edge. An array field whose label is hidden keeps the label as its list's accessible name, and a text field drawn with no label takes it as its control's. A field override also takes an `action` (`FormFieldAction`): a button at the end of a text control that sets the field's value from what its function returns.
+
+  Breaking:
+
+  - `Project` 0.8.0 drops `repo`, `repositories` and `session`. plugin-projects' migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. Migrated projects cannot be read by an older build.
+  - Delegating a task no longer seeds the chat's session config from its project, since `Project.session` is gone.
+  - `Project`'s schema no longer has a Repositories field. The overview shows the list, in its Software group, only while plugin-code is enabled, which enabling plugin-claude also does.
+  - A generic object update no longer reaches a project's repositories. The GitHub skill points an agent at the Project Repositories skill instead.
+  - `ProjectSurface.Settings` is gone. Declare a `ProjectCapabilities.ConfigGroup` instead.
+
+- 7da5d17: Comment threads now keep their messages in a feed the thread owns (`Thread` 0.3.0: `feed` replaces `messages`; a migration moves existing threads), and the assistant answers them: plugin-assistant contributes `AppCapabilities.CommentAgentRunner`, which runs each turn in a hidden chat on the thread's feed with the commented object bound, so comments on a diagram, a sheet or a document get that type's skills. While a turn runs the thread shows a pending reply, an agent edit keeps the comment anchored to the edited text, and `@`-mentions complete and render as pills in the mentioned actor's colour. plugin-review's own LLM runner is removed, `Chat.feed` can run on a feed another object owns, and `CreateChat` accepts an existing `feed`. The "Comment agent mode" setting (`off` | `auto` | `mention`, default `mention`) moves from plugin-markdown to plugin-review, applies to every subject, and appears under Plugin Settings. The plugin registry's search filter also matches a plugin's description. `Typography.Timestamp` gains `variant='relative'` (relative within two days, then the date), with `formatRelative` and `useRelativeTime`; comment threads, assistant messages, notifications and pull requests now share it.
+- d00cc85: Typing quickly into a combobox or a controlled `Editor.View` no longer drops characters when the page renders slowly, and Enter picks a combobox's first match even when pressed in the same frame as the typing. A chat feed's jump to the latest message now arrives however long the feed sat idle, and scrolling away while an answer streams is no longer undone. Table cells for any type with a GeoPoint field open their editor instead of an error, and a new feature card's name field takes focus once the board shows it. `useMasonryTileRevealed`, `pin` on `useFollow`'s handle, and the `gate` option on scripted model turns are new.
+- 10b3963: The chat prompt's task list adds a task in one line again: `TaskList.Editor`'s `inline` lays the create row on the list's own columns, each field the rows' own glyph under the column it edits. An empty estimate shows a ruler rather than the asterisk an empty priority shows. `TaskList.Root` takes the title line's cells as an ordered `columns` list (default `DEFAULT_COLUMNS`), which the rows and an inline create row share; the chat puts status ahead of the title and priority and estimate after it. The project list's create row keeps its stacked layout. Form fields with the `tag` presentation, and the project overview's status, render as react-ui's `Tag` in its new `outline` variant, which draws the hue as a ring and text on no fill.
+
+  Breaking: `TaskList.Root`'s `showAssignees` is removed (leave `assignee` out of `columns`), `Button`'s `pill` is removed, `Select.Trigger`'s `pill` becomes `tag`, which renders the trigger as a `Tag`, and the `pill` form presentation becomes `tag`.
+
+- e67aa80: `ColorPicker.HueGrid` is a hue-only variant of the color picker whose value is a theme hue's name, and `HuePicker` now opens it in a popover, so every hue fits the grid and the reset button no longer covers a swatch; `HuePicker`'s `onReset` takes no event. `NumberInput` gains `stepper='start'` (the pair before the input), `stepper='split'` (decrement before the input, increment after), `stepperOnHover` (the stepper sits opposite the number and shows only while the row is hovered or focused), `align='end'` for right-aligned figures, and `slider`, a button that opens a slider over `min`..`max`. The space's Database section hides a type whose plugin is disabled (its objects stay reachable), and an object whose plugin is disabled offers a "Find plugin" button that opens the plugin registry filtered by its type. The dev-server variant of the "Composer Plugin" project template has its own id and label, so it no longer appears as a duplicate of plugin-projects' template.
+
+### Patch Changes
+
+- cb058b9: `AttentionGlyph` draws activity in four slots (fill, mark, edge, corner) from a `treatments` prop; each treatment names its slot, hue, mark, priority and whether it animates, and at most one slot animates. The navtree glyph shows the progress monitors keyed `<uri>#<suffix>` to an object (new `useObjectProgressMonitors` hook): a pulsing star while one runs, a red edge when one fails. Agent turns report themselves as trace status updates (`withTurnStatus` in `@dxos/agent-runtime`), on the chat and on a companion chat's subject (`Chat.getCompanionSubject`), so a turn shows wherever it runs; `@dxos/compute` exports the terminal status messages (`Trace.StatusComplete`, `StatusFailed`, `StatusError`, `StatusCancelled`), and `StatusError` (`Failed`) ends a run that is not a sync without calling it one. Breaking: the glyph's `presence` and `syncing` props are removed; pass `treatments`. `@dxos/ui-types` exports `Hue`, which `IconHue` aliases; `Icon` accepts the `primary` hue.
+- df16fba: Popups (menus, selects, comboboxes, popovers) no longer draw a focus ring; the highlighted item shows where focus is. In the chat prompt, the placeholder is shortened to "/ for skills, @ for content", "Add an object" is renamed "Add object", and switching between the tasks and context drawers closes the open drawer before the other opens. The search and add-to-collection dialogs keep their input's inner padding. The prompt's command completions render as a react-ui-list Listbox in a popover above the editor, at most 8 rows tall, whose arrow keys stop at the first and last command instead of wrapping; Escape closes it and leaves focus in the editor. An editor no longer moves focus to its host on an Escape CodeMirror already acted on.
+
+  A polyline locked while its vertices are being edited loses its vertex handles, Delete no longer removes a vertex from it, and a vertex drag the lock lands in the middle of neither previews nor commits a change.
+
+- b0113a1: Composite objects whose parts follow their frame, declared in the scene DSL.
+
+  A part of a composite can now say, per axis, which of its edges follow the frame
+  (`constrain` over `min | max | stretch | center | scale`), so an Object drawn at
+  another size lays itself out instead of scaling like a picture — a card's footer
+  stays on its floor and its body grows. A tool declares its shape as DSL source
+  (`composite <id> { element … }`) rather than painting it in a React view, and
+  every shape that tool draws is an Instance of one definition, so restyling any
+  of them reaches them all while each one's text stays its own.
+
+  A part may be `optional`: it is switched off for one Instance from the Properties
+  panel, the part naming it in `grow` takes its room, and a part that `follows`
+  another goes with it — so a card without a footer is the same Object as a card
+  with one, not a second definition. A part `bind`s to any field of the Instance,
+  not only text, so a card's glyph is its own typed `icon`. A `polyline` part
+  authors its vertices in the DSL (`points="0,0.5 1,0.5"`), as fractions of its own
+  frame, so a template can draw a rule that stretches with the shape it is in.
+
+  Double-clicking an Object now edits it where it stands: its parts become what the
+  editor acts on and the drawing around them fades, as 3D already did. Links gain
+  an `ortho` variant and the Properties panel a Variant selector (straight,
+  orthogonal, elbow, curve, spline).
+
+  The built-in Card and the UML class are composites themselves: each declares its
+  template and places an Instance of it, so its regions are parts in the Views tree,
+  edited in place, with the data still typed on the shape.
+  `@dxos/react-ui-canvas-editor` gains a `./testing` entry point so a plugin's own
+  kind can be rendered through the shared editor in a story.
+
+  Cards, text shapes and gestures also sit on the canvas's own grid:
+
+  - `card` and `icon` are built-in node types. A card is a glyph and a title, a body, and a footer over
+    a hairline, each edited in place; an icon is any Phosphor glyph at any of its six weights. The
+    `card` and `icon` prototypes remain for a contributed kind that paints a view of its own.
+  - A gesture lands on the finest grid level drawn rather than the major one, so a shape can be placed a
+    cell from its neighbour and lands on the lines under the pointer. `SceneSnap.snapMinor` is gone:
+    `snap` is that function now.
+  - A move draws the box it will land in, not only when the drop would be refused.
+  - The text node (`note`) draws no fill, border or radius of its own, and `padding` is a property of
+    the two types that draw text in a box — the rectangle and the text node — defaulting to the minor
+    grid cell it was hardcoded to.
+  - Default and minimum sizes are whole numbers of grid cells: a rectangle is 4 x 2 nominal units and a
+    card 4 x 3, and an ellipse resizes down to a quarter unit.
+
+  Hulls: a border round a set of shapes, which a link's route respects.
+
+  - The Hull tool drags a frame that takes the shapes inside it, and Enclose draws a hull round the selection. A hull's
+    Hull property is `perimeter` (round the shapes) or `box` (the rectangle that bounds them); its frame follows
+    whatever is inside it, moving it moves them, and it is styled as any shape is.
+  - A hull is stored as a group: an Instance with `hull` set over an anonymous composite of its shapes, as the Group
+    command makes one. The 2D editor draws that group opened out, so a shape inside a hull is selected, moved and
+    linked directly.
+  - On a lattice the border runs along the gutters, and an elbow link keeps to the side of it both its ends are on: a
+    link between two shapes inside stays inside, one from outside crosses the border once, and one between two shapes
+    outside goes round the hull.
+  - The lattice no longer snaps a composite's parts, which are placed about the composite's own centre.
+  - In the Views inspector a hull's shapes are rows under it, and a row dragged onto a hull, or beside a row of
+    another hull or of none, moves its shape into, between or out of hulls.
+
+  The display panel's grid switch on a lattice scene can be turned off: pressing the option that is drawn (its cells,
+  or the grid) draws neither, as pressing dots or lines already did elsewhere. A lattice scene draws no grid when the
+  look has none.
+
+  A link's free end is drawn where it will land while it is dragged: on the port or node under the pointer, else on
+  the grid. An orthogonal link with a free end keeps its corner on one side of the line while that end is dragged,
+  rather than jumping across it at the diagonal.
+
+  An elbow link to an end on no port turns twice, halfway between its ends, on a lattice scene too, where it used to
+  follow the nearest gutter line. The Properties panel's Type field now changes how a link is drawn: it was refused by
+  the form and ignored by the edit behind it. A form field's error icon shows the error in a tooltip.
+
+  The Drawing section's Cell and Gutter are whole counts of grid cells: the lattice stored is the counts times the grid
+  size, so a new grid size rescales it. Turning the lattice off and on again brings back the lattice the drawing had.
+  A lattice that changes size keeps every shape on the cells it had, the shapes inside a hull included: the lattice mode
+  re-seats a layout's shapes when a `layout` intent writes a new lattice.
+
+  A hull has an `inset`: a whole number of grid cells its border is drawn inside its line. On a lattice the line is the
+  centre of the gutter, which the inset leaves clear, and a link inside the hull runs between the border and the shapes;
+  off a lattice the inset comes off the margin. A link outside an inset hull runs along the gutter's centre line, as it
+  would with no hull there. `fitHulls`, `hullOutline` and `enclose` take the grid pitch, and `gridPitch` is the one rule
+  for the pitch a drawing is on. The Properties panel shows a hull's border and inset side by side.
+
+  The default lattice's gutter is 8 by 8 grid cells (128 by 128 px, where it was 128 by 64). A drawing put on the
+  default lattice from now on takes the new one; a drawing already on a lattice keeps its own. plugin-canvas's
+  reference diagrams are drawn on it: their `.dx` sources name `grid=384x256`, and their compiled commands and SVG
+  renders are regenerated.
+
+  plugin-canvas contributes its own extension tools through `CanvasCapabilities.NodeType`, the space graph first: one
+  ECHO space as a circle of objects on a hexagonal lattice, with its seed, spacing and hue as Properties. The tools
+  panel has two more groups after the shapes: `Containers` (the hull and the view) and `Extensions` (the card, and
+  every kind a plugin contributes unless it names a group of its own, so plugin-uml's class is there too);
+  react-ui-canvas exports `CONTAINERS_GROUP` and `EXTENSIONS_GROUP`.
+
+  An extension kind keeps its own fields under its element's `data`, not at the element's top
+  (`Schema.Struct({ ...Scene.Element2D.fields, type, data: Schema.Struct({ … }) })`), so a kind's field never meets the
+  base's or another kind's; `Scene.BaseElement` gains the `data` slot. The engine's node carries the same `data`: a
+  view reads it with `kindData(schema, node)`, a part or a bind names a field as `data.<field>`, and the Properties
+  panel shows it last, as a group labelled `Custom`. `kindNodeDef` refuses a kind that declares a field of its own at the
+  top, unless it extends a core prototype whose frame reads fields there (a card's `icon`, `body`, `footer`).
+  `KindRegistry` gains `dataFields(type)` and `normalize(element)`. **Migration:** move a kind's own fields into
+  `data` in its schema, its `create`, its view, and its `parts` / `fields` / template `bind` names. A stored element
+  with the fields at its top is read as before and written back under `data` on its next edit. plugin-uml's class
+  keeps `attributes` and `methods` in `data`.
+
+  Conductor's compute shapes follow the same rule in a board's stored shape, its scene element and the engine's node:
+  the compute `node` id and each shape's own fields (a constant's `value`, a template's `valueType`, a random number's
+  `min` and `max`, a trigger's `functionTrigger`) are under `data`. **Migration:** pass a shape's own fields to its
+  factory under `data` (`createConstant({ data: { value } })`) and read them from `shape.data`; a board stored with
+  the fields beside the shape's own opens as before and is rewritten on its next edit.
+
+  The space graph's Properties are two to a row; Population is Node density, and Base dots (off unless turned on) draws
+  the lattice points that hold no object.
+
+  A link's elbows are sized by the drawing's grid: a corner is cut one grid cell back, a smart link's stub leaves its
+  port by half a major cell, and lanes sharing a gutter are a cell apart, where each was a fixed length of the default
+  grid. `linkGeometry`, `viewLinkGeometry`, `linkPath`, `smartPoints` and `splinePath` take the grid as a last
+  argument (the default grid when left out), and `ControlFrame` a `grid` prop.
+
+  A port is the same size on screen at any zoom, as a resize handle is; it grew with the drawing, and covered a
+  zoomed-in shape. A selected shape drawn too small for its resize handles (under 40 px on its shorter side) shows
+  its outline alone, where the handles overlapped and hid it; `handlesFit(bounds, zoom)` is the rule. The Properties
+  panel shows a part selected inside an Object that is being edited in place, where it
+  showed nothing selected.
+
+  The card is authored at the size the tool draws it (16 by 12 grid cells, `CARD_SIZE`): a two-cell glyph, the title
+  half a cell beside it, the body half a cell under the header, and a two-cell footer half a cell under the body and
+  half a cell off the floor. Its text has sizes of its own (title 18, body 16, footer 14) and its glyph is 24 px. The
+  scene DSL reads and prints a 2D element's text size (`fontSize=18`), and an icon node with a `fontSize` in its style
+  draws its glyph at that size, where it took 70% of its frame. plugin-canvas's space graph component is `Graph`
+  (`graphSpec`, `GraphNode`, `GraphData`), its tool named Graph; the element type is still `space-graph`.
+
+  A Draw tool (S), after Polyline in the tools panel, draws a line in one stroke: it samples the pointer while
+  the button is down and lands the stroke as a polyline run as a curve through a few of the samples
+  (`PolylineParams.smooth`, also a switch in Properties; `simplifyPath`; `NodeDef.freehand`). The tool stays in hand for
+  the next stroke, and a stroke begun on a shape is drawn over it. The card's title is centred beside its glyph; the
+  scene DSL also reads `alignHorizontal` and `alignVertical`.
+
+  A form field with no value shows the default its schema declares (Effect's `default` annotation,
+  `Schema.Number.annotate({ default: 26 })`) as its value. Showing it writes nothing: the form holds no value for the
+  field until it is edited. The space graph declares its defaults this way, so the Properties panel and the drawing
+  agree on an unset field.
+
+  The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
+
+  A switch or checkbox keeps its visually hidden input inside itself (`position: relative` on `.dx-switch` and
+  `.dx-checkbox`): in a scrolling form the input was left behind, and focusing it scrolled a clipped ancestor, which took
+  the Properties panel out of view when a toggle far down it was pressed. The Properties panel shows Fill and Border as
+  a shape draws them, so a type that draws all it shows (text, an icon) reads off until one is asked for. A node type
+  may be an `outline` (`NodeDefSpec.outline`): its border is the frame's and is on, with no fill unless asked for one.
+  Being part of the drawing, an outline keeps its colour while the node is selected or hovered; the selection frame
+  alone marks it. The space graph is one, so its ring is its Border, and turning it off or on moves nothing inside it.
+  A vector field's stack no longer asks a plain fieldset for a gutter, which logged a warning.
+
+  `@dxos/ui-types/phosphor` exports `phosphorIcons`, the name of every regular Phosphor glyph. It is an entry of its
+  own rather than part of the package's index, and `iconOptions()` imports it when a picker first asks, so the
+  catalogue is not downloaded with the app.
+
+  A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
+
+  A `diagram` fence in a markdown document draws as a diagram, in the editor's light or dark palette:
+  `SvgFile.toSvgFile` takes `{ theme, transparent }`, `diagramPreview()` follows the editor's colour mode, and
+  plugin-canvas contributes it to the markdown editor.
+
+- e343467: A floating panel stays opaque while it is dragged; the devtools SDK Explorer shows a connecting state and scrolls its tool list; the MESH signal panel no longer crashes before signal status arrives; the ECHO Objects tree drops the `$.content` role labels and shows a relation's glyph at the end of its row; and the ECHO Queries list supports arrow-key navigation with compact query labels.
+- 034e231: Kanban cards render in card views that request only `cardContent`: the kanban, map, assistant and devtools surface modules now declare every role their surfaces bind. `MediaPlayer` embeds drop the `allow-presentation` sandbox flag on engines that don't support it, so WebKit no longer logs an error per embed. The "large number of dispose callbacks" warning reports six stack frames, enough to reach the code past a helper such as `Event.on`.
+- 0590c11: New Demo space template: sixteen chess games at every stage, a world map of every Cloudflare data centre with a globe tour from Los Angeles to Sydney, a voxel creeper, a voxel town, and a spacetime scene of three race cars and a fire truck. `@dxos/plugin-spacetime` is now public, with a `SpacetimePresets` entry that builds a preset model (fire truck, race car, taxi) as a stored mesh. A game now has an optional `description`, which chess keeps set to the current FEN so tables and cards show each position; chess cards draw their board full width again, and the move list drops its focus ring. A map's `coordinates` are its globe tour route; the globe gets a light street-map palette, small dark-blue markers, a red tour route and a margin at rest, and flat-map pins shrink to 60%. The DXOS Architecture template's metrics sheet gains a pie of the busiest plugins' PR share. Refs to the same object from different clients in one page no longer share a cached atom, so each client resolves a ref through its own database (previously every client's editor bound to whichever client loaded the object first). Replicated comments now show up on every peer: the editor retries an anchor whose cursor cites edits not yet received, and comment sync re-reads anchors when a thread arrives after its anchor. Many clients editing one document replicate much faster: sync no longer rebuilds Automerge changes on every message to check a peer's initial heads (patched `@automerge/automerge-repo`), and a query from objects to typed relations on them (`select(...).targetOf(Type)`, as comment threads use) re-runs only when those objects, relations of that type, or the relations' endpoints change, rather than on every write in the space. A masonry grid now has the same gap on all four sides: inside a padded `Masonry.Content` it adds the gap above and below as well as at the sides, and a non-scrolling grid (`scroll={false}`) adds none, leaving the perimeter to its host. Padding of `p-3` is now the equivalent `p-trim-md` token. A toolbar now insets both ends by the same gap, whether the edge item is a labelled control or an icon-only button, plugin-theme registers the menu translations so the overflow button reads "More", and a project's pipeline toggle reads "Hide pipeline" while the chart is shown.
+- 4fe25ee: Upgrade to React 19.3. The `react` and `react-dom` peer ranges are now `~19.3.1`.
+- ca2a4a8: A `Listbox` in a settings form row now spans the row below its description; it previously collapsed to zero width and showed no items.
+- 7e07e49: Peers viewing the same object show up again. Each plank header shows an avatar for every other member viewing it, the navtree glyph counts them, and a space's row counts the peers viewing the space itself. Avatars keep one order for a given set of peers. Their rings match the attention glyph: accent for a peer attending the object, neutral gray for one who only has it open. Leaving a workspace clears your presence on what it showed. The avatar `current` status now rings with `--color-accent-bg` instead of `--color-focus`.
+- Updated dependencies [cb058b9]
+- Updated dependencies [b0113a1]
+- Updated dependencies [c9c3867]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [e50d1e5]
+  - @dxos/ui-types@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/lit-ui@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-focus@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/react-error-boundary@0.17.0
+  - @dxos/i18n@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

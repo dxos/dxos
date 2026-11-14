@@ -1,5 +1,98 @@
 # @dxos/agent-code-mode
 
+## 0.17.0
+
+### Minor Changes
+
+- da83bee: Code mode's prompt now states one skill, the Skill Manager, in place of the conversation's skills, operations and types, and the model finds them from code through its operations. The Skill Manager gains `queryOperations` (searches the operations of the skills an agent can use, and gives one's input on lookup) and `queryTypes` (searches the registered types, and gives their fields), and `querySkills` now returns light rows saying whether each skill is enabled here and whether an agent may enable it, with a skill's instructions and operations on lookup by key. Tool calling still lists every skill, its operations as tools and the types. Type and input descriptions move to `@dxos/assistant/Describe` so both share them.
+- 665d1af: Code mode states the skills enabled in the conversation, with their instructions and their operations' inputs, beside the Skill Manager's lookups; other skills, operations and types are still looked up from code. An enabled skill's rules apply to every request it touches, and a channel agent that had to look up how to reply did not. `SkillManagerSkill.makeForCodeMode()` now carries only the lookups (`querySkills`, `queryOperations`, `queryTypes`, `enableSkills`): its MCP connection operations reach a conversation only through a bound Skill Manager, as under tool calling.
+- 64c7c6a: `WorkerdSandbox` calls its host over Workers RPC instead of `fetch`: the isolate has no network, and its calls come back into the invocation that started it, so it runs inside a Durable Object. The `outbound` and `register` options and `registerHost` are gone; `make` takes only the `loader`. The isolate now has the whole plain dialect: `describe`, `relations`, `children` and `referrers` run on the host, a printed object prints as the live object, and `ref(obj)` crosses as a marker the host turns into a reference in `make`, `update` and operation inputs. An evaluation's host closes when it ends, so an abandoned isolate cannot write; an `update` the code does not await is applied before the evaluation returns; and an object an operation returns can be passed back like a query's. The package is now public, so EDGE can install it.
+
+### Patch Changes
+
+- c9a38c1: Code mode records which operations each `eval` ran on its result (`ToolResult.invocations`: their keys, not their outputs), and `ensureReplySent` counts a channel send among them as the reply, so a reply sent from code is no longer followed by a reminder. Code mode's types section names a tagged union of more than four variants by its tags, and says to print an existing value to see a variant's fields.
+- Updated dependencies [5d280a1]
+- Updated dependencies [3f250b7]
+- Updated dependencies [fc5e071]
+- Updated dependencies [c9a38c1]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [cb058b9]
+- Updated dependencies [f142d06]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [d105c19]
+- Updated dependencies [665d1af]
+- Updated dependencies [7a8b279]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [3aef671]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [592fdad]
+- Updated dependencies [a18cb35]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [392bed0]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [3d06043]
+- Updated dependencies [b159f41]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/assistant@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/agent-runtime@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/assistant-toolkit@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,258 @@
 # @dxos/plugin-debug
 
+## 0.17.0
+
+### Minor Changes
+
+- 592fdad: The Hello Worker space template now starts from a partial plan for the assistant to finish. It seeds a `Spec` object holding a partly written `.mdl` spec (Deus), four planned features on the project's feature map that cite it, and three planning tasks: complete the spec, draw its architecture, and plan the implementation as tasks. A feature's spec row opens the spec in the space. The `Spec` type moves from plugin-code to `@dxos/types` so any plugin can create one; its typename (`org.dxos.type.spec`) is unchanged, so existing specs keep working.
+- 70d9cfe: Adds the Ride Check space template: a written `.mdl` spec of a ride-forecast page, a feature map of four features carrying the spec's requirements (the verdict with two subfeatures), and three tasks for the assistant (draw the architecture, build and deploy the Worker, check the live page). The project instructions carry the recipe for a Vite page built with `@dxos/react-ui` and served by one Cloudflare Worker over the Open-Meteo API, deployed with the space's Cloudflare connection and kept in a local sandbox's workspace when no repository can be attached. The space icon picker gains a bicycle.
+
+### Patch Changes
+
+- 0590c11: New Demo space template: sixteen chess games at every stage, a world map of every Cloudflare data centre with a globe tour from Los Angeles to Sydney, a voxel creeper, a voxel town, and a spacetime scene of three race cars and a fire truck. `@dxos/plugin-spacetime` is now public, with a `SpacetimePresets` entry that builds a preset model (fire truck, race car, taxi) as a stored mesh. A game now has an optional `description`, which chess keeps set to the current FEN so tables and cards show each position; chess cards draw their board full width again, and the move list drops its focus ring. A map's `coordinates` are its globe tour route; the globe gets a light street-map palette, small dark-blue markers, a red tour route and a margin at rest, and flat-map pins shrink to 60%. The DXOS Architecture template's metrics sheet gains a pie of the busiest plugins' PR share. Refs to the same object from different clients in one page no longer share a cached atom, so each client resolves a ref through its own database (previously every client's editor bound to whichever client loaded the object first). Replicated comments now show up on every peer: the editor retries an anchor whose cursor cites edits not yet received, and comment sync re-reads anchors when a thread arrives after its anchor. Many clients editing one document replicate much faster: sync no longer rebuilds Automerge changes on every message to check a peer's initial heads (patched `@automerge/automerge-repo`), and a query from objects to typed relations on them (`select(...).targetOf(Type)`, as comment threads use) re-runs only when those objects, relations of that type, or the relations' endpoints change, rather than on every write in the space. A masonry grid now has the same gap on all four sides: inside a padded `Masonry.Content` it adds the gap above and below as well as at the sides, and a non-scrolling grid (`scroll={false}`) adds none, leaving the perimeter to its host. Padding of `p-3` is now the equivalent `p-trim-md` token. A toolbar now insets both ends by the same gap, whether the edge item is a labelled control or an icon-only button, plugin-theme registers the menu translations so the overflow button reads "More", and a project's pipeline toggle reads "Hide pipeline" while the chart is shown.
+- 6eb949e: The Drawing skill lays out boxes-and-arrows diagrams with the semantic diagram engine: an agent states the boxes, arrows and groups and the engine places them and routes the arrows, instead of the agent positioning every box itself, which left boxes and labels overlapping. The Hello Worker template binds the Drawing skill to its project and asks for its architecture diagram in that language.
+- 80818bc: A project's repositories are one ordered list, the `Repo.RepositoriesAnnotation` on the project, read with `Repo.getRepositories` and written with `Repo.setRepositories`. The first repository is the one bare issue numbers resolve against and the one a cloud coding agent starts in. plugin-code edits the list in the overview's Software group, above plugin-claude's code folder. A cloud session checks out the project's repositories in their order, then the repositories bound to the chat, each once. Agents edit the list with plugin-code's `CodeOperation.UpdateProjectRepositories` (tool `code-update-project-repositories`), the one tool of its new Project Repositories skill (`org.dxos.skill.code.repositories`).
+
+  The project overview puts the most-used parts first. The name and description are edited in place, with the status as a pill in the top right corner, and both line up with the section headings. `Project`'s status carries an option table (title, hue and icon), so the pill reads Active, Paused, Blocked or Ended in its colour. Then come Notes, Artifacts (six at most until Show all), Milestones (each with its tasks' progress, and a button that opens the Tasks tab filtered to that milestone) and Specs, then a Config section of folded groups, each with a summary of what it holds. The project's own Agent group holds the instructions, skills and context. Other plugins declare groups with `ProjectCapabilities.ConfigGroup`: each field is a schema plus a function from the project to a writable atom, and the overview's form renders and writes it with no UI of the plugin's own. plugin-code declares Software with the project's repositories, and plugin-claude adds the project's code folder on this device, which the desktop app can still choose with its folder picker. A config field's `order` sorts the fields of a group several plugins fill.
+
+  plugin-tasks' task list has a milestone filter beside its sort and grouping, kept per device with the rest of the list's view state. It keeps the tasks under the milestone, sub-tasks that inherit it included, with the ancestors of each.
+
+  react-ui-form's `FormPresentation` gains `title` and `plain`, which render a text field alone as a page's title or as body text, and `section`, which renders an array as a section of its own, its add button on the heading's row. A field override takes a `presentation` of its own in place of the form's `layout`. react-ui's Input has `title` and `plain` variants for it, and Textarea a `plain` one: no well and no inset, and a plain Textarea is as tall as its text. A form's sections leave a wider gap between each other than between their rows, and a form's array rows start on the form's edge. An array field whose label is hidden keeps the label as its list's accessible name, and a text field drawn with no label takes it as its control's. A field override also takes an `action` (`FormFieldAction`): a button at the end of a text control that sets the field's value from what its function returns.
+
+  Breaking:
+
+  - `Project` 0.8.0 drops `repo`, `repositories` and `session`. plugin-projects' migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. Migrated projects cannot be read by an older build.
+  - Delegating a task no longer seeds the chat's session config from its project, since `Project.session` is gone.
+  - `Project`'s schema no longer has a Repositories field. The overview shows the list, in its Software group, only while plugin-code is enabled, which enabling plugin-claude also does.
+  - A generic object update no longer reaches a project's repositories. The GitHub skill points an agent at the Project Repositories skill instead.
+  - `ProjectSurface.Settings` is gone. Declare a `ProjectCapabilities.ConfigGroup` instead.
+
+- a8e68c5: A spec's features are embedded in its document as `![name](echo:///id)`, drawn as editable sections, and the text decides which features the spec holds and in what order. `/feature` at the end of a paragraph makes it a feature, and moving, deleting or undoing an embed does the same to the feature. Every feature gets a block id (`F-n`) and every requirement an id under it as soon as it exists, and ids are kept when features move. The local and GitHub file syncs read and write `feat` blocks through the new `SpecDocumentCodec` capability, and export rewrites only the blocks that changed. Breaking: `Feature` is now 0.4.0, and its `specs` field moved to meta foreign keys (`Feature.getSources`, `Feature.getBlockId`), with a migration. `deus changelog check` reads a fence holding several decisions as one entry each. `StubWidget` no longer accepts another widget's DOM, which kept a kept-alive widget from rendering twice.
+- Updated dependencies [5d280a1]
+- Updated dependencies [3f250b7]
+- Updated dependencies [fc5e071]
+- Updated dependencies [c9a38c1]
+- Updated dependencies [b6d1c9c]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [a458aef]
+- Updated dependencies [73ed632]
+- Updated dependencies [710da43]
+- Updated dependencies [5ee83e7]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [cab57d0]
+- Updated dependencies [a349ae0]
+- Updated dependencies [df16fba]
+- Updated dependencies [e82b80a]
+- Updated dependencies [10a11da]
+- Updated dependencies [e8029c3]
+- Updated dependencies [81d2cd2]
+- Updated dependencies [f142d06]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [1ac444f]
+- Updated dependencies [d105c19]
+- Updated dependencies [665d1af]
+- Updated dependencies [7a8b279]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [21a8ea6]
+- Updated dependencies [cd6c578]
+- Updated dependencies [bc50a90]
+- Updated dependencies [d45bf58]
+- Updated dependencies [98db701]
+- Updated dependencies [6eb949e]
+- Updated dependencies [f82b258]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [f37ae92]
+- Updated dependencies [16d3147]
+- Updated dependencies [416201f]
+- Updated dependencies [9f97660]
+- Updated dependencies [3aef671]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [870af94]
+- Updated dependencies [a1c19cc]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [906213f]
+- Updated dependencies [38ebf5e]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [ece15ab]
+- Updated dependencies [9471682]
+- Updated dependencies [6030742]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [c5d4212]
+- Updated dependencies [7d807f6]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [0910d74]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [09d8716]
+- Updated dependencies [a843e27]
+- Updated dependencies [3f5e201]
+- Updated dependencies [27b3290]
+- Updated dependencies [d619a65]
+- Updated dependencies [0a634be]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [de0606c]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [8554a26]
+- Updated dependencies [80c25fe]
+- Updated dependencies [20a14b9]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [1a06754]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f071de2]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [4be51c3]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [ccb00a4]
+- Updated dependencies [02254b0]
+- Updated dependencies [296c44c]
+- Updated dependencies [8bd7730]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [7e07e49]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [13486b1]
+- Updated dependencies [2c9d3c1]
+- Updated dependencies [1545eff]
+- Updated dependencies [a8e68c5]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+- Updated dependencies [6191e3f]
+  - @dxos/assistant@0.17.0
+  - @dxos/plugin-illustrator@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/devtools@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/plugin-canvas@0.17.0
+  - @dxos/react-ui-canvas-compute@0.17.0
+  - @dxos/scene@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/plugin-code@0.17.0
+  - @dxos/assistant-toolkit@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/plugin-projects@0.17.0
+  - @dxos/plugin-kanban@0.17.0
+  - @dxos/plugin-map@0.17.0
+  - @dxos/plugin-chess@0.17.0
+  - @dxos/plugin-game@0.17.0
+  - @dxos/plugin-tldraw@0.17.0
+  - @dxos/plugin-inbox@0.17.0
+  - @dxos/plugin-google@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-table@0.17.0
+  - @dxos/plugin-sheet@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/react-ui-syntax-highlighter@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/conductor@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/plugin-status-bar@0.17.0
+  - @dxos/plugin-voxel@0.17.0
+  - @dxos/compute-hyperformula@0.17.0
+  - @dxos/operation@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/react-ui-debug@0.17.0
+  - @dxos/react-ui-components@0.17.0
+  - @dxos/react-ui-terminal@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/random@0.17.0
+  - @dxos/log-store-idb@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,0 @@
----
-'@dxos/plugin-presenter': minor
----
-
-Slide markdown takes three style tags: `<List variant="cards|steps|outline">`, `<Table variant="rows|cards|outline">` and `<Box variant="card|outline">`. `List` and `Table` style the block they wrap rather than adding an element, so the content stays a plain markdown list or GFM table while the slide theme paints it; `Box` is the generic container and wraps whatever it holds. Variants are defined in one place in the slide theme, keyed by the part each class lands on, and their classes read the theme's `--slide-*` variables, so colors are overridden rather than hard-coded: a deck's theme settings now also carry `code` and `separator`, a slide overrides any of `accent`, `foreground`, `code` and `separator` in its own frontmatter, and a `tone` on one tag (`accent`, `info`, `success`, `warning`, `error`, `neutral`) repaints that block alone. Markdown supplies no CSS — every variant, tone and color is validated, and an invalid one falls back and is reported as a slide issue.

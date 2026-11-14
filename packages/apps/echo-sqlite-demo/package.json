@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-sqlite-demo",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "A graph database in the browser (@dxos/echo-sqlite over OPFS), with a Durable Object fronting R2 holding the authoritative copy.",
   "homepage": "https://dxos.org",

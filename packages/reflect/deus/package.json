@@ -1,6 +1,6 @@
 {
   "name": "@dxos/deus",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Deus — pattern specification language for human-agent collaborative software development. Carries the .mdl grammar, CodeMirror extension, and core dialects.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

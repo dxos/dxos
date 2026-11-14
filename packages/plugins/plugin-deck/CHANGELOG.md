@@ -1,5 +1,136 @@
 # @dxos/plugin-deck
 
+## 0.17.0
+
+### Minor Changes
+
+- 812ae94: `AppCapability.surface({ roles })` now takes role tokens (`[AppSurface.Article]`) instead of NSID strings, and `@dxos/app-toolkit/AppSurface` can be imported without loading React, so a `dx.config.ts` can name roles as `AppSurface.*`. Breaking: plugin role modules are renamed to `<Plugin>Surface`: `@dxos/plugin-deck/DeckRole` is now `DeckSurface`, `@dxos/plugin-map/MapRole` is now `MapSurface`, `@dxos/plugin-assistant/ChatSurface` is now `AssistantSurface`, and the projects settings role moves from `ProjectView.Settings` to `@dxos/plugin-projects/ProjectSurface`.
+- 9a3313a: Workspace switches fade between two live decks instead of running a view transition, and objects open without one, so both settle several times faster in WebKit. `Hooks.createHeightMemory` and `Hooks.useReservedHeight` let a component hold the height it last rendered at while its content reloads; plugin-stack keeps section heights in `StackCapabilities.SectionHeights`, `mermaid()` takes a `cache` of rendered diagrams, and plugin-deck's `ShownDeckState` provides the deck state a non-live deck renders. CodeMirror themes are built once instead of per editor. `Carousel` mounts a slide's media only on its page (images on neighbouring slides too), and `Carousel.Root` no longer accepts `autoSize`, since a slide without its media would size to nothing.
+- 0a4580c: `@dxos/plugin-deck` exports the deck's presentational pane parts as the `Pane` namespace (`Pane.Root`, `Toolbar`, `Sigil`, `Title`, `Tabs`, `Content`; also `@dxos/plugin-deck/Pane`), so a page outside the deck can render Composer's plank chrome.
+
+### Patch Changes
+
+- af82eb1: Folded planks in the sliding deck (Flatten deck off) render as full-height spines with the plank's icon and title, in both piles. A folded plank used to show as a small icon tile at the deck's mid-height, and planks scrolled past the start slid off-screen instead of piling up on the left.
+- Updated dependencies [b6d1c9c]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [710da43]
+- Updated dependencies [cab57d0]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [c8d6d86]
+- Updated dependencies [f142d06]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [d45bf58]
+- Updated dependencies [f82b258]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [908c301]
+- Updated dependencies [78e96da]
+- Updated dependencies [416201f]
+- Updated dependencies [3aef671]
+- Updated dependencies [13bc40d]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [8554a26]
+- Updated dependencies [80c25fe]
+- Updated dependencies [20a14b9]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f175a2d]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [02254b0]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [7e07e49]
+- Updated dependencies [b159f41]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+- Updated dependencies [fe3aaf6]
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/react-ui-mosaic@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/plugin-observability@0.17.0
+  - @dxos/react-ui-dnd@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-focus@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

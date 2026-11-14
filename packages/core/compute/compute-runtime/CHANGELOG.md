@@ -1,5 +1,104 @@
 # @dxos/compute-runtime
 
+## 0.17.0
+
+### Minor Changes
+
+- 66304b6: Plugin bundles on EDGE get a default file storage backend (EDGE plugins spec D-84). `PluginProtocol.Env` takes an optional `BLOB_SERVICE` binding to EDGE's hosted blob store; the host registers it as the default `edge` blob backend (`FunctionWrappingOptions.blobBackends`, new in `@dxos/compute-runtime`) and offers it as a `FileCapabilities.Backend` from a host plugin activated beside the bundle's own (`FileStorage`). plugin-file's `file.create*` operations no longer fail `NoBackendError` in a bundle, and no plugin has to contribute a backend on EDGE.
+
+### Patch Changes
+
+- d95ffc3: Plugin operations now work when EDGE runs them from their own plugin bundles. An invocation's writes are saved even when its operation declares no `Database.Service`, so `tasks.move` and the Gmail, Calendar and JMAP materialize operations keep what they create. A bundle's skills keep `agentCanEnable`, so an agent can still enable them. Fixes in individual plugins:
+
+  - `thread.createChannel` saves the channel in the space, and the feed backend loads the channel's feed before appending.
+  - Markdown creates documents with an empty history.
+  - Magazine's `loadPostContent` loads its post.
+  - Loading an object by reference resolves its type from the type sources when the registry lacks it, so an object whose type another plugin publishes arrives with a schema.
+  - Unsubscribing from a sender keeps the first skip filter, and plugin-inbox registers the `Tag` type it creates.
+
+  plugin-google and plugin-jmap now ship EDGE bundles.
+
+- 853af68: `wrapFunctionHandler` now flushes ECHO writes when an operation exits with `Operation.runAgain()`, as it does on success. Before, a run that wrote a checkpoint and then asked to run again could lose those writes.
+- f175a2d: An EDGE run's progress meter now takes over from the pending meter a sync button starts, instead of timing out with "sync reported no progress". The remote trace subscription ignores messages that are not trace broadcasts and skips a payload that does not decode, where either used to end it for the session. Progress broadcasts may arrive in any order: a run's count no longer moves back, and an update from the same run that lands within 10 s after its terminal no longer reopens its meter.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [cb058b9]
+- Updated dependencies [a458aef]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [034e231]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [a245692]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [a18cb35]
+- Updated dependencies [ece15ab]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [392bed0]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b159f41]
+- Updated dependencies [8e2f718]
+- Updated dependencies [768db81]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/operation@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,100 @@
 # @dxos/react-ui-assistant
 
+## 0.17.0
+
+### Minor Changes
+
+- 4d5f4e3: The chat thread can show the estimated tokens each block consumes in a gutter beside it. `ChatThread.Root` takes `showTokens`, and the assistant's new `showTokens` setting ("Show token counts", off by default) turns it on.
+- 901c1e4: Agent chats are now stored as an append-only log of `Trajectory.Event`s. Older feeds still load because their messages, bindings, alarms and fork links are converted to events in memory. Folded state is cached in SQLite, so reopening a chat reads only the events written since; the chat and an agent on the same device share that cache. Each thread and each agent turn is a branch of the chat's feed, so an agent never writes on the branch a person owns. `Feed.walk` takes `branch: 'all'` to walk every branch in local order and resume after a local cursor, and `Feed.setBranch` puts an item on a branch before it is appended. The trajectory modules are `@dxos/compute/Trajectory`, `@dxos/compute/Reducer` and `@dxos/compute/Transcript`. A durable operation can declare `optionalServices`, which a process receives when the runtime can resolve them and runs without otherwise. New chat feeds are created with indexing off (`TrajectoryStore.makeFeed`), so their events are not indexed or text-searchable. Breaking: chat feeds no longer receive new `Message`, `AiContext.Binding`, `Alarm` or `SessionLink` records, and `SessionStore.markInFlight` is removed.
+
+  Light threads: with the assistant's new **Parallel threads** setting on, a prompt sent while the agent works starts a thread that runs in parallel instead of waiting. The new thread starts with a transcript of every running thread and can wait for one with the `thread_wait` tool; finished threads join the conversation. The chat colours each thread's gutter; a thread a newer prompt sends to the background becomes a card in its original place, and its answer appears where it completes. Another installed agent can share the chat (**Parallel thread agents**): a prompt starting with `@<agent>` runs on that agent, in a lane of its own. The trace panel draws each thread as a lane of its own.
+
+  Forks: an answer's toolbar offers **Fork the conversation here**, which opens a thread that sees the chat up to that answer and then only what is sent in it. A fork stays apart from the main conversation, which shows it as a marker at the answer it forks at, until a person merges it (by default as a summary of its final answer). `TrajectoryStore.forkThread`, `forkOf` and `mergeFork` do the same from code, `AgentService.SubmitPromptOptions.thread` sends a prompt into a fork, and `ThreadingOptions.policy` sets which kinds of thread join main when they complete.
+
+### Patch Changes
+
+- 9d1d6f0: An assistant chat that anyone besides the reader has written in shows an avatar beside every prompt, and names the prompts the reader did not write. `ChatThread.Root` takes `userDid` and `getAuthor` for this, and a prompt's row keeps its author's DID while it is on its way to the agent.
+- Updated dependencies [c9a38c1]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [cb058b9]
+- Updated dependencies [73ed632]
+- Updated dependencies [df16fba]
+- Updated dependencies [f142d06]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [7a8b279]
+- Updated dependencies [b0113a1]
+- Updated dependencies [711e08a]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [908c301]
+- Updated dependencies [3aef671]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [09d8716]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [4be51c3]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [7e07e49]
+- Updated dependencies [b159f41]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [a8e68c5]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [d00cc85]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [10b3963]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+  - @dxos/types@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/react-ui-feed@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-syntax-highlighter@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-ui-components@0.17.0
+  - @dxos/ui@0.17.0
+  - @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

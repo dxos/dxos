@@ -1,5 +1,71 @@
 # @dxos/plugin-heygen
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [710da43]
+- Updated dependencies [cab57d0]
+- Updated dependencies [e8029c3]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [f82b258]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [a245692]
+- Updated dependencies [908c301]
+- Updated dependencies [78e96da]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [20a14b9]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b159f41]
+- Updated dependencies [768db81]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/plugin-studio@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

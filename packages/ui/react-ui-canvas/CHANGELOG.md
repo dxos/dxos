@@ -1,5 +1,331 @@
 # @dxos/react-ui-canvas
 
+## 0.17.0
+
+### Minor Changes
+
+- 5ee83e7: `Canvas.About` and `AboutInspector` are removed; the Views panel's rows carry the counts. Deleting an Object with its instances (`removeComposite`) also deletes, in the same undo step, the records only those instances pointed at, and Ungroup brings an Object's animation tracks back out onto the new nodes, placed and sized as the Instance drew them. The floating inspector panel is one scrolling list again; only the docked panel splits Properties from the other sections. In plugin-canvas, `CanvasOperation.ImportTldraw` takes `snap` (true by default), aligning the imported shapes' positions and sizes to the canvas grid. A tldraw frame now becomes a labelled outline rectangle on a frames layer under its shapes, which stay in the same View (tldraw has no nested scenes), so arrows into the frame stay bound. A plain (non-smart) line bound to a node without a port now points at the node's centre and stops at its outline; smart lines still attach at ports.
+- a761a74: Parametric shapes. A `shape` node (`ShapeNode` in `@dxos/scene`, kind `shape`) names a `recipe` and stores its `params`; the recipe (`ShapeRecipe`, `SHAPE_RECIPES`) makes the outline from the frame and the parameters, and each parameter says what it is measured against (`ParamUnit`: scene `px`, the frame's `width`, `height` or shorter side, or a `count`), so a part keeps its proportions when the frame is resized: an arrow's head is as long as a share of its height, so widening the arrow lengthens only its shaft. The recipes are arrow, double arrow, chevron, callout, parallelogram, trapezoid, cross, star and cog; each has a tool in the palette, sharing one flyout (`SHAPE_FOLD`), with Arrow on `A`.
+
+  A shape selected alone shows an adjust handle for each of its recipe's controls (`shapeNodeHandles`); dragging one sets its parameter (`dragShapeNodeParam`, the `param` drag, `onParamPointerDown`). The Properties panel lists the recipe's parameters with their ranges, and its Shape field turns the node into another recipe. Join and Subtract take a shape's outline (`nodeRings`), and lifting 2D to 3D stands a shape up as a `mesh` over its outline (`prismMesh`, `triangulate`), which flattens back to the shape. A recipe a build does not have is drawn as its frame.
+
+  Every shape that draws a label now carries the text `padding` field (ellipse, cloud, polygon, shape, polyline, hull and solid, beside the rectangle and the text node), in scene px as a font size is. A label takes `padding.y` too, and unset it is half a minor grid cell (12 across and 6 down at the default grid), where a label had none above or below: a label aligned to the top or bottom, a hull's name included, now stands 6 px in from that edge. The Properties panel shows Padding after the label, with the padding drawn when none is set.
+
+- c1c6cf4: Breaking: the scene container is renamed View across the API — `SceneId` → `ViewId`, `SceneStore` → `ViewStore`, `SceneKind` → `ViewKind`, `Scene` → `View`, `SceneBuilder` → `ViewBuilder`, `useSceneProjection` → `useViewProjection`, the store's `scenes`/`scene(id)` → `views`/`view(id)` — and the `frame` node type is now `view` (`FrameNode` → `ViewNode`, `isFrameNode` → `isViewNode`); stored `frame` nodes load as `view`. react-ui-canvas-compute and plugin-canvas follow (`boardSceneId` → `boardViewId`, `readScenes`/`writeScenes` → `readViews`/`writeViews`, `ROOT_SCENE_ID` → `ROOT_VIEW_ID`, `DYNAMIC_SCENE_ID` → `DYNAMIC_VIEW_ID`).
+
+  The canvas's commands live in a React-free `CanvasController` (`createCanvasController`), organised by aspect (selection, editing, tools, time, navigation, look), and its parts read their own state, so panning or a selection change no longer re-renders panels that do not show it. A read-only canvas pastes, cuts and deletes nothing.
+
+  The new `Canvas.Views` panel shows the drawing's Views, nodes, links and placed Objects as a tree: a row selects on the canvas (opening an Object in isolation for its contents), the root row selects everything, a double-click opens a View, a drag restacks siblings, and a filter narrows the rows. Group (⌘G) makes an anonymous Object and one Instance in place of the selection, which joins the Objects library once named or placed again; Ungroup (⇧⌘G) puts it back. `groupIntoView` and the Compose button are removed, and deleting the last node that opens a View or an anonymous Object deletes that record, as stores do on load (`createMemoryStore`'s `root` option, plugin-canvas on bind).
+
+  The inspector panel shows the same sections docked or floating, Properties above a draggable seam and the rest below (`InspectorSectionDef.pane`; `InspectorSectionDef.show` and `InspectorPanel.Root`'s `selected` are removed); selection actions sit in its toolbar (`InspectorPanel.Root` `actions`). New shapes: `cloud` (key C, with a bump count) and a regular `polygon` (key N, with a side count), drawn through `NodeDef.silhouette`; every node takes a `rotation` in 15° steps. The timeline's key actions move into one menu, and the scene-tree fixtures move from `builder/testing` to `testing`.
+
+- a5742a9: `createDynamicProjection` accepts `layers` and `link.layer`, so a laid-out graph can draw a backdrop layer (such as package frames) under its nodes and put its links on a chosen layer.
+- cab57d0: Breaking: the scene UI is now `@dxos/react-ui-canvas` (the 2D and 3D surface, with `/3d`, `/io` and `/headless` entries) and the new `@dxos/react-ui-canvas-editor` (`SceneEditor`: one editor for both dimensions, with its tool rail, actions bar, display panel, inspectors and Timeline); `@dxos/react-ui-scene` and `@dxos/plugin-spacetime` are removed, and `@dxos/scene`, `@dxos/animation`, `@dxos/react-ui-animation` and `@dxos/plugin-animator` are now public. `@dxos/plugin-canvas` moves legacy scene drawings onto `Canvas` objects when a space loads and draws them in both dimensions: a 3D canvas places primitives and meshes, joins, subtracts and extrudes solids, imports OBJ and GLB and exports STL, and its rail's Library tool inserts the bundled race car, fire engine and taxi (plugins add more through `CanvasCapabilities.LibraryItem`); a Neu shape with no hue draws as Neutral, and a canvas embedded in markdown takes a 16:9 height and opens fitted.
+
+  An object opened outside any collection (`…/db/<type>+<id>`) resolves again, as the app graph no longer wraps a type node's schema in an action forwarder, and an object in a nested collection is addressed as `object/<id>`.
+
+  `Surface.useContributions(role)` subscribes a component to a role's contributed surfaces, so a check made with `Surface.useIsAvailable` is repeated once a module loaded on demand contributes; a markdown embed uses it, and no longer stays blank when its preview's surface module loads after the embed first renders.
+
+- e82b80a: ECHO adds content migrations for formats stored inside an object field: `Annotation.ContentVersionAnnotation` marks the field holding the version, `Migration.defineContent` declares one step, `db.runMigrations` applies each object's chain once, writing only the records that change, and `Migration.upgradeContent` applies it in memory. The canvas is the first user: every stored drawing moves from `dxos.org/scene/1` to `dxos.org/scene/2` on first start (a frame's `role` moving into its `link`), so a client on an earlier release cannot open a migrated drawing until it updates, and from this release a drawing saved by a newer Canvas plugin opens read-only. The canvas also gains a polyline shape and tool (Y) and a per-type edit mode entered by double-click (a label, or a polyline's draggable vertices), and Rounded and line style now draw the same on every shape.
+
+  Breaking: `CanvasAtoms.editing` is an `Editing` union replacing `EditingPart`; the lattice snap toggle (`CanvasAtoms.lattice`, `toggleLattice`, Shift+G) is removed, since a lattice scene always snaps to its cells and shows no grid; and drawing variants match a canvas by format rather than by exact version string.
+
+- 10a11da: A canvas selection can be restacked — `Bring to front` / `Send to back` in the right-click menu and on ⌘] / ⌘[ — and a layer now paints its nodes and links in one order by `z`, so a shape drawn over a link covers it and a link drawn over a shape crosses it, matching what the Views list shows and what a click selects. The selection is no longer raised above its neighbours.
+
+  A 2D layout carries a `grid` pitch, which the new `Drawing` inspector section edits along with the lattice, and `DEFAULT_GRID` is 12 (major cell 48). Every default and fixture geometry that was written in 64px cells — shape sizes, layout pitches, the compute shapes and circuits, the `.dx` exemplars — is now expressed in major cells, so it holds whatever the drawing's grid is. ⌘' toggles the background grid, and shape text is 20px.
+
+- 6eb0aae: Join and Subtract work on 2D shapes as they do on 3D ones. The `join` and `subtract` layout intents are now valid in a 2D layout (`isLayoutIntent(…, '2d')` accepts them; `extrude` stays 3D only) and make a `solid` element framed by its operands (`solidBounds2D`), which are hidden while it stands and shown again when it is deleted; `solid` is a 2D kind. The 2D viewport draws a solid as the outline its operands make, joined or cut (`solidRings`, `combineRings`, `nodeRings`, `solidPath`, the `solid` node type), worked out as a layout is read and never stored. The two commands are one definition both editors offer (`SOLID_COMMANDS`). Subtract cuts every other selected shape from the first, in both dimensions: the `subtract` intent takes optional `tools` after `tool`, which are further operands of the one `difference` solid. `flattenPath` now reads arcs (`A`).
+
+  Hulls nest. Enclosing a selection that holds a hull puts that hull inside the new one with its own shapes (`encloseIn`, `hullDescendants`), where before its shapes were taken from it; shapes of one hull are enclosed inside it. The Hull tool and the actions bar's command (now `Hull`, `scene-action-hull`, where it was Enclose) make a hull by the same operation. Stored, an inner hull's group is a part of the outer hull's group, and `moveToHull` and `viewMove` accept a hull. A hull that names no border is now a box (`DEFAULT_HULL_SHAPE`), where it was a perimeter, so a new hull is a box; a hull stored as `perimeter` is unchanged.
+
+  A stroke kept as drawn (Freehand, or a Sketch stroke that reads as nothing) lands as a closed line where it ends near where it began, measured against its own bounds (`strokeCloses`), so a large stroke and a small one close alike.
+
+  An orthogonal link between two ports leaves each along its side's normal and then turns at right angles as seldom as it can without crossing either shape (`orthoRoute`): straight where the ports face each other on one line, one corner where their sides meet, two for a step or a U, up to four where a port faces away. Before, it turned at the midpoint between its ends whatever sides they were on, so a link to the far side of a shape ran through the shape. A port `RouteEnd` carries its node's `bounds`, and `orthoPoints` takes the grid its stubs are sized by. Orthogonal is now the default variant: it leads `defaultLinkRegistry`, and a link drawn from a port before any link tool is picked is `ortho`, where it was `smart`. A stored link that names no type still reads as `smart`.
+
+  A press on a link's end that opens the context menu (a control-click, which is the primary button) no longer starts dragging the end, and a press released where it began leaves the end on its port (`endDrop`); before, either left the end as a free point. A press on an end opens the link's menu (`onEndContextMenu`), where it opened the menu of the node under it.
+
+  The context menu opened on a link's end leads with that end's marker (None, Arrow, Circle, Triangle; `LinkEndMenuItems`, `CanvasLinkEndMenu`, `SceneContextMenu`'s `lead`), set by `controller.document.setEndMarker`; a host's `onContextMenu` is given the end pressed (`MenuLinkEnd`). A press is on an end wherever it lands on what is drawn there (`linkEndAt`): on the link within a marker's length of the end, or on the point it meets a shape at, selected or not. Each marker choice, there and in Properties, shows an icon of the line with that end (`px--line-arrow--regular`, `px--line-circle--regular`, `px--line-triangle--regular`; `MARKER_ITEMS` carries `icon`). The markers last set on a link, there or in Properties, are the ones the next link drawn takes (`atoms.linkEnds`, `drawnLinkEnds`); before any are set, a link between directed ports still draws an arrow.
+
+  Breaking: the actions bar no longer has a create menu, and `EditorTools.commands.create` is removed; a shape is made with its tool or dragged from the tools panel.
+
+  The rules between the groups of the editor's horizontal bars (camera, actions, display) run from edge to edge, as the tool palette's do (`FLOATING_BAR_RULE`); before, each was half a control tall.
+
+  A link's end may draw `many`, a crow's foot (`Marker` in `@dxos/scene`): two toes spread from the line onto the connection point (`MANY_SPREAD`), the line running on between them. It is offered beside the other markers, with its icon (`px--line-many--regular`). A diagram connector's crow's foot now reads as `many`, where it read as an arrow, and a `many` end exports as the diagram renderer's crow's foot at a target; at a source, which the renderer has none for, as an arrow.
+
+  The actions bar shows its commands in named groups (`ACTION_GROUPS`): Cut, Copy, Paste, Duplicate, Delete; Group, Ungroup, Hull, Make object; Join, Subtract; then a dimension's other commands, and Undo and Redo. Before, Delete followed Make object in one group with the clipboard commands, and Hull sat with Join and Subtract.
+
+  In the tool palette the link types now sit above the tools that draw a line of their own, after the closed shapes (`toolGroups`), where they ended the create group; Polyline and Spline share one flyout (`PATH_FOLD`), as the link types and the two stroke tools do.
+
+- e8029c3: Canvas undo and redo patch the store instead of restoring snapshots. Every edit is a commit of a `CanvasHistory` that records the store's heads before and after and the paths it wrote; undo writes a path back only while nobody has changed it since, and returns the view to the View path and selection the edit was made in. `Canvas.Root` takes `history` (from `useCanvasHistory`, or a `CreateHistory`); without one the canvas keeps a local history, so ⌘Z, ⇧⌘Z and the toolbar work standalone. Breaking: `Projection.snapshot`/`restore`, `withUndo`, `recordViews`, `recordStoreStep` and `CanvasAtoms.undo` are removed; a projection with a model of its own exposes it as `model` (a `VersionedSource`) and may implement `restored()`, and `useViewProjection` now takes `history`. `ViewStore.versions`, `VersionedSource`, `recordChanges` and `patchSource` are exported from `headless`.
+
+  In plugin-canvas, a canvas in Composer records its edits on the app's `HistoryTracker` as `CanvasOperation.Patch`, scoped to the canvas, and agents can edit a canvas with `CanvasOperation.Apply` (intents); both are undoable, and `Apply` refuses a malformed intent (`isIntent`, exported from `headless`) or a canvas with no version history before it writes. The ECHO-backed store reads its past through Automerge heads. In app-framework, `UndoMapping` gains `merge` (fold merged invocations into one forward and re-derive the inverse) and `toast` (false records an entry without the deck's undo toast).
+
+  Drawing conversion copies by default: `DrawingOperation.Convert` writes a new drawing beside the source (`replace: true` converts in place, as drawing.sh does) and names it in its output, and Composer's menu offers "Copy as …" for each variant, opening the copy. A plugin can register an `IllustratorCapabilities.Converter` for a pair of variants, which `Convert` uses over the generic scene replay (`IllustratorModel.convertByScene`). plugin-canvas registers one for tldraw to canvas that converts a DSL-managed drawing generically and maps a hand-drawn one shape by shape; breaking: `CanvasOperation.ImportTldraw` and its "Copy as canvas" action are removed in its favour.
+
+  The canvas's Snap and Lattice toggles move to the bottom-right bar beside the grid and guides, and the centre action bar hides on a canvas too narrow for it. A link's `style.fontSize` sets its caption's size (unset is `LINK_FONT_SIZE`, 14), and a caption on a straight sloped line is shortened only when it does not fit the line's run. A rounded regular polygon rounds its corners by the look's rounded radius; a `NodeDef.silhouette` is given that radius in px. A polygon's `params.fit` sets how it sits in its frame: `frame` (the default) fills the frame, `circle` puts its vertices on the circle that fits it; `polygonPath` takes an options bag. The bottom-right bar ends with the theme picker. A form field override can control a nested group's `open` state (`onOpenChange`); the canvas properties panel takes `groups`, and plugin-canvas keeps which groups are open in its view state. Breaking: `ThemePanel` is renamed `DisplayPanel`. Breaking: a polygon's `sides` and `fit` and a cloud's `bumps` move into the node's `params` (`PolygonParams`, `CloudParams`), shown as the type's own group in the properties panel; stored drawings read in the new shape through `withLegacyParams`.
+
+- b0113a1: Composite objects whose parts follow their frame, declared in the scene DSL.
+
+  A part of a composite can now say, per axis, which of its edges follow the frame
+  (`constrain` over `min | max | stretch | center | scale`), so an Object drawn at
+  another size lays itself out instead of scaling like a picture — a card's footer
+  stays on its floor and its body grows. A tool declares its shape as DSL source
+  (`composite <id> { element … }`) rather than painting it in a React view, and
+  every shape that tool draws is an Instance of one definition, so restyling any
+  of them reaches them all while each one's text stays its own.
+
+  A part may be `optional`: it is switched off for one Instance from the Properties
+  panel, the part naming it in `grow` takes its room, and a part that `follows`
+  another goes with it — so a card without a footer is the same Object as a card
+  with one, not a second definition. A part `bind`s to any field of the Instance,
+  not only text, so a card's glyph is its own typed `icon`. A `polyline` part
+  authors its vertices in the DSL (`points="0,0.5 1,0.5"`), as fractions of its own
+  frame, so a template can draw a rule that stretches with the shape it is in.
+
+  Double-clicking an Object now edits it where it stands: its parts become what the
+  editor acts on and the drawing around them fades, as 3D already did. Links gain
+  an `ortho` variant and the Properties panel a Variant selector (straight,
+  orthogonal, elbow, curve, spline).
+
+  The built-in Card and the UML class are composites themselves: each declares its
+  template and places an Instance of it, so its regions are parts in the Views tree,
+  edited in place, with the data still typed on the shape.
+  `@dxos/react-ui-canvas-editor` gains a `./testing` entry point so a plugin's own
+  kind can be rendered through the shared editor in a story.
+
+  Cards, text shapes and gestures also sit on the canvas's own grid:
+
+  - `card` and `icon` are built-in node types. A card is a glyph and a title, a body, and a footer over
+    a hairline, each edited in place; an icon is any Phosphor glyph at any of its six weights. The
+    `card` and `icon` prototypes remain for a contributed kind that paints a view of its own.
+  - A gesture lands on the finest grid level drawn rather than the major one, so a shape can be placed a
+    cell from its neighbour and lands on the lines under the pointer. `SceneSnap.snapMinor` is gone:
+    `snap` is that function now.
+  - A move draws the box it will land in, not only when the drop would be refused.
+  - The text node (`note`) draws no fill, border or radius of its own, and `padding` is a property of
+    the two types that draw text in a box — the rectangle and the text node — defaulting to the minor
+    grid cell it was hardcoded to.
+  - Default and minimum sizes are whole numbers of grid cells: a rectangle is 4 x 2 nominal units and a
+    card 4 x 3, and an ellipse resizes down to a quarter unit.
+
+  Hulls: a border round a set of shapes, which a link's route respects.
+
+  - The Hull tool drags a frame that takes the shapes inside it, and Enclose draws a hull round the selection. A hull's
+    Hull property is `perimeter` (round the shapes) or `box` (the rectangle that bounds them); its frame follows
+    whatever is inside it, moving it moves them, and it is styled as any shape is.
+  - A hull is stored as a group: an Instance with `hull` set over an anonymous composite of its shapes, as the Group
+    command makes one. The 2D editor draws that group opened out, so a shape inside a hull is selected, moved and
+    linked directly.
+  - On a lattice the border runs along the gutters, and an elbow link keeps to the side of it both its ends are on: a
+    link between two shapes inside stays inside, one from outside crosses the border once, and one between two shapes
+    outside goes round the hull.
+  - The lattice no longer snaps a composite's parts, which are placed about the composite's own centre.
+  - In the Views inspector a hull's shapes are rows under it, and a row dragged onto a hull, or beside a row of
+    another hull or of none, moves its shape into, between or out of hulls.
+
+  The display panel's grid switch on a lattice scene can be turned off: pressing the option that is drawn (its cells,
+  or the grid) draws neither, as pressing dots or lines already did elsewhere. A lattice scene draws no grid when the
+  look has none.
+
+  A link's free end is drawn where it will land while it is dragged: on the port or node under the pointer, else on
+  the grid. An orthogonal link with a free end keeps its corner on one side of the line while that end is dragged,
+  rather than jumping across it at the diagonal.
+
+  An elbow link to an end on no port turns twice, halfway between its ends, on a lattice scene too, where it used to
+  follow the nearest gutter line. The Properties panel's Type field now changes how a link is drawn: it was refused by
+  the form and ignored by the edit behind it. A form field's error icon shows the error in a tooltip.
+
+  The Drawing section's Cell and Gutter are whole counts of grid cells: the lattice stored is the counts times the grid
+  size, so a new grid size rescales it. Turning the lattice off and on again brings back the lattice the drawing had.
+  A lattice that changes size keeps every shape on the cells it had, the shapes inside a hull included: the lattice mode
+  re-seats a layout's shapes when a `layout` intent writes a new lattice.
+
+  A hull has an `inset`: a whole number of grid cells its border is drawn inside its line. On a lattice the line is the
+  centre of the gutter, which the inset leaves clear, and a link inside the hull runs between the border and the shapes;
+  off a lattice the inset comes off the margin. A link outside an inset hull runs along the gutter's centre line, as it
+  would with no hull there. `fitHulls`, `hullOutline` and `enclose` take the grid pitch, and `gridPitch` is the one rule
+  for the pitch a drawing is on. The Properties panel shows a hull's border and inset side by side.
+
+  The default lattice's gutter is 8 by 8 grid cells (128 by 128 px, where it was 128 by 64). A drawing put on the
+  default lattice from now on takes the new one; a drawing already on a lattice keeps its own. plugin-canvas's
+  reference diagrams are drawn on it: their `.dx` sources name `grid=384x256`, and their compiled commands and SVG
+  renders are regenerated.
+
+  plugin-canvas contributes its own extension tools through `CanvasCapabilities.NodeType`, the space graph first: one
+  ECHO space as a circle of objects on a hexagonal lattice, with its seed, spacing and hue as Properties. The tools
+  panel has two more groups after the shapes: `Containers` (the hull and the view) and `Extensions` (the card, and
+  every kind a plugin contributes unless it names a group of its own, so plugin-uml's class is there too);
+  react-ui-canvas exports `CONTAINERS_GROUP` and `EXTENSIONS_GROUP`.
+
+  An extension kind keeps its own fields under its element's `data`, not at the element's top
+  (`Schema.Struct({ ...Scene.Element2D.fields, type, data: Schema.Struct({ … }) })`), so a kind's field never meets the
+  base's or another kind's; `Scene.BaseElement` gains the `data` slot. The engine's node carries the same `data`: a
+  view reads it with `kindData(schema, node)`, a part or a bind names a field as `data.<field>`, and the Properties
+  panel shows it last, as a group labelled `Custom`. `kindNodeDef` refuses a kind that declares a field of its own at the
+  top, unless it extends a core prototype whose frame reads fields there (a card's `icon`, `body`, `footer`).
+  `KindRegistry` gains `dataFields(type)` and `normalize(element)`. **Migration:** move a kind's own fields into
+  `data` in its schema, its `create`, its view, and its `parts` / `fields` / template `bind` names. A stored element
+  with the fields at its top is read as before and written back under `data` on its next edit. plugin-uml's class
+  keeps `attributes` and `methods` in `data`.
+
+  Conductor's compute shapes follow the same rule in a board's stored shape, its scene element and the engine's node:
+  the compute `node` id and each shape's own fields (a constant's `value`, a template's `valueType`, a random number's
+  `min` and `max`, a trigger's `functionTrigger`) are under `data`. **Migration:** pass a shape's own fields to its
+  factory under `data` (`createConstant({ data: { value } })`) and read them from `shape.data`; a board stored with
+  the fields beside the shape's own opens as before and is rewritten on its next edit.
+
+  The space graph's Properties are two to a row; Population is Node density, and Base dots (off unless turned on) draws
+  the lattice points that hold no object.
+
+  A link's elbows are sized by the drawing's grid: a corner is cut one grid cell back, a smart link's stub leaves its
+  port by half a major cell, and lanes sharing a gutter are a cell apart, where each was a fixed length of the default
+  grid. `linkGeometry`, `viewLinkGeometry`, `linkPath`, `smartPoints` and `splinePath` take the grid as a last
+  argument (the default grid when left out), and `ControlFrame` a `grid` prop.
+
+  A port is the same size on screen at any zoom, as a resize handle is; it grew with the drawing, and covered a
+  zoomed-in shape. A selected shape drawn too small for its resize handles (under 40 px on its shorter side) shows
+  its outline alone, where the handles overlapped and hid it; `handlesFit(bounds, zoom)` is the rule. The Properties
+  panel shows a part selected inside an Object that is being edited in place, where it
+  showed nothing selected.
+
+  The card is authored at the size the tool draws it (16 by 12 grid cells, `CARD_SIZE`): a two-cell glyph, the title
+  half a cell beside it, the body half a cell under the header, and a two-cell footer half a cell under the body and
+  half a cell off the floor. Its text has sizes of its own (title 18, body 16, footer 14) and its glyph is 24 px. The
+  scene DSL reads and prints a 2D element's text size (`fontSize=18`), and an icon node with a `fontSize` in its style
+  draws its glyph at that size, where it took 70% of its frame. plugin-canvas's space graph component is `Graph`
+  (`graphSpec`, `GraphNode`, `GraphData`), its tool named Graph; the element type is still `space-graph`.
+
+  A Draw tool (S), after Polyline in the tools panel, draws a line in one stroke: it samples the pointer while
+  the button is down and lands the stroke as a polyline run as a curve through a few of the samples
+  (`PolylineParams.smooth`, also a switch in Properties; `simplifyPath`; `NodeDef.freehand`). The tool stays in hand for
+  the next stroke, and a stroke begun on a shape is drawn over it. The card's title is centred beside its glyph; the
+  scene DSL also reads `alignHorizontal` and `alignVertical`.
+
+  A form field with no value shows the default its schema declares (Effect's `default` annotation,
+  `Schema.Number.annotate({ default: 26 })`) as its value. Showing it writes nothing: the form holds no value for the
+  field until it is edited. The space graph declares its defaults this way, so the Properties panel and the drawing
+  agree on an unset field.
+
+  The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
+
+  A switch or checkbox keeps its visually hidden input inside itself (`position: relative` on `.dx-switch` and
+  `.dx-checkbox`): in a scrolling form the input was left behind, and focusing it scrolled a clipped ancestor, which took
+  the Properties panel out of view when a toggle far down it was pressed. The Properties panel shows Fill and Border as
+  a shape draws them, so a type that draws all it shows (text, an icon) reads off until one is asked for. A node type
+  may be an `outline` (`NodeDefSpec.outline`): its border is the frame's and is on, with no fill unless asked for one.
+  Being part of the drawing, an outline keeps its colour while the node is selected or hovered; the selection frame
+  alone marks it. The space graph is one, so its ring is its Border, and turning it off or on moves nothing inside it.
+  A vector field's stack no longer asks a plain fieldset for a gutter, which logged a warning.
+
+  `@dxos/ui-types/phosphor` exports `phosphorIcons`, the name of every regular Phosphor glyph. It is an entry of its
+  own rather than part of the package's index, and `iconOptions()` imports it when a picker first asks, so the
+  catalogue is not downloaded with the app.
+
+  A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
+
+  A `diagram` fence in a markdown document draws as a diagram, in the editor's light or dark palette:
+  `SvgFile.toSvgFile` takes `{ theme, transparent }`, `diagramPreview()` follows the editor's colour mode, and
+  plugin-canvas contributes it to the markdown editor.
+
+- 08f8784: Sketch (W) is a second tool in the Draw button's flyout, beside Freehand (S, the tool that was Draw) (`NodeDef.fold`): it reads a stroke before it lands, and one drawn round a rectangle, an ellipse, a triangle or a diamond becomes that shape, squared up on the grid at the tool's size or the last such shape's when it is close. A stroke is read by the segments it was drawn in: where the hand rests is a corner, and each run between two corners is a straight line or a parabola, so a stroke that is no shape lands as a polyline of those segments, with nearly level or upright sides squared up and corners nearly in line aligned. A polyline's new `bends` name the segments that run as parabolas (`PolylineBend`), `NodeDef.freehand` is now `'stroke' | 'shape'`, and the `freehand` drag carries the `times` its points were sampled at.
+
+  A text node has a colour of its own in Properties, a grid of the nine style hues at three tones (`style.textHue`, `style.textTone`), and the icon picker offers the DXOS mark ahead of Phosphor's glyphs.
+
+  A Spline tool (U) draws a curve through points placed click by click: each segment is a cubic with two control points, shown with the vertices in the line's edit mode and dragged like them. A `PolylineBend` with a `second` control is a cubic; `smoothBends` makes the bends of a line through points, and a vertex put in on a bent segment, or taken out between two, keeps the curve.
+
+  The Views list is front first: the row at the top is what is drawn on top, and a row dropped above another goes in front of it. A tool that draws its node point by point or in a stroke (Polyline, Spline, Freehand, Sketch) is picked from the toolbar, not dragged from it. A line (a polyline, a spline, a stroke) keeps its own colour while it is selected or its vertices are edited; the selection frame and the handles mark it. A spline's vertex takes its two control points with it when it moves (`bendsWithVertex`).
+
+- 94df7d2: Dynamic projection edges can carry their own caption, end markers and line style (`GraphEdge.text`, `ends`, `style`), so one graph can draw several kinds of edge; an edge without them keeps `DynamicOptions.link`.
+- df1380a: The dynamic projection lays a graph out on a lattice and orders it to read cleanly.
+
+  - `DynamicOptions.lattice` places one node per lattice cell, draws the lattice guides, and snaps moved nodes onto free cells.
+  - `DynamicOptions.arrange` chooses how ranked nodes take their cells:
+    - `crossings` is the new default. Each rank is ordered to minimise edge crossings; previously nodes were in id order within each rank.
+    - `rank` keeps that previous id order.
+    - `routed` starts from `crossings`, then moves and swaps nodes to lower the cost of the links as they are routed through the lattice gutters.
+    - `force` and `force-free` run a d3-force layout. `force` snaps the result to free cells; `force-free` leaves it where it came to rest. `DynamicOptions.force` tunes attraction, repulsion and repulsion range.
+  - New exports: `improveSlots`, `routeCost` and `latticeEnds`.
+  - Masonry draws a selected tile's ring on an overlay above the tile, so an opaque tile (such as a card) no longer hides it.
+  - The markdown editor shows the link button (`decorateMarkdown`'s `renderLinkButton`) after bare URLs and `<url>` autolinks too, as it does for `[label](url)` links.
+
+- 13bc40d: Feature maps are editable in Composer: create a feature on the map and name it in place, add an existing one from the toolbar, edit a card's name and description inline, set status or remove a feature from its card menu, draw and delete dependency arrows and remove boxes on the canvas, and add dependencies and link tasks from the feature article. Every edit runs the same operation an agent uses, and a refused edit (a dependency that would close a cycle) shows its message as a toast. The canvas dynamic projection accepts `onLink` and `onDelete` hooks, so a host can apply those edits to its own model instead of the projection's graph. `ObjectPicker` no longer pins its popup to a custom trigger's width, so a picker behind an icon button is readable.
+- a1c19cc: Projects gains feature maps: `Feature` (status, two-level subfeatures, repo spec links, `DependsOn` and `Implements` relations), `Showcase` (a write-up with artifacts that `Demonstrates` a feature or task) and `FeatureMap` (a board with cards and canvas views), with operations agents use through the project skill. The canvas dynamic projection now accepts a node factory, a link style with arrow ends, and its own capabilities, so a host can render its own nodes in a drag-only view.
+- 05e0b67: A lattice canvas's display panel switches between the lattice and the grid: the choice decides what is drawn and what shapes snap to, so a shape can sit off the lattice.
+
+### Patch Changes
+
+- a349ae0: A drawing's `grid` pitch must be at least one: snapping divides by it, so a layout patch storing zero or a
+  negative pitch would have put every drop and nudge at `NaN`. A restack also keeps an element whose id is
+  `__proto__`, which an object literal would have dropped from the edit.
+- df16fba: Popups (menus, selects, comboboxes, popovers) no longer draw a focus ring; the highlighted item shows where focus is. In the chat prompt, the placeholder is shortened to "/ for skills, @ for content", "Add an object" is renamed "Add object", and switching between the tasks and context drawers closes the open drawer before the other opens. The search and add-to-collection dialogs keep their input's inner padding. The prompt's command completions render as a react-ui-list Listbox in a popover above the editor, at most 8 rows tall, whose arrow keys stop at the first and last command instead of wrapping; Escape closes it and leaves focus in the editor. An editor no longer moves focus to its host on an Escape CodeMirror already acted on.
+
+  A polyline locked while its vertices are being edited loses its vertex handles, Delete no longer removes a vertex from it, and a vertex drag the lock lands in the middle of neither previews nor commits a change.
+
+- 40271d5: With snap on, moving and resizing a node land it on the major grid again, as the Snap button describes, rather than on the minor grid.
+- 9b2b0fe: A 2D canvas shown as a section, slide or card leaves the wheel and trackpad to the page until it has focus. A canvas exported or printed as SVG draws a container's label at its top-left corner rather than its centre.
+
+  In a presented deck, left, right, `[` and `]` move between slides past any click steps, with the brackets landing on a slide fully built, up and down step through a slide's click steps, and Cmd or Ctrl with left or right jumps to the first or last slide. Up and down no longer jump to the deck's ends. In a Presentation's thumbnail grid, up and down move between rows and Space starts presenting from the current slide.
+
+  Choosing a template in the Create Space dialog no longer scrolls the list, so the press lands on the row under the pointer. The chosen template keeps an orange outline, hover is easier to see, and the dialog's scrollbar sits at its edge. `Listbox.Root` gains `selectionStyle='outline'`.
+
+  Theme settings gain a hue picker for the focus color.
+
+  A `Card.Header`'s Block and icon-only Button stay beside the first line of a wrapping Title. The space Home scrollbar sits at the right edge of the plank.
+
+- 81d2cd2: Specs can declare the specs they build on (`uses` blocks, a plugin's `dependsOn`) and refer into them as `<spec id>#<item>`; the spec viewer links those references, marks broken ones and opens the target spec at the item. A plugin's Open Specification opens the spec as the main plank, and the Canvas plugin now publishes its spec. In the canvas, a link end's marker can be set back to None, and a View node cannot be grouped into or created inside an Object.
+- 6030742: A tldraw drawing can be copied as a canvas: `CanvasOperation.ImportTldraw` maps its shapes to nodes, its arrows to links (bound ends stay attached to their nodes), and its frames to View nodes over Views of their own and its groups to anonymous Objects, then files the new drawing beside the original and opens it. The action ("Copy as canvas") appears on every tldraw drawing; plugin-tldraw takes no dependency on plugin-canvas. Rotation carries over; tldraw's clouds and regular polygons map to the canvas's own, and the shapes it has no match for become rectangles. `@dxos/react-ui-canvas/headless` now exports `composeSelection` and the other pure grouping helpers, so a host can group nodes without loading React.
+- Updated dependencies [cb058b9]
+- Updated dependencies [73ed632]
+- Updated dependencies [82f2242]
+- Updated dependencies [a349ae0]
+- Updated dependencies [df16fba]
+- Updated dependencies [10a11da]
+- Updated dependencies [e8029c3]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [1302e04]
+- Updated dependencies [7067fec]
+- Updated dependencies [bc50a90]
+- Updated dependencies [39eb10b]
+- Updated dependencies [f37ae92]
+- Updated dependencies [416201f]
+- Updated dependencies [13bc40d]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [17a9e75]
+- Updated dependencies [09d8716]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [80818bc]
+- Updated dependencies [8554a26]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [7da5d17]
+- Updated dependencies [4be51c3]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [7e07e49]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [a8e68c5]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [d00cc85]
+- Updated dependencies [10b3963]
+- Updated dependencies [e67aa80]
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/diagram@0.17.0
+  - @dxos/scene@0.17.0
+  - @dxos/react-ui-editor@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/animation@0.17.0
+  - @dxos/react-ui-animation@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+
 ## 0.16.0
 
 ### Minor Changes

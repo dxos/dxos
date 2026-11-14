@@ -1,0 +1,111 @@
+# @dxos/plugin-host-cloudflare
+
+## 0.17.0
+
+### Minor Changes
+
+- 66304b6: Plugin bundles on EDGE get a default file storage backend (EDGE plugins spec D-84). `PluginProtocol.Env` takes an optional `BLOB_SERVICE` binding to EDGE's hosted blob store; the host registers it as the default `edge` blob backend (`FunctionWrappingOptions.blobBackends`, new in `@dxos/compute-runtime`) and offers it as a `FileCapabilities.Backend` from a host plugin activated beside the bundle's own (`FileStorage`). plugin-file's `file.create*` operations no longer fail `NoBackendError` in a bundle, and no plugin has to contribute a backend on EDGE.
+
+### Patch Changes
+
+- d53982f: A plugin bundle on EDGE no longer leaves a caller's cancellation wait pending when one of its skills fails to build, and no longer registers operations marked `skipRegistry`, or operations whose schema cannot be serialized.
+- 59fc727: A plugin bundle on EDGE now resolves its own skills by registry URI, and the tools those skills name, because each space-scoped invocation's registry holds the plugin's skills and operation records beside its types.
+- 0cb6c97: A plugin bundle on EDGE no longer leaves a caller's cancellation wait pending when the invoked operation's schema cannot be serialized.
+- Updated dependencies [5d280a1]
+- Updated dependencies [3f250b7]
+- Updated dependencies [fc5e071]
+- Updated dependencies [b6d1c9c]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [a458aef]
+- Updated dependencies [710da43]
+- Updated dependencies [cab57d0]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [d105c19]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [d45bf58]
+- Updated dependencies [f82b258]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [3aef671]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [853af68]
+- Updated dependencies [7ab1f89]
+- Updated dependencies [b844925]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [ece15ab]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [80c25fe]
+- Updated dependencies [20a14b9]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [f175a2d]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [02254b0]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b159f41]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [8e2f718]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/assistant@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/functions-runtime-cloudflare@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0

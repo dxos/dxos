@@ -1,5 +1,99 @@
 # @dxos/edge-compute
 
+## 0.17.0
+
+### Minor Changes
+
+- 78e96da: Plugin bundles on EDGE now get what operation-service gives a handler. `PluginProtocol.InvocationScope` carries the request context (conversation, origin, caller, trace sink and pids, cancellation, test id seed), the services only EDGE holds (`services`, a `ServiceHost` stub with service descriptors) and other plugins' operations (`operations`, an `OperationHost` stub). The protocol is versioned: `PluginProtocol.PROTOCOL_VERSION` is 2, `isSupported` and `scopeFor` let EDGE speak each bundle's version, `Catalog.protocolVersion` records it, and the main module `PluginLoader.workerCode` generates answers `protocolVersion()` from the vendored host (1 for a host that predates versioning).
+
+  EDGE's plugin loader ships only the modules that run on workerd, leaving out browser-only bodies and the UI packages they vendor, and a plugin chunk that declares its own top-level `Map` (such as plugin-map's ECHO type) now loads instead of failing with "is not a constructor".
+
+  Agent operations declare the types they write but plugin-agent does not register, so they run on EDGE, where a plugin bundle registers only its own types; before this, `agent.create` on EDGE failed with `Schema not registered Schema: org.dxos.type.instructions`.
+
+  `dx` initializes the ECHO client only when a command first uses it, so a command that never uses it (such as `dx plugin list` or `dx registry publish --upload-only --edge-url <url>`) no longer waits for or fails with initialization. Breaking: `ClientService` now provides a handle rather than the client; resolve the client with `yield* ClientService.client`. `ClientService.layer` stays eager; the new `ClientService.layerLazy` initializes the client on first use. `ClientPlugin` gains `initializeOnUse`, which the CLI sets, and loses `awaitInitialization`.
+
+### Patch Changes
+
+- 768db81: A connection sync that starts on EDGE before the client's new connection or binding has replicated there now waits for it, instead of finishing with nothing synced until the next scheduled run. `Binding.loadReplicated` loads such an object with a short retry in the run, then runs the operation again; it gives up once the object is several minutes old. A force-run of a remote trigger now carries the fire event's `data` to EDGE, so the pressed binding is synced first there too.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [cb058b9]
+- Updated dependencies [a458aef]
+- Updated dependencies [d338edb]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [a245692]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [853af68]
+- Updated dependencies [7ab1f89]
+- Updated dependencies [b844925]
+- Updated dependencies [a18cb35]
+- Updated dependencies [ece15ab]
+- Updated dependencies [9471682]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [392bed0]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [f175a2d]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [8e2f718]
+- Updated dependencies [768db81]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/functions-runtime-cloudflare@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/crypto@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

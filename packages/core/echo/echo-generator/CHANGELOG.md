@@ -1,5 +1,65 @@
 # @dxos/echo-generator
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [d338edb]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [9471682]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [392bed0]
+- Updated dependencies [c9c3867]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/random@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

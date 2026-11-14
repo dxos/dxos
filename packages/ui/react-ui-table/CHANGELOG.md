@@ -1,5 +1,100 @@
 # @dxos/react-ui-table
 
+## 0.17.0
+
+### Minor Changes
+
+- 38ebf5e: Tables and sheets show other people's selected cells and ranges. Each one is outlined in the person's member hue and tagged with their name, the same name and color their Markdown cursor shows. A selection stays on its rows when anyone sorts, filters or inserts rows, and focusing a header or a table's draft row clears yours for everyone else. Selecting a commented sheet cell opens its thread only when you move to it, not when someone else's edit shifts its row.
+
+  `react-ui-grid` adds `GridSelectionModel`, the selection state both tables and sheets now use, with cells named by row and column id through a `GridAddressing`. `Grid.Root` takes an `awareness` channel and `Grid.Content` takes `addressing`. `useGridAwareness` creates that channel, a `@dxos/protocols/Awareness` channel on `awareness.selection.<id>` whose value is the selection's corner cells by id, and the grid shows one selection per member. The sheet's cursor and range now come from this model.
+
+  `dx-grid` draws `remoteSelections`, and its `dx-grid-cells-select` event carries the `range` with its plane. It adds `getSelection()`, `getFocusedCell()` and `moveSelection(range, { focus })`, and `refocus(axis, delta)` now moves the selection with focus.
+
+  In the Database section, a type that has a view (such as a table) now shows its caret before it is first expanded. A member who joins a space can now open a table from its type there.
+
+### Patch Changes
+
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [cb058b9]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [908c301]
+- Updated dependencies [416201f]
+- Updated dependencies [3aef671]
+- Updated dependencies [13bc40d]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [38ebf5e]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [8554a26]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [7e07e49]
+- Updated dependencies [b159f41]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [d00cc85]
+- Updated dependencies [768db81]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/lit-grid@0.17.0
+  - @dxos/react-ui-grid@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,97 @@
 # @dxos/echo-client
 
+## 0.17.0
+
+### Minor Changes
+
+- 908c301: A plugin bundle on EDGE resolves types other plugins publish. A registry query for types by key (`Filter.and(Filter.type(Type.Type), Filter.key(typename))` over `Scope.registry()`) asks the type sources registered with `HypergraphImpl.registerTypeSource` (`@dxos/echo-client`) for the types the in-process registry lacks, and caches what they return there; with no source installed it behaves as before. `PluginProtocol.Env` gains `TYPE_REGISTRY`, EDGE's registry of published types, which the plugin host installs as a type source, so `space.queryObjects`, `space.addObject` and `space.addRelation` find types other plugins publish with the same query on a client and on EDGE.
+
+### Patch Changes
+
+- b2d8572: Loading an object with a parent no longer reports it missing while the parent is still loading. A fresh client, such as each operation invocation on EDGE, could not load an object another invocation had just created until EDGE had indexed it: `Database.load` threw `EntityNotFoundError`.
+- c80b89d: The transitive deletion check (`Obj.isDeleted`, and the one query recompute runs per candidate) is about 4× faster: an entity's deletion-relevant system fields are read once per document change, not on every check.
+- 6a41aa7: Integrating a host update and acknowledging a local write no longer look up every head's change by hash, which cost up to ~200 µs per update on documents with concurrent edits.
+- f3dde57: An index hit whose database closes while it waits for the space root to link its object now resolves to no result, instead of throwing `Database was not initialized with root object` from a timer that outlived the database, or rejecting the load with `ContextDisposedError`.
+- 68d1c38: New documents now reach the host as Automerge bytes in `DataService.createDocument`'s new `initialDocument` field, so initial values holding `RawString` links or bytes are no longer rejected by the RPC transport. The JSON `initialValue` field is deprecated and logs a warning when a host receives it. A creation the transport refuses as invalid now fails once instead of retrying forever, and retried creations back off instead of re-sending every 250 ms.
+- d95ffc3: Plugin operations now work when EDGE runs them from their own plugin bundles. An invocation's writes are saved even when its operation declares no `Database.Service`, so `tasks.move` and the Gmail, Calendar and JMAP materialize operations keep what they create. A bundle's skills keep `agentCanEnable`, so an agent can still enable them. Fixes in individual plugins:
+
+  - `thread.createChannel` saves the channel in the space, and the feed backend loads the channel's feed before appending.
+  - Markdown creates documents with an empty history.
+  - Magazine's `loadPostContent` loads its post.
+  - Loading an object by reference resolves its type from the type sources when the registry lacks it, so an object whose type another plugin publishes arrives with a schema.
+  - Unsubscribing from a sender keeps the first skip filter, and plugin-inbox registers the `Tag` type it creates.
+
+  plugin-google and plugin-jmap now ship EDGE bundles.
+
+- 3eefd80: Index query hydration arms one timer per pass instead of one per 64-record chunk, so re-hydrating a large reactive result no longer repeatedly arms and clears timers on the main thread. Records that outrun the hydration budget are still reported as stalled.
+
+  Replying to a new comment while its thread is still being saved no longer deletes the thread. The reply now waits for the save to end and is then added to the thread.
+
+- 853663c: A malformed `echo:` reference no longer throws `Unsupported URI kind` when read: the resolver returns `undefined` and logs `malformed echo reference` once per URI. Decoding a reference envelope now rejects an `echo:` URI that does not parse, such as a full URI wrapped in `echo:///`, with `Invalid echo URI: <uri>`.
+- de25be8: `RepoClosedError` now says what stopped the repo proxy. Its `closeReason` context is the reason the closer gave, read from the `CLOSE_REASON_ATTRIBUTE` attribute of the `Context` passed to `close()` (`'closed'` when none is given), or `'error'` when an error put the proxy in its error state. Its `cause` is that error, or one whose stack is the `close()` call site. The proxy logs once when it stops: at info for a close that gave a reason or an error, at debug for a plain close. `EchoClient`, `DatabaseImpl` and `EntityManager` pass their close context down to the proxy.
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [3058ee6]
+- Updated dependencies [a458aef]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2ed9310]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [392bed0]
+- Updated dependencies [c9c3867]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [b601d34]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b159f41]
+- Updated dependencies [768db81]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/echo-host@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

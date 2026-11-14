@@ -1,5 +1,89 @@
 # @dxos/plugin-mobile
 
+## 0.17.0
+
+### Patch Changes
+
+- 80c25fe: The transcription microphone shows in every chat prompt again, just before Send: the Space Home prompt, the assistant companion before its first message, an agent's chat, and stored chats. Each prompt reads the buttons other plugins add to it from a hidden prompt node under the node that hosts it, which `AppNode.makePrompt`, `AppNode.getPromptId` and `AppNode.PROMPT_TYPE` describe; contributors file app-graph actions on it with the `prompt` disposition. Every surface that hosts a chat article now passes its graph node as `nodeId`, which is where the prompt finds its host. `ObjectAction` is deprecated in favour of app-graph actions on the subject's node.
+- Updated dependencies [b6d1c9c]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [710da43]
+- Updated dependencies [cab57d0]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [c8d6d86]
+- Updated dependencies [f142d06]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [af82eb1]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [d45bf58]
+- Updated dependencies [f82b258]
+- Updated dependencies [0737c44]
+- Updated dependencies [78e96da]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [17a9e75]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [0a4580c]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [80c25fe]
+- Updated dependencies [20a14b9]
+- Updated dependencies [5970ed3]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f175a2d]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [02254b0]
+- Updated dependencies [7e07e49]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [fe3aaf6]
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/plugin-deck@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui-mosaic@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/react-ui-search@0.17.0
+  - @dxos/react-ui-dnd@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes
