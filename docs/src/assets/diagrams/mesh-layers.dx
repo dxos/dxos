@@ -1,0 +1,10 @@
+diagram flow=down
+node Ext "Extensions" ref="packages/core/mesh/teleport-extension-replicator/src/index.ts"
+node Swarm "Swarm" ref="packages/core/mesh/network-manager/src/swarm/swarm.ts"
+node Signal "Signaling" ref="packages/core/mesh/network-manager/src/signal/swarm-messenger.ts"
+node Teleport "Teleport session" ref="packages/core/mesh/teleport/src/teleport.ts"
+node Transport "Transport" ref="packages/core/mesh/network-manager/src/transport/transport.ts"
+edge Swarm -> Signal "finds peers"
+edge Swarm -> Teleport "opens"
+edge Ext -> Teleport "run on"
+edge Teleport -> Transport "carried by"

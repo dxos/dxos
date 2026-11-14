@@ -11,7 +11,7 @@ const { stage, peers = 1 } = Astro.props;
 
 <!-- The app runs on its own page so that its theme CSS stays off the docs pages; see `pages/embed/contacts.astro`. -->
 <iframe
-  class="tutorial-embed not-content"
+  class="tutorial-embed dx-wide not-content"
   data-peers={peers}
   src={`/embed/contacts/?${new URLSearchParams({ stage, peers: String(peers) })}`}
   title="The tutorial app"

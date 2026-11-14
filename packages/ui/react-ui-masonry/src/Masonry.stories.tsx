@@ -189,3 +189,73 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+//
+// Docs
+//
+
+type Photo = { id: string; title: string; color: string; height: number; caption?: string };
+
+const PHOTOS: Photo[] = [
+  { id: '1', title: 'Harbor', color: '#0891b2', height: 80, caption: 'Boats at first light.' },
+  { id: '2', title: 'Dunes', color: '#ca8a04', height: 48 },
+  { id: '3', title: 'Forest', color: '#059669', height: 104, caption: 'A path through the pines, after rain.' },
+  { id: '4', title: 'Peaks', color: '#4f46e5', height: 64 },
+  { id: '5', title: 'Market', color: '#e11d48', height: 88, caption: 'Saturday stalls.' },
+  { id: '6', title: 'Canyon', color: '#ea580c', height: 56 },
+  { id: '7', title: 'Lagoon', color: '#2563eb', height: 72, caption: 'Still water, no wind.' },
+  { id: '8', title: 'Meadow', color: '#65a30d', height: 60 },
+  { id: '9', title: 'Glacier', color: '#0ea5e9', height: 120, caption: 'Blue ice under a grey sky.' },
+  { id: '10', title: 'Orchard', color: '#16a34a', height: 52 },
+  { id: '11', title: 'Lighthouse', color: '#dc2626', height: 96, caption: 'The lamp turns at dusk.' },
+  { id: '12', title: 'Desert', color: '#d97706', height: 68 },
+  { id: '13', title: 'Bridge', color: '#7c3aed', height: 84, caption: 'Fog over the river.' },
+  { id: '14', title: 'Reef', color: '#0d9488', height: 44 },
+  { id: '15', title: 'Vineyard', color: '#9333ea', height: 112, caption: 'Rows down to the lake.' },
+  { id: '16', title: 'Tundra', color: '#64748b', height: 58 },
+  { id: '17', title: 'Waterfall', color: '#0284c7', height: 100, caption: 'Spray on the ferns.' },
+  { id: '18', title: 'Prairie', color: '#a16207', height: 50 },
+  { id: '19', title: 'Island', color: '#0f766e', height: 76, caption: 'One palm, one hut.' },
+  { id: '20', title: 'Volcano', color: '#b91c1c', height: 92 },
+  { id: '21', title: 'Marsh', color: '#4d7c0f', height: 54, caption: 'Herons at low tide.' },
+  { id: '22', title: 'Summit', color: '#4338ca', height: 108 },
+  { id: '23', title: 'Harvest', color: '#c2410c', height: 62, caption: 'Bales in the field.' },
+  { id: '24', title: 'Cove', color: '#0369a1', height: 46 },
+  { id: '25', title: 'Aurora', color: '#7e22ce', height: 116, caption: 'Green light over the bay.' },
+  { id: '26', title: 'Garden', color: '#15803d', height: 66 },
+  { id: '27', title: 'Quarry', color: '#78716c', height: 82, caption: 'Swimmers on the ledge.' },
+  { id: '28', title: 'Lake', color: '#1d4ed8', height: 56 },
+  { id: '29', title: 'Mesa', color: '#b45309', height: 98, caption: 'Red rock at noon.' },
+  { id: '30', title: 'Fjord', color: '#155e75', height: 70 },
+  { id: '31', title: 'Pier', color: '#be123c', height: 86, caption: 'Gulls on every post.' },
+  { id: '32', title: 'Steppe', color: '#57534e', height: 48 },
+];
+
+const PhotoTile = ({ data: photo }: { data: Photo }) => (
+  <Card.Root>
+    <div style={{ height: photo.height, background: photo.color }} />
+    <Card.Header>
+      <Card.Title>{photo.title}</Card.Title>
+    </Card.Header>
+    {photo.caption && (
+      <Card.Row classNames='pb-2'>
+        <Card.Text variant='muted' lines={2}>
+          {photo.caption}
+        </Card.Text>
+      </Card.Row>
+    )}
+  </Card.Root>
+);
+
+/** The docs' gallery: photos of different heights in columns at least 9rem wide. */
+export const Docs: Story = {
+  render: () => (
+    <div className='fixed inset-0 flex dx-base-surface'>
+      <Masonry.Root Tile={PhotoTile} minColumnWidth={9}>
+        <Masonry.Content>
+          <Masonry.Viewport items={PHOTOS} getId={(photo) => photo.id} />
+        </Masonry.Content>
+      </Masonry.Root>
+    </div>
+  ),
+};

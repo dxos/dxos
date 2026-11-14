@@ -1,0 +1,47 @@
+---
+title: Masonry
+description: Tiles of different heights packed into columns.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+
+<ApiStory id="react-ui-masonry/masonry" height="28rem" />
+
+```ts
+import { Masonry } from '@dxos/react-ui-masonry';
+```
+
+```sh
+npm install @dxos/react-ui-masonry
+```
+
+`Masonry` packs tiles of different heights into columns, each tile in the shortest column, so the columns have no
+gaps. The number of columns follows the width it has. When the items change, the tiles that stay move to their new
+places, and the masonry measures only the new ones.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Masonry.Root` | Takes the `Tile` that draws one item, and the column sizes |
+| `Masonry.Content` | Scrolls the tiles |
+| `Masonry.Viewport` | Takes the `items` and a `getId` for each |
+
+## `Masonry.Root`
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `Tile` | `ComponentType<{ data }>` | Draws one item |
+| `minColumnWidth` | `number` | The narrowest a column gets, in rem |
+| `maxColumnWidth` | `number` | The widest a column gets, in rem |
+| `maxColumns` | `number` | At most this many columns |
+| `gap` | `number` | The space between tiles, in rem |
+
+## Lay out tiles
+
+Build each tile from a `Card` from `@dxos/react-ui`, so the gallery matches the rest of the app:
+
+<Snippet file="tile-guide-masonry" region="gallery" lang="tsx" />
+
+The story at the top of this page runs this example.

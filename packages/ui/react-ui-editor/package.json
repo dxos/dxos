@@ -37,6 +37,7 @@
     "src"
   ],
   "scripts": {
+    "typedoc": "typedoc --out typedoc",
     "vitest-ui": "vitest --ui"
   },
   "dependencies": {
@@ -83,6 +84,7 @@
     "lodash.defaultsdeep": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "typedoc": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

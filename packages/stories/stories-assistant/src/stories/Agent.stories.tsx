@@ -12,17 +12,12 @@ import * as Chat from '@dxos/assistant/Chat';
 import { Database, Feed, Filter } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Space } from '@dxos/react-client/echo';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { ContentBlock, Message } from '@dxos/types';
 import { concat } from '@dxos/util';
 
 import { AgentModule, StoryRole } from '../modules/index.ts';
-import {
-  AgentClaudePlugin,
-  ModuleContainer,
-  createDecorators,
-  findPromptEditor,
-  storyParameters,
-} from '../testing/index.ts';
+import { AgentClaudePlugin, createDecorators, findPromptEditor, storyParameters } from '../testing/index.ts';
 
 /**
  * The turn asks for one allowed tool call (Read), one that the M1 permission posture must refuse
@@ -91,9 +86,9 @@ const require_ = <T,>(value: T | undefined, message: string): T => {
   return value;
 };
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Agent',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
   // Spawns the real SDK and spends real tokens. `manual` is the repo's opt-in tag (vitest.tags.ts),
   // skipped unless DX_RUN_MANUAL_TESTS=1 — which `moon run stories-assistant:test-storybook-live`
@@ -103,7 +98,7 @@ const meta: Meta<typeof ModuleContainer> = {
 
 export default meta;
 
-type Story = StoryObj<typeof ModuleContainer>;
+type Story = StoryObj<typeof ModuleContainer.Root>;
 
 /**
  * Drives a real Claude Agent SDK turn through the sidecar and appends the projected messages onto

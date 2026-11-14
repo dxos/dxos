@@ -19,11 +19,62 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./modules": {
-      "source": "./src/modules/index.ts",
-      "types": "./dist/types/src/modules/index.d.ts",
-      "import": "./dist/lib/modules/index.mjs"
-    }
+    "./Cell": {
+      "source": "./src/Cell.ts",
+      "types": "./dist/types/src/Cell.d.ts",
+      "import": "./dist/lib/ns/Cell.mjs"
+    },
+    "./ModuleContainer": {
+      "source": "./src/ModuleContainer.ts",
+      "types": "./dist/types/src/ModuleContainer.d.ts",
+      "import": "./dist/lib/ns/ModuleContainer.mjs"
+    },
+    "./ModuleSurfacesPlugin": {
+      "source": "./src/ModuleSurfacesPlugin.ts",
+      "types": "./dist/types/src/ModuleSurfacesPlugin.d.ts",
+      "import": "./dist/lib/ns/ModuleSurfacesPlugin.mjs"
+    },
+    "./StoryAiPlugin": {
+      "source": "./src/StoryAiPlugin.ts",
+      "types": "./dist/types/src/StoryAiPlugin.d.ts",
+      "import": "./dist/lib/ns/StoryAiPlugin.mjs"
+    },
+    "./StoryEmbed": {
+      "source": "./src/StoryEmbed.tsx",
+      "types": "./dist/types/src/StoryEmbed.d.ts",
+      "import": "./dist/lib/ns/StoryEmbed.mjs"
+    },
+    "./StoryHarness": {
+      "source": "./src/StoryHarness.ts",
+      "types": "./dist/types/src/StoryHarness.d.ts",
+      "import": "./dist/lib/ns/StoryHarness.mjs"
+    },
+    "./StoryLayout": {
+      "source": "./src/StoryLayout.ts",
+      "types": "./dist/types/src/StoryLayout.d.ts",
+      "import": "./dist/lib/ns/StoryLayout.mjs"
+    },
+    "./StoryModules": {
+      "source": "./src/StoryModules.ts",
+      "types": "./dist/types/src/StoryModules.d.ts",
+      "import": "./dist/lib/ns/StoryModules.mjs"
+    },
+    "./StoryPeers": {
+      "source": "./src/StoryPeers.ts",
+      "types": "./dist/types/src/StoryPeers.d.ts",
+      "import": "./dist/lib/ns/StoryPeers.mjs"
+    },
+    "./StorySnapshot": {
+      "source": "./src/StorySnapshot.ts",
+      "types": "./dist/types/src/StorySnapshot.d.ts",
+      "import": "./dist/lib/ns/StorySnapshot.mjs"
+    },
+    "./StoryStagePlugin": {
+      "source": "./src/StoryStagePlugin.ts",
+      "types": "./dist/types/src/StoryStagePlugin.d.ts",
+      "import": "./dist/lib/ns/StoryStagePlugin.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -31,11 +82,13 @@
     "src"
   ],
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
@@ -51,6 +104,7 @@
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -62,13 +116,14 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-trace": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "vite": "catalog:"

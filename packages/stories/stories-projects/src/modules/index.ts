@@ -4,7 +4,7 @@
 
 import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
-import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
+import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 
 import { MailboxModule } from './MailboxModule.tsx';
 import { ProjectModule, type ProjectModuleProps } from './ProjectModule.tsx';
@@ -15,11 +15,11 @@ export * from './ProjectModule.tsx';
 /**
  * Custom roles for story panels with no equivalent composer plugin surface. Generic diagnostics
  * (config, database, logging, invocations, execution graph, routine) are spread in from
- * `ModuleRole`; object-bound panels use `Cell.article`/`Cell.companion` against real plugin
+ * `StoryModules.Role`; object-bound panels use `Cell.article`/`Cell.companion` against real plugin
  * surfaces instead of a role here.
  */
 export const StoryRole = {
-  ...ModuleRole,
+  ...StoryModules.Role,
 
   Project: Role.make<ProjectModuleProps>('org.dxos.storybook.role.project'),
   Mailbox: Role.make<Record<string, never>>('org.dxos.storybook.role.mailbox'),
@@ -27,7 +27,7 @@ export const StoryRole = {
 
 /** React surfaces for this package's panels, keyed by `StoryRole` tokens, plus the generic ones. */
 export const moduleSurfaces: Surface.Definition[] = [
-  ...commonSurfaces,
+  ...StoryModules.surfaces,
 
   Surface.create({
     id: 'role.project',

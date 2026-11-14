@@ -70,7 +70,6 @@ const plexRedirects = Object.fromEntries(
 );
 
 const redirects: Record<string, string> = {
-  '/docs': '/docs/echo/overview/',
   '/docs/halo/introduction': '/docs/halo/overview/',
   '/docs/halo/typescript': '/docs/halo/api/identity/',
   // Section roots were `welcome` pages before they were titled Overview.
@@ -212,6 +211,8 @@ export default defineConfig({
           path.join(rootDir, '{packages,tools}/**/dist/**/*.{mjs,html}'),
           path.join(rootDir, '{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
           path.join(import.meta.dirname, 'src/demos/**/*.{ts,tsx}'),
+          path.join(import.meta.dirname, 'src/echo/snippets/tile-*.tsx'),
+          path.join(import.meta.dirname, 'src/tile-tutorial/**/*.{ts,tsx}'),
         ],
         scanPaths: [path.join(rootDir, 'packages/ui/ui-icons/src/index.ts')],
       }),
@@ -259,7 +260,7 @@ export default defineConfig({
         // The sidebar folds into a menu below 72rem; see `PageFrame.astro`.
         PageFrame: './src/components/PageFrame.astro',
         PageTitle: './src/components/PageTitle.astro',
-        // Lists the topics with the DXOS brand marks; see `SidebarTopics.astro`.
+        // Drops the topic list; the header switches topics. See `topic-nav/TopicNav.astro`.
         Sidebar: './src/components/Sidebar.astro',
         // TODO(wittjosiah): Uncomment to link logo to home page.
         // SiteTitle: './src/components/CustomSiteTitle.astro',
@@ -296,18 +297,46 @@ export default defineConfig({
               items: sidebarFromSpec(specPages, 'HALO'),
             },
             {
+              id: 'mesh',
+              label: 'MESH',
+              link: '/docs/mesh/overview/',
+              items: sidebarFromSpec(specPages, 'MESH'),
+            },
+            {
+              id: 'edge',
+              label: 'EDGE',
+              link: '/docs/edge/overview/',
+              items: sidebarFromSpec(specPages, 'EDGE'),
+            },
+            {
+              id: 'sage',
+              label: 'SAGE',
+              link: '/docs/sage/overview/',
+              items: sidebarFromSpec(specPages, 'SAGE'),
+            },
+            {
               id: 'plex',
               label: 'PLEX',
               link: '/docs/plex/overview/',
               items: sidebarFromSpec(specPages, 'PLEX'),
+            },
+            {
+              id: 'tile',
+              label: 'TILE',
+              link: '/docs/tile/overview/',
+              items: sidebarFromSpec(specPages, 'TILE'),
             },
           ],
           // Pages missing from a section's sidebar, such as the old plugin tutorial, still belong to it.
           {
             topics: {
               echo: ['/docs/echo/**'],
-              plex: ['/docs/plex/**'],
+              edge: ['/docs/edge/**'],
               halo: ['/docs/halo/**'],
+              mesh: ['/docs/mesh/**'],
+              plex: ['/docs/plex/**'],
+              sage: ['/docs/sage/**'],
+              tile: ['/docs/tile/**'],
             },
           },
         ),

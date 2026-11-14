@@ -1,0 +1,33 @@
+---
+import { ApiStory } from '../tile/ApiStory.tsx';
+
+interface Props {
+  /** `<package>/<namespace>`, a key of `STORIES` in `tile/ApiStory.tsx`. */
+  id: string;
+  height?: string;
+  /** Keep the frame in the text column, for a story narrower than it. */
+  narrow?: boolean;
+}
+
+const { id, height = '28rem', narrow = false } = Astro.props;
+---
+
+<!-- The namespace's own story from its package, at the top of its API page [D-298]. -->
+<div class:list={['api-story dx-island not-content', { 'dx-wide': !narrow }]} style={{ height }}>
+  <ApiStory id={id} client:only="react" />
+</div>
+
+<style>
+  .api-story {
+    position: relative;
+    margin-block: 0 1.5rem;
+    border: 1px solid var(--c-hairline);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+  }
+
+  /* Storybook's frames (the size rows, the centred and column layouts) show the page through; components keep their surfaces. */
+  .api-story :global(:is([data-testid^='size-'], .dx-deck-surface, .fixed.inset-0 > .dx-base-surface)) {
+    background: transparent;
+  }
+</style>

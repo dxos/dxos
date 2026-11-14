@@ -185,7 +185,7 @@ cannot keep a dev server running, so start it yourself once the chat asks, from 
 Server** as above.
 
 The **Composer Plugin (Sandbox)** template, contributed by the Sandbox plugin, runs the same example against any
-bundled Composer, deployed ones included: the agent builds in an EDGE sandbox with `@dxos/*` installed from
+bundled Composer, deployed ones included: the agent builds in an [EDGE](/docs/edge/concepts/compute/) sandbox with `@dxos/*` installed from
 [pkg.pr.new](https://pkg.pr.new) at the commit the app was built from, serves `dist/` from the container, and
 offers the manifest URL of the port it exposed.
 

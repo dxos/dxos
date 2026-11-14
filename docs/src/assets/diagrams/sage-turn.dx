@@ -1,0 +1,17 @@
+diagram kind=sequence
+node Person role=actor
+node Chat "Chat" ref="packages/core/compute/assistant/src/types/Chat.ts"
+node Agent "Agent process" ref="packages/core/compute/agent-runtime/src/agent-service/agent-process.ts"
+node Model "Model" ref="packages/core/compute/ai/src/AiService.ts"
+node Space "ECHO objects"
+edge Person -> Chat "message"
+edge Chat sends Agent "input"
+edge Agent calls Model "chat and skills"
+edge Model returns Agent "operation call"
+fragment loop "until it answers" {
+  edge Agent calls Space "invoke operation"
+  edge Space returns Agent "result"
+  edge Agent calls Model "result"
+  edge Model returns Agent "next step"
+}
+edge Agent -> Chat "answer"

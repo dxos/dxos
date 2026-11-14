@@ -1,0 +1,67 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../plugins/plugin-canvas"
+    },
+    {
+      "path": "../../plugins/plugin-explorer"
+    },
+    {
+      "path": "../../plugins/plugin-illustrator"
+    },
+    {
+      "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-mermaid"
+    },
+    {
+      "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-table"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../storybook-testing"
+    }
+  ]
+}

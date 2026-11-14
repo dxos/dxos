@@ -18,7 +18,7 @@ export const collections = {
           .object({
             section: z.string(),
             tagline: z.string(),
-            background: z.enum(['dxos', 'echo', 'halo', 'kube', 'mesh']),
+            background: z.enum(['dxos', 'echo', 'edge', 'halo', 'mesh', 'plex', 'sage', 'tile']),
           })
           .optional(),
       }),

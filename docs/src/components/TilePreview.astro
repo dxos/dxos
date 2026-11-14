@@ -1,0 +1,31 @@
+---
+import { TileDemo } from '../tile/TileDemo.tsx';
+
+interface Props {
+  /** A key of `PREVIEWS` in `tile/TileDemo.tsx`. */
+  id: string;
+  /** A fixed height, for a preview that fills its frame, such as a panel. */
+  height?: string;
+}
+
+const { id, height } = Astro.props;
+---
+
+<!-- An island in the page, never an iframe [F-16.10]; `.dx-island` is where the page's styles stop. -->
+<div class="tile-preview dx-wide dx-island not-content" data-fill={height ? '' : undefined} style={height ? { height } : undefined}>
+  <TileDemo id={id} client:only="react" />
+</div>
+
+<style>
+  .tile-preview {
+    margin-block: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--c-hairline);
+    border-radius: var(--c-radius);
+  }
+
+  .tile-preview[data-fill] {
+    padding: 0;
+    overflow: hidden;
+  }
+</style>

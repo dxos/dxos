@@ -1,0 +1,53 @@
+---
+title: Translations and icons
+description: Every string a component shows is translatable, and every icon is a symbol in one sprite.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+TILE components show no hard-coded text and load no icon files of their own. Strings come from translation resources,
+and icons from a sprite that the build assembles.
+
+## Model
+
+**Resources by namespace.** A translation resource maps a language to namespaces, and each namespace to keys. react-ui's
+own strings, such as the "No items" of an empty state, are in the `@dxos/react-ui` namespace of its `translations`
+export. An app or plugin adds its own namespace:
+
+<Snippet file="tile-guides" region="resource" lang="tsx" />
+
+**The provider merges them.** `Theme.Provider` takes every resource in `resourceExtensions`, so pass react-ui's together
+with your own:
+
+<Snippet file="tile-guides" region="provider" lang="tsx" />
+
+**`useTranslation` reads them.** It returns `t` for one namespace. Keys take [i18next](https://www.i18next.com)
+interpolation and plurals, so `count.label` with `{ count: 3 }` picks the `_other` form.
+
+<Snippet file="tile-guides" region="use-translation" lang="tsx" />
+
+**Icon names.** An icon is named `ph--<name>--<weight>`, from the [Phosphor](https://phosphoricons.com) set:
+`ph--house--regular`, `ph--heart--fill`. The weights are `thin`, `light`, `regular`, `bold`, `fill` and `duotone`.
+DXOS's own marks use `dx--<name>--regular`.
+
+**The sprite.** `IconsPlugin` finds every icon name in your sources and in the scanned packages, and writes their SVGs
+into one sprite, `/icons.svg`. `Theme.Provider` loads the sprite once into the page, and `Icon.Icon` draws a `<use>` of
+the symbol it names.
+
+<Snippet file="tile-components" region="icons" lang="tsx" />
+
+<TilePreview id="icons" />
+
+## Behavior
+
+- A component that takes `icon` and `label` uses the label as the button's accessible name and, for an icon-only
+  button, as its tooltip. Pass a translated string.
+- A name the build did not find, such as one built from a string at run time, is fetched on its own the first time it
+  is drawn, from the app's icon-set route (such as `/phosphor/regular/plus.svg`). Composer serves that route, so icons
+  from a plugin installed at run time still appear. An app that serves no such route shows a blank icon.
+
+## Limits
+
+- A missing key renders as the key itself, such as `add.label`. Check that the resource is in `resourceExtensions`.
+- Name icons in full in your code, as with classes, so the build finds them and the sprite has them from the start.

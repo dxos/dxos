@@ -1,0 +1,45 @@
+---
+title: Input
+description: "Text fields, checkboxes, switches, sliders and the frame they sit in."
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+```ts
+import * as Input from '@dxos/react-ui/Input';
+```
+
+`Input` holds the controls. [Field](/docs/tile/api/field/) gives a control its label, help text and error, and
+[Select](/docs/tile/api/select/) picks one value from a list.
+
+<Snippet file="tile-components" region="inputs" lang="tsx" />
+
+<TilePreview id="inputs" />
+
+## `Input`
+
+| Part              | What it is                                                                     |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `Input.Root`      | A text input. Takes the props of an `<input>`                                  |
+| `Input.Textarea`  | Multi-line text                                                                |
+| `Input.Number`    | A number, with steppers                                                        |
+| `Input.Password`  | A password, with a button to show it                                           |
+| `Input.Pin`       | A code of several single-character boxes                                       |
+| `Input.Date`      | A date, a time, or both                                                        |
+| `Input.Checkbox`  | A checkbox. `label` for its visible label                                      |
+| `Input.Switch`    | An on/off switch. `label`, and `indeterminate` for a mixed state               |
+| `Input.Slider`    | A value on a range                                                             |
+| `Input.Frame`     | The frame a control sits in, for building a control of your own                |
+
+`Input.Root` also takes:
+
+| Prop         | Type                  | Effect                                                                      |
+| ------------ | --------------------- | --------------------------------------------------------------------------- |
+| `start`      | React node            | Content before the text, such as an icon or a currency                      |
+| `end`        | React node            | Content after the text, such as a unit or an icon button                    |
+| `copyable`   | boolean               | A button that copies the value; replaces `end`                              |
+| `variant`    | `'default' \| 'subdued' \| 'mono'` | `subdued` drops the well; `mono` is for keys and ids           |
+| `noAutoFill` | boolean               | Ask password managers not to offer to fill it, such as for a search box     |
+
+Inside a [`Field.Root`](/docs/tile/api/field/), a control takes the field's id, label and description, so it needs no `aria-label`.

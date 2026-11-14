@@ -1,0 +1,151 @@
+---
+// The docs home: one card per section, each its suite hero art cropped to the mark, with the section's name [D-272].
+import { SUITE_BACKGROUNDS, SUITE_ORDER } from './topic-nav/suite.ts';
+import { TOPICS } from './topic-nav/topics.ts';
+
+// Every suite mark is centred at (1440, 540) of the 1920 x 1080 art. A window around it keeps the mark whole, with room
+// for the rays to run out to the card's edges; ECHO's two-wide card gets a window twice as wide [D-272].
+const WIDE = 'echo';
+const crop = (svg: string, wide: boolean) =>
+  svg
+    .replace(/viewBox="[^"]*"/, wide ? 'viewBox="0 90 2880 900"' : 'viewBox="720 90 1440 900"')
+    .replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" aria-hidden="true" ');
+
+const cards = SUITE_ORDER.map((id) => {
+  const topic = TOPICS.find((topic) => topic.id === id);
+  return {
+    id,
+    wide: id === WIDE,
+    label: topic?.label ?? id.toUpperCase(),
+    href: topic?.href,
+    description: topic?.description,
+    art: crop(SUITE_BACKGROUNDS[id], id === WIDE),
+  };
+});
+---
+
+<ul class="docs-home not-content">
+  {
+    cards.map((card) => (
+      <li class:list={{ wide: card.wide }}>
+        <a href={card.href}>
+          <div class="art" set:html={card.art} />
+          <div class="text">
+            <span class="name">{card.label}</span>
+            <span class="description">{card.description}</span>
+          </div>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  :global(.docs-home-intro) {
+    max-width: 46rem;
+    font-size: var(--sl-text-lg);
+    color: var(--sl-color-gray-2);
+  }
+
+  .docs-home {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (max-width: 64rem) {
+    .docs-home {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 32rem) {
+    .docs-home {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  a {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0;
+    background: rgb(29, 31, 32);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  a:hover {
+    border-color: var(--sl-color-accent);
+  }
+
+  .art {
+    aspect-ratio: 16 / 10;
+  }
+
+  /* ECHO spans two columns wherever there are two or more; its art grows to the row's height rather than its own ratio. */
+  @media (min-width: 32.01rem) {
+    .wide {
+      grid-column: span 2;
+    }
+
+    .wide .art {
+      aspect-ratio: auto;
+      flex: 1;
+      min-height: 0;
+    }
+  }
+
+  .art :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem 1rem;
+  }
+
+  .name {
+    font-family: 'Sharp Sans', var(--sl-font);
+    font-size: var(--sl-text-2xl);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .description {
+    font-size: var(--sl-text-sm);
+    color: rgb(255 255 255 / 0.7);
+  }
+
+  /* Light: the art's ground is the page's own, as on the Overview heroes [D-253]; the rays keep the section's color. */
+  :global(:root[data-theme='light']) a {
+    --dx-bg-fill: var(--c-bg);
+    --dx-bg-icon: var(--c-fg);
+    background: var(--c-bg);
+  }
+
+  :global(:root[data-theme='light']) .name {
+    color: var(--c-fg);
+  }
+
+  :global(:root[data-theme='light']) .description {
+    color: var(--c-muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    a {
+      transition: border-color 0.15s;
+    }
+  }
+</style>

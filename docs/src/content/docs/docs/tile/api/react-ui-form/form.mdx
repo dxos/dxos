@@ -1,0 +1,70 @@
+---
+title: Form
+description: A form built from an Effect schema.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../../components/TilePreview.astro';
+
+<ApiStory id="react-ui-form/form" height="28rem" />
+
+```ts
+import { Form, ObjectForm } from '@dxos/react-ui-form';
+```
+
+```sh
+npm install @dxos/react-ui-form
+```
+
+`Form` builds a form from an Effect schema. Each property becomes a field of the right kind, its `title` annotation
+becomes the field's label, and the schema's checks become the form's validation. Change the schema and the form
+follows. Register the package's strings from `@dxos/react-ui-form/translations` with the theme provider.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Form.Root` | Takes the `schema` and the `values` or `defaultValues`; `onSave` gets the checked values |
+| `Form.Viewport` | The form's container; with `scroll` it fills its parent and scrolls |
+| `Form.Content` | The `form` element |
+| `Form.Fields` | A field for each property of the schema, or of the properties in `include` |
+| `Form.Field` | One row, bound to the form at `path` or holding controls of your own |
+| `Form.FieldSet` | A labelled group of fields, which can fold |
+| `Form.Layout` | The schema's fields laid out by a template |
+| `Form.Actions` | Save and Cancel |
+| `Form.Submit` | A submit button alone, with a label and icon of your own |
+| `Form.ErrorText` | The text of a field's error |
+
+`ObjectForm` is a `Form` over an ECHO object: it writes each change to the object as the user makes it.
+
+## Describe the fields
+
+A schema for a contact. `Format.Email` asks for an email field, a set of literals asks for a select, and `Format.Text`
+asks for a text area:
+
+<Snippet file="tile-guide-forms" region="schema" lang="tsx" />
+
+## Render the form
+
+`Form.Fields` renders a field for each property, and `Form.Actions` adds Save and Cancel. A field shows its error once
+the user leaves it, and Save is disabled while a field the user touched has one. Save checks every value against the
+schema, then calls `onSave` with them:
+
+<Snippet file="tile-guide-forms" region="form" lang="tsx" />
+
+<TilePreview id="form-new-contact" height="26rem" />
+
+To show some of the fields, list them in `include`. They keep the schema's order; pass `sort` to reorder them:
+
+<Snippet file="tile-guide-forms" region="include" lang="tsx" />
+
+## Edit an ECHO object
+
+`ObjectForm` takes the type and the object and needs no Save button. A property that refers to another object gets a
+picker of the objects of that type. The types from ECHO's [Defining types](/docs/echo/learn/defining-types/) page work as
+they are:
+
+<Snippet file="tile-guide-forms" region="object" lang="tsx" />
+
+[Connect to ECHO](/docs/tile/learn/connect-to-echo/) uses `ObjectForm` for the contacts screen's edit dialog.

@@ -1,0 +1,51 @@
+---
+title: TILE in a PLEX plugin
+description: How a plugin's components use TILE.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+A [PLEX](/docs/plex/overview/) plugin draws its UI with TILE. Composer already provides the theme, the provider, the
+icon sprite and dark mode, so a plugin skips [Installation](/docs/tile/learn/installation/) and uses the components directly.
+This guide covers the two rules that keep a plugin's UI consistent with the rest of the app.
+
+## Components take props; containers connect them
+
+A plugin splits its UI into two kinds of React components:
+
+- A **component**, under `src/components/`, renders from its props. It imports TILE and nothing from
+  `@dxos/app-framework` or `@dxos/app-toolkit`, so it can be shown in a story and reused.
+- A **container**, under `src/containers/`, is what a [surface](/docs/plex/concepts/surfaces/) renders. It reads
+  capabilities, queries the space and invokes operations, then passes the results to components as props.
+
+<Snippet file="tile-guides" region="component" lang="tsx" />
+
+The container for this list would query the space's contacts and pass each one's id and name, and an `onAdd` that invokes the
+plugin's create operation.
+
+## The container shape
+
+A container that fills a plank or a dialog is a `Panel`: a toolbar in the header and a scrolling body. See
+[Layout](/docs/tile/concepts/layout/) and [Panel](/docs/tile/api/panel/). Lists, forms and stacks inside it own their
+spacing, so add no padding around them.
+
+A plugin's toolbar is usually built from its actions with `@dxos/react-ui-menu`, so that other plugins can add to it.
+See [ActionToolbar](/docs/tile/api/react-ui-menu/action-toolbar/).
+
+## The plugin's strings
+
+A plugin keeps its strings in a `translations.ts` resource, in a namespace named after the plugin's id, and registers
+it in `dx.config.ts`:
+
+```ts title="dx.config.ts"
+AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+```
+
+Components read them with `useTranslation`. See [Translations and icons](/docs/tile/concepts/translations-and-icons/).
+
+## Checklist
+
+- Colors and sizes come from tokens and the `size` prop, never raw values.
+- Overrides go through `classNames`.
+- Every string a user sees comes from the plugin's translations.
+- Icons are named in full, `ph--<name>--<weight>`.

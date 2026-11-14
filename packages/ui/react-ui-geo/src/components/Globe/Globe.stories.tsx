@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { type FeatureCollection, type Geometry, type Position } from 'geojson';
 import { Leva } from 'leva';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -448,4 +448,80 @@ export const VersorDrag: Story = {
     rotation: initialRotation,
     styles: defaultStyles,
   },
+};
+
+//
+// Docs
+//
+
+const TRIP = [
+  { lat: 51.5074, lng: -0.1278 },
+  { lat: 40.7128, lng: -74.006 },
+  { lat: 35.6762, lng: 139.6503 },
+  { lat: -33.8688, lng: 151.2093 },
+  { lat: -23.5505, lng: -46.6333 },
+];
+
+const TRIP_LEGS = TRIP.map((source, index) => ({ source, target: TRIP[(index + 1) % TRIP.length] }));
+
+const TRIP_STYLES: Record<'light' | 'dark', StyleSet> = {
+  light: {
+    background: { fillStyle: '#EEE' },
+    water: { fillStyle: '#555' },
+    land: { fillStyle: '#999' },
+    line: { strokeStyle: '#b91c1c', lineWidth: 1, lineDash: [4, 6] },
+    point: { fillStyle: '#b91c1c', pointRadius: 3 },
+    arc: { strokeStyle: '#f97316', lineWidth: 2 },
+    cursor: { fillStyle: '#f97316', pointRadius: 3 },
+  },
+  dark: {
+    background: { fillStyle: '#111' },
+    water: { fillStyle: '#123E6A' },
+    land: { fillStyle: '#032153' },
+    line: { strokeStyle: '#fbbf24', lineWidth: 1, lineDash: [4, 6] },
+    point: { fillStyle: '#f87171', pointRadius: 3 },
+    arc: { strokeStyle: '#fbbf24', lineWidth: 2 },
+    cursor: { fillStyle: '#fbbf24', pointRadius: 3 },
+  },
+};
+
+const TripStory = () => {
+  const themeMode = Hooks.useThemeMode();
+  const [topology] = Hooks.useAsyncState(() => loadTopology('110m'), []);
+  const [controller, setController] = useState<GlobeController | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const handleZoom = useGlobeZoomHandler(controller);
+  const styles = TRIP_STYLES[themeMode];
+  const [running, setRunning] = useTour(controller, TRIP, { loop: true, duration: 2_000, styles });
+  useDrag(controller, {
+    onUpdate: ({ type }) => {
+      setDragging(type !== 'end');
+      if (type === 'start') {
+        setRunning(false);
+      }
+    },
+  });
+
+  // The tour needs a mounted canvas; it resumes after a pause once a lap ends or the user lets go.
+  useEffect(() => {
+    if (running || dragging || !controller?.canvas) {
+      return;
+    }
+    const timeout = setTimeout(() => setRunning(true), 1_500);
+    return () => clearTimeout(timeout);
+  }, [controller, running, dragging]);
+
+  return (
+    <Globe.Root zoom={1.1} rotation={[0, -20, 0]} ref={setController}>
+      <Globe.Viewport>
+        <Globe.Canvas topology={topology} styles={styles} features={{ points: TRIP, lines: TRIP_LEGS }} />
+        <Globe.Zoom onAction={handleZoom} />
+      </Globe.Viewport>
+    </Globe.Root>
+  );
+};
+
+/** The docs' globe: flies a trip from stop to stop; drag to take over, and the tour resumes after. */
+export const Docs: Story = {
+  render: () => <TripStory />,
 };

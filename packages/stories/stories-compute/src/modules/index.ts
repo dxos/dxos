@@ -4,7 +4,7 @@
 
 import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
-import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
+import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 
 import { AgentPromptModule, AgentsModule } from './AgentModules.tsx';
 import { CommandModule } from './CommandModule.tsx';
@@ -26,7 +26,7 @@ export * from './ProcessesModule.tsx';
 
 /** Roles for this package's story panels, plus the generic diagnostic ones. */
 export const StoryRole = {
-  ...ModuleRole,
+  ...StoryModules.Role,
 
   Command: Role.make<Record<string, never>>('org.dxos.storybook.role.compute.command'),
   Processes: Role.make<Record<string, never>>('org.dxos.storybook.role.compute.processes'),
@@ -39,7 +39,7 @@ export const StoryRole = {
 
 /** React surfaces for this package's panels, keyed by `StoryRole` tokens, plus the generic ones. */
 export const moduleSurfaces: Surface.Definition[] = [
-  ...commonSurfaces,
+  ...StoryModules.surfaces,
 
   Surface.create({
     id: 'role.compute.command',

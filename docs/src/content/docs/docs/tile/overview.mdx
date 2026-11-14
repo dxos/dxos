@@ -1,0 +1,47 @@
+---
+title: Overview
+description: What TILE is, the core and component packages, and where to start.
+welcome:
+  section: TILE
+  tagline: Design system and UI components.
+  background: tile
+---
+
+import TileGrid from '../../../../components/TileGrid.astro';
+
+TILE is a design system for React apps: accessible, themed UI components, and the tokens and build plugin behind them.
+Its core is `@dxos/react-ui`, which needs `@dxos/ui-theme` for its styles and nothing else from DXOS, so it works in any
+React app. Composer and its plugins draw their UI with it.
+
+Each demo below is a TILE component package running in this page, on sample data and with no database. Try them: drag
+the cards, edit the cells, move the boxes. They follow the page's light or dark theme, and each card's header opens the
+component's API page.
+
+<TileGrid />
+
+## Core and component packages
+
+| Package                               | What it holds                                                                               |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `@dxos/react-ui`                      | The components: buttons, inputs, overlays, menus, layout, status, icons, and the theme provider |
+| `@dxos/ui-theme`                      | The color and size tokens, the cascade layers, and the Vite plugin that generates the styles |
+| The other `@dxos/react-ui-*` packages | Lists, forms, menus, editors, tables and more, built on the core                            |
+
+The API section documents the core, then each component package in a group of its own, one page per component, such as
+[Board](/docs/tile/api/react-ui-mosaic/board/) in `@dxos/react-ui-mosaic`.
+
+## How these pages are organized
+
+- **Start here**: [Why TILE?](/docs/tile/why-tile/) makes the case for the design, and
+  [Build with a coding agent](/docs/tile/build-with-a-coding-agent/) gives your agent the skills DXOS uses.
+- **Learning path** builds a contacts screen step by step, starting at
+  [The TILE component](/docs/tile/learn/the-tile-component/). Its [Installation](/docs/tile/learn/installation/) page
+  adds TILE to a Vite app.
+- **Core concepts** describe one idea each: [Theme and tokens](/docs/tile/concepts/theme-and-tokens/),
+  [Composite components](/docs/tile/concepts/composite-components/), [Layout](/docs/tile/concepts/layout/),
+  [Density and sizes](/docs/tile/concepts/density-and-sizes/),
+  [Focus and keyboard](/docs/tile/concepts/focus-and-keyboard/) and
+  [Translations and icons](/docs/tile/concepts/translations-and-icons/).
+- **API** has one page per family of core components, then a group per component package with a page for each of
+  its components, each opening with the component running.
+- **Guides** cover theming, using TILE in a [PLEX](/docs/plex/overview/) plugin, and stories and tests.

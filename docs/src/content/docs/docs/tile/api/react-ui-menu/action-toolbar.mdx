@@ -1,0 +1,60 @@
+---
+title: ActionToolbar
+description: A toolbar drawn from a list of actions.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../../components/TilePreview.astro';
+
+<ApiStory id="react-ui-menu/action-toolbar" height="12rem" />
+
+```ts
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+```
+
+```sh
+npm install @dxos/react-ui-menu @effect/atom-react
+```
+
+`ActionToolbar` draws a list of actions as a toolbar. When the row is too narrow, it moves actions into an overflow menu. An action is a label, an icon and the function it runs. You build the list with `MenuBuilder` and
+`useMenuBuilder`, and because the list is data, other code can add to it, which is how Composer plugins add buttons to
+each other's toolbars. The actions live in an atom, so wrap your app in `RegistryProvider` from
+`@effect/atom-react/RegistryContext`, and register the strings from `@dxos/react-ui-menu/translations`.
+
+## Props
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `...menu` | `MenuActions` | The actions, from `useMenuBuilder` |
+| `attendableId` | `string` | The toolbar is dimmed while this surface lacks the user's attention |
+| `alwaysActive` | `boolean` | Never dimmed |
+| `customActions` | `Atom<ActionGraphProps>` | Actions another component adds to this toolbar |
+
+## Build a toolbar
+
+`useMenuBuilder` takes a function that builds the actions, and the values it depends on. Give an action `iconOnly` to
+show only its icon, with the label as its tooltip. `placement: { zone: 'end' }` puts it at the far end of the row. Pass
+`alwaysActive` when the toolbar does not belong to a surface that tracks the user's attention:
+
+<Snippet file="tile-guide-menus" region="toolbar" lang="tsx" />
+
+<TilePreview id="format-toolbar" height="6rem" />
+
+## Show state
+
+A switch shows whether something is on. Pass the state as `checked`, and list it in the dependencies so the actions are
+rebuilt when it changes:
+
+<Snippet file="tile-guide-menus" region="switch" lang="tsx" />
+
+<TilePreview id="view-toolbar" height="4rem" />
+
+## In a plugin
+
+In a Composer plugin, other plugins add actions to an object's node in the [app graph](/docs/plex/guides/app-graph/).
+`graphActions` reads the ones marked for the toolbar and adds them to yours. Pass the surface's `attendableId`, so the
+toolbar is active while its surface has the user's attention. `onAction` runs a graph action; plugin-graph's
+`useActionRunner` gives you one:
+
+<Snippet file="tile-guide-menus" region="plugin" lang="tsx" />

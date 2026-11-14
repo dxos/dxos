@@ -1,10 +1,10 @@
 ---
 import { Code } from 'astro-expressive-code/components';
 
-import art from '../../../node_modules/@dxos/brand/assets/backgrounds/bg-echo-right.svg?raw';
 import Diagram from '../../components/Diagram.astro';
-import { EchoDemo } from '../../demos/EchoDemo.tsx';
 import SpecCite from '../../components/SpecCite.astro';
+import { SUITE_BACKGROUNDS } from '../../components/topic-nav/suite.ts';
+import { StoryDemo } from '../../demos/StoryDemo.tsx';
 import WebflowFooter from '../../components/WebflowFooter.astro';
 import WebflowNav from '../../components/WebflowNav.astro';
 import { INSTALL, guarantees, reasons, routes, steps } from '../../echo/home.ts';
@@ -14,27 +14,30 @@ import WebflowLayout from '../../layouts/WebflowLayout.astro';
 import '../../styles/tokens.generated.css';
 import '../../styles/fonts.css';
 
-// The brand art's icon, at its own size, with its rays lengthened to run past the hero's edges; the hero clips them.
-const ICON = { x: 1187, y: 270, width: 506, height: 540 };
-const CENTER = { x: ICON.x + ICON.width / 2, y: ICON.y + ICON.height / 2 };
-const RAY_LENGTH = 8;
+// ECHO's art and color come from the section suite, as on the docs heroes, so the two cannot diverge [D-288].
+const art = SUITE_BACKGROUNDS.echo;
+const OFFSET = Number(art.match(/translate\((-?[\d.]+),/)?.[1] ?? 0);
+const RAY_COLOR = art.match(/--dx-bg-lines, (rgb\([^)]+\))/)?.[1] ?? 'currentColor';
+const pointsOf = (d: string) =>
+  [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map(([, x, y]) => ({ x: Number(x) + OFFSET, y: Number(y) }));
 const pathsOf = (group: string) =>
   [...(art.match(new RegExp(`<g id="${group}"[\\s\\S]*?</g>`))?.[0] ?? '').matchAll(/\sd="([^"]+)"/g)].map(([, d]) => d);
-// A ray is lengthened along its own line only at the ends that leave the art; one the art starts inside it stays put.
-const VIEW = { width: 1920, height: 1080 };
-const leaves = ({ x, y }: { x: number; y: number }) => x <= 0 || y <= 0 || x >= VIEW.width || y >= VIEW.height;
-const rays = pathsOf('lines').map((d) => {
-  const [a, b] = [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map(([, x, y]) => ({ x: Number(x), y: Number(y) }));
-  const dx = (b.x - a.x) * RAY_LENGTH;
-  const dy = (b.y - a.y) * RAY_LENGTH;
-  const start = leaves(a) ? { x: a.x - dx, y: a.y - dy } : a;
-  const end = leaves(b) ? { x: b.x + dx, y: b.y + dy } : b;
-  return `M${start.x.toFixed(1)},${start.y.toFixed(1)} L${end.x.toFixed(1)},${end.y.toFixed(1)}`;
-});
-const icon = pathsOf('icon');
+const shift = (d: string) => d.replace(/(-?[\d.]+),(-?[\d.]+)/g, (_, x, y) => `${(Number(x) + OFFSET).toFixed(1)},${y}`);
+const icon = pathsOf('icon').map(shift);
+// The icon's box; the hero's view box and the rays' fade are sized from it.
+const iconPoints = pathsOf('icon').flatMap(pointsOf);
+const ICON = {
+  x: Math.min(...iconPoints.map((p) => p.x)),
+  y: Math.min(...iconPoints.map((p) => p.y)),
+  width: Math.max(...iconPoints.map((p) => p.x)) - Math.min(...iconPoints.map((p) => p.x)),
+  height: Math.max(...iconPoints.map((p) => p.y)) - Math.min(...iconPoints.map((p) => p.y)),
+};
+const CENTER = { x: ICON.x + ICON.width / 2, y: ICON.y + ICON.height / 2 };
+// The suite's rays already run past the art's edges.
+const rays = pathsOf('lines').map(shift);
 const FADE = 1.05 * ICON.height;
 
-/** The live demos shown, in order, by id in `DEMOS`. */
+/** The live demos shown, in order, by id in `STORIES`. */
 const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
 ---
 <WebflowLayout
@@ -230,12 +233,12 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
               data-panel={id}
               data-active={index === 0 ? '' : undefined}
             >
-              <EchoDemo id={id} client:only="react">
+              <StoryDemo id={id} client:only="react">
                 <div slot="fallback" class="echo-demo-loading" role="status">
                   <span class="echo-demo-spinner" aria-hidden="true" />
                   Loading live demo…
                 </div>
-              </EchoDemo>
+              </StoryDemo>
             </div>
           ))}
         </div>
@@ -322,7 +325,9 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   }
 </script>
 
-<style>
+<style define:vars={{ echoGreen: RAY_COLOR }}>
+  /* --echoGreen is ECHO's ray color from the suite art [D-288]; text takes a lighter tint to stay legible on the dark ground. */
+
   .echo-hero {
     position: relative;
     overflow: hidden;
@@ -350,11 +355,11 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   }
 
   .echo-eyebrow {
-    color: var(--base-color-system--purple);
+    color: color-mix(in oklab, var(--echoGreen), white 40%);
   }
 
   .echo-highlight {
-    border-bottom: 2px solid var(--base-color-system--purple);
+    border-bottom: 2px solid var(--echoGreen);
   }
 
   .echo-install {
@@ -411,12 +416,12 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
 
   .echo-copy[data-copied] .echo-copied-icon {
     visibility: visible;
-    color: var(--base-color-system--purple);
+    color: color-mix(in oklab, var(--echoGreen), white 40%);
   }
 
   .button.echo-primary {
-    border-color: var(--base-color-system--purple);
-    background-color: var(--base-color-system--purple);
+    border-color: var(--echoGreen);
+    background-color: var(--echoGreen);
   }
 
   /* The icon keeps a bounded size in the column beside the copy; its rays run out past it and fade. */
@@ -430,7 +435,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   }
 
   .echo-mark-rays {
-    stroke: rgb(150 37 79);
+    stroke: var(--echoGreen);
   }
 
   .echo-mark-icon {
@@ -541,7 +546,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   }
 
   .echo-tablist [role='tab'][aria-selected='true'] {
-    border-bottom-color: var(--base-color-system--purple);
+    border-bottom-color: var(--echoGreen);
     color: #fff;
   }
 
@@ -558,11 +563,6 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   .echo-panels > [data-panel]:not([data-active]) {
     visibility: hidden;
     pointer-events: none;
-  }
-
-  /* The marketing pages have square corners; the docs keep their rounded code frames. */
-  .echo-step {
-    --ec-brdRad: 0;
   }
 
   /* The step and demo tabs are cards as wide as the frame below them, each with a sentence or two on what it shows. */
@@ -584,7 +584,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   }
 
   .echo-card-tabs .echo-tablist [role='tab'][aria-selected='true'] {
-    border-color: var(--base-color-system--purple);
+    border-color: var(--echoGreen);
     background-color: #ffffff0a;
   }
 
@@ -619,7 +619,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
     }
     .echo-card-tabs .echo-tablist [role='tab'][aria-selected='true'] {
       border-color: transparent;
-      border-bottom-color: var(--base-color-system--purple);
+      border-bottom-color: var(--echoGreen);
       background-color: transparent;
     }
     .echo-card-tabs .echo-tab-summary {
@@ -651,10 +651,6 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
 
   .echo-demo {
     height: 32rem;
-  }
-
-  .echo-demo :global([data-demo-frame]) {
-    border-radius: 0;
   }
 
   /* Until its island hydrates, a demo holds its frame's size, so the page does not shift when it arrives. */

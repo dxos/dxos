@@ -17,15 +17,17 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
 import { Text } from '@dxos/schema';
-import { Cell, addToRootCollection } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, findPromptEditor, storyParameters } from '../testing/index.ts';
+import { createDecorators, findPromptEditor, storyParameters } from '../testing/index.ts';
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Documents',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 
@@ -108,7 +110,7 @@ export const WithMarkdown: Story = {
       );
       // Register the documents in the space root collection so plugin-space builds app-graph nodes
       // for them — this is what makes the editor's comment toolbar (a graph action) resolvable.
-      addToRootCollection(space, [document, guide]);
+      StoryHarness.addToRootCollection(space, [document, guide]);
       return [
         [StoryRole.Chat],
         [Cell.article(document)],
@@ -161,7 +163,7 @@ export const WithSkills: Story = {
           instructions: Template.make({ source: 'Help manage the task list.' }),
         }),
       );
-      addToRootCollection(space, [document, skill]);
+      StoryHarness.addToRootCollection(space, [document, skill]);
       return [[StoryRole.Chat], [StoryRole.Tasks, Cell.article(skill)]];
     },
     onChatCreated: async ({ db, binder }) => {
@@ -220,7 +222,7 @@ export const WithScript: Story = {
       );
 
       await space.db.flush();
-      addToRootCollection(space, [script]);
+      StoryHarness.addToRootCollection(space, [script]);
       return [[StoryRole.Chat], [Cell.article(script)]];
     },
     onChatCreated: async ({ db, binder }) => {

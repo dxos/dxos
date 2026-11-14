@@ -1,0 +1,23 @@
+---
+title: Accordion
+description: "A stack of sections that open and close."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/accordion" height="12.75rem" narrow />
+
+```ts
+import * as Accordion from '@dxos/react-ui/Accordion';
+```
+
+Each item has a trigger row and a region it shows or hides. Any number of items may be open at once unless `multiple` is false.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Accordion.Root` | The stack of items |
+| `Accordion.Item` | One section; a `disabled` item keeps its place but does not open |
+| `Accordion.ItemTrigger` | The row that opens and closes the item: an optional icon, the label and a caret |
+| `Accordion.ItemContent` | The region the item shows; its height animates as it opens |

@@ -8,15 +8,16 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
+import { createDecorators, storyParameters } from '../testing/index.ts';
 
 const MAILBOX_NAME = 'Clients';
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-projects/SenderResearch',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
   decorators: createDecorators({
     mailboxName: MAILBOX_NAME,

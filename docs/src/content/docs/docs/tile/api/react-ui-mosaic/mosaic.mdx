@@ -1,0 +1,33 @@
+---
+title: Mosaic
+description: Tiles the user can drag, in stacks.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui-mosaic/mosaic" height="28rem" />
+
+```ts
+import { Mosaic } from '@dxos/react-ui-mosaic';
+```
+
+```sh
+npm install @dxos/react-ui-mosaic @dxos/react-ui-dnd
+```
+
+`Mosaic` lays out tiles the user can drag. A container's `eventHandler` decides what it takes and what a drop means;
+the package draws the tiles and handles the drag. [`Board`](/docs/tile/api/react-ui-mosaic/board/) is built from these
+parts.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Mosaic.Container` | A drop target; its `eventHandler` decides what it takes |
+| `Mosaic.Stack` | A list of tiles from `items`, one `Tile` each |
+| `Mosaic.VirtualStack` | A stack that draws only the tiles in view, and can load pages as it scrolls |
+| `Mosaic.Tile` | A draggable tile with an `id`, its `data` and its `location` |
+| `Mosaic.DragHandle` | The handle that drags its tile |
+| `Mosaic.ResizeHandle` | An edge that resizes its tile |
+| `Mosaic.Placeholder` | The gap a drop would land in |
+| `Mosaic.DropIndicator` | The line where a drop would land |

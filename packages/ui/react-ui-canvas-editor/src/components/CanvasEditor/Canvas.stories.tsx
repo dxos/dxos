@@ -215,6 +215,27 @@ export const Lattice: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'lattice' },
 };
 
+const DocsStory = () => {
+  const initial = useMemo(() => {
+    const tree = createModelViewTree();
+    return fromRenderLists2D(tree.views, { root: tree.root });
+  }, []);
+  const { document, onIntent, onModelIntent } = useDocumentHost(initial);
+  return (
+    <CanvasEditor.Root document={document} onIntent={onIntent} onModelIntent={onModelIntent}>
+      <CanvasEditor.Viewport liveDepth={1} />
+      <CanvasEditor.Navigation />
+      <CanvasEditor.Tools />
+      <CanvasEditor.Camera />
+    </CanvasEditor.Root>
+  );
+};
+
+/** The docs' demo: the model with only the canvas, navigation, palette and zoom; no inspectors. */
+export const Docs: Story = {
+  render: () => <DocsStory />,
+};
+
 /**
  * Docked inspectors: one accordion section each beside the canvas, only the properties open to start; a header opens
  * or closes its section, and the dock's close button floats the same column over the canvas.

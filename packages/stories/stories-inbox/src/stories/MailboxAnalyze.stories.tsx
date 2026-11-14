@@ -60,13 +60,11 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Select from '@dxos/react-ui/Select';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { TagIndex, Text } from '@dxos/schema';
-import {
-  ModuleContainer,
-  StoryAiPlugin,
-  UpdateCompanionStubPlugin,
-  createStoryDecorators,
-} from '@dxos/storybook-testing';
-import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryAiPlugin from '@dxos/storybook-testing/StoryAiPlugin';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
+import * as StoryModules from '@dxos/storybook-testing/StoryModules';
+import * as StoryStagePlugin from '@dxos/storybook-testing/StoryStagePlugin';
 import { Message, Organization, Person, ProfileOf, Task } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
@@ -91,7 +89,7 @@ const TRACKED_SENDER_RE = /@(kirkconsult\.com|sequoia\.com)$/i;
 /** Investor domains for the Investor Conversations pipeline (fixture VCs + the demo seed's). */
 const INVESTOR_DOMAINS = ['backed.vc', 'blueyard.com', 'dispersion.xyz', 'sequoia.com'];
 
-/** Role token for the story-local process module, referenced by the `ModuleContainer` layout. */
+/** Role token for the story-local process module, referenced by the `ModuleContainer.Root` layout. */
 const ProcessRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.process');
 
 /** A selectable workbench pipeline: `run` returns the payload rendered as the `last` count. */
@@ -105,7 +103,7 @@ type StoryAction = {
  * Story-local module: drives the cursored mailbox pipelines and their cursor resets via the
  * OperationInvoker (the same operations the mailbox toolbar runs), reporting live counts so the play
  * function can assert cursor semantics from the DOM.
- * Resolves the active space like every module surface (`ModuleContainer` sets the workspace).
+ * Resolves the active space like every module surface (`ModuleContainer.Root` sets the workspace).
  */
 const ProcessModule = () => {
   const space = ToolkitHooks.useActiveSpace();
@@ -555,7 +553,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
 
 /**
  * Registers the story-local process module surface plus the shared diagnostic module surfaces
- * (Logging etc. — see `@dxos/storybook-testing/modules`), so the `ModuleContainer` layout can
+ * (Logging etc. — see `@dxos/storybook-testing/modules`), so the `ModuleContainer.Root` layout can
  * reference both by role token.
  */
 const StoryProcessPlugin = Plugin.define(
@@ -575,7 +573,7 @@ const StoryProcessPlugin = Plugin.define(
             filter: Surface.makeFilter(ProcessRole),
             component: ProcessModule,
           }),
-          ...moduleSurfaces,
+          ...StoryModules.surfaces,
         ]),
       ]),
   }),
@@ -606,11 +604,11 @@ const StoryProcessPlugin = Plugin.define(
 );
 
 const DefaultStory = () => (
-  <ModuleContainer
+  <ModuleContainer.Root
     layout={[
       [ProcessRole, StoryRole.Mailbox],
-      [ModuleRole.Objects, StoryRole.Facts],
-      [StoryRole.Trace, ModuleRole.Logging],
+      [StoryModules.Role.Objects, StoryRole.Facts],
+      [StoryRole.Trace, StoryModules.Role.Logging],
     ]}
   />
 );
@@ -626,7 +624,7 @@ const meta = {
   title: 'stories/stories-inbox/MailboxAnalyze',
   render: DefaultStory,
   // Initializer form: the seed variant is a story arg, so one plugin set serves every story.
-  decorators: createStoryDecorators<StoryArgs>(({ args }) => ({
+  decorators: StoryHarness.decorators<StoryArgs>(({ args }) => ({
     setupEvents: [ActivationEvents.Startup],
     types: [
       AccessToken.AccessToken,
@@ -678,10 +676,10 @@ const meta = {
       TripPlugin.make(),
       // Both provide the `AiService` LayerSpec, so exactly one is registered per variant: the trip
       // seed needs the canned flight payloads; every other variant targets local Ollama.
-      args.seed === 'trip' ? StoryTripAiPlugin() : StoryAiPlugin({ ai: 'ollama' }),
+      args.seed === 'trip' ? StoryTripAiPlugin() : StoryAiPlugin.make({ ai: 'ollama' }),
       StoryModulesPlugin(),
       StoryProcessPlugin(),
-      UpdateCompanionStubPlugin(),
+      StoryStagePlugin.make(),
     ],
   })),
   parameters: {

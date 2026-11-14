@@ -10,12 +10,12 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { log } from '@dxos/log';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
 import { SpaceTemplateToolbar, StoryRole } from '../modules/index.ts';
 import { applyStagedProfileImport } from '../modules/profile-archive.ts';
 import {
   HelpdeskSpacePlugin,
-  ModuleContainer,
   VoyageSpacePlugin,
   config,
   createDecorators,
@@ -24,15 +24,15 @@ import {
 } from '../testing/index.ts';
 import { isPersistent } from '../testing/persistence.ts';
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Projects',
-  // Rows, not a fragment: `ModuleContainer` pins itself to its nearest positioned ancestor, so a
+  // Rows, not a fragment: `ModuleContainer.Root` pins itself to its nearest positioned ancestor, so a
   // bare sibling of the toolbar would cover it.
   render: (args) => (
     <div className='dx-grow grid grid-rows-[min-content_1fr]'>
       <SpaceTemplateToolbar />
       <div className='relative'>
-        <ModuleContainer {...args} />
+        <ModuleContainer.Root {...args} />
       </div>
     </div>
   ),

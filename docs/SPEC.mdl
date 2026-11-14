@@ -5,10 +5,13 @@ version: 0.1.0
 ---
 
 The DXOS docs teach a developer to build on ECHO, then to build apps from plugins with PLEX, using
-Composer as the app those plugins run in. They have three sections: ECHO; HALO, which holds identity, devices and
-space membership; and PLEX, which holds the plugin docs and the tool chain. ECHO comes first, and `/docs/` opens its Overview page;
-there is no separate docs home [F-16]. Every section has the same shape: Start here, a learning path that builds one
-thing step by step, core concepts, an API group with one page per core namespace, guides, and resources [F-17], [F-18].
+Composer as the app those plugins run in. They have seven sections: ECHO; HALO, which holds identity, devices and
+space membership; MESH, the peer networking; EDGE, the services DXOS runs, with the compute that runs operations and
+triggers over ECHO; SAGE, the AI layer of models, skills and agents; PLEX, which holds the plugin docs and the tool
+chain; and TILE, the design system. ECHO comes first. `/docs/` is a home page with one card per section, each showing
+the section's hero art and name [F-16]. Every section has the same shape: Start here, a learning path
+that builds one thing step by step, core concepts, an API group with one page per core namespace, guides, and
+resources [F-17], [F-18]. MESH, EDGE and SAGE keep only Start here, core concepts and resources.
 
 This document is the source of truth for what the docs cover and how. Each `page` block gives the page's section,
 place in the sidebar, template and status, a one-line summary, and under `covers:` the points the page must cover.
@@ -85,9 +88,9 @@ template landing: The front door
 template narrative: An argument
   purpose: Explain why, in the order of the Effect page "Why Effect?".
   parts:
-    - Title and one-paragraph answer
+    - Title and one-paragraph answer that pitches the section on its own [D-280]
     - The pattern: the smallest complete example and an anatomy strip of its key signature
-    - Comparison: the same task written without and with ECHO, side by side
+    - Comparison: the same task against the strongest alternative, side by side [D-280]
     - Practical problems: one H3 per problem, each with its mechanism and spec citation
     - Closing: where to go next
 ```
@@ -140,11 +143,33 @@ template stub: A planned page
     - The page's `covers:` list
 ```
 
+```mdl
+template home: The docs home
+  purpose: Show every section at once and route the reader into one.
+  parts:
+    - Title and a short, neutral paragraph on DXOS as a whole, not a list of its sections, with ECHO named as the usual start
+    - Grid: one card per section, four columns with ECHO two wide, falling to two columns and then one; each card is the section's hero art with its mark and name, and links to the section's Overview [D-272]
+```
+
 ## Site map
 
 The order of these blocks is the order of the sidebar: section, then group, by first appearance. Routes are
-absolute. A page with status `later` is in scope but not yet in the sidebar. There is no docs home page:
-`/docs/` redirects to ECHO's Overview, the first page of the first section [F-16.5].
+absolute. A page with status `later` is in scope but not yet in the sidebar. The docs home at `/docs/` belongs to
+no section and has no sidebar [F-16.5].
+
+```mdl
+page docs-home: DXOS Docs
+  What DXOS is, and where to start in each of its sections.
+  section: none
+  route: /docs/
+  group: none
+  template: home
+  status: spike
+  covers:
+    - A neutral paragraph under the title on DXOS as a whole: independent pieces, each usable on its own, that build on each other and are stronger together, with ECHO as the usual start [D-272]
+    - The cards in the order ECHO, HALO, MESH, then PLEX, TILE, EDGE and SAGE; where there are four columns, ECHO spans two, so the seven cards fill two rows [D-272]
+    - Each card's art follows the page's theme, as the Overview heroes do [D-253]
+```
 
 ## ECHO
 
@@ -160,7 +185,7 @@ page welcome: Overview
   status: spike
   covers:
     - What ECHO is in one paragraph: a typed, local-first, peer-to-peer object graph for TypeScript
-    - The model in four points: CRDT replication, peers over WebRTC, concurrent writers, offline writes that merge
+    - The model in four points: CRDT replication, peers that sync directly or through a server, concurrent writers, offline writes that merge [D-280]
     - What DXOS is, in two sentences, with ECHO as the lead
     - Spaces hold data and objects are its unit, with links to both concept pages
     - How these docs are organized: the ECHO, HALO and PLEX sections, and in each the learning path, core
@@ -176,8 +201,9 @@ page why-echo: Why ECHO?
   template: narrative
   status: spike
   covers:
+    - Opening: a typed object graph on the user's devices that apps and agents read alike [D-280]
     - Agents need memory they can query, and a schema they can inspect
-    - External data needs one graph to meet in, and plugins code against that graph
+    - External data needs one graph to meet in, and in an app built from plugins every plugin codes against that graph
     - The ECHO pattern: the smallest complete example, then the same task without and with ECHO
     - The practical problems ECHO solves, each with its mechanism and a spec citation
     - How DXOS apps differ from SaaS apps, in the comparison table moved from the old docs home
@@ -920,7 +946,7 @@ page halo-spaces-membership: Spaces and membership
     - The membership policy: invite or locked
     - Membership is signed delegations and revocations that converge with no server; a member revokes only those it has causal seniority over, an admin anyone
     - The group key, which changes with membership and which pull members relay without reading
-    - EDGE as a pull member, and the explicit read a plaintext service such as AI or search needs
+    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-245]
     - Links to ECHO's Spaces and databases for data and replication
 ```
 ```mdl
@@ -1081,6 +1107,536 @@ page halo-llms-txt: llms.txt
     - Links to `/halo/llms-full.txt`, every HALO page in one file
 ```
 
+## MESH
+
+MESH is DXOS's peer networking: how a device finds the other devices in a space and carries replication, presence
+and invitations to them. MESH multiplexes transports. A direct WebRTC link to a peer and the WebSocket to EDGE are
+both transports it carries the same protocols over [D-227]. The section has no learning path, API or guides; it
+explains the architecture and how ECHO and HALO use it [D-226]. Swarms, signaling and ICE/TURN are MESH's pages;
+EDGE's pages cover EDGE as a server and link here [D-228].
+
+### Start here
+
+```mdl
+page mesh-overview: Overview
+  What MESH is, and what ECHO and HALO run over it.
+  section: MESH
+  route: /docs/mesh/overview/
+  group: Start here
+  template: concept
+  status: spike
+  covers:
+    - What MESH is in one paragraph, on its own: devices that share a topic find each other and run protocols over direct links, with several transports at once [D-227], [D-280]
+    - A diagram of devices, direct WebRTC links between peers, and EDGE as both the signaling server and a transport
+    - A table of where ECHO and HALO use MESH: space swarms for replication, presence, device sync and invitations
+    - How these pages are organized, and where to go next: Why MESH?, then Architecture
+```
+```mdl
+page why-mesh: Why MESH?
+  Why devices connect to each other directly, and why a server stays one of the routes.
+  section: MESH
+  route: /docs/mesh/why-mesh/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - Direct links give lower latency between nearby devices, keep working when the internet or a server is out of reach, and carry data that reaches no server unless WebRTC has to fall back to a TURN relay [D-254], [D-280]
+    - A server is a transport too: it reaches devices that are rarely online together and peers no direct link reaches; in DXOS that server is EDGE, for the spaces that replicate through it
+    - Today ECHO replicates each space over both at once, peer links and EDGE (`subductionReplicator`, `feedReplicator`), and the pages say so plainly [D-227]
+```
+
+### Core concepts
+
+```mdl
+page mesh-architecture: Architecture
+  The layers of MESH, from the transport up to the extensions ECHO and HALO run.
+  section: MESH
+  route: /docs/mesh/concepts/architecture/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The layers, bottom to top: transport, Teleport, signaling, swarm, extensions, in one diagram
+    - Which package holds each layer in `packages/core/mesh`: `network-manager`, `teleport`, `messaging`, the `teleport-extension-*` packages and `edge-client`
+    - The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of these pages [D-230]
+```
+```mdl
+page mesh-signaling: Signaling and discovery
+  How a device finds the peers in a space and sets up a direct link.
+  section: MESH
+  route: /docs/mesh/concepts/signaling/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The signal manager, and EDGE as the signaling server over the device's WebSocket; the in-memory signal manager in tests
+    - Swarm topics, keyed by space; joining and leaving a swarm; the offers and answers peers exchange
+    - ICE servers and TURN providers for peers behind NAT
+    - Configuration: `runtime.services.ice`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures.signaling` [D-231]
+```
+```mdl
+page mesh-swarms: Swarms and topology
+  One swarm per topic, and how MESH decides which peers to connect.
+  section: MESH
+  route: /docs/mesh/concepts/swarms/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A swarm per topic, and the peers in it
+    - The MMST topology: connect enough peers that devices usually stay reachable, not every pair; it does not guarantee a connected swarm, and EDGE covers the gaps [D-257]
+    - The fully connected and star topologies, and when each is used
+    - The connection limiter
+```
+```mdl
+page mesh-transports: Transports
+  The links MESH carries its protocols over, and how it uses several at once.
+  section: MESH
+  route: /docs/mesh/concepts/transports/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - MESH multiplexes transports: the same replication runs over a direct link and over EDGE, and a device uses whichever reaches the peer [D-227]
+    - WebRTC in the browser, TCP in Node, memory in tests, and the EDGE WebSocket
+    - Iroh, a QUIC transport for presence and gossip, in one paragraph marked planned [D-229]
+```
+```mdl
+page mesh-teleport: Teleport
+  One multiplexed stream per connection, and the extensions that run on it.
+  section: MESH
+  route: /docs/mesh/concepts/teleport/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - One Teleport session per connection, with named streams multiplexed over it
+    - The extensions and who adds them: control, RPC, feed replication, Automerge replication, gossip, admission, notarization and HALO invitations
+    - Links to ECHO's Spaces page for replication and to HALO's invitation pages
+```
+```mdl
+page mesh-presence: Presence and network status
+  Who is online, and how an app reads and changes its own connection.
+  section: MESH
+  route: /docs/mesh/concepts/presence/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Gossip and peer state: how a device learns which peers are online
+    - `client.mesh.networkStatus`, and going offline and back with `client.mesh.updateConfig(ConnectionState.OFFLINE)`, as the tutorials' offline switch does
+```
+
+### Resources
+
+```mdl
+page mesh-glossary: Glossary
+  Every MESH term, defined once.
+  section: MESH
+  route: /docs/mesh/resources/glossary/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Swarm, topic, topology, MMST, signaling, transport, Teleport, extension, ICE, TURN, presence and network status
+    - Links to EDGE's glossary for router, Durable Object and environment
+```
+```mdl
+page mesh-llms-txt: llms.txt
+  The MESH site map and full text for agents, in the llms.txt format.
+  section: MESH
+  route: /docs/mesh/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/mesh/llms.txt`, each MESH page with its summary and a link to its Markdown
+    - Links to `/mesh/llms-full.txt`, every MESH page in one file
+```
+
+## EDGE
+
+EDGE is the set of services DXOS runs on Cloudflare Workers: an always-online peer for every space and identity. The
+section explains EDGE's architecture and how ECHO, HALO, MESH and PLEX use it; it has only Start here, Core concepts and
+Resources [D-232]. EDGE can read a space only when the space gives it more than `pull` access; HALO's Spaces and
+membership says so, and EDGE has no page of its own on it [D-245]. DXOS operates EDGE; the pages cover no self-hosting and never link its source [D-237].
+Swarms, signaling and ICE/TURN are MESH's; Connecting covers only the link between a device and EDGE [D-234].
+
+### Start here
+
+```mdl
+page edge-overview: Overview
+  What EDGE is, and where ECHO, HALO, MESH and PLEX use it.
+  section: EDGE
+  route: /docs/edge/overview/
+  group: Start here
+  template: concept
+  status: spike
+  covers:
+    - EDGE is an always-online peer for local-first apps, run by DXOS on Cloudflare Workers, with a Durable Object per identity and per space [D-280]
+    - One diagram of devices, EDGE and peers, and what goes over each link: each device's WebSocket ends at the Router, which reaches the DB, compute and identity services [D-285]
+    - A table of where ECHO, HALO, MESH and PLEX use EDGE, each linking its concept page
+    - DXOS runs EDGE, and an app points at it with `runtime.services.edge.url`
+```
+```mdl
+page why-edge: Why EDGE?
+  Why a local-first system runs servers at all.
+  section: EDGE
+  route: /docs/edge/why-edge/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - The pattern: a space that syncs between two devices that are never online at the same time
+    - Comparison: an app server that owns the data, against an always-online peer that holds a copy
+    - Practical problems: devices rarely online together, queries over objects this device has not loaded, recovery when every device is lost, work that runs while you are offline
+    - One line that EDGE reads a space only with more than `pull` access, linking HALO's Spaces and membership [D-245]
+```
+
+### Core concepts
+
+```mdl
+page edge-architecture: Architecture
+  EDGE's services, the objects it keeps per space and per identity, and its environments.
+  section: EDGE
+  route: /docs/edge/concepts/architecture/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The entry points: each device's WebSocket ends at the Router, and HTTP requests go to the `edge` worker, which forwards each to the service that owns its path [D-285]
+    - The services, one line each: Router, DB, identity, compute, KMS, hub, AI, blob and registry
+    - The Durable Objects per identity and per space, in a diagram
+    - The development, preview and production environments, and how an app's config selects one
+    - DXOS operates every environment; there is no self-hosted EDGE [D-237]
+```
+```mdl
+page edge-connecting: Connecting
+  The one WebSocket each device keeps to EDGE, and how EDGE knows who is on it.
+  section: EDGE
+  route: /docs/edge/concepts/connecting/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - One WebSocket per device, multiplexed with a channel per service
+    - Authentication: a challenge signed by the device key, with the HALO credential chain that admits the device
+    - The router per identity, which delivers messages to the identity's devices
+    - The `edgeFeatures` flags; reconnecting, and what works while offline
+    - Swarms, signaling and ICE/TURN link to MESH [D-234]
+```
+```mdl
+page edge-replication: Replication and backup
+  How EDGE keeps an always-online copy of each space.
+  section: EDGE
+  route: /docs/edge/concepts/replication/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Subduction for Automerge documents, the feed replicator for feeds
+    - The always-online copy lets devices sync without ever meeting
+    - `setEdgeReplication` on and off, and what turning it off costs
+    - Archives, backups and space deletion
+    - EDGE is a copy, not the authority; conflicts resolve as they do in ECHO
+```
+```mdl
+page edge-indexing: Indexing and queries
+  EDGE's index of each space, and how a query uses it.
+  section: EDGE
+  route: /docs/edge/concepts/indexing/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The index EDGE keeps of each space it can read; a space that grants EDGE only `pull` access has none
+    - A query merges local results with EDGE's, which ECHO treats as evidence, not authority
+    - The index trails the latest changes; queries are live and never complete
+```
+```mdl
+page edge-identity-services: Identity services
+  What EDGE does for HALO: recovery, accounts, invitations and service access.
+  section: EDGE
+  route: /docs/edge/concepts/identity-services/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The recovery challenge, and why recovery needs EDGE
+    - Hub accounts, invitations and email verification
+    - Service access credentials, API tokens and agent identities
+    - Links to HALO's Recovery and credentials
+```
+```mdl
+page edge-compute: Compute
+  How EDGE runs work over ECHO objects, with operations, processes and triggers, and where agents and plugins run.
+  section: EDGE
+  route: /docs/edge/concepts/compute/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - What compute is: typed operations started by people, agents and triggers, that run in the app, in a worker or on EDGE and read and write the space's objects [D-271], [D-280]
+    - The workers and Durable Objects that run operations and fire triggers while no device is online, linking Operations, Processes and Triggers
+    - Where agent processes run on EDGE, and the AI service, linking SAGE's Agents and Models [D-275]
+    - Sandbox builds and the plugin registry that PLEX publishing uses
+```
+```mdl
+page edge-operations: Operations
+  A typed action with an input and output schema, invoked by key.
+  section: EDGE
+  route: /docs/edge/concepts/operations/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - `Operation.make` with input and output schemas and a key, and `Operation.withHandler`
+    - The registry and the invoker: how a caller finds an operation by key and runs it
+    - Handler sets, and how a PLEX plugin contributes operations, linking PLEX's page on them
+    - Errors and cancellation
+```
+```mdl
+page edge-processes: Processes
+  One running invocation, with its own services, lifetime and trace.
+  section: EDGE
+  route: /docs/edge/concepts/processes/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The process manager, and one process per running operation
+    - The layer stack: the services a process gets, such as the database, storage and credentials
+    - Local and remote processes: the same operation runs in the app, in a worker or on EDGE, and the app invokes one on EDGE by key [D-276]
+    - Operation code kept as an ECHO object and deployed to EDGE, and the credentials it uses, kept in the space [D-276]
+    - One paragraph on pipelines: an operation that streams a long source, such as a mailbox, uses `@dxos/pipeline` and a saved cursor inside its process [D-277]
+```
+```mdl
+page edge-triggers: Triggers
+  What starts an operation without a person asking.
+  section: EDGE
+  route: /docs/edge/concepts/triggers/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Trigger kinds: schedule, ECHO subscription, email and webhook
+    - A trigger is an ECHO object in the space, so it syncs and is edited like any other object
+    - Where triggers fire: in the app while it is open, and on EDGE while it is not
+```
+```mdl
+page edge-traces: Traces
+  What ran, when and why, kept so people and agents can see it.
+  section: EDGE
+  route: /docs/edge/concepts/traces/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Trace events for each operation's start, end and failure
+    - Where traces are kept, and how an app or an agent reads them
+```
+
+### Resources
+
+```mdl
+page edge-configuration: Configuration
+  Every client setting that points at or turns on part of EDGE.
+  section: EDGE
+  route: /docs/edge/resources/configuration/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - `runtime.services.edge.url`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures`, with defaults [D-236]
+    - Links to ECHO's Installation, which uses them
+```
+```mdl
+page edge-glossary: Glossary
+  Every EDGE term, defined once.
+  section: EDGE
+  route: /docs/edge/resources/glossary/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Durable Object, environment, hub, index, replicator, router, service access, worker, operation, handler, invoker, process, layer stack, trigger, pipeline and trace
+```
+```mdl
+page edge-llms-txt: llms.txt
+  The EDGE site map and full text for agents, in the llms.txt format.
+  section: EDGE
+  route: /docs/edge/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/edge/llms.txt`, each EDGE page with its summary and a link to its Markdown
+    - Links to `/edge/llms-full.txt`, every EDGE page in one file
+```
+
+## SAGE
+
+SAGE is DXOS's AI layer: models, the skills that tell them how to work, and the agents that act in a space. An agent
+works through the same operations a person invokes, reads and writes the same ECHO objects, and keeps its memory as
+ECHO objects too, so what an agent did is data the user owns. Every page starts from ECHO: the objects an agent can
+see and the operations it can call on them. The section has only Start here, Core concepts and Resources, like MESH,
+[D-271], [D-279].
+
+### Start here
+
+```mdl
+page sage-overview: Overview
+  What SAGE is, and where it runs.
+  section: SAGE
+  route: /docs/sage/overview/
+  group: Start here
+  template: concept
+  status: spike
+  covers:
+    - What SAGE is in one paragraph, on its own: durable agent processes with an identity of their own, typed tools, skills and any model [D-280]
+    - A table of where SAGE runs, in Composer's assistant, in agents on EDGE and behind the MCP server, each linking its concept page
+    - After the table, one sentence each on operations as the agent's actions and on memory as objects in the user's spaces [D-280]
+    - Where to go next: Why SAGE?, then Agents
+```
+```mdl
+page why-sage: Why SAGE?
+  What sets SAGE's agents apart from other agent frameworks.
+  section: SAGE
+  route: /docs/sage/why-sage/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - The pattern: an agent handed a long task that hibernates, delegates, and resumes when its sub-agents report
+    - Comparison: an agent framework with tools and a memory store, against SAGE, row by row, without claiming the others lack tools or memory [D-280]
+    - Practical problems: work that outlives a session, knowing which agent changed what, waking on events without polling a model, one set of actions for people and agents, a spec that people and agents both work from and check against [D-281], choosing any model
+    - Memory the user owns, as one of the practical problems
+    - What SAGE does not do: it does not run the work, which EDGE's compute does, and it does not train models
+```
+
+### Core concepts
+
+```mdl
+page sage-models: Models
+  The model an agent uses, and how DXOS picks and calls it.
+  section: SAGE
+  route: /docs/sage/concepts/models/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The AI service, providers and model resolution
+    - Local and hosted models, and EDGE's AI service
+    - What is sent to a model, and that telemetry records each call
+```
+```mdl
+page sage-agents: Agents
+  A model in a loop, acting in a space with its own identity.
+  section: SAGE
+  route: /docs/sage/concepts/agents/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - An agent as a process: a turn, the operations it calls, then the next turn, linking EDGE's Processes, with one diagram of a chat, the turn, the operations it calls and the objects they change [D-284]
+    - An agent's identity, linking HALO
+    - Agents in Composer's assistant and on EDGE, and one agent delegating to another
+    - Hosting an outside agent loop, such as the Claude Agent SDK, with its output kept as ECHO objects
+```
+```mdl
+page sage-tools: Operations as tools
+  How an agent sees and calls the operations a person would.
+  section: SAGE
+  route: /docs/sage/concepts/tools/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - An operation's schema and description become the tool the model sees, linking EDGE's Operations
+    - Searching the operations rather than listing all of them
+    - Code mode: the model writes one program against the workspace instead of one tool call per action
+```
+```mdl
+page sage-skills: Skills
+  Instructions an agent loads when a task needs them.
+  section: SAGE
+  route: /docs/sage/concepts/skills/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A skill as instructions plus the operations it brings
+    - How a PLEX plugin contributes skills, linking PLEX
+    - How an agent finds and loads a skill during a turn
+```
+```mdl
+page sage-specs: Specs
+  The contract people and agents both work from, with what to build, who decided it, and how far the code meets it.
+  section: SAGE
+  route: /docs/sage/concepts/specs/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A spec as `.mdl` text: prose with typed blocks for requirements, operations, features and tests, in the DEUS language [D-281]
+    - Decisions and open questions in the spec's changelog, each attributed to the person or the agent that made it
+    - Reviews: per-item verdicts on how far the code meets the spec, with the commit read and the code as evidence
+    - QA tests whose steps a person can follow and an agent can run, one operation per step
+    - Specs as objects in a project, synced with `.mdl` files in a repository, and the skills that read and review them
+```
+```mdl
+page sage-memory: Memory
+  What an agent keeps between turns, as ECHO objects the user can read.
+  section: SAGE
+  route: /docs/sage/concepts/memory/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Chats and their messages as ECHO objects
+    - Facts extracted from text, and the goal rules that decide when an agent wakes
+    - Memory syncs and is shared like any other object in the space
+```
+```mdl
+page sage-mcp: MCP
+  Reaching a space's operations and skills from any MCP client.
+  section: SAGE
+  route: /docs/sage/concepts/mcp/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The DXOS MCP server: the tools and prompts it serves from the operation registry
+    - Running it with `dx mcp serve`, and on EDGE
+    - Connecting outside MCP servers, so an agent can call their tools
+```
+
+### Resources
+
+```mdl
+page sage-glossary: Glossary
+  Every SAGE term, defined once.
+  section: SAGE
+  route: /docs/sage/resources/glossary/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Agent, turn, model, provider, tool, skill, instructions, code mode, memory, fact, goal, MCP, spec, decision and review
+```
+```mdl
+page sage-llms-txt: llms.txt
+  The SAGE site map and full text for agents, in the llms.txt format.
+  section: SAGE
+  route: /docs/sage/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/sage/llms.txt`, each SAGE page with its summary and a link to its Markdown
+    - Links to `/sage/llms-full.txt`, every SAGE page in one file
+```
+
 ## PLEX
 
 PLEX builds apps from plugins. Composer is built on it and is the app the section's examples run
@@ -1098,11 +1654,9 @@ page app-framework-welcome: Overview
   template: narrative
   status: spike
   covers:
-    - What PLEX is, in one screen: plugins made of modules that contribute capabilities, and an app that is the plugins it loads
-    - Composer as the app built on it: a local-first workspace where everything, including the core UI, is a plugin, so a third-party plugin has the same powers as a built-in one
-    - What ECHO does under it: spaces, typed objects, sync between devices and people, and agents that query the same graph
-    - What a reader can build: anything a built-in plugin can, shown by the demos rather than listed
-    - What PLEX apps look like: the four live demos from `/echo`, each with a narrative about the plugins that render it [F-7.10]
+    - What PLEX is, in one short intro: an app is the plugins it loads, and Composer is the app built on it, where a third-party plugin has the same powers as a built-in one [D-284]
+    - What a reader can build, right after the intro: the four live demos from `/echo`, each with a narrative about the plugins that render it, then anything a built-in plugin can [F-7.10] [D-284]
+    - How it works, in one section: plugins made of modules that contribute capabilities, the two packages, and what a plugin gets for free (ECHO sync, operations and skills as agent tools, TILE's look) [D-280] [D-284]
     - Where to go next: Why PLEX?, Build with a coding agent, or the learning path
 ```
 
@@ -1632,6 +2186,1158 @@ page app-framework-cli: The dx CLI
     - The commands a plugin author uses
 ```
 
+## TILE
+
+TILE is DXOS's design system: themed UI components and the tokens behind them [D-246]. Its core is `@dxos/react-ui`,
+and `@dxos/ui-theme` is documented as part of its setup, since nothing renders styled without it [D-238]. The other
+`react-ui-*` packages get one line each in a catalog, and four of them get a guide [D-240]. The learning path builds a
+contacts screen with plain React state and connects it to ECHO only on its last page [D-239]. Live previews on these
+pages are islands rendered in the page, never iframes [D-241]. It has six concept pages and eleven API family
+pages [D-242]. The routes are under `/docs/tile/`.
+
+### Start here
+
+```mdl
+page tile-overview: Overview
+  What TILE is, the core and component packages, and where to start.
+  section: TILE
+  route: /docs/tile/overview/
+  group: Start here
+  template: concept
+  status: spike
+  covers:
+    - What TILE is in one paragraph: `@dxos/react-ui` and the `@dxos/ui-theme` tokens and build plugin it needs
+    - A grid of live component demos that follows the page's light or dark theme; each card names its package and opens that package's guide [D-293]
+    - The split between the core and the component packages, with a link to the catalog
+    - Where to go next: Why TILE?, Build with a coding agent, then the learning path
+```
+```mdl
+page why-tile: Why TILE?
+  Why UI written by many hands still looks and behaves like one app.
+  section: TILE
+  route: /docs/tile/why-tile/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - Opening: an app whose screens are written by many people, with Composer's plugins as the example [D-280]
+    - Themed primitives and semantic tokens, so a plugin never picks a raw color and every plugin follows light and dark
+    - Composite components built on zag machines, so focus, keyboard and ARIA roles come with the component
+    - One size scale, so a toolbar, a menu and a dialog line up without per-component padding
+    - What TILE does not need: no ECHO and no PLEX, so it works in any React app
+```
+```mdl
+page tile-build-with-agent: Build with a coding agent
+  Point Claude Code, Codex or Cursor at the skills DXOS uses to build with TILE.
+  section: TILE
+  route: /docs/tile/build-with-a-coding-agent/
+  group: Start here
+  template: tutorial
+  status: spike
+  covers:
+    - Links to the `composer-ui` and `composite-components` skills, and where each agent loads skills from [D-248]
+    - No prompt builder for now [D-248]
+    - The `/tile/llms-full.txt` file for an agent that reads docs
+```
+
+### Learning path
+
+```mdl
+page tile-the-tile-component: The TILE component
+  What a TILE component is, and the contacts screen the learning path builds, running.
+  section: TILE
+  route: /docs/tile/learn/the-tile-component/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - What a TILE component is: a namespace of parts, themed by the provider, styled with `classNames` [D-248]
+    - The finished contacts screen, running, so the reader sees where the path ends
+    - What each page of the path adds, and the folder it goes in
+```
+```mdl
+page tile-learn-installation: Installation
+  Start the contacts screen: a Vite app with TILE's packages, theme, icons and dark mode.
+  section: TILE
+  route: /docs/tile/learn/installation/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - The packages: `@dxos/react-ui` and its peer `@dxos/ui-theme` [D-248]
+    - The Vite plugins: `ThemePlugin` from `@dxos/ui-theme/plugin` and `IconsPlugin` from `@dxos/vite-plugin-icons`
+    - The stylesheets, `Theme.Provider` with `Theme.defaultTx`, and the `translations` resources
+    - Dark mode: the `dark` class on the root element, following the system
+    - The first buttons, which follow light and dark [D-239]
+```
+```mdl
+page tile-learn-layout: Lay out a screen
+  A list beside a detail panel, with a toolbar.
+  section: TILE
+  route: /docs/tile/learn/lay-out-a-screen/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - `Panel`, `ScrollArea`, `Toolbar` and the `Layout` primitives, with the contacts held in React state
+```
+```mdl
+page tile-learn-inputs: Inputs and actions
+  Edit a contact with inputs and buttons.
+  section: TILE
+  route: /docs/tile/learn/inputs-and-actions/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - The `Input` and `Button` namespaces, `Field` and `Select`
+```
+```mdl
+page tile-learn-overlays: Overlays
+  An edit dialog, a tooltip and a toast.
+  section: TILE
+  route: /docs/tile/learn/overlays/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - `Dialog`, `Popover`, `Tooltip` and `Toast`
+```
+```mdl
+page tile-learn-icons: Icons and translations
+  Icons on the toolbar, and the screen's strings in a translation resource.
+  section: TILE
+  route: /docs/tile/learn/icons-and-translations/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - `Icon`, icon buttons, and `useTranslation` with a resource of the screen's own
+```
+```mdl
+page tile-learn-echo: Connect to ECHO
+  Replace the React state with ECHO's contact-book types.
+  section: TILE
+  route: /docs/tile/learn/connect-to-echo/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - `useQuery` for the list and `useObject` for the detail, with the ECHO tutorial's schema [D-239]
+    - The edit dialog becomes a schema form, with a link to the Forms guide
+```
+
+### Core concepts
+
+```mdl
+page tile-theme-tokens: Theme and tokens
+  Semantic tokens, cascade layers, and `classNames` instead of `className`.
+  section: TILE
+  route: /docs/tile/concepts/theme-and-tokens/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Semantic color tokens and the utilities each yields (`bg-*`, `text-*`, `border-*`); dark mode through `light-dark()`
+    - The `--dx-*` variables components read, and the cascade layers that order the theme against an app's own styles
+    - The `classNames` prop for overrides, and why a guessed token renders wrong
+    - Classes are generated at build time, so the Vite plugin must see every source that uses one
+```
+```mdl
+page tile-composite: Composite components
+  `Foo.Root`, `Foo.Trigger`, `Foo.Content`: one namespace per component, one part per element.
+  section: TILE
+  route: /docs/tile/concepts/composite-components/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Components export as namespaces from subpaths, such as `@dxos/react-ui/Dialog`
+    - Parts, `asChild` and slots
+    - Behavior and ARIA roles come from zag machines; components add no roles of their own
+```
+```mdl
+page tile-layout-concept: Layout
+  The Panel and ScrollArea container model, and the layout primitives.
+  section: TILE
+  route: /docs/tile/concepts/layout/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - `Panel` rows (header, body, footer) and the height chain that lets a body scroll
+    - `Flex`, `Grid` and `Container` instead of hand-written flex and grid classes; `gap` takes ramp steps
+    - Sizing is physical (`w-*`, `h-*`); direction-sensitive spacing is logical (`ps-*`, `ms-*`)
+```
+```mdl
+page tile-density: Density and sizes
+  One size scale, set on an element and inherited by what is inside it.
+  section: TILE
+  route: /docs/tile/concepts/density-and-sizes/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Sizes `xs` to `xl`, set with the `size` prop or the `data-size` attribute
+    - Popups take their trigger's size
+```
+```mdl
+page tile-focus: Focus and keyboard
+  The focus ring, keyboard navigation, and focus inside overlays.
+  section: TILE
+  route: /docs/tile/concepts/focus-and-keyboard/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The focus ring and `--dx-focus-ring-color`
+    - Arrow-key navigation in toolbars, menus and lists; focus held in a dialog and returned on close
+```
+```mdl
+page tile-translations-icons: Translations and icons
+  Every string a component shows is translatable, and every icon is a sprite symbol.
+  section: TILE
+  route: /docs/tile/concepts/translations-and-icons/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Translation resources, namespaces and `useTranslation`; the `translations` react-ui ships
+    - Icon names `ph--<name>--<weight>`, the sprite the Vite plugin builds, and names resolved at run time
+```
+
+### API
+
+```mdl
+page tile-api-layout: Layout
+  `Flex`, `Grid`, `Columns`, `Block`, `Container` and `Separator`.
+  section: TILE
+  route: /docs/tile/api/layout/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Each primitive's props, with the `gap` ramp
+```
+```mdl
+page tile-api-button: Button
+  Buttons, button groups and toggles.
+  section: TILE
+  route: /docs/tile/api/button/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - `Button.Root` variants and props, `Button.Group` and `Button.Toggle`
+```
+```mdl
+page tile-api-input: Input
+  Text fields, checkboxes, switches, sliders and the frame they sit in.
+  section: TILE
+  route: /docs/tile/api/input/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - The `Input` parts [D-310]
+```
+```mdl
+page tile-api-status: Status
+  Progress, skeletons, empty and error states.
+  section: TILE
+  route: /docs/tile/api/status/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - The `Status` parts and when each fits
+```
+```mdl
+page tile-api-panel: Panel
+  The container shell: header, body and footer.
+  section: TILE
+  route: /docs/tile/api/panel/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - `Panel.Root`, `Panel.Header`, `Panel.Body` and `Panel.Footer` [D-310]
+```
+```mdl
+page tile-api-toolbar: Toolbar
+  A row of controls with arrow-key navigation.
+  section: TILE
+  route: /docs/tile/api/toolbar/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - The `Toolbar` parts
+```
+```mdl
+page tile-api-accordion: Accordion
+  A stack of sections that open and close.
+  section: TILE
+  route: /docs/tile/api/accordion/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Accordion` under its own story [D-308]
+```
+```mdl
+page tile-api-alert-dialog: AlertDialog
+  A dialog that asks the user to confirm or cancel.
+  section: TILE
+  route: /docs/tile/api/alert-dialog/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `AlertDialog` under its own story [D-308]
+```
+```mdl
+page tile-api-avatar: Avatar
+  A person or object shown as an image, initials, an emoji or an icon.
+  section: TILE
+  route: /docs/tile/api/avatar/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Avatar` under its own story [D-308]
+```
+```mdl
+page tile-api-badge: Badge
+  A small mark on the corner of an avatar or icon.
+  section: TILE
+  route: /docs/tile/api/badge/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Badge` under its own story [D-308]
+```
+```mdl
+page tile-api-banner: Banner
+  A note or alert across the top of a view.
+  section: TILE
+  route: /docs/tile/api/banner/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Banner` under its own story [D-308]
+```
+```mdl
+page tile-api-breadcrumb: Breadcrumb
+  The trail of pages from the top down to the current one.
+  section: TILE
+  route: /docs/tile/api/breadcrumb/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Breadcrumb` under its own story [D-308]
+```
+```mdl
+page tile-api-card: Card
+  A block of related content and actions, one surface above its host.
+  section: TILE
+  route: /docs/tile/api/card/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Card` under its own story [D-308]
+```
+```mdl
+page tile-api-carousel: Carousel
+  Slides of images or video, one page at a time.
+  section: TILE
+  route: /docs/tile/api/carousel/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Carousel` under its own story [D-308]
+```
+```mdl
+page tile-api-collapsible: Collapsible
+  One region that opens and closes.
+  section: TILE
+  route: /docs/tile/api/collapsible/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Collapsible` under its own story [D-308]
+```
+```mdl
+page tile-api-color-picker: ColorPicker
+  A colour typed as text or picked from a swatch.
+  section: TILE
+  route: /docs/tile/api/color-picker/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `ColorPicker` under its own story [D-308]
+```
+```mdl
+page tile-api-combobox: Combobox
+  A text field that filters a list of options as the user types.
+  section: TILE
+  route: /docs/tile/api/combobox/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Combobox` under its own story [D-308]
+```
+```mdl
+page tile-api-drag-handle: DragHandle
+  The grip, drop line and drag preview for drag and drop.
+  section: TILE
+  route: /docs/tile/api/drag-handle/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `DragHandle` under its own story [D-308]
+```
+```mdl
+page tile-api-editable: Editable
+  Text that turns into a field when the user edits it.
+  section: TILE
+  route: /docs/tile/api/editable/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Editable` under its own story [D-308]
+```
+```mdl
+page tile-api-fieldset: Fieldset
+  A named group of fields.
+  section: TILE
+  route: /docs/tile/api/fieldset/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Fieldset` under its own story [D-308]
+```
+```mdl
+page tile-api-floating-panel: FloatingPanel
+  A window the user can drag, resize, minimize and maximize.
+  section: TILE
+  route: /docs/tile/api/floating-panel/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `FloatingPanel` under its own story [D-308]
+```
+```mdl
+page tile-api-focus: Focus
+  Keyboard focus groups: one Tab stop, arrow keys inside.
+  section: TILE
+  route: /docs/tile/api/focus/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Focus` under its own story [D-308]
+```
+```mdl
+page tile-api-listbox: Listbox
+  A list the user selects one, several or no items from.
+  section: TILE
+  route: /docs/tile/api/listbox/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Listbox` under its own story [D-308]
+```
+```mdl
+page tile-api-main: Main
+  The app shell: content between a navigation sidebar and a complementary sidebar.
+  section: TILE
+  route: /docs/tile/api/main/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Main` under its own story [D-308]
+```
+```mdl
+page tile-api-media: Media
+  Images and audio or video players.
+  section: TILE
+  route: /docs/tile/api/media/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Media` under its own story [D-308]
+```
+```mdl
+page tile-api-qr-code: QrCode
+  A QR code that fills its host's width.
+  section: TILE
+  route: /docs/tile/api/qr-code/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `QrCode` under its own story [D-308]
+```
+```mdl
+page tile-api-scroll-container: ScrollContainer
+  A scroll area that follows new content, as a chat log does.
+  section: TILE
+  route: /docs/tile/api/scroll-container/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `ScrollContainer` under its own story [D-308]
+```
+```mdl
+page tile-api-splitter: Splitter
+  Panes side by side with a divider between them.
+  section: TILE
+  route: /docs/tile/api/splitter/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Splitter` under its own story [D-308]
+```
+```mdl
+page tile-api-system-button: SystemButton
+  Buttons for common actions, each with its icon and translated label.
+  section: TILE
+  route: /docs/tile/api/system-button/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `SystemButton` under its own story [D-308]
+```
+```mdl
+page tile-api-tabs: Tabs
+  Views the user switches between with a row of tabs.
+  section: TILE
+  route: /docs/tile/api/tabs/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Tabs` under its own story [D-308]
+```
+```mdl
+page tile-api-tag: Tag
+  A small label, which can be clicked or removed.
+  section: TILE
+  route: /docs/tile/api/tag/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Tag` under its own story [D-308]
+```
+```mdl
+page tile-api-toggle-group: ToggleGroup
+  Buttons that toggle, alone or as a set where one is on.
+  section: TILE
+  route: /docs/tile/api/toggle-group/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `ToggleGroup` under its own story [D-308]
+```
+```mdl
+page tile-api-tour: Tour
+  A guided tour that points at parts of the app, one step at a time.
+  section: TILE
+  route: /docs/tile/api/tour/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Tour` under its own story [D-308]
+```
+```mdl
+page tile-api-typography: Typography
+  Text that lines up with the controls beside it.
+  section: TILE
+  route: /docs/tile/api/typography/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Typography` under its own story [D-308]
+```
+```mdl
+page tile-api-dialog: Dialog
+  A modal window for a task the user finishes or cancels before going on.
+  section: TILE
+  route: /docs/tile/api/dialog/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Dialog` [D-310]
+```
+```mdl
+page tile-api-popover: Popover
+  Short content beside the control that opens it, such as a share link.
+  section: TILE
+  route: /docs/tile/api/popover/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Popover` [D-310]
+```
+```mdl
+page tile-api-tooltip: Tooltip
+  A short name or hint for a control, on hover or focus.
+  section: TILE
+  route: /docs/tile/api/tooltip/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Tooltip` [D-310]
+```
+```mdl
+page tile-api-hover-card: HoverCard
+  A preview of what a link or name points to, on hover.
+  section: TILE
+  route: /docs/tile/api/hover-card/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `HoverCard` [D-310]
+```
+```mdl
+page tile-api-toast: Toast
+  A notice that something happened, which goes away by itself.
+  section: TILE
+  route: /docs/tile/api/toast/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Toast` [D-310]
+```
+```mdl
+page tile-api-field: Field
+  A control's label, help text and error.
+  section: TILE
+  route: /docs/tile/api/field/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Field` [D-310]
+```
+```mdl
+page tile-api-select: Select
+  Picks one value from a list.
+  section: TILE
+  route: /docs/tile/api/select/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Select` [D-310]
+```
+```mdl
+page tile-api-scroll-area: ScrollArea
+  A scrolling region with a themed scrollbar.
+  section: TILE
+  route: /docs/tile/api/scroll-area/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `ScrollArea` [D-310]
+```
+```mdl
+page tile-api-menu: Menu
+  Dropdown menus.
+  section: TILE
+  route: /docs/tile/api/menu/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - The `Menu` parts, and where `@dxos/react-ui-menu` takes over for menus built from actions
+```
+```mdl
+page tile-api-icon: Icon
+  The icon component and its props.
+  section: TILE
+  route: /docs/tile/api/icon/
+  group: API
+  package: react-ui
+  family: Core
+  template: namespace
+  status: spike
+  covers:
+    - `Icon.Icon` props
+```
+
+```mdl
+page tile-api-mosaic-board: Board
+  Columns of cards the user drags.
+  section: TILE
+  route: /docs/tile/api/react-ui-mosaic/board/
+  group: API
+  package: react-ui-mosaic
+  family: Collections
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - The `Board` parts over a `BoardModel`, dragging cards within and across columns and columns by their handle; the Overview grid's Kanban board card links here [D-298]
+```
+```mdl
+page tile-api-list-listbox: Listbox (react-ui-list)
+  A flat list the user picks from.
+  section: TILE
+  route: /docs/tile/api/react-ui-list/listbox/
+  group: API
+  package: react-ui-list
+  family: Collections
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Listbox` story, live at the top [D-298]
+    - The `Listbox` parts and its selection [D-298]
+```
+```mdl
+page tile-api-masonry-masonry: Masonry
+  Tiles of different heights packed into columns.
+  section: TILE
+  route: /docs/tile/api/react-ui-masonry/masonry/
+  group: API
+  package: react-ui-masonry
+  family: Collections
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - The `Masonry` parts, column sizes, and tiles built from `Card`; the Overview grid's Gallery card links here [D-298]
+```
+```mdl
+page tile-api-mosaic-mosaic: Mosaic
+  Tiles the user can drag, in stacks.
+  section: TILE
+  route: /docs/tile/api/react-ui-mosaic/mosaic/
+  group: API
+  package: react-ui-mosaic
+  family: Collections
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Mosaic` story, live at the top [D-298]
+    - The `Mosaic` parts: containers and their event handlers, stacks, tiles and handles [D-298]
+```
+```mdl
+page tile-api-list-ordered-list: OrderedList
+  Rows the user drags into order.
+  section: TILE
+  route: /docs/tile/api/react-ui-list/ordered-list/
+  group: API
+  package: react-ui-list
+  family: Collections
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `OrderedList` story, live at the top [D-298]
+    - The `OrderedList` parts, `onMove`, and the drag handle's keyboard moves [D-298]
+```
+```mdl
+page tile-api-list-picker: Picker
+  A filter input over a list of choices.
+  section: TILE
+  route: /docs/tile/api/react-ui-list/picker/
+  group: API
+  package: react-ui-list
+  family: Collections
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Picker` story, live at the top [D-298]
+    - The `Picker` parts and committing an item from the keyboard [D-298]
+```
+```mdl
+page tile-api-list-tree: Tree
+  Nested rows from a tree model.
+  section: TILE
+  route: /docs/tile/api/react-ui-list/tree/
+  group: API
+  package: react-ui-list
+  family: Collections
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Tree` story, live at the top [D-298]
+    - The `Tree` parts, `createStaticTreeModel`, and open and selected state in atoms [D-298]
+```
+```mdl
+page tile-api-editor-editor: Editor
+  A text editor and its toolbar, built on CodeMirror.
+  section: TILE
+  route: /docs/tile/api/react-ui-editor/editor/
+  group: API
+  package: react-ui-editor
+  family: Editing
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Editor` story, live at the top [D-298]
+    - The `Editor` parts, the `@dxos/ui-editor` extensions for plain text and markdown, the toolbar and attention, and the `automerge` binding to an ECHO `Text`; the Overview grid's Markdown editor card links here [D-298]
+```
+```mdl
+page tile-api-form-form: Form
+  A form built from an Effect schema.
+  section: TILE
+  route: /docs/tile/api/react-ui-form/form/
+  group: API
+  package: react-ui-form
+  family: Editing
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Form` story, live at the top [D-298]
+    - The `Form` parts over a schema, validation and Save, `include`, and `ObjectForm` over an ECHO object [D-298]
+```
+```mdl
+page tile-api-grid-grid: Grid
+  A fast, editable grid of cells.
+  section: TILE
+  route: /docs/tile/api/react-ui-grid/grid/
+  group: API
+  package: react-ui-grid
+  family: Editing
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - `Grid.Root` and `Grid.Content`, planes and `getCells`, `overscroll`, and `GridCellEditor`; the Overview grid's Spreadsheet card links here [D-298]
+```
+```mdl
+page tile-api-menu-action-menu: ActionMenu
+  A dropdown menu drawn from a list of actions.
+  section: TILE
+  route: /docs/tile/api/react-ui-menu/action-menu/
+  group: API
+  package: react-ui-menu
+  family: Actions
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `ActionMenu` story, live at the top [D-298]
+    - `ActionMenu` over `MenuBuilder` actions, its trigger, and deferring a menu until it opens [D-298]
+```
+```mdl
+page tile-api-menu-action-toolbar: ActionToolbar
+  A toolbar drawn from a list of actions.
+  section: TILE
+  route: /docs/tile/api/react-ui-menu/action-toolbar/
+  group: API
+  package: react-ui-menu
+  family: Actions
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `ActionToolbar` story, live at the top [D-298]
+    - `useMenuBuilder` and `ActionToolbar`, placement, overflow, switches, attention, and `graphActions` in a plugin, linked to PLEX's App Graph [D-240] [D-298]
+```
+```mdl
+page tile-api-calendar-calendar: Calendar
+  A scrolling date picker and a week of events.
+  section: TILE
+  route: /docs/tile/api/react-ui-calendar/calendar/
+  group: API
+  package: react-ui-calendar
+  family: Time
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Calendar` story, live at the top [D-298]
+    - `Calendar.Root`, `Toolbar`, `Grid` and `Week`, picking a day or a range, and creating, moving and resizing events; the Overview grid's Calendar card links here [D-298]
+```
+```mdl
+page tile-api-plot-timeline: Timeline
+  Events from a table along a vertical time axis.
+  section: TILE
+  route: /docs/tile/api/react-ui-plot/timeline/
+  group: API
+  package: react-ui-plot
+  family: Time
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Timeline` story, live at the top [D-298]
+    - `Timeline` over a table of events, zoom, filter and category tags [D-298]
+```
+```mdl
+page tile-api-plot-plot: Plot
+  A table of values as a chart.
+  section: TILE
+  route: /docs/tile/api/react-ui-plot/plot/
+  group: API
+  package: react-ui-plot
+  family: Visualization
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - `Plot` over `toPlotData`, its chart types and options, and when it draws a legend; the Overview grid's Chart card links here [D-298]
+```
+```mdl
+page tile-api-canvas-editor-canvas-editor: CanvasEditor
+  An editor for drawings of shapes and links on a canvas that pans, zooms and opens nested views.
+  section: TILE
+  route: /docs/tile/api/react-ui-canvas-editor/canvas-editor/
+  group: API
+  package: react-ui-canvas-editor
+  family: Visualization
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Model` story, the one the Overview's Canvas card runs, live at the top [D-307]
+    - Every part of `CanvasEditor` and the props of `CanvasEditor.Root` [D-307]
+```
+```mdl
+page tile-api-geo-globe: Globe
+  A globe of countries drawn on a canvas.
+  section: TILE
+  route: /docs/tile/api/react-ui-geo/globe/
+  group: API
+  package: react-ui-geo
+  family: Visualization
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - The `Globe` parts, `features` of points and lines, the controller hooks, and a tour along a trip; the Overview grid's Map card links here [D-298]
+```
+```mdl
+page tile-api-graph-graph: Graph
+  Nodes and edges in SVG, placed by a projector.
+  section: TILE
+  route: /docs/tile/api/react-ui-graph/graph/
+  group: API
+  package: react-ui-graph
+  family: Visualization
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - `Graph` over a `GraphModel`, its props, and the force projector; the Overview grid's Force graph card links here [D-298]
+```
+```mdl
+page tile-api-geo-map: Map
+  A tiled street map with markers and lines.
+  section: TILE
+  route: /docs/tile/api/react-ui-geo/map/
+  group: API
+  package: react-ui-geo
+  family: Visualization
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Map` story, live at the top [D-298]
+    - The `Map` parts, its tiles, markers and lines [D-298]
+```
+```mdl
+page tile-api-graph-svg: SVG
+  The SVG surface a graph draws on.
+  section: TILE
+  route: /docs/tile/api/react-ui-graph/svg/
+  group: API
+  package: react-ui-graph
+  family: Visualization
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `SVG` story, live at the top [D-298]
+    - The `SVG` parts: root, zoom, grid, markers and mesh [D-298]
+```
+
+### Guides
+
+```mdl
+page tile-guide-custom-themes: Custom themes and dark mode
+  Change the theme's tokens, and follow or force dark mode.
+  section: TILE
+  route: /docs/tile/guides/custom-themes/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Overriding `--dx-*` variables and color tokens in an app's own stylesheet
+    - Following the system theme, or forcing light or dark
+```
+```mdl
+page tile-guide-plex: TILE in a PLEX plugin
+  How a plugin's components use TILE.
+  section: TILE
+  route: /docs/tile/guides/tile-in-a-plex-plugin/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Components take props and never read capabilities; containers connect them, with a link to PLEX Surfaces
+    - The plugin's translations, and the container shape (`Panel` with a scrolling body)
+```
+```mdl
+page tile-guide-testing: Testing and stories
+  Storybook stories and tests for TILE components.
+  section: TILE
+  route: /docs/tile/guides/testing-and-stories/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - A story with `withTheme` and the `translations` parameter
+    - `@dxos/react-ui/testing` in tests
+```
+### Resources
+
+```mdl
+page tile-api-reference: API reference
+  Generated reference for TILE's core and the component packages with guides.
+  section: TILE
+  route: /docs/tile/resources/api-reference/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Typedoc for `@dxos/react-ui` and `@dxos/ui-theme` [D-249]
+    - Typedoc for `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, the packages the guides cover [D-249]
+```
+```mdl
+page tile-glossary: Glossary
+  Every TILE term, defined once.
+  section: TILE
+  route: /docs/tile/resources/glossary/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Each term with a link to the page that explains it
+```
+```mdl
+page tile-llms-txt: llms.txt
+  The TILE site map and full text for agents, in the llms.txt format.
+  section: TILE
+  route: /docs/tile/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/tile/llms.txt`, each TILE page with its summary and a link to its Markdown
+    - Links to `/tile/llms-full.txt`, every TILE page in one file
+```
+
 ## Features
 
 ```mdl
@@ -1836,8 +3542,9 @@ feat F-7: Relationship to dxos.org
   req F-7.1:
     when: a reader is on any dxos.org docs page
     then: the header shows the DXOS logo, linking home, and the dxos.org nav (Home, ECHO, Composer,
-          Plugins, Blog, Docs); the footer links the same pages, the ECHO, HALO and PLEX docs,
-          GitHub and Discord
+          Plugins, Blog, Docs); the footer links the same pages with Docs right after Home [D-305], every
+          docs section in the topic switcher's order (ECHO, HALO, MESH, EDGE, SAGE, PLEX, TILE), GitHub and
+          Discord [D-250], [D-274]
 
   req F-7.2:
     when: a reader looks for ECHO material on dxos.org
@@ -1890,6 +3597,11 @@ feat F-7: Relationship to dxos.org
   req F-7.11:
     when: a reader comes back to a page with demos after its tab has been in the background
     then: every demo still shows its peers and their content, as it did before the tab was hidden
+
+  req F-7.12:
+    when: a reader opens `/echo`
+    then: every demo shows its content on every peer no later than the shared-runtime demos did (a median of
+          7.8 s on a local production build), measured over the whole page rather than per demo
 ```
 
 ```mdl
@@ -1912,6 +3624,11 @@ feat F-9: Diagrams as canvas applications
   req F-9.1:
     when: a page shows a diagram
     then: the diagram is a stand-alone `plugin-canvas` application
+
+  req F-9.2:
+    when: a docs page shows a static diagram
+    then: it is a plugin-illustrator render (`.dx` source and `.dx.svg` in `src/assets/diagrams/`) shown with
+      `Diagram`, never ASCII art in a code block [D-243]
 
 feat F-10: Live schema forms
 
@@ -2029,7 +3746,8 @@ feat F-16: Docs sections
 
   req F-16.1:
     when: a reader opens the docs
-    then: there are three sections, ECHO, HALO and PLEX, in that order in the topic switcher
+    then: there are seven sections, ECHO, HALO, MESH, EDGE, SAGE, PLEX and TILE, in that order in the topic
+          switcher [D-274]
 
   req F-16.2:
     when: a reader looks for HALO
@@ -2042,22 +3760,31 @@ feat F-16: Docs sections
 
   req F-16.4:
     when: the docs are built
-    then: they do not document EDGE or the sync services
+    then: EDGE is its own section, explaining the services DXOS runs and what they can read, with no self-hosting
+          and no link to EDGE's source
 
   req F-16.5:
     when: a reader opens `/docs/`
-    then: they land on ECHO's Overview page; there is no separate docs home page
+    then: they land on the docs home: the title DXOS Docs, a short neutral paragraph on what DXOS is, and a grid of
+          every section's hero art with its mark and name, in which ECHO spans two columns where there are four; each
+          card links to its section's Overview [D-272]
 
   req F-16.7:
-    when: a reader follows a redirected docs URL, such as `/docs` or an old `/docs/composer/` page
+    when: a reader follows a redirected docs URL, such as an old `/docs/composer/` page
     then: the server answers with a 301 to the new page, so no "Redirecting from" page shows in between; links in the
           site's own navigation point at the destination directly
 
   req F-16.6:
     when: a reader looks at the topic switcher
-    then: each section shows a DXOS brand mark, the same ones the brand package and the studio site use: ECHO's for
-          ECHO, HALO's for HALO, and KUBE's for PLEX; each mark has no box and takes its label's color, the accent
-          color for the current section
+    then: each section shows its logotype from the brand suite, drawn to one frame and one stroke weight [D-273]; each
+          has no box and takes its label's color, the accent color for the current section
+
+  req F-16.9:
+    when: a reader moves between dxos.org and the docs
+    then: the docs header is one row: the DXOS logo and a Docs link at the same spots as in the site's nav, then the
+          section picker, then search (icon and shortcut only), the social links in the text color and the theme
+          picker; the sections are always in the picker, never tabs, and the docs home has no picker [D-278]; on
+          phones the header keeps only the logo and the picker; the sidebar itself lists no sections
 
   req F-16.8:
     when: a reader opens a section's root page
@@ -2065,6 +3792,11 @@ feat F-16: Docs sections
           section's product name in large type as the page's only heading, over the section's brand background, with
           a one-line tagline under it; at every page width the heading stays on one line and the section's mark in the
           background stays whole
+
+  req F-16.10:
+    when: a TILE page shows a live preview of a component
+    then: the preview is a React island rendered in the page, inside a `.dx-island` root, never an iframe; it follows
+          the page's light or dark theme, and the page's own styles outside it are unchanged
 ```
 
 ```mdl
@@ -2073,7 +3805,8 @@ feat F-17: Same shape in both sections
   req F-17.1:
     when: a section is built
     then: its sidebar groups are Start here, Learning path, Core concepts, API, Guides, any groups of its own and
-          Resources, in that order
+          Resources, in that order; MESH, EDGE and SAGE have only Start here, Core concepts and Resources
+          [D-271]
 
   req F-17.2:
     when: a page is written
@@ -2083,7 +3816,7 @@ feat F-17: Same shape in both sections
     when: a learning path is built
     then: its pages build one thing, the ECHO tutorial app or the PLEX tutorial plugin, and each page ends with
           it as it stands after that page; HALO's learning path continues the ECHO tutorial app, adding people and
-          devices to it
+          devices to it; TILE's builds a contacts screen with React state and connects it to ECHO on its last page
 ```
 
 ```mdl
@@ -2162,6 +3895,34 @@ feat F-20: The tutorial plugin
     then: the page embeds the inspector, the reader loads their own plugin into it from its dev server, and no
           page before Run it in Composer needs Composer; The PLEX plugin alone loads the finished Stash
           plugin by itself
+```
+
+```mdl
+feat F-21: TILE demo grid
+
+  desc: |
+    The TILE Overview opens with a grid of live demos, one per component package, each one of the package's own
+    stories on sample data, with no ECHO. A card's size follows how much room its demo needs [D-299].
+
+  req F-21.1:
+    when: a reader looks at a card in the grid
+    then: the card names the package it shows
+
+  req F-21.2:
+    when: a reader clicks a card's header
+    then: the API page of the component the card shows opens [D-298]
+
+  req F-21.3:
+    when: a reader opens the TILE Overview
+    then: each card's code loads when the card scrolls into view, so the page is ready before every demo is
+
+  req F-21.4:
+    when: a reader opens the TILE Overview on a phone
+    then: the cards stack in one column in the order the wide layout reads
+
+  req F-21.5:
+    when: a reader opens the TILE Overview on a screen wider than the text column
+    then: the grid is wider than the text, up to the width of the content panel, and centered on the text column
 ```
 
 ## Acceptance
@@ -3039,7 +4800,6 @@ decision D-92: Each section is a sidebar topic, made with `starlight-sidebar-top
     - Starlight's built-in collapsed groups, which keep every section in one tree.
     - `starlight-sidebar-topics-dropdown`, which hides the sections until opened and pays off only with more sections than two.
 ```
-
 
 ```mdl
 decision D-93: The docs have no separate home page. `/docs/` goes to ECHO's Welcome, which takes over the home page's description of DXOS, and the SaaS comparison table moves into Why ECHO?.
@@ -4031,6 +5791,787 @@ decision D-224: The dxos.org Webflow nav keeps Try Composer inside the page's ed
   why: Between 992px and about 1300px the social links and Try Composer overflowed their column and Try Composer touched the window's edge, and on phones from about 480px to 600px it ran past it.
 ```
 
+```mdl
+decision D-225: The topic switcher moves from the top of the sidebar to the docs header, as logotype tabs beside the logo and Docs, folding into a picker below 72rem, where the sidebar folds into a menu. The sections become ECHO, HALO, MESH, PLEX, EDGE and TILE, and MESH, EDGE and TILE get an Overview with only the hero. Replaces the list in [D-92] and [D-105].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-16.1, F-16.4, F-16.6, F-16.9]
+  why: Josiah chose this design, modelled on Effect's docs, from six explored in the header; keeping the logo and Docs where the site's nav has them means neither moves when a reader crosses into the docs.
+```
+
+```mdl
+decision D-226: MESH has Start here, Core concepts and Resources, with no learning path, API or guides. It explains the architecture and where ECHO and HALO use it. Amends [F-17.1] for MESH.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-17.1, mesh-overview, why-mesh, mesh-architecture]
+  why: Apps never call MESH directly; ECHO and HALO do. A learning path or API pages would teach calls no reader makes.
+```
+
+```mdl
+decision D-227: The MESH pages describe MESH as multiplexing transports: a direct WebRTC link and the WebSocket to EDGE both carry the same protocols, and ECHO replicates each space over both today.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [mesh-overview, why-mesh, mesh-transports]
+  why: Josiah's own framing of MESH. It matches the code: `subductionReplicator` and `feedReplicator` run beside the peer swarm.
+```
+
+```mdl
+decision D-228: Swarms, signaling and ICE/TURN are MESH pages. EDGE's pages describe EDGE as a server and link to MESH for these.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [mesh-signaling, mesh-swarms, edge-connecting]
+  why: Each idea has one home, and the reader finds peer discovery under networking, not under the server that happens to run it.
+```
+
+```mdl
+decision D-229: Iroh, the planned QUIC transport for presence and gossip, gets one paragraph on Transports, marked planned.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [mesh-transports]
+  why: It is in progress and not on by default, so a page of its own would document behavior no reader gets.
+```
+
+```mdl
+decision D-230: The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of the MESH pages.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [mesh-architecture]
+  why: They live in `packages/core/mesh` but carry calls inside one device, not between devices.
+```
+
+```mdl
+decision D-231: MESH's client settings (`runtime.services.ice`, `runtime.services.iceProviders`, `runtime.client.edgeFeatures.signaling`) are documented on Signaling and discovery, not on a page of their own.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [mesh-signaling]
+  why: Three settings do not fill a page, and each belongs to signaling.
+```
+
+```mdl
+decision D-232: EDGE has Start here, Core concepts and Resources, with no learning path, API or guides. Amends [F-17.1] for EDGE.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-17.1, edge-overview, why-edge, edge-architecture]
+  why: Apps reach EDGE through ECHO, HALO and the client config; there is no EDGE API for a reader to call.
+```
+
+```mdl
+decision D-233: The sections are ordered ECHO, HALO, MESH, EDGE, PLEX, TILE. EDGE moves before PLEX. Amends [D-225].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-16.1]
+  why: EDGE belongs with the data and networking sections it serves; PLEX and TILE are the app-building sections and sit together at the end.
+```
+
+```mdl
+decision D-234: EDGE's Connecting page covers only the link between a device and EDGE: the WebSocket, its authentication and reconnecting. Peer links are MESH's.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [edge-connecting]
+  why: Follows [D-228].
+```
+
+```mdl
+decision D-235: The EDGE pages say plainly that EDGE stores space content in plaintext and can read it today, and describe Keyhive's encrypted relay only as the target. Replaces the part of [F-16.4] that kept EDGE undocumented.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-16.4, edge-what-it-can-see, edge-replication]
+  why: A reader deciding what to put in a space needs to know what the server can read now. HALO's Spaces and membership describes the Keyhive model, so What EDGE can see links there as the target.
+```
+
+```mdl
+decision D-236: EDGE has a Configuration page in Resources listing every client setting that points at or turns on EDGE.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [edge-configuration]
+  why: The settings are spread over `runtime.services` and `runtime.client.edgeFeatures`, and their defaults differ between a bare `Config` and the CLI.
+```
+
+```mdl
+decision D-237: DXOS operates EDGE. The pages cover no self-hosting, and never link EDGE's source, which is private.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [edge-overview, edge-architecture]
+  why: There is no supported way to run EDGE yourself, and a link to a private repository fails for every reader.
+```
+
+```mdl
+decision D-238: TILE's core is `@dxos/react-ui`, with `@dxos/ui-theme` documented as part of its setup. The other `react-ui-*` packages get one line each in the Component packages catalog.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [tile-overview, tile-installation, tile-packages]
+  why: react-ui renders nothing styled without ui-theme, so they are one install. The next tier of packages needs ECHO or the app graph, which makes react-ui the clean line for a standalone core.
+```
+
+```mdl
+decision D-239: TILE's learning path builds a contacts screen with plain React state on pages 1 to 5 and connects it to ECHO, with the ECHO tutorial's schema, on page 6. Amends [F-17.3].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-17.3, tile-learn-theme, tile-learn-echo]
+  why: react-ui does not need ECHO, so the path teaches it without ECHO first and shows the integration at the end.
+```
+
+```mdl
+decision D-240: Four component packages get guides, picked by how many plugins use them: Lists (`react-ui-list`), Forms from a schema (`react-ui-form`), Menus and toolbars (`react-ui-menu`) and Text editor (`react-ui-editor`). They are planned until Josiah confirms the picks.
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-guide-lists, tile-guide-forms, tile-guide-menus, tile-guide-editor]
+  why: Josiah asked for guides for the common packages and a proposal of which. Attention and mosaic are left out because they belong to the plugin shell.
+```
+
+```mdl
+decision D-241: TILE's live previews are `client:only` React islands rendered in the docs page, inside a `.dx-island` root, never iframes. The layer order of [D-68] keeps Starlight and the react-ui preflight apart.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-16.10, tile-overview]
+  why: Josiah agreed to live previews on the condition that an embed is an island, not an iframe.
+```
+
+```mdl
+decision D-242: TILE has six concept pages and eleven API family pages (Theme, Layout, Button, Input, Status, Panel, Toolbar, Overlays, Menu, Icon, Hooks), not one page per exported subpath. Its API reference stays planned until react-ui and ui-theme build typedoc.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-18.1, tile-api-reference]
+  why: About 50 subpaths would make 50 thin pages; a family page shows related parts together.
+```
+
+```mdl
+decision D-243: Docs pages draw diagrams with plugin-illustrator and never use ASCII art. The MESH and EDGE pages' six ASCII diagrams are redrawn this way.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-9.2]
+  why: The rest of the docs already use illustrator renders; they theme for dark mode, carry `ref=` paths back to the code, and open in Composer.
+```
+
+```mdl
+decision D-244: TILE's guides cover the four packages [D-240] picked: Lists, Forms, Menus and toolbars, and Text editor. They and the learning path show their components in live previews. The API reference stays planned until react-ui and ui-theme build typedoc [D-242].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [tile-learn-installation, tile-learn-layout, tile-learn-inputs, tile-learn-overlays, tile-learn-icons, tile-learn-echo, tile-guide-lists, tile-guide-forms, tile-guide-menus, tile-guide-editor]
+  why: Josiah asked for the planned TILE pages to be finished.
+```
+
+```mdl
+decision D-245: EDGE has no page on what it can see. HALO's Spaces and membership says it: a space that gives EDGE more than `pull` access is readable on EDGE. The data is stored encrypted and the keys apart from it, both are needed to read it, and they come together while an operation works on the data. Supersedes [D-235].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [why-edge, halo-spaces-membership, edge-replication, edge-compute]
+  supersedes: D-235
+  why: It follows from the ECHO and HALO pages, and access to the data during operations is the trade-off for EDGE's compute, indexing and other services.
+```
+
+```mdl
+decision D-246: TILE's tagline is "Design system and UI components.", and its overview calls its parts UI components, not React components. Pages about using them from React still say React.
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [tile-overview]
+  why: The long-term plan is for TILE not to be React-only; its components are built on Zag, which works across frameworks. The docs do not mention Zag yet.
+```
+
+```mdl
+decision D-247: TILE's mark is the seven tangram pieces cut into a diamond, in the arrangement Josiah picked as variant 7, in the topic switcher's logotype and the Overview hero. The hero's rays start at the diamond's border and continue only its edges and the cut lines that reach it.
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [F-16.6, tile-overview]
+  why: Josiah picked variant 7 of the tangram diamonds and asked for rays only out of the border, never inside the mark.
+```
+
+```mdl
+decision D-248: TILE's Start here has Overview, Why TILE? and Build with a coding agent, like ECHO and PLEX. Its learning path starts with The TILE component, which shows the finished contacts screen, then Installation, which also builds the first buttons. The coding-agent page links DXOS's TILE skills and has no prompt builder for now.
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [tile-build-with-agent, tile-the-tile-component, tile-learn-installation, tile-overview, D-239]
+  why: Josiah asked for TILE to start like ECHO, HALO and PLEX, with a first learning-path page about its core idea, and for the coding-agent page to stay simple.
+```
+
+```mdl
+decision D-249: TILE's API reference links generated typedoc for `@dxos/react-ui`, `@dxos/ui-theme`, `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, which now build it like the ECHO and HALO packages. Supersedes the part of [D-242] that kept it planned.
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [tile-api-reference, D-242]
+  why: Josiah asked for an API reference for the core and the four packages with guides.
+```
+
+```mdl
+decision D-250: The footer's Docs column lists every section the topic switcher has, in its order: ECHO, HALO, MESH, EDGE, PLEX and TILE. Amends [F-7.1].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [F-7.1]
+  why: The column listed only ECHO, HALO and PLEX after MESH, EDGE and TILE got sections.
+```
+
+```mdl
+decision D-251: The Component packages catalog has two groups: general purpose, and designed for ECHO. No package is described as built on ECHO or as specific to the plugin shell; `react-ui-menu` and `react-ui-editor` are general purpose. Amends [D-238].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [tile-packages, tile-overview]
+  why: Some packages are built for ECHO or with it in mind, but none is built on it, and none is specific to the plugin shell.
+```
+
+```mdl
+decision D-252: Each section's Overview hero uses the background from the final product suite, with the mark on the right. HALO and MESH keep the brand's right-hand art. EDGE uses the brand's DXNS art. ECHO and PLEX use the brand's ECHO and Kube art moved right, with the rays extended to the edges; PLEX drops the rays from the cube's upper-left edge and through its top-left vertex. TILE keeps its tangram art from [D-247] but drops the horizontal ray left of the diamond. Replaces EDGE's earlier hand-drawn background.
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [F-16.8]
+  why: Josiah asked that the docs use the real backgrounds from the final suite; the EDGE and PLEX heroes did not.
+```
+
+```mdl
+decision D-253: Each Overview hero follows the page's theme. In dark mode it is unchanged. In light mode its ground is the page background, so the hero blends into the page as it does in dark mode, its mark and title are the page's text color, and its tagline is the muted text color. The rays keep the section's color in both themes. Amends [D-252].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [F-16.8]
+  why: Josiah asked for light and dark versions of the header images; a dark banner on a light page stood out, and a gray one still read as a box where the dark hero blends in.
+```
+
+```mdl
+decision D-254: EDGE and MESH pages, including every section of Why MESH?, say EDGE holds a copy of each space that replicates through it and that `Space.setEdgeReplication` turns that off. Why MESH? says a direct link can pass through a TURN relay and no longer says its data never reaches a server; its section on that is titled Data on a direct link.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [why-mesh, why-edge, mesh-overview, mesh-transports, edge-replication]
+  why: A space can turn EDGE replication off, and WebRTC falls back to TURN when devices have no route; the pages promised a copy and a server-free path that need not exist.
+```
+
+```mdl
+decision D-255: EDGE's Indexing and queries page and Why EDGE? say EDGE indexes and answers queries only for the spaces it can read; a space that grants EDGE only `pull` access has no index there.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [edge-indexing, why-edge]
+  why: With only `pull` access EDGE relays a space unread, so it cannot index it.
+```
+
+```mdl
+decision D-256: Teleport's page and MESH's Architecture page say the other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates, and that a peer that fails authentication is disconnected only if the session's owner closes the session, as the space manager does. The auth extension runs on space connections; an invitation connection adds only the invitations extension beside the control extension, and checks the guest by the invitation's auth method, which for `none` checks nothing.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-teleport, mesh-architecture]
+  why: `SpaceProtocolSession.open` registers the replicator beside the auth extension, and the replicator does not check authentication.
+```
+
+```mdl
+decision D-257: Swarms and topology says MMST usually connects a swarm but does not guarantee it, and that EDGE covers the gaps.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-swarms]
+  why: MMST stops originating connections at its minimum, so two groups that each reach it never connect.
+```
+
+```mdl
+decision D-258: A space's swarm topic is its space ID, the first 20 bytes of the SHA-256 of its space key, on Signaling and discovery and in the glossary.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-signaling, mesh-glossary]
+  why: The pages called the topic a 32-byte key; `SpaceProtocol` derives it from the space ID.
+```
+
+```mdl
+decision D-259: The TILE learning path's ECHO app configures its client as ECHO's Installation page does: persistent storage, the OPFS worker, and EDGE signaling and replication. Connect to ECHO tells the reader to start the new entry point with the stylesheet imports.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-learn-echo]
+  why: Without a network config the client used in-memory transports, so the sharing exercise could not sync two browser profiles.
+```
+
+```mdl
+decision D-260: The guide sample's contact list keys its rows by id.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-guide-plex]
+  why: Rows keyed by name collide when two contacts share a name.
+```
+
+```mdl
+decision D-261: The text editor guide keeps the editor's text in state and passes it as `value` with `onChange`.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-guide-editor]
+  why: Rebuilding the extensions on a theme change recreates the editor, which reset it to its initial value.
+```
+
+```mdl
+decision D-262: The learning path's role tooltips sit on a focusable element.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-learn-icons, tile-learn-overlays]
+  why: The trigger was not focusable, so keyboard users could not open the tooltip.
+```
+
+```mdl
+decision D-263: The Overlays reference says Popover holds focus only with `modal`.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-api-overlays]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-264: The Hooks reference says `useTranslation` returns `{ t, … }`.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-api-hooks]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-265: The Menu reference says `Menu.Root`'s `onSelect` receives `{ value }`.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-api-menu]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-266: Theme and tokens puts `modal-surface` at the `raised` level and leaves `overlay` for explicit elevation.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-theme-tokens]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-267: The Layout concept says only `Flex`, `Grid` and `Container` take `asChild`.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-layout-concept]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-268: Composite components says interactive parts take no added roles or state attributes, that an icon-only part still needs an accessible name, and that a layout primitive may take a role.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-composite]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-269: The Forms guide says `include` keeps schema order, and that Save is disabled only while a touched field has an error.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-guide-forms]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-270: The topic picker's panel on a phone is capped at the viewport's height and scrolls.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.6]
+  why: On a short landscape screen the fixed panel ran past the viewport, where it could not be scrolled to.
+```
+
+```mdl
+decision D-271: The docs gain SAGE, a section on AI: models, agents, operations as tools, skills, memory and MCP. It has only Start here, Core concepts and Resources, like MESH, and no learning path, API or guides. Compute is not a section of its own for now: EDGE's Compute page introduces it, and Operations, Processes, Triggers and Traces follow it in EDGE's Core concepts. Every page starts from the ECHO objects the work or the agent reads and writes. Until SAGE's pages are written, its sidebar has only its Overview, which shows only the hero; the new pages are `later`.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-16.1, F-17.1, sage-overview, edge-compute, edge-operations, edge-processes, edge-triggers, edge-traces]
+  why: Josiah named the AI packages SAGE and wanted it beside the other products with ECHO kept in front. A RUNE section for compute was drafted and dropped for now; Josiah asked to merge compute into EDGE.
+```
+
+```mdl
+decision D-272: `/docs/` is a docs home titled DXOS Docs, with a short neutral paragraph on what DXOS is and a grid of all seven sections, each card the section's hero art with its mark and name, linking to its Overview. The cards run ECHO, HALO, MESH, then PLEX, TILE, EDGE and SAGE; in four columns ECHO spans two, so the cards fill two rows. They follow the page's theme like the heroes. The `/docs` redirect to ECHO's Overview is removed. Supersedes [F-16.5]'s "no separate docs home".
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-16.5, F-16.7, docs-home]
+  why: Landing on ECHO's Overview hid the other sections; Josiah asked for a home that shows every topic with its rayed logo, and for ECHO's card to grow so seven cards balance.
+```
+
+```mdl
+decision D-273: Every section's mark, color and hero art come from the alt 4 brand suite: ECHO green, HALO amber, MESH blue, PLEX light violet with the crossed mark, TILE red, EDGE orange with the cube and SAGE sage green with the hourglass. The section picker's logotypes, the Overview heroes and the docs home use it, drawn to one frame and stroke weight. The SVGs go into `@dxos/brand` [F-2.3]. Supersedes the marks and art chosen in [D-106], [D-247] and [D-252]; [D-253]'s light and dark treatment still applies.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-16.6, F-16.8, docs-home]
+  why: Josiah picked the alt 4 suite as the logo set; using it only for SAGE would show EDGE and PLEX with two different marks.
+```
+
+```mdl
+decision D-274: The section picker and the footer list the sections as ECHO, HALO, MESH, EDGE, SAGE, PLEX and TILE, down the stack from data to interface. Amends [D-250].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1, F-7.1]
+  why: SAGE runs on EDGE and under PLEX, so it sits between them.
+```
+
+```mdl
+decision D-275: EDGE's Compute page introduces compute and covers what EDGE hosts: where operations run and triggers fire while no device is online, where agent processes run, the AI service and the plugin registry. It links Operations, Processes and Triggers for the details, and SAGE for agents and models.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [edge-compute, sage-agents]
+  why: Josiah asked to merge compute into EDGE rather than give it a section.
+```
+
+```mdl
+decision D-276: There is no Functions page. Operations replaced functions: the function runtime now runs operations, so an operation deployed to EDGE is a remote process, covered on Processes. The EDGE and SAGE pages never call an operation a function, even where a package or API name still does.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [edge-processes, edge-compute]
+  why: Josiah said operations replace functions, and any doc or code still saying functions is old wording not yet updated.
+```
+
+```mdl
+decision D-277: Pipelines are not a concept page. Processes mentions them in one paragraph, as a tool an operation uses to stream a long source, with a cursor to resume. A Pipelines guide may come later.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [edge-processes]
+  why: A pipeline runs inside an operation, as in the Discord back-index, so it is not on the same level as operations and triggers.
+```
+
+```mdl
+decision D-278: The docs header always shows the sections as a picker, never as a row of tabs, and the docs home has no picker. Amends [F-16.9].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-16.9]
+  why: Seven logotype tabs crowd the header well before the sidebar folds, and the home page's grid already lists every section.
+```
+
+```mdl
+decision D-279: EDGE's compute pages and every SAGE page are written from the compute and AI packages as they are today: operations, processes, triggers and traces in EDGE, and models, agents, operations as tools, skills, memory and MCP in SAGE. The Overview shows the hero above its text. SAGE's pages are exported to agents through `/sage/llms.txt` like the other sections'.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [edge-compute, edge-operations, edge-processes, edge-triggers, edge-traces, sage-overview, why-sage, sage-models, sage-agents, sage-tools, sage-skills, sage-memory, sage-mcp, sage-glossary, sage-llms-txt]
+  why: Josiah found EDGE's compute pages too thin and asked for them to draw on the RUNE plan, and for SAGE's pages to be written from its plan.
+```
+
+```mdl
+decision D-280: Every section is pitched on its own. An Overview's or a Why page's opening says what the section does and why it is worth using alone, and names no other section as a requirement. How the sections work together, and what each gains next to the others, is woven into the page where it fits, never set apart under a heading of its own; the emphasis is on what the section does, not on what it needs. A comparison is against the strongest alternative, such as an agent framework with tools and memory, not a weak one.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [welcome, why-echo, mesh-overview, why-mesh, edge-overview, edge-compute, edge-operations, sage-overview, why-sage, app-framework-welcome, why-plex, tile-overview, why-tile]
+  why: Josiah wants each section usable and sold independently, with integration explained as a benefit; several pages sold a section only through the others, and Why SAGE? compared against assistants that see only pasted text, which the best agents are not.
+```
+
+```mdl
+decision D-281: SAGE has a Specs page, and Why SAGE? counts specs among what sets SAGE apart. A spec is `.mdl` text that people and agents both work from: its changelog attributes each decision to a person or an agent, a review records how far the code meets each item, and its QA tests are steps a person can follow and an agent can run.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [sage-specs, why-sage, sage-overview, sage-glossary]
+  why: Josiah named the MDL specs as something unique to SAGE.
+```
+
+```mdl
+decision D-282: The section picker and the docs home cards give each section one line, short enough that none wraps in the picker: ECHO "Local-first database: objects, queries, sync.", HALO "Identity, devices and access control.", MESH "Peer-to-peer networking and replication.", EDGE "Always-online backup, indexing and compute.", SAGE "Durable agents, tools, skills and models.", PLEX "An app framework where everything is a plugin." and TILE "Design system and UI components." [D-246]. SAGE's Overview tagline is "Durable agents with their own identity, tools and skills.".
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-16.5, F-16.9, docs-home, sage-overview]
+  why: Josiah asked for better PLEX, EDGE and SAGE lines, an EDGE line short enough not to wrap, access control named in HALO's, and each section pitched on its own [D-280].
+```
+
+```mdl
+decision D-283: SAGE Models says only that telemetry records each model call with its model, timings and token counts. It does not say when the record includes the prompt and the response.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [sage-models]
+  why: Josiah said the page does not need that much detail.
+```
+
+```mdl
+decision D-284: SAGE's Overview no longer walks through a turn; the turn and its diagram move to Agents. PLEX's Overview puts the demos right after a short intro that names Composer, and merges how an app is put together, the packages and what a plugin gets for free into one section.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [sage-overview, sage-agents, app-framework-welcome]
+  why: Josiah said a turn loop is detail, not overview content, and that PLEX's Overview was a run of small sections a reader would stop before reaching the demos.
+```
+
+```mdl
+decision D-285: EDGE's diagrams and pages name services as the edge repo does and show the Router as where each device's WebSocket ends. The Overview diagram drops the "front door" box and draws devices to the Router, the Router to the DB, compute and identity services, DB triggers to compute and compute prompts to the AI service. Architecture describes the `edge` worker as the HTTP entry point rather than a front door for every request.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [edge-overview, edge-architecture, edge-glossary]
+  why: Josiah asked where the "front door" and lowercase "db" came from and pointed out that the Router terminates the WebSockets.
+```
+
+```mdl
+decision D-286: On a wide screen the dxos.org Webflow nav puts its links beside the logo, as the docs header does, with Try Composer and the social links pushed to the right edge. Its narrow-screen rules from [D-224] stay. Amends [D-224].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.4]
+  why: This branch had already moved the links beside the logo to match the docs header when main centred the menu; merging keeps the docs layout and main's overflow fixes.
+```
+
+```mdl
+decision D-287: `/echo` uses ECHO's green from the alt 4 suite [D-273]. The hero's rays are the suite's green, and the eyebrow, the headline's underline, the primary button, the copied check and the selected tabs, which were the site's purple, are green too. Text in green uses a lighter tint of it so it stays legible on the dark ground.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [D-220]
+  why: Josiah asked for `/echo` to match the colors ECHO got when the section colors were swapped around; its purple and maroon now read as PLEX and TILE.
+```
+
+```mdl
+decision D-288: `/echo` draws its hero from the same ECHO art as the docs heroes and takes its green from that art's ray color, so a change to the section suite reaches `/echo` with no second edit. Amends [D-220] and [D-287].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [D-220, D-287]
+  why: Josiah asked for `/echo` to share assets and inherit colors so it does not diverge from the suite again.
+```
+
+```mdl
+decision D-289: PLEX's Overview calls PLEX a framework for building apps out of plugins, not an agentic one. What agents get from a plugin, its operations and skills as tools, stays in "How it works".
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [app-framework-welcome]
+  why: Josiah asked what makes PLEX agentic; nothing in the framework itself does.
+```
+
+```mdl
+decision D-290: The HALO, MESH and SAGE suite art run their rays well past the art's edges, as ECHO, EDGE, PLEX and TILE already do, so any crop wider than the art, such as the docs home cards, shows them running to the edge rather than stopping short. Amends [D-272] and [D-273].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [docs-home, D-272, D-273]
+  why: Josiah saw the SAGE card's rays stop before the card's right edge; its art's rays ended at x 1940, inside the card's 720 to 2160 window.
+```
+
+```mdl
+decision D-291: Each live demo is a Storybook story, built with the story harness in `@dxos/storybook-testing`, and the docs site embeds the story itself rather than a copy of it. The ECHO demos live in `@dxos/stories-echo`. `@dxos/storybook-testing` is a namespace package with one entry point per namespace, each plugin its own namespace. A story asks for peers; it is not always two. A page of stories can hand them one shared set of peers and one space so the page starts two clients, not two per demo.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-7.5, F-7.10, F-7.12]
+  why: Any story built with the layout harness can then go onto the site as a demo, with no second frame to keep in step with Storybook.
+  rejected:
+    - Keep the docs demo frame and runtime beside the story harness: two ways to frame a demo drift apart, and a story could not be dropped onto a page.
+    - Always run two peers: a story that needs one peer should not pay for a second.
+```
+
+```mdl
+decision D-292: The docs island composes a story with `StoryEmbed.compose`, which runs its meta, decorators and loaders outside Storybook, and renders it with `StoryEmbed.Root` under layout containment, so the story's fixed full-screen layout fills the island. On `/echo` every island joins one `StoryPeers` runtime, started when the first island mounts and before the story module arrives; each story seeds once, partials are seeded once per page, and the diagram seeds after both peers join. The PLEX Overview's iframe page gives its story peers of its own. Fills in [D-291].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.5, F-7.10, F-7.12]
+  why: A runtime per demo starts eight clients on the page, which [D-61] found too slow; one shared runtime starts two.
+  rejected:
+    - Seed the diagram with the others: its large write slows the second peer's join, and the page was ready about 1.2 s later.
+    - Hold a second peer's app until its replica has the story's objects: it did not change the time to ready.
+```
+
+```mdl
+decision D-293: The TILE Overview opens with a grid of live demos in four columns. Kanban, Calendar, Markdown editor and Diagram get two columns and two rows; the spreadsheet grid gets three columns and one row; force graph, map and chart get one cell, and the masonry gallery two columns and one row. Each card names its package and links to the guide for it, one guide per package; the Markdown editor's is Text editor.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-overview, F-21, tile-guide-mosaic, tile-guide-calendar, tile-guide-grid, tile-guide-graph, tile-guide-diagram, tile-guide-masonry, tile-guide-map, tile-guide-chart]
+  why: One preview of buttons does not show what can be built with TILE; a grid of the larger components does, and each card leads to how to build it.
+  rejected:
+    - Equal tiles: a kanban board or a week of events does not read in a single cell.
+    - Plugin stories through `StoryEmbed`: they start ECHO clients, and TILE needs none.
+```
+
+```mdl
+decision D-294: A page can mark a block wide, with the `dx-wide` class, and it breaks out of the text column into the whole content panel, up to 80rem, centered on the column. The TILE Overview's demo grid is wide. Fills in [D-293].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-21.5, tile-overview]
+  why: Live demos need more width than prose; in the 50rem text column four columns of demos were too narrow for a kanban board or a week of events.
+  rejected:
+    - Fewer columns in the text column: the large demos would still be cramped, and the small ones would take a whole row.
+```
+
+```mdl
+decision D-295: The TILE Overview's Calendar card shows the package's existing week view, `Calendar.Week`, with events to drag, move and resize. The Kanban card's cards reorder within a column and move across columns, and its columns reorder by the handle in their header. Fills in [D-293].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-guide-calendar, tile-guide-mosaic, tile-overview]
+  why: A board whose columns and cards do not move does not show what the board does, and a docs demo should show what a package already has rather than add to it.
+  rejected:
+    - A new `Calendar.Month` view in `@dxos/react-ui-calendar`: it changed the package's API to serve one demo.
+```
+
+```mdl
+decision D-296: A TILE guide is named after its package and covers the package, not one demo, in the plural like Lists and Forms: Mosaics, Calendars, Grids, Graphs, Diagrams, Masonry, Maps and Charts. A demo is one example on its package's guide; a card in the Overview's grid keeps the demo's name and opens the package's guide. Text editor keeps its name. Amends [D-293].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-guide-mosaic, tile-guide-calendar, tile-guide-grid, tile-guide-graph, tile-guide-diagram, tile-guide-masonry, tile-guide-map, tile-guide-chart]
+  why: A kanban board is one thing Mosaic does; a guide named after the demo hides the rest of the package.
+```
+
+```mdl
+decision D-297: A card's header is one compact line: the demo's title, its package and an arrow to the guide. The grid is in twelfths so every card has room for that line: Kanban, Calendar, Markdown editor and Diagram take half the width and two rows; the spreadsheet two thirds of a row beside the force graph; the gallery half the width and two rows, with the map and chart stacked beside it. The calendar is the week view; the markdown editor pads its text off the card's edges; the spreadsheet keeps wheel and trackpad scrolling inside the grid, so the page neither scrolls nor swipes back or forward; the chart has one series and no legend; the globe flies a looping trip between its points along the lines that join them. The masonry card is titled Gallery. Amends [D-293].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-21.1, tile-overview]
+  why: The package on its own line made the headers tall, and a quarter-width card had no room for it beside the title.
+```
+
+```mdl
+decision D-298: TILE's API section has one page per component namespace, as `@dxos/react-ui`'s pages do, grouped by package. The core pages sit directly under API; each other package's pages live at `/docs/tile/api/<package>/<namespace>/` and nest in a group after them [D-301]. In every section a top-level group starts expanded and a nested group starts collapsed, opening when the current page is in it. Each namespace page opens with one of the package's own stories, embedded with `StoryEmbed` and with debug args turned off, then the import, the install, the parts and their props, and the examples that were the package guides. The package guides and the Component packages page are retired; Guides keeps the three that span packages. The Overview grid's cards open the namespace pages. Amends [D-238], [D-251] and [D-293].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-overview, F-21.2, tile-api-reference]
+  why: A reader looks for a component by the package they install and the namespace they import, and a package's stories already show it running, so the docs need no second copy of each demo.
+  rejected:
+    - One Overview page per package: the reader wants a page per component namespace, as for `@dxos/react-ui`.
+    - A catalog page of every package: a package worth documenting gets its own group in API instead.
+```
+
+```mdl
+decision D-299: Each card in the TILE Overview's grid runs a story from its package's own stories file, the same story that opens the card's API page. Calendar runs `Week` and Markdown editor runs `WithToolbar`. Where no story fits a card, the package gains a `Docs` story with the demo the guide had: the task board, the spreadsheet, the force graph, the diagram, the gallery, the globe's trip and the chart. A `Docs` story fills its frame on the page's surface, whatever its meta's layout. The examples on those API pages keep their code, and the story at the top runs it. A story can change for the docs, as the editor stories pad their text, but a package's API does not. Amends [D-293], [D-297] and [D-298].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-21, tile-overview, tile-api-mosaic-board, tile-api-diagram-diagram, tile-api-geo-globe, tile-api-graph-graph, tile-api-grid-grid, tile-api-masonry-masonry, tile-api-plot-plot]
+  why: A demo written for the docs alone is a second copy that drifts from the package; a story is checked in Storybook and runs the same in the grid, on the API page and in Storybook.
+  rejected:
+    - Snippets for the cards, as before: each card's demo lived only in the docs.
+    - Existing stories for every card: Board's and the force graph's are sized for a whole screen, and Board's eight ECHO-backed columns clip in a card; the others have no story for what the card shows.
+```
+
+```mdl
+decision D-300: The TILE Overview's cards come in more sizes, each set by what its demo needs, in twelfths of the width and rows of 14rem. Kanban takes five columns and Calendar seven, both two rows tall. The spreadsheet takes eight columns and one row, beside a force graph four columns wide and two rows tall. The chart and the map take four columns and one row each, under the spreadsheet. The diagram takes seven columns and the Markdown editor five after it, both two rows tall, and the gallery takes the full width for two rows. On a phone a one-row card is 16rem tall and the others 22rem. Amends [D-297].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-overview]
+  why: Josiah found the cards too alike in size, and the force graph too cramped in a third of a row.
+```
+
+```mdl
+decision D-301: TILE's API sidebar nests the component packages' pages by what the component does, not by package, in groups named with one word: Collections (Board, Listbox, Masonry, Mosaic, OrderedList, Picker, Tree), Editing (Editor, Form, Grid), Actions (ActionMenu, ActionToolbar), Time (Calendar, Timeline) and Visualization (Diagram, Globe, Graph, Map, Plot, SVG). A page's `family` field places it. The top level of API holds only `@dxos/react-ui`'s core; every package that builds on it nests in a group. Routes keep the package, and each page names its package in its import and install. Amends [D-298].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: Six of the twelve packages hold one namespace, so a group per package was mostly one click to one link, and a reader looks for a list or a chart, not for its package.
+  rejected:
+    - One Components group of twenty pages: long, and it splits Graph from SVG and Globe from Map.
+    - General purpose and Data and visualization: shorter, but less precise.
+    - Groups only for packages with two or more pages: the sidebar mixes groups and pages with no rule a reader can see.
+```
+
+```mdl
+decision D-302: Every section's API group lists its pages alphabetically, and TILE's family groups (Actions, Collections, Editing, Time, Visualization) follow in alphabetical order. Amends [D-301].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: A reader scans an API list for a name, and an alphabetical list is the one order they can predict.
+  rejected:
+    - Spec order: it tracks when a page was written, which a reader cannot see.
+```
+
+```mdl
+decision D-303: Every demo embedded in a docs page (the PLEX plugin inspector, the HALO and ECHO tutorial embeds, the demo embeds and the TILE previews) is wider than the text column, up to the width of the content panel and centered on it, as the TILE Overview grid and the TILE API stories are.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [plex-the-plex-plugin, app-framework-create-plugin, app-framework-define-type, app-framework-add-operation, app-framework-add-surface, app-framework-extend-app-graph]
+  why: A demo is an app with its own panes, and at the text column's width each pane gets little room.
+```
+
+```mdl
+decision D-304: The docs have square corners everywhere outside a demo, as the marketing pages do: the demo and code frames, the topic switcher and its menu, the search button and its dialog, the Docs home cards, the sidebar and on-this-page links, buttons, cards, inline code and the agent prompt. A demo keeps its own corners. Amends [D-223].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [docs-home]
+  why: The home, Composer, plugins and `/echo` pages are square, and rounded framing made the docs read as a different site.
+  rejected:
+    - Square the demos too: a demo shows the components as they ship, corners included.
+```
+
+```mdl
+decision D-305: The docs footer and the marketing pages' footer list Docs right after Home: Home, Docs, ECHO, Composer, Plugins. Amends [F-7.1].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-7.1]
+  why: Docs is the site's second destination after Home, so it reads first among the rest.
+```
+
+```mdl
+decision D-306: Every section's sidebar lists its groups in one order: Start here, Learning path, Core concepts, Guides, API, Resources. A section without a group skips it. TILE's API moves after its Guides.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: A reader who knows one section's sidebar finds the same group in the same place in every other.
+  rejected:
+    - API before Guides everywhere: guides teach a task and the API is what a reader looks up after, so Guides lead in four of the five sections already.
+```
+
+```mdl
+decision D-307: TILE documents and demos `@dxos/react-ui-canvas-editor`'s `CanvasEditor`, the canvas Composer's drawing plugins use, in place of `@dxos/react-ui-diagram`. The Overview's Diagram card becomes a Canvas card that runs `CanvasEditor`'s `Model` story, and the Diagram API page becomes a CanvasEditor page in the Visualization group. `react-ui-diagram` keeps no `Docs` story. Amends [D-299], [D-301].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-overview, tile-api-canvas-editor-canvas-editor]
+  why: The canvas editor is the one the platform draws with, in the canvas, code graph, code and UML plugins; no plugin uses the React Flow diagram.
+```
+
+```mdl
+decision D-308: TILE's API documents every namespace of `@dxos/react-ui`, one page each, and nests every page, core or not, in a family group: Actions, Collections, Display, Editing, Foundations, Layout, Overlays, Time and Visualization. The API group has no top-level pages, so the sidebar no longer tells core components from the packages built on them. A family lists its pages alphabetically, and the two Listbox pages are labelled by package. Amends [D-301], [D-302].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: Thirty-two of the core namespaces had no page, and a reader looks for a component by what it does, not by which package holds it.
+  rejected:
+    - Keep the core pages at the top level: with forty-three pages the list is too long to scan.
+```
+
+```mdl
+decision D-309: An API page's story sits centred in its frame, as Storybook centres a story whose layout is not fullscreen, and Storybook's own frames (the size rows, the centred and column layouts) are transparent, so the page shows through around the components. A story taller or wider than the frame starts at its top left and scrolls. The `CanvasEditor` demo is its `Docs` story: the canvas, navigation, palette and zoom, without the inspectors, actions or display menu. Amends [D-298], [D-307].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-overview, tile-api-reference]
+  why: The core stories size themselves for Storybook's centred layout, so in the docs they sat in the frame's top left on a patch of Storybook's background; the full editor's panels crowded the demo.
+  rejected:
+    - Stretch each story to the frame's width: a 32rem accordion or tab bar reads worse at 77rem.
+```
+
+```mdl
+decision D-310: Every TILE API page documents exactly one namespace. The Overlays page splits into Dialog, Popover, Tooltip, HoverCard and Toast; Input keeps only `Input`, with Field and Select on pages of their own; Panel keeps only `Panel`, with ScrollArea on its own page. Amends [D-308].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference, tile-api-input, tile-api-panel, tile-api-dialog, tile-api-popover, tile-api-tooltip, tile-api-hover-card, tile-api-toast, tile-api-field, tile-api-select, tile-api-scroll-area]
+  why: A reader looks a component up by its namespace; a page that bundles several hides all but the first from the sidebar and from search.
+  rejected:
+    - Keep Overlays as a page that compares them: the learning path's Overlays step already says which to use when.
+```
+
+```mdl
+decision D-311: A core `@dxos/react-ui` story's frame fits the story: as tall as the story plus a margin, up to the height the page gives, and as wide as the text column unless the story is wider. Under Storybook's fixed centred or column layout the frame fits the panel that layout holds; a fullscreen story keeps the page's frame. The other packages' frames keep the sizes their pages give, since their stories fill whatever frame they get. Amends [D-303], [D-309].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: A badge or a breadcrumb sat in a frame as tall and wide as the Board's, mostly empty.
+  rejected:
+    - Fit every API story: a chart or map with no size of its own collapses to nothing.
+```
+
+```mdl
+decision D-312: TILE's API puts the 44 core `@dxos/react-ui` component pages in one Core group, listed alphabetically; the families hold only the other packages' pages. Hooks, Theme and Util, which are not components, and VirtualAnchor, Show and Match, which have no story or draw nothing of their own, have no API page. Amends [D-308].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: The core is what every TILE app starts from, so it reads as one set; a page per helper namespace padded the list without anything to show.
+  rejected:
+    - Keep the core in the families with the other packages: it hid which components come with `@dxos/react-ui` itself.
+```
+
+```mdl
+decision D-313: A core API page sets its story's frame size in the page, `height` and `narrow`, from the story's measured size, so the frame does not change size as the story loads. Amends [D-311].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: Measured on load, the frame showed at the full width and height until the story arrived, then jumped.
+```
+
+```mdl
+decision D-314: The topic switcher loads its Kumbh Sans stylesheet without blocking the parser, as a print stylesheet that switches to all media once it loads. Fills in [D-225].
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-16.1]
+  why: The stylesheet sat in the header, so the parser stopped at the next script until Google Fonts answered, and Firefox, which has no paint holding or cross-document view transitions, painted a page with only the header between navigations.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
@@ -4053,6 +6594,8 @@ ext page
     group: Prose
     template: ExtRef
     status: planned | spike | done | later
+    package?: Prose
+    family?: Prose
     covers?: ProseList
 ```
 

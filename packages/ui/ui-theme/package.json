@@ -36,7 +36,8 @@
   ],
   "scripts": {
     "audit-classes": "npx tsx bin/audit-classes.mts",
-    "tailwind-check": "tailwindcss -i ./dist/plugin/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
+    "tailwind-check": "tailwindcss -i ./dist/plugin/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check",
+    "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
     "@dxos/node-std": "workspace:*",
@@ -61,6 +62,7 @@
     "@storybook/react-vite": "catalog:",
     "@types/postcss-import": "catalog:",
     "esbuild": "catalog:",
+    "typedoc": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
