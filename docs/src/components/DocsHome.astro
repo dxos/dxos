@@ -106,6 +106,18 @@ const cards = SUITE_ORDER.map((id) => {
     height: 100%;
   }
 
+  /* Beside other cards ECHO's art is out of flow, so the row is as high as they are and the names line up. */
+  @media (min-width: 64.01rem) {
+    .wide .art {
+      position: relative;
+    }
+
+    .wide .art :global(svg) {
+      position: absolute;
+      inset: 0;
+    }
+  }
+
   .text {
     display: flex;
     flex-direction: column;
@@ -122,7 +134,9 @@ const cards = SUITE_ORDER.map((id) => {
     color: #fff;
   }
 
+  /* Two lines whatever the text's length, so every card's name sits at the same height in its row. */
   .description {
+    min-height: 2lh;
     font-size: var(--sl-text-sm);
     color: rgb(255 255 255 / 0.7);
   }
