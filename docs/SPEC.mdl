@@ -6572,6 +6572,14 @@ decision D-314: The topic switcher loads its Kumbh Sans stylesheet without block
   why: The stylesheet sat in the header, so the parser stopped at the next script until Google Fonts answered, and Firefox, which has no paint holding or cross-document view transitions, painted a page with only the header between navigations.
 ```
 
+```mdl
+decision D-315: Every docs page carries a `darkreader-lock` meta tag, so the Dark Reader extension leaves the docs alone.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-16.1]
+  why: Josiah saw a page flash between navigations in Firefox that stopped only when Dark Reader was off globally; the docs already have a dark theme, so the extension adds nothing.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

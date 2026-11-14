@@ -29,6 +29,8 @@ const PAGE_REVERT = `@layer page-revert {
 <!-- First in the head, so this order holds over the layers that Starlight and the react-ui theme declare. -->
 <style is:inline set:html={`@layer ${DOCS_LAYERS.join(', ')};\n${PAGE_REVERT}`} />
 {PRELOAD_FONTS.map((href) => <link rel="preload" href={href} as="font" type="font/ttf" crossorigin />)}
+<!-- The docs carry their own dark theme, so Dark Reader stays out. -->
+<meta name="darkreader-lock" />
 <Default />
 <!-- react-ui's dark variant keys on a `dark` class; Starlight's theme picker sets `data-theme`. -->
 <script is:inline>
