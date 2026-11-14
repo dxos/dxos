@@ -10,6 +10,7 @@ import {
   grooveBounds,
   grooveHeads,
   grooveTrim,
+  linkEndAt,
   markerFrame,
   markerTrim,
   trimPath,
@@ -43,6 +44,28 @@ describe("a link end's marker", () => {
     expect(drawnLinkEnds({ start: 'circle' }, true)).toEqual({ start: 'circle' });
     // Markers cleared are a choice too: the next link has none, directed or not.
     expect(drawnLinkEnds({}, true)).toBeUndefined();
+  });
+});
+
+describe('the link end at a point', () => {
+  const links = [
+    { link: 'one', source: { x: 0, y: 0 }, target: { x: 100, y: 0 } },
+    { link: 'two', source: { x: 100, y: 4 }, target: { x: 100, y: 200 } },
+  ];
+
+  test('a point within reach of an end is on it, and one further off is on none', ({ expect }) => {
+    expect(linkEndAt(links, { x: 6, y: 8 }, 10)).toEqual({ link: 'one', end: 'source' });
+    expect(linkEndAt(links, { x: 100, y: 190 }, 10)).toEqual({ link: 'two', end: 'target' });
+    expect(linkEndAt(links, { x: 50, y: 0 }, 10)).toBeUndefined();
+  });
+
+  test('the nearest end wins, and the earlier link where two are as near', ({ expect }) => {
+    expect(linkEndAt(links, { x: 100, y: 3 }, 10)).toEqual({ link: 'two', end: 'source' });
+    expect(linkEndAt(links, { x: 100, y: 2 }, 10)).toEqual({ link: 'one', end: 'target' });
+    // A short link's ends are both in reach of a press between them.
+    expect(linkEndAt([{ link: 'short', source: { x: 0, y: 0 }, target: { x: 12, y: 0 } }], { x: 8, y: 0 }, 10)).toEqual(
+      { link: 'short', end: 'target' },
+    );
   });
 });
 

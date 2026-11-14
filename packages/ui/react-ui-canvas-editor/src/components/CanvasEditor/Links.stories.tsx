@@ -302,3 +302,58 @@ export const EndMarkerTest: Story = {
     await expect(marker(drawn()[0])).toContain('arrow-end');
   },
 };
+
+/**
+ * A link's end is wherever the press lands on what is drawn there, whether or not the link was selected first: its
+ * marker and the line beside it, and the point it meets a shape at, which that shape's port otherwise covers.
+ */
+export const EndPressTest: Story = {
+  args: { type: 'ortho' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    // The wide twin of the link's line, which is what a press on the link lands on.
+    const line = () => view.querySelector<SVGPathElement>('path[data-link-press="far-side"]');
+    await waitFor(() => expect(line()).not.toBeNull());
+    const path = line();
+    if (!path) {
+      throw new Error('The link is not drawn.');
+    }
+    /** Where the link is `back` scene units short of its target end, on screen. */
+    const short = (back: number) => {
+      const { x, y } = path.getPointAtLength(path.getTotalLength() - back);
+      const matrix = path.getScreenCTM();
+      const point = matrix ? new DOMPoint(x, y).matrixTransform(matrix) : new DOMPoint(x, y);
+      return { clientX: point.x, clientY: point.y };
+    };
+    const closeMenu = async (item: HTMLElement) => {
+      await waitFor(() => expect(item.closest('[role="menu"]')).toHaveFocus());
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+    };
+    // The view fits its scene after it mounts, and a press aimed while it does lands somewhere else.
+    let placed = '';
+    await waitFor(() => {
+      const matrix = path.getScreenCTM();
+      const now = matrix ? [matrix.a, matrix.e, matrix.f].join() : '';
+      const still = now !== '' && now === placed;
+      placed = now;
+      return expect(still).toBe(true);
+    });
+
+    // 1. A press on the line beside its end, with nothing selected, leads the menu with that end's marker.
+    await fireEvent.contextMenu(path, { ...short(8), button: 2 });
+    await closeMenu(await screen.findByTestId('menu-end-none'));
+    await waitFor(() => expect(view.querySelector('[data-link-end="target"]')).not.toBeNull());
+
+    // 2. A press on the middle of the link is on the link, not an end.
+    await fireEvent.contextMenu(path, { ...short(path.getTotalLength() / 2), button: 2 });
+    const cut = await screen.findByRole('menuitem', { name: /^Cut/ });
+    await expect(screen.queryByTestId('menu-end-none')).toBeNull();
+    await closeMenu(cut);
+
+    // 3. A press on the point the link meets its shape at, where the press lands on the canvas, is on the end too.
+    await fireEvent.contextMenu(view, { ...short(0), button: 2 });
+    await closeMenu(await screen.findByTestId('menu-end-none'));
+  },
+};

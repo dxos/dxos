@@ -305,6 +305,7 @@ export const SceneLayer = memo(
                               onPointerLeave={() => handlers.onLinkHover?.(undefined)}
                               onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
                               onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
+                              data-link-press={link.id}
                             />
                           )}
                           {diagram && link.connector ? (

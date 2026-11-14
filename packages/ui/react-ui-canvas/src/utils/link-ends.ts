@@ -10,7 +10,7 @@
 // groove's lips are offset in the scene's frame.
 //
 
-import { type Bounds, type LinkEnds, type Marker, type Point } from '@dxos/scene';
+import { type Bounds, type LinkEnds, type LinkId, type Marker, type Point } from '@dxos/scene';
 
 import { flattenPath } from './path.ts';
 
@@ -326,4 +326,31 @@ export const withEndMarker = (
 export const drawnLinkEnds = (remembered: LinkEnds | undefined, directed: boolean): LinkEnds | undefined => {
   const { start, end }: LinkEnds = remembered ?? (directed ? { end: 'arrow' } : {});
   return start || end ? { ...(start ? { start } : {}), ...(end ? { end } : {}) } : undefined;
+};
+
+/** Where a link's two ends are anchored. */
+export type LinkAnchors = { link: LinkId; source: Point; target: Point };
+
+/**
+ * The link end at `point`: the nearest anchor within `reach` of it, the earlier link's where two are as near. A press
+ * is on a link's end wherever it lands on what is drawn there, its marker as much as its handle.
+ */
+export const linkEndAt = (
+  links: readonly LinkAnchors[],
+  point: Point,
+  reach: number,
+): { link: LinkId; end: 'source' | 'target' } | undefined => {
+  let best: { link: LinkId; end: 'source' | 'target'; distance: number } | undefined;
+  for (const { link, source, target } of links) {
+    for (const [end, anchor] of [
+      ['source', source],
+      ['target', target],
+    ] as const) {
+      const distance = Math.hypot(point.x - anchor.x, point.y - anchor.y);
+      if (distance <= reach && (!best || distance < best.distance)) {
+        best = { link, end, distance };
+      }
+    }
+  }
+  return best && { link: best.link, end: best.end };
 };

@@ -451,6 +451,11 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] **A new link takes the markers last set** (user, 2026-11-13): set from the end's menu or in Properties, they
       are kept per canvas (`atoms.linkEnds`) and given to the next link drawn (`drawnLinkEnds`); cleared markers
       count, so the next link then has none even between directed ports. Only the markers are kept, not the style.
+- [x] **A link's end is what is drawn there, not only its handle** (user, 2026-11-13): the end's menu opened
+      only for a press on the 5 px handle, which a link shows once selected; a press on the arrowhead got the
+      link's plain menu, and on an unselected link's end the shape's port took it. The pointer machine now
+      resolves the end by position (`linkEndAt`): within 20 px of it along the link, or 8 px off the link.
+      Story `Links` › End Press Test.
 - [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
       Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the

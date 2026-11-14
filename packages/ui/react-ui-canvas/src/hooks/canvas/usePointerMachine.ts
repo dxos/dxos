@@ -82,6 +82,7 @@ import {
   insertIndex,
   insertLink,
   insertNode,
+  linkEndAt,
   linkGeometry,
   minPolylineVertices,
   moveNodes,
@@ -118,6 +119,12 @@ import { type SceneSnap } from './useSceneSnap.ts';
 
 /** How near a port the pointer must be, in screen px, for the port rather than the body to take a link. */
 const PORT_SNAP_PX = 16;
+
+/** How far along a link from its end, in screen px, a press on the link is on that end: about a marker's length. */
+const END_PRESS_PX = 20;
+
+/** How near a link's end, in screen px, a press off the link is on that end: about its handle. */
+const END_HANDLE_PX = 8;
 
 /** The node drawn as a preview during a create drag; it never reaches the model. */
 export const PREVIEW_NODE_ID = 'preview-node';
@@ -910,11 +917,6 @@ export const usePointerMachine = ({
     [registry, atoms.selection, select, openMenu],
   );
 
-  const onLinkContextMenu = useCallback(
-    (link: Link, event: MouseEvent) => onElementContextMenu(link.id, event),
-    [onElementContextMenu],
-  );
-
   const onEndContextMenu = useCallback(
     (link: Link, end: LinkEnd, event: MouseEvent) => {
       if (!registry.get(atoms.selection).has(link.id)) {
@@ -925,8 +927,47 @@ export const usePointerMachine = ({
     [registry, atoms.selection, select, openMenu],
   );
 
+  /** The end of one of `links` the press is on, within `reach` screen px of where that end is anchored. */
+  const pressedEnd = useCallback(
+    (links: readonly Link[], event: MouseEvent, reach: number) => {
+      // An end that cannot be changed has no handle, and so no menu of its own.
+      const anchors = links.flatMap((link) => {
+        const geometry = capabilities.update && !link.locked ? linkGeometry(scene, nodeRegistry, link) : undefined;
+        return geometry ? [{ link: link.id, source: geometry.source.point, target: geometry.target.point }] : [];
+      });
+      return linkEndAt(anchors, toScene(event), reach / registry.get(atoms.camera).zoom);
+    },
+    [capabilities.update, scene, nodeRegistry, toScene, registry, atoms.camera],
+  );
+
+  /** A press on a link beside one of its ends is on that end, so its marker is as good a target as its handle. */
+  const onLinkContextMenu = useCallback(
+    (link: Link, event: MouseEvent) => {
+      const pressed = pressedEnd([link], event, END_PRESS_PX);
+      if (pressed) {
+        onEndContextMenu(link, pressed.end, event);
+      } else {
+        onElementContextMenu(link.id, event);
+      }
+    },
+    [pressedEnd, onEndContextMenu, onElementContextMenu],
+  );
+
   const onContextMenu = useCallback(
     (event: MouseEvent) => {
+      // A link that is not selected shows no end handle where it meets a shape: the shape's port is there instead.
+      const selection = registry.get(atoms.selection);
+      const links = Object.values(scene.links);
+      const pressed = pressedEnd(
+        [...links.filter(({ id }) => selection.has(id)), ...links.filter(({ id }) => !selection.has(id))],
+        event,
+        END_HANDLE_PX,
+      );
+      const link = pressed && scene.links[pressed.link];
+      if (pressed && link) {
+        onEndContextMenu(link, pressed.end, event);
+        return;
+      }
       const node = hitTest(scene, toScene(event));
       if (node) {
         onElementContextMenu(node.id, event);
@@ -934,7 +975,7 @@ export const usePointerMachine = ({
         openMenu(event, 'canvas');
       }
     },
-    [scene, toScene, onElementContextMenu, openMenu],
+    [scene, toScene, registry, atoms.selection, pressedEnd, onEndContextMenu, onElementContextMenu, openMenu],
   );
 
   /** Dragging a link's end re-attaches it; the other end stays put and anchors the rubber band. */
