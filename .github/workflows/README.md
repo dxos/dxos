@@ -7,8 +7,8 @@ even on a public repository, so no workflow asks for one. Composite actions live
 
 ## Check
 
-[`check.yml`](check.yml) is the build/test pipeline. A draft PR runs `check` (lint, build, types), the
-node tests and `boot-budget`. A ready PR adds the browser and storybook tests, which gate the merge, and
+[`check.yml`](check.yml) is the build/test pipeline. A draft PR runs `check` (lint, build, types) and the
+node tests. knip and `boot-budget` run only on the nightly schedule and on dispatch. A ready PR adds the browser and storybook tests, which gate the merge, and
 e2e on Chromium, Firefox and WebKit, which reports without gating.
 
 The merge queue runs only what can block a merge: `check` and the cells behind `test`. A push to main

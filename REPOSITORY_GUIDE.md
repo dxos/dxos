@@ -494,8 +494,8 @@ Run `pnpm lint:changed` to lint only what you've been working on using `pnpm cha
 ### Unused dependencies and dead code
 
 `pnpm knip` reports unused dependencies, dependencies that are imported without being declared, and
-source files nothing references. CI runs the same command in the **Check** workflow's `knip` job, so
-a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
+source files nothing references. CI runs the same command in the **Check** workflow's nightly run
+(not on PRs), so a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
 packages through their `source` export condition — so it needs no build and takes about 80 seconds.
 
 Most of what the config in `.config/knip.ts` does is teach knip the ways this repo reaches code

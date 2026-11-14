@@ -202,6 +202,13 @@ This label decides whether a failure _counts_:
 The difference between `flaky` and `advisory` is intent: a flaky test is a stable test that is
 broken for now, so it has an owner and an exit; an advisory test is meant to inform and has neither.
 
+### Decided
+
+- **knip and the boot budget run nightly only** (and on dispatch), not on PRs or the merge queue.
+  knip is never cached and costs ~3.5 min on every PR run; the boot budget rebuilds affected packages
+  (~4 min) to report a budget that does not gate the merge. `boot-trend.yml` still measures every push
+  to main. Done in `check.yml`.
+
 ### What stays blocking
 
 Untagged, and so blocking on PRs:
@@ -247,7 +254,7 @@ These cost as much as the tests, and no tag fixes them:
 - **Cold `check` builds everything twice.** Module structure and edge-release re-run ~680 builds the
   compile gate just made, 16–28 min of every nightly; 3 of the last 5 nightly `check` jobs hit the
   75-min timeout.
-- **knip is never cached:** ~3.5 min on every run, the longest step on a warm PR.
+- **knip is never cached:** ~3.5 min on every run, the longest step on a warm PR. Now nightly only.
 - **Cancelled runs are spent minutes.** A new push cancels the running Check: 49% of PR
   `e2e-composer` runs and 33% of `test-browser` runs, and 12% of edge `test-edge` minutes.
 - **Setup is paid per job:** 87 s in each edge job (~10 runner-minutes per Check run); dxos PR jobs
