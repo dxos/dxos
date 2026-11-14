@@ -6615,15 +6615,6 @@ decision D-319: SAGE's one line is "Autonomous agents, tools, skills and models.
   why: Review of the docs home suggested "Autonomous" or "Long lived" in place of "Durable".
 ```
 
-```mdl
-decision D-320: The page does not bounce past its top or bottom edge, so the fixed header stays in place at the ends of a scroll.
-  date: 2026-11-14
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-7.1]
-  why: On iPad, Safari's bounce at the bottom of a page moved the header out of the way and showed page text in its place. The live site did the same before D-316.
-```
-
 ## Appendix: Extension Definitions
 
 ```mdl
