@@ -83,6 +83,18 @@ const liftShape = (
   return mesh ? { type: 'mesh', props: { ...props, mesh } } : undefined;
 };
 
+/**
+ * An element that places a shape through its `object` was given a solid of its own when lifted; flattened, the solid
+ * goes, since the shape draws its outline again. An element with a kind of its own is `flattenShape`'s.
+ */
+const withoutShapeMesh = ({ type, object, props }: Scene.Element3D): { props?: Props } => {
+  if (type !== undefined || object === undefined || props?.mesh === undefined) {
+    return {};
+  }
+  const { mesh: _mesh, ...kept } = props;
+  return { props: kept };
+};
+
 /** A solid that was lifted from a parametric shape, as that shape again: its mesh is the recipe's to remake. */
 const flattenShape = (
   type: string | undefined,
@@ -101,22 +113,33 @@ const liftSize = ({ width, height }: Scene.Size2): Scene.Vec3 => ({
   z: height / PIXELS_PER_UNIT,
 });
 
-const liftElement = ({
-  center,
-  size,
-  rotation,
-  scale: _scale,
-  overrides,
-  ...element
-}: Scene.Element2D): Scene.Element3D => ({
-  ...element,
-  ...(liftShape(element.type, element.props, size) ??
-    (element.type !== undefined ? { type: liftKind(element.type) } : {})),
-  ...(overrides ? { overrides: liftStyle(overrides) } : {}),
-  ...(center ? { center: toGround(center) } : {}),
-  ...(size ? { scale: liftSize(size) } : {}),
-  ...(rotation !== undefined ? { rotation: { x: 0, y: rotation, z: 0 } } : {}),
-});
+/**
+ * An element lifted onto the ground. One that places a parametric shape, by its own kind or by its `object`'s,
+ * carries the solid of the outline it draws: its recipe and parameters over the object's, in its own frame, since
+ * the object's solid is the outline at the object's frame.
+ */
+const liftElement = (
+  { center, size, rotation, scale: _scale, overrides, ...element }: Scene.Element2D,
+  object?: Scene.Object2D,
+): Scene.Element3D => {
+  const props = object?.props || element.props ? { ...object?.props, ...element.props } : undefined;
+  const shape = liftShape(element.type ?? object?.type, props, size ?? object?.size);
+  return {
+    ...element,
+    ...(shape
+      ? {
+          ...(element.type !== undefined ? { type: shape.type } : {}),
+          props: { ...element.props, mesh: shape.props.mesh },
+        }
+      : element.type !== undefined
+        ? { type: liftKind(element.type) }
+        : {}),
+    ...(overrides ? { overrides: liftStyle(overrides) } : {}),
+    ...(center ? { center: toGround(center) } : {}),
+    ...(size ? { scale: liftSize(size) } : {}),
+    ...(rotation !== undefined ? { rotation: { x: 0, y: rotation, z: 0 } } : {}),
+  };
+};
 
 const liftObject = ({ size, overrides, ...object }: Scene.Object2D): Scene.Object3D => ({
   ...object,
@@ -125,8 +148,14 @@ const liftObject = ({ size, overrides, ...object }: Scene.Object2D): Scene.Objec
   ...(size ? { scale: liftSize(size) } : {}),
 });
 
-/** A layout lifted onto the ground plane. */
-export const liftLayout = (layout: Scene.LayoutRecord): Scene.LayoutRecord3D =>
+/**
+ * A layout lifted onto the ground plane. `objects` are its model's, which an element placing one takes its kind,
+ * frame and properties from; without them an element is lifted by its own fields alone.
+ */
+export const liftLayout = (
+  layout: Scene.LayoutRecord,
+  objects: Readonly<Record<string, Scene.Object2D>> = {},
+): Scene.LayoutRecord3D =>
   layout.dim === '3d'
     ? layout
     : {
@@ -135,7 +164,10 @@ export const liftLayout = (layout: Scene.LayoutRecord): Scene.LayoutRecord3D =>
         ...(layout.name !== undefined ? { name: layout.name } : {}),
         ...(layout.model !== undefined ? { model: layout.model } : {}),
         elements: Object.fromEntries(
-          Object.entries(layout.elements).map(([key, element]) => [key, liftElement(element)]),
+          Object.entries(layout.elements).map(([key, element]) => [
+            key,
+            liftElement(element, element.object === undefined ? undefined : objects[element.object]),
+          ]),
         ),
       };
 
@@ -163,7 +195,10 @@ const liftSceneRecord = (scene: Scene.SceneRecord): Scene.SceneRecord3D =>
 /** Every scene, layout and model of a document lifted onto the ground plane, so the 3D renderer draws a 2D drawing. */
 export const liftScene = (doc: Scene.SceneDocument): Scene.SceneDocument => ({
   scenes: doc.scenes.map(liftSceneRecord),
-  layouts: doc.layouts.map(liftLayout),
+  layouts: doc.layouts.map((layout) => {
+    const model = layout.model === undefined ? undefined : doc.models.find(({ id }) => id === layout.model);
+    return liftLayout(layout, model?.dim === '2d' ? model.objects : {});
+  }),
   models: doc.models.map(liftModel),
 });
 
@@ -185,6 +220,7 @@ const flattenElement = ({ center, scale, rotation, overrides, ...element }: Scen
     ...element,
     ...(flattenShape(element.type, element.props) ??
       (element.type !== undefined ? { type: FLAT_KINDS[element.type] ?? element.type } : {})),
+    ...withoutShapeMesh(element),
     ...(overrides ? { overrides: flattenStyle(overrides) } : {}),
     ...(center ? { center: toCanvas(center) } : {}),
     ...(shape ? { size: { width: (scale?.x ?? 1) * PIXELS_PER_UNIT, height: (scale?.z ?? 1) * PIXELS_PER_UNIT } } : {}),

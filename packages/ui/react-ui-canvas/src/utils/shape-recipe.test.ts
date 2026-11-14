@@ -147,6 +147,26 @@ describe('shape recipes', () => {
     }
   });
 
+  test('a recipe fitted to a tall or a flat frame keeps an area to fill', ({ expect }) => {
+    const area = (points: readonly { x: number; y: number }[]) =>
+      Math.abs(
+        points.reduce((sum, { x, y }, index) => {
+          const next = points[(index + 1) % points.length];
+          return sum + x * next.y - next.x * y;
+        }, 0),
+      ) / 2;
+    for (const size of [
+      { width: 48, height: 192 },
+      { width: 192, height: 12 },
+    ]) {
+      for (const known of SHAPE_RECIPES) {
+        expect(area(shapeOutline(known, size, undefined)), known.id).toBeGreaterThan(size.width * size.height * 0.05);
+      }
+    }
+    // A parallelogram's slant stops at half the width, so a body is left between its two slanted sides.
+    expect(shapeValues(recipe('parallelogram'), { width: 48, height: 192 }, undefined).slant).toBe(24);
+  });
+
   test('a handle dragged to where it is leaves its parameter as it was', ({ expect }) => {
     const size = { width: 192, height: 96 };
     for (const known of SHAPE_RECIPES) {

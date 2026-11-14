@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { endDrop, isLinkDrawn } from './usePointerMachine.ts';
+import { endDrop, isLinkDrawn, paramDrop } from './usePointerMachine.ts';
 
 describe('endDrop', () => {
   const to = { x: 40, y: 20 };
@@ -43,5 +43,25 @@ describe('isLinkDrawn', () => {
     };
     expect(Math.hypot(drag.to.x - drag.from.x, drag.to.y - drag.from.y)).toBe(grid);
     expect(isLinkDrawn(drag, grid)).toBe(false);
+  });
+});
+
+describe('paramDrop', () => {
+  test('a handle pressed and released where it was sets nothing, whatever changed meanwhile', ({ expect }) => {
+    expect(paramDrop({ param: 'head', params: { head: 0.5 } }, { head: 0.8 })).toBeUndefined();
+  });
+
+  test("a dragged handle writes its own parameter over the shape's latest, keeping a change made to another", ({
+    expect,
+  }) => {
+    // Pressed with a shaft of 0.6, which a peer set to 0.9 before the release.
+    const drag = { param: 'head', params: { head: 0.8, shaft: 0.6 }, moved: true };
+    expect(paramDrop(drag, { head: 0.5, shaft: 0.9 })).toEqual({ head: 0.8, shaft: 0.9 });
+    // A shape with no parameters stored yet takes the one that was dragged.
+    expect(paramDrop(drag, undefined)).toEqual({ head: 0.8 });
+  });
+
+  test('a drag that ends on the value the shape has writes nothing', ({ expect }) => {
+    expect(paramDrop({ param: 'head', params: { head: 0.5 }, moved: true }, { head: 0.5 })).toBeUndefined();
   });
 });

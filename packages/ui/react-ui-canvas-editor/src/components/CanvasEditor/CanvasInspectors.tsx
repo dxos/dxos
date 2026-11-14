@@ -40,7 +40,7 @@ export const CanvasPropertiesForm = ({
   onGroupsChange,
   sceneFilter,
 }: CanvasPropertiesProps) => {
-  const { draw, atoms, nodeRegistry, capabilities, store } = useCanvasServices('Canvas.PropertiesForm');
+  const { draw, atoms, nodeRegistry, capabilities, store, grid } = useCanvasServices('Canvas.PropertiesForm');
   const path = useAtomValue(useCanvasNavigation('Canvas.PropertiesForm').atoms.path);
   const scenes = useAtomValue(store.views);
   const options = useMemo(() => viewOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
@@ -55,6 +55,7 @@ export const CanvasPropertiesForm = ({
       overrides={overrides}
       viewOptions={options}
       styles={store.styles}
+      grid={grid}
       groups={groups}
       onGroupsChange={onGroupsChange}
       readonly={!capabilities.update}

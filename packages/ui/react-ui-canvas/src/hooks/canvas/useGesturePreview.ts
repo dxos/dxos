@@ -145,7 +145,7 @@ export const useGesturePreview = ({
       };
     }
     if (drag?.kind === 'param') {
-      return { displayScene: updateElement(drag.id, { params: drag.params })(scene), blocked: false };
+      return preview(updateElement(drag.id, { params: drag.params }));
     }
     if (drag?.kind === 'vertex') {
       // Refitted as the release will land it, so the frame and its outline follow the vertex.
