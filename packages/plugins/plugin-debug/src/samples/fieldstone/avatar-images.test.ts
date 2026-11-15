@@ -5,8 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { AVATAR_IMAGES } from './avatar-images.ts';
-import { CONTACT_SEEDS } from './inbox-crm/contacts.ts';
-import { PEOPLE_SEEDS } from './team/people.ts';
+import { CONTACT_SEEDS } from './inbox-crm/contact-seeds.ts';
+import { PEOPLE_SEEDS } from './team/seeds.ts';
 
 describe('avatar images', () => {
   // A headshot keyed by a misspelled name would silently go unused.
