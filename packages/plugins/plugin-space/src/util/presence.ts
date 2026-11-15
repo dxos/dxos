@@ -599,22 +599,18 @@ export const makeSendScheduler = (
 export type LocationScheduler = {
   /** Notes that `key`'s location may have changed; a change goes out with the next send. */
   schedule: (key: string) => void;
-  dispose: () => void;
 };
 
 /**
- * Batches location changes of `keys` into one send per `interval()` ({@link LOCATION_BROADCAST_INTERVAL} by default),
- * to the spaces of the keys whose location differs from the last one seen, so an unchanged location (a remote edit, a
- * resize) sends nothing.
+ * Schedules a send through `sends` for the spaces of the keys whose location differs from the last one seen, so an
+ * unchanged location (a remote edit, a resize) sends nothing.
  */
 export const makeLocationScheduler = (
   keys: readonly string[],
   read: (key: string) => SpaceSchema.PeerLocation | undefined,
-  send: (spaceIds: ReadonlySet<string>) => void,
-  interval: () => number = () => LOCATION_BROADCAST_INTERVAL,
+  sends: SendScheduler,
 ): LocationScheduler => {
   const seen = new Map(keys.map((key) => [key, read(key)]));
-  const sends = makeSendScheduler(send, interval);
   return {
     schedule: (key) => {
       const location = read(key);
@@ -626,6 +622,5 @@ export const makeLocationScheduler = (
       seen.set(key, location);
       sends.schedule([spaceId]);
     },
-    dispose: sends.dispose,
   };
 };

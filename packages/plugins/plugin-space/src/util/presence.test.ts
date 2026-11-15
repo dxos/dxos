@@ -458,45 +458,16 @@ describe('makeSendScheduler', () => {
       vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
       expect(send).not.toHaveBeenCalled();
 
+      // Requests half an interval apart, from any source, still go out together.
       scheduler.schedule([spaceId]);
+      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL / 2);
       scheduler.schedule([otherSpaceId]);
-      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL - 1);
+      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL / 2 - 1);
       expect(send).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
       expect(send).toHaveBeenCalledExactlyOnceWith(new Set([spaceId, otherSpaceId]));
-      scheduler.dispose();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-});
 
-describe('makeLocationScheduler', () => {
-  const key = EID.make({ spaceId, entityId: objectId });
-  const otherKey = EID.make({ spaceId: otherSpaceId, entityId: childId });
-
-  test('sends once per interval, to the spaces whose locations changed, and not for an unchanged one', ({ expect }) => {
-    vi.useFakeTimers();
-    try {
-      const locations: Record<string, { selection: string }> = { [key]: { selection: 'a:a' } };
-      const send = vi.fn();
-      const scheduler = makeLocationScheduler([key, otherKey], (key) => locations[key], send);
-
-      locations[key] = { selection: 'a:a' };
-      scheduler.schedule(key);
-      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
-      expect(send).not.toHaveBeenCalled();
-
-      locations[key] = { selection: 'a:b' };
-      scheduler.schedule(key);
-      scheduler.schedule(key);
-      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
-      expect(send).toHaveBeenCalledTimes(1);
-      expect(send).toHaveBeenLastCalledWith(new Set([spaceId]));
-
-      scheduler.schedule(key);
-      locations[otherKey] = { selection: 'b:b' };
-      scheduler.schedule(otherKey);
+      scheduler.schedule([spaceId]);
       scheduler.dispose();
       vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
       expect(send).toHaveBeenCalledTimes(1);
@@ -509,18 +480,13 @@ describe('makeLocationScheduler', () => {
     vi.useFakeTimers();
     try {
       let followed = false;
-      const locations: Record<string, { selection: string }> = {};
       const send = vi.fn();
-      const scheduler = makeLocationScheduler(
-        [key],
-        (key) => locations[key],
-        send,
-        () => (followed ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL),
+      const scheduler = makeSendScheduler(send, () =>
+        followed ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL,
       );
 
       followed = true;
-      locations[key] = { selection: 'a:b' };
-      scheduler.schedule(key);
+      scheduler.schedule([spaceId]);
       vi.advanceTimersByTime(FOLLOW_BROADCAST_INTERVAL - 1);
       expect(send).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
@@ -529,6 +495,27 @@ describe('makeLocationScheduler', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('makeLocationScheduler', () => {
+  const key = EID.make({ spaceId, entityId: objectId });
+  const otherKey = EID.make({ spaceId: otherSpaceId, entityId: childId });
+
+  test('asks for a send to the spaces whose locations changed, and not for an unchanged one', ({ expect }) => {
+    const locations: Record<string, { selection: string }> = { [key]: { selection: 'a:a' } };
+    const sends = { schedule: vi.fn(), dispose: vi.fn() };
+    const scheduler = makeLocationScheduler([key, otherKey], (key) => locations[key], sends);
+
+    scheduler.schedule(key);
+    expect(sends.schedule).not.toHaveBeenCalled();
+
+    locations[key] = { selection: 'a:b' };
+    scheduler.schedule(key);
+    scheduler.schedule(key);
+    locations[otherKey] = { selection: 'b:b' };
+    scheduler.schedule(otherKey);
+    expect(sends.schedule.mock.calls).toEqual([[[spaceId]], [[otherSpaceId]]]);
   });
 });
 

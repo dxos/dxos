@@ -370,18 +370,17 @@ export default Capability.makeModule(
       // followed; every plank's location goes out, so a follower mirroring this deck scrolls each of them.
       const locationKeys = [...new Set([...current, ...active].flatMap((path) => getPresenceKeyFromPath(path) ?? []))];
       const sendInterval = () => (isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL);
-      const locationScheduler = makeLocationScheduler(locationKeys, getLocation, send, sendInterval);
-      // An extension's value (the deck's front, say) goes out at the same rate as a location, to the spaces it changed in.
-      const extensionSends = makeSendScheduler(send, sendInterval);
-      scheduleSend = extensionSends.schedule;
+      // Locations and extension values (the deck's front, say) share one send, so together they keep to its rate.
+      const sends = makeSendScheduler(send, sendInterval);
+      const locationScheduler = makeLocationScheduler(locationKeys, getLocation, sends);
+      scheduleSend = sends.schedule;
       const locationSubscriptions = locationKeys.map((key) =>
         viewState.subscribe(ViewLocation.aspect, key, () => locationScheduler.schedule(key)),
       );
 
       broadcastCleanup = () => {
         clearInterval(interval);
-        locationScheduler.dispose();
-        extensionSends.dispose();
+        sends.dispose();
         scheduleSend = undefined;
         locationSubscriptions.forEach((unsubscribe) => unsubscribe());
       };
