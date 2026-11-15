@@ -59,6 +59,7 @@ export const tools2D = (
       category: group.name === TOOLS_GROUP ? ('select' as const) : ('create' as const),
       group: group.name,
       ...(entry.tool.kind === 'node' ? { kind: entry.tool.type } : {}),
+      ...(entry.tool.kind === 'node' && nodes[entry.tool.type]?.createFromPoints ? { drawn: true } : {}),
       ...(entry.key ? { key: entry.key } : {}),
       ...(entry.fold ? { fold: entry.fold } : {}),
     })),
@@ -79,6 +80,9 @@ export const typeIcons2D = (
     ),
   );
 
-/** A node tool drags a node of its type onto the canvas, as the canvas's palette did; other tools do not drag. */
+/**
+ * A node tool drags a node of its type onto the canvas, as the canvas's palette did; other tools do not drag, nor
+ * does one that draws its node (a polyline, a spline, a stroke), which has no shape to drop.
+ */
 export const toolDragData2D = (tool: ToolDef): Record<string, unknown> | undefined =>
-  tool.id.startsWith('node:') && tool.kind ? nodeDragData(tool.kind) : undefined;
+  tool.id.startsWith('node:') && tool.kind && !tool.drawn ? nodeDragData(tool.kind) : undefined;

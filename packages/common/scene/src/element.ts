@@ -94,6 +94,11 @@ export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
+/** The levels a text colour's hue is drawn at, light to dark. */
+export const TEXT_TONES = [1, 2, 3] as const;
+export const TextTone = Schema.Literals(TEXT_TONES);
+export type TextTone = Schema.Schema.Type<typeof TextTone>;
+
 /** The typefaces a shape's text may use: the theme's body face, or its fixed-width one. */
 export const FONT_FAMILIES = ['default', 'monospace'] as const;
 export type FontFamily = (typeof FONT_FAMILIES)[number];
@@ -156,6 +161,10 @@ export const styleFields = {
   fontFamily: Schema.optional(Schema.Literals(FONT_FAMILIES).annotate({ title: 'Font' })),
   /** Unset is `DEFAULT_FONT_SIZE`; the same field as a link's, so a mixed selection edits it once. */
   fontSize: fontSizeField,
+  /** One of the style hues, for the text alone; unset, the text takes the colour the shape's hue and fill give it. */
+  textHue: Schema.optional(StyleHue.annotate({ title: 'Text' })),
+  /** How light or dark the text's hue is drawn: 1 light, 2 (the default) medium, 3 dark. */
+  textTone: Schema.optional(TextTone),
   /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
   alignHorizontal: Schema.optional(Schema.Literals(HORIZONTAL_ALIGNS).annotate({ title: 'Horizontal' })),
   /** Where the text sits down the shape; unset is the type's own (a label is middled, a note starts at the top). */
@@ -280,9 +289,10 @@ export const boxFields = {
  * in `label` still reads as itself.
  */
 /**
- * Space between a shape's frame and the text it draws, in scene px. Unset, a text box pads itself by a minor grid
- * cell either side, which is what puts a label's own lines on the grid; zero puts the text on the frame's edge, as a
- * part of a composite card must be to sit where the card's own regions sit.
+ * Space between a shape's frame and the text it draws, in scene px, as a font size is. Unset, a text box pads
+ * itself by a minor grid cell either side, which is what puts its lines on the grid, and above and below by half a
+ * cell for a label, a hull's name included (12 and 6 at the default grid), or a whole one for a text node. Zero puts
+ * the text on the frame's edge, as a part of a composite card must be to sit where the card's own regions sit.
  */
 export const Padding = Schema.Struct({
   x: Schema.optional(Schema.Number.annotate({ title: 'X' })),
@@ -290,7 +300,7 @@ export const Padding = Schema.Struct({
 }).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }));
 export type Padding = Schema.Schema.Type<typeof Padding>;
 
-/** The fields of a shape whose text is inset from its frame: the rectangle and the text node. */
+/** The fields of a shape whose text is inset from its frame: every shape that draws a label, and the text node. */
 export const paddingFields = {
   padding: Schema.optional(Padding.annotate({ title: 'Padding' })),
 };
@@ -327,6 +337,7 @@ export const EllipseNode = Schema.Struct({
   type: Schema.Literal('ellipse'),
   ...nodeBase,
   label: Schema.optional(Schema.String),
+  ...paddingFields,
 });
 export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
 
@@ -344,6 +355,7 @@ export const CloudNode = Schema.Struct({
   type: Schema.Literal('cloud'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   params: Schema.optional(CloudParams),
 });
 export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
@@ -373,9 +385,27 @@ export const PolygonNode = Schema.Struct({
   type: Schema.Literal('polygon'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   params: Schema.optional(PolygonParams),
 });
 export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
+
+/**
+ * A shape a recipe draws (an arrow, a callout, a star): `recipe` names it, and the recipe makes the outline from the
+ * frame and `params`, each parameter measured against what the recipe says (a side of the frame, or scene px), so a
+ * part keeps its proportions however the frame is resized. A recipe unknown to a build is drawn as its frame.
+ * Labelled like a box.
+ */
+export const ShapeNode = Schema.Struct({
+  type: Schema.Literal('shape'),
+  ...nodeBase,
+  ...boxFields,
+  ...paddingFields,
+  recipe: Schema.String,
+  /** The recipe's parameters by id; one unset takes the recipe's default. */
+  params: Schema.optional(Schema.Record(Schema.String, Schema.Number)),
+});
+export type ShapeNode = Schema.Schema.Type<typeof ShapeNode>;
 
 /** A polyline's own settings, in its `params`. */
 export const PolylineParams = Schema.Struct({
@@ -387,14 +417,31 @@ export const PolylineParams = Schema.Struct({
 export type PolylineParams = Schema.Schema.Type<typeof PolylineParams>;
 
 /**
- * An irregular line of straight segments through `points`, in the frame's unit space (0..1 of its size, origin
- * top-left) so a resize scales it; closed, it is a filled outline like a polygon. Labelled like a box.
+ * A segment of a polyline that runs as a curve rather than straight: `segment` is the index of the point it leaves
+ * (a closed line's last runs back to the first). With `control` alone it is a parabola, the control being where its
+ * two end tangents meet; with `second` too it is a cubic, which leaves its first point toward `control` and arrives
+ * at its last from `second`, so it can bow one way and then the other. Both are in the frame's unit space as the
+ * points are, though they may lie outside the frame.
+ */
+export const PolylineBend = Schema.Struct({
+  segment: Schema.Number,
+  control: Point,
+  second: Schema.optional(Point),
+});
+export type PolylineBend = Schema.Schema.Type<typeof PolylineBend>;
+
+/**
+ * An irregular line of segments through `points`, in the frame's unit space (0..1 of its size, origin top-left) so a
+ * resize scales it; closed, it is a filled outline like a polygon. Each segment is straight unless `bends` names it.
+ * Labelled like a box.
  */
 export const PolylineNode = Schema.Struct({
   type: Schema.Literal('polyline'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
   points: Schema.Array(Point),
+  bends: Schema.optional(Schema.Array(PolylineBend)),
   params: Schema.optional(PolylineParams),
 });
 export type PolylineNode = Schema.Schema.Type<typeof PolylineNode>;
@@ -406,6 +453,9 @@ export type PolylineNode = Schema.Schema.Type<typeof PolylineNode>;
 export const HULL_SHAPES = ['perimeter', 'box'] as const;
 export type HullShape = (typeof HULL_SHAPES)[number];
 
+/** The border a hull that names none takes, and so the one a new hull is made with. */
+export const DEFAULT_HULL_SHAPE: HullShape = 'box';
+
 /**
  * A border drawn round the nodes that name it as their `parent`: a hull's group as the 2D editor draws it, opened out
  * (see `parent`). Its frame and `points` (the border, in the frame's unit space as a polyline's are) follow those
@@ -416,7 +466,8 @@ export const HullNode = Schema.Struct({
   type: Schema.Literal('hull'),
   ...nodeBase,
   ...boxFields,
-  /** Unset, `perimeter`. */
+  ...paddingFields,
+  /** Unset, `DEFAULT_HULL_SHAPE`. */
   shape: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
   /**
    * How far inside its line the border is drawn, in cells of the drawing's grid: on a lattice the line is the centre
@@ -559,8 +610,8 @@ export const rebindEndpoint = <E extends Endpoint | ElementEndpoint>(end: E, map
   'node' in end && end.node !== undefined ? { ...end, node: map(end.node) } : end;
 
 /** What is drawn at a link end. */
-/** An end marker: a filled `arrow`, a `circle`, or a hollow `triangle` (inheritance). */
-export const Marker = Schema.Literals(['arrow', 'circle', 'triangle']);
+/** An end marker: a filled `arrow`, a `circle`, a hollow `triangle` (inheritance), or `many` (a crow's foot). */
+export const Marker = Schema.Literals(['arrow', 'circle', 'triangle', 'many']);
 export type Marker = Schema.Schema.Type<typeof Marker>;
 
 /** Markers at the source (`start`) and target (`end`) of a link. */
@@ -683,6 +734,7 @@ export const BuiltinNode = Schema.Union([
   EllipseNode,
   CloudNode,
   PolygonNode,
+  ShapeNode,
   PolylineNode,
   HullNode,
   NoteNode,
@@ -699,6 +751,7 @@ export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'ellipse',
   'polygon',
   'cloud',
+  'shape',
   'polyline',
   'hull',
   'note',
@@ -718,6 +771,7 @@ export type NodeType = string;
 export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
 export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
+export const isShapeNode = (node: NodeBase): node is ShapeNode => node.type === 'shape';
 export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
 export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.type === 'polyline';
 export const isHullNode = (node: NodeBase): node is HullNode => node.type === 'hull';

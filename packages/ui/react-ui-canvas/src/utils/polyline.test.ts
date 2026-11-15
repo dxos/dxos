@@ -7,12 +7,18 @@ import { describe, expect, test } from 'vitest';
 import { type PolylineNode } from '@dxos/scene';
 
 import {
+  bendsAfterDelete,
+  bendsAfterInsert,
+  bendsWithVertex,
+  cubicPoint,
+  polylineBends,
   polylineFrame,
   polylineMidpoints,
   polylinePath,
   polylineVertices,
   refitPolyline,
   simplifyPath,
+  smoothBends,
 } from './polyline.ts';
 
 const polyline = (rotation?: number): PolylineNode => ({
@@ -48,6 +54,7 @@ describe('polylineFrame', () => {
         { x: 1, y: 1 },
         { x: 0.5, y: 0 },
       ],
+      bends: [],
     });
   });
 
@@ -273,5 +280,172 @@ describe('polylineMidpoints', () => {
   test('a closed line has its closing segment too', () => {
     expect(polylineMidpoints(vertices, true)).toHaveLength(3);
     expect(polylineMidpoints(vertices, true)[2]).toEqual({ index: 3, point: { x: 5, y: 5 } });
+  });
+});
+
+describe('bends', () => {
+  // A segment along the top that bows down to y 100 at its middle: its control is twice as far.
+  const [from, to, control] = [
+    { x: 0, y: 0 },
+    { x: 200, y: 0 },
+    { x: 100, y: 200 },
+  ];
+
+  test('the frame covers where a bent segment reaches, not its control', () => {
+    const frame = polylineFrame([from, to], 0, [{ segment: 0, control }]);
+    expect(frame?.bounds).toEqual({ x: 0, y: 0, width: 200, height: 100 });
+    // The control is in the frame's unit space, outside the frame.
+    expect(frame?.bends).toEqual([{ segment: 0, control: { x: 0.5, y: 2 } }]);
+  });
+
+  test('a bent segment is a parabola in the path, and two points close into a shape', () => {
+    const size = { width: 200, height: 100 };
+    const points = [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+    ];
+    const bends = [{ segment: 0, control: { x: 0.5, y: 2 } }];
+    expect(polylinePath(size, points, { bends })).toBe('M 0 0 Q 100 200, 200 0');
+    expect(polylinePath(size, points, { bends, closed: true })).toBe('M 0 0 Q 100 200, 200 0 L 0 0 Z');
+  });
+
+  test('a vertex put in on a bent segment splits its curve in two, and moves the bends after it', () => {
+    const vertices = [from, to, { x: 200, y: 100 }, { x: 0, y: 100 }];
+    const bends = [
+      { segment: 0, control },
+      { segment: 2, control: { x: 100, y: 300 } },
+    ];
+    // Put in on segment 0: each half's control is midway from an end to the old control.
+    expect(bendsAfterInsert(bends, 1, vertices)).toEqual([
+      { segment: 0, control: { x: 50, y: 100 } },
+      { segment: 1, control: { x: 150, y: 100 } },
+      { segment: 3, control: { x: 100, y: 300 } },
+    ]);
+    // The two halves draw the curve the one segment did: its middle is where they meet.
+    expect(polylineMidpoints(vertices, false, bends)[0]).toEqual({ index: 1, point: { x: 100, y: 100 } });
+    // Put in on segment 1, which is straight.
+    expect(bendsAfterInsert(bends, 2, vertices).map(({ segment }) => segment)).toEqual([0, 3]);
+  });
+
+  test('a vertex taken out joins the two segments that met there, bent where either was', () => {
+    // A peak with a bent segment either side: out to (100, 100) and back.
+    const vertices = [
+      { x: 0, y: 0 },
+      { x: 100, y: 100 },
+      { x: 200, y: 0 },
+    ];
+    const bends = [
+      { segment: 0, control: { x: 0, y: 100 } },
+      { segment: 1, control: { x: 200, y: 100 } },
+    ];
+    // The joined segment leaves and arrives as the two did: straight down from one end and up to the other never
+    // meet, so its control is midway between theirs.
+    expect(bendsAfterDelete(bends, 1, vertices)).toEqual([{ segment: 0, control: { x: 100, y: 100 } }]);
+    // One bent and one straight: the bend is kept.
+    expect(bendsAfterDelete([bends[0]], 1, vertices)).toEqual([{ segment: 0, control: { x: 0, y: 100 } }]);
+    // Neither bent, and a bend further on moves one nearer.
+    expect(bendsAfterDelete([{ segment: 2, control }], 1, [...vertices, { x: 100, y: -50 }])).toEqual([
+      { segment: 1, control },
+    ]);
+  });
+
+  test('a line through points placed by hand runs as one curve, each segment a cubic', () => {
+    const points = [
+      { x: 0, y: 100 },
+      { x: 120, y: 0 },
+      { x: 240, y: 100 },
+      { x: 360, y: 0 },
+    ];
+    const bends = smoothBends(points);
+    expect(bends.map(({ segment }) => segment)).toEqual([0, 1, 2]);
+    // The way through an inner point is that from the point before it to the one after: level here, so the
+    // controls either side of it are at its height, and the line does not turn a corner there.
+    expect(bends[0].second).toEqual({ x: 80, y: 0 });
+    expect(bends[1].control).toEqual({ x: 160, y: 0 });
+    // The middle segment bows one way and then the other, which one control could not do.
+    expect(bends[1].second).toEqual({ x: 200, y: 100 });
+    // Closed, every segment has one, the closing segment too.
+    expect(smoothBends(points.slice(0, 3), true)).toHaveLength(3);
+    // A cubic is a `C` in the path, and the frame covers where it reaches.
+    const frame = polylineFrame(points, 0, bends);
+    expect(
+      polylinePath(frame?.bounds ?? { width: 0, height: 0 }, frame?.points ?? [], { bends: frame?.bends }),
+    ).toMatch(/^M [\d. -]+( C [\d. -]+, [\d. -]+, [\d. -]+){3}$/);
+  });
+
+  test('a vertex put in on a cubic splits it into two that draw the same curve', () => {
+    const [start, end] = [from, to];
+    const cubic = { segment: 0, control: { x: 0, y: 120 }, second: { x: 200, y: 120 } };
+    const [left, right] = bendsAfterInsert([cubic], 1, [start, end]);
+    const middle = polylineMidpoints([start, end], false, [cubic])[0].point;
+    expect(middle).toEqual({ x: 100, y: 90 });
+    // A quarter of the way along the whole is half of the way along its first half.
+    const whole = cubicPoint(start, cubic.control, cubic.second, end, 0.25);
+    const half = cubicPoint(start, left.control, left.second ?? middle, middle, 0.5);
+    expect(half.x).toBeCloseTo(whole.x);
+    expect(half.y).toBeCloseTo(whole.y);
+    expect(right.segment).toBe(1);
+    // Taken out again, the one segment leaves and arrives as the two did.
+    const [joined] = bendsAfterDelete([left, right], 1, [start, middle, end]);
+    expect(joined.segment).toBe(0);
+    expect(joined.control).toEqual(left.control);
+    expect(joined.second).toEqual(right.second);
+  });
+
+  test("a vertex that moves takes its own controls with it, and leaves its neighbours' where they are", () => {
+    const points = [
+      { x: 0, y: 100 },
+      { x: 120, y: 0 },
+      { x: 240, y: 100 },
+    ];
+    const bends = smoothBends(points);
+    const delta = { x: 12, y: -24 };
+    const moved = bendsWithVertex(bends, 1, points.length, delta);
+    // The control it arrives by and the one it leaves toward.
+    expect(moved[0].second).toEqual({ x: (bends[0].second?.x ?? 0) + 12, y: (bends[0].second?.y ?? 0) - 24 });
+    expect(moved[1].control).toEqual({ x: bends[1].control.x + 12, y: bends[1].control.y - 24 });
+    // The controls at the other ends of those two segments are the neighbours' own.
+    expect(moved[0].control).toEqual(bends[0].control);
+    expect(moved[1].second).toEqual(bends[1].second);
+    // The first vertex of an open line has no segment arriving, and a parabola's one control is both its ends'.
+    expect(bendsWithVertex(bends, 0, points.length, delta)[1]).toEqual(bends[1]);
+    const parabola = [{ segment: 0, control }];
+    expect(bendsWithVertex(parabola, 0, 2, delta)).toEqual(parabola);
+  });
+
+  test('a refit keeps a bend where it is in the scene', () => {
+    const node: PolylineNode = {
+      type: 'polyline',
+      id: 'polyline-2',
+      z: 'a1',
+      center: { x: 100, y: 50 },
+      size: { width: 200, height: 100 },
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+      ],
+      bends: [{ segment: 0, control: { x: 0.5, y: 2 } }],
+    };
+    expect(polylineBends(node)).toEqual([{ segment: 0, control }]);
+    // The second vertex dragged out to x 400: the bow leans, and the frame follows it.
+    const values = refitPolyline(node, [from, { x: 400, y: 0 }]);
+    expect(values?.size.width).toBe(400);
+    const moved = { ...node, ...values };
+    expect(polylineBends(moved)[0].control.x).toBeCloseTo(100);
+    expect(polylineBends(moved)[0].control.y).toBeCloseTo(200);
+    // A cubic keeps both of its controls, turned with the line.
+    const turned: PolylineNode = {
+      ...node,
+      rotation: 90,
+      bends: [{ segment: 0, control: { x: 0.25, y: 1 }, second: { x: 0.75, y: 1 } }],
+    };
+    const refitted = { ...turned, ...refitPolyline(turned, polylineVertices(turned)) };
+    polylineBends(refitted).forEach((bend, index) => {
+      expect(bend.second?.x).toBeCloseTo(polylineBends(turned)[index].second?.x ?? Number.NaN);
+      expect(bend.second?.y).toBeCloseTo(polylineBends(turned)[index].second?.y ?? Number.NaN);
+      expect(bend.control.x).toBeCloseTo(polylineBends(turned)[index].control.x);
+    });
+    // A line with no bends is written none.
+    expect(refitPolyline(polyline(), polylineVertices(polyline()))).not.toHaveProperty('bends');
   });
 });

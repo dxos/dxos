@@ -31,15 +31,37 @@ tasks:
       runInCI: false
       cache: false
 
-  # Crawl seed channels into a persistent SQLite file via DiscordPipeline. Requires DISCORD_TOKEN;
-  # tunable via DISCORD_CRAWL_CHANNELS / DISCORD_CRAWL_DB / DISCORD_MAX_DAYS. Re-running resumes.
+  # Crawl seed channels via DiscordPipeline into persistent SQLite: messages and crawl state in DISCORD_CRAWL_DB,
+  # channels as `id[:days]` in DISCORD_CRAWL_CHANNELS (DISCORD_CRAWL_REWIND=id,… re-reads a channel further back),
+  # extracted RDF facts in DISCORD_FACTS_DB. Requires DISCORD_TOKEN; tunable via DISCORD_CRAWL_CHANNELS /
+  # DISCORD_MAX_DAYS / DISCORD_LIST_FACTS and DX_ANTHROPIC_API_KEY. Re-running resumes.
   crawl-demo:
     command: 'pnpm exec vitest run src/testing/crawl-demo.test.ts'
     options:
       runInCI: false
       cache: false
 
-  # Replay the stored SQLite messages (no token) through question extraction and print the tuples.
+  # Serve the RDF facts crawl-demo persisted (DISCORD_FACTS_DB) over HTTP on DISCORD_FACT_SERVER_PORT (7700) for the
+  # stories-brain `FactExplorer` story. Runs until interrupted.
+  fact-server:
+    command: 'pnpm exec tsx src/testing/fact-server.ts'
+    deps:
+      - 'pipeline-rdf:build'
+    options:
+      runInCI: false
+      cache: false
+      persistent: true
+
+  # Replay the cached messages (no token) through question and fact extraction into DISCORD_FACTS_DB, to rebuild the
+  # fact store after the extractors change. Needs DX_ANTHROPIC_API_KEY.
+  reextract:
+    command: 'pnpm exec vitest run src/testing/reextract.test.ts'
+    options:
+      runInCI: false
+      cache: false
+
+  # Replay the stored SQLite messages (no token) through question extraction, print the tuples and write each
+  # question to DISCORD_FACTS_DB as an `asked` fact graph (backfills earlier crawls).
   questions-demo:
     command: 'pnpm exec vitest run src/testing/questions-demo.test.ts'
     options:

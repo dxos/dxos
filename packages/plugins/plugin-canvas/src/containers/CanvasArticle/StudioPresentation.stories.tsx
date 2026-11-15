@@ -26,7 +26,9 @@ import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import type * as SlideTheme from '@dxos/plugin-presenter/SlideTheme';
 import { PresenterStoryPlugin } from '@dxos/plugin-presenter/testing';
-import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
@@ -97,7 +99,7 @@ const BORDERS = `
   [data-testid="scene-view"] { outline: 2px solid color-mix(in oklch, cyan 60%, transparent); }
 `;
 
-const decorators = createStoryDecorators<StoryArgs>(({ args }) => ({
+const decorators = StoryHarness.decorators<StoryArgs>(({ args }) => ({
   types: [Drawing.Drawing, Drawing.Canvas, Presentation.Presentation, Presentation.Slide, ...types],
   plugins: [
     IllustratorPlugin.make(),
@@ -156,7 +158,7 @@ const decorators = createStoryDecorators<StoryArgs>(({ args }) => ({
 
 const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-canvas/containers/StudioPresentation',
-  render: () => <ModuleContainer />,
+  render: () => <ModuleContainer.Root />,
   decorators,
   argTypes: { borders: { control: 'boolean' } },
   parameters: { layout: 'fullscreen', translations },

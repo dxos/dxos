@@ -26,7 +26,6 @@ whatever plugin answers, without importing it.
 | How two add-ons work together     | Through the host, if it allows it      | One plugin reads another's capabilities and renders its surfaces |
 | When outside code loads           | Usually at startup                     | Each module when its activation event fires                      |
 | How an agent acts                 | A separate API, if there is one        | Through the same operations the UI runs                          |
-| Where outside code keeps its data | A store of its own                     | ECHO objects in spaces, which every plugin can query             |
 
 ## Practical problems
 
@@ -52,9 +51,8 @@ assistant calls it as a tool, reading the schema to fill in the input. None of t
 
 ### Data that syncs without plugin code
 
-A plugin's data is ECHO objects in spaces. It syncs between a user's devices and the people they share with, merges
-concurrent edits and works offline, with no sync code in the plugin. [Spaces](/docs/echo/concepts/spaces/) explains the
-model.
+A plugin's data is [ECHO](/docs/echo/overview/) objects in spaces that every plugin can query. It syncs between a user's
+devices and the people they share with, merges concurrent edits and works offline, with no sync code in the plugin.
 
 ## What PLEX does not do
 

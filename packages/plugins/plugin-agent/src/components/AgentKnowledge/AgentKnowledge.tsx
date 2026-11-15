@@ -8,6 +8,15 @@ import { type Obj } from '@dxos/echo';
 import { RDF } from '@dxos/pipeline-rdf';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import {
+  ENTITY_HUES,
+  EntityBrowser,
+  type EntityCardModel,
+  KnowledgeCard,
+  TRIG_PREFIXES,
+  TurtleSnippet,
+  formatRawFact,
+} from '@dxos/react-ui-rdf';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -19,12 +28,7 @@ import { type SpaceGraphEdge, SpaceGraphModel, type SpaceGraphNode } from '@dxos
 import { type Goal } from '#types';
 
 import { AgentNamespace } from '../../namespace.ts';
-import { EntityBrowser } from './EntityBrowser.tsx';
-import { type EntityCardProps } from './EntityCard.tsx';
-import { KnowledgeCard, KnowledgeStack } from './KnowledgeStack.tsx';
-import { type EntityCardModel } from './subgraph.ts';
-import { TRIG_PREFIXES, formatRawFact } from './trig.ts';
-import { TurtleSnippet } from './TurtleSnippet.tsx';
+import { KnowledgeStack } from './KnowledgeStack.tsx';
 
 //
 // Root
@@ -262,16 +266,6 @@ AgentKnowledgeFacts.displayName = 'AgentKnowledge.Facts';
 //
 // Entities
 //
-
-/** One hue per entity type the brain assigns, chosen rather than hashed so no two types share one. */
-const ENTITY_HUES: EntityCardProps['hues'] = {
-  Person: 'amber',
-  Organization: 'indigo',
-  Place: 'emerald',
-  Event: 'pink',
-  Concept: 'violet',
-  Thing: 'neutral',
-};
 
 type AgentKnowledgeEntitiesProps = {
   /** One card per entity in the agent's brain (see `toEntityCards`). */

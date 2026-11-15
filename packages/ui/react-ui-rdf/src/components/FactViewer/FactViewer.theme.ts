@@ -36,6 +36,8 @@ const factViewerStyles = tv({
     rowMeta: 'flex items-center justify-end gap-2 shrink-0',
     rowConfidence: 'text-xs text-fg-subtle',
     rowAttribution: 'text-xs text-fg-subtle text-right',
+    // Selectable text inside a selectable row, so the TriG can be copied.
+    rowTurtle: 'p-2 overflow-x-auto text-xs select-text cursor-text bg-input-surface rounded-sm',
   },
   variants: {
     // Conflicting facts get a warning rule on the inline-start edge.

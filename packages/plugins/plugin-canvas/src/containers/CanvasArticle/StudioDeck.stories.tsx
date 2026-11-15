@@ -20,7 +20,9 @@ import { DXN } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { Cell, ModuleContainer, type ModuleSpec, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
@@ -55,13 +57,13 @@ const StudioKindsPlugin = Plugin.define(
  * `ModuleLayout`'s outer array is its columns, so the deck is dealt across them rather than sliced down them —
  * sliced, column one would hold slides 1 to 3 and the deck would read downwards.
  */
-const square = (cells: ModuleSpec[]): ModuleSpec[][] => {
+const square = (cells: ModuleContainer.Spec[]): ModuleContainer.Spec[][] => {
   const columns = Math.max(1, Math.ceil(Math.sqrt(cells.length)));
   return Array.from({ length: columns }, (_, column) => cells.filter((_cell, index) => index % columns === column));
 };
 
 const decorators = (slides: readonly StudioSlide[] = STUDIO_SLIDES) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), StudioKindsPlugin()],
     onInit: async ({ space }) => {
@@ -81,9 +83,9 @@ const decorators = (slides: readonly StudioSlide[] = STUDIO_SLIDES) =>
     },
   });
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'plugins/plugin-canvas/containers/StudioDeck',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     translations,

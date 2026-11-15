@@ -5,12 +5,13 @@
 //
 // Link routes as SVG path data in scene coordinates, one per link type: `line` is straight, `curve`
 // leaves each port along its side's normal and bends toward the other end, `spline` is the polyline
-// through the link's control points with its corners rounded. `ortho` (phase 2) will come from
-// `@dxos/diagram`'s router.
+// through the link's control points with its corners rounded, and `ortho` leaves each port along its side's normal
+// and turns at right angles, as seldom as it can (`orthoRoute`).
 //
 
 import { Nudge } from '@dxos/diagram';
 import {
+  type Bounds,
   DEFAULT_GRID,
   type Endpoint,
   type Link,
@@ -31,6 +32,7 @@ import { type DiagramRoute, diagramRoute, isRouteObstacle } from './diagram-shap
 import { gutterRoute, gutterRouteWithCost } from './gutter-route.ts';
 import { type HullWalls, hullRegions, routeWalls } from './hull.ts';
 import { type LatticeSpec, onLattice, quantize } from './lattice.ts';
+import { orthoRoute } from './ortho-route.ts';
 import {
   type PortTerminal,
   nearestPort,
@@ -57,14 +59,15 @@ const TANGENT_RATIO = 0.4;
  */
 const cornerRadius = (grid: number): number => grid;
 
-/** How far a smart link's stub leaves its port: half a major cell. */
-const smartStub = (grid: number): number => (grid * MAJOR_GRID_RATIO) / 2;
+/** How far a link's stub leaves its port along the side's normal: half a major cell. */
+const portStub = (grid: number): number => (grid * MAJOR_GRID_RATIO) / 2;
 
 /**
  * A resolved link end. `free` marks a point end (one being dragged, or left on empty canvas): it has no port to
- * leave along, so a route runs straight to it rather than turning to its side's normal.
+ * leave along, so a route runs straight to it rather than turning to its side's normal. `bounds` is the frame of the
+ * node a port end is on, which an orthogonal route goes round.
  */
-export type RouteEnd = { point: Point; side: Side; free?: boolean };
+export type RouteEnd = { point: Point; side: Side; free?: boolean; bounds?: Bounds };
 
 const pt = ({ x, y }: Point) => `${x} ${y}`;
 
@@ -148,7 +151,7 @@ export const linkPath = (
     case 'curve':
       return curvePath(from, to);
     case 'ortho':
-      return splinePath(orthoPoints(from, to), grid);
+      return splinePath(orthoPoints(from, to, grid), grid);
     case 'spline':
       return splinePath([from.point, ...link.points, to.point], grid);
     case 'smart':
@@ -239,7 +242,7 @@ export const smartPoints = (from: RouteEnd, to: RouteEnd, grid = DEFAULT_GRID): 
   if (from.free || to.free) {
     return elbowPoints(from, to);
   }
-  const length = smartStub(grid);
+  const length = portStub(grid);
   const stub = (end: RouteEnd): Point => {
     const normal = sideNormal(end.side);
     return { x: end.point.x + normal.x * length, y: end.point.y + normal.y * length };
@@ -248,16 +251,16 @@ export const smartPoints = (from: RouteEnd, to: RouteEnd, grid = DEFAULT_GRID): 
 };
 
 /**
- * The polyline an orthogonal link follows: straight where its ends line up on an axis, one corner where their sides
- * are perpendicular, and otherwise two turns at the midpoint between them. It reads only its own two ends, so a shape
- * moving elsewhere never re-routes it — which is what makes it predictable to draw a diagram with.
+ * The route of an orthogonal link with an end on no port, or between two shapes that overlap: straight where its ends
+ * line up on an axis, one corner where their sides are perpendicular, and otherwise two turns at the midpoint between
+ * them.
  *
  * A free end (one being dragged, or left on empty canvas) has no side to leave by. It takes the axis its other end
  * does not, so the two meet at one corner, and with both ends free the route leaves sideways. Neither choice reads
  * which way the far end lies, so the corner holds still while an end is dragged, rather than jumping across the line
  * each time the drag crosses the diagonal.
  */
-export const orthoPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
+const cornerPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
   const [a, b] = [from.point, to.point];
   if (Math.abs(a.x - b.x) < ORTHO_EPSILON || Math.abs(a.y - b.y) < ORTHO_EPSILON) {
     return [a, b];
@@ -271,6 +274,18 @@ export const orthoPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
     ? [a, { x: (a.x + b.x) / 2, y: a.y }, { x: (a.x + b.x) / 2, y: b.y }, b]
     : [a, { x: a.x, y: (a.y + b.y) / 2 }, { x: b.x, y: (a.y + b.y) / 2 }, b];
 };
+
+/**
+ * The polyline an orthogonal link follows. Between two ports each end leaves along its side's normal by a stub, and
+ * the route between the stubs turns at right angles as seldom as it can without crossing either shape
+ * ({@link orthoRoute}): straight where the ports face each other on one line, one corner where their sides meet, two
+ * turns for a step or a U, up to four where a port faces away. It reads only its own two ends and their frames, so a
+ * shape moving elsewhere never re-routes it, which is what makes it predictable to draw a diagram with.
+ *
+ * An end on no port has no normal to leave along, so the route meets it at one corner ({@link cornerPoints}).
+ */
+export const orthoPoints = (from: RouteEnd, to: RouteEnd, grid = DEFAULT_GRID): Point[] =>
+  from.free || to.free ? cornerPoints(from, to) : (orthoRoute(from, to, portStub(grid)) ?? cornerPoints(from, to));
 
 export type LinkGeometry = {
   link: Link;
@@ -328,6 +343,7 @@ const terminalOf = (scene: RenderList2D, registry: NodeRegistry, end: PortEndpoi
 const routeEnd = (terminal: PortTerminal, port: Port): RouteEnd => ({
   point: portPoint(terminal.bounds, port),
   side: port.side,
+  bounds: terminal.bounds,
 });
 
 /** Port pairs searched per tier of fewest possible bends. */

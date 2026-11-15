@@ -19,7 +19,7 @@ export type SlideToken = { from: number; to: number; kind: SlideTokenKind };
 
 const FRONTMATTER = /^(---)[ \t]*\r?\n([\s\S]*?)\r?\n?(---)[ \t]*(?:\r?\n|$)/;
 const YAML_KEY = /^([A-Za-z_][\w-]*)\s*:/;
-const TAG = /<\/?(?:v-clicks?|v-after|Surface)\b[^<>]*>/g;
+const TAG = /<\/?(?:v-clicks?|v-after|Surface|List|Table|Box)\b[^<>]*>/g;
 const ATTRIBUTE = /\s([A-Za-z_][\w-]*)(?==)/g;
 const EMBED = /!\[[^\]]*\]\((?:echo|eid):[^)\s]+\)/g;
 // The body may not contain `-->`, so an earlier comment cannot extend the match into the trailing notes.

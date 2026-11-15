@@ -7,12 +7,29 @@ import type { Data, Html, Paragraph, Parent, Root, RootContent, Text } from 'mda
 
 import { EID } from '@dxos/keys';
 
+import { SlideTheme } from '#types';
+
 import { type SlideIssue } from './frontmatter.ts';
 
 /** Content regions of a slide, selected by `::name::` markers. */
 export const SLOTS = ['default', 'left', 'middle', 'right', 'bottom-left', 'bottom-right'] as const;
 
 export type SlotName = (typeof SLOTS)[number];
+
+/** Named list styles a `<List>` may request; the first is the plain markdown list. */
+export const LIST_VARIANTS = ['default', 'cards', 'steps', 'outline'] as const;
+
+export type ListVariant = (typeof LIST_VARIANTS)[number];
+
+/** Named box styles a `<Box>` may request; the first is an undecorated container. */
+export const BOX_VARIANTS = ['default', 'card', 'outline'] as const;
+
+export type BoxVariant = (typeof BOX_VARIANTS)[number];
+
+/** Named table styles a `<Table>` may request; the first is the plain markdown table. */
+export const TABLE_VARIANTS = ['default', 'rows', 'cards', 'outline'] as const;
+
+export type TableVariant = (typeof TABLE_VARIANTS)[number];
 
 /** Roles a `<Surface>` may request; the first is the default. */
 export const SURFACE_ROLES = ['slide', 'section', 'card'] as const;
@@ -54,9 +71,60 @@ const CONTAINER_TAGS = {
   'v-click': 'slide-click',
   'v-clicks': 'slide-clicks',
   'v-after': 'slide-after',
+  // A style tag leaves no element of its own; it names a style for the block it wraps (see `STYLE_TAGS`).
+  'list': '',
+  'table': '',
+  // `<Box>` is the one style tag with an element of its own: it wraps whatever it holds.
+  'box': 'slide-box',
 } as const;
 
 type ContainerTag = keyof typeof CONTAINER_TAGS;
+
+/** The tags that style the block they wrap: the mdast node each one looks for, and the variants it takes. */
+const STYLE_TAGS = {
+  list: { node: 'list', variants: LIST_VARIANTS as readonly string[] },
+  table: { node: 'table', variants: TABLE_VARIANTS as readonly string[] },
+} as const;
+
+type StyleTag = keyof typeof STYLE_TAGS;
+
+const isStyleTag = (tag: ContainerTag): tag is StyleTag => Object.hasOwn(STYLE_TAGS, tag);
+
+/**
+ * The tone a style tag asks for, or none when it asks for no tone: an untoned block inherits the tone of the block
+ * around it, while `tone="accent"` is a request to return to the slide's own accent. An unknown name falls back.
+ */
+const toneName = (tag: ContainerTag, value: string | undefined, issues: SlideIssue[]): SlideTheme.Tone | undefined => {
+  if (value === undefined || SlideTheme.isTone(value)) {
+    return value;
+  }
+  issues.push({
+    kind: 'html',
+    message: `Invalid ${tagLabel(tag)} tone "${value}"; using "${SlideTheme.TONES[0]}".`,
+  });
+  return SlideTheme.TONES[0];
+};
+
+/** A tag's name as it is written, for an issue message. */
+const tagLabel = (tag: ContainerTag): string => `<${tag[0].toUpperCase()}${tag.slice(1)}>`;
+
+/** The requested variant, or the first (plain) one when it is not a name this tag knows. */
+const variantName = (
+  tag: ContainerTag,
+  value: string | undefined,
+  variants: readonly string[],
+  issues: SlideIssue[],
+): string => {
+  const variant = value ?? variants[0];
+  if (variants.includes(variant)) {
+    return variant;
+  }
+  issues.push({
+    kind: 'html',
+    message: `Invalid ${tagLabel(tag)} variant "${variant}"; using "${variants[0]}".`,
+  });
+  return variants[0];
+};
 
 // Parents whose children are inline, so escaped HTML stays a bare text node instead of a paragraph.
 const PHRASING_PARENTS = new Set([
@@ -252,7 +320,7 @@ const transformChildren = (parent: Parent, issues: SlideIssue[]) => {
         const frame = top();
         if (frame.open?.tag === token.tag) {
           stack.pop();
-          top().children.push(containerElement(frame.open, frame.children, issues));
+          top().children.push(...containerNodes(frame.open, frame.children, issues));
         } else {
           issues.push({ kind: 'html', message: `Unmatched closing tag: ${token.raw}` });
           top().children.push(escaped(token.raw));
@@ -355,18 +423,49 @@ const positiveInteger = (value: string | undefined, name: string, issues: SlideI
   return 1;
 };
 
-const containerElement = (
+/**
+ * `<List>` and `<Table>` style the block they wrap and contribute no element, so a styled list is still a `<ul>` and
+ * a styled table still a `<table>`; the variant travels on the node for the renderer to turn into classes.
+ */
+const styleBlocks = (
+  tag: StyleTag,
+  children: RootContent[],
+  attributes: Record<string, string>,
+  issues: SlideIssue[],
+): RootContent[] => {
+  const { node, variants } = STYLE_TAGS[tag];
+  const variant = variantName(tag, attributes.variant, variants, issues);
+  const tone = toneName(tag, attributes.tone, issues);
+  const blocks = children.filter((child) => child.type === node);
+  if (blocks.length === 0) {
+    issues.push({ kind: 'html', message: `${tagLabel(tag)} has no ${node} to style.` });
+  }
+  for (const block of blocks) {
+    block.data = { ...block.data, hProperties: { ...block.data?.hProperties, variant, ...(tone && { tone }) } };
+  }
+  return children;
+};
+
+const containerNodes = (
   open: Extract<Token, { kind: 'open' }>,
   children: RootContent[],
   issues: SlideIssue[],
-): SlideElement => {
+): RootContent[] => {
+  if (open.tag === 'box') {
+    const variant = variantName(open.tag, open.attributes.variant, BOX_VARIANTS, issues);
+    const tone = toneName(open.tag, open.attributes.tone, issues);
+    return [slideElement(CONTAINER_TAGS.box, { variant, ...(tone && { tone }) }, children)];
+  }
+  if (isStyleTag(open.tag)) {
+    return styleBlocks(open.tag, children, open.attributes, issues);
+  }
   const hName = CONTAINER_TAGS[open.tag];
   if (open.tag !== 'v-clicks') {
-    return slideElement(hName, {}, children);
+    return [slideElement(hName, {}, children)];
   }
   const depth = positiveInteger(open.attributes.depth, 'depth', issues);
   const every = positiveInteger(open.attributes.every, 'every', issues);
-  return slideElement(hName, { depth, every }, children);
+  return [slideElement(hName, { depth, every }, children)];
 };
 
 /** Nodes revealed one by one by `<v-clicks>`: list items down to `depth`, otherwise each child. */
