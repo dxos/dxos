@@ -27,8 +27,7 @@
       "source": "./src/paths.ts",
       "types": "./dist/types/src/paths.d.ts",
       "import": "./dist/lib/paths.mjs"
-    },
-    "./assets/*": "./assets/*"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
