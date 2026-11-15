@@ -153,8 +153,10 @@ const DEMOS: Demo[] = [
     cursor: pointer;
   }
 
-  .tile-card[data-select]:not([data-selected]) .tile-card-demo {
-    pointer-events: none;
+  /* The whole subtree, since a descendant that sets `pointer-events: auto` (a tool rail) would otherwise take input. */
+  .tile-card[data-select]:not([data-selected]) .tile-card-demo,
+  .tile-card[data-select]:not([data-selected]) .tile-card-demo :global(*) {
+    pointer-events: none !important;
   }
 
   .tile-card[data-selected] {
