@@ -168,11 +168,10 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
               : [
                   AppGraphNode.makeAction({
                     id: `follow-${suffix}`,
-                    data: () =>
-                      Effect.gen(function* () {
-                        const registry = yield* Capability.get(Capabilities.AtomRegistry);
-                        registry.update(ephemeralAtom, (state) => ({ ...state, following: target }));
-                      }),
+                    data: Effect.fnUntraced(function* () {
+                      const registry = yield* Capability.get(Capabilities.AtomRegistry);
+                      registry.update(ephemeralAtom, (state) => ({ ...state, following: target }));
+                    }),
                     properties: {
                       label: FOLLOW_LABEL,
                       icon: 'ph--eye--regular',

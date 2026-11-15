@@ -113,7 +113,7 @@ export default Capability.makeModule(
         isCompanionOpen(deck.companionPlanks, flat, plank),
       );
       return { flat, front, companions: { items, ...(variant !== undefined && { variant }) } };
-    }).pipe(Atom.keepAlive);
+    });
 
     return [
       Capability.contribute(DeckCapabilities.State, stateAtom),

@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
@@ -23,8 +24,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperati
       for (const subjectId of subject) {
         AppGraph.expandPath(graph, subjectId);
       }
-      const deck = yield* DeckCapabilities.getDeck();
-      const { workspace } = yield* currentNavigation();
+      // The projection of the URL this writes switches to `input.workspace`, so the deck changes in one step.
+      const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
+      const deck = (input.workspace && state.decks[input.workspace]) || (yield* DeckCapabilities.getDeck());
+      const current = yield* currentNavigation();
+      const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
       // An earlier navigation's scroll intent would still focus its plank once mounted, which `focus: false` declines.
       if (input.focus === false) {
         yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) =>

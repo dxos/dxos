@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import { describe, onTestFinished, test } from 'vitest';
+import { describe, onTestFinished, test, vi } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -71,12 +71,16 @@ describe('Follow', () => {
     await expect.poll(() => followed.closed).toBe(true);
   });
 
-  test('with no extension that navigates, the follower opens the attended object without focus', async ({ expect }) => {
+  test('with no extension that navigates, the follower opens the attended object in its space, without focus', async ({
+    expect,
+  }) => {
     const { calls, ephemeral, registry, space, object } = await setup({ navigates: false });
     const path = GraphPath.getObjectPathFromObject(object);
     lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
 
-    await expect.poll(() => calls.find(({ op }) => op === 'open')?.input).toEqual({ subject: [path], focus: false });
+    await expect
+      .poll(() => calls.find(({ op }) => op === 'open')?.input)
+      .toEqual({ subject: [path], workspace: GraphPath.getSpacePath(space.id), focus: false });
     expect(calls.filter(({ op }) => op === 'open')).toHaveLength(1);
   });
 
@@ -86,7 +90,7 @@ describe('Follow', () => {
     lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
 
     await expect.poll(() => followed.views.at(-1)?.attended.localPath).toBe(path);
-    await waitTicks(600);
+    await vi.advanceTimersByTimeAsync(600);
     expect(calls.filter(({ op }) => op === 'open')).toEqual([]);
   });
 
@@ -96,7 +100,7 @@ describe('Follow', () => {
     const { calls, layout, ephemeral, registry, space, object } = await setup();
     const path = GraphPath.getObjectPathFromObject(object);
     lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
-    await waitTicks(600);
+    await vi.advanceTimersByTimeAsync(600);
     expect(calls.filter(({ op }) => op === 'reveal')).toEqual([]);
 
     registry.update(layout, (state) => ({ ...state, active: [path] }));
@@ -134,7 +138,7 @@ describe('Follow', () => {
     lead(registry, ephemeral, spaceId, key, GraphPath.getObjectPath(spaceId, 'expando', EntityId.random()));
 
     await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(true);
-    await waitTicks(600);
+    await vi.advanceTimersByTimeAsync(600);
     expect(registry.get(ephemeral).following?.paused).toBe(true);
   });
 
@@ -169,13 +173,11 @@ describe('Follow', () => {
 
   test('going back in history while not following writes nothing', async ({ expect }) => {
     const { ephemeral, registry } = await setup();
-    let writes = 0;
-    // Reading it first builds the state, which would otherwise announce itself on the first read.
-    registry.get(ephemeral);
-    const unsubscribe = registry.subscribe(ephemeral, () => writes++);
+    const states: SpaceCapabilities.SpaceEphemeralState[] = [];
+    const unsubscribe = registry.subscribe(ephemeral, (state) => states.push(state), { immediate: true });
     window.dispatchEvent(new PopStateEvent('popstate'));
     unsubscribe();
-    expect(writes).toBe(0);
+    expect(states).toHaveLength(1);
   });
 
   test('a leader on the space’s Home is followed there, not paused', async ({ expect }) => {
@@ -186,9 +188,6 @@ describe('Follow', () => {
     expect(registry.get(ephemeral).following?.paused).toBeFalsy();
   });
 });
-
-/** Lets the module's forked work settle. */
-const waitTicks = (ms = 200) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Starts following `LEADER`, who attends `key` at `path`, with their top line there at `line-12`. */
 const lead = (
@@ -239,6 +238,9 @@ const Reveal = Operation.make({
 const setup = async ({ navigates = true }: { navigates?: boolean } = {}) => {
   const followed: Followed = { views: [], closed: false };
   const calls: Call[] = [];
+  // The follow's update ticks run on this clock, which keeps pace with real time until a test jumps it.
+  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'], shouldAdvanceTime: true });
+  onTestFinished(() => void vi.useRealTimers());
   const harness = await Harness.createComposerTestApp({
     plugins: [ClientPlugin.make({}), makeFollowPlugin(followed, calls, navigates)],
   });
@@ -292,57 +294,54 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
             TestShows,
           ],
         },
-        () =>
-          Effect.gen(function* () {
-            const registry = yield* Capabilities.AtomRegistry;
-            const layout = Atom.make<AppCapabilities.Layout>({
-              mode: 'solo',
-              dialogOpen: false,
-              sidebarOpen: false,
-              complementarySidebarOpen: false,
-              workspace: 'root',
-              active: [],
-              inactive: [],
-              scrollIntoView: undefined,
-            }).pipe(Atom.keepAlive);
-            const shows = Atom.make(true).pipe(Atom.keepAlive);
-            const extension: AppCapabilities.LocatorExtension = {
-              id: EXTENSION_ID,
-              location: Atom.make({}),
-              navigates,
-              follow: (view) =>
-                Effect.gen(function* () {
-                  followed.views.push(registry.get(view));
-                  const unsubscribe = registry.subscribe(view, (next) => followed.views.push(next));
-                  yield* Effect.addFinalizer(() =>
-                    Effect.sync(() => {
-                      unsubscribe();
-                      followed.closed = true;
-                    }),
-                  );
-                  return shows;
+        Effect.fnUntraced(function* () {
+          const registry = yield* Capabilities.AtomRegistry;
+          const layout = Atom.make<AppCapabilities.Layout>({
+            mode: 'solo',
+            dialogOpen: false,
+            sidebarOpen: false,
+            complementarySidebarOpen: false,
+            workspace: 'root',
+            active: [],
+            inactive: [],
+            scrollIntoView: undefined,
+          }).pipe(Atom.keepAlive);
+          const shows = Atom.make(true).pipe(Atom.keepAlive);
+          const extension: AppCapabilities.LocatorExtension = {
+            id: EXTENSION_ID,
+            location: Atom.make({}),
+            navigates,
+            follow: Effect.fnUntraced(function* (view) {
+              followed.views.push(registry.get(view));
+              const unsubscribe = registry.subscribe(view, (next) => followed.views.push(next));
+              yield* Effect.addFinalizer(() =>
+                Effect.sync(() => {
+                  unsubscribe();
+                  followed.closed = true;
                 }),
-            };
-            const record = (op: string) => (input: unknown) => Effect.sync(() => void calls.push({ op, input }));
-            return [
-              Capability.contribute(AppCapabilities.Layout, layout),
-              Capability.contribute(TestLayout, layout),
-              Capability.contribute(TestShows, shows),
-              Capability.contribute(AppCapabilities.Locator, { id: Type.getTypename(Expando.Expando), reveal: Reveal }),
-              Capability.contribute(AppCapabilities.LocatorExtension, extension),
-              Capability.contribute(
-                Capabilities.OperationHandler,
-                OperationHandlerSet.make(
-                  Operation.withHandler(LayoutOperation.Open, (input) =>
-                    record('open')(input).pipe(Effect.as(input.subject)),
-                  ),
-                  Operation.withHandler(LayoutOperation.SwitchWorkspace, record('switchWorkspace')),
-                  Operation.withHandler(Reveal, record('reveal')),
+              );
+              return shows;
+            }),
+          };
+          const record = (op: string) => (input: unknown) => Effect.sync(() => void calls.push({ op, input }));
+          return [
+            Capability.contribute(AppCapabilities.Layout, layout),
+            Capability.contribute(TestLayout, layout),
+            Capability.contribute(TestShows, shows),
+            Capability.contribute(AppCapabilities.Locator, { id: Type.getTypename(Expando.Expando), reveal: Reveal }),
+            Capability.contribute(AppCapabilities.LocatorExtension, extension),
+            Capability.contribute(
+              Capabilities.OperationHandler,
+              OperationHandlerSet.make(
+                Operation.withHandler(LayoutOperation.Open, (input) =>
+                  record('open')(input).pipe(Effect.as(input.subject)),
                 ),
+                Operation.withHandler(Reveal, record('reveal')),
               ),
-              Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
-            ];
-          }),
+            ),
+            Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
+          ];
+        }),
       ),
     ),
     Plugin.addModule<void>(

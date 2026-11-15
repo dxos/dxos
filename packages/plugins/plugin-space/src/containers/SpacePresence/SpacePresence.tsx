@@ -30,6 +30,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import type * as Util from '@dxos/react-ui/Util';
@@ -257,9 +258,10 @@ export const FullPresence = (props: MemberPresenceProps) => {
     >
       <Popover.Anchor asChild>
         {/* A row of overlapping avatars; the `dx-avatar-group` rule only styles lit avatars. */}
-        <div
+        <Layout.Flex
           ref={groupRef}
-          className='dx-avatar-group inline-flex items-center [&>*+*]:-ms-2'
+          align='center'
+          classNames='dx-avatar-group inline-flex [&>*+*]:-ms-2'
           data-testid='spacePlugin.presence'
         >
           {members.slice(0, 3).map((member, i) => (
@@ -291,7 +293,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
               </button>
             </Popover.Trigger>
           )}
-        </div>
+        </Layout.Flex>
       </Popover.Anchor>
       {/* The Members companion's size, so the two lists read alike; the plank header's would be larger. */}
       <Popover.Content size='md' classNames='w-96'>

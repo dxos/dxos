@@ -16,39 +16,39 @@ _3 error(s), 30 warning(s)._
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 8893cd1d495-1 - unresolved - minimal-precise-tests - packages/e2e/composer-e2e/src/playwright/collaboration.spec.ts:46
-- 8893cd1d495-2 - unresolved - workerd-variant-imports-conditioned-barrel - packages/plugins/plugin-deck/dx.config.ts:115
-- 8893cd1d495-3 - unresolved - no-sleep-in-test - packages/plugins/plugin-deck/src/capabilities/locator-extension.test.ts:98
-- 8893cd1d495-4 - unresolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-deck/src/capabilities/locator-extension.test.ts:363
-- 8893cd1d495-5 - unresolved - store-events-not-projections - packages/plugins/plugin-deck/src/capabilities/locator-extension.ts:61
-- 8893cd1d495-6 - unresolved - one-operation-per-navigation-intent - packages/plugins/plugin-deck/src/capabilities/locator-extension.ts:145
-- 8893cd1d495-7 - unresolved - atom-lifetime-bound-to-owner - packages/plugins/plugin-deck/src/capabilities/state.ts:97
-- 8893cd1d495-8 - unresolved - empty-container-uses-empty - packages/plugins/plugin-deck/src/components/Companion/Companion.tsx:108
-- 8893cd1d495-9 - unresolved - no-module-level-object-caches - packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx:1007
-- 8893cd1d495-10 - unresolved - containers-share-core-hooks - packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx:1616
-- 8893cd1d495-11 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-deck/src/containers/Sidebar/ComplementarySidebar.tsx:106
-- 8893cd1d495-12 - unresolved - toolbars-are-menu-actions - packages/plugins/plugin-deck/src/containers/Sidebar/ComplementarySidebar.tsx:238
-- 8893cd1d495-13 - unresolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-deck/src/operations/set.test.ts:92
-- 8893cd1d495-14 - unresolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-deck/src/types/DeckCapabilities.ts:61
-- 8893cd1d495-15 - unresolved - jsdoc-non-obvious-identifiers - packages/plugins/plugin-deck/src/types/DeckSchema.ts:124
-- 8893cd1d495-16 - unresolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-markdown/src/types/MarkdownOperation.ts:1
-- 8893cd1d495-17 - unresolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/peers.ts:171
-- 8893cd1d495-18 - unresolved - no-eager-read-before-subscribe - packages/plugins/plugin-space/src/capabilities/follow.test.ts:164
-- 8893cd1d495-19 - unresolved - no-sleep-in-test - packages/plugins/plugin-space/src/capabilities/follow.test.ts:176
-- 8893cd1d495-20 - unresolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-space/src/capabilities/follow.test.ts:314
-- 8893cd1d495-21 - unresolved - one-operation-per-navigation-intent - packages/plugins/plugin-space/src/capabilities/follow.test.ts:326
-- 8893cd1d495-22 - unresolved - one-operation-per-navigation-intent - packages/plugins/plugin-space/src/capabilities/follow.ts:208
-- 8893cd1d495-23 - unresolved - use-context-scoped-cancellation - packages/plugins/plugin-space/src/capabilities/follow.ts:340
-- 8893cd1d495-24 - unresolved - retries-via-schedule-with-evidence - packages/plugins/plugin-space/src/capabilities/spaces-available.ts:172
-- 8893cd1d495-25 - unresolved - no-casts - packages/plugins/plugin-space/src/capabilities/spaces-available.ts:208
-- 8893cd1d495-26 - unresolved - atom-lifetime-bound-to-owner - packages/plugins/plugin-space/src/capabilities/state.ts:43
-- 8893cd1d495-27 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.tsx:257
-- 8893cd1d495-28 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-space/src/containers/TypeArticle/TypeArticle.stories.tsx:119
-- 8893cd1d495-29 - unresolved - operations-resolve-database-from-service - packages/plugins/plugin-space/src/operations/open-object-form.test.ts:47
-- 8893cd1d495-30 - unresolved - operations-resolve-database-from-service - packages/plugins/plugin-space/src/types/SpaceCapabilities.ts:115
-- 8893cd1d495-31 - unresolved - no-casts - packages/plugins/plugin-space/src/types/SpaceSchema.ts:201
-- 8893cd1d495-32 - unresolved - no-casts - packages/sdk/app-toolkit/src/app-graph/AppNode.ts:208
-- 8893cd1d495-33 - unresolved - no-module-level-object-caches - packages/sdk/app-toolkit/src/app-graph/AppNode.ts:674
+- 8893cd1d495-1 - ignored - minimal-precise-tests - packages/e2e/composer-e2e/src/playwright/collaboration.spec.ts:46
+- 8893cd1d495-2 - ignored - workerd-variant-imports-conditioned-barrel - packages/plugins/plugin-deck/dx.config.ts:115
+- 8893cd1d495-3 - resolved - no-sleep-in-test - packages/plugins/plugin-deck/src/capabilities/locator-extension.test.ts:98
+- 8893cd1d495-4 - resolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-deck/src/capabilities/locator-extension.test.ts:363
+- 8893cd1d495-5 - resolved - store-events-not-projections - packages/plugins/plugin-deck/src/capabilities/locator-extension.ts:61
+- 8893cd1d495-6 - resolved - one-operation-per-navigation-intent - packages/plugins/plugin-deck/src/capabilities/locator-extension.ts:145
+- 8893cd1d495-7 - resolved - atom-lifetime-bound-to-owner - packages/plugins/plugin-deck/src/capabilities/state.ts:97
+- 8893cd1d495-8 - ignored - empty-container-uses-empty - packages/plugins/plugin-deck/src/components/Companion/Companion.tsx:108
+- 8893cd1d495-9 - ignored - no-module-level-object-caches - packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx:1007
+- 8893cd1d495-10 - ignored - containers-share-core-hooks - packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx:1616
+- 8893cd1d495-11 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-deck/src/containers/Sidebar/ComplementarySidebar.tsx:106
+- 8893cd1d495-12 - ignored - toolbars-are-menu-actions - packages/plugins/plugin-deck/src/containers/Sidebar/ComplementarySidebar.tsx:238
+- 8893cd1d495-13 - resolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-deck/src/operations/set.test.ts:92
+- 8893cd1d495-14 - ignored - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-deck/src/types/DeckCapabilities.ts:61
+- 8893cd1d495-15 - ignored - jsdoc-non-obvious-identifiers - packages/plugins/plugin-deck/src/types/DeckSchema.ts:124
+- 8893cd1d495-16 - ignored - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-markdown/src/types/MarkdownOperation.ts:1
+- 8893cd1d495-17 - resolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/peers.ts:171
+- 8893cd1d495-18 - resolved - no-eager-read-before-subscribe - packages/plugins/plugin-space/src/capabilities/follow.test.ts:164
+- 8893cd1d495-19 - resolved - no-sleep-in-test - packages/plugins/plugin-space/src/capabilities/follow.test.ts:176
+- 8893cd1d495-20 - resolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-space/src/capabilities/follow.test.ts:314
+- 8893cd1d495-21 - ignored - one-operation-per-navigation-intent - packages/plugins/plugin-space/src/capabilities/follow.test.ts:326
+- 8893cd1d495-22 - resolved - one-operation-per-navigation-intent - packages/plugins/plugin-space/src/capabilities/follow.ts:208
+- 8893cd1d495-23 - ignored - use-context-scoped-cancellation - packages/plugins/plugin-space/src/capabilities/follow.ts:340
+- 8893cd1d495-24 - ignored - retries-via-schedule-with-evidence - packages/plugins/plugin-space/src/capabilities/spaces-available.ts:172
+- 8893cd1d495-25 - ignored - no-casts - packages/plugins/plugin-space/src/capabilities/spaces-available.ts:208
+- 8893cd1d495-26 - ignored - atom-lifetime-bound-to-owner - packages/plugins/plugin-space/src/capabilities/state.ts:43
+- 8893cd1d495-27 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.tsx:257
+- 8893cd1d495-28 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-space/src/containers/TypeArticle/TypeArticle.stories.tsx:119
+- 8893cd1d495-29 - ignored - operations-resolve-database-from-service - packages/plugins/plugin-space/src/operations/open-object-form.test.ts:47
+- 8893cd1d495-30 - ignored - operations-resolve-database-from-service - packages/plugins/plugin-space/src/types/SpaceCapabilities.ts:115
+- 8893cd1d495-31 - ignored - no-casts - packages/plugins/plugin-space/src/types/SpaceSchema.ts:201
+- 8893cd1d495-32 - ignored - no-casts - packages/sdk/app-toolkit/src/app-graph/AppNode.ts:208
+- 8893cd1d495-33 - ignored - no-module-level-object-caches - packages/sdk/app-toolkit/src/app-graph/AppNode.ts:674
 
 ## Issues
 
@@ -185,6 +185,15 @@ System One judges this a likely violation of `no-casts` (No casts to silence the
 System One judges this a likely violation of `no-module-level-object-caches` (Scope a WeakMap cache or FinalizationRegistry to its owner, never the module), p=0.92. The likeliest place is lines 674-692 (`export const registerEditCommands = (element: Element, commands: EditCommands...`, location confidence 0.58). This is a single-shot classifier: confirm against the rule before acting.
 
 ## Appendix
+
+### Triage
+
+- Fixed: 3 and 19 (a fake clock replaces the sleeps), 4, 13, 17 and 20 (`Effect.fnUntraced`), 5 (`Shown` stores `landedAt`, not a deadline), 6 and 22 (one `Set` or `Open` carries the `workspace`, so no separate `SwitchWorkspace` races it), 7 (the view atom no longer keeps itself alive), 18 (the test subscribes with `immediate` instead of reading first), 27 (`Layout.Flex`).
+- 1: `getShownPlanks` is the one measure of what a sliding deck shows; the follow tests assert on it, so it is the precise check, not an extra test.
+- 21: a test stub that records the operations it receives, not a navigation chain.
+- 23: the tick interval is cleared in the module's finalizer, which is the scope it belongs to.
+- 26: the `keepAlive` predates this PR, which only added fields to the atom.
+- 2, 8 to 12, 14 to 16, 24, 25 and 28 to 33: the flagged lines are outside this PR's changes; they come from its base or from main.
 
 ### System One pass
 

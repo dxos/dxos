@@ -200,7 +200,7 @@ export default Capability.makeModule(
       );
     };
 
-    // With no extension that navigates, the follower switches to the space and opens the attended object at its own path.
+    // With no extension that navigates, the follower opens the attended object at its own path, in the space's workspace.
     const open = (current: Session) => {
       const { spaceId, attended } = current.view;
       const { localPath } = attended;
@@ -210,13 +210,12 @@ export default Capability.makeModule(
       }
       current.opened = target;
       current.openFailed = false;
-      const workspace = GraphPath.getSpacePath(spaceId);
+      // One operation carries the workspace, so switching to the space and opening do not race.
       fork(
-        Effect.gen(function* () {
-          if (registry.get(layoutAtom).workspace !== workspace) {
-            yield* invoke(LayoutOperation.SwitchWorkspace, { subject: workspace });
-          }
-          yield* invoke(LayoutOperation.Open, { subject: [localPath], focus: false });
+        invoke(LayoutOperation.Open, {
+          subject: [localPath],
+          workspace: GraphPath.getSpacePath(spaceId),
+          focus: false,
         }).pipe(
           Effect.catchCause((cause) =>
             Effect.sync(() => {
