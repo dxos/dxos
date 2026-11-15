@@ -50,6 +50,117 @@ const browserNodeStd = (): Plugin => ({
   },
 });
 
+/** Lowers the `using` declarations in `@dxos/*` sources, which Safari cannot parse. */
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
+
+/**
+ * Safari has no `Symbol.dispose`, and a chunk evaluated before `@dxos/util` polyfills it keys dispose methods under
+ * `undefined`, so every chunk starts with this. `globalThis.Symbol` survives chunks that bind `Symbol` (`Schema.Symbol`).
+ */
+const disposePolyfill = `{
+  const S = globalThis.Symbol;
+  typeof S.dispose !== 'symbol' && Object.defineProperty(S, 'dispose', { value: S.for('dispose') });
+  typeof S.asyncDispose !== 'symbol' && Object.defineProperty(S, 'asyncDispose', { value: S.for('asyncDispose') });
+}`;
+
+/** Astro's per-environment `esnext` target overrides `build.target`. */
+const browserBuildTarget = (): Plugin => ({
+  name: 'docs:browser-build-target',
+  configEnvironment: (name) =>
+    name === 'client'
+      ? {
+          build: {
+            target: browserTargets,
+            rolldownOptions: { output: { intro: `${disposePolyfill}\n${sharedImport}` } },
+          },
+        }
+      : undefined,
+});
+
+/** Dedupes `import()` by URL and runs one at a time; see {@link shareDynamicImports}. */
+const sharedImport = `globalThis.__dxImport ??= (() => {
+  const loads = new Map();
+  let last = Promise.resolve();
+  return (url) => {
+    let load = loads.get(url);
+    if (!load) {
+      load = last.then(() => import(url));
+      last = load.catch(() => {});
+      loads.set(url, load);
+    }
+    return load;
+  };
+})();`;
+
+type Node = { type: string; start: number; end: number; source?: Node };
+
+/**
+ * Safari 26 can settle an `import()` while another still evaluates a chunk they share, leaving `undefined` exports, so
+ * every dynamic import goes through {@link sharedImport}.
+ */
+const shareDynamicImports = (): Plugin => ({
+  name: 'docs:share-dynamic-imports',
+  applyToEnvironment: (environment) => environment.name === 'client',
+  generateBundle: {
+    // After Vite's preload helper, which finds each import's CSS by matching `import(`.
+    order: 'post',
+    handler(_options, bundle) {
+      for (const chunk of Object.values(bundle)) {
+        if (chunk.type !== 'chunk' || !chunk.code.includes('import(')) {
+          continue;
+        }
+        // The minifier renames the helper's parameter, so its own `import()` is found by position.
+        const helper = chunk.code.search(/__dxImport\s*\?\?=/);
+        const isHelper = (node: Node) => helper >= 0 && node.start > helper && node.start < helper + 200;
+        const imports: Node[] = [];
+        const walk = (value: unknown) => {
+          if (Array.isArray(value)) {
+            value.forEach(walk);
+          } else if (value && typeof value === 'object') {
+            const node = value as Node;
+            if (node.type === 'ImportExpression' && !isHelper(node)) {
+              imports.push(node);
+            }
+            Object.values(node).forEach(walk);
+          }
+        };
+        walk(this.parse(chunk.code));
+        let code = chunk.code;
+        for (const { start, end, source } of imports.sort((left, right) => right.start - left.start)) {
+          const specifier = chunk.code.slice(source!.start, source!.end);
+          code = `${code.slice(0, start)}__dxImport(new URL(${specifier}, import.meta.url).href)${code.slice(end)}`;
+        }
+        chunk.code = code;
+      }
+    },
+  },
+});
+
+/** The two `import()` calls in Astro's minified island loader, the first load and its retry, with their replacements. */
+const islandImports: [string, string][] = [
+  [
+    'return await import(e)}catch',
+    `${sharedImport.replace(/;$/, '')};return await globalThis.__dxImport(new URL(e,document.baseURI).href)}catch`,
+  ],
+  ['import(this.getRetryImportUrl(e))', 'globalThis.__dxImport(this.getRetryImportUrl(e))'],
+];
+
+/** Routes Astro's island loader through {@link sharedImport}, inlined because the loader runs before any chunk. */
+const shareIslandImports = (): Plugin => ({
+  name: 'docs:share-island-imports',
+  transform(code, id) {
+    if (!/astro-island\.prebuilt(-dev)?\.js$/.test(id)) {
+      return;
+    }
+    return islandImports.reduce((result, [from, to]) => {
+      if (!result.includes(from)) {
+        throw new Error(`docs:share-island-imports: Astro's island loader no longer has \`${from}\`.`);
+      }
+      return result.replace(from, to);
+    }, code);
+  },
+});
+
 const rootDir = path.resolve(import.meta.dirname, '..');
 const phosphorIconsCore = path.join(rootDir, 'node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, 'packages/ui/brand/assets/icons');
@@ -70,7 +181,6 @@ const plexRedirects = Object.fromEntries(
 );
 
 const redirects: Record<string, string> = {
-  '/docs': '/docs/echo/overview/',
   '/docs/halo/introduction': '/docs/halo/overview/',
   '/docs/halo/typescript': '/docs/halo/api/identity/',
   // Section roots were `welcome` pages before they were titled Overview.
@@ -191,6 +301,9 @@ export default defineConfig({
     plugins: [
       // Replaces each plugin's `dx.config.ts` with its manifest, as in the apps.
       pluginConfigPlugin(),
+      browserBuildTarget(),
+      shareDynamicImports(),
+      shareIslandImports(),
       importSource({ include: ['@dxos/**', '#*'] }),
       browserNodeStd(),
       DxosLogPlugin(),
@@ -212,6 +325,9 @@ export default defineConfig({
           path.join(rootDir, '{packages,tools}/**/dist/**/*.{mjs,html}'),
           path.join(rootDir, '{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
           path.join(import.meta.dirname, 'src/demos/**/*.{ts,tsx}'),
+          path.join(import.meta.dirname, 'src/tile/**/*.{ts,tsx}'),
+          path.join(import.meta.dirname, 'src/echo/snippets/tile-*.tsx'),
+          path.join(import.meta.dirname, 'src/tile-tutorial/**/*.{ts,tsx}'),
         ],
         scanPaths: [path.join(rootDir, 'packages/ui/ui-icons/src/index.ts')],
       }),
@@ -231,6 +347,7 @@ export default defineConfig({
     // Workers the demos start load wasm with top-level await, which only an ES module worker supports.
     worker: {
       format: 'es',
+      rolldownOptions: { output: { intro: disposePolyfill } },
       plugins: () => [importSource({ include: ['@dxos/**', '#*'] }), browserNodeStd(), DxosLogPlugin(), wasm()],
     },
   },
@@ -250,6 +367,13 @@ export default defineConfig({
       title: 'DXOS Documentation',
       lastUpdated: true,
       favicon: '/favicon.ico',
+      // `viewport-fit=cover` extends the page under Safari's status bar so the header's safe-area padding fills it.
+      head: [
+        {
+          tag: 'meta',
+          attrs: { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        },
+      ],
       customCss: ['./src/styles/tokens.generated.css', './src/styles/fonts.css', './src/styles/theme.css'],
       components: {
         Footer: './src/components/Footer.astro',
@@ -259,7 +383,7 @@ export default defineConfig({
         // The sidebar folds into a menu below 72rem; see `PageFrame.astro`.
         PageFrame: './src/components/PageFrame.astro',
         PageTitle: './src/components/PageTitle.astro',
-        // Lists the topics with the DXOS brand marks; see `SidebarTopics.astro`.
+        // Drops the topic list; the header switches topics. See `topic-nav/TopicNav.astro`.
         Sidebar: './src/components/Sidebar.astro',
         // TODO(wittjosiah): Uncomment to link logo to home page.
         // SiteTitle: './src/components/CustomSiteTitle.astro',
@@ -296,18 +420,46 @@ export default defineConfig({
               items: sidebarFromSpec(specPages, 'HALO'),
             },
             {
+              id: 'mesh',
+              label: 'MESH',
+              link: '/docs/mesh/overview/',
+              items: sidebarFromSpec(specPages, 'MESH'),
+            },
+            {
+              id: 'edge',
+              label: 'EDGE',
+              link: '/docs/edge/overview/',
+              items: sidebarFromSpec(specPages, 'EDGE'),
+            },
+            {
+              id: 'sage',
+              label: 'SAGE',
+              link: '/docs/sage/overview/',
+              items: sidebarFromSpec(specPages, 'SAGE'),
+            },
+            {
               id: 'plex',
               label: 'PLEX',
               link: '/docs/plex/overview/',
               items: sidebarFromSpec(specPages, 'PLEX'),
+            },
+            {
+              id: 'tile',
+              label: 'TILE',
+              link: '/docs/tile/overview/',
+              items: sidebarFromSpec(specPages, 'TILE'),
             },
           ],
           // Pages missing from a section's sidebar, such as the old plugin tutorial, still belong to it.
           {
             topics: {
               echo: ['/docs/echo/**'],
-              plex: ['/docs/plex/**'],
+              edge: ['/docs/edge/**'],
               halo: ['/docs/halo/**'],
+              mesh: ['/docs/mesh/**'],
+              plex: ['/docs/plex/**'],
+              sage: ['/docs/sage/**'],
+              tile: ['/docs/tile/**'],
             },
           },
         ),

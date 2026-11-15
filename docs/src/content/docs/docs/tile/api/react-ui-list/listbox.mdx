@@ -1,0 +1,48 @@
+---
+title: Listbox
+description: A flat list the user picks from.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../../components/TilePreview.astro';
+
+<ApiStory id="react-ui-list/listbox" height="22rem" />
+
+```ts
+import { Listbox } from '@dxos/react-ui-list';
+```
+
+```sh
+npm install @dxos/react-ui-list
+```
+
+`Listbox` is a flat list. With `value` and `onValueChange` the user picks one row; without them the list is only
+for display. Each part handles keyboard navigation and the current and selected states, and sets its own spacing, so put
+it in a panel's body with no padding around it.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Listbox.Root` | Takes the options as `items`; `value`, `onValueChange` and `onDeselect` make it selectable |
+| `Listbox.Label` | Names the list; `srOnly` keeps it for screen readers |
+| `Listbox.Viewport` | Scrolls the list |
+| `Listbox.Content` | The listbox element |
+| `Listbox.Item` | A row for the option whose value is `id` |
+| `Listbox.ItemIcon` | The row's icon |
+| `Listbox.ItemText` | The option's label |
+| `Listbox.ItemDescription` | The option's description |
+| `Listbox.ItemIndicator` | A check on the selected row |
+| `Listbox.ItemGroup` | A group of rows |
+| `Listbox.ItemGroupLabel` | A group's heading |
+| `Listbox.Empty` | Stands in for the rows while there are none |
+
+## Pick from a list
+
+Each option has a `value`, a `label` and an optional `description`. Inside each `Listbox.Item`, the parts read the
+option, so `Listbox.ItemText` shows its label without being told:
+
+<Snippet file="tile-guide-lists" region="listbox" lang="tsx" />
+
+<TilePreview id="people-listbox" height="12rem" />

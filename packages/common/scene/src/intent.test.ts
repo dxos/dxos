@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { applyIntent, isLayoutIntent, layoutChanges } from './intent.ts';
+import { applyIntent, isLayoutIntent, layoutChanges, solidBounds2D, solidOperands } from './intent.ts';
 import type * as Scene from './Scene.ts';
 import { layout2D, layout3D } from './testing.ts';
 
@@ -135,6 +135,24 @@ describe('solid intents', () => {
     ]);
   });
 
+  test('a subtraction of several tools is one solid: the base less each of them, in order', () => {
+    const intent = { kind: 'subtract', id: 'd', base: 'box', tool: 'hole', tools: ['other'] } as const;
+    expect(isLayoutIntent(intent, '3d')).toBe(true);
+    const cut = applyIntent(parts(), intent);
+    expect(cut.elements.d).toEqual({ id: 'd', type: 'solid', props: { op: 'difference', operands: 'box hole other' } });
+    expect([cut.elements.box.hidden, cut.elements.hole.hidden, cut.elements.other.hidden]).toEqual([true, true, true]);
+    // Deleted, every one of them is drawn again.
+    const restored = applyIntent(cut, { kind: 'delete', ids: ['d'] });
+    expect([restored.elements.box.hidden, restored.elements.hole.hidden, restored.elements.other.hidden]).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    // A tool that is missing refuses the whole subtraction, as a missing operand does a join.
+    const layout = parts();
+    expect(applyIntent(layout, { ...intent, tools: ['missing'] })).toBe(layout);
+  });
+
   test("a solid takes its base operand's style, so a subtraction keeps the colour it was cut from", () => {
     const styled = applyIntent(parts(), {
       kind: 'update',
@@ -193,10 +211,87 @@ describe('solid intents', () => {
     expect(applyIntent(layout, { kind: 'join', id: 'u', operands: [] })).toBe(layout);
   });
 
-  test('solid intents are 3D only', () => {
-    const flat = layout2D('f', [{ id: 'r', type: 'rect' }]);
-    expect(isLayoutIntent({ kind: 'join', id: 'u', operands: ['r'] }, '2d')).toBe(false);
-    expect(applyIntent(flat, { kind: 'join', id: 'u', operands: ['r'] })).toBe(flat);
+  const flat = () =>
+    layout2D('f', [
+      { id: 'a', type: 'rect', z: 'a1', center: { x: 0, y: 0 }, size: { width: 100, height: 60 } },
+      { id: 'b', type: 'ellipse', z: 'a3', center: { x: 60, y: 30 }, size: { width: 80, height: 80 } },
+      { id: 'c', type: 'rect', z: 'a2', center: { x: 0, y: 0 }, size: { width: 40, height: 40 }, rotation: 45 },
+    ]);
+
+  test('a 2D join is a solid framed by all its operands, on top of them; they are hidden', () => {
+    expect(isLayoutIntent({ kind: 'join', id: 'u', operands: ['a', 'b'] }, '2d')).toBe(true);
+    const joined = applyIntent(flat(), { kind: 'join', id: 'u', operands: ['a', 'b'] });
+    expect(joined.elements.u).toEqual({
+      id: 'u',
+      type: 'solid',
+      z: 'a3',
+      center: { x: 25, y: 20 },
+      size: { width: 150, height: 100 },
+      props: { op: 'union', operands: 'a b' },
+    });
+    expect([joined.elements.a.hidden, joined.elements.b.hidden, joined.elements.c.hidden]).toEqual([
+      true,
+      true,
+      undefined,
+    ]);
+    const restored = applyIntent(joined, { kind: 'delete', ids: ['u'] });
+    expect([restored.elements.a.hidden, restored.elements.b.hidden]).toEqual([undefined, undefined]);
+  });
+
+  test("a 2D subtraction is framed by its base alone, where it was in the stack, and keeps the base's look", () => {
+    const styled = applyIntent(flat(), { kind: 'update', id: 'a', path: ['overrides'], value: { hue: 'red' } });
+    const cut = applyIntent(styled, { kind: 'subtract', id: 'd', base: 'a', tool: 'b' });
+    expect(cut.elements.d).toEqual({
+      id: 'd',
+      type: 'solid',
+      z: 'a1',
+      center: { x: 0, y: 0 },
+      size: { width: 100, height: 60 },
+      overrides: { hue: 'red' },
+      props: { op: 'difference', operands: 'a b' },
+    });
+  });
+
+  test('a 2D subtraction of several tools is still framed by its base', () => {
+    const cut = applyIntent(flat(), { kind: 'subtract', id: 'd', base: 'a', tool: 'b', tools: ['c'] });
+    expect(cut.elements.d).toMatchObject({
+      center: { x: 0, y: 0 },
+      size: { width: 100, height: 60 },
+      props: { op: 'difference', operands: 'a b c' },
+    });
+    expect([cut.elements.a.hidden, cut.elements.b.hidden, cut.elements.c.hidden]).toEqual([true, true, true]);
+  });
+
+  test('a turned operand is measured as it stands', () => {
+    const bounds = solidBounds2D('union', [flat().elements.c]);
+    expect(bounds?.width).toBeCloseTo(40 * Math.SQRT2, 2);
+    expect(bounds?.x).toBeCloseTo(-20 * Math.SQRT2, 2);
+    expect(solidBounds2D('difference', [flat().elements.a, undefined])).toEqual({
+      x: -50,
+      y: -30,
+      width: 100,
+      height: 60,
+    });
+    expect(solidBounds2D('union', [flat().elements.a, { center: { x: 0, y: 0 } }])).toBeUndefined();
+  });
+
+  test('operands the layout cannot measure still make a solid, with no frame; nothing is extruded in 2D', () => {
+    // Placed objects take their size from the model, which a layout alone does not hold.
+    const layout = layout2D('f', [
+      { id: 'r', object: 'box', center: { x: 0, y: 0 } },
+      { id: 's', object: 'box', center: { x: 50, y: 0 } },
+    ]);
+    const joined = applyIntent(layout, { kind: 'join', id: 'u', operands: ['r', 's'] });
+    expect(joined.elements.u).toEqual({ id: 'u', type: 'solid', props: { op: 'union', operands: 'r s' } });
+    expect([joined.elements.r.hidden, joined.elements.s.hidden]).toEqual([true, true]);
+    expect(
+      isLayoutIntent({ kind: 'extrude', id: 'e', target: 'r', face: { x: 0, y: 1, z: 0 }, distance: 1 }, '2d'),
+    ).toBe(false);
+  });
+
+  test('the ids a solid names are read from its operands', () => {
+    expect(solidOperands('a  b c')).toEqual(['a', 'b', 'c']);
+    expect(solidOperands(undefined)).toEqual([]);
   });
 
   test('a layout intent writes 2D layout fields in the same batch as the elements, and unsets one with undefined', () => {

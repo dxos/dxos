@@ -8,6 +8,7 @@ import {
   BACKGROUND_FILLS,
   type BackgroundGrid,
   FLOATING_BAR,
+  FLOATING_BAR_RULE,
   type LookTone,
   RADIUS_CLASSES,
   type Theme,
@@ -194,7 +195,7 @@ export const DisplayPanel = ({
       />
     )}
     {/* Snapping is behaviour, the rest is what the canvas draws. */}
-    {onSnapToggle && <Toolbar.Separator variant='line' />}
+    {onSnapToggle && <Toolbar.Separator variant='line' classNames={FLOATING_BAR_RULE} />}
     {/* A guide is drawn on the grid, so the toggle leads the grid options; on a lattice scene it is one side of the switch. */}
     {onGuidesToggle && lattice !== true && (
       <Button.Toggle
@@ -280,7 +281,7 @@ export const DisplayPanel = ({
     {/* Playing a shot is viewing, as the axes are, so a read-only scene offers it too. */}
     {onTimelineToggle && (
       <>
-        <Toolbar.Separator variant='line' />
+        <Toolbar.Separator variant='line' classNames={FLOATING_BAR_RULE} />
         <Button.Toggle
           variant='ghost'
           iconOnly
@@ -292,7 +293,7 @@ export const DisplayPanel = ({
         />
       </>
     )}
-    <Toolbar.Separator variant='line' />
+    <Toolbar.Separator variant='line' classNames={FLOATING_BAR_RULE} />
     <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
       {/* A way of viewing, as the axes are: open in a read-only scene. */}
       <Menu.Trigger asChild disabled={!onThemeChange}>

@@ -4,11 +4,70 @@
 
 import { describe, test } from 'vitest';
 
-import { grooveBounds, grooveHeads, grooveTrim, markerFrame, markerTrim, trimPath } from './link-ends.ts';
+import {
+  drawnLinkEnds,
+  endMarker,
+  grooveBounds,
+  grooveHeads,
+  grooveTrim,
+  linkEndAt,
+  markerFrame,
+  markerTrim,
+  trimPath,
+  withEndMarker,
+} from './link-ends.ts';
 import { flattenPath } from './path.ts';
 
 /** How far a mitred tip reaches past its vertex, for arms at the ends' half-angle. */
 const miter = (width: number) => width / 2 / Math.sin(Math.atan2(5, 10));
+
+describe("a link end's marker", () => {
+  test('the source end is the start marker and the target end the end marker', ({ expect }) => {
+    const ends = { start: 'circle', end: 'arrow' } as const;
+    expect(endMarker(ends, 'source')).toBe('circle');
+    expect(endMarker(ends, 'target')).toBe('arrow');
+    expect(endMarker(undefined, 'target')).toBeUndefined();
+  });
+
+  test('setting one end keeps the other, and clearing one drops only it', ({ expect }) => {
+    expect(withEndMarker(undefined, 'target', 'arrow')).toEqual({ end: 'arrow' });
+    expect(withEndMarker({ end: 'arrow' }, 'source', 'triangle')).toEqual({ start: 'triangle', end: 'arrow' });
+    expect(withEndMarker({ start: 'circle', end: 'arrow' }, 'target', undefined)).toEqual({ start: 'circle' });
+    expect(withEndMarker({ end: 'arrow' }, 'target', undefined)).toEqual({});
+  });
+
+  test('a link drawn takes the markers last set, and before any were an arrow where it has a direction', ({
+    expect,
+  }) => {
+    expect(drawnLinkEnds(undefined, false)).toBeUndefined();
+    expect(drawnLinkEnds(undefined, true)).toEqual({ end: 'arrow' });
+    expect(drawnLinkEnds({ start: 'circle' }, true)).toEqual({ start: 'circle' });
+    // Markers cleared are a choice too: the next link has none, directed or not.
+    expect(drawnLinkEnds({}, true)).toBeUndefined();
+  });
+});
+
+describe('the link end at a point', () => {
+  const links = [
+    { link: 'one', source: { x: 0, y: 0 }, target: { x: 100, y: 0 } },
+    { link: 'two', source: { x: 100, y: 4 }, target: { x: 100, y: 200 } },
+  ];
+
+  test('a point within reach of an end is on it, and one further off is on none', ({ expect }) => {
+    expect(linkEndAt(links, { x: 6, y: 8 }, 10)).toEqual({ link: 'one', end: 'source' });
+    expect(linkEndAt(links, { x: 100, y: 190 }, 10)).toEqual({ link: 'two', end: 'target' });
+    expect(linkEndAt(links, { x: 50, y: 0 }, 10)).toBeUndefined();
+  });
+
+  test('the nearest end wins, and the earlier link where two are as near', ({ expect }) => {
+    expect(linkEndAt(links, { x: 100, y: 3 }, 10)).toEqual({ link: 'two', end: 'source' });
+    expect(linkEndAt(links, { x: 100, y: 2 }, 10)).toEqual({ link: 'one', end: 'target' });
+    // A short link's ends are both in reach of a press between them.
+    expect(linkEndAt([{ link: 'short', source: { x: 0, y: 0 }, target: { x: 12, y: 0 } }], { x: 8, y: 0 }, 10)).toEqual(
+      { link: 'short', end: 'target' },
+    );
+  });
+});
 
 describe('marker ends', () => {
   test("a pointed marker's mitred tip and a circle's far side are at the anchor, at any stroke", ({ expect }) => {
@@ -37,6 +96,17 @@ describe('marker ends', () => {
     expect(markerTrim('triangle', 16, 2, { width: 8, round: false })).toBeCloseTo(miter(2) + triangle.size * (10 / 12));
     const circle = markerFrame('circle', 16, 2);
     expect(markerTrim('circle', 16, 2, { width: 8, round: true })).toBeCloseTo(circle.size * (4 / 10) + 1);
+  });
+
+  test("a crow's foot's toes reach the anchor, and the line runs on between them", ({ expect }) => {
+    for (const stroke of [1, 2, 6]) {
+      const many = markerFrame('many', 16, stroke);
+      // The toes end at 10 view units; their round caps reach half a stroke past, to the anchor.
+      expect((many.refX - 10) * (many.size / many.view)).toBeCloseTo(stroke / 2);
+      expect(many.size).toBe(markerFrame('arrow', 16, stroke).size);
+    }
+    expect(markerTrim('many', 16, 2, { width: 8, round: false })).toBe(0);
+    expect(markerTrim('many', 16, 2, { width: 8, round: true })).toBe(0);
   });
 });
 
@@ -68,6 +138,26 @@ describe('groove heads', () => {
     expect(head).toContain('A 12 12');
     expect(head.startsWith('M 72 0')).toBe(true);
     expect(100 - grooveTrim('circle', 8, 16)).toBeCloseTo(72);
+  });
+
+  test("a crow's foot opens onto the end: its toes are there, its vertex back along the route, and the track runs on", ({
+    expect,
+  }) => {
+    const head = grooveHeads('M 0 0 L 100 0', { end: 'many' }, 8, 16);
+    const [upper, vertex, lower] = corners(head.outline);
+    // The toes' caps, half the channel out, reach the end; the vertex is a head's length back, on the route.
+    expect(upper.x + 4).toBeCloseTo(100);
+    expect(lower.x).toBeCloseTo(upper.x);
+    expect(upper.y).toBeCloseTo(-lower.y);
+    // Each toe spreads three quarters of the foot's length from the route.
+    expect(Math.abs(upper.y)).toBeCloseTo((upper.x - vertex.x) * 0.75);
+    expect(vertex.y).toBeCloseTo(0);
+    expect(vertex.x).toBeLessThan(upper.x);
+    expect(head.hollow).toBe('');
+    expect(grooveTrim('many', 8, 16)).toBeCloseTo(4);
+    // At a start, the toes are at the route's first point.
+    const [first] = corners(grooveHeads('M 0 0 L 0 100', { start: 'many' }, 8, 16).outline);
+    expect(first.y).toBeCloseTo(4);
   });
 
   test('a degenerate route draws no heads', ({ expect }) => {

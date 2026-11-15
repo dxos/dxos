@@ -4,7 +4,7 @@
 
 import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
-import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
+import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 
 import { AgentKnowledgeModule } from './AgentKnowledgeModule.tsx';
 import { AgentModule } from './AgentModule.tsx';
@@ -23,11 +23,11 @@ import { TrajectoryGraphModule } from './TrajectoryGraphModule.tsx';
  * Custom roles for story panels that are NOT bound to a story-created object — the harness chat and
  * the bespoke diagnostics that have no equivalent composer plugin surface. Generic diagnostics
  * (config, database, logging, invocations, execution graph, routine) are spread in from
- * `ModuleRole`. Object-bound panels (documents, sketches, games, …) use `Cell.article`/
+ * `StoryModules.Role`. Object-bound panels (documents, sketches, games, …) use `Cell.article`/
  * `Cell.companion` against the real plugin surfaces instead of a role here.
  */
 export const StoryRole = {
-  ...ModuleRole,
+  ...StoryModules.Role,
 
   Agent: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agent'),
   AgentKnowledge: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentKnowledge'),
@@ -46,10 +46,10 @@ export const StoryRole = {
 /**
  * React surfaces for the stories-assistant panels that have no equivalent composer plugin surface
  * (the harness chat and space-scoped debug views), each registered under a `StoryRole` token and
- * referenced as a bare token in a story layout. Generic diagnostics come from `commonSurfaces`.
+ * referenced as a bare token in a story layout. Generic diagnostics come from `StoryModules.surfaces`.
  */
 export const moduleSurfaces: Surface.Definition[] = [
-  ...commonSurfaces,
+  ...StoryModules.surfaces,
 
   Surface.create({
     id: 'role.agent',

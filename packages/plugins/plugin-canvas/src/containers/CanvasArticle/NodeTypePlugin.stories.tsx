@@ -18,7 +18,9 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { type ElementKindSpec, type NodeViewProps, TextPart, kindData } from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
-import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { mx } from '@dxos/ui-theme';
 
 import * as CanvasPlugin from '#meta';
@@ -110,7 +112,7 @@ const seed = (content: ContentMap, root: string) => {
 };
 
 const decorators = (plugins: Plugin.Plugin[]) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), ...plugins],
     onInit: async ({ space }) => {
@@ -121,9 +123,9 @@ const decorators = (plugins: Plugin.Plugin[]) =>
     },
   });
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'plugins/plugin-canvas/containers/NodeTypePlugin',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     translations,

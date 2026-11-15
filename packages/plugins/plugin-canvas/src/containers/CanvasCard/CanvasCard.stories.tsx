@@ -16,7 +16,9 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { DEFAULT_CELL } from '@dxos/react-ui-canvas';
 import * as Card from '@dxos/react-ui/Card';
 import { toEcho } from '@dxos/scene';
-import { Cell, ModuleContainer, type ResolvedCellProps, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
 import * as CanvasPlugin from '#meta';
@@ -29,7 +31,7 @@ import { addTestCanvas } from '../../testing/canvas.ts';
 
 // Dispatched through the illustrator's card surface, as a stack or popover shows it, so the story covers the variant
 // dispatch as well as the card.
-const DrawingCard = ({ object }: ResolvedCellProps) => (
+const DrawingCard = ({ object }: ModuleContainer.ResolvedCellProps) => (
   <Card.Root classNames='w-80'>
     <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
   </Card.Root>
@@ -50,7 +52,7 @@ const node = (scene: string, id: string, type: string, x: number, y: number, lab
 
 /** A 2D canvas of three shapes, as a card shows it. */
 const shapesDrawing = () =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
@@ -67,7 +69,7 @@ const shapesDrawing = () =>
 
 /** A canvas over scenes written in `.dx`, as a card shows it. */
 const sceneDrawing = (text: string) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
@@ -90,9 +92,9 @@ const sceneDrawing = (text: string) =>
     },
   });
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'plugins/plugin-canvas/containers/CanvasCard',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     translations,
