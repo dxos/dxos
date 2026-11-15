@@ -24,9 +24,7 @@ import { SpaceCapabilities } from '#types';
 
 import { FOLLOW_LOST_TIMEOUT, getPeerFocus, getPresenceKeyFromPath } from '../util/presence.ts';
 
-/** How long a plank has to mount once it is open; its anchor is revealed again on every tick meanwhile. */
-const MOUNT_TIMEOUT = 5_000;
-
+/** How often the follow updates, which also advances each extension's view. */
 const TICK_INTERVAL = 500;
 
 /** Keys that do nothing on their own, so pressing one does not break a follow. */
@@ -232,7 +230,7 @@ export default Capability.makeModule(
     // Reveals the leader's anchor in each object this session shows of them, at the path its layout holds it at. A plank
     // just opened may not have mounted, so its anchor is revealed again on every update until it has had time to.
     const revealAnchors = (current: Session, anchors: ReadonlyMap<EID.EID, string>) => {
-      const now = Date.now();
+      const { now } = current.view;
       const { active } = registry.get(layoutAtom);
       for (const path of current.mounted.keys()) {
         if (!active.includes(path)) {
@@ -254,7 +252,8 @@ export default Capability.makeModule(
             : active.find((plank) => getPresenceKeyFromPath(plank) === key);
         const typename = load(current.view.spaceId, key)?.typename;
         const locator = typename && registry.get(locatorsAtom).find(({ id }) => id === typename);
-        const mounting = path !== undefined && now < (current.mounted.get(path) ?? 0) + MOUNT_TIMEOUT;
+        const mounting =
+          path !== undefined && now < (current.mounted.get(path) ?? 0) + AppCapabilities.FOLLOW_MOUNT_TIMEOUT;
         if (
           !path ||
           !locator ||
@@ -317,6 +316,7 @@ export default Capability.makeModule(
       const path = active.find((plank) => getPresenceKeyFromPath(plank) === focus.key);
       const localPath = getLocalPath(following.spaceId, focus.key);
       const view: AppCapabilities.FollowView = {
+        now,
         spaceId: following.spaceId,
         active,
         attended: { key: focus.key, ...(path && { path }), ...(localPath && { localPath }) },
@@ -344,7 +344,7 @@ export default Capability.makeModule(
         const viewAtom = current.views.get(extension.id);
         if (!viewAtom) {
           startExtension(current, extension, extensionView);
-        } else if (JSON.stringify(extensionView) !== JSON.stringify(registry.get(viewAtom))) {
+        } else {
           registry.set(viewAtom, extensionView);
         }
       }

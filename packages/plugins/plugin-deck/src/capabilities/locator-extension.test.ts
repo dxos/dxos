@@ -36,6 +36,9 @@ const BOUND_SEGMENT = 'bound';
 /** A segment whose URL binding comes from {@link LateBindingPlugin}, which a test enables partway through. */
 const LATE_SEGMENT = 'late';
 
+/** How often the follow in plugin-space updates the view it hands an extension. */
+const TICK_INTERVAL = 500;
+
 type Call = { op: string; input: { subject?: unknown; focus?: unknown } };
 
 describe('LocatorExtension', () => {
@@ -312,6 +315,7 @@ const view = (
     available = true,
   }: { active?: string[]; value?: DeckLocation; localPath?: string; available?: boolean } = {},
 ): AppCapabilities.FollowView => ({
+  now: Date.now(),
   spaceId,
   active,
   attended: { key: keyOf(path), path, ...(available && { localPath }) },
@@ -347,13 +351,15 @@ const setup = async ({
   const spaceId = SpaceId.random();
   registry.update(state, (deck) => ({ ...deck, workspace: GraphPath.getSpacePath(spaceId), flat }));
   const locator = harness.get(AppCapabilities.LocatorExtension);
-  // The follow's update ticks and mounting window run on this clock, which keeps pace with real time until a test jumps it.
+  // The follow's ticks and mount window run on this clock, which keeps pace with real time until a test jumps it.
   vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'], shouldAdvanceTime: true });
   onTestFinished(() => void vi.useRealTimers());
 
-  /** Follows `initial` until the test ends. */
+  /** Follows `initial` until the test ends, advancing the view on every tick as the follow does. */
   const follow = async (initial: AppCapabilities.FollowView) => {
     const viewAtom = Atom.make(initial);
+    const tick = setInterval(() => registry.update(viewAtom, (view) => ({ ...view, now: Date.now() })), TICK_INTERVAL);
+    onTestFinished(() => clearInterval(tick));
     const scope = Effect.runSync(Scope.make());
     onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
     invariant(locator.follow);

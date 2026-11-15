@@ -1617,6 +1617,17 @@ decision D-81: A `Locator`'s `reveal` answers whether it revealed the anchor, an
     - Markdown applying a pending anchor when its editor mounts; each type would need its own pending store.
 ```
 
+```mdl
+decision D-82: The follow owns the clock: the view it hands each extension carries `now`, which advances on every tick, and the mount window is `FOLLOW_MOUNT_TIMEOUT` in app-toolkit. An extension re-applies what has not mounted from those, with no timer of its own. Fills in [D-79].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.21]
+  why: The core and the deck's extension each ran a 500 ms interval and a five-second mount window, so every extension would repeat them.
+  rejected:
+    - The view listing the follower's paths still mounting; the deck's window runs from when it lands the view, which the core does not know.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

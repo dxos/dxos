@@ -30,11 +30,6 @@ export type DeckLocation = {
   variant?: string;
 };
 
-/** How long planks opened for the leader have to mount; their scroll and companions are sent again on every tick meanwhile. */
-const MOUNT_TIMEOUT = 5_000;
-
-const TICK_INTERVAL = 500;
-
 const isString = (value: unknown): value is string => typeof value === 'string';
 
 /** Narrows a leader's value, which arrives as opaque JSON, to a {@link DeckLocation}. */
@@ -65,7 +60,7 @@ type Shown = {
   /** The leader's planks (or path, on a flat deck) this deck could bind when it last landed the view. */
   bound: readonly string[];
   front?: string;
-  /** When the deck last landed the view, from which planks it opened have {@link MOUNT_TIMEOUT} to mount. */
+  /** When the deck last landed the view, from which planks it opened have the follow's mount window to mount. */
   landedAt: number;
   /** Set when the deck could not open the view, so the next update opens it again. */
   retry?: boolean;
@@ -166,7 +161,7 @@ export default Capability.makeModule(
 
           // Showing the view only once the deck has it keeps a failing retry from re-entering `update` at once, and
           // the planks it opened mount from now, however long it waited.
-          target.landedAt = Date.now();
+          target.landedAt = registry.get(viewAtom).now;
           setShowing(true);
         }).pipe(
           // A failed operation can reach here as a defect; an interrupt is a newer view or a stop, not a failure.
@@ -176,7 +171,7 @@ export default Capability.makeModule(
 
       const update = () => {
         const view = registry.get(viewAtom);
-        const now = Date.now();
+        const { now } = view;
         const layout = registry.get(layoutAtom);
         const deck = registry.get(deckViewAtom);
         const leader = parseDeckLocation(view.value);
@@ -204,7 +199,7 @@ export default Capability.makeModule(
         }
 
         // Planks opened for the leader mount late, so their scroll and companions are sent again until they have.
-        const mounting = now < shown.landedAt + MOUNT_TIMEOUT;
+        const mounting = now < shown.landedAt + AppCapabilities.FOLLOW_MOUNT_TIMEOUT;
         // The leader's front when this deck holds it. A front this deck has no binding for is never held, so once the
         // deck holds every plank of theirs it can bind, it slides to one of theirs it holds, the first after the
         // front, else the last before it; until then the deck still shows its own planks and does not slide.
@@ -263,14 +258,13 @@ export default Capability.makeModule(
         }
       };
 
+      // The follow updates the view on every tick, so this re-applies what has not mounted yet.
       update();
       const unsubscribeView = registry.subscribe(viewAtom, update);
-      const tick = setInterval(update, TICK_INTERVAL);
 
       yield* Effect.addFinalizer(() =>
         Effect.gen(function* () {
           unsubscribeView();
-          clearInterval(tick);
           unmountShowing();
           if (navigating) {
             yield* Fiber.interrupt(navigating);

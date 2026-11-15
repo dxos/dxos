@@ -54,11 +54,24 @@ describe('Follow', () => {
 
     await expect.poll(() => followed.views.at(-1)?.attended.localPath).toBe(path);
     expect(followed.views.at(-1)).toEqual({
+      now: expect.any(Number),
       spaceId: space.id,
       active: [path, other],
       attended: { key, path, localPath: path },
       value: { front: other },
     });
+  });
+
+  test('each tick advances an extension’s view, so it needs no timer of its own', async ({ expect }) => {
+    const { followed, ephemeral, registry, space, object } = await setup();
+    const path = GraphPath.getObjectPathFromObject(object);
+    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
+    await expect.poll(() => followed.views.length).toBeGreaterThan(0);
+
+    // Nothing else changes, so each view after the first is a tick.
+    const updates = followed.views.length;
+    await vi.advanceTimersByTimeAsync(600);
+    expect(followed.views.length).toBeGreaterThan(updates);
   });
 
   test('stopping a follow ends each extension’s follow', async ({ expect }) => {

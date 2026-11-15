@@ -100,8 +100,13 @@ export const LayoutAccent = Capability$.make<Atom.Atom<ChromaticPalette | undefi
   'org.dxos.app-framework.capability.layoutAccent',
 );
 
+/** How long what a follow opens has to mount; it is applied again on every update of the {@link FollowView} meanwhile. */
+export const FOLLOW_MOUNT_TIMEOUT = 5_000;
+
 /** What a follower shows of the session it follows, as handed to each {@link LocatorExtension}. */
 export type FollowView = Readonly<{
+  /** When the follow last updated the view; it advances on every tick, so an extension needs no timer of its own. */
+  now: number;
   spaceId: string;
   /** The leader's open items in the space, in order. */
   active: readonly string[];
