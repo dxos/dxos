@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
@@ -19,12 +19,15 @@ import { Person } from '@dxos/types';
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { ObjectForm, ObjectProperties } from './ObjectForm.tsx';
 
-type StoryArgs = PaneArgs & { component?: 'form' | 'properties' };
+type StoryArgs = PaneArgs & { component?: 'form' | 'properties' | 'transient' };
 
 const DefaultStory = ({ component = 'form' }: StoryArgs) => {
   const { space } = useClientStory();
   const [person] = useQuery(space?.db, Filter.type(Person.Person));
   const [snapshot] = useObject(person);
+  // Stands in for the popover's dismissal, so the test can assert that both buttons close their host.
+  const [closed, setClosed] = useState(0);
+  const handleClose = useCallback(() => setClosed((closed) => closed + 1), []);
   if (!person) {
     return <></>;
   }
@@ -34,8 +37,17 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
       <Typography.Text truncate data-testid='object'>
         {JSON.stringify({ ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.label) })}
       </Typography.Text>
+      <Typography.Text data-testid='closed'>{String(closed)}</Typography.Text>
     </Panel.Footer>
   );
+  if (component === 'transient') {
+    return (
+      <Panel.Root size='sm'>
+        <ObjectProperties object={person} onClose={handleClose} />
+        {footer}
+      </Panel.Root>
+    );
+  }
   return component === 'properties' ? (
     <Panel.Root size='sm'>
       <ObjectProperties object={person} />
@@ -93,6 +105,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Properties: Story = { args: { component: 'properties' } };
+
+export const Transient: Story = { args: { component: 'transient' } };
 
 const readObject = (canvasElement: HTMLElement) =>
   JSON.parse(within(canvasElement).getByTestId('object').textContent ?? '{}');
@@ -157,5 +171,38 @@ export const TestProperties: Story = {
     await userEvent.type(title, ' II');
     await waitFor(() => expect(readObject(canvasElement).jobTitle).toBe('Engineer II'));
     await expect(within(canvas.getByTestId('_tags')).getByText('Friend')).toBeVisible();
+  },
+};
+
+const readClosed = (canvasElement: HTMLElement) => Number(within(canvasElement).getByTestId('closed').textContent);
+
+/** 1. TestTransient: with `onClose`, the form holds its edits until Save; Cancel discards them. */
+export const TestTransient: Story = {
+  args: { component: 'transient' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 2. The pane shows the live object and, unlike the live variant, a Cancel and a Save.
+    const title = await canvas.findByDisplayValue('Engineer', {}, { timeout: 15_000 });
+    await expect(canvas.getByTestId('cancel-button')).toBeVisible();
+    await expect(canvas.getByTestId('save-button')).toBeVisible();
+
+    // 3. Typing writes nothing: the object still holds the value it opened with.
+    await userEvent.clear(title);
+    await userEvent.type(title, 'Architect');
+    await expect(readObject(canvasElement).jobTitle).toBe('Engineer');
+
+    // 4. Cancel leaves the object untouched and closes.
+    await userEvent.click(canvas.getByTestId('cancel-button'));
+    await waitFor(() => expect(readClosed(canvasElement)).toBe(1));
+    await expect(readObject(canvasElement).jobTitle).toBe('Engineer');
+
+    // 5. Save writes every edit at once and closes.
+    const reopened = canvas.getByDisplayValue('Architect');
+    await userEvent.clear(reopened);
+    await userEvent.type(reopened, 'Architect II');
+    await userEvent.click(canvas.getByTestId('save-button'));
+    await waitFor(() => expect(readObject(canvasElement).jobTitle).toBe('Architect II'));
+    await expect(readClosed(canvasElement)).toBe(2);
   },
 };
