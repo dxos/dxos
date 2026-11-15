@@ -540,6 +540,15 @@ const ArtifactsStory = (props: Parameters<typeof DefaultStory>[0]) => {
   );
 };
 
+/** Each host's framing of the create pane, copied from its call site so the story shows what ships. */
+const EDITOR_FRAME = {
+  default: 'bg-input-surface border border-separator rounded-md p-2',
+  // `TaskSetArticle`'s footer: inset from the panel's edges, in a bordered box of its own surface.
+  project: 'py-2 dx-group-surface border border-separator-subtle rounded-sm',
+  // `Chat`'s strip: the prompt frames it, so the pane itself carries no box.
+  chat: undefined,
+} as const;
+
 const DefaultStory = ({
   seed = seedFlat,
   readonly,
@@ -553,6 +562,9 @@ const DefaultStory = ({
   columns,
   inline = false,
   acceptFiles = false,
+  createOnly = false,
+  flush = false,
+  frame = 'default',
   members,
   agents = false,
 }: {
@@ -577,6 +589,12 @@ const DefaultStory = ({
   inline?: boolean;
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
+  /** Only ever create, as both hosts do: a task is edited through its own row, not by selecting it into the pane. */
+  createOnly?: boolean;
+  /** The list's rows sit flush, without the pane's outer columns — what the chat's narrow strip uses. */
+  flush?: boolean;
+  /** Which host's framing to reproduce: the project's footer box, the chat's inset strip, or the bare pane. */
+  frame?: 'default' | 'project' | 'chat';
   members?: readonly TaskMember[];
   agents?: boolean;
 }) => {
@@ -681,6 +699,7 @@ const DefaultStory = ({
       hierarchical={hierarchical}
       groupByStatus={groupByStatus}
       showGroupLabels={showGroupLabels}
+      flush={flush}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
       columns={columns}
@@ -698,12 +717,15 @@ const DefaultStory = ({
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <Layout.Flex classNames='p-trim-md'>
+        <Layout.Flex classNames={frame === 'chat' ? 'px-1' : 'p-trim-md'}>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
             inline={inline}
-            classNames='bg-input-surface border border-separator rounded-md p-2'
+            createOnly={createOnly}
+            // The project names its create row "Add task"; the chat leaves the title placeholder as it is.
+            placeholder={frame === 'project' ? 'Add task' : undefined}
+            classNames={EDITOR_FRAME[frame]}
           />
           {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
         </Layout.Flex>
@@ -783,13 +805,33 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Chat: Story = {
+/**
+ * The chat's add row (`Chat.tsx`): one line on the list's own columns, each field under the column it edits, with
+ * the list above it. `createOnly`, because a task is changed through its row, never by selecting it into the strip.
+ */
+export const ChatPrompt: Story = {
   args: {
     showGroupLabels: false,
     showOrdinals: true,
     showDescription: false,
     columns: ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'],
     inline: true,
+    createOnly: true,
+    flush: true,
+    frame: 'chat',
+  },
+};
+
+/**
+ * The project's footer form (`TaskSetArticle`): the title and description stack above a row of labelled tags
+ * (Todo / Priority / Assignee / Estimate), framed as the chat prompt is, with the list above it.
+ */
+export const ProjectFooter: Story = {
+  args: {
+    showDescription: true,
+    acceptFiles: true,
+    createOnly: true,
+    frame: 'project',
   },
 };
 
@@ -1675,7 +1717,7 @@ export const TestCreateWithProperties: Story = {
 };
 
 export const TestInlineCreateWithProperties: Story = {
-  args: { ...Chat.args },
+  args: { ...ChatPrompt.args },
   play: async ({ canvasElement }) => {
     const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
     const glyph = (field: string) =>
