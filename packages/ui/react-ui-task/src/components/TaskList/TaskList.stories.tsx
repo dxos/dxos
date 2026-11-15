@@ -544,7 +544,7 @@ const ArtifactsStory = (props: Parameters<typeof DefaultStory>[0]) => {
 const EDITOR_FRAME = {
   default: 'bg-input-surface border border-separator rounded-md p-2',
   // `TaskSetArticle`'s footer: inset from the panel's edges, in a bordered box of its own surface.
-  project: 'py-2 dx-group-surface border border-separator-subtle rounded-sm',
+  project: 'py-2 dx-group-surface ring-1 ring-inset ring-separator-subtle rounded-sm',
   // `Chat`'s strip: the prompt frames it, so the pane itself carries no box.
   chat: undefined,
 } as const;
@@ -715,7 +715,9 @@ const DefaultStory = ({
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <Layout.Flex classNames={frame === 'chat' ? 'px-1' : 'p-trim-md'}>
+        {/* Block-axis padding only: horizontal padding here would inset the pane's grid from the rows' and the
+            columns would no longer line up. */}
+        <Layout.Flex classNames={frame === 'chat' ? 'px-1' : 'pb-trim-md'}>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
@@ -1207,10 +1209,11 @@ export const WithTags: Story = {
       const centre = (rect: DOMRect) => rect.top + rect.height / 2;
       await expect(Math.abs(centre(box) - centre(title))).toBeLessThan(2);
       await expect(box.left).toBeGreaterThanOrEqual(title.right - 0.5);
+      // Who has it, how urgent it is and how big it is read together after the title.
       const priority = row
         .querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!
         .getBoundingClientRect();
-      await expect(priority.right).toBeLessThanOrEqual(title.left + 0.5);
+      await expect(priority.left).toBeGreaterThanOrEqual(box.right - 0.5);
     }
 
     // A row with nothing to show as a chip holds no empty line for them.

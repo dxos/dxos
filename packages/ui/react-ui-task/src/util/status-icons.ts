@@ -24,10 +24,10 @@ export const STATUS_ORDER: Task.Status[] = Task.StatusOptions.map(({ id }) => id
  */
 export const UNSET_ICON = 'ph--asterisk--regular';
 
-/** An unset estimate's glyph: a quiet mark, since the column's values are short text rather than icons. */
-export const ESTIMATE_UNSET_ICON = 'ph--dot--regular';
-
 export const ESTIMATE_ICON = 'ph--ruler--regular';
+
+/** An unset estimate draws the property's own glyph, so the empty control still names the column it sits in. */
+export const ESTIMATE_UNSET_ICON = ESTIMATE_ICON;
 
 /** Unset priority draws the high bars in a neutral tone, so an empty control still reads as the priority ramp. */
 const PRIORITY_PLACEHOLDER: Task.Priority = 'high';
