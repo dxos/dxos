@@ -317,22 +317,48 @@ const BLOCK_TAGS = new Set([
   'slide-after',
   'slide-surface',
   'slide-box',
+  'slide-grid',
+  'slide-cell',
+  'slide-card',
 ]);
 
 const NODE_CLASSES: Record<string, string> = theme.nodes;
 
 /** The element a `<List>`/`<Table>` variant lands on, and the kind of block it belongs to. */
-const VARIANT_BLOCKS: Record<string, string> = { 'ul': 'list', 'ol': 'list', 'table': 'table', 'slide-box': 'box' };
+const VARIANT_BLOCKS: Record<string, string> = {
+  'ul': 'list',
+  'ol': 'list',
+  'table': 'table',
+  'slide-box': 'box',
+  'slide-grid': 'grid',
+  'slide-cell': 'cell',
+  'slide-card': 'card',
+};
 
-/** The key a styled block's descendants take their classes under; `list` covers both `ul` and `ol`. */
+/**
+ * The key a styled block's descendants take their classes under. A part is named by its tag, so a variant styles any
+ * tag it holds by writing that tag's name; these are the aliases, where the key is not the tag: both list tags share
+ * one part, and each custom element is named without its prefix.
+ */
 const VARIANT_PARTS: Record<string, string> = {
   'ul': 'list',
   'ol': 'list',
-  'li': 'li',
-  'table': 'table',
-  'th': 'th',
-  'td': 'td',
   'slide-box': 'box',
+  'slide-grid': 'grid',
+  'slide-cell': 'cell',
+  'slide-card': 'card',
+};
+
+const variantPart = (tagName: string): string => VARIANT_PARTS[tagName] ?? tagName;
+
+/** The axes a `<Grid>` lays down and a cell or card spans, written as `cols`/`rows` on either. */
+const TRACK_AXES = ['cols', 'rows'] as const;
+
+/** What a layout tag's `cols`/`rows` mean: the tracks a grid lays down, or the tracks one of its children spans. */
+const TRACK_PREFIXES: Record<string, string> = {
+  'slide-grid': 'grid',
+  'slide-cell': 'span',
+  'slide-card': 'span',
 };
 
 /** A variant in force: the kind of block that set it and the name it carries. */
@@ -376,8 +402,11 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     tagName = element.children.some((child) => child.type === 'element' && BLOCK_TAGS.has(child.tagName))
       ? 'div'
       : 'span';
-  } else if (tagName === 'slide-box') {
+  } else if (tagName === 'slide-box' || tagName === 'slide-grid' || tagName === 'slide-cell') {
     tagName = 'div';
+  } else if (tagName === 'slide-card') {
+    // An article: a card is a titled, self-contained piece, which is what the element means.
+    tagName = 'article';
   } else if (tagName === 'slide-surface') {
     // `ref` is reserved by React, so the object URI travels under another name.
     properties.uri = properties.ref;
@@ -399,7 +428,7 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   // A nested list or table with no variant of its own starts clean rather than inheriting the one around it.
   const activeVariant: ActiveVariant | undefined = block ? (name ? { kind: block, name } : undefined) : variant;
   const variantClass =
-    activeVariant && theme.variants[activeVariant.kind]?.[activeVariant.name]?.[VARIANT_PARTS[element.tagName]];
+    activeVariant && theme.variants[activeVariant.kind]?.[activeVariant.name]?.[variantPart(element.tagName)];
   if (block && variantClass) {
     properties.dataVariant = name;
   }
@@ -411,9 +440,25 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   // A tone rebinds `--slide-accent` for this element and everything under it, so the variant's own classes follow it.
   const tone = block ? asVariant(properties.tone) : undefined;
   delete properties.tone;
+  const declarations: string[] = [];
   if (SlideTheme.isTone(tone)) {
     properties.dataTone = tone;
-    properties.style = `--slide-accent: ${TONE_COLORS[tone]}`;
+    declarations.push(`--slide-accent: ${TONE_COLORS[tone]}`);
+  }
+  // The tracks a grid lays down, or the tracks its child spans; the theme's classes read them, so the markdown
+  // supplies a count and never CSS of its own. Only a layout tag carries them, so no other tag loses a `cols` of its.
+  const track = TRACK_PREFIXES[element.tagName];
+  if (track) {
+    for (const axis of TRACK_AXES) {
+      const count = Number(properties[axis]);
+      delete properties[axis];
+      if (Number.isInteger(count) && count >= 1) {
+        declarations.push(`--slide-${track}-${axis}: ${count}`);
+      }
+    }
+  }
+  if (declarations.length > 0) {
+    properties.style = declarations.join('; ');
   }
 
   const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : (variantClass ?? NODE_CLASSES[tagName]);

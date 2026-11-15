@@ -251,6 +251,40 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([]);
   });
 
+  test('<Grid> carries the tracks it lays down', () => {
+    const slide = parseSlide('<Grid cols="4" rows="2">\n\nCells\n\n</Grid>');
+    const [grid] = elements(slide.slots.default, 'slide-grid');
+    expect(grid.properties.cols).toBe(4);
+    expect(grid.properties.rows).toBe(2);
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('<Cell> and <Card> carry the tracks they span', () => {
+    const slide = parseSlide(
+      '<Grid cols="3">\n\n<Cell cols="2">\n\nWide\n\n</Cell>\n\n<Card rows="2">\n\nTall\n\n</Card>\n\n</Grid>',
+    );
+    expect(elements(slide.slots.default, 'slide-cell')[0].properties.cols).toBe(2);
+    const [card] = elements(slide.slots.default, 'slide-card');
+    expect(card.properties.rows).toBe(2);
+    // A card still takes a named style, which a cell has no use for.
+    expect(card.properties.variant).toBe('default');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('a track count outside the grid falls away with an issue', () => {
+    const slide = parseSlide('<Grid cols="40">\n\nToo wide\n\n</Grid>');
+    expect(elements(slide.slots.default, 'slide-grid')[0].properties.cols).toBeUndefined();
+    expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('Invalid <Grid> cols') }]);
+  });
+
+  test('<Card variant> names a style of its own', () => {
+    const slide = parseSlide('<Card variant="outline">\n\n### Title\n\nText\n\n</Card>');
+    const [card] = elements(slide.slots.default, 'slide-card');
+    expect(card.properties.variant).toBe('outline');
+    expect(textOf(card)).toContain('Title');
+    expect(slide.issues).toEqual([]);
+  });
+
   test('<List tone> travels with the variant', () => {
     const slide = parseSlide('<List variant="outline" tone="warning">\n\n- a\n\n</List>');
     expect(elements(slide.slots.default, 'ul')[0].properties.tone).toBe('warning');
