@@ -39,9 +39,10 @@ export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
   placeholder?: string;
   /**
-   * Edit a description under the title — the selected task's, or the new task's when creating, so a
-   * task can be added with one. Off by default, matching `Root`'s `showDescription`: a markdown
-   * field is several rows tall wherever it appears, which a single-line strip has no room for.
+   * Edit a description under the title — the selected task's, or the new task's when creating, so a task can be
+   * added with one. This is what makes the pane two lines rather than one: either way its property controls sit on
+   * the list's own column tracks, and the description spans the title's. Off by default, matching `Root`'s
+   * `showDescription`: a markdown field is several rows tall, which a single-line strip has no room for.
    */
   showDescription?: boolean;
   /** Placeholder for the description field; translated by default. */
@@ -59,11 +60,6 @@ export type TaskListEditorProps = ComposableProps<{
    * and then handed to `onTaskCreate` with it. A host sets this only when it can store a file.
    */
   acceptFiles?: boolean;
-  /**
-   * One line on the list's own columns, each field under the column it edits, as the chat prompt's add row. Otherwise
-   * the title and description stack above a row of labelled tags.
-   */
-  inline?: boolean;
 }>;
 
 /**
@@ -85,7 +81,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       descriptionExtensions,
       createOnly = false,
       acceptFiles = false,
-      inline = false,
       ...props
     },
     forwardedRef,
@@ -362,7 +357,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       <div
         {...rest}
         className={mx(
-          inline ? 'grid gap-y-2' : 'flex flex-col gap-2',
+          'grid gap-y-2',
           'w-full min-w-0 shrink-0',
           // The drop target is the pane itself, marked while files are held over it.
           dragOver && 'ring-2 ring-inset ring-accent-bg',
@@ -370,7 +365,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           !flush && 'px-(--dx-gap-size)',
           className,
         )}
-        style={inline ? ({ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties) : undefined}
+        style={{ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties}
         data-testid='taskList.edit'
         {...(takesFiles && {
           onDragEnterCapture: handleDragEnter,
@@ -385,7 +380,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           key={current?.id ?? 'create'}
           values={values}
           cells={cells}
-          inline={inline}
           members={members}
           people={people}
           title={{
@@ -402,7 +396,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             canCancel && (
               <SystemButton.Cancel
                 variant='ghost'
-                classNames={inline ? undefined : 'ms-auto'}
+
                 data-testid='taskList.edit.cancel'
                 onClick={handleCancel}
                 onMouseDown={(event) => event.preventDefault()}
@@ -414,7 +408,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           {takesFiles && files.length > 0 && (
             <div
               className='flex flex-wrap items-center gap-1 min-w-0'
-              style={inline ? { gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) } : undefined}
+              style={{ gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) }}
             >
               {files.map((file, index) => (
                 <Tag.Tag

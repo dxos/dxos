@@ -21,11 +21,9 @@ import { ActionMenu } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
-import * as Tag from '@dxos/react-ui/Tag';
 import { type Actor, type Person, Task } from '@dxos/types';
 
 import { translationKey } from '#translations';
@@ -65,7 +63,6 @@ export type TaskDescriptionBehavior = {
 export type TaskEditorFormProps = PropsWithChildren<{
   values: TaskEditorValues;
   cells: readonly TaskColumn[];
-  inline?: boolean;
   members: readonly TaskMember[];
   people: readonly Person.Person[];
   title: TaskTitleBehavior;
@@ -82,7 +79,6 @@ export const TaskEditorForm = ({
   children,
   values,
   cells,
-  inline = false,
   members,
   people,
   title,
@@ -101,13 +97,18 @@ export const TaskEditorForm = ({
     [t],
   );
   const context = useMemo(
-    () => ({ inline, members, people, title, description, delegate: values.delegate }),
-    [inline, members, people, title, description, values.delegate],
+    () => ({ members, people, title, description, delegate: values.delegate }),
+    [members, people, title, description, values.delegate],
   );
   const textFields = useMemo(() => (description ? ['title', 'description'] : ['title']), [description]);
-  const propertyFields = useMemo(
-    () => PROPERTY_FIELDS.filter((field) => field !== 'assignee' || cells.includes('assignee')),
-    [cells],
+  // A property the list gives a column is edited under it; the rest keep their controls together at the end of the
+  // last line, so a host that hides a column from its rows still reaches the value.
+  const trailingFields = useMemo(
+    () =>
+      PROPERTY_FIELDS.filter(
+        (field) => !cells.includes(field) && (field !== 'assignee' || members.length > 0 || !!values.delegate),
+      ),
+    [cells, members, values.delegate],
   );
 
   const handleValuesChanged = useCallback(
@@ -126,56 +127,56 @@ export const TaskEditorForm = ({
         schema={TASK_SCHEMA}
         values={{ ...values, status: values.status ?? 'todo' }}
         fieldOverrides={fieldOverrides}
-        fieldMap={inline ? INLINE_FIELD_MAP : FIELD_MAP}
+        fieldMap={FIELD_MAP}
         onValuesChanged={handleValuesChanged}
       >
-        {inline ? (
-          <>
-            {cells.map((cell) =>
-              cell === 'title' ? (
-                <Fragment key={cell}>
-                  <div className='row-start-1 min-w-0' style={{ gridColumn: spanFromTitle(cells, ['artifacts']) }}>
-                    <Form.Fields include={['title']} />
-                  </div>
-                  {description && (
-                    <div
-                      className='row-start-2 min-w-0'
-                      style={{ gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) }}
-                    >
-                      <Form.Fields include={['description']} />
-                    </div>
-                  )}
-                </Fragment>
-              ) : PROPERTY_FIELDS.includes(cell) ? (
-                <div key={cell} className={TRACK[cell]}>
-                  <Form.Fields include={[cell]} layout='tag' />
+        {cells.map((cell) =>
+          cell === 'title' ? (
+            <Fragment key={cell}>
+              <div className='row-start-1 min-w-0' style={{ gridColumn: spanFromTitle(cells, ['artifacts']) }}>
+                <Form.Fields include={['title']} />
+              </div>
+              {description && (
+                <div
+                  className='row-start-2 min-w-0'
+                  style={{ gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) }}
+                >
+                  <Form.Fields include={['description']} />
                 </div>
-              ) : cell === 'actions' && end ? (
-                <div key={cell} className={TRACK.actions}>
-                  {end}
-                </div>
-              ) : null,
-            )}
-            {children}
-          </>
-        ) : (
-          <>
-            <Form.Fields include={textFields} sort={textFields} />
-            {children}
-            <Layout.Flex wrap align='center' gap='xs' classNames='min-w-0' data-testid='taskList.edit.properties'>
-              <Form.Fields include={propertyFields} sort={propertyFields} layout='tag' />
+              )}
+            </Fragment>
+          ) : PROPERTY_FIELDS.includes(cell) ? (
+            <div key={cell} className={TRACK[cell]}>
+              <Form.Fields include={[cell]} layout='tag' />
+            </div>
+          ) : cell === 'actions' && end ? (
+            <div key={cell} className={TRACK.actions}>
               {end}
-            </Layout.Flex>
-          </>
+            </div>
+          ) : null,
         )}
+        {trailingFields.length > 0 && (
+          <Layout.Flex
+            align='center'
+            gap='xs'
+            classNames='min-w-0'
+            style={{
+              gridRow: description ? 3 : 2,
+              gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']),
+            }}
+            data-testid='taskList.edit.properties'
+          >
+            <Form.Fields include={trailingFields} sort={trailingFields} layout='tag' />
+          </Layout.Flex>
+        )}
+        {children}
       </Form.Root>
     </TaskEditorContext.Provider>
   );
 };
 
 const TaskEditorContext = createContext<
-  | (Pick<TaskEditorFormProps, 'inline' | 'members' | 'people' | 'title' | 'description'> &
-      Pick<TaskEditorValues, 'delegate'>)
+  | (Pick<TaskEditorFormProps, 'members' | 'people' | 'title' | 'description'> & Pick<TaskEditorValues, 'delegate'>)
   | undefined
 >(undefined);
 
@@ -272,7 +273,7 @@ const AssigneeTag = ({
   onValueChange,
 }: FormFieldRendererProps<Actor.Actor | undefined>) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const { inline, members, people, delegate } = useTaskEditorContext();
+  const { members, people, delegate } = useTaskEditorContext();
   const assignee = getValue();
   const current = useAssigneeDisplay(assignee);
   const worker = useAssigneeDisplay(delegate);
@@ -293,26 +294,21 @@ const AssigneeTag = ({
         })
       }
     >
-      {inline ? (
-        <Button.Root variant='ghost' icon={icon} iconOnly label={name} data-testid={jsonPath} />
-      ) : (
-        <Tag.Tag
-          variant='outline'
-          data-placeholder-shown={assignee || delegate ? undefined : ''}
-          data-testid={jsonPath}
-        >
-          <Icon.Icon icon={icon} />
-          {name}
-        </Tag.Tag>
-      )}
+      <Button.Root variant='ghost' icon={icon} iconOnly label={name} data-testid={jsonPath} />
     </ActionMenu>
   );
 
-  return inline ? <Layout.Block>{tag}</Layout.Block> : tag;
+  return <Layout.Block>{tag}</Layout.Block>;
 };
 
 AssigneeTag.displayName = 'TaskList.AssigneeTag';
 
-const FIELD_MAP = { assignee: AssigneeTag, description: DescriptionField, title: TitleField };
-
-const INLINE_FIELD_MAP = { ...FIELD_MAP, estimate: EstimateGlyph, priority: PriorityGlyph, status: StatusGlyph };
+/** One control per property wherever it sits: a glyph the narrow column tracks can hold, labelled by its tooltip. */
+const FIELD_MAP = {
+  assignee: AssigneeTag,
+  description: DescriptionField,
+  title: TitleField,
+  estimate: EstimateGlyph,
+  priority: PriorityGlyph,
+  status: StatusGlyph,
+};
