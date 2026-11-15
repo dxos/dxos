@@ -1597,6 +1597,15 @@ decision D-79: Any plugin can add its own data to a session's location through a
 ```
 
 ```mdl
+decision D-80: With no extension that navigates, the follow opens the attended object with one `LayoutOperation.Open` carrying the space's workspace, not a `SwitchWorkspace` followed by an `Open`. Fills in [D-79].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.21]
+  why: The workspace switch seeds the space's first plank, which raced the open that followed it; one operation lands the view in one write.
+```
+
+```mdl
 decision D-81: A `Locator`'s `reveal` answers whether it revealed the anchor, and the follow treats an anchor as shown only once its view says so; the markdown, sheet and project reveals answer false while their view has not mounted or cannot resolve the anchor. Fills in [D-79].
   date: 2026-11-15
   by: agent:claude-code
@@ -1606,15 +1615,6 @@ decision D-81: A `Locator`'s `reveal` answers whether it revealed the anchor, an
   rejected:
     - A longer mount window; a slow document can take longer than any fixed window.
     - Markdown applying a pending anchor when its editor mounts; each type would need its own pending store.
-```
-
-```mdl
-decision D-80: With no extension that navigates, the follow opens the attended object with one `LayoutOperation.Open` carrying the space's workspace, not a `SwitchWorkspace` followed by an `Open`. Fills in [D-79].
-  date: 2026-11-15
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.21]
-  why: The workspace switch seeds the space's first plank, which raced the open that followed it; one operation lands the view in one write.
 ```
 
 ## Appendix: Extension Definitions
