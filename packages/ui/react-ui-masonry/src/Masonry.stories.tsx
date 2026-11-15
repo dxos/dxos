@@ -3,11 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
 import { random } from '@dxos/random';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
 import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -88,27 +91,44 @@ const createPeople = (count: number): PersonData[] =>
 // Seed the largest preset once so switching counts is a cheap slice.
 const PEOPLE = createPeople(ITEM_COUNTS[ITEM_COUNTS.length - 1]);
 
+/** Removes a person from the story that shows the card; a tile is given only its data, so the story passes this down. */
+const DeleteContext = createContext<(id: string) => void>(() => {});
+
+/**
+ * A person as a `grid` card: the photo, then a header and rows that share the card's rails, so the name starts at the
+ * same edge as the text of the rows under it, with an icon in the start rail of each and the menu in the end rail.
+ */
 const StoryItem = ({ data: person }: { data: PersonData }) => {
-  const { fullName, jobTitle, department, image, emails, notes } = person;
+  const { id, fullName, jobTitle, department, image, emails, notes } = person;
+  const onDelete = useContext(DeleteContext);
   const role = [jobTitle, department].filter(Boolean).join(' · ');
   return (
-    <Card.Root>
-      <Card.Header>
-        <Card.Title>{fullName}</Card.Title>
-      </Card.Header>
+    <Card.Root grid>
       {image && <Card.Poster alt={fullName ?? ''} src={image} />}
+      <Card.Header>
+        <Layout.Block>
+          <Icon.Icon icon='ph--user--regular' />
+        </Layout.Block>
+        <Card.Title>{fullName}</Card.Title>
+        <Card.Menu label={`Actions for ${fullName}`}>
+          <Menu.Item
+            item={{ value: 'delete', label: 'Delete', icon: 'ph--trash--regular' }}
+            onClick={() => onDelete(id)}
+          />
+        </Card.Menu>
+      </Card.Header>
       {role && (
-        <Card.Row classNames='px-2'>
+        <Card.Row icon='ph--briefcase--regular'>
           <Card.Text variant='muted'>{role}</Card.Text>
         </Card.Row>
       )}
-      {emails && emails.length > 0 && (
-        <Card.Row classNames='px-2'>
-          <Card.Text variant='muted'>{emails.map((email) => email.value).join(', ')}</Card.Text>
+      {emails?.map((email) => (
+        <Card.Row key={email.value} icon='ph--envelope-simple--regular'>
+          <Card.Text variant='muted'>{email.value}</Card.Text>
         </Card.Row>
-      )}
+      ))}
       {notes && (
-        <Card.Row classNames='px-2 pb-2'>
+        <Card.Row icon='ph--note--regular' align='start'>
           <Card.Text variant='muted'>{notes}</Card.Text>
         </Card.Row>
       )}
@@ -135,6 +155,8 @@ const DefaultStory = (props: MasonryRootProps) => {
       return next;
     });
 
+  const remove = useCallback((id: string) => setVisible((current) => current.filter((person) => person.id !== id)), []);
+
   const removeOne = () =>
     setVisible((current) => {
       if (current.length === 0) {
@@ -145,27 +167,29 @@ const DefaultStory = (props: MasonryRootProps) => {
     });
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          {ITEM_COUNTS.map((count) => (
-            <Button.Root key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
-              {count}
-            </Button.Root>
-          ))}
-          <Button.Root onClick={addOne}>Add one</Button.Root>
-          <Button.Root onClick={removeOne}>Remove one</Button.Root>
-          <Button.Root onClick={() => setVisible([])}>Clear</Button.Root>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
-        <Masonry.Root {...props} Tile={StoryItem}>
-          <Masonry.Content>
-            <Masonry.Viewport items={visible} getId={(person) => person.id} />
-          </Masonry.Content>
-        </Masonry.Root>
-      </Panel.Body>
-    </Panel.Root>
+    <DeleteContext.Provider value={remove}>
+      <Panel.Root>
+        <Panel.Header>
+          <Toolbar.Root>
+            {ITEM_COUNTS.map((count) => (
+              <Button.Root key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
+                {count}
+              </Button.Root>
+            ))}
+            <Button.Root onClick={addOne}>Add one</Button.Root>
+            <Button.Root onClick={removeOne}>Remove one</Button.Root>
+            <Button.Root onClick={() => setVisible([])}>Clear</Button.Root>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body>
+          <Masonry.Root {...props} Tile={StoryItem}>
+            <Masonry.Content>
+              <Masonry.Viewport items={visible} getId={(person) => person.id} />
+            </Masonry.Content>
+          </Masonry.Root>
+        </Panel.Body>
+      </Panel.Root>
+    </DeleteContext.Provider>
   );
 };
 
@@ -202,15 +226,23 @@ type DocsStoryProps = {
 /** How many of the generated people the gallery shows when it is given none. */
 const DOCS_PEOPLE = 24;
 
-/** The docs' gallery: person cards of different heights in columns at least 10rem wide. */
+const DocsStory = ({ people: initial = PEOPLE.slice(0, DOCS_PEOPLE) }: DocsStoryProps) => {
+  const [people, setPeople] = useState(initial);
+  const remove = useCallback((id: string) => setPeople((current) => current.filter((person) => person.id !== id)), []);
+  return (
+    <DeleteContext.Provider value={remove}>
+      <div className='fixed inset-0 flex dx-base-surface'>
+        <Masonry.Root Tile={StoryItem} minColumnWidth={10}>
+          <Masonry.Content>
+            <Masonry.Viewport items={people} getId={(person) => person.id} />
+          </Masonry.Content>
+        </Masonry.Root>
+      </div>
+    </DeleteContext.Provider>
+  );
+};
+
+/** The docs' gallery: person cards of different heights in columns at least 10rem wide; a card's menu deletes it. */
 export const Docs: StoryObj<DocsStoryProps> = {
-  render: ({ people = PEOPLE.slice(0, DOCS_PEOPLE) }) => (
-    <div className='fixed inset-0 flex dx-base-surface'>
-      <Masonry.Root Tile={StoryItem} minColumnWidth={10}>
-        <Masonry.Content>
-          <Masonry.Viewport items={people} getId={(person) => person.id} />
-        </Masonry.Content>
-      </Masonry.Root>
-    </div>
-  ),
+  render: (args) => <DocsStory {...args} />,
 };
