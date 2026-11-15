@@ -37,6 +37,9 @@ export const TRACK = {
   actions: 'row-start-1 col-[actions]',
 } as const;
 
+/** The actions column on the pane's second line, under the control that heads it. */
+export const ACTIONS_SECOND_LINE = 'row-start-2 col-[actions]';
+
 export const spanFromTitle = (cells: readonly TaskColumn[], spanning: readonly TaskColumn[]): string => {
   const end = cells.slice(cells.indexOf('title') + 1).find((cell) => !spanning.includes(cell));
   return end ? `title / ${end}` : 'title / -1';

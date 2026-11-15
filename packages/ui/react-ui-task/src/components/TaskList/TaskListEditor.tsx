@@ -392,6 +392,17 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             onSave: handleSave,
           }}
           description={description}
+          save={
+            canSave && (
+              <SystemButton.Save
+                variant='primary'
+                data-testid='taskList.edit.save'
+                onClick={handleSave}
+                // The title commits on blur, which would otherwise run before the click and move the button.
+                onMouseDown={(event) => event.preventDefault()}
+              />
+            )
+          }
           end={
             canCancel && (
               <SystemButton.Cancel

@@ -33,7 +33,7 @@ import { UNASSIGNED_ICON } from '../../util/assignee.ts';
 import { type TaskMember, assigneeMenuActions, pickAssignee } from '../../util/property-menus.ts';
 import { ESTIMATE_ICON, UNSET_ICON } from '../../util/status-icons.ts';
 import { TaskField } from './TaskField.tsx';
-import { type TaskColumn, TRACK, spanFromTitle } from './tracks.ts';
+import { ACTIONS_SECOND_LINE, type TaskColumn, TRACK, spanFromTitle } from './tracks.ts';
 
 export type TaskEditorValues = {
   title: string;
@@ -68,6 +68,8 @@ export type TaskEditorFormProps = PropsWithChildren<{
   title: TaskTitleBehavior;
   description?: TaskDescriptionBehavior;
   end?: ReactNode;
+  /** Committed from the actions column's second line, under `end`; only a two-line pane has one. */
+  save?: ReactNode;
   onChange: (patch: Task.Edit) => void;
 }>;
 
@@ -84,6 +86,7 @@ export const TaskEditorForm = ({
   title,
   description,
   end,
+  save,
   onChange,
 }: TaskEditorFormProps) => {
   const { t } = Hooks.useTranslation(translationKey);
@@ -149,10 +152,11 @@ export const TaskEditorForm = ({
             <div key={cell} className={TRACK[cell]}>
               <Form.Fields include={[cell]} layout='tag' />
             </div>
-          ) : cell === 'actions' && end ? (
-            <div key={cell} className={TRACK.actions}>
-              {end}
-            </div>
+          ) : cell === 'actions' && (end || save) ? (
+            <Fragment key={cell}>
+              {end && <div className={TRACK.actions}>{end}</div>}
+              {save && description && <div className={ACTIONS_SECOND_LINE}>{save}</div>}
+            </Fragment>
           ) : null,
         )}
         {trailingFields.length > 0 && (
@@ -189,7 +193,7 @@ const useTaskEditorContext = () => {
 };
 
 const TitleField = ({ type, getValue, onValueChange }: FormFieldRendererProps<string>) => {
-  const { title } = useTaskEditorContext();
+  const { title, description } = useTaskEditorContext();
   return (
     <Field.Root classNames='min-w-0'>
       <Input.Root
@@ -200,7 +204,9 @@ const TitleField = ({ type, getValue, onValueChange }: FormFieldRendererProps<st
         onChange={(event) => onValueChange(type, event.target.value)}
         onKeyDown={title.onKeyDown}
         onBlur={title.onBlur}
+        // A one-line pane has no actions row under the cancel to put this on, so it rides in the title instead.
         end={
+          !description &&
           title.canSave && (
             <SystemButton.Save
               variant='primary'
