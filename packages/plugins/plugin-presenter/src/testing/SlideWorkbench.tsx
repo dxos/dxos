@@ -37,7 +37,7 @@ export type SlideWorkbenchProps = Util.ThemedClassName<
  * it. Shared by the stories, where it is both the illustration of a feature and the way to try it.
  */
 export const SlideWorkbench = ({ classNames, content, onContentChange, ...props }: SlideWorkbenchProps) => {
-  const split = useHalfSplit();
+  const split = useSplit();
   const [value, setValue] = useState(content);
   // A story that changes its `content` arg (the Storybook control) restarts the editor from it.
   useLayoutEffect(() => setValue(content), [content]);
@@ -50,9 +50,9 @@ export const SlideWorkbench = ({ classNames, content, onContentChange, ...props 
   );
 
   return (
-    <Splitter.Root {...split} orientation='vertical' resizable classNames={classNames ?? 'size-full'}>
+    <Splitter.Root {...split} orientation='horizontal' resizable classNames={classNames ?? 'size-full'}>
       <Splitter.Panel position='start'>
-        <Slide.Frame inset classNames='min-h-0'>
+        <Slide.Frame inset classNames='min-w-0 min-h-0'>
           <MarkdownSlide content={value} {...props} />
         </Slide.Frame>
       </Splitter.Panel>
@@ -95,12 +95,15 @@ const SlideSourceEditor = ({ value, onChange }: SlideSourceEditorProps) => {
   );
 };
 
+/** The slide's share of the width; the editor takes the rest. */
+const SLIDE_SHARE = 0.7;
+
 /**
- * Starts the seam at half the container's height. The splitter sizes its panes in rem, so the half has to be
- * measured; a container that is not laid out yet measures zero, so the observer waits for the first real height.
- * After that the size is the user's, and the observer stops.
+ * Starts the seam at the slide's share of the container's width. The splitter sizes its panes in rem, so the share
+ * has to be measured; a container that is not laid out yet measures zero, so the observer waits for the first real
+ * width. After that the size is the user's, and the observer stops.
  */
-const useHalfSplit = () => {
+const useSplit = () => {
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const [size, setSize] = useState<number>();
   useLayoutEffect(() => {
@@ -108,9 +111,9 @@ const useHalfSplit = () => {
       return;
     }
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    const apply = (height: number) => height > 0 && setSize(height / 2 / rem);
-    apply(root.getBoundingClientRect().height);
-    const observer = new ResizeObserver(([entry]) => apply(entry.contentRect.height));
+    const apply = (width: number) => width > 0 && setSize((width * SLIDE_SHARE) / rem);
+    apply(root.getBoundingClientRect().width);
+    const observer = new ResizeObserver(([entry]) => apply(entry.contentRect.width));
     observer.observe(root);
     return () => observer.disconnect();
   }, [root, size]);
