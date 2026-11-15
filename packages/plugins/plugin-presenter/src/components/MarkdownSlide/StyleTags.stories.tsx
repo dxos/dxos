@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -337,5 +337,10 @@ export const FlowBuild: Story = {
     // The arrow between the two revealed cards is drawn; the one that would point at a card still to come is not.
     await expect(getComputedStyle(items[0], '::after').content).toBe('"→"');
     await expect(getComputedStyle(items[1], '::after').content).toBe('none');
+
+    // Clicking the slide runs the build on, and the arrow that was waiting is drawn with the card it points at.
+    await userEvent.click(items[0]);
+    await waitFor(() => expect(items[2].classList.contains('invisible')).toBe(false));
+    await expect(getComputedStyle(items[1], '::after').content).toBe('"→"');
   },
 };

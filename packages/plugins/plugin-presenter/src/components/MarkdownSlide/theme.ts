@@ -68,7 +68,7 @@ export const theme = {
           'before:content-[counter(slide-step)] before:text-[28px] before:opacity-60 ' +
           // The arrow sits in the gap after every card but the last; it is decoration, so it never reaches the text.
           "after:content-['→'] after:absolute after:start-full after:top-1/2 after:ms-5 after:-translate-y-1/2 " +
-          'after:text-[56px] after:opacity-60 last:after:content-none ' +
+          'after:text-[88px] after:leading-none after:opacity-70 last:after:content-none ' +
           // During a build the arrow waits for the card it points at, which is laid out but not yet revealed.
           '[&:has(+li.invisible)]:after:content-none ' +
           '[&_em]:not-italic [&_em]:uppercase [&_em]:tracking-wide [&_em]:text-[28px] [&_em]:opacity-60 ' +

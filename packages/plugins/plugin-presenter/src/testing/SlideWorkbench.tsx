@@ -3,7 +3,7 @@
 //
 
 import { EditorView as NaturalEditorView } from '@codemirror/view';
-import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import React, { type KeyboardEvent, useCallback, useLayoutEffect, useMemo, useState } from 'react';
 
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -19,6 +19,8 @@ import {
   scrollbarAutohide,
 } from '@dxos/ui-editor';
 
+import { parseSlide } from '#markdown';
+
 import { MarkdownSlide, type MarkdownSlideProps } from '../components/MarkdownSlide/index.ts';
 import { Slide } from '../components/Slide/index.ts';
 import { slideCompletion } from '../containers/SlideEditorArticle/slide-completion.ts';
@@ -29,6 +31,8 @@ export type SlideWorkbenchProps = Util.ThemedClassName<
     /** The slide's markdown; the editor starts from it and the slide follows every edit. */
     content: string;
     onContentChange?: (content: string) => void;
+    /** The click step to start on; the slide advances from there as it is clicked. */
+    step?: number;
   }
 >;
 
@@ -36,9 +40,34 @@ export type SlideWorkbenchProps = Util.ThemedClassName<
  * A slide over the markdown that renders it, in a live editor: typing in the lower pane re-renders the slide above
  * it. Shared by the stories, where it is both the illustration of a feature and the way to try it.
  */
-export const SlideWorkbench = ({ classNames, content, onContentChange, ...props }: SlideWorkbenchProps) => {
+export const SlideWorkbench = ({
+  classNames,
+  content,
+  onContentChange,
+  step: initial,
+  ...props
+}: SlideWorkbenchProps) => {
   const split = useSplit();
   const [value, setValue] = useState(content);
+  const clicks = useMemo(() => parseSlide(value).clicks, [value]);
+  const [step, setStep] = useState(initial ?? 0);
+  // An edit that removes a click leaves the step past the end, which would hide nothing and reveal nothing.
+  useLayoutEffect(() => setStep((step) => Math.min(step, clicks)), [clicks]);
+  // Clicking the slide runs the build, wrapping at the end so a story can be stepped through again.
+  const advance = useCallback(
+    (delta: number) => setStep((step) => (step + delta + clicks + 1) % (clicks + 1)),
+    [clicks],
+  );
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'ArrowRight' || event.key === ' ') {
+        advance(1);
+      } else if (event.key === 'ArrowLeft') {
+        advance(-1);
+      }
+    },
+    [advance],
+  );
   // A story that changes its `content` arg (the Storybook control) restarts the editor from it.
   useLayoutEffect(() => setValue(content), [content]);
   const handleChange = useCallback(
@@ -51,10 +80,14 @@ export const SlideWorkbench = ({ classNames, content, onContentChange, ...props 
 
   return (
     <Splitter.Root {...split} orientation='horizontal' resizable classNames={classNames ?? 'size-full'}>
-      <Splitter.Panel position='start'>
-        <Slide.Frame inset classNames='min-w-0 min-h-0'>
-          <MarkdownSlide content={value} {...props} />
-        </Slide.Frame>
+      {/* `asChild`, so the pane itself takes the click and the keys rather than a box inside it. */}
+      <Splitter.Panel position='start' asChild>
+        <div tabIndex={0} onClick={() => clicks > 0 && advance(1)} onKeyDown={handleKeyDown}>
+          <Slide.Frame inset classNames='min-w-0 min-h-0'>
+            {/* A slide with no clicks of its own renders whole, as it does outside a build. */}
+            <MarkdownSlide content={value} step={clicks > 0 ? step : undefined} {...props} />
+          </Slide.Frame>
+        </div>
       </Splitter.Panel>
       <Splitter.ResizeTrigger aria-label='Resize' />
       <Splitter.Panel position='end'>
