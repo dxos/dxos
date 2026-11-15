@@ -269,6 +269,7 @@ export const ApiStory = ({ id }: ApiStoryProps) => {
     ]).then(
       ([composed, loaded]) => {
         if (!cancelled) {
+          setError(undefined);
           setArgs(loaded);
           // A composed story is a function, which `setStory` would call as an updater.
           setStory(() => composed);
