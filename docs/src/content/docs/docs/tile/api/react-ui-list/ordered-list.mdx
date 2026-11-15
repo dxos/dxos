@@ -1,0 +1,47 @@
+---
+title: OrderedList
+description: Rows the user drags into order.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../../components/TilePreview.astro';
+
+<ApiStory id="react-ui-list/ordered-list" height="22rem" />
+
+```ts
+import { OrderedList } from '@dxos/react-ui-list';
+```
+
+```sh
+npm install @dxos/react-ui-list
+```
+
+`OrderedList` gives each row a drag handle. A drop, or a keyboard move from the handle, calls `onMove` with the old
+and the new index, and you update your state. Each part handles keyboard navigation and the current and selected states, and sets its own spacing, so put
+it in a panel's body with no padding around it.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `OrderedList.Root` | Takes the `items`, `getId`, `getLabel` and `onMove`; its child is a function of the items |
+| `OrderedList.Label` | Names the list |
+| `OrderedList.Viewport` | Scrolls the list, and scrolls it during a drag near its edges |
+| `OrderedList.Content` | The listbox element |
+| `OrderedList.Item` | A row; `collapsible` folds a `Detail` under it |
+| `OrderedList.DragHandle` | The grip the user drags, or moves with Alt and the arrow keys |
+| `OrderedList.Detail` | A collapsible row's detail, at full width |
+| `OrderedList.ItemIcon` | The row's icon |
+| `OrderedList.ItemText` | The row's text |
+| `OrderedList.ItemDescription` | The row's description |
+| `OrderedList.Empty` | Stands in for the rows while there are none |
+
+## Let the user reorder rows
+
+`getLabel` names each row for screen readers as it moves. The root's child is a function of the items, so the rows
+always follow the order you hold:
+
+<Snippet file="tile-guide-lists" region="ordered" lang="tsx" />
+
+<TilePreview id="agenda" height="14rem" />

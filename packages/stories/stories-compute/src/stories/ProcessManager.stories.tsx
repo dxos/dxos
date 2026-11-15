@@ -7,7 +7,8 @@ import React, { type PropsWithChildren } from 'react';
 
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import { ComputeProvider, StoryRole } from '../modules/index.ts';
 import { EDGE_DEV_URL, EDGE_LOCAL_URL, makeEdgeConfig, surfacesPlugin } from '../testing/story-config.ts';
@@ -18,9 +19,9 @@ const LocalProvider = ({ children }: PropsWithChildren) => <ComputeProvider>{chi
 /** Processes run locally or on the EDGE service the client is configured for. */
 const EdgeProvider = ({ children }: PropsWithChildren) => <ComputeProvider edge>{children}</ComputeProvider>;
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-compute/ProcessManager',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -37,12 +38,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: createStoryDecorators({ plugins: [surfacesPlugin()], Wrapper: LocalProvider }),
+  decorators: StoryHarness.decorators({ plugins: [surfacesPlugin()], Wrapper: LocalProvider }),
 };
 
 /** A local EDGE stack (`pnpm stack:start` in the edge repo), whose edge worker listens on :8787. */
 export const EdgeLocal: Story = {
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     plugins: [surfacesPlugin()],
     Wrapper: EdgeProvider,
     config: makeEdgeConfig(EDGE_LOCAL_URL),
@@ -51,7 +52,7 @@ export const EdgeLocal: Story = {
 
 /** Dev EDGE; it must host the Mandelbrot process key for remote spawns to succeed. */
 export const EdgeRemote: Story = {
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     plugins: [surfacesPlugin()],
     Wrapper: EdgeProvider,
     config: makeEdgeConfig(EDGE_DEV_URL),

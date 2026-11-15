@@ -4,40 +4,16 @@ description: What PLEX is, how an app is made of plugins, and Composer as the ap
 welcome:
   section: PLEX
   tagline: Build apps out of plugins that extend each other through typed contributions.
-  background: kube
+  background: plex
 ---
 
 import DemoEmbed from '../../../../components/DemoEmbed.astro';
 
-PLEX is an agentic framework for building apps out of plugins. An app is little more than the plugins it loads: each plugin adds types,
-views, actions and settings, and plugins extend each other through typed contributions instead of imports.
-
-## How an app is put together
-
-A plugin is a set of modules. Each module activates on an event, such as startup or the first time a view is needed,
-and contributes capabilities: typed values such as a React component for a surface, a handler for an operation, or nodes
-for the navigation graph. Other modules look capabilities up, so one plugin can render inside another plugin's view or
-add an action to another plugin's objects without either knowing about the other.
-[Plugins and modules](/docs/plex/concepts/plugins/) explains the pieces.
-
-The packages are `@dxos/app-framework`, which holds plugins, modules, capabilities and surfaces, and
-`@dxos/app-toolkit`, which adds what a workspace app needs: App Graph, layout, settings and the standard surface
-roles.
-
-## Composer: a super-app built on PLEX
-
-[Composer](/composer) is a local-first workspace built entirely with PLEX. Its navigation tree, the deck
-of open items, the settings page and the assistant are all plugins, written against the same API a third-party plugin
-uses. A plugin from outside DXOS has the same powers as a built-in one, which is why these pages use Composer as the
-place your plugin runs.
-
-## What ECHO does underneath
-
-ECHO is the database under every PLEX app. A plugin's data is ECHO objects in spaces, so it syncs between a
-user's devices and the people they share with, merges concurrent edits, and works offline, without the plugin doing
-anything for it. Agents read and write the same objects through the same queries.
-[Spaces](/docs/echo/concepts/spaces/) and [Objects and relations](/docs/echo/concepts/objects-relations/) explain the
-model.
+PLEX is a framework for building apps out of plugins. An app is little more than the plugins it loads: each
+plugin adds types, views, actions and settings, and plugins extend each other through typed contributions instead of
+imports. [Composer](/composer), a local-first workspace, is built entirely this way. Its navigation tree, deck,
+settings and assistant are plugins written against the same API as yours, so a plugin from outside DXOS has the same
+powers as a built-in one.
 
 ## What you can build
 
@@ -53,9 +29,22 @@ a peer to take it offline, or the toolbar to show one peer or both.
 
 <DemoEmbed id="diagram" />
 
-These are examples, not the limits. Composer's own navigation, settings and assistant are plugins too, so a plugin of
-your own can add anything a built-in one can: new types and views, actions, widgets inside another plugin's editor,
-or a whole new kind of app.
+These are examples, not the limits. A plugin of your own can add anything a built-in one can: new types and views,
+actions, widgets inside another plugin's editor, or a whole new kind of app.
+
+## How it works
+
+A plugin is a set of modules. Each module activates on an event, such as startup or the first time a view is needed,
+and contributes capabilities: typed values such as a React component for a surface, a handler for an operation, or nodes
+for the navigation graph. Other modules look capabilities up, so one plugin can render inside another plugin's view or
+add an action to another plugin's objects without either knowing about the other. The pieces live in
+`@dxos/app-framework`, and `@dxos/app-toolkit` adds what a workspace app needs: App Graph, layout, settings and the
+standard surface roles. [Plugins and modules](/docs/plex/concepts/plugins/) explains them.
+
+A plugin's data is [ECHO](/docs/echo/overview/) objects in spaces, so it syncs between a user's devices and the people
+they share with, merges concurrent edits, and works offline without the plugin doing anything for it. Its operations and
+skills are tools an agent can use as soon as the plugin is installed. Its views use the same
+[TILE](/docs/tile/overview/) components as every other plugin, so plugins written by different people look like one app.
 
 ## Where to go next
 

@@ -6,15 +6,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
+import { createDecorators, storyParameters } from '../testing/index.ts';
 
 const MAILBOX_NAME = 'Work';
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-projects/SenderLedger',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
   decorators: createDecorators({
     mailboxName: MAILBOX_NAME,

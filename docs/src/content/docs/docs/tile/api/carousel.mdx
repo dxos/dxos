@@ -1,0 +1,26 @@
+---
+title: Carousel
+description: "Slides of images or video, one page at a time."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/carousel" narrow />
+
+```ts
+import * as Carousel from '@dxos/react-ui/Carousel';
+```
+
+Arrow buttons and a row of dots move between pages. Each item plays a media source by default.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Carousel.Root` | The carousel |
+| `Carousel.ItemGroup` | The frame that shows one slide at a time |
+| `Carousel.Item` | One slide: a media player for `src`, or its children |
+| `Carousel.PrevTrigger` | Steps back a page |
+| `Carousel.NextTrigger` | Steps forward a page |
+| `Carousel.IndicatorGroup` | One dot per page |
+| `Carousel.Caption` | Text describing the page in view |

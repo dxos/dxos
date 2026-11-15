@@ -206,6 +206,11 @@ export type Dimension = {
   edits?: Partial<Record<SceneMenuCommand, EngineEdit>>;
   /** The aids as the engine draws them; without them the display panel shows the host's display. */
   aids?: DimensionAids;
+  /**
+   * The dimension's own items for the part that was pressed (2D: a link end's marker), ahead of the shared commands;
+   * drawn inside `Root`, so it reads the dimension's engine.
+   */
+  MenuLead?: ComponentType<{ anchor: MenuAnchor }>;
   inspector?: DimensionInspector;
 };
 

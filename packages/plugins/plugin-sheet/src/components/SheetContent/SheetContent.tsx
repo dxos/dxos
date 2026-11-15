@@ -188,12 +188,13 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     }
   }, [dxGrid, selection?.from, selection?.to]);
 
-  // Peers' presence reveals this sheet at the selection, so publish it as a comment-style anchor too.
+  // Peers' presence reveals this sheet at the selection, so publish it as a comment-style anchor too. The anchor names
+  // rows and columns by id, so an axis edit under an unchanged A1 selection republishes it.
   const { set: setViewLocation } = useViewStateActions(ViewLocation.aspect, selectionContextId);
   useEffect(() => {
     const anchor = selection && SheetUtil.anchorFromSelection(model.sheet, { mode: 'range', ...selection });
     setViewLocation({ selection: anchor });
-  }, [model.sheet, selection?.from, selection?.to, setViewLocation]);
+  }, [model.sheet, sheetRows, sheetColumns, selection?.from, selection?.to, setViewLocation]);
 
   const handleSelect = useCallback<NonNullable<GridContentProps['onSelect']>>(
     ({ minCol, maxCol, minRow, maxRow }) => {
