@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { query, slide } from '../../testing/slideStory.tsx';
 import { SlideWorkbench, type SlideWorkbenchProps } from '../../testing/SlideWorkbench.tsx';
-import { SUITE, suiteImage } from '../../testing/suiteArt.ts';
+import { SUITE } from '../../testing/suiteArt.ts';
 
 /**
  * The layout tags — `<Grid>`, `<Cell>` and `<Card>` — which lay a slide out in tracks rather than down the page.
@@ -17,7 +17,7 @@ import { SUITE, suiteImage } from '../../testing/suiteArt.ts';
  * changed and seen without leaving the story.
  */
 const meta = {
-  title: 'plugins/plugin-presenter/components/Layout',
+  title: 'plugins/plugin-presenter/components/LayoutTags',
   component: SlideWorkbench,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
@@ -35,7 +35,7 @@ const card = (index: number) => {
   return [
     `<Card${index === 0 ? ' cols="2"' : ''}>`,
     '',
-    `![${topic.label}](${suiteImage(topic)})`,
+    `![${topic.label}](${topic.image})`,
     '',
     `### ${topic.label}`,
     '',
@@ -66,7 +66,7 @@ export const SuiteGrid: Story = {
     // 1. Every topic gets a card, each with its art, its title and its sentence.
     await expect(cards).toHaveLength(SUITE.length);
     await expect(cards[0].querySelector('h3')?.textContent).toBe('ECHO');
-    await expect(cards[0].querySelector('img')?.getAttribute('src')).toMatch(/^data:image\/svg\+xml,/);
+    await expect(cards[0].querySelector('img')?.getAttribute('src')).toBe(SUITE[0].image);
     await expect(cards[0].textContent).toContain('context memory');
     // 2. ECHO spans two of the four columns; the rest take one.
     await expect(grid.getAttribute('style')).toContain('--slide-span-cols: 2');
@@ -138,7 +138,7 @@ export const CardVariants: Story = {
         [
           `<Card variant="${variant}">`,
           '',
-          `![${variant}](${suiteImage(SUITE[0])})`,
+          `![${variant}](${SUITE[0].image})`,
           '',
           `### ${variant}`,
           '',
