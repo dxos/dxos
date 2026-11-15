@@ -2,6 +2,33 @@
 // Copyright 2026 DXOS.org
 //
 
+/** The sample imports `effect`, and pnpm lets a project import only what it depends on. */
+export const INSTALL = 'pnpm add @dxos/echo';
+
+/** The sample's tabs, by region of `snippets/hero.ts`; each body is HTML. */
+export const steps = [
+  {
+    id: 'define',
+    label: 'Define',
+    body: 'One declaration is both the runtime schema and the TypeScript type.',
+  },
+  {
+    id: 'connect',
+    label: 'Connect',
+    body: 'A client keeps its spaces on the device. A space’s <code>db</code> holds its objects.',
+  },
+  {
+    id: 'query',
+    label: 'Query',
+    body: 'A query over local objects is live: its subscriber has already run when <code>add</code> returns.',
+  },
+  {
+    id: 'change',
+    label: 'Change',
+    body: 'Each change is a CRDT operation, so it merges with any peer’s edit to the same task.',
+  },
+];
+
 export const reasons = [
   {
     title: 'Memory for agents',

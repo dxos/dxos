@@ -10,7 +10,7 @@ import { expect } from 'vitest';
 
 import { type AiService } from '@dxos/ai';
 import { Pipeline } from '@dxos/pipeline';
-import { FactStore, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { FactStore, type FactStoreApi, RDF, SemanticIndexError } from '@dxos/pipeline-rdf';
 import { failingAiService } from '@dxos/pipeline-rdf/testing';
 
 import * as Crawler from '../Crawler.ts';
@@ -56,7 +56,8 @@ describe('extractFactsStage', () => {
       yield* crawl();
       expect(prompts).toHaveLength(1);
 
-      const facts = yield* (yield* FactStore).query({});
+      // Profile graphs name users from their metadata and cite no message.
+      const facts = (yield* (yield* FactStore).query({})).filter((fact) => fact.extractor.id !== 'agent-registry');
       expect(facts.length).toBeGreaterThan(0);
       const cited = new Set<string>();
       for (const fact of facts) {
@@ -65,7 +66,7 @@ describe('extractFactsStage', () => {
         cited.add(id);
         // The deterministic extractor's facts are `author mentions noun`, so each must land on the message naming it.
         expect(message.text).toContain(fact.assertion.object.kind === 'entity' ? fact.assertion.object.label : '');
-        expect(fact.attribution.agent).toBe(normalizeEntityId(`discord-user:${message.author}`));
+        expect(fact.attribution.agent).toBe(`https://discord.com/users/${message.author}`);
       }
       expect([...cited].sort()).toEqual(Object.keys(TEXTS).sort());
 
@@ -73,6 +74,136 @@ describe('extractFactsStage', () => {
       const targets = yield* StateStore.listTargets();
       expect(targets.find((target) => target.id === 'chan-1')?.cursor).toBe('1001');
       expect(targets.find((target) => target.id === 'thread-1')?.cursor).toBe('2001');
+    }).pipe(Effect.provide(layer(prompts)));
+  });
+
+  it.effect('names people by their Discord identity, labelled from their profile', () => {
+    const prompts: string[] = [];
+    const target: Type.Target = { id: 'chan-1', channelId: 'chan-1', depth: 0, status: 'active' };
+    const message = (id: string, user: Type.User, text: string): Type.Event => ({
+      _tag: 'Message',
+      target,
+      message: { id, text, author: user },
+    });
+    const alice: Type.User = { id: '111', source: 'discord', displayName: 'Alice', username: 'alice_w' };
+    const bob: Type.User = { id: '222', source: 'discord', displayName: 'Bob' };
+    return Effect.gen(function* () {
+      yield* Stream.fromIterable([
+        message('1', bob, 'Bob maintains Automerge.'),
+        message('2', alice, 'Ask <@222> about OPFS.'),
+      ]).pipe(agentProfileStage(), extractFactsStage(), Stream.runDrain);
+
+      // The model reads names, and a mention reads as the person it names.
+      expect(prompts[0]).toContain('author="Alice"');
+      expect(prompts[0]).toContain('Ask @Bob about OPFS.');
+      expect(prompts[0]).not.toContain('discord-user');
+
+      const store = yield* FactStore;
+      const said = (yield* store.query({ source: 'discord:2' })).filter(
+        (fact) => fact.extractor.id !== 'agent-registry',
+      );
+      expect(said.length).toBeGreaterThan(0);
+      expect(said.every((fact) => fact.attribution.agent === 'https://discord.com/users/111')).toBe(true);
+      expect(said[0].assertion.subject).toMatchObject({ entity: 'https://discord.com/users/111', label: 'Alice' });
+
+      const profile = yield* store.query({ subjectEntity: 'https://discord.com/users/111' });
+      const account = profile.find((fact) => fact.assertion.predicate === 'has account');
+      expect(account?.assertion.object).toEqual({ kind: 'literal', literal: 'alice_w' });
+      expect(account?.assertion.subject).toMatchObject({ label: 'Alice', type: 'person' });
+
+      // A changed profile writes a new graph that supersedes the old one, so one profile graph stays current; the
+      // registry keeps every username it has seen as an alias, so the current graph lists both.
+      const renamed: Type.User = { ...alice, username: 'alice_v' };
+      yield* Stream.fromIterable([message('3', renamed, 'Alice reviews Automerge.')]).pipe(
+        agentProfileStage(),
+        extractFactsStage(),
+        Stream.runDrain,
+      );
+      const profiles = (yield* store.query({ subjectEntity: 'https://discord.com/users/111' })).filter(
+        (fact) => fact.extractor.id === 'agent-registry',
+      );
+      const statuses = RDF.Graph.status(profiles);
+      const graphs = [...new Set(profiles.map((fact) => RDF.Mapping.graphOf(fact)))];
+      expect(graphs.map((graph) => statuses.get(graph)).sort()).toEqual(['active', 'superseded']);
+      const current = profiles.filter((fact) => statuses.get(RDF.Mapping.graphOf(fact)) === 'active');
+      expect(
+        current
+          .flatMap((fact) => (fact.assertion.object.kind === 'literal' ? [fact.assertion.object.literal] : []))
+          .sort(),
+      ).toEqual(['alice_v', 'alice_w']);
+    }).pipe(Effect.provide(layer(prompts)));
+  });
+
+  it.effect('a profile rewritten with the same hash still has exactly one current graph', () => {
+    const prompts: string[] = [];
+    const target: Type.Target = { id: 'chan-1', channelId: 'chan-1', depth: 0, status: 'active' };
+    const say = (id: string, displayName: string): Type.Event => ({
+      _tag: 'Message',
+      target,
+      message: {
+        id,
+        text: 'Automerge compaction reduces OPFS growth.',
+        author: { id: '111', source: 'discord', displayName, username: 'alice_w' },
+      },
+    });
+    return Effect.gen(function* () {
+      const store = yield* FactStore;
+      yield* Stream.fromIterable([say('1', 'Alice')]).pipe(agentProfileStage(), extractFactsStage(), Stream.runDrain);
+      // As if `setCursor` had failed after the write: the retry writes the same profile hash again.
+      yield* store.setCursor('https://discord.com/users/111', 'stale');
+      yield* Stream.fromIterable([say('2', 'Alice')]).pipe(agentProfileStage(), extractFactsStage(), Stream.runDrain);
+
+      // Without a readable cursor the rewrite has no previous graph, so it lands in the same graph, never superseding it.
+      const profiles = (yield* store.query({ subjectEntity: 'https://discord.com/users/111' })).filter(
+        (fact) => fact.extractor.id === 'agent-registry',
+      );
+      const statuses = RDF.Graph.status(profiles);
+      const graphs = [...new Set(profiles.map((fact) => RDF.Mapping.graphOf(fact)))];
+      expect(graphs.map((graph) => statuses.get(graph))).toEqual(['active']);
+    }).pipe(Effect.provide(layer(prompts)));
+  });
+
+  it.effect('a changed profile supersedes the previous one on a store that cannot be read', () => {
+    const prompts: string[] = [];
+    const target: Type.Target = { id: 'chan-1', channelId: 'chan-1', depth: 0, status: 'active' };
+    const say = (id: string, username: string): Type.Event => ({
+      _tag: 'Message',
+      target,
+      message: {
+        id,
+        text: 'Automerge compaction reduces OPFS growth.',
+        author: { id: '111', source: 'discord', username },
+      },
+    });
+    return Effect.gen(function* () {
+      const memory = yield* FactStore;
+      const written: RDF.Fact[] = [];
+      // Like the ECHO fact feed: writes and cursors work, reads fail.
+      const writeOnly: FactStoreApi = {
+        ...memory,
+        putFacts: (facts) => memory.putFacts(facts).pipe(Effect.tap(() => Effect.sync(() => written.push(...facts)))),
+        query: () => Effect.fail(new SemanticIndexError({ message: 'write-only' })),
+      };
+      for (const [id, username] of [
+        ['1', 'alice_w'],
+        ['2', 'alice_v'],
+      ] as const) {
+        yield* Stream.fromIterable([say(id, username)]).pipe(
+          agentProfileStage(),
+          extractFactsStage(),
+          Stream.runDrain,
+          Effect.provideService(FactStore, writeOnly),
+        );
+      }
+      const profiles = written.filter((fact) => fact.extractor.id === 'agent-registry');
+      const [first, second] = [...new Set(profiles.map((fact) => RDF.Mapping.graphOf(fact)))];
+      expect(second).toBeDefined();
+      expect(
+        profiles
+          .filter((fact) => RDF.Mapping.graphOf(fact) === second)
+          .every((fact) => fact.supersedes?.includes(first)),
+      ).toBe(true);
+      expect(RDF.Graph.status(profiles).get(first)).toBe('superseded');
     }).pipe(Effect.provide(layer(prompts)));
   });
 

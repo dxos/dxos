@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
-
 export * from './calculator.ts';
 export * from './chat-messages.ts';
 export * from './data.ts';

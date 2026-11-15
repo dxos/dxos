@@ -15,21 +15,22 @@ import * as InboxSkill from '@dxos/plugin-inbox/InboxSkill';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as TranscriptionSkill from '@dxos/plugin-transcription/TranscriptionSkill';
-import { Cell, addToRootCollection } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Event, Message, Transcript } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import {
-  ModuleContainer,
   config,
   createDecorators,
   createTestMailbox,
   createTestTranscription,
   storyParameters,
 } from '../testing/index.ts';
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Connectors',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 
@@ -87,7 +88,7 @@ export const WithGmail: Story = {
     types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      addToRootCollection(space, [mailbox]);
+      StoryHarness.addToRootCollection(space, [mailbox]);
       return [
         [StoryRole.Chat],
         [

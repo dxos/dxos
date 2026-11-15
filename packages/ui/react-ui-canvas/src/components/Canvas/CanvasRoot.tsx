@@ -385,8 +385,11 @@ const CanvasEngine = ({
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onEndContextMenu,
     onVertexPointerDown,
+    onParamPointerDown,
     onVertexMidpointPointerDown,
+    onBendPointerDown,
     deleteVertex,
     setDrag,
     toScene,
@@ -513,7 +516,7 @@ const CanvasEngine = ({
   // pointer; the view's menu never shows.
   useLayoutEffect(() => {
     if (menu && onHostContextMenu) {
-      onHostContextMenu(menu.at, menu.kind === 'canvas' ? 'canvas' : 'element');
+      onHostContextMenu(menu.at, menu.kind === 'canvas' ? 'canvas' : 'element', menu.end);
       closeMenu();
     }
   }, [menu, onHostContextMenu, closeMenu]);
@@ -621,8 +624,11 @@ const CanvasEngine = ({
               onPointPointerDown={onPointPointerDown}
               onMidpointPointerDown={onMidpointPointerDown}
               onPointContextMenu={onPointContextMenu}
+              onEndContextMenu={onEndContextMenu}
               onVertexPointerDown={onVertexPointerDown}
+              onParamPointerDown={onParamPointerDown}
               onVertexMidpointPointerDown={onVertexMidpointPointerDown}
+              onBendPointerDown={onBendPointerDown}
               removePoint={removePoint}
               menu={menu}
               closeMenu={closeMenu}

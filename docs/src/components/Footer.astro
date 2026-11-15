@@ -5,6 +5,7 @@ import config from 'virtual:starlight/user-config';
 import logoBlack from '../../node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-block.svg?url';
 import logoWhite from '../../node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-white.svg?url';
 import { siteLinks } from './site-links.ts';
+import { TOPICS } from './topic-nav/topics.ts';
 ---
 <Default />
 <footer class="site-footer">
@@ -23,9 +24,8 @@ import { siteLinks } from './site-links.ts';
   <div>
     <h4 class="label-mono">Docs</h4>
     <ul>
-      <li><a href="/docs/echo/overview/">ECHO</a></li>
-      <li><a href="/docs/halo/overview/">HALO</a></li>
-      <li><a href="/docs/plex/overview/">PLEX</a></li>
+      {/* The same sections as the header's topic switcher. */}
+      {TOPICS.map(({ label, href }) => <li><a href={href}>{label}</a></li>)}
     </ul>
   </div>
   <div>

@@ -22,12 +22,14 @@ import {
   PolygonNode,
   PolylineNode,
   RectNode,
+  ShapeNode,
   type Size,
   ViewNode,
   isCloudNode,
   isHullNode,
   isPolygonNode,
   isPolylineNode,
+  isShapeNode,
 } from '@dxos/scene';
 
 import {
@@ -39,13 +41,21 @@ import {
 } from '../../model/index.ts';
 import {
   CONTAINERS_GROUP,
+  DRAW_FOLD,
   EXTENSIONS_GROUP,
   HULL_STYLE,
   NOMINAL_SIZES,
+  PATH_FOLD,
+  SHAPE_FOLD,
+  SHAPE_RECIPES,
+  SolidNode,
   cloudPath,
   createNode,
+  isSolidNode,
   polygonPath,
   polylinePath,
+  shapeNodePath,
+  solidPath,
 } from '../../utils/index.ts';
 import { CARD_TEMPLATE } from './card-template.ts';
 import { CardNode, CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
@@ -143,6 +153,48 @@ export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = {
   object: objectPrototype,
 };
 
+/** What the tools that draw in one stroke share: the polyline a stroke lands as, run as a curve through its points. */
+const strokeTool: NodeDefSpec = {
+  schema: PolylineNode,
+  component: PolylineNodeView,
+  create: (props) => createNode({ type: 'polyline', ...props }),
+  createFromPoints: (props, points, closed) => ({
+    ...createNode({ type: 'polyline', ...props }),
+    points: [...points],
+    params: { smooth: true, ...(closed ? { closed } : {}) },
+  }),
+  defaultSize: NOMINAL_SIZES.polyline,
+};
+
+/** What every parametric shape shares: its outline is its recipe's, in the frame and with the parameters it has. */
+const shapeSpec: NodeDefSpec = {
+  schema: ShapeNode,
+  component: PolygonNodeView,
+  create: (props) => createNode({ type: 'shape', ...props }),
+  defaultSize: NOMINAL_SIZES.shape,
+  silhouette: (node, inset, radius) => (isShapeNode(node) ? shapeNodePath(node, inset, radius) : ''),
+  portsPerSide: 1,
+  parts: [{ field: 'label' }],
+  resizable: true,
+  minSize: MIN_SIZE,
+};
+
+/** A tool per recipe, sharing one flyout: each drags out a `shape` node that names its recipe. */
+const shapeTools: Readonly<Record<NodeType, NodeDefSpec>> = Object.fromEntries(
+  SHAPE_RECIPES.map((recipe) => [
+    recipe.id,
+    {
+      ...shapeSpec,
+      name: recipe.name,
+      icon: recipe.icon,
+      ...(recipe.key !== undefined ? { key: recipe.key } : {}),
+      fold: SHAPE_FOLD,
+      create: (props) => ({ ...createNode({ type: 'shape', ...props }), recipe: recipe.id }),
+      defaultSize: recipe.defaultSize,
+    } satisfies NodeDefSpec,
+  ]),
+);
+
 export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
   rect: {
     extends: 'box',
@@ -202,10 +254,19 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
+  // A recipe's shape, as its node is drawn; each recipe has a tool of its own, below.
+  shape: {
+    ...shapeSpec,
+    name: 'Shape',
+    icon: 'ph--shapes--regular',
+    palette: false,
+  },
+  ...shapeTools,
   polyline: {
     name: 'Polyline',
     icon: 'ph--line-segments--regular',
     key: 'Y',
+    fold: PATH_FOLD,
     schema: PolylineNode,
     component: PolylineNodeView,
     create: (props) => createNode({ type: 'polyline', ...props }),
@@ -222,6 +283,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
             closed: node.params?.closed,
             smooth: node.params?.smooth,
             radius,
+            bends: node.bends,
           })
         : '',
     filled: (node) => isPolylineNode(node) && node.params?.closed === true,
@@ -232,23 +294,40 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: { width: 12, height: 12 },
   },
-  // A tool rather than a type of its own: the stroke it draws is a polyline, run as a curve through its points.
-  freehand: {
-    name: 'Draw',
-    icon: 'ph--scribble--regular',
-    key: 'S',
-    schema: PolylineNode,
-    component: PolylineNodeView,
-    create: (props) => createNode({ type: 'polyline', ...props }),
-    createFromPoints: (props, points) => ({
+  // A tool rather than a type of its own: the line it draws is a polyline whose every segment is bent.
+  spline: {
+    ...strokeTool,
+    name: 'Spline',
+    icon: 'ph--bezier-curve--regular',
+    key: 'U',
+    fold: PATH_FOLD,
+    createFromPoints: (props, points, closed) => ({
       ...createNode({ type: 'polyline', ...props }),
       points: [...points],
-      params: { smooth: true },
+      ...(closed ? { params: { closed } } : {}),
     }),
-    freehand: true,
-    defaultSize: NOMINAL_SIZES.polyline,
+    curved: true,
   },
-  // Dragged out round the shapes it is to hold, which it takes as it lands; Enclose makes one round a selection.
+  // A tool rather than a type of its own: the stroke it draws is a polyline, run as a curve through its points.
+  freehand: {
+    ...strokeTool,
+    name: 'Freehand',
+    icon: 'ph--scribble--regular',
+    key: 'S',
+    freehand: 'stroke',
+    fold: DRAW_FOLD,
+  },
+  // The same stroke, read before it lands: one drawn round a shape becomes that shape, on the grid.
+  freehandShape: {
+    ...strokeTool,
+    name: 'Sketch',
+    icon: 'ph--shapes--regular',
+    key: 'W',
+    freehand: 'shape',
+    fold: DRAW_FOLD,
+  },
+  // Dragged out round the shapes it is to hold, which it takes as it lands; the Hull command makes one of a
+  // selection, by the same operation (`encloseIn`).
   hull: {
     name: 'Hull',
     icon: 'ph--bounding-box--regular',
@@ -332,6 +411,23 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     palette: false,
     bare: true,
   },
+  // Shapes joined into one, or one cut from another: made from a selection (Join, Subtract), never drawn, and it
+  // stands for the shapes it is made of, which are hidden while it does.
+  solid: {
+    name: 'Solid',
+    icon: 'ph--unite--regular',
+    schema: SolidNode,
+    component: PolygonNodeView,
+    create: (props) => ({ type: 'solid', ...props }),
+    defaultSize: NOMINAL_SIZES.rect,
+    silhouette: (node, inset) => solidPath(node.size, isSolidNode(node) ? node.rings : undefined, inset),
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    // What is left of a cut may be a sliver.
+    minSize: { width: 3, height: 3 },
+    palette: false,
+  },
   card: {
     extends: 'object',
     name: 'Card',
@@ -385,14 +481,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
 export const defaultNodeRegistry: NodeRegistry = createNodeRegistry(defaultNodeTypes, defaultNodePrototypes);
 
 /**
- * The link variants, in the order the palette and the Properties panel list them, the default (elbow) first. A link's
- * stored `type` is the variant: `elbow` leaves each port along its normal and joins with one corner, `straight` runs
- * between the ends as they are, and `orthogonal` turns at right angles.
+ * The link variants, in the order the palette and the Properties panel list them, the default (Orthogonal) first. A
+ * link's stored `type` is the variant: `ortho` leaves each port along its normal and turns at right angles, `smart`
+ * (named Elbow) leaves each port along its normal and joins the two with one segment, and `line` (named Straight)
+ * runs between the ends as they are.
  */
 export const defaultLinkRegistry: LinkRegistry = {
+  ortho: { type: 'ortho', name: 'Orthogonal', icon: 'ph--arrow-elbow-right-up--regular', key: 'H' },
   smart: { type: 'smart', name: 'Elbow', icon: 'ph--flow-arrow--regular', key: 'O' },
   line: { type: 'line', name: 'Straight', icon: 'ph--line-segment--regular', key: 'L' },
-  ortho: { type: 'ortho', name: 'Orthogonal', icon: 'ph--arrow-elbow-right-up--regular', key: 'H' },
   curve: { type: 'curve', name: 'Curve', icon: 'ph--bezier-curve--regular', key: 'K' },
   spline: { type: 'spline', name: 'Spline', icon: 'ph--wave-sine--regular', key: 'P' },
 };

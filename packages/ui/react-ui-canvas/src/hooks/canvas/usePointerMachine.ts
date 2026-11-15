@@ -21,15 +21,18 @@ import {
   type NodeType,
   type Point,
   type Port,
+  type Size,
   type SplineLink,
   endpointNode,
   isInstanceNode,
   isPointEndpoint,
   isPolylineNode,
+  isShapeNode,
   isViewNode,
 } from '@dxos/scene';
 
 import {
+  type BendHandle,
   type CanvasAtoms,
   type ControlPointRef,
   type DocumentEditCommands,
@@ -38,6 +41,7 @@ import {
   type DrawState,
   type Handle,
   type LinkEnd,
+  type MenuLinkEnd,
   type ToolsCommands,
 } from '../../engine/index.ts';
 import {
@@ -55,9 +59,14 @@ import {
   FREEHAND_STEP_PX,
   FREEHAND_TOLERANCE_PX,
   NOMINAL_SIZES,
+  type RecognizedPath,
+  type RecognizedShape,
   type SceneEdit,
   VERTEX_SNAP_PX,
   activeLayer,
+  bendsAfterDelete,
+  bendsAfterInsert,
+  bendsWithVertex,
   between,
   boundsCenter,
   boundsFromPoints,
@@ -66,31 +75,40 @@ import {
   createId,
   createLink,
   createNode,
+  dragShapeNodeParam,
+  drawnLinkEnds,
+  favorMajor,
   handlePoint,
   hasVertices,
   hitTest,
   insertIndex,
   insertLink,
   insertNode,
+  linkEndAt,
   linkGeometry,
   minPolylineVertices,
   moveNodes,
+  nearestSize,
   nodeBounds,
   nodePorts,
   nodesIntersecting,
   nominalSize,
   panBy,
+  polylineBends,
   polylineFrame,
   polylineVertices,
   portAccepts,
   portPoint,
   pressSelects,
+  readStroke,
   refitPolyline,
   resizeBounds,
   resizeTo,
   screenToScene,
   sideToward,
   simplifyPath,
+  smoothBends,
+  strokeCloses,
   topOfView,
   updateElement,
 } from '../../utils/index.ts';
@@ -103,6 +121,12 @@ import { type SceneSnap } from './useSceneSnap.ts';
 
 /** How near a port the pointer must be, in screen px, for the port rather than the body to take a link. */
 const PORT_SNAP_PX = 16;
+
+/** How far along a link from its end, in screen px, a press on the link is on that end: about a marker's length. */
+const END_PRESS_PX = 20;
+
+/** How near a link's end, in screen px, a press off the link is on that end: about its handle. */
+const END_HANDLE_PX = 8;
 
 /** The node drawn as a preview during a create drag; it never reaches the model. */
 export const PREVIEW_NODE_ID = 'preview-node';
@@ -117,6 +141,33 @@ const distance = (left: Point, right: Point): [number, number] => [left.x - righ
  */
 export const isLinkDrawn = ({ press, pointer }: { press: Point; pointer: Point }, minimum: number): boolean =>
   Math.hypot(pointer.x - press.x, pointer.y - press.y) >= minimum;
+
+/**
+ * Where a dragged link end lands: on what the pointer was over, else as a free end at the point it was dropped. Nothing
+ * for a press released where it began, so pressing an end does not detach it from its port.
+ */
+export const endDrop = ({
+  to,
+  target,
+  moved,
+}: {
+  to: Point;
+  target?: Endpoint;
+  moved?: boolean;
+}): Endpoint | undefined => (moved ? (target ?? { point: to }) : undefined);
+
+/**
+ * The parameters a released adjust handle writes: the handle's own, over those the shape has now, so a change made to
+ * another while the handle was held (by a peer, or an undo) stays. Nothing for a press released where it began, or
+ * for a drag that left the parameter as it is.
+ */
+export const paramDrop = (
+  { param, params, moved }: { param: string; params: Readonly<Record<string, number>>; moved?: boolean },
+  stored: Readonly<Record<string, number>> | undefined,
+): Record<string, number> | undefined => {
+  const value = params[param];
+  return moved && value !== undefined && value !== stored?.[param] ? { ...stored, [param]: value } : undefined;
+};
 
 /**
  * Whether the pointer is over the canvas itself: not over a panel the view hosts, nor over a popup portalled from one,
@@ -141,7 +192,7 @@ const isDirected = (scene: RenderList2D, registry: NodeRegistry, source: Endpoin
     return port !== undefined && port.accepts !== undefined && port.accepts !== 'any';
   });
 
-export type ContextMenu = { at: Point; scene: Point; kind: 'point' | 'element' | 'canvas' };
+export type ContextMenu = { at: Point; scene: Point; kind: 'point' | 'element' | 'canvas'; end?: MenuLinkEnd };
 
 export type UsePointerMachineOptions = {
   registry: ReturnType<typeof useRegistry>;
@@ -188,10 +239,15 @@ export type PointerMachine = {
   onPointPointerDown: (link: SplineLink, index: number, event: PointerEvent) => void;
   onMidpointPointerDown: (link: SplineLink, index: number, point: Point, event: PointerEvent) => void;
   onPointContextMenu: (link: SplineLink, index: number, event: MouseEvent) => void;
+  /** The menu of a link pressed on one of its ends, which would else be the menu of the node the end is on. */
+  onEndContextMenu: (link: Link, end: LinkEnd, event: MouseEvent) => void;
   /** A vertex of the node in vertex edit mode: press marks it, drag moves it, alt-click removes it. */
   onVertexPointerDown: (node: Node, index: number, event: PointerEvent) => void;
+  onParamPointerDown: (node: Node, param: string, event: PointerEvent) => void;
   /** A segment's midpoint in vertex edit mode: pressing it adds a vertex there, `index`, and moves it. */
   onVertexMidpointPointerDown: (node: Node, index: number, point: Point, event: PointerEvent) => void;
+  /** The control of a bent segment in vertex edit mode: dragging it changes how the segment bows. */
+  onBendPointerDown: (node: Node, segment: number, handle: BendHandle, event: PointerEvent) => void;
   /** Removes a vertex of the node in vertex edit mode, unless the node would be left with too few to draw. */
   deleteVertex: (id: NodeId, index: number) => void;
 
@@ -281,7 +337,10 @@ export const usePointerMachine = ({
     (type: NodeType, points: readonly Point[], closed: boolean, stroke = false) => {
       const def = nodeRegistry[type];
       // The frame needs some extent on each axis to scale the line by, so a straight run gets a minor cell.
-      const frame = points.length >= 2 ? polylineFrame(points, minor) : undefined;
+      const shut = closed && points.length >= 3;
+      // A tool that draws a curve bends every segment, so the line runs through its points as one.
+      const frame =
+        points.length >= 2 ? polylineFrame(points, minor, def?.curved ? smoothBends(points, shut) : []) : undefined;
       if (!def?.createFromPoints || !frame) {
         return;
       }
@@ -294,15 +353,107 @@ export const usePointerMachine = ({
           size: { width: bounds.width, height: bounds.height },
         },
         frame.points,
-        closed && points.length >= 3,
+        shut,
       );
-      draw.apply(insertNode({ ...node, layer: activeLayer(scene, registry.get(atoms.layer)) }));
+      draw.apply(
+        insertNode({
+          ...node,
+          ...(frame.bends.length > 0 ? { bends: frame.bends } : {}),
+          layer: activeLayer(scene, registry.get(atoms.layer)),
+        }),
+      );
       if (!stroke) {
         select([node.id]);
         setTool({ kind: 'select' });
       }
     },
     [nodeRegistry, minor, scene, draw, registry, atoms.layer, select, setTool],
+  );
+
+  /** The size of the last shape of each type a gesture made, which a shape drawn nearly that size takes. */
+  const lastSizeRef = useRef<Readonly<Record<NodeType, Size>>>({});
+
+  /**
+   * Lands a shape read from a stroke as the node that draws it, on the grid whatever the snap setting: a shape drawn
+   * by hand is rough, and squaring it up is the point of reading it. Its sides and its edges take a major line of the
+   * grid where one is near, and a minor one otherwise. False where the registry has no such type.
+   */
+  const landShape = useCallback(
+    ({ shape, bounds, rotation }: RecognizedShape): boolean => {
+      const type = shape === 'rect' || shape === 'ellipse' ? shape : 'polygon';
+      const def = nodeRegistry[type];
+      if (!def) {
+        return false;
+      }
+      const onGrid = (value: number) => favorMajor(value, minor, major);
+      const turned = ({ width, height }: Size): Size => ({ width: height, height: width });
+      // A triangle on its side is the upright one turned, so its frame is the box turned back.
+      const sideways = rotation === 90 || rotation === 270;
+      const drawn = {
+        width: Math.max(minor, onGrid(bounds.width)),
+        height: Math.max(minor, onGrid(bounds.height)),
+      };
+      // Nearly the size of the last such shape, or of the tool's own, it was meant to match, and takes that size.
+      const size = nearestSize(sideways ? turned(drawn) : drawn, [
+        lastSizeRef.current[type],
+        nominalSize(def.defaultSize, cell),
+      ]);
+      // The box the frame covers, about the middle of the stroke, with its edges on the grid.
+      const box = sideways ? turned(size) : size;
+      const middle = boundsCenter(bounds);
+      const [left, top] = [onGrid(middle.x - box.width / 2), onGrid(middle.y - box.height / 2)];
+      const node = def.create({
+        id: createId(type),
+        z: topOfView(scene),
+        center: { x: left + box.width / 2, y: top + box.height / 2 },
+        size,
+      });
+      lastSizeRef.current = { ...lastSizeRef.current, [type]: size };
+      draw.apply(
+        insertNode({
+          ...node,
+          ...(type === 'polygon' ? { params: { sides: shape === 'triangle' ? 3 : 4 } } : {}),
+          ...(rotation !== undefined ? { rotation } : {}),
+          layer: activeLayer(scene, registry.get(atoms.layer)),
+        }),
+      );
+      return true;
+    },
+    [nodeRegistry, minor, major, cell, scene, draw, registry, atoms.layer],
+  );
+
+  /**
+   * Lands a stroke read as segments as a polyline through their ends, which are on the grid already; a segment that
+   * bows is one of its bends. False where the registry has no polyline to draw it.
+   */
+  const landPath = useCallback(
+    ({ points, bends, closed }: RecognizedPath): boolean => {
+      const def = nodeRegistry.polyline;
+      const frame = polylineFrame(points, minor, bends);
+      if (!def?.createFromPoints || !frame) {
+        return false;
+      }
+      const { bounds } = frame;
+      const node = def.createFromPoints(
+        {
+          id: createId('polyline'),
+          z: topOfView(scene),
+          center: boundsCenter(bounds),
+          size: { width: bounds.width, height: bounds.height },
+        },
+        frame.points,
+        closed,
+      );
+      draw.apply(
+        insertNode({
+          ...node,
+          ...(frame.bends.length > 0 ? { bends: frame.bends } : {}),
+          layer: activeLayer(scene, registry.get(atoms.layer)),
+        }),
+      );
+      return true;
+    },
+    [nodeRegistry, minor, scene, draw, registry, atoms.layer],
   );
 
   /** The type the tool in hand draws in one stroke (`NodeDef.freehand`), where it is such a tool and may draw. */
@@ -316,7 +467,7 @@ export const usePointerMachine = ({
   const startStroke = useCallback(
     (type: NodeType, event: PointerEvent) => {
       select([]);
-      startDrag({ kind: 'freehand', type, points: [toScene(event)] }, event);
+      startDrag({ kind: 'freehand', type, points: [toScene(event)], times: [event.timeStamp] }, event);
     },
     [select, startDrag, toScene],
   );
@@ -664,6 +815,7 @@ export const usePointerMachine = ({
         node,
         vertices.filter((_, i) => i !== index),
         minor,
+        bendsAfterDelete(polylineBends(node), index, vertices),
       );
       if (values) {
         draw.apply(updateElement(id, values));
@@ -683,9 +835,24 @@ export const usePointerMachine = ({
         return;
       }
       registry.set(atoms.editing, { id: node.id, kind: 'vertices', vertex: index });
-      startDrag({ kind: 'vertex', id: node.id, index, points: polylineVertices(node) }, event);
+      startDrag(
+        { kind: 'vertex', id: node.id, index, points: polylineVertices(node), bends: polylineBends(node) },
+        event,
+      );
     },
     [capabilities.update, deleteVertex, registry, atoms.editing, startDrag],
+  );
+
+  /** Dragging an adjust handle of a parametric shape sets the parameter the handle stands for. */
+  const onParamPointerDown = useCallback(
+    (node: Node, param: string, event: PointerEvent) => {
+      if (event.button !== 0 || !capabilities.update || node.locked || !isShapeNode(node)) {
+        return;
+      }
+      event.stopPropagation();
+      startDrag({ kind: 'param', id: node.id, param, params: node.params ?? {} }, event);
+    },
+    [capabilities.update, startDrag],
   );
 
   const onVertexMidpointPointerDown = useCallback(
@@ -697,7 +864,37 @@ export const usePointerMachine = ({
       const vertices = polylineVertices(node);
       registry.set(atoms.editing, { id: node.id, kind: 'vertices', vertex: index });
       startDrag(
-        { kind: 'vertex', id: node.id, index, points: [...vertices.slice(0, index), point, ...vertices.slice(index)] },
+        {
+          kind: 'vertex',
+          id: node.id,
+          index,
+          points: [...vertices.slice(0, index), point, ...vertices.slice(index)],
+          bends: bendsAfterInsert(polylineBends(node), index, vertices),
+        },
+        event,
+      );
+    },
+    [capabilities.update, registry, atoms.editing, startDrag],
+  );
+
+  const onBendPointerDown = useCallback(
+    (node: Node, segment: number, handle: BendHandle, event: PointerEvent) => {
+      if (event.button !== 0 || !capabilities.update || !hasVertices(node)) {
+        return;
+      }
+      event.stopPropagation();
+      // No vertex is marked: Delete then takes the node, not a vertex beside the control.
+      registry.set(atoms.editing, { id: node.id, kind: 'vertices' });
+      startDrag(
+        {
+          kind: 'vertex',
+          id: node.id,
+          index: segment,
+          bend: segment,
+          handle,
+          points: polylineVertices(node),
+          bends: polylineBends(node),
+        },
         event,
       );
     },
@@ -710,17 +907,23 @@ export const usePointerMachine = ({
   const [menu, setMenu] = useState<ContextMenu | undefined>(undefined);
   const closeMenu = useCallback(() => setMenu(undefined), []);
   const openMenu = useCallback(
-    (event: MouseEvent, kind: ContextMenu['kind']) => {
+    (event: MouseEvent, kind: ContextMenu['kind'], end?: MenuLinkEnd) => {
       event.preventDefault();
       event.stopPropagation();
+      // A press that opens the menu is no gesture: a control-click is the primary button, and has begun one.
+      if (registry.get(atoms.drag)?.kind !== 'vertices') {
+        pendingRef.current = undefined;
+        setDrag(undefined);
+      }
       const rect = rootRef.current?.getBoundingClientRect();
       setMenu({
         at: { x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) },
         scene: toScene(event),
         kind,
+        ...(end ? { end } : {}),
       });
     },
-    [toScene, rootRef],
+    [toScene, rootRef, registry, atoms.drag, setDrag],
   );
 
   const onPointContextMenu = useCallback(
@@ -742,13 +945,57 @@ export const usePointerMachine = ({
     [registry, atoms.selection, select, openMenu],
   );
 
+  const onEndContextMenu = useCallback(
+    (link: Link, end: LinkEnd, event: MouseEvent) => {
+      if (!registry.get(atoms.selection).has(link.id)) {
+        select([link.id]);
+      }
+      openMenu(event, 'element', { link: link.id, end });
+    },
+    [registry, atoms.selection, select, openMenu],
+  );
+
+  /** The end of one of `links` the press is on, within `reach` screen px of where that end is anchored. */
+  const pressedEnd = useCallback(
+    (links: readonly Link[], event: MouseEvent, reach: number) => {
+      // An end that cannot be changed has no handle, and so no menu of its own.
+      const anchors = links.flatMap((link) => {
+        const geometry = capabilities.update && !link.locked ? linkGeometry(scene, nodeRegistry, link) : undefined;
+        return geometry ? [{ link: link.id, source: geometry.source.point, target: geometry.target.point }] : [];
+      });
+      return linkEndAt(anchors, toScene(event), reach / registry.get(atoms.camera).zoom);
+    },
+    [capabilities.update, scene, nodeRegistry, toScene, registry, atoms.camera],
+  );
+
+  /** A press on a link beside one of its ends is on that end, so its marker is as good a target as its handle. */
   const onLinkContextMenu = useCallback(
-    (link: Link, event: MouseEvent) => onElementContextMenu(link.id, event),
-    [onElementContextMenu],
+    (link: Link, event: MouseEvent) => {
+      const pressed = pressedEnd([link], event, END_PRESS_PX);
+      if (pressed) {
+        onEndContextMenu(link, pressed.end, event);
+      } else {
+        onElementContextMenu(link.id, event);
+      }
+    },
+    [pressedEnd, onEndContextMenu, onElementContextMenu],
   );
 
   const onContextMenu = useCallback(
     (event: MouseEvent) => {
+      // A link that is not selected shows no end handle where it meets a shape: the shape's port is there instead.
+      const selection = registry.get(atoms.selection);
+      const links = Object.values(scene.links);
+      const pressed = pressedEnd(
+        [...links.filter(({ id }) => selection.has(id)), ...links.filter(({ id }) => !selection.has(id))],
+        event,
+        END_HANDLE_PX,
+      );
+      const link = pressed && scene.links[pressed.link];
+      if (pressed && link) {
+        onEndContextMenu(link, pressed.end, event);
+        return;
+      }
       const node = hitTest(scene, toScene(event));
       if (node) {
         onElementContextMenu(node.id, event);
@@ -756,7 +1003,7 @@ export const usePointerMachine = ({
         openMenu(event, 'canvas');
       }
     },
-    [scene, toScene, onElementContextMenu, openMenu],
+    [scene, toScene, registry, atoms.selection, pressedEnd, onEndContextMenu, onElementContextMenu, openMenu],
   );
 
   /** Dragging a link's end re-attaches it; the other end stays put and anchors the rubber band. */
@@ -920,16 +1167,43 @@ export const usePointerMachine = ({
           const last = current.points[current.points.length - 1];
           const step = FREEHAND_STEP_PX / registry.get(atoms.camera).zoom;
           if (Math.hypot(point.x - last.x, point.y - last.y) >= step) {
-            setDrag({ ...current, points: [...current.points, point] });
+            setDrag({ ...current, points: [...current.points, point], times: [...current.times, event.timeStamp] });
+          }
+          break;
+        }
+        case 'param': {
+          // The handle lands on the minor grid, as a vertex does, and the parameter is read from where it lands.
+          const node = scene.nodes[current.id];
+          if (node && isShapeNode(node)) {
+            const point = toScene(event);
+            setDrag({
+              ...current,
+              params: dragShapeNodeParam(node, current.param, { x: snap(point.x), y: snap(point.y) }),
+              moved: true,
+            });
           }
           break;
         }
         case 'vertex': {
-          // A vertex lands on the minor grid, as the polyline tool places one.
+          // A vertex lands on the minor grid, as the polyline tool places one; a bend's control too.
           const point = toScene(event);
+          const landed = { x: snap(point.x), y: snap(point.y) };
+          if (current.bend !== undefined) {
+            const bends = current.bends.map((bend) =>
+              bend.segment === current.bend ? { ...bend, [current.handle ?? 'control']: landed } : bend,
+            );
+            setDrag({ ...current, bends });
+            break;
+          }
           const points = [...current.points];
-          points[current.index] = { x: snap(point.x), y: snap(point.y) };
-          setDrag({ ...current, points });
+          const from = points[current.index];
+          points[current.index] = landed;
+          // The vertex's own controls go with it, so the curve keeps its shape there.
+          const bends = bendsWithVertex(current.bends, current.index, points.length, {
+            x: landed.x - from.x,
+            y: landed.y - from.y,
+          });
+          setDrag({ ...current, points, bends });
           break;
         }
         case 'point': {
@@ -947,7 +1221,7 @@ export const usePointerMachine = ({
           const other = link ? endpointNode(current.end === 'source' ? link.target : link.source) : undefined;
           const target = linkTarget(point, other, current.end === 'source' ? 'out' : 'in');
           // As a new link's far end: where it will land, on what is under the pointer or else on the grid.
-          setDrag({ ...current, to: target ? point : { x: snap(point.x), y: snap(point.y) }, target });
+          setDrag({ ...current, to: target ? point : { x: snap(point.x), y: snap(point.y) }, target, moved: true });
           break;
         }
       }
@@ -1083,6 +1357,7 @@ export const usePointerMachine = ({
   const commitCreated = useCallback(
     (node: Node) => {
       pendingRef.current = undefined;
+      lastSizeRef.current = { ...lastSizeRef.current, [node.type]: node.size };
       addNode(node);
       select([node.id]);
     },
@@ -1195,8 +1470,12 @@ export const usePointerMachine = ({
                 z: created ? nextZ() : z,
                 source: current.source,
                 target,
-                // A link between ports that declare a direction is drawn with one.
-                ends: isDirected(scene, nodeRegistry, current.source, target) ? { end: 'arrow' } : undefined,
+                // The markers last set on a link; before any were, a link between ports that declare a direction
+                // is drawn with one.
+                ends: drawnLinkEnds(
+                  registry.get(atoms.linkEnds),
+                  isDirected(scene, nodeRegistry, current.source, target),
+                ),
               });
               edits.push(insertLink({ ...link, layer: activeLayer(scene, registry.get(atoms.layer)) }));
               draw.apply(edits.length === 1 ? edits[0] : chainEdits(edits));
@@ -1220,11 +1499,32 @@ export const usePointerMachine = ({
           // Thinned to the points the line needs, so it has few enough vertices to edit; a press with no travel
           // leaves one point, which makes nothing.
           const tolerance = FREEHAND_TOLERANCE_PX / registry.get(atoms.camera).zoom;
-          landPoints(current.type, simplifyPath(current.points, tolerance), false, true);
+          // Read from every sample, not the thinned ones: how near the stroke runs to a shape is in the samples, and
+          // where the hand paused is in their times.
+          const read =
+            nodeRegistry[current.type]?.freehand === 'shape'
+              ? readStroke(current.points, current.times, { minimum: 2 * minor, minor, major })
+              : undefined;
+          const landed = read?.kind === 'shape' ? landShape(read.shape) : read?.kind === 'path' && landPath(read.path);
+          if (!landed) {
+            landPoints(current.type, simplifyPath(current.points, tolerance), strokeCloses(current.points), true);
+          }
           break;
         }
         case 'point': {
           draw.apply(updateElement(current.id, { points: current.points }));
+          break;
+        }
+        case 'param': {
+          const node = scene.nodes[current.id];
+          // A node locked while its handle was dragged keeps the shape it had.
+          if (!node || node.locked || !isShapeNode(node)) {
+            break;
+          }
+          const params = paramDrop(current, node.params);
+          if (params) {
+            draw.apply(updateElement(current.id, { params }));
+          }
           break;
         }
         case 'vertex': {
@@ -1236,9 +1536,10 @@ export const usePointerMachine = ({
           }
           const before = polylineVertices(node);
           const moved =
+            current.bend !== undefined ||
             before.length !== current.points.length ||
             current.points.some((point, index) => point.x !== before[index].x || point.y !== before[index].y);
-          const values = moved ? refitPolyline(node, current.points, minor) : undefined;
+          const values = moved ? refitPolyline(node, current.points, minor, current.bends) : undefined;
           if (values) {
             draw.apply(updateElement(current.id, values));
           }
@@ -1246,8 +1547,10 @@ export const usePointerMachine = ({
         }
         case 'end': {
           // Dropped on a node it attaches there; dropped on empty canvas it becomes a free end at that point.
-          const end: Endpoint = current.target ?? { point: current.to };
-          draw.apply(updateElement(current.id, { [current.end]: end }));
+          const end = endDrop(current);
+          if (end) {
+            draw.apply(updateElement(current.id, { [current.end]: end }));
+          }
           break;
         }
         case 'pan':
@@ -1279,6 +1582,10 @@ export const usePointerMachine = ({
       snap,
       activate,
       rootRef,
+      landPoints,
+      landShape,
+      landPath,
+      atoms.camera,
     ],
   );
 
@@ -1300,8 +1607,11 @@ export const usePointerMachine = ({
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onEndContextMenu,
     onVertexPointerDown,
+    onParamPointerDown,
     onVertexMidpointPointerDown,
+    onBendPointerDown,
     deleteVertex,
 
     setDrag,

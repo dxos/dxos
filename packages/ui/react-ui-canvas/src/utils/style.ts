@@ -16,6 +16,7 @@ import {
   STYLE_HUES,
   type StyleHue,
   type StyleMap,
+  type TextTone,
   type VerticalAlign,
   isEllipseNode,
   isViewNode,
@@ -123,6 +124,68 @@ const TONE_FILLS: Record<StyleHue, Record<'strong' | 'light', ToneClasses>> = {
 };
 
 const isStyleHue = (hue: string | undefined): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
+
+/** A text colour as it is drawn, and the swatch that offers it. */
+export type TextColor = { text: string; swatch: string };
+
+/** The tone a text colour takes when its style names a hue alone. */
+export const DEFAULT_TEXT_TONE: TextTone = 2;
+
+/**
+ * Each style hue as a text colour at its three tones, light to dark: the palette's 300, 500 and 700, so a text set in
+ * a hue can be made to stand out or sit back on either canvas.
+ */
+export const TEXT_COLORS: Record<StyleHue, readonly [TextColor, TextColor, TextColor]> = {
+  neutral: [
+    { text: 'text-neutral-300', swatch: 'bg-neutral-300' },
+    { text: 'text-neutral-500', swatch: 'bg-neutral-500' },
+    { text: 'text-neutral-700', swatch: 'bg-neutral-700' },
+  ],
+  red: [
+    { text: 'text-red-300', swatch: 'bg-red-300' },
+    { text: 'text-red-500', swatch: 'bg-red-500' },
+    { text: 'text-red-700', swatch: 'bg-red-700' },
+  ],
+  orange: [
+    { text: 'text-orange-300', swatch: 'bg-orange-300' },
+    { text: 'text-orange-500', swatch: 'bg-orange-500' },
+    { text: 'text-orange-700', swatch: 'bg-orange-700' },
+  ],
+  amber: [
+    { text: 'text-amber-300', swatch: 'bg-amber-300' },
+    { text: 'text-amber-500', swatch: 'bg-amber-500' },
+    { text: 'text-amber-700', swatch: 'bg-amber-700' },
+  ],
+  green: [
+    { text: 'text-green-300', swatch: 'bg-green-300' },
+    { text: 'text-green-500', swatch: 'bg-green-500' },
+    { text: 'text-green-700', swatch: 'bg-green-700' },
+  ],
+  teal: [
+    { text: 'text-teal-300', swatch: 'bg-teal-300' },
+    { text: 'text-teal-500', swatch: 'bg-teal-500' },
+    { text: 'text-teal-700', swatch: 'bg-teal-700' },
+  ],
+  sky: [
+    { text: 'text-sky-300', swatch: 'bg-sky-300' },
+    { text: 'text-sky-500', swatch: 'bg-sky-500' },
+    { text: 'text-sky-700', swatch: 'bg-sky-700' },
+  ],
+  blue: [
+    { text: 'text-blue-300', swatch: 'bg-blue-300' },
+    { text: 'text-blue-500', swatch: 'bg-blue-500' },
+    { text: 'text-blue-700', swatch: 'bg-blue-700' },
+  ],
+  violet: [
+    { text: 'text-violet-300', swatch: 'bg-violet-300' },
+    { text: 'text-violet-500', swatch: 'bg-violet-500' },
+    { text: 'text-violet-700', swatch: 'bg-violet-700' },
+  ],
+};
+
+/** The colour a text hue draws at a tone; none for a name that is no style hue. */
+export const textColor = (hue: string | undefined, tone: TextTone = DEFAULT_TEXT_TONE): TextColor | undefined =>
+  isStyleHue(hue) ? TEXT_COLORS[hue][tone - 1] : undefined;
 
 /** The default look: the base surface, the base text and the separator border. */
 const DEFAULT: HueClasses = { surface: 'bg-base-surface', text: '', border: 'border-separator' };
@@ -263,10 +326,12 @@ export const frameClasses = (
   const clear = !filled || hue.surface === 'bg-transparent';
   const surface = opaque && clear ? VIEW_FILLS[view.contents][look.tone] : filled ? hue.surface : '';
   const lineStyle = style.lineStyle ?? tokens.borderStyle;
+  // A text colour of its own wins over the one the shape's hue and fill give the text.
+  const text = textColor(style.textHue, style.textTone)?.text ?? hue.text;
   return [
     surface,
     // A guide's hue marks its edge (a group's backdrop); its title reads in the default text colour.
-    style.guide ? '' : hue.text,
+    style.guide ? '' : text,
     selected
       ? 'border-focus'
       : hovered

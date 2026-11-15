@@ -12,7 +12,7 @@ import { type Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
-import { resolveStorySpace } from '@dxos/storybook-testing';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 export type StorySetupOptions = {
   /**
@@ -37,7 +37,7 @@ export const StorySetupPlugin = Plugin.define<StorySetupOptions>(
     activate: Effect.fnUntraced(function* () {
       const invoker = yield* Capabilities.OperationInvoker;
       const client = yield* ClientCapabilities.Client;
-      const space = yield* resolveStorySpace(client);
+      const space = yield* StoryHarness.resolveSpace(client);
       yield* invoker.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
       const stop = yield* Effect.tryPromise(() => onReady({ db: space.db, invoker }));
       if (stop) {

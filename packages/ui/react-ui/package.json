@@ -297,6 +297,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@ark-ui/react": "catalog:",
     "@dxos/async": "workspace:*",
@@ -334,6 +337,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "typedoc": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
