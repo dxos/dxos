@@ -89,7 +89,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
         () => import('./src/capabilities/graph-retention.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
-        'LayoutLocator',
+        'LocatorExtension',
         {
           requires: [
             Capabilities.AtomRegistry,
@@ -97,9 +97,9 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
             AppCapabilities.Layout,
             DeckCapabilities.View,
           ],
-          provides: [AppCapabilities.LayoutLocator],
+          provides: [AppCapabilities.LocatorExtension],
         },
-        () => import('./src/capabilities/layout-locator.ts', { with: { type: 'module-url' } }),
+        () => import('./src/capabilities/locator-extension.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'NotificationTracker',

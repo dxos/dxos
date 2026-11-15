@@ -94,6 +94,7 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
         environments: ['browser', 'tauri'],
         requires: [
           Capabilities.AtomRegistry,
+          Capabilities.OperationInvoker,
           AppCapabilities.Layout,
           AttentionCapabilities.Attention,
           SpaceCapabilities.EphemeralState,

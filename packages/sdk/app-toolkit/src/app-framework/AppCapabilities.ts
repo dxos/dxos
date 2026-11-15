@@ -100,8 +100,8 @@ export const LayoutAccent = Capability$.make<Atom.Atom<ChromaticPalette | undefi
   'org.dxos.app-framework.capability.layoutAccent',
 );
 
-/** What a follower's layout shows of the session it follows; see {@link LayoutLocator}. */
-export type LayoutFollowView = Readonly<{
+/** What a follower shows of the session it follows, as handed to each {@link LocatorExtension}. */
+export type FollowView<T = unknown> = Readonly<{
   spaceId: string;
   /** The leader's open items in the space, in order. */
   active: readonly string[];
@@ -110,33 +110,34 @@ export type LayoutFollowView = Readonly<{
    * opens it at itself, absent while it cannot load the object yet.
    */
   attended: Readonly<{ key: EID.EID; path?: string; localPath?: string }>;
-  /** The anchor to reveal in each object the leader shows, by object. */
-  anchors: Readonly<Record<EID.EID, string>>;
-  /** The leader's layout location in the space, when their layout's locator has this one's id. */
-  location?: unknown;
+  /** The leader's value for this extension in the space, when they sent one. */
+  value?: T;
 }>;
 
 /**
- * Where a layout is, and how it shows another session's, contributed by the layout plugin. Presence sends each space's
- * `location` to peers, and a follower's layout shows the leader's view through `follow`, as an object's `Locator`
- * reveals a peer's anchor.
+ * Data a plugin adds to a session's location, which presence carries to peers without reading it, and how a follower
+ * applies a leader's value, as an object's `Locator` reveals a peer's anchor.
  */
-export type LayoutLocator = Readonly<{
-  /** Names the format of `location`; a follower reads a leader's location only from a locator with the same id. */
+export type LocatorExtension = Readonly<{
+  /** Names the data; a follower hands a leader's value only to its own extension with the same id. */
   id: string;
-  /** Where the layout is in each space it shows, in its own format, by space id; it travels to peers as JSON. */
+  /** This session's value in each space it shows, by space id; it travels to peers as JSON. */
   location: Atom.Atom<Readonly<Record<string, JsonValue>>>;
+  /** Whether its `follow` opens what the leader shows; with no such extension the follower opens the attended object. */
+  navigates?: boolean;
   /**
-   * Keeps the layout showing `view` until the scope closes, without moving focus or the caret. The returned atom holds
-   * whether it shows the view, which it does not while the attended object is unavailable or opening it failed.
+   * Applies the leader's view until the scope closes, without moving focus or the caret. The returned atom holds whether
+   * it shows the view; any extension holding false pauses the follow.
    */
-  follow: (view: Atom.Atom<LayoutFollowView>) => Effect$.Effect<Atom.Atom<boolean>, never, Scope$.Scope>;
+  follow?: (view: Atom.Atom<FollowView>) => Effect$.Effect<Atom.Atom<boolean>, never, Scope$.Scope>;
 }>;
 
 /**
  * @category Capability
  */
-export const LayoutLocator = Capability$.make<LayoutLocator>()('org.dxos.app-framework.capability.layoutLocator');
+export const LocatorExtension = Capability$.make<LocatorExtension>()(
+  'org.dxos.app-framework.capability.locatorExtension',
+);
 
 /**
  * @category Capability

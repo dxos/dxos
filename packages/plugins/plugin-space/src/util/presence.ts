@@ -150,10 +150,14 @@ const parseDeck = (value: unknown): SpaceSchema.PeerDeck | undefined => {
   if (typeof value !== 'object' || value === null) {
     return undefined;
   }
-  const { planks, layout } = value as Record<string, unknown>;
-  const { id, location } = typeof layout === 'object' && layout !== null ? (layout as Record<string, unknown>) : {};
+  const { planks, extensions } = value as Record<string, unknown>;
   return Array.isArray(planks)
-    ? { planks: planks.filter(isString), ...(isString(id) && { layout: { id, location } }) }
+    ? {
+        planks: planks.filter(isString),
+        ...(typeof extensions === 'object' &&
+          extensions !== null &&
+          !Array.isArray(extensions) && { extensions: { ...extensions } }),
+      }
     : undefined;
 };
 

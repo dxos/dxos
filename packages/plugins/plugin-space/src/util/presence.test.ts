@@ -113,14 +113,14 @@ describe('parseViewingMessage', () => {
     });
   });
 
-  test("keeps a deck's layout location and drops one without a locator id", ({ expect }) => {
+  test("keeps a deck's extension values by id and drops extensions that are not an object", ({ expect }) => {
     const message = { identityKey: 'peer', added: [], removed: [] };
-    const layout = { id: 'deck', location: { front: 'root/a' } };
-    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], layout } })?.deck).toEqual({
+    const extensions = { deck: { front: 'root/a' } };
+    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], extensions } })?.deck).toEqual({
       planks: ['root/a'],
-      layout,
+      extensions,
     });
-    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], layout: { location: {} } } })?.deck).toEqual({
+    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], extensions: ['deck'] } })?.deck).toEqual({
       planks: ['root/a'],
     });
   });

@@ -451,21 +451,21 @@ feat F-1: Deck Presentations
           planks changed since it last measured names none until it measures the planks it shows
 
   req F-1.11:
-    when: the deck reports where it is in a space through its `LayoutLocator`
-    then: its location there holds its front plank when that plank is in the space, and its planks in the space whose
+    when: the deck reports where it is in a space through its `LocatorExtension`
+    then: its value there holds its front plank when that plank is in the space, and its planks in the space whose
           companion is open with the companion tab it shows them in
 
   req F-1.12:
-    when: plugin-space hands the deck a leader's view through its `LayoutLocator`'s `follow`
-    then: a sliding deck shows the leader's planks in the space, in order, leaving out any it has no URL binding for,
-          scrolled to the leader's front plank (or, when that plank is left out and the deck holds every other plank it
-          can bind, to the first of their planks after it that it holds, else the last before it); a flat deck opens the
-          object the leader attends, at the leader's path when it has a URL binding for it and at the object's own path
-          otherwise, first closing any planks stacked after it. Each plank shown of the leader opens the companion they
-          have open there, in their tab, and closes one they closed, and reveals the leader's anchor through the type's
-          `Locator`. None of it moves the caret or focus. Planks it opens for the leader have five seconds to mount, during
-          which their scroll, companions and anchors are sent again. While the attended object is not yet available, or
-          opening it failed, the deck reports that it does not show the view and tries again on the next update.
+    when: plugin-space hands the deck a leader's view and the leader's deck value through its `LocatorExtension`'s `follow`
+    then: the deck opens what the leader shows, so plugin-space opens nothing itself. A sliding deck shows the leader's
+          planks in the space, in order, leaving out any it has no URL binding for, scrolled to the leader's front plank
+          (or, when that plank is left out and the deck holds every other plank it can bind, to the first of their planks
+          after it that it holds, else the last before it); a flat deck opens the object the leader attends, at the
+          leader's path when it has a URL binding for it and at the object's own path otherwise, first closing any planks
+          stacked after it. Each plank shown of the leader opens the companion they have open there, in their tab, and
+          closes one they closed. None of it moves the caret or focus. Planks it opens for the leader have five seconds to
+          mount, during which their scroll and companions are sent again. While the attended object is not yet available,
+          or opening it failed, the deck reports that it does not show the view and tries again on the next update.
 
   req F-1.13:
     when: a `LayoutAccent` contribution holds a palette hue
@@ -963,14 +963,15 @@ decision D-2: A sliding deck re-measures its front when its planks change, not o
 ```
 
 ```mdl
-decision D-3: The deck's front, flatness and open companions stay deck state rather than fields on the generic layout. The deck contributes a `LayoutLocator`, whose location in a space carries its front and open companions, and whose `follow` mirrors a leader's deck; the heading wash comes from a `LayoutAccent` contribution. Replaces how [D-1] publishes the front.
+decision D-3: The deck's front, flatness and open companions stay deck state rather than fields on the generic layout. The deck contributes a `LocatorExtension`, whose value in a space carries its front and open companions, and whose `follow` mirrors a leader's deck and opens what they show; the heading wash comes from a `LayoutAccent` contribution. Replaces how [D-1] publishes the front.
   date: 2026-11-15
   by: user:wittjosiah
   affects: [F-1.10, F-1.11, F-1.12, F-1.13]
-  why: `front`, `flat` and companion state describe the deck, not every layout. A contributed locator matches how objects already reveal through their own `Locator`, and keeps the deck's sliding and binding rules in the deck.
+  why: `front`, `flat` and companion state describe the deck, not every layout. Any plugin can add its own data to a session's location through a `LocatorExtension`, and the deck is one such plugin; its sliding and binding rules stay in the deck.
   rejected:
     - Generic names for the same layout fields; the follow in plugin-space would still carry the deck's rules.
     - plugin-space reading the deck's state directly; it ties follow to one layout plugin.
+    - A single `LayoutLocator` for the layout plugin alone; only layout state could travel with a location.
 ```
 
 ---

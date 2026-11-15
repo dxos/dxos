@@ -29,6 +29,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { unpackJson } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ViewLocation } from '@dxos/react-ui-attention/types';
+import { type JsonValue } from '@dxos/util';
 
 import { SpaceCapabilities, type SpaceSchema } from '#types';
 
@@ -59,6 +60,20 @@ const DEVICE_KINDS: Record<DeviceType, SpaceSchema.SessionDevice['kind']> = {
   [DeviceType.MOBILE]: 'mobile',
   [DeviceType.AGENT]: 'agent',
   [DeviceType.AGENT_MANAGED]: 'agent',
+};
+
+/** Each locator extension's value in one space, by extension id, for its viewing message; nothing when none has one. */
+const getExtensionValues = (
+  values: readonly { id: string; bySpace: Readonly<Record<string, JsonValue>> }[],
+  spaceId: string,
+): { extensions?: Record<string, JsonValue> } => {
+  const extensions: Record<string, JsonValue> = {};
+  for (const { id, bySpace } of values) {
+    if (spaceId in bySpace) {
+      extensions[id] = bySpace[spaceId];
+    }
+  }
+  return Object.keys(extensions).length > 0 ? { extensions } : {};
 };
 
 /**
@@ -122,12 +137,11 @@ export default Capability.makeModule(
     const { invoke } = yield* Capabilities.OperationInvoker;
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
-    // Where the layout is in each space, from the layout plugin's locator, which may contribute after this module.
-    const layoutLocatorsAtom = capabilities.atom(AppCapabilities.LayoutLocator);
-    const layoutLocationAtom = Atom.make((get) => {
-      const [locator] = get(layoutLocatorsAtom);
-      return locator && { id: locator.id, bySpace: get(locator.location) };
-    });
+    // Each locator extension's value in each space, by extension id; extensions may contribute after this module.
+    const extensionsAtom = capabilities.atom(AppCapabilities.LocatorExtension);
+    const extensionValuesAtom = Atom.make((get) =>
+      get(extensionsAtom).map(({ id, location }) => ({ id, bySpace: get(location) })),
+    );
     const attention = yield* AttentionCapabilities.Attention;
     const viewState = yield* AttentionCapabilities.ViewState;
     const stateAtom = yield* SpaceCapabilities.State;
@@ -294,7 +308,7 @@ export default Capability.makeModule(
         if (identity) {
           const device = getDevice();
           const following = registry.get(ephemeralAtom).following;
-          const layoutLocation = registry.get(layoutLocationAtom);
+          const extensionValues = registry.get(extensionValuesAtom);
           const attendedBySpace = groupPresenceKeysBySpace([...current]);
           const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 
@@ -319,10 +333,7 @@ export default Capability.makeModule(
                 }),
                 deck: {
                   planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id),
-                  ...(layoutLocation &&
-                    space.id in layoutLocation.bySpace && {
-                      layout: { id: layoutLocation.id, location: layoutLocation.bySpace[space.id] },
-                    }),
+                  ...getExtensionValues(extensionValues, space.id),
                 },
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
@@ -361,7 +372,7 @@ export default Capability.makeModule(
 
     // Subscribe to layout changes for broadcast.
     subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
-    subscriptions.add(registry.subscribe(layoutLocationAtom, () => setupBroadcast()));
+    subscriptions.add(registry.subscribe(extensionValuesAtom, () => setupBroadcast()));
     // Subscribe to attention.current changes.
     subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
     // Starting, retargeting or stopping a follow tells the space at once, so the leader's rate changes with it.

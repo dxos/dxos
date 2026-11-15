@@ -13,7 +13,6 @@ import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Obj } from '@dxos/echo';
 import { type EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -21,7 +20,7 @@ import { DeckCapabilities } from '#types';
 
 import { DeckNamespace } from '../namespace.ts';
 
-/** Where the deck is in one space, in its `LayoutLocator`'s format. */
+/** Where the deck is in one space: its `LocatorExtension`'s value there. */
 export type DeckLocation = {
   /** The plank the deck is scrolled to, when it is in the space. */
   front?: string;
@@ -38,7 +37,7 @@ const TICK_INTERVAL = 500;
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 
-/** Narrows a leader's location, which arrives as opaque JSON, to a {@link DeckLocation}. */
+/** Narrows a leader's value, which arrives as opaque JSON, to a {@link DeckLocation}. */
 export const parseDeckLocation = (value: unknown): DeckLocation | undefined => {
   if (typeof value !== 'object' || value === null) {
     return undefined;
@@ -56,7 +55,7 @@ const isSamePlanks = (a?: readonly string[], b?: readonly string[]) =>
 
 /**
  * What this deck shows of the leader: their attended object, the deck mirrored from theirs (when this one lays planks
- * side by side), its front plank, and the anchor last revealed in each plank.
+ * side by side), and its front plank.
  */
 type Shown = {
   key: EID.EID;
@@ -64,7 +63,6 @@ type Shown = {
   localPath?: string;
   planks?: readonly string[];
   front?: string;
-  anchors: Map<string, string>;
   revealUntil: number;
   /** Set when the deck could not open the view, so the next update opens it again. */
   retry?: boolean;
@@ -73,10 +71,10 @@ type Shown = {
 };
 
 /**
- * The deck's `LayoutLocator`. Its location in a space is its front plank there and its planks with their companion
- * open. Following, a deck that lays planks side by side mirrors the leader's deck: their planks, the plank they are
- * scrolled to, their companions, and the anchor in each plank. A flat deck opens the plank the leader attends, at the
- * leader's path. Anchors are revealed through each type's `Locator` without moving the caret or focus.
+ * The deck's `LocatorExtension`. Its value in a space is its front plank there and its planks with their companion
+ * open. Following, it opens what the leader shows: a deck that lays planks side by side mirrors the leader's deck, their
+ * planks, the plank they are scrolled to and their companions; a flat deck opens the plank the leader attends, at the
+ * leader's path. Neither moves the caret or focus.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -85,7 +83,6 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
     const deckViewAtom = yield* DeckCapabilities.View;
-    const locatorsAtom = capabilities.atom(AppCapabilities.Locator);
     const appGraphAtom = capabilities.atom(AppCapabilities.AppGraph);
 
     const location = Atom.make((get) => {
@@ -112,7 +109,7 @@ export default Capability.makeModule(
     const findOpenPath = (key: EID.EID) =>
       registry.get(layoutAtom).active.find((path) => GraphPath.getEidFromPath(path) === key);
 
-    const follow = (viewAtom: Atom.Atom<AppCapabilities.LayoutFollowView>) =>
+    const follow = (viewAtom: Atom.Atom<AppCapabilities.FollowView>) =>
       Effect.gen(function* () {
         const showing = Atom.make(true);
         const unmountShowing = registry.mount(showing);
@@ -124,28 +121,6 @@ export default Capability.makeModule(
 
         let shown: Shown | undefined;
         let navigating: Fiber.Fiber<void> | undefined;
-        // Reveals still running when a follow stops would otherwise scroll the view afterwards.
-        const revealing = new Set<Fiber.Fiber<void>>();
-
-        // The type is read off this deck's graph node, which a plank opened for the leader may not have until it mounts.
-        const reveal = (path: string, anchor: string) => {
-          const [appGraph] = registry.get(appGraphAtom);
-          const node = appGraph && Option.getOrUndefined(registry.get(appGraph.graph.node(path)));
-          const typename = node && Obj.isObject(node.data) ? Obj.getTypename(node.data) : undefined;
-          const locator = typename && registry.get(locatorsAtom).find(({ id }) => id === typename);
-          if (!locator) {
-            return false;
-          }
-
-          const fiber = Effect.runFork(
-            invoke(locator.reveal, { subject: path, anchor, follow: true }).pipe(
-              Effect.catch((err) => Effect.sync(() => log.warn('follow reveal failed', { err }))),
-            ),
-          );
-          revealing.add(fiber);
-          fiber.addObserver(() => revealing.delete(fiber));
-          return true;
-        };
 
         const retryLater = (target: Shown, err?: unknown) =>
           Effect.sync(() => {
@@ -205,13 +180,13 @@ export default Capability.makeModule(
           const now = Date.now();
           const layout = registry.get(layoutAtom);
           const deck = registry.get(deckViewAtom);
-          const leader = parseDeckLocation(view.location);
+          const leader = parseDeckLocation(view.value);
           const { key, path, localPath } = view.attended;
           // A leader that reported no planks is followed as a flat deck follows, by the object they attend.
           const planks = !deck.flat && view.active.length > 0 ? view.active : undefined;
           const changed = !shown || key !== shown.key || path !== shown.path || !isSamePlanks(planks, shown.planks);
           if (!shown || changed) {
-            shown = { key, path, planks, anchors: new Map(), revealUntil: now + MOUNT_TIMEOUT };
+            shown = { key, path, planks, revealUntil: now + MOUNT_TIMEOUT };
           }
           shown.localPath = localPath;
           if (changed || shown.retry) {
@@ -222,7 +197,7 @@ export default Capability.makeModule(
             navigating = Effect.runFork(navigate(view.spaceId, shown));
           }
 
-          // Planks opened for the leader mount late, so their scroll and anchors are sent again until they have.
+          // Planks opened for the leader mount late, so their scroll and companions are sent again until they have.
           const mounting = now < shown.revealUntil;
           // The leader's front when this deck holds it. A front this deck has no binding for is never held, so once the
           // deck holds every plank of theirs it can bind, it slides to one of theirs it holds, the first after the
@@ -283,20 +258,6 @@ export default Capability.makeModule(
               }
             }
           }
-
-          const targets: [string | undefined, string | undefined][] = planks
-            ? planks.map((plank) => {
-                const plankKey = GraphPath.getEidFromPath(plank);
-                return [plank, plankKey && view.anchors[plankKey]];
-              })
-            : [[findOpenPath(key), view.anchors[key]]];
-          for (const [plank, anchor] of targets) {
-            if (plank && anchor && layout.active.includes(plank) && (anchor !== shown.anchors.get(plank) || mounting)) {
-              if (reveal(plank, anchor)) {
-                shown.anchors.set(plank, anchor);
-              }
-            }
-          }
         };
 
         update();
@@ -311,12 +272,16 @@ export default Capability.makeModule(
             if (navigating) {
               yield* Fiber.interrupt(navigating);
             }
-            yield* Fiber.interruptAll(revealing);
           }),
         );
         return showing as Atom.Atom<boolean>;
       });
 
-    return Capability.contribute(AppCapabilities.LayoutLocator, { id: DeckNamespace.key, location, follow });
+    return Capability.contribute(AppCapabilities.LocatorExtension, {
+      id: DeckNamespace.key,
+      location,
+      navigates: true,
+      follow,
+    });
   }),
 );

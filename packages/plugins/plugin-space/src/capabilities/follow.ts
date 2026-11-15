@@ -12,8 +12,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Attention } from '@dxos/react-ui-attention/types';
@@ -22,16 +24,34 @@ import { SpaceCapabilities } from '#types';
 
 import { FOLLOW_LOST_TIMEOUT, getPeerFocus, getPresenceKeyFromPath } from '../util/presence.ts';
 
+/** How long a plank has to mount once it is open; its anchor is revealed again on every tick meanwhile. */
+const MOUNT_TIMEOUT = 5_000;
+
 const TICK_INTERVAL = 500;
 
 /** Keys that do nothing on their own, so pressing one does not break a follow. */
 const MODIFIER_KEYS: ReadonlySet<string> = new Set(['Alt', 'Control', 'Meta', 'Shift']);
 
-/** The follow running in the layout: the view handed to its locator, until its scope closes. */
+/** An object a follow has loaded: the path this session opens it at, and its type, which picks its `Locator`. */
+type Loaded = { path: string; typename?: string };
+
+/** The follow running here, until its scope closes. */
 type Session = {
   scope: Scope.Closeable;
-  view: Atom.Writable<AppCapabilities.LayoutFollowView>;
-  unsubscribe: () => void;
+  /** What the follower shows of the leader, without any extension's value. */
+  view: AppCapabilities.FollowView;
+  /** The view handed to each extension that follows, with that extension's value, by extension id. */
+  views: Map<string, Atom.Writable<AppCapabilities.FollowView>>;
+  /** Whether each extension that follows shows the view, by extension id. */
+  showing: Map<string, boolean>;
+  /** The attended object as last opened here when no extension opens it, and whether that open failed. */
+  opened?: string;
+  openFailed?: boolean;
+  /** When each plank appeared in the layout, and the anchor last revealed in it. */
+  mounted: Map<string, number>;
+  revealed: Map<string, string>;
+  fibers: Set<Fiber.Fiber<unknown>>;
+  unsubscribes: (() => void)[];
 };
 
 /** Whether an event happened inside a plank or companion of an object, as opposed to the sidebars or a popover. */
@@ -57,26 +77,29 @@ const isInDeck = (target: EventTarget | null): boolean =>
   (target instanceof Element && !!target.closest('main')) || isInObject(target);
 
 /**
- * Follows the peer named by the ephemeral `following` state. The follower's layout shows the leader's view through its
- * `LayoutLocator`: their open items in the space, the object they attend, the anchor in each object, and their layout's
- * location when it has the same locator. The local user's own input in the deck or an object's companion, selecting an
- * object in the navtree, Escape, attending an object outside what is shown of the leader, leaving the space's workspace,
- * or the leader leaving the space ends it.
+ * Follows the peer named by the ephemeral `following` state. The follower loads the object the leader attends, reveals
+ * the leader's anchor in each object it shows of them through the type's `Locator`, and hands each `LocatorExtension`
+ * the leader's view with the leader's value for it. An extension that navigates opens what the leader shows; with none,
+ * the follower opens the attended object itself. The local user's own input in the deck or an object's companion,
+ * selecting an object in the navtree, Escape, attending an object outside what is shown of the leader, leaving the
+ * space's workspace, or the leader leaving the space ends it.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
+    const { invoke } = yield* Capabilities.OperationInvoker;
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
     const attention = yield* AttentionCapabilities.Attention;
     const ephemeralAtom = yield* SpaceCapabilities.EphemeralState;
     const client = yield* ClientCapabilities.Client;
-    const layoutLocatorsAtom = capabilities.atom(AppCapabilities.LayoutLocator);
+    const extensionsAtom = capabilities.atom(AppCapabilities.LocatorExtension);
+    const locatorsAtom = capabilities.atom(AppCapabilities.Locator);
 
     let session: Session | undefined;
     let lostSince: number | undefined;
-    // The path this session opens each attended object at, once it has loaded it, and the loads in flight.
-    const localPaths = new Map<EID.EID, string>();
+    // The objects this session has loaded for the leader, and the loads in flight.
+    const loaded = new Map<EID.EID, Loaded>();
     const loading = new Map<EID.EID, Fiber.Fiber<void>>();
 
     const isFollowing = () => registry.get(ephemeralAtom).following !== undefined;
@@ -90,9 +113,27 @@ export default Capability.makeModule(
           : state,
       );
 
+    // Paused while the attended object cannot be loaded or opened, or while an extension cannot show the view.
+    const refreshPaused = () => {
+      if (session) {
+        setPaused(
+          !session.view.attended.localPath || !!session.openFailed || [...session.showing.values()].includes(false),
+        );
+      }
+    };
+
+    const fork = (effect: Effect.Effect<unknown>) => {
+      const fiber = Effect.runFork(effect);
+      session?.fibers.add(fiber);
+      fiber.addObserver(() => session?.fibers.delete(fiber));
+    };
+
     const end = () => {
       if (session) {
-        session.unsubscribe();
+        session.unsubscribes.forEach((unsubscribe) => unsubscribe());
+        for (const fiber of session.fibers) {
+          Effect.runFork(Fiber.interrupt(fiber));
+        }
         Effect.runFork(Scope.close(session.scope, Exit.void));
         session = undefined;
       }
@@ -101,24 +142,20 @@ export default Capability.makeModule(
         Effect.runFork(Fiber.interrupt(fiber));
       }
       loading.clear();
-      localPaths.clear();
+      loaded.clear();
       lostSince = undefined;
     };
 
-    // The path this session opens the attended object at: its own path once loaded, or the space's Home for a leader on
-    // it, whose key names no object. An object this session cannot load yet (one the leader just made may not have
-    // replicated) has none, and is loaded again on the next update.
-    const getLocalPath = (spaceId: string, key: EID.EID) => {
-      if (!EID.getEntityId(key)) {
-        return GraphPath.getSpaceHomePath(spaceId);
-      }
+    // Loads an object the leader shows, for the path this session opens it at and its type. One this session cannot load
+    // yet (one the leader just made may not have replicated) is loaded again on the next update.
+    const load = (spaceId: string, key: EID.EID) => {
       const space = client.spaces.get().find((space) => space.id === spaceId);
-      if (!localPaths.has(key) && space && !loading.has(key)) {
+      if (!loaded.has(key) && space && !loading.has(key)) {
         const fiber = Effect.runFork(
           Effect.tryPromise(() => space.db.makeRef(key).load()).pipe(
             Effect.map((object) => {
               if (Obj.isObject(object)) {
-                localPaths.set(key, GraphPath.getObjectPathFromObject(object));
+                loaded.set(key, { path: GraphPath.getObjectPathFromObject(object), typename: Obj.getTypename(object) });
               }
             }),
             Effect.catch(() => Effect.void),
@@ -127,20 +164,107 @@ export default Capability.makeModule(
         );
         loading.set(key, fiber);
         fiber.addObserver(() => {
-          if (localPaths.has(key)) {
+          if (loaded.has(key)) {
             update();
           }
         });
       }
-      return localPaths.get(key);
+      return loaded.get(key);
     };
 
-    const start = (locator: AppCapabilities.LayoutLocator, view: AppCapabilities.LayoutFollowView) => {
-      const scope = Effect.runSync(Scope.make());
+    // The path this session opens the attended object at: its own once loaded, or the space's Home for a leader on it,
+    // whose key names no object.
+    const getLocalPath = (spaceId: string, key: EID.EID) =>
+      EID.getEntityId(key) ? load(spaceId, key)?.path : GraphPath.getSpaceHomePath(spaceId);
+
+    const startExtension = (
+      current: Session,
+      extension: AppCapabilities.LocatorExtension,
+      view: AppCapabilities.FollowView,
+    ) => {
+      if (!extension.follow) {
+        return;
+      }
       const viewAtom = Atom.make(view);
-      const showing = Effect.runSync(locator.follow(viewAtom).pipe(Scope.provide(scope)));
-      const unsubscribe = registry.subscribe(showing, (shows) => setPaused(!shows), { immediate: true });
-      session = { scope, view: viewAtom, unsubscribe };
+      current.views.set(extension.id, viewAtom);
+      const showing = Effect.runSync(extension.follow(viewAtom).pipe(Scope.provide(current.scope)));
+      current.unsubscribes.push(
+        registry.subscribe(
+          showing,
+          (shows) => {
+            current.showing.set(extension.id, shows);
+            refreshPaused();
+          },
+          { immediate: true },
+        ),
+      );
+    };
+
+    // With no extension that navigates, the follower switches to the space and opens the attended object at its own path.
+    const open = (current: Session) => {
+      const { spaceId, attended } = current.view;
+      const { localPath } = attended;
+      const target = localPath && `${attended.key}\n${localPath}`;
+      if (!localPath || (target === current.opened && !current.openFailed)) {
+        return;
+      }
+      current.opened = target;
+      current.openFailed = false;
+      const workspace = GraphPath.getSpacePath(spaceId);
+      fork(
+        Effect.gen(function* () {
+          if (registry.get(layoutAtom).workspace !== workspace) {
+            yield* invoke(LayoutOperation.SwitchWorkspace, { subject: workspace });
+          }
+          yield* invoke(LayoutOperation.Open, { subject: [localPath], focus: false });
+        }).pipe(
+          Effect.catchCause((cause) =>
+            Effect.sync(() => {
+              log.warn('follow could not open what the leader attends', { cause });
+              current.openFailed = true;
+              refreshPaused();
+            }),
+          ),
+        ),
+      );
+    };
+
+    // Reveals the leader's anchor in each object this session shows of them, at the path its layout holds it at. A plank
+    // just opened may not have mounted, so its anchor is revealed again on every update until it has had time to.
+    const revealAnchors = (current: Session, anchors: ReadonlyMap<EID.EID, string>) => {
+      const now = Date.now();
+      const { active } = registry.get(layoutAtom);
+      for (const path of current.mounted.keys()) {
+        if (!active.includes(path)) {
+          current.mounted.delete(path);
+          current.revealed.delete(path);
+        }
+      }
+      for (const path of active) {
+        if (!current.mounted.has(path)) {
+          current.mounted.set(path, now);
+        }
+      }
+
+      for (const [key, anchor] of anchors) {
+        const leaderPath = current.view.active.find((plank) => getPresenceKeyFromPath(plank) === key);
+        const path =
+          leaderPath && active.includes(leaderPath)
+            ? leaderPath
+            : active.find((plank) => getPresenceKeyFromPath(plank) === key);
+        const typename = load(current.view.spaceId, key)?.typename;
+        const locator = typename && registry.get(locatorsAtom).find(({ id }) => id === typename);
+        const mounting = path !== undefined && now < (current.mounted.get(path) ?? 0) + MOUNT_TIMEOUT;
+        if (!path || !locator || (anchor === current.revealed.get(path) && !mounting)) {
+          continue;
+        }
+        current.revealed.set(path, anchor);
+        fork(
+          invoke(locator.reveal, { subject: path, anchor, follow: true }).pipe(
+            Effect.catch((err) => Effect.sync(() => log.warn('follow reveal failed', { err }))),
+          ),
+        );
+      }
     };
 
     const update = () => {
@@ -162,13 +286,6 @@ export default Capability.makeModule(
       }
 
       lostSince = undefined;
-      const [locator] = registry.get(layoutLocatorsAtom);
-      if (!locator) {
-        // No layout can show the leader's view.
-        setPaused(true);
-        return;
-      }
-
       const deck = peerDecks[following.spaceId]?.[following.identityKey]?.[focus.sessionId];
       const active = deck?.planks ?? [];
       const getAnchor = (key: EID.EID) => {
@@ -178,28 +295,53 @@ export default Capability.makeModule(
             : viewersByObject[key]?.[following.identityKey]?.[focus.sessionId]?.location;
         return location?.viewport ?? location?.selection;
       };
-      const anchors: Record<EID.EID, string> = {};
+      // The space's Home names no object, so it has no anchor.
+      const anchors = new Map<EID.EID, string>();
       for (const key of new Set([...active.flatMap((plank) => getPresenceKeyFromPath(plank) ?? []), focus.key])) {
-        const anchor = getAnchor(key);
+        const anchor = EID.getEntityId(key) && getAnchor(key);
         if (anchor) {
-          anchors[key] = anchor;
+          anchors.set(key, anchor);
         }
       }
       const path = active.find((plank) => getPresenceKeyFromPath(plank) === focus.key);
       const localPath = getLocalPath(following.spaceId, focus.key);
-      const view: AppCapabilities.LayoutFollowView = {
+      const view: AppCapabilities.FollowView = {
         spaceId: following.spaceId,
         active,
         attended: { key: focus.key, ...(path && { path }), ...(localPath && { localPath }) },
-        anchors,
-        ...(deck?.layout?.id === locator.id && { location: deck.layout.location }),
       };
 
-      if (!session) {
-        start(locator, view);
-      } else if (JSON.stringify(view) !== JSON.stringify(registry.get(session.view))) {
-        registry.set(session.view, view);
+      session ??= {
+        scope: Effect.runSync(Scope.make()),
+        view,
+        views: new Map(),
+        showing: new Map(),
+        mounted: new Map(),
+        revealed: new Map(),
+        fibers: new Set(),
+        unsubscribes: [],
+      };
+      const current = session;
+      current.view = view;
+
+      // Each extension gets the leader's value for it alone; one contributed after the follow started joins it.
+      const extensions = registry.get(extensionsAtom);
+      for (const extension of extensions) {
+        const value = deck?.extensions?.[extension.id];
+        const extensionView = { ...view, ...(value !== undefined && { value }) };
+        const viewAtom = current.views.get(extension.id);
+        if (!viewAtom) {
+          startExtension(current, extension, extensionView);
+        } else if (JSON.stringify(extensionView) !== JSON.stringify(registry.get(viewAtom))) {
+          registry.set(viewAtom, extensionView);
+        }
       }
+
+      if (!extensions.some((extension) => extension.navigates && extension.follow)) {
+        open(current);
+      }
+      revealAnchors(current, anchors);
+      refreshPaused();
     };
 
     const unsubscribeState = registry.subscribe(ephemeralAtom, update);
@@ -210,7 +352,7 @@ export default Capability.makeModule(
       if (!isFollowing() || !session) {
         return;
       }
-      const { active, attended } = registry.get(session.view);
+      const { active, attended } = session.view;
       const keys = attention.getCurrent().flatMap((path) => getPresenceKeyFromPath(path) ?? []);
       const followed = [...active.flatMap((path) => getPresenceKeyFromPath(path) ?? []), attended.key];
       if (keys.length > 0 && !keys.some((key) => followed.includes(key))) {

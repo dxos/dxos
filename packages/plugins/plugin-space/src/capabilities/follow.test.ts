@@ -7,6 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
+import * as Schema from 'effect/Schema';
 import { describe, onTestFinished, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -14,7 +15,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { DXN, Obj } from '@dxos/echo';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
@@ -24,6 +28,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { Expando } from '@dxos/schema';
+import { Thread } from '@dxos/types';
 
 import { SpaceCapabilities, type SpaceSchema } from '#types';
 
@@ -34,17 +39,17 @@ await Harness.preload({ plugins: [ClientPlugin.make({})] });
 
 const LEADER = 'a'.repeat(64);
 
-const LOCATOR_ID = 'test-layout';
+const EXTENSION_ID = 'test-extension';
 
 describe('Follow', () => {
-  test('the layout is handed the leader’s planks, attended object, anchors and location', async ({ expect }) => {
+  test('each extension is handed the leader’s view with the leader’s value for it alone', async ({ expect }) => {
     const { followed, ephemeral, registry, space, object } = await setup();
     const key = EID.make({ spaceId: space.id, entityId: object.id });
     const path = GraphPath.getObjectPathFromObject(object);
     const other = GraphPath.getObjectPath(space.id, 'expando', EntityId.random());
     lead(registry, ephemeral, space.id, key, path, {
       planks: [path, other],
-      layout: { id: LOCATOR_ID, location: { front: other } },
+      extensions: { [EXTENSION_ID]: { front: other }, 'other-extension': { zoom: 2 } },
     });
 
     await expect.poll(() => followed.views.at(-1)?.attended.localPath).toBe(path);
@@ -52,24 +57,11 @@ describe('Follow', () => {
       spaceId: space.id,
       active: [path, other],
       attended: { key, path, localPath: path },
-      anchors: { [key]: 'line-12' },
-      location: { front: other },
+      value: { front: other },
     });
   });
 
-  test('a location from another layout’s locator is not handed on', async ({ expect }) => {
-    const { followed, ephemeral, registry, space, object } = await setup();
-    const path = GraphPath.getObjectPathFromObject(object);
-    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path, {
-      planks: [path],
-      layout: { id: 'other-layout', location: { front: path } },
-    });
-
-    await expect.poll(() => followed.views.length).toBeGreaterThan(0);
-    expect(followed.views.at(-1)?.location).toBeUndefined();
-  });
-
-  test('stopping a follow ends the layout’s follow', async ({ expect }) => {
+  test('stopping a follow ends each extension’s follow', async ({ expect }) => {
     const { followed, ephemeral, registry, space, object } = await setup();
     const path = GraphPath.getObjectPathFromObject(object);
     lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
@@ -77,6 +69,40 @@ describe('Follow', () => {
 
     registry.update(ephemeral, (state) => ({ ...state, following: undefined }));
     await expect.poll(() => followed.closed).toBe(true);
+  });
+
+  test('with no extension that navigates, the follower opens the attended object without focus', async ({ expect }) => {
+    const { calls, ephemeral, registry, space, object } = await setup({ navigates: false });
+    const path = GraphPath.getObjectPathFromObject(object);
+    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
+
+    await expect.poll(() => calls.find(({ op }) => op === 'open')?.input).toEqual({ subject: [path], focus: false });
+    expect(calls.filter(({ op }) => op === 'open')).toHaveLength(1);
+  });
+
+  test('an extension that navigates opens what the leader shows instead', async ({ expect }) => {
+    const { calls, followed, ephemeral, registry, space, object } = await setup();
+    const path = GraphPath.getObjectPathFromObject(object);
+    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
+
+    await expect.poll(() => followed.views.at(-1)?.attended.localPath).toBe(path);
+    await waitTicks(600);
+    expect(calls.filter(({ op }) => op === 'open')).toEqual([]);
+  });
+
+  test('the leader’s anchor is revealed in an object once the layout holds it, without moving the caret', async ({
+    expect,
+  }) => {
+    const { calls, layout, ephemeral, registry, space, object } = await setup();
+    const path = GraphPath.getObjectPathFromObject(object);
+    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
+    await waitTicks(600);
+    expect(calls.filter(({ op }) => op === 'reveal')).toEqual([]);
+
+    registry.update(layout, (state) => ({ ...state, active: [path] }));
+    await expect
+      .poll(() => calls.find(({ op }) => op === 'reveal')?.input)
+      .toEqual({ subject: path, anchor: 'line-12', follow: true });
   });
 
   test('a follow pauses until the leader’s object arrives', async ({ expect }) => {
@@ -89,6 +115,16 @@ describe('Follow', () => {
     space.db.add(object);
     await space.db.flush();
     await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(false);
+  });
+
+  test('an extension that cannot show the view pauses the follow', async ({ expect }) => {
+    const { shows, ephemeral, registry, space, object } = await setup();
+    const path = GraphPath.getObjectPathFromObject(object);
+    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
+    await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(false);
+
+    registry.set(shows, false);
+    await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(true);
   });
 
   test('a follow in a space this session does not have pauses', async ({ expect }) => {
@@ -182,13 +218,29 @@ const lead = (
     following: { spaceId, identityKey: LEADER },
   }));
 
-/** What the fake layout was handed: every view in order, and whether its follow ended. */
-type Followed = { views: AppCapabilities.LayoutFollowView[]; closed: boolean };
+/** What the fake extension was handed: every view in order, and whether its follow ended. */
+type Followed = { views: AppCapabilities.FollowView[]; closed: boolean };
 
-const setup = async () => {
+/** A layout operation or reveal the follow asked for. */
+type Call = { op: string; input: unknown };
+
+/** The reveal operation of the test `Locator` for `Expando`. */
+const Reveal = Operation.make({
+  meta: { key: DXN.make('com.example.operation.reveal'), name: 'Reveal' },
+  input: Schema.Struct({
+    subject: Schema.String,
+    anchor: Schema.String,
+    follow: Schema.optional(Schema.Boolean),
+    thread: Schema.optional(Ref.Ref(Thread.Thread)),
+  }),
+  output: Schema.Void,
+});
+
+const setup = async ({ navigates = true }: { navigates?: boolean } = {}) => {
   const followed: Followed = { views: [], closed: false };
+  const calls: Call[] = [];
   const harness = await Harness.createComposerTestApp({
-    plugins: [ClientPlugin.make({}), makeFollowPlugin(followed)],
+    plugins: [ClientPlugin.make({}), makeFollowPlugin(followed, calls, navigates)],
   });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
@@ -201,7 +253,10 @@ const setup = async () => {
   onTestFinished(() => harness[Symbol.asyncDispose]());
   return {
     followed,
+    calls,
     registry: harness.get(Capabilities.AtomRegistry),
+    layout: harness.get(TestLayout),
+    shows: harness.get(TestShows),
     ephemeral: harness.get(SpaceCapabilities.EphemeralState),
     space,
     object,
@@ -209,18 +264,33 @@ const setup = async () => {
   };
 };
 
+const TestLayout = Capability.makeSingleton<Atom.Writable<AppCapabilities.Layout>>()(
+  'org.dxos.plugin.space.test.follow.layout',
+);
+
+/** Whether the fake extension shows the view. */
+const TestShows = Capability.makeSingleton<Atom.Writable<boolean>>()('org.dxos.plugin.space.test.follow.shows');
+
 /**
- * The follow module over a layout whose locator records each view it is handed and shows it once the attended object
- * is available, as a layout does.
+ * The follow module over a layout that records the operations it is asked for, a `Locator` for `Expando`, and an
+ * extension that records each view it is handed.
  */
-const makeFollowPlugin = (followed: Followed): Plugin.Plugin =>
+const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean): Plugin.Plugin =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.space.test.follow'), name: 'Follow (test)' })).pipe(
     Plugin.addModule<void>(
       Capability.inlineModule(
         'layout',
         {
           requires: [Capabilities.AtomRegistry],
-          provides: [AppCapabilities.Layout, AppCapabilities.LayoutLocator, SpaceCapabilities.EphemeralState],
+          provides: [
+            AppCapabilities.Layout,
+            AppCapabilities.Locator,
+            AppCapabilities.LocatorExtension,
+            Capabilities.OperationHandler,
+            SpaceCapabilities.EphemeralState,
+            TestLayout,
+            TestShows,
+          ],
         },
         () =>
           Effect.gen(function* () {
@@ -235,9 +305,11 @@ const makeFollowPlugin = (followed: Followed): Plugin.Plugin =>
               inactive: [],
               scrollIntoView: undefined,
             }).pipe(Atom.keepAlive);
-            const locator: AppCapabilities.LayoutLocator = {
-              id: LOCATOR_ID,
+            const shows = Atom.make(true).pipe(Atom.keepAlive);
+            const extension: AppCapabilities.LocatorExtension = {
+              id: EXTENSION_ID,
               location: Atom.make({}),
+              navigates,
               follow: (view) =>
                 Effect.gen(function* () {
                   followed.views.push(registry.get(view));
@@ -248,12 +320,26 @@ const makeFollowPlugin = (followed: Followed): Plugin.Plugin =>
                       followed.closed = true;
                     }),
                   );
-                  return Atom.make((get) => get(view).attended.localPath !== undefined);
+                  return shows;
                 }),
             };
+            const record = (op: string) => (input: unknown) => Effect.sync(() => void calls.push({ op, input }));
             return [
               Capability.contribute(AppCapabilities.Layout, layout),
-              Capability.contribute(AppCapabilities.LayoutLocator, locator),
+              Capability.contribute(TestLayout, layout),
+              Capability.contribute(TestShows, shows),
+              Capability.contribute(AppCapabilities.Locator, { id: Type.getTypename(Expando.Expando), reveal: Reveal }),
+              Capability.contribute(AppCapabilities.LocatorExtension, extension),
+              Capability.contribute(
+                Capabilities.OperationHandler,
+                OperationHandlerSet.make(
+                  Operation.withHandler(LayoutOperation.Open, (input) =>
+                    record('open')(input).pipe(Effect.as(input.subject)),
+                  ),
+                  Operation.withHandler(LayoutOperation.SwitchWorkspace, record('switchWorkspace')),
+                  Operation.withHandler(Reveal, record('reveal')),
+                ),
+              ),
               Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
             ];
           }),
@@ -265,6 +351,7 @@ const makeFollowPlugin = (followed: Followed): Plugin.Plugin =>
         {
           requires: [
             Capabilities.AtomRegistry,
+            Capabilities.OperationInvoker,
             AppCapabilities.Layout,
             AttentionCapabilities.Attention,
             SpaceCapabilities.EphemeralState,

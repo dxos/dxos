@@ -28,15 +28,15 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { DeckCapabilities } from '#types';
 
-import layoutLocator, { type DeckLocation } from './layout-locator.ts';
+import locatorExtension, { type DeckLocation } from './locator-extension.ts';
 
 /** A segment the test plugin's graph binds a URL to, as a plugin binds its own section. */
 const BOUND_SEGMENT = 'bound';
 
 type Call = { op: string; input: { subject?: unknown; focus?: unknown } };
 
-describe('LayoutLocator', () => {
-  test('its location in a space holds its front there and its open companions', async ({ expect }) => {
+describe('LocatorExtension', () => {
+  test('its value in a space holds its front there and its open companions', async ({ expect }) => {
     const { registry, state, locator } = await setup({ flat: false });
     const [spaceA, spaceB] = [SpaceId.random(), SpaceId.random()];
     const a = GraphPath.getSpacePath(spaceA, BOUND_SEGMENT, EntityId.random());
@@ -131,7 +131,7 @@ describe('LayoutLocator', () => {
   test('a deck that lands after a long wait gets the full mounting window', { timeout: 20_000 }, async ({ expect }) => {
     const { calls, follow, registry, spaceId, state } = await setup({ flat: false });
     const [path, next] = [boundPath(spaceId), boundPath(spaceId)];
-    const leader = { active: [path, next], location: { front: path, companions: [] } };
+    const leader = { active: [path, next], value: { front: path, companions: [] } };
     const { viewAtom, showing } = await follow(view(spaceId, path, { ...leader, available: false }));
     await expect.poll(() => registry.get(showing)).toBe(false);
     await waitTicks(5_500);
@@ -156,7 +156,7 @@ describe('LayoutLocator', () => {
       const other = objectPath(spaceId);
       unresolved.add(other);
       const { showing } = await follow(
-        view(spaceId, path, { active: [path, other], location: { front: other, companions: [] } }),
+        view(spaceId, path, { active: [path, other], value: { front: other, companions: [] } }),
       );
       await expect.poll(() => calls.find(({ op }) => op === 'set')).toBeDefined();
       // The leader's front plank is the one left out, so the deck slides to a plank of theirs it holds.
@@ -178,7 +178,7 @@ describe('LayoutLocator', () => {
     const late = boundPath(spaceId);
     const held = [boundPath(spaceId), boundPath(spaceId)];
     registry.update(state, (deck) => ({ ...deck, active: held, front: held[0] }));
-    const leader = { active: [...held, late], location: { front: late, companions: [] } };
+    const leader = { active: [...held, late], value: { front: late, companions: [] } };
     const { viewAtom, showing } = await follow(view(spaceId, late, { ...leader, available: false }));
     await expect.poll(() => registry.get(showing)).toBe(false);
     await waitTicks(600);
@@ -197,7 +197,7 @@ describe('LayoutLocator', () => {
     await follow(
       view(spaceId, boundPath(spaceId), {
         active: [held, unbound],
-        location: { front: unbound, companions: [] },
+        value: { front: unbound, companions: [] },
         available: false,
       }),
     );
@@ -209,13 +209,13 @@ describe('LayoutLocator', () => {
     const { calls, follow, registry, spaceId } = await setup({ flat: false });
     const [first, second, third] = [boundPath(spaceId), boundPath(spaceId), boundPath(spaceId)];
     const { viewAtom } = await follow(
-      view(spaceId, first, { active: [first, second], location: { front: second, companions: [] } }),
+      view(spaceId, first, { active: [first, second], value: { front: second, companions: [] } }),
     );
     await expect.poll(() => calls.filter(({ op }) => op === 'scrollIntoView').length).toBe(1);
 
     registry.set(
       viewAtom,
-      view(spaceId, first, { active: [first, second, third], location: { front: third, companions: [] } }),
+      view(spaceId, first, { active: [first, second, third], value: { front: third, companions: [] } }),
     );
     await expect.poll(() => calls.filter(({ op }) => op === 'set').length).toBe(2);
     await waitTicks(1_200);
@@ -235,7 +235,7 @@ describe('LayoutLocator', () => {
     await follow(
       view(spaceId, boundPath(spaceId), {
         active: [before, unbound, after],
-        location: { front: unbound, companions: [] },
+        value: { front: unbound, companions: [] },
         available: false,
       }),
     );
@@ -249,7 +249,7 @@ describe('LayoutLocator', () => {
     const [first, second] = [boundPath(spaceId), boundPath(spaceId)];
     const unbound = GraphPath.getSpacePath(spaceId, 'unbound', EntityId.random());
     unresolved.add(unbound);
-    const leader = { active: [first, second, unbound], location: { front: first, companions: [] } };
+    const leader = { active: [first, second, unbound], value: { front: first, companions: [] } };
     const { viewAtom } = await follow(view(spaceId, first, leader));
     await expect.poll(() => calls.filter(({ op }) => op === 'set').length).toBe(1);
 
@@ -265,13 +265,13 @@ describe('LayoutLocator', () => {
     const { calls, follow, registry, spaceId } = await setup({ flat: false });
     const path = boundPath(spaceId);
     const { viewAtom } = await follow(
-      view(spaceId, path, { location: { front: path, companions: [path], variant: 'comments' } }),
+      view(spaceId, path, { value: { front: path, companions: [path], variant: 'comments' } }),
     );
     await expect
       .poll(() => calls.find(({ op }) => op === 'updateCompanion')?.input)
       .toEqual({ subject: `${path}/~comments`, anchor: path });
 
-    registry.set(viewAtom, view(spaceId, path, { location: { front: path, companions: [] } }));
+    registry.set(viewAtom, view(spaceId, path, { value: { front: path, companions: [] } }));
     await expect
       .poll(() => calls.filter(({ op }) => op === 'updateCompanion').at(-1)?.input)
       .toEqual({ subject: null, anchor: path });
@@ -297,16 +297,15 @@ const view = (
   path: string,
   {
     active = [path],
-    location,
+    value,
     localPath = path,
     available = true,
-  }: { active?: string[]; location?: DeckLocation; localPath?: string; available?: boolean } = {},
-): AppCapabilities.LayoutFollowView => ({
+  }: { active?: string[]; value?: DeckLocation; localPath?: string; available?: boolean } = {},
+): AppCapabilities.FollowView => ({
   spaceId,
   active,
   attended: { key: keyOf(path), path, ...(available && { localPath }) },
-  anchors: {},
-  ...(location && { location }),
+  ...(value && { value }),
 });
 
 type DeckTestState = {
@@ -318,7 +317,7 @@ type DeckTestState = {
 };
 
 const DeckTestState = Capability.makeSingleton<Atom.Writable<DeckTestState>>()(
-  'org.dxos.plugin.deck.test.layoutLocator.state',
+  'org.dxos.plugin.deck.test.locatorExtension.state',
 );
 
 const setup = async ({
@@ -333,13 +332,14 @@ const setup = async ({
   const state = harness.get(DeckTestState);
   const spaceId = SpaceId.random();
   registry.update(state, (deck) => ({ ...deck, workspace: GraphPath.getSpacePath(spaceId), flat }));
-  const locator = harness.get(AppCapabilities.LayoutLocator);
+  const locator = harness.get(AppCapabilities.LocatorExtension);
 
   /** Follows `initial` until the test ends. */
-  const follow = async (initial: AppCapabilities.LayoutFollowView) => {
+  const follow = async (initial: AppCapabilities.FollowView) => {
     const viewAtom = Atom.make(initial);
     const scope = Effect.runSync(Scope.make());
     onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+    invariant(locator.follow);
     const showing = Effect.runSync(locator.follow(viewAtom).pipe(Scope.provide(scope)));
     return { viewAtom, showing };
   };
@@ -350,7 +350,7 @@ const setup = async ({
 /** The deck's locator over a fake deck that records the layout operations it asks for. */
 const makeDeckPlugin = (calls: Call[], failOpens: number, unresolved: ReadonlySet<string>): Plugin.Plugin =>
   Plugin.define(
-    Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.deck.test.layoutLocator'), name: 'Deck (test)' }),
+    Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.deck.test.locatorExtension'), name: 'Deck (test)' }),
   ).pipe(
     Plugin.addModule<void>(
       Capability.inlineModule(
@@ -482,9 +482,9 @@ const makeDeckPlugin = (calls: Call[], failOpens: number, unresolved: ReadonlySe
             AppCapabilities.Layout,
             DeckCapabilities.View,
           ],
-          provides: [AppCapabilities.LayoutLocator],
+          provides: [AppCapabilities.LocatorExtension],
         },
-        () => layoutLocator(),
+        () => locatorExtension(),
       ),
     ),
     Plugin.make,

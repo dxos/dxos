@@ -130,8 +130,8 @@ export type PeerLocation = {
 /** A session's deck in one space: the graph paths of its planks there, in order. */
 export type PeerDeck = {
   planks: string[];
-  /** Where its layout is in the space, in the format its `LayoutLocator` id names; see `AppCapabilities.LayoutLocator`. */
-  layout?: { id: string; location: unknown };
+  /** Each `AppCapabilities.LocatorExtension`'s value for the space, by extension id. */
+  extensions?: Record<string, unknown>;
 };
 
 export type ObjectId = string;
