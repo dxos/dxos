@@ -10,26 +10,36 @@ type Demo = {
   /** Columns of the twelve, and rows of the grid, the card takes, sized to what its demo needs [D-300]. */
   cols: number;
   rows: number;
+  /**
+   * The demo takes the pointer only once its card is selected: a canvas or a graph zooms on the wheel and a calendar
+   * scrolls on it, which would stop the page scrolling as the pointer passes over it.
+   */
+  select?: boolean;
 };
 
 const DEMOS: Demo[] = [
-  { title: 'Kanban board', pkg: 'react-ui-mosaic', page: 'board', cols: 5, rows: 2 },
-  { title: 'Calendar', pkg: 'react-ui-calendar', page: 'calendar', cols: 7, rows: 2 },
+  { title: 'Kanban', pkg: 'react-ui-mosaic', page: 'board', cols: 5, rows: 2 },
+  { title: 'Calendar', pkg: 'react-ui-calendar', page: 'calendar', cols: 7, rows: 2, select: true },
   { title: 'Spreadsheet', pkg: 'react-ui-grid', page: 'grid', cols: 8, rows: 1 },
-  { title: 'Force graph', pkg: 'react-ui-graph', page: 'graph', cols: 4, rows: 2 },
+  { title: 'Force graph', pkg: 'react-ui-graph', page: 'graph', cols: 4, rows: 2, select: true },
   { title: 'Chart', pkg: 'react-ui-plot', page: 'plot', cols: 4, rows: 1 },
   { title: 'Map', pkg: 'react-ui-geo', page: 'globe', cols: 4, rows: 1 },
-  { title: 'Canvas', pkg: 'react-ui-canvas-editor', page: 'canvas-editor', cols: 7, rows: 2 },
+  { title: 'Canvas', pkg: 'react-ui-canvas-editor', page: 'canvas-editor', cols: 7, rows: 2, select: true },
   { title: 'Markdown editor', pkg: 'react-ui-editor', page: 'editor', cols: 5, rows: 2 },
-  { title: 'Gallery', pkg: 'react-ui-masonry', page: 'masonry', cols: 12, rows: 2 },
+  { title: 'Masonry', pkg: 'react-ui-masonry', page: 'masonry', cols: 12, rows: 2 },
 ];
 ---
 
 <!-- Each card is an island that runs its package story as it nears the viewport [F-21.3], never an iframe [F-16.10]. -->
 <div class="tile-grid dx-wide not-content">
   {
-    DEMOS.map(({ title, pkg, page, cols, rows }) => (
-      <article class="tile-card" data-rows={rows} style={`--tile-cols: ${cols}; --tile-rows: ${rows}`}>
+    DEMOS.map(({ title, pkg, page, cols, rows, select }) => (
+      <article
+        class="tile-card"
+        data-rows={rows}
+        data-select={select ? '' : undefined}
+        style={`--tile-cols: ${cols}; --tile-rows: ${rows}`}
+      >
         <a class="tile-card-head" href={`/docs/tile/api/${pkg}/${page}/`} title={`${title} in @dxos/${pkg}`}>
           <span class="tile-card-title">{title}</span>
           <span class="tile-card-pkg">@dxos/{pkg}</span>
@@ -44,6 +54,30 @@ const DEMOS: Demo[] = [
     ))
   }
 </div>
+
+<script>
+  // A press inside a card selects it, and a press anywhere else in the page, or Escape, clears it. A press outside
+  // the page is in something a demo opened over it (a menu, a dialog), which leaves the selection as it is.
+  const cards = () => document.querySelectorAll<HTMLElement>('.tile-card[data-select]');
+
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target instanceof Element ? event.target : undefined;
+    if (!target?.closest('.page')) {
+      return;
+    }
+    for (const card of cards()) {
+      card.toggleAttribute('data-selected', card.contains(target));
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      for (const card of cards()) {
+        card.removeAttribute('data-selected');
+      }
+    }
+  });
+</script>
 
 <style>
   .tile-grid {
@@ -112,6 +146,21 @@ const DEMOS: Demo[] = [
     position: relative;
     min-height: 0;
     overflow: hidden;
+  }
+
+  /* Until its card is selected the demo is only a picture: the wheel scrolls the page, and a press selects the card. */
+  .tile-card[data-select]:not([data-selected]) {
+    cursor: pointer;
+  }
+
+  /* The whole subtree, since a descendant that sets `pointer-events: auto` (a tool rail) would otherwise take input. */
+  .tile-card[data-select]:not([data-selected]) .tile-card-demo,
+  .tile-card[data-select]:not([data-selected]) .tile-card-demo :global(*) {
+    pointer-events: none !important;
+  }
+
+  .tile-card[data-selected] {
+    border-color: var(--sl-color-accent);
   }
 
   /* Phones: one column, in the order the wide layout reads [F-21.4]. */

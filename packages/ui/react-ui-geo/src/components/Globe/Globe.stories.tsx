@@ -512,7 +512,7 @@ const TripStory = () => {
   }, [controller, running, dragging]);
 
   return (
-    <Globe.Root zoom={1.1} rotation={[0, -20, 0]} ref={setController}>
+    <Globe.Root zoom={1} rotation={[0, -20, 0]} ref={setController}>
       <Globe.Viewport>
         <Globe.Canvas topology={topology} styles={styles} features={{ points: TRIP, lines: TRIP_LEGS }} />
         <Globe.Zoom onAction={handleZoom} />

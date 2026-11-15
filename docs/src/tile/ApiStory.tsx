@@ -12,14 +12,17 @@ import '@dxos/node-std/globals';
 import '@dxos/react-ui/theme.css';
 import * as StoryEmbed from '@dxos/storybook-testing/StoryEmbed';
 
+import { dxosPage } from '../../../packages/plugins/plugin-canvas/src/samples/architecture/dxos-page.ts';
 import { useNearViewport, useThemeMode } from './hooks.ts';
 
 type ApiStoryEntry = {
   load: () => Promise<StoryEmbed.Module>;
   name: string;
-  /** Args over the story's own, such as turning off its debug panel. */
-  args?: Record<string, unknown>;
+  /** Args over the story's own, such as turning off its debug panel; a function loads them with the story. */
+  args?: StoryArgs | (() => Promise<StoryArgs>);
 };
+
+type StoryArgs = Record<string, unknown>;
 
 /** The story at the top of each component namespace page, and on its TILE Overview card, by `<package>/<namespace>` [D-298, D-299]. */
 const STORIES: Record<string, ApiStoryEntry> = {
@@ -34,6 +37,8 @@ const STORIES: Record<string, ApiStoryEntry> = {
   'react-ui-editor/editor': {
     load: () => import('../../../packages/ui/react-ui-editor/src/components/Editor/Editor.stories.tsx'),
     name: 'WithToolbar',
+    // A real page to edit: the DXOS guide the DXOS Architecture space template seeds, less the drawing it embeds.
+    args: { initialValue: dxosPage({ edge: '[EDGE](/docs/edge/overview/)' }) },
   },
   'react-ui-form/form': {
     load: () => import('../../../packages/ui/react-ui-form/src/components/Form.stories.tsx'),
@@ -78,6 +83,8 @@ const STORIES: Record<string, ApiStoryEntry> = {
   'react-ui-masonry/masonry': {
     load: () => import('../../../packages/ui/react-ui-masonry/src/Masonry.stories.tsx'),
     name: 'Docs',
+    // The portraits are bundled images, so they load with the story, not with the page.
+    args: () => import('./people.ts').then(({ people }) => ({ items: people() })),
   },
   'react-ui-menu/action-menu': {
     load: () => import('../../../packages/ui/react-ui-menu/src/components/ActionMenu.stories.tsx'),
@@ -248,6 +255,7 @@ export const ApiStory = ({ id }: ApiStoryProps) => {
   const [element, setElement] = useState<HTMLDivElement | null>(null);
   const near = useNearViewport(element, true);
   const [story, setStory] = useState<StoryEmbed.Composed>();
+  const [args, setArgs] = useState<StoryArgs>();
   const [error, setError] = useState<string>();
   // The story's decorators read the theme as a global, so a theme change composes it again.
   useEffect(() => {
@@ -255,14 +263,20 @@ export const ApiStory = ({ id }: ApiStoryProps) => {
       return;
     }
     let cancelled = false;
-    entry
-      .load()
-      .then((module) => StoryEmbed.compose(module, entry.name, { theme: themeMode }))
-      // A composed story is a function, which `setStory` would call as an updater.
-      .then(
-        (composed) => !cancelled && setStory(() => composed),
-        (error) => !cancelled && setError(String(error)),
-      );
+    Promise.all([
+      entry.load().then((module) => StoryEmbed.compose(module, entry.name, { theme: themeMode })),
+      typeof entry.args === 'function' ? entry.args() : entry.args,
+    ]).then(
+      ([composed, loaded]) => {
+        if (!cancelled) {
+          setError(undefined);
+          setArgs(loaded);
+          // A composed story is a function, which `setStory` would call as an updater.
+          setStory(() => composed);
+        }
+      },
+      (error) => !cancelled && setError(String(error)),
+    );
     return () => {
       cancelled = true;
     };
@@ -277,7 +291,7 @@ export const ApiStory = ({ id }: ApiStoryProps) => {
           <StoryEmbed.Root
             key={themeMode}
             story={story}
-            args={entry.args}
+            args={args}
             // Storybook centres a story whose layout is not fullscreen; a fixed-position story layout ignores this.
             classNames={
               story.parameters?.layout === 'fullscreen'

@@ -222,7 +222,8 @@ const DocsStory = () => {
   }, []);
   const { document, onIntent, onModelIntent } = useDocumentHost(initial);
   return (
-    <CanvasEditor.Root document={document} onIntent={onIntent} onModelIntent={onModelIntent}>
+    // A fit stops at half size, so a wide card shows the model with room round it and not a few large boxes.
+    <CanvasEditor.Root document={document} onIntent={onIntent} onModelIntent={onModelIntent} fitZoom={0.5}>
       <CanvasEditor.Viewport liveDepth={1} />
       <CanvasEditor.Navigation />
       <CanvasEditor.Tools />
