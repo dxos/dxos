@@ -46,9 +46,18 @@ const NAMES = [
 /** Roles, dealt out in turn so the cards differ without the names implying anything about them. */
 const ROLES = ['Designer', 'Engineer', 'Product manager', 'Researcher', 'Operations lead', 'Writer'] as const;
 
+const CITIES = ['Lisbon', 'Nairobi', 'Osaka', 'Toronto', 'Mumbai', 'Berlin', 'Mexico City', 'Seoul'] as const;
+
+const NOTES = [
+  'Keeps the team notes and the weekly review.',
+  'Runs the Thursday demo and collects the feedback.',
+  'Prefers a short call to a long thread.',
+  'Owns the onboarding guide and its next revision.',
+] as const;
+
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-/** The gallery's cards: one person each, with their portrait, role and email. */
+/** The gallery's cards: one person each, with their portrait and two to four rows, so the cards differ in height. */
 export const people = (): GalleryItem[] =>
   NAMES.map((name, index) => {
     const number = String(index + 1).padStart(2, '0');
@@ -60,6 +69,8 @@ export const people = (): GalleryItem[] =>
       rows: [
         { icon: 'ph--briefcase--regular', text: ROLES[index % ROLES.length] },
         { icon: 'ph--envelope-simple--regular', text: `${slug(name).split('-')[0]}@example.com` },
-      ],
+        { icon: 'ph--map-pin--regular', text: CITIES[index % CITIES.length] },
+        { icon: 'ph--note--regular', text: NOTES[index % NOTES.length], lines: 3 },
+      ].slice(0, 2 + ((index * 5 + 1) % 3)),
     };
   });
