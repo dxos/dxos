@@ -221,11 +221,11 @@ export const ObjectProperties = Util.composable<HTMLDivElement, ObjectProperties
         resolveCreateEntry={resolveCreateEntry}
         {...(onClose ? { onSave: save, onCancel: onClose } : { onValuesChanged: handleChange })}
       >
-        <Form.Viewport {...props} scroll ref={forwardedRef}>
+        {/* The actions sit in the pane's footer, so Save stays put while a form longer than the pane scrolls. */}
+        <Form.Viewport {...props} scroll footer={onClose && <Form.Actions />} ref={forwardedRef}>
           <Form.Content>
             <Form.Fields />
             {children && <Form.FieldSet>{children}</Form.FieldSet>}
-            {onClose && <Form.Actions />}
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
