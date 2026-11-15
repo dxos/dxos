@@ -13,10 +13,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
-import * as Typography from '@dxos/react-ui/Typography';
 import { Person } from '@dxos/types';
 
-import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
+import { NextJsonLayout, type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { ObjectForm, ObjectProperties } from './ObjectForm.tsx';
 
 type StoryArgs = PaneArgs & { component?: 'form' | 'properties' | 'transient' };
@@ -32,40 +31,36 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
     return <></>;
   }
 
-  const footer = (
-    <Panel.Footer>
-      <Typography.Text truncate data-testid='object'>
-        {JSON.stringify({ ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.label) })}
-      </Typography.Text>
-      <Typography.Text data-testid='closed'>{String(closed)}</Typography.Text>
-    </Panel.Footer>
-  );
-  if (component === 'transient') {
-    return (
-      <Panel.Root size='sm'>
-        <ObjectProperties object={person} onClose={handleClose} />
-        {footer}
+  // `closed` rides along with the object so one JSON panel shows everything the story asserts.
+  const data = {
+    object: { ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.label) },
+    closed,
+  };
+
+  return (
+    <NextJsonLayout data={data}>
+      {/* The play functions read this, not the JSON panel beside it. A mounted `JsonHighlighter` stops a tag picked
+          in the combobox popup from ever reaching the object — the same data in a plain element writes fine — so
+          reading the panel would make this story assert that defect instead of the form's own behaviour. */}
+      <span className='sr-only' data-testid='object'>
+        {JSON.stringify(data)}
+      </span>
+      <Panel.Root>
+        {component === 'form' ? (
+          <Panel.Body asChild>
+            <ScrollArea.Root>
+              <ScrollArea.Viewport asChild>
+                <Layout.Container>
+                  <ObjectForm object={person} type={Person.Person} />
+                </Layout.Container>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Body>
+        ) : (
+          <ObjectProperties object={person} onClose={component === 'transient' ? handleClose : undefined} />
+        )}
       </Panel.Root>
-    );
-  }
-  return component === 'properties' ? (
-    <Panel.Root size='sm'>
-      <ObjectProperties object={person} />
-      {footer}
-    </Panel.Root>
-  ) : (
-    <Panel.Root size='sm'>
-      <Panel.Body asChild>
-        <ScrollArea.Root>
-          <ScrollArea.Viewport asChild>
-            <Layout.Container>
-              <ObjectForm object={person} type={Person.Person} />
-            </Layout.Container>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-      {footer}
-    </Panel.Root>
+    </NextJsonLayout>
   );
 };
 
@@ -74,7 +69,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withNextPane({ height: '48rem' }),
+    withNextPane({ width: '100dvw', height: '100dvh' }),
     withClientProvider({
       types: [Person.Person, Tag.Tag],
       createIdentity: true,
@@ -108,8 +103,10 @@ export const Properties: Story = { args: { component: 'properties' } };
 
 export const Transient: Story = { args: { component: 'transient' } };
 
-const readObject = (canvasElement: HTMLElement) =>
+const readValues = (canvasElement: HTMLElement) =>
   JSON.parse(within(canvasElement).getByTestId('object').textContent ?? '{}');
+
+const readObject = (canvasElement: HTMLElement) => readValues(canvasElement).object;
 
 /** 1. Test: the object's fields and meta tags edit the live object; a tag is picked and created inline. */
 export const Test: Story = {
@@ -174,7 +171,7 @@ export const TestProperties: Story = {
   },
 };
 
-const readClosed = (canvasElement: HTMLElement) => Number(within(canvasElement).getByTestId('closed').textContent);
+const readClosed = (canvasElement: HTMLElement) => readValues(canvasElement).closed;
 
 /** 1. TestTransient: with `onClose`, the form holds its edits until Save; Cancel discards them. */
 export const TestTransient: Story = {
