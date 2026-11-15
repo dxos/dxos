@@ -83,6 +83,19 @@ export const getSpaceIdFromPath = (qualifiedPath: string) => {
 };
 
 /**
+ * The object a qualified path names: its space and innermost entity id, or the space alone for a path that names no
+ * object (the space's Home). Read off the path alone, so it holds for a plank whose node is not yet in the graph.
+ */
+export const getEidFromPath = (qualifiedPath: string): EID.EID | undefined => {
+  const spaceId = getSpaceIdFromPath(qualifiedPath);
+  if (!spaceId) {
+    return undefined;
+  }
+  const entityId = qualifiedPath.split('/').findLast(Key.EntityId.isValid);
+  return EID.make({ spaceId, entityId });
+};
+
+/**
  * Canonical qualified path to the database section of a space.
  * Optional additional segments are appended.
  */

@@ -8,10 +8,11 @@ import { useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { type ChromaticPalette } from '@dxos/ui-types';
 
-/** The palette hue every plank heading takes right now, from the first `HeadingAccent` contribution holding one. */
-export const useHeadingAccent = (): string | undefined => {
-  const accents = Hooks.useCapabilities(AppCapabilities.HeadingAccent);
+/** The hue the deck's plank headings take right now, from the first `LayoutAccent` contribution holding one. */
+export const useLayoutAccent = (): ChromaticPalette | undefined => {
+  const accents = Hooks.useCapabilities(AppCapabilities.LayoutAccent);
   const accentAtom = useMemo(
     () => Atom.make((get) => accents.map((accent) => get(accent)).find((hue) => hue !== undefined)),
     [accents],

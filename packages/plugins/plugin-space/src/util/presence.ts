@@ -44,21 +44,13 @@ export const LOCATION_BROADCAST_INTERVAL = 1_000;
 /** {@link LOCATION_BROADCAST_INTERVAL} while someone follows this session. */
 export const FOLLOW_BROADCAST_INTERVAL = 100;
 
-/** How long a follower waits for its leader to attend an object in the space again before it stops following. */
 /** The hue that marks every follow, on the leader's screen and each follower's alike. */
 export const FOLLOW_HUE: ChromaticPalette = 'indigo';
 
+/** How long a follower waits for its leader to attend an object in the space again before it stops following. */
 export const FOLLOW_LOST_TIMEOUT = 5_000;
 
-export const getPresenceKeyFromPath = (path: string): EID.EID | undefined => {
-  const spaceId = GraphPath.getSpaceIdFromPath(path);
-  if (!spaceId) {
-    return undefined;
-  }
-
-  const innermostEntityId = path.split('/').findLast(Key.EntityId.isValid);
-  return EID.make({ spaceId, entityId: innermostEntityId });
-};
+export const getPresenceKeyFromPath = GraphPath.getEidFromPath;
 
 export const groupPresenceKeysBySpace = (paths: readonly string[]): Map<Key.SpaceId, EID.EID[]> => {
   const bySpace = new Map<Key.SpaceId, EID.EID[]>();
@@ -158,14 +150,10 @@ const parseDeck = (value: unknown): SpaceSchema.PeerDeck | undefined => {
   if (typeof value !== 'object' || value === null) {
     return undefined;
   }
-  const { planks, front, companions, companionVariant } = value as Record<string, unknown>;
+  const { planks, layout } = value as Record<string, unknown>;
+  const { id, location } = typeof layout === 'object' && layout !== null ? (layout as Record<string, unknown>) : {};
   return Array.isArray(planks)
-    ? {
-        planks: planks.filter(isString),
-        ...(isString(front) && { front }),
-        ...(Array.isArray(companions) && { companions: companions.filter(isString) }),
-        ...(isString(companionVariant) && { companionVariant }),
-      }
+    ? { planks: planks.filter(isString), ...(isString(id) && { layout: { id, location } }) }
     : undefined;
 };
 

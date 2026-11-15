@@ -75,6 +75,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
             AppCapabilities.Layout,
             DeckCapabilities.Platform,
             DeckCapabilities.Projection,
+            DeckCapabilities.View,
           ],
         },
         () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
@@ -86,6 +87,19 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           provides: [AppCapabilities.AppGraphRetention],
         },
         () => import('./src/capabilities/graph-retention.ts', { with: { type: 'module-url' } }),
+      ),
+      Capability.lazyModule(
+        'LayoutLocator',
+        {
+          requires: [
+            Capabilities.AtomRegistry,
+            Capabilities.OperationInvoker,
+            AppCapabilities.Layout,
+            DeckCapabilities.View,
+          ],
+          provides: [AppCapabilities.LayoutLocator],
+        },
+        () => import('./src/capabilities/layout-locator.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'NotificationTracker',

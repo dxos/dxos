@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -117,9 +118,16 @@ export default Capability.makeModule(
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
+    const capabilities = yield* Capability.Service;
     const { invoke } = yield* Capabilities.OperationInvoker;
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
+    // Where the layout is in each space, from the layout plugin's locator, which may contribute after this module.
+    const layoutLocatorsAtom = capabilities.atom(AppCapabilities.LayoutLocator);
+    const layoutLocationAtom = Atom.make((get) => {
+      const [locator] = get(layoutLocatorsAtom);
+      return locator && { id: locator.id, bySpace: get(locator.location) };
+    });
     const attention = yield* AttentionCapabilities.Attention;
     const viewState = yield* AttentionCapabilities.ViewState;
     const stateAtom = yield* SpaceCapabilities.State;
@@ -286,6 +294,7 @@ export default Capability.makeModule(
         if (identity) {
           const device = getDevice();
           const following = registry.get(ephemeralAtom).following;
+          const layoutLocation = registry.get(layoutLocationAtom);
           const attendedBySpace = groupPresenceKeysBySpace([...current]);
           const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 
@@ -310,15 +319,10 @@ export default Capability.makeModule(
                 }),
                 deck: {
                   planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id),
-                  ...(layout.front &&
-                    GraphPath.getSpaceIdFromPath(layout.front) === space.id && { front: layout.front }),
-                  // Companions are content, so a follower opens the same ones.
-                  ...(layout.companions && {
-                    companions: layout.companions.items.filter(
-                      (path) => GraphPath.getSpaceIdFromPath(path) === space.id,
-                    ),
-                    ...(layout.companions.variant && { companionVariant: layout.companions.variant }),
-                  }),
+                  ...(layoutLocation &&
+                    space.id in layoutLocation.bySpace && {
+                      layout: { id: layoutLocation.id, location: layoutLocation.bySpace[space.id] },
+                    }),
                 },
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
@@ -357,6 +361,7 @@ export default Capability.makeModule(
 
     // Subscribe to layout changes for broadcast.
     subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
+    subscriptions.add(registry.subscribe(layoutLocationAtom, () => setupBroadcast()));
     // Subscribe to attention.current changes.
     subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
     // Starting, retargeting or stopping a follow tells the space at once, so the leader's rate changes with it.

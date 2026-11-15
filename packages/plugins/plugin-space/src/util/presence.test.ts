@@ -113,13 +113,14 @@ describe('parseViewingMessage', () => {
     });
   });
 
-  test("keeps a deck's front plank and drops a malformed one", ({ expect }) => {
+  test("keeps a deck's layout location and drops one without a locator id", ({ expect }) => {
     const message = { identityKey: 'peer', added: [], removed: [] };
-    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], front: 'root/a' } })?.deck).toEqual({
+    const layout = { id: 'deck', location: { front: 'root/a' } };
+    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], layout } })?.deck).toEqual({
       planks: ['root/a'],
-      front: 'root/a',
+      layout,
     });
-    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], front: 7 } })?.deck).toEqual({
+    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], layout: { location: {} } } })?.deck).toEqual({
       planks: ['root/a'],
     });
   });

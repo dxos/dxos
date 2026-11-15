@@ -87,13 +87,12 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       () => import('./src/capabilities/dashboard.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.defaultParent(() => import('./src/capabilities/default-parent.ts', { with: { type: 'module-url' } })),
-    // Browser-only: it opens and reveals in the deck and listens for the local user's input on the window.
+    // Browser-only: it listens for the local user's input on the window.
     Capability.lazyModule(
       'Follow',
       {
         environments: ['browser', 'tauri'],
         requires: [
-          Capabilities.OperationInvoker,
           Capabilities.AtomRegistry,
           AppCapabilities.Layout,
           AttentionCapabilities.Attention,
@@ -110,7 +109,7 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       {
         environments: ['browser', 'tauri'],
         requires: [SpaceCapabilities.EphemeralState, AppCapabilities.Layout],
-        provides: [AppCapabilities.HeadingAccent],
+        provides: [AppCapabilities.LayoutAccent],
         activatesOn: ClientEvents.SpacesAvailable,
       },
       () => import('./src/capabilities/follow-accent.ts', { with: { type: 'module-url' } }),

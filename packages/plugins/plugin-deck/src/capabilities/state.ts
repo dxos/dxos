@@ -80,6 +80,24 @@ export default Capability.makeModule(
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
+      return {
+        mode: platform === 'mobile' ? 'mobile' : DeckSchema.getMode(open, !!ephemeral.fullscreen),
+        dialogOpen: ephemeral.dialogOpen,
+        sidebarOpen: state.sidebarState === 'expanded',
+        complementarySidebarOpen: state.complementarySidebarState === 'expanded',
+        workspace: state.activeDeck,
+        active: open.active,
+        inactive: open.inactive,
+        scrollIntoView: ephemeral.scrollIntoView?.id,
+      } satisfies AppCapabilities.Layout;
+    }).pipe(Atom.keepAlive);
+
+    const viewAtom = Atom.make((get): DeckCapabilities.View => {
+      const state = get(stateAtom);
+      const ephemeral = get(ephemeralAtom);
+      const deck = state.decks[state.activeDeck];
+      invariant(deck, `Deck not found: ${state.activeDeck}`);
+      const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
       const [settingsAtom] = get(settingsCapabilityAtom);
       const flat = platform === 'mobile' || (settingsAtom ? !!get(settingsAtom).flatten : false);
       // A sliding deck's front holds only for the planks it was measured among: until the deck measures the planks it
@@ -91,22 +109,10 @@ export default Capability.makeModule(
       const variant = viewState
         ? get(viewState.atom(CompanionViewState.aspect, CompanionViewState.CONTEXT)).variant
         : undefined;
-      const companionItems = getRenderedPlanks(open.active, flat).filter((plank) =>
+      const items = getRenderedPlanks(open.active, flat).filter((plank) =>
         isCompanionOpen(deck.companionPlanks, flat, plank),
       );
-      return {
-        mode: platform === 'mobile' ? 'mobile' : DeckSchema.getMode(open, !!ephemeral.fullscreen),
-        dialogOpen: ephemeral.dialogOpen,
-        sidebarOpen: state.sidebarState === 'expanded',
-        complementarySidebarOpen: state.complementarySidebarState === 'expanded',
-        workspace: state.activeDeck,
-        active: open.active,
-        inactive: open.inactive,
-        scrollIntoView: ephemeral.scrollIntoView?.id,
-        flat,
-        front,
-        companions: { items: companionItems, ...(variant !== undefined && { variant }) },
-      } satisfies AppCapabilities.Layout;
+      return { flat, front, companions: { items, ...(variant !== undefined && { variant }) } };
     }).pipe(Atom.keepAlive);
 
     return [
@@ -114,6 +120,7 @@ export default Capability.makeModule(
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
       Capability.contribute(DeckCapabilities.Projection, projection),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(DeckCapabilities.View, viewAtom),
       Capability.contribute(DeckCapabilities.Platform, platform),
     ];
   }),

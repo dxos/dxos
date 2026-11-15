@@ -9,6 +9,7 @@ import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema$ from 'effect/Schema';
+import type * as Scope$ from 'effect/Scope';
 
 import type { OpaqueToolkit, AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
@@ -24,11 +25,13 @@ import type { Database, Obj, Ref, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
-import { type URI } from '@dxos/keys';
+import { type EID, type URI } from '@dxos/keys';
 import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
 import type { Selection } from '@dxos/react-ui-attention/types';
 import type { AnchoredTo, Message, Thread } from '@dxos/types';
+import { type ChromaticPalette } from '@dxos/ui-types';
+import { type JsonValue } from '@dxos/util';
 import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -80,21 +83,6 @@ export type Layout = Readonly<{
    * Identifier of the item which should be scrolled into view.
    */
   scrollIntoView: string | undefined;
-  /**
-   * Whether the layout shows only its current item (a flattened deck, or mobile) rather than items side by side.
-   */
-  flat?: boolean;
-  /**
-   * The first item of the layout with at least half its width in view; the current item when {@link flat}, and the
-   * first item when the layout lays items side by side but is not scrolled. Where the layout is scrolled to,
-   * independent of its width. Unset while the layout has not yet measured the items it now shows.
-   */
-  front?: string;
-  /**
-   * The items the layout shows whose companion is open, and the companion tab it shows them in (a linked variant such
-   * as `comments`), so another view of the layout can open the same ones.
-   */
-  companions?: Readonly<{ items: readonly string[]; variant?: string }>;
 }>;
 
 /**
@@ -104,13 +92,51 @@ export type Layout = Readonly<{
 export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>()(LAYOUT_CAPABILITY_ID);
 
 /**
- * A palette hue (e.g. `indigo`) every plank heading takes while it is set, such as while the session takes part in a
- * follow; the layout uses the first contribution that holds one.
+ * A hue the layout tints its chrome with while it is set, such as while the session takes part in a follow; the layout
+ * uses the first contribution that holds one.
  * @category Capability
  */
-export const HeadingAccent = Capability$.make<Atom.Atom<string | undefined>>()(
-  'org.dxos.app-framework.capability.headingAccent',
+export const LayoutAccent = Capability$.make<Atom.Atom<ChromaticPalette | undefined>>()(
+  'org.dxos.app-framework.capability.layoutAccent',
 );
+
+/** What a follower's layout shows of the session it follows; see {@link LayoutLocator}. */
+export type LayoutFollowView = Readonly<{
+  spaceId: string;
+  /** The leader's open items in the space, in order. */
+  active: readonly string[];
+  /**
+   * The object the leader attends; the path they have it open at, when they reported one; and the path this session
+   * opens it at itself, absent while it cannot load the object yet.
+   */
+  attended: Readonly<{ key: EID.EID; path?: string; localPath?: string }>;
+  /** The anchor to reveal in each object the leader shows, by object. */
+  anchors: Readonly<Record<EID.EID, string>>;
+  /** The leader's layout location in the space, when their layout's locator has this one's id. */
+  location?: unknown;
+}>;
+
+/**
+ * Where a layout is, and how it shows another session's, contributed by the layout plugin. Presence sends each space's
+ * `location` to peers, and a follower's layout shows the leader's view through `follow`, as an object's `Locator`
+ * reveals a peer's anchor.
+ */
+export type LayoutLocator = Readonly<{
+  /** Names the format of `location`; a follower reads a leader's location only from a locator with the same id. */
+  id: string;
+  /** Where the layout is in each space it shows, in its own format, by space id; it travels to peers as JSON. */
+  location: Atom.Atom<Readonly<Record<string, JsonValue>>>;
+  /**
+   * Keeps the layout showing `view` until the scope closes, without moving focus or the caret. The returned atom holds
+   * whether it shows the view, which it does not while the attended object is unavailable or opening it failed.
+   */
+  follow: (view: Atom.Atom<LayoutFollowView>) => Effect$.Effect<Atom.Atom<boolean>, never, Scope$.Scope>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const LayoutLocator = Capability$.make<LayoutLocator>()('org.dxos.app-framework.capability.layoutLocator');
 
 /**
  * @category Capability

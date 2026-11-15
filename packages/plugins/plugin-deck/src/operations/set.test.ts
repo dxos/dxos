@@ -53,7 +53,7 @@ describe('LayoutOperation.Set', () => {
   test('a sliding deck reports a front only while it was measured against the planks it shows', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({ plugins: [DocsPlugin(), DeckPlugin.make()] });
     const registry = harness.get(Capabilities.AtomRegistry);
-    const front = () => registry.get(harness.get(AppCapabilities.Layout)).front;
+    const front = () => registry.get(harness.get(DeckCapabilities.View)).front;
     registry.update(harness.get(DeckCapabilities.Settings), (settings) => ({ ...settings, flatten: false }));
     await setDeck(harness);
     const ephemeralAtom = harness.get(DeckCapabilities.EphemeralState);
