@@ -39,9 +39,9 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
 
   return (
     <NextJsonLayout data={data}>
-      {/* The play functions read this, not the JSON panel beside it. A mounted `JsonHighlighter` stops a tag picked
-          in the combobox popup from ever reaching the object — the same data in a plain element writes fine — so
-          reading the panel would make this story assert that defect instead of the form's own behaviour. */}
+      {/* The play functions read this, not the JSON panel beside it: the panel's `textContent` is the tokenizer's
+          span tree flattened, which drops spaces inside string values ("Alice Liddell" reads back as
+          "AliceLiddell"), so parsing it asserts the highlighter's rendering rather than what the form wrote. */}
       <span className='sr-only' data-testid='object'>
         {JSON.stringify(data)}
       </span>
