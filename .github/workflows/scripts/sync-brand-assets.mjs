@@ -22,7 +22,11 @@
 // the hosting-artifacts uploader (as `storybook-cache.ts` does); this script only decides what to publish and
 // under which key.
 //
-// Usage: sync-brand-assets.mjs [--dry-run]
+// Publishes whatever the running checkout holds, so a run from a branch that is behind on these files
+// silently reverts the bucket to the older art. `main` is the only ref the workflow runs on, and a run
+// anywhere else needs `--force` for that reason — reach for `--dry-run` first.
+//
+// Usage: sync-brand-assets.mjs [--dry-run] [--force]
 
 import { execFile } from 'node:child_process';
 import { readdir } from 'node:fs/promises';
@@ -68,6 +72,17 @@ const walk = async (dir) => {
 
 const main = async () => {
   const dryRun = process.argv.includes('--dry-run');
+
+  // Overwrites in place, over a public URL a third party may already serve. Outside CI that is a
+  // production write from whatever the checkout happens to hold, which is worth one deliberate flag.
+  if (!dryRun && !process.env.CI && !process.argv.includes('--force')) {
+    console.error(
+      `refusing to publish to ${PUBLIC_BASE}/${PREFIX}/ outside CI: this overwrites live objects with\n` +
+        "this checkout's copies, reverting anything published from a newer commit. Pass --dry-run to see\n" +
+        'what would be uploaded, or --force if overwriting is what you mean.',
+    );
+    process.exit(1);
+  }
 
   const candidates = (await Promise.all(FOLDERS.map((folder) => walk(join(SOURCE, folder))))).flat();
   const published = candidates.filter((file) => PUBLISHED.has(`.${file.split('.').pop()}`.toLowerCase()));
