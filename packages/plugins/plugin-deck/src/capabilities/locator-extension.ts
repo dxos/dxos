@@ -62,6 +62,8 @@ type Shown = {
   path?: string;
   localPath?: string;
   planks?: readonly string[];
+  /** The leader's planks (or path, on a flat deck) this deck could bind when it last landed the view. */
+  bound: readonly string[];
   front?: string;
   /** When the deck last landed the view, from which planks it opened have {@link MOUNT_TIMEOUT} to mount. */
   landedAt: number;
@@ -181,9 +183,16 @@ export default Capability.makeModule(
         const { key, path, localPath } = view.attended;
         // A leader that reported no planks is followed as a flat deck follows, by the object they attend.
         const planks = !deck.flat && view.active.length > 0 ? view.active : undefined;
-        const changed = !shown || key !== shown.key || path !== shown.path || !isSamePlanks(planks, shown.planks);
+        // A binding that arrives later (its plugin loads) lands the view again, so the deck gains the plank it left out.
+        const bound = (planks ?? (path ? [path] : [])).filter(isBound);
+        const changed =
+          !shown ||
+          key !== shown.key ||
+          path !== shown.path ||
+          !isSamePlanks(planks, shown.planks) ||
+          !isSamePlanks(bound, shown.bound);
         if (!shown || changed) {
-          shown = { key, path, planks, landedAt: now };
+          shown = { key, path, planks, bound, landedAt: now };
         }
         shown.localPath = localPath;
         if (changed || shown.retry) {

@@ -48,6 +48,7 @@ import {
   isFollowTargetOf,
   isSameFollowTarget,
   makeLocationScheduler,
+  makeSendScheduler,
   parseViewingMessage,
   prunePeerSessions,
 } from '../util/presence.ts';
@@ -63,10 +64,7 @@ const DEVICE_KINDS: Record<DeviceType, SpaceSchema.SessionDevice['kind']> = {
 };
 
 /** Each locator extension's value in one space, by extension id, for its viewing message; nothing when none has one. */
-const getExtensionValues = (
-  values: readonly { id: string; bySpace: Readonly<Record<string, JsonValue>> }[],
-  spaceId: string,
-): { extensions?: Record<string, JsonValue> } => {
+const getExtensionValues = (values: ExtensionValues, spaceId: string): { extensions?: Record<string, JsonValue> } => {
   const extensions: Record<string, JsonValue> = {};
   for (const { id, bySpace } of values) {
     if (spaceId in bySpace) {
@@ -74,6 +72,20 @@ const getExtensionValues = (
     }
   }
   return Object.keys(extensions).length > 0 ? { extensions } : {};
+};
+
+type ExtensionValues = readonly { id: string; bySpace: Readonly<Record<string, JsonValue>> }[];
+
+/** The spaces in which some extension's value differs between `previous` and `next`. */
+const getChangedExtensionSpaces = (previous: ExtensionValues, next: ExtensionValues): Set<string> => {
+  const bySpace = (values: ExtensionValues) => {
+    const spaceIds = new Set(values.flatMap(({ bySpace }) => Object.keys(bySpace)));
+    return new Map([...spaceIds].map((spaceId) => [spaceId, JSON.stringify(getExtensionValues(values, spaceId))]));
+  };
+  const [before, after] = [bySpace(previous), bySpace(next)];
+  return new Set(
+    [...new Set([...before.keys(), ...after.keys()])].filter((spaceId) => before.get(spaceId) !== after.get(spaceId)),
+  );
 };
 
 /**
@@ -291,6 +303,7 @@ export default Capability.makeModule(
 
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
     let broadcastCleanup: (() => void) | undefined;
+    let scheduleSend: ((spaceIds: Iterable<string>) => void) | undefined;
     let previousActive: readonly string[] = [];
     const setupBroadcast = () => {
       broadcastCleanup?.();
@@ -356,9 +369,11 @@ export default Capability.makeModule(
       // Moving or scrolling in an open object re-sends to its space, at most once per interval, which is shorter while
       // followed; every plank's location goes out, so a follower mirroring this deck scrolls each of them.
       const locationKeys = [...new Set([...current, ...active].flatMap((path) => getPresenceKeyFromPath(path) ?? []))];
-      const locationScheduler = makeLocationScheduler(locationKeys, getLocation, send, () =>
-        isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL,
-      );
+      const sendInterval = () => (isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL);
+      const locationScheduler = makeLocationScheduler(locationKeys, getLocation, send, sendInterval);
+      // An extension's value (the deck's front, say) goes out at the same rate as a location, to the spaces it changed in.
+      const extensionSends = makeSendScheduler(send, sendInterval);
+      scheduleSend = extensionSends.schedule;
       const locationSubscriptions = locationKeys.map((key) =>
         viewState.subscribe(ViewLocation.aspect, key, () => locationScheduler.schedule(key)),
       );
@@ -366,13 +381,22 @@ export default Capability.makeModule(
       broadcastCleanup = () => {
         clearInterval(interval);
         locationScheduler.dispose();
+        extensionSends.dispose();
+        scheduleSend = undefined;
         locationSubscriptions.forEach((unsubscribe) => unsubscribe());
       };
     };
 
     // Subscribe to layout changes for broadcast.
     subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
-    subscriptions.add(registry.subscribe(extensionValuesAtom, () => setupBroadcast()));
+    let previousExtensionValues = registry.get(extensionValuesAtom);
+    subscriptions.add(
+      registry.subscribe(extensionValuesAtom, (values) => {
+        const changed = getChangedExtensionSpaces(previousExtensionValues, values);
+        previousExtensionValues = values;
+        scheduleSend?.(changed);
+      }),
+    );
     // Subscribe to attention.current changes.
     subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
     // Starting, retargeting or stopping a follow tells the space at once, so the leader's rate changes with it.

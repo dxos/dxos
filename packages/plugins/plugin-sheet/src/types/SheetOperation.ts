@@ -67,7 +67,9 @@ export const ScrollToAnchor = Operation.make({
     ),
     thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to highlight.' })),
   }),
-  output: Schema.Void,
+  output: Schema.Boolean.annotate({
+    description: 'Whether the anchor was revealed; false while its view is not ready.',
+  }),
 });
 
 export const Create = Operation.make({

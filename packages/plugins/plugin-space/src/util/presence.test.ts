@@ -27,6 +27,7 @@ import {
   groupPresenceKeysBySpace,
   isFollowTargetOf,
   makeLocationScheduler,
+  makeSendScheduler,
   parseViewingMessage,
   prunePeerSessions,
 } from './presence.ts';
@@ -443,6 +444,30 @@ describe('getFollowGroup', () => {
         now,
       }),
     ).toBeUndefined();
+  });
+});
+
+describe('makeSendScheduler', () => {
+  test('sends once per interval, to every space asked for since the last, and nothing for none', ({ expect }) => {
+    vi.useFakeTimers();
+    try {
+      const send = vi.fn();
+      const scheduler = makeSendScheduler(send);
+
+      scheduler.schedule([]);
+      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
+      expect(send).not.toHaveBeenCalled();
+
+      scheduler.schedule([spaceId]);
+      scheduler.schedule([otherSpaceId]);
+      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL - 1);
+      expect(send).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(send).toHaveBeenCalledExactlyOnceWith(new Set([spaceId, otherSpaceId]));
+      scheduler.dispose();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

@@ -47,9 +47,10 @@ type Session = {
   /** The attended object as last opened here when no extension opens it, and whether that open failed. */
   opened?: string;
   openFailed?: boolean;
-  /** When each plank appeared in the layout, and the anchor last revealed in it. */
+  /** When each plank appeared in the layout, the anchor its view last confirmed revealing, and the one being revealed. */
   mounted: Map<string, number>;
   revealed: Map<string, string>;
+  revealing: Map<string, string>;
   fibers: Set<Fiber.Fiber<unknown>>;
   unsubscribes: (() => void)[];
 };
@@ -254,13 +255,24 @@ export default Capability.makeModule(
         const typename = load(current.view.spaceId, key)?.typename;
         const locator = typename && registry.get(locatorsAtom).find(({ id }) => id === typename);
         const mounting = path !== undefined && now < (current.mounted.get(path) ?? 0) + MOUNT_TIMEOUT;
-        if (!path || !locator || (anchor === current.revealed.get(path) && !mounting)) {
+        if (
+          !path ||
+          !locator ||
+          current.revealing.get(path) === anchor ||
+          (anchor === current.revealed.get(path) && !mounting)
+        ) {
           continue;
         }
-        current.revealed.set(path, anchor);
+        // Only an anchor its view confirms is settled; one it could not reveal yet (unmounted, or not loaded) is asked
+        // again on the next update.
+        current.revealing.set(path, anchor);
         fork(
           invoke(locator.reveal, { subject: path, anchor, follow: true }).pipe(
+            Effect.tap((done) => Effect.sync(() => done && current.revealed.set(path, anchor))),
             Effect.catch((err) => Effect.sync(() => log.warn('follow reveal failed', { err }))),
+            Effect.ensuring(
+              Effect.sync(() => current.revealing.get(path) === anchor && current.revealing.delete(path)),
+            ),
           ),
         );
       }
@@ -317,6 +329,7 @@ export default Capability.makeModule(
         showing: new Map(),
         mounted: new Map(),
         revealed: new Map(),
+        revealing: new Map(),
         fibers: new Set(),
         unsubscribes: [],
       };

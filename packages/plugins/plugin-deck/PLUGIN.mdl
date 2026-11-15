@@ -464,7 +464,8 @@ feat F-1: Deck Presentations
           leader's path when it has a URL binding for it and at the object's own path otherwise, first closing any planks
           stacked after it. Each plank shown of the leader opens the companion they have open there, in their tab, and
           closes one they closed. None of it moves the caret or focus. Each view lands in one `LayoutOperation.Set` or
-          `Open` that carries the space's workspace, so a follower outside the space switches to it in the same write.
+          `Open` that carries the space's workspace, so a follower outside the space switches to it in the same write. A
+          plank of the leader's the deck gains a URL binding for later (its plugin loads) lands the view again.
           Planks it opens for the leader have five seconds to
           mount, during which their scroll and companions are sent again. While the attended object is not yet available,
           or opening it failed, the deck reports that it does not show the view and tries again on the next update.
@@ -985,6 +986,15 @@ decision D-4: `LayoutOperation.Set` takes an optional `workspace`, as `Open` doe
   why: Two operations for one navigation race: the workspace switch seeds the space's first plank and scrolls to it while the open is still on its way. The URL a `Set` writes names its workspace, and projecting it switches the deck there.
   rejected:
     - Await `SwitchWorkspace` before opening; its seed still writes a plank and a scroll intent the follow then replaces.
+```
+
+```mdl
+decision D-5: The deck lands the leader's view again when the set of their planks (or, on a flat deck, their path) it can bind changes, not only when the leader's planks or attended object do. Fills in [D-3].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.12]
+  why: A plank whose binding came from a plugin that loaded after the follow started stayed left out until the leader changed their deck.
 ```
 
 ---

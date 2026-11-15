@@ -109,6 +109,27 @@ describe('Follow', () => {
       .toEqual({ subject: path, anchor: 'line-12', follow: true });
   });
 
+  test('an anchor the view has not confirmed is revealed again after the mount window, and a confirmed one is not', async ({
+    expect,
+  }) => {
+    const { calls, layout, reveals, ephemeral, registry, space, object } = await setup();
+    const path = GraphPath.getObjectPathFromObject(object);
+    const revealCount = () => calls.filter(({ op }) => op === 'reveal').length;
+    registry.set(reveals, false);
+    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
+    registry.update(layout, (state) => ({ ...state, active: [path] }));
+    await vi.advanceTimersByTimeAsync(6_000);
+    const unconfirmed = revealCount();
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(revealCount()).toBeGreaterThan(unconfirmed);
+
+    registry.set(reveals, true);
+    await vi.advanceTimersByTimeAsync(1_000);
+    const confirmed = revealCount();
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(revealCount()).toBe(confirmed);
+  });
+
   test('a follow pauses until the leader’s object arrives', async ({ expect }) => {
     const { ephemeral, registry, space } = await setup();
     const object = Obj.make(Expando.Expando, { name: 'Draft' });
@@ -232,14 +253,14 @@ const Reveal = Operation.make({
     follow: Schema.optional(Schema.Boolean),
     thread: Schema.optional(Ref.Ref(Thread.Thread)),
   }),
-  output: Schema.Void,
+  output: Schema.Boolean,
 });
 
 const setup = async ({ navigates = true }: { navigates?: boolean } = {}) => {
   const followed: Followed = { views: [], closed: false };
   const calls: Call[] = [];
   // The follow's update ticks run on this clock, which keeps pace with real time until a test jumps it.
-  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'], shouldAdvanceTime: true });
+  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'], shouldAdvanceTime: true });
   onTestFinished(() => void vi.useRealTimers());
   const harness = await Harness.createComposerTestApp({
     plugins: [ClientPlugin.make({}), makeFollowPlugin(followed, calls, navigates)],
@@ -259,6 +280,7 @@ const setup = async ({ navigates = true }: { navigates?: boolean } = {}) => {
     registry: harness.get(Capabilities.AtomRegistry),
     layout: harness.get(TestLayout),
     shows: harness.get(TestShows),
+    reveals: harness.get(TestReveals),
     ephemeral: harness.get(SpaceCapabilities.EphemeralState),
     space,
     object,
@@ -272,6 +294,9 @@ const TestLayout = Capability.makeSingleton<Atom.Writable<AppCapabilities.Layout
 
 /** Whether the fake extension shows the view. */
 const TestShows = Capability.makeSingleton<Atom.Writable<boolean>>()('org.dxos.plugin.space.test.follow.shows');
+
+/** What the test `Locator`'s reveal answers: whether its view revealed the anchor. */
+const TestReveals = Capability.makeSingleton<Atom.Writable<boolean>>()('org.dxos.plugin.space.test.follow.reveals');
 
 /**
  * The follow module over a layout that records the operations it is asked for, a `Locator` for `Expando`, and an
@@ -291,6 +316,7 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
             Capabilities.OperationHandler,
             SpaceCapabilities.EphemeralState,
             TestLayout,
+            TestReveals,
             TestShows,
           ],
         },
@@ -307,6 +333,7 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
             scrollIntoView: undefined,
           }).pipe(Atom.keepAlive);
           const shows = Atom.make(true).pipe(Atom.keepAlive);
+          const reveals = Atom.make(true).pipe(Atom.keepAlive);
           const extension: AppCapabilities.LocatorExtension = {
             id: EXTENSION_ID,
             location: Atom.make({}),
@@ -327,6 +354,7 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
           return [
             Capability.contribute(AppCapabilities.Layout, layout),
             Capability.contribute(TestLayout, layout),
+            Capability.contribute(TestReveals, reveals),
             Capability.contribute(TestShows, shows),
             Capability.contribute(AppCapabilities.Locator, { id: Type.getTypename(Expando.Expando), reveal: Reveal }),
             Capability.contribute(AppCapabilities.LocatorExtension, extension),
@@ -336,7 +364,9 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
                 Operation.withHandler(LayoutOperation.Open, (input) =>
                   record('open')(input).pipe(Effect.as(input.subject)),
                 ),
-                Operation.withHandler(Reveal, record('reveal')),
+                Operation.withHandler(Reveal, (input) =>
+                  record('reveal')(input).pipe(Effect.map(() => registry.get(reveals))),
+                ),
               ),
             ),
             Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),

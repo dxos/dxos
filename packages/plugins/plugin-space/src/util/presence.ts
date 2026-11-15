@@ -561,6 +561,41 @@ export const getFollowGroupMembers = (group: FollowGroup, identityKey: string): 
     [group.leader, ...group.followers.map((follower) => follower.identityKey)].filter((key) => key !== identityKey),
   );
 
+export type SendScheduler = {
+  /** Adds `spaceIds` to the next send, starting its timer if none is running. */
+  schedule: (spaceIds: Iterable<string>) => void;
+  dispose: () => void;
+};
+
+/**
+ * Batches sends into one per `interval()` ({@link LOCATION_BROADCAST_INTERVAL} by default), to every space asked for
+ * since the last. The interval is read when a send is scheduled, so a session that gains a follower speeds up.
+ */
+export const makeSendScheduler = (
+  send: (spaceIds: ReadonlySet<string>) => void,
+  interval: () => number = () => LOCATION_BROADCAST_INTERVAL,
+): SendScheduler => {
+  const pending = new Set<string>();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return {
+    schedule: (spaceIds) => {
+      for (const spaceId of spaceIds) {
+        pending.add(spaceId);
+      }
+      if (pending.size === 0) {
+        return;
+      }
+      timer ??= setTimeout(() => {
+        timer = undefined;
+        const due = new Set(pending);
+        pending.clear();
+        send(due);
+      }, interval());
+    },
+    dispose: () => clearTimeout(timer),
+  };
+};
+
 export type LocationScheduler = {
   /** Notes that `key`'s location may have changed; a change goes out with the next send. */
   schedule: (key: string) => void;
@@ -579,8 +614,7 @@ export const makeLocationScheduler = (
   interval: () => number = () => LOCATION_BROADCAST_INTERVAL,
 ): LocationScheduler => {
   const seen = new Map(keys.map((key) => [key, read(key)]));
-  const pending = new Set<string>();
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  const sends = makeSendScheduler(send, interval);
   return {
     schedule: (key) => {
       const location = read(key);
@@ -590,14 +624,8 @@ export const makeLocationScheduler = (
         return;
       }
       seen.set(key, location);
-      pending.add(spaceId);
-      timer ??= setTimeout(() => {
-        timer = undefined;
-        const spaceIds = new Set(pending);
-        pending.clear();
-        send(spaceIds);
-      }, interval());
+      sends.schedule([spaceId]);
     },
-    dispose: () => clearTimeout(timer),
+    dispose: sends.dispose,
   };
 };

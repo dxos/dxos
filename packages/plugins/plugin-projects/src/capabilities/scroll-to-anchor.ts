@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.ScrollToAnchor> = P
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, anchor, thread: threadRef }) {
       if (typeof document === 'undefined') {
-        return;
+        return false;
       }
 
       if (threadRef) {
@@ -39,7 +39,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.ScrollToAnchor> = P
         if (view) {
           scrollCommentIntoView(view, thread.id);
         }
-        return;
+        return !!view;
       }
 
       // A cursor resolves only in the text it was taken from.
@@ -50,9 +50,10 @@ const handler: Operation.WithHandler<typeof ProjectOperation.ScrollToAnchor> = P
             selection: { anchor: range.from, head: range.to },
             ...(isRangeVisible(view, range) ? {} : { effects: EditorView.scrollIntoView(range.from, SCROLL_OPTIONS) }),
           });
-          return;
+          return true;
         }
       }
+      return false;
     }),
   ),
 );

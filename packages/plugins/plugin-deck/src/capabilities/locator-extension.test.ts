@@ -33,6 +33,9 @@ import locatorExtension, { type DeckLocation } from './locator-extension.ts';
 /** A segment the test plugin's graph binds a URL to, as a plugin binds its own section. */
 const BOUND_SEGMENT = 'bound';
 
+/** A segment whose URL binding comes from {@link LateBindingPlugin}, which a test enables partway through. */
+const LATE_SEGMENT = 'late';
+
 type Call = { op: string; input: { subject?: unknown; focus?: unknown } };
 
 describe('LocatorExtension', () => {
@@ -167,6 +170,20 @@ describe('LocatorExtension', () => {
     expect(calls.filter(({ op }) => op === 'set')).toHaveLength(1);
     expect(calls.filter(({ op }) => op === 'scrollIntoView').length).toBe(scrolls);
     expect(registry.get(showing)).toBe(true);
+  });
+
+  test('a plank of the leader’s that gains a binding later joins the mirrored deck', async ({ expect }) => {
+    const unresolved = new Set<string>();
+    const { calls, enableLateBinding, follow, spaceId } = await setup({ flat: false, unresolved });
+    const path = boundPath(spaceId);
+    const late = GraphPath.getSpacePath(spaceId, LATE_SEGMENT, EntityId.random());
+    unresolved.add(late);
+    await follow(view(spaceId, path, { active: [path, late], value: { front: path, companions: [] } }));
+    await expect.poll(() => calls.filter(({ op }) => op === 'set').length).toBe(1);
+
+    unresolved.delete(late);
+    await enableLateBinding();
+    await expect.poll(() => calls.filter(({ op }) => op === 'set').length).toBe(2);
   });
 
   test('a waiting deck that lacks a bindable plank of the leader’s does not slide', async ({ expect }) => {
@@ -319,7 +336,11 @@ const setup = async ({
   unresolved = new Set<string>(),
 }: { flat?: boolean; failOpens?: number; unresolved?: ReadonlySet<string> } = {}) => {
   const calls: Call[] = [];
-  const harness = await Harness.createComposerTestApp({ plugins: [makeDeckPlugin(calls, failOpens, unresolved)] });
+  const deckPlugin = makeDeckPlugin(calls, failOpens, unresolved);
+  const harness = await Harness.createComposerTestApp({
+    plugins: [deckPlugin, LateBindingPlugin()],
+    enabled: [deckPlugin.meta.profile.key],
+  });
   onTestFinished(() => harness[Symbol.asyncDispose]());
   const registry = harness.get(Capabilities.AtomRegistry);
   const state = harness.get(DeckTestState);
@@ -340,7 +361,10 @@ const setup = async ({
     return { viewAtom, showing };
   };
 
-  return { calls, registry, state, spaceId, locator, follow };
+  /** A plugin loads that binds {@link LATE_SEGMENT}. */
+  const enableLateBinding = () => EffectEx.runPromise(harness.manager.enable(LateBindingPlugin.meta.profile.key));
+
+  return { calls, registry, state, spaceId, locator, follow, enableLateBinding };
 };
 
 /** The deck's locator over a fake deck that records the layout operations it asks for. */
@@ -483,3 +507,25 @@ const makeDeckPlugin = (calls: Call[], failOpens: number, unresolved: ReadonlySe
     ),
     Plugin.make,
   )();
+
+/** Binds {@link LATE_SEGMENT}, as a plugin that loads after the follow started would. */
+const LateBindingPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('com.example.plugin.lateBinding'), name: 'Late binding' }),
+).pipe(
+  Plugin.addModule<void>(
+    Capability.inlineModule(
+      'graph',
+      { provides: [AppCapabilities.AppGraphBuilder] },
+      Effect.fnUntraced(function* () {
+        const late = yield* AppGraphBuilder.createExtension({
+          id: 'late',
+          url: { key: LATE_SEGMENT, kind: 'item', path: [LATE_SEGMENT] },
+          match: GraphNodeMatcher.whenNodeType('example.com.type.never'),
+          connector: () => Effect.succeed([]),
+        });
+        return Capability.contribute(AppCapabilities.AppGraphBuilder, late);
+      }),
+    ),
+  ),
+  Plugin.make,
+);

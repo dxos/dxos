@@ -127,7 +127,8 @@ export type LocatorExtension = Readonly<{
   navigates?: boolean;
   /**
    * Applies the leader's view until the scope closes, without moving focus or the caret. The returned atom holds whether
-   * it shows the view; any extension holding false pauses the follow.
+   * it shows the view; any extension holding false pauses the follow. It runs synchronously when the follow starts, so the
+   * effect must not suspend: fork any asynchronous work into the scope.
    */
   follow?: (view: Atom.Atom<FollowView>) => Effect$.Effect<Atom.Atom<boolean>, never, Scope$.Scope>;
 }>;
@@ -490,7 +491,8 @@ export type RevealInput = {
  */
 export type Locator = Readonly<{
   id: string;
-  reveal: Operation.Definition<RevealInput, void>;
+  /** Answers whether it revealed the anchor: false while the view has not mounted or cannot resolve it yet. */
+  reveal: Operation.Definition<RevealInput, boolean>;
 }>;
 
 /**

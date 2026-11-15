@@ -6,6 +6,12 @@ version: 0.1.0
 
 Core workspace container plugin for `DXOS` Composer — creates, manages, and shares collaborative spaces with full membership control, object lifecycle management, schema registration, and navigation.
 
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.deck: A follower's deck opens what the leader shows through the deck's `LocatorExtension`.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -590,7 +596,7 @@ feat F-8: Presence and Sync Status
   req F-8.17: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
   req F-8.19: A peer's node carries Follow, which follows whichever of their sessions moved most recently, switching as that changes; a session's node carries Follow for that session alone. Neither shows while it is already the followed target.
   req F-8.20: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
-  req F-8.21: While following, the follower shows the leader's view. It loads the object the leader attends, reveals the leader's anchor in each object it shows of them (the top of their viewport there, or their selection when they report no viewport) through the type's `Locator`, and hands each `LocatorExtension` with a `follow` the leader's planks in the space, the attended object with the path they have it open at, and the leader's value for that extension. An extension that opens what the leader shows (the deck, plugin-deck F-1.12) does so; with none, the follower opens the attended object with one `LayoutOperation.Open` that names the space's workspace. Planks have five seconds from appearing to mount, during which their anchors are revealed again. None of it moves the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can, and so does an extension that reports it cannot show the view.
+  req F-8.21: While following, the follower shows the leader's view. It loads the object the leader attends, reveals the leader's anchor in each object it shows of them (the top of their viewport there, or their selection when they report no viewport) through the type's `Locator`, and hands each `LocatorExtension` with a `follow` the leader's planks in the space, the attended object with the path they have it open at, and the leader's value for that extension. An extension that opens what the leader shows (the deck, org.dxos.plugin.deck#F-1.12) does so; with none, the follower opens the attended object with one `LayoutOperation.Open` that names the space's workspace. Planks have five seconds from appearing to mount, during which their anchors are revealed again, and an anchor the view could not reveal yet (not mounted, or not loaded) is revealed again on every update until it can. None of it moves the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can, and so does an extension that reports it cannot show the view.
   req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing.
   req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
   req F-8.24: A follow is marked in indigo on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an indigo dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows. Those rows wash in indigo, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. While the session follows or is followed in the space its deck shows, every plank heading there, companions included and in a flat or sliding deck, takes a light indigo wash over a one-pixel indigo underline. The follow is also a state of the presence indicator: the avatars of those in the session's follow ring in indigo.
@@ -1588,6 +1594,18 @@ decision D-79: Any plugin can add its own data to a session's location through a
     - A single `LayoutLocator` for the layout plugin alone; only layout state could travel with a location.
     - The plank list as part of the deck's extension; it is the generic layout's `active`, and Go to reads it.
     - Folding the object `Locator` into the same capability; it reveals an anchor in one object, keyed by type, not per-space state.
+```
+
+```mdl
+decision D-81: A `Locator`'s `reveal` answers whether it revealed the anchor, and the follow treats an anchor as shown only once its view says so; the markdown, sheet and project reveals answer false while their view has not mounted or cannot resolve the anchor. Fills in [D-79].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.21]
+  why: An editor that mounted after the five-second window kept the position it opened at, because the follow had already recorded the anchor as revealed; it was corrected only when the leader moved.
+  rejected:
+    - A longer mount window; a slow document can take longer than any fixed window.
+    - Markdown applying a pending anchor when its editor mounts; each type would need its own pending store.
 ```
 
 ```mdl

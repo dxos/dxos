@@ -257,5 +257,7 @@ export const ScrollToAnchor = Operation.make({
     anchor: Schema.String.annotate({ description: 'The anchor to reveal.' }),
     thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to mark current.' })),
   }),
-  output: Schema.Void,
+  output: Schema.Boolean.annotate({
+    description: 'Whether the anchor was revealed; false while its view is not ready.',
+  }),
 }).pipe(Operation.mutation('none'));
