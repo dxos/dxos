@@ -8,6 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
+import { type Space as HaloSpace } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { EID } from '@dxos/keys';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -22,7 +23,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
-import { getFreshSessions } from '../../util/index.ts';
+import { type ViewersByObject, getFreshSessions } from '../../util/index.ts';
 import { PeerActions } from '../SpacePresence/PeerActions.tsx';
 import {
   type Member,
@@ -31,6 +32,53 @@ import {
   useNow,
   useShowSessions,
 } from '../SpacePresence/SpacePresence.tsx';
+
+/**
+ * The other online members, under each object in the space one of their sessions attends, with the sessions attending
+ * it.
+ */
+const groupByAttendedObject = ({
+  spaceId,
+  viewersByObject,
+  members,
+  selfKey,
+  now,
+}: {
+  spaceId: string;
+  viewersByObject: ViewersByObject;
+  members: readonly HaloSpace.Member[];
+  selfKey: string | undefined;
+  now: number;
+}): Map<EID.EID, Member[]> => {
+  const byObject = new Map<EID.EID, Member[]>();
+  for (const [key, viewers] of Object.entries(viewersByObject)) {
+    const eid = EID.tryParse(key);
+    if (!eid || EID.getSpaceId(eid) !== spaceId) {
+      continue;
+    }
+    for (const member of members) {
+      if (!member.online || !member.identityKey || member.identityKey === selfKey) {
+        continue;
+      }
+      const sessions = getFreshSessions(viewers[member.identityKey], now).filter(
+        (session) => session.currentlyAttended,
+      );
+      if (sessions.length > 0) {
+        byObject.set(eid, [
+          ...(byObject.get(eid) ?? []),
+          {
+            ...member,
+            rowId: `${eid}/${member.identityKey}`,
+            sessions,
+            now,
+            defaultSessionId: sessions[0].sessionId,
+          },
+        ]);
+      }
+    }
+  }
+  return byObject;
+};
 
 /** Everyone in the active space, grouped by the object they attend. */
 export const MembersCompanion = () => {
@@ -43,40 +91,19 @@ export const MembersCompanion = () => {
   const now = useNow();
   const [showSessions, setShowSessions] = useShowSessions();
 
-  // A member is listed under each object one of their sessions attends, with the sessions attending it.
-  const groups = useMemo(() => {
-    const byObject = new Map<EID.EID, Member[]>();
-    if (!space || !ephemeral) {
-      return byObject;
-    }
-    for (const [key, viewers] of Object.entries(ephemeral.viewersByObject)) {
-      const eid = EID.tryParse(key);
-      if (!eid || EID.getSpaceId(eid) !== space.id) {
-        continue;
-      }
-      for (const member of members) {
-        if (!member.online || !member.identityKey || member.identityKey === identity?.identityKey) {
-          continue;
-        }
-        const sessions = getFreshSessions(viewers[member.identityKey], now).filter(
-          (session) => session.currentlyAttended,
-        );
-        if (sessions.length > 0) {
-          byObject.set(eid, [
-            ...(byObject.get(eid) ?? []),
-            {
-              ...member,
-              rowId: `${eid}/${member.identityKey}`,
-              sessions,
-              now,
-              defaultSessionId: sessions[0].sessionId,
-            },
-          ]);
-        }
-      }
-    }
-    return byObject;
-  }, [space, ephemeral, members, identity?.identityKey, now]);
+  const groups = useMemo(
+    () =>
+      space && ephemeral
+        ? groupByAttendedObject({
+            spaceId: space.id,
+            viewersByObject: ephemeral.viewersByObject,
+            members,
+            selfKey: identity?.identityKey,
+            now,
+          })
+        : new Map<EID.EID, Member[]>(),
+    [space, ephemeral, members, identity?.identityKey, now],
+  );
 
   const listed = useMemo(() => [...groups.values()].flat(), [groups]);
   const online = useMemo(() => new Set(listed.map((member) => member.identityKey)).size, [listed]);
