@@ -148,6 +148,9 @@
       "path": "packages/common/diagram/tsconfig.json"
     },
     {
+      "path": "packages/apps/diagram-app/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {

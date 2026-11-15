@@ -18,7 +18,9 @@
  *
  * A flow exports `steps`: `{ name, setup?, caption?, run }`, where `run({ peers, caption, sleep })` gets each
  * peer by its lowercased name (`peers.alice.page`, `peers.alice.click(locator)`). Steps run in order; a
- * step's `name` is its caption unless it sets `caption: false` or captions itself.
+ * step's `name` is its caption unless it sets `caption: false` or captions itself. A flow may also export
+ * `boot`, the lowercased names of the peers to boot before its steps; the others start on a blank page, for a
+ * person whose first visit is a step (opening an invitation link).
  */
 
 import { chromium } from '@playwright/test';
@@ -290,10 +292,11 @@ try {
         .catch((error) => console.error(String(error?.message ?? error)))
         .finally(() => context.close());
     }
+    const booted = flow.boot ? peerList.filter((peer) => flow.boot.includes(peer.name.toLowerCase())) : peerList;
     if (options.boot === 'parallel') {
-      await Promise.all(peerList.map((peer) => bootPage(peer.page, peer.name)));
+      await Promise.all(booted.map((peer) => bootPage(peer.page, peer.name)));
     } else {
-      for (const peer of peerList) {
+      for (const peer of booted) {
         await bootPage(peer.page, peer.name);
       }
     }

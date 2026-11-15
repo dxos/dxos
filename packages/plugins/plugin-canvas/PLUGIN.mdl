@@ -67,6 +67,16 @@ uses org.dxos.scene: The data a drawing stores — models, layouts and scenes as
 | `uses`     | `dxos.spec.core/uses`       |
 | `test`     | `org.dxos.mdl.test@1.0`     |
 | `decision` | `org.dxos.mdl.decision@1.0` |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+
+## Features
+
+```mdl
+feat F-1: Collaborator cursors
+
+  req F-1.1: A 2D Canvas drawing's article and section show the other members' pointers on the drawing, each tagged with the member's name in their hue, on the illustrator's shared pointer channel. Pointers are shared in scene coordinates, so each sits over the same place for every peer whatever their pan and zoom.
+  req F-1.2: A pointer shows only to peers in the same drilled-in view, and leaves when its member's pointer leaves the canvas. A slide, a card and a 3D Canvas show none.
+```
 
 ## QA
 
@@ -442,4 +452,15 @@ decision D-25: A contributed kind keeps its own fields under its element's `data
   why: Only core shapes keep properties at an element's top; an extension's own go in one common sub-object so they cannot collide with the base's or another extension's (COMMON-CORE.md decision 21).
   rejected:
     - Fields at the element's top (COMMON-CORE.md decision 13 as first built): the space graph had to call its radius `objectSize` because `size` was taken.
+```
+
+```mdl
+decision D-26: The 2D `CanvasArticle` renders `CanvasCursors`: react-ui-attention's `RemoteCursorLayer` as the first viewport child, fed by `usePointerCursors` on the drawing's canvas object, with a projection that maps the layer's pixels to scene coordinates through the canvas camera atom (`sceneToScreen`, `screenToScene`). A pointer carries the drilled-in view path, and peers filter by it. Extends [org.dxos.plugin.illustrator#D-5] to the Canvas variant.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.1, F-1.2, CanvasPlugin]
+  why: The user asked for collaborator cursors on canvas diagrams. The layer covers the canvas root, the same box the camera transform is drawn in, so the camera atom alone places a pointer, and a pan or zoom re-places every pointer through a new projection.
+  rejected:
+    - Reading the transform from the DOM, as the SVG article does: the camera is already an atom in the canvas services, and the DOM element carries no stable hook.
 ```

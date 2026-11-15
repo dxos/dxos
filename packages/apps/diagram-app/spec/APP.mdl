@@ -1,0 +1,800 @@
+---
+id: org.dxos.app.diagram
+name: Diagram app
+version: 0.1.0
+---
+
+A diagramming app that is one full-screen canvas: open it and draw, with no sign-up. It is an app-framework
+app with a small plugin set (the canvas and illustrator plugins plus its own layout plugin) rather than Composer
+with things turned off. An identity is made silently on first run. Diagrams live in spaces, and a space is
+shared with a link. The data and the link format are Composer's, so a space shared from Composer opens here and
+one shared from here opens in Composer, with the same diagrams in both.
+
+The product name is open ([Q-1]); `diagram-app` is the working package name.
+
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.canvas: The scene editor every diagram opens in, its toolbar and palette, and the `Canvas` drawing variants.
+```
+
+```mdl
+uses org.dxos.plugin.illustrator: The `Drawing` type a diagram is, its variants, and the create and convert operations.
+```
+
+```mdl
+uses org.dxos.plugin.space: Composer's share link and root-collection filing, which this app matches so the two interoperate.
+```
+
+```mdl
+uses org.dxos.app.composer: The app a space shared from here must also open in.
+```
+
+## Extensions
+
+| Term        | URI                           |
+| ----------- | ----------------------------- |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
+| `question`  | `org.dxos.mdl.question@1.0`   |
+
+## Features
+
+```mdl
+feat F-1: App shell
+  req F-1.1: The app renders one diagram filling the viewport; every control floats over the canvas.
+  req F-1.2: The plugin set is Attention, Client, Graph, ProcessManager, Theme, Illustrator, Canvas and the app's own `DiagramAppPlugin`; Composer's deck and SpacePlugin are not loaded.
+  req F-1.3: `DiagramAppPlugin` contributes the `Layout` capability (a single-item workspace with no sidebars), the React root, the root-collection `DefaultParent` rule, the `Collection` schema, the handler for Composer's share operation and the space plugin's translations; it registers its types before the first write.
+  req F-1.4: The app's own UI uses only existing `@dxos/react-ui` components; the canvas toolbar and palette are the canvas plugin's.
+```
+
+```mdl
+feat F-2: Anonymous identity
+  req F-2.1: On first run the app creates an identity without asking anything, then a space named "My diagrams" holding one empty diagram, and opens it.
+  req F-2.2: The identity and its spaces persist in the browser (OPFS); a reload reopens the space and diagram the URL names (F-8).
+  req F-2.3: Opening an invitation link on a profile with no identity creates the identity first, then joins (F-6); it creates no "My diagrams" space.
+```
+
+```mdl
+feat F-3: Space switcher
+  req F-3.1: A pill at the top center, clear of the canvas toolbars, shows the current space's avatar and name. Its menu is a search over the ready spaces, each with a square avatar of its initials in the space's hue, the current one checked.
+  req F-3.2: Picking a space opens its last diagram in this browser, else its most recently created one, else its empty state (F-4.6).
+  req F-3.3: "New space" asks for a name, creates the space, and switches to it with one empty diagram.
+  req F-3.4: "Join with a link…" takes a pasted link or bare invitation code and joins as in F-6.
+  req F-3.5: A space joined from Composer is listed like any other.
+  req F-3.6: New space and Join with a link follow the spaces under a separator and show whatever is typed.
+```
+
+```mdl
+feat F-4: Diagrams
+  req F-4.1: A diagram is an illustrator `Drawing`; new ones are created with the 2D `Canvas` variant through `DrawingOperation.Create`.
+  req F-4.2: A new diagram is filed into the space's root collection, as Composer files one, so it shows in Composer's navigator.
+  req F-4.3: The diagram menu lists the space's canvas diagrams newest first, each with the `Drawing` icon and its name on one line; a search field at the top narrows the list by name.
+  req F-4.4: Only drawings whose canvas is the canvas plugin's `Canvas` are diagrams here; drawings of any other kind are neither listed nor opened.
+  req F-4.5: Each row has its own menu that renames or deletes that diagram. A deleted diagram is unlinked from every collection that lists it; deleting the open one opens the next, or the empty state.
+  req F-4.6: A space with no diagrams shows an empty state with a "New diagram" button; the app never creates a drawing in a space just because it was opened.
+  req F-4.7: "New diagram" follows the diagrams under a separator, shows whatever is typed, and shows its shortcut, ⌥N, which also works anywhere in the app. When the typed text names no diagram, the row creates a diagram with that name.
+  req F-4.8: In both menus every row puts its glyph, name, check and row menu in the same columns, whether or not the row is current or has a menu.
+```
+
+```mdl
+feat F-5: Sharing
+  req F-5.1: Share creates a delegated, multi-use invitation authenticated by a known public key — the same invitation Composer's Get share link makes.
+  req F-5.2: The link is `<app origin>/?spaceInvitationCode=<code>`, the parameter Composer reads, so it opens in either app.
+  req F-5.3: The dialog is Composer's members panel: the space's members with their presence, the open invitations each with copy and cancel, and an action that creates another. The panel is drawn on the dialog's surface, with no inner background of its own, and without its own heading, which the dialog title replaces.
+  req F-5.4: Share opens every time it is pressed, and a new link can be made after the others were cancelled.
+```
+
+```mdl
+feat F-6: Joining
+  req F-6.1: Loading the app with `?spaceInvitationCode=` removes the parameter from the URL, joins that space, and switches to it when the join succeeds.
+  req F-6.2: While joining, a status card shows the steps (identity, invitation accepted, syncing); Cancel abandons the join.
+  req F-6.3: A failed or cancelled join leaves the user in their last space with a toast saying the link no longer works.
+  req F-6.4: A link copied from Composer joins the same way.
+  req F-6.5: A join fails only when the invitation is cancelled, expires or times out, or the client reports an error. EDGE refusing a link for a space with no agent does not fail it: a member online can still admit the joiner.
+```
+
+```mdl
+feat F-7: EDGE
+  req F-7.1: The client is configured with the EDGE endpoint and signaling, so peers find each other and Composer's agent-backed spaces can redeem invitations through EDGE.
+  req F-7.2: EDGE replicators and agents are off: an account-less identity syncs peer to peer while another member is online ([Q-2]).
+```
+
+```mdl
+feat F-8: Addresses
+  req F-8.1: The URL path is `/<space id>/<diagram id>`. Opening a space or diagram adds a history entry, so Back returns to the previous one; a URL that names no diagram, or one not in the space, is rewritten to the diagram shown.
+  req F-8.2: A URL whose space is not in this browser opens the last space, with a toast saying to ask for an invitation link.
+  req F-8.3: The invitation stays in the `?spaceInvitationCode=` query (F-5.2), so a path and an invitation can be in one URL.
+```
+
+```mdl
+feat F-9: Presence
+  req F-9.1: Avatars beside Share show the members viewing the open diagram, in this app or in Composer, as Composer's plank headings show them.
+  req F-9.2: Each other viewer's pointer shows on the canvas as a named cursor.
+```
+
+## Running against EDGE without an account
+
+What EDGE `main` does for an identity with no Hub account, as of edge#1510 (2026-11-13):
+
+| Path                                    | Account-less identity                                                                 |
+| --------------------------------------- | ------------------------------------------------------------------------------------- |
+| `/ws` signaling (swarm, signal frames)  | Allowed, as an unbound connection: 2 devices per identity, 16 swarms per device.     |
+| `/ws` replicator frames                 | Dropped (`service_not_allowed`): no EDGE sync of documents or feeds.                 |
+| `POST /db/spaces/:id/join` (invitation) | No auth. EDGE redeems it only when the space has an EDGE agent; otherwise a peer must. |
+| Space root and queue HTTP routes        | 403: an account is required.                                                          |
+| Creating an agent                       | 403: an account is required.                                                          |
+
+So, today:
+
+- Two people on this app sync only while both are online. A delegated invitation one of them made is redeemed by
+  any online member device.
+- A link from a Composer user whose space has an agent is redeemed by EDGE at any time. After that the joiner
+  syncs with the Composer user's devices only while one is online: EDGE holds the space but will not serve it
+  to an unbound identity.
+- The 16-swarm cap means about 14 spaces sync at once, since each open space joins one swarm and invitations take
+  the rest.
+
+## Components
+
+```mdl
+component DiagramRoot
+  desc: The whole app (F-1). Mockup boards 1–3.
+  state:
+    route: the space and diagram ids in the URL path (F-8)
+    joining: Invitation | undefined
+  layout: |
+    ┌──────────────────────────────────────────────────────────────────────────────────┐
+    │ [↑ ⌂]     [◍ Team space ▾ / ⚲ Service map ▾  (A)(B)  [Share]]       [Inspector]│
+    │ [▸]                                                                              │
+    │ [▭]                   canvas article of the open drawing                         │
+    │ [◯]                                                                              │
+    │ [⤢ 1 + − 100%]          [✂ ⧉ … ↶ ↷]                              [⌖ ⊞ … Flat ▾]  │
+    └──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+```mdl
+component SpaceMenu
+  desc: The space half of the pill (F-3). The same searchable combobox as the diagram menu. Mockup board 2.
+  actions:
+    select: switch to a space
+    create: open the new-space dialog
+    join: open the join-with-a-link dialog
+  layout: |
+    [Find a space                 ]
+      [MD] My diagrams
+      [TS] Team space          ✓
+    ───────────────────────────────
+      +    New space
+      ⛓    Join with a link…
+```
+
+```mdl
+component DiagramMenu
+  desc: The diagram half of the pill (F-4). A combobox whose button opens a search over the diagrams. Mockup board 3.
+  actions:
+    select: open a diagram
+    create: create a Canvas diagram, named when typed, and open it
+    rename: rename a diagram from its row menu
+    delete: delete a diagram from its row menu
+  layout: |
+    [Find a diagram                    ]
+      ⚲ Service architecture      ✓  ⋯
+      ⚲ Onboarding flow              ⋯
+    ─────────────────────────────────────
+      + New diagram                  ⌥N
+    row menu (⋯):
+      Rename…
+      Delete
+```
+
+```mdl
+component ShareDialog
+  desc: F-5. Composer's members panel in a dialog; mockup board 4 is superseded by it.
+  layout: |
+    Share “Team space”                                  ×
+    ┌ Composer members panel ───────────────────────┐
+    │ Members: avatars with presence                 │
+    │ Invitations: each open link [⧉] [✕]            │
+    │ [Create multi-use invitation ▾]                │
+    └────────────────────────────────────────────────┘
+```
+
+```mdl
+component JoinStatus
+  desc: F-6. Mockup board 5.
+  layout: |
+          ◠ Joining a shared space…
+          ✓ Created an anonymous identity in this browser
+          ✓ Invitation accepted
+          • Syncing
+                    [Cancel]
+```
+
+## QA
+
+Each test runs against `moon run diagram-app:serve`. Tests that need two people use two browser profiles
+(a normal and a private window of different browsers is enough).
+
+```mdl
+test QA-1: First run
+  desc: A fresh profile gets an identity, a space and a diagram with no prompts, and keeps them across a reload.
+  actors: human
+  covers: [F-2.1, F-2.2, F-1.1]
+  status: unverified
+  given:
+    - a browser profile that has never opened the app
+  steps:
+    - name: Open the app
+      do: Load the app.
+      expect: the canvas opens with the pill reading "My diagrams / Untitled" and no dialog
+    - name: Draw
+      do: Draw a rectangle and type "Hello" in it.
+      expect: the shape and its label show on the canvas
+    - name: Reload
+      do: Reload the page.
+      expect: the same space and diagram reopen with the "Hello" rectangle
+```
+
+```mdl
+test QA-2: Spaces and diagrams
+  desc: Create a second space and diagram, rename and delete, and switch back.
+  actors: human
+  covers: [F-3.1, F-3.2, F-3.3, F-4.3, F-4.5, F-4.6, F-4.7]
+  status: unverified
+  given:
+    - QA-1 has run on this profile
+  steps:
+    - name: New space
+      do: Open the space menu, choose New space, name it "QA space".
+      expect: the pill reads "QA space / Untitled" and the canvas is empty
+    - name: Second diagram
+      do: Open the diagram menu and choose New diagram, then rename it "Second" from its row menu.
+      expect: the diagram menu lists "Second" and "Untitled", with "Second" checked and both rows' menus in one column
+    - name: Search and shortcut
+      do: Press ⌥N, then open the diagram menu and type "sec".
+      expect: a third diagram opened; the search lists only "Second", with New diagram still below the separator
+    - name: Delete
+      do: With "Second" open, choose Delete in its row menu.
+      expect: another diagram opens and "Second" is gone from the menu
+    - name: Switch back
+      do: Pick "My diagrams" in the space menu.
+      expect: the "Hello" diagram from QA-1 opens
+```
+
+```mdl
+test QA-3: Share between two people on this app
+  desc: A link made here admits a second anonymous identity, and edits flow both ways while both are online.
+  actors: human
+  covers: [F-5.1, F-5.2, F-5.3, F-5.4, F-6.1, F-6.2, F-2.3, F-9.1, F-9.2]
+  status: unverified
+  given:
+    - profile A has run QA-1
+    - profile B has never opened the app
+  steps:
+    - name: Copy the link
+      do: In A, click Share, create a multi-use invitation and copy it.
+      expect: the dialog lists A as a member and one open invitation whose link carries `?spaceInvitationCode=`
+    - name: Join
+      do: Open the link in B.
+      expect: B shows the join card, then "My diagrams" with A's "Hello" diagram, and no space of its own
+    - name: Edit both ways
+      do: Move the rectangle in B, then add an ellipse in A.
+      expect: each change shows in the other profile within a few seconds; each profile shows the other's avatar beside Share and the other's cursor while it moves over the canvas
+    - name: Cancel the link
+      do: In A, open Share and cancel the invitation; open the old link in a third profile.
+      expect: the third profile shows the join card, then the toast that the link no longer works
+    - name: New link
+      do: In A, open Share again and create another invitation.
+      expect: a new invitation is listed
+```
+
+```mdl
+test QA-4: Composer interop
+  desc: A Composer share link opens here, and a diagram made here shows in Composer.
+  actors: human
+  covers: [F-3.5, F-4.2, F-4.4, F-6.4]
+  status: unverified
+  given:
+    - a Composer user with a space holding a Canvas drawing and an Excalidraw drawing
+  steps:
+    - name: Open a Composer link
+      do: In Composer, copy the space's share link; open it in a profile of this app.
+      expect: the app joins and lists only the Canvas drawing, which opens; the Excalidraw drawing is not listed
+    - name: Create here
+      do: Create a diagram "From the app" and draw a shape, with Composer open.
+      expect: Composer's navigator shows "From the app" in the space's root collection, and opening it shows the shape
+```
+
+```mdl
+test QA-5: Addresses
+  desc: The URL names the open space and diagram, so Back, reload and a bookmark return to it.
+  actors: human
+  covers: [F-8.1, F-8.2, F-8.3]
+  status: unverified
+  given:
+    - QA-2 has run on this profile
+  steps:
+    - name: Path
+      do: Open a diagram from the diagram menu.
+      expect: the address bar reads `/<space id>/<diagram id>`
+    - name: Back
+      do: Open another diagram, then press Back.
+      expect: the first diagram opens again
+    - name: Reload
+      do: Reload the page.
+      expect: the same diagram reopens
+    - name: Unknown space
+      do: In a profile that has not joined this space, open the same URL.
+      expect: that profile's last space opens with a toast saying to ask for an invitation link
+```
+
+```mdl
+test QA-6: Two people draw together
+  desc: One person shares a diagram, a second joins from the link, and each sees the other's presence, cursor and shapes live.
+  actors: human
+  covers: [F-2.1, F-2.3, F-4.3, F-5.1, F-5.2, F-5.3, F-6.1, F-8.1, F-9.1, F-9.2]
+  status: passing # 2026-11-14, chromium
+  automated:
+    - diagram-app:collaboration.spec.ts#Collaboration › two people draw together
+  given:
+    - two browser profiles, Ada and Ben, that have never opened the app, both online
+  steps:
+    - name: Ada draws
+      do: As Ada, open the app, choose the Rectangle tool and drag out a rectangle.
+      expect: the pill reads "My diagrams / Untitled" and the Views panel lists one rectangle
+    - name: Ada shares
+      do: As Ada, click Share, create a multi-use invitation and copy its link.
+      expect: the dialog lists Ada as a member and one invitation; the link carries `?spaceInvitationCode=`
+    - name: Ben joins
+      do: As Ben, open the copied link.
+      expect: Ben sees the join card, then Ada's diagram at the same `/<space id>/<diagram id>` path, with her rectangle, and Ben's space menu lists only "My diagrams"
+    - name: Presence
+      do: Leave both on the diagram for up to a minute.
+      expect: each shows the other's avatar beside Share
+    - name: Cursors
+      do: As Ben, move the pointer over the canvas.
+      expect: Ada sees a cursor with Ben's name follow it
+    - name: Ben draws
+      do: As Ben, choose the Ellipse tool and drag out an ellipse.
+      expect: within a few seconds Ada's Views panel lists the rectangle and the ellipse
+    - name: Ada adds a diagram
+      do: As Ada, open the diagram menu, type "Roadmap" and choose New diagram “Roadmap”.
+      expect: Ada's pill reads "Roadmap", and Ben's diagram menu lists "Roadmap" beside "Untitled"
+```
+
+## Changelog
+
+```mdl
+decision D-1: The app is a full-screen canvas editor, a canvas-editor counterpart of tldraw.com, open for anyone to use. It is an app-framework app built from plugins: its own layout plugin plus the canvas plugin.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-1]
+```
+
+```mdl
+decision D-2: The identity is created automatically and is anonymous. Setting a display name and resetting the identity come later and are out of the initial scope.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-2]
+```
+
+```mdl
+decision D-3: The app has a very simple space switcher, and diagrams live within a space.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-3, F-4]
+```
+
+```mdl
+decision D-4: Users can send and receive invitations, kept simple by using delegated, non-interactive invitations.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-5, F-6]
+```
+
+```mdl
+decision D-5: The app is compatible with Composer: someone invited to a space by a Composer user can collaborate on its diagrams and sees every diagram in the space.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-3.5, F-4, F-6.4]
+```
+
+```mdl
+decision D-6: The app's UI uses only existing react-ui components.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-1.4]
+```
+
+```mdl
+decision D-7: The name is decided later; drawing.sh, the existing site, is the fallback.
+  date: 2026-11-14
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-8: The plugin set is Attention, Client, Graph, ProcessManager, Theme, Illustrator, Canvas and `DiagramAppPlugin`, which contributes the layout, the React root and the root-collection rule. Fills in [D-1].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.2, F-1.3]
+  why: The canvas article needs attention, the graph its shortcuts resolve against, and the illustrator's variants; drawing.sh runs on the same set. Filing into the root collection is one capability, so the app contributes it rather than loading SpacePlugin.
+  rejected:
+    - SpacePlugin: brings Composer's navigator, deck surfaces and space settings, which a single-canvas app neither shows nor needs.
+```
+
+```mdl
+decision D-9: A diagram is an illustrator `Drawing`. The app creates the 2D Canvas variant, lists drawings of every variant, opens the variants it registers, and shows a Composer notice for the rest. New drawings file into the root collection. Fills in [D-5].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.1, F-4.2, F-4.3, F-4.4]
+  why: Composer's canvas diagrams are `Drawing`s with a `Canvas`; listing all variants keeps "see every diagram" true without shipping Excalidraw and tldraw.
+  rejected:
+    - Listing only Canvas drawings: hides diagrams Composer users made, against D-5.
+    - Converting other variants on open: changes a Composer user's drawing just by looking at it.
+```
+
+```mdl
+decision D-10: The invitation is Composer's share link: delegated, multi-use, known-public-key auth, carried in `?spaceInvitationCode=`. Fills in [D-4] and [D-5].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1, F-5.2, F-6.1, F-6.4]
+  why: The same link then opens in either app. EDGE redeems only NONE and KNOWN_PUBLIC_KEY invitations; with KNOWN_PUBLIC_KEY the keypair in the link is the secret, not the invitation id.
+  rejected:
+    - SHARED_SECRET: needs the interactive code exchange D-4 rules out, and EDGE never redeems it.
+    - NONE: anyone who learns the invitation id from the space's control feed can join.
+```
+
+```mdl
+decision D-11: First run creates "My diagrams" with one empty diagram; any other empty space shows an empty state, and joining never creates a space. Fills in [D-2] and [D-3].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.1, F-2.3, F-4.6]
+  why: The app opens straight onto a canvas, but opening a shared space must not write into it.
+```
+
+```mdl
+decision D-12: The client runs with EDGE signaling and with EDGE replicators and agents off; account-less identities sync peer to peer while another member is online. Fills in [D-5].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7]
+  why: Since edge#1510 an identity with no Hub account gets only swarm and signal frames; replicator frames are dropped and the space-root route returns 403, which the client retries forever. Turning replication on waits for [Q-2].
+  rejected:
+    - Replicators on: no data moves and every space logs 403 retries.
+```
+
+```mdl
+decision D-13: The last space and the last diagram per space are remembered in this browser's local storage; the URL carries only an invitation. Fills in [D-3].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.2, F-3.2]
+```
+
+```mdl
+question Q-1: What is the app called, and on which domain?
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  context: drawing.sh is the fallback (D-7) but already hosts the agent-diagram DSL site. whois on 2026-11-14 reported these .sh names unregistered; a registrar must confirm.
+  options:
+    - linework.sh: a plain word for drawn lines, no well-known product with the name.
+    - dotline.sh: dots and lines, what a diagram is made of; also free on .is and .to.
+    - canvy.sh: short and says canvas; also free on .is, .ink and .to.
+    - drawing.sh: the fallback; the app moves to its root and the DSL site to a path or subdomain.
+```
+
+```mdl
+question Q-2: How do account-less identities get EDGE replication, so a diagram syncs when nobody else is online?
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.2]
+  context: EDGE admits account-less identities for signaling only (edge#1510). A Composer link still works, because the space's agent redeems it, but afterwards the joiner syncs only with the Composer user's devices while one is online.
+  options:
+    - Agent-backed spaces: EDGE lets an unbound identity's replicator frames through for spaces that have an EDGE agent; the owning account pays for storage. Covers spaces shared from Composer, not spaces made here.
+    - Lightweight accounts: Hub mints an account for an unbound identity on first use, with storage and rate caps. Covers everything, agents included, and needs an abuse budget.
+    - Peer-to-peer only: keep today's behaviour and say so in the UI.
+```
+
+```mdl
+decision D-14: The space and diagram pill sits at the top center and carries the sync indicator at its end. Fills in [D-3].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1, F-7.3, DiagramRoot]
+  why: The canvas article draws its own toolbars in every corner and along the bottom edge (breadcrumb, palette, zoom, edit and view toolbars, inspector); the top center is the only free edge.
+  rejected:
+    - Top-left, as in the mockups: covers the breadcrumb and the palette.
+    - Bottom-left with the indicator bottom-right: covers the zoom and view toolbars.
+```
+
+```mdl
+decision D-15: A join fails only on a cancelled, expired or timed-out invitation or an observable error; the ERROR state alone does not end it, and an already-joined error counts as success. Fills in [D-4] and [D-5].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.3, F-6.5]
+  why: The guest runs EDGE and peer-to-peer redemption at once. EDGE refuses a space with no agent as retryable and sets ERROR, while a member online admits the joiner a moment later. Composer's join panel ignores the ERROR state the same way.
+  rejected:
+    - Fail on ERROR: every join of a space made in this app fell back to a new space even though the member admitted it.
+```
+
+```mdl
+decision D-16: `DiagramAppPlugin` contributes the `Collection` schema and fires its own start event before the first write, which pulls in the client's schema registration. Fills in [D-9].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.3]
+  why: The root collection is a typed object, and the client registers schemas on demand; the client plugin's `types` option is ignored when the host passes its own client.
+```
+
+```mdl
+decision D-17: The domain does not need to be on .sh, but the name should ideally be about diagrams. linework.sh, dotline.sh and canvy.sh are rejected.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [Q-1]
+```
+
+```mdl
+question Q-3: Which diagram domain does the app use?
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  context: Follows [D-17]. On 2026-11-14 these had no RDAP record and no nameservers; single-word names on new TLDs are often premium-priced, so a registrar must confirm price and availability. Registered already include diagram.sh, .app, .io, .so, .page, .new, .studio, .ink, .to, .dev, .ai and .co, and diagrams.new, diagrams.sh and diagrams.io.
+  options:
+    - diagram.space: matches the app's spaces, where diagrams live and are shared.
+    - diagram.wiki: says anyone with a link can edit.
+    - diagram.club: an open, social place to draw together; diagrams.club is also free.
+    - diagram.is: short; reads as the start of a sentence.
+    - diagramtogether.com: the only free .com found; long but says what the app does.
+
+```mdl
+decision D-18: Each space in the space menu shows the planet icon, and each diagram in the diagram menu shows an icon, so the rows do not look oddly indented.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-3.1, F-4.3, SpaceMenu, DiagramMenu]
+```
+
+```mdl
+decision D-19: The app does not support other drawing types and does not show them.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-4.3, F-4.4, DiagramMenu]
+```
+
+```mdl
+decision D-20: The "Saved in this browser" text is not wanted; its purpose is unclear.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-7.3]
+```
+
+```mdl
+decision D-21: Share can be opened more than once, and links that were turned off can be turned on again. The share dialog reuses existing UI, such as Composer's member lists, as much as possible instead of custom UI.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-5, ShareDialog]
+```
+
+```mdl
+decision D-22: Presence avatars sit next to Share, as in Composer's plank headings, and cursors are hooked up.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-9, DiagramRoot]
+```
+
+```mdl
+decision D-23: Invitations stay peer to peer for now; what to do about EDGE is discussed with the team later.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-7.2, Q-2]
+```
+
+```mdl
+decision D-24: The space id and the open diagram's id are in the URL path, not only in internal state, so a diagram can be bookmarked.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-2.2, F-8]
+  supersedes: D-13
+```
+
+```mdl
+decision D-25: The diagram menu has more of the features of the mockup's diagram menu (board 3): a "Find a diagram" search, rows with an icon, the name and a subtitle such as when it was edited, a menu on each row, and New diagram with its ⌥N shortcut.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-4.3, F-4.5, F-4.7, DiagramMenu]
+```
+
+```mdl
+decision D-26: The menus are closer to the mockup: wider, and denser vertically.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [SpaceMenu, DiagramMenu]
+```
+
+```mdl
+decision D-27: A diagram is a drawing whose canvas is the canvas plugin's `Canvas`; a drawing's kind is known once its canvas loads, and the menu waits for it rather than show and then hide a row. Fills in [D-19].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.3, F-4.4]
+  why: The drawing's own fields do not say which renderer owns it; only the canvas object's type does.
+  rejected:
+    - Keep the Composer notice for other kinds: [D-19] says not to show them.
+```
+
+```mdl
+decision D-28: The sync indicator is removed; the presence avatars ([F-9.1]) show who else is connected. Fills in [D-20] and [D-22].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.3, DiagramRoot]
+```
+
+```mdl
+decision D-29: The share dialog is Composer's members panel (`MembersContainer` from the space plugin) inside a dialog. The app handles Composer's share operation and loads the space plugin's translations so the panel works without the space plugin. Fills in [D-21].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.3, F-5.3, F-5.4, ShareDialog]
+  why: The panel already lists members, open invitations with copy and cancel, and creates invitations, the same way Composer does.
+  rejected:
+    - Fix the custom dialog: it would keep UI that Composer already has.
+```
+
+```mdl
+decision D-30: Presence uses Composer's `viewing` protocol (post every 30 s, drop a viewer after 60 s), shown with the space plugin's `FullPresence`, which the space plugin now exports. Cursors are the canvas plugin's awareness cursors in the 2D article. Fills in [D-22].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+  why: Composer users viewing the same diagram then show here, and app users show in Composer.
+```
+
+```mdl
+decision D-31: The path is `/<space id>/<diagram id>`. Choosing a space or diagram pushes a history entry; a correction (no diagram named, a deleted diagram) replaces it. The invitation stays a query parameter, and a URL whose space is not in this browser falls back to the last space with a toast. Fills in [D-24].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8]
+  why: Back then steps through the diagrams a user opened, and a Composer link keeps working unchanged.
+```
+
+```mdl
+decision D-32: The diagram menu is react-ui's `Combobox` with a button trigger and its search field. A row's subtitle is "Edited" and the latest change time of the drawing or its canvas. A typed name that matches none offers New diagram with that name. Duplicate, Download .dx.svg and the editor's name ("by Ada") are left out. Fills in [D-25].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.3, F-4.5, F-4.7, DiagramMenu]
+  why: There is no working duplicate operation (Composer's DuplicateObject is a stub), `.dx.svg` export covers only SVG drawings, and ECHO does not record who made a change in a form the menu can read.
+  rejected:
+    - Menu with a filter input: react-ui's Menu has no search field or two-line rows.
+```
+
+```mdl
+decision D-33: The space menu is 300 px wide and the diagram menu 360 px, as in the mockup, at the default menu size; a diagram row is two lines with a smaller subtitle. Fills in [D-26].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpaceMenu, DiagramMenu]
+```
+
+```mdl
+decision D-34: Diagram rows drop the description line.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-4.3, DiagramMenu]
+```
+
+```mdl
+decision D-35: The menus' columns are always aligned.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-4.8, SpaceMenu, DiagramMenu]
+```
+
+```mdl
+decision D-36: Spaces show avatars, as in the mockups.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-3.1, SpaceMenu]
+```
+
+```mdl
+decision D-37: The space menu is a combobox, like the diagram menu.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-3.1, SpaceMenu]
+```
+
+```mdl
+decision D-38: The actions at the bottom of the menus sit under a separator and are always shown.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-3.6, F-4.7, SpaceMenu, DiagramMenu]
+```
+
+```mdl
+decision D-39: The invitations dialog's background matches its surface, so the dialog looks uniform.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-5.3, ShareDialog]
+```
+
+```mdl
+decision D-40: Both menus are one combobox component with fixed columns: a glyph slot, the name, a check slot that keeps its width when unchecked, and a row-menu slot. Commands follow a separator as options the filter never removes. Fills in [D-35], [D-37] and [D-38].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.6, F-4.7, F-4.8, SpaceMenu, DiagramMenu]
+  why: The combobox's check is removed from layout when an option is not selected, which shifted the row menu on every other row.
+```
+
+```mdl
+decision D-41: A space's avatar is react-ui's square `Avatar` with the name's initials, in the space's hue, or a hue derived from its id when it has none. Fills in [D-36].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1]
+  why: Spaces made here have no hue; deriving one from the id keeps a space's colour the same on every device.
+```
+
+```mdl
+decision D-42: With the commands always shown, the typed name goes into the New diagram row itself rather than the combobox's own create row. Fills in [D-38]; replaces the create row of [D-32].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.7]
+  why: The built-in create row and an always-shown New diagram would offer the same action twice.
+```
+
+```mdl
+decision D-43: A base-level panel inside a dialog takes the dialog's raised surface, as one inside a popup already takes the popup's; the fix is in react-ui's panel theme. Fills in [D-39].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.3]
+  why: The members panel is a scrolling settings form, which is a panel at the base level, so it drew a darker box inside the dialog. Every such form in a dialog, in Composer too, had the same mismatch.
+  rejected:
+    - A surface prop on the members panel: fixes one form and leaves the rest.
+```
+
+```mdl
+decision D-44: The members panel's own heading ("Manage space members" and its description) is dropped from the Share dialog.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-5.3, ShareDialog]
+```
+
+```mdl
+decision D-45: A collaborative QA flow covers two people sharing, joining, seeing each other's presence and cursors, and drawing together, with a Playwright test generated from it and a recorded demonstration.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [QA-6]
+```
+
+```mdl
+decision D-46: QA-6 runs as two browser contexts against the app's preview bundle and counts shapes by the Views panel's object rows, since the canvas draws shapes without one DOM node each. Fills in [D-45].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-6]
+  why: The Views rows carry a stable id per scene object and update for remote edits, so the test judges replication by framework state rather than pixels.
+```
+
+```mdl
+decision D-47: QA-6 is passing: `collaboration.spec.ts` passes on chromium against the e2e bundle, and the side-by-side recording ran every step. Fills in [D-45].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-6]
+```

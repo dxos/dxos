@@ -196,6 +196,7 @@ component MembersContainer
   desc: Panel showing all members of a space with their presence status and role; allows managing invitations.
   props:
     space: Space
+    heading?: boolean
 ```
 
 ```mdl
@@ -1588,6 +1589,15 @@ decision D-79: Any plugin can add its own data to a session's location through a
     - A single `LayoutLocator` for the layout plugin alone; only layout state could travel with a location.
     - The plank list as part of the deck's extension; it is the generic layout's `active`, and Go to reads it.
     - Folding the object `Locator` into the same capability; it reveals an anchor in one object, keyed by type, not per-space state.
+```
+
+```mdl
+decision D-80: `MembersContainer` takes an optional `heading`, on by default; a host that already names the panel, such as a dialog titled "Share", turns off the panel's own title and description.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [MembersContainer]
+  why: The diagram app shows the panel in a dialog whose title already says what it is, and the user asked for the repeated heading to go.
 ```
 
 ## Appendix: Extension Definitions

@@ -17,6 +17,7 @@ import { canvasDimension, sceneClipboardCodec } from '#model';
 import { Canvas } from '#types';
 
 import { useCanvasLoaded } from '../CanvasStage/index.ts';
+import { CanvasCursors } from './CanvasCursors.tsx';
 import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { type SceneDimension } from './dimension.ts';
@@ -50,7 +51,10 @@ const DimensionArticle = (props: DimensionArticleProps) => {
 const CanvasArticle2D = (props: DimensionArticleProps) => {
   const host = useCanvasEditor(props.canvas, '2d');
   const dimension = useDimension2D(props.canvas);
-  return <SceneEditorArticle {...props} host={host} dimension={dimension} />;
+  // A slide is a picture placed on another drawing; collaborators point at the drawing itself.
+  return (
+    <SceneEditorArticle {...props} host={host} dimension={dimension} cursors={props.role !== AppSurface.Slide.role} />
+  );
 };
 
 const CanvasArticle3D = (props: DimensionArticleProps) => {
@@ -60,7 +64,12 @@ const CanvasArticle3D = (props: DimensionArticleProps) => {
   return <SceneEditorArticle {...props} host={host} dimension={dimension} />;
 };
 
-type SceneEditorArticleProps<C> = DimensionArticleProps & { host: CanvasEditorHost; dimension: SceneDimension<C> };
+type SceneEditorArticleProps<C> = DimensionArticleProps & {
+  host: CanvasEditorHost;
+  dimension: SceneDimension<C>;
+  /** Shows collaborators' pointers; 2D only, since they read the 2D camera. */
+  cursors?: boolean;
+};
 
 /** The shared editor over the host's scene, in the dimension's config. */
 const SceneEditorArticle = <C,>({
@@ -70,6 +79,7 @@ const SceneEditorArticle = <C,>({
   extrinsic,
   host,
   dimension,
+  cursors,
 }: SceneEditorArticleProps<C>) => {
   const [element, setElement] = useState<HTMLElement | null>(null);
   const { hasAttention } = useAttention(attendableId);
@@ -119,6 +129,8 @@ const SceneEditorArticle = <C,>({
           >
             <CanvasEditCommands element={element} />
             <SceneEditor.Viewport>
+              {/* First, so the floating panels draw over the pointers. */}
+              {cursors && <CanvasCursors object={canvas} />}
               <SceneEditor.Navigation />
               <SceneEditor.Tools />
               <SceneEditor.Actions />
