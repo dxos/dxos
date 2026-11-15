@@ -225,6 +225,18 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([{ kind: 'html', message: '<List> has no list to style.' }]);
   });
 
+  test('<List active> marks the item the list has reached', () => {
+    const slide = parseSlide('<List variant="flow" active="2">\n\n1. a\n2. b\n\n</List>');
+    expect(elements(slide.slots.default, 'ol')[0].properties.active).toBe(2);
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('an active that is not an item number is ignored and reported', () => {
+    const slide = parseSlide('<List variant="flow" active="0">\n\n- a\n\n</List>');
+    expect(elements(slide.slots.default, 'ul')[0].properties.active).toBeUndefined();
+    expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('Invalid <List> active') }]);
+  });
+
   test('<Table variant> styles the table it wraps', () => {
     const slide = parseSlide('<Table variant="rows">\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\n</Table>');
     expect(elements(slide.slots.default, 'table')[0].properties.variant).toBe('rows');

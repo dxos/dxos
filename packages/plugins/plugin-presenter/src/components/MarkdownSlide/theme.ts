@@ -58,6 +58,27 @@ export const theme = {
         list: 'flex flex-col gap-6 my-[16px] list-none',
         li: 'px-10 py-8 rounded-[20px] border-4 border-(--slide-accent) text-[48px]',
       },
+      // A row of cards with an arrow in each gap, for a progression. The item's own markdown names its parts:
+      // emphasis is the label beside the counter, strong is the title, and the rest is the body — so four cards
+      // fit across the slide without the author writing anything but prose.
+      flow: {
+        list: 'grid grid-flow-col auto-cols-fr gap-24 my-[16px] list-none [counter-reset:slide-step]',
+        li:
+          'relative px-10 py-12 rounded-[20px] bg-(--slide-code) text-[32px] leading-normal [counter-increment:slide-step] ' +
+          'before:content-[counter(slide-step)] before:text-[28px] before:opacity-60 ' +
+          // The arrow sits in the gap after every card but the last; it is decoration, so it never reaches the text.
+          "after:content-['→'] after:absolute after:start-full after:top-1/2 after:ms-5 after:-translate-y-1/2 " +
+          'after:text-[56px] after:opacity-60 last:after:content-none ' +
+          // During a build the arrow waits for the card it points at, which is laid out but not yet revealed.
+          '[&:has(+li.invisible)]:after:content-none ' +
+          '[&_em]:not-italic [&_em]:uppercase [&_em]:tracking-wide [&_em]:text-[28px] [&_em]:opacity-60 ' +
+          '[&_em]:before:content-["·"] [&_em]:before:mx-2 ' +
+          '[&_strong]:block [&_strong]:mt-5 [&_strong]:mb-3 [&_strong]:text-[44px] [&_strong]:leading-tight ' +
+          '[&_strong]:font-(family-name:--slide-font-heading) ' +
+          '[&[data-active]]:border-4 [&[data-active]]:border-(--slide-accent) ' +
+          '[&[data-active]]:before:text-(color:--slide-accent) [&[data-active]]:before:opacity-100 ' +
+          '[&[data-active]_em]:text-(color:--slide-accent) [&[data-active]_em]:opacity-100',
+      },
     },
     box: {
       card: { box: 'p-12 rounded-[24px] bg-(--slide-code)' },

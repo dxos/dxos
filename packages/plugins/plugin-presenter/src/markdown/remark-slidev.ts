@@ -17,7 +17,7 @@ export const SLOTS = ['default', 'left', 'middle', 'right', 'bottom-left', 'bott
 export type SlotName = (typeof SLOTS)[number];
 
 /** Named list styles a `<List>` may request; the first is the plain markdown list. */
-export const LIST_VARIANTS = ['default', 'cards', 'steps', 'outline'] as const;
+export const LIST_VARIANTS = ['default', 'cards', 'steps', 'outline', 'flow'] as const;
 
 export type ListVariant = (typeof LIST_VARIANTS)[number];
 
@@ -427,6 +427,19 @@ const positiveInteger = (value: string | undefined, name: string, issues: SlideI
  * `<List>` and `<Table>` style the block they wrap and contribute no element, so a styled list is still a `<ul>` and
  * a styled table still a `<table>`; the variant travels on the node for the renderer to turn into classes.
  */
+/** The 1-based item a list marks as the one in hand (`<List active="3">`), or none. */
+const activeItem = (tag: ContainerTag, value: string | undefined, issues: SlideIssue[]): number | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const item = Number(value);
+  if (Number.isInteger(item) && item >= 1) {
+    return item;
+  }
+  issues.push({ kind: 'html', message: `Invalid ${tagLabel(tag)} active "${value}"; ignored.` });
+  return undefined;
+};
+
 const styleBlocks = (
   tag: StyleTag,
   children: RootContent[],
@@ -436,12 +449,16 @@ const styleBlocks = (
   const { node, variants } = STYLE_TAGS[tag];
   const variant = variantName(tag, attributes.variant, variants, issues);
   const tone = toneName(tag, attributes.tone, issues);
+  const active = activeItem(tag, attributes.active, issues);
   const blocks = children.filter((child) => child.type === node);
   if (blocks.length === 0) {
     issues.push({ kind: 'html', message: `${tagLabel(tag)} has no ${node} to style.` });
   }
   for (const block of blocks) {
-    block.data = { ...block.data, hProperties: { ...block.data?.hProperties, variant, ...(tone && { tone }) } };
+    block.data = {
+      ...block.data,
+      hProperties: { ...block.data?.hProperties, variant, ...(tone && { tone }), ...(active && { active }) },
+    };
   }
   return children;
 };

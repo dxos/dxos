@@ -397,11 +397,16 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   const name = block ? asVariant(properties.variant) : undefined;
   delete properties.variant;
   // A nested list or table with no variant of its own starts clean rather than inheriting the one around it.
-  const active: ActiveVariant | undefined = block ? (name ? { kind: block, name } : undefined) : variant;
-  const variantClass = active && theme.variants[active.kind]?.[active.name]?.[VARIANT_PARTS[element.tagName]];
+  const activeVariant: ActiveVariant | undefined = block ? (name ? { kind: block, name } : undefined) : variant;
+  const variantClass =
+    activeVariant && theme.variants[activeVariant.kind]?.[activeVariant.name]?.[VARIANT_PARTS[element.tagName]];
   if (block && variantClass) {
     properties.dataVariant = name;
   }
+
+  // The item a list marks as the one in hand; its own `data-active` is what the variant styles.
+  const activeItem = block ? Number(properties.active) : NaN;
+  delete properties.active;
 
   // A tone rebinds `--slide-accent` for this element and everything under it, so the variant's own classes follow it.
   const tone = block ? asVariant(properties.tone) : undefined;
@@ -420,10 +425,28 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     ...element,
     tagName,
     properties: withStep(properties),
-    children: element.children.map((child) =>
-      child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre', active) : child,
+    children: markActive(
+      element.children.map((child) =>
+        child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre', activeVariant) : child,
+      ),
+      activeItem,
     ),
   };
+};
+
+/** Marks the `item`-th list item (1-based), which a variant styles as the one in hand. */
+const markActive = (children: ElementContent[], item: number): ElementContent[] => {
+  if (!Number.isInteger(item)) {
+    return children;
+  }
+  let index = 0;
+  return children.map((child) => {
+    if (child.type !== 'element' || child.tagName !== 'li') {
+      return child;
+    }
+    index += 1;
+    return index === item ? { ...child, properties: { ...child.properties, dataActive: '' } } : child;
+  });
 };
 
 const asVariant = (value: Properties[string]): string | undefined => (typeof value === 'string' ? value : undefined);
