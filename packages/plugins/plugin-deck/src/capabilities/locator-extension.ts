@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
+import type * as Scope from 'effect/Scope';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -30,7 +31,7 @@ export type DeckLocation = {
   variant?: string;
 };
 
-/** How long planks opened for the leader have to mount; their scroll and anchors are sent again on every tick meanwhile. */
+/** How long planks opened for the leader have to mount; their scroll and companions are sent again on every tick meanwhile. */
 const MOUNT_TIMEOUT = 5_000;
 
 const TICK_INTERVAL = 500;
@@ -109,7 +110,9 @@ export default Capability.makeModule(
     const findOpenPath = (key: EID.EID) =>
       registry.get(layoutAtom).active.find((path) => GraphPath.getEidFromPath(path) === key);
 
-    const follow = (viewAtom: Atom.Atom<AppCapabilities.FollowView>) =>
+    const follow = (
+      viewAtom: Atom.Atom<AppCapabilities.FollowView>,
+    ): Effect.Effect<Atom.Atom<boolean>, never, Scope.Scope> =>
       Effect.gen(function* () {
         const showing = Atom.make(true);
         const unmountShowing = registry.mount(showing);
@@ -274,7 +277,7 @@ export default Capability.makeModule(
             }
           }),
         );
-        return showing as Atom.Atom<boolean>;
+        return showing;
       });
 
     return Capability.contribute(AppCapabilities.LocatorExtension, {

@@ -101,7 +101,7 @@ export const LayoutAccent = Capability$.make<Atom.Atom<ChromaticPalette | undefi
 );
 
 /** What a follower shows of the session it follows, as handed to each {@link LocatorExtension}. */
-export type FollowView<T = unknown> = Readonly<{
+export type FollowView = Readonly<{
   spaceId: string;
   /** The leader's open items in the space, in order. */
   active: readonly string[];
@@ -111,7 +111,7 @@ export type FollowView<T = unknown> = Readonly<{
    */
   attended: Readonly<{ key: EID.EID; path?: string; localPath?: string }>;
   /** The leader's value for this extension in the space, when they sent one. */
-  value?: T;
+  value?: unknown;
 }>;
 
 /**
