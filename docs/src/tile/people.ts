@@ -43,9 +43,8 @@ const NAMES = [
   'Camille Morgan',
 ] as const;
 
-/** Roles and departments, dealt out in turn so the cards differ without the names implying anything about them. */
+/** Roles, dealt out in turn so the cards differ without the names implying anything about them. */
 const ROLES = ['Designer', 'Engineer', 'Product manager', 'Researcher', 'Operations lead', 'Writer'] as const;
-const DEPARTMENTS = ['Product', 'Platform', 'Research', 'Design', 'Operations'] as const;
 
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
@@ -59,11 +58,8 @@ export const people = (): GalleryItem[] =>
       icon: 'ph--user--regular',
       image: PORTRAITS[`./faces/${number}-${slug(name)}.png`],
       rows: [
-        {
-          icon: 'ph--briefcase--regular',
-          text: `${ROLES[index % ROLES.length]} · ${DEPARTMENTS[index % DEPARTMENTS.length]}`,
-        },
-        { icon: 'ph--envelope-simple--regular', text: `${slug(name).replace(/-/g, '.')}@example.com` },
+        { icon: 'ph--briefcase--regular', text: ROLES[index % ROLES.length] },
+        { icon: 'ph--envelope-simple--regular', text: `${slug(name).split('-')[0]}@example.com` },
       ],
     };
   });
