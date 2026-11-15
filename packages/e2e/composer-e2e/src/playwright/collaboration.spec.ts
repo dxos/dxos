@@ -299,7 +299,8 @@ test.describe('Collaboration tests', () => {
     await guest.expandSection('spacePlugin.collectionsSection');
     await navigateToNewDocument(guest);
     const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
-    await guestTextbox.waitFor();
+    // The editor stays read-only until the replicated document is bound to it.
+    await expect(guestTextbox).toBeEditable({ timeout: 30_000 });
     await guestTextbox.focus();
     await guestTextbox.fill('Hello from the guest');
 
@@ -342,7 +343,8 @@ test.describe('Collaboration tests', () => {
       await guest.expandSection('spacePlugin.collectionsSection');
       await navigateToNewDocument(guest);
       const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
-      await guestTextbox.waitFor();
+      // The editor stays read-only until the replicated document is bound to it.
+      await expect(guestTextbox).toBeEditable({ timeout: 30_000 });
       await guestTextbox.focus();
       await guestTextbox.fill('Hello from the guest');
 
