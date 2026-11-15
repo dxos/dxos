@@ -2,26 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Suspense, useCallback, useEffect, useState } from 'react';
+import React, { Fragment, Suspense, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Containers from '@dxos/plugin-space/Containers';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { useSpaceProperties } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
 import * as Typography from '@dxos/react-ui/Typography';
 
+import { LayoutState } from '../DiagramAppCapabilities.ts';
 import { useCanvasDrawings, useViewers } from '../hooks/index.ts';
-import { removeDrawing } from '../model/index.ts';
-import { DiagramMenu } from './DiagramMenu.tsx';
+import { type NavigateMode, removeDrawing, savePreload, setBootLook } from '../model/index.ts';
+import { dismissBootShell } from './BootShell.tsx';
+import { DIAGRAM_MENU_ANCHOR } from './DiagramLayout.tsx';
+import { DiagramMenu, useDrawingName } from './DiagramMenu.tsx';
 import { DrawingView } from './DrawingView.tsx';
-import { NameDialog } from './NameDialog.tsx';
+import { PillFrame, PillSeparator, ShareButton } from './Pill.tsx';
 import { ShareDialog } from './ShareDialog.tsx';
-import { SpaceMenu, type SpaceMenuProps } from './SpaceMenu.tsx';
-
-export type NavigateMode = 'push' | 'replace';
+import { SpaceMenu, type SpaceMenuProps, spaceLook } from './SpaceMenu.tsx';
 
 export type SpaceViewProps = Omit<SpaceMenuProps, 'current'> & {
   space: Space;
@@ -41,12 +45,44 @@ export const SpaceView = ({
   onError,
   ...spaceMenu
 }: SpaceViewProps) => {
-  const { drawings, pending } = useCanvasDrawings(space);
-  const [dialog, setDialog] = useState<{ kind: 'share' } | { kind: 'rename'; drawing: Drawing.Drawing }>();
+  const { drawings, pending } = useCanvasDrawings(space, drawingId);
+  const [sharing, setSharing] = useState(false);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { popoverAnchor } = Hooks.useAtomCapability(LayoutState);
+  const MenuAnchor = popoverAnchor?.anchorId === DIAGRAM_MENU_ANCHOR ? Popover.Anchor : Fragment;
   const named = drawings.find(({ id }) => id === drawingId);
   // While a named diagram's canvas is still loading, show nothing rather than flash another diagram.
   const drawing = named ?? (pending && drawingId ? undefined : drawings[0]);
   const viewers = useViewers(space, drawing?.id);
+  const [properties] = useSpaceProperties(space.id);
+  const drawingName = useDrawingName(drawing);
+
+  // What the diagram reached is saved as it is left, for the next load to fetch in one batch.
+  useEffect(() => {
+    if (!drawing) {
+      return;
+    }
+    const handleVisibilityChange = () => document.visibilityState === 'hidden' && savePreload(drawing);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      savePreload(drawing);
+    };
+  }, [drawing]);
+
+  // With a diagram, the boot shell waits for its frame (`DrawingView`); without one, it gives way to the empty state.
+  useLayoutEffect(() => {
+    if (!drawing && !pending) {
+      dismissBootShell();
+    }
+  }, [drawing, pending]);
+
+  useEffect(() => {
+    if (properties && drawing) {
+      const { name, hue } = spaceLook(space);
+      setBootLook({ spaceId: space.id, spaceName: name, spaceHue: hue, drawingId: drawing.id, drawingName });
+    }
+  }, [space, properties, drawing, drawingName]);
 
   // A URL with no diagram, or one that names none here, is rewritten to the diagram shown.
   useEffect(() => {
@@ -104,52 +140,29 @@ export const SpaceView = ({
         )
       )}
 
-      {/* The canvas article's toolbars hold the corners and the bottom edge; the top center is free. */}
-      <Layout.Flex
-        gap='xs'
-        align='center'
-        classNames='absolute top-2 inset-x-0 mx-auto w-fit z-30 rounded-sm bg-modal-surface border border-separator p-0.5'
-        data-testid='diagram-app.pill'
-      >
+      <PillFrame testId='diagram-app.pill'>
         <SpaceMenu current={space} {...spaceMenu} />
-        <Typography.Text classNames='text-fg-subtle'>/</Typography.Text>
-        <DiagramMenu
-          drawings={drawings}
-          current={drawing}
-          onSelect={(next) => onSelectDrawing(next.id, 'push')}
-          onCreate={create}
-          onRename={(target) => setDialog({ kind: 'rename', drawing: target })}
-          onDelete={handleDelete}
-        />
+        <PillSeparator />
+        {/* A rename popover from the diagram's row menu sits under the menu's button, as Composer's under the row. */}
+        <MenuAnchor>
+          <DiagramMenu
+            drawings={drawings}
+            current={drawing}
+            onSelect={(next) => onSelectDrawing(next.id, 'push')}
+            onCreate={create}
+            onRename={(target) =>
+              void invokePromise(SpaceOperation.RenameObject, { object: target, caller: DIAGRAM_MENU_ANCHOR })
+            }
+            onDelete={handleDelete}
+          />
+        </MenuAnchor>
+        <ShareButton data-testid='diagram-app.share' onClick={() => setSharing(true)} />
         <Suspense>
           <Containers.FullPresence members={viewers} size='sm' />
         </Suspense>
-        <Button.Root
-          variant='primary'
-          icon='ph--user-plus--regular'
-          data-testid='diagram-app.share'
-          onClick={() => setDialog({ kind: 'share' })}
-        >
-          Share
-        </Button.Root>
-      </Layout.Flex>
+      </PillFrame>
 
-      {dialog?.kind === 'share' && <ShareDialog space={space} onClose={() => setDialog(undefined)} />}
-      {dialog?.kind === 'rename' && (
-        <NameDialog
-          title='Rename diagram'
-          label='Name'
-          submitLabel='Rename'
-          initialValue={dialog.drawing.name ?? ''}
-          onClose={() => setDialog(undefined)}
-          onSubmit={(name) => {
-            Obj.update(dialog.drawing, (drawing) => {
-              drawing.name = name;
-            });
-            setDialog(undefined);
-          }}
-        />
-      )}
+      {sharing && <ShareDialog space={space} onClose={() => setSharing(false)} />}
     </div>
   );
 };

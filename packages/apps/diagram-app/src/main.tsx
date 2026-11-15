@@ -16,6 +16,7 @@ import { Config, Defaults, Envs, Local, defs } from '@dxos/config';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
+import { showBootShell } from './components/BootShell.tsx';
 import { getPlugins } from './plugins.ts';
 
 const createDedicatedWorker = () =>
@@ -30,6 +31,7 @@ const createCoordinatorWorker = () =>
 
 const main = Effect.gen(function* () {
   performance.mark('diagram-app:main');
+  showBootShell();
   const config = new Config(
     {
       runtime: {

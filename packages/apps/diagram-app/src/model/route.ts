@@ -21,3 +21,6 @@ export const parseRoute = (pathname: string): Route => {
 
 export const routePath = ({ spaceId, drawingId }: Route): string =>
   `/${[spaceId, spaceId && drawingId].filter(Boolean).join('/')}`;
+
+/** A pushed route is a step Back returns from; a replaced one is not. */
+export type NavigateMode = 'push' | 'replace';

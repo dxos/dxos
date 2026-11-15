@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { type Space } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as Canvas from '@dxos/plugin-canvas/Canvas';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -14,14 +15,35 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 export type CanvasDrawings = {
   /** The space's canvas diagrams, newest first (spec F-4.3, F-4.4). */
   drawings: Drawing.Drawing[];
-  /** Whether some drawing's canvas has not loaded yet, so the list may still grow. */
+  /** Whether the list may still grow: some drawing's canvas, or the expected drawing itself, has not loaded yet. */
   pending: boolean;
 };
 
-/** The space's drawings whose canvas is the canvas plugin's scene; a drawing's kind is known once its canvas loads. */
-export const useCanvasDrawings = (space: Space): CanvasDrawings => {
+/**
+ * The space's drawings whose canvas is the canvas plugin's scene; a drawing's kind is known once its canvas loads.
+ * The query answers before every stored drawing has loaded, so the drawing the caller `expected` keeps the list
+ * pending until its own load settles.
+ */
+export const useCanvasDrawings = (space: Space, expected?: string): CanvasDrawings => {
   const all = useQuery(space.db, Filter.type(Drawing.Drawing));
   const [formats, setFormats] = useState<ReadonlyMap<string, boolean>>(new Map());
+  const [settled, setSettled] = useState<string>();
+
+  useEffect(() => {
+    if (!expected) {
+      return;
+    }
+    let cancelled = false;
+    const settle = () => !cancelled && setSettled(expected);
+    // A drawing deleted or never synced here fails to load, which settles it too.
+    space.db
+      .makeRef(EID.make({ entityId: expected }))
+      .load()
+      .then(settle, settle);
+    return () => {
+      cancelled = true;
+    };
+  }, [space, expected]);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,8 +70,10 @@ export const useCanvasDrawings = (space: Space): CanvasDrawings => {
       drawings: all
         .filter((drawing) => formats.get(drawing.id))
         .toSorted((left, right) => right.id.localeCompare(left.id)),
-      pending: all.some((drawing) => !formats.has(drawing.id)),
+      pending:
+        all.some((drawing) => !formats.has(drawing.id)) ||
+        (expected !== undefined && settled !== expected && !all.some(({ id }) => id === expected)),
     }),
-    [all, formats],
+    [all, formats, expected, settled],
   );
 };

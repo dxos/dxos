@@ -47,12 +47,12 @@ export type RenamePopoverProps = { subject: RenameSubject };
 //   so any plugin can use the rename popover without depending on plugin-space.
 
 /**
- * Rename popover anchored to a navtree row: an object's basic properties (name, description, tags), which write as they
+ * Rename popover anchored to a navtree row: an object's basic properties (name, description), which write as they
  * change; a space or a callback subject keeps the inline name field.
  */
 export const RenamePopover = ({ subject }: RenamePopoverProps) =>
   !isRenameCallback(subject) && Obj.isObject(subject) ? (
-    <ObjectProperties object={subject} classNames='max-h-[min(var(--available-height),32rem)]' />
+    <ObjectProperties object={subject} showTags={false} classNames='max-h-[min(var(--available-height),32rem)]' />
   ) : (
     <RenameField subject={subject} />
   );

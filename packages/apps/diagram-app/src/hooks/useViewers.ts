@@ -20,15 +20,20 @@ const BROADCAST_INTERVAL = 30_000;
 const EXPIRY = 2 * BROADCAST_INTERVAL;
 const REFRESH_INTERVAL = 5_000;
 
+/** An online member of the space; `currentlyAttended` when they show the same diagram as this client. */
 export type Viewer = Halo.Member & { lastSeen: number; currentlyAttended: boolean };
 
 const strings = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 
-/** Announces that this client shows `objectId`, and returns the other online members who show it too. */
+/**
+ * Announces that this client shows `objectId`, and returns the space's other online members, those who show it too
+ * first.
+ */
 export const useViewers = (space: Space, objectId: string | undefined): Viewer[] => {
   const identityKey = useIdentity()?.identityKey;
   const members = useMembers(space.id);
+  // When each peer last announced `objectId`.
   const [seen, setSeen] = useState<Readonly<Record<string, number>>>({});
   const [now, setNow] = useState(Date.now);
   const key = objectId ? EID.make({ spaceId: space.id, entityId: objectId }) : undefined;
@@ -79,11 +84,17 @@ export const useViewers = (space: Space, objectId: string | undefined): Viewer[]
       members
         .flatMap((member) => {
           const lastSeen = member.identityKey ? seen[member.identityKey] : undefined;
-          return member.online && lastSeen && now - lastSeen < EXPIRY
-            ? [{ ...member, lastSeen, currentlyAttended: true }]
-            : [];
+          if (!member.online || !member.identityKey || member.identityKey === identityKey) {
+            return [];
+          }
+          const here = lastSeen !== undefined && now - lastSeen < EXPIRY;
+          return [{ ...member, lastSeen: lastSeen ?? 0, currentlyAttended: here }];
         })
-        .toSorted((left, right) => (left.identityKey ?? '').localeCompare(right.identityKey ?? '')),
-    [members, seen, now],
+        .toSorted(
+          (left, right) =>
+            Number(right.currentlyAttended) - Number(left.currentlyAttended) ||
+            (left.identityKey ?? '').localeCompare(right.identityKey ?? ''),
+        ),
+    [members, identityKey, seen, now],
   );
 };

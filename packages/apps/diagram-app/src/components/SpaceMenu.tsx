@@ -7,9 +7,9 @@ import React from 'react';
 import { type Space } from '@dxos/client/echo';
 import { useSpaceProperties } from '@dxos/react-client/echo';
 import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Button from '@dxos/react-ui/Button';
 import { getHashHue } from '@dxos/ui-theme';
 
+import { SpaceTrigger } from './Pill.tsx';
 import { PillCombobox } from './PillCombobox.tsx';
 
 const UNTITLED_SPACE = 'Untitled space';
@@ -23,7 +23,7 @@ export const useSpaceName = (space: Space | undefined): string => {
 };
 
 /** A space's name and hue as they stand; the menu reads them each time it renders. */
-const spaceLook = (space: Space): { name: string; hue: Avatar.RootProps['hue'] } => {
+export const spaceLook = (space: Space): { name: string; hue: Avatar.RootProps['hue'] } => {
   const properties = space.properties;
   return {
     name: properties.name || UNTITLED_SPACE,
@@ -50,12 +50,7 @@ export const SpaceMenu = ({ spaces, current, onSelect, onCreate, onJoin }: Space
   const name = useSpaceName(current);
   return (
     <PillCombobox
-      trigger={
-        <Button.Root variant='ghost' caretDown data-testid='diagram-app.space-menu'>
-          <SpaceAvatar space={current} />
-          {name}
-        </Button.Root>
-      }
+      trigger={<SpaceTrigger name={name} hue={spaceLook(current).hue} data-testid='diagram-app.space-menu' />}
       width='w-75'
       placeholder='Find a space'
       testId='diagram-app.space-list'

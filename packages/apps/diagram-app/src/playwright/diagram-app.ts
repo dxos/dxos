@@ -23,7 +23,7 @@ export class DiagramApp {
 
   constructor(private readonly _browser: Browser) {}
 
-  /** Opens `url` in a fresh profile and waits for the canvas or the join card. */
+  /** Opens `url` in a fresh profile and waits for the canvas or the join dialog. */
   async open(url: string = ORIGIN): Promise<void> {
     const { page, close } = await setupPage(this._browser);
     this.page = page;
@@ -38,7 +38,7 @@ export class DiagramApp {
       });
     });
     await page.goto(url);
-    await this.toolbar().or(this.joinStatus()).waitFor();
+    await this.toolbar().or(this.joinDialog()).waitFor();
   }
 
   async close(): Promise<void> {
@@ -55,8 +55,8 @@ export class DiagramApp {
     return this.page.getByTestId('canvas-toolbar');
   }
 
-  joinStatus(): Locator {
-    return this.page.getByTestId('diagram-app.join-status');
+  joinDialog(): Locator {
+    return this.page.getByTestId('join-dialog');
   }
 
   pill(): Locator {

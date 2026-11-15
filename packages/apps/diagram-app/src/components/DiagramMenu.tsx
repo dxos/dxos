@@ -2,23 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React from 'react';
 
-import { Annotation, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import * as Button from '@dxos/react-ui/Button';
+import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Icon from '@dxos/react-ui/Icon';
 
 import { UNTITLED } from '../model/index.ts';
+import { DIAGRAM_ICON, DiagramTrigger } from './Pill.tsx';
 import { PillCombobox } from './PillCombobox.tsx';
-
-/** The `Drawing` type's own icon, as Composer shows it. */
-export const DIAGRAM_ICON = Annotation.IconAnnotation.get(Type.getSchema(Drawing.Drawing)).pipe(
-  Option.map(({ icon }) => icon),
-  Option.getOrElse(() => 'ph--compass-tool--regular'),
-);
 
 /** The shortcut that creates a diagram (spec F-4.7), as the menu shows it. */
 export const NEW_DIAGRAM_SHORTCUT = '⌥N';
@@ -56,11 +48,7 @@ export const DiagramMenu = ({ drawings, current, onSelect, onCreate, onRename, o
   const find = (id: string) => drawings.find((drawing) => drawing.id === id);
   return (
     <PillCombobox
-      trigger={
-        <Button.Root variant='ghost' caretDown icon={DIAGRAM_ICON} data-testid='diagram-app.diagram-menu'>
-          {current ? name : 'No diagrams'}
-        </Button.Root>
-      }
+      trigger={<DiagramTrigger name={current ? name : 'No diagrams'} data-testid='diagram-app.diagram-menu' />}
       width='w-90'
       placeholder='Find a diagram'
       testId='diagram-app.diagram-list'

@@ -2,13 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { type AuthenticatingInvitationObservable, type Invitation } from '@dxos/client/invitations';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as Canvas from '@dxos/plugin-canvas/Canvas';
@@ -16,74 +20,124 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
-import { toPublicKey } from '@dxos/protocols/buf';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpaces } from '@dxos/react-client/echo';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as Toast from '@dxos/react-ui/Toast';
-import * as Typography from '@dxos/react-ui/Typography';
 
+import { LayoutState } from '../DiagramAppCapabilities.ts';
 import * as DiagramAppEvents from '../DiagramAppEvents.ts';
 import {
   FIRST_SPACE_NAME,
+  type NavigateMode,
   type Route,
   UNTITLED,
   createSpace,
   ensureIdentity,
   fileDrawing,
   getLastDrawing,
-  joinSpace,
-  parseInvitationCode,
   parseRoute,
-  routePath,
-  setLastDrawing,
-  setLastSpace,
+  preloadDrawing,
+  recordRoute,
   startSpace,
-  takeInvitationCode,
 } from '../model/index.ts';
-import { JoinStatus } from './JoinStatus.tsx';
-import { NameDialog } from './NameDialog.tsx';
-import { type NavigateMode, SpaceView } from './SpaceView.tsx';
+import { dismissJoinDialog, isBootShellShown, showJoinDialog } from './BootShell.tsx';
+import { DiagramLayout } from './DiagramLayout.tsx';
+import { SpaceView } from './SpaceView.tsx';
 
-const LINK_FAILED = 'This link no longer works. Ask for a new one.';
+/** Records a boot milestone once, for the startup harness. */
+const markOnce = (name: string) => {
+  if (performance.getEntriesByName(name, 'mark').length === 0) {
+    performance.mark(name);
+  }
+};
+
 const SPACE_NOT_HERE = 'That space is not in this browser. Ask for an invitation link.';
 
 /**
- * The whole app (spec F-1): creates the identity, opens the space and diagram the URL names (or joins one from an
- * invitation link), and shows the diagram with the space switcher, diagram menu, viewers and Share over it.
+ * Brings up what the app needs before it reads or writes anything, all at once: the create operation (Idle), every
+ * drawing variant (the illustrator's start), the app's types (its own start), the identity, and the article
+ * surfaces, so the canvas does not suspend when it first renders.
+ */
+const prepare = async (manager: PluginManager.PluginManager, client: Client) => {
+  markOnce('diagram-app:startup');
+  await Promise.all([
+    EffectEx.runPromise(manager.activate(ActivationEvents.SurfacesRequested(AppSurface.Article.role))),
+    EffectEx.runPromise(manager.activate(ActivationEvents.Idle)),
+    EffectEx.runPromise(manager.activate(IllustratorEvents.Start)),
+    EffectEx.runPromise(manager.activate(DiagramAppEvents.Start)),
+    EffectEx.runPromise(ensureIdentity(client)),
+  ]);
+  markOnce('diagram-app:prepared');
+};
+
+/**
+ * The whole app (spec F-1). Mounts the app once the client is initialized, since client hooks suspend before then
+ * and React holds a revealed boundary back for its fallback throttle; the preparation starts at once regardless.
  */
 export const DiagramRoot = () => {
+  markOnce('diagram-app:root-render');
   const manager = Hooks.useCapability(Capabilities.PluginManager);
   const client = Hooks.useCapability(ClientCapabilities.Client);
+  const [prepared, setPrepared] = useState<Promise<void>>();
+  const [initialized, setInitialized] = useState(client.initialized);
+
+  useEffect(() => {
+    setPrepared(prepare(manager, client));
+    if (!client.initialized) {
+      void client.waitUntilInitialized().then(() => setInitialized(true));
+    }
+  }, [manager, client]);
+
+  // Until a space shows, the boot shell covers the app.
+  return initialized && prepared ? (
+    <DiagramLayout>
+      <DiagramApp prepared={prepared} />
+    </DiagramLayout>
+  ) : (
+    <Layout.Container classNames='fixed inset-0 bg-base-surface' data-testid='diagram-app.loading' />
+  );
+};
+
+/**
+ * Opens the space and diagram the URL names and shows it with the pill. A link with parameters goes first to the
+ * plugins' navigation handlers: SpacePlugin's opens Composer's join dialog for an invitation (spec F-6.1).
+ */
+const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
+  const client = Hooks.useCapability(ClientCapabilities.Client);
+  const navigationHandlers = Hooks.useCapabilities(AppCapabilities.NavigationHandler);
   const { invokePromise } = Hooks.useOperationInvoker();
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const layoutState = Hooks.useCapability(LayoutState);
+  const [layout, updateLayout] = Hooks.useAtomCapabilityState(LayoutState);
   const spaces = useSpaces();
-  const [route, setRoute] = useState<Route>({});
-  const [joining, setJoining] = useState<AuthenticatingInvitationObservable>();
-  const [dialog, setDialog] = useState<'new-space' | 'join'>();
-  const [notice, setNotice] = useState<string>();
+  // Set from asking for the join dialog until the joined space shows, or the dialog is dismissed: the space it started
+  // on, the dismissals so far, and whether the dialog has opened.
+  const [joining, setJoining] = useState<{ spaceId?: string; dismissals: number; opened: boolean }>();
   const startedRef = useRef(false);
+  const { route } = layout;
   const space = spaces.find(({ id }) => id === route.spaceId);
   const spaceId = space?.id;
 
+  const notify = useCallback(
+    (id: string, title: string) =>
+      void invokePromise(LayoutOperation.AddToast, { id: `diagram-app.${id}`, icon: 'ph--warning--regular', title }),
+    [invokePromise],
+  );
+
   /** The route is the URL's path (spec F-8): a pushed one is a step Back returns from. */
-  const navigate = useCallback((next: Route, mode: NavigateMode) => {
-    if (next.spaceId) {
-      setLastSpace(next.spaceId);
-      if (next.drawingId) {
-        setLastDrawing(next.spaceId, next.drawingId);
-      }
-    }
-    setRoute(next);
-    const path = routePath(next);
-    if (path !== window.location.pathname) {
-      window.history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', path + window.location.search);
-    }
-  }, []);
+  const navigate = useCallback(
+    (next: Route, mode: NavigateMode) => {
+      recordRoute(next, mode);
+      updateLayout((state) => ({ ...state, route: next }));
+    },
+    [updateLayout],
+  );
 
   useEffect(() => {
-    const handlePopState = () => setRoute(parseRoute(window.location.pathname));
+    const handlePopState = () => updateLayout((state) => ({ ...state, route: parseRoute(window.location.pathname) }));
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [updateLayout]);
 
   const openSpace = useCallback(
     (next: Space, mode: NavigateMode = 'push') =>
@@ -117,71 +171,27 @@ export const DiagramRoot = () => {
     [invokePromise],
   );
 
-  const createSpaceWithDiagram = useCallback(
-    async (name: string) => {
-      const created = await EffectEx.runPromise(createSpace(client, name));
-      const drawing = await createDiagram(created);
-      navigate({ spaceId: created.id, drawingId: drawing.id }, 'push');
-    },
-    [client, createDiagram, navigate],
-  );
-
   /** The space and diagram the URL names, else the last space, else any, else a first run's "My diagrams" (spec F-2.1). */
   const openStart = useCallback(
     async (wanted: Route = {}) => {
       const existing = await EffectEx.runPromise(startSpace(client, wanted.spaceId));
       if (wanted.spaceId && existing?.id !== wanted.spaceId) {
-        setNotice(SPACE_NOT_HERE);
+        notify('space-not-here', SPACE_NOT_HERE);
       }
       if (!existing) {
-        await createSpaceWithDiagram(FIRST_SPACE_NAME);
-      } else if (existing.id === wanted.spaceId) {
-        navigate({ spaceId: existing.id, drawingId: wanted.drawingId ?? getLastDrawing(existing.id) }, 'replace');
-      } else {
-        openSpace(existing, 'replace');
+        const created = await EffectEx.runPromise(createSpace(client, FIRST_SPACE_NAME));
+        const drawing = await createDiagram(created);
+        navigate({ spaceId: created.id, drawingId: drawing.id }, 'push');
+        return;
       }
-    },
-    [client, navigate, openSpace, createSpaceWithDiagram],
-  );
-
-  const startJoin = useCallback(
-    (code: string) => {
-      try {
-        setJoining(joinSpace(client, code));
-      } catch (err) {
-        log.warn('invitation code did not decode', { err });
-        setNotice(LINK_FAILED);
-        if (!spaceId) {
-          void openStart();
-        }
+      const drawingId = (existing.id === wanted.spaceId ? wanted.drawingId : undefined) ?? getLastDrawing(existing.id);
+      if (drawingId) {
+        preloadDrawing(existing, drawingId);
       }
+      navigate({ spaceId: existing.id, drawingId }, 'replace');
     },
-    [client, spaceId, openStart],
+    [client, notify, navigate, createDiagram],
   );
-
-  const handleJoined = useCallback(
-    async (invitation: Invitation) => {
-      const spaceKey = toPublicKey(invitation.spaceKey);
-      const joined = client.spaces
-        .get()
-        .find((candidate) => candidate.id === invitation.spaceId || (spaceKey && candidate.key.equals(spaceKey)));
-      if (!joined) {
-        throw new Error('Joined space not found');
-      }
-      await joined.waitUntilReady();
-      openSpace(joined, 'replace');
-      setJoining(undefined);
-    },
-    [client, openSpace],
-  );
-
-  const handleJoinFailed = useCallback(() => {
-    setJoining(undefined);
-    setNotice(LINK_FAILED);
-    if (!spaceId) {
-      void openStart();
-    }
-  }, [spaceId, openStart]);
 
   useEffect(() => {
     // A capability identity change reruns this effect; a second startup would race the first to create the space.
@@ -189,92 +199,88 @@ export const DiagramRoot = () => {
       return;
     }
     startedRef.current = true;
-    const code = takeInvitationCode();
     const wanted = parseRoute(window.location.pathname);
     void (async () => {
-      // The create operation (Idle), every drawing variant (the illustrator's start) and the app's types (its own
-      // start) must be up before anything is written or rendered.
-      await EffectEx.runPromise(manager.activate(ActivationEvents.Idle));
-      await EffectEx.runPromise(manager.activate(IllustratorEvents.Start));
-      await EffectEx.runPromise(manager.activate(DiagramAppEvents.Start));
-      await EffectEx.runPromise(ensureIdentity(client));
-      if (code) {
-        startJoin(code);
-      } else {
-        await openStart(wanted);
+      await prepared;
+      if (window.location.search) {
+        const url = new URL(window.location.href);
+        await Promise.all(
+          navigationHandlers.map((handler) =>
+            EffectEx.runPromise(handler(url)).catch((err) => log.warn('navigation handler failed', { err })),
+          ),
+        );
       }
+      // An invitation's handler has opened the join dialog by now.
+      const { dialogOpen, dialogDismissals } = registry.get(layoutState);
+      if (dialogOpen) {
+        setJoining({ dismissals: dialogDismissals, opened: true });
+        return;
+      }
+      dismissJoinDialog();
+      await openStart(wanted);
+      markOnce('diagram-app:space-open');
     })().catch((err) => {
       log.error('startup failed', { err });
-      setNotice('The app could not start. Reload to try again.');
+      notify('startup-failed', 'The app could not start. Reload to try again.');
     });
-  }, [manager, client, startJoin, openStart]);
+  }, [prepared, navigationHandlers, registry, layoutState, openStart, notify]);
 
-  return (
-    <Toast.Provider>
-      {space ? (
-        <SpaceView
-          key={space.id}
-          space={space}
-          spaces={spaces}
-          drawingId={route.drawingId}
-          onSelect={openSpace}
-          onSelectDrawing={selectDrawing}
-          onCreate={() => setDialog('new-space')}
-          onJoin={() => setDialog('join')}
-          onCreateDiagram={createDiagram}
-          onError={setNotice}
-        />
-      ) : (
-        !joining && (
-          <Layout.Flex center classNames='fixed inset-0 bg-base-surface' data-testid='diagram-app.loading'>
-            <Typography.Text classNames='text-fg-muted'>Opening…</Typography.Text>
-          </Layout.Flex>
-        )
-      )}
+  // A join ends when its space shows. One the user closes first returns to the space it started on, or on a link
+  // with none, to the usual start space.
+  useEffect(() => {
+    if (!joining) {
+      return;
+    }
+    if (!joining.opened) {
+      if (layout.dialogOpen) {
+        setJoining({ ...joining, opened: true });
+      }
+      return;
+    }
+    if (space && space.id !== joining.spaceId) {
+      setJoining(undefined);
+    } else if (!layout.dialogOpen && layout.dialogDismissals > joining.dismissals) {
+      setJoining(undefined);
+      if (!route.spaceId) {
+        void openStart();
+      }
+    }
+  }, [joining, space, route.spaceId, layout.dialogOpen, layout.dialogDismissals, openStart]);
 
-      {joining && <JoinStatus invitation={joining} onJoined={handleJoined} onFailed={handleJoinFailed} />}
+  // A join that succeeded closes its dialog before the joined space shows; the still copy stands in until it does, and
+  // over the boot shell until the shell gives way to the joined diagram.
+  const joined = !!joining?.opened && !layout.dialogOpen && layout.dialogDismissals === joining.dismissals;
+  useLayoutEffect(() => {
+    if (!joined) {
+      return;
+    }
+    showJoinDialog();
+    return () => {
+      if (!isBootShellShown()) {
+        dismissJoinDialog();
+      }
+    };
+  }, [joined]);
 
-      {dialog === 'new-space' && (
-        <NameDialog
-          title='New space'
-          label='Space name'
-          submitLabel='Create'
-          placeholder='Team space'
-          onClose={() => setDialog(undefined)}
-          onSubmit={(name) => {
-            setDialog(undefined);
-            createSpaceWithDiagram(name).catch((err) => {
-              log.error('space not created', { err });
-              setNotice('The space could not be created.');
-            });
-          }}
-        />
-      )}
-      {dialog === 'join' && (
-        <NameDialog
-          title='Join a space'
-          label='Invitation link'
-          submitLabel='Join'
-          placeholder='Paste a link from this app or Composer'
-          onClose={() => setDialog(undefined)}
-          onSubmit={(text) => {
-            setDialog(undefined);
-            const code = parseInvitationCode(text);
-            if (code) {
-              startJoin(code);
-            }
-          }}
-        />
-      )}
+  const handleJoin = useCallback(() => {
+    setJoining({ spaceId, dismissals: registry.get(layoutState).dialogDismissals, opened: false });
+    void invokePromise(SpaceOperation.Join, {});
+  }, [spaceId, registry, layoutState, invokePromise]);
 
-      <Toast.Root
-        open={!!notice}
-        onOpenChange={(open) => !open && setNotice(undefined)}
-        data-testid='diagram-app.notice'
-      >
-        <Toast.Header icon='ph--warning--regular'>{notice}</Toast.Header>
-      </Toast.Root>
-      <Toast.Toaster />
-    </Toast.Provider>
+  return space ? (
+    <SpaceView
+      key={space.id}
+      space={space}
+      spaces={spaces}
+      drawingId={route.drawingId}
+      onSelect={openSpace}
+      onSelectDrawing={selectDrawing}
+      onCreate={() => void invokePromise(SpaceOperation.OpenCreateSpace)}
+      onJoin={handleJoin}
+      onCreateDiagram={createDiagram}
+      onError={(message) => notify('error', message)}
+    />
+  ) : (
+    <Layout.Container classNames='fixed inset-0 bg-base-surface' data-testid='diagram-app.loading' />
   );
 };

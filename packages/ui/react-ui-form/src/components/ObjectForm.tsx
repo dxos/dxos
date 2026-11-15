@@ -156,7 +156,11 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
 };
 
 export type ObjectPropertiesProps = PropsWithChildren<
-  { object: Obj.Unknown } & Pick<RefFieldDataProps, 'getCreateDefaults' | 'resolveCreateEntry'>
+  {
+    object: Obj.Unknown;
+    /** Render the meta-tags field. Defaults to `true`. */
+    showTags?: boolean;
+  } & Pick<RefFieldDataProps, 'getCreateDefaults' | 'resolveCreateEntry'>
 >;
 
 /**
@@ -165,14 +169,17 @@ export type ObjectPropertiesProps = PropsWithChildren<
  * the form's viewport.
  */
 export const ObjectProperties = Util.composable<HTMLDivElement, ObjectPropertiesProps>(
-  ({ children, object, getCreateDefaults, resolveCreateEntry, ...props }, forwardedRef) => {
+  ({ children, object, showTags = true, getCreateDefaults, resolveCreateEntry, ...props }, forwardedRef) => {
     const db = Obj.getDatabase(object);
     const [snapshot] = useObject(object);
     const { values, handleCreate, handleChange } = useObjectFormModel({ object, snapshot, db });
     // `Obj.getType` misses database-registered (dynamic) schemas, which `useType` resolves by the stored type URI.
     const registered = useType(db, Obj.getTypeURI(object));
     const type = Obj.getType(object) ?? registered;
-    const formSchema = useMemo(() => (type ? withMetaTags(Type.getSchema(type)) : undefined), [type]);
+    const formSchema = useMemo(
+      () => (type ? (showTags ? withMetaTags(Type.getSchema(type)) : omitId(Type.getSchema(type))) : undefined),
+      [type, showTags],
+    );
     if (!formSchema) {
       return null;
     }

@@ -11,6 +11,7 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 
 import { DiagramAppPlugin } from './DiagramAppPlugin.ts';
@@ -23,7 +24,8 @@ export type PluginOptions = {
 
 /**
  * The plugin set (spec F-1.2): the canvas article needs attention and the app graph its shortcuts resolve
- * against, and the illustrator owns the `Drawing` type and its variants. Each plugin body is a lazy chunk.
+ * against, the illustrator owns the `Drawing` type and its variants, and SpacePlugin's dialogs and popovers
+ * show in the app's layout. Each plugin body is a lazy chunk.
  */
 export const getPlugins = ({ client, config, services }: PluginOptions): Plugin.Plugin[] => [
   AttentionPlugin.make(),
@@ -33,5 +35,6 @@ export const getPlugins = ({ client, config, services }: PluginOptions): Plugin.
   GraphPlugin.make(),
   IllustratorPlugin.make(),
   ProcessManagerPlugin.make(),
+  SpacePlugin.make({}),
   ThemePlugin.make({ appName: 'Diagram' }),
 ];

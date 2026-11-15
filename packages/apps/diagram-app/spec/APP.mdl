@@ -5,7 +5,7 @@ version: 0.1.0
 ---
 
 A diagramming app that is one full-screen canvas: open it and draw, with no sign-up. It is an app-framework
-app with a small plugin set (the canvas and illustrator plugins plus its own layout plugin) rather than Composer
+app with a small plugin set (the canvas, illustrator and space plugins plus its own layout plugin) rather than Composer
 with things turned off. An identity is made silently on first run. Diagrams live in spaces, and a space is
 shared with a link. The data and the link format are Composer's, so a space shared from Composer opens here and
 one shared from here opens in Composer, with the same diagrams in both.
@@ -23,7 +23,7 @@ uses org.dxos.plugin.illustrator: The `Drawing` type a diagram is, its variants,
 ```
 
 ```mdl
-uses org.dxos.plugin.space: Composer's share link and root-collection filing, which this app matches so the two interoperate.
+uses org.dxos.plugin.space: Composer's share link, root-collection filing, and its join, create-space and rename dialogs, which this app's layout shows.
 ```
 
 ```mdl
@@ -46,24 +46,26 @@ uses org.dxos.app.composer: The app a space shared from here must also open in.
 ```mdl
 feat F-1: App shell
   req F-1.1: The app renders one diagram filling the viewport; every control floats over the canvas.
-  req F-1.2: The plugin set is Attention, Client, Graph, ProcessManager, Theme, Illustrator, Canvas and the app's own `DiagramAppPlugin`; Composer's deck and SpacePlugin are not loaded.
-  req F-1.3: `DiagramAppPlugin` contributes the `Layout` capability (a single-item workspace with no sidebars), the React root, the root-collection `DefaultParent` rule, the `Collection` schema, the handler for Composer's share operation and the space plugin's translations; it registers its types before the first write.
+  req F-1.2: The plugin set is Attention, Canvas, Client, Graph, Illustrator, ProcessManager, Space, Theme and the app's own `DiagramAppPlugin`; Composer's deck is not loaded.
+  req F-1.3: `DiagramAppPlugin` is the app's layout plugin. It contributes the `Layout` capability (a single-item workspace with no sidebars) and the React root, and handles the layout operations other plugins call: `AddToast`, `Open`, `SwitchWorkspace`, `UpdateDialog` and `UpdatePopover`. It shows one dialog surface, one popover surface and the toasts over the canvas, and registers the `Collection` schema before the first write.
   req F-1.4: The app's own UI uses only existing `@dxos/react-ui` components; the canvas toolbar and palette are the canvas plugin's.
+  req F-1.5: The app draws its pill and the diagram's frame at once, before the client is up: the space name and hue, diagram name and Share as the last visit left them, and the toolbars and panels the diagram opened with, without its content. The live app replaces them once its own frame is on screen, and until then they take no input. The diagram's content fades in over 100 ms; the frame does not, since it is already on screen. A first run draws "My diagrams / Untitled" and no frame, and a space the last visit did not show draws the pill without names. An invitation link draws the same, with the join dialog over it (F-6.2). The app shows no loading text.
+  req F-1.6: The app prepares in the background, all at once: plugins, identity and the open space. Opening a diagram loads every object it reached on its last open in one batch, not one reference at a time.
 ```
 
 ```mdl
 feat F-2: Anonymous identity
   req F-2.1: On first run the app creates an identity without asking anything, then a space named "My diagrams" holding one empty diagram, and opens it.
   req F-2.2: The identity and its spaces persist in the browser (OPFS); a reload reopens the space and diagram the URL names (F-8).
-  req F-2.3: Opening an invitation link on a profile with no identity creates the identity first, then joins (F-6); it creates no "My diagrams" space.
+  req F-2.3: Opening an invitation link on a profile with no identity creates the identity first, then joins (F-6); a join that succeeds creates no "My diagrams" space.
 ```
 
 ```mdl
 feat F-3: Space switcher
   req F-3.1: A pill at the top center, clear of the canvas toolbars, shows the current space's avatar and name. Its menu is a search over the ready spaces, each with a square avatar of its initials in the space's hue, the current one checked.
   req F-3.2: Picking a space opens its last diagram in this browser, else its most recently created one, else its empty state (F-4.6).
-  req F-3.3: "New space" asks for a name, creates the space, and switches to it with one empty diagram.
-  req F-3.4: "Join with a link…" takes a pasted link or bare invitation code and joins as in F-6.
+  req F-3.3: "New space" opens Composer's create-space dialog; the space it creates opens with one empty diagram.
+  req F-3.4: "Join with a link…" opens Composer's join dialog, which takes a pasted link or bare invitation code, joins, and switches to the joined space. A space this identity joined never gets a diagram it did not have.
   req F-3.5: A space joined from Composer is listed like any other.
   req F-3.6: New space and Join with a link follow the spaces under a separator and show whatever is typed.
 ```
@@ -74,8 +76,8 @@ feat F-4: Diagrams
   req F-4.2: A new diagram is filed into the space's root collection, as Composer files one, so it shows in Composer's navigator.
   req F-4.3: The diagram menu lists the space's canvas diagrams newest first, each with the `Drawing` icon and its name on one line; a search field at the top narrows the list by name.
   req F-4.4: Only drawings whose canvas is the canvas plugin's `Canvas` are diagrams here; drawings of any other kind are neither listed nor opened.
-  req F-4.5: Each row has its own menu that renames or deletes that diagram. A deleted diagram is unlinked from every collection that lists it; deleting the open one opens the next, or the empty state.
-  req F-4.6: A space with no diagrams shows an empty state with a "New diagram" button; the app never creates a drawing in a space just because it was opened.
+  req F-4.5: Each row has its own menu that renames or deletes that diagram. Rename opens Composer's rename popover under the diagram button: the diagram's name, saved as it changes, with no tags field. A deleted diagram is unlinked from every collection that lists it; deleting the open one opens the next, or the empty state.
+  req F-4.6: A space with no diagrams shows an empty state with a "New diagram" button; the app never creates a drawing in a space just because it was opened. The empty state waits for the diagram the URL or the last visit names to load or fail, so a space that has diagrams never shows it while they load.
   req F-4.7: "New diagram" follows the diagrams under a separator, shows whatever is typed, and shows its shortcut, ⌥N, which also works anywhere in the app. When the typed text names no diagram, the row creates a diagram with that name.
   req F-4.8: In both menus every row puts its glyph, name, check and row menu in the same columns, whether or not the row is current or has a menu.
 ```
@@ -90,11 +92,10 @@ feat F-5: Sharing
 
 ```mdl
 feat F-6: Joining
-  req F-6.1: Loading the app with `?spaceInvitationCode=` removes the parameter from the URL, joins that space, and switches to it when the join succeeds.
-  req F-6.2: While joining, a status card shows the steps (identity, invitation accepted, syncing); Cancel abandons the join.
-  req F-6.3: A failed or cancelled join leaves the user in their last space with a toast saying the link no longer works.
+  req F-6.1: Loading the app with `?spaceInvitationCode=` removes the parameter from the URL and opens Composer's join dialog on it, as Composer does. When the join succeeds the dialog closes, a toast says so, and the app switches to the joined space.
+  req F-6.2: From an invitation link, or "Join with a link…", until the joined space shows, the app shows the join dialog. A still copy of the dialog as it connects stands in before the plugins load and after the live dialog closes on success. On a link the boot shell (F-1.5) stays behind the dialog, so closing it shows the app at once; behind the live dialog the app opens no space.
+  req F-6.3: A failed join shows its error in the join dialog. Closing the dialog without joining opens the space shown before, else the last space, or runs the first run (F-2.1) on a profile with none. Closing it before the join finishes cancels the join, so the space is not joined afterwards.
   req F-6.4: A link copied from Composer joins the same way.
-  req F-6.5: A join fails only when the invitation is cancelled, expires or times out, or the client reports an error. EDGE refusing a link for a space with no agent does not fail it: a member online can still admit the joiner.
 ```
 
 ```mdl
@@ -112,7 +113,7 @@ feat F-8: Addresses
 
 ```mdl
 feat F-9: Presence
-  req F-9.1: Avatars beside Share show the members viewing the open diagram, in this app or in Composer, as Composer's plank headings show them.
+  req F-9.1: Avatars to the right of Share show the space's other online members, in this app or in Composer, those on the open diagram first. A member who shows the open diagram has an accent ring and any other a neutral ring, as Composer rings the viewers attending an object.
   req F-9.2: Each other viewer's pointer shows on the canvas as a named cursor.
 ```
 
@@ -144,8 +145,8 @@ So, today:
 component DiagramRoot
   desc: The whole app (F-1). Mockup boards 1–3.
   state:
-    route: the space and diagram ids in the URL path (F-8)
-    joining: Invitation | undefined
+    route: the space and diagram ids in the URL path (F-8), held in the layout state
+    joining: whether the join dialog an invitation link opened is still open
   layout: |
     ┌──────────────────────────────────────────────────────────────────────────────────┐
     │ [↑ ⌂]     [◍ Team space ▾ / ⚲ Service map ▾  (A)(B)  [Share]]       [Inspector]│
@@ -161,8 +162,8 @@ component SpaceMenu
   desc: The space half of the pill (F-3). The same searchable combobox as the diagram menu. Mockup board 2.
   actions:
     select: switch to a space
-    create: open the new-space dialog
-    join: open the join-with-a-link dialog
+    create: open Composer's create-space dialog
+    join: open Composer's join dialog
   layout: |
     [Find a space                 ]
       [MD] My diagrams
@@ -178,7 +179,7 @@ component DiagramMenu
   actions:
     select: open a diagram
     create: create a Canvas diagram, named when typed, and open it
-    rename: rename a diagram from its row menu
+    rename: open Composer's rename popover for a diagram from its row menu
     delete: delete a diagram from its row menu
   layout: |
     [Find a diagram                    ]
@@ -204,14 +205,24 @@ component ShareDialog
 ```
 
 ```mdl
-component JoinStatus
-  desc: F-6. Mockup board 5.
+component BootShell
+  desc: F-1.5. The pill as the last visit left it, over a copy of the diagram's frame without its content, painted before the client and plugins start, under dialogs and toasts; for an invitation link, with the JoinShell over it.
   layout: |
-          ◠ Joining a shared space…
-          ✓ Created an anonymous identity in this browser
-          ✓ Invitation accepted
-          • Syncing
-                    [Cancel]
+    [◍ My diagrams ▾ / ⚲ Untitled ▾  [Share]]
+```
+
+```mdl
+component JoinShell
+  desc: F-6.2. A still copy of Composer's join dialog as it connects, which takes no input.
+  layout: |
+    Joining space                          ×
+    Connecting…
+                                [Cancel] [Next]
+```
+
+```mdl
+component DiagramLayout
+  desc: F-1.3. The layout plugin's surfaces over the canvas: the dialog and the popover the layout state asks for, each the one surface that answers it, and the toasts.
 ```
 
 ## QA
@@ -280,16 +291,19 @@ test QA-3: Share between two people on this app
       expect: the dialog lists A as a member and one open invitation whose link carries `?spaceInvitationCode=`
     - name: Join
       do: Open the link in B.
-      expect: B shows the join card, then "My diagrams" with A's "Hello" diagram, and no space of its own
+      expect: B shows Composer's join dialog, then "My diagrams" with A's "Hello" diagram, and no space of its own
     - name: Edit both ways
       do: Move the rectangle in B, then add an ellipse in A.
       expect: each change shows in the other profile within a few seconds; each profile shows the other's avatar beside Share and the other's cursor while it moves over the canvas
     - name: Cancel the link
       do: In A, open Share and cancel the invitation; open the old link in a third profile.
-      expect: the third profile shows the join card, then the toast that the link no longer works
+      expect: the third profile shows the join dialog, which reports that it could not join
     - name: New link
       do: In A, open Share again and create another invitation.
       expect: a new invitation is listed
+    - name: Close while connecting
+      do: Open the new link in a fourth profile and close the join dialog while it reads "Connecting…".
+      expect: that profile opens its own "My diagrams", and a minute later its space menu still lists only that space
 ```
 
 ```mdl
@@ -337,7 +351,7 @@ test QA-6: Two people draw together
   desc: One person shares a diagram, a second joins from the link, and each sees the other's presence, cursor and shapes live.
   actors: human
   covers: [F-2.1, F-2.3, F-4.3, F-5.1, F-5.2, F-5.3, F-6.1, F-8.1, F-9.1, F-9.2]
-  status: passing # 2026-11-14, chromium
+  status: passing # 2026-11-15, chromium
   automated:
     - diagram-app:collaboration.spec.ts#Collaboration › two people draw together
   given:
@@ -351,7 +365,7 @@ test QA-6: Two people draw together
       expect: the dialog lists Ada as a member and one invitation; the link carries `?spaceInvitationCode=`
     - name: Ben joins
       do: As Ben, open the copied link.
-      expect: Ben sees the join card, then Ada's diagram at the same `/<space id>/<diagram id>` path, with her rectangle, and Ben's space menu lists only "My diagrams"
+      expect: Ben sees the join dialog, then Ada's diagram at the same `/<space id>/<diagram id>` path, with her rectangle, and Ben's space menu lists only "My diagrams"
     - name: Presence
       do: Leave both on the diagram for up to a minute.
       expect: each shows the other's avatar beside Share
@@ -797,4 +811,287 @@ decision D-47: QA-6 is passing: `collaboration.spec.ts` passes on chromium again
   by: agent:claude-code
   for: user:wittjosiah
   affects: [QA-6]
+```
+
+```mdl
+decision D-48: The app renders as quickly as possible. It may show UI first and finish preparing in the background for a moment, but it must be ready to use as soon as it can be.
+  date: 2026-11-14
+  by: user:wittjosiah
+  affects: [F-1]
+```
+
+```mdl
+decision D-49: Before the client is up, the app draws the pill from the names the last visit cached, and the live pill replaces it in the same frame once it knows its diagram. Fills in [D-48].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5, BootShell]
+  why: The framework renders nothing until the client worker connects, about 550 ms into a warm load; the shell paints at about 100 ms, and the shell and live pill share one set of parts, so the swap does not move a pixel.
+  rejected:
+    - A static HTML pill in index.html: paints earlier, but it is a second copy of the pill's styling that drifts.
+```
+
+```mdl
+decision D-50: Plugins, identity and space open start together, and the app mounts without suspending; each diagram remembers the objects it reached, and its next open loads them in one batch. Fills in [D-48].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.6, DiagramRoot]
+  why: A suspension during boot costs React's reveal throttle (about 300 ms), and the diagram's objects form a chain (drawing, canvas, scene, layout, model) in which each reference cost a round trip to the worker.
+```
+
+```mdl
+decision D-51: The diagram's frame (its toolbars and panels) draws at once and its content loads a moment later, both in the boot shell and in the live diagram.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.5, BootShell]
+```
+
+```mdl
+decision D-52: The boot shell draws a copy of the frame the live diagram drew as it last opened, with the scene's layers removed, and only with the stylesheet it was drawn with. Fills in [D-51].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5, BootShell, DrawingView]
+  why: The copy matches the live frame exactly, whatever tools, panels and theme the diagram has, and it adds nothing to the code that loads before first paint.
+  rejected:
+    - Placeholder toolbars drawn by hand: a second copy of the canvas editor's frame that drifts, and the tools differ per diagram.
+    - The canvas editor's own toolbars in the boot shell: they need its whole editor and its scene, and they grow the code that loads before first paint.
+```
+
+```mdl
+decision D-53: The live diagram's article stays as it is: it finds its canvas, scene and document loaded on its first render, so it has nothing to draw ahead of. Fills in [D-51].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5]
+  why: Measured on warm loads, the article first renders within 2 ms of the drawing reaching the space's query, with every object it reads already loaded; the time before that is the drawing reaching the query.
+```
+
+```mdl
+decision D-54: The drawing list stays pending until the diagram the URL or the last visit names loads or fails to. Fills in [D-48].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.6, F-1.5]
+  why: The space's query answers before every stored drawing has loaded, so each warm load showed the empty state for about 120 ms before the diagram.
+```
+
+```mdl
+decision D-55: The boot shell stays until the live diagram's frame is on screen, not until the app knows which diagram to open. Fills in [D-52].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5, BootShell, DrawingView]
+  why: The article can paint a beat after the drawing is known, and in that gap the toolbars vanished for about 130 ms between the shell and the live frame.
+```
+
+```mdl
+decision D-56: The diagram's content fades in over 100 ms as it loads.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.5, DrawingView]
+```
+
+```mdl
+decision D-57: The join card exposes less internal information: it reads "Joining a shared space", with the steps "Connecting" ("Connected" once accepted) and "Loading diagrams". Cancel shows no message, and a failed join says "This link didn't work. Ask the person who shared it for a new one."
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-6.2, F-6.3, JoinStatus]
+```
+
+```mdl
+decision D-58: The presence avatars sit to the right of Share.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-59: Presence shows the whole space, and each avatar's ring colour says which object that member has open, as in Composer.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-60: Presence lists the space's online members; one who announces the open diagram on Composer's `viewing` channel gets the accent (`current`) ring, any other the neutral (`inactive`) ring, and those on the diagram come first. Fills in [D-59].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1]
+  why: Composer rings a viewer in accent when they attend the object shown and neutral otherwise; a member's online state comes from the space itself, so a member counts whatever they have open, in this app or in Composer.
+  rejected:
+    - A ring hue per diagram: the pill names one diagram, so a colour for any other has nothing on screen to match.
+```
+
+```mdl
+decision D-61: "Join with a link…" uses Composer's existing join dialog instead of a custom one.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-3.4, SpaceMenu]
+```
+
+```mdl
+decision D-62: The joining dialog is laid out with existing react-ui components.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-6.2, JoinStatus]
+```
+
+```mdl
+decision D-63: Renaming a diagram uses Composer's existing rename pattern instead of a custom dialog.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-4.5, DiagramMenu]
+```
+
+```mdl
+decision D-64: The join dialog is the shell's `JoinPanel` in a dialog, as plugin-space's `JoinDialog` renders it. The joined space opens when the panel reports it. Fills in [D-61].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.4]
+  why: The panel is the part of Composer's dialog that works without Composer's layout; it handles pasted links, codes and auth codes itself.
+  rejected:
+    - plugin-space's `JoinDialog` surface: it closes and navigates through layout operations this app does not have.
+    - The shell's `JoinDialog` composite: an alert dialog, which Composer no longer uses for joining.
+```
+
+```mdl
+decision D-65: The joining dialog is a `Dialog` with a title and close button, the steps as a `Listbox` with a leading icon per row (a spinner for the current step, a check for done ones, a dim circle for later ones), and Cancel in the footer. Focus starts on Cancel, and closing the dialog cancels. Fills in [D-62].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.2, JoinStatus]
+  why: These are the parts Composer's dialogs use, so the card matches the join dialog beside it. The steps are a status, so focus goes to the one action rather than highlighting a row.
+  rejected:
+    - A `Card` with hand-laid rows: it does not match Composer's dialogs, and the rows were a hand-rolled list.
+```
+
+```mdl
+decision D-66: Rename opens plugin-space's `RenamePopover`, which edits the diagram's properties as they change, in a modal popover anchored under the diagram button. Fills in [D-63].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.5, DiagramMenu]
+  why: Composer renames an object with this popover anchored to its row. The row's menu closes when Rename is chosen, so the pill's diagram button is the anchor that stays.
+```
+
+```mdl
+decision D-67: Composer's generic rename popover does not show the tags field.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-4.5]
+```
+
+```mdl
+decision D-68: "New space" uses Composer's create-space form.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-3.3, SpaceMenu]
+```
+
+```mdl
+decision D-69: The app provides its own layout plugin: whatever draws the app's shell is that plugin, and it handles the layout operations other plugins call. The app loads the space plugin alongside it.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.2, F-1.3]
+```
+
+```mdl
+decision D-70: Invitation links open Composer's join dialog through the space plugin's link handling, and the app's own joining card is dropped.
+  date: 2026-11-15
+  by: user:wittjosiah
+  supersedes: D-57
+  affects: [F-6.1, F-6.2, F-6.3]
+```
+
+```mdl
+decision D-71: The plugin set is Attention, Canvas, Client, Graph, Illustrator, ProcessManager, Space, Theme and `DiagramAppPlugin`. `DiagramAppPlugin` holds the layout state (the route, the dialog, the popover and the toasts), handles `AddToast`, `Open`, `SwitchWorkspace`, `UpdateDialog` and `UpdatePopover`, and draws the dialog and popover surfaces with one surface each. The root-collection rule, the share handler and the translations now come from the space plugin, which replaces those parts of [D-29]. Fills in [D-69].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-8
+  affects: [F-1.2, F-1.3, DiagramLayout]
+  why: These are the layout operations the space plugin's join, create-space, rename and share flows call; `Open` is how they hand the app a space to show.
+  rejected:
+    - Answering only the operations the app uses today: the next plugin that toasts or opens a dialog would silently do nothing.
+```
+
+```mdl
+decision D-72: `Open` on a space path opens the diagram it names, else the space's last diagram here, else its newest. A space with no diagrams gets one Untitled diagram only when this identity created the space, judged by the space's creator key. Fills in [D-68] and [D-70].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.3, F-3.4, F-2.3]
+  why: Both the create-space and join dialogs open the new space the same way. A joined space's members have not synced when it opens, so a count of members cannot tell a new space from a joined one.
+  rejected:
+    - Treating a space with one member as new: a joined space shows one member until it syncs, and got a stray Untitled diagram.
+```
+
+```mdl
+decision D-73: A popover a plugin asks for with a `caller` id anchors on the part that renders that id; the diagram button renders the id Rename passes, so the rename popover opens under it. Fills in [D-67].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-66
+  affects: [F-4.5, DiagramMenu]
+  why: This is how Composer's deck anchors a popover by id, so the space plugin's rename operation works unchanged.
+```
+
+```mdl
+decision D-74: At startup the app runs the navigation handlers on the URL's query. While the join dialog they open is up, the app opens no space; if the dialog is dismissed with no space open, the app opens the last space or runs the first run. Whether a join failed is the join panel's call, and the panel shows it. Fills in [D-70].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-64
+  affects: [F-6.1, F-6.2, F-6.3]
+  why: The panel already reports a failure and offers to start over, so the toast and the app's own failure rules, and the card of [D-65], have nothing left to do.
+```
+
+```mdl
+decision D-75: While the app joins a space it shows the join dialog where it would show its "Opening…" loading text. Only joins are covered.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.5, F-6.2]
+```
+
+```mdl
+decision D-76: An invitation link's boot shell draws a still copy of the join dialog as it connects, and the live dialog replaces it once on screen. After a join succeeds the app shows the copy again until the joined space shows; behind the live dialog it shows only the surface. A join started from the space menu does the same. Fills in [D-75].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5, F-6.2, BootShell, JoinShell]
+  why: The copy is drawn with react-ui's `Dialog` parts as Composer's panel draws its first step, so the swaps do not show. The join dialog closes before the joined space is ready, so the gap after it is the app's to cover.
+  rejected:
+    - Keeping plugin-space's join dialog open until it opens the space: `Open` returns before the space is ready, and the panel has no view for a finished join, so it shows a title over an empty body.
+```
+
+```mdl
+decision D-77: Closing the join panel before its join finishes cancels the invitation. Fills in [D-70].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.3, QA-3]
+  why: Closing the dialog while it was connecting left the join running, and the space was joined about 20 s later while the user was in another one. The panel is Composer's too, so Composer gains the same fix.
+```
+
+```mdl
+decision D-78: Started without an invitation, the app boots straight to its shell; started with one, it boots straight to the join dialog. The shell is always behind the dialog, so closing the dialog shows the shell at once.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.5, F-6.2]
+```
+
+```mdl
+decision D-79: The boot shell is always drawn, without names for a space the last visit did not show, and sits under dialogs and toasts. The still join dialog is a separate overlay above it, drawn in the same paint on a link, removed once a live dialog is on screen, and drawn again after a join succeeds until the joined diagram replaces the shell. Where nothing covers the app before a space shows, it draws only its surface. Fills in [D-78].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-76
+  affects: [F-1.5, F-6.2, BootShell, JoinShell]
+  why: Keeping the shell under the dialog is what makes closing it immediate, and the separate overlay lets the live dialog replace only the copy. Drawing both in one paint avoids a frame of shell without the dialog.
+  rejected:
+    - Moving the shell above the live dialog and hiding it there: the live dialog's scrim and toasts would sit under it.
 ```

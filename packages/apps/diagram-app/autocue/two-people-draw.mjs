@@ -42,6 +42,12 @@ const count = (locator, expected, what) => waitFor(async () => (await locator.co
 
 const path = (page) => new URL(page.url()).pathname;
 
+/** Presses a canvas shortcut; the scene takes keys only while it has focus, not the toolbar button last clicked. */
+const sceneKey = async (peer, key) => {
+  await peer.page.getByTestId('scene-view').focus();
+  await peer.page.keyboard.press(key);
+};
+
 /** Drags out a shape with a toolbar tool, the cursor following the drag, clear of the panel on the right. */
 const draw = async (peer, tool, from, to) => {
   await peer.click(peer.page.getByTestId(`canvas.tool.${tool}`));
@@ -51,7 +57,7 @@ const draw = async (peer, tool, from, to) => {
   await peer.page.mouse.up();
   await peer.click(peer.page.getByTestId('canvas.tool.select'));
   // Deselect, so the Properties panel gives way to the Views panel.
-  await peer.page.keyboard.press('Escape');
+  await sceneKey(peer, 'Escape');
 };
 
 let link;
@@ -118,6 +124,10 @@ export const steps = [
     name: 'Each sees the other beside Share',
     subtitle: 'QA-6 step 4',
     run: async ({ peers: { ada, ben } }) => {
+      // Both frame the diagram, so the panes share a camera and Ben's pointer lands at the same spot in Ada's pane.
+      for (const peer of [ada, ben]) {
+        await sceneKey(peer, 'Home');
+      }
       for (const peer of [ada, ben]) {
         await count(peer.page.getByTestId('spacePlugin.presence.member'), 1, `${peer.name} seeing the other`);
       }
@@ -143,8 +153,16 @@ export const steps = [
         },
         { what: "Ben's cursor on Ada's canvas" },
       );
+      // Each point waits for Ada's copy of the cursor to arrive, so the two panes show it at the same spot.
       for (const point of points) {
-        await ben.move(point);
+        await ben.move(point, { steps: 15 });
+        await waitFor(
+          async () => {
+            const box = await cursors.first().boundingBox();
+            return !!box && Math.abs(box.x - point.x) < 8 && Math.abs(box.y - point.y) < 8;
+          },
+          { timeout: 5_000, what: "Ben's cursor at the same spot on Ada's canvas" },
+        ).catch((err) => console.warn(err.message));
       }
     },
   },
