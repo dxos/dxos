@@ -1,4 +1,6 @@
 ---
+# multiple-changesets: the slide flow variant and the icon picker are different packages in
+# different publish groups; a reader reaches each from its own package's changelog.
 '@dxos/react-ui-pickers': minor
 '@dxos/plugin-registry': patch
 '@dxos/ui-types': minor
