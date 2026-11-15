@@ -83,8 +83,8 @@ const STORIES: Record<string, ApiStoryEntry> = {
   'react-ui-masonry/masonry': {
     load: () => import('../../../packages/ui/react-ui-masonry/src/Masonry.stories.tsx'),
     name: 'Docs',
-    // The headshots are a third of a megabyte of data URLs, so they load with the story, not with the page.
-    args: () => import('./alienlabs.ts').then(({ alienLabsPeople }) => ({ people: alienLabsPeople() })),
+    // The logos are ninety kilobytes of data URLs, so they load with the story, not with the page.
+    args: () => import('./alienlabs.ts').then(({ alienLabsOrganizations }) => ({ items: alienLabsOrganizations() })),
   },
   'react-ui-menu/action-menu': {
     load: () => import('../../../packages/ui/react-ui-menu/src/components/ActionMenu.stories.tsx'),

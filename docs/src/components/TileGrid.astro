@@ -11,22 +11,22 @@ type Demo = {
   cols: number;
   rows: number;
   /**
-   * The demo takes the pointer only once its card is selected: a canvas or a graph zooms on the wheel, which would
-   * stop the page scrolling as the pointer passes over it.
+   * The demo takes the pointer only once its card is selected: a canvas or a graph zooms on the wheel and a calendar
+   * scrolls on it, which would stop the page scrolling as the pointer passes over it.
    */
   select?: boolean;
 };
 
 const DEMOS: Demo[] = [
-  { title: 'Kanban board', pkg: 'react-ui-mosaic', page: 'board', cols: 5, rows: 2 },
-  { title: 'Calendar', pkg: 'react-ui-calendar', page: 'calendar', cols: 7, rows: 2 },
+  { title: 'Kanban', pkg: 'react-ui-mosaic', page: 'board', cols: 5, rows: 2 },
+  { title: 'Calendar', pkg: 'react-ui-calendar', page: 'calendar', cols: 7, rows: 2, select: true },
   { title: 'Spreadsheet', pkg: 'react-ui-grid', page: 'grid', cols: 8, rows: 1 },
   { title: 'Force graph', pkg: 'react-ui-graph', page: 'graph', cols: 4, rows: 2, select: true },
   { title: 'Chart', pkg: 'react-ui-plot', page: 'plot', cols: 4, rows: 1 },
   { title: 'Map', pkg: 'react-ui-geo', page: 'globe', cols: 4, rows: 1 },
   { title: 'Canvas', pkg: 'react-ui-canvas-editor', page: 'canvas-editor', cols: 7, rows: 2, select: true },
   { title: 'Markdown editor', pkg: 'react-ui-editor', page: 'editor', cols: 5, rows: 2 },
-  { title: 'Gallery', pkg: 'react-ui-masonry', page: 'masonry', cols: 12, rows: 2 },
+  { title: 'Masonry', pkg: 'react-ui-masonry', page: 'masonry', cols: 12, rows: 2 },
 ];
 ---
 

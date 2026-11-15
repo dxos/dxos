@@ -32,7 +32,7 @@ const shuffle = <T,>(array: readonly T[]): T[] => {
   return copy;
 };
 
-export type PersonData = {
+type PersonData = {
   id: string;
   fullName: string;
   jobTitle?: string;
@@ -88,50 +88,72 @@ const createPeople = (count: number): PersonData[] =>
     };
   });
 
-// Seed the largest preset once so switching counts is a cheap slice.
-const PEOPLE = createPeople(ITEM_COUNTS[ITEM_COUNTS.length - 1]);
-
 /** Removes a person from the story that shows the card; a tile is given only its data, so the story passes this down. */
 const DeleteContext = createContext<(id: string) => void>(() => {});
 
+/** One line of a card under its title: an icon in the start rail and text beside it. */
+type GalleryRow = {
+  icon: string;
+  text: string;
+  /** How many lines the text may run to before it is cut; one by default. */
+  lines?: number;
+};
+
+/** What a gallery card shows, whatever it is a card of: a person, an organization. */
+export type GalleryItem = {
+  id: string;
+  title: string;
+  /** The icon beside the title, which says what kind of thing the card is. */
+  icon: string;
+  image?: string;
+  rows: GalleryRow[];
+};
+
+const personItem = ({ id, fullName, jobTitle, department, image, emails, notes }: PersonData): GalleryItem => ({
+  id,
+  title: fullName,
+  icon: 'ph--user--regular',
+  image,
+  rows: [
+    ...(jobTitle || department
+      ? [{ icon: 'ph--briefcase--regular', text: [jobTitle, department].filter(Boolean).join(' · ') }]
+      : []),
+    ...(emails ?? []).map((email) => ({ icon: 'ph--envelope-simple--regular', text: email.value })),
+    ...(notes ? [{ icon: 'ph--note--regular', text: notes, lines: 4 }] : []),
+  ],
+});
+
+// Seed the largest preset once so switching counts is a cheap slice.
+const PEOPLE = createPeople(ITEM_COUNTS[ITEM_COUNTS.length - 1]).map(personItem);
+
 /**
- * A person as a `grid` card: the photo, then a header and rows that share the card's rails, so the name starts at the
- * same edge as the text of the rows under it, with an icon in the start rail of each and the menu in the end rail.
+ * A `grid` card: the picture, then a header and rows that share the card's rails, so the title starts at the same
+ * edge as the text of the rows under it, with an icon in the start rail of each and the menu in the end rail.
  */
-const StoryItem = ({ data: person }: { data: PersonData }) => {
-  const { id, fullName, jobTitle, department, image, emails, notes } = person;
+const StoryItem = ({ data: { id, title, icon, image, rows } }: { data: GalleryItem }) => {
   const onDelete = useContext(DeleteContext);
-  const role = [jobTitle, department].filter(Boolean).join(' · ');
   return (
-    <Card.Root grid>
-      {image && <Card.Poster alt={fullName ?? ''} src={image} />}
+    <Card.Root grid size='sm'>
+      {image && <Card.Poster alt={title} src={image} />}
       <Card.Header>
         <Layout.Block>
-          <Icon.Icon icon='ph--user--regular' />
+          <Icon.Icon icon={icon} />
         </Layout.Block>
-        <Card.Title>{fullName}</Card.Title>
-        <Card.Menu label={`Actions for ${fullName}`}>
+        <Card.Title>{title}</Card.Title>
+        <Card.Menu label={`Actions for ${title}`}>
           <Menu.Item
             item={{ value: 'delete', label: 'Delete', icon: 'ph--trash--regular' }}
             onClick={() => onDelete(id)}
           />
         </Card.Menu>
       </Card.Header>
-      {role && (
-        <Card.Row icon='ph--briefcase--regular'>
-          <Card.Text variant='muted'>{role}</Card.Text>
-        </Card.Row>
-      )}
-      {emails?.map((email) => (
-        <Card.Row key={email.value} icon='ph--envelope-simple--regular'>
-          <Card.Text variant='muted'>{email.value}</Card.Text>
+      {rows.map(({ icon, text, lines }) => (
+        <Card.Row key={`${icon}:${text}`} icon={icon} align={lines ? 'start' : undefined}>
+          <Card.Text variant='muted' lines={lines}>
+            {text}
+          </Card.Text>
         </Card.Row>
       ))}
-      {notes && (
-        <Card.Row icon='ph--note--regular' align='start'>
-          <Card.Text variant='muted'>{notes}</Card.Text>
-        </Card.Row>
-      )}
     </Card.Root>
   );
 };
@@ -140,7 +162,7 @@ const StoryItem = ({ data: person }: { data: PersonData }) => {
 // (bulk render under load, re-shuffled each time) and add/remove single tiles (the small-edit
 // reflow animation).
 const DefaultStory = (props: MasonryRootProps) => {
-  const [visible, setVisible] = useState<PersonData[]>(() => shuffle(PEOPLE).slice(0, ITEM_COUNTS[0]));
+  const [visible, setVisible] = useState<GalleryItem[]>(() => shuffle(PEOPLE).slice(0, ITEM_COUNTS[0]));
 
   const addOne = () =>
     setVisible((current) => {
@@ -219,22 +241,22 @@ export const Default: Story = {};
 //
 
 type DocsStoryProps = {
-  /** The people to show; without them, some of the generated ones. */
-  people?: PersonData[];
+  /** The cards to show; without them, some of the generated people. */
+  items?: GalleryItem[];
 };
 
 /** How many of the generated people the gallery shows when it is given none. */
 const DOCS_PEOPLE = 24;
 
-const DocsStory = ({ people: initial = PEOPLE.slice(0, DOCS_PEOPLE) }: DocsStoryProps) => {
-  const [people, setPeople] = useState(initial);
-  const remove = useCallback((id: string) => setPeople((current) => current.filter((person) => person.id !== id)), []);
+const DocsStory = ({ items: initial = PEOPLE.slice(0, DOCS_PEOPLE) }: DocsStoryProps) => {
+  const [items, setItems] = useState(initial);
+  const remove = useCallback((id: string) => setItems((current) => current.filter((item) => item.id !== id)), []);
   return (
     <DeleteContext.Provider value={remove}>
       <div className='fixed inset-0 flex dx-base-surface'>
         <Masonry.Root Tile={StoryItem} minColumnWidth={10}>
           <Masonry.Content>
-            <Masonry.Viewport items={people} getId={(person) => person.id} />
+            <Masonry.Viewport items={items} getId={(item) => item.id} />
           </Masonry.Content>
         </Masonry.Root>
       </div>
@@ -242,7 +264,7 @@ const DocsStory = ({ people: initial = PEOPLE.slice(0, DOCS_PEOPLE) }: DocsStory
   );
 };
 
-/** The docs' gallery: person cards of different heights in columns at least 10rem wide; a card's menu deletes it. */
+/** The docs' gallery: cards of different heights in columns at least 10rem wide; a card's menu deletes it. */
 export const Docs: StoryObj<DocsStoryProps> = {
   render: (args) => <DocsStory {...args} />,
 };

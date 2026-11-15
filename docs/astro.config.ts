@@ -325,6 +325,7 @@ export default defineConfig({
           path.join(rootDir, '{packages,tools}/**/dist/**/*.{mjs,html}'),
           path.join(rootDir, '{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
           path.join(import.meta.dirname, 'src/demos/**/*.{ts,tsx}'),
+          path.join(import.meta.dirname, 'src/tile/**/*.{ts,tsx}'),
           path.join(import.meta.dirname, 'src/echo/snippets/tile-*.tsx'),
           path.join(import.meta.dirname, 'src/tile-tutorial/**/*.{ts,tsx}'),
         ],
