@@ -33,7 +33,7 @@ import { FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { discordSourceLayer } from '../services/index.ts';
 import { costReport, meter } from './metering.ts';
-import { extractOptionsFromEnv } from './vocabularies.ts';
+import { runOptionsFromEnv } from './vocabularies.ts';
 
 const token = process.env.DISCORD_TOKEN;
 // Defaults: DXOS #general, #composer-vip, #dxos-team.
@@ -129,7 +129,7 @@ describe('crawl demo', () => {
               seed: { maxDays },
               channelSettings,
             },
-            { extract: extractOptionsFromEnv() },
+            runOptionsFromEnv(),
           );
           const stored = yield* MessageStore.count();
           const agents = yield* AgentRegistry.list();

@@ -36,7 +36,7 @@ import { FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { exportChannelIds, exportSourceLayer } from './export-source.ts';
 import { costReport, meter } from './metering.ts';
-import { extractOptionsFromEnv } from './vocabularies.ts';
+import { runOptionsFromEnv } from './vocabularies.ts';
 
 const defaultDir = join(homedir(), '.local/share/dxos/discord-export/effect');
 const dir = process.env.DISCORD_EXPORT_DIR ?? (existsSync(defaultDir) ? defaultDir : undefined);
@@ -73,7 +73,7 @@ describe('crawl export', () => {
           const before = yield* MessageStore.count();
           const summary = yield* DiscordPipeline.run(
             { channels, descendThreads: false, seed: {} },
-            { extract: extractOptionsFromEnv() },
+            runOptionsFromEnv(),
           );
           const stored = yield* MessageStore.count();
           const agents = yield* AgentRegistry.list();

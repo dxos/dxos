@@ -23,6 +23,11 @@ export type ExtractFactsOptions = {
    * its own, as a single-document request.
    */
   readonly batchSize?: number;
+  /**
+   * Batches extracted at once (default 1). Each batch sees the predicates the store learned before it started, so
+   * batches running together reuse each other's new predicates less.
+   */
+  readonly concurrency?: number;
   /** The predicates the extractor reuses (e.g. seeded with published vocabularies); defaults to the seed ontology. */
   readonly ontology?: RDF.ExtractOptions['ontology'];
   /** Drop relations no listed predicate fits instead of minting one. */
@@ -178,6 +183,7 @@ export const extractFactsStage = (
     'extract-facts',
     {
       size: options?.batchSize ?? DEFAULT_INDEX_BATCH_SIZE,
+      concurrency: options?.concurrency ?? 1,
       weight: (event: Type.Event) => (isExtractable(event) ? 1 : 0),
     },
     (events: readonly Type.Event[]) => {

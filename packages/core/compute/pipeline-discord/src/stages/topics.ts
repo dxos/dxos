@@ -27,6 +27,8 @@ export type TopicsOptions = {
   /** ECHO database to upsert {@link Topic.Topic} objects into; detection-only when absent. */
   readonly db?: Database.Database;
   readonly detect?: DetectOptions;
+  /** Channels or threads summarized at once, and segments per channel summarized at once (default 1). */
+  readonly concurrency?: number;
 };
 
 const TopicShape = Schema.Struct({
@@ -136,12 +138,19 @@ export const buildTopicsForTarget = (
     const messages = yield* MessageStore.listByTarget(target.id);
     const byId = new Map(messages.map((message) => [message.id, message]));
     const segments = detectTopics(target, messages, options.detect);
-    for (const segment of segments) {
-      const segmentMessages = segment.messageIds.flatMap((id) => {
-        const message = byId.get(id);
-        return message ? [message] : [];
-      });
-      const { name, summary } = yield* summarizeSegment(segment, segmentMessages);
+    const summarized = yield* Effect.forEach(
+      segments,
+      (segment) =>
+        summarizeSegment(
+          segment,
+          segment.messageIds.flatMap((id) => {
+            const message = byId.get(id);
+            return message ? [message] : [];
+          }),
+        ).pipe(Effect.map((result) => ({ segment, ...result }))),
+      { concurrency: options.concurrency ?? 1 },
+    );
+    for (const { segment, name, summary } of summarized) {
       log.info('topic', {
         target: segment.targetId,
         name,
@@ -172,6 +181,9 @@ export const topicsStage = (
   StateError,
   MessageStore.MessageStore | AiService.AiService | StateStore.StateStore
 > =>
-  tapStage('topics', ['ThreadEnd', 'ChannelEnd'], (event) =>
-    buildTopicsForTarget(event.target, options).pipe(Effect.asVoid),
+  tapStage(
+    'topics',
+    ['ThreadEnd', 'ChannelEnd'],
+    (event) => buildTopicsForTarget(event.target, options).pipe(Effect.asVoid),
+    { concurrency: options.concurrency },
   );
