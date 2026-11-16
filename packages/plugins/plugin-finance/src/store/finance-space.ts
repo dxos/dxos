@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import type * as Scope from 'effect/Scope';
@@ -12,11 +11,12 @@ import { join } from 'node:path';
 import { Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { Database, Feed, Filter, Obj, type Type } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
 import { Finance } from '#types';
 
-class SpaceNotLoaded extends Data.TaggedError('SpaceNotLoaded')<{ readonly spaceId: string }> {}
+class SpaceNotLoaded extends BaseError.extend('SpaceNotLoaded', 'Space did not load') {}
 
 /** A local, persistent client and the space the finance feeds live in. */
 export type FinanceSpace = {
@@ -48,7 +48,7 @@ export const open = (dataRoot: string): Effect.Effect<FinanceSpace, never, Scope
       const space = spaceId
         ? yield* Effect.suspend(() => {
             const found = client.spaces.get().find((candidate) => candidate.id === spaceId);
-            return found ? Effect.succeed(found) : Effect.fail(new SpaceNotLoaded({ spaceId }));
+            return found ? Effect.succeed(found) : Effect.fail(new SpaceNotLoaded({ context: { spaceId } }));
           }).pipe(Effect.retry({ schedule: Schedule.spaced('200 millis'), times: 150 }), Effect.orDie)
         : yield* Effect.promise(() => client.spaces.create());
       writeFileSync(idFile, space.id);

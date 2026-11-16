@@ -25,7 +25,6 @@
 // channels it classes as human discussion (and forums), reusing that file when present.
 
 import type * as Cause from 'effect/Cause';
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -33,6 +32,7 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { BaseError } from '@dxos/errors';
 
 import { snowflakeForTimestamp } from '../services/discord-message.ts';
 import { type ChannelSample, classify } from './channel-scan.ts';
@@ -103,7 +103,11 @@ const CHANNEL_TYPES: Record<number, string> = {
 //
 
 /** A request Discord refused (`status`), or a run that cannot start. */
-class ExportError extends Data.TaggedError('ExportError')<{ readonly message: string; readonly status?: number }> {}
+class ExportError extends BaseError.extend('ExportError', 'Discord export failed') {}
+
+/** The HTTP status Discord refused a request with, when it was a refusal rather than a run that cannot start. */
+const statusOf = (error: ExportError): number | undefined =>
+  typeof error.context.status === 'number' ? error.context.status : undefined;
 
 const secondsHeader = (headers: Headers, name: string): number | undefined => {
   const value = headers.get(name);
@@ -131,7 +135,10 @@ const makeClient = (authorization: string) => {
       }
       if (!response.ok) {
         return yield* Effect.fail(
-          new ExportError({ message: `Discord answered ${response.status} for ${path}`, status: response.status }),
+          new ExportError({
+            message: `Discord answered ${response.status} for ${path}`,
+            context: { status: response.status },
+          }),
         );
       }
       if (secondsHeader(response.headers, 'x-ratelimit-remaining') === 0) {
@@ -158,7 +165,7 @@ const authorize = (token: string) =>
         .get<User>('users/@me')
         .pipe(
           Effect.catchIf(
-            (error) => error._tag === 'ExportError' && error.status === 401,
+            (error) => error instanceof ExportError && statusOf(error) === 401,
             () => Effect.succeed(undefined),
           ),
         );
@@ -410,7 +417,7 @@ const { values: args } = parseArgs({
 
 /** A channel the token cannot read (Discord answers 401/403, or 404 for one hidden from it); those are skipped. */
 const accessDenied = (error: ExportError | Cause.UnknownError): boolean =>
-  error._tag === 'ExportError' && [401, 403, 404].includes(error.status ?? 0);
+  error instanceof ExportError && [401, 403, 404].includes(statusOf(error) ?? 0);
 
 /** The effect's result, or `undefined` when the token has no access — a public guild has channels most members cannot read. */
 const orSkip = <A>(effect: Effect.Effect<A, ExportError | Cause.UnknownError>, what: string) =>

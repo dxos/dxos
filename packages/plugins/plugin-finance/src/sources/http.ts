@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as HttpClient from 'effect/http/HttpClient';
@@ -10,11 +9,10 @@ import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Schedule from 'effect/Schedule';
 
+import { BaseError } from '@dxos/errors';
+
 /** A source that did not answer, or answered with something unusable. */
-export class SourceError extends Data.TaggedError('SourceError')<{
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+export class SourceError extends BaseError.extend('SourceError', 'Source request failed') {}
 
 /** Yahoo answers 404 to a request without a browser user agent. */
 export const BROWSER_USER_AGENT =
