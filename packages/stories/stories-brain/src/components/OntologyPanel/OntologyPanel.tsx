@@ -5,10 +5,9 @@
 import React, { useMemo, useState } from 'react';
 
 import { RDF } from '@dxos/pipeline-rdf';
-import { KnowledgeCard, type KnowledgeCardRow, TurtleSnippet, curie } from '@dxos/react-ui-rdf';
+import { KnowledgeCard, type KnowledgeCardRow, TurtleSnippet, VirtualList, curie } from '@dxos/react-ui-rdf';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
@@ -27,6 +26,12 @@ export type OntologyPanelProps = {
 };
 
 type View = 'list' | 'ontology' | 'trig';
+
+/** A predicate card's height before it is measured: its title, IRI, use count and a line of metadata. */
+const ESTIMATED_CARD_HEIGHT = 140;
+
+/** Space between cards, and above the first and below the last, in px. */
+const CARD_GAP = 8;
 
 const VIEWS: ReadonlyArray<{ id: View; label: string }> = [
   { id: 'list', label: 'List' },
@@ -57,6 +62,7 @@ export const predicateUsage = (facts: readonly RDF.Fact[], ontology: RDF.Ontolog
 export const OntologyPanel = Util.composable<HTMLDivElement, OntologyPanelProps>(
   ({ ontology, facts, selected, onSelect, ...props }, forwardedRef) => {
     const [view, setView] = useState<View>('list');
+    const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
     const usage = useMemo(() => predicateUsage(facts, ontology), [facts, ontology]);
     const entries = useMemo(
       () =>
@@ -102,20 +108,30 @@ export const OntologyPanel = Util.composable<HTMLDivElement, OntologyPanelProps>
         </Panel.Header>
         <Panel.Body asChild>
           <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
+            <ScrollArea.Viewport ref={setViewport}>
               {view === 'list' ? (
-                <Layout.Flex column gap='sm' classNames='p-2'>
-                  {entries.map((entry) => (
-                    <PredicateCard
-                      key={entry.iri}
-                      entry={entry}
-                      count={usage.get(entry.iri) ?? 0}
-                      ontology={ontology}
-                      selected={selected === entry.iri}
-                      onClick={onSelect && (() => onSelect(selected === entry.iri ? undefined : entry.iri))}
-                    />
-                  ))}
-                </Layout.Flex>
+                // Predicate cards vary with their metadata, so each is measured as it scrolls into view.
+                <VirtualList
+                  count={entries.length}
+                  getKey={(index) => entries[index].iri}
+                  renderItem={(index) => {
+                    const entry = entries[index];
+                    return (
+                      <PredicateCard
+                        entry={entry}
+                        count={usage.get(entry.iri) ?? 0}
+                        ontology={ontology}
+                        selected={selected === entry.iri}
+                        onClick={onSelect && (() => onSelect(selected === entry.iri ? undefined : entry.iri))}
+                      />
+                    );
+                  }}
+                  scrollElement={viewport}
+                  estimateSize={ESTIMATED_CARD_HEIGHT}
+                  gap={CARD_GAP}
+                  padding={CARD_GAP}
+                  classNames='px-2'
+                />
               ) : text.trim().length === 0 ? (
                 <Status.Empty>Nothing to show.</Status.Empty>
               ) : (
