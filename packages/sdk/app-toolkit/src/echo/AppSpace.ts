@@ -324,6 +324,55 @@ export const getActiveSpace = (client: Client, capabilities: CapabilityManager.C
 };
 
 //
+// Space plugins.
+//
+
+/**
+ * The plugins this space runs, by NSID, each with the semver range the space accepts.
+ *
+ * Lives on `space.properties` rather than in a settings object: it decides which types exist and
+ * which version of each plugin runs, for every member and for EDGE, which reads the same map off the
+ * space it is invoked in.
+ *
+ * Empty is a space that names no plugins, so each member runs their own set. "The space runs
+ * nothing" is not a state worth expressing: a space with no plugins can do nothing.
+ */
+export const getSpacePlugins = (space: Space): Record<string, string> => ({ ...space.properties.plugins });
+
+/** The NSIDs the space names, or `undefined` when it names none. */
+export const getSpacePluginIds = (space: Space): string[] | undefined => {
+  const ids = Object.keys(space.properties.plugins ?? {});
+  return ids.length === 0 ? undefined : ids;
+};
+
+/** The range the space accepts for one plugin, or `undefined` when it does not name it. */
+export const getSpacePluginRange = (space: Space, id: string): string | undefined => space.properties.plugins?.[id];
+
+/**
+ * Name a plugin in the space at `range`, or stop naming it when `range` is `undefined`.
+ *
+ * A range rather than a pin, so a patch release reaches the space without a write.
+ */
+export const setSpacePlugin = (space: Space, id: string, range: string | undefined): void => {
+  Obj.update(space.properties, (properties) => {
+    const plugins = { ...properties.plugins };
+    if (range === undefined) {
+      delete plugins[id];
+    } else {
+      plugins[id] = range;
+    }
+    properties.plugins = plugins;
+  });
+};
+
+/** Stop naming any plugin, so the space defers to its members' own sets again. */
+export const clearSpacePlugins = (space: Space): void => {
+  Obj.update(space.properties, (properties) => {
+    properties.plugins = {};
+  });
+};
+
+//
 // Home content visibility.
 //
 

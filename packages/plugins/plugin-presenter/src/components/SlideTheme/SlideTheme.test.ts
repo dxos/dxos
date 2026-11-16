@@ -72,8 +72,75 @@ describe('SlideTheme.Settings', () => {
     expect(['#ab', '#abcde', '#abcdefa', '#abcdefabc'].some(SlideTheme.isColor)).toBe(false);
   });
 
+  test('the code and separator colors are overridable too', () => {
+    expect(Result.isSuccess(decode({ code: '#111', separator: '#222' }))).toBe(true);
+    const style = slideThemeStyle({ code: '#111', separator: '#222' });
+    expect(style['--slide-code']).toBe('#111');
+    expect(style['--slide-separator']).toBe('#222');
+  });
+
   test('rejects unknown base themes and unsafe values', () => {
     expect(Result.isSuccess(decode({ base: 'neon' }))).toBe(false);
     expect(Result.isSuccess(decode({ background: 'url(x)' }))).toBe(false);
+  });
+
+  test('a bare word is a color only where CSS knows it', () => {
+    expect(['rebeccapurple', 'transparent', 'currentColor'].every(SlideTheme.isColor)).toBe(true);
+    expect(['notacolor', 'rgb()', 'oklch( )'].some(SlideTheme.isColor)).toBe(false);
+  });
+
+  test('a color function needs its three components, in either syntax', () => {
+    expect(
+      [
+        'rgb(1 2 3)',
+        'rgb(1,2,3)',
+        'rgba(1,2,3,0.5)',
+        'rgb(1 2 3 / 50%)',
+        'hsl(210, 10%, 20%)',
+        'oklch(44.3% 0.11 240.79)',
+        'lab(50% 40 59.5)',
+      ].every(SlideTheme.isColor),
+    ).toBe(true);
+    expect(['rgb(1)', 'rgb(+)', 'rgb(1 2)', 'rgb(1 2 3 4 5)'].some(SlideTheme.isColor)).toBe(false);
+  });
+
+  test('separators follow the function: no mixing, and commas only where CSS takes them', () => {
+    expect(['rgb(1, 2 3)', 'rgb(1 2, 3)', 'oklch(0.5, 0.1, 240)', 'lab(1,2,3)'].some(SlideTheme.isColor)).toBe(false);
+  });
+
+  test('a hue is a number, wherever the function puts it', () => {
+    expect(['hsl(210 10% 20%)', 'oklch(44.3% 0.11 240.79)', 'lch(50% 40 60)'].every(SlideTheme.isColor)).toBe(true);
+    // First in `hsl()`, last in `lch()`; a percentage is not a hue in either.
+    expect(['hsl(10% 20% 30%)', 'oklch(50% 0.1 20%)', 'lch(50% 40 60%)'].some(SlideTheme.isColor)).toBe(false);
+  });
+
+  test('the legacy syntax takes its own component types', () => {
+    expect(['rgb(10%, 20%, 30%)', 'rgba(10%,20%,30%,50%)', 'hsl(210, 10%, 20%)'].every(SlideTheme.isColor)).toBe(true);
+    // `rgb()` takes three numbers or three percentages, never a mix; `hsl()` takes a hue and two percentages.
+    expect(['rgb(1, 2%, 3)', 'hsl(210, 10, 20)', 'hsl(210, 10%, 20)'].some(SlideTheme.isColor)).toBe(false);
+    // The modern syntax is the permissive one, as CSS has it.
+    expect(SlideTheme.isColor('hsl(210 10 20)')).toBe(true);
+  });
+
+  test("a legacy color CSS rejects leaves the theme's own", () => {
+    expect(slideThemeStyle({ accent: 'rgb(1, 2%, 3)' })['--slide-accent']).toBe('var(--color-accent-text)');
+    expect(slideThemeStyle({ accent: 'hsl(10% 20% 30%)' })['--slide-accent']).toBe('var(--color-accent-text)');
+  });
+
+  test('a malformed color is rejected without retrying every split of its digits', () => {
+    const digits = '1'.repeat(128);
+    const started = performance.now();
+    expect(SlideTheme.isColor(`rgb(${digits} ${digits} ${digits}x)`)).toBe(false);
+    // The overlapping form this replaced took ~500ms here, on the thread that re-parses the slide as it is typed.
+    expect(performance.now() - started).toBeLessThan(50);
+  });
+
+  test("an invalid color leaves the theme's own", () => {
+    expect(slideThemeStyle({ accent: 'rgb(1, 2 3)' })['--slide-accent']).toBe('var(--color-accent-text)');
+    expect(slideThemeStyle({ code: 'notacolor' })['--slide-code']).toBe('var(--color-input-surface)');
+  });
+
+  test('the theme accent is published separately, for a tone to return to', () => {
+    expect(slideThemeStyle({ accent: '#f80' })['--slide-theme-accent']).toBe('#f80');
   });
 });

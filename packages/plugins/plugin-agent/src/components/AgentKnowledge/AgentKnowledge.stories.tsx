@@ -8,6 +8,16 @@ import React, { useMemo } from 'react';
 import { RDF } from '@dxos/pipeline-rdf';
 import { Editor } from '@dxos/react-ui-editor';
 import { Masonry } from '@dxos/react-ui-masonry';
+import {
+  EntityBrowser,
+  EntityCard,
+  type EntityCardModel,
+  TRIG_PREFIXES,
+  curie,
+  formatNamedGraphs,
+  formatRawFact,
+  toEntityCards,
+} from '@dxos/react-ui-rdf';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -25,10 +35,6 @@ import {
   type AgentKnowledgeGoal,
   type AgentKnowledgeView,
 } from './AgentKnowledge.tsx';
-import { EntityBrowser } from './EntityBrowser.tsx';
-import { EntityCard } from './EntityCard.tsx';
-import { type EntityCardModel, toEntityCards } from './subgraph.ts';
-import { TRIG_PREFIXES, curie, formatNamedGraphs, formatRawFact } from './trig.ts';
 
 const hoursAgo = (hours: number) => new Date(NOW.getTime() - hours * 3_600_000).toISOString();
 

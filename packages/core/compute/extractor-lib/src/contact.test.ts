@@ -34,6 +34,13 @@ describe('buildContactFromActor', () => {
     expect(contact).toBeUndefined();
   });
 
+  test("builds a Person for an address with an apostrophe (the canary mailbox's nicholas.o'day@enron.com)", async ({
+    expect,
+  }) => {
+    const contact = await EffectEx.runPromise(buildContactFromActor({ email: "nicholas.o'day@enron.com" }, db));
+    expect(contact?.emails?.[0]?.value).toBe("nicholas.o'day@enron.com");
+  });
+
   test('builds a Person and links a matching Organization by domain', async ({ expect }) => {
     db.add(Obj.make(Organization.Organization, { name: 'DXOS', website: 'dxos.org' }));
     await db.flush({ indexes: true });

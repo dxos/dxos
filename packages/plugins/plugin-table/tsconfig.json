@@ -41,6 +41,9 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../core/halo/halo-react"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -57,6 +60,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-grid"
     },
     {
       "path": "../../ui/react-ui-menu"

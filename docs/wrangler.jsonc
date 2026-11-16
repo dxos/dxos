@@ -14,5 +14,7 @@
     "production": { "name": "docs" },
     "staging": { "name": "docs-staging" },
     "preview": { "name": "docs-preview" },
+    // On demand, for a branch that needs a hosted copy of the site before it merges.
+    "dev": { "name": "docs-dev" },
   },
 }

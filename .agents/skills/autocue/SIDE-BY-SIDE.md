@@ -60,6 +60,9 @@ export const steps = [
 ];
 ```
 
+`peer.move(point, { steps })` glides the real pointer and the overlay cursor together without clicking, for a
+flow whose subject is where the pointer is (hover states, live cursors).
+
 Peers are keyed by lowercased name (`--peers Alice,Bob,Carol` gives three panes). `caption(title,
 subtitle)` adds a caption mid-step; `caption: false` on a step suppresses its automatic one. `speed(10)` …
 `speed(1)` plays a stretch such as an agent working at ten times speed once the composed video is trimmed, with

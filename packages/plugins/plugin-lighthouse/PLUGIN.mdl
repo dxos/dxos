@@ -355,6 +355,7 @@ feat F-1: Connection
 
 ```mdl
 feat F-2: Research
+  uses: [Research]
 
   req F-2.1: A Research is created from the space's create menu, with a goal and a budget preset (Quick, Standard, Deep); a space with one lighthouse connection gives the Research that connection.
   req F-2.2: Running it creates the lighthouse session and stores its run; the article streams it from then on.
@@ -365,6 +366,7 @@ feat F-2: Research
 
 ```mdl
 feat F-3: Findings in the space
+  uses: [Finding, Research]
 
   req F-3.1: When the session reports, its picks are appended to the feed as Findings with keptBy pick, once each.
   req F-3.2: Starring a result appends it as a Finding with keptBy person and stars it; unstarring removes the star, not the entry.

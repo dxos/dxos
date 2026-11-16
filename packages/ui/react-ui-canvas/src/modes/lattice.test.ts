@@ -6,8 +6,11 @@ import { describe, test } from 'vitest';
 
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
-import { DEFAULT_LATTICE } from '../utils/index.ts';
+import { type LatticeSpec } from '../utils/index.ts';
 import { latticeConstrain } from './lattice.ts';
+
+// The lattice these positions are worked out on: a pitch of 384 by 192.
+const LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
 /** A one-cell shape at lattice cell (`col`, `row`). */
 const cellElement = (id: string, col: number, row: number): Scene.Element2D => ({
@@ -20,7 +23,7 @@ const cellElement = (id: string, col: number, row: number): Scene.Element2D => (
 const layoutOf = (...elements: Scene.Element2D[]): Scene.LayoutRecord2D => ({
   id: 'l',
   dim: '2d',
-  lattice: DEFAULT_LATTICE,
+  lattice: LATTICE,
   elements: Object.fromEntries(elements.map((element) => [element.id, element])),
 });
 
@@ -105,9 +108,65 @@ describe('latticeConstrain', () => {
     expect(moved?.elements.p.center).toEqual({ x: 10, y: 7 });
   });
 
+  test('a hull takes no cells: a shape lands on a cell its frame covers, whatever its style', ({ expect }) => {
+    // A hull's frame covers the shapes inside it, so as a shape of the lattice it would refuse every move among them.
+    const hull: Scene.Element2D = {
+      id: 'h',
+      type: 'hull',
+      center: { x: 192, y: 0 },
+      size: { width: 768, height: 192 },
+      overrides: { tone: 2, lineStyle: 'solid' },
+    };
+    const layout = layoutOf(hull, cellElement('a', 0, 0));
+    const moved = after(layout, { kind: 'move', ids: ['a'], delta: { x: 384, y: 0 } });
+    expect(moved?.elements.a.center).toEqual({ x: 384, y: 0 });
+  });
+
+  test("a composite's parts are left where they are given, about its own centre", ({ expect }) => {
+    const parts: Scene.LayoutRecord2D = { ...layoutOf(cellElement('a', 0, 0)), kind: 'composite' };
+    const intent: LayoutIntent = { kind: 'move', ids: ['a'], delta: { x: -192, y: -96 } };
+    expect(latticeConstrain(parts, intent)).toBe(intent);
+  });
+
   test('a layout with no lattice is not constrained', ({ expect }) => {
     const { lattice: _lattice, ...free } = layoutOf(cellElement('a', 0, 0), cellElement('b', 1, 0));
     const intent: LayoutIntent = { kind: 'move', ids: ['a'], delta: { x: 384, y: 0 } };
     expect(latticeConstrain(free, intent)).toBe(intent);
+  });
+
+  test('a new lattice keeps every shape on the cells it had, placed in the same step', ({ expect }) => {
+    const wider = { width: 192, height: 96, gutterX: 96, gutterY: 96 };
+    const guide: Scene.Element2D = { ...cellElement('g', 5, 5), overrides: { guide: true } };
+    const layout = layoutOf(cellElement('a', 0, 0), cellElement('b', 1, 0), cellElement('c', -2, 3), guide);
+    const next = after(layout, { kind: 'layout', patch: { grid: 12, lattice: wider } });
+    expect([next?.lattice, next?.grid]).toEqual([wider, 12]);
+    expect(Object.values(next?.elements ?? {}).map(({ id, center, size }) => [id, center, size])).toEqual([
+      ['a', { x: 0, y: 0 }, { width: 192, height: 96 }],
+      ['b', { x: 288, y: 0 }, { width: 192, height: 96 }],
+      ['c', { x: -576, y: 576 }, { width: 192, height: 96 }],
+      ['g', guide.center, guide.size],
+    ]);
+    // The same lattice written again, and any other field of the layout, moves nothing.
+    const same: LayoutIntent = { kind: 'layout', patch: { lattice: LATTICE } };
+    const grid: LayoutIntent = { kind: 'layout', patch: { grid: 8 } };
+    expect([latticeConstrain(layout, same), latticeConstrain(layout, grid)]).toEqual([same, grid]);
+  });
+
+  test('the steps after a new lattice in a batch are checked on it, not on the one before', ({ expect }) => {
+    const wider = { width: 192, height: 96, gutterX: 96, gutterY: 96 };
+    const layout = layoutOf(cellElement('a', 0, 0), cellElement('b', 1, 0));
+    // B is written where the new lattice seats it: a frame that covers A's cell and its own on the old one.
+    const next = after(layout, {
+      kind: 'batch',
+      intents: [
+        { kind: 'layout', patch: { lattice: wider } },
+        { kind: 'update', id: 'b', path: ['center'], value: { x: 288, y: 0 } },
+        { kind: 'move', ids: ['b'], delta: { x: 300, y: 0 } },
+      ],
+    });
+    expect([next?.elements.a.center, next?.elements.b.center]).toEqual([
+      { x: 0, y: 0 },
+      { x: 576, y: 0 },
+    ]);
   });
 });

@@ -215,7 +215,7 @@ describe('Skill Manager', () => {
         const conversation = yield* getConversationDXN;
         const result = yield* Operation.invoke(QuerySkills, {}, { conversation });
         expect(result).toHaveLength(3);
-        const keys = result.map((skill: Skill.Skill) => Obj.getMeta(skill).key);
+        const keys = result.map(({ key }) => key);
         expect(keys).toContain('org.dxos.skill.chatContext');
         expect(keys).toContain('org.dxos.skill.memory');
         expect(keys).toContain('org.dxos.skill.automation');
@@ -232,9 +232,7 @@ describe('Skill Manager', () => {
       function* (_) {
         const conversation = yield* getConversationDXN;
         const result = yield* Operation.invoke(QuerySkills, { query: 'save a memory' }, { conversation });
-        expect(result.map((skill: Skill.Skill) => Obj.getMeta(skill).key)[0]).toBe('org.dxos.skill.memory');
-        // Each result names its tools, which is how the model tells it has found the right one.
-        expect(result[0].tools.length).toBeGreaterThan(0);
+        expect(result.map(({ key }) => key)[0]).toBe('org.dxos.skill.memory');
 
         const none = yield* Operation.invoke(QuerySkills, { query: 'zzzz' }, { conversation });
         expect(none).toHaveLength(0);

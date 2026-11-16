@@ -26,6 +26,7 @@ import {
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
+import type * as Awareness from '@dxos/protocols/Awareness';
 
 import { Cursor, type CursorConverter, singleValueFacet } from '../../../util/index.ts';
 
@@ -39,21 +40,14 @@ export interface AwarenessProvider {
   update(position: AwarenessPosition | undefined, options?: AwarenessUpdateOptions): void;
 }
 
-export type AwarenessUpdateOptions = {
-  /** False when only a remote edit shifted the caret; defaults to true. */
-  moved?: boolean;
-};
+export type AwarenessUpdateOptions = Awareness.UpdateOptions;
 
 export type AwarenessPosition = {
   anchor?: string;
   head?: string;
 };
 
-export type AwarenessInfo = {
-  displayName: string;
-  darkColor: string;
-  lightColor: string;
-};
+export type AwarenessInfo = Awareness.Info;
 
 export type AwarenessState = {
   position?: AwarenessPosition;

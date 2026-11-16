@@ -90,6 +90,7 @@ const OBJECT_TYPENAMES: Record<string, string> = {
   Document: 'org.dxos.type.document',
   Mailbox: 'org.dxos.type.mailbox',
   Project: 'org.dxos.type.project',
+  Sheet: 'org.dxos.type.sheet',
   Table: 'org.dxos.type.table',
 };
 
@@ -672,13 +673,24 @@ export class AppManager {
     await this.#expandRow(this.getObjectLinks().nth(nth), timeout);
   }
 
-  async expandSection(testId: string, timeout = 15_000): Promise<void> {
+  async expandSection(testId: string | RegExp, timeout = 15_000): Promise<void> {
     const section = this.currentWorkspace.getByTestId(testId).first();
     await section.waitFor({ state: 'attached', timeout });
     await this.#expandRow(section, timeout);
   }
 
-  async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
+  /** `typename` picks the type a type-backed object (a Table) views, from the form's type select, at any version. */
+  async createObject({
+    type,
+    name,
+    nth,
+    typename,
+  }: {
+    type: string;
+    name?: string;
+    nth?: number;
+    typename?: string;
+  }): Promise<void> {
     if (nth !== undefined) {
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
@@ -724,6 +736,10 @@ export class AppManager {
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
     }
+    if (typename) {
+      await objectForm.getByTestId('typename').click();
+      await this.page.locator(`[role="option"][data-value^="dxn:${typename}:"]`).click();
+    }
     // The form's Create sits in the dialog's footer, outside the form element.
     await openDialog.getByTestId('save-button').click();
     // Reopening the dialog before it has finished closing reuses the instance, which is still on
@@ -745,12 +761,12 @@ export class AppManager {
       .first()
       .click();
     await this.page.getByTestId('spacePlugin.renameObject').last().click();
-    // An object's rename popover is its properties form, whose Name field writes as it is typed; Escape closes it.
-    const name = this.page
-      .locator('[data-scope="popover"][data-part="content"]')
-      .getByRole('textbox', { name: 'Name' });
+    // An object's rename popover is its properties form, which holds what is typed until Save writes it and closes
+    // the popover; dismissing it any other way — Escape, a click outside — throws the edit away.
+    const popover = this.page.locator('[data-scope="popover"][data-part="content"]');
+    const name = popover.getByRole('textbox', { name: 'Name' });
     await name.fill(newName);
-    await name.press('Escape');
+    await popover.getByTestId('save-button').click();
     await this.page.mouse.move(0, 0, { steps: 4 });
   }
 

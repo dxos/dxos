@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { createPorts, defineComputeNode } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { TextComponent } from './Text.tsx';
@@ -23,7 +25,7 @@ export type TextShape = Schema.Schema.Type<typeof TextShape>;
 export type CreateTextProps = CreateShapeProps<TextShape>;
 
 export const createText = (props: CreateTextProps) =>
-  createShape<TextShape>({ type: 'text', size: { width: 384, height: 384 }, ...props });
+  createShape<TextShape>({ type: 'text', size: { width: 6 * MAJOR_GRID, height: 6 * MAJOR_GRID }, ...props });
 
 export const textNodeDef = defineComputeNode<TextShape>({
   type: 'text',

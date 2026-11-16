@@ -6,9 +6,10 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { ComputeValueType, TemplateOutput, VoidInput } from '@dxos/conductor';
+import { MAJOR_GRID } from '@dxos/scene';
 
 import { createFunctionPorts, defineComputeNode } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
+import { ComputeShape, type CreateShapeProps, computeData, createShape, withZ } from './defs.ts';
 import { TemplateComponent } from './Template.tsx';
 
 // Kept out of `Template.tsx`: react-refresh only fast-refreshes a module whose
@@ -21,7 +22,7 @@ import { TemplateComponent } from './Template.tsx';
 export const TemplateShape = ComputeShape.mapFields(
   Struct.assign({
     type: Schema.Literal('template'),
-    valueType: Schema.optional(ComputeValueType),
+    data: computeData({ valueType: Schema.optional(ComputeValueType) }),
   }),
 );
 
@@ -34,7 +35,7 @@ export type TemplateShape = Schema.Schema.Type<typeof TemplateShape>;
 export type CreateTemplateProps = CreateShapeProps<TemplateShape> & { text?: string };
 
 export const createTemplate = (props: CreateTemplateProps) =>
-  createShape<TemplateShape>({ type: 'template', size: { width: 256, height: 384 }, ...props });
+  createShape<TemplateShape>({ type: 'template', size: { width: 4 * MAJOR_GRID, height: 6 * MAJOR_GRID }, ...props });
 
 export const templateNodeDef = defineComputeNode<TemplateShape>({
   type: 'template',

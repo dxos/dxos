@@ -26,6 +26,7 @@ import {
 import { type LinkValues } from '../model/index.ts';
 import { type PartField } from './parts.ts';
 import { DEFAULT_POLYLINE_POINTS } from './polyline.ts';
+import { DEFAULT_SHAPE } from './shape-recipe.ts';
 import { DEFAULT_CLOUD_BUMPS, DEFAULT_POLYGON_SIDES } from './silhouette.ts';
 
 /** Axis-aligned frame of a node: its size centred on its centre. */
@@ -59,11 +60,13 @@ export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
  * new shape scales with the drawing's grid.
  */
 export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: { width: 2, height: 1 },
+  rect: { width: 4, height: 2 },
   ellipse: { width: 2, height: 2 },
   cloud: { width: 3, height: 2 },
   polygon: { width: 2, height: 2 },
+  shape: { width: 4, height: 2 },
   polyline: { width: 2, height: 2 },
+  hull: { width: 4, height: 2 },
   note: { width: 4, height: 2 },
   view: { width: 4, height: 2 },
   instance: { width: 4, height: 2 },
@@ -72,19 +75,24 @@ export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
   diagram: { width: 2, height: 1 },
 };
 
-/** The built-in types' sizes in scene px, for fixtures and imports, whose layouts are written against them. */
+/**
+ * The built-in types' sizes in scene px at the default grid, for fixtures and imports, whose layouts are written
+ * against them: each a whole number of major cells, so they land on the grid move and resize snap to.
+ */
 export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: { width: 256, height: 256 },
-  ellipse: { width: 256, height: 256 },
-  cloud: { width: 384, height: 256 },
-  polygon: { width: 256, height: 256 },
-  polyline: { width: 256, height: 256 },
-  note: { width: 256, height: 128 },
-  view: { width: 512, height: 256 },
-  instance: { width: 512, height: 256 },
-  path: { width: 256, height: 256 },
-  generator: { width: 512, height: 512 },
-  diagram: { width: 256, height: 128 },
+  rect: nominalSize({ width: 4, height: 4 }),
+  ellipse: nominalSize({ width: 4, height: 4 }),
+  cloud: nominalSize({ width: 6, height: 4 }),
+  polygon: nominalSize({ width: 4, height: 4 }),
+  shape: nominalSize({ width: 8, height: 4 }),
+  polyline: nominalSize({ width: 4, height: 4 }),
+  hull: nominalSize({ width: 8, height: 4 }),
+  note: nominalSize({ width: 4, height: 2 }),
+  view: nominalSize({ width: 8, height: 4 }),
+  instance: nominalSize({ width: 8, height: 4 }),
+  path: nominalSize({ width: 4, height: 4 }),
+  generator: nominalSize({ width: 8, height: 8 }),
+  diagram: nominalSize({ width: 4, height: 2 }),
 };
 
 /** The bounding box a new basic shape gets at the default grid. */
@@ -120,8 +128,14 @@ export const createNode = ({
       return { type, id, z, center, size, params: { bumps: DEFAULT_CLOUD_BUMPS } };
     case 'polygon':
       return { type, id, z, center, size, params: { sides: DEFAULT_POLYGON_SIDES } };
+    // Its recipe's defaults stand until a parameter is set, so `params` starts unset.
+    case 'shape':
+      return { type, id, z, center, size, recipe: DEFAULT_SHAPE };
     case 'polyline':
       return { type, id, z, center, size, points: [...DEFAULT_POLYLINE_POINTS] };
+    // Its frame and border follow the nodes that name it as their parent, once any does.
+    case 'hull':
+      return { type, id, z, center, size };
     case 'note':
       return { type, id, z, center, size, text: 'Note' };
     case 'view':
@@ -176,6 +190,7 @@ export const createLink = ({ type, id, z, source, target, ends }: CreateLinkProp
   const base = { id, z, source, target, ...(ends ? { ends } : {}) };
   switch (type) {
     case 'line':
+    case 'ortho':
     case 'curve':
     case 'smart':
       return { type, ...base };

@@ -7,7 +7,7 @@ import { type BlobBackend } from '@dxos/blob';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
-import { QueryAST } from '@dxos/echo-protocol';
+import { EncodedReference, QueryAST } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   type RefResolverRequest,
@@ -271,6 +271,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
       resolveLegacy: async (uri, options) => {
         const obj = await this._resolveAsync(uri, context, options);
+        if (obj) {
+          await this.#resolveTypeOf(obj);
+        }
         return obj ? materializeStoredSchema(obj) : undefined;
       },
 
@@ -638,6 +641,24 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       }
     }
     return undefined;
+  }
+
+  /**
+   * Registers a loaded object's static type from the type sources when the registry lacks it. A `dxn:` type is not a
+   * strong dependency, on the premise that the registry always holds it; with a type source that does not hold — a
+   * plugin bundle on EDGE registers only its own types, and loads objects of types other bundles publish — and an
+   * object whose type is missing has no schema to read or write through.
+   */
+  async #resolveTypeOf(obj: Entity.Unknown): Promise<void> {
+    if (this.#typeSources.length === 0 || !isEchoObject(obj)) {
+      return;
+    }
+    const typeRef = getObjectCore(obj).getType();
+    const typeUri = typeRef ? EncodedReference.toURI(typeRef) : undefined;
+    if (typeUri === undefined || !DXN.isDXN(typeUri) || this._registry.getByURI(typeUri) !== undefined) {
+      return;
+    }
+    await this.#resolveFromTypeSources(typeUri);
   }
 
   /**

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { describeFields, describeInput } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -15,7 +16,6 @@ import { EffectDialect } from './dialect-effect.ts';
 import { renderTypes } from './Dialect.ts';
 import { STATIC_DOCS, loadDocs } from './docs/index.ts';
 import { conciseError } from './eval-tool.ts';
-import { describeFields, describeInput } from './fields.ts';
 
 class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
   Schema.Struct({ name: Schema.String }),
@@ -70,6 +70,35 @@ describe('prompt', () => {
     // `Operation.make` does not require a struct, so any other input is labelled as it is.
     expect(describeInput(Schema.String)).toEqual('string');
     expect(describeInput(Schema.suspend(() => Schema.Struct({ id: Schema.String })))).toEqual('{ id: string }');
+  });
+
+  test("a type's union of more than four tagged variants is named by its tags", ({ expect }) => {
+    const variant = (tag: string) => Schema.TaggedStruct(tag, { text: Schema.String });
+    const many = Schema.Union(['a', 'b', 'c', 'd', 'e'].map(variant));
+    expect(describeFields({ block: many })).toEqual([
+      { name: 'block', type: '{ _tag: "a" | "b" | "c" | "d" | "e", … }', optional: false },
+    ]);
+    // Four or fewer are still spelled out, since their fields are short enough to be worth stating.
+    const few = Schema.Union(['a', 'b'].map(variant));
+    expect(describeFields({ block: few })).toEqual([
+      { name: 'block', type: '{ _tag: "a", text: string } | { _tag: "b", text: string }', optional: false },
+    ]);
+    // An operation's input is what the model writes, so it keeps every variant's fields.
+    expect(describeInput(Schema.Struct({ block: many }))).toContain('{ _tag: "e", text: string }');
+  });
+
+  test('the types section says how to see a shortened union, and only when a type has one', ({ expect }) => {
+    const type = (field: string) => ({
+      typename: 'com.example.type.note',
+      dxn: 'dxn:com.example.type.note:0.1.0',
+      kind: 'object' as const,
+      fields: [{ name: 'block', type: field, optional: false }],
+    });
+    const [{ type: shortened }] = describeFields({
+      block: Schema.Union(['a', 'b', 'c', 'd', 'e'].map((tag) => Schema.TaggedStruct(tag, {}))),
+    });
+    expect(renderTypes([type(shortened)])).toContain("print an existing value of that type to see a variant's fields");
+    expect(renderTypes([type('string')])).not.toContain('shortened to its tags');
   });
 
   test('the effect dialect documents an operation by the schema Operation.invoke decodes against', ({ expect }) => {

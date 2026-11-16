@@ -89,38 +89,17 @@ export const SlideToolbar = ({
               () => onInsert('notes'),
             ),
         )
-        .group(
+        .action(
           'preview',
           {
-            label: label('preview-mode.label'),
-            icon: 'ph--eye--regular',
-            variant: 'toggleGroup',
-            selectCardinality: 'single',
-            value: previewMode,
+            label: label('preview-split.label'),
+            icon: 'ph--square-split-vertical--regular',
+            type: 'toggle',
+            checked: previewMode === 'split',
+            testId: 'presenter.slide-toolbar.split',
             placement: { zone: 'end', collapse: 2 },
           },
-          (group) =>
-            group
-              .action(
-                'split',
-                {
-                  label: label('preview-split.label'),
-                  icon: 'ph--square-split-vertical--regular',
-                  checked: previewMode === 'split',
-                  testId: 'presenter.slide-toolbar.split',
-                },
-                () => previewMode !== 'split' && onPreviewModeChange('split'),
-              )
-              .action(
-                'companion',
-                {
-                  label: label('preview-companion.label'),
-                  icon: 'ph--sidebar-simple--regular',
-                  checked: previewMode === 'companion',
-                  testId: 'presenter.slide-toolbar.companion',
-                },
-                () => previewMode !== 'companion' && onPreviewModeChange('companion'),
-              ),
+          () => onPreviewModeChange(previewMode === 'split' ? 'off' : 'split'),
         )
         .group(
           'navigate',

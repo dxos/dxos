@@ -209,7 +209,7 @@ export const OUTLINE_STYLE_SET: StyleSet = {
     { id: 'dashed', name: 'Dashed', borderWidth: 2, borderStyle: 'dashed', ...OUTLINE_SHAPE },
   ],
   defaultVariant: 0,
-  link: { kind: 'rails', width: 8, caption: 'translucent' },
+  link: { kind: 'line', width: 3, caption: 'translucent' },
   view: { contents: 'translucent' },
 };
 
@@ -231,7 +231,7 @@ export const GLASS_STYLE_SET: StyleSet = {
     { id: 'solid', name: 'Solid', surface: 'glass-solid', ...GLASS_SHAPE },
   ],
   defaultVariant: 1,
-  link: { kind: 'glass', width: 8, caption: 'translucent' },
+  link: { kind: 'line', width: 3, caption: 'translucent' },
   view: { contents: 'translucent' },
 };
 

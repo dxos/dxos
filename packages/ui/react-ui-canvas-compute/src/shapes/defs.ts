@@ -34,7 +34,27 @@ export const parseAnchorId = (id: string): [PropertyKind | undefined, string] =>
 // Shapes
 //
 
-export type CreateShapeProps<S extends ComputeShape> = Omit<MakeOptional<S, 'id' | 'size'>, 'type' | 'node'>;
+/**
+ * What a shape's factory takes: the board shape's fields, and the shape's own under `data`. The compute `node` is not
+ * among them, being the id of the node the compute graph makes for the shape.
+ */
+export type CreateShapeProps<S extends ComputeShape> = Omit<MakeOptional<S, 'id' | 'size'>, 'type' | 'data'> & {
+  data?: Omit<NonNullable<S['data']>, 'node'>;
+};
+
+/** The fields every compute shape keeps under `data`. */
+const ComputeFields = {
+  // TODO(burdon): Rename computeNode?
+  node: Schema.mutableKey(Schema.optional(Obj.ID.annotate({ description: 'Compute node id' }))),
+};
+
+/**
+ * A compute shape's own fields (its compute `node`, and `fields`), kept under the shape's `data` so none meets a field
+ * of the board shape or of the engine's node. The key is optional without `undefined`, which keeps the value a struct
+ * the kind registry reads the field names of.
+ */
+export const computeData = <Fields extends Schema.Struct.Fields>(fields: Fields) =>
+  Schema.mutableKey(Schema.optionalKey(Schema.Struct({ ...ComputeFields, ...fields }).annotate({ title: 'Compute' })));
 
 // The board's stored shape (a closed shape with a centre and size, every key mutable), so boards the editor wrote
 // still decode.
@@ -47,8 +67,7 @@ export const ComputeShape = CanvasBoard.Shape.mapFields(
   .mapFields(Struct.map(Schema.mutableKey))
   .mapFields(
     Struct.assign({
-      // TODO(burdon): Rename computeNode?
-      node: Schema.mutableKey(Schema.optional(Obj.ID.annotate({ description: 'Compute node id' }))),
+      data: computeData({}),
     }),
   );
 

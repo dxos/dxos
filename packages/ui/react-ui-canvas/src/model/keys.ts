@@ -37,6 +37,9 @@ export type KeyAction =
   | 'selectAll'
   | 'group'
   | 'ungroup'
+  | 'bringToFront'
+  | 'sendToBack'
+  | 'grid'
   | 'snap'
   | 'guides'
   | 'debug';
@@ -61,6 +64,9 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   selectAll: [{ key: 'a', meta: true }],
   group: [{ key: 'g', meta: true, shift: false }],
   ungroup: [{ key: 'g', meta: true, shift: true }],
+  bringToFront: [{ key: ']', meta: true }],
+  sendToBack: [{ key: '[', meta: true }],
+  grid: [{ key: "'", meta: true }],
   snap: [{ key: 'g', shift: false }],
   guides: [{ key: ';' }],
   debug: [{ key: 'd' }],

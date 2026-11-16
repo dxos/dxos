@@ -1,0 +1,89 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": [
+      "@cloudflare/workers-types",
+      "@dxos/typings",
+      "node",
+      "wicg-file-system-access"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../tools/vite-plugin-icons"
+    },
+    {
+      "path": "../../../tools/vite-plugin-import-source"
+    },
+    {
+      "path": "../../../tools/vite-plugin-log"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/graph"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/echo/echo-sqlite"
+    },
+    {
+      "path": "../../core/echo/echo-sqlite-sync"
+    },
+    {
+      "path": "../../core/echo/echo-sync-worker"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    }
+  ]
+}

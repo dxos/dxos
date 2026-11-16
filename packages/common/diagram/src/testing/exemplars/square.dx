@@ -3,5 +3,5 @@ scene square dim=2d layout=square name="Square" theme=flat {
 }
 
 layout square dim=2d {
-  element a rect "Square" @ 0,0 size=128x128 hue=blue surface=solid border=true rounded=true
+  element a rect "Square" @ 0,0 size=96x96 hue=blue surface=solid border=true rounded=true
 }

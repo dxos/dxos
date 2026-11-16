@@ -4,4 +4,5 @@
 
 export * from './AttentionGlyph/index.ts';
 export * from './AttentionProvider/index.ts';
+export * from './RemoteCursor/index.ts';
 export * from './ViewStateProvider/index.ts';

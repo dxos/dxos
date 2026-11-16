@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { GptInput, GptOutput } from '@dxos/conductor';
+import { MAJOR_GRID } from '@dxos/scene';
 
 import { createFunctionPorts, defineComputeNode, getHeight } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
@@ -27,7 +28,7 @@ export type CreateGptProps = CreateShapeProps<GptShape>;
 export const createGpt = (props: CreateGptProps) =>
   createShape<GptShape>({
     type: 'gpt',
-    size: { width: 256, height: Math.max(getHeight(GptInput), getHeight(GptOutput)) },
+    size: { width: 4 * MAJOR_GRID, height: Math.max(getHeight(GptInput), getHeight(GptOutput)) },
     ...props,
   });
 

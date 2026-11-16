@@ -6,8 +6,8 @@
  * Minimal XML-style DSL for laying out schema fields in a grid.
  *
  * Grammar:
- *   <grid cols="N" [fixed="true"]>  ...children...  </grid>
- *   <field name="x" span="N"/>
+ *   <grid cols="N" [fixed="true"] [header="true"]>  ...children...  </grid>
+ *   <field name="x" [span="N"] [width="auto"]/>
  *
  * - Attributes accept `"…"`, `'…'`, or unquoted integers.
  * - Whitespace between tags is ignored. Text content (between tags) is forbidden.
@@ -23,9 +23,19 @@ export type LayoutNode =
       readonly cols: number;
       /** Keeps the columns in a narrow pane rather than stacking the cells. */
       readonly fixed?: boolean;
+      /** Names the columns once in a row above the cells, which then carry no labels (an array's items: once above all). */
+      readonly header?: boolean;
       readonly children: readonly LayoutNode[];
     }
-  | { readonly kind: 'field'; readonly name: string; readonly span?: number };
+  | {
+      readonly kind: 'field';
+      readonly name: string;
+      readonly span?: number;
+      /** `auto` sizes the field's one track to its content instead of an equal share. */
+      readonly width?: 'auto';
+    };
+
+export type LayoutGrid = Extract<LayoutNode, { kind: 'grid' }>;
 
 export class LayoutParseError extends Error {
   readonly _tag = 'LayoutParseError';
@@ -107,7 +117,7 @@ const parseInteger = (value: string, attr: string, tag: string, position: number
 };
 
 /** Parses a layout template string into a single root node. The root must be `<grid>`. */
-export const parseLayout = (template: string): LayoutNode => {
+export const parseLayout = (template: string): LayoutGrid => {
   const tokens = tokenize(template);
   if (tokens.length === 0) {
     throw new LayoutParseError('empty template');
@@ -128,8 +138,18 @@ export const parseLayout = (template: string): LayoutNode => {
       const name = requireAttr(token.attrs, 'name', 'field', token.position);
       const spanRaw = token.attrs.span;
       const span = spanRaw !== undefined ? parseInteger(spanRaw, 'span', 'field', token.position) : undefined;
+      const width = token.attrs.width;
+      if (width !== undefined && width !== 'auto') {
+        throw new LayoutParseError(
+          `<field> attribute "width" expects "auto", got ${JSON.stringify(width)}`,
+          token.position,
+        );
+      }
+      if (width && span !== undefined && span !== 1) {
+        throw new LayoutParseError('<field width="auto"> takes one track, so it cannot span', token.position);
+      }
       index += 1;
-      return { kind: 'field', name, span };
+      return { kind: 'field', name, span, ...(width ? { width } : {}) };
     }
 
     if (token.name === 'grid') {
@@ -153,7 +173,11 @@ export const parseLayout = (template: string): LayoutNode => {
       }
       index += 1;
       const fixed = token.attrs.fixed === 'true';
-      return { kind: 'grid', cols, ...(fixed ? { fixed } : {}), children };
+      const header = token.attrs.header === 'true';
+      if (header && children.some((child) => child.kind !== 'field')) {
+        throw new LayoutParseError('<grid header="true"> names its columns, so it holds only fields', token.position);
+      }
+      return { kind: 'grid', cols, ...(fixed ? { fixed } : {}), ...(header ? { header } : {}), children };
     }
 
     throw new LayoutParseError(`unknown element <${token.name}>`, token.position);
@@ -171,4 +195,21 @@ export const parseLayout = (template: string): LayoutNode => {
     throw new LayoutParseError('root element must be <grid>');
   }
   return root;
+};
+
+/**
+ * A grid's column tracks: `cols` equal shares, except that a `width="auto"` field's track fits its content. Fields take
+ * tracks in order, each `span` of them; tracks no field claims stay equal shares.
+ */
+export const gridTracks = (grid: LayoutGrid): string => {
+  const share = 'minmax(0, 1fr)';
+  if (!grid.children.some((child) => child.kind === 'field' && child.width === 'auto')) {
+    return `repeat(${grid.cols}, ${share})`;
+  }
+  const tracks = grid.children.flatMap((child) =>
+    child.kind === 'field' && child.width === 'auto'
+      ? ['auto']
+      : Array.from({ length: child.kind === 'field' ? (child.span ?? 1) : 1 }, () => share),
+  );
+  return [...tracks, ...Array.from({ length: Math.max(0, grid.cols - tracks.length) }, () => share)].join(' ');
 };

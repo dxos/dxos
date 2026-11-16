@@ -3,11 +3,11 @@
 //
 
 import { Config } from '@dxos/config';
-import { makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
+import * as ModuleSurfacesPlugin from '@dxos/storybook-testing/ModuleSurfacesPlugin';
 
 import { moduleSurfaces } from '../modules/index.ts';
 
-export const surfacesPlugin = () => makeModuleSurfacesPlugin('org.dxos.stories.compute.modules', moduleSurfaces);
+export const surfacesPlugin = () => ModuleSurfacesPlugin.make('org.dxos.stories.compute.modules', moduleSurfaces);
 
 /** Client config pointing at an EDGE service, for the stories that spawn there for real. */
 export const makeEdgeConfig = (url: string) =>

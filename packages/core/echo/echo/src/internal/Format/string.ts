@@ -9,11 +9,11 @@ import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { FormatAnnotation, TypeFormat } from './types.ts';
 
 /**
- * Email address (RFC 5321)
+ * Email address (RFC 5321). The local part also allows an apostrophe, which real mail carries (`o'day@corp.com`).
  * https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
  */
 export const Email = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/u)),
+  Schema.check(Schema.isPattern(/^[a-zA-Z0-9._%+'-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/u)),
   FormatAnnotation.set(TypeFormat.Email),
   Schema.annotate({
     title: 'Email',
@@ -45,6 +45,11 @@ export const Regex = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Regex));
  * Multi-line text.
  */
 export const Text = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Text));
+
+/**
+ * Multi-line text written as Markdown; a form renders it in an editor with Markdown decorations.
+ */
+export const Markdown = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Markdown));
 
 const URL_PATTERN = /^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i;
 

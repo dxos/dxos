@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type FunctionWrappingOptions } from '@dxos/compute-runtime';
+import { type FunctionWrappingOptions } from '@dxos/compute-runtime/protocol';
 import { Entity, JsonSchema, Obj, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { PluginProtocol } from '@dxos/protocols';

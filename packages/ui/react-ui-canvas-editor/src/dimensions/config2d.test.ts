@@ -40,6 +40,8 @@ describe('config2d', () => {
     const snapped = constrain?.(lattice, move, { snap: true });
     expect(snapped && applyIntent(lattice, snapped).elements.a.center).toEqual({ x: 384, y: 0 });
     expect(constrain?.(lattice, move, { snap: false })).toBe(move);
+    // Snapping to the grid rather than the lattice leaves the move off the cells.
+    expect(constrain?.(lattice, move, { snap: true, lattice: false })).toBe(move);
     // A layout with no lattice is free.
     const { lattice: _lattice, ...free } = lattice;
     expect(constrain?.(free, move, { snap: true })).toBe(move);
@@ -137,5 +139,51 @@ describe('config2d', () => {
     expect(registry.get(layouts).root.elements).toEqual(before.elements);
     history.redo();
     expect(registry.get(layouts).root).toEqual(after);
+  });
+
+  test('Join and Subtract are the commands 3D has, and write a solid a 2D layout takes', () => {
+    const { commands } = createConfig2D();
+    const run = (id: string, selection: readonly string[]) => {
+      const intents: LayoutIntent[] = [];
+      let selected: readonly string[] = [];
+      void commands
+        ?.find((command) => command.id === id)
+        ?.run({
+          document,
+          layout: 'root',
+          selection,
+          onIntent: (_layout, intent) => intents.push(intent),
+          onModelIntent: () => [],
+          select: (ids) => (selected = ids),
+          setTool: () => {},
+          notify: () => {},
+        });
+      return { intents, selected };
+    };
+    const [root] = document.layouts;
+    const joined = run('join', ['a', 'b']);
+    expect(joined.intents).toEqual([{ kind: 'join', id: 'union-1', operands: ['a', 'b'] }]);
+    expect(joined.selected).toEqual(['union-1']);
+    expect(applyIntent(root, joined.intents[0]).elements['union-1']).toMatchObject({
+      type: 'solid',
+      center: { x: 300, y: 100 },
+      size: { width: 500, height: 300 },
+      props: { op: 'union', operands: 'a b' },
+    });
+    const cut = run('subtract', ['a', 'b']);
+    expect(cut.intents).toEqual([{ kind: 'subtract', id: 'difference-1', base: 'a', tool: 'b' }]);
+    expect(applyIntent(root, cut.intents[0]).elements['difference-1']).toMatchObject({
+      center: { x: 100, y: 0 },
+      props: { op: 'difference', operands: 'a b' },
+    });
+    const subtract = commands?.find((command) => command.id === 'subtract');
+    expect(subtract?.enabled({ selection: ['a'], readonly: false })).toBe(false);
+    expect(subtract?.enabled({ selection: ['a', 'b'], readonly: false })).toBe(true);
+    // With more selected, the first is still the base and each of the rest is cut from it.
+    expect(subtract?.enabled({ selection: ['a', 'b', 'c'], readonly: false })).toBe(true);
+    expect(run('subtract', ['a', 'b', 'c']).intents).toEqual([
+      { kind: 'subtract', id: 'difference-1', base: 'a', tool: 'b', tools: ['c'] },
+    ]);
+    expect(commands?.find((command) => command.id === 'join')?.icon).toBe('ph--unite--regular');
   });
 });

@@ -66,6 +66,7 @@ export const TldrawArticle = ({
       selection={selection}
       onSelectionChange={onSelectionChange}
       onActivate={onActivate}
+      cursors
       {...props}
     />
   );

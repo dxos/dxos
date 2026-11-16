@@ -58,7 +58,8 @@ const emphasis = '[&_h1]:text-[160px] [&_h1]:leading-tight [&_h2]:text-[96px]';
 const centered = ({ name, className }: { name: LayoutName; className?: string }): Layout => {
   const CenteredLayout = ({ slots }: LayoutProps) => (
     <Frame name={name} className={mx('grid place-content-center text-center', theme.padding, className)}>
-      <Slot name='default' className='items-center'>
+      {/* A centred slide is a few large blocks — a mark, a name, a date — so they are spaced to be read apart. */}
+      <Slot name='default' className='items-center gap-32'>
         {slots.default}
       </Slot>
     </Frame>
@@ -95,11 +96,12 @@ const TwoColsLayout = ({ slots, frontmatter }: LayoutProps) => {
   const padding = columns(frontmatter.bleed);
   return (
     <Frame name='two-cols' className={mx('grid grid-cols-2 gap-16', padding.frame)}>
-      <Slot name='default' className={padding.left}>
+      {/* Each column is read as its own block, so it is centred in its half rather than hung from the top. */}
+      <Slot name='default' className={mx('justify-center', padding.left)}>
         {slots.default}
         {slots.left}
       </Slot>
-      <Slot name='right' className={padding.right}>
+      <Slot name='right' className={mx('justify-center', padding.right)}>
         {slots.right}
       </Slot>
     </Frame>

@@ -1,0 +1,17 @@
+diagram flow=down aspect=16:9
+group client "In your process" {
+  node React "echo-react" ref="packages/core/echo/echo-react"
+  node Echo "echo" ref="packages/core/echo/echo" right-of React
+  node Client "echo-client" ref="packages/core/echo/echo-client" below Echo
+}
+group remote "Behind QueryService" right-of client {
+  node Host "echo-host" ref="packages/core/echo/echo-host"
+  node Index "index-core" ref="packages/core/echo/index-core" below Host
+  node Edge "EDGE" below Index
+}
+edge React -> Echo
+edge React -> Client
+edge Client -> Echo "implements"
+edge Client -> Host "QueryService"
+edge Client -> Edge "QueryService"
+edge Host -> Index "snapshots"

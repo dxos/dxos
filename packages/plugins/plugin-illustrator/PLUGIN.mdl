@@ -308,6 +308,37 @@ test QA-4: Showcase clip
       expect: each shape appears
 ```
 
+```mdl
+test QA-5: Two peers see each other's pointer on a drawing
+  desc: |
+    Live cursors on the core drawing types, tldraw sketches and svg architecture diagrams. Pointers are shared
+    in each surface's own coordinates, so peers with different panel sizes agree.
+  actors: human
+  status: unverified        # 2026-11-04, written from composer-e2e/src/playwright/drawing-cursors.spec.ts
+  automated:
+    - composer-e2e:drawing-cursors.spec.ts#Drawing cursors › host and guest see each other's pointer on a tldraw drawing
+    - composer-e2e:drawing-cursors.spec.ts#Drawing cursors › host and guest see each other's pointer on a svg drawing
+  given:
+    - two identities on two devices, members of one space
+    - plugin-illustrator and plugin-tldraw enabled
+  steps:
+    - name: Open one drawing on both peers
+      do: Create a tldraw drawing on the host, then open it on the host and on the guest.
+      expect: both peers show the drawing
+    - name: Move the host's pointer
+      do: Move the mouse over the drawing on the host.
+      expect: the guest's drawing shows a cursor at the same place, tagged with the host's name in the host's avatar hue
+    - name: Move the guest's pointer
+      do: Move the mouse over the drawing on the guest.
+      expect: the host's drawing shows the guest's cursor
+    - name: Leave the drawing
+      do: Move the host's mouse off the drawing.
+      expect: the host's cursor disappears from the guest's drawing
+    - name: Repeat on a diagram
+      do: Repeat the steps with an svg drawing that holds a diagram.
+      expect: the same, with each cursor over the same box on both peers whatever the panel sizes
+```
+
 ## Changelog
 
 ```mdl
@@ -344,3 +375,27 @@ decision D-4: `Drawing.canvas` is a Ref to either the base `Canvas`, which tldra
   source: packages/common/scene/SPEC.mdl D-26
 ```
 
+```mdl
+decision D-5: Collaborators' pointers show on the core drawing types, tldraw and svg, through one shared awareness channel; QA-5 checks both.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [QA-5, VariantProvider]
+  why: tldraw and svg (the architecture diagrams) are the core drawing types. One shared channel gives them the same throttling, expiry and member hue. The svg article shares pointers in viewBox coordinates through `RemoteCursorLayer`, while its card shows none. Canvas, conductor boards, the 3D canvas and excalidraw are out of scope.
+```
+
+```mdl
+decision D-6: Pointers travel on `Awareness.Channel` in `@dxos/protocols`, the channel markdown cursors use, in their wire format. Refines [D-5].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [QA-5]
+  why: The drawing channel and the editor's collaboration cursors were two implementations of one protocol; the markdown wire format serves as the generic one.
+```
+
+```mdl
+decision D-7: `app-toolkit` defines the pointer's `Point` schema and its timing, a 50 ms throttle, a 5 s heartbeat and a 60 s idle withdraw. Fills in [D-6].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-5]
+  why: The shared channel defines no coordinates and defaults to the text cursor's timing, so the pointer type and its pace stay with the drawing surfaces that read them.
+```

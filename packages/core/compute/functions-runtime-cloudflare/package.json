@@ -41,6 +41,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
     "@cloudflare/workers-types": "catalog:"
   },
   "publishConfig": {

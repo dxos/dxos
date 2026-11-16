@@ -96,7 +96,8 @@ export const MarkdownField = ({
 /** The markdown editor every markdown field draws, given its value through the form or bound through `extensions`. */
 const MarkdownEditor = ({ extensions: formExtensions, ...props }: Omit<InputEditorProps, 'rows'>) => {
   const extensions = useMemo(
-    () => [createMarkdownExtensions(), decorateMarkdown(), fieldTheme, ...(formExtensions ?? [])],
+    // `fixedHeight`: a field is a row of a form, so a heading keeps the body size and every line the same height.
+    () => [createMarkdownExtensions({ fixedHeight: true }), decorateMarkdown(), fieldTheme, ...(formExtensions ?? [])],
     [formExtensions],
   );
   return <InputEditor {...props} rows={ROWS} extensions={extensions} />;

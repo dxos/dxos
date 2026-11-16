@@ -41,6 +41,8 @@ export type CommandState = {
   canUngroup: boolean;
   /** The canvas has a model to extract an object into. */
   canMakeObject: boolean;
+  /** The scene draws in a stored order a restack can change, which is 2D's: a 3D scene draws by depth. */
+  canOrder: boolean;
   /** False when the host gives no codec, so the view keeps its own clipboard. */
   clipboard?: boolean;
 };
@@ -69,6 +71,8 @@ const ICONS: Record<SceneMenuCommand, string> = {
   'paste': 'ph--clipboard--regular',
   'duplicate': 'ph--copy-simple--regular',
   'delete': 'ph--trash--regular',
+  'bring-to-front': 'ph--arrow-line-up--regular',
+  'send-to-back': 'ph--arrow-line-down--regular',
   'group': 'ph--selection-plus--regular',
   'ungroup': 'ph--selection-slash--regular',
   'make-object': 'ph--package--regular',
@@ -80,13 +84,28 @@ export const SHARED_COMMANDS: readonly SceneMenuCommand[] = [
   'copy',
   'paste',
   'duplicate',
+  'delete',
   'group',
   'ungroup',
   'make-object',
-  'delete',
+  'bring-to-front',
+  'send-to-back',
   'undo',
   'redo',
 ];
+
+/**
+ * The actions bar's groups, each in the order it shows: editing the selection, putting it together, and combining
+ * solids. A dimension's command named here sits with the shared ones; any other follows, ahead of undo and redo.
+ */
+export const ACTION_GROUPS: readonly (readonly string[])[] = [
+  ['cut', 'copy', 'paste', 'duplicate', 'delete'],
+  ['group', 'ungroup', 'hull', 'make-object'],
+  ['join', 'subtract'],
+];
+
+/** The shared commands the right-click menu offers and the actions bar leaves out, as the inspector restacks too. */
+export const MENU_ONLY_COMMANDS: ReadonlySet<string> = new Set<SceneMenuCommand>(['bring-to-front', 'send-to-back']);
 
 /**
  * The editor's command table, the same shared commands in 2D and 3D with the dimension's own and the config's extras
@@ -117,6 +136,8 @@ export const buildCommands = ({
     'paste': clipboard && editable,
     'duplicate': clipboard && some,
     'delete': some,
+    'bring-to-front': some && state.canOrder,
+    'send-to-back': some && state.canOrder,
     'group': editable && state.selection.length > 1,
     'ungroup': editable && state.canUngroup,
     'make-object': some && state.canMakeObject,
@@ -165,6 +186,7 @@ const ALL_ENABLED = {
   canPaste: true,
   canCreate: true,
   canDelete: true,
+  canOrder: true,
   canGroup: true,
   canUngroup: true,
   canMakeObject: true,

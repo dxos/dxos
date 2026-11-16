@@ -163,6 +163,12 @@ export type OperationsOptions = {
   /** The invocation's pid, every nested invocation's parent. */
   readonly pid: string;
   readonly idSeed: PluginProtocol.IdSeed | undefined;
+  /**
+   * Brings the invocation's documents up to date with EDGE (`ServiceContainer.refreshWorkingSet`). Called when a
+   * nested call to another invocation returns, since this invocation's data plane is pull-only and would otherwise
+   * continue on the space as it stood before the callee wrote to it.
+   */
+  readonly refreshWorkingSet?: () => Promise<void>;
 };
 
 /**
@@ -177,6 +183,7 @@ export const makeOperations = ({
   conversation,
   pid,
   idSeed,
+  refreshWorkingSet,
 }: OperationsOptions): Operation.OperationService => {
   const local = (op: Operation.Definition.Any): Handler | undefined => {
     const key = bareKey(String(op.meta.key));
@@ -198,7 +205,13 @@ export const makeOperations = ({
       // TEST-ONLY: a child seed drawn from the seeded stream keeps the whole call tree reproducible.
       ...(idSeed === undefined ? {} : { idSeed: { time: idSeed.time, seed: childSeed(EntityId.random()) } }),
     };
-    return Effect.promise(async () => host.invoke(bareKey(String(op.meta.key)), await byReference(input), nested)).pipe(
+    return Effect.promise(async () => {
+      const result = await host.invoke(bareKey(String(op.meta.key)), await byReference(input), nested);
+      // Whether it succeeded or not, the callee may have written: its output's refs, and anything this invocation
+      // reads next, resolve against the space as it left it.
+      await refreshWorkingSet?.();
+      return result;
+    }).pipe(
       Effect.flatMap((result) =>
         result.ok
           ? Effect.promise(() => loadEntities(result.output))

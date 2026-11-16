@@ -8,12 +8,12 @@
         "type": "note",
         "z": "V",
         "center": {
-          "x": 128,
-          "y": 64
+          "x": 120,
+          "y": 48
         },
         "size": {
-          "width": 256,
-          "height": 128
+          "width": 240,
+          "height": 96
         },
         "overrides": {
           "hue": "violet",
@@ -32,7 +32,7 @@
         "type": "rect",
         "z": "l",
         "center": {
-          "x": 416,
+          "x": 384,
           "y": 96
         },
         "size": {
@@ -52,12 +52,12 @@
         "type": "rect",
         "z": "x",
         "center": {
-          "x": 640,
-          "y": 64
+          "x": 672,
+          "y": 48
         },
         "size": {
-          "width": 128,
-          "height": 128
+          "width": 96,
+          "height": 96
         },
         "overrides": {
           "tone": 0
@@ -71,12 +71,12 @@
         "type": "cloud",
         "z": "z",
         "center": {
-          "x": 640,
-          "y": 256
+          "x": 672,
+          "y": 240
         },
         "size": {
-          "width": 128,
-          "height": 128
+          "width": 96,
+          "height": 96
         },
         "label": "Sky",
         "overrides": {
@@ -91,12 +91,12 @@
         "type": "polygon",
         "z": "zV",
         "center": {
-          "x": 896,
-          "y": 256
+          "x": 864,
+          "y": 240
         },
         "size": {
-          "width": 128,
-          "height": 128
+          "width": 96,
+          "height": 96
         },
         "overrides": {
           "tone": 0
@@ -116,13 +116,13 @@
         "source": {
           "point": {
             "x": 0,
-            "y": 320
+            "y": 288
           }
         },
         "target": {
           "point": {
-            "x": 192,
-            "y": 320
+            "x": 144,
+            "y": 336
           }
         },
         "props": {
@@ -147,12 +147,12 @@
         "type": "note",
         "z": "V",
         "center": {
-          "x": 128,
-          "y": 64
+          "x": 120,
+          "y": 48
         },
         "size": {
-          "width": 256,
-          "height": 128
+          "width": 240,
+          "height": 96
         },
         "overrides": {
           "hue": "violet",
@@ -174,7 +174,7 @@
         "type": "rect",
         "z": "l",
         "center": {
-          "x": 416,
+          "x": 384,
           "y": 96
         },
         "size": {
@@ -197,12 +197,12 @@
         "type": "rect",
         "z": "x",
         "center": {
-          "x": 640,
-          "y": 64
+          "x": 672,
+          "y": 48
         },
         "size": {
-          "width": 128,
-          "height": 128
+          "width": 96,
+          "height": 96
         },
         "overrides": {
           "tone": 0
@@ -219,12 +219,12 @@
         "type": "cloud",
         "z": "z",
         "center": {
-          "x": 640,
-          "y": 256
+          "x": 672,
+          "y": 240
         },
         "size": {
-          "width": 128,
-          "height": 128
+          "width": 96,
+          "height": 96
         },
         "label": "Sky",
         "overrides": {
@@ -242,12 +242,12 @@
         "type": "polygon",
         "z": "zV",
         "center": {
-          "x": 896,
-          "y": 256
+          "x": 864,
+          "y": 240
         },
         "size": {
-          "width": 128,
-          "height": 128
+          "width": 96,
+          "height": 96
         },
         "overrides": {
           "tone": 0
@@ -270,13 +270,13 @@
         "source": {
           "point": {
             "x": 0,
-            "y": 320
+            "y": 288
           }
         },
         "target": {
           "point": {
-            "x": 192,
-            "y": 320
+            "x": 144,
+            "y": 336
           }
         },
         "props": {

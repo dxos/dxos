@@ -9,6 +9,7 @@ export default defineConfig({
     'index': 'src/index.ts',
     'extraction': 'src/extraction/index.ts',
     'ExecutionGraph': 'src/util/execution-graph.ts',
+    'describe/Describe': 'src/describe/Describe.ts',
     'session/AiContext': 'src/session/AiContext.ts',
     'types/Agent': 'src/types/Agent.ts',
     'types/Chat': 'src/types/Chat.ts',

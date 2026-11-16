@@ -7,92 +7,102 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Database, Feed, Obj, Type } from '@dxos/echo';
-import * as EffectEx from '@dxos/effect/EffectEx';
-import { invariant } from '@dxos/invariant';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import type * as CallManager from '@dxos/plugin-calls/CallManager';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
-import { type buf } from '@dxos/protocols/buf';
-import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { type Channel, Message } from '@dxos/types';
+import * as TranscriptOperation from '@dxos/plugin-transcription/TranscriptOperation';
 
-import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+import { MeetingActivity, MeetingCapabilities, MeetingOperation } from '#types';
 
-// TODO(wittjosiah): Factor out.
-// TODO(wittjosiah): Can we stop using protobuf for this?
-type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
+import { TranscriptSink, type TranscriptStage, type TranscriptTarget } from '../transcript/index.ts';
 
+/**
+ * Connects the call to the meeting it is for: follows the call's meeting activity, and writes the call's transcript
+ * into that meeting's feed while transcription is on.
+ */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
-
     const store = yield* MeetingCapabilities.State;
+    const callManager = yield* Capability.get(CallsCapabilities.Manager);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const identity = yield* Capability.get(ClientCapabilities.IdentityService);
 
-    /** A simulated call's scripted lines go to the active meeting's transcript, as live transcription would write them. */
-    const writeUtterance = async ({ speaker, text }: CallManager.SimulatedUtterance) => {
+    /** The active meeting's transcript feed, resolved per segment so a meeting selected mid-call is written to. */
+    const resolveTarget = async (): Promise<TranscriptTarget | undefined> => {
       const meeting = store.state.activeMeeting;
       const db = meeting && Obj.getDatabase(meeting);
       if (!meeting || !db) {
-        return;
+        return undefined;
       }
-
       const transcript = await meeting.transcript.load();
-      const feed = await transcript.feed.load();
-      const created = new Date().toISOString();
-      const message = Obj.make(Message.Message, {
-        created,
-        blocks: [{ _tag: 'transcript', started: created, text }],
-        sender: { name: speaker },
-      });
-      await Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+      return { db, feed: await transcript.feed.load() };
     };
-    // Subscribed here rather than in `onJoin`, which plugin-calls never invokes; utterances only flow in a simulated call.
-    const callManager = yield* Capability.get(CallsCapabilities.Manager);
-    const unsubscribe = callManager.simulatedUtterance.on(
-      (utterance) => void writeUtterance(utterance).catch((err) => log.catch(err)),
-    );
-    // The manager outlives this module, so a reactivation would otherwise write every line twice.
-    yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
 
-    return Capability.contribute(CallsCapabilities.EventHandler, {
-      onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
-        const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
-        const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
-        invariant(identity);
+    /** Links known entities in each segment, as the standalone transcription recorder does. */
+    const enrich: TranscriptStage = async (message) => {
+      const [settingsAtom] = capabilities.getAll(TranscriptionCapabilities.Settings);
+      const settings = settingsAtom && registry.get(settingsAtom);
+      const spaceId = store.state.activeMeeting && Obj.getDatabase(store.state.activeMeeting)?.spaceId;
+      // Read per segment so a settings toggle mid-call applies.
+      if (!spaceId || !(settings?.entityExtraction ?? true)) {
+        return message;
+      }
+      const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+      const { data, error } = await invokePromise(TranscriptOperation.EnrichMessage, { message }, { spaceId });
+      if (error) {
+        log.warn('entity extraction failed; using raw transcript', { error });
+        return message;
+      }
+      return data?.message ?? message;
+    };
 
-        // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-        const transcriptionManager = await capabilities
-          .get(TranscriptionCapabilities.TranscriptionManagerProvider)({})
-          .open();
-        store.updateState((current) => ({ ...current, transcriptionManager }));
-      },
-      onLeave: async () => {
-        const { transcriptionManager } = store.state;
-        await transcriptionManager?.close();
+    const callSink = new TranscriptSink({ resolveTarget, stages: [enrich] });
+    // A simulated call's scripted lines are written as spoken, as live transcription would, but are not enriched.
+    const simulatedSink = new TranscriptSink({ resolveTarget });
+
+    /** The meeting id last resolved from the call, so repeated call-state updates do not resolve it again. */
+    let handledMeetingId: string | undefined;
+    const unsubscribe = [
+      callManager.transcript.on((segment) => {
+        if (
+          MeetingActivity.isTranscriptionEnabled(
+            registry.get(callManager.activityAtom(MeetingActivity.TRANSCRIPTION_KEY)),
+          )
+        ) {
+          const did = Option.getOrUndefined(identity.getSnapshot())?.did;
+          void callSink.write(segment, { identityDid: did }).catch((error) => log.catch(error));
+        }
+      }),
+      callManager.simulatedUtterance.on(({ speaker, text }) => {
+        const started = new Date().toISOString();
+        void simulatedSink
+          .write({ _tag: 'transcript', started, text }, { name: speaker })
+          .catch((error) => log.catch(error));
+      }),
+      callManager.left.on(() => {
+        handledMeetingId = undefined;
         store.updateState(() => ({}));
-      },
-      onCallStateUpdated: async (callState: CallManager.CallState) => {
-        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
-        const typename = Type.getTypename(Meeting.Meeting);
-        const activity = typename ? callState.activities?.[typename] : undefined;
-        if (!activity?.payload) {
+      }),
+      callManager.callStateUpdated.on((state) => {
+        const payload: MeetingActivity.MeetingPayload | undefined =
+          state.activities?.[MeetingActivity.meetingKey()]?.payload;
+        // Every speaking flip updates call state; only a newly advertised meeting needs resolving.
+        if (!payload || payload.meetingId === handledMeetingId) {
           return;
         }
-
-        const payload: MeetingPayload = activity.payload;
-        await invokePromise(MeetingOperation.HandlePayload, payload);
-      },
-      onMediaStateUpdated: async ([mediaState, isSpeaking]: [CallManager.MediaState, boolean]) => {
-        const { transcriptionManager } = store.state;
-        // Not awaited (media updates must not block on transcription), but a rejection — e.g. no
-        // transcription endpoint configured — has to be logged rather than left unhandled.
-        void transcriptionManager?.setAudioTrack(mediaState.audioTrack).catch((err) => log.catch(err));
-        void transcriptionManager?.setRecording(isSpeaking);
-      },
-    });
+        handledMeetingId = payload.meetingId;
+        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+        void invokePromise(MeetingOperation.HandlePayload, { meetingId: payload.meetingId }).catch((error) =>
+          log.catch(error),
+        );
+      }),
+    ];
+    // The manager outlives this module, so a reactivation would otherwise write every segment twice.
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe.forEach((dispose) => dispose())));
+    return [];
   }),
 );

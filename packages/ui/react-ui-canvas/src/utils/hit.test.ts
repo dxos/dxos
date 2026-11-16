@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type BuiltinNode } from '@dxos/scene';
+import { type BuiltinNode, MAJOR_GRID } from '@dxos/scene';
 
 import { type RenderList2D } from '../model/index.ts';
 import { boundsFromPoints, contentBounds, hitTest, nodesIntersecting } from './hit.ts';
@@ -62,7 +62,9 @@ describe('hit', () => {
   test('contentBounds frames the content alone, and nothing for an empty scene', ({ expect }) => {
     const near: RenderList2D = { id: 'near', nodes: { a: nodes.a }, links: {} };
     // The node's 50..150 box, padded by a major cell and grown to the grid.
-    expect(contentBounds(near)).toEqual({ x: -64, y: -64, width: 320, height: 320 });
+    const low = Math.floor((50 - MAJOR_GRID) / MAJOR_GRID) * MAJOR_GRID;
+    const high = Math.ceil((150 + MAJOR_GRID) / MAJOR_GRID) * MAJOR_GRID;
+    expect(contentBounds(near)).toEqual({ x: low, y: low, width: high - low, height: high - low });
     expect(contentBounds({ id: 'empty', nodes: {}, links: {} })).toBeUndefined();
   });
 });

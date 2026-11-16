@@ -1,4 +1,4 @@
-diagram @ -128,-64 flow=down box=256x128 grid=384x192
+diagram @ -128,-64 flow=down box=256x128 grid=384x256
 group device "Device" {
   node Proxy "Object proxy" ref="packages/core/echo/echo-client/src" color=blue
   node Core "ObjectCore" ref="packages/core/echo/echo-client/src/core-db"

@@ -1,0 +1,23 @@
+// A graph database in the browser, with a Durable Object per space fronting R2 for the copy.
+// Deploy: `moon run echo-sqlite-demo:bundle && pnpm exec wrangler deploy -c packages/apps/echo-sqlite-demo/wrangler.jsonc`
+// Local:  `moon run echo-sqlite-demo:bundle`, then `pnpm exec wrangler dev` here (local DO and R2).
+{
+  "name": "echo-sqlite-demo",
+  "main": "./src/worker/main.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./out/echo-sqlite-demo",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // Everything else is asset-first; only the space API needs the Worker.
+    "run_worker_first": ["/api/*"],
+  },
+  // One object per slug: single-threaded, so it assigns sync versions in a total order with no
+  // coordination, which is what makes last-writer-wins well defined. Created on demand by the
+  // first request that addresses it, and deleted by its own alarm 24h later.
+  "durable_objects": {
+    "bindings": [{ "name": "SPACE", "class_name": "SpaceObject" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SpaceObject"] }],
+  "observability": { "enabled": true },
+}

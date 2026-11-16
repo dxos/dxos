@@ -23,6 +23,8 @@ import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
+import * as FileStorage from './FileStorage.ts';
+
 /** The plugin a bundle publishes. It runs alone on EDGE: plugins share types and definitions, never capabilities. */
 export type Plugins = {
   readonly primary: Plugin.Plugin;
@@ -50,12 +52,14 @@ export type Activation = {
 
 /**
  * Activates a release's plugins the way a headless host does: Startup, Idle and AssistantStart, with no React tree.
+ * The host's own plugins activate beside the primary and contribute only what EDGE provides every bundle, such as its
+ * default file storage; the catalog reads the primary's contributions alone.
  *
  * Must run inside a request: the plugin manager schedules Effect fibers that use timers, which workerd disallows in
  * global scope.
  */
 export const activate = async (release: Plugins): Promise<Activation> => {
-  const plugins = [release.primary];
+  const plugins = [release.primary, FileStorage.makePlugin()];
   const manager = PluginManager.make({
     pluginLoader: (id: string) =>
       Effect.sync(() => {

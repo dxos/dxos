@@ -126,6 +126,16 @@ svg {
             }
           }
         }
+        /* A node the host marks selected keeps its hue — the type is still what it is — and takes the focus ring as
+           its edge, the way a selected row keeps its surface. */
+        &[data-selected='true'] circle {
+          @apply stroke-[3px];
+          stroke: var(--color-focus);
+
+          .dark & {
+            stroke: var(--color-focus);
+          }
+        }
 
         g.dx-graph-label {
           @apply hidden;

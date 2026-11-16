@@ -18,6 +18,7 @@ import {
   type Point,
   Shape,
   isDiagramNode,
+  isHullNode,
 } from '@dxos/scene';
 
 import { nodeBounds } from './shapes.ts';
@@ -191,6 +192,12 @@ export const diagramLinkMarkup = (
 /** Whether a node is a diagram group's backdrop (a tinted box), which sits under the shapes it groups. */
 export const isDiagramBackdrop = (node: Node): boolean => isDiagramNode(node) && node.element.fill === 'tint';
 
-/** Whether a re-routed connector keeps clear of a node: a box does, a group's backdrop or a caption it may cross. */
+/**
+ * Whether a re-routed connector keeps clear of a node: a box does; a hull, a group's backdrop or a caption it may
+ * cross.
+ */
 export const isRouteObstacle = (node: Node): boolean =>
-  node.style?.guide !== true && !isDiagramBackdrop(node) && !(isDiagramNode(node) && node.element.kind === 'text');
+  node.style?.guide !== true &&
+  !isHullNode(node) &&
+  !isDiagramBackdrop(node) &&
+  !(isDiagramNode(node) && node.element.kind === 'text');

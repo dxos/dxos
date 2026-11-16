@@ -213,7 +213,7 @@ describe('FactPipeline', () => {
           throw new Error(`unexpected predicate: ${role.assertion.predicate}`);
         }
         // A predicate the ontology does not know is minted in the brain's namespace, not the shared `dx:` one.
-        if (likes.assertion.predicateIri !== `${Vocab.LOCAL_BRAIN}like` || role.graph !== likes.graph) {
+        if (likes.assertion.predicateIri !== `${Vocab.LOCAL_BRAIN}likes` || role.graph !== likes.graph) {
           throw new Error('expected a minted predicate in the shared graph');
         }
       });
@@ -261,7 +261,7 @@ describe('FactPipeline', () => {
       );
       yield* Effect.sync(() => {
         const [[minted], [reused, typed]] = collected.map(({ facts }) => facts);
-        const studiesUnder = 'https://dxos.org/semantic/brain/agent-1/studyUnder';
+        const studiesUnder = 'https://dxos.org/semantic/brain/agent-1/studiesUnder';
         expect(minted.assertion.predicateIri).toBe(studiesUnder);
         expect(minted.assertion.predicateDescription).toBe('A teacher the subject learned from.');
         // A mention of a known entity is stored under its IRI; an unknown one stays a (graph-local) slug.
@@ -273,7 +273,7 @@ describe('FactPipeline', () => {
         });
         expect(minted.assertion.subject).toEqual({ kind: 'entity', entity: 'plato', label: 'Plato' });
         // The second document is shown the predicate the first minted, and uses it.
-        expect(String(prompts[1])).toContain('- study_under: "studies under" — A teacher the subject learned from.');
+        expect(String(prompts[1])).toContain('- studies_under: "studies under" — A teacher the subject learned from.');
         expect(String(prompts[0])).toContain('- Socrates (person)');
         expect(reused.assertion.predicateIri).toBe(studiesUnder);
         expect(typed.assertion.predicateIri).toBe(Vocab.RDF_TYPE);

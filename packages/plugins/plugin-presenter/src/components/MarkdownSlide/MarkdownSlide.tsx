@@ -19,9 +19,24 @@ import { SyntaxHighlighter, type SyntaxHighlighterProps, renderRows } from '@dxo
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { LAYOUT_SLOTS, type SlotName, SURFACE_ROLES, type SurfaceRole, parseSlide, parseSourceRange } from '#markdown';
+import {
+  LAYOUT_SLOTS,
+  SLIDE_COLORS,
+  type SlideFrontmatter,
+  type SlotName,
+  SURFACE_ROLES,
+  type SurfaceRole,
+  parseSlide,
+  parseSourceRange,
+} from '#markdown';
+import { SlideTheme } from '#types';
 
-import { slideThemeClasses, useSlideColorScheme, useSlideThemeStyle } from '../SlideTheme/index.ts';
+import {
+  type SlideThemeStyle,
+  slideThemeClasses,
+  useSlideColorScheme,
+  useSlideThemeStyle,
+} from '../SlideTheme/index.ts';
 import { ActiveSlotContext, layouts } from './layouts.tsx';
 import { SlideBackground } from './SlideBackground.tsx';
 import { theme } from './theme.ts';
@@ -78,7 +93,8 @@ export const MarkdownSlide = ({
     };
   }, [parsed, step]);
 
-  const themeStyle = useSlideThemeStyle();
+  const deckStyle = useSlideThemeStyle();
+  const themeStyle = useMemo(() => slideStyle(deckStyle, parsed.frontmatter), [deckStyle, parsed.frontmatter]);
   const Layout = layouts[parsed.layout];
   // Layouts without a `left` slot render `::left::` content inside the first region.
   const outlinedSlot = activeSlot === 'left' && !LAYOUT_SLOTS[parsed.layout]?.includes('left') ? 'default' : activeSlot;
@@ -122,6 +138,38 @@ export const MarkdownSlide = ({
       </div>
     </div>
   );
+};
+
+/** The deck's theme with this slide's own color overrides applied, as inline `--slide-*` variables. */
+const slideStyle = (style: SlideThemeStyle, frontmatter: SlideFrontmatter): SlideThemeStyle => {
+  const overrides = SLIDE_COLORS.filter((color) => frontmatter[color] !== undefined);
+  if (overrides.length === 0) {
+    return style;
+  }
+  const overridden = overrides.reduce<SlideThemeStyle>(
+    (style, color) => ({ ...style, [`--slide-${VARIABLES[color]}`]: frontmatter[color]! }),
+    style,
+  );
+  // The slide's accent is its own, so a `tone="accent"` under it returns here rather than to the deck's.
+  return frontmatter.accent ? { ...overridden, '--slide-theme-accent': frontmatter.accent } : overridden;
+};
+
+/** The `--slide-*` variable each overridable color writes to. */
+const VARIABLES: Record<(typeof SLIDE_COLORS)[number], string> = {
+  accent: 'accent',
+  foreground: 'fg',
+  code: 'code',
+  separator: 'separator',
+};
+
+/** A tone repaints the accent the variant's classes already read, so one attribute recolors the whole block. */
+const TONE_COLORS: Record<SlideTheme.Tone, string> = {
+  accent: 'var(--slide-theme-accent)',
+  info: 'var(--color-info-text)',
+  success: 'var(--color-success-text)',
+  warning: 'var(--color-warning-text)',
+  error: 'var(--color-error-text)',
+  neutral: 'var(--color-neutral-text)',
 };
 
 //
@@ -268,9 +316,53 @@ const BLOCK_TAGS = new Set([
   'slide-clicks',
   'slide-after',
   'slide-surface',
+  'slide-box',
+  'slide-grid',
+  'slide-cell',
+  'slide-card',
 ]);
 
 const NODE_CLASSES: Record<string, string> = theme.nodes;
+
+/** The element a `<List>`/`<Table>` variant lands on, and the kind of block it belongs to. */
+const VARIANT_BLOCKS: Record<string, string> = {
+  'ul': 'list',
+  'ol': 'list',
+  'table': 'table',
+  'slide-box': 'box',
+  'slide-grid': 'grid',
+  'slide-cell': 'cell',
+  'slide-card': 'card',
+};
+
+/**
+ * The key a styled block's descendants take their classes under. A part is named by its tag, so a variant styles any
+ * tag it holds by writing that tag's name; these are the aliases, where the key is not the tag: both list tags share
+ * one part, and each custom element is named without its prefix.
+ */
+const VARIANT_PARTS: Record<string, string> = {
+  'ul': 'list',
+  'ol': 'list',
+  'slide-box': 'box',
+  'slide-grid': 'grid',
+  'slide-cell': 'cell',
+  'slide-card': 'card',
+};
+
+const variantPart = (tagName: string): string => VARIANT_PARTS[tagName] ?? tagName;
+
+/**
+ * The track counts a layout tag carries, and the custom property each becomes. A grid states the tracks it lays down
+ * (`cols`/`rows`); its children state the tracks they cover (`colSpan`/`rowSpan`), named as the table attributes are.
+ */
+const TRACK_PROPERTIES: Record<string, Record<string, string>> = {
+  'slide-grid': { cols: '--slide-grid-cols', rows: '--slide-grid-rows' },
+  'slide-cell': { colSpan: '--slide-col-span', rowSpan: '--slide-row-span' },
+  'slide-card': { colSpan: '--slide-col-span', rowSpan: '--slide-row-span' },
+};
+
+/** A variant in force: the kind of block that set it and the name it carries. */
+type ActiveVariant = { kind: string; name: string };
 
 const classList = (value: Properties[string]): string[] =>
   Array.isArray(value) ? value.map(String) : typeof value === 'string' ? value.split(/\s+/) : [];
@@ -286,7 +378,8 @@ const prepareRoot = (root: Root, step: number): Root => ({
   children: root.children.map((child) => (child.type === 'element' ? prepareElement(child, step, false) : child)),
 });
 
-const prepareElement = (element: Element, step: number, inPre: boolean): Element => {
+/** `variant` is the style of the `<List>`/`<Table>` this element sits in, which its parts take their classes from. */
+const prepareElement = (element: Element, step: number, inPre: boolean, variant?: ActiveVariant): Element => {
   const properties: Properties = { ...element.properties };
   const ownStep = properties.step ?? undefined;
   delete properties.step;
@@ -309,6 +402,11 @@ const prepareElement = (element: Element, step: number, inPre: boolean): Element
     tagName = element.children.some((child) => child.type === 'element' && BLOCK_TAGS.has(child.tagName))
       ? 'div'
       : 'span';
+  } else if (tagName === 'slide-box' || tagName === 'slide-grid' || tagName === 'slide-cell') {
+    tagName = 'div';
+  } else if (tagName === 'slide-card') {
+    // An article: a card is a titled, self-contained piece, which is what the element means.
+    tagName = 'article';
   } else if (tagName === 'slide-surface') {
     // `ref` is reserved by React, so the object URI travels under another name.
     properties.uri = properties.ref;
@@ -323,7 +421,44 @@ const prepareElement = (element: Element, step: number, inPre: boolean): Element
     }
   }
 
-  const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : NODE_CLASSES[tagName];
+  // A style tag restyles the whole block, so neither it nor the parts inside it take the plain markdown classes.
+  const block = VARIANT_BLOCKS[element.tagName];
+  const name = block ? asVariant(properties.variant) : undefined;
+  delete properties.variant;
+  // A nested list or table with no variant of its own starts clean rather than inheriting the one around it.
+  const activeVariant: ActiveVariant | undefined = block ? (name ? { kind: block, name } : undefined) : variant;
+  const variantClass =
+    activeVariant && theme.variants[activeVariant.kind]?.[activeVariant.name]?.[variantPart(element.tagName)];
+  if (block && variantClass) {
+    properties.dataVariant = name;
+  }
+
+  // The item a list marks as the one in hand; its own `data-active` is what the variant styles.
+  const activeItem = block ? Number(properties.active) : NaN;
+  delete properties.active;
+
+  // A tone rebinds `--slide-accent` for this element and everything under it, so the variant's own classes follow it.
+  const tone = block ? asVariant(properties.tone) : undefined;
+  delete properties.tone;
+  const declarations: string[] = [];
+  if (SlideTheme.isTone(tone)) {
+    properties.dataTone = tone;
+    declarations.push(`--slide-accent: ${TONE_COLORS[tone]}`);
+  }
+  // The tracks a grid lays down, or the tracks its child covers; the theme's classes read them, so the markdown
+  // supplies a count and never CSS of its own. Only a layout tag carries them, so no other tag loses an attribute.
+  for (const [attribute, property] of Object.entries(TRACK_PROPERTIES[element.tagName] ?? {})) {
+    const count = Number(properties[attribute]);
+    delete properties[attribute];
+    if (Number.isInteger(count) && count >= 1) {
+      declarations.push(`${property}: ${count}`);
+    }
+  }
+  if (declarations.length > 0) {
+    properties.style = declarations.join('; ');
+  }
+
+  const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : (variantClass ?? NODE_CLASSES[tagName]);
   if (themed) {
     properties.className = [themed, ...classList(properties.className)];
   }
@@ -332,11 +467,31 @@ const prepareElement = (element: Element, step: number, inPre: boolean): Element
     ...element,
     tagName,
     properties: withStep(properties),
-    children: element.children.map((child) =>
-      child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre') : child,
+    children: markActive(
+      element.children.map((child) =>
+        child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre', activeVariant) : child,
+      ),
+      activeItem,
     ),
   };
 };
+
+/** Marks the `item`-th list item (1-based), which a variant styles as the one in hand. */
+const markActive = (children: ElementContent[], item: number): ElementContent[] => {
+  if (!Number.isInteger(item)) {
+    return children;
+  }
+  let index = 0;
+  return children.map((child) => {
+    if (child.type !== 'element' || child.tagName !== 'li') {
+      return child;
+    }
+    index += 1;
+    return index === item ? { ...child, properties: { ...child.properties, dataActive: '' } } : child;
+  });
+};
+
+const asVariant = (value: Properties[string]): string | undefined => (typeof value === 'string' ? value : undefined);
 
 const stepProperties = (properties: Properties, ownStep: Properties[string], step: number): Properties => {
   const hidden = Number(ownStep) > step;

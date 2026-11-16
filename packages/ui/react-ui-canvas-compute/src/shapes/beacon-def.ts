@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { BeaconComponent } from './Beacon.tsx';
 import { createPorts, defineComputeNode } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
@@ -23,7 +25,7 @@ export type BeaconShape = Schema.Schema.Type<typeof BeaconShape>;
 export type CreateBeaconProps = CreateShapeProps<BeaconShape>;
 
 export const createBeacon = (props: CreateBeaconProps) =>
-  createShape<BeaconShape>({ type: 'beacon', size: { width: 64, height: 64 }, ...props });
+  createShape<BeaconShape>({ type: 'beacon', size: { width: MAJOR_GRID, height: MAJOR_GRID }, ...props });
 
 export const beaconNodeDef = defineComputeNode<BeaconShape>({
   type: 'beacon',

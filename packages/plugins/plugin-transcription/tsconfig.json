@@ -34,6 +34,9 @@
       "path": "../../common/graph"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -64,9 +67,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-doc"
-    },
-    {
       "path": "../../core/echo/echo-react"
     },
     {
@@ -82,13 +82,13 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
@@ -97,13 +97,7 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
       "path": "../../ui/react-ui-audio"
-    },
-    {
-      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-menu"
@@ -125,9 +119,6 @@
     },
     {
       "path": "../plugin-preview"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

@@ -51,6 +51,7 @@ describe('labelEvalCall', () => {
     expect(labelCall(evalCall('await ops.updateTask({})'))?.displayName).toBe('Update task');
     const key = String(DXN.make('com.example.operation.updateTask'));
     expect(labelCall(evalCall(`yield* Database.resolve('${key}')`))?.displayName).toBe('Update task');
+    expect(labelCall(evalCall(`await ops['com.example.operation.updateTask']({})`))?.displayName).toBe('Update task');
   });
 
   test('does not match an operation whose name prefixes another', ({ expect }) => {

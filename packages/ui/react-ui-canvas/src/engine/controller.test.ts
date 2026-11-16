@@ -239,6 +239,56 @@ describe('CanvasController', () => {
       expect(applied).toBe(1);
     });
 
+    test('order lifts the selection over the rest and drops it under, as one undo step', ({ expect }) => {
+      const tree = ViewBuilder.view('root', [
+        ViewBuilder.rect('a', box(0)),
+        ViewBuilder.rect('b', box(512)),
+        ViewBuilder.rect('c', box(1024)),
+      ]).build();
+      const { controller, scene, undoStep } = setup({ tree });
+      const order = () =>
+        Object.values(scene().nodes)
+          .sort((left, right) => (left.z < right.z ? -1 : 1))
+          .map((node) => node.id);
+      expect(order()).toEqual(['a', 'b', 'c']);
+      expect(controller.document.order(['a', 'b'], 'front')).toBe(true);
+      expect(order()).toEqual(['c', 'a', 'b']);
+      // One undo step for the whole selection.
+      undoStep();
+      expect(order()).toEqual(['a', 'b', 'c']);
+      expect(controller.document.order(['c'], 'back')).toBe(true);
+      expect(order()).toEqual(['c', 'a', 'b']);
+      // Already at that end: nothing is written.
+      expect(controller.document.order(['c'], 'back')).toBe(false);
+    });
+
+    test('order restacks a node against the links too, since one order paints them', ({ expect }) => {
+      const tree = ViewBuilder.view('root', [
+        ViewBuilder.rect('a', box(0)),
+        ViewBuilder.rect('b', box(512)),
+        ViewBuilder.link('line', 'a', 'b').id('ab'),
+      ]).build();
+      const { controller, scene } = setup({ tree });
+      const order = () =>
+        [...Object.values(scene().nodes), ...Object.values(scene().links)]
+          .sort((left, right) => (left.z < right.z ? -1 : 1))
+          .map((element) => element.id);
+      expect(order()).toEqual(['a', 'b', 'ab']);
+      // The link is on top, so a shape brought to the front must go over it, not just over the other shape.
+      expect(controller.document.order(['a'], 'front')).toBe(true);
+      expect(order()).toEqual(['b', 'ab', 'a']);
+      // And a link sent to the back goes under the shapes, not just under the other links.
+      expect(controller.document.order(['ab'], 'back')).toBe(true);
+      expect(order()).toEqual(['ab', 'b', 'a']);
+    });
+
+    test('order leaves a read-only view alone', ({ expect }) => {
+      const { controller, scene } = setup({ readonly: true });
+      const before = Object.values(scene().nodes).map((node) => node.z);
+      expect(controller.document.order(['b'], 'back')).toBe(false);
+      expect(Object.values(scene().nodes).map((node) => node.z)).toEqual(before);
+    });
+
     test("restack in another container (an Object's definition) writes the store, as one undo step", ({ expect }) => {
       const tree = ViewBuilder.view('root', [
         ViewBuilder.rect('a', box(0)),
@@ -531,12 +581,42 @@ describe('CanvasController', () => {
     });
   });
 
+  describe('link ends', () => {
+    test('a marker set on one end leaves the other, and is what the next link drawn takes', ({ expect }) => {
+      const { registry, atoms, controller, scene, linkId } = setup();
+      expect(registry.get(atoms.linkEnds)).toBeUndefined();
+      expect(controller.document.setEndMarker(linkId, 'target', 'arrow')).toBe(true);
+      expect(scene().links[linkId].ends).toEqual({ end: 'arrow' });
+      expect(controller.document.setEndMarker(linkId, 'source', 'circle')).toBe(true);
+      expect(scene().links[linkId].ends).toEqual({ start: 'circle', end: 'arrow' });
+      expect(registry.get(atoms.linkEnds)).toEqual({ start: 'circle', end: 'arrow' });
+    });
+
+    test('clearing the last marker stores none, and the next link drawn takes none', ({ expect }) => {
+      const { registry, atoms, controller, scene, linkId } = setup();
+      controller.document.setEndMarker(linkId, 'target', 'arrow');
+      expect(controller.document.setEndMarker(linkId, 'target', undefined)).toBe(true);
+      expect(scene().links[linkId].ends).toBeUndefined();
+      expect(registry.get(atoms.linkEnds)).toEqual({});
+    });
+
+    test('a link that is not there, or a drawing that cannot be changed, is left alone', ({ expect }) => {
+      const { controller } = setup();
+      expect(controller.document.setEndMarker('missing', 'target', 'arrow')).toBe(false);
+      const locked = setup({ readonly: true });
+      expect(locked.controller.document.setEndMarker(locked.linkId, 'target', 'arrow')).toBe(false);
+      expect(locked.scene().links[locked.linkId].ends).toBeUndefined();
+    });
+  });
+
   describe('tools', () => {
     test('a creation tool clears the selection and a link tool sets the link type', ({ expect }) => {
       const { registry, atoms, controller } = setup();
       controller.selection.select(['a']);
       controller.tools.setTool({ kind: 'select' });
       expect(registry.get(atoms.selection).size).toBe(1);
+      // Until a link tool is picked, a link drawn from a port is orthogonal.
+      expect(registry.get(atoms.linkType)).toBe('ortho');
       controller.tools.setTool({ kind: 'link', type: 'curve' });
       expect(registry.get(atoms.selection).size).toBe(0);
       expect(registry.get(atoms.linkType)).toBe('curve');

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { parseMdlBlocks } from '../extension/blocks.ts';
+import { parseBlockHeaders } from '../extension/blocks.ts';
 import { frontmatter } from '../spec-index/parse.ts';
 import { parseFields } from './fields.ts';
 import { type SourceKey, formatSourceKey, parseSourceKey } from './source-key.ts';
@@ -14,6 +14,21 @@ import { type SourceKey, formatSourceKey, parseSourceKey } from './source-key.ts
 export const VERDICT_STATUSES = ['done', 'untested', 'partial', 'diverged', 'missing'] as const;
 
 export type VerdictStatus = (typeof VERDICT_STATUSES)[number];
+
+/**
+ * Kinds whose items are named `<kind>:<id>` (`binding:DATA_SERVICE`, `table:feeds`), as the worker and SQL dialects
+ * cite them, since a worker's tables, routes and actors routinely share names with its types and ops.
+ */
+export const QUALIFIED_KINDS: ReadonlySet<string> = new Set(['binding', 'actor', 'route', 'keyspace', 'table']);
+
+/** The id a review judges a block by: `<kind>:<id>` for a qualified kind, else the block id. */
+export const reviewItemId = (kind: string, id: string): string => (QUALIFIED_KINDS.has(kind) ? `${kind}:${id}` : id);
+
+/** A verdict header, `verdict <id>[: <summary>]`, where the id may be qualified (`verdict table:feeds: …`). */
+export const parseVerdictHeader = (line: string): { id: string; summary?: string } | undefined => {
+  const match = line.match(/^\s*verdict\s+((?:[a-z]+:)?[A-Za-z][\w.-]*)\s*(?::\s*(.*?))?\s*$/);
+  return match ? { id: match[1], ...(match[2] && { summary: match[2] }) } : undefined;
+};
 
 export type Verdict = {
   /** The spec item judged: a block id (`Scene`, `F-1`) or a nested requirement (`F-1.2`). */
@@ -92,9 +107,16 @@ const parseSummary = (text: string): string | undefined =>
 export const parseReview = (text: string): ReviewModel => {
   const { spec, commit, date, by } = frontmatter(text);
   const summary = parseSummary(text);
-  const verdicts = parseMdlBlocks(text)
-    .filter(({ type, id }) => type === 'verdict' && id)
-    .flatMap(({ id, title, body }): Verdict[] => {
+  const verdicts = parseBlockHeaders(text)
+    .filter(({ type }) => type === 'verdict')
+    .flatMap(({ body: block }): Verdict[] => {
+      const [headerLine, ...rest] = block.split('\n');
+      const header = parseVerdictHeader(headerLine);
+      if (!header) {
+        return [];
+      }
+      const { id, summary: title } = header;
+      const body = rest.join('\n');
       const fields = parseFields(body);
       const status = fields.get('status')?.inline;
       if (!isStatus(status)) {

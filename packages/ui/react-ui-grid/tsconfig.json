@@ -12,7 +12,16 @@
   ],
   "references": [
     {
+      "path": "../../common/display-name"
+    },
+    {
       "path": "../../common/random"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../lit-grid"

@@ -24,7 +24,10 @@ const handler: Operation.WithHandler<typeof JmapOperation.MaterializeJmapTarget>
       Effect.fnUntraced(function* ({ connection }) {
         // The operation derives the db from the connection ref's target and provides
         // `Database.layer(db)` itself (composer's invoker is wired without a `databaseResolver`).
-        const connectionObj = connection.target;
+        // Loaded rather than read through `target`: a ref decoded from an EDGE invocation's input
+        // points into a database opened for that call, so its target is not in memory yet and
+        // `target` would answer `undefined`.
+        const connectionObj = yield* Effect.promise(() => connection.tryLoad());
         const db = connectionObj ? Obj.getDatabase(connectionObj) : undefined;
         if (!connectionObj || !db) {
           return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());

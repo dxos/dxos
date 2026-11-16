@@ -12,6 +12,7 @@ import { GoogleOperation } from '#types';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants.ts';
 import { CalendarForeignKeyWrongTypeError } from '../../../errors.ts';
+import { databaseOf } from '../../database-of.ts';
 
 /**
  * Find-or-create the local Calendar materialized for this remote calendar id.
@@ -60,10 +61,7 @@ const handler: Operation.WithHandler<typeof GoogleOperation.MaterializeGoogleCal
         //   have it provided by the OperationInvoker — composer's invoker is wired
         //   without a `databaseResolver`, so we derive the db from the connection ref's
         //   target and provide `Database.layer(db)` ourselves.
-        const db = connection.target ? Obj.getDatabase(connection.target) : undefined;
-        if (!db) {
-          return yield* Effect.fail(new CalendarForeignKeyWrongTypeError());
-        }
+        const db = yield* databaseOf(connection);
 
         return yield* findOrCreateCalendar(remoteTarget.id, remoteTarget.name).pipe(
           Effect.map((calendar) => ({ target: Ref.make(calendar) })),

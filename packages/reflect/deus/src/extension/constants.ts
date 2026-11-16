@@ -25,4 +25,8 @@ export const BLOCK_TYPES = [
   'plugin',
   'uses',
   'table',
+  'binding',
+  'actor',
+  'route',
+  'keyspace',
 ] as const;

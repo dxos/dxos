@@ -5,5 +5,7 @@
 export * from './call-manager.ts';
 export * from './call-swarm-synchronizer.ts';
 export * from './media-manager.ts';
+export * from './media-transport.ts';
+export * from './realtime-kit-transport.ts';
 export * from './types.ts';
 export * from './util/index.ts';

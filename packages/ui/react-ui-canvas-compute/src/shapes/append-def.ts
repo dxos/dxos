@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { AppendInput } from '@dxos/conductor';
+import { MAJOR_GRID } from '@dxos/scene';
 
 import { AppendComponent } from './Append.tsx';
 import { createFunctionPorts, defineComputeNode, getHeight } from './common/index.ts';
@@ -27,7 +28,7 @@ export type CreateAppendProps = CreateShapeProps<AppendShape>;
 export const createAppend = (props: CreateAppendProps) =>
   createShape<AppendShape>({
     type: 'append',
-    size: { width: 128, height: getHeight(AppendInput) },
+    size: { width: 2 * MAJOR_GRID, height: getHeight(AppendInput) },
     ...props,
   });
 
