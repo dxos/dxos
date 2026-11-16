@@ -670,8 +670,8 @@ export const AsMenu: Story = {
   },
 };
 
-const CompactStory = () => {
-  const menu = useMenuBuilder(
+const useCompactMenu = () =>
+  useMenuBuilder(
     () =>
       MenuBuilder.make()
         .root({ label: 'Document' })
@@ -697,6 +697,9 @@ const CompactStory = () => {
         .build(),
     [],
   );
+
+const CompactStory = () => {
+  const menu = useCompactMenu();
   return (
     <div className='p-8'>
       <ActionToolbar {...menu} alwaysActive classNames='_border border-separator max-w-[12rem]' />
@@ -715,5 +718,31 @@ export const Compact: Story = {
     await expect(canvas.getByTestId('story.share')).toHaveAttribute('aria-label', 'Share');
     await expect(canvas.getByTestId('story.search')).toBeVisible();
     await expect(canvas.queryByTestId('toolbar.overflow')).toBeNull();
+  },
+};
+
+const GrowBackStory = () => {
+  const menu = useCompactMenu();
+  const [box, setBox] = useState<HTMLDivElement | null>(null);
+  return (
+    <div ref={setBox} className='flex p-8 w-[16rem]' data-testid='story.box'>
+      {/* As wide as its content, so its own width says nothing of the room it has. */}
+      <div role='none' className='flex min-w-0'>
+        <ActionToolbar {...menu} alwaysActive bounds={box} classNames='border border-separator' />
+      </div>
+    </div>
+  );
+};
+
+/** A toolbar as wide as its content takes its full form again once the box it measures has room. */
+export const GrowBack: Story = {
+  render: () => <GrowBackStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const title = canvas.getByTestId('story.title');
+    await waitFor(() => expect(title).not.toHaveTextContent('A rather long document title'));
+    canvas.getByTestId('story.box').style.width = '48rem';
+    await waitFor(() => expect(title).toHaveTextContent('A rather long document title'));
+    await expect(canvas.getByTestId('story.share')).toHaveTextContent('Share');
   },
 };

@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { type PropsWithChildren, type ReactNode, createContext, useContext, useRef } from 'react';
+import React, { type PropsWithChildren, type ReactNode, createContext, useContext, useRef, useState } from 'react';
 
 import { Annotation, Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -21,6 +21,9 @@ export const DIAGRAM_ICON = Annotation.IconAnnotation.get(Type.getSchema(Drawing
   Option.getOrElse(() => 'ph--compass-tool--regular'),
 );
 
+/** The row the pill sits in, which its toolbar measures to grow back: the pill itself is only as wide as its content. */
+const PillBoundsContext = createContext<HTMLElement | null>(null);
+
 const getAccentWash = (accent: string) => `color-mix(in oklab, var(--color-${accent}-border) 18%, transparent)`;
 
 export type PillFrameProps = PropsWithChildren<{
@@ -33,29 +36,34 @@ export type PillFrameProps = PropsWithChildren<{
  * The pill's frame in the top edge, between the breadcrumbs and the inspector, which the canvas article's toolbars
  * leave free. It centres in the page while both sides have room, then moves aside, then shrinks.
  */
-export const PillFrame = ({ children, testId, accent }: PillFrameProps) => (
-  <div role='none' className='absolute top-2 inset-x-2 z-30 flex pointer-events-none'>
-    <div role='none' className='flex-1 basis-0 min-w-24' />
-    <Layout.Flex
-      align='center'
-      classNames='min-w-0 pointer-events-auto rounded-sm bg-modal-surface border border-separator p-0.5'
-      style={
-        accent
-          ? {
-              backgroundImage: `linear-gradient(${getAccentWash(accent)}, ${getAccentWash(accent)})`,
-              boxShadow: `inset 0 -1px 0 var(--color-${accent}-border)`,
-            }
-          : undefined
-      }
-      data-accent={accent}
-      data-testid={testId}
-    >
-      {children}
-    </Layout.Flex>
-    {/* The floating inspector's width (`w-80`) and the gap to it; below 800 px the editor folds it to one icon. */}
-    <div role='none' className='flex-1 basis-0 min-w-82 max-[800px]:min-w-10' />
-  </div>
-);
+export const PillFrame = ({ children, testId, accent }: PillFrameProps) => {
+  const [bounds, setBounds] = useState<HTMLDivElement | null>(null);
+  return (
+    <PillBoundsContext.Provider value={bounds}>
+      <div role='none' ref={setBounds} className='absolute top-2 inset-x-2 z-30 flex pointer-events-none'>
+        <div role='none' className='flex-1 basis-0 min-w-24' />
+        <Layout.Flex
+          align='center'
+          classNames='min-w-0 pointer-events-auto rounded-sm bg-modal-surface border border-separator p-0.5'
+          style={
+            accent
+              ? {
+                  backgroundImage: `linear-gradient(${getAccentWash(accent)}, ${getAccentWash(accent)})`,
+                  boxShadow: `inset 0 -1px 0 var(--color-${accent}-border)`,
+                }
+              : undefined
+          }
+          data-accent={accent}
+          data-testid={testId}
+        >
+          {children}
+        </Layout.Flex>
+        {/* The floating inspector's width (`w-80`) and the gap to it; below 800 px the editor folds it to one icon. */}
+        <div role='none' className='flex-1 basis-0 min-w-82 max-[800px]:min-w-10' />
+      </div>
+    </PillBoundsContext.Provider>
+  );
+};
 
 /** A combobox trigger (`asChild`) passes its own `className` to the trigger, beside the Button's props. */
 type TriggerProps = Button.RootProps & { name: string; className?: string };
@@ -124,6 +132,7 @@ export type PillToolbarProps = PillSlots & {
 export const PillToolbar = ({ onShare, ...slots }: PillToolbarProps) => {
   const shareRef = useRef(onShare);
   shareRef.current = onShare;
+  const bounds = useContext(PillBoundsContext);
   const viewers = slots.presence !== undefined;
   const menu = useMenuBuilder(() => {
     const builder = MenuBuilder.make()
@@ -160,7 +169,7 @@ export const PillToolbar = ({ onShare, ...slots }: PillToolbarProps) => {
   return (
     <PillSlotsContext.Provider value={slots}>
       {/* The space avatar at the start, and Share or a viewer at the end, sit twice the pill's top padding from its edge. */}
-      <ActionToolbar {...menu} alwaysActive classNames='min-w-0 bg-transparent ps-0 pe-1.25' />
+      <ActionToolbar {...menu} alwaysActive bounds={bounds} classNames='min-w-0 bg-transparent ps-0 pe-1.25' />
     </PillSlotsContext.Provider>
   );
 };

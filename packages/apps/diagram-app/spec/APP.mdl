@@ -51,7 +51,7 @@ feat F-1: App shell
   req F-1.4: The app's own UI uses only existing `@dxos/react-ui` components; the canvas toolbar and palette are the canvas plugin's.
   req F-1.5: The app draws its pill at once, before the client is up: the space name and hue, diagram name and Share as the last visit left them. The diagram's frame, the canvas editor's own toolbars and panels over an empty scene, follows as soon as the editor's code loads, the same on a first run as on a return. The live app replaces them once its own frame is on screen, and until then they take no input. The diagram's content fades in over 100 ms; the frame and the theme's background do not, since they are already on screen. A first run draws "My diagrams / Untitled", and a space the last visit did not show draws the pill without names. An invitation link draws the same, with the join dialog over it (F-6.2). The app shows no loading text.
   req F-1.6: The app prepares in the background, all at once: plugins, identity and the open space. Opening a diagram loads every object it reached on its last open in one batch, not one reference at a time.
-  req F-1.7: The pill is a toolbar between the canvas's breadcrumbs and its inspector and never overlaps either; below 800 px, where the canvas folds the inspector to one icon, it leaves room for that icon alone. It centres in the page while both sides have room, then moves aside. As the page narrows, Share, then the space menu, then the diagram menu show only their icon or avatar (with the menus' caret), never a name cut short; the viewers' avatars never collapse. Where even that does not fit, Share moves into the pill's overflow menu (⋮), and past that the pill scrolls sideways. The menus are divided by the toolbar's own line separator.
+  req F-1.7: The pill is a toolbar between the canvas's breadcrumbs and its inspector and never overlaps either; below 800 px, where the canvas folds the inspector to one icon, it leaves room for that icon alone. It centres in the page while both sides have room, then moves aside. As the page narrows, Share, then the space menu, then the diagram menu show only their icon or avatar (with the menus' caret), never a name cut short; the viewers' avatars never collapse. Where even that does not fit, Share moves into the pill's overflow menu (⋮), and past that the pill scrolls sideways. As the page widens again, each takes its full form back in the reverse order. The menus are divided by the toolbar's own line separator.
 ```
 
 ```mdl
@@ -1503,4 +1503,23 @@ decision D-115: In QA-7, Ben clicks Follow and nothing more: the list closes onc
   why: The list closes about a second after Follow, so a second click on the avatar reopens it when it lands late; a recorded take hit that race.
   rejected:
     - Click the avatar again: closes the list only when it lands before the canvas takes focus.
+```
+
+```mdl
+decision D-116: The pill takes its full form back as the page widens.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-1.7]
+  why: The pill collapsed as the page narrowed but stayed collapsed when it widened again.
+```
+
+```mdl
+decision D-117: The pill's toolbar measures the row the pill sits in, not its own frame, to tell when a collapsed item fits again; react-ui-menu's `ActionToolbar` takes that box as `bounds`. Fills in [D-116].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.7, Pill]
+  why: The pill is as wide as its content, so once collapsed its frame never widens and the toolbar never saw the room it had.
+  rejected:
+    - Stretch the pill across the gap between the breadcrumbs and the inspector: it would no longer centre in the page.
 ```

@@ -498,7 +498,12 @@ const isCompactable = (item: MenuItem): boolean => {
  * into the overflow menu, then the rest, last first. Each step is undone once the toolbar is wider than when it was
  * taken, so hidden items are never measured.
  */
-const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>): Collapsed => {
+const useCollapse = (
+  menu: MenuActions,
+  units: MenuItem[],
+  rows: RefObject<(HTMLElement | null)[]>,
+  bounds: HTMLElement | null | undefined,
+): Collapsed => {
   const registry = useContext(RegistryContext);
   const steps = useMemo<CollapseStep[]>(() => {
     // A named group collapses as a submenu, which can only hold what a menu shows; an empty one takes no room to free.
@@ -545,7 +550,7 @@ const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTML
     if (elements.length === 0) {
       return;
     }
-    const width = frameOf(elements[0]).clientWidth;
+    const width = (bounds ?? frameOf(elements[0])).clientWidth;
     // A toolbar not laid out yet (a closed drawer, a hidden panel) has no width to fit; it is measured once it has one.
     if (width === 0) {
       return;
@@ -557,7 +562,7 @@ const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTML
     } else if (!overflowing && count > 0 && width > (thresholds.current[count - 1] ?? Infinity)) {
       setCount(count - 1);
     }
-  }, [units, stepsKey, count, width]);
+  }, [units, stepsKey, count, width, bounds]);
 
   // Re-render on resize only when something can collapse.
   const observed = steps.length > 0;
@@ -567,9 +572,9 @@ const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTML
       return;
     }
     const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(frameOf(element));
+    observer.observe(bounds ?? frameOf(element));
     return () => observer.disconnect();
-  }, [observed, rows]);
+  }, [observed, rows, bounds]);
 
   return useMemo(() => {
     const taken = steps.slice(0, count);
@@ -643,6 +648,11 @@ export type ActionToolbarProps = Partial<MenuActions> &
      * and `MenuBuilder.extend(groupId, …)` adds to a named group.
      */
     customActions?: Atom.Atom<ActionGraphProps>;
+    /**
+     * The box whose width the toolbar may fill, measured to decide when collapsed items fit again; by default the
+     * toolbar's own frame. A toolbar as wide as its content passes the box it sits in, or it never grows back.
+     */
+    bounds?: HTMLElement | null;
   };
 
 /**
@@ -664,6 +674,7 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
       attendableId,
       alwaysActive,
       customActions,
+      bounds,
       children: _,
       ...props
     },
@@ -690,7 +701,7 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
       defaultOverflowGroup;
     const units = useMemo(() => (rootItems ?? []).filter((item) => item.id !== TOOLBAR_OVERFLOW_ID), [rootItems]);
     const rows = useRef<(HTMLElement | null)[]>([]);
-    const { moved, folded, compacted } = useCollapse(menu, units, rows);
+    const { moved, folded, compacted } = useCollapse(menu, units, rows, bounds);
 
     const rowCount = Math.max(1, ...units.map((item) => (placementOf(item).row ?? 0) + 1));
     const zone = (row: number, zone: ToolbarZone) =>
