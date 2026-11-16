@@ -33,12 +33,12 @@ import {
 import { useExpandPeerNodes } from './PeerActions.tsx';
 import {
   type AvatarSize,
+  type Member,
   PresenceAvatar,
   PresenceList,
   type PresenceListAction,
   type PresenceListProps,
   getName,
-  type Member,
   getPresenceMembers,
   isAttending,
   useNow,
