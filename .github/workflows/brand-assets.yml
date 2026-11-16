@@ -6,7 +6,10 @@
 # Adds and overwrites; never deletes — see the script's header for why.
 #
 # Secrets required:
-#   R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY — S3 write on `assets` (the pair deploy-apps.yml uses).
+#   R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY — the repo's shared R2 pair, whose token must carry S3 write on
+#   `assets`. It was minted for `agent-artifacts` before this bucket existed, so the first runs here failed
+#   `403 AccessDenied` on the opening PUT until its bucket scope was widened; a rotation that forgets
+#   `assets` fails the same way, and the error says nothing about scope.
 
 name: Brand Assets
 
