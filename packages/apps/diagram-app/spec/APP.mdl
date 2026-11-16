@@ -439,13 +439,13 @@ test QA-8: Across this app and Composer
       expect: both shapes show in both apps, and each sees the other's cursor and avatar
     - name: Bob follows Alice
       do: As Bob, click Alice's avatar and Follow; as Alice, pan and zoom the diagram in Composer.
-      expect: Bob's canvas keeps Alice's centre and zoom, and his pill takes the follow's wash
+      expect: Bob's canvas keeps Alice's camera, and his pill takes the follow's wash
     - name: Alice opens the document
       do: As Alice, open the document; as Bob, click Alice's avatar, then Stop.
       expect: Bob stays on the diagram and his follow shows Paused until he stops it
     - name: Alice follows Bob
       do: As Alice, open the diagram, click Bob's avatar on its plank and Follow; as Bob, pan and zoom.
-      expect: Alice's Composer plank keeps Bob's centre and zoom, and its heading takes the follow's wash
+      expect: Alice's Composer plank keeps Bob's camera, and its heading takes the follow's wash
 ```
 
 ## Changelog
@@ -1572,7 +1572,7 @@ decision D-122: A follower shows the leader's drawing through the drawing's view
   by: agent:claude-code
   for: user:wittjosiah
   supersedes: D-84
-  affects: [F-9.3, F-9.5]
+  affects: [F-9.3, F-9.5, QA-8]
   why: The space plugin's follow now carries the followed object's view state for every illustrator variant. The drawing anchor set the same camera from the centre while the view state set it from the offset, and the follower's view did not settle.
   rejected:
     - Keeping the anchor for Jump: the two paths would place the camera differently on views of different sizes.

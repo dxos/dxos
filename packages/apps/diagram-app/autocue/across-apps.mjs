@@ -54,20 +54,14 @@ const sidebar = (page) => page.locator('[data-scope="main"][data-part="complemen
 const sceneView = (page) => page.getByTestId('scene-view').first();
 const nodes = (page) => sceneView(page).locator('[data-node-id]');
 
-/** Where the first shape sits in the view: its centre's offset from the view's centre, and its width. */
+/** Where the first shape sits in the view: its offset from the view's top left, and its width. */
 const shapeInView = async (page) => {
   const view = await sceneView(page).boundingBox();
   const shape = await nodes(page).first().boundingBox();
-  return view && shape
-    ? {
-        dx: shape.x + shape.width / 2 - (view.x + view.width / 2),
-        dy: shape.y + shape.height / 2 - (view.y + view.height / 2),
-        width: shape.width,
-      }
-    : undefined;
+  return view && shape ? { dx: shape.x - view.x, dy: shape.y - view.y, width: shape.width } : undefined;
 };
 
-/** Two views show the scene alike when the same shape sits at the same offset from their centres, at the same size. */
+/** Two views share a camera when the same shape sits at the same offset from their top left, at the same size. */
 const sameView = async (a, b) => {
   const [one, two] = await Promise.all([shapeInView(a), shapeInView(b)]);
   return (
