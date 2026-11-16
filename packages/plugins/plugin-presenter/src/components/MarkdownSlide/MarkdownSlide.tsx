@@ -317,22 +317,48 @@ const BLOCK_TAGS = new Set([
   'slide-after',
   'slide-surface',
   'slide-box',
+  'slide-grid',
+  'slide-cell',
+  'slide-card',
 ]);
 
 const NODE_CLASSES: Record<string, string> = theme.nodes;
 
 /** The element a `<List>`/`<Table>` variant lands on, and the kind of block it belongs to. */
-const VARIANT_BLOCKS: Record<string, string> = { 'ul': 'list', 'ol': 'list', 'table': 'table', 'slide-box': 'box' };
+const VARIANT_BLOCKS: Record<string, string> = {
+  'ul': 'list',
+  'ol': 'list',
+  'table': 'table',
+  'slide-box': 'box',
+  'slide-grid': 'grid',
+  'slide-cell': 'cell',
+  'slide-card': 'card',
+};
 
-/** The key a styled block's descendants take their classes under; `list` covers both `ul` and `ol`. */
+/**
+ * The key a styled block's descendants take their classes under. A part is named by its tag, so a variant styles any
+ * tag it holds by writing that tag's name; these are the aliases, where the key is not the tag: both list tags share
+ * one part, and each custom element is named without its prefix.
+ */
 const VARIANT_PARTS: Record<string, string> = {
   'ul': 'list',
   'ol': 'list',
-  'li': 'li',
-  'table': 'table',
-  'th': 'th',
-  'td': 'td',
   'slide-box': 'box',
+  'slide-grid': 'grid',
+  'slide-cell': 'cell',
+  'slide-card': 'card',
+};
+
+const variantPart = (tagName: string): string => VARIANT_PARTS[tagName] ?? tagName;
+
+/**
+ * The track counts a layout tag carries, and the custom property each becomes. A grid states the tracks it lays down
+ * (`cols`/`rows`); its children state the tracks they cover (`colSpan`/`rowSpan`), named as the table attributes are.
+ */
+const TRACK_PROPERTIES: Record<string, Record<string, string>> = {
+  'slide-grid': { cols: '--slide-grid-cols', rows: '--slide-grid-rows' },
+  'slide-cell': { colSpan: '--slide-col-span', rowSpan: '--slide-row-span' },
+  'slide-card': { colSpan: '--slide-col-span', rowSpan: '--slide-row-span' },
 };
 
 /** A variant in force: the kind of block that set it and the name it carries. */
@@ -376,8 +402,11 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     tagName = element.children.some((child) => child.type === 'element' && BLOCK_TAGS.has(child.tagName))
       ? 'div'
       : 'span';
-  } else if (tagName === 'slide-box') {
+  } else if (tagName === 'slide-box' || tagName === 'slide-grid' || tagName === 'slide-cell') {
     tagName = 'div';
+  } else if (tagName === 'slide-card') {
+    // An article: a card is a titled, self-contained piece, which is what the element means.
+    tagName = 'article';
   } else if (tagName === 'slide-surface') {
     // `ref` is reserved by React, so the object URI travels under another name.
     properties.uri = properties.ref;
@@ -397,18 +426,36 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   const name = block ? asVariant(properties.variant) : undefined;
   delete properties.variant;
   // A nested list or table with no variant of its own starts clean rather than inheriting the one around it.
-  const active: ActiveVariant | undefined = block ? (name ? { kind: block, name } : undefined) : variant;
-  const variantClass = active && theme.variants[active.kind]?.[active.name]?.[VARIANT_PARTS[element.tagName]];
+  const activeVariant: ActiveVariant | undefined = block ? (name ? { kind: block, name } : undefined) : variant;
+  const variantClass =
+    activeVariant && theme.variants[activeVariant.kind]?.[activeVariant.name]?.[variantPart(element.tagName)];
   if (block && variantClass) {
     properties.dataVariant = name;
   }
 
+  // The item a list marks as the one in hand; its own `data-active` is what the variant styles.
+  const activeItem = block ? Number(properties.active) : NaN;
+  delete properties.active;
+
   // A tone rebinds `--slide-accent` for this element and everything under it, so the variant's own classes follow it.
   const tone = block ? asVariant(properties.tone) : undefined;
   delete properties.tone;
+  const declarations: string[] = [];
   if (SlideTheme.isTone(tone)) {
     properties.dataTone = tone;
-    properties.style = `--slide-accent: ${TONE_COLORS[tone]}`;
+    declarations.push(`--slide-accent: ${TONE_COLORS[tone]}`);
+  }
+  // The tracks a grid lays down, or the tracks its child covers; the theme's classes read them, so the markdown
+  // supplies a count and never CSS of its own. Only a layout tag carries them, so no other tag loses an attribute.
+  for (const [attribute, property] of Object.entries(TRACK_PROPERTIES[element.tagName] ?? {})) {
+    const count = Number(properties[attribute]);
+    delete properties[attribute];
+    if (Number.isInteger(count) && count >= 1) {
+      declarations.push(`${property}: ${count}`);
+    }
+  }
+  if (declarations.length > 0) {
+    properties.style = declarations.join('; ');
   }
 
   const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : (variantClass ?? NODE_CLASSES[tagName]);
@@ -420,10 +467,28 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     ...element,
     tagName,
     properties: withStep(properties),
-    children: element.children.map((child) =>
-      child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre', active) : child,
+    children: markActive(
+      element.children.map((child) =>
+        child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre', activeVariant) : child,
+      ),
+      activeItem,
     ),
   };
+};
+
+/** Marks the `item`-th list item (1-based), which a variant styles as the one in hand. */
+const markActive = (children: ElementContent[], item: number): ElementContent[] => {
+  if (!Number.isInteger(item)) {
+    return children;
+  }
+  let index = 0;
+  return children.map((child) => {
+    if (child.type !== 'element' || child.tagName !== 'li') {
+      return child;
+    }
+    index += 1;
+    return index === item ? { ...child, properties: { ...child.properties, dataActive: '' } } : child;
+  });
 };
 
 const asVariant = (value: Properties[string]): string | undefined => (typeof value === 'string' ? value : undefined);
