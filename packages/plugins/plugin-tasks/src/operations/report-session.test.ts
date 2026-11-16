@@ -259,6 +259,27 @@ describe('report-session', () => {
       expect(reported.instructions).toContain('tasks-list');
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
+
+  it.effect('reports the project, not the task set, for a sub-task of a delegated tree', () =>
+    Effect.gen(function* () {
+      const { session } = yield* create({ sessionId: 'session_tree', title: 'Worker' });
+      const assignee = { role: 'assistant' as const, subject: Ref.make(session) };
+
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Backlog' }));
+      const project = yield* Database.add(Project.make({ name: 'Voyage', taskSet: Ref.make(taskSet) }));
+      const root = yield* Database.add(Task.make({ title: 'Root', status: 'started', assignee }));
+      const child = yield* Database.add(Task.make({ title: 'Child', status: 'started', assignee }));
+      TaskSet.addTaskToSet(taskSet, root);
+      TaskSet.addTaskToSet(taskSet, child, { parent: root });
+      yield* Database.flush();
+
+      const reported = yield* report({ sessionId: 'session_tree' });
+      expect((reported.tasks ?? []).map(({ title, projectDxn }) => ({ title, projectDxn }))).toEqual([
+        { title: 'Root', projectDxn: Obj.getURI(project).toString() },
+        { title: 'Child', projectDxn: Obj.getURI(project).toString() },
+      ]);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
+  );
 });
 
 describe('list-sessions', () => {

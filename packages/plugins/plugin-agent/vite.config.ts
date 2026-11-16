@@ -21,6 +21,7 @@ export default defineConfig({
     AgentMailbox: 'src/types/AgentMailbox.ts',
     AgentOperation: 'src/types/AgentOperation.ts',
     AgentPresence: 'src/types/AgentPresence.ts',
+    AgentSession: 'src/types/AgentSession.ts',
     AgentSettings: 'src/types/AgentSettings.ts',
     EmailOperation: 'src/types/EmailOperation.ts',
     AgentCompanion: 'src/types/AgentCompanion.ts',

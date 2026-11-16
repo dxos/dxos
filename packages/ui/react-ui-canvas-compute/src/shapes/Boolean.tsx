@@ -147,7 +147,7 @@ const AndSymbol = createSymbol(({ startX, endX, top, bottom }) => {
 export const AndShape = GateShape;
 export type AndShape = GateShape;
 
-export const createAnd = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
+export const createAnd = (props: Omit<CreateGateProps, 'type'>) => {
   return createGate({ ...props, type: 'and' });
 };
 export const andNodeDef = defineGate({
@@ -181,7 +181,7 @@ const OrSymbol = createSymbol(({ startX, endX, top, mid, bottom }) => {
 export const OrShape = GateShape;
 export type OrShape = GateShape;
 
-export const createOr = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
+export const createOr = (props: Omit<CreateGateProps, 'type'>) => {
   return createGate({ ...props, type: 'or' });
 };
 export const orNodeDef = defineGate({
@@ -218,7 +218,7 @@ const NotSymbol = createSymbol(({ startX, endX, top, mid, bottom }) => {
 export const NotShape = GateShape;
 export type NotShape = GateShape;
 
-export const createNot = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
+export const createNot = (props: Omit<CreateGateProps, 'type'>) => {
   return createGate({ ...props, type: 'not' });
 };
 export const notNodeDef = defineGate({

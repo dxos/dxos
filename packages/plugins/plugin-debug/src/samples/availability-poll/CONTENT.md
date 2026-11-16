@@ -5,7 +5,7 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 - `Code`: `spec.ts`, `features.ts`, `project.ts`, `docs.ts`, `diagrams.ts`, `SPEC.mdl`, `FLIGHTS.mdl`, `diagrams/*.dx` (compiled to `diagrams/compiled.json`); template `AvailabilityPollSpace.ts`.
 - `Requires`: none.
 - `Optional`: none.
-- `Provides`: `spec.spec`, `spec.flights`, `features.features`, `features.flights`, `project.project`, `project.instructions`, `project.taskSet`, `docs.docs`, `docs.drawings`.
+- `Provides`: `spec.spec`, `spec.flights`, `features.map`, `features.flights`, `project.project`, `project.instructions`, `project.taskSet`, `docs.docs`, `docs.drawings`.
 - `Clock`: unused (nothing is dated; the agent dates the tasks it files).
 - `Used by`: Availability Poll (`org.dxos.plugin-debug.template.availability-poll`).
 
@@ -13,14 +13,14 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 
 ### Spec (`spec.ts`, `SPEC.mdl`, `FLIGHTS.mdl`)
 
-- 1 `Spec.Spec` "Availability Poll" (`@dxos/compute`) read from `SPEC.mdl`, fully written: an Interface section; types `Slot`, `Respondent`, `Poll`, `NewPoll`, `SlotPlan`, `LocalRange`; `feat` F-1 to F-8; a Milestones table with rows M-1 to M-4; `scenario` T-1 to T-3; decisions D-1 to D-5. Each `feat` block becomes an embed of its feature (below), in the block's place.
-- Foreign key `{ source: 'github.com/dxos/dxos', id: 'availability-poll/SPEC.mdl' }`, the path the features cite.
-- 1 `Spec.Spec` "Flight options" read from `FLIGHTS.mdl`: types `Trip`, `Limits`, `Traveler`, `Offer`; `feat` F-1 to F-4; `scenario` T-1; decisions D-1 and D-2. It declares `uses com.example.availability-poll` and cites the poll spec's items by id (`com.example.availability-poll#F-3`, `#F-6`, `#F-7`). Its `feat` blocks become embeds of the four subfeatures below.
+- 1 `Spec.Spec` "Availability Poll" (`@dxos/compute`) read from `SPEC.mdl`, fully written: an Interface section; types `Slot`, `Respondent`, `Poll`, `NewPoll`, `SlotPlan`, `LocalRange`; `feat` F-1 to F-8; a Milestones table with rows M-1 to M-4; `scenario` T-1 to T-3; decisions D-1 to D-7.
+- Foreign key `{ source: 'github.com/dxos/dxos', id: 'availability-poll/SPEC.mdl' }`, the file the spec syncs with.
+- 1 `Spec.Spec` "Flight options" read from `FLIGHTS.mdl`: types `Trip`, `Limits`, `Traveler`, `Offer`; `feat` F-1 to F-4; `scenario` T-1; decisions D-1 to D-3. It declares `uses com.example.availability-poll` and cites the poll spec's items by id (`com.example.availability-poll#F-3`, `#F-6`, `#F-7`).
 - Foreign key `{ source: 'github.com/dxos/dxos', id: 'availability-poll/FLIGHTS.mdl' }`.
 
 ### Features (`features.ts`)
 
-- The poll spec is the feature map: the project owns it (`Project.specs`), and it holds eight features in its features annotation (`FeatureMap.FeaturesAnnotation`), all `planned`, each citing its block (`availability-poll/SPEC.mdl#F-n`) and carrying the block's `req` lines as requirements:
+- The poll spec is the feature map: the project owns it (`Project.specs`), and its text holds eight features as `feat` blocks, all `status: planned`, with the block's `req` lines as requirements:
   - `create` "Create a poll" (F-1), 4 requirements.
   - `mark` "Mark availability" (F-2), 3 requirements.
   - `heatmap` "Heat map and best slot" (F-3), 4 requirements.
@@ -28,18 +28,18 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
   - `pollPage` "Poll page" (F-5), 7 requirements.
   - `zones` "Time zones" (F-6), 3 requirements.
   - `dst` "Daylight-saving time" (F-7), 4 requirements.
-  - `flights` "Flight options" (F-8), 1 requirement, owning the "Flight options" spec (`spec`).
-- The "Flight options" spec holds four subfeatures, all `planned`, each citing `availability-poll/FLIGHTS.mdl#F-n` with its requirements: `trip` "Trip" (2), `search` "Offer search" (4), `pick` "Pick a flight" (2), `overlay` "Arrival overlay" (2).
-- 13 `Feature.DependsOn`:
+  - `flights` "Flight options" (F-8), 1 requirement, whose `spec:` cites the "Flight options" spec. The project owns that spec too.
+- The "Flight options" spec's text holds four subfeatures as `feat` blocks, all `planned`: `trip` "Trip" (2), `search` "Offer search" (4), `pick` "Pick a flight" (2), `overlay` "Arrival overlay" (2).
+- 13 `depends` entries:
   - On the poll spec: `mark` → `create`, `heatmap` → `mark`, `newPage` → `create`, `pollPage` → `heatmap`, `zones` → `create`, `dst` → `zones`, `flights` → `heatmap`, `flights` → `dst`.
   - On the flights spec: `search` → `trip`, `pick` → `search`, `overlay` → `pick`.
-  - Across the two: `search` → `heatmap` (limits are set against the best slot), `overlay` → `zones` (markers are drawn in the reader's zone).
-- No `Feature.Implements`: no task exists yet; the agent links the tasks it files.
+  - Across the two, as spec item links (`echo:///<spec>#F-n`): `search` → `heatmap` (limits are set against the best slot), `overlay` → `zones` (markers are drawn in the reader's zone).
+- No `SpecItem.Implements`: no task exists yet; the agent links the tasks it files.
 
 ### Project (`project.ts`)
 
 - 1 `TaskSet.TaskSet` "Availability Poll", empty: no `Milestone.Milestone` and no `Task.Task`.
-- 1 `Project.Project` "Availability Poll", `active` → the task set (`taskSet`), → its instructions (`instructions`), → the poll spec (`specs`), and → the 3 documents and 2 drawings below (`artifacts`), in that order.
+- 1 `Project.Project` "Availability Poll", `active` → the task set (`taskSet`), → its instructions (`instructions`), → the poll spec and the flights spec (`specs`), and → the 3 documents and 2 drawings below (`artifacts`), in that order.
 - 1 `Instructions.Instructions` binding the Markdown and Drawing skills and → the task set (`objects`), carrying how to plan a milestone from the spec (one milestone per row of the Milestones table, one task per feature and a check task), the build recipe (one sandbox with its own git and no repository, the image's wrangler, `wrangler deploy --temporary` with a SQLite Durable Object migration), how to check each task and scenario on `wrangler dev` in the sandbox and deploy once the scenario passes, and when a feature is `prototype`, `operational` or `failing`.
 
 ### Design (`docs.ts`, `diagrams.ts`)
@@ -66,11 +66,11 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 
 ## Checks
 
-- Exactly 1 project, 1 instructions, 1 task set, 0 milestones, 0 tasks, 12 features (8 and 4 subfeatures), 2 specs, 3 documents and 2 drawings.
+- Exactly 1 project, 1 instructions, 1 task set, 0 milestones, 0 tasks, 2 specs holding 12 `feat` blocks (8 and 4 subfeatures), no feature objects, 3 documents and 2 drawings.
 - Every persisted typename is declared by a partial.
-- The project owns the poll spec, which holds the eight features in spec order, all `planned`, citing F-1 to F-8 of `availability-poll/SPEC.mdl`.
-- "Flight options" owns the flights spec, which holds its four subfeatures citing F-1 to F-4 of `availability-poll/FLIGHTS.mdl`.
+- The project owns the poll spec, whose text holds F-1 to F-8 in order, all `planned`.
+- "Flight options" cites the flights spec, whose text holds its four subfeatures F-1 to F-4, all `planned`.
 - The 13 dependencies are exactly the pairs above.
-- Each spec's foreign key is the path its features cite, and its text embeds its features in order with no `feat` block left.
+- Each spec's foreign key is the file it syncs with.
 - The poll spec's text keeps the Milestones table's rows M-1 to M-4 and the scenarios T-1 to T-3.
 - The project's artifacts are the 3 documents and the 2 drawings, and the "Design" collection holds the same 5.

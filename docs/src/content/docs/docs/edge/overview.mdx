@@ -1,0 +1,48 @@
+---
+title: Overview
+description: What EDGE is, and where ECHO, HALO, MESH and PLEX use it.
+welcome:
+  section: EDGE
+  tagline: Hosted services for sync, identity and compute.
+  background: edge
+---
+
+import Diagram from '../../../../components/Diagram.astro';
+
+EDGE is an always-online peer for local-first apps, run by DXOS on Cloudflare Workers. It is not where the data lives;
+the devices are. It keeps a copy of each space, indexes it, recovers identities when every device is lost, and runs
+operations and agents while every device is asleep. Each space and each
+identity gets its own Durable Objects, small stateful servers that hold that space's or identity's state.
+
+## What goes over each link
+
+<Diagram name="edge-overview" alt="Two devices share a direct link and each keep a WebSocket to the Router in EDGE; the Router reaches the DB, compute and identity services, the DB service fires triggers in compute, and compute prompts the AI service." />
+
+Every device keeps one WebSocket to EDGE. Over it, EDGE introduces the device to its peers, receives and sends the
+changes for each of its spaces, answers queries over objects the device has not loaded, and runs the identity's
+services. Devices that are online together also link directly through [MESH](/docs/mesh/overview/).
+
+## Where the rest of DXOS uses EDGE
+
+| Section | Uses EDGE for                                                                  | Page                                                         |
+| ------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| ECHO    | An always-online copy of each space, and backups                               | [Replication and backup](/docs/edge/concepts/replication/)   |
+| ECHO    | Queries over objects this device has not loaded                                | [Indexing and queries](/docs/edge/concepts/indexing/)        |
+| HALO    | Recovering an identity, accounts, invitations, service access                  | [Identity services](/docs/edge/concepts/identity-services/)  |
+| MESH    | The WebSocket each device keeps, and signaling between peers                   | [Connecting](/docs/edge/concepts/connecting/)                |
+| SAGE    | Agent processes, and models through the AI service                             | [Compute](/docs/edge/concepts/compute/)                      |
+| PLEX    | Operations, triggers, sandbox builds and the plugin registry                   | [Compute](/docs/edge/concepts/compute/)                      |
+
+## Running it
+
+DXOS runs EDGE. An app points at it with one setting, `runtime.services.edge.url`, which is `https://dxos.network/` in
+production. There is no self-hosted EDGE. See [Configuration](/docs/edge/resources/configuration/).
+
+## How these pages are organized
+
+Apps reach EDGE through the DXOS client, not an API they call. These pages explain how it works, so there is no
+learning path, API group or guides.
+
+- [Why EDGE?](/docs/edge/why-edge/) argues for servers in a local-first system.
+- [Architecture](/docs/edge/concepts/architecture/) lists the services and the objects behind them. The other concept
+  pages take one job each.

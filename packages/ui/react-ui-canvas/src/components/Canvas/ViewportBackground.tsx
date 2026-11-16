@@ -53,11 +53,11 @@ export const ViewportBackground = ({
     [look.background, backgroundBounds, bounds, latticeBounds],
   );
   const zooming = useChanging(camera.zoom, ZOOM_SETTLE);
-  // A lattice scene draws what a shape snaps to: its cells (the guides, drawn over the scene) or else the grid's lines;
-  // read-only or as a picture nothing snaps, so it draws neither.
+  // A lattice scene draws what a shape snaps to: its cells (the guides, drawn over the scene) or else the grid's lines,
+  // unless the look draws no grid at all; read-only or as a picture nothing snaps, so it draws neither.
   const latticeScene = draw.lattice !== undefined;
   const gridDrawn: BackgroundGrid = latticeScene
-    ? guidesShown || readonly || transparent
+    ? guidesShown || readonly || transparent || look.background.grid === 'none'
       ? 'none'
       : 'lines'
     : look.background.grid;

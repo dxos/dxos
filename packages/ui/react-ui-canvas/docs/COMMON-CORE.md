@@ -83,6 +83,15 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
     diagram-styled elements can take catalog styles. Supersedes decision 15's style approach.
 20. (2026-10-30, agent call, approved by the user) Two theme-independent hues, `black` and `white`, are added
     to the hue list so diagram `black`/`white` map exactly and the corpus metric gate stays stable.
+21. (2026-11-12, user) **Only core shapes keep properties at an element's top; an extension keeps its own under
+    `data`.** A plugin kind's schema is `Schema.Struct({ ...elementBase, type: Schema.Literal('class'), data:
+Schema.Struct({ …own fields }) })`: one typed sub-object, the same name for every kind, so a kind's field never
+    meets the base's (`size`) or another kind's. The engine's node carries the same `data`, a part or a bind names a
+    field as `data.<field>`, and the Properties panel shows `data` last, as a group labelled `Custom`. The fields of the
+    core prototype a kind extends stay at the top, where the prototype's frame reads them (a card's `icon`, `body` and
+    `footer`), as does the base's `label`. An element stored with its kind's fields at its top (decision 13 as first
+    built) is read with them under `data`, and its next write stores them there. This supersedes the "own fields" at
+    the top of decision 13; the registry and the unknown-field rule of 13 stand.
 
 ## Expectations (user, 2026-10-30)
 
@@ -139,12 +148,12 @@ elementBase = { id; type; z; locked?; layer?; label?; text?; style?: string /* w
                 source?: Endpoint; target?: Endpoint; ends?; connector? }     // links: an element with endpoints
 Endpoint    = { node: string; port?: string } | { point: Vec2 | Vec3 }
 Element2D   = elementBase & { center?: Vec2; size?: Size2; rotation?: number; points?: Vec2[];
-                              overrides?: Partial<Style2D> /* was style */ } & <type's own fields>
+                              overrides?: Partial<Style2D> /* was style */; data?: <kind's own fields> }
 Element3D   = elementBase & { center?: Vec3; scale?: Vec3; rotation?: Vec3; points?: Vec3[];
-                              overrides?: Partial<Style3D> } & <type's own fields>
+                              overrides?: Partial<Style3D>; data?: <kind's own fields> }
 // Instance transform (decision 18): { object; center; scale?; rotation?; fit?: 'none' | 'frame' }
-// Plugin kinds: Schema.Struct({ ...elementBase, type: Schema.Literal('class'), ...own }) registered in the kind
-// registry (decision 13).
+// Plugin kinds: Schema.Struct({ ...elementBase, type: Schema.Literal('class'), data: Schema.Struct({ ...own }) })
+// registered in the kind registry (decisions 13 and 21).
 LayoutIntent | ModelIntent                                        // the one edit vocabulary
 ```
 
@@ -207,43 +216,43 @@ core. A viewport never writes ECHO and never owns a command; it reports gestures
 
 ## Features: shared and per dimension
 
-| Group           | Feature            | Shared (core / data)                                                               | 2D (config)                                 | 3D (config)                                       |
-| --------------- | ------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------- |
-| **Data**        | Document           | `Model`/`Layout`/`Scene`, `SceneDocument`, `.dx` text                              | `Element2D`, `Camera2D`                     | `Element3D`, `Camera3D`                           |
-|                 | Elements           | `BaseElement`: kind, object, style, label, layer, links, groups, props             | center `Vec2`, size, rotation °             | center `Vec3`, scale, rotation `Vec3`             |
-|                 | Objects and parts  | model objects; composite `parts` layout; placement by `object`                     | `Object2D` (size)                           | `Object3D` (scale; mesh, solid props)             |
-|                 | Edits              | `LayoutIntent`, `ModelIntent`, one reducer                                         | move/scale `Vec2`                           | move/scale/rotate `Vec3`; extrude, join, subtract |
-|                 | Storage            | ECHO objects, `Canvas`, `CreatedFrom`, migration                                   | scene/2 → Canvas migration                  | —                                                 |
-| **Core**        | Store              | selection, tool, hover, drill path                                                 | —                                           | selected face                                     |
-|                 | Commands           | one command table (run + enabled)                                                  | —                                           | —                                                 |
-|                 | Undo/redo          | canvas-session history over intents; remote edits skipped                          | —                                           | —                                                 |
-|                 | Clipboard          | cut, copy, paste, duplicate as `.dx`; lift/flatten across dims                     | paste offset in grid px                     | paste offset on the ground                        |
-|                 | Lock and roles     | read-only lock; card/section/slide have no chrome                                  | —                                           | —                                                 |
-|                 | Keys               | one keymap; Cmd-drag = hand                                                        | plain D = debug                             | —                                                 |
-| **Viewport**    | Rendering          | `Viewport` contract: render, pick, project                                         | SVG/DOM scene layer                         | Babylon renderer                                  |
-|                 | Picking            | `pick(point) → { element, point }`                                                 | hit test                                    | ray pick + ground plane                           |
-|                 | Selection feedback | focus-colour token                                                                 | frame and handles                           | silhouette, bounding box, face pane               |
-|                 | Handles            | emit intents on release                                                            | resize/rotate handles                       | move/rotate/scale gizmos                          |
-|                 | Camera             | per-viewer view state; fit, reset, zoom                                            | pan/zoom                                    | orbit/pan/zoom                                    |
-|                 | Grid and snap      | toggles, grid kind, snap step                                                      | dots or lines; major grid px                | ground grid; 1 unit, 15°, 0.1                     |
-|                 | Guides             | —                                                                                  | lattice guides                              | —                                                 |
-| **Tools**       | Rail groups        | select/hand · transform · create (shapes + link) · lock                            | hand pans                                   | hand orbits                                       |
-|                 | Select             | click, shift-click, marquee; create tools also select                              | marquee                                     | —                                                 |
-|                 | Create             | click = default, drag = size; Escape cancels                                       | drag box                                    | drag base, then height                            |
-|                 | Link               | click A then B                                                                     | —                                           | —                                                 |
-|                 | Dimension-only     | —                                                                                  | text, polyline, image                       | extrude, face select                              |
-| **Panels**      | Placement          | rail left, actions bottom centre, camera bottom left, display bottom right         | —                                           | —                                                 |
-|                 | Actions / menu     | from the command table                                                             | —                                           | join, subtract, import, export STL                |
-|                 | Inspector          | one dockable panel, section order                                                  | —                                           | —                                                 |
-|                 | Properties         | shared form: label, layer, style fields, vectors (sm, end-aligned, hover steppers) | center, size, rotation                      | center, rotation, scale; face (read-only)         |
-|                 | Views              | layout tree, drill-in, scenes list                                                 | —                                           | —                                                 |
-|                 | Objects            | model objects: place, make object, edit parts                                      | —                                           | import mesh                                       |
-|                 | Layers             | `BaseElement.layer`: hide, lock                                                    | —                                           | hide removes from render and pick                 |
-|                 | Display            | registry themes, grid, snap                                                        | guides (lattice)                            | CAD/Presentation looks                            |
-| **Modes**       | Projections        | —                                                                                  | free, lattice, constrained, dynamic, scored | free                                              |
-| **Integration** | Animator           | stages a `Scene`; sampled, never written                                           | 2D stage                                    | 3D stage                                          |
-|                 | Assistant          | `ReadScene`/`EditScene` over `.dx`                                                 | —                                           | —                                                 |
-|                 | Export             | —                                                                                  | SVG, tldraw/excalidraw conversion           | STL                                               |
+| Group           | Feature            | Shared (core / data)                                                               | 2D (config)                                 | 3D (config)                               |
+| --------------- | ------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------- |
+| **Data**        | Document           | `Model`/`Layout`/`Scene`, `SceneDocument`, `.dx` text                              | `Element2D`, `Camera2D`                     | `Element3D`, `Camera3D`                   |
+|                 | Elements           | `BaseElement`: kind, object, style, label, layer, links, groups, props             | center `Vec2`, size, rotation °             | center `Vec3`, scale, rotation `Vec3`     |
+|                 | Objects and parts  | model objects; composite `parts` layout; placement by `object`                     | `Object2D` (size)                           | `Object3D` (scale; mesh, solid props)     |
+|                 | Edits              | `LayoutIntent`, `ModelIntent`, one reducer; join, subtract                         | move/scale `Vec2`                           | move/scale/rotate `Vec3`; extrude         |
+|                 | Storage            | ECHO objects, `Canvas`, `CreatedFrom`, migration                                   | scene/2 → Canvas migration                  | —                                         |
+| **Core**        | Store              | selection, tool, hover, drill path                                                 | —                                           | selected face                             |
+|                 | Commands           | one command table (run + enabled)                                                  | —                                           | —                                         |
+|                 | Undo/redo          | canvas-session history over intents; remote edits skipped                          | —                                           | —                                         |
+|                 | Clipboard          | cut, copy, paste, duplicate as `.dx`; lift/flatten across dims                     | paste offset in grid px                     | paste offset on the ground                |
+|                 | Lock and roles     | read-only lock; card/section/slide have no chrome                                  | —                                           | —                                         |
+|                 | Keys               | one keymap; Cmd-drag = hand                                                        | plain D = debug                             | —                                         |
+| **Viewport**    | Rendering          | `Viewport` contract: render, pick, project                                         | SVG/DOM scene layer                         | Babylon renderer                          |
+|                 | Picking            | `pick(point) → { element, point }`                                                 | hit test                                    | ray pick + ground plane                   |
+|                 | Selection feedback | focus-colour token                                                                 | frame and handles                           | silhouette, bounding box, face pane       |
+|                 | Handles            | emit intents on release                                                            | resize/rotate handles                       | move/rotate/scale gizmos                  |
+|                 | Camera             | per-viewer view state; fit, reset, zoom                                            | pan/zoom                                    | orbit/pan/zoom                            |
+|                 | Grid and snap      | toggles, grid kind, snap step                                                      | dots or lines; major grid px                | ground grid; 1 unit, 15°, 0.1             |
+|                 | Guides             | —                                                                                  | lattice guides                              | —                                         |
+| **Tools**       | Rail groups        | select/hand · transform · create (shapes + link) · lock                            | hand pans                                   | hand orbits                               |
+|                 | Select             | click, shift-click, marquee; create tools also select                              | marquee                                     | —                                         |
+|                 | Create             | click = default, drag = size; Escape cancels                                       | drag box                                    | drag base, then height                    |
+|                 | Link               | click A then B                                                                     | —                                           | —                                         |
+|                 | Dimension-only     | —                                                                                  | text, polyline, image                       | extrude, face select                      |
+| **Panels**      | Placement          | rail left, actions bottom centre, camera bottom left, display bottom right         | —                                           | —                                         |
+|                 | Actions / menu     | from the command table                                                             | —                                           | join, subtract, import, export STL        |
+|                 | Inspector          | one dockable panel, section order                                                  | —                                           | —                                         |
+|                 | Properties         | shared form: label, layer, style fields, vectors (sm, end-aligned, hover steppers) | center, size, rotation                      | center, rotation, scale; face (read-only) |
+|                 | Views              | layout tree, drill-in, scenes list                                                 | —                                           | —                                         |
+|                 | Objects            | model objects: place, make object, edit parts                                      | —                                           | import mesh                               |
+|                 | Layers             | `BaseElement.layer`: hide, lock                                                    | —                                           | hide removes from render and pick         |
+|                 | Display            | registry themes, grid, snap                                                        | guides (lattice)                            | CAD/Presentation looks                    |
+| **Modes**       | Projections        | —                                                                                  | free, lattice, constrained, dynamic, scored | free                                      |
+| **Integration** | Animator           | stages a `Scene`; sampled, never written                                           | 2D stage                                    | 3D stage                                  |
+|                 | Assistant          | `ReadScene`/`EditScene` over `.dx`                                                 | —                                           | —                                         |
+|                 | Export             | —                                                                                  | SVG, tldraw/excalidraw conversion           | STL                                       |
 
 ## Consumers of react-ui-canvas's own model
 

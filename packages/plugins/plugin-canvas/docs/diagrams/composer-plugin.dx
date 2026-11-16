@@ -1,4 +1,4 @@
-diagram @ -128,-64 flow=down box=256x128 grid=384x192
+diagram @ -128,-64 flow=down box=256x128 grid=384x256
 group entry "Entry" {
   node Entry "CanvasPlugin" ref="packages/plugins/plugin-canvas/src/CanvasPlugin.ts" color=violet
   node Meta "meta" ref="packages/plugins/plugin-canvas/src/meta.ts"

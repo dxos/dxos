@@ -142,6 +142,32 @@ batch.
 `echo-sqlite-demo-spaces` is now unused and can be deleted. Expiry is a DO alarm set 24 hours out
 on first write, which calls `deleteAll` on its own storage.
 
+## Decision D-6: sequence numbers and compare-and-set, not arrival order
+
+Requested 2026-11-10. Supersedes D-5's conflict rule.
+
+**Two counters, no clocks.** The DO keeps one `seq` per graph and stamps each accepted write with the
+next one. Each client keeps its own `clientSeq`, which numbers its pushes, so the DO can apply a retried
+push once.
+
+**Pull → merge → push.** Every pushed record carries `base`, the `seq` of the version it was edited
+on. The DO applies a push only if every `base` is still current, all or nothing. If one is stale, the
+DO applies nothing and answers with the records the client missed. The client merges them three-way
+(base, local, remote) field by field, and pushes again. A delete on either side wins.
+
+Under D-5 the DO applied every push in arrival order, so a client could overwrite a version it never
+saw. Now the last write still wins, but only after its writer has seen what it overwrites, and edits
+to different fields of one record both survive.
+
+**The DO is its own package, `@dxos/echo-sync-worker`,** with no dependencies outside its directory,
+so the "Deploy to Cloudflare" button can clone and build it alone. The client imports the protocol
+from it.
+
+**Two tabs are still out of scope.** Turso's browser build (`@tursodatabase/database-wasm` 0.8.3
+and 0.9.0-pre.2) opens each OPFS file with an exclusive sync access handle and needs cross-origin
+isolation for its thread pool, so it has the same one-tab limit as wa-sqlite. A file per tab would
+work, but was declined.
+
 ## Open questions
 
 - **Q-1** Does `echo-sqlite` need synchronous SQL anywhere? The README says `runSync()` "never

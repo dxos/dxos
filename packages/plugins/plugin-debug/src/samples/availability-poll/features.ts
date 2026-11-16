@@ -5,17 +5,16 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import type * as Spec from '@dxos/compute/Spec';
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
-import * as Feature from '@dxos/plugin-code/Feature';
+import * as Spec from '@dxos/compute/Spec';
+import { Database, Obj, Text } from '@dxos/echo';
 import * as FeatureMap from '@dxos/plugin-code/FeatureMap';
-import * as SpecText from '@dxos/plugin-code/SpecText';
+import * as SpecItem from '@dxos/plugin-code/SpecItem';
 
-import { FLIGHTS_PATH, SPEC_PATH, type SpecResult } from './spec.ts';
+import { type SpecResult } from './spec.ts';
 
 //
-// The feature map: one feature per `feat` block, read from the spec text itself so names, descriptions and
-// requirements are the spec's own. "Flight options" owns the flights spec, whose blocks are its subfeatures.
+// The feature map is the spec text's `feat` blocks; this partial writes their status and dependencies into them.
+// "Flight options" cites the flights spec, whose blocks are its subfeatures.
 //
 
 /** Feature keys by the block each is read from. */
@@ -58,46 +57,60 @@ export const DEPENDENCIES: ReadonlyArray<readonly [AnyKey, AnyKey]> = [
 
 export type FeaturesInput = { spec: SpecResult };
 
-export type FeaturesResult = {
-  features: Record<FeatureKey, Feature.Feature>;
-  flights: Record<FlightFeatureKey, Feature.Feature>;
+export type FeaturesResult = { map: Spec.Spec; flights: Spec.Spec };
+
+/** A block's title, read from the line that opens it. */
+const titleOf = (text: string, block: string): string => {
+  const title = text.match(new RegExp(`^feat ${block}: (.+)$`, 'm'))?.[1];
+  if (!title) {
+    throw new Error(`no feat ${block}`);
+  }
+  return title;
 };
 
-/** Embeds each `feat` block of `text` as a feature on `spec`, then returns the features by key. */
-const takeFeatures = <K extends string>(spec: Spec.Spec, path: string, text: string, blocks: Record<K, string>) =>
-  Effect.gen(function* () {
-    yield* Effect.promise(() => SpecText.take(spec, { path, text }));
-    const features = yield* Effect.promise(() => Ref.loadAll(FeatureMap.getFeatures(spec)));
-    const bySource = new Map(
-      features.flatMap((feature) => Feature.getSources(feature).map((source) => [source, feature])),
-    );
-    return Object.fromEntries(
-      Object.entries<string>(blocks).map(([key, block]) => {
-        const feature = bySource.get(`${path}#${block}`);
-        if (!feature) {
-          throw new Error(`${path} has no feat ${block}`);
-        }
-        return [key, feature];
-      }),
-    ) as Record<K, Feature.Feature>;
-  });
-
 export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput> = SampleSpace.partial('features', {
-  schemas: [Feature.Feature, Feature.DependsOn],
+  schemas: [Spec.Spec],
   run: ({ spec }: FeaturesInput) =>
     Effect.gen(function* () {
-      const text = (target: Spec.Spec) => Effect.promise(async () => (await target.content.load()).content ?? '');
-      const features = yield* takeFeatures(spec.spec, SPEC_PATH, yield* text(spec.spec), FEATURES);
-      const flights = yield* takeFeatures(spec.flights, FLIGHTS_PATH, yield* text(spec.flights), FLIGHT_FEATURES);
-      Obj.update(features.flights, (feature) => {
-        feature.spec = Ref.make(spec.flights);
-      });
+      const { spec: map, flights } = spec;
+      const owner = (key: AnyKey) =>
+        key in FEATURES
+          ? { spec: map, block: FEATURES[key as FeatureKey] }
+          : { spec: flights, block: FLIGHT_FEATURES[key as FlightFeatureKey] };
 
-      const all: Record<AnyKey, Feature.Feature> = { ...features, ...flights };
-      for (const [source, target] of DEPENDENCIES) {
-        yield* Database.add(Feature.makeDependsOn({ [Relation.Source]: all[source], [Relation.Target]: all[target] }));
-      }
+      // Each spec's feat blocks carry their status and what they need; a block in the other spec is cited by link.
+      const write = <K extends AnyKey>(target: Spec.Spec, blocks: Record<K, string>) =>
+        Effect.gen(function* () {
+          // Made by this template, so a text that will not load is a bug, not an outcome.
+          const text = yield* Database.load(target.content).pipe(Effect.orDie);
+          const content = SpecItem.writeFeatures(
+            text.content,
+            (Object.entries(blocks) as [K, string][]).map(([key, block]) => {
+              const depends = DEPENDENCIES.filter(([source]) => source === key).map(([, needed]) => {
+                const { spec: other, block } = owner(needed);
+                return other.id === target.id ? block : SpecItem.citation(other, block);
+              });
+              return {
+                key: block,
+                title: titleOf(text.content, block),
+                fields: {
+                  status: 'planned',
+                  ...(depends.length > 0 && { depends }),
+                  ...(key === 'flights' && { spec: `echo:///${flights.id}` }),
+                },
+              };
+            }),
+          );
+          Obj.update(text, (text) => {
+            Text.update(text, 'content', content);
+          });
+          Obj.update(target, (target) => {
+            target.dialects.splice(0, target.dialects.length, FeatureMap.SOFTWARE_DIALECT);
+          });
+        });
 
-      return { features, flights };
+      yield* write(map, FEATURES);
+      yield* write(flights, FLIGHT_FEATURES);
+      return { map, flights };
     }),
 });

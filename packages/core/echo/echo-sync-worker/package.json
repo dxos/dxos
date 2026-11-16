@@ -1,0 +1,48 @@
+{
+  "name": "@dxos/echo-sync-worker",
+  "version": "0.16.0",
+  "private": true,
+  "description": "The echo-sqlite sync server: a Cloudflare Worker with one Durable Object per graph.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./protocol": {
+      "source": "./src/protocol.ts",
+      "types": "./dist/types/src/protocol.d.ts",
+      "import": "./dist/lib/protocol.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260717.1",
+    "wrangler": "^4.112.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "SPACE": {
+        "description": "One Durable Object per graph slug. It assigns sequence numbers to writes and holds the graph for 24 hours."
+      }
+    }
+  }
+}

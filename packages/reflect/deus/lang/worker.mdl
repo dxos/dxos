@@ -102,6 +102,9 @@ ext binding
   desc: |
     One name in a worker's environment: a service, an actor namespace, a store, a variable or a
     secret. The identifier is the name as the worker reads it; the inline prose is what it is for.
+  role: structure
+  icon: ph--link--regular
+  hue: neutral
   fields:
     type: TypeExpr              # what the code sees: `Service<E>`, `DurableObjectNamespace<C>`, a store type, a value type, `Secret<T>`
     target?: Prose              # what it points at: service + entrypoint, bucket, namespace, actor class + worker
@@ -126,6 +129,9 @@ ext actor
     A stateful instance class — on Cloudflare, a Durable Object class. The identifier is the class
     name; the inline prose is what one instance is. Its `ops` are the methods callers invoke on an
     instance.
+  role: structure
+  icon: ph--cpu--regular
+  hue: yellow
   adds-fields:
     binding: Identifier         # the binding through which callers reach its namespace
     key: Prose                  # what one instance is addressed by, and how a caller derives it
@@ -153,6 +159,9 @@ ext route
   desc: |
     One HTTP endpoint a worker serves. The identifier is a name for the route; the inline prose is
     what it does. `auth` is required: who may call it, or `none`.
+  role: structure
+  icon: ph--signpost--regular
+  hue: orange
   fields:
     method: GET | POST | PUT | PATCH | DELETE | ALL
     path: Prose                 # as the router matches it, parameters as `:name`
@@ -178,6 +187,9 @@ ext keyspace
     A key-value or blob layout one component owns — a KV namespace, an actor's key-value storage, an
     R2 prefix, or isolate memory. The non-SQL sibling of `table`. The identifier names the layout; the
     inline prose is what it holds.
+  role: structure
+  icon: ph--key--regular
+  hue: red
   fields:
     store: Prose                # a binding, an actor's storage, or `isolate memory`
     keys: FieldMap              # `pattern: ValueType  # meaning`; variable parts as `<name>`

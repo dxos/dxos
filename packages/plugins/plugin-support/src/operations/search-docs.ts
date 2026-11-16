@@ -27,7 +27,7 @@ export default handler;
 const DOCS_INDEX: ReadonlyArray<{ title: string; url: string; excerpt: string }> = [
   {
     title: 'Composer overview',
-    url: 'https://dxos.org/docs/composer/introduction/',
+    url: 'https://dxos.org/docs/app-framework/introduction/',
     excerpt: 'Composer is the DXOS reference application: a local-first, plugin-based workspace.',
   },
   {
@@ -37,7 +37,7 @@ const DOCS_INDEX: ReadonlyArray<{ title: string; url: string; excerpt: string }>
   },
   {
     title: 'Plugins',
-    url: 'https://dxos.org/docs/composer/tutorial/',
+    url: 'https://dxos.org/docs/app-framework/tutorial/',
     excerpt: 'Plugins contribute surfaces, operations, schemas and skills to Composer.',
   },
 ];

@@ -65,6 +65,7 @@ type Board
 
 ```mdl
 feat F-1: Start Game
+  uses: [Board]
 
   req F-1.1: New Board created with pieces in standard starting positions.
   req F-1.2: White moves first.
@@ -72,6 +73,7 @@ feat F-1: Start Game
 
 ```mdl
 feat F-2: Make Move
+  uses: [Board, Move]
 
   req F-2.1:
     when: player submits a Move on their turn

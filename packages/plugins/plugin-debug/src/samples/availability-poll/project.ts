@@ -42,27 +42,26 @@ const SKILL_KEYS = [
 /** What the agent needs to plan from the spec, build, deploy, check and report; each line saves it a rediscovery. */
 const INSTRUCTIONS = `This project builds the availability poll its spec (\`Availability Poll\`, in this space) describes: one \
 Cloudflare Worker, one Durable Object per poll. The spec is written in full and stages the work in its Milestones table; \
-the feature map holds one feature per \`feat\` block. There are no tasks until you plan them. Every step below is meant \
+its \`feat\` blocks are the feature map. There are no tasks until you plan them. Every step below is meant \
 to take one or two calls; read the spec once, and print only what you need.
 
 Planning. When I ask you to plan a milestone, plan it in two calls and stop. Never plan a milestone I did not name, \
 and do not start the work until I delegate the tasks.
-- First call: print the spec's Milestones table and the features, then read the milestone's row: \
+- First call: print the spec's Milestones table and its features, then read the milestone's row: \
 \`const Project = yield* Database.resolve('dxn:org.dxos.type.project:0.8.0'); \
 const [project] = yield* Database.query(Filter.type(Project, { name: 'Availability Poll' })).run; \
 const text = (yield* Database.load((yield* Database.load(project.specs[0])).content)).content; \
 yield* print(text.slice(text.indexOf('## Milestones'), text.indexOf('## Acceptance'))); \
-const Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.4.0'); \
-for (const feature of yield* Database.query(Filter.type(Feature)).run) yield* print(feature.id, feature.name);\`
+yield* print(text.match(/^feat .+$/gm).join('\\n'));\`
 - Second call, one program: create one milestone on the task set, named as its row names it (\`M-1: Core poll\`), \
 with its "Done when" as the description; one task per feature the row names, titled by the feature \
 (\`F-1: Create a poll\`) and linked to it; then \`Check M-n\`, linked to every one of those features too, one \
-\`linkFeatureTask\` each, since the map reads a milestone's check from its links. Each task depends on the one \
+\`linkTask\` each, since the map reads a milestone's check from its links. Each task depends on the one \
 before. The task set is \`(yield* Database.load(project.taskSet))\`; the operations are \
 \`dxn:org.dxos.operation.tasks.createMilestone\` \`{ taskSet, name, description }\`, \
 \`dxn:org.dxos.operation.tasks.create\` \`{ taskSet, title, milestone }\`, which returns \`{ task }\`, and \
-\`dxn:org.dxos.operation.code.linkFeatureTask\` \`{ task, feature }\`, all taking refs (\`Ref.make(object)\`); load \
-each feature with \`Database.query(Filter.id(id)).run\`, and set \
+\`dxn:org.dxos.operation.code.linkTask\` \`{ task, spec, item }\`, all taking refs (\`Ref.make(object)\`) but \
+\`item\`, the feature's block key (\`F-1\`); \`spec\` is \`project.specs[0]\`. Set \
 \`Obj.update(task, (task) => { task.dependsOn = [Ref.make(previous)]; })\`.
 
 Building. Work the tasks you are given in order:
@@ -121,9 +120,9 @@ user.email agent@poll.test && git config user.name Agent\`; in the same program 
 starts \`npm install --no-audit --no-fund > npm.log 2>&1; echo $? > npm.exit\` with \`background: true\`, so the \
 install runs while you write the code. F-1's program waits for it with \`until [ -f npm.exit ]; do sleep 2; done\` \
 before its first \`npx vite build\`. Find the task with \
-\`Filter.type(Task, { title })\` (\`dxn:org.dxos.type.task:0.7.0\`) and the feature by its name; set statuses with \
-\`dxn:org.dxos.operation.code.updateFeature\` \`{ feature, status }\` and \`dxn:org.dxos.operation.tasks.update\` \
-\`{ task, status }\`.
+\`Filter.type(Task, { title })\` (\`dxn:org.dxos.type.task:0.7.0\`); set statuses with \
+\`dxn:org.dxos.operation.projects.setSpecBlock\` \`{ spec: project.specs[0], block: 'F-n', fields: { status } }\` \
+and \`dxn:org.dxos.operation.tasks.update\` \`{ task, status }\`.
 - After the setup lines, a task's program is: \`yield* write('worker.js', ...)\` for each file it adds or changes; \
 \`yield* sh('npx vite build')\` when the front end changed, printing its output only if it failed; ExposePort to \
 restart the server; \`const checks = yield* sh('...')\`, one command of \`curl -sf\` and \`grep -q\` that exits \
@@ -200,7 +199,7 @@ login and no API keys; if a step seems to need either, it is the wrong step.`;
 
 /**
  * The work-stream. Its task set starts empty — no milestone, no task — because planning from the spec is what the
- * reader watches the agent do. It owns the poll spec as its feature map and files the design docs and drawings as
+ * reader watches the agent do. It owns the poll spec, its feature map, and the flight options spec, and files the design docs and drawings as
  * artifacts, in the order the reader opens them.
  */
 export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = SampleSpace.partial('project', {
@@ -230,7 +229,7 @@ export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = 
           status: 'active',
           instructions: Ref.make(instructions),
           taskSet: Ref.make(taskSet),
-          specs: [Ref.make(spec.spec)],
+          specs: [Ref.make(spec.spec), Ref.make(spec.flights)],
           artifacts: [
             Ref.make(docs.docs.zones),
             Ref.make(docs.docs.durable),

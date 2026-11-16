@@ -389,7 +389,7 @@ const count = (value: unknown): number => (typeof value === 'number' ? value : 0
  * The turn's model calls: one per `assistant` event, each fed the transcript before it. The CLI
  * reports no per-message timing, so every call spans the turn.
  */
-const turnCalls = (prompt: string, turn: Turn): Usage.Call[] => {
+export const turnCalls = (prompt: string, turn: Turn): Usage.Call[] => {
   const transcript: unknown[] = [{ role: 'user', content: prompt }];
   const calls: Usage.Call[] = [];
   for (const event of turn.events) {

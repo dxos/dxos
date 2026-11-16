@@ -32,13 +32,15 @@ export const make = (): Skill.Skill =>
         or topic:
         1. FIRST call Summarize Subject with \`subject\` set to that name — it returns a fact-grounded
            summary plus a \`factCount\`.
-        2. If \`factCount\` is 0, call Query Facts with \`entity\` set to the name's slug to
-           double-check before concluding anything is missing.
+        2. If \`factCount\` is 0, call Query Facts with \`entity\` set to the name to double-check
+           before concluding anything is missing.
         3. Report "nothing found" only after BOTH tools return empty. Never answer from prior
            knowledge or guess.
 
         ## Using the tools
-        - Entity slugs are lowercase-hyphenated forms of names: "Alice Smith" → "alice-smith".
+        - Name entities as they are written ("Alice Smith", "dmaretskyi"): the tools match the name's slug
+          ("alice-smith") and every entity labelled with the name, including those with an IRI of their own
+          (e.g. a Discord user, https://discord.com/users/<id>). An IRI is matched exactly.
         - Query Facts: use \`entity\` to match facts where the entity appears as subject OR object;
           use \`subjectEntity\` to match the subject position only. Start broad (just \`entity\`), then
           narrow iteratively with \`predicate\` or \`minConfidence\` (e.g. 0.8) when there are too many

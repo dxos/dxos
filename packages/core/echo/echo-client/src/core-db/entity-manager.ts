@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId, isValidAutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -52,6 +52,7 @@ import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, countWork, deepMapValues } from '@dxos/util';
 
+import { isValidAutomergeUrl } from '../automerge/automerge-url.ts';
 import {
   type ChangeEvent,
   type ClientDocHandleEvents,

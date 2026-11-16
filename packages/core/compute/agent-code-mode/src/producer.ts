@@ -157,15 +157,14 @@ const runCodeModeTurn = ({
               const mcps = yield* AiSession.connectMcpServers(
                 params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
               );
-              // The prompt states one skill, the Skill Manager, and the model looks up every other skill, operation and
-              // type through its operations. Those, the enabled skills' and the MCP tools are what code can call.
-              const stated = SkillManagerSkill.makeForCodeMode();
-              const operations = yield* projectOperations([stated, ...skills], mcps);
-              const statedTools = new Set(stated.tools.map(String));
-              // An MCP tool has no skill to look it up through, so the conversation's are stated too.
-              const listed = operations.filter(
-                (operation) => statedTools.has(operation.name) || operation.definition === undefined,
+              // The prompt states the Skill Manager's lookups and the enabled skills, with their operations; the model
+              // looks up every other skill, operation and type through the lookups. A bound Skill Manager is stated as
+              // its code-mode form, since its own instructions list every skill, but its operations stay callable.
+              const lookups = SkillManagerSkill.makeForCodeMode();
+              const enabled = skills.filter(
+                (skill) => Obj.getMeta(skill).key?.replace(/^dxn:/, '') !== SkillManagerSkill.key,
               );
+              const operations = yield* projectOperations([lookups, ...skills], mcps);
               labelCall = labelEvalCall(operations);
               const toolkit = makeEvalToolkit({
                 dialect,
@@ -178,10 +177,10 @@ const runCodeModeTurn = ({
                 onEvaluated: evaluations.add,
               });
               const system = yield* formatSystemPrompt({
-                system: [dialect.instructions({ operations: listed }), options.system, params.system]
+                system: [dialect.instructions({ operations }), options.system, params.system]
                   .filter(isPresent)
                   .join('\n\n'),
-                skills: [stated],
+                skills: [lookups, ...enabled],
                 objects: session.context.getObjects(),
                 instructions,
               }).pipe(Effect.orDie);

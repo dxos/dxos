@@ -136,13 +136,23 @@ decision D-1: Flight options are their own spec, owned by the poll spec's F-6, a
   for: user:wittjosiah
   why: The variant is a new feature built on the poll; citing F-3 and F-4 makes a change there visible as a change here.
   rejected: Writing the flight features into the poll spec as F-6.1 onwards, which would hide where the poll ends and the variant begins.
+```
 
+```mdl
 decision D-2: The citations follow the poll spec's renumbering: its time zone and daylight-saving features are now F-6 and F-7, flight options F-8, and the three-zone scenario T-3.
   date: 2026-11-05
   by: agent:claude-code
   for: user:wittjosiah
   why: The poll spec gave its page design a milestone of its own (its decision D-5), which moved the later features and scenarios up by two and one.
   rejected: Keeping the old numbers here, which would cite the wrong blocks.
+```
+
+```mdl
+decision D-3: The template writes each feat block's status and `depends` into this text, citing the poll spec's blocks for the two it needs from there. The appendix defines `feat` at 1.1 so those fields parse.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The spec's text is the source of truth for its features; there are no feature objects to file against it.
 ```
 
 ---
@@ -165,12 +175,18 @@ ext type
 
 ```mdl
 ext feat
-  uri: org.dxos.mdl.feat@1.0
+  uri: org.dxos.mdl.feat@1.1
   desc: A named feature grouping one or more requirements.
+  role: anchor
+  label: F
+  icon: ph--star--regular
+  hue: emerald
   fields:
+    status?: planned | in-progress | prototype | operational | failing
     desc?: Prose
-    req: RequirementList
-  nesting: self              # feat blocks may contain feat blocks
+    depends?: Ref<feat>[]       # features this one needs first; no cycles
+    spec?: Ref<spec>            # the spec that breaks this feature down
+    req: RequirementList        # req <key>: one testable sentence
 ```
 
 ```mdl

@@ -22,15 +22,18 @@ driven by it: the icons, the type names, the forms and the graph's edges are all
 
 ## What it does not demonstrate
 
-**Sync, not convergence.** Every object travels as a record the Durable Object versions, so the last
-writer of a record wins and a concurrent edit to the same record is lost. A client holds a socket and
-the object pushes each write to every other one; `POST /api/space/<slug>/sync` remains for a peer
-that cannot hold a socket open, and for a script. Real convergence is the
-feed protocol against an `echo-sqlite` instance inside the Durable Object — see
-`.agents/projects/echo-cloudflare-demo/DESIGN.md`, D-1 and D-4.
+**Merge, not CRDT convergence.** Every object travels as a record. The Durable Object stamps each
+accepted write with its next sequence number, and refuses a push whose records it has moved on
+from; the client pulls what it missed, merges it field by field into its own edits, and pushes
+again. Concurrent edits to different fields both survive; to the same field, the push that lands
+last wins — but only after its writer has seen what it overwrites. No wall clock is involved. The
+protocol is described in [`@dxos/echo-sync-worker`](../../core/echo/echo-sync-worker). Real
+convergence is the feed protocol against an `echo-sqlite` instance inside the Durable Object — see
+`.agents/projects/echo-cloudflare-demo/DESIGN.md`, D-1, D-4 and D-6.
 
-**One tab per device.** An OPFS file is held by one tab, so a second tab on the same graph says so
-rather than waiting on a handle it cannot have.
+**One tab per device.** An OPFS file is held by one tab, so a second tab says so rather than waiting
+on a handle it cannot have, and opens by itself once the first one closes. Turso's browser build has
+the same limit (an exclusive OPFS handle per file), so switching engines does not lift it.
 
 ## Architecture
 
@@ -74,6 +77,12 @@ moon run echo-sqlite-demo:bundle && pnpm exec wrangler dev
 ```
 
 ## Deploy
+
+The sync server deploys on its own from
+[`@dxos/echo-sync-worker`](../../core/echo/echo-sync-worker) — it has a "Deploy to Cloudflare"
+button. Build the app against it with `VITE_SYNC_URL=https://<worker>`.
+
+To deploy the app and the server as one Worker:
 
 `--force`, because `@dxos/*` resolve from source and the task's inputs are this package's files: a
 change in a library it imports leaves the bundle cached, and the deploy ships the previous build.

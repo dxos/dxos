@@ -1,0 +1,103 @@
+# Ontology: Entities and how they relate; value types and containers alongside
+# Exported from studio assets/deck (slide "ontology"), 1600 × 900 slide units.
+
+object title @ 80,40 {
+  text heading 0,0 "Ontology"
+  text subtitle 0,44 "Entities and how they relate; value types and containers alongside"
+}
+
+object col-types @ 60,208 {
+  rect frame 0,0 256x356 color=grey stroke=dashed
+}
+object col-containers @ 1284,208 {
+  rect frame 0,0 256x422 color=grey stroke=dashed
+}
+object h-entities @ 560,134 {
+  text label 0,0 "Entities"
+}   # role=heading
+object c-entities @ 560,168 {
+  text label 0,0 "Things in the world, one ID each"
+}   # role=caption
+object h-types @ 60,134 {
+  text label 0,0 "Types"
+}   # role=heading
+object c-types @ 60,168 {
+  text label 0,0 "Values with no identity"
+}   # role=caption
+object h-containers @ 1284,134 {
+  text label 0,0 "Containers"
+}   # role=heading
+object c-containers @ 1284,168 {
+  text label 0,0 "Made to hold and arrange"
+}   # role=caption
+
+object organization @ 682,218 {
+  rect box 0,0 236x66 "Organization"
+}   # card icon=buildings
+object "group" @ 402,393 {
+  rect box 0,0 236x66 "Group"
+}   # card icon=users-three
+object transaction @ 682,393 {
+  rect box 0,0 236x66 "Transaction"
+}   # card icon=currency-circle-dollar
+object project @ 962,393 {
+  rect box 0,0 236x66 "Project"
+}   # card icon=folder
+object person @ 402,588 {
+  rect box 0,0 236x66 "Person"
+}   # card icon=user
+object task @ 962,588 {
+  rect box 0,0 236x66 "Task"
+}   # card icon=check-square
+object message @ 402,783 {
+  rect box 0,0 236x66 "Message"
+}   # card icon=chat-text
+object event @ 682,783 {
+  rect box 0,0 236x66 "Event"
+}   # card icon=calendar-blank
+object type-text @ 80,228 {
+  rect box 0,0 216x52 "Text"
+}   # card icon=text-t
+object type-drawing @ 80,294 {
+  rect box 0,0 216x52 "Drawing"
+}   # card icon=scribble
+object type-contact @ 80,360 {
+  rect box 0,0 216x52 "Contact"
+}   # card icon=address-book
+object type-address @ 80,426 {
+  rect box 0,0 216x52 "Address"
+}   # card icon=map-pin
+object type-account @ 80,492 {
+  rect box 0,0 216x52 "Account"
+}   # card icon=user-circle
+object container-presentation @ 1304,228 {
+  rect box 0,0 216x52 "Presentation"
+}   # card icon=presentation-chart
+object container-sheet @ 1304,294 {
+  rect box 0,0 216x52 "Sheet"
+}   # card icon=grid-four
+object container-kanban @ 1304,360 {
+  rect box 0,0 216x52 "Kanban"
+}   # card icon=kanban
+object container-transcript @ 1304,426 {
+  rect box 0,0 216x52 "Transcript"
+}   # card icon=microphone
+object container-tag @ 1304,492 {
+  rect box 0,0 216x52 "Tag"
+}   # card icon=tag
+object container-document @ 1304,558 {
+  rect box 0,0 216x52 "Document"
+}   # card icon=file-text
+
+object links @ 0,0 {
+  arrow group-organization group/box -> organization/box "part of" head=triangle
+  arrow project-organization project/box -> organization/box "owned by" head=triangle
+  arrow transaction-organization transaction/box -> organization/box "payer" head=triangle
+  arrow transaction-person transaction/box -> person/box "payee" head=triangle
+  arrow person-group person/box -> group/box "member of" head=triangle
+  arrow task-project task/box -> project/box "in" head=triangle
+  arrow task-person task/box -> person/box "assignee" head=triangle
+  arrow message-person message/box -> person/box "sender" head=triangle
+  arrow event-person event/box -> person/box "attendee" head=triangle
+  arrow event-task event/box -> task/box "about" head=triangle
+}

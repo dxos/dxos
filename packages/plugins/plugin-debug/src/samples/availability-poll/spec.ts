@@ -13,10 +13,7 @@ import { Text } from '@dxos/schema';
 import flightsContent from './FLIGHTS.mdl?raw';
 import content from './SPEC.mdl?raw';
 
-/**
- * The specs' repo-style paths. Features cite `<path>#F-n`, and each spec carries its path as its foreign key, so a
- * feature card opens the space's copy rather than a GitHub URL that does not exist for a template.
- */
+/** The specs' repo-style paths, each carried as its spec's foreign key: the file the spec syncs with. */
 export const SPEC_PATH = 'availability-poll/SPEC.mdl';
 export const FLIGHTS_PATH = 'availability-poll/FLIGHTS.mdl';
 

@@ -101,20 +101,42 @@ Instance = NodeBase & {
 - Overrides reuse the instance-prototype rule of `DESIGN.md` §4c: an unset value is read from the definition, and
   `resetOverride` clears one. Identity, links and the inner structure are never overridden. Changing the
   structure means editing the definition, which changes every instance.
+- **A node places a composite by naming one** (`composite`), whatever its own type: the generic `instance`, and a
+  type of its own that declares a `template` (plugin-uml's `class`), which keeps its type and its typed fields and
+  draws through the composite all the same. `isInstanceNode` tests for the field, not the type name.
+- **A part says how it follows the frame** (`constrain: { x, y }` over `min | max | stretch | center | scale`, on a
+  node or a link). An instance whose composite constrains any axis re-solves its parts into its frame rather than
+  scaling them, so a card's footer stays on its floor and its body grows; `scale`, what an axis means when it says
+  nothing, keeps the part's proportion of that axis. A composite no part of which is constrained still draws through
+  one transform, under the instance's `fit`, as it always did. The solve inverts exactly (`unsolvePartBounds`), which
+  is what lets a part be edited where it is drawn and stored in the definition's own coordinates.
+- **A part may show a field of the instance** (`bind: 'attributes'`): the part draws the instance's value and typing
+  in it writes that value back, so a tool keeps typed data on the shape while the composite says how it is laid out.
+- **A tool declares its composite in the DSL**, not in code: `NodeDef.template` is scene-DSL source
+  (`composite <id> { element … constrain=stretch,max }`), compiled once per drawing under `template:<type>`. One
+  definition per tool, so restyling any instance of it reaches them all.
 - An Object's own ports are the ports of the inner nodes marked `exposed: true`, drawn on the instance's frame
   where the inner node meets it. Links from outside attach to those.
 - A `view` node is a place to drill into; an Instance is a symbol you repeat.
 
 ### 4.2 Actions
 
-| Action          | Effect                                                                                        |
-| --------------- | --------------------------------------------------------------------------------------------- |
-| **Group**       | `SPEC.mdl` [F-9.2]. Keyed tracks of the grouped nodes move into the Object.                   |
-| **Ungroup**     | `SPEC.mdl` [F-9.3]: the tracks come back out, mapped through the Instance's transform.        |
-| **Duplicate**   | Copies the instance node. Both share the definition.                                          |
-| **Make unique** | Copies the definition and points this instance at the copy; disabled for an anonymous Object. |
-| **Place**       | Drags an Object from the Objects panel onto the canvas, creating an instance.                 |
-| **Edit**        | Opens the definition in isolation (`SPEC.mdl` [F-1.8]).                                       |
+| Action          | Effect                                                                                                                                                                                                                                                                  |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Group**       | `SPEC.mdl` [F-9.2]. Keyed tracks of the grouped nodes move into the Object.                                                                                                                                                                                             |
+| **Ungroup**     | `SPEC.mdl` [F-9.3]: the tracks come back out, mapped through the Instance's transform.                                                                                                                                                                                  |
+| **Duplicate**   | Copies the instance node. Both share the definition.                                                                                                                                                                                                                    |
+| **Make unique** | Copies the definition and points this instance at the copy; disabled for an anonymous Object.                                                                                                                                                                           |
+| **Place**       | Drags an Object from the Objects panel onto the canvas, creating an instance.                                                                                                                                                                                           |
+| **Edit**        | Enters the Instance in place: its parts become what the editor acts on, the drawing around them is faded and locked, and Escape leaves. The camera does not move and no view is opened; the Objects panel still opens the definition in isolation (`SPEC.mdl` [F-1.8]). |
+
+### 4.2a Where an edit made in place is written
+
+One rule, so no modifier is needed: **a part's text belongs to the Instance** (`overrides`, or the bound field when
+the part is bound), and **its style, its geometry and which parts there are belong to the definition**, so they reach
+every Instance of it. Typing a part back to the definition's own text clears the override again. Geometry is written
+through the part's own constraint, so a part dragged inside a stretched Instance lands where it was dragged in every
+other one.
 
 ### 4.3 Objects panel
 

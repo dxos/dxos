@@ -68,6 +68,19 @@ describe('walkCollectionChainToRoot', () => {
     expect(await walk(leaf.id, root.id)).toEqual([parent.id]);
   });
 
+  test('an object owned by another object walks through its owner', async ({ expect }) => {
+    const { db, walk } = await setup();
+    // A presenter slide is listed in no collection: it hangs off its presentation, which is the thing
+    // the collection holds. Without this step the slide has no path and its plank never resolves.
+    const owned = db.add(Collection.make());
+    const owner = db.add(Collection.make());
+    Obj.setParent(owned, owner);
+    const root = addCollection(db, [owner]);
+    await db.flush({ indexes: true });
+
+    expect(await walk(owned.id, root.id)).toEqual([owner.id]);
+  });
+
   test('an object outside the root collection tree has no chain', async ({ expect }) => {
     const { db, walk } = await setup();
     const orphan = db.add(Collection.make());

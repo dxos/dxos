@@ -41,12 +41,19 @@ export const makeCreateJoinUrl =
 export const DATABASE_KEY = 'db';
 
 /**
+ * The Composer a headless host given no `shareableLinkOrigin` links objects to, such as an EDGE plugin bundle, whose
+ * host cannot pass plugin options.
+ * TODO(mykola): Replace with the Composer each environment links to, once a bundle's host can provide it.
+ */
+export const DEFAULT_SHAREABLE_LINK_ORIGIN = 'https://preview.composer.space';
+
+/**
  * Builds the object-link builder: a URL under the generic `db` key, which every ECHO object resolves through,
- * carrying the object's title for link previews; `undefined` for an object outside a space. No builder without a
- * public origin (a headless host not given `shareableLinkOrigin`), since a link to localhost reaches no one else.
+ * carrying the object's title for link previews; `undefined` for an object outside a space. A headless host given no
+ * `shareableLinkOrigin` links to {@link DEFAULT_SHAREABLE_LINK_ORIGIN}.
  */
 export const makeCreateObjectUrl = ({
-  shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : undefined,
+  shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : DEFAULT_SHAREABLE_LINK_ORIGIN,
 }: SpaceSchema.SpacePluginOptions): SpaceOperationConfig['createObjectUrl'] =>
   shareableLinkOrigin === undefined
     ? undefined

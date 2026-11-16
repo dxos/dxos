@@ -17,7 +17,7 @@ the ones shown on it. Push runs never cancel each other: GitHub keeps one pendin
 each newer push, so a burst of merges gets one e2e run on its newest commit, and a red run names a range
 of commits rather than one.
 
-Each suite reports through one check whatever its shard count: `test` gates the node, browser and `native` cells,
+Each suite reports through one check whatever its shard count: `test` gates the node and browser cells,
 `e2e` the e2e cells. A gate fails if any of its cells failed or was cancelled, or `plan` failed; a skipped
 cell passes. Branch protection requires `check` and `test`; `e2e` reports without gating. Changing the
 shard count never changes the required checks.
@@ -27,7 +27,6 @@ shard count never changes the required checks.
 | Job | Cells | Why |
 | :-- | :-- | :-- |
 | `test node` | 2 shards, 4 targets at a time | Peaks under 10 GB with no browser. |
-| `native` | 1 job: every `:test-native` | The Rust addon compiles RocksDB from source, about 25 minutes when forced; in a node cell it starved the tests. |
 | `test browser` | Up to 8 cells of affected targets from `plan`: build the cell's closure at concurrency 4, then test 1 target at a time | Each target drives its own Chromium; sharing 4 vCPU with another target or a build made timing-sensitive stories fail. |
 | `e2e composer` | Chromium and Firefox 2 shards × 2 workers, WebKit 4 shards × 1 worker | One WebKit page holds ~6 GB and two-peer specs open two, so WebKit cannot run two tests at once. The cell table is in [`plan.mjs`](../actions/plan/plan.mjs). |
 | `e2e rest` | 2 target halves per browser, 1 worker | Storybook's cold start lost module loads with two workers. |

@@ -14,7 +14,11 @@ import { useFormContext } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
 
-/** A Switch that labels itself, except in a settings row, whose header column holds the label. */
+/**
+ * A Switch that labels itself, except in a settings row, whose header column holds the label, and where the presentation
+ * drops labels (an array's table cell), where it is named for assistive tech alone. Read-only, it looks as it does
+ * editable.
+ */
 export const BooleanField = ({
   type,
   format,
@@ -29,7 +33,8 @@ export const BooleanField = ({
   const { t } = Hooks.useTranslation(translationKey);
   const { variant } = useFormContext('Form.BooleanField');
   const value = getValue();
-  if (presentationFor(presentation).isStatic) {
+  const { isStatic, showLabel } = presentationFor(presentation);
+  if (isStatic) {
     return <FormStaticValue value={value} format={format} />;
   }
 
@@ -38,9 +43,14 @@ export const BooleanField = ({
       // A switch has no third state: an indeterminate one is dimmed and says so, and the first press sets it.
       indeterminate={indeterminate}
       label={
-        variant === 'settings' ? undefined : indeterminate ? `${label} (${t('indeterminate.placeholder')})` : label
+        variant === 'settings' || !showLabel
+          ? undefined
+          : indeterminate
+            ? `${label} (${t('indeterminate.placeholder')})`
+            : label
       }
-      disabled={!!readonly}
+      aria-label={showLabel ? undefined : label}
+      readOnly={!!readonly}
       checked={!!value}
       // A toggle is a commit: the switch never blurs, so it commits itself.
       onCheckedChange={({ checked }) => {

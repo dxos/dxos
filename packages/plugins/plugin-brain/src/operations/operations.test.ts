@@ -10,8 +10,9 @@ import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, RDF } from '@dxos/pipeline-rdf';
 
+import { queryResolvedFacts } from './facts.ts';
 import { queryCompactFacts } from './query-facts.ts';
 import { summarizeSubject } from './summarize-subject.ts';
 
@@ -89,6 +90,125 @@ describe('QueryFacts', () => {
     );
     expect(confident.map((fact) => fact.id)).toEqual(['f-1']);
     expect(bounded).toHaveLength(1);
+  });
+});
+
+/** A user with an IRI of its own (as the Discord pipeline names them), known by a display name, not a slug. */
+const DISCORD_USER = 'https://discord.com/users/1234';
+const DISCORD_FACTS: RDF.Fact[] = [
+  {
+    ...makeFact({ id: 'd-1', subject: 'x', predicate: 'works on', object: 'opfs' }),
+    assertion: {
+      subject: { kind: 'entity', entity: DISCORD_USER, label: 'dmaretskyi' },
+      predicate: 'works on',
+      object: { kind: 'entity', entity: 'opfs', label: 'OPFS' },
+    },
+  },
+  {
+    ...makeFact({ id: 'd-2', subject: 'x', predicate: 'reviews', object: 'x' }),
+    assertion: {
+      subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
+      predicate: 'reviews',
+      object: { kind: 'entity', entity: DISCORD_USER, label: 'dmaretskyi' },
+    },
+  },
+];
+
+describe('entity names', () => {
+  test('finds an entity with an IRI of its own by its label, in either position', async ({ expect }) => {
+    const { byLabel, bySubject, byIri } = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts([...FACTS, ...DISCORD_FACTS]);
+        return {
+          byLabel: yield* queryCompactFacts({ entity: 'dmaretskyi' }),
+          bySubject: yield* queryCompactFacts({ subjectEntity: 'DMaretskyi' }),
+          byIri: yield* queryCompactFacts({ entity: DISCORD_USER }),
+        };
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(byLabel.map((fact) => fact.id).sort()).toEqual(['d-1', 'd-2']);
+    expect(bySubject.map((fact) => fact.id)).toEqual(['d-1']);
+    expect(byIri.map((fact) => fact.id).sort()).toEqual(['d-1', 'd-2']);
+  });
+
+  test('finds an entity by an absolute IRI of any scheme, with no label to match', async ({ expect }) => {
+    const did = 'did:key:z6MkAlice';
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts([
+          {
+            ...makeFact({ id: 'k-1', subject: 'x', predicate: 'works on', object: 'x' }),
+            assertion: {
+              subject: { kind: 'entity', entity: did },
+              predicate: 'works on',
+              object: { kind: 'entity', entity: 'opfs', label: 'OPFS' },
+            },
+          },
+        ]);
+        return yield* queryCompactFacts({ entity: did });
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(facts.map((fact) => fact.id)).toEqual(['k-1']);
+  });
+
+  test('leaves out a graph another result supersedes', async ({ expect }) => {
+    const [old] = RDF.Graph.assign([
+      {
+        ...makeFact({ id: '', subject: 'x', predicate: 'has account', object: 'x' }),
+        assertion: {
+          subject: { kind: 'entity', entity: DISCORD_USER, label: 'dmaretskyi' },
+          predicate: 'has account',
+          object: { kind: 'literal', literal: 'old_name' },
+        },
+      },
+    ]);
+    const [current] = RDF.Graph.assign([
+      {
+        ...old,
+        id: '',
+        graph: undefined,
+        supersedes: [RDF.Mapping.graphOf(old)],
+        assertion: { ...old.assertion, object: { kind: 'literal', literal: 'new_name' } },
+      },
+    ]);
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts([old, current]);
+        return yield* queryResolvedFacts({ entity: DISCORD_USER });
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(facts.map((fact) => fact.assertion.object)).toEqual([{ kind: 'literal', literal: 'new_name' }]);
+  });
+
+  test('leaves out a superseded graph even when its replacement does not match the query', async ({ expect }) => {
+    const statement = (object: string, supersedes?: string): RDF.Fact => ({
+      ...makeFact({ id: '', subject: 'alice', predicate: 'works for', object }),
+      ...(supersedes ? { supersedes: [supersedes] } : {}),
+    });
+    const [acme] = RDF.Graph.assign([statement('acme')]);
+    const [contoso] = RDF.Graph.assign([statement('contoso', RDF.Mapping.graphOf(acme))]);
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts([acme, contoso]);
+        return yield* queryResolvedFacts({ entity: 'acme' });
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(facts).toEqual([]);
+  });
+
+  test('summarizes a subject named by its label', async ({ expect }) => {
+    const result = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts([...FACTS, ...DISCORD_FACTS]);
+        return yield* summarizeSubject({ subject: 'dmaretskyi' });
+      }).pipe(Effect.provide(Layer.provideMerge(FactStoreLive.layerMemory, textAiService('Works on OPFS [d-1].')))),
+    );
+    expect(result.factCount).toBe(2);
   });
 });
 

@@ -9,6 +9,7 @@ import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as Field from '@dxos/react-ui/Field';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { type FormFieldLabelPlacement, type FormPresentation } from '#types';
@@ -40,6 +41,10 @@ export type FormFieldProps<T = any> = PropsWithChildren<{
   labelEnd?: ReactNode;
   /** `beside`: the control carries its own label (a Switch), so the row draws no header. */
   labelPlacement?: FormFieldLabelPlacement;
+  /** The label sits beside the control rather than above it. */
+  inlineLabel?: boolean;
+  /** The value's text colour. */
+  tone?: 'muted';
   presentation?: FormPresentation;
   renderStatic?: (value: T | undefined) => ReactNode;
 }>;
@@ -118,6 +123,8 @@ export const FormFieldRow = <T,>({
   standalone,
   labelEnd,
   labelPlacement = 'above',
+  inlineLabel,
+  tone,
   presentation: presentationProp,
   renderStatic,
   format,
@@ -143,7 +150,8 @@ export const FormFieldRow = <T,>({
   const showHeader = resolved.showLabel && !!label && (labelPlacement !== 'beside' || settings);
   const row = (
     <Field.Root
-      layout={settings ? 'row' : 'stack'}
+      layout={settings ? 'row' : inlineLabel ? 'inline' : 'stack'}
+      tone={tone}
       level={settings ? '+1' : undefined}
       invalid={!!error}
       required={!!required}
@@ -170,7 +178,10 @@ export const FormFieldRow = <T,>({
           {labelEnd}
           {error && (
             <Layout.Block>
-              <Icon.Icon icon='ph--warning--regular' valence='error' label={error} />
+              {/* The error itself, on hover: the icon alone says only that there is one. */}
+              <Tooltip.Trigger asChild content={error}>
+                <Icon.Icon icon='ph--warning--regular' valence='error' label={error} />
+              </Tooltip.Trigger>
             </Layout.Block>
           )}
         </Field.Header>

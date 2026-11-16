@@ -205,6 +205,164 @@ describe('parseSlide', () => {
     expect(stepped.map((element) => [textOf(element), element.properties.step])).toEqual([['a b', '1']]);
   });
 
+  test('<List variant> styles the list it wraps and adds no element', () => {
+    const slide = parseSlide('<List variant="steps">\n\n1. a\n2. b\n\n</List>');
+    const [list] = elements(slide.slots.default, 'ol');
+    expect(list.properties.variant).toBe('steps');
+    expect(elements(slide.slots.default, 'li')).toHaveLength(2);
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('<List> with an unknown variant falls back and reports it', () => {
+    const slide = parseSlide('<List variant="neon">\n\n- a\n\n</List>');
+    expect(elements(slide.slots.default, 'ul')[0].properties.variant).toBe('default');
+    expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('Invalid <List> variant') }]);
+  });
+
+  test('<List> wrapping no list is reported', () => {
+    const slide = parseSlide('<List variant="cards">\n\nJust text\n\n</List>');
+    expect(textOf(slide.slots.default)).toContain('Just text');
+    expect(slide.issues).toEqual([{ kind: 'html', message: '<List> has no list to style.' }]);
+  });
+
+  test('<List active> marks the item the list has reached', () => {
+    const slide = parseSlide('<List variant="flow" active="2">\n\n1. a\n2. b\n\n</List>');
+    expect(elements(slide.slots.default, 'ol')[0].properties.active).toBe(2);
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('an active that is not an item number is ignored and reported', () => {
+    const slide = parseSlide('<List variant="flow" active="0">\n\n- a\n\n</List>');
+    expect(elements(slide.slots.default, 'ul')[0].properties.active).toBeUndefined();
+    expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('Invalid <List> active') }]);
+  });
+
+  test('<Table variant> styles the table it wraps', () => {
+    const slide = parseSlide('<Table variant="rows">\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\n</Table>');
+    expect(elements(slide.slots.default, 'table')[0].properties.variant).toBe('rows');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('<Box variant> wraps its content in an element of its own', () => {
+    const slide = parseSlide('<Box variant="card">\n\nBoxed\n\n</Box>');
+    const [box] = elements(slide.slots.default, 'slide-box');
+    expect(box.properties.variant).toBe('card');
+    expect(textOf(box)).toContain('Boxed');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('<Grid> carries the tracks it lays down', () => {
+    const slide = parseSlide('<Grid cols="4" rows="2">\n\nCells\n\n</Grid>');
+    const [grid] = elements(slide.slots.default, 'slide-grid');
+    expect(grid.properties.cols).toBe(4);
+    expect(grid.properties.rows).toBe(2);
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('<Cell> and <Card> carry the tracks they span', () => {
+    const slide = parseSlide(
+      '<Grid cols="3">\n\n<Cell colSpan="2">\n\nWide\n\n</Cell>\n\n<Card rowSpan="2">\n\nTall\n\n</Card>\n\n</Grid>',
+    );
+    expect(elements(slide.slots.default, 'slide-cell')[0].properties.colSpan).toBe(2);
+    const [card] = elements(slide.slots.default, 'slide-card');
+    expect(card.properties.rowSpan).toBe(2);
+    // A card still takes a named style, which a cell has no use for.
+    expect(card.properties.variant).toBe('default');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('a track count outside the grid falls away with an issue', () => {
+    const slide = parseSlide('<Grid cols="40">\n\nToo wide\n\n</Grid>');
+    expect(elements(slide.slots.default, 'slide-grid')[0].properties.cols).toBeUndefined();
+    expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('Invalid <Grid> cols') }]);
+  });
+
+  test('<Card variant> names a style of its own', () => {
+    const slide = parseSlide('<Card variant="outline">\n\n### Title\n\nText\n\n</Card>');
+    const [card] = elements(slide.slots.default, 'slide-card');
+    expect(card.properties.variant).toBe('outline');
+    expect(textOf(card)).toContain('Title');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('<List tone> travels with the variant', () => {
+    const slide = parseSlide('<List variant="outline" tone="warning">\n\n- a\n\n</List>');
+    expect(elements(slide.slots.default, 'ul')[0].properties.tone).toBe('warning');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('a block with no tone carries none, so it inherits the one around it', () => {
+    const slide = parseSlide('<List variant="outline">\n\n- a\n\n</List>');
+    expect(elements(slide.slots.default, 'ul')[0].properties.tone).toBeUndefined();
+  });
+
+  test('tone="accent" is kept, so a nested block can return to the slide accent', () => {
+    const slide = parseSlide(
+      '<Box tone="warning">\n\n<List variant="outline" tone="accent">\n\n- a\n\n</List>\n\n</Box>',
+    );
+    expect(elements(slide.slots.default, 'slide-box')[0].properties.tone).toBe('warning');
+    expect(elements(slide.slots.default, 'ul')[0].properties.tone).toBe('accent');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('an unknown tone falls back to the accent and is reported', () => {
+    const slide = parseSlide('<Box tone="neon">\n\nBoxed\n\n</Box>');
+    expect(elements(slide.slots.default, 'slide-box')[0].properties.tone).toBe('accent');
+    expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('Invalid <Box> tone') }]);
+  });
+
+  test('a slide overrides theme colors in its own frontmatter', () => {
+    const slide = parseSlide('---\naccent: "#ff7a1a"\nseparator: "oklch(0.5 0 0)"\n---\n\n# Title');
+    expect(slide.frontmatter.accent).toBe('#ff7a1a');
+    expect(slide.frontmatter.separator).toBe('oklch(0.5 0 0)');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('a color that is not a plain color is rejected', () => {
+    const slide = parseSlide('---\naccent: "url(https://example.com/x.png)"\n---\n\n# Title');
+    expect(slide.frontmatter.accent).toBeUndefined();
+    expect(slide.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+  });
+
+  test('a word CSS does not know, or an empty color function, is rejected', () => {
+    const named = parseSlide('---\naccent: "notacolor"\n---\n\n# Title');
+    expect(named.frontmatter.accent).toBeUndefined();
+    expect(named.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+
+    const empty = parseSlide('---\ncode: "rgb()"\n---\n\n# Title');
+    expect(empty.frontmatter.code).toBeUndefined();
+    expect(empty.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('code') }]);
+
+    const short = parseSlide('---\ncode: "rgb(1)"\n---\n\n# Title');
+    expect(short.frontmatter.code).toBeUndefined();
+    expect(short.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('code') }]);
+
+    // Separators cannot be mixed, and only the sRGB and HSL functions take commas at all.
+    const mixed = parseSlide('---\naccent: "rgb(1, 2 3)"\n---\n\n# Title');
+    expect(mixed.frontmatter.accent).toBeUndefined();
+    expect(mixed.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+
+    const commas = parseSlide('---\naccent: "oklch(0.5, 0.1, 240)"\n---\n\n# Title');
+    expect(commas.frontmatter.accent).toBeUndefined();
+    expect(commas.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+
+    // The legacy syntax fixes its component types: no mixing in `rgb()`, percentages in `hsl()`.
+    const mixedTypes = parseSlide('---\naccent: "rgb(1, 2%, 3)"\ncode: "hsl(210, 10, 20)"\n---\n\n# Title');
+    expect(mixedTypes.frontmatter.accent).toBeUndefined();
+    expect(mixedTypes.frontmatter.code).toBeUndefined();
+    expect(mixedTypes.issues).toHaveLength(2);
+
+    // A hue is a number, so a percentage in its place is not a color.
+    const hue = parseSlide('---\naccent: "hsl(10% 20% 30%)"\n---\n\n# Title');
+    expect(hue.frontmatter.accent).toBeUndefined();
+    expect(hue.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+
+    // The colors CSS does know still pass.
+    const valid = parseSlide('---\naccent: "rebeccapurple"\nseparator: "rgb(1 2 3)"\n---\n\n# Title');
+    expect(valid.frontmatter.accent).toBe('rebeccapurple');
+    expect(valid.issues).toEqual([]);
+  });
+
   test('<Surface> with an invalid ref keeps the element and reports it', () => {
     const slide = parseSlide('<Surface ref="javascript:alert(1)" />');
     expect(elements(slide.slots.default, 'slide-surface')).toHaveLength(1);

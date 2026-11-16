@@ -366,14 +366,16 @@ export const TaskSetArticle = ({
             <TaskList.Content />
           </TaskList.Viewport>
         </Panel.Body>
-        {/* Framed as the chat prompt is: inset from the panel's edges, in a bordered box of its own surface. */}
-        <Panel.Footer classNames='p-2 dx-grow bg-base-surface'>
+        {/* Framed as the chat prompt is, in a box of its own surface. Padded on the block axis only, and ringed
+            rather than bordered, because either one on the inline axis would inset the pane's grid from the rows'
+            and its fields would no longer sit under the columns they edit. */}
+        <Panel.Footer classNames='py-2 dx-grow bg-base-surface'>
           <TaskList.Editor
             createOnly
             showDescription
             acceptFiles={!!attachFile}
             descriptionExtensions={descriptionExtensions}
-            classNames='py-2 dx-group-surface border border-separator-subtle rounded-sm'
+            classNames='py-2 dx-group-surface ring-1 ring-inset ring-separator-subtle rounded-sm'
             placeholder={t('task-create.placeholder')}
           />
         </Panel.Footer>
