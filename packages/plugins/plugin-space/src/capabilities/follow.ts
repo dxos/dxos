@@ -201,11 +201,12 @@ export default Capability.makeModule(
     };
 
     // With no extension that navigates, the follower switches to the space and opens the attended object at its own path.
+    // Each target is opened once: one the layout refuses keeps the follow paused until the leader attends another.
     const open = (current: Session) => {
       const { spaceId, attended } = current.view;
       const { localPath } = attended;
       const target = localPath && `${attended.key}\n${localPath}`;
-      if (!localPath || (target === current.opened && !current.openFailed)) {
+      if (!localPath || target === current.opened) {
         return;
       }
       current.opened = target;

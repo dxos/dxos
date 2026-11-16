@@ -20,6 +20,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { BaseError } from '@dxos/errors';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -127,6 +128,21 @@ describe('Follow', () => {
     await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(true);
   });
 
+  test('an object the layout refuses to open pauses the follow until the leader attends another', async ({
+    expect,
+  }) => {
+    const { calls, ephemeral, registry, space, object } = await setup({ navigates: false, refuses: true });
+    const path = GraphPath.getObjectPathFromObject(object);
+    const key = EID.make({ spaceId: space.id, entityId: object.id });
+    lead(registry, ephemeral, space.id, key, path);
+    await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(true);
+
+    lead(registry, ephemeral, space.id, key, path);
+    await waitTicks(600);
+    expect(registry.get(ephemeral).following?.paused).toBe(true);
+    expect(calls.filter(({ op }) => op === 'open')).toHaveLength(1);
+  });
+
   test('a follow in a space this session does not have pauses', async ({ expect }) => {
     const { ephemeral, registry } = await setup();
     const spaceId = SpaceId.random();
@@ -221,6 +237,9 @@ const lead = (
 /** What the fake extension was handed: every view in order, and whether its follow ended. */
 type Followed = { views: AppCapabilities.FollowView[]; closed: boolean };
 
+/** The test layout's refusal to open an object. */
+class RefusedError extends BaseError.extend('RefusedError', 'The layout refused to open it.') {}
+
 /** A layout operation or reveal the follow asked for. */
 type Call = { op: string; input: unknown };
 
@@ -236,11 +255,11 @@ const Reveal = Operation.make({
   output: Schema.Void,
 });
 
-const setup = async ({ navigates = true }: { navigates?: boolean } = {}) => {
+const setup = async ({ navigates = true, refuses = false }: { navigates?: boolean; refuses?: boolean } = {}) => {
   const followed: Followed = { views: [], closed: false };
   const calls: Call[] = [];
   const harness = await Harness.createComposerTestApp({
-    plugins: [ClientPlugin.make({}), makeFollowPlugin(followed, calls, navigates)],
+    plugins: [ClientPlugin.make({}), makeFollowPlugin(followed, calls, navigates, refuses)],
   });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
@@ -272,10 +291,10 @@ const TestLayout = Capability.makeSingleton<Atom.Writable<AppCapabilities.Layout
 const TestShows = Capability.makeSingleton<Atom.Writable<boolean>>()('org.dxos.plugin.space.test.follow.shows');
 
 /**
- * The follow module over a layout that records the operations it is asked for, a `Locator` for `Expando`, and an
- * extension that records each view it is handed.
+ * The follow module over a layout that records the operations it is asked for (refusing every open when `refuses`), a
+ * `Locator` for `Expando`, and an extension that records each view it is handed.
  */
-const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean): Plugin.Plugin =>
+const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean, refuses: boolean): Plugin.Plugin =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.space.test.follow'), name: 'Follow (test)' })).pipe(
     Plugin.addModule<void>(
       Capability.inlineModule(
@@ -334,7 +353,9 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
                 Capabilities.OperationHandler,
                 OperationHandlerSet.make(
                   Operation.withHandler(LayoutOperation.Open, (input) =>
-                    record('open')(input).pipe(Effect.as(input.subject)),
+                    record('open')(input).pipe(
+                      Effect.flatMap(() => (refuses ? Effect.fail(new RefusedError()) : Effect.succeed(input.subject))),
+                    ),
                   ),
                   Operation.withHandler(LayoutOperation.SwitchWorkspace, record('switchWorkspace')),
                   Operation.withHandler(Reveal, record('reveal')),

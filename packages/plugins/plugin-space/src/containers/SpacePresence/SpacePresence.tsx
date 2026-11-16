@@ -22,7 +22,7 @@ import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
-import { type EID } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { type Progress } from '@dxos/progress';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { type Activity } from '@dxos/react-ui-attention/types';
@@ -44,11 +44,13 @@ import {
   MEMBERS_COMPANION_ID,
   type ObjectViewers,
   type PeerSession,
+  type ViewersByObject,
   countViewers,
   getFreshSessions,
   getPeerNodeIds,
   isMoving,
 } from '../../util/index.ts';
+import { FollowControls } from './FollowControls.tsx';
 import { PeerActions, useExpandPeerNodes } from './PeerActions.tsx';
 
 const REFRESH_INTERVAL = 5000;
@@ -82,35 +84,81 @@ export const useShowSessions = (): [boolean, (showSessions: boolean) => void] =>
   return [state.showSessions ?? false, setShowSessions];
 };
 
-export type SpacePresenceProps = {
-  spaceId?: Key.SpaceId;
-  presenceKey?: EID.EID;
+/** Everyone's sessions attending something in the space, keyed as one object's viewers, and what each attends. */
+const getSpaceViewers = (viewersByObject: ViewersByObject, spaceId: string) => {
+  const viewers: ObjectViewers = {};
+  const objectBySession: Record<string, EID.EID> = {};
+  for (const [key, objectViewers] of Object.entries(viewersByObject)) {
+    const objectKey = EID.tryParse(key);
+    if (!objectKey || EID.getSpaceId(objectKey) !== spaceId) {
+      continue;
+    }
+    for (const [identityKey, sessions] of Object.entries(objectViewers)) {
+      for (const [sessionId, viewer] of Object.entries(sessions)) {
+        if (viewer.currentlyAttended) {
+          (viewers[identityKey] ??= {})[sessionId] = viewer;
+          objectBySession[sessionId] = objectKey;
+        }
+      }
+    }
+  }
+  return { viewers, objectBySession };
 };
 
-export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
-  const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
+export type SpacePresenceProps = {
+  spaceId?: Key.SpaceId;
+  /** The object the list is of; with `everyone`, the object whose viewers' avatars are lit. */
+  presenceKey?: EID.EID;
+  /** Lists everyone attending something in the space, each row with the actions on what they attend. */
+  everyone?: boolean;
+  size?: AvatarSize;
+};
+
+export const SpacePresence = ({ spaceId, presenceKey, everyone, size }: SpacePresenceProps) => {
+  const [ephemeral, updateEphemeral] = Hooks.useAtomCapabilityState(SpaceCapabilities.EphemeralState);
   const identity = useIdentity();
   const spaceMembers = useMembers(spaceId);
   const now = useNow();
   const [showSessions, setShowSessions] = useShowSessions();
   const follow = useFollowGroup(spaceId, now);
-  const viewers = (presenceKey && ephemeral?.viewersByObject[presenceKey]) || {};
+  const { viewers, objectBySession } =
+    everyone && spaceId && ephemeral
+      ? getSpaceViewers(ephemeral.viewersByObject, spaceId)
+      : { viewers: (presenceKey && ephemeral?.viewersByObject[presenceKey]) || {}, objectBySession: undefined };
   // Ready before the list opens, so its rows' actions do not appear after it.
   useExpandPeerNodes(spaceId ? getPeerNodeIds(spaceId, viewers, now) : []);
 
-  if (!identity || !ephemeral || !presenceKey) {
+  if (!identity || !ephemeral || !(presenceKey || everyone)) {
     return null;
   }
 
+  // The object a row's actions are on: the list's own, or with `everyone` what that session (else the member's most
+  // recently moved one) attends.
+  const getObjectKey = (member: Member, sessionId?: string): EID.EID | undefined =>
+    objectBySession ? objectBySession[sessionId ?? member.sessions[0]?.sessionId ?? ''] : presenceKey;
+
+  const following = spaceId && ephemeral.following?.spaceId === spaceId ? ephemeral.following : undefined;
+
   const members = spaceMembers
     .flatMap((member) => {
-      const sessions = getFreshSessions(member.identityKey ? viewers[member.identityKey] : undefined, now);
+      const leader = !!following && member.identityKey === following.identityKey;
+      const here = getFreshSessions(member.identityKey ? viewers[member.identityKey] : undefined, now);
+      // The person this session follows keeps their row, and its Stop, while they are on another object.
+      const sessions =
+        leader && here.length === 0
+          ? Object.values(ephemeral.viewersByObject).flatMap((viewers) =>
+              getFreshSessions(viewers[following.identityKey], now).filter((session) => session.currentlyAttended),
+            )
+          : here;
       if (!member.online || member.identityKey === identity.identityKey || sessions.length === 0) {
         return [];
       }
       return [{ ...member, rowId: member.identityKey ?? '', sessions, now }];
     })
-    .toSorted(byIdentityKey);
+    .toSorted(byIdentityKey)
+    .toSorted(
+      (a, b) => Number(b.identityKey === following?.identityKey) - Number(a.identityKey === following?.identityKey),
+    );
 
   // Someone in this session's follow is on the object, so their avatars show the follow.
   const followHue =
@@ -120,19 +168,41 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
 
   return (
     <FullPresence
+      size={size}
       members={members}
+      isLit={
+        objectBySession && presenceKey
+          ? (member) => member.sessions.some((session) => objectBySession[session.sessionId] === presenceKey)
+          : undefined
+      }
       follow={followHue && follow ? { hue: followHue, members: follow.members } : undefined}
       showSessions={showSessions}
-      renderActions={(member, sessionId) =>
-        spaceId && member.identityKey ? (
+      renderActions={(member, sessionId) => {
+        // The person this session follows gets the follow's controls in place of their actions.
+        if (
+          following &&
+          member.identityKey === following.identityKey &&
+          (!sessionId || !following.sessionId || sessionId === following.sessionId)
+        ) {
+          return (
+            <FollowControls
+              paused={following.paused}
+              onStop={() => updateEphemeral((state) => ({ ...state, following: undefined }))}
+              closePopover
+            />
+          );
+        }
+        const objectKey = getObjectKey(member, sessionId);
+        return spaceId && member.identityKey && objectKey ? (
           <PeerActions
             spaceId={spaceId}
             identityKey={member.identityKey}
-            presenceKey={presenceKey}
+            presenceKey={objectKey}
             sessionId={sessionId}
+            closePopover
           />
-        ) : null
-      }
+        ) : null;
+      }}
       headerAction={
         <>
           <SessionsToggle pressed={showSessions} onPressedChange={setShowSessions} />
@@ -209,6 +279,8 @@ export type MemberPresenceProps = Util.ThemedClassName<{
   headerAction?: ReactNode;
   /** The follow this session takes part in: its members' avatars ring in its hue. */
   follow?: { hue: string; members: ReadonlySet<string> };
+  /** Whether a member's avatar is lit; by default, whether they attend the object. */
+  isLit?: (member: Member) => boolean;
 }>;
 
 const OVERFLOW_TRIGGER = 'overflow';
@@ -231,7 +303,7 @@ const AvatarTrigger = forwardRef<HTMLButtonElement, AvatarTriggerProps>(
 
 /** Avatars of the members on an object; clicking any opens the full list, with the clicked member's row highlighted. */
 export const FullPresence = (props: MemberPresenceProps) => {
-  const { size = 'md', showSessions, renderActions, headerAction, follow } = props;
+  const { size = 'md', showSessions, renderActions, headerAction, follow, isLit = isAttending } = props;
   const members = UiHooks.useDefaultValue(props.members, () => []);
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   // The row of the avatar that opened the list; the list seeds its own selection from it on every open.
@@ -267,7 +339,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
               <AvatarTrigger tooltip={getName(member)}>
                 <PresenceAvatar
                   member={member}
-                  match={isAttending(member)}
+                  match={isLit(member)}
                   index={members.length - i}
                   size={size}
                   followHue={member.identityKey && follow?.members.has(member.identityKey) ? follow.hue : undefined}

@@ -12,6 +12,7 @@ import { type EID } from '@dxos/keys';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
 import * as Theme from '@dxos/react-ui/Theme';
 
 import { SpaceNamespace } from '../../namespace.ts';
@@ -40,10 +41,15 @@ export type PeerActionsProps = {
   presenceKey: EID.EID;
   /** Acts on this session of the peer rather than their most recently moved one. */
   sessionId?: string;
+  /**
+   * The buttons close the popover they sit in: what an action shows is behind it, and the usual ways to close it,
+   * Escape or a click on the object, would end a follow it just started.
+   */
+  closePopover?: boolean;
 };
 
 /** The actions contributed on a peer's (or one of their session's) graph node for one object, as buttons. */
-export const PeerActions = ({ spaceId, identityKey, presenceKey, sessionId }: PeerActionsProps) => {
+export const PeerActions = ({ spaceId, identityKey, presenceKey, sessionId, closePopover }: PeerActionsProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
@@ -57,16 +63,25 @@ export const PeerActions = ({ spaceId, identityKey, presenceKey, sessionId }: Pe
       {actions
         .filter(AppGraphNode.isAction)
         .filter((action) => action.properties.presenceKey === presenceKey)
-        .map((action) => (
-          <Button.Root
-            key={action.id}
-            variant='outline'
-            icon={action.properties.icon}
-            label={Theme.toLocalizedString(action.properties.label, t)}
-            data-testid={action.properties.testId}
-            onClick={() => void runAction(action)}
-          />
-        ))}
+        .map((action) => {
+          const button = (
+            <Button.Root
+              key={action.id}
+              variant='outline'
+              icon={action.properties.icon}
+              label={Theme.toLocalizedString(action.properties.label, t)}
+              data-testid={action.properties.testId}
+              onClick={() => void runAction(action)}
+            />
+          );
+          return closePopover ? (
+            <Popover.CloseTrigger key={action.id} asChild>
+              {button}
+            </Popover.CloseTrigger>
+          ) : (
+            button
+          );
+        })}
     </>
   );
 };

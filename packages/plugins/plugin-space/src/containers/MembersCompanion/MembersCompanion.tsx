@@ -13,7 +13,6 @@ import { EID } from '@dxos/keys';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -25,6 +24,7 @@ import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
 import { FOLLOW_HUE, getFreshSessions } from '../../util/index.ts';
+import { FollowControls } from '../SpacePresence/FollowControls.tsx';
 import { PeerActions } from '../SpacePresence/PeerActions.tsx';
 import {
   type Member,
@@ -208,20 +208,7 @@ export const MembersCompanion = () => {
                         <PresenceItems
                           member={leader}
                           followHue={follow?.hue ?? FOLLOW_HUE}
-                          renderActions={() => (
-                            <>
-                              {following?.paused && (
-                                <span className='text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>
-                              )}
-                              <Button.Root
-                                variant='outline'
-                                icon='ph--stop--regular'
-                                label={t('presence-stop-following.label')}
-                                data-testid='spacePlugin.presence.stopFollowing'
-                                onClick={stopFollowing}
-                              />
-                            </>
-                          )}
+                          renderActions={() => <FollowControls paused={following?.paused} onStop={stopFollowing} />}
                         />
                       )}
                       {followers.length > 0 && (
