@@ -78,3 +78,19 @@ without the patch `plugin-discord` fails to typecheck and its layers fail to loa
 **Retesting after a dfx upgrade.** If the new release's `dist` has no `effect/unstable/` imports, drop
 this patch's line from `pnpm-workspace.yaml`, reinstall, and run `moon run plugin-discord:build`. A
 clean build means the patch and this section can go.
+
+## `pkg-pr-new@0.0.93`
+
+**What.** When a publish is over 99 MB, uploads the largest packages of 5 MB or less separately as well
+(multipart, like the packages over 5 MB), until the ones left in the final `POST /publish` total 90 MB or
+less.
+
+**Why.** pkg-pr-new sends every package of 5 MB or less inside that one request, and Cloudflare refuses a
+request body over 100 MB with a 413. `main` already put 72 MB there; the EDGE bundles the `edge-release`
+plugins ship in `dist/plugin` make it 115 MB. With the patch it is 88 MB. Unchanged on a publish whose
+final request already fits.
+
+**Retesting after a pkg-pr-new upgrade.** If the new release still skips every package of one chunk or
+less in its multipart loop (`if (file.size <= chunkSize) continue`), the patch is still needed. Otherwise
+drop this patch's line from `pnpm-workspace.yaml`, reinstall, and dispatch `pkg-pr-new.yml` on a branch:
+a publish that succeeds means the patch and this section can go.
