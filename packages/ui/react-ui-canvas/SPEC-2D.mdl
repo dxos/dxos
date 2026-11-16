@@ -1692,7 +1692,7 @@ decision D-66: The editor's floating bars (crumbs, the bottom bar and the Timeli
 ```
 
 ```mdl
-decision D-65: The navigation commands gain `centreOn(point, zoom)`, which leaves fit mode and moves the camera so `point` is at the view's centre at `zoom`.
+decision D-67: The navigation commands gain `centreOn(point, zoom)`, which leaves fit mode and moves the camera so `point` is at the view's centre at `zoom`.
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
@@ -1703,11 +1703,11 @@ decision D-65: The navigation commands gain `centreOn(point, zoom)`, which leave
 ---
 
 ```mdl
-decision D-66: `centreOn` is removed from the navigation commands; no host uses it.
+decision D-68: `centreOn` is removed from the navigation commands; no host uses it.
   date: 2026-11-16
   by: agent:claude-code
   for: user:wittjosiah
-  supersedes: D-65
+  supersedes: D-67
   affects: [F-1]
   why: Its one caller, the canvas plugin's drawing `Locator`, is gone; a follower now sets the camera through the host's `camera` prop.
 ```
