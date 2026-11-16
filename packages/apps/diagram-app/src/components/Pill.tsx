@@ -76,7 +76,7 @@ export const SpaceTrigger = ({ name, hue, className, ...props }: SpaceTriggerPro
       caretDown
       aria-label={collapsed ? name : undefined}
       {...props}
-      classNames={mx(NAME, 'max-w-60', className)}
+      classNames={mx(NAME, 'max-w-60 ps-1.25', className)}
     >
       <Avatar.Root variant='square' size='xs' hue={hue} fallback={name} />
       {!collapsed && <span>{name}</span>}
@@ -159,12 +159,8 @@ export const PillToolbar = ({ onShare, ...slots }: PillToolbarProps) => {
   }, [viewers]);
   return (
     <PillSlotsContext.Provider value={slots}>
-      {/* The toolbar's end padding plus the space menu's padding before its avatar, whether Share or a viewer ends the row. */}
-      <ActionToolbar
-        {...menu}
-        alwaysActive
-        classNames='min-w-0 bg-transparent pe-[calc(2*var(--dx-gap-size)_-_var(--dx-control-inset))]'
-      />
+      {/* The space avatar at the start, and Share or a viewer at the end, sit twice the pill's top padding from its edge. */}
+      <ActionToolbar {...menu} alwaysActive classNames='min-w-0 bg-transparent ps-0 pe-1.25' />
     </PillSlotsContext.Provider>
   );
 };
