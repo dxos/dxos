@@ -25,6 +25,11 @@ export type ExtractDocument = {
   /** The author's canonical id, stored as `attribution.agent`; defaults to `author` normalized. */
   readonly agent?: string;
   readonly date?: string;
+  /**
+   * Earlier messages of the conversation this document continues, as `author: text` lines, read only to resolve its
+   * references; System One extracts one document at a time, so this is how it sees what a transcript would show it.
+   */
+  readonly context?: string;
 };
 
 /** Which extractor turns text into facts: the LLM alone, or System One with the LLM as its fallback. */

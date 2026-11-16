@@ -10,8 +10,11 @@ import {
   DEFAULT_THRESHOLDS,
   NEW,
   OTHER,
+  claimDecisions,
+  contextRule,
   entityChoices,
   factualityOf,
+  offersAllPredicates,
   predicateChoices,
   route,
   surfaceOf,
@@ -78,6 +81,33 @@ describe('choices', () => {
 
     const many = Ontology.make(Array.from({ length: 300 }, (_, index) => Ontology.entry(`relation_${index}`)));
     expect(predicateChoices(many).size).toBe(254);
+    expect(offersAllPredicates(many, predicateChoices(many))).toBe(false);
+    expect(offersAllPredicates(Ontology.DEFAULT, predicateChoices(Ontology.DEFAULT))).toBe(true);
+  });
+
+  test('a closed ontology past the choice limit sends "other" to the LLM, since it may be a listed predicate', ({
+    expect,
+  }) => {
+    const other = { ...DECISION, predicate: { label: OTHER, confidence: 0.9 } };
+    expect(route(other, { ...CLOSED, allPredicatesOffered: false })).toEqual({
+      _tag: 'fallback',
+      reason: 'unlisted-predicate',
+    });
+  });
+
+  test('caller rules become a decision, and a claim outside them is dropped', ({ expect }) => {
+    const claim = { text: 'Bob uses Redis', subject: 'Bob', object: 'Redis' };
+    const decisions = claimDecisions(claim, 'bob', predicateChoices(Ontology.DEFAULT), new Map(), [
+      'Extract only propositions about Alice.',
+    ]);
+    expect(decisions.follows_rules).toBeDefined();
+    expect(claimDecisions(claim, 'bob', predicateChoices(Ontology.DEFAULT), new Map()).follows_rules).toBeUndefined();
+    expect(route({ ...DECISION, followsRules: 0.1 }, OPEN)).toEqual({ _tag: 'drop', reason: 'outside-rules' });
+    expect(route({ ...DECISION, followsRules: 0.9 }, OPEN)).toEqual({ _tag: 'accept' });
+  });
+
+  test('the fallback reads earlier messages only to resolve references', ({ expect }) => {
+    expect(contextRule('alice: I maintain Atlas')).toContain('alice: I maintain Atlas');
   });
 
   test('entities are keyed for the choice', ({ expect }) => {

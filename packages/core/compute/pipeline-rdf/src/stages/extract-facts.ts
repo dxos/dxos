@@ -356,9 +356,21 @@ export const extractTranscriptFacts = (
   options?: ExtractOptions & { readonly maxTranscriptChars?: number },
 ): Effect.Effect<DocumentFacts[], SemanticIndexError, AiService.AiService> =>
   options?.extractor === 'system-one'
-    ? // System One reads one message at a time, so a transcript gains it nothing.
-      Effect.forEach(docs, (doc) => extractDocFacts(doc, options).pipe(Effect.map((facts) => ({ doc, facts }))))
+    ? // System One reads one message at a time; the messages before it in the batch resolve its references.
+      Effect.forEach(docs, (doc, index) =>
+        extractDocFacts(withContext(doc, docs.slice(Math.max(0, index - CONTEXT_MESSAGES), index)), options).pipe(
+          Effect.map((facts) => ({ doc, facts })),
+        ),
+      )
     : extractLlmTranscriptFacts(docs, options);
+
+/** How many earlier messages of a batch System One reads alongside each message. */
+const CONTEXT_MESSAGES = 5;
+
+const withContext = (doc: ExtractDocument, earlier: readonly ExtractDocument[]): ExtractDocument =>
+  earlier.length === 0
+    ? doc
+    : { ...doc, context: earlier.map((message) => `${message.author ?? 'unknown'}: ${message.text}`).join('\n') };
 
 const extractLlmTranscriptFacts = (
   docs: readonly ExtractDocument[],

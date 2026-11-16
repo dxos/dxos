@@ -74,28 +74,40 @@ export type ClaimDecision = {
   readonly speechAct: SpeechAct;
   readonly certainty: Certainty;
   readonly negated: number;
+  /** How likely extracting the claim follows the caller's {@link ExtractOptions.rules}; absent without rules. */
+  readonly followsRules?: number;
 };
 
 export type FallbackReason = 'unlisted-predicate' | 'low-confidence' | 'flagged' | 'no-spans' | 'no-claims' | 'error';
 
 export type Route =
   | { readonly _tag: 'accept' }
-  | { readonly _tag: 'drop'; readonly reason: 'not-a-fact' | 'unlisted-predicate' }
+  | { readonly _tag: 'drop'; readonly reason: 'not-a-fact' | 'unlisted-predicate' | 'outside-rules' }
   | { readonly _tag: 'fallback'; readonly reason: FallbackReason };
 
 /**
  * Where a claim goes: kept as System One decided it, dropped, or sent to the LLM. A closed ontology drops an
- * unlisted relation rather than paying the LLM to mint a predicate it would then drop too.
+ * unlisted relation rather than paying the LLM to mint a predicate it would then drop too, but only when every listed
+ * predicate was offered as a choice: past the choice limit, "other" may be a listed predicate the model never saw.
  */
 export const route = (
   decision: ClaimDecision,
-  { thresholds, closed }: { readonly thresholds: SystemOneThresholds; readonly closed: boolean },
+  {
+    thresholds,
+    closed,
+    allPredicatesOffered = true,
+  }: { readonly thresholds: SystemOneThresholds; readonly closed: boolean; readonly allPredicatesOffered?: boolean },
 ): Route => {
   if (decision.isFact < thresholds.minIsFact) {
     return { _tag: 'drop', reason: 'not-a-fact' };
   }
+  if (decision.followsRules !== undefined && decision.followsRules < RULES_THRESHOLD) {
+    return { _tag: 'drop', reason: 'outside-rules' };
+  }
   if (decision.predicate.label === OTHER) {
-    return closed ? { _tag: 'drop', reason: 'unlisted-predicate' } : { _tag: 'fallback', reason: 'unlisted-predicate' };
+    return closed && allPredicatesOffered
+      ? { _tag: 'drop', reason: 'unlisted-predicate' }
+      : { _tag: 'fallback', reason: 'unlisted-predicate' };
   }
   if (decision.needsFallback > thresholds.maxNeedsFallback) {
     return { _tag: 'fallback', reason: 'flagged' };
@@ -105,6 +117,18 @@ export const route = (
   }
   return { _tag: 'accept' };
 };
+
+/** A claim less likely than this to follow the caller's extraction rules is dropped. */
+const RULES_THRESHOLD = 0.5;
+
+/** Whether {@link predicateChoices} offered every live predicate, or stopped at the choice limit. */
+export const offersAllPredicates = (
+  ontology: Ontology.Ontology,
+  choices: ReadonlyMap<string, Ontology.Entry>,
+): boolean =>
+  new Set(
+    ontology.entries.filter((entry) => entry.replacedBy === undefined && entry.name !== OTHER).map(({ name }) => name),
+  ).size <= choices.size;
 
 /** The ontology's live predicates as choice criteria, keyed by shorthand, leaving room for {@link OTHER}. */
 export const predicateChoices = (ontology: Ontology.Ontology): ReadonlyMap<string, Ontology.Entry> => {
@@ -212,6 +236,8 @@ export const toCandidate = (
 
 const ClaimState = Schema.Struct({
   author: Schema.String,
+  /** Earlier messages of the conversation, so a reference in the message ("she", "that") resolves; may be empty. */
+  context: Schema.String,
   message: Schema.String,
   claim: Schema.String,
   subject: Schema.String,
@@ -235,12 +261,13 @@ const entityCriterion = (entity: KnownEntity): string =>
     .filter(Boolean)
     .join(' ');
 
-/** The decisions asked about every claim, in one System One call. */
+/** The decisions asked about every claim, in one System One call; `rules` are the caller's extra extraction rules. */
 export const claimDecisions = (
   claim: Claim,
   author: string,
   predicates: ReadonlyMap<string, Ontology.Entry>,
   entities: ReadonlyMap<string, KnownEntity>,
+  rules: readonly string[] = [],
 ): Record<string, Decision.Any> => {
   const firstPerson = `First-person words (I, me, my, we) refer to the author, ${author}.`;
   const entityCriteria = {
@@ -266,6 +293,13 @@ export const claimDecisions = (
     speech_act: Decision.classify({ instructions: 'What does the author do with the claim?', criteria: SPEECH_ACTS }),
     certainty: Decision.classify({ instructions: 'How certain is the claim as stated?', criteria: CERTAINTY }),
     negated: Decision.probability({ instructions: 'The claim says the relation does NOT hold.' }),
+    ...(rules.length > 0
+      ? {
+          follows_rules: Decision.probability({
+            instructions: `Extracting the claim follows every one of these rules: ${rules.map((rule, index) => `(${index + 1}) ${rule}`).join(' ')}`,
+          }),
+        }
+      : {}),
     ...(entities.size > 0
       ? {
           subject_entity: Decision.classify({
@@ -302,6 +336,7 @@ export const toClaimDecision = (
   if (!predicate) {
     return undefined;
   }
+  const followsRules = probabilityOf(answers.follows_rules);
   const speechAct = choiceOf(answers.speech_act)?.label;
   const certainty = choiceOf(answers.certainty)?.label;
   return {
@@ -313,6 +348,7 @@ export const toClaimDecision = (
     speechAct: isKeyOf(SPEECH_ACTS, speechAct) ? speechAct : 'statement',
     certainty: isKeyOf(CERTAINTY, certainty) ? certainty : 'certain',
     negated: probabilityOf(answers.negated) ?? 0,
+    ...(followsRules !== undefined ? { followsRules } : {}),
   };
 };
 
@@ -388,6 +424,8 @@ const analyseChunk = (
     readonly entities: ReadonlyMap<string, KnownEntity>;
     readonly thresholds: SystemOneThresholds;
     readonly closed: boolean;
+    readonly allPredicatesOffered: boolean;
+    readonly rules: readonly string[];
     readonly concurrency: number;
     readonly counters: Counters;
   },
@@ -421,9 +459,9 @@ const analyseChunk = (
           const response = yield* DecisionModel.decide(
             Decision.make({
               input: ClaimState,
-              decisions: claimDecisions(claim, author, context.predicates, context.entities),
+              decisions: claimDecisions(claim, author, context.predicates, context.entities, context.rules),
             }),
-            { input: { author, message: text, claim: claimText, subject, object } },
+            { input: { author, context: doc.context ?? '', message: text, claim: claimText, subject, object } },
           );
           counters.decisionTokens += response.usage.inputTokens ?? 0;
           const decision = toClaimDecision(response.answers);
@@ -431,7 +469,11 @@ const analyseChunk = (
             count(counters, 'no-decision');
             return { _tag: 'fallback' as const, claim: claimText };
           }
-          const next = route(decision, { thresholds: context.thresholds, closed: context.closed });
+          const next = route(decision, {
+            thresholds: context.thresholds,
+            closed: context.closed,
+            allPredicatesOffered: context.allPredicatesOffered,
+          });
           count(counters, next._tag === 'accept' ? 'accept' : next.reason);
           switch (next._tag) {
             case 'accept':
@@ -463,6 +505,10 @@ const analyseChunk = (
     };
   });
 
+/** The rule that gives a fallback request the conversation before its message, for resolving references only. */
+export const contextRule = (context: string): string =>
+  `The message continues a conversation. Use these earlier messages only to resolve references such as "she" or "that"; extract nothing from them:\n"""\n${context}\n"""`;
+
 /** The rule that scopes a claims-only fallback request to its clauses while keeping the message as context. */
 export const claimsRule = (message: string): string =>
   `The message text holds only some clauses of a longer message. Read them in the context of the full message, but extract propositions only from these clauses. Full message:\n"""\n${message}\n"""`;
@@ -484,8 +530,12 @@ export const extractSystemOne = (
     const systemOne = options?.systemOne;
     const thresholds = { ...DEFAULT_THRESHOLDS, ...systemOne?.thresholds };
     const counters: Counters = { dropped: 0, extractionTokens: 0, decisionTokens: 0, reasons: {} };
+    const ontology = options?.ontology ?? Vocabularies.DEFAULT;
+    const predicates = predicateChoices(ontology);
     const context = {
-      predicates: predicateChoices(options?.ontology ?? Vocabularies.DEFAULT),
+      predicates,
+      allPredicatesOffered: offersAllPredicates(ontology, predicates),
+      rules: options?.rules ?? [],
       entities: entityChoices(options?.entities ?? []),
       thresholds,
       closed: options?.closed ?? false,
@@ -520,13 +570,14 @@ export const extractSystemOne = (
         if (!useFallback || (analysis.whole === undefined && analysis.fallback.length === 0)) {
           return Effect.succeed([]);
         }
+        const rules = [...(options?.rules ?? []), ...(doc.context ? [contextRule(doc.context)] : [])];
         const request =
           analysis.whole === undefined
             ? extractChunk(
                 { ...doc, text: analysis.fallback.join('\n') },
-                { ...options, rules: [...(options?.rules ?? []), claimsRule(analysis.text)] },
+                { ...options, rules: [...rules, claimsRule(analysis.text)] },
               )
-            : extractChunk({ ...doc, text: analysis.text }, options);
+            : extractChunk({ ...doc, text: analysis.text }, { ...options, rules });
         return request.pipe(
           AiUsage.withStage('system-one-fallback'),
           Effect.map(({ facts }) => facts),
