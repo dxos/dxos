@@ -86,6 +86,8 @@ const fold = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string, windo
   const options: EdgeAgent.Options = { definition, control: () => EdgeAgent.fromRemoteControl(control) };
   const progress = yield* EdgeAgent.runTurnUntil(options, { chat, feed }, { prompt }, Date.now() + windowMs);
   if (!progress.done) {
+    // The open turn's record is what the next call picks up, so it must be stored before this invocation ends.
+    yield* Database.flush();
     return { chat: Ref.make(chat), done: false, pullRequests: [] };
   }
   const pullRequests = pullRequestsIn(yield* TrajectoryStore.messages(feed));
