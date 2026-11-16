@@ -125,8 +125,9 @@ export const SetValues = Operation.make({
 });
 
 /**
- * The chart types a sheet draws (`SheetCapabilities.ChartType` contributions of this plugin): react-ui-plot's plot types
- * plus `timeline`, listed rather than imported since that package's only entry brings React into operation definitions.
+ * The chart types this plugin contributes (`SheetCapabilities.ChartType`), named to the agent; other plugins may add
+ * more, so `AddChart` takes any name (PLUGIN.mdl D-5). Listed rather than imported since react-ui-plot's only entry brings React
+ * into operation definitions.
  */
 export const CHART_TYPES = ['bar', 'pie', 'xy', 'scatter', 'heatmap', 'radar', 'map', 'timeline'] as const;
 
@@ -143,7 +144,9 @@ export const AddChart = Operation.make({
       description:
         'Range in A1 notation (e.g. "A1:C6"). The first column is the category (bar, pie), x axis (xy, scatter), row (heatmap), spoke (radar) or country (map); each other column is a series.',
     }),
-    type: Schema.Literals(CHART_TYPES).annotate({ description: 'How the chart is drawn.' }),
+    type: Schema.String.annotate({
+      description: `The contributed chart type that draws it; this plugin's are ${CHART_TYPES.join(', ')}.`,
+    }),
     name: Schema.optional(Schema.String).annotate({ description: 'The chart title.' }),
     header: Schema.optional(Schema.Boolean).annotate({ description: 'The first row holds the series names.' }),
     horizontal: Schema.optional(Schema.Boolean).annotate({ description: 'Bars run along the x axis (bar).' }),

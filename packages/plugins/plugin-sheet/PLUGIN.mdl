@@ -179,6 +179,23 @@ op create
 ```
 
 ```mdl
+op addChart
+  key: org.dxos.operation.sheet.addChart
+  desc: Adds a chart of a range of a sheet; the chart is its own object, owned by the sheet, and shows in its Charts companion.
+  input:
+    sheet: Ref<Sheet>
+    range: string                 # A1 notation, e.g. "A1:C6"
+    type: string                  # a contributed chart type (see [D-5])
+    name?: string
+    header?: boolean              # the first row holds the series names
+    horizontal?: boolean
+    stacked?: boolean
+  output: { id: string }          # URI of the created chart
+  effects: [echo:write]
+  requires: [Database.Service]
+```
+
+```mdl
 op getRange
   key: org.dxos.operation.sheet.getRange
   desc: Reads cell values from a sheet as a 2D array. Omit `range` for the entire occupied area.
@@ -529,6 +546,33 @@ test QA-5: See a collaborator's selection
       expect: the guest's outline disappears from the host's grid
 ```
 
+```mdl
+test QA-6: An agent turns findings into sheets with charts, a deck and a summary
+  desc: The artifacts demo — an agent with the sheet, presenter and markdown skills makes a sheet and a chart for each finding in a document, a deck of the charts, and a summary.
+  actors: human, agent
+  status: passing            # 2026-11-16, recorded by stories-assistant/autocue/findings-artifacts.mjs
+  given:
+    - the stories-assistant `Artifacts › With Findings` story, which seeds a document of five Cloudflare Discord findings and binds it to the chat
+    - a live model (the story's default)
+  steps:
+    - name: Ask for the artifacts
+      do: In the chat, ask the agent to make a sheet and a fitting chart for each finding, a presentation with one slide per chart, and a markdown summary.
+      expect: the agent creates the sheets one by one, each appearing as a tab in the Artifacts panel as it is made
+    - name: Read the deck
+      do: Wait for the agent's reply, then look at the presentation it opened with.
+      expect: a cover slide and one slide per chart, each slide drawing its chart
+    - name: Open a sheet
+      do: Click the "Who Answers First" tab.
+      expect: the grid holds the responder table and its bar chart is drawn below it
+    - name: Open the pie chart
+      do: Click the "Messages per Person" tab.
+      expect: the posting distribution table with its pie chart
+    - name: Read the summary
+      do: Click the summary document's tab.
+      expect: a short markdown recap of the five findings
+  note: The model chooses the titles and chart types, so a take's tabs can be named differently; the flow finds them by what they hold.
+```
+
 ## Changelog
 
 ```mdl
@@ -586,6 +630,17 @@ decision D-5: A chart's `type` is a string naming a `SheetCapabilities.ChartType
   rejected:
     - Built-in types as a literal list beside contributed ones: two ways to name and draw a chart type.
     - A Sankey panel of its own beside every sheet: it leaves the chart out of the companion's list and out of documents and slides, which embed `Sheet.Chart` objects.
+```
+
+```mdl
+decision D-6: The `addChart` operation takes the chart type as a string and names this plugin's types in its description, rather than a literal list in its schema. Follows [D-5].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [op:addChart]
+  why: A type another plugin contributes is as valid as the sheet's own, and the agent learns the common ones from the description and the skill.
+  rejected:
+    - A literal union of the sheet's types in the input schema: the built-in list D-5 rejected, and it refuses contributed types.
 ```
 
 ---
