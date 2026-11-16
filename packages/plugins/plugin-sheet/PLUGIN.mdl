@@ -564,9 +564,9 @@ test QA-6: An agent turns findings into sheets with charts, a deck and a summary
     - name: Open a sheet
       do: Click the "Who Answers First" tab.
       expect: the grid holds the responder table and its bar chart is drawn below it
-    - name: Open the pie chart
-      do: Click the "Messages per Person" tab.
-      expect: the posting distribution table with its pie chart
+    - name: Open the product tone sheet
+      do: Click the product mentions sheet's tab.
+      expect: the mentions and tone table with the chart the agent chose for it
     - name: Read the summary
       do: Click the summary document's tab.
       expect: a short markdown recap of the five findings

@@ -46,9 +46,9 @@ export const CLOUDFLARE_FINDINGS = trim`
 
   | Product | Mentions | Tone |
   |---|---|---|
-  | Workers | 640 | −0.11 |
-  | Email Service | 354 | 0.07 |
-  | Dashboard | 271 | −0.32 |
+  | Workers | 637 | −0.11 |
+  | Email Service | 350 | 0.06 |
+  | Dashboard | 269 | −0.32 |
   | Durable Objects | 257 | 0.02 |
   | D1 | 225 | −0.10 |
   | Billing | 214 | −0.29 |
@@ -74,7 +74,3 @@ export const CLOUDFLARE_FINDINGS = trim`
   | 2026-11-02 | 20 | −0.04 | 1 |
   | 2026-11-09 | 11 | −0.26 | 2 |
 `;
-
-/** What the demo asks the agent, typed into the chat. */
-export const FINDINGS_PROMPT =
-  'Turn the five findings in the bound document into artifacts: for each finding create a sheet with its table and a chart that fits it (bar to compare, pie for shares, xy over time). Then create a presentation with one slide per chart, and a short markdown summary of the five findings.';

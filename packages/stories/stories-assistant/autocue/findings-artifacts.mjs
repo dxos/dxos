@@ -21,6 +21,25 @@ const TAB = (kind) => `[data-artifact="${kind}"]`;
 const REQUEST =
   'Turn the five findings in the bound document into artifacts: for each finding create a sheet with its table and a chart that fits it (bar to compare, pie for shares, xy over time). Then create a presentation with one slide per chart, and a short markdown summary of the five findings.';
 
+/** Resolves once the chat's activity line (Generating, Contacting inference provider, …) has been gone for `quiet` ms. */
+const agentIdle = async (page, { quiet = 4_000, timeout = 300_000 } = {}) => {
+  const deadline = Date.now() + timeout;
+  let since = Date.now();
+  while (Date.now() < deadline) {
+    const busy = await page.evaluate(
+      (selector) => (document.querySelector(selector)?.textContent?.trim() ?? '') !== '',
+      ACTIVITY,
+    );
+    if (busy) {
+      since = Date.now();
+    } else if (Date.now() - since >= quiet) {
+      return;
+    }
+    await page.waitForTimeout(500);
+  }
+  throw new Error('The agent was still working after the timeout.');
+};
+
 /** Clicks the first tab of a kind whose label matches, falling back to the first tab of that kind. */
 const openTab = async ({ demo, page }, kind, pattern, label) => {
   const tabs = page.locator(TAB(kind));
@@ -62,11 +81,7 @@ export const steps = [
       await demo.speed({ factor: 6 });
       await page.locator(TAB('document')).first().waitFor({ state: 'visible', timeout: 300_000 });
       await page.locator(TAB('presentation')).first().waitFor({ state: 'visible', timeout: 60_000 });
-      await page.waitForFunction(
-        (selector) => !document.querySelector(selector)?.textContent?.includes('Generating'),
-        ACTIVITY,
-        { timeout: 120_000 },
-      );
+      await agentIdle(page);
       await demo.speed({ factor: 1 });
     },
   },
@@ -84,8 +99,8 @@ export const steps = [
     name: 'Open a sheet',
     narration: 'Each sheet holds its finding as a table, with its chart below.',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Who answers first: the table and its bar chart', subtitle: 'finding 1' });
-      await openTab({ demo, page }, 'sheet', /answer/i, 'Sheet');
+      await demo.caption({ value: 'Who answers first: the table, and its chart below', subtitle: 'finding 1' });
+      await openTab({ demo, page }, 'sheet', /who answers|first/i, 'Sheet');
       await page.locator('dx-grid').first().waitFor({ state: 'visible', timeout: 10_000 });
       await page
         .locator('svg')
@@ -96,11 +111,11 @@ export const steps = [
     },
   },
   {
-    name: 'Open the pie chart',
-    narration: 'A share is drawn as a pie.',
+    name: 'Open the product tone sheet',
+    narration: 'Product mentions and tone, charted the way the agent chose.',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Messages per person: a long tail, as a pie', subtitle: 'finding 3' });
-      await openTab({ demo, page }, 'sheet', /person/i, 'Sheet');
+      await demo.caption({ value: 'Product mentions and tone', subtitle: 'finding 4 — the agent picks the chart' });
+      await openTab({ demo, page }, 'sheet', /product|tone|mention/i, 'Sheet');
       await page.locator('dx-grid').first().waitFor({ state: 'visible', timeout: 10_000 });
       await demo.sleep({ ms: 3000 });
     },

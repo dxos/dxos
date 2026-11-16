@@ -20,15 +20,15 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /**
  * The artifacts an agent makes in the story's space — sheets (with their charts), presentations and documents — one
- * tab each, newest first, each drawn by its plugin's own article surface. A new artifact takes the panel unless the
- * viewer has picked one.
+ * tab each, newest first, each drawn by its plugin's own article surface. Each new artifact takes the panel as it
+ * arrives; between arrivals the viewer's pick holds.
  */
 export const ArtifactsModule = () => {
   const space = Hooks.useActiveSpace();
   return space ? <ArtifactsPanel space={space} /> : null;
 };
 
-/** The artifacts shown; documents the story seeds as input (keyed) are left out, so only what the agent made shows. */
+/** The kinds of object shown as artifacts. */
 const ARTIFACTS = Filter.or(
   Filter.type(Sheet.Sheet),
   Filter.type(Presentation.Presentation),
@@ -40,6 +40,7 @@ export const SEEDED_KEY_SOURCE = 'org.dxos.storybook.seed';
 
 const ArtifactsPanel = ({ space }: { space: Space }) => {
   const all = useQuery(space.db, ARTIFACTS);
+  // Objects the story seeded as input are keyed, so only what the agent made shows.
   const artifacts = useMemo(
     () =>
       all
@@ -49,7 +50,7 @@ const ArtifactsPanel = ({ space }: { space: Space }) => {
   );
   const [picked, setPicked] = useState<string | undefined>();
   const [newest, setNewest] = useState<string | undefined>();
-  // A new artifact is shown as it arrives; once the viewer picks a tab, their pick stays.
+  // A new artifact is shown as it arrives, replacing the viewer's pick, so the panel follows the agent's work.
   useEffect(() => {
     const first = artifacts[0]?.id;
     if (first !== newest) {

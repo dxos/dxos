@@ -17,8 +17,7 @@ import { trim } from '@dxos/util';
 
 import { SEEDED_KEY_SOURCE } from '../modules/ArtifactsModule.tsx';
 import { StoryRole } from '../modules/index.ts';
-import { CLOUDFLARE_FINDINGS } from '../testing/findings.ts';
-import { createDecorators, storyParameters } from '../testing/index.ts';
+import { CLOUDFLARE_FINDINGS, createDecorators, storyParameters } from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Artifacts',
   render: ModuleContainer.Root,
@@ -220,7 +219,7 @@ export const WithBoard: Story = {
 /**
  * Starts with only the agent: it reads five findings about the Cloudflare Developers Discord from a bound document and
  * builds artifacts from them — sheets with charts, a presentation linking the charts as slides, and a summary — each
- * shown in the artifacts panel as it is made. Prompt with `FINDINGS_PROMPT` (`../testing/findings.ts`).
+ * shown in the artifacts panel as it is made. `autocue/findings-artifacts.mjs` prompts it and walks the result.
  */
 export const WithFindings: Story = {
   decorators: createDecorators({
