@@ -412,14 +412,17 @@ const generatePayload = <P extends { readonly facts: ReadonlyArray<unknown> }, S
     Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to extract facts', cause })),
   );
 
-/** Resolve the `LanguageModel` layer for extraction, honoring a caller-supplied model/provider override. */
+/**
+ * Resolve the `LanguageModel` layer for extraction, honoring a caller-supplied model/provider override. Thinking stays
+ * on: without it Haiku emits about four times as many facts for the same output tokens, many of them low-value.
+ */
 const modelLayer = (
   options?: ExtractOptions,
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService.AiService> => {
   if (!options?.provider) {
-    return AiService.languageModel(options?.model ?? DEFAULT_MODEL, { thinking: false });
+    return AiService.languageModel(options?.model ?? DEFAULT_MODEL, { thinking: true });
   }
   const provider = DXN.tryMake(options.provider);
   invariant(provider, `Invalid provider DXN: ${options.provider}`);
-  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider, thinking: false });
+  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider, thinking: true });
 };

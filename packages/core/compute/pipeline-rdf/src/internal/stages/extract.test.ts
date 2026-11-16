@@ -12,24 +12,22 @@ import { Ontology, Vocabularies } from '../../types/index.ts';
 import { ExtractPayload, buildExtractionInstructions, extractChunk, parseExtractPayload } from './extract.ts';
 
 describe('extractChunk request', () => {
-  it.effect(
-    'sends the instructions as a cached system message and the message as the user turn, without thinking',
-    () =>
-      Effect.gen(function* () {
-        const capture: RequestCapture = { requests: [], resolved: [] };
-        yield* extractChunk({ text: 'Alice uses Effect.', source: 'doc', author: 'alice' }).pipe(
-          Effect.provide(queuedAiService([{ facts: [] }], [], capture)),
-        );
-        expect(capture.resolved[0]?.thinking).toBe(false);
-        expect(capture.requests[0]).toEqual([
-          {
-            role: 'system',
-            content: expect.stringContaining('You extract atomic propositions'),
-            options: { anthropic: { cacheControl: { type: 'ephemeral' } } },
-          },
-          { role: 'user', content: expect.stringContaining('Message:\nAlice uses Effect.') },
-        ]);
-      }),
+  it.effect('sends the instructions as a cached system message and the message as the user turn, with thinking', () =>
+    Effect.gen(function* () {
+      const capture: RequestCapture = { requests: [], resolved: [] };
+      yield* extractChunk({ text: 'Alice uses Effect.', source: 'doc', author: 'alice' }).pipe(
+        Effect.provide(queuedAiService([{ facts: [] }], [], capture)),
+      );
+      expect(capture.resolved[0]?.thinking).toBe(true);
+      expect(capture.requests[0]).toEqual([
+        {
+          role: 'system',
+          content: expect.stringContaining('You extract atomic propositions'),
+          options: { anthropic: { cacheControl: { type: 'ephemeral' } } },
+        },
+        { role: 'user', content: expect.stringContaining('Message:\nAlice uses Effect.') },
+      ]);
+    }),
   );
 });
 
