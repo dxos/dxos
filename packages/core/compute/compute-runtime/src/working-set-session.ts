@@ -81,17 +81,16 @@ export class WorkingSetSession {
   }
 
   /**
-   * Takes what other invocations of the same caller left in its working set, for a database that outlives them (a
-   * hosted process's). Call it once `db` holds at least what the rows hold (`ServiceContainer.refreshWorkingSet`).
+   * Takes the objects the caller's other invocations wrote, for a database that outlives them (a hosted process's).
+   * The base stays this database's own, so a report of a copy older than the stored one drops it instead of
+   * overwriting it.
    */
   async absorb(db: DatabaseImpl): Promise<void> {
     const service = this.#service;
     const workingSet = service ? await bestEffort('get', () => service.get()) : undefined;
-    if (!workingSet) {
-      return;
+    if (workingSet) {
+      await takeUnindexed(db, workingSet.unindexed);
     }
-    this.#base = Object.fromEntries(workingSet.rows.map((row) => [row.documentId, row.heads]));
-    await takeUnindexed(db, workingSet.unindexed);
   }
 }
 

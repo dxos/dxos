@@ -84,12 +84,13 @@ export class DataServiceImpl implements DataService.Handlers {
    * — another bundle, or operation-service — runs in its own invocation and writes through its own database. Once it
    * returns, the caller's copy of the space root lacks every object the callee minted, and the caller reports them
    * absent (`Entity not found`) when it loads the output's refs. The host calls this when a nested call returns, so
-   * the caller continues on the space as the callee left it.
+   * the caller continues on the space as the callee left it. `only` limits it to those documents, for a caller whose
+   * subscription holds more than the callee could have changed.
    */
-  async 'refreshWorkingSet'(): Promise<void> {
+  async 'refreshWorkingSet'(only?: ReadonlySet<string>): Promise<void> {
     await Promise.all(
       [...this.dataSubscriptions.values()].map(async (subscription) => {
-        const documentIds = [...subscription.workingSet];
+        const documentIds = [...subscription.workingSet].filter((documentId) => !only || only.has(documentId));
         if (documentIds.length === 0) {
           return;
         }

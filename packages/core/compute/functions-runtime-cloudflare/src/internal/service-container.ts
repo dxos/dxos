@@ -60,10 +60,10 @@ export class ServiceContainer {
 
   /**
    * Brings every document the invocation holds up to date with EDGE, for a caller that resumes after another
-   * invocation wrote to the space (see {@link DataServiceImpl.refreshWorkingSet}).
+   * invocation wrote to the space, or only the documents in `only` (see {@link DataServiceImpl.refreshWorkingSet}).
    */
-  async refreshWorkingSet(): Promise<void> {
-    await Promise.all(this._dataServices.map((dataService) => dataService.refreshWorkingSet()));
+  async refreshWorkingSet(only?: ReadonlySet<string>): Promise<void> {
+    await Promise.all(this._dataServices.map((dataService) => dataService.refreshWorkingSet(only)));
   }
 
   async queryQueue(queue: EID.EID): Promise<FeedProtocol.QueryResult> {

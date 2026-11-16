@@ -204,7 +204,9 @@ export const wrapFunctionHandler = (
           await funcContext.db.flush({ disk: true, indexes: false });
         }
         // Reported on failure too: what the handler wrote before failing is what the caller's next invocation reads.
-        await funcContext.reportWorkingSet();
+        if (funcContext.db) {
+          await funcContext.workingSet.report(funcContext.db);
+        }
 
         const result = EffectEx.unwrapExit(exit);
 
@@ -359,23 +361,6 @@ export class FunctionContext extends Resource {
       for (const { name, backend, default: isDefault } of this.opts.blobBackends ?? []) {
         this.#unregisterBlobBackends.push(this.client.graph.registerBlobBackend(name, backend, { default: isDefault }));
       }
-    }
-  }
-
-  /**
-   * Reports what the database holds to the caller's working set: when an invocation ends, and when a hosted process
-   * is about to invoke an operation that must see the process's own writes.
-   */
-  async reportWorkingSet(): Promise<void> {
-    if (this.db) {
-      await this.workingSet.report(this.db);
-    }
-  }
-
-  /** Takes what the caller's other invocations left in its working set; see {@link WorkingSetSession.absorb}. */
-  async absorbWorkingSet(): Promise<void> {
-    if (this.db) {
-      await this.workingSet.absorb(this.db);
     }
   }
 
