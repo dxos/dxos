@@ -82,7 +82,11 @@ export const Cover: Story = {
   args: {
     content: slide(
       { layout: 'center' },
+      '<Box variant="hero">',
+      '',
       '![DXOS](https://assets.dxos.org/brand/icons/white/icon-dxos.svg)',
+      '',
+      '</Box>',
       '',
       '# DXOS',
       '',
@@ -100,6 +104,9 @@ export const Cover: Story = {
     const art = mark!.getBoundingClientRect();
     const title = slide.querySelector('h1')!.getBoundingClientRect();
     await expect(title.top).toBeGreaterThanOrEqual(art.bottom - 1);
+    // 3. The hero box draws it large enough to carry the slide, rather than at the file's own 256px.
+    await expect(art.height).toBeGreaterThan(art.width * 0.9);
+    await expect(slide.querySelector('[data-variant="hero"]')).not.toBeNull();
   },
 };
 

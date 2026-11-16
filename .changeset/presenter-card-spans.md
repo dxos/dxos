@@ -8,3 +8,5 @@ A grid's children name the tracks they cover as `colSpan`/`rowSpan`, as a table 
 Card art is cut to the card. `gen-card-art.mjs` writes one crop per mark per card width into `backgrounds/cards/`: each is the same height and centred on the mark, so a card spanning two columns fills its width without drawing its mark larger than its neighbours' — which `object-fit` cannot do, since it takes its scale from the box. The rays are run past the frame first, so the wider crop has no bare edge.
 
 The brand's `icons/{white,black}` marks carry their own size instead of `width="100%"`, which left them with no intrinsic size and collapsed them to nothing wherever they were drawn as an `<img>`.
+
+`<Box variant="hero">` draws a lone image at a title slide's scale, which is how the new cover story shows the DXOS mark.

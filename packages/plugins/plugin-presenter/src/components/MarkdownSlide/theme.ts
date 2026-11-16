@@ -83,6 +83,13 @@ export const theme = {
     box: {
       card: { box: 'p-12 rounded-[24px] bg-(--slide-code)' },
       outline: { box: 'p-12 rounded-[24px] border-4 border-(--slide-accent)' },
+      // A title slide's mark: drawn large enough to carry the slide, at a size in canvas units rather than a share of
+      // a box that has none of its own. `contents` drops the paragraph markdown wraps a lone image in.
+      hero: {
+        box: 'flex flex-col items-center',
+        img: 'h-[420px] w-auto max-w-full object-contain',
+        p: '[&:has(>img)]:contents',
+      },
     },
 
     // A grid lays down equal tracks from the counts `<Grid cols rows>` set; `minmax(0,1fr)` keeps a long word in one
