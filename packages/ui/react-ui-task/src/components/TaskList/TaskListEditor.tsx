@@ -357,7 +357,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       <div
         {...rest}
         className={mx(
-          'grid gap-y-2',
+          'grid gap-y-1',
           'w-full min-w-0 shrink-0',
           // The drop target is the pane itself, marked while files are held over it.
           dragOver && 'ring-2 ring-inset ring-accent-bg',
