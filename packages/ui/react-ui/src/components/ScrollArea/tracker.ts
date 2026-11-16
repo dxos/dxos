@@ -111,6 +111,7 @@ export class ScrollTracker {
   readonly #getOptions: () => ScrollTrackerOptions;
   readonly #areas = new Map<HTMLElement, { name?: string; tracked?: Tracked }>();
   #root: HTMLElement | null = null;
+  #updating = false;
 
   constructor(getOptions: () => ScrollTrackerOptions) {
     this.#getOptions = getOptions;
@@ -126,11 +127,11 @@ export class ScrollTracker {
       return () => {};
     }
     this.#areas.set(viewport, { name });
-    this.#update();
+    this.#scheduleUpdate();
     return () => {
       this.#areas.get(viewport)?.tracked?.dispose();
       this.#areas.delete(viewport);
-      this.#update();
+      this.#scheduleUpdate();
     };
   }
 
@@ -148,6 +149,19 @@ export class ScrollTracker {
       area.tracked?.dispose();
     }
     this.#areas.clear();
+  }
+
+  // A nested viewport registers before the one around it (child effects run first), so the main area is picked once
+  // every viewport of the same commit has registered; otherwise the nested one would take the main restore.
+  #scheduleUpdate(): void {
+    if (this.#updating) {
+      return;
+    }
+    this.#updating = true;
+    queueMicrotask(() => {
+      this.#updating = false;
+      this.#update();
+    });
   }
 
   // Of several outermost unnamed areas (side by side), the largest is the main one.

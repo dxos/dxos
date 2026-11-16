@@ -402,6 +402,7 @@ try {
   // A failed read must not skip the stops and the close below, which save the take.
   const recording = await recordingInfo({
     page: peerList[0].page,
+    flowFile,
     source,
     appUrl: options.url,
     target: 'browser',
