@@ -2,85 +2,44 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, {
-  type ComponentProps,
-  type ComponentPropsWithoutRef,
-  type CSSProperties,
-  type ReactNode,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
-import { type Space } from '@dxos/halo';
-import { useIdentity, useMembers } from '@dxos/halo-react';
 import { type EID } from '@dxos/keys';
 import { type Progress } from '@dxos/progress';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { type Activity } from '@dxos/react-ui-attention/types';
-import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
-import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
-import type * as Util from '@dxos/react-ui/Util';
 import { toLocalizedString } from '@dxos/ui-types/translations';
-import { hexToFallback } from '@dxos/util';
 
-import { useFollowGroup } from '#hooks';
-import { SpaceCapabilities, type SpaceSchema } from '#types';
+import { SpaceCapabilities } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
+import { MEMBERS_COMPANION_ID, type ObjectViewers, countViewers, getPeerNodeIds } from '../../util/index.ts';
+import { useExpandPeerNodes } from './PeerActions.tsx';
 import {
-  MEMBERS_COMPANION_ID,
-  type ObjectViewers,
-  type PeerSession,
-  countViewers,
-  getFreshSessions,
-  getPeerNodeIds,
-  isMoving,
-} from '../../util/index.ts';
-import { PeerActions, useExpandPeerNodes } from './PeerActions.tsx';
-
-const REFRESH_INTERVAL = 5000;
-
-// TODO(wittjosiah): Factor out?
-const getName = (member: Space.Member) => member.displayName ?? generateName(member.identityKey ?? '0');
-
-const byIdentityKey = (a: Space.Member, b: Space.Member) => (a.identityKey ?? '').localeCompare(b.identityKey ?? '');
-
-export const useNow = () => {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), REFRESH_INTERVAL);
-    return () => clearInterval(interval);
-  }, []);
-  return now;
-};
+  type AvatarSize,
+  PresenceAvatar,
+  PresenceList,
+  type PresenceListAction,
+  type PresenceListProps,
+  getName,
+  getPresenceMembers,
+  isAttending,
+  useNow,
+  usePresenceList,
+} from './PresenceList.tsx';
 
 const useActiveViewerCount = (viewers?: ObjectViewers) => {
   const now = useNow();
   return countViewers(viewers, now);
-};
-
-/** Whether presence lists show a row per session rather than per person; kept per device. */
-export const useShowSessions = (): [boolean, (showSessions: boolean) => void] => {
-  const [state, updateState] = Hooks.useAtomCapabilityState(SpaceCapabilities.State);
-  const setShowSessions = useCallback(
-    (showSessions: boolean) => updateState((state) => ({ ...state, showSessions })),
-    [updateState],
-  );
-  return [state.showSessions ?? false, setShowSessions];
 };
 
 export type SpacePresenceProps = {
@@ -89,128 +48,27 @@ export type SpacePresenceProps = {
 };
 
 export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
+  const { invokePromise } = Hooks.useOperationInvoker();
   const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
-  const identity = useIdentity();
-  const spaceMembers = useMembers(spaceId);
   const now = useNow();
-  const [showSessions, setShowSessions] = useShowSessions();
-  const follow = useFollowGroup(spaceId, now);
+  const list = usePresenceList(spaceId, presenceKey);
   const viewers = (presenceKey && ephemeral?.viewersByObject[presenceKey]) || {};
   // Ready before the list opens, so its rows' actions do not appear after it.
   useExpandPeerNodes(spaceId ? getPeerNodeIds(spaceId, viewers, now) : []);
-
-  if (!identity || !ephemeral || !presenceKey) {
-    return null;
-  }
-
-  const members = spaceMembers
-    .flatMap((member) => {
-      const sessions = getFreshSessions(member.identityKey ? viewers[member.identityKey] : undefined, now);
-      if (!member.online || member.identityKey === identity.identityKey || sessions.length === 0) {
-        return [];
-      }
-      return [{ ...member, rowId: member.identityKey ?? '', sessions, now }];
-    })
-    .toSorted(byIdentityKey);
-
-  // Someone in this session's follow is on the object, so their avatars show the follow.
-  const followHue =
-    follow && members.some((member) => member.identityKey && follow.members.has(member.identityKey))
-      ? follow.hue
-      : undefined;
-
-  return (
-    <FullPresence
-      members={members}
-      follow={followHue && follow ? { hue: followHue, members: follow.members } : undefined}
-      showSessions={showSessions}
-      renderActions={(member, sessionId) =>
-        spaceId && member.identityKey ? (
-          <PeerActions
-            spaceId={spaceId}
-            identityKey={member.identityKey}
-            presenceKey={presenceKey}
-            sessionId={sessionId}
-          />
-        ) : null
-      }
-      headerAction={
-        <>
-          <SessionsToggle pressed={showSessions} onPressedChange={setShowSessions} />
-          <SeeEveryoneButton />
-        </>
-      }
-    />
+  const seeEveryone = useMemo(
+    (): PresenceListAction => ({
+      id: 'seeEveryone',
+      label: ['presence-see-everyone.label', { ns: SpaceNamespace.key }],
+      icon: 'ph--users--regular',
+      testId: 'spacePlugin.presence.seeEveryone',
+      onClick: () =>
+        void invokePromise(LayoutOperation.UpdateComplementary, { subject: MEMBERS_COMPANION_ID, state: 'expanded' }),
+    }),
+    [invokePromise],
   );
+
+  return presenceKey ? <FullPresence {...list} action={seeEveryone} /> : null;
 };
-
-const SessionsToggle = ({
-  pressed,
-  onPressedChange,
-}: {
-  pressed: boolean;
-  onPressedChange: (pressed: boolean) => void;
-}) => {
-  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
-  return (
-    <Button.Toggle
-      variant='ghost'
-      icon='ph--devices--regular'
-      iconOnly
-      label={t('presence-show-sessions.label')}
-      pressed={pressed}
-      onPressedChange={onPressedChange}
-      data-testid='spacePlugin.presence.showSessions'
-    />
-  );
-};
-
-/** Opens the Members companion, which lists everyone in the space. */
-const SeeEveryoneButton = () => {
-  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
-  const { invokePromise } = Hooks.useOperationInvoker();
-  return (
-    <Popover.CloseTrigger asChild>
-      <Button.Root
-        variant='ghost'
-        icon='ph--users--regular'
-        iconOnly
-        label={t('presence-see-everyone.label')}
-        data-testid='spacePlugin.presence.seeEveryone'
-        onClick={() =>
-          void invokePromise(LayoutOperation.UpdateComplementary, { subject: MEMBERS_COMPANION_ID, state: 'expanded' })
-        }
-      />
-    </Popover.CloseTrigger>
-  );
-};
-
-export type Member = Space.Member & {
-  /** Id of the member's Listbox row, unique in its list. */
-  rowId: string;
-  /** The member's sessions on the object, the most recently moved first. */
-  sessions: PeerSession[];
-  /** When the sessions were read, to tell which are moving. */
-  now: number;
-};
-
-const isAttending = (member: Member) => member.sessions.some((session) => session.currentlyAttended);
-
-type AvatarSize = ComponentProps<typeof Avatar.Root>['size'];
-
-export type MemberPresenceProps = Util.ThemedClassName<{
-  size?: AvatarSize;
-  members?: Member[];
-  showCount?: boolean;
-  /** A row per session rather than per member. */
-  showSessions?: boolean;
-  /** Controls on a member's row, or on one of their session's rows, e.g. its graph actions. */
-  renderActions?: (member: Member, sessionId?: string) => ReactNode;
-  /** A control at the end of the list's header, e.g. a link to everyone in the space. */
-  headerAction?: ReactNode;
-  /** The follow this session takes part in: its members' avatars ring in its hue. */
-  follow?: { hue: string; members: ReadonlySet<string> };
-}>;
 
 const OVERFLOW_TRIGGER = 'overflow';
 
@@ -230,14 +88,30 @@ const AvatarTrigger = forwardRef<HTMLButtonElement, AvatarTriggerProps>(
   ),
 );
 
-/** Avatars of the members on an object; clicking any opens the full list, with the clicked member's row highlighted. */
-export const FullPresence = (props: MemberPresenceProps) => {
-  const { size = 'md', showSessions, renderActions, headerAction, follow } = props;
-  const members = UiHooks.useDefaultValue(props.members, () => []);
+export type FullPresenceProps = PresenceListProps & {
+  size?: AvatarSize;
+  /** At the end of the list's header; taking it closes the list. */
+  action?: PresenceListAction;
+};
+
+/** Avatars of the members on an object; clicking any opens the presence list of the object. */
+export const FullPresence = ({ size = 'md', action, ...props }: FullPresenceProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
-  // The row of the avatar that opened the list; the list seeds its own selection from it on every open.
-  const [openedFor, setOpenedFor] = useState<string>();
+  const [open, setOpen] = useState(false);
   const groupRef = useRef<HTMLDivElement>(null);
+  const members = getPresenceMembers(props);
+  const title = t('presence-in-object.heading', { count: members.length });
+  const closingAction = useMemo(
+    () =>
+      action && {
+        ...action,
+        onClick: () => {
+          setOpen(false);
+          action.onClick();
+        },
+      },
+    [action],
+  );
 
   if (members.length === 0) {
     return null;
@@ -247,8 +121,9 @@ export const FullPresence = (props: MemberPresenceProps) => {
   // and keeps the list in the tab order after it (zag binds that tab order at open, not on a switch to another avatar).
   return (
     <Popover.Root
+      open={open}
+      onOpenChange={({ open }) => setOpen(open)}
       positioning={{ placement: 'bottom-end' }}
-      onTriggerValueChange={({ value }) => setOpenedFor(value === OVERFLOW_TRIGGER ? undefined : (value ?? undefined))}
       // zag focuses nothing when the opening avatar has left, so focus falls back to the first one.
       finalFocusEl={() =>
         groupRef.current?.querySelector<HTMLElement>('[data-part="trigger"][data-current]') ??
@@ -272,18 +147,16 @@ export const FullPresence = (props: MemberPresenceProps) => {
                   match={isAttending(member)}
                   index={members.length - i}
                   size={size}
-                  followHue={member.identityKey && follow?.members.has(member.identityKey) ? follow.hue : undefined}
+                  followHue={
+                    member.identityKey && props.followMembers?.has(member.identityKey) ? props.followHue : undefined
+                  }
                 />
               </AvatarTrigger>
             </Popover.Trigger>
           ))}
           {members.length > 3 && (
             <Popover.Trigger asChild value={OVERFLOW_TRIGGER}>
-              <button
-                type='button'
-                className='grid focus:outline-hidden'
-                aria-label={t('presence-in-object.heading', { count: members.length })}
-              >
+              <button type='button' className='grid focus:outline-hidden' aria-label={title}>
                 <Avatar.Root
                   status='inactive'
                   style={{ zIndex: members.length - 4 }}
@@ -296,197 +169,23 @@ export const FullPresence = (props: MemberPresenceProps) => {
         </Layout.Flex>
       </Popover.Anchor>
       {/* The Members companion's size, so the two lists read alike; the plank header's would be larger. */}
-      <Popover.Content size='md' classNames='w-96'>
-        <Popover.Header>
-          <Popover.Title>{t('presence-in-object.heading', { count: members.length })}</Popover.Title>
-          {headerAction}
-        </Popover.Header>
-        {/* The header keeps a gap from the panel's top edge; the list keeps the same from its bottom. */}
-        <Popover.Body classNames='pb-2'>
-          {/* Keyed by the opener, so a switch to another avatar while open reseeds the selection too. */}
-          <Listbox.Root
-            key={openedFor ?? ''}
-            items={getPresenceOptions(members, showSessions, t)}
-            defaultValue={openedFor ?? ''}
-          >
-            <Listbox.Content aria-label={t('presence-in-object.heading', { count: members.length })}>
-              {members.map((member) => (
-                <PresenceItems
-                  key={member.rowId}
-                  member={member}
-                  showSessions={showSessions}
-                  renderActions={renderActions}
-                />
-              ))}
-            </Listbox.Content>
-          </Listbox.Root>
-        </Popover.Body>
+      <Popover.Content size='md' classNames='w-96' aria-label={title}>
+        <PresenceList.Root {...props}>
+          <Popover.Header>
+            <PresenceList.Toolbar
+              title={['presence-in-object.heading', { ns: SpaceNamespace.key, count: members.length }]}
+              action={closingAction}
+            />
+          </Popover.Header>
+          {/* The header keeps a gap from the panel's top edge; the list keeps the same from its bottom. */}
+          <Popover.Body classNames='pb-2'>
+            <PresenceList.Content label={title} />
+          </Popover.Body>
+        </PresenceList.Root>
       </Popover.Content>
     </Popover.Root>
   );
 };
-
-const getSessionRowId = (member: Member, session: PeerSession) => `${member.rowId}/${session.sessionId}`;
-
-type Translate = ReturnType<typeof UiHooks.useTranslation>['t'];
-
-/** A device's label, else what it runs ("Chrome on macOS", or the app on its OS). */
-const getDeviceName = (device: SpaceSchema.SessionDevice | undefined, t: Translate): string => {
-  if (device?.label) {
-    return device.label;
-  }
-  if (device?.kind === 'native' || device?.kind === 'mobile') {
-    return device.os ? t('presence-app-device.label', { os: device.os }) : t('presence-app.label');
-  }
-  if (device?.platform && device.os) {
-    return t('presence-device.label', { platform: device.platform, os: device.os });
-  }
-  return device?.platform ?? device?.os ?? t('presence-unknown-device.label');
-};
-
-type SessionRow = { session: PeerSession; name: string };
-
-/** A member's sessions by device name, numbered where several (tabs) run on the same device, in a stable order. */
-const getSessionRows = (member: Member, t: Translate): SessionRow[] => {
-  const byDevice = new Map<string, PeerSession[]>();
-  for (const session of member.sessions.toSorted((a, b) => a.sessionId.localeCompare(b.sessionId))) {
-    const device = getDeviceName(session.device, t);
-    byDevice.set(device, [...(byDevice.get(device) ?? []), session]);
-  }
-  return [...byDevice.entries()]
-    .toSorted(([a], [b]) => a.localeCompare(b))
-    .flatMap(([device, sessions]) =>
-      sessions.map((session, i) => ({
-        session,
-        name: sessions.length > 1 ? t('presence-numbered-device.label', { device, index: i + 1 }) : device,
-      })),
-    );
-};
-
-/** Listbox options for members' rows, each followed by its sessions' rows with `showSessions`. */
-export const getPresenceOptions = (members: Member[], showSessions: boolean | undefined, t: Translate) =>
-  members.flatMap((member) => [
-    { value: member.rowId, label: getName(member) },
-    ...(showSessions
-      ? getSessionRows(member, t).map(({ session, name }) => ({ value: getSessionRowId(member, session), label: name }))
-      : []),
-  ]);
-
-export type PresenceItemsProps = {
-  member: Member;
-  showSessions?: boolean;
-  /** Controls at the end of a row, e.g. the member's graph actions; `sessionId` is set on a session's row. */
-  renderActions?: (member: Member, sessionId?: string) => ReactNode;
-  /** In this session's follow: the rows wash in the follow's hue and the avatar rings in it. */
-  followHue?: string;
-};
-
-/**
- * A member's Listbox row: avatar, name, then their actions. With `showSessions` a row per session
- * follows it, with whether the session moved lately and its device; the actions move to those rows. The member's rows
- * hover and highlight as one.
- */
-export const PresenceItems = ({ member, showSessions, renderActions, followHue }: PresenceItemsProps) => {
-  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
-  return (
-    <div
-      role='group'
-      aria-label={getName(member)}
-      // The list's value marks a row `aria-selected`, the keys' row `data-highlighted`; either highlights the group.
-      className='rounded-sm [&:is(:hover,:has([data-highlighted]),:has([aria-selected=true]))]:bg-hover-surface-subtle [&>.dx-row]:bg-transparent'
-      // Lets the list move a person's rows as one when they change place, as joining a follow does.
-      data-member={member.identityKey}
-      {...(followHue && {
-        'data-follow': true,
-        'style': { backgroundColor: `color-mix(in oklab, var(--color-${followHue}-border) 22%, transparent)` },
-      })}
-    >
-      <Listbox.Item id={member.rowId} data-testid='spacePlugin.presence.row'>
-        {/* Smaller than the row, so the row's hover and highlight frame it. */}
-        <Listbox.ItemIcon>
-          <PresenceAvatar member={member} size='sm' followHue={followHue} />
-        </Listbox.ItemIcon>
-        <Listbox.ItemText>{getName(member)}</Listbox.ItemText>
-        {/* The person's own actions: Jump and Go to act on their session that last moved here, Follow on the person. */}
-        {!showSessions && renderActions?.(member)}
-      </Listbox.Item>
-      {showSessions &&
-        getSessionRows(member, t).map(({ session, name }) => {
-          const active = isMoving(session, member.now);
-          return (
-            <Listbox.Item
-              key={session.sessionId}
-              id={getSessionRowId(member, session)}
-              data-testid='spacePlugin.presence.session'
-            >
-              {/* The dot sits under the avatar, so the device lines up with the member's name. */}
-              <Listbox.ItemIcon>
-                <span
-                  role='img'
-                  aria-label={t(active ? 'presence-active.label' : 'presence-idle.label')}
-                  data-active={active ? '' : undefined}
-                  className='size-2 rounded-full bg-neutral-border data-[active]:bg-success-text'
-                />
-              </Listbox.ItemIcon>
-              <Listbox.ItemText classNames='ps-2'>{name}</Listbox.ItemText>
-              {/* A session that moved to another object stays listed until it lapses, but must not act on it. */}
-              {session.currentlyAttended && renderActions?.(member, session.sessionId)}
-            </Listbox.Item>
-          );
-        })}
-    </div>
-  );
-};
-
-type PresenceAvatarProps = {
-  member: Space.Member;
-  size?: AvatarSize;
-  showName?: boolean;
-  match?: boolean;
-  index?: number;
-  /** In this session's follow: a ring in the follow's hue, whatever the member attends. */
-  followHue?: string;
-  onClick?: () => void;
-};
-
-const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
-  ({ member, showName, match, index, followHue, onClick, size }, forwardedRef) => {
-    // Rows leave `match` unset and draw no ring: its gap is painted in the surface colour, which shows on hover.
-    const status = followHue ? 'current' : match === undefined ? undefined : match ? 'current' : 'inactive';
-    const style: CSSProperties & Record<'--dx-avatar-ring', string | undefined> = {
-      ...(index ? { zIndex: index } : {}),
-      '--dx-avatar-ring': followHue ? `var(--color-${followHue}-border)` : undefined,
-    };
-    const fallbackValue = hexToFallback(member.identityKey ?? '0');
-    const name = getName(member);
-    const nameId = UiHooks.useId('presence-name');
-    const avatar = (
-      <Avatar.Root
-        status={status}
-        hue={Avatar.toAvatarHue(member.data?.hue || fallbackValue.hue)}
-        data-testid='spacePlugin.presence.member'
-        data-status={status}
-        size={size}
-        style={style}
-        {...(followHue && { 'data-follow': true })}
-        onClick={onClick}
-        fallback={member.data?.emoji || fallbackValue.emoji}
-        {...(showName ? { 'aria-labelledby': nameId } : { label: name })}
-        ref={forwardedRef}
-      />
-    );
-    return showName ? (
-      <>
-        {avatar}
-        <span id={nameId} className='text-sm truncate px-2'>
-          {name}
-        </span>
-      </>
-    ) : (
-      avatar
-    );
-  },
-);
 
 export type SmallPresenceLiveProps = {
   id?: string;

@@ -310,7 +310,6 @@ test.describe('Collaboration tests', () => {
 
     const row = host.page.getByTestId('spacePlugin.presence.row');
     await expect(row).toHaveCount(1);
-    await expect(row).toHaveAttribute('aria-selected', 'true');
 
     // The guest's document is open on the host, so the action is Jump rather than Go to.
     await row.getByTestId('spacePlugin.presence.jump').click({ timeout: 30_000 });
@@ -393,7 +392,6 @@ test.describe('Collaboration tests', () => {
       await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
       await expect(host.getCompanionTab('members')).toHaveAttribute('data-badge', '');
       await expect(rows.first().getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
-      await expect(rows.first()).toHaveAttribute('aria-selected', 'true');
 
       // The guest opens the other document and scrolls to its end; the host's deck goes with them.
       await guest.navigateToObject(1);

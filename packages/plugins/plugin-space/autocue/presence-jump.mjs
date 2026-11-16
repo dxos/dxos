@@ -297,12 +297,10 @@ export const steps = [
   },
   {
     name: 'Alice clicks Bob’s avatar',
-    subtitle: 'QA-3 step 2: the viewers list opens with his row highlighted',
+    subtitle: 'QA-3 step 2: the viewers list opens with his row',
     run: async ({ peers: { alice } }) => {
       await openViewers(alice);
-      await waitFor(async () => (await viewerRows(alice.page).first().getAttribute('aria-selected')) === 'true', {
-        what: 'Bob’s row to be highlighted',
-      });
+      await viewerRows(alice.page).first().waitFor();
     },
     pace: 2_500,
   },
