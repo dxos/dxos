@@ -411,6 +411,40 @@ describe('SceneEditor', () => {
       outside.remove();
     }
   });
+  test("a press in a menu's portal, outside the editor, leaves Cmd+Z working once the menu returns focus", () => {
+    const undo = vi.fn();
+    const history: History = {
+      canUndo: true,
+      canRedo: false,
+      record: (change) => (change(), true),
+      recordDocument: () => {},
+      undo,
+      redo: () => {},
+    };
+    render(
+      <SceneEditor.Root
+        config={config('2d')}
+        document={DOCUMENT}
+        scene='s'
+        onIntent={() => {}}
+        history={history}
+        display={DISPLAY}
+      >
+        <SceneEditor.Viewport />
+      </SceneEditor.Root>,
+    );
+    fireEvent.pointerDown(screen.getByTestId('viewport'));
+    const editor = globalThis.document.activeElement as HTMLElement;
+    const menu = globalThis.document.createElement('div');
+    globalThis.document.body.appendChild(menu);
+    fireEvent.pointerDown(menu);
+    editor.blur();
+    editor.focus();
+    fireEvent.keyDown(editor, { key: 'z', metaKey: true });
+    expect(undo).toHaveBeenCalledTimes(1);
+    menu.remove();
+  });
+
   test("the config's constrain rewrites or refuses every write, and sees the snap and lattice toggles", () => {
     const write = vi.fn();
     const seen: ConstrainContext[] = [];
