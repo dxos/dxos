@@ -6,19 +6,17 @@ import { describe, expect, test } from 'vitest';
 
 import { RDF } from '@dxos/pipeline-rdf';
 
+import { type TextItem } from '../sources/text-item.ts';
 import { mentionFacts, sentimentFacts } from './facts.ts';
-import { type NewsItem } from './news-item.ts';
 import { findTickers } from './tickers.ts';
 import { ANNOTATIONS, FINANCE, PACKS, SCHEMA_FINANCE, companyIri, ontology } from './vocabulary.ts';
 
-const ITEM: NewsItem = {
-  id: '0123456789abcdef',
+const ITEM: TextItem = {
+  key: { source: 'news.google.com', id: 'CBMi1' },
   title: 'Nvidia beats estimates; $AMD slips',
   link: 'https://example.com/nvda',
   publisher: 'Reuters',
   published: '2026-11-01T12:00:00.000Z',
-  feed: 'google:NVDA',
-  fetchedAt: '2026-11-16T00:00:00.000Z',
 };
 const EXTRACTOR = { id: 'finance-test', model: 'regex', version: '1' };
 
@@ -42,7 +40,7 @@ describe('annotation facts', () => {
       .filter((fact) => fact.assertion.predicateIri === ANNOTATIONS.mentions.iri)
       .map((fact) => RDF.termValue(fact.assertion.object));
     expect(mentioned).toEqual([companyIri('NVDA'), companyIri('AMD')]);
-    expect(facts.every((fact) => fact.attribution.source === `news:${ITEM.id}` && fact.graph)).toBe(true);
+    expect(facts.every((fact) => fact.attribution.source === 'news.google.com:CBMi1' && fact.graph)).toBe(true);
     // Deterministic: the same item writes the same statements.
     expect(mentionFacts(ITEM, findTickers(ITEM.title), EXTRACTOR).map(({ id }) => id)).toEqual(
       facts.map(({ id }) => id),

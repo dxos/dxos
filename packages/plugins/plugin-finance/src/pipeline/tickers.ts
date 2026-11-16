@@ -42,7 +42,7 @@ export const TICKERS: ReadonlyArray<Listing> = [
   { ticker: 'NFLX', name: 'Netflix', bare: true },
   { ticker: 'AMD', name: 'Advanced Micro Devices', aliases: ['AMD'], bare: true },
   { ticker: 'CRM', name: 'Salesforce', bare: true },
-  { ticker: 'BAC', name: 'Bank of America', bare: true },
+  { ticker: 'BAC', name: 'Bank of America', aliases: ['Bank America'], bare: true },
   { ticker: 'KO', name: 'Coca-Cola' },
   { ticker: 'PEP', name: 'PepsiCo' },
   { ticker: 'DIS', name: 'Disney', aliases: ['Walt Disney'] },
