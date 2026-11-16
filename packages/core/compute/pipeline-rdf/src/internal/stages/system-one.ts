@@ -78,17 +78,34 @@ export type ClaimDecision = {
   readonly followsRules?: number;
 };
 
-export type FallbackReason = 'unlisted-predicate' | 'low-confidence' | 'flagged' | 'no-spans' | 'no-claims' | 'error';
+export type FallbackReason =
+  | 'unlisted-predicate'
+  | 'unchecked-rules'
+  | 'unresolved-reference'
+  | 'low-confidence'
+  | 'flagged'
+  | 'no-spans'
+  | 'no-claims'
+  | 'error';
 
 export type Route =
   | { readonly _tag: 'accept' }
   | { readonly _tag: 'drop'; readonly reason: 'not-a-fact' | 'unlisted-predicate' | 'outside-rules' }
   | { readonly _tag: 'fallback'; readonly reason: FallbackReason };
 
+/** How System One links mentions: the known entities by choice key, the author, and the confidence thresholds. */
+export type Linking = {
+  readonly entities: ReadonlyMap<string, KnownEntity>;
+  readonly author?: string;
+  readonly thresholds: SystemOneThresholds;
+};
+
 /**
  * Where a claim goes: kept as System One decided it, dropped, or sent to the LLM. A closed ontology drops an
  * unlisted relation rather than paying the LLM to mint a predicate it would then drop too, but only when every listed
  * predicate was offered as a choice: past the choice limit, "other" may be a listed predicate the model never saw.
+ * With `rulesRequired`, a decision without a rules answer goes to the LLM, since nothing checked the claim against
+ * them; with `claim`, a role written as an unlinked third-person reference goes to the LLM, which reads the context.
  */
 export const route = (
   decision: ClaimDecision,
@@ -96,7 +113,17 @@ export const route = (
     thresholds,
     closed,
     allPredicatesOffered = true,
-  }: { readonly thresholds: SystemOneThresholds; readonly closed: boolean; readonly allPredicatesOffered?: boolean },
+    rulesRequired = false,
+    claim,
+    entities = new Map(),
+  }: {
+    readonly thresholds: SystemOneThresholds;
+    readonly closed: boolean;
+    readonly allPredicatesOffered?: boolean;
+    readonly rulesRequired?: boolean;
+    readonly claim?: Claim;
+    readonly entities?: ReadonlyMap<string, KnownEntity>;
+  },
 ): Route => {
   if (decision.isFact < thresholds.minIsFact) {
     return { _tag: 'drop', reason: 'not-a-fact' };
@@ -108,6 +135,16 @@ export const route = (
     return closed && allPredicatesOffered
       ? { _tag: 'drop', reason: 'unlisted-predicate' }
       : { _tag: 'fallback', reason: 'unlisted-predicate' };
+  }
+  if (rulesRequired && decision.followsRules === undefined) {
+    return { _tag: 'fallback', reason: 'unchecked-rules' };
+  }
+  if (
+    claim &&
+    (isUnresolvedReference(claim.subject, decision.subject, { entities, thresholds }) ||
+      isUnresolvedReference(claim.object, decision.object, { entities, thresholds }))
+  ) {
+    return { _tag: 'fallback', reason: 'unresolved-reference' };
   }
   if (decision.needsFallback > thresholds.maxNeedsFallback) {
     return { _tag: 'fallback', reason: 'flagged' };
@@ -150,28 +187,33 @@ export const entityChoices = (entities: ReadonlyArray<KnownEntity>): ReadonlyMap
 
 const FIRST_PERSON = /^(i|me|my|myself|i'm|i've|i'll|i'd)$/i;
 
+const THIRD_PERSON =
+  /^(he|she|him|her|his|hers|they|them|their|theirs|it|its|this|that|these|those|he's|she's|they're|it's)$/i;
+
+/** The known entity a mention is confidently linked to, if any. */
+const linkedEntity = (
+  choice: Choice | undefined,
+  { entities, thresholds }: Pick<Linking, 'entities' | 'thresholds'>,
+): KnownEntity | undefined =>
+  choice && choice.confidence >= thresholds.minEntityConfidence ? entities.get(choice.label) : undefined;
+
+/** Whether a span is a third-person reference ("she", "that") no known entity resolves. */
+export const isUnresolvedReference = (
+  span: string,
+  choice: Choice | undefined,
+  linking: Pick<Linking, 'entities' | 'thresholds'>,
+): boolean => THIRD_PERSON.test(span.trim()) && linkedEntity(choice, linking) === undefined;
+
 /**
  * The surface form a mention is written as: a confidently linked entity's own label (so it resolves to that entity's
  * IRI), the author for a first-person mention, else the span as written.
  */
-export const surfaceOf = (
-  span: string,
-  choice: Choice | undefined,
-  {
-    entities,
-    author,
-    thresholds,
-  }: {
-    readonly entities: ReadonlyMap<string, KnownEntity>;
-    readonly author?: string;
-    readonly thresholds: SystemOneThresholds;
-  },
-): string => {
-  const entity = choice && choice.confidence >= thresholds.minEntityConfidence ? entities.get(choice.label) : undefined;
+export const surfaceOf = (span: string, choice: Choice | undefined, linking: Linking): string => {
+  const entity = linkedEntity(choice, linking);
   if (entity) {
     return entity.label;
   }
-  return author && FIRST_PERSON.test(span.trim()) ? author : span.trim();
+  return linking.author && FIRST_PERSON.test(span.trim()) ? linking.author : span.trim();
 };
 
 const FORCE: Record<SpeechAct, Pick<ExtractedFact, 'force' | 'mood'>> = {
@@ -204,20 +246,14 @@ export const toCandidate = (
   decision: ClaimDecision,
   {
     predicates,
-    entities,
-    author,
-    thresholds,
     graph,
-  }: {
+    ...linking
+  }: Linking & {
     readonly predicates: ReadonlyMap<string, Ontology.Entry>;
-    readonly entities: ReadonlyMap<string, KnownEntity>;
-    readonly author?: string;
-    readonly thresholds: SystemOneThresholds;
     readonly graph: string;
   },
 ): ExtractedFact => {
   const entry = predicates.get(decision.predicate.label);
-  const linking = { entities, author, thresholds };
   return {
     subject: surfaceOf(claim.subject, decision.subject, linking),
     predicate: entry?.name ?? decision.predicate.label,
@@ -473,6 +509,9 @@ const analyseChunk = (
             thresholds: context.thresholds,
             closed: context.closed,
             allPredicatesOffered: context.allPredicatesOffered,
+            rulesRequired: context.rules.length > 0,
+            claim,
+            entities: context.entities,
           });
           count(counters, next._tag === 'accept' ? 'accept' : next.reason);
           switch (next._tag) {

@@ -117,12 +117,10 @@ export const parseFilingFeed = (xml: string): FilingEntry[] =>
     return [{ accession, form, filed, link, ...(formName ? { formName } : {}), ...(items ? { items } : {}) }];
   });
 
-// Bounds a feed walk, so a filer with years of filings in the window cannot page without end.
-const MAX_FILING_PAGES = 25;
-
 /**
- * Collects a newest-first filing feed a page at a time (`fetchPage(start)`) until a page comes back short or reaches
- * past `since` (ISO day), and keeps the filings on or after `since`.
+ * Collects a newest-first filing feed a page at a time (`fetchPage(start)`) until a page comes back short, reaches
+ * past `since` (ISO day), or adds no filing not already seen (a feed that ignores `start` would otherwise repeat
+ * forever), and keeps the filings on or after `since`.
  */
 export const collectFilings = <E>(
   fetchPage: (start: number) => Effect.Effect<FilingEntry[], E>,
@@ -131,10 +129,15 @@ export const collectFilings = <E>(
 ): Effect.Effect<FilingEntry[], E> =>
   Effect.gen(function* () {
     const filings: FilingEntry[] = [];
-    for (let page = 0; page < MAX_FILING_PAGES; page++) {
+    const seen = new Set<string>();
+    for (let page = 0; ; page++) {
       const entries = yield* fetchPage(page * count);
-      filings.push(...entries);
-      if (entries.length < count || entries.some(({ filed }) => filed < since)) {
+      const fresh = entries.filter(({ accession }) => !seen.has(accession));
+      for (const entry of fresh) {
+        seen.add(entry.accession);
+        filings.push(entry);
+      }
+      if (fresh.length === 0 || entries.length < count || entries.some(({ filed }) => filed < since)) {
         break;
       }
     }
@@ -300,13 +303,22 @@ const ISSUERS = new Map(
 /** The known listing a 13F issuer name (`APPLE INC`, `ALPHABET INC CL A`) names, by normalized name. */
 export const tickerForIssuer = (name: string): string | undefined => ISSUERS.get(issuerKey(name));
 
-/** One row of a 13F information table; `putCall` marks an option position on the issuer rather than its shares. */
+/**
+ * One row of a 13F information table; `putCall` marks an option position on the issuer rather than its shares, and
+ * `amountType` says whether `shares` counts shares (`SH`) or a principal amount in USD (`PRN`, e.g. convertible debt).
+ */
 export type InfoTableRow = {
   readonly issuer: string;
   readonly cusip: string;
   readonly value: number;
   readonly shares: number;
+  readonly amountType?: 'SH' | 'PRN';
   readonly putCall?: 'put' | 'call';
+};
+
+const amountTypeOf = (value: unknown): 'SH' | 'PRN' | undefined => {
+  const text = str(value)?.toUpperCase();
+  return text === 'SH' || text === 'PRN' ? text : undefined;
 };
 
 const putCallOf = (value: unknown): 'put' | 'call' | undefined => {
@@ -321,21 +333,23 @@ export const parseInfoTable = (xml: string): InfoTableRow[] =>
     const cusip = str(field(row, 'cusip'));
     const value = num(field(row, 'value'));
     const shares = num(field(row, 'shrsOrPrnAmt', 'sshPrnamt'));
+    const amountType = amountTypeOf(field(row, 'shrsOrPrnAmt', 'sshPrnamtType'));
     const putCall = putCallOf(field(row, 'putCall'));
     return issuer && cusip && value !== undefined && shares !== undefined
-      ? [{ issuer, cusip, value, shares, ...(putCall ? { putCall } : {}) }]
+      ? [{ issuer, cusip, value, shares, ...(amountType ? { amountType } : {}), ...(putCall ? { putCall } : {}) }]
       : [];
   });
 
 /**
  * The share positions of an information table, summed per CUSIP (a filer lists one issuer once per share class and
- * manager), largest first: rows in a known listing plus the ten largest. Put and call rows are left out, since a
- * holding states ownership of the shares and an option's notional is not that.
+ * manager), largest first: rows in a known listing plus the ten largest. Put, call and principal-amount (`PRN`) rows
+ * are left out, since a holding states ownership of the shares and neither an option's notional nor a bond's principal
+ * is that.
  */
 export const shareHoldings = (rows: ReadonlyArray<InfoTableRow>): InfoTableRow[] => {
   const byCusip = new Map<string, InfoTableRow>();
   for (const row of rows) {
-    if (row.putCall) {
+    if (row.putCall || row.amountType === 'PRN') {
       continue;
     }
     const previous = byCusip.get(row.cusip);

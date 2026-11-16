@@ -77,6 +77,12 @@ const OPTIONS_INFO_TABLE = `<?xml version="1.0" encoding="UTF-8"?>
   <infoTable><nameOfIssuer>APPLE INC</nameOfIssuer><cusip>037833100</cusip><value>7000</value><shrsOrPrnAmt><sshPrnamt>70</sshPrnamt></shrsOrPrnAmt><putCall>Call</putCall></infoTable>
 </informationTable>`;
 
+const PRN_INFO_TABLE = `<?xml version="1.0" encoding="UTF-8"?>
+<informationTable xmlns="http://www.sec.gov/edgar/document/thirteenf/informationtable">
+  <infoTable><nameOfIssuer>APPLE INC</nameOfIssuer><cusip>037833100</cusip><value>1000</value><shrsOrPrnAmt><sshPrnamt>10</sshPrnamt><sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt></infoTable>
+  <infoTable><nameOfIssuer>APPLE INC</nameOfIssuer><cusip>037833100</cusip><value>2000</value><shrsOrPrnAmt><sshPrnamt>2000000</sshPrnamt><sshPrnamtType>PRN</sshPrnamtType></shrsOrPrnAmt></infoTable>
+</informationTable>`;
+
 const CHART = JSON.stringify({
   chart: {
     result: [
@@ -216,6 +222,17 @@ describe('SEC EDGAR', () => {
     expect(shareHoldings(rows)).toEqual([{ issuer: 'APPLE INC', cusip: '037833100', value: 1500, shares: 15 }]);
   });
 
+  test('13F principal-amount rows are not summed as shares', () => {
+    const rows = parseInfoTable(PRN_INFO_TABLE);
+    expect(rows.map(({ shares, amountType }) => [shares, amountType])).toEqual([
+      [10, 'SH'],
+      [2000000, 'PRN'],
+    ]);
+    expect(shareHoldings(rows)).toEqual([
+      { issuer: 'APPLE INC', cusip: '037833100', value: 1000, shares: 10, amountType: 'SH' },
+    ]);
+  });
+
   test('a filing feed is paged until it reaches past the window', () => {
     const entry = (filed: string, index: number): FilingEntry => ({
       accession: `a-${index}`,
@@ -256,11 +273,45 @@ describe('SEC EDGAR', () => {
     expect(filings).toHaveLength(1);
     expect(starts).toEqual([0]);
   });
+
+  test('a long window is paged to its end, however many pages it spans', () => {
+    const feed = Array.from({ length: 100 }, (_, index) => ({
+      accession: `a-${index}`,
+      form: '4',
+      filed: '2026-11-10',
+      link: `https://www.sec.gov/${index}`,
+    }));
+    const filings = Effect.runSync(
+      collectFilings((start) => Effect.sync(() => feed.slice(start, start + 2)), '2026-01-01', 2),
+    );
+    expect(filings).toHaveLength(100);
+  });
+
+  test('a feed that repeats a page ends instead of paging forever', () => {
+    const page: FilingEntry[] = [
+      { accession: 'a', form: '4', filed: '2026-11-10', link: 'x' },
+      { accession: 'b', form: '4', filed: '2026-11-09', link: 'y' },
+    ];
+    const starts: number[] = [];
+    const filings = Effect.runSync(
+      collectFilings(
+        (start) =>
+          Effect.sync(() => {
+            starts.push(start);
+            return page;
+          }),
+        '2026-01-01',
+        2,
+      ),
+    );
+    expect(filings.map(({ accession }) => accession)).toEqual(['a', 'b']);
+    expect(starts).toEqual([0, 2]);
+  });
 });
 
 describe('market data', () => {
   test('daily bars with returns, skipping a bar with no close', () => {
-    const bars = parseChart('AAPL', CHART);
+    const bars = parseChart('AAPL', CHART, Date.UTC(2026, 10, 20));
     expect(bars.map(({ date, values }) => [date, values.close, values.changePercent])).toEqual([
       ['2026-11-13', 184, undefined],
       ['2026-11-14', 182.16, -1],
@@ -293,6 +344,14 @@ describe('market data', () => {
     const dates = (now: number) => parseChart('AAPL', chart, now).map(({ date }) => date);
     expect(dates((session.start + 3600) * 1000)).toEqual(['2026-11-15']);
     expect(dates(session.end * 1000)).toEqual(['2026-11-15', '2026-11-16']);
+  });
+
+  test('without session metadata, a bar from the last 24 hours is left out as possibly open', () => {
+    // The newest bar opens 2026-11-14 14:30 UTC.
+    const newest = 1794666600 * 1000;
+    const dates = (now: number) => parseChart('AAPL', CHART, now).map(({ date }) => date);
+    expect(dates(newest + 3600 * 1000)).toEqual(['2026-11-13']);
+    expect(dates(newest + 24 * 3600 * 1000)).toEqual(['2026-11-13', '2026-11-14']);
   });
 
   test('FINRA short volume, kept for known listings', () => {

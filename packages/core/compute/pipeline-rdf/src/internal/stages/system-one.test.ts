@@ -14,6 +14,7 @@ import {
   contextRule,
   entityChoices,
   factualityOf,
+  isUnresolvedReference,
   offersAllPredicates,
   predicateChoices,
   route,
@@ -104,6 +105,31 @@ describe('choices', () => {
     expect(claimDecisions(claim, 'bob', predicateChoices(Ontology.DEFAULT), new Map()).follows_rules).toBeUndefined();
     expect(route({ ...DECISION, followsRules: 0.1 }, OPEN)).toEqual({ _tag: 'drop', reason: 'outside-rules' });
     expect(route({ ...DECISION, followsRules: 0.9 }, OPEN)).toEqual({ _tag: 'accept' });
+  });
+
+  test('with caller rules, a decision that does not answer them goes to the LLM', ({ expect }) => {
+    expect(route(DECISION, { ...OPEN, rulesRequired: true })).toEqual({ _tag: 'fallback', reason: 'unchecked-rules' });
+    expect(route({ ...DECISION, followsRules: 0.9 }, { ...OPEN, rulesRequired: true })).toEqual({ _tag: 'accept' });
+    expect(route({ ...DECISION, followsRules: 0.1 }, { ...OPEN, rulesRequired: true })).toEqual({
+      _tag: 'drop',
+      reason: 'outside-rules',
+    });
+  });
+
+  test('an unlinked third-person reference goes to the LLM, which reads the earlier messages', ({ expect }) => {
+    const claim = { text: 'She uses Redis', subject: 'She', object: 'Redis' };
+    expect(route(DECISION, { ...OPEN, claim })).toEqual({ _tag: 'fallback', reason: 'unresolved-reference' });
+    const entities = entityChoices([ALICE]);
+    expect(route({ ...DECISION, subject: { label: NEW, confidence: 0.9 } }, { ...OPEN, claim, entities })).toEqual({
+      _tag: 'fallback',
+      reason: 'unresolved-reference',
+    });
+    expect(route({ ...DECISION, subject: { label: 'e0', confidence: 0.9 } }, { ...OPEN, claim, entities })).toEqual({
+      _tag: 'accept',
+    });
+    expect(route(DECISION, { ...OPEN, claim: { ...claim, subject: 'Bob' } })).toEqual({ _tag: 'accept' });
+    expect(isUnresolvedReference('that', undefined, { entities, thresholds: DEFAULT_THRESHOLDS })).toBe(true);
+    expect(isUnresolvedReference('the launch', undefined, { entities, thresholds: DEFAULT_THRESHOLDS })).toBe(false);
   });
 
   test('the fallback reads earlier messages only to resolve references', ({ expect }) => {

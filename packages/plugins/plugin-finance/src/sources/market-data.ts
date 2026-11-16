@@ -38,10 +38,14 @@ const Chart = Schema.Struct({
   }),
 });
 
+/** Without session metadata, a bar this recent may belong to a session still open. */
+const PROVISIONAL_MS = 24 * 60 * 60 * 1000;
+
 /**
  * Daily OHLCV bars from a chart response, with each bar's return on the previous close. Bars with no close (a halt)
  * are left out, and so is the bar of a session still open at `now` (epoch ms): its close is the last trade, and rows
- * are deduped on `ticker@date`, so storing it would keep the final close from ever replacing it.
+ * are deduped on `ticker@date`, so storing it would keep the final close from ever replacing it. Without the
+ * response's session metadata, any bar from the last 24 hours counts as open.
  */
 export const parseChart = (ticker: string, json: string, now = Date.now()): Finance.Observation[] => {
   const decoded = Schema.decodeUnknownSync(Schema.fromJsonString(Chart))(json);
@@ -51,7 +55,8 @@ export const parseChart = (ticker: string, json: string, now = Date.now()): Fina
   }
   const [quote] = result.indicators.quote;
   const session = result.meta?.currentTradingPeriod?.regular;
-  const isOpen = (time: number) => session !== undefined && time >= session.start && now < session.end * 1000;
+  const isOpen = (time: number) =>
+    session !== undefined ? time >= session.start && now < session.end * 1000 : now - time * 1000 < PROVISIONAL_MS;
   const observations: Finance.Observation[] = [];
   let previous: number | undefined;
   result.timestamp.forEach((time, index) => {

@@ -367,10 +367,14 @@ export const extractTranscriptFacts = (
 /** How many earlier messages of a batch System One reads alongside each message. */
 const CONTEXT_MESSAGES = 5;
 
-const withContext = (doc: ExtractDocument, earlier: readonly ExtractDocument[]): ExtractDocument =>
-  earlier.length === 0
-    ? doc
-    : { ...doc, context: earlier.map((message) => `${message.author ?? 'unknown'}: ${message.text}`).join('\n') };
+/** Appends the batch window to any context the caller supplied, which predates the window. */
+const withContext = (doc: ExtractDocument, earlier: readonly ExtractDocument[]): ExtractDocument => {
+  if (earlier.length === 0) {
+    return doc;
+  }
+  const window = earlier.map((message) => `${message.author ?? 'unknown'}: ${message.text}`).join('\n');
+  return { ...doc, context: doc.context ? `${doc.context}\n${window}` : window };
+};
 
 const extractLlmTranscriptFacts = (
   docs: readonly ExtractDocument[],
