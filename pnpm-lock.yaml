@@ -1314,6 +1314,9 @@ catalogs:
     pitchy:
       specifier: ^4.1.0
       version: 4.1.0
+    pkg-pr-new:
+      specifier: 0.0.93
+      version: 0.0.93
     pkg-up:
       specifier: ^3.1.0
       version: 3.1.0
@@ -1814,6 +1817,9 @@ patchedDependencies:
   memory-pager@1.5.0:
     hash: 21c9214e21930a792429b9613bd1e4ee15578beeb2e326e626477e01da37f248
     path: patches/memory-pager@1.5.0.patch
+  pkg-pr-new@0.0.93:
+    hash: f97eec76c99b175c3eaf6c71bd0f952d134b2ea2729c1a2724f4bdf4f15eedf1
+    path: patches/pkg-pr-new@0.0.93.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -2114,6 +2120,9 @@ importers:
       oxlint-tsgolint:
         specifier: 'catalog:'
         version: 7.0.2001
+      pkg-pr-new:
+        specifier: 'catalog:'
+        version: 0.0.93(patch_hash=f97eec76c99b175c3eaf6c71bd0f952d134b2ea2729c1a2724f4bdf4f15eedf1)
       pkg-up:
         specifier: 'catalog:'
         version: 3.1.0
@@ -44824,6 +44833,10 @@ packages:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
 
+  pkg-pr-new@0.0.93:
+    resolution: {integrity: sha512-JH3HEO+m8sNFpalNAeGrNKjdwxNcXT3yuEuGMU/65dvLojPo+Ofnmc8la2v2ceisjXTOKQw/738Pj4KNFY7F+w==}
+    hasBin: true
+
   pkg-types@1.3.1:
     resolution: {integrity: sha512-/Jm5M4RvtBFVkKWRu2BLUTNP8/M2a+UwuAX+ae4770q1qVGtfjG+WTCupoZixokjmHiry8uI+dlY8KXYV5HVVQ==}
 
@@ -69216,6 +69229,8 @@ snapshots:
   pkg-dir@4.2.0:
     dependencies:
       find-up: 4.1.0
+
+  pkg-pr-new@0.0.93(patch_hash=f97eec76c99b175c3eaf6c71bd0f952d134b2ea2729c1a2724f4bdf4f15eedf1): {}
 
   pkg-types@1.3.1:
     dependencies:
