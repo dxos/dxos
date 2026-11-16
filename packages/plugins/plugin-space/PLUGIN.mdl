@@ -1739,6 +1739,17 @@ decision D-92: A session sends its viewing message as soon as it hears a session
     - Read the followables' atom before subscribing to it: it fixes this read only, and the next atom a send reads would bring the leak back.
 ```
 
+```mdl
+decision D-93: `OpenDeleteSpace` opens the plugin's delete-space confirmation as a layout dialog, whose confirm runs `Delete`, so an app other than Composer asks before a space goes with no dialog of its own. `Delete` itself still deletes at once.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpaceOperation.Delete]
+  why: The diagram app's user asked for its own delete-space dialog to give way to one from the space plugin.
+  rejected:
+    - Ask inside `Delete`: an agent or MCP call would wait on a dialog nobody sees.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
