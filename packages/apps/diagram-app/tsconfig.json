@@ -36,9 +36,6 @@
       "path": "../../../tools/vite-plugin-module-url"
     },
     {
-      "path": "../../common/display-name"
-    },
-    {
       "path": "../../common/effect"
     },
     {
