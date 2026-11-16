@@ -32,8 +32,6 @@ const BRAND = 'https://assets.dxos.org/brand';
 const LOCKUP = `${BRAND}/logotypes/dxos-hero-white.svg`;
 /** The wordmark alone, for a slide whose mark is drawn by the art behind it. */
 const WORDMARK = `${BRAND}/logotypes/dxos-text-white.svg`;
-/** The mark alone, for the oversized watermark. */
-const MARK = `${BRAND}/logotypes/dxos-logo-white.svg`;
 /** The deck's own art: the mark drawn as a lit volume, exported from the Figma title slide. */
 const GLOW = `${BRAND}/backgrounds/bg-dxos-glow.svg`;
 
@@ -79,19 +77,35 @@ export const Eyebrow: Story = {
   },
 };
 
-/** 3. The brand's own art behind the slide draws the mark; only the wordmark and the title sit on top of it. */
+/** 3. The brand's own art draws the mark; the title holds the top edge and the wordmark the bottom, leaving it the middle. */
 export const Art: Story = {
   args: {
     content: slide(
       {
         layout: 'center',
         background: `${BRAND}/backgrounds/bg-dxos.svg`,
-        backgroundOpacity: 0.55,
+        // The art's mark is centred, so it is held down to where it reads as texture between the words rather than
+        // as a second mark competing with the wordmark.
+        backgroundOpacity: 0.22,
       },
-      ...hero(WORDMARK),
+      '<Box variant="spread">',
       '',
       '## The decentralized operating system',
+      '',
+      `![DXOS](${WORDMARK})`,
+      '',
+      '</Box>',
     ),
+  },
+  play: async ({ canvasElement }) => {
+    const frame = await query(canvasElement, '[data-layout="center"]');
+    const heading = frame.querySelector('h2')!.getBoundingClientRect();
+    const mark = frame.querySelector('[data-variant="spread"] img')!;
+    await waitFor(() => expect((mark as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
+    // The two blocks hold opposite edges, so the art has the slide's middle to itself.
+    const slideBox = frame.getBoundingClientRect();
+    await expect(heading.top - slideBox.top).toBeLessThan(slideBox.height / 4);
+    await expect(slideBox.bottom - mark.getBoundingClientRect().bottom).toBeLessThan(slideBox.height / 4);
   },
 };
 
@@ -152,14 +166,16 @@ export const Glow: Story = {
   },
 };
 
-/** 5. The mark run oversized off the start edge, behind the words, which take the rest of the slide. */
-export const Watermark: Story = {
+/** 4. The art fills a column of its own, bleeding to the slide's edges, with the words in the column beside it. */
+export const Column: Story = {
   args: {
     content: slide(
-      { layout: 'two-cols' },
-      '<Box variant="watermark">',
+      // The art carries its own ground (`rgb(29,31,32)`, the brand's fallback fill), so the slide takes the same one
+      // and the column's edge does not show as a seam.
+      { layout: 'two-cols', bleed: 'left', background: 'rgb(29,31,32)' },
+      '<Box variant="fill">',
       '',
-      `![](${MARK})`,
+      `![](${BRAND}/backgrounds/bg-dxos.svg)`,
       '',
       '</Box>',
       '',
@@ -174,11 +190,14 @@ export const Watermark: Story = {
   },
   play: async ({ canvasElement }) => {
     const frame = await query(canvasElement, '[data-layout="two-cols"]');
-    const mark = frame.querySelector('[data-variant="watermark"] img')!;
-    await waitFor(() => expect((mark as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
-    // The mark is cropped by the slide's start edge rather than fitted inside it.
-    const art = mark.getBoundingClientRect();
+    const art = frame.querySelector('[data-variant="fill"] img')!;
+    await waitFor(() => expect((art as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
+    // 1. The art runs to the slide's own start and bottom edges rather than sitting inside the layout's padding.
+    const picture = art.getBoundingClientRect();
     const slideBox = frame.getBoundingClientRect();
-    await expect(art.left).toBeLessThan(slideBox.left);
+    await expect(Math.abs(picture.left - slideBox.left)).toBeLessThan(2);
+    await expect(Math.abs(picture.bottom - slideBox.bottom)).toBeLessThan(2);
+    // 2. It keeps to its own column, so the words beside it are clear of it.
+    await expect(picture.right).toBeLessThan(slideBox.left + slideBox.width / 2);
   },
 };

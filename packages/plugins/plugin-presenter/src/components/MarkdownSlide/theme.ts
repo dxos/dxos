@@ -102,9 +102,26 @@ export const theme = {
       },
       // A mark run oversized off the slide's start edge, behind the words. It leaves the flow, so the text is laid
       // out as though it were not there, and it is cropped by the slide rather than fitted to it.
-      watermark: {
-        box: 'absolute inset-y-0 -start-[14%] w-[72%] flex items-center pointer-events-none opacity-[0.18]',
-        img: 'w-full h-auto object-contain',
+      //
+      // It is not tinted down with `opacity`, which would fade the relief with it. `brightness` takes the white mark
+      // to the surface's own value, and the two drop-shadows — dark down-end, light up-start — are then the only
+      // thing that reads, so the mark looks raised out of the slide rather than laid on it. The offsets are canvas
+      // units, scaled with everything else.
+      //
+      // The mark is drawn high in its own square (21 units of air above it, 218 below), so centring the file centres
+      // the air rather than the mark; the nudge is half that difference, as a share of the image's height.
+      // A picture that fills its column rather than sitting in it: it grows to the column's height and is cropped
+      // to its width, so the mark at the art's centre stays centred however narrow the column is.
+      fill: {
+        box: 'grow min-h-0 self-stretch flex items-center justify-center overflow-hidden',
+        img: 'w-full h-full object-cover',
+        p: '[&:has(>img)]:contents',
+      },
+      // Blocks pushed to the slide's own top and bottom edges, which leaves the middle to whatever is behind them —
+      // the art on a title slide. It fills the slide, so it carries the slide's padding itself.
+      spread: {
+        box: 'absolute inset-0 flex flex-col justify-between items-center text-center px-40 py-24',
+        img: 'h-[200px] w-auto max-w-full object-contain',
         p: '[&:has(>img)]:contents',
       },
       // A title slide's name and the links under it, set against the slide's start edge rather than its padding:
