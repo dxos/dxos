@@ -61,6 +61,9 @@ export const KIND_CLASSES: ReadonlyArray<string> = [...KINDS.keys()];
 export const isKindQuad = (predicate: string, object: string): boolean =>
   predicate === Vocab.RDF_TYPE && KINDS.has(object);
 
+/** The kind a class IRI states (current or legacy class), if it is a kind class. */
+export const kindOfClass = (iri: string): EntityKind | undefined => KINDS.get(iri);
+
 /** The class IRI an entity of this kind is typed with. */
 export const classIri = (kind: EntityKind): string => CLASSES[kind];
 

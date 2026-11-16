@@ -7,8 +7,8 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { SemanticIndexError } from '../errors.ts';
-import { Fact } from '../types/index.ts';
-import { FactStore, type FactStoreApi } from './fact-store.ts';
+import { EntityKind, Fact } from '../types/index.ts';
+import { FactStore, type FactStoreApi, type WindowedFactStoreApi, isWindowed } from './fact-store.ts';
 
 //
 // A FactStore over HTTP: `make` is a client that runs in any runtime with `fetch` (a browser story included), and
@@ -64,8 +64,46 @@ const QueryArgs = Schema.Struct({ query: SemanticQuery });
 const SelectArgs = Schema.Struct({ sparql: Schema.String });
 const CursorArgs = Schema.Struct({ source: Schema.String });
 const SetCursorArgs = Schema.Struct({ source: Schema.String, hash: Schema.String });
+const EntityFilterFields = {
+  role: Schema.optional(Schema.Literals(['any', 'subject'])),
+  predicates: Schema.optional(Schema.Array(Schema.String)),
+};
+const EntitiesArgs = Schema.Struct({
+  query: Schema.Struct({
+    ...EntityFilterFields,
+    offset: Schema.Number,
+    limit: Schema.Number,
+    kind: Schema.optional(EntityKind),
+    text: Schema.optional(Schema.String),
+  }),
+});
+const EntityWindow = Schema.Struct({
+  total: Schema.Number,
+  items: Schema.Array(Schema.Struct({ key: Schema.String, label: Schema.String, kind: Schema.optional(EntityKind) })),
+  kinds: Schema.Array(Schema.Struct({ kind: EntityKind, count: Schema.Number })),
+});
+const EntityFactsArgs = Schema.Struct({
+  query: Schema.Struct({
+    ...EntityFilterFields,
+    keys: Schema.Array(Schema.String),
+    limit: Schema.optional(Schema.Number),
+  }),
+});
+const Usage = Schema.Record(Schema.String, Schema.Number);
 
-const METHODS = ['putFacts', 'predicates', 'query', 'select', 'rows', 'cursor', 'setCursor', 'clear'] as const;
+const METHODS = [
+  'putFacts',
+  'predicates',
+  'query',
+  'select',
+  'rows',
+  'entities',
+  'entityFacts',
+  'predicateUsage',
+  'cursor',
+  'setCursor',
+  'clear',
+] as const;
 
 type Method = (typeof METHODS)[number];
 
@@ -77,7 +115,7 @@ const ResultBody = Schema.Struct({ result: Schema.Unknown });
 /**
  * A FactStore client that forwards every call to a {@link handle} server at `baseUrl` (e.g. `http://localhost:7700`).
  */
-export const make = (baseUrl: string): FactStoreApi => {
+export const make = (baseUrl: string): WindowedFactStoreApi => {
   const call = <S extends Schema.Constraint & Schema.ConstraintDecoder<unknown>>(
     method: Method,
     args: object,
@@ -120,6 +158,9 @@ export const make = (baseUrl: string): FactStoreApi => {
     query: (query) => call('query', { query }, Facts).pipe(Effect.map((facts) => [...facts])),
     select: (sparql) => call('select', { sparql }, Facts).pipe(Effect.map((facts) => [...facts])),
     rows: (sparql) => call('rows', { sparql }, Rows).pipe(Effect.map((rows) => [...rows])),
+    entities: (query) => call('entities', { query }, EntityWindow),
+    entityFacts: (query) => call('entityFacts', { query }, Facts).pipe(Effect.map((facts) => [...facts])),
+    predicateUsage: () => call('predicateUsage', {}, Usage),
     cursor: (source) => call('cursor', { source }, Hash).pipe(Effect.map((hash) => hash ?? undefined)),
     setCursor: (source, hash) => call('setCursor', { source, hash }, Done).pipe(Effect.asVoid),
     clear: () => call('clear', {}, Done).pipe(Effect.asVoid),
@@ -157,6 +198,12 @@ const json = (status: number, body: unknown, origin: string | null): Response =>
     headers: { 'content-type': 'application/json', ...corsHeaders(origin) },
   });
 
+/** The store, if it answers windowed reads; a store that cannot (a write-only feed) fails the call. */
+const windowed = (store: FactStoreApi, method: Method): Effect.Effect<WindowedFactStoreApi, SemanticIndexError> =>
+  isWindowed(store)
+    ? Effect.succeed(store)
+    : Effect.fail(new SemanticIndexError({ message: `This fact store does not answer ${method}` }));
+
 const dispatch = (
   store: FactStoreApi,
   method: Method,
@@ -176,6 +223,18 @@ const dispatch = (
       return Schema.decodeUnknownEffect(SelectArgs)(body).pipe(Effect.flatMap(({ sparql }) => store.select(sparql)));
     case 'rows':
       return Schema.decodeUnknownEffect(SelectArgs)(body).pipe(Effect.flatMap(({ sparql }) => store.rows(sparql)));
+    case 'entities':
+      return Schema.decodeUnknownEffect(EntitiesArgs)(body).pipe(
+        Effect.flatMap(({ query }) => windowed(store, method).pipe(Effect.flatMap((found) => found.entities(query)))),
+      );
+    case 'entityFacts':
+      return Schema.decodeUnknownEffect(EntityFactsArgs)(body).pipe(
+        Effect.flatMap(({ query }) =>
+          windowed(store, method).pipe(Effect.flatMap((found) => found.entityFacts(query))),
+        ),
+      );
+    case 'predicateUsage':
+      return windowed(store, method).pipe(Effect.flatMap((found) => found.predicateUsage()));
     case 'cursor':
       return Schema.decodeUnknownEffect(CursorArgs)(body).pipe(
         Effect.flatMap(({ source }) => store.cursor(source)),

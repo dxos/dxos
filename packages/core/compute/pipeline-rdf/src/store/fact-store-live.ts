@@ -28,7 +28,8 @@ import { hashText } from '../internal/stages/reconcile.ts';
 import { type Fact, Graph, Ontology } from '../types/index.ts';
 import * as Mapping from '../types/Mapping.ts';
 import * as Vocab from '../types/Vocab.ts';
-import { FactStore, type FactStoreApi, type SparqlRow } from './fact-store.ts';
+import { type EntityIndex, buildEntityIndex } from './entity-index.ts';
+import { FactStore, type FactStoreApi, type SparqlRow, type WindowedFactStoreApi } from './fact-store.ts';
 
 //
 // Live implementations of {@link FactStore}. Kept separate from the tag so operation definitions
@@ -106,7 +107,7 @@ const attempt =
   <A>(run: () => A): Effect.Effect<A, SemanticIndexError> =>
     Effect.try({ try: run, catch: (cause) => new SemanticIndexError({ message, cause }) });
 
-const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transactionSync']>): FactStoreApi => {
+const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transactionSync']>): WindowedFactStoreApi => {
   const engine = new SqlSparqlEngine(storage);
 
   const insert = (rdfQuads: readonly RdfQuad[]): void => {
@@ -135,9 +136,14 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
     seed();
   });
 
+  // Built on the first windowed read and dropped by every write, so it never answers from stale statements.
+  let entityIndex: EntityIndex | undefined;
+  const index = (): EntityIndex => (entityIndex ??= buildEntityIndex(storage));
+
   const putFacts: FactStoreApi['putFacts'] = (facts) =>
     attempt('Failed to persist facts')(() =>
       transactionSync(() => {
+        entityIndex = undefined;
         const described = new Set(
           engine.query(DESCRIBED_PREDICATES_SPARQL).flatMap(({ s: subject }) => (subject ? [subject.value] : [])),
         );
@@ -171,22 +177,42 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
       );
     });
 
+  /** Every fact in the named graphs, loaded a batch of graphs at a time. */
+  const graphFacts = (graphs: readonly string[]): Fact[] => {
+    const quads: RdfQuad[] = [];
+    for (let start = 0; start < graphs.length; start += LOAD_BATCH) {
+      const batch = graphValues(graphs.slice(start, start + LOAD_BATCH));
+      quads.push(...rowsToQuads(engine.query(graphQuadsSparql(batch))));
+    }
+    return graphs.length === 0 ? [] : Mapping.triplesToFacts([...quads, ...ontologyQuads()]);
+  };
+
   const select: FactStoreApi['select'] = (sparql) =>
     attempt('SPARQL query failed')(() => {
       assertSelect(sparql);
       return boundGraphs(engine.query(sparql));
-    }).pipe(
-      Effect.flatMap((graphs) =>
-        attempt('Failed to reassemble facts')(() => {
-          const quads: RdfQuad[] = [];
-          for (let start = 0; start < graphs.length; start += LOAD_BATCH) {
-            const batch = graphValues(graphs.slice(start, start + LOAD_BATCH));
-            quads.push(...rowsToQuads(engine.query(graphQuadsSparql(batch))));
-          }
-          return graphs.length === 0 ? [] : Mapping.triplesToFacts([...quads, ...ontologyQuads()]);
-        }),
-      ),
-    );
+    }).pipe(Effect.flatMap((graphs) => attempt('Failed to reassemble facts')(() => graphFacts(graphs))));
+
+  const entities: NonNullable<FactStoreApi['entities']> = (windowQuery) =>
+    attempt('Failed to list entities')(() => index().window(windowQuery));
+
+  // A graph can hold statements about other entities too, so each reassembled fact is checked against the query.
+  const entityFacts: NonNullable<FactStoreApi['entityFacts']> = (factsQuery) =>
+    attempt('Failed to load entity facts')(() => {
+      const keys = new Set(factsQuery.keys);
+      const predicates = factsQuery.predicates && new Set(factsQuery.predicates);
+      const quads = rowsToQuads(index().rowsFor(factsQuery));
+      return (quads.length === 0 ? [] : Mapping.triplesToFacts([...quads, ...ontologyQuads()])).filter((fact) => {
+        const { subject, object } = fact.assertion;
+        const named =
+          (subject.kind === 'entity' && keys.has(subject.entity)) ||
+          (factsQuery.role !== 'subject' && object.kind === 'entity' && keys.has(object.entity));
+        return named && (!predicates || predicates.has(Mapping.predicateOf(fact)));
+      });
+    });
+
+  const predicateUsage: NonNullable<FactStoreApi['predicateUsage']> = () =>
+    attempt('Failed to count predicate usage')(() => index().predicateUsage());
 
   const rows: FactStoreApi['rows'] = (sparql) =>
     attempt('SPARQL query failed')(() => {
@@ -213,13 +239,26 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
     attempt('Failed to clear store')(() =>
       // One transaction, so a store is never left without its seed vocabulary.
       transactionSync(() => {
+        entityIndex = undefined;
         engine.reset();
         storage.exec(`DELETE FROM ${CURSORS_TABLE}`);
         seed();
       }),
     );
 
-  return { putFacts, predicates, query, select, rows, cursor, setCursor, clear };
+  return {
+    putFacts,
+    predicates,
+    query,
+    select,
+    rows,
+    entities,
+    entityFacts,
+    predicateUsage,
+    cursor,
+    setCursor,
+    clear,
+  };
 };
 
 /** Storage that runs its own transactions, as every `@dxos/sql-sqlite/SqlStorage` database does. */
@@ -233,7 +272,7 @@ type TransactionalStorage = SqlStorage & Required<Options>;
 export const make = (
   storage: SqlStorage | TransactionalStorage,
   options: Options = {},
-): Effect.Effect<FactStoreApi> => {
+): Effect.Effect<WindowedFactStoreApi> => {
   const transactionSync =
     options.transactionSync ??
     ('transactionSync' in storage ? <T>(run: () => T): T => storage.transactionSync(run) : undefined);
@@ -254,9 +293,9 @@ const memoryError = (cause: unknown) =>
  * A FactStore over a private in-memory SQLite database, constructed synchronously: the database (whose
  * browser driver loads asynchronously) opens on the first operation.
  */
-export const makeMemory = (): FactStoreApi => {
-  let store: FactStoreApi | undefined;
-  const get: Effect.Effect<FactStoreApi, SemanticIndexError> = Effect.suspend(() =>
+export const makeMemory = (): WindowedFactStoreApi => {
+  let store: WindowedFactStoreApi | undefined;
+  const get: Effect.Effect<WindowedFactStoreApi, SemanticIndexError> = Effect.suspend(() =>
     store
       ? Effect.succeed(store)
       : SqliteStorage.makeMemory().pipe(
@@ -283,6 +322,9 @@ export const makeMemory = (): FactStoreApi => {
     query: (semanticQuery) => get.pipe(Effect.flatMap((opened) => opened.query(semanticQuery))),
     select: (sparql) => get.pipe(Effect.flatMap((opened) => opened.select(sparql))),
     rows: (sparql) => get.pipe(Effect.flatMap((opened) => opened.rows(sparql))),
+    entities: (windowQuery) => get.pipe(Effect.flatMap((opened) => opened.entities(windowQuery))),
+    entityFacts: (factsQuery) => get.pipe(Effect.flatMap((opened) => opened.entityFacts(factsQuery))),
+    predicateUsage: () => get.pipe(Effect.flatMap((opened) => opened.predicateUsage())),
     cursor: (source) => get.pipe(Effect.flatMap((opened) => opened.cursor(source))),
     setCursor: (source, hash) => get.pipe(Effect.flatMap((opened) => opened.setCursor(source, hash))),
     clear: () => get.pipe(Effect.flatMap((opened) => opened.clear())),

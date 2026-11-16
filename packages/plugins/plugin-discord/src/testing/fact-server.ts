@@ -19,7 +19,14 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, type FactStoreApi, FactStoreLive } from '@dxos/pipeline-rdf';
+import {
+  FactStore,
+  type FactStoreApi,
+  FactStoreLive,
+  SemanticIndexError,
+  type WindowedFactStoreApi,
+  isWindowed,
+} from '@dxos/pipeline-rdf';
 import { serveFactStore } from '@dxos/pipeline-rdf/testing';
 
 const factsPath = process.env.DISCORD_FACTS_DB ?? join(tmpdir(), 'dxos-discord-facts.db');
@@ -44,6 +51,12 @@ const open = Effect.gen(function* () {
 
 const program = Effect.gen(function* () {
   let current: Open = yield* open;
+  // The file store answers windowed reads; checked per call since a reopen replaces it.
+  const windowed: Effect.Effect<WindowedFactStoreApi, SemanticIndexError> = Effect.suspend(() =>
+    isWindowed(current.store)
+      ? Effect.succeed(current.store)
+      : Effect.fail(new SemanticIndexError({ message: 'The open fact store does not answer windowed reads' })),
+  );
   // Every call goes to whichever file is open now, so a reopen swaps the store under the running server.
   const store: FactStoreApi = {
     putFacts: (facts) => Effect.suspend(() => current.store.putFacts(facts)),
@@ -51,6 +64,9 @@ const program = Effect.gen(function* () {
     query: (query) => Effect.suspend(() => current.store.query(query)),
     select: (sparql) => Effect.suspend(() => current.store.select(sparql)),
     rows: (sparql) => Effect.suspend(() => current.store.rows(sparql)),
+    entities: (query) => windowed.pipe(Effect.flatMap((open) => open.entities(query))),
+    entityFacts: (query) => windowed.pipe(Effect.flatMap((open) => open.entityFacts(query))),
+    predicateUsage: () => windowed.pipe(Effect.flatMap((open) => open.predicateUsage())),
     cursor: (source) => Effect.suspend(() => current.store.cursor(source)),
     setCursor: (source, hash) => Effect.suspend(() => current.store.setCursor(source, hash)),
     clear: () => Effect.suspend(() => current.store.clear()),

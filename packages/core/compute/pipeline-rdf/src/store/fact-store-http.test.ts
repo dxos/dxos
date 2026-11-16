@@ -43,6 +43,12 @@ describe('FactStoreHttp', () => {
 
           expect((yield* client.predicates()).length).toBeGreaterThan(0);
 
+          const window = yield* client.entities({ offset: 0, limit: 1, role: 'subject' });
+          expect(window).toEqual(yield* backing.entities({ offset: 0, limit: 1, role: 'subject' }));
+          expect(window.total).toBe(2);
+          expect((yield* client.entityFacts({ keys: ['bob'] })).map((found) => found.id)).toEqual(['f2']);
+          expect(Object.values(yield* client.predicateUsage())).toEqual([2]);
+
           const rows = yield* client.rows('SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }');
           expect(rows).toEqual(yield* backing.rows('SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }'));
           // The two statements' graphs, and the ontology graph describing the predicate they mint.
