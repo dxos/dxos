@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
