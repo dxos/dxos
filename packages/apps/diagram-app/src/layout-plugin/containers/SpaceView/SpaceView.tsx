@@ -95,8 +95,8 @@ export const SpaceView = ({
     }
   }, [drawing, drawingId, onSelectDrawing]);
 
-  // The diagram the route names now, or none once this space has closed: a create or delete that finishes after the
-  // user has moved on leaves the view where they went.
+  // A fresh entry per navigation, or none once this space has closed: a create or delete that finishes after the user
+  // has moved on, even back to the same diagram, leaves the view where they went.
   const currentRef = useRef<{ drawingId?: string } | undefined>({ drawingId });
   useLayoutEffect(() => {
     currentRef.current = { drawingId };
@@ -110,9 +110,9 @@ export const SpaceView = ({
 
   const create = useCallback(
     (name?: string) => {
-      const from = currentRef.current?.drawingId;
+      const from = currentRef.current;
       onCreateDiagram(space, name).then(
-        (created) => currentRef.current && currentRef.current.drawingId === from && onSelectDrawing(created.id, 'push'),
+        (created) => from && currentRef.current === from && onSelectDrawing(created.id, 'push'),
         (err) => {
           log.error('diagram not created', { err });
           onError('The diagram could not be created.');
@@ -138,8 +138,9 @@ export const SpaceView = ({
     (target: Drawing.Drawing) => {
       // Deleting the open diagram moves to another; deleting any other leaves the view where it is.
       const next = target.id === drawing?.id ? drawings.find(({ id }) => id !== target.id) : undefined;
+      const from = currentRef.current;
       void removeDrawing(space, target).then(
-        () => next && currentRef.current?.drawingId === target.id && onSelectDrawing(next.id, 'replace'),
+        () => next && from && currentRef.current === from && onSelectDrawing(next.id, 'replace'),
       );
     },
     [space, drawing, drawings, onSelectDrawing],

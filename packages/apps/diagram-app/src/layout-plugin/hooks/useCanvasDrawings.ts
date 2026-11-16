@@ -28,7 +28,8 @@ export type CanvasDrawings = {
  */
 export const useCanvasDrawings = (space: Space, expected?: string): CanvasDrawings => {
   const all = useQuery(space.db, Filter.type(Drawing.Drawing));
-  const [formats, setFormats] = useState<ReadonlyMap<string, boolean>>(new Map());
+  // Whether each drawing is a canvas diagram; `retrying` while a failed load waits to be tried again.
+  const [formats, setFormats] = useState<ReadonlyMap<string, boolean | 'retrying'>>(new Map());
   const [settled, setSettled] = useState<string>();
 
   useEffect(() => {
@@ -47,8 +48,8 @@ export const useCanvasDrawings = (space: Space, expected?: string): CanvasDrawin
     };
   }, [space, expected]);
 
-  // A canvas not synced yet fails to load: its drawing is left out, so the list is not held pending, and is tried
-  // again a few times as sync catches up.
+  // A canvas not synced yet fails to load: its drawing is left out and tried again a few times as sync catches up.
+  // Only the expected drawing holds the list pending meanwhile, so the route does not give it up for another.
   const retries = useRef({ attempts: new Map<string, number>(), timers: new Set<ReturnType<typeof setTimeout>>() });
   useEffect(() => {
     const { timers } = retries.current;
@@ -68,10 +69,11 @@ export const useCanvasDrawings = (space: Space, expected?: string): CanvasDrawin
             return;
           }
           log.warn('drawing canvas did not load', { id: drawing.id, err });
-          setFormats((prev) => new Map(prev).set(drawing.id, false));
           const { attempts, timers } = retries.current;
           const attempt = attempts.get(drawing.id) ?? 0;
-          if (attempt < RETRY_DELAYS.length) {
+          const retry = attempt < RETRY_DELAYS.length;
+          setFormats((prev) => new Map(prev).set(drawing.id, retry ? 'retrying' : false));
+          if (retry) {
             attempts.set(drawing.id, attempt + 1);
             const timer = setTimeout(() => {
               timers.delete(timer);
@@ -95,10 +97,11 @@ export const useCanvasDrawings = (space: Space, expected?: string): CanvasDrawin
     () => ({
       // Object ids are time-ordered, so newest first is a reverse sort by id.
       drawings: all
-        .filter((drawing) => formats.get(drawing.id))
+        .filter((drawing) => formats.get(drawing.id) === true)
         .toSorted((left, right) => right.id.localeCompare(left.id)),
       pending:
         all.some((drawing) => !formats.has(drawing.id)) ||
+        (expected !== undefined && formats.get(expected) === 'retrying') ||
         (expected !== undefined && settled !== expected && !all.some(({ id }) => id === expected)),
     }),
     [all, formats, expected, settled],
