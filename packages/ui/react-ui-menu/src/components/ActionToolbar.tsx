@@ -553,11 +553,13 @@ const useCollapse = (
   const [count, setCount] = useState(0);
   const thresholds = useRef<number[]>([]);
   const [width, setWidth] = useState(0);
+  // Bumped when an item's own content (a custom item's children) grows a row past its width.
+  const [contentChanges, setContentChanges] = useState(0);
   // Ids rather than the items: `steps` is rebuilt whenever a caller passes a fresh `onAction`.
   const stepsKey = steps.map(({ kind, item }) => `${kind}:${item.id}`).join('\n');
 
   // Each read forces a layout, so measure only when the items (a new label or icon-only flag yields new items), the
-  // steps, the step count or the frame width moved.
+  // steps, the step count, the frame width or an item's content moved.
   useLayoutEffect(() => {
     if (steps.length === 0 && count === 0) {
       return;
@@ -578,7 +580,7 @@ const useCollapse = (
     } else if (!overflowing && count > 0 && width > (thresholds.current[count - 1] ?? Infinity)) {
       setCount(count - 1);
     }
-  }, [units, stepsKey, count, width, bounds]);
+  }, [units, stepsKey, count, width, bounds, contentChanges]);
 
   // Re-render on resize only when something can collapse.
   const observed = steps.length > 0;
@@ -591,6 +593,21 @@ const useCollapse = (
     observer.observe(bounds ?? frameOf(element));
     return () => observer.disconnect();
   }, [observed, rows, bounds]);
+
+  // Content that changes inside an item leaves the items and the frame as they were, so neither observer above sees it.
+  useLayoutEffect(() => {
+    const elements = rows.current.filter((row): row is HTMLElement => !!row);
+    if (!observed || elements.length === 0) {
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      if (elements.some((row) => row.scrollWidth > row.clientWidth + 1)) {
+        setContentChanges((changes) => changes + 1);
+      }
+    });
+    elements.forEach((row) => observer.observe(row, { childList: true, subtree: true, characterData: true }));
+    return () => observer.disconnect();
+  }, [observed, rows, units, count]);
 
   return useMemo(() => {
     const taken = steps.slice(0, count);

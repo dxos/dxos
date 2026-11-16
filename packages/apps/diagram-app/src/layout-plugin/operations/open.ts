@@ -50,7 +50,7 @@ const firstDiagram = Effect.fnUntraced(function* (spaceId: string) {
 /** The app shows only diagrams; a follow of someone on another kind of object pauses on this failure. */
 export class NotADiagramError extends BaseError.extend('NotADiagramError', 'Only a diagram opens in this app.') {}
 
-/** Whether an object in a space is a diagram; one that cannot be loaded yet is not. */
+/** Whether an object in a space is a drawing whose canvas is a `Canvas` (spec D-27); one that cannot be loaded yet is not. */
 const isDiagram = Effect.fnUntraced(function* (spaceId: Key.SpaceId, objectId: string) {
   const client = yield* Capability.get(ClientCapabilities.Client);
   const space = client.spaces.get().find(({ id }) => id === spaceId);
@@ -60,7 +60,11 @@ const isDiagram = Effect.fnUntraced(function* (spaceId: Key.SpaceId, objectId: s
   const object = yield* Effect.tryPromise(() =>
     space.db.makeRef(EID.make({ spaceId, entityId: objectId })).load(),
   ).pipe(Effect.orElseSucceed(() => undefined));
-  return Obj.instanceOf(Drawing.Drawing, object);
+  if (!Obj.instanceOf(Drawing.Drawing, object)) {
+    return false;
+  }
+  const canvas = yield* Effect.tryPromise(() => object.canvas.load()).pipe(Effect.orElseSucceed(() => undefined));
+  return Canvas.isCanvas(canvas);
 });
 
 /**

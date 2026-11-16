@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
@@ -750,5 +750,62 @@ export const GrowBack: Story = {
     canvas.getByTestId('story.box').style.width = '48rem';
     await waitFor(() => expect(title).toHaveTextContent('A rather long document title'));
     await expect(canvas.getByTestId('story.share')).toHaveTextContent('Share');
+  },
+};
+
+// Read by the item itself, so a change reaches its content without rebuilding the menu.
+const NamesContext = createContext<string[]>([]);
+
+const People = ({ collapsed }: { collapsed?: boolean }) => {
+  const names = useContext(NamesContext);
+  return (
+    <Button.Root variant='ghost' icon='ph--users--regular' data-testid='story.people'>
+      {!collapsed && names.join(', ')}
+    </Button.Root>
+  );
+};
+
+const GrowingContentStory = () => {
+  const [names, setNames] = useState(['Ada']);
+  const [box, setBox] = useState<HTMLDivElement | null>(null);
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .root({ label: 'Document' })
+        .custom('people', { label: 'People', placement: { collapse: 1 } }, ({ collapsed }) => (
+          <People collapsed={collapsed} />
+        ))
+        .action('search', { label: 'Search', icon: 'ph--magnifying-glass--regular', testId: 'story.search' }, () =>
+          log('search'),
+        )
+        .build(),
+    [],
+  );
+  return (
+    <div className='flex flex-col gap-4 p-8'>
+      <Button.Root data-testid='story.join' onClick={() => setNames((names) => [...names, 'Ben', 'Charlotte'])}>
+        Join
+      </Button.Root>
+      <div ref={setBox} className='flex w-[12rem]'>
+        <div role='none' className='flex min-w-0'>
+          <NamesContext.Provider value={names}>
+            <ActionToolbar {...menu} alwaysActive bounds={box} classNames='border border-separator' />
+          </NamesContext.Provider>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/** A custom item whose content grows past the box it measures takes its compact form, though menu and box are unchanged. */
+export const GrowingContent: Story = {
+  render: () => <GrowingContentStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const people = canvas.getByTestId('story.people');
+    await expect(people).toHaveTextContent('Ada');
+    await userEvent.click(canvas.getByTestId('story.join'));
+    await waitFor(() => expect(canvas.getByTestId('story.people')).not.toHaveTextContent('Ada'));
+    await expect(canvas.getByTestId('story.search')).toBeVisible();
   },
 };
