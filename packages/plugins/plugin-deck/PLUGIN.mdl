@@ -461,6 +461,12 @@ feat F-1: Deck Presentations
   req F-1.12:
     when: a `LayoutAccent` contribution holds a palette hue
     then: every plank heading, companions included, takes a light wash of that hue over a one-pixel underline in it
+
+  req F-1.13:
+    when: a plank shows an object's article
+    then: the article is inside a scroll scope keyed by the object's EID, so its outermost scrolling area reports and
+          restores its position as the object's `ScrollPosition` view state, which a follow carries; a companion or an
+          article nested in another has no scope of its own
 ```
 
 ```mdl
@@ -981,6 +987,23 @@ decision D-4: `LayoutOperation.Set` takes an optional `workspace`, as `Open` doe
   why: Two operations for one navigation race: the workspace switch seeds the space's first plank and scrolls to it while the open is still on its way. The URL a `Set` writes names its workspace, and projecting it switches the deck there.
   rejected:
     - Await `SwitchWorkspace` before opening; its seed still writes a plank and a scroll intent the follow then replaces.
+```
+
+```mdl
+decision D-5: Each plank puts a scroll scope keyed by its object's EID around its article, and companions get none, so a follower restores the leader's scroll in each plank it mirrors.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.13]
+  why: The plank is where the layout knows both the article and the object it shows. A companion of the same object would share the plank's position and move it.
+  rejected:
+    - A scope in every `Article` surface, nested ones included; an embedded article would track a second object's scroll inside the first.
+```
+
+```mdl
+decision D-6: Approve [D-5].
+  date: 2026-11-16
+  by: user:wittjosiah
 ```
 
 ---

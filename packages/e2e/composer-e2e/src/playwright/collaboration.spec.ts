@@ -421,6 +421,41 @@ test.describe('Collaboration tests', () => {
   );
 
   test(
+    "a follower takes the leader's scroll in an article with no follow code of its own",
+    { tag: ['@space:QA-8'] },
+    async () => {
+      test.setTimeout(150_000);
+
+      await host.createSpace();
+      await host.createObject({ type: 'Document' });
+      await perfomInvitation(host, guest);
+      // Short enough that Home scrolls.
+      await Promise.all([host, guest].map((app) => app.page.setViewportSize({ width: 1280, height: 520 })));
+
+      const home = `root/${guest.workspaceId}/home`;
+      const homeScroller = (app: AppManager) =>
+        app.page.locator(`[data-testid="deck.plank"][data-attendable-id="${home}"] .dx-scroll-viewport`).first();
+      await guest.page.locator(`[data-object-id="${home}"]`).first().click();
+      await expect(homeScroller(guest)).toBeVisible({ timeout: 30_000 });
+
+      const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+      await host.openCompanion('members');
+      await sidebar
+        .getByTestId('spacePlugin.presence.row')
+        .getByTestId('spacePlugin.presence.follow')
+        .click({ timeout: 45_000 });
+      await expect(homeScroller(host)).toBeVisible({ timeout: 30_000 });
+
+      await homeScroller(guest).evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+      });
+      await expect
+        .poll(() => homeScroller(host).evaluate((element) => element.scrollTop), { timeout: 30_000 })
+        .toBeGreaterThan(0);
+    },
+  );
+
+  test(
     "a follower whose deck lays planks side by side mirrors the leader's planks and scroll until it selects one in the navtree",
     { tag: ['@space:QA-6'] },
     async () => {

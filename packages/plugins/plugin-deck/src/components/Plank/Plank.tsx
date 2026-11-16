@@ -19,7 +19,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { ScrollScope, useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -77,6 +77,8 @@ export type PlankProps = Util.ThemedClassName<{
   popoverAnchorId?: string;
   /** Extra Article surface data merged over the computed defaults (e.g. companionTo/variant/path). */
   articleData?: Partial<AppSurface.ArticleData>;
+  /** The EID the article's scroll is kept under, so a follower restores it; none for a companion. */
+  scrollContextId?: string;
   /** Error fallback for the content surface. */
   fallback?: SurfaceProps['fallback'];
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
@@ -139,6 +141,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       pending,
       popoverAnchorId,
       articleData,
+      scrollContextId,
       fallback,
       headless,
       accent,
@@ -277,14 +280,15 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
             // Nothing has resolved for this plank yet; from the second subject on, the one before is held.
             PLANK_LOADING
           ) : (
-            <Surface.Surface
-              key={shown.key}
-              type={AppSurface.Article}
-              data={shown.data}
-              limit={1}
-              fallback={fallback}
-              placeholder={PLANK_LOADING}
-            />
+            <ScrollScope key={shown.key} contextId={scrollContextId}>
+              <Surface.Surface
+                type={AppSurface.Article}
+                data={shown.data}
+                limit={1}
+                fallback={fallback}
+                placeholder={PLANK_LOADING}
+              />
+            </ScrollScope>
           )}
         </Pane.Content>
       </Pane.Root>

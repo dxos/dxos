@@ -313,7 +313,11 @@ export default Capability.makeModule(
             ],
           ]),
       );
+      // Only a follower reads them, so they go out only while this session is followed.
       const getViewState = (spaceId: string): { viewState?: Record<string, Record<string, JsonValue>> } => {
+        if (!isFollowed(Date.now())) {
+          return {};
+        }
         const followed = Object.entries(viewState.followed(viewStateContexts.get(spaceId) ?? []));
         return followed.length > 0
           ? {
@@ -389,7 +393,7 @@ export default Capability.makeModule(
         viewState.subscribe(ViewLocation.aspect, key, () => locationScheduler.schedule(key)),
       );
       const unsubscribeViewState = viewState.subscribeFollowed((_, contextId) => {
-        if (!EID.isEID(contextId)) {
+        if (!EID.isEID(contextId) || !isFollowed(Date.now())) {
           return;
         }
         const spaceId = EID.getSpaceId(contextId);

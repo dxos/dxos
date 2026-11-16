@@ -5,7 +5,16 @@
 // @import-as-namespace
 
 import { ark } from '@ark-ui/react/factory';
-import React, { useCallback, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
 import { type AllowedAxis } from '@dxos/ui-types';
@@ -13,8 +22,10 @@ import { type AllowedAxis } from '@dxos/ui-types';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { composableProps, slottable } from '../../util/slots.ts';
+import { type ScrollPosition } from './position.ts';
 import { ScrollAreaThumbs } from './ScrollAreaThumbs.tsx';
 import { scrollbar } from './scrollbar.ts';
+import { MAIN_AREA, ScrollTracker, type ScrollTrackerOptions } from './tracker.ts';
 
 type ScrollAreaContextValue = {
   native: boolean;
@@ -22,6 +33,50 @@ type ScrollAreaContextValue = {
 };
 
 const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaContextValue>('ScrollArea');
+
+type ScrollTrackingContextValue = { tracker?: ScrollTracker };
+
+const [ScrollTrackingProvider, useScrollTrackingContext] = createContext<ScrollTrackingContextValue>(
+  'ScrollTracking',
+  {},
+);
+
+//
+// Tracking
+//
+
+type ScrollAreaTrackingProps = PropsWithChildren<ScrollTrackerOptions>;
+
+type ScrollAreaTrackingHandle = {
+  /** Restores `position` in the area tracked under `name`. */
+  restore: (name: string, position: ScrollPosition) => void;
+};
+
+/**
+ * Keeps the scroll position of the areas inside it: the outermost `Viewport` as the main area, and each `Viewport`
+ * given a `follow` name under that name. It renders a `display: contents` element, so it does not change the layout.
+ */
+const ScrollAreaTracking = forwardRef<ScrollAreaTrackingHandle, ScrollAreaTrackingProps>(
+  ({ children, ...options }, forwardedRef) => {
+    const optionsRef = useRef(options);
+    optionsRef.current = options;
+    const tracker = useMemo(() => new ScrollTracker(() => optionsRef.current), []);
+    const setRoot = useCallback((element: HTMLElement | null) => tracker.setRoot(element), [tracker]);
+    useEffect(() => () => tracker.dispose(), [tracker]);
+    useImperativeHandle(forwardedRef, () => ({ restore: (name, position) => tracker.restore(name, position) }), [
+      tracker,
+    ]);
+    return (
+      <ScrollTrackingProvider tracker={tracker}>
+        <div className='contents' ref={setRoot}>
+          {children}
+        </div>
+      </ScrollTrackingProvider>
+    );
+  },
+);
+
+ScrollAreaTracking.displayName = 'ScrollArea.Tracking';
 
 //
 // Root
@@ -127,13 +182,26 @@ ScrollAreaRoot.displayName = 'ScrollArea.Root';
 // Viewport
 //
 
-type ScrollAreaViewportProps = {};
+type ScrollAreaViewportProps = {
+  /**
+   * Whether a `Tracking` ancestor keeps this area's scroll position: the outermost area is kept by default, `false` opts
+   * out, and a name keeps an inner area under that name.
+   */
+  follow?: boolean | string;
+};
 
 /** The scrolling element; under `asChild` it is the child (e.g. a Container) itself. */
 const ScrollAreaViewport = slottable<HTMLDivElement, ScrollAreaViewportProps>(
-  ({ children, asChild, ...props }, forwardedRef) => {
+  ({ children, asChild, follow = true, ...props }, forwardedRef) => {
     const { native, setViewport } = useScrollAreaContext('ScrollArea.Viewport');
-    const ref = useComposedRefs(forwardedRef, setViewport);
+    const { tracker } = useScrollTrackingContext('ScrollArea.Viewport');
+    const [element, setElement] = useState<HTMLElement | null>(null);
+    const ref = useComposedRefs(forwardedRef, setViewport, setElement);
+    useEffect(() => {
+      if (tracker && element && follow !== false) {
+        return tracker.register(element, typeof follow === 'string' ? follow : undefined);
+      }
+    }, [tracker, element, follow]);
     const { className, ...rest } = composableProps(props, { classNames: recipes.scrollViewport() });
     return (
       <ark.div
@@ -153,5 +221,12 @@ const ScrollAreaViewport = slottable<HTMLDivElement, ScrollAreaViewportProps>(
 
 ScrollAreaViewport.displayName = 'ScrollArea.Viewport';
 
-export { ScrollAreaRoot as Root, ScrollAreaViewport as Viewport };
-export type { ScrollAreaRootProps as RootProps, ScrollAreaViewportProps as ViewportProps };
+export { ScrollAreaRoot as Root, ScrollAreaViewport as Viewport, ScrollAreaTracking as Tracking, MAIN_AREA };
+export type {
+  ScrollAreaRootProps as RootProps,
+  ScrollAreaViewportProps as ViewportProps,
+  ScrollAreaTrackingProps as TrackingProps,
+  ScrollAreaTrackingHandle as TrackingHandle,
+  ScrollPosition,
+};
+export { SCROLL_ANCHOR_ATTRIBUTE, captureScrollPosition, applyScrollPosition } from './position.ts';
