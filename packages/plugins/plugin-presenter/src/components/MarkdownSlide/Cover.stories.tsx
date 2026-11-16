@@ -112,40 +112,43 @@ export const Split: Story = {
 };
 
 /**
- * 6. The deck's own title slide: the lit mark held to the end edge, the words down the start edge. The art carries
- * the slide, so the words stay small and out of its way.
+ * 6. The deck's own title slide, reproduced from the Figma deck it was designed in: the artwork is that slide
+ * exported as SVG and published to the brand bucket, and the words sit at its own measurements rather than in the
+ * layout's padding.
  */
 export const Glow: Story = {
   args: {
     content: slide(
-      // The deck's green is the accent here, which the links take; the title is set in the foreground instead.
-      { layout: 'two-cols', accent: 'rgb(31,213,138)' },
+      // The art carries the slide's background, black included, so the frontmatter names no color of its own; the
+      // deck's green is the accent, which the links take.
+      { layout: 'cover', accent: 'rgb(31,213,138)', background: GLOW },
       '<Box variant="title">',
       '',
       '# composer',
       '',
+      // Two trailing spaces: the links are one block set on two lines, not two paragraphs the box would space apart.
+      '[https://dxos.org/composer](https://dxos.org/composer)  ',
+      '[https://dxos.org/xxx (video)](https://dxos.org/xxx)',
+      '',
       '</Box>',
       '',
-      '[https://dxos.org/composer](https://dxos.org/composer)',
+      '<Box variant="caption">',
       '',
-      '*November 2026*',
+      `![DXOS](${BRAND}/logotypes/dxos-horizontal-white.svg)`,
       '',
-      '::right::',
-      '',
-      '<Box variant="art">',
-      '',
-      `![](${GLOW})`,
+      'DXOS.org',
       '',
       '</Box>',
     ),
   },
   play: async ({ canvasElement }) => {
-    const frame = await query(canvasElement, '[data-layout="two-cols"]');
-    const art = frame.querySelector('[data-variant="art"] img')!;
-    await waitFor(() => expect((art as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
-    // The title holds the start edge, clear of the art.
+    const frame = await query(canvasElement, '[data-layout="cover"]');
+    const lockup = frame.querySelector('[data-variant="caption"] img')!;
+    // 1. The brand lockup is drawn.
+    await waitFor(() => expect((lockup as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
+    // 2. The title and the lockup share the slide's start edge, so the two blocks read as one column.
     const title = frame.querySelector('h1')!.getBoundingClientRect();
-    await expect(title.left).toBeLessThan(frame.getBoundingClientRect().width / 2);
+    await expect(Math.abs(title.left - lockup.getBoundingClientRect().left)).toBeLessThan(2);
   },
 };
 

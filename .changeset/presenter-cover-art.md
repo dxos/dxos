@@ -3,8 +3,6 @@
 '@dxos/brand': minor
 ---
 
-The deck's title-slide artwork is a brand asset: `bg-dxos-glow.svg` draws the mark as a lit volume and `bg-dxos-glow-mask.svg` is the blurred shape that shades it, both exported from the Figma slide they were designed on.
+The deck's title-slide artwork is a brand asset: `bg-dxos-glow.svg` is that slide exported from Figma as SVG, with its text dropped and a fractal-noise grain laid over it so the long dark ramp of its glow stops banding at 8 bits.
 
-`<Box variant="art">` carries artwork that is the slide rather than a backdrop: held to the end edge at full strength, running past it so the slide crops it, and out of the flow so the words are laid out as though it were not there. A sixth cover story draws the deck's own title slide with it.
-
-`<Box variant="title">` sets a title slide's name large in the slide's foreground, which leaves the accent free for the links under it.
+`<Box variant="title">` and `<Box variant="caption">` carry a title slide's two blocks — the name with the deck's links under it, and the brand lockup with the small print at the foot — on one start edge, at the measurements of the Figma slide they reproduce. The sixth cover story draws that slide, with the artwork as its background.

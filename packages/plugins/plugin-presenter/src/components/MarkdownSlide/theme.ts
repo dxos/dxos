@@ -97,18 +97,25 @@ export const theme = {
         img: 'w-full h-auto object-contain',
         p: '[&:has(>img)]:contents',
       },
-      // A title slide's name: set large in the slide's own foreground rather than its accent, so the accent is left
-      // free for what sits under it (the deck's links).
+      // A title slide's name and the links under it, set against the slide's start edge rather than its padding:
+      // the measurements come from the Figma deck this reproduces, scaled from its 1920-wide frame to the canvas.
+      // The name takes the slide's own foreground, which leaves the accent free for the links.
       title: {
-        box: 'flex flex-col',
-        h1: 'text-[180px] leading-none font-(family-name:--slide-font-heading) text-(color:--slide-foreground)',
+        box: 'absolute start-[53px] top-[577px] flex flex-col gap-[209px]',
+        // Important: `cover` and the other emphasis layouts size their headings with a `[&_h1]` descendant rule,
+        // which outranks a class on the heading itself, so a variant can only set its own size by overriding it.
+        h1: 'text-[208px]! leading-none! font-(family-name:--slide-font-heading) text-(color:--slide-foreground)',
+        p: 'text-[37px] leading-[1.4]',
+        a: 'text-(color:--slide-accent) no-underline',
       },
-      // Artwork that carries the slide rather than sitting behind it: held to the end edge at full strength, running
-      // past it so the slide crops it. It leaves the flow, as the watermark does, so the words ignore it.
-      art: {
-        box: 'absolute -inset-y-[12%] -end-[22%] w-[86%] flex items-center pointer-events-none',
-        img: 'w-full h-auto object-contain',
-        p: '[&:has(>img)]:contents',
+      // The quiet matter at a slide's foot: a brand lockup and the small print under it, on the same start edge as
+      // the title and run to the slide's bottom, so the two blocks share one margin.
+      caption: {
+        box: 'absolute start-[53px] bottom-[20px] flex flex-col gap-[51px]',
+        img: 'w-[399px] h-auto object-contain',
+        // The lockup's own paragraph collapses, so the box's gap falls between the mark and the line under it
+        // rather than around an empty wrapper.
+        p: 'text-[27px] leading-none opacity-50 font-(family-name:--slide-font-mono) [&:has(>img)]:contents',
       },
     },
 
