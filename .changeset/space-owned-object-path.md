@@ -1,4 +1,6 @@
 ---
+# multiple-changesets: a slide's path through the collection tree, the slide editor's preview control and
+# the deck's handover between two articles are three packages a reader would look up separately
 '@dxos/plugin-space': patch
 ---
 
