@@ -97,6 +97,7 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
           Capabilities.OperationInvoker,
           AppCapabilities.Layout,
           AttentionCapabilities.Attention,
+          AttentionCapabilities.ViewState,
           SpaceCapabilities.EphemeralState,
           ClientCapabilities.Client,
         ],

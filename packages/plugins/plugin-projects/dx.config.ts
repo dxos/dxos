@@ -64,6 +64,12 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'tauri'],
       },
     ),
+    // Browser-only, as the follow that reads it is.
+    Capability.lazyModule(
+      'Followable',
+      { provides: [AppCapabilities.Followable], environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/followable.ts', { with: { type: 'module-url' } }),
+    ),
     Capability.lazyModule(
       'ProjectComments',
       {

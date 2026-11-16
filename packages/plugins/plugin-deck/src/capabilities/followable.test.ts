@@ -23,12 +23,14 @@ import { DXN } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
-import { EntityId, SpaceId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { DeckCapabilities } from '#types';
 
-import locatorExtension, { type DeckLocation } from './locator-extension.ts';
+import * as DeckLocation from '../types/DeckLocation.ts';
+import followable from './followable.ts';
 
 /** A segment the test plugin's graph binds a URL to, as a plugin binds its own section. */
 const BOUND_SEGMENT = 'bound';
@@ -36,14 +38,14 @@ const BOUND_SEGMENT = 'bound';
 /** A segment whose URL binding comes from {@link LateBindingPlugin}, which a test enables partway through. */
 const LATE_SEGMENT = 'late';
 
-/** How often the follow in plugin-space updates the view it hands an extension. */
+/** How often the follow in plugin-space updates the view it hands a followable. */
 const TICK_INTERVAL = 500;
 
 type Call = { op: string; input: { subject?: unknown; focus?: unknown } };
 
-describe('LocatorExtension', () => {
-  test('its value in a space holds its front there and its open companions', async ({ expect }) => {
-    const { registry, state, locator } = await setup({ flat: false });
+describe('Followable', () => {
+  test('its location in a space holds its front there and its open companions', async ({ expect }) => {
+    const { registry, state, viewState } = await setup({ flat: false });
     const [spaceA, spaceB] = [SpaceId.random(), SpaceId.random()];
     const a = GraphPath.getSpacePath(spaceA, BOUND_SEGMENT, EntityId.random());
     const b = GraphPath.getSpacePath(spaceB, BOUND_SEGMENT, EntityId.random());
@@ -54,9 +56,14 @@ describe('LocatorExtension', () => {
       companions: { items: [a, b], variant: 'comments' },
     }));
 
-    expect(registry.get(locator.location)).toEqual({
-      [spaceA]: { front: a, companions: [a], variant: 'comments' },
-      [spaceB]: { companions: [b], variant: 'comments' },
+    expect(viewState.get(DeckLocation.aspect, EID.make({ spaceId: spaceA }))).toEqual({
+      front: a,
+      companions: [a],
+      variant: 'comments',
+    });
+    expect(viewState.get(DeckLocation.aspect, EID.make({ spaceId: spaceB }))).toEqual({
+      companions: [b],
+      variant: 'comments',
     });
   });
 
@@ -280,13 +287,13 @@ const view = (
     value,
     localPath = path,
     available = true,
-  }: { active?: string[]; value?: DeckLocation; localPath?: string; available?: boolean } = {},
-): AppCapabilities.FollowView => ({
+  }: { active?: string[]; value?: DeckLocation.State; localPath?: string; available?: boolean } = {},
+): AppCapabilities.FollowView<DeckLocation.State> => ({
   now: Date.now(),
   spaceId,
   active,
   attended: { key: keyOf(path), path, ...(available && { localPath }) },
-  ...(value && { value }),
+  values: value ? { [EID.make({ spaceId })]: value } : {},
 });
 
 type DeckTestState = {
@@ -298,7 +305,7 @@ type DeckTestState = {
 };
 
 const DeckTestState = Capability.makeSingleton<Atom.Writable<DeckTestState>>()(
-  'org.dxos.plugin.deck.test.locatorExtension.state',
+  'org.dxos.plugin.deck.test.followable.state',
 );
 
 const setup = async ({
@@ -317,34 +324,33 @@ const setup = async ({
   const state = harness.get(DeckTestState);
   const spaceId = SpaceId.random();
   registry.update(state, (deck) => ({ ...deck, workspace: GraphPath.getSpacePath(spaceId), flat }));
-  const locator = harness.get(AppCapabilities.LocatorExtension);
+  const viewState = harness.get(AttentionCapabilities.ViewState);
+  const deckFollowable = harness.get(AppCapabilities.Followable);
   // The follow's ticks and mount window run on this clock, which keeps pace with real time until a test jumps it.
   vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'], shouldAdvanceTime: true });
   onTestFinished(() => void vi.useRealTimers());
 
   /** Follows `initial` until the test ends, advancing the view on every tick as the follow does. */
-  const follow = async (initial: AppCapabilities.FollowView) => {
+  const follow = async (initial: AppCapabilities.FollowView<DeckLocation.State>) => {
     const viewAtom = Atom.make(initial);
     const tick = setInterval(() => registry.update(viewAtom, (view) => ({ ...view, now: Date.now() })), TICK_INTERVAL);
     onTestFinished(() => clearInterval(tick));
     const scope = Effect.runSync(Scope.make());
     onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-    invariant(locator.follow);
-    const showing = Effect.runSync(locator.follow(viewAtom).pipe(Scope.provide(scope)));
+    invariant(deckFollowable.follow);
+    const showing = Effect.runSync(deckFollowable.follow(viewAtom).pipe(Scope.provide(scope)));
     return { viewAtom, showing };
   };
 
   /** A plugin loads that binds {@link LATE_SEGMENT}. */
   const enableLateBinding = () => EffectEx.runPromise(harness.manager.enable(LateBindingPlugin.meta.profile.key));
 
-  return { calls, registry, state, spaceId, locator, follow, enableLateBinding };
+  return { calls, registry, state, spaceId, viewState, follow, enableLateBinding };
 };
 
-/** The deck's locator over a fake deck that records the layout operations it asks for. */
+/** The deck's followable over a fake deck that records the layout operations it asks for. */
 const makeDeckPlugin = (calls: Call[], failOpens: number, unresolved: ReadonlySet<string>): Plugin.Plugin =>
-  Plugin.define(
-    Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.deck.test.locatorExtension'), name: 'Deck (test)' }),
-  ).pipe(
+  Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.deck.test.followable'), name: 'Deck (test)' })).pipe(
     Plugin.addModule<void>(
       Capability.inlineModule(
         'deck',
@@ -465,17 +471,18 @@ const makeDeckPlugin = (calls: Call[], failOpens: number, unresolved: ReadonlySe
     ),
     Plugin.addModule<void>(
       Capability.inlineModule(
-        'locator',
+        'followable',
         {
           requires: [
             Capabilities.OperationInvoker,
             Capabilities.AtomRegistry,
             AppCapabilities.Layout,
+            AttentionCapabilities.ViewState,
             DeckCapabilities.View,
           ],
-          provides: [AppCapabilities.LocatorExtension],
+          provides: [AppCapabilities.Followable],
         },
-        () => locatorExtension(),
+        () => followable(),
       ),
     ),
     Plugin.make,

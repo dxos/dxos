@@ -24,7 +24,7 @@ import { SpaceCapabilities } from '#types';
 
 import { FOLLOW_KEEP_SELECTOR, FOLLOW_LOST_TIMEOUT, getPeerFocus, getPresenceKeyFromPath } from '../util/presence.ts';
 
-/** How often the follow updates, which also advances each extension's view. */
+/** How often the follow updates, which also advances each followable's view. */
 const TICK_INTERVAL = 500;
 
 /** Keys that do nothing on their own, so pressing one does not break a follow. */
@@ -36,13 +36,15 @@ type Loaded = { path: string; typename?: string };
 /** The follow running here, until its scope closes. */
 type Session = {
   scope: Scope.Closeable;
-  /** What the follower shows of the leader, without any extension's value. */
+  /** What the follower shows of the leader, without the leader's view state. */
   view: AppCapabilities.FollowView;
-  /** The view handed to each extension that follows, with that extension's value, by extension id. */
+  /** The view handed to each followable's `follow`, with the leader's values of it, by aspect key. */
   views: Map<string, Atom.Writable<AppCapabilities.FollowView>>;
-  /** Whether each extension that follows shows the view, by extension id. */
+  /** Whether each followable's `follow` shows the view, by aspect key. */
   showing: Map<string, boolean>;
-  /** The attended object as last opened here when no extension opens it, and whether that open failed. */
+  /** The leader's value last written here for each followable without a `follow`, by aspect key and context. */
+  written: Map<string, string>;
+  /** The attended object as last opened here when no followable opens it, and whether that open failed. */
   opened?: string;
   openFailed?: boolean;
   /** When each plank appeared in the layout, the anchor its view last confirmed revealing, and the one being revealed. */
@@ -81,11 +83,12 @@ const isInDeck = (target: EventTarget | null): boolean =>
 
 /**
  * Follows the peer named by the ephemeral `following` state. The follower loads the object the leader attends, reveals
- * the leader's anchor in each object it shows of them through the type's `Locator`, and hands each `LocatorExtension`
- * the leader's view with the leader's value for it. An extension that navigates opens what the leader shows; with none,
- * the follower opens the attended object itself. The local user's own input in the deck or an object's companion
- * (outside the presence controls), * selecting an object in the navtree, Escape, attending an object outside what is shown of the leader, leaving the
- * space's workspace, or the leader leaving the space ends it.
+ * the leader's anchor in each object it shows of them through the type's `Locator`, and takes the leader's values of each
+ * `Followable` aspect: it writes them into its own view state, or hands them to the followable's `follow`. A followable
+ * that navigates opens what the leader shows; with none, the follower opens the attended object itself. The local
+ * user's own input in the deck or an object's companion (outside the presence controls), selecting an object in the
+ * navtree, Escape, attending an object outside what is shown of the leader, leaving the space's workspace, or the
+ * leader leaving the space ends it.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -96,7 +99,8 @@ export default Capability.makeModule(
     const attention = yield* AttentionCapabilities.Attention;
     const ephemeralAtom = yield* SpaceCapabilities.EphemeralState;
     const client = yield* ClientCapabilities.Client;
-    const extensionsAtom = capabilities.atom(AppCapabilities.LocatorExtension);
+    const viewState = yield* AttentionCapabilities.ViewState;
+    const followablesAtom = capabilities.atom(AppCapabilities.Followable);
     const locatorsAtom = capabilities.atom(AppCapabilities.Locator);
 
     let session: Session | undefined;
@@ -116,7 +120,7 @@ export default Capability.makeModule(
           : state,
       );
 
-    // Paused while the attended object cannot be loaded or opened, or while an extension cannot show the view.
+    // Paused while the attended object cannot be loaded or opened, or while a followable cannot show the view.
     const refreshPaused = () => {
       if (session) {
         setPaused(
@@ -180,22 +184,38 @@ export default Capability.makeModule(
     const getLocalPath = (spaceId: string, key: EID.EID) =>
       EID.getEntityId(key) ? load(spaceId, key)?.path : GraphPath.getSpaceHomePath(spaceId);
 
-    const startExtension = (
+    // A followable with a `follow` gets the view with the leader's values of it; one contributed after the follow started
+    // joins it. One without writes each value of the leader's that changed since it last wrote it.
+    const applyFollowable = (
       current: Session,
-      extension: AppCapabilities.LocatorExtension,
+      followable: AppCapabilities.Followable,
       view: AppCapabilities.FollowView,
     ) => {
-      if (!extension.follow) {
+      const { key, follow } = followable;
+      if (!follow) {
+        for (const [contextId, value] of Object.entries(view.values)) {
+          const written = JSON.stringify(value);
+          if (current.written.get(`${key}\n${contextId}`) !== written) {
+            current.written.set(`${key}\n${contextId}`, written);
+            followable.write(viewState, contextId, value);
+          }
+        }
         return;
       }
-      const viewAtom = Atom.make(view);
-      current.views.set(extension.id, viewAtom);
-      const showing = Effect.runSync(extension.follow(viewAtom).pipe(Scope.provide(current.scope)));
+
+      const viewAtom = current.views.get(key);
+      if (viewAtom) {
+        registry.set(viewAtom, view);
+        return;
+      }
+      const created = Atom.make(view);
+      current.views.set(key, created);
+      const showing = Effect.runSync(follow(created).pipe(Scope.provide(current.scope)));
       current.unsubscribes.push(
         registry.subscribe(
           showing,
           (shows) => {
-            current.showing.set(extension.id, shows);
+            current.showing.set(key, shows);
             refreshPaused();
           },
           { immediate: true },
@@ -203,7 +223,7 @@ export default Capability.makeModule(
       );
     };
 
-    // With no extension that navigates, the follower opens the attended object at its own path, in the space's workspace.
+    // With no followable that navigates, the follower opens the attended object at its own path, in the space's workspace.
     const open = (current: Session) => {
       const { spaceId, attended } = current.view;
       const { localPath } = attended;
@@ -324,6 +344,7 @@ export default Capability.makeModule(
         spaceId: following.spaceId,
         active,
         attended: { key: focus.key, ...(path && { path }), ...(localPath && { localPath }) },
+        values: {},
       };
 
       session ??= {
@@ -331,6 +352,7 @@ export default Capability.makeModule(
         view,
         views: new Map(),
         showing: new Map(),
+        written: new Map(),
         mounted: new Map(),
         revealed: new Map(),
         revealing: new Map(),
@@ -340,20 +362,12 @@ export default Capability.makeModule(
       const current = session;
       current.view = view;
 
-      // Each extension gets the leader's value for it alone; one contributed after the follow started joins it.
-      const extensions = registry.get(extensionsAtom);
-      for (const extension of extensions) {
-        const value = deck?.extensions?.[extension.id];
-        const extensionView = { ...view, ...(value !== undefined && { value }) };
-        const viewAtom = current.views.get(extension.id);
-        if (!viewAtom) {
-          startExtension(current, extension, extensionView);
-        } else {
-          registry.set(viewAtom, extensionView);
-        }
+      const followables = registry.get(followablesAtom);
+      for (const followable of followables) {
+        applyFollowable(current, followable, { ...view, values: deck?.viewState?.[followable.key] ?? {} });
       }
 
-      if (!extensions.some((extension) => extension.navigates && extension.follow)) {
+      if (!followables.some((followable) => followable.navigates && followable.follow)) {
         open(current);
       }
       revealAnchors(current, anchors);

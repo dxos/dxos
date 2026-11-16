@@ -81,25 +81,26 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
         () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
-        'GraphRetention',
-        {
-          requires: [DeckCapabilities.State, AppCapabilities.Layout],
-          provides: [AppCapabilities.AppGraphRetention],
-        },
-        () => import('./src/capabilities/graph-retention.ts', { with: { type: 'module-url' } }),
-      ),
-      Capability.lazyModule(
-        'LocatorExtension',
+        'Followable',
         {
           requires: [
             Capabilities.AtomRegistry,
             Capabilities.OperationInvoker,
             AppCapabilities.Layout,
             DeckCapabilities.View,
+            AttentionCapabilities.ViewState,
           ],
-          provides: [AppCapabilities.LocatorExtension],
+          provides: [AppCapabilities.Followable],
         },
-        () => import('./src/capabilities/locator-extension.ts', { with: { type: 'module-url' } }),
+        () => import('./src/capabilities/followable.ts', { with: { type: 'module-url' } }),
+      ),
+      Capability.lazyModule(
+        'GraphRetention',
+        {
+          requires: [DeckCapabilities.State, AppCapabilities.Layout],
+          provides: [AppCapabilities.AppGraphRetention],
+        },
+        () => import('./src/capabilities/graph-retention.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'NotificationTracker',

@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -19,7 +18,7 @@ import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { DeviceType, getDeviceLabel } from '@dxos/client/halo';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
-import { PublicKey } from '@dxos/keys';
+import { EID, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -61,31 +60,6 @@ const DEVICE_KINDS: Record<DeviceType, SpaceSchema.SessionDevice['kind']> = {
   [DeviceType.MOBILE]: 'mobile',
   [DeviceType.AGENT]: 'agent',
   [DeviceType.AGENT_MANAGED]: 'agent',
-};
-
-/** Each locator extension's value in one space, by extension id, for its viewing message; nothing when none has one. */
-const getExtensionValues = (values: ExtensionValues, spaceId: string): { extensions?: Record<string, JsonValue> } => {
-  const extensions: Record<string, JsonValue> = {};
-  for (const { id, bySpace } of values) {
-    if (spaceId in bySpace) {
-      extensions[id] = bySpace[spaceId];
-    }
-  }
-  return Object.keys(extensions).length > 0 ? { extensions } : {};
-};
-
-type ExtensionValues = readonly { id: string; bySpace: Readonly<Record<string, JsonValue>> }[];
-
-/** The spaces in which some extension's value differs between `previous` and `next`. */
-const getChangedExtensionSpaces = (previous: ExtensionValues, next: ExtensionValues): Set<string> => {
-  const bySpace = (values: ExtensionValues) => {
-    const spaceIds = new Set(values.flatMap(({ bySpace }) => Object.keys(bySpace)));
-    return new Map([...spaceIds].map((spaceId) => [spaceId, JSON.stringify(getExtensionValues(values, spaceId))]));
-  };
-  const [before, after] = [bySpace(previous), bySpace(next)];
-  return new Set(
-    [...new Set([...before.keys(), ...after.keys()])].filter((spaceId) => before.get(spaceId) !== after.get(spaceId)),
-  );
 };
 
 /**
@@ -149,11 +123,8 @@ export default Capability.makeModule(
     const { invoke } = yield* Capabilities.OperationInvoker;
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
-    // Each locator extension's value in each space, by extension id; extensions may contribute after this module.
-    const extensionsAtom = capabilities.atom(AppCapabilities.LocatorExtension);
-    const extensionValuesAtom = Atom.make((get) =>
-      get(extensionsAtom).map(({ id, location }) => ({ id, bySpace: get(location) })),
-    );
+    // Followables may contribute after this module.
+    const followablesAtom = capabilities.atom(AppCapabilities.Followable);
     const attention = yield* AttentionCapabilities.Attention;
     const viewState = yield* AttentionCapabilities.ViewState;
     const stateAtom = yield* SpaceCapabilities.State;
@@ -303,7 +274,6 @@ export default Capability.makeModule(
 
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
     let broadcastCleanup: (() => void) | undefined;
-    let scheduleSend: ((spaceIds: Iterable<string>) => void) | undefined;
     let previousActive: readonly string[] = [];
     const setupBroadcast = () => {
       broadcastCleanup?.();
@@ -314,6 +284,31 @@ export default Capability.makeModule(
       const departed = previousActive.filter((id) => !active.includes(id));
       const inactive = [...layout.inactive, ...departed];
       previousActive = active;
+      const locationKeys = [...new Set([...current, ...active].flatMap((path) => getPresenceKeyFromPath(path) ?? []))];
+
+      // Followed view state is read for each space and each object open in it, by their EIDs.
+      const viewStateContexts = new Map<string, EID.EID[]>(
+        client.spaces
+          .get()
+          .map((space) => [
+            space.id,
+            [
+              ...new Set([
+                EID.make({ spaceId: space.id }),
+                ...locationKeys.filter((key) => EID.getSpaceId(key) === space.id),
+              ]),
+            ],
+          ]),
+      );
+      const getViewState = (spaceId: string): { viewState?: Record<string, Record<string, JsonValue>> } => {
+        const aspects = Object.fromEntries(
+          registry.get(followablesAtom).flatMap((followable) => {
+            const values = followable.read(viewState, viewStateContexts.get(spaceId) ?? []);
+            return Object.keys(values).length > 0 ? [[followable.key, values]] : [];
+          }),
+        );
+        return Object.keys(aspects).length > 0 ? { viewState: aspects } : {};
+      };
 
       const send = (spaceIds?: ReadonlySet<string>) => {
         const spaces = client.spaces.get().filter((space) => !spaceIds || spaceIds.has(space.id));
@@ -321,7 +316,6 @@ export default Capability.makeModule(
         if (identity) {
           const device = getDevice();
           const following = registry.get(ephemeralAtom).following;
-          const extensionValues = registry.get(extensionValuesAtom);
           const attendedBySpace = groupPresenceKeysBySpace([...current]);
           const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 
@@ -346,7 +340,7 @@ export default Capability.makeModule(
                 }),
                 deck: {
                   planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id),
-                  ...getExtensionValues(extensionValues, space.id),
+                  ...getViewState(space.id),
                 },
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
@@ -368,34 +362,33 @@ export default Capability.makeModule(
 
       // Moving or scrolling in an open object re-sends to its space, at most once per interval, which is shorter while
       // followed; every plank's location goes out, so a follower mirroring this deck scrolls each of them.
-      const locationKeys = [...new Set([...current, ...active].flatMap((path) => getPresenceKeyFromPath(path) ?? []))];
       const sendInterval = () => (isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL);
-      // Locations and extension values (the deck's front, say) share one send, so together they keep to its rate.
+      // Locations and followed view state (the deck's front, say) share one send, so together they keep to its rate.
       const sends = makeSendScheduler(send, sendInterval);
       const locationScheduler = makeLocationScheduler(locationKeys, getLocation, sends);
-      scheduleSend = sends.schedule;
       const locationSubscriptions = locationKeys.map((key) =>
         viewState.subscribe(ViewLocation.aspect, key, () => locationScheduler.schedule(key)),
+      );
+      const viewStateSubscriptions = [...viewStateContexts].flatMap(([spaceId, contextIds]) =>
+        registry
+          .get(followablesAtom)
+          .flatMap((followable) =>
+            contextIds.map((contextId) => followable.subscribe(viewState, contextId, () => sends.schedule([spaceId]))),
+          ),
       );
 
       broadcastCleanup = () => {
         clearInterval(interval);
         sends.dispose();
-        scheduleSend = undefined;
         locationSubscriptions.forEach((unsubscribe) => unsubscribe());
+        viewStateSubscriptions.forEach((unsubscribe) => unsubscribe());
       };
     };
 
     // Subscribe to layout changes for broadcast.
     subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
-    let previousExtensionValues = registry.get(extensionValuesAtom);
-    subscriptions.add(
-      registry.subscribe(extensionValuesAtom, (values) => {
-        const changed = getChangedExtensionSpaces(previousExtensionValues, values);
-        previousExtensionValues = values;
-        scheduleSend?.(changed);
-      }),
-    );
+    // A followable contributed later is sent, and watched, from then on.
+    subscriptions.add(registry.subscribe(followablesAtom, setupBroadcast));
     // Subscribe to attention.current changes.
     subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
     // Starting, retargeting or stopping a follow tells the space at once, so the leader's rate changes with it.

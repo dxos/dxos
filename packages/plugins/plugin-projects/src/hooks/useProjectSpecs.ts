@@ -4,7 +4,7 @@
 
 import type * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
-import { type Ref } from '@dxos/echo';
+import { Obj, type Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useViewState } from '@dxos/react-ui-attention';
 
@@ -23,6 +23,6 @@ const EMPTY: readonly Ref.Ref<Spec.Spec>[] = [];
 /** The spec the project's Specs tab shows: `spec` when the level names one, else the reader's pick, else the first. */
 export const useSelectedSpec = (project: Project.Project, spec?: Spec.Spec): Spec.Spec | undefined => {
   const specs = useProjectSpecs(project);
-  const { spec: selectedId } = useViewState(ProjectView.aspect, project.id);
+  const { spec: selectedId } = useViewState(ProjectView.aspect, Obj.getURI(project));
   return spec ?? specs.find(({ id }) => id === selectedId) ?? specs[0];
 };

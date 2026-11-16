@@ -65,6 +65,8 @@ feat F-4: A project's specs
               packages add their own editing on top.
   req F-4.13: A spec's text, and each feature section embedded in it, shows the carets of the other peers editing it,
               each with the peer's name.
+  req F-4.14: A peer following another (org.dxos.plugin.space#F-8.21) shows the tab, the spec, its view and the chart
+              the leader has open in each project, since the article's view state is followable.
 ```
 
 ```mdl
@@ -2212,4 +2214,14 @@ decision D-209: QA-9 starts once the peers share the space and both have checked
   supersedes: D-203
   affects: [QA-9]
   why: A project made after the document check did not open on the host. Made first, it sits in its own section, so the guest's document list and the host's first object stay as the document steps expect.
+```
+
+```mdl
+decision D-210: The project article's view state is keyed by the project's EID and contributed as an `AppCapabilities.Followable`, so a follower takes the leader's tab, spec, view and chart with no follow code of the plugin's own. A reader's tab, spec and chart picked under the project's bare id before this change are not carried over.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-4.14]
+  why: Presence keys an object's state by its EID, as it does locations, so the key is what lets the leader's value reach the follower's article.
+  rejected:
+    - Keeping the bare id and translating at the presence boundary; every followable would need the translation.
 ```

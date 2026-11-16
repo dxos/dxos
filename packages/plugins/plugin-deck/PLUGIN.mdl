@@ -451,12 +451,12 @@ feat F-1: Deck Presentations
           planks changed since it last measured names none until it measures the planks it shows
 
   req F-1.11:
-    when: the deck reports where it is in a space through its `LocatorExtension`
+    when: the deck keeps where it is in a space in its followable location view state, keyed by the space's EID
     then: its value there holds its front plank when that plank is in the space, and its planks in the space whose
           companion is open with the companion tab it shows them in
 
   req F-1.12:
-    when: plugin-space hands the deck a leader's view and the leader's deck value through its `LocatorExtension`'s `follow`
+    when: plugin-space hands the deck a leader's view and the leader's deck location through its followable's `follow`
     then: the deck opens what the leader shows, so plugin-space opens nothing itself. A sliding deck shows the leader's
           planks in the space, in order, leaving out any it has no URL binding for, scrolled to the leader's front plank
           (or, when that plank is left out and the deck holds every other plank it can bind, to the first of their planks
@@ -995,6 +995,14 @@ decision D-5: The deck lands the leader's view again when the set of their plank
   for: user:wittjosiah
   affects: [F-1.12]
   why: A plank whose binding came from a plugin that loaded after the follow started stayed left out until the leader changed their deck.
+```
+
+```mdl
+decision D-6: The deck keeps its location in each space in a memory view-state aspect keyed by the space's EID, and makes it followable with `AppCapabilities.makeFollowable`, keeping its own `follow`. Replaces the `LocatorExtension` of [D-3].
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-1.11, F-1.12]
+  why: plugin-space follows view state now (org.dxos.plugin.space#D-88), so the deck's location is one more aspect; it keeps a `follow` because writing the leader's front into view state would not open or slide to their planks.
 ```
 
 ---

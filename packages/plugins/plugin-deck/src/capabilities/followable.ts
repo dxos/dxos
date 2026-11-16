@@ -13,37 +13,16 @@ import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type EID } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
 import { DeckCapabilities } from '#types';
 
-import { DeckNamespace } from '../namespace.ts';
+import * as DeckLocation from '../types/DeckLocation.ts';
 
-/** Where the deck is in one space: its `LocatorExtension`'s value there. */
-export type DeckLocation = {
-  /** The plank the deck is scrolled to, when it is in the space. */
-  front?: string;
-  /** Its planks in the space whose companion is open. */
-  companions: string[];
-  /** The companion tab it shows them in. */
-  variant?: string;
-};
-
-const isString = (value: unknown): value is string => typeof value === 'string';
-
-/** Narrows a leader's value, which arrives as opaque JSON, to a {@link DeckLocation}. */
-export const parseDeckLocation = (value: unknown): DeckLocation | undefined => {
-  if (typeof value !== 'object' || value === null) {
-    return undefined;
-  }
-  const { front, companions, variant } = value as Record<string, unknown>;
-  return {
-    ...(isString(front) && { front }),
-    companions: Array.isArray(companions) ? companions.filter(isString) : [],
-    ...(isString(variant) && { variant }),
-  };
-};
+/** The context the deck's location in a space is kept under: the space's EID. */
+const getSpaceKey = (spaceId: string) => GraphPath.getEidFromPath(GraphPath.getSpacePath(spaceId));
 
 const isSamePlanks = (a?: readonly string[], b?: readonly string[]) =>
   a === b || (a?.length === b?.length && !!a?.every((path, index) => path === b?.[index]));
@@ -69,8 +48,8 @@ type Shown = {
 };
 
 /**
- * The deck's `LocatorExtension`. Its value in a space is its front plank there and its planks with their companion
- * open. Following, it opens what the leader shows: a deck that lays planks side by side mirrors the leader's deck, their
+ * Keeps the deck's location in each space it shows, its front plank there and its planks with their companion open, and
+ * makes it followable. Following, it opens what the leader shows: a deck that lays planks side by side mirrors the leader's deck, their
  * planks, the plank they are scrolled to and their companions; a flat deck opens the plank the leader attends, at the
  * leader's path. Neither moves the caret or focus.
  */
@@ -81,22 +60,35 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
     const deckViewAtom = yield* DeckCapabilities.View;
+    const viewState = yield* AttentionCapabilities.ViewState;
     const appGraphAtom = capabilities.atom(AppCapabilities.AppGraph);
 
+    // A space the deck no longer shows goes back to the default, which has no front.
     const location = Atom.make((get) => {
       const { active } = get(layoutAtom);
       const { front, companions } = get(deckViewAtom);
-      const bySpace: Record<string, DeckLocation> = {};
+      const bySpace = new Map<string, DeckLocation.State>();
       for (const spaceId of new Set(active.flatMap((plank) => GraphPath.getSpaceIdFromPath(plank) ?? []))) {
         const inSpace = (path: string) => GraphPath.getSpaceIdFromPath(path) === spaceId;
-        bySpace[spaceId] = {
+        bySpace.set(EID.make({ spaceId }), {
           ...(front && inSpace(front) && { front }),
           companions: companions.items.filter(inSpace),
           ...(companions.variant && { variant: companions.variant }),
-        };
+        });
       }
       return bySpace;
     });
+    const writeLocation = (bySpace: ReadonlyMap<string, DeckLocation.State>) => {
+      for (const contextId of new Set([...viewState.contexts(DeckLocation.aspect), ...bySpace.keys()])) {
+        const next = bySpace.get(contextId) ?? DeckLocation.aspect.defaultValue();
+        if (JSON.stringify(viewState.get(DeckLocation.aspect, contextId)) !== JSON.stringify(next)) {
+          viewState.set(DeckLocation.aspect, contextId, next);
+        }
+      }
+    };
+    writeLocation(registry.get(location));
+    const unsubscribeLocation = registry.subscribe(location, writeLocation);
+    yield* Effect.addFinalizer(() => Effect.sync(unsubscribeLocation));
 
     // Whether this deck has a URL binding for a graph path; the deck drops a path it cannot represent.
     const isBound = (path: string) => {
@@ -107,7 +99,7 @@ export default Capability.makeModule(
     const findOpenPath = (key: EID.EID) =>
       registry.get(layoutAtom).active.find((path) => GraphPath.getEidFromPath(path) === key);
 
-    const follow = Effect.fnUntraced(function* (viewAtom: Atom.Atom<AppCapabilities.FollowView>) {
+    const follow = Effect.fnUntraced(function* (viewAtom: Atom.Atom<AppCapabilities.FollowView<DeckLocation.State>>) {
       const showing = Atom.make(true);
       const unmountShowing = registry.mount(showing);
       const setShowing = (value: boolean) => {
@@ -174,7 +166,8 @@ export default Capability.makeModule(
         const { now } = view;
         const layout = registry.get(layoutAtom);
         const deck = registry.get(deckViewAtom);
-        const leader = parseDeckLocation(view.value);
+        const spaceKey = getSpaceKey(view.spaceId);
+        const leader = spaceKey && view.values[spaceKey];
         const { key, path, localPath } = view.attended;
         // A leader that reported no planks is followed as a flat deck follows, by the object they attend.
         const planks = !deck.flat && view.active.length > 0 ? view.active : undefined;
@@ -274,11 +267,9 @@ export default Capability.makeModule(
       return showing;
     });
 
-    return Capability.contribute(AppCapabilities.LocatorExtension, {
-      id: DeckNamespace.key,
-      location,
-      navigates: true,
-      follow,
-    });
+    return Capability.contribute(
+      AppCapabilities.Followable,
+      AppCapabilities.makeFollowable({ aspect: DeckLocation.aspect, navigates: true, follow }),
+    );
   }),
 );
