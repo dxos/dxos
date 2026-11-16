@@ -4,7 +4,7 @@
 
 import { createContext, useContext } from 'react';
 
-import { RDF } from '@dxos/pipeline-rdf';
+import { RDF, type WindowedFactStoreApi } from '@dxos/pipeline-rdf';
 
 /**
  * The only state genuinely shared across the Facts-story modules: the currently-displayed facts (a
@@ -24,6 +24,11 @@ export type FactsStoryState = {
   /** What the last SPARQL run bound, scoping the facts and entities views; undefined for everything. */
   scope: QueryScope | undefined;
   setScope: (scope: QueryScope | undefined) => void;
+  /**
+   * A store too large to hold in `facts`: unscoped views page through it as they scroll, and `facts` holds only what a
+   * scope (a SPARQL run, an agent's lookup) read. Absent when `facts` holds every fact.
+   */
+  store?: WindowedFactStoreApi;
 };
 
 /** The terms a SPARQL result binds, which the views keep only what they touch of. */

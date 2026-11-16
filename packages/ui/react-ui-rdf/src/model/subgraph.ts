@@ -48,6 +48,13 @@ const KIND_TYPES: Readonly<Record<RDF.EntityKind, string>> = {
   thing: 'Thing',
 };
 
+/** The display class of an entity kind (`org` → `Organization`). */
+export const entityTypeOfKind = (kind: RDF.EntityKind): string => KIND_TYPES[kind];
+
+/** The kind a display class names, if it names one. */
+export const entityKindOfType = (type: string): RDF.EntityKind | undefined =>
+  RDF.EntityKind.literals.find((kind) => KIND_TYPES[kind] === type);
+
 /** Classes by entity id: the caller's first, then the first type the facts state for each entity. */
 const typesOf = (facts: readonly RDF.Fact[], types: EntityCardOptions['types']): Map<string, string> => {
   const result = new Map(Object.entries(types ?? {}));

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -11,7 +11,7 @@ import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { RDF } from '@dxos/pipeline-rdf';
+import { RDF, isWindowed } from '@dxos/pipeline-rdf';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
@@ -71,16 +71,22 @@ const ExplorerRoot = () => {
     return () => void operationFactListeners.delete(listener);
   }, []);
 
-  // The remote store ignores the space id; any key reaches the server.
+  // The remote store ignores the space id; any key reaches the server. Its views page through it as they scroll, so
+  // nothing loads up front but a cheap read that says whether the server is up.
+  const store = useMemo(() => {
+    const remote = registry.forSpace('remote');
+    return isWindowed(remote) ? remote : undefined;
+  }, [registry]);
   useEffect(() => {
-    void EffectEx.runPromise(registry.forSpace('remote').query({})).then(setFacts, (failure: unknown) =>
-      setError(failure instanceof Error ? failure.message : String(failure)),
+    void EffectEx.runPromise(registry.forSpace('remote').predicates()).then(
+      () => setError(undefined),
+      (failure: unknown) => setError(failure instanceof Error ? failure.message : String(failure)),
     );
   }, [registry]);
 
   return (
     <FactsStoryContext.Provider
-      value={{ facts, setFacts, selected, setSelected, predicate, setPredicate, scope, setScope }}
+      value={{ facts, setFacts, selected, setSelected, predicate, setPredicate, scope, setScope, store }}
     >
       {error && (
         <div className='p-2 text-sm text-error-text'>

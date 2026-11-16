@@ -2,7 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, createContext, forwardRef, useContext, useMemo, useState } from 'react';
+import React, {
+  type ReactNode,
+  createContext,
+  forwardRef,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { type RDF, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
 import { Tree } from '@dxos/react-ui-graph';
@@ -19,7 +28,14 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { formatRawFact } from '../../model/index.ts';
+import { useWindowedRows } from '../../hooks/index.ts';
+import {
+  type FactSource,
+  type SubjectSummary,
+  type WindowRequest,
+  formatRawFact,
+  memoryFactSource,
+} from '../../model/index.ts';
 import {
   type Group,
   factualityColor,
@@ -45,7 +61,10 @@ type FactViewerContextValue = {
   facts: RDF.Fact[];
   context?: string;
   predicate?: string;
-  groups: Group[];
+  /** Subject groups a window at a time: the `source` given, else the scoped facts in memory. */
+  source: FactSource;
+  /** The text the source filters by (the memory source is filtered already). */
+  sourceText: string;
   graph: ReturnType<typeof graphToTreeNode> | undefined;
   filter: string;
   setFilter: (value: string) => void;
@@ -76,6 +95,11 @@ type FactViewerRootProps = Util.ThemedClassName<{
   context?: string;
   /** Predicate filter; when set, only facts with this predicate are shown. */
   predicate?: string;
+  /**
+   * Subject groups loaded a window at a time as the list scrolls (a fact store); the list shows `facts` otherwise. The
+   * source applies its own scope: `context` and `predicate` narrow `facts` only.
+   */
+  source?: FactSource;
   /** Custom composition; when omitted the default toolbar + list/graph body is rendered. */
   children?: ReactNode;
 }>;
@@ -89,7 +113,7 @@ type FactViewerRootProps = Util.ThemedClassName<{
  * (`FactViewer.Toolbar`, `FactViewer.List`, `FactViewer.Graph`) directly.
  */
 const FactViewerRoot = forwardRef<HTMLDivElement, FactViewerRootProps>(
-  ({ classNames, facts, context, predicate, children }, forwardedRef) => {
+  ({ classNames, facts, context, predicate, source: sourceProp, children }, forwardedRef) => {
     const [filter, setFilter] = useState('');
     const [view, setView] = useState<View>('list');
     const [turtle, setTurtle] = useState(false);
@@ -104,7 +128,11 @@ const FactViewerRoot = forwardRef<HTMLDivElement, FactViewerRootProps>(
         ),
       [facts, context, predicate],
     );
-    const groups = useMemo(() => groupFacts(scoped, filter), [scoped, filter]);
+    const source = useMemo(
+      () => sourceProp ?? memoryFactSource(groupFacts(scoped, filter).flatMap((group) => group.facts)),
+      [sourceProp, scoped, filter],
+    );
+    const sourceText = sourceProp ? filter : '';
     const graph = useMemo(
       () =>
         context == null ? undefined : graphToTreeNode(buildFactGraph(context, factSourceFromFacts(facts)), context),
@@ -112,8 +140,21 @@ const FactViewerRoot = forwardRef<HTMLDivElement, FactViewerRootProps>(
     );
 
     const value = useMemo<FactViewerContextValue>(
-      () => ({ facts, context, predicate, groups, graph, filter, setFilter, view, setView, turtle, setTurtle }),
-      [facts, context, predicate, groups, graph, filter, view, turtle],
+      () => ({
+        facts,
+        context,
+        predicate,
+        source,
+        sourceText,
+        graph,
+        filter,
+        setFilter,
+        view,
+        setView,
+        turtle,
+        setTurtle,
+      }),
+      [facts, context, predicate, source, sourceText, graph, filter, view, turtle],
     );
 
     return (
@@ -196,21 +237,58 @@ const ESTIMATED_GROUP_HEIGHT = 200;
 /** Space between groups, and above the first and below the last, in px. */
 const GROUP_GAP = 8;
 
+/** How long typing pauses before the filter reaches a store. */
+const FILTER_DELAY = 150;
+
+const getSubjectId = (subject: SubjectSummary): string => subject.id;
+
 const FactViewerList = ({ classNames }: FactViewerListProps) => {
-  const { groups } = useFactViewerContext('List');
+  const { source, sourceText } = useFactViewerContext('List');
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+  const [text, setText] = useState(sourceText);
+  useEffect(() => {
+    const timeout = setTimeout(() => setText(sourceText.trim()), FILTER_DELAY);
+    return () => clearTimeout(timeout);
+  }, [sourceText]);
+  const load = useCallback(
+    (request: Pick<WindowRequest, 'offset' | 'limit'>) => source.window({ ...request, ...(text ? { text } : {}) }),
+    [source, text],
+  );
+  const details = useCallback((items: readonly SubjectSummary[]) => source.groups(items.map(getSubjectId)), [source]);
+  const windowed = useWindowedRows({ load, details, getId: getSubjectId });
+  const total = windowed.total ?? 0;
+
   return (
     <Panel.Body asChild>
       <ScrollArea.Root classNames={classNames}>
         <ScrollArea.Viewport classNames={styles.listViewport()} ref={setViewport}>
-          {groups.length === 0 ? (
+          {windowed.error ? (
+            <Status.Empty>{windowed.error}</Status.Empty>
+          ) : windowed.total === undefined ? (
+            <Status.Empty>Loading…</Status.Empty>
+          ) : total === 0 ? (
             <Status.Empty>No facts.</Status.Empty>
           ) : (
             // Groups have no fixed height (a quote, a TriG snippet), so each is measured as it scrolls into view.
             <VirtualList
-              count={groups.length}
-              getKey={(index) => groups[index].subject}
-              renderItem={(index) => <FactViewerGroup group={groups[index]} />}
+              count={total}
+              getKey={(index) => windowed.item(index)?.id ?? `pending:${index}`}
+              renderItem={(index) => {
+                const subject = windowed.item(index);
+                const group = subject && windowed.detail(subject.id);
+                return group ? (
+                  <FactViewerGroup group={group} />
+                ) : (
+                  // Holds the group's place, under its subject once the page is known, until its facts arrive.
+                  <div role='none' className={styles.group()} data-testid='fact-viewer-placeholder'>
+                    <div className={styles.groupHeader()}>
+                      <h3>{subject?.label ?? '…'}</h3>
+                    </div>
+                    <div role='none' className='h-16' />
+                  </div>
+                );
+              }}
+              onRangeChange={windowed.onRangeChange}
               scrollElement={viewport}
               estimateSize={ESTIMATED_GROUP_HEIGHT}
               gap={GROUP_GAP}

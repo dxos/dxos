@@ -26,6 +26,8 @@ export type VirtualListProps = {
   padding?: number;
   /** The index of a row to keep in view: whenever it changes, the list scrolls just far enough to show it. */
   activeIndex?: number;
+  /** Called with the first and last row rendered (overscan included) whenever they change, so rows can load in view. */
+  onRangeChange?: (start: number, end: number) => void;
 };
 
 /**
@@ -36,7 +38,19 @@ export type VirtualListProps = {
 // Composable, so a `Focus.Group asChild` can make the list its arrow-key group.
 export const VirtualList = Util.composable<HTMLDivElement, VirtualListProps>(
   (
-    { count, getKey, renderItem, scrollElement, estimateSize, gap = 0, padding = 0, activeIndex, children, ...props },
+    {
+      count,
+      getKey,
+      renderItem,
+      scrollElement,
+      estimateSize,
+      gap = 0,
+      padding = 0,
+      activeIndex,
+      onRangeChange,
+      children,
+      ...props
+    },
     forwardedRef,
   ) => {
     const virtualizer = useVirtualizer({
@@ -58,6 +72,15 @@ export const VirtualList = Util.composable<HTMLDivElement, VirtualListProps>(
       }
     }, [virtualizer, activeIndex, count]);
 
+    const items = virtualizer.getVirtualItems();
+    const first = items.at(0)?.index ?? -1;
+    const last = items.at(-1)?.index ?? -1;
+    useEffect(() => {
+      if (first >= 0) {
+        onRangeChange?.(first, last);
+      }
+    }, [first, last, onRangeChange]);
+
     return (
       <div
         {...Util.composableProps(props, {
@@ -67,7 +90,7 @@ export const VirtualList = Util.composable<HTMLDivElement, VirtualListProps>(
         })}
         ref={forwardedRef}
       >
-        {virtualizer.getVirtualItems().map(({ key, index, start }) => (
+        {items.map(({ key, index, start }) => (
           <div
             key={key}
             role='none'

@@ -23,6 +23,8 @@ export type OntologyPanelProps = {
   selected?: string;
   /** Makes each predicate selectable; choosing the chosen one again clears the choice. */
   onSelect?: (iri: string | undefined) => void;
+  /** Statements per predicate IRI as a store counted them, in place of counting `facts` (which hold only a scope). */
+  usage?: Readonly<Record<string, number>>;
 };
 
 type View = 'list' | 'ontology' | 'trig';
@@ -54,16 +56,32 @@ export const predicateUsage = (facts: readonly RDF.Fact[], ontology: RDF.Ontolog
   return counts;
 };
 
+/** Statements per canonical predicate IRI from per-IRI counts, so merged-away predicates count toward their survivor. */
+export const foldUsage = (
+  counts: Readonly<Record<string, number>>,
+  ontology: RDF.Ontology.Ontology,
+): Map<string, number> => {
+  const folded = new Map<string, number>();
+  for (const [iri, count] of Object.entries(counts)) {
+    const canonical = ontology.canonical(iri)?.iri ?? iri;
+    folded.set(canonical, (folded.get(canonical) ?? 0) + count);
+  }
+  return folded;
+};
+
 /**
  * Every predicate the brain knows, most used first, with its metadata and how often the facts use it, plus the
  * ontology graph and the facts as TriG. Seed predicates keep their vocabulary's IRIs (schema.org, FOAF, …); those an
  * extractor minted live in the brain's own namespace.
  */
 export const OntologyPanel = Util.composable<HTMLDivElement, OntologyPanelProps>(
-  ({ ontology, facts, selected, onSelect, ...props }, forwardedRef) => {
+  ({ ontology, facts, selected, onSelect, usage: counted, ...props }, forwardedRef) => {
     const [view, setView] = useState<View>('list');
     const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
-    const usage = useMemo(() => predicateUsage(facts, ontology), [facts, ontology]);
+    const usage = useMemo(
+      () => (counted ? foldUsage(counted, ontology) : predicateUsage(facts, ontology)),
+      [counted, facts, ontology],
+    );
     const entries = useMemo(
       () =>
         [...ontology.entries].sort(

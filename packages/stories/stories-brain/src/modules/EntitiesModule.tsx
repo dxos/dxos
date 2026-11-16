@@ -10,6 +10,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
+import { storeEntitySource } from '@dxos/react-ui-rdf';
 
 import { KnowledgePanel } from '../components/index.ts';
 import { entitiesInScope, factInScope, useFactsStory } from './context.ts';
@@ -35,10 +36,28 @@ const toOntology = (entries: readonly RDF.Ontology.Entry[]): RDF.Ontology.Ontolo
 export const EntitiesModule = () => {
   const space = ToolkitHooks.useActiveSpace();
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
-  const { facts, selected, setSelected, predicate, setPredicate, scope } = useFactsStory();
+  const { facts, selected, setSelected, predicate, setPredicate, scope, store } = useFactsStory();
   const scoped = useMemo(() => (scope ? facts.filter((fact) => factInScope(fact, scope)) : facts), [facts, scope]);
   const entities = useMemo(() => (scope ? entitiesInScope(facts, scope) : undefined), [facts, scope]);
   const [ontology, setOntology] = useState<RDF.Ontology.Ontology | undefined>(undefined);
+  // Unscoped, a large store pages its entities in as they scroll and counts predicate use itself.
+  const windowed = scope ? undefined : store;
+  const source = useMemo(() => (windowed ? storeEntitySource(windowed) : undefined), [windowed]);
+  const [usage, setUsage] = useState<Readonly<Record<string, number>> | undefined>(undefined);
+  useEffect(() => {
+    setUsage(undefined);
+    if (!windowed) {
+      return;
+    }
+    let cancelled = false;
+    void EffectEx.runPromise(windowed.predicateUsage()).then(
+      (counts) => !cancelled && setUsage(counts),
+      (error: unknown) => log.catch(error),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [windowed, facts]);
 
   // The pool grows as facts are written (an extractor mints predicates), so it is re-read whenever the facts change.
   useEffect(() => {
@@ -65,7 +84,9 @@ export const EntitiesModule = () => {
     <KnowledgePanel
       facts={scoped}
       entities={entities}
+      source={source}
       ontology={ontology}
+      usage={usage}
       selected={selected}
       onSelect={setSelected}
       predicate={predicate?.iri}

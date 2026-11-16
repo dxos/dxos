@@ -20,6 +20,7 @@ export const translations = [
         'entity-browser-actions.label': 'Column actions',
         'entity-browser-close.label': 'Close column',
         'entity-browser-empty.message': 'No matching entities.',
+        'entity-browser-loading.message': 'Loading…',
         'entity-type-filter.label': 'Filter by type',
         'entity-type-filter.item': '{{type}} {{count}}',
         'entity-type-filter.more': '{{count}} more',

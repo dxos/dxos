@@ -24,6 +24,9 @@ import {
 } from '../components/index.ts';
 import { useFactsStory } from './context.ts';
 
+/** Statement graphs per bound entity a large store loads for a result's scope. */
+const SCOPED_GRAPHS = 200;
+
 /**
  * LEFT: natural-language → SPARQL over Brain's per-space `FactStore`, run as written; the raw result shows under the
  * query, and what it binds scopes the facts and entities views.
@@ -38,7 +41,7 @@ export const QueryModule = () => {
 
 const QueryModuleContainer = ({ space }: { space: Space }) => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
-  const { setFacts, setScope } = useFactsStory();
+  const { setFacts, setScope, store: windowed } = useFactsStory();
 
   const [question, setQuestion] = useState('');
   const [query, setQuery] = useState(DEFAULT_SPARQL);
@@ -88,19 +91,29 @@ const QueryModuleContainer = ({ space }: { space: Space }) => {
       }
       // The whole result is built before the scope is set, so a failing `select` leaves scope and result in step.
       let next: QueryPanelResult;
+      const bound = graphs.size > 0 ? await EffectEx.runPromise(store.select(query)) : [];
       if (graphs.size > 0) {
-        const facts = await EffectEx.runPromise(store.select(query));
-        next = { kind: 'graphs', count: new Set(facts.map(RDF.Mapping.graphOf)).size, text: RDF.Graph.toTriG(facts) };
+        next = { kind: 'graphs', count: new Set(bound.map(RDF.Mapping.graphOf)).size, text: RDF.Graph.toTriG(bound) };
       } else {
         next = { kind: 'rows', count: rows.length, text: formatBindings(rows) };
       }
-      // The store may have grown since the views loaded; the scope can only show facts they hold.
-      const all = await EffectEx.runPromise(store.query({}));
+      // The scope can only show facts the views hold: a large store loads what the result names (its graphs, else the
+      // entities it binds); a small one is re-read whole, since it may have grown since the views loaded.
+      const all = !windowed
+        ? await EffectEx.runPromise(store.query({}))
+        : graphs.size > 0
+          ? bound
+          : await EffectEx.runPromise(
+              windowed.entityFacts({
+                keys: [...iris].map((iri) => RDF.Vocab.entityKey(iri)),
+                limit: SCOPED_GRAPHS,
+              }),
+            );
       setFacts(all);
       setScope({ graphs, iris, literals });
       setResult(next);
     });
-  }, [guard, registry, space.id, query, setFacts, setScope]);
+  }, [guard, registry, space.id, query, setFacts, setScope, windowed]);
 
   // Reset the field, drop the result's scope and re-read all facts.
   const handleReset = useCallback(() => {
@@ -108,10 +121,11 @@ const QueryModuleContainer = ({ space }: { space: Space }) => {
       setQuery(DEFAULT_SPARQL);
       setScope(undefined);
       setResult(undefined);
-      const results = await EffectEx.runPromise(registry.forSpace(space.id).query({}));
+      // A large store's unscoped views page through it themselves.
+      const results = windowed ? [] : await EffectEx.runPromise(registry.forSpace(space.id).query({}));
       setFacts(results);
     });
-  }, [guard, registry, space.id, setFacts, setScope]);
+  }, [guard, registry, space.id, setFacts, setScope, windowed]);
 
   return (
     <QueryPanel

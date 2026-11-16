@@ -44,11 +44,13 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@tanstack/react-virtual": "catalog:"
+    "@tanstack/react-virtual": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/n3": "catalog:",
     "@types/react": "catalog:",
