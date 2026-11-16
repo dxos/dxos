@@ -2,6 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+// The tracks a grid child covers. The counts are reset on the child itself rather than left to the `var()`
+// fallbacks: a custom property inherits, so a child inside a child would otherwise cover the tracks of the one
+// around it. An inline `colSpan`/`rowSpan` outranks the reset.
+const span =
+  '[--slide-col-span:1] [--slide-row-span:1] ' +
+  '[grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]';
+
 /** Classes for the 2560×1440 slide canvas (`SlideFrame` scales it to fit); colors and fonts come from `--slide-*` variables. */
 export const theme = {
   root: 'leading-relaxed',
@@ -78,6 +85,9 @@ export const theme = {
           '[&[data-active]]:border-4 [&[data-active]]:border-(--slide-accent) ' +
           '[&[data-active]]:before:text-(color:--slide-accent) [&[data-active]]:before:opacity-100 ' +
           '[&[data-active]_em]:text-(color:--slide-accent) [&[data-active]_em]:opacity-100',
+        // A loose item wraps its content in a paragraph, which would otherwise take the slide's body size and
+        // undo the card's.
+        p: 'text-[32px] leading-normal',
       },
     },
     box: {
@@ -124,7 +134,9 @@ export const theme = {
     grid: {
       default: {
         grid:
-          'grid grow min-h-0 gap-8 my-[16px] ' +
+          // The counts are reset here rather than left to the `var()` fallbacks: a custom property inherits, so a
+          // grid inside a grid would otherwise lay down the tracks of the one around it.
+          'grid grow min-h-0 gap-8 my-[16px] [--slide-grid-cols:1] [--slide-grid-rows:1] ' +
           '[grid-template-columns:repeat(var(--slide-grid-cols,1),minmax(0,1fr))] ' +
           // The explicit rows `rows` asks for, and any further row an overflowing grid opens, are all one fraction,
           // so the rows stay even however many there turn out to be.
@@ -135,7 +147,7 @@ export const theme = {
     // A cell spans the tracks `cols`/`rows` ask for; with neither it is one cell, as any grid child is.
     cell: {
       default: {
-        cell: 'min-w-0 [grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]',
+        cell: `min-w-0 ${span}`,
       },
     },
 
@@ -144,9 +156,7 @@ export const theme = {
     // a window of the same height, not because of anything the card does.
     card: {
       default: {
-        card:
-          'flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ' +
-          '[grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]',
+        card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ${span}`,
         img: 'w-full grow min-h-0 object-cover',
         h1: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
         h2: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
@@ -154,9 +164,7 @@ export const theme = {
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
       },
       outline: {
-        card:
-          'flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ' +
-          '[grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]',
+        card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ${span}`,
         img: 'w-full grow min-h-0 object-cover',
         h1: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
         h2: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
@@ -165,7 +173,7 @@ export const theme = {
       },
       // No surface of its own: the art and the text sit straight on the slide, for a grid that is all pictures.
       plain: {
-        card: 'flex flex-col min-w-0 [grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]',
+        card: `flex flex-col min-w-0 ${span}`,
         img: 'w-full grow min-h-0 object-contain',
         h1: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
         h2: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
