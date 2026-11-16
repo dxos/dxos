@@ -156,7 +156,6 @@
     "oxfmt": "^0.63.0",
     "oxlint": "1.78.0",
     "oxlint-tsgolint": "catalog:",
-    "pkg-pr-new": "catalog:",
     "pkg-up": "catalog:",
     "prettier": "catalog:",
     "raf": "catalog:",
