@@ -100,16 +100,6 @@ export const theme = {
         img: 'h-[420px] w-auto max-w-full object-contain',
         p: '[&:has(>img)]:contents',
       },
-      // A mark run oversized off the slide's start edge, behind the words. It leaves the flow, so the text is laid
-      // out as though it were not there, and it is cropped by the slide rather than fitted to it.
-      //
-      // It is not tinted down with `opacity`, which would fade the relief with it. `brightness` takes the white mark
-      // to the surface's own value, and the two drop-shadows — dark down-end, light up-start — are then the only
-      // thing that reads, so the mark looks raised out of the slide rather than laid on it. The offsets are canvas
-      // units, scaled with everything else.
-      //
-      // The mark is drawn high in its own square (21 units of air above it, 218 below), so centring the file centres
-      // the air rather than the mark; the nudge is half that difference, as a share of the image's height.
       // A picture that fills its column rather than sitting in it: it grows to the column's height and is cropped
       // to its width, so the mark at the art's centre stays centred however narrow the column is.
       fill: {

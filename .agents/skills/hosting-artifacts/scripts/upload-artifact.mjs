@@ -190,8 +190,15 @@ const main = async () => {
 
   const localMd5 = createHash('md5').update(body).digest('hex');
   // A CDN in front of the bucket (a custom domain caches for hours) keeps serving an overwritten key's old
-  // body, so the URL carries the content's version: each upload gets a URL no edge has cached.
-  const url = `${PUBLIC_BASE}/${key}?v=${localMd5.slice(0, 8)}`;
+  // body AND its old headers, so the URL carries a version of everything being verified: re-uploading the
+  // same bytes under a new cache-control would otherwise be checked against the cached response of the old
+  // one. Each segment is encoded because a `#` or a space in a key is signed literally in the PUT but would
+  // otherwise truncate or shift this GET's path onto a different object.
+  const version = createHash('md5')
+    .update(`${localMd5}\n${contentType}\n${cacheControl ?? ''}`)
+    .digest('hex')
+    .slice(0, 8);
+  const url = `${PUBLIC_BASE}/${key.split('/').map(encodeURIComponent).join('/')}?v=${version}`;
 
   // Verify with a GET through the public URL rather than trusting the PUT: a HEAD can answer from a different
   // cache entry than the body a viewer downloads, and a wrong type or truncated body is invisible until then.
