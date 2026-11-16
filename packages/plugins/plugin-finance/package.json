@@ -59,7 +59,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/errors": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-magazine": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -68,6 +67,7 @@
   "devDependencies": {
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "effect": "catalog:"
   },
