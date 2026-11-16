@@ -68,6 +68,10 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
       files), not on the diff. Needs eviction: an operator, or a CI `moon run mcp-server:build --force`.
       Root cause (a cancelled shard uploading an empty entry) is suggested as a separate task.
 
+- [ ] Apple: macOS notarization (and likely the iOS App Store Connect upload) fail with HTTP 403
+      "A required agreement is missing or has expired" (Deploy Apps run 815). The Apple Developer
+      account holder must accept the agreement; not fixable in code.
+
 ## PRs
 
 - dxos/dxos#14557 — this project: draft-PR brief, repositories over MCP, specs. Draft; CI red on
