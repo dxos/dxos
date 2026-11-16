@@ -31,6 +31,8 @@
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-presenter": "workspace:*",
+    "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

@@ -23109,6 +23109,12 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-presenter':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-presenter
+      '@dxos/plugin-sheet':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-sheet
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space

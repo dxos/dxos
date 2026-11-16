@@ -4,16 +4,20 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { Filter, Ref, Type, View } from '@dxos/echo';
+import { Filter, Obj, Ref, Type, View } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as ChessSkill from '@dxos/plugin-chess/ChessSkill';
 import * as MapSkill from '@dxos/plugin-map/MapSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Presentation from '@dxos/plugin-presenter/Presentation';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { ViewModel } from '@dxos/schema';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { trim } from '@dxos/util';
 
+import { SEEDED_KEY_SOURCE } from '../modules/ArtifactsModule.tsx';
 import { StoryRole } from '../modules/index.ts';
+import { CLOUDFLARE_FINDINGS } from '../testing/findings.ts';
 import { createDecorators, storyParameters } from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Artifacts',
@@ -210,5 +214,45 @@ export const WithBoard: Story = {
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Context]],
+  },
+};
+
+/**
+ * Starts with only the agent: it reads five findings about the Cloudflare Developers Discord from a bound document and
+ * builds artifacts from them — sheets with charts, a presentation linking the charts as slides, and a summary — each
+ * shown in the artifacts panel as it is made. Prompt with `FINDINGS_PROMPT` (`../testing/findings.ts`).
+ */
+export const WithFindings: Story = {
+  decorators: createDecorators({
+    lazyPlugins: async () => {
+      const [SheetPlugin, PresenterPlugin, MarkdownPlugin, SpacePlugin] = await Promise.all([
+        import('@dxos/plugin-sheet/SheetPlugin'),
+        import('@dxos/plugin-presenter/PresenterPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-space/SpacePlugin'),
+      ]);
+      return {
+        // SpacePlugin handles `AddObject`, which the create operations of the artifact plugins file their objects with.
+        plugins: [SheetPlugin.make(), PresenterPlugin.make(), MarkdownPlugin.make(), SpacePlugin.make({})],
+        types: [Sheet.Sheet, Sheet.Chart, Presentation.Presentation],
+      };
+    },
+    onInit: async ({ space }) => {
+      space.db.add(
+        Markdown.make({
+          name: 'Cloudflare community findings',
+          content: CLOUDFLARE_FINDINGS,
+          [Obj.Meta]: { keys: [{ source: SEEDED_KEY_SOURCE, id: 'findings' }] },
+        }),
+      );
+    },
+    onChatCreated: async ({ db, binder }) => {
+      const documents = await db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: documents.map((document) => Ref.make(document)) });
+    },
+    skills: [AssistantSkill.key, Sheet.SKILL_KEY, Presentation.SKILL_KEY, Markdown.SKILL_KEY],
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [StoryRole.Artifacts]],
   },
 };

@@ -125,6 +125,9 @@
       "path": "../../plugins/plugin-pipeline"
     },
     {
+      "path": "../../plugins/plugin-presenter"
+    },
+    {
       "path": "../../plugins/plugin-preview"
     },
     {
@@ -141,6 +144,9 @@
     },
     {
       "path": "../../plugins/plugin-script"
+    },
+    {
+      "path": "../../plugins/plugin-sheet"
     },
     {
       "path": "../../plugins/plugin-space"
