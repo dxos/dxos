@@ -327,7 +327,8 @@ const rewriteDiagnosticPaths = (output: string, cwd: string, repoRoot: string): 
 const runDeclarationBuild = async (): Promise<void> => {
   await rm(join(process.cwd(), 'dist/types'), { recursive: true, force: true });
   try {
-    const { stdout, stderr } = await execFileAsync('pnpm', ['exec', 'tsc']);
+    // The workspace bin directly, not `pnpm exec`: the wrapper adds ~0.3 s to each of ~370 package builds.
+    const { stdout, stderr } = await execFileAsync(join(workspaceRoot, 'node_modules/.bin/tsc'), []);
     if (stdout.length > 0) {
       process.stdout.write(rewriteDiagnosticPaths(stdout, process.cwd(), workspaceRoot));
     }

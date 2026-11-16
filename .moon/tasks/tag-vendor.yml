@@ -8,7 +8,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: pnpm exec vite build --logLevel silent
+    command: vite build --logLevel silent
     deps:
       - esbuild-plugins:build
       - vite-plugin-import-source:build
