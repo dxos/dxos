@@ -168,13 +168,11 @@ export class DiagramApp {
     await this.diagramEntries().filter({ hasText: name }).click();
   }
 
-  /** Follows the first person in the presence list; the list closes itself. */
+  /** Follows the first person in the presence list; the list closes once the follow opens their object. */
   async follow(): Promise<void> {
     await this.presence().first().click();
     await this.page.getByTestId('spacePlugin.presence.follow').first().click();
-    // The followed row carries Stop in place of Follow; clicking the avatar again closes the list and keeps the follow.
-    await this.page.getByTestId('spacePlugin.presence.stopFollowing').waitFor();
-    await this.presence().first().click();
+    // Opening the leader's object focuses its canvas, which closes the list; another click on the avatar would reopen it.
     await this.page.getByTestId('spacePlugin.presence.stopFollowing').waitFor({ state: 'detached' });
   }
 

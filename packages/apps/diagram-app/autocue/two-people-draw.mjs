@@ -112,7 +112,9 @@ export const steps = [
       await count(shapes(ben.page), 1, "Ada's rectangle on Ben's canvas");
       await ben.click(ben.page.getByTestId('diagram-app.space-menu'));
       await count(
-        ben.page.getByTestId('diagram-app.space-list').locator('[data-testid^="diagram-app.space."]'),
+        ben.page
+          .getByTestId('diagram-app.space-list')
+          .locator('[data-testid^="diagram-app.space."]:not([data-testid$=".actions"])'),
         1,
         'one space',
       );
