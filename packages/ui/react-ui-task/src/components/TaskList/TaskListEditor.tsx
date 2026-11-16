@@ -250,7 +250,9 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     cancelRef.current = handleCancel;
 
     const handlePaneKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key !== 'Escape') {
+      // An IME may report its own cancel as Escape mid-composition, and discarding the draft on that would throw
+      // away far more than the composition it meant to end.
+      if (event.key !== 'Escape' || event.nativeEvent.isComposing) {
         return;
       }
 
