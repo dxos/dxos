@@ -13073,21 +13073,12 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../../core/compute/compute
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
@@ -13101,6 +13092,15 @@ importers:
         specifier: '>=5.3.6'
         version: 5.7.1
     devDependencies:
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       effect:
         specifier: 4.0.4
         version: 4.0.4

@@ -57,17 +57,17 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/compute": "workspace:*",
-    "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-magazine": "workspace:*",
     "@dxos/util": "workspace:*",
     "fast-xml-parser": "catalog:"
   },
   "devDependencies": {
+    "@dxos/compute": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/log": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {
