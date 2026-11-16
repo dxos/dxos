@@ -15,6 +15,7 @@
 //     [--days <n> | --after <iso date>] [--before <iso date>] [--no-threads] [--human-only] [--out <dir>]
 //   pnpm exec tsx src/testing/discord-export.ts --guild <id> --scan [--out <dir>]
 //   pnpm exec tsx src/testing/discord-export.ts --list-guilds
+//   pnpm exec tsx src/testing/discord-export.ts --guild <id> --members [--out <dir>]
 //
 // Each channel or thread is written as JSON lines (`<guild> - [<parent> - ]<name> [<id>].jsonl`): a header line, then
 // one message per line, appended a page at a time. A restarted export continues each file after its last committed
@@ -26,7 +27,7 @@
 
 import type * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -36,7 +37,7 @@ import { BaseError } from '@dxos/errors';
 
 import { snowflakeForTimestamp } from '../services/discord-message.ts';
 import { type ChannelSample, classify } from './channel-scan.ts';
-import { appendPage, resumeFrom } from './export-format.ts';
+import { appendPage, isExportFile, readExportFile, resumeFrom } from './export-format.ts';
 
 const API = 'https://discord.com/api/v10';
 const PAGE = 100;
@@ -74,7 +75,12 @@ type Channel = {
   last_message_id?: string | null;
   thread_metadata?: { archive_timestamp?: string };
 };
-type Guild = { id: string; name: string };
+type Role = { id: string; name: string };
+type Guild = { id: string; name: string; roles?: Role[] };
+type Member = { roles: string[]; joined_at?: string; user?: User };
+
+/** What `--members` records per author: their server roles by name, so staff and recognised experts can be told apart. */
+export type MemberRecord = { readonly name: string; readonly roles: readonly string[]; readonly joinedAt?: string };
 type ThreadSearch = { threads: Channel[]; has_more: boolean };
 
 /** Text, announcement and forum channels hold messages or threads; categories and voice channels are skipped. */
@@ -411,6 +417,7 @@ const { values: args } = parseArgs({
     'scan': { type: 'boolean', default: false },
     'human-only': { type: 'boolean', default: false },
     'list-guilds': { type: 'boolean', default: false },
+    'members': { type: 'boolean', default: false },
     'out': { type: 'string', default: join(homedir(), '.local/share/dxos/discord-export') },
   },
 });
@@ -427,6 +434,45 @@ const orSkip = <A>(effect: Effect.Effect<A, ExportError | Cause.UnknownError>, w
       return Effect.succeed(undefined);
     }),
   );
+
+/**
+ * Records the server roles of every human author in the exports under `dir` into `dir/members.json`, one member lookup
+ * each; authors already recorded are skipped, so a rerun picks up where it stopped. An author who left is skipped.
+ */
+const exportMembers = (client: Client, guildId: string, dir: string) =>
+  Effect.gen(function* () {
+    const guild = yield* client.get<Guild>(`guilds/${guildId}`);
+    const roleNames = new Map((guild.roles ?? []).map((role) => [role.id, role.name]));
+    const authors = new Map<string, string>();
+    for (const name of readdirSync(dir).filter(isExportFile)) {
+      for (const message of readExportFile(join(dir, name)).messages) {
+        if (!message.author.isBot) {
+          authors.set(message.author.id, message.author.nickname ?? message.author.name ?? message.author.id);
+        }
+      }
+    }
+    const file = join(dir, 'members.json');
+    const members: Record<string, MemberRecord> = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
+    const pending = [...authors].filter(([id]) => members[id] === undefined);
+    console.log(`${authors.size} authors, ${pending.length} to look up.`);
+    for (const [index, [id, name]] of pending.entries()) {
+      const member = yield* orSkip(client.get<Member>(`guilds/${guildId}/members/${id}`), `member ${name}`);
+      if (member) {
+        members[id] = {
+          name,
+          roles: member.roles.flatMap((role) => roleNames.get(role) ?? []),
+          ...(member.joined_at ? { joinedAt: member.joined_at } : {}),
+        };
+      }
+      // Written every so often so an interrupted run keeps what it fetched.
+      if (index % 50 === 49 || index === pending.length - 1) {
+        writeFileSync(file, JSON.stringify(members, null, 2));
+        process.stdout.write(`\r  ${index + 1}/${pending.length}`);
+      }
+    }
+    process.stdout.write('\n');
+    console.log(`→ ${file}`);
+  });
 
 const program = Effect.gen(function* () {
   const token = readToken();
@@ -447,6 +493,13 @@ const program = Effect.gen(function* () {
     }
     return;
   }
+  if (args.members) {
+    if (!args.guild) {
+      return yield* Effect.fail(new ExportError({ message: '--members needs --guild <id>.' }));
+    }
+    yield* exportMembers(client, args.guild, args.out);
+    return;
+  }
 
   const afterDate =
     args.after ?? (args.days ? new Date(Date.now() - Number(args.days) * 86_400_000).toISOString() : undefined);
@@ -458,7 +511,9 @@ const program = Effect.gen(function* () {
 
   const listed: Channel[] = args.guild
     ? (yield* client.get<Channel[]>(`guilds/${args.guild}/channels`)).filter((channel) => EXPORTABLE.has(channel.type))
-    : yield* Effect.forEach(channelIds, (id) => client.get<Channel>(`channels/${id}`));
+    : (yield* Effect.forEach(channelIds, (id) =>
+        orSkip(client.get<Channel>(`channels/${id}`), `channel ${id}`),
+      )).filter((channel): channel is Channel => channel !== undefined);
 
   mkdirSync(args.out, { recursive: true });
   const scanFile = join(args.out, 'channels.json');

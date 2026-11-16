@@ -25,7 +25,13 @@ export type ExportMessage = {
 /** What an export file says about where its messages come from. */
 export type ExportHeader = {
   readonly guild?: { readonly id?: string; readonly name?: string };
-  readonly channel: { readonly id: string; readonly name?: string };
+  readonly channel: {
+    readonly id: string;
+    readonly name?: string;
+    /** `GuildPublicThread` etc. for a thread, whose `category` is then its parent channel's name. */
+    readonly type?: string;
+    readonly category?: string | null;
+  };
 };
 
 /** One channel's export: its header and its messages, oldest first. */

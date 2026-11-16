@@ -59,6 +59,14 @@ tasks:
       runInCI: false
       cache: false
 
+  # Query a crawl's databases headlessly: `sparql <query>` against DISCORD_FACTS_DB, `sql <query>` against DISCORD_CRAWL_DB
+  # (both default to the Cloudflare run). See the script header.
+  facts:
+    command: 'pnpm exec tsx src/testing/facts-cli.ts'
+    options:
+      runInCI: false
+      cache: false
+
   # Serve the RDF facts crawl-demo persisted (DISCORD_FACTS_DB) over HTTP on DISCORD_FACT_SERVER_PORT (7700) for the
   # stories-brain `FactExplorer` story. Runs until interrupted.
   fact-server:
