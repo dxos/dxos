@@ -3,6 +3,7 @@
 //
 
 import * as LanguageModel from 'effect/ai/LanguageModel';
+import type * as Prompt from 'effect/ai/Prompt';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -268,15 +269,15 @@ export const extractChunk = (
   options?: ExtractOptions,
 ): Effect.Effect<ExtractPayload, SemanticIndexError, AiService.AiService> => {
   const context = `Author: ${doc.author ?? 'unknown'}\nDate: ${doc.date ?? 'unknown'}\nMessage:\n${doc.text}`;
-  const prompt = `${buildExtractionPrompt(options)}\n\n${context}`;
+  const system = buildExtractionPrompt(options);
   return generatePayload({
     source: doc.source,
-    strict: LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
+    strict: LanguageModel.generateObject({ schema: ExtractPayload, prompt: extractionPrompt(system, context) }).pipe(
       Effect.map((response) => response.value),
     ),
-    lenient: LanguageModel.generateText({ prompt: `${prompt}\n\n${LENIENT_SUFFIX}` }).pipe(
-      Effect.map((response) => parseExtractPayload(response.text)),
-    ),
+    lenient: LanguageModel.generateText({
+      prompt: extractionPrompt(system, `${context}\n\n${LENIENT_SUFFIX}`),
+    }).pipe(Effect.map((response) => parseExtractPayload(response.text))),
     options,
   });
 };
@@ -291,18 +292,28 @@ export const extractTranscript = (
   options?: ExtractOptions,
 ): Effect.Effect<TranscriptPayload, SemanticIndexError, AiService.AiService> => {
   const rules = [...(options?.rules ?? []), TRANSCRIPT_RULE];
-  const prompt = `${buildExtractionPrompt({ ...options, rules })}\n\n${transcript}`;
+  const system = buildExtractionPrompt({ ...options, rules });
   return generatePayload({
     source: label,
-    strict: LanguageModel.generateObject({ schema: TranscriptPayload, prompt }).pipe(
-      Effect.map((response) => response.value),
-    ),
-    lenient: LanguageModel.generateText({ prompt: `${prompt}\n\n${LENIENT_SUFFIX}` }).pipe(
-      Effect.map((response) => parseTranscriptPayload(response.text)),
-    ),
+    strict: LanguageModel.generateObject({
+      schema: TranscriptPayload,
+      prompt: extractionPrompt(system, transcript),
+    }).pipe(Effect.map((response) => response.value)),
+    lenient: LanguageModel.generateText({
+      prompt: extractionPrompt(system, `${transcript}\n\n${LENIENT_SUFFIX}`),
+    }).pipe(Effect.map((response) => parseTranscriptPayload(response.text))),
     options,
   });
 };
+
+/**
+ * The instructions as a system message marked as a cache breakpoint, then the input as the user message. The
+ * instructions repeat across every request of a run, so Anthropic bills them at the cache-read rate after the first.
+ */
+export const extractionPrompt = (system: string, input: string): ReadonlyArray<Prompt.MessageEncoded> => [
+  { role: 'system', content: system, options: { anthropic: { cacheControl: { type: 'ephemeral' } } } },
+  { role: 'user', content: input },
+];
 
 const LENIENT_SUFFIX = 'Respond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.';
 
@@ -369,9 +380,9 @@ const modelLayer = (
   options?: ExtractOptions,
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService.AiService> => {
   if (!options?.provider) {
-    return AiService.languageModel(options?.model ?? DEFAULT_MODEL);
+    return AiService.languageModel(options?.model ?? DEFAULT_MODEL, { thinking: false });
   }
   const provider = DXN.tryMake(options.provider);
   invariant(provider, `Invalid provider DXN: ${options.provider}`);
-  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider });
+  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider, thinking: false });
 };

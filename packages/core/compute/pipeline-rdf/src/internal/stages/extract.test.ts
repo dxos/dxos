@@ -2,10 +2,35 @@
 // Copyright 2026 DXOS.org
 //
 
+import { it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { ExtractPayload, parseExtractPayload } from './extract.ts';
+import { type RequestCapture, queuedAiService } from '../../testing/index.ts';
+import { ExtractPayload, extractChunk, parseExtractPayload } from './extract.ts';
+
+describe('extractChunk request', () => {
+  it.effect(
+    'sends the instructions as a cached system message and the message as the user turn, without thinking',
+    () =>
+      Effect.gen(function* () {
+        const capture: RequestCapture = { requests: [], resolved: [] };
+        yield* extractChunk({ text: 'Alice uses Effect.', source: 'doc', author: 'alice' }).pipe(
+          Effect.provide(queuedAiService([{ facts: [] }], [], capture)),
+        );
+        expect(capture.resolved[0]?.thinking).toBe(false);
+        expect(capture.requests[0]).toEqual([
+          {
+            role: 'system',
+            content: expect.stringContaining('You extract atomic propositions'),
+            options: { anthropic: { cacheControl: { type: 'ephemeral' } } },
+          },
+          { role: 'user', content: expect.stringContaining('Message:\nAlice uses Effect.') },
+        ]);
+      }),
+  );
+});
 
 describe('parseExtractPayload', () => {
   test('salvages the JSON object from reasoning-wrapped model output', ({ expect }) => {

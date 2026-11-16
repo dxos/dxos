@@ -156,7 +156,7 @@ export const claudeHaiku55: Model = make('com.anthropic.model.claude-haiku-5-5.d
   label: 'Claude Haiku 5.5',
   characteristics: { maxTokens: 16_384, thinking: true, tools: true },
   // Prompts over 100K tokens are billed at $0.50 / $2.50; this catalog prices the short-prompt tier.
-  pricing: { input: 0.1, output: 0.5 },
+  pricing: { input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite: 0.125 },
 });
 
 export const deepseekV4Flash: Model = make('com.deepseek.model.deepseek-v4-flash.default', {
