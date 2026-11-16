@@ -1,0 +1,44 @@
+{
+  "name": "@dxos/echo-memory-native",
+  "version": "0.16.0",
+  "private": true,
+  "description": "Local MemoryService implementations: an RDF quad store and goal-rule subscriptions over SQLite.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/brain": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
+    "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/sparql-sqlite": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "effect": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  }
+}

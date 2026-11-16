@@ -24,6 +24,7 @@ export type SparqlTerm =
 /** One SPARQL solution: each bound variable (named without `?`) to its term; an unbound variable is absent. */
 export type SparqlRow = Readonly<Record<string, SparqlTerm>>;
 
+/** @deprecated Use `MemoryService.Service` from `@dxos/echo-memory`. */
 export interface FactStoreApi {
   /** Persist facts as statements in their named graphs (idempotent appends; no write-time merge). */
   readonly putFacts: (facts: readonly Fact[]) => Effect.Effect<void, SemanticIndexError>;
@@ -50,4 +51,5 @@ export interface FactStoreApi {
   readonly clear: () => Effect.Effect<void, SemanticIndexError>;
 }
 
+/** @deprecated Use `MemoryService` from `@dxos/echo-memory`, with `MemoryNative` from `@dxos/echo-memory-native`. */
 export class FactStore extends Context.Service<FactStore, FactStoreApi>()('@dxos/pipeline-rdf/FactStore') {}

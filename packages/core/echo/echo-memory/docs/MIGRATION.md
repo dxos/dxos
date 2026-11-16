@@ -4,50 +4,54 @@ Tasks to replace `BrainService` (`@dxos/plugin-agent`) and `FactStore` (`@dxos/p
 `MemoryService`. The spec is `../SPEC.mdl` (`org.dxos.echo-memory`); requirement ids below point into it.
 
 Order: phases 1–3 add the new packages without touching callers; phase 4 marks the old surfaces
-deprecated; phases 5–7 move callers; phase 8 deletes the old code. Open spec questions (Q-1 to Q-3)
+deprecated; phases 5–7 move callers; phase 8 deletes the old code. Open spec questions (Q-1 to Q-5)
 block only the tasks that name them.
 
-## 1. `@dxos/echo-memory` (interface)
+## 1. `@dxos/echo-memory` (interface) — done
 
-- [ ] Scaffold `packages/core/echo/echo-memory`: `package.json` (`"private": true`), `moon.yml`,
-      `tsconfig.json`, `vite.config.ts`. Dependencies: `effect`, `@dxos/errors`, `@dxos/util` only [F-1.2].
-- [ ] Move the fact schemas from `pipeline-rdf/src/types` unchanged: `Fact`, `Assertion`, `Term`
-      (`EntityTerm`, `LiteralTerm`), `Entity`, `EntityKind`, `Attribution`, `Factuality`, `Illocution` [F-2.1].
-- [ ] Add `MemoryQuery<T>` and its kinds (`FactsQuery`, `GraphsQuery`, `SparqlQuery`, `PredicatesQuery`,
-      `CursorQuery`), with a typed constructor and a result schema per kind [F-3.2, F-3.7]. Add `FactQuery`
-      (merge of `BrainService.FactQuery` and `SemanticQuery`), `SparqlTerm`, `SparqlRow`,
-      `PredicateEntry` (from `Ontology.Entry`), `ReadCursor`, `PutOptions`, `Subscription`, `MemoryEvent`,
-      `GraphStatus`.
-- [ ] Add the pure functions `graphStatus` (from `Graph.status`), `currentFacts`, `termValue`, `termText`,
-      `factText` (from `BrainService`) [F-2.3]. Check each has no `n3` import.
-- [ ] Add the branded ids `FactId`, `GraphIri`, `EntityKey`, `SourceUri`, `SubscriptionId`,
-      `MemoryEventId` [F-2.4]; brand-only, so decoding existing JSON is unchanged.
-- [ ] Add `MemoryError` [F-6.1] and the `MemoryService` tag (`@dxos/echo-memory/MemoryService`) with its API.
-- [ ] Add `MAX_SUBSCRIPTIONS = 256` (replaces `BrainService.MAX_TRIGGERS` and edge's `MAX_TRIGGERS`).
-- [ ] Tests: T-6 (JSON round trip of `Fact`, `Subscription`, `MemoryEvent`, every MemoryQuery kind); a decode test over facts
-      fixtures already in the repo (`pipeline-rdf` testing data) for [F-2.1].
-- [ ] Add a `## Rules` check run (`no-implementation-deps`) to CI's agentic review scope.
+- [x] Package `packages/core/echo/echo-memory` (`"private": true`); runtime dependencies `effect` and
+      `@dxos/errors` only [F-1.2].
+- [x] Fact schemas in `Fact`: `Fact`, `Assertion`, `Term` (`EntityTerm`, `LiteralTerm`), `Entity`,
+      `EntityKind`, `Attribution`, `Factuality`, `Illocution`, `PredicateEntry`, `GraphStatus` [F-2.1].
+      They are copies with branded ids; `pipeline-rdf` keeps its own until phase 7 points it at these.
+- [x] Branded ids `FactId`, `GraphIri`, `EntityKey`, `SourceUri` (in `Fact`), `SubscriptionId`,
+      `MemoryEventId` (in `Subscription`) [F-2.4].
+- [x] `MemoryQuery`: the kinds `facts`, `graphs`, `sparql`, `predicates`, `cursor`, a constructor per kind,
+      `results` (a result schema per kind) and `ResultOf<Q>` [F-3.2, F-3.7]; `FactQuery`, `SparqlTerm`,
+      `SparqlRow`.
+- [x] Pure functions `graphOf`, `graphStatus`, `currentFacts`, `termValue`, `termText`, `factText`
+      [F-2.3]; no `n3` import.
+- [x] `MemoryError` [F-6.1]; `MemoryService` tag and `Service` API, `ReadCursor`, `PutOptions`;
+      `Subscription`, `MemoryEvent`, `MAX_SUBSCRIPTIONS` [F-4.1].
+- [x] Tests: JSON round trip of `Fact`, every query kind, `Subscription` and `MemoryEvent` (T-6); a fact in
+      today's stored shape decodes unchanged [F-2.1]; `currentFacts`; query answer types.
+- [ ] `MemoryWire`: the JSON-in / JSON-out codec every transport shares (`docs/PACKAGES.md`).
+- [ ] Add the `## Rules` check (`no-implementation-deps`) to CI's agentic review scope.
 
-## 2. `@dxos/echo-memory-native` (local implementations) — missing
+## 2. `@dxos/echo-memory-native` (local implementations) — first cut
 
-Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `FactStoreHttp` and
-`BrainMemory`. Location depends on **Q-1**.
+`MemoryNative.make(storage)` serves `MemoryService` over one SQLite database. The knowledge base is
+`FactStoreLive` from `@dxos/pipeline-rdf`, used as a library. The event base is new tables beside it,
+evaluated by `@dxos/brain`'s `Evaluator`. The code assumes the first option of each open question:
+Q-1 (keep the compute dependencies), Q-2 (keep SPARQL), Q-3 (no change stream), Q-4 (shared facts),
+Q-5 (event-base reads stay ops).
 
-- [ ] Scaffold `@dxos/echo-memory-native` (`"private": true`). Dependencies: `@dxos/echo-memory`,
-      `@dxos/sparql-sqlite`, `@dxos/sql-sqlite`, `@dxos/brain`, `n3`, `sparqljs`.
-- [ ] Move the knowledge-base core from `pipeline-rdf/src/store/fact-store-live.ts` and its internals
-      (`internal/sparql/*`, `Mapping`, `Vocab`, `Ontology` resolution, TriG) behind `MemoryService`,
-      one store per space, with no space or agent argument on any op [F-3, F-5.1].
-- [ ] Event base, persisted: SQLite tables for subscriptions, outboxes, queued-event ids and read cursors;
-      rules run on `@dxos/brain`'s `Evaluator` [F-4, F-7.2]. Time-driven rules are scheduled inside the
-      layer's scope and caught up on open [F-4.5, F-7.5]. Port the logic from `BrainMemory` (client)
-      and `BrainObject` (edge), which are two copies today.
-- [ ] `layer(storage)`, `layerFile(path)`, `layerMemory` [F-7.1].
-- [ ] HTTP client layer and fetch-style handler, from `FactStoreHttp` (extend it to the event-base ops)
+- [x] Package `packages/core/echo/echo-memory-native` (`"private": true`).
+- [x] Event base, persisted: `memory_subscriptions`, `memory_events` (acknowledged rows kept as the dedup
+      record, at most `MAX_EVENTS` each), `memory_state` (last evaluation time) [F-4, F-7.2]. Ported from
+      EDGE's `BrainObject`.
+- [x] Time-driven rules: a fiber in the layer's scope sleeps until `nextDueAt`, is woken early by
+      `put`, `subscribe` and `reset`, and a reopened memory catches up on open [F-4.5, F-7.5].
+- [x] `layer(storage)`, `layerFile(path)`, `layerMemory` [F-7.1].
+- [x] Tests T-1 to T-5, owner filter, unsubscribe-once, rules that do not compile, a clock-driven wake,
+      and SPARQL answers.
+- [ ] Move the store itself (`fact-store-live.ts`, `internal/sparql/*`, `Mapping`, `Vocab`, `Ontology`
+      resolution, TriG) out of `pipeline-rdf` into this package, so it stops depending on `pipeline-rdf`.
+- [ ] `put` stores facts and moves the cursor in two transactions (facts first, so a failure re-reads
+      the source and never skips it); make it one, as F-3.1 says.
+- [ ] HTTP client layer and fetch-style handler, from `FactStoreHttp`, extended to the event-base ops
       [F-7.3]. Move `pipeline-rdf/src/testing/fact-server.ts` here.
-- [ ] Tests T-1 to T-5 and T-7; port `fact-store.test.ts`, `fact-store-live.test.ts`, `fact-store-http.test.ts`
-      and `BrainMemory.test.ts`.
-- [ ] Decide the `graphs`/`sparql` kinds per **Q-2**, event-base reads per **Q-5**, and change notifications per **Q-3** (plugin-brain's `withNotify`).
+- [ ] Port the remaining cases of `fact-store.test.ts`, `fact-store-live.test.ts` and `BrainMemory.test.ts`.
 
 ## 3. EDGE implementation (`dxos/edge`) — missing
 
@@ -69,8 +73,9 @@ Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `Fa
 
 ## 4. Deprecate [F-8.1]
 
-- [ ] `@deprecated` JSDoc on `BrainService`, `BrainMemory`, `BrainWire`, `FactStore`, `FactStoreLive`,
-      `FactStoreHttp`, `SemanticQuery`, `SemanticIndexError`, `BrainError`, naming the replacement.
+- [x] `@deprecated` JSDoc on `BrainService`, `FactStore` and `FactStoreApi`, naming the replacement.
+- [ ] The same on `BrainMemory`, `BrainWire`, `FactStoreLive`, `FactStoreHttp`, `SemanticQuery`,
+      `SemanticIndexError` and `BrainError`.
 
 ## 5. Move `@dxos/plugin-agent`
 

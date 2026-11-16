@@ -155,6 +155,7 @@ export interface Service {
   readonly wake: (request: WakeRequest) => Effect.Effect<void, BrainError, Database.Service>;
 }
 
+/** @deprecated Use `MemoryService` from `@dxos/echo-memory`, scoped to the agent's space; `wake` stays with the agent runtime. */
 export class BrainService extends Context.Service<BrainService, Service>()('@dxos/plugin-agent/BrainService') {}
 
 /** Re-exported so callers importing this module as a namespace avoid `BrainService.BrainService.key`. */
