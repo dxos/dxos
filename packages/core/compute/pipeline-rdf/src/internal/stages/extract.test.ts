@@ -29,6 +29,16 @@ describe('extractChunk request', () => {
       ]);
     }),
   );
+
+  it.effect('turns thinking off when the caller asks', () =>
+    Effect.gen(function* () {
+      const capture: RequestCapture = { requests: [], resolved: [] };
+      yield* extractChunk({ text: 'Alice uses Effect.', source: 'doc' }, { thinking: false }).pipe(
+        Effect.provide(queuedAiService([{ facts: [] }], [], capture)),
+      );
+      expect(capture.resolved[0]?.thinking).toBe(false);
+    }),
+  );
 });
 
 describe('buildExtractionInstructions', () => {

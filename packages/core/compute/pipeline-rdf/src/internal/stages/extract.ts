@@ -413,16 +413,16 @@ const generatePayload = <P extends { readonly facts: ReadonlyArray<unknown> }, S
   );
 
 /**
- * Resolve the `LanguageModel` layer for extraction, honoring a caller-supplied model/provider override. Thinking stays
- * on: without it Haiku emits about four times as many facts for the same output tokens, many of them low-value.
+ * Resolve the `LanguageModel` layer for extraction, honoring a caller-supplied model/provider override and
+ * {@link ExtractOptions.thinking} (on unless the caller turns it off).
  */
 const modelLayer = (
   options?: ExtractOptions,
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService.AiService> => {
   if (!options?.provider) {
-    return AiService.languageModel(options?.model ?? DEFAULT_MODEL, { thinking: true });
+    return AiService.languageModel(options?.model ?? DEFAULT_MODEL, { thinking: options?.thinking ?? true });
   }
   const provider = DXN.tryMake(options.provider);
   invariant(provider, `Invalid provider DXN: ${options.provider}`);
-  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider, thinking: true });
+  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider, thinking: options.thinking ?? true });
 };

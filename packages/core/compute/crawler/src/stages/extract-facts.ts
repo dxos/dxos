@@ -27,6 +27,8 @@ export type ExtractFactsOptions = {
   readonly ontology?: RDF.ExtractOptions['ontology'];
   /** Drop relations no listed predicate fits instead of minting one. */
   readonly closed?: boolean;
+  /** Whether the extraction model thinks first; see `RDF.ExtractOptions.thinking` (default on). */
+  readonly thinking?: boolean;
   /** `system-one` extracts each message with Cloudflare's System One models, falling back to the LLM per claim. */
   readonly extractor?: RDF.Extractor;
   readonly systemOne?: RDF.SystemOneOptions;
@@ -128,6 +130,7 @@ export const extractFactsStage = (
     ...(options?.rules ? { rules: options.rules } : {}),
     ...(options?.ontology ? { ontology: options.ontology } : {}),
     ...(options?.closed ? { closed: true } : {}),
+    ...(options?.thinking !== undefined ? { thinking: options.thinking } : {}),
     ...(options?.extractor ? { extractor: options.extractor } : {}),
     ...(options?.systemOne ? { systemOne: options.systemOne } : {}),
   };

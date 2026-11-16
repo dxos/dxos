@@ -71,6 +71,14 @@ export type ExtractOptions = {
    */
   readonly strict?: boolean;
   /**
+   * Whether a thinking model (Haiku 5.5) reasons before answering. Defaults to `true`. Measured on the Effect Discord
+   * export (1,232 messages, 51 transcript requests): with thinking, Haiku emitted 179 facts with 9 minted predicates;
+   * without it, 694 facts with 37 minted predicates used 268 times (167 of them a low-value "says"), for about the same
+   * output tokens (116K against 130K) and cost ($0.120 against $0.118). Turning it off buys recall, not savings, and the
+   * facts are noisier.
+   */
+  readonly thinking?: boolean;
+  /**
    * The predicates the extractor is shown and reuses; a relation none of them fits mints a predicate in the
    * ontology's namespace. Defaults to the seed ontology.
    */
