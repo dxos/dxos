@@ -9,6 +9,8 @@ import React, { Fragment, useMemo } from 'react';
 
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
+import type * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as Field from '@dxos/react-ui/Field';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 
@@ -18,7 +20,7 @@ import { useFormContext, useFormFieldState } from '../hooks/index.ts';
 import { FormFieldErrorBoundary } from './field-binding.tsx';
 import { FormFieldRow } from './FormField.tsx';
 import { FormFieldDispatch } from './FormFieldDispatch.tsx';
-import { type LayoutNode, LayoutParseError, parseLayout } from './layout/parser.ts';
+import { type LayoutGrid, type LayoutNode, LayoutParseError, gridTracks, parseLayout } from './layout/parser.ts';
 import { resolveLayoutField } from './layout/resolve-layout-field.ts';
 import { type FormFieldDispatchProps } from './resolve-field.ts';
 
@@ -33,7 +35,7 @@ export type FormLayoutProps = {
 } & Pick<FormFieldDispatchProps, 'path' | 'readonly' | 'layout' | 'projection' | 'fieldMap' | 'fieldProvider'>;
 
 /**
- * Lays out schema fields by a FormLayout DSL template: a `<grid cols=N>` is a row Container of N equal tracks, and a
+ * Lays out schema fields by a FormLayout DSL template: a `<grid cols=N>` is a row Container of N tracks, and a
  * `<field span=N>` a cell spanning N of them (Container `span`). Only the fields the template names render; a dotted
  * name drills into a nested struct, and a struct with a `LabelAnnotation` renders as its label, read-only.
  */
@@ -71,14 +73,21 @@ const LayoutNodeView = ({ node, schema, basePath, ...props }: LayoutNodeViewProp
       <Layout.Container
         layout='row'
         gutter='inherit'
-        align='start'
+        align={node.header ? undefined : 'start'}
         gap='md'
-        columns={`repeat(${node.cols}, minmax(0, 1fr))`}
+        columns={gridTracks(node)}
         fixed={node.fixed}
       >
+        {node.header && <LayoutHeader grid={node} schema={schema} />}
         {node.children.map((child, index) => (
           <Fragment key={index}>
-            <LayoutNodeView node={child} schema={schema} basePath={basePath} {...props} />
+            <LayoutNodeView
+              node={child}
+              schema={schema}
+              basePath={basePath}
+              {...props}
+              layout={node.header ? 'inline' : props.layout}
+            />
           </Fragment>
         ))}
       </Layout.Container>
@@ -109,6 +118,34 @@ const LayoutNodeView = ({ node, schema, basePath, ...props }: LayoutNodeViewProp
       </FormFieldErrorBoundary>
     </Layout.Container>
   );
+};
+
+/** A table cell's own track: without it a cell takes the list's tracks, which `--dx-columns` passes down. */
+export const CELL = 'minmax(0, 1fr)';
+
+/** The title of each field a header grid names, a cell per field, in the grid's order. */
+export const LayoutHeader = ({ grid, schema }: { grid: LayoutGrid; schema: Schema.Codec<AnyProperties, any> }) =>
+  grid.children.map((child, index) => {
+    const resolved = child.kind === 'field' ? resolveLayoutField(schema, child.name) : undefined;
+    return (
+      <Layout.Container key={index} gutter='none' columns={CELL} span={child.kind === 'field' ? child.span : undefined}>
+        <Field.Header>
+          <Typography.Text truncate>
+            {resolved ? (resolved.title ?? String.capitalize(resolved.leafName)) : ''}
+          </Typography.Text>
+        </Field.Header>
+      </Layout.Container>
+    );
+  });
+
+/**
+ * The grid of fields an array's item type lays out by, which makes each item a row of cells in the list's tracks; a
+ * header grid names the columns once above the rows.
+ */
+export const rowLayout = (type: SchemaAST.AST, name = Annotation.DEFAULT_LAYOUT_NAME): LayoutGrid | undefined => {
+  const source = Option.getOrUndefined(Annotation.FormLayoutAnnotation.getFromAst(type))?.[name];
+  const grid = source === undefined ? undefined : parseLayout(source);
+  return grid?.children.every((child) => child.kind === 'field') ? grid : undefined;
 };
 
 type LabelFieldProps = {

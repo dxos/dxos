@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
@@ -10,12 +11,14 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
+import * as Button from '@dxos/react-ui/Button';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
 import * as Typography from '@dxos/react-ui/Typography';
 
+import { OptionsLookupAnnotation, optionsLookup } from '../annotations.ts';
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { Organization } from '../testing/schema.ts';
 import { Form } from './Form.tsx';
@@ -129,6 +132,51 @@ export const Test: Story = {
   },
 };
 
+/** Kept columns: a list toggled read-only keeps its handle and remove columns, so no row moves; its rows top their parts. */
+const KeptColumnsStory = (_: PaneArgs) => {
+  const [values, setValues] = useState<ArrayValues>(INITIAL);
+  const [readonly, setReadonly] = useState(false);
+  return (
+    <Layout.Container>
+      <Form.Root
+        schema={ArraySchema}
+        values={values}
+        readonly={readonly}
+        fieldOverrides={{ steps: { keepColumns: true, rowAlign: 'start' } }}
+        onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+      >
+        <Form.Content>
+          <Form.Fields include={['steps']} />
+        </Form.Content>
+      </Form.Root>
+      <Button.Root onClick={() => setReadonly((value) => !value)} data-testid='toggle'>
+        {readonly ? 'Edit' : 'Read only'}
+      </Button.Root>
+    </Layout.Container>
+  );
+};
+
+export const KeptColumns: Story = {
+  render: KeptColumnsStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const steps = canvas.getByRole('listbox', { name: 'Steps' });
+    const cell = () => within(steps).getAllByRole('option')[0].children[1].getBoundingClientRect();
+    const label = () => canvas.getByText('Steps').getBoundingClientRect();
+    const [editable, editableLabel] = [cell(), label()];
+
+    // 1. Read-only drops the handles and remove buttons but keeps their columns: no row or label moves.
+    await userEvent.click(canvas.getByTestId('toggle'));
+    await waitFor(() => expect(within(steps).queryAllByRole('button', { name: 'Drag to rearrange' })).toHaveLength(0));
+    await expect(cell().left).toBeCloseTo(editable.left, 0);
+    await expect(cell().width).toBeCloseTo(editable.width, 0);
+    await expect(label().left).toBeCloseTo(editableLabel.left, 0);
+
+    // 2. A row's parts sit at its top.
+    await expect(getComputedStyle(within(steps).getAllByRole('option')[0].children[1]).alignSelf).toBe('start');
+  },
+};
+
 /** Empty arrays: one whose override gives a placeholder shows it in place of its rows, until a row is added. */
 const EmptyStory = (_: PaneArgs) => {
   const [values, setValues] = useState<ArrayValues>({ tags: [], steps: [], contacts: [] });
@@ -233,5 +281,65 @@ export const Owned: Story = {
     const created = canvas.getByRole('group', { name: 'Initech' });
     await userEvent.type(within(created).getByRole('textbox', { name: 'Full name' }), ' Ltd');
     await expect(await canvas.findByRole('group', { name: 'Initech Ltd' })).toBeInTheDocument();
+  },
+};
+
+const PLANETS = ['Mercury', 'Venus', 'Earth', 'Mars'];
+
+const LookupSchema = Schema.Struct({
+  route: Schema.Array(
+    Schema.String.pipe(
+      OptionsLookupAnnotation.set(
+        optionsLookup<{}>()([], () => Effect.succeed(PLANETS.map((value) => ({ value, secondaryLabel: 'Planet' })))),
+      ),
+    ),
+  )
+    .pipe(Annotation.ArrayPresentationAnnotation.set({ display: 'tag', ordered: true }))
+    .annotate({ title: 'Route' }),
+});
+
+type LookupValues = { route: readonly string[] };
+
+/** An array of looked-up strings presented as `tag`: one selection of chips, which keeps a value the lookup lacks. */
+const LookupTagsStory = (_: PaneArgs) => {
+  const [values, setValues] = useState<LookupValues>({ route: ['Earth', 'Pluto'] });
+  return (
+    <Layout.Container>
+      <Form.Root
+        schema={LookupSchema}
+        values={values}
+        onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+      >
+        <Form.Content>
+          <Form.Fields />
+        </Form.Content>
+      </Form.Root>
+      <Typography.Text truncate data-testid='values'>
+        {JSON.stringify(values)}
+      </Typography.Text>
+    </Layout.Container>
+  );
+};
+
+/** 1. Test: chips show the held values, an unknown one included, and picking from the lookup appends one. */
+export const LookupTags: Story = {
+  render: LookupTagsStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    // 2. Each held value is a chip; one the lookup does not offer keeps its chip.
+    await expect(await canvas.findByText('Earth')).toBeInTheDocument();
+    await expect(canvas.getByText('Pluto')).toBeInTheDocument();
+
+    // 3. Picking an offered value appends it.
+    const trigger = canvasElement.querySelector<HTMLElement>('[data-scope="combobox"][data-part="trigger"]');
+    invariant(trigger);
+    await userEvent.click(trigger);
+    const popup = await body.findByRole('dialog');
+    await userEvent.click(await within(popup).findByRole('option', { name: /Mars/ }));
+    await waitFor(() =>
+      expect(JSON.parse(canvas.getByTestId('values').textContent ?? '{}').route).toEqual(['Earth', 'Pluto', 'Mars']),
+    );
   },
 };

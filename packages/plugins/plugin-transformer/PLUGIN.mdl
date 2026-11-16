@@ -143,6 +143,7 @@ op CaptureAudio
 
 ```mdl
 feat F-1: In-Browser ASR Pipeline
+  uses: [PipelineState, Voice]
 
   req F-1.1:
     when: Voice component mounts with active = true
@@ -163,6 +164,7 @@ feat F-1: In-Browser ASR Pipeline
 
 ```mdl
 feat F-2: Microphone Capture
+  uses: [AudioStreamState]
 
   req F-2.1:
     when: useAudioStream is activated

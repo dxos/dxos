@@ -14,6 +14,7 @@ import { Obj, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { DEFAULT_CELL } from '@dxos/react-ui-canvas';
+import { nodeKey } from '@dxos/react-ui-canvas/headless';
 import * as Card from '@dxos/react-ui/Card';
 import { toEcho } from '@dxos/scene';
 import * as Cell from '@dxos/storybook-testing/Cell';
@@ -22,7 +23,6 @@ import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
 import * as CanvasPlugin from '#meta';
-import { nodeKey } from '#model';
 import { translations } from '#translations';
 import { Canvas as CanvasFormat } from '#types';
 

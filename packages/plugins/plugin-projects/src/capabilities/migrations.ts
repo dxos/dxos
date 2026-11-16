@@ -15,6 +15,7 @@ export default Capability.makeModule(() =>
     Capability.contribute(ClientCapabilities.Migration, [
       LegacyProject.projectSpecs,
       LegacyProject.projectRepositories,
+      LegacyProject.specSoftwareDialect,
     ]),
   ),
 );

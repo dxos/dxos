@@ -11,9 +11,8 @@ import * as SpecReview from '@dxos/compute/SpecReview';
 import { Annotation, Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
 import { Text } from '@dxos/schema';
-
-import { SpecReviews } from '#sync';
 
 import REVIEW from '../containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl?raw';
 import createSpecReview from './create-spec-review.ts';
@@ -66,7 +65,7 @@ describe('CreateSpecReview', () => {
     expect(history.map(({ date }) => date)).toEqual(['2026-11-05T18:30Z', '2026-11-05', '2026-10-27']);
 
     // The current status takes each item from the newest review that judges it.
-    const current = SpecReviews.currentModel(history);
+    const current = SpecModel.currentReviewModel(history);
     const verdict = current?.verdicts.find(({ id }) => id === 'F-17.2');
     expect(verdict).toMatchObject({ status: 'done', review: { commit: '0123456789abcdef' } });
   });

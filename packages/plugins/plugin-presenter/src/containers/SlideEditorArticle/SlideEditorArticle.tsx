@@ -16,6 +16,7 @@ import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
+import { Button } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Editor, type EditorToolbarState, useEditorContext } from '@dxos/react-ui-editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -65,6 +66,7 @@ export type SlideEditorArticleProps = AppSurface.ObjectArticleProps<Text.Text>;
  * the plank's companion), kept in step with the cursor.
  */
 export const SlideEditorArticle = ({ role, subject, attendableId }: SlideEditorArticleProps) => {
+  const { t } = UiHooks.useTranslation(PresenterNamespace.key);
   const { previewMode, splitSize } = useViewState(SlideEditorViewState.aspect, SlideEditorViewState.CONTEXT);
   const { update } = useViewStateActions(SlideEditorViewState.aspect, SlideEditorViewState.CONTEXT);
   const handleSizeChange = useCallback((size: number) => update((state) => ({ ...state, splitSize: size })), [update]);
@@ -90,8 +92,16 @@ export const SlideEditorArticle = ({ role, subject, attendableId }: SlideEditorA
                 <SlideEditorContent subject={subject} />
               </Splitter.Panel>
               <Splitter.ResizeTrigger />
-              <Splitter.Panel position='end'>
+              <Splitter.Panel position='end' classNames='relative'>
                 <SlidePreview subject={subject} />
+                <Button.Root
+                  classNames='absolute top-1 end-1 z-[1]'
+                  label={t('close-preview.label')}
+                  icon='ph--x--regular'
+                  iconOnly
+                  variant='ghost'
+                  onClick={() => update((state) => ({ ...state, previewMode: 'off' }))}
+                />
               </Splitter.Panel>
             </Splitter.Root>
           ) : (
@@ -285,13 +295,10 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
     onObjectsOpenChange: setObjectsOpen,
     onInsertObject: (id: string) =>
       apply((content, cursor) => insertSnippet(content, cursor, surfaceSnippet(EID.make({ entityId: id })))),
-    onPreviewModeChange: (previewMode: SlideEditorViewState.PreviewMode) => {
-      update((state) => ({ ...state, previewMode }));
-      void invokePromise(LayoutOperation.UpdateCompanion, {
-        subject: previewMode === 'companion' ? `~${SlideEditorViewState.COMPANION_VARIANT}` : null,
-        anchor: attendableId,
-      });
-    },
+    // The preview is the editor's own pane, so showing or hiding it says nothing about the plank's
+    // companion — which another tool may have opened, and which closing here would take with it.
+    onPreviewModeChange: (previewMode: SlideEditorViewState.PreviewMode) =>
+      update((state) => ({ ...state, previewMode })),
     onPrevious: position > 0 ? () => open(position - 1) : undefined,
     onNext: position >= 0 && position < slides.length - 1 ? () => open(position + 1) : undefined,
     onPresent:

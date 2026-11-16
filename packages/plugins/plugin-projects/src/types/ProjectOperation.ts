@@ -11,8 +11,10 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Text } from '@dxos/schema';
 import { Task, Thread } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -259,3 +261,85 @@ export const ScrollToAnchor = Operation.make({
   }),
   output: Schema.Void,
 }).pipe(Operation.mutation('none'));
+
+//
+// Spec blocks
+//
+
+/**
+ * A block's field values as its kind's schema reads them: a string, a list of strings, a list of `{ name, optional,
+ * value, note }` rows (a map field such as `input`), or a list of `{ key, label, text }` entries (a keyed field such as
+ * `req`).
+ */
+const BlockFields = Schema.Record(Schema.String, Schema.Unknown);
+
+/** One block of a spec as its kind's schema reads it. */
+export const SpecBlock = Schema.Struct({
+  kind: Schema.String,
+  /** The block's id: a stable key for a numbered kind (`feat k7q2x`), empty for a block with none. */
+  key: Schema.String,
+  /** The positional label a numbered kind is drawn with (`F-3`); entries carry theirs (`F-3.2`). */
+  label: Schema.optional(Schema.String),
+  title: Schema.optional(Schema.String),
+  prose: Schema.optional(Schema.String),
+  fields: BlockFields,
+});
+export type SpecBlock = Schema.Schema.Type<typeof SpecBlock>;
+
+export const GetSpecBlocks = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.getSpecBlocks'),
+    name: 'Get Spec Blocks',
+    description: trim`
+      Read a spec's blocks (features, operations, types, scenarios and any kind its dialects or its own ext blocks
+      define), each with its key, positional label, title, prose and field values. Filter by kind.
+    `,
+    icon: 'ph--list-bullets--regular',
+  },
+  services: [Database.Service],
+  types: [Spec.Spec, Text.Text],
+  input: Schema.Struct({
+    spec: Ref.Ref(Spec.Spec),
+    kind: Schema.optional(Schema.String.annotate({ description: 'Only blocks of this kind, such as `feat`.' })),
+  }),
+  output: Schema.Struct({ blocks: Schema.Array(SpecBlock) }),
+}).pipe(Operation.mutation('none'));
+
+export const SetSpecBlock = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.setSpecBlock'),
+    name: 'Set Spec Block',
+    description: trim`
+      Write one block of a spec, named by key or label. With a kind and no block, or a block no existing one has, adds
+      one: a numbered kind gets a fresh key, any other takes the name given. Only what is given changes: a field set to
+      null is removed, and a keyed entry without a key gets one. \`after\` moves the block after another; an empty
+      string moves it before the first of its kind.
+    `,
+    icon: 'ph--pencil-simple--regular',
+  },
+  services: [Database.Service],
+  types: [Spec.Spec, Text.Text],
+  input: Schema.Struct({
+    spec: Ref.Ref(Spec.Spec),
+    block: Schema.optional(Schema.String.annotate({ description: 'The key or label of the block.' })),
+    kind: Schema.optional(Schema.String.annotate({ description: 'The kind of a new block, such as `feat`.' })),
+    title: Schema.optional(Schema.String),
+    prose: Schema.optional(Schema.String),
+    fields: Schema.optional(BlockFields),
+    after: Schema.optional(Schema.String.annotate({ description: 'The key or label to place the block after.' })),
+  }),
+  output: Schema.Struct({ key: Schema.String, label: Schema.optional(Schema.String) }),
+}).pipe(Operation.mutation('write'));
+
+export const DeleteSpecBlock = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.deleteSpecBlock'),
+    name: 'Delete Spec Block',
+    description: 'Remove one block, named by key or label, from a spec.',
+    icon: 'ph--trash--regular',
+  },
+  services: [Database.Service],
+  types: [Spec.Spec, Text.Text],
+  input: Schema.Struct({ spec: Ref.Ref(Spec.Spec), block: Schema.String }),
+  output: Schema.Void,
+}).pipe(Operation.mutation('destructive'));

@@ -49,6 +49,9 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Typography.Text mono data-testid={`mono-${size}`}>
         did:key:z6Mk
       </Typography.Text>
+      <Typography.Text tone='muted' hue='emerald' data-testid={`hue-${size}`}>
+        F-1
+      </Typography.Text>
     </Container>
     <Container>
       <Typography.Text asChild>
@@ -78,7 +81,7 @@ export const Default: Story = {};
 /**
  * Wrapped text keeps its first line centred in a block, so the rail icon beside it lines up at every size. `truncate`
  * keeps one block-tall line ending in an ellipsis; `lines` clamps to that many lines; `tone='muted'` and
- * `tone='subtle'` take the secondary and interface text colours; `mono` the monospace font.
+ * `tone='subtle'` take the secondary and interface text colours; `mono` the monospace font; `hue` its text colour.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -117,6 +120,13 @@ export const Test: Story = {
     await expect(subdued.color).not.toBe(plain.color);
     await expect(subdued.color).not.toBe(getComputedStyle(byTestId(canvasElement, 'description-md')).color);
     await expect(getComputedStyle(byTestId(canvasElement, 'mono-md')).fontFamily).toMatch(/mono/i);
+    // A hue takes the hue's text colour over the tone's.
+    const hued = byTestId(canvasElement, 'hue-md');
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--color-emerald-text)';
+    canvasElement.append(probe);
+    await expect(getComputedStyle(hued).color).toBe(getComputedStyle(probe).color);
+    probe.remove();
 
     // `asChild` moves the metrics onto the heading itself.
     const heading = byTestId(canvasElement, 'heading-md');

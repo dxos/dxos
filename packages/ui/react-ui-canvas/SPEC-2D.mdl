@@ -598,6 +598,7 @@ op layout
 
 ```mdl
 feat F-1: Depth and navigation
+  uses: [move, View]
   View nesting IS the hierarchy (decision 4); a `view` node renders its child live, so moving between
   levels is a camera move rather than a page change. Below, a _portal_ is a `view` node seen as the
   window it draws its child through.
@@ -620,6 +621,7 @@ feat F-1: Depth and navigation
 
 ```mdl
 feat F-2: Grid and snapping
+  uses: [Grid, link, View]
   req F-2.1: The grid is drawn only while snapping is on (G toggles both): its lines are what a gesture
     lands on, so drawing them when nothing snaps states a constraint the canvas is not applying.
   req F-2.2: Gestures snap to the FINEST LEVEL THE GRID ACTUALLY DRAWS, read back through the same rule
@@ -637,6 +639,7 @@ feat F-2: Grid and snapping
 
 ```mdl
 feat F-3: Selection and editing
+  uses: [Canvas, create, DrawState, layer, link, NodeStyle, update, View]
   req F-3.1: Nodes and links are selected together in one set; Delete removes either.
   req F-3.2: A marquee replaces the selection, Shift adds, Alt subtracts.
   req F-3.3: A port drag creates a link; dropping on empty canvas leaves a free end; dragging an end
@@ -677,6 +680,7 @@ feat F-3: Selection and editing
 
 ```mdl
 feat F-4: Undo and clipboard
+  uses: [batch, layout, View]
   The engine's own history and clipboard, used where it runs on its own; inside the editor the core's replace them
   ([F-10.3]).
   req F-4.1: Every committed edit — a gesture at pointer-up, a panel edit, a key command, a controller
@@ -699,6 +703,7 @@ feat F-4: Undo and clipboard
 
 ```mdl
 feat F-5: Read-only
+  uses: [layout]
   req F-5.1: `readonly` lets the view select, pan, zoom and drill, and nothing else.
   req F-5.2: No handle, port, tool or toolbar edit is drawn or reachable, whatever the layout's
     capabilities would allow — the stricter of the two wins.
@@ -706,6 +711,7 @@ feat F-5: Read-only
 
 ```mdl
 feat F-6: Open registry
+  uses: [link, NodeBase, View]
   req F-6.1: The engine operates on `NodeBase`; a host's type is not a special case.
   req F-6.2: A host composes its registry from the built-ins and its own defs, and its View schema with
     `createViewSchema`.
@@ -717,6 +723,7 @@ feat F-6: Open registry
 
 ```mdl
 feat F-7: Persistence (M4)
+  uses: [Canvas, layout]
   req F-7.1: `createBoardStore(board)` reads a `CanvasBoard` as a 2D layout, its `layout.nodes` the shapes and
     `layout.edges` the links, deriving `z` from array order, so every board written by the old editor opens
     unchanged.
@@ -728,6 +735,7 @@ feat F-7: Persistence (M4)
 
 ```mdl
 feat F-8: Links between shapes
+  uses: [link]
   req F-8.1: With a link tool a node's BODY is a source like a port is, so two shapes can be joined
     without aiming at their dots; the endpoint carries no port and routing picks the side.
   req F-8.2: A drop resolves the same way: a port claims it only while the pointer is within reach,
@@ -742,6 +750,7 @@ feat F-8: Links between shapes
 
 ```mdl
 feat F-9: Views, Objects and Tags
+  uses: [layer, link, View]
   The containers of the Ontology, and the two panels that show them: Views for the hierarchy, Objects
   for the library.
   req F-9.1: A stored `frame` node reads as `view`, on load, in every document; the next write stores it as
@@ -773,6 +782,7 @@ feat F-9: Views, Objects and Tags
 
 ```mdl
 feat F-10: The 2D viewport in the editor
+  uses: [Canvas, create, layout, link, View]
   req F-10.1: The engine reads the open scene's 2D layouts as render lists, the scene's layout first as the root, a
     composite element as a `view` node over its parts layout's list; 3D layouts are left out, and nothing stores the
     lists.
@@ -792,6 +802,7 @@ feat F-10: The 2D viewport in the editor
 
 ```mdl
 feat F-11: 2D tools, geometry and camera
+  uses: [create, layout, link]
   req F-11.1: The rail is the engine's palette groups: Select and the hand, then one create group of the node types
     followed by the link types (line, curve, spline, smart), then any further node groups by name; a node tool drags
     a node of its type onto the canvas.
@@ -812,6 +823,7 @@ feat F-12: Axes and guides
 
 ```mdl
 feat F-13: Diagrams on the canvas
+  uses: [batch, link]
   req F-13.1: The diagram engines' output reaches the canvas as `Layout2D` elements and model objects in one
     `LayoutIntent` batch, each element keeping its DSL identity; `Scene.Command` stays the protocol to the external
     formats (SVG, tldraw, excalidraw).
@@ -836,6 +848,7 @@ feat F-14: 2D styles and composites
 
 ```mdl
 feat F-15: Modes
+  uses: [batch, layout, link, move]
   req F-15.1: The host's mode is the engine's `constrain` rule over the layout (freehand when unset; lattice, constrained,
     dynamic and scored as the host passes them), with its generators.
   req F-15.2: A dynamic layout (`arrange` of kind `dynamic`) is its own graph: its shapes are the nodes and its links
@@ -863,6 +876,7 @@ feat F-15: Modes
 
 ```mdl
 feat F-16: The Neu themes
+  uses: [link]
   req F-16.1: The Neu themes (neumorphism) are Neu Light, always light, and Neu Dark, always dark, whatever the app's
     mode. Every Neu shape is the ground colour, and its hue colours only its border and label; a shape with no hue has
     no border of its own.
@@ -884,6 +898,7 @@ feat F-16: The Neu themes
 
 ```mdl
 feat F-17: Link ends
+  uses: [link, Link]
   req F-17.1: An arrowhead ends in a point at the connection point on the shape's edge, and the link's line never
     shows past or through it, in every theme, link style and width.
   req F-17.2: The other ends sit the same way: a triangle's point and a circle's far side at the connection point, the

@@ -769,12 +769,12 @@ export class AppManager {
       .first()
       .click();
     await this.page.getByTestId('spacePlugin.renameObject').last().click();
-    // An object's rename popover is its properties form, whose Name field writes as it is typed; Escape closes it.
-    const name = this.page
-      .locator('[data-scope="popover"][data-part="content"]')
-      .getByRole('textbox', { name: 'Name' });
+    // An object's rename popover is its properties form, which holds what is typed until Save writes it and closes
+    // the popover; dismissing it any other way — Escape, a click outside — throws the edit away.
+    const popover = this.page.locator('[data-scope="popover"][data-part="content"]');
+    const name = popover.getByRole('textbox', { name: 'Name' });
     await name.fill(newName);
-    await name.press('Escape');
+    await popover.getByTestId('save-button').click();
     await this.page.mouse.move(0, 0, { steps: 4 });
   }
 

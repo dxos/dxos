@@ -21,6 +21,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -135,6 +136,7 @@ op summarizeVideo
 
 ```mdl
 feat F-1: Store Video
+  uses: [Video]
 
   req F-1.1: A Video is created with a name and url.
   req F-1.2: Video.transcript is initially unset.
@@ -142,6 +144,7 @@ feat F-1: Store Video
 
 ```mdl
 feat F-2: Play Video
+  uses: [Video]
 
   req F-2.1:
     when: a Video is opened in the article surface
@@ -154,6 +157,7 @@ feat F-2: Play Video
 
 ```mdl
 feat F-3: Transcribe Video
+  uses: [Text, transcribeVideo, TranscriptionService, Video, VideoArticle]
 
   req F-3.1:
     when: the user triggers Transcribe on the VideoArticle
@@ -175,6 +179,7 @@ feat F-3: Transcribe Video
 
 ```mdl
 feat F-4: Summarize Video
+  uses: [summarizeVideo, Text, Video, VideoArticle]
 
   req F-4.1:
     when: the user triggers Summarize on the VideoArticle
@@ -193,6 +198,7 @@ feat F-4: Summarize Video
 
 ```mdl
 feat F-5: View Transcript and Summary
+  uses: [summarizeVideo, Video, VideoArticle]
 
   req F-5.1:
     when: Video.transcript or Video.summary is set
@@ -210,6 +216,7 @@ feat F-5: View Transcript and Summary
 
 ```mdl
 feat F-6: Comments
+  uses: [Video]
 
   req F-6.1:
     when: a Video is the active subject
@@ -223,6 +230,15 @@ feat F-6: Comments
       Anchored (text-range) comments into Video.transcript / Video.summary
       require the comment-sync editor extension, which currently only
       targets Markdown.Document content. Follow-up.
+```
+
+```mdl
+feat F-7: The Video package
+  req F-7.1: The Video package gives a spec the video dialect (`org.dxos.spec.video`), so a script's scenes, shots and
+             cast group and draw in plugin-projects' Definitions by the same rules as software.
+  req F-7.2: A spec using the video dialect offers `/scene`, `/shot`, `/voiceover` and `/caption`, which write its
+             blocks, and no views of its own.
+  req F-7.3: The package is offered only while this plugin is enabled.
 ```
 
 ## Acceptance
@@ -326,6 +342,24 @@ test QA-1: Add a video, transcribe it, and summarize it
       do: Right-click "QA Video" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and its plank closes
+```
+
+## Changelog
+
+```mdl
+decision D-1: A companion view or package that is specific to video belongs to this plugin and comes with the video dialect.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7]
+```
+
+```mdl
+decision D-2: The Video package and its slash commands move here from plugin-code, and contribute no views: Definitions, Related, Decisions and Review read the video dialect as they read any other. Fills in [D-1].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.1, F-7.2, F-7.3]
+  why: plugin-code provides only the software dialect, and nothing it draws reads video blocks.
 ```
 
 ---
