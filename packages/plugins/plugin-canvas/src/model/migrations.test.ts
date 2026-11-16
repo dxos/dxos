@@ -7,10 +7,10 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Filter, Migration } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { clone } from '@dxos/react-ui-canvas/headless';
 
 import { Canvas } from '#types';
 
-import { clone } from './content.ts';
 import { SceneMigrations, sceneV1ToV2 } from './migrations.ts';
 
 const box = { center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };

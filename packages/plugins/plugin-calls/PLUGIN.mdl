@@ -494,6 +494,7 @@ op SetSimulatedParticipants
 
 ```mdl
 feat F-1: Start Call from a Channel
+  uses: [Call, CallArticle, Lobby, startCall]
 
   req F-1.1: Channel article surface shows a "Start video call" action
              in its toolbar (contributed via a graph type-extension on
@@ -513,6 +514,7 @@ feat F-1: Start Call from a Channel
 
 ```mdl
 feat F-2: Active Call Companion
+  uses: [Call, CallArticle, CallState]
 
   req F-2.1:
     when: CallState.joined === true
@@ -528,6 +530,7 @@ feat F-2: Active Call Companion
 
 ```mdl
 feat F-3: Participant Grid
+  uses: [CallState, Participant, ParticipantGrid, ParticipantTile, SpeakingMonitor]
 
   req F-3.1: ParticipantGrid lays out self + remote users responsively, up
              to fullscreen.
@@ -541,6 +544,7 @@ feat F-3: Participant Grid
 
 ```mdl
 feat F-4: Media Controls
+  uses: [Call, CallArticle, CallSwarmSynchronizer, leaveCall, MediaManager, Toolbar]
 
   req F-4.1: Toolbar exposes toggles for microphone, camera, screenshare,
              raise-hand, and a Leave button.
@@ -557,6 +561,7 @@ feat F-4: Media Controls
 
 ```mdl
 feat F-5: Call Events
+  uses: [CallsCapabilities.EventHandler, CallState, leaveCall, MediaState, startCall]
 
   req F-5.1: Plugins react to a call by subscribing to CallManager's events;
              there is no contributed callback capability.
@@ -585,6 +590,7 @@ feat F-5: Call Events
 
 ```mdl
 feat F-6: Lobby / Display Name Gate
+  uses: [CallArticle, Lobby, startCall]
 
   req F-6.1: Users without a profile.displayName cannot join a call.
   req F-6.2:
@@ -599,6 +605,7 @@ feat F-6: Lobby / Display Name Gate
 
 ```mdl
 feat F-7: Devtools Surface
+  uses: [CallState, MediaState]
 
   req F-7.1: A `devtools-overview` surface is contributed showing CallState
              (joined, users, audio tracks) and the most recent MediaState.
@@ -608,6 +615,7 @@ feat F-7: Devtools Surface
 
 ```mdl
 feat F-8: Independence from plugin-thread
+  uses: [CallsCapabilities.EventHandler, CallsCapabilities.Manager]
 
   req F-8.1: plugin-calls MUST NOT depend on plugin-thread at runtime.
              It depends only on `@dxos/types` for the Channel type.
@@ -629,6 +637,7 @@ feat F-8: Independence from plugin-thread
 
 ```mdl
 feat F-9: Slim Persistent Call
+  uses: [Call, CallArticle, provisionCall]
 
   req F-9.1: The `Call` ECHO type persists ONLY `name?`, `created`, and
              `transport`. It carries no notes / summary / transcript /
@@ -651,6 +660,7 @@ feat F-9: Slim Persistent Call
 
 ```mdl
 feat F-10: Pluggable Call Transport
+  uses: [Call, CallsCapabilities.CallTransportProvider, provisionCall]
 
   req F-10.1: The live Cloudflare/WebRTC stack is registered as the built-in
               CallsCapabilities.CallTransportProvider
@@ -672,6 +682,7 @@ feat F-10: Pluggable Call Transport
 
 ```mdl
 feat F-11: Event / Meeting linkage (out of scope — see plugin-meeting)
+  uses: [Call]
 
   req F-11.1: `Call` has no knowledge of `Event` or `Meeting`. The hub `Meeting`
               references a `Call` via `Meeting.call?: Ref<Call>`, and

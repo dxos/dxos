@@ -53,6 +53,7 @@
   .dx-row:focus-visible::before,
   [role='listbox']:focus-visible > .dx-row[data-highlighted]::before,
   [role='listbox']:focus-visible > * > .dx-row[data-highlighted]::before,
+  [role='listbox']:focus-visible > * > * > .dx-row[data-highlighted]::before,
   /*
    * The current row is ringed whenever the list has focus, a click included, until the keys move to another row: the
    * ring marks one row, the one the keys act on.

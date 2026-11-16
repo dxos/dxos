@@ -37,10 +37,6 @@ describe('FeatureMapSkill', () => {
 
   test('every operation declares the types it touches, for hosts that do not activate the plugin', ({ expect }) => {
     const undeclared = FeatureMapSkill.operations
-      .filter(
-        (operation) =>
-          String(operation.meta.key).includes('Feature') || String(operation.meta.key).includes('Showcase'),
-      )
       .filter((operation) => (operation.types ?? []).length === 0)
       .map((operation) => Operation.toolName(operation));
     expect(undeclared).toEqual([]);

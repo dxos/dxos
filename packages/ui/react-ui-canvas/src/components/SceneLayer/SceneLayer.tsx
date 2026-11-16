@@ -662,6 +662,7 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
   const arrow = markerFrame('arrow', box, width);
   const triangle = markerFrame('triangle', box, width);
   const circle = markerFrame('circle', box, width);
+  const diamond = markerFrame('diamond', box, width);
   const many = markerFrame('many', box, width);
   // An outline matches the line's width, in its marker's view units.
   const outline = ({ size, view }: MarkerFrame) => (width * view) / size;
@@ -701,6 +702,19 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
           />
         </marker>
       ))}
+      {/* Aggregation and composition (UML): a diamond at the owning end, hollow (filled with the canvas) or solid. */}
+      {ends.flatMap((end) =>
+        (['diamond', 'diamond-filled'] as const).map((kind) => (
+          <marker key={`${kind}-${end}`} id={`${id}-${kind}-${end}`} viewBox='-1 -1 18 18' {...frame(diamond, end)}>
+            <path
+              d='M 0 5 L 8 0 L 16 5 L 8 10 z'
+              className={mx(kind === 'diamond' ? canvasFill : line.fill, line.stroke)}
+              strokeWidth={outline(diamond)}
+              strokeLinejoin='miter'
+            />
+          </marker>
+        )),
+      )}
       {/* A circle filled with the canvas, its far side on the connection point, so the line stops under it. */}
       {ends.map((end) => (
         <marker key={`circle-${end}`} id={`${id}-circle-${end}`} viewBox='0 0 10 10' {...frame(circle, end)}>
@@ -862,7 +876,7 @@ type GrooveStrokeProps = Pick<LinkStrokeProps, 'id' | 'path' | 'stroke' | 'empha
 };
 
 /** No groove heads: a link without ends. */
-const NO_HEADS: GrooveHeads = { outline: '', hollow: '' };
+const NO_HEADS: GrooveHeads = { outline: '', hollow: '', solid: '' };
 
 /**
  * A channel pressed into the Neu ground, its ends heads of the same channel. The channel is one shape, the track and
@@ -889,6 +903,7 @@ const GrooveStroke = ({ id, path, heads, bounds, stroke, emphasis, width, dash, 
         <path d={path} fill='none' stroke='white' strokeWidth={width} strokeDasharray={dash} strokeLinecap='round' />
       )}
       {heads.hollow && <path d={heads.hollow} fill='black' />}
+      {heads.solid && <path d={heads.solid} fill='white' />}
       {heads.outline && (
         <path d={heads.outline} fill='none' stroke='white' strokeWidth={width} strokeLinejoin='miter' />
       )}
@@ -932,6 +947,14 @@ const GrooveStroke = ({ id, path, heads, bounds, stroke, emphasis, width, dash, 
           {heads.outline && (
             <path d={heads.outline} className={mx('fill-none', stroke)} strokeWidth={width} strokeLinejoin='miter' />
           )}
+          {/* Masked to the channel, a stroke as wide as the region fills a solid head. */}
+          {heads.solid && (
+            <path
+              d={heads.solid}
+              className={mx('fill-none', stroke)}
+              strokeWidth={Math.max(bounds.width, bounds.height)}
+            />
+          )}
         </g>
       ) : (
         fill(GROOVE_FILLS.floor, masks.channel)
@@ -972,13 +995,15 @@ const LinkText = ({ path, text, backdrop, textClass, fontSize }: LinkTextProps) 
       return;
     }
     const room = at.room === undefined ? Infinity : at.room - LINK_TEXT_PAD.x * 2 - LINK_TEXT_CLEARANCE * 2;
-    if (text.length === 0 || element.getComputedTextLength() <= room) {
+    // Text not laid out yet (as in a hidden tab) has no characters to measure, so it is shown whole.
+    const chars = element.getNumberOfChars();
+    if (chars === 0 || element.getComputedTextLength() <= room) {
       setShown(text);
       return;
     }
     // The ellipsis takes about one character's width of what it replaces.
-    const ellipsis = element.getComputedTextLength() / text.length;
-    let count = text.length - 1;
+    const ellipsis = element.getComputedTextLength() / chars;
+    let count = chars - 1;
     while (count > 0 && element.getSubStringLength(0, count) + ellipsis > room) {
       count--;
     }

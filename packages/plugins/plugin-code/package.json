@@ -160,6 +160,11 @@
       "types": "./dist/types/src/types/SourceFile.d.ts",
       "import": "./dist/lib/SourceFile.mjs"
     },
+    "./SpecItem": {
+      "source": "./src/types/SpecItem.ts",
+      "types": "./dist/types/src/types/SpecItem.d.ts",
+      "import": "./dist/lib/SpecItem.mjs"
+    },
     "./SpecText": {
       "source": "./src/types/SpecText.ts",
       "types": "./dist/types/src/types/SpecText.d.ts",
@@ -219,7 +224,6 @@
   "dependencies": {
     "@codemirror/lang-javascript": "catalog:",
     "@codemirror/lang-markdown": "catalog:",
-    "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
@@ -247,7 +251,6 @@
     "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
-    "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -259,10 +262,8 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
     "@dxos/scene": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -276,6 +277,7 @@
     "esbuild-wasm": "catalog:"
   },
   "devDependencies": {
+    "@codemirror/lint": "catalog:",
     "@dxos/assistant": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@effect/atom-react": "catalog:",

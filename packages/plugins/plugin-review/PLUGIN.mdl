@@ -291,7 +291,8 @@ op SendNotifications
     excerpt only when EDGE may already read the space (`contentCaptureAllowed`, true for every space
     until E2E spaces exist); otherwise it says "New comment" and carries the ref alone. The one
     attachment is the subject, named by its title under the same rule; the notifications panel opens
-    it. A failed send to one recipient is logged and skipped.
+    it with its Comments companion, which the message names in its `companion` property. A failed send
+    to one recipient is logged and skipped.
 ```
 
 ```mdl
@@ -560,6 +561,7 @@ feat F-3: Review workflow
 
 ```mdl
 feat F-4: Version history
+  uses: [HistoryProvider]
 
   req F-4.1: Checkpoint/fork/base views MUST render historical content read-only from detached
     snapshots (contentAt), never by binding the live doc to old heads (I-7).
@@ -571,6 +573,7 @@ feat F-4: Version history
 
 ```mdl
 feat F-5: Comment threads
+  uses: [Delete, DeleteMessage]
 
   req F-5.1: The comment extension MUST create anchored threads from selections, keep AnchoredTo
     cursors in sync with edits, scope visibility to the active review branch, and honour the render
@@ -585,6 +588,7 @@ feat F-5: Comment threads
 
 ```mdl
 feat F-6: Per-thread agent
+  uses: [AgentIdentity]
 
   req F-6.1: Thread.agent gates AI involvement (absent/disabled = none); the trigger gate fires only
     on non-assistant messages of unresolved threads, in auto mode or on @mention of the resolved
@@ -624,6 +628,8 @@ feat F-8: Comment subscriptions
     carry the subject's title or the comment's text.
 
   req F-8.5: The Comments companion MUST let the current identity subscribe and unsubscribe by hand.
+
+  req F-8.6: Opening a comment's notification MUST show its subject with the Comments companion open.
 ```
 
 ## Acceptance
@@ -918,4 +924,12 @@ decision D-7: SendNotifications reaches the inbox through `AppCapabilities.Inbox
   date: 2026-11-03
   by: user:wittjosiah
   affects: [SendNotifications]
+```
+
+```mdl
+decision D-8: A comment's notification names the Comments companion (`~comments`) in its `companion` property, so opening it shows the subject with its comments ([org.dxos.plugin.messenger#D-3]). Fills in [F-8.6].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [SendNotifications, F-8.6]
+  why: Opening a notification showed the feature alone, and the reader opened Comments by hand to find the reply.
 ```
