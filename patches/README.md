@@ -93,6 +93,9 @@ final request already fits.
 Measured on 0.0.93: the stock CLI's publish of dxos#14554 failed with Cloudflare's 413, and the patched one
 published, sending 17 packages separately instead of 10.
 
+pkg-pr-new is a root devDependency, and every moon task hashes `/patches/*` and the root's dependencies, so a
+version bump or a change to this patch gives every build a new cache key and the next CI run rebuilds them all.
+
 **Retesting after a pkg-pr-new upgrade.** If the new release still skips every package of one chunk or
 less in its multipart loop (`if (file.size <= chunkSize) continue`), the patch is still needed. Otherwise
 drop this patch's line from `pnpm-workspace.yaml`, reinstall, and dispatch `pkg-pr-new.yml` on a branch:
