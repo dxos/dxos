@@ -250,11 +250,20 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     cancelRef.current = handleCancel;
 
     const handlePaneKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        cancelRef.current();
+      if (event.key !== 'Escape') {
+        return;
       }
+
+      // A picker portals its menu out of the pane but stays its React child, so the menu's own Escape — the one
+      // that closes it — arrives here too. Discarding on that would throw away the title and files the reader is
+      // still writing, so only an Escape from a field inside the pane counts: a portalled target is not contained.
+      if (!(event.target instanceof Node) || !event.currentTarget.contains(event.target)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      cancelRef.current();
     }, []);
 
     // Only while creating: an existing task's attachments are its article's to manage. Captured, so
