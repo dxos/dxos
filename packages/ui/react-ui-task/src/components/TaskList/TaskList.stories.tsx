@@ -1510,19 +1510,15 @@ export const TestEdit: Story = {
     await expect(title().value).toEqual('');
     await waitFor(async () => expect(description()).not.toBeNull());
 
-    // ...and offers no Save/Cancel: with nothing typed there is nothing to save and nothing to
-    // cancel, and two dead controls read as a form to fill in rather than a place to type.
+    // ...and offers no Save: with nothing typed there is nothing to save, and a dead control reads as
+    // a form to fill in rather than a place to type.
     const save = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]');
-    const cancel = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]');
     await expect(save()).toBeNull();
-    await expect(cancel()).toBeNull();
     await userEvent.click(title());
     await userEvent.keyboard('Something');
     await waitFor(async () => expect(save()).not.toBeNull());
-    await expect(cancel()).not.toBeNull();
     await userEvent.clear(title());
     await waitFor(async () => expect(save()).toBeNull());
-    await expect(cancel()).toBeNull();
 
     // A half-typed title that loses focus creates nothing: leaving the field is not a decision to
     // add a task. Enter and Save are the deliberate acts, and they still work.
@@ -1618,18 +1614,14 @@ export const TestEdit: Story = {
     // edited one's text.
     await expect(text()).not.toContain('KEEP');
 
-    // Cancel leaves the same way but throws the pending edit away. The buttons must not take focus:
-    // the fields commit on blur, so a Cancel that stole focus would have written the very text it is
-    // meant to discard — as would the blur that tearing the editor down fires.
+    // Escape leaves the same way but throws the pending edit away — the pane shows only Save, so this
+    // is the exit that discards. It must not blur first: the fields commit on blur, which would have
+    // written the very text it is meant to discard.
     rows()[0].click();
     await waitFor(async () => expect(description()).not.toBeNull());
     await userEvent.click(content());
     await userEvent.keyboard(' THROW');
-    const cancelButton = pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]');
-    if (!cancelButton) {
-      throw new Error('Task edit cancel button not found.');
-    }
-    await userEvent.click(cancelButton);
+    await userEvent.keyboard('{Escape}');
     await waitFor(async () => expect(title().value).toEqual(''));
     await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
 

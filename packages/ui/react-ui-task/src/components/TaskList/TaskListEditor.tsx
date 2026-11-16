@@ -193,6 +193,8 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       }
     }, [task, current, commitTitle]);
 
+    // Assigned below, where `handleCancel` is declared: the key handler must exist before it.
+    const cancelRef = useRef<() => void>(() => {});
     const handleTitleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
@@ -245,6 +247,15 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       setFiles([]);
       onTaskSelect?.(undefined);
     }, [task, current, updateDraft, onTaskSelect]);
+    cancelRef.current = handleCancel;
+
+    const handlePaneKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        cancelRef.current();
+      }
+    }, []);
 
     // Only while creating: an existing task's attachments are its article's to manage. Captured, so
     // the description editor does not take a dropped file and insert its bytes as text.
@@ -331,8 +342,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const hasDescription = !!(showDescription && (current ? onTaskUpdate : onTaskCreate));
     // Valid only with a title: a task cannot be created, or renamed, to nothing.
     const canSave = draft.title.trim().length > 0;
-    // Something to throw away: an edit in progress, or a draft.
-    const canCancel = !!current || canSave;
     const values: TaskEditorValues = current
       ? {
           title: draft.title,
@@ -367,6 +376,10 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         )}
         style={{ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties}
         data-testid='taskList.edit'
+        // The pane shows only Save, so Escape is what throws a pending edit away — the exit the cancel button
+        // used to be. Captured on the pane so it reaches the description's editor too, and handled without
+        // moving focus: a blur commits, which would write the very text this discards.
+        onKeyDownCapture={handlePaneKeyDown}
         {...(takesFiles && {
           onDragEnterCapture: handleDragEnter,
           onDragLeaveCapture: handleDragLeave,
@@ -399,17 +412,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
                 data-testid='taskList.edit.save'
                 onClick={handleSave}
                 // The title commits on blur, which would otherwise run before the click and move the button.
-                onMouseDown={(event) => event.preventDefault()}
-              />
-            )
-          }
-          end={
-            canCancel && (
-              <SystemButton.Cancel
-                variant='ghost'
-
-                data-testid='taskList.edit.cancel'
-                onClick={handleCancel}
                 onMouseDown={(event) => event.preventDefault()}
               />
             )
