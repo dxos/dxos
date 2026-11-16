@@ -466,8 +466,8 @@ feat F-1: Deck Presentations
   req F-1.13:
     when: a plank shows an object's article
     then: the article is inside a scroll scope keyed by the object's EID, so its outermost scrolling area reports and
-          restores its position as the object's `ScrollPosition` view state, which a follow carries; a companion or an
-          article nested in another has no scope of its own
+          restores its position as the object's `ScrollPosition` view state, which a follow carries; a companion's
+          scope has no EID and keeps no view state, and an article nested in another has no scope of its own
 ```
 
 ```mdl
@@ -1014,6 +1014,15 @@ decision D-6: Each plank puts a scroll scope keyed by its object's EID around it
 decision D-7: Approve [D-6].
   date: 2026-11-16
   by: user:wittjosiah
+```
+
+```mdl
+decision D-8: A companion's article sits in a scroll scope with no EID, which keeps no view state, rather than in no scope. Refines [D-6].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.13]
+  why: Every plank renders its article the same way; leaving out the EID is enough to keep a companion from sharing or moving the plank's position.
 ```
 
 ---

@@ -268,7 +268,15 @@ const peers = Object.fromEntries(peerList.map((peer) => [peer.name.toLowerCase()
 
 const flowFile = path.resolve(options.flow);
 const flow = await import(pathToFileURL(flowFile).href);
-const source = flowSource(flowFile);
+// A failed read leaves the source to be read again with the recording metadata, which tolerates failure.
+const source = (() => {
+  try {
+    return flowSource(flowFile);
+  } catch (error) {
+    console.error('could not read the flow source:', error);
+    return undefined;
+  }
+})();
 const steps = flow.steps ?? [];
 
 /** Caption timeline, in ms from the shared cut; empty until the take starts. */
