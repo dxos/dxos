@@ -80,22 +80,7 @@ mapfile -t PATCHED_PACKAGES < <(node .github/workflows/scripts/stage-patched-pac
   @automerge/automerge-repo @automerge/automerge-subduction)
 echo "Staged ${#PATCHED_PACKAGES[@]} patched third-party packages"
 
-# pkg-pr-new 0.0.93 with `.github/patches/pkg-pr-new@0.0.93.patch`: the stock CLI sends every package of 5 MB or less
-# in one request, which outgrew Cloudflare's 100 MB limit (see `.github/patches/README.md`). Fetched and checked against
-# its registry integrity here rather than added to the workspace, because the root's dependencies are part of every
-# project's dependency closure, so a root devDependency would give every moon task a new cache key.
-PKG_PR_NEW_VERSION=0.0.93
-PKG_PR_NEW_INTEGRITY='sha512-JH3HEO+m8sNFpalNAeGrNKjdwxNcXT3yuEuGMU/65dvLojPo+Ofnmc8la2v2ceisjXTOKQw/738Pj4KNFY7F+w=='
-PKG_PR_NEW_DIR=$(mktemp -d)
-curl -fsSL -o "$PKG_PR_NEW_DIR/package.tgz" \
-  "https://registry.npmjs.org/pkg-pr-new/-/pkg-pr-new-${PKG_PR_NEW_VERSION}.tgz"
-PKG_PR_NEW_ACTUAL="sha512-$(openssl dgst -sha512 -binary "$PKG_PR_NEW_DIR/package.tgz" | openssl base64 -A)"
-if [ "$PKG_PR_NEW_ACTUAL" != "$PKG_PR_NEW_INTEGRITY" ]; then
-  echo "pkg-pr-new ${PKG_PR_NEW_VERSION} does not match its pinned integrity"
-  exit 1
-fi
-tar -xzf "$PKG_PR_NEW_DIR/package.tgz" -C "$PKG_PR_NEW_DIR"
-git -C "$PKG_PR_NEW_DIR/package" apply "$PWD/.github/patches/pkg-pr-new@${PKG_PR_NEW_VERSION}.patch"
+# Run pkg-pr-new publish with all public packages. The workspace's pinned, patched pkg-pr-new: the stock one sends every
+# package of 5 MB or less in one request, which outgrew Cloudflare's 100 MB limit (see patches/README.md).
+pnpm exec pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}" "${PATCHED_PACKAGES[@]}"
 
-# Run pkg-pr-new publish with all public packages.
-node "$PKG_PR_NEW_DIR/package/bin/cli.js" publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}" "${PATCHED_PACKAGES[@]}"
