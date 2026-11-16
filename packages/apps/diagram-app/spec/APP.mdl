@@ -104,6 +104,7 @@ feat F-6: Joining
 feat F-7: EDGE
   req F-7.1: The client is configured with the EDGE endpoint and signaling, so peers find each other and Composer's agent-backed spaces can redeem invitations through EDGE.
   req F-7.2: The client runs every EDGE feature Composer runs: signaling, the Subduction and feed replicators, and agents. Documents sync peer to peer, and through EDGE where EDGE accepts the identity.
+  req F-7.3: The app deploys to the dev, preview and staging environments, each against the EDGE that Composer's deploy of the same name uses, so a space syncs between the two apps there.
 ```
 
 ```mdl
@@ -1597,4 +1598,22 @@ decision D-124: Each pill menu is a react-ui `Popover` holding react-ui-search's
   why: `SearchList.Item` draws only an icon, a label, a suffix and a check, and a row needs an avatar and its own menu, so the rows are `Picker.Item`s under the search list's keyboard handling.
   rejected:
     - Adding an avatar slot and a row menu to `SearchList.Item`: it changes a shared component for one app.
+```
+
+```mdl
+decision D-125: The app has dev, preview and staging deploy environments.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-7.3]
+```
+
+```mdl
+decision D-126: Each environment is its own assets-only Worker, `diagram-<env>`, served from `diagram-<env>.dxos.workers.dev` until the app has a domain, and built with the environment file Composer's deploy reads: dev against EDGE preview, preview and staging against EDGE production. Preview deploys daily from `main` with the other preview apps; dev and staging deploy on dispatch. There is no production environment yet. Fills in [D-125].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.3]
+  why: Sharing Composer's environment files puts each deploy on the same EDGE as the Composer it shares spaces with, and the deploy pipeline derives everything else from the app's Workers config.
+  rejected:
+    - A production environment: the product name and its domain are still open ([Q-1]).
 ```
