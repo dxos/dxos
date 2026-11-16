@@ -57,7 +57,26 @@ const cellOf = (row: SparqlRow, name: string): string => {
 
 const MAX_CELL = 80;
 
-const printTable = (columns: readonly string[], rows: ReadonlyArray<readonly string[]>): void => {
+const BAR_WIDTH = 40;
+
+/** The rows with a bar for their last column, scaled to the largest value, when every value in it is a number. */
+const withBars = (
+  columns: readonly string[],
+  rows: ReadonlyArray<readonly string[]>,
+): [readonly string[], ReadonlyArray<readonly string[]>] => {
+  const values = rows.map((row) => Number(row[row.length - 1]));
+  if (rows.length === 0 || values.some((value) => Number.isNaN(value))) {
+    return [columns, rows];
+  }
+  const max = Math.max(...values.map(Math.abs), 1e-9);
+  return [
+    [...columns, ''],
+    rows.map((row, index) => [...row, '█'.repeat(Math.round((Math.abs(values[index]) / max) * BAR_WIDTH))]),
+  ];
+};
+
+const printTable = (header: readonly string[], body: ReadonlyArray<readonly string[]>): void => {
+  const [columns, rows] = flags.bars ? withBars(header, body) : [header, body];
   const clip = (value: string) => {
     const flat = value.replace(/\s+/g, ' ');
     return flat.length > MAX_CELL ? `${flat.slice(0, MAX_CELL - 1)}…` : flat;
@@ -79,6 +98,7 @@ const { values: flags, positionals } = parseArgs({
     facts: { type: 'string' },
     crawl: { type: 'string' },
     json: { type: 'boolean', default: false },
+    bars: { type: 'boolean', default: false },
   },
 });
 

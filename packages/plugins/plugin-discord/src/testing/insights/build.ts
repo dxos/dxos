@@ -123,7 +123,9 @@ for (const dir of args.export) {
   }
   const records: Record<string, MemberRecord> = JSON.parse(readFileSync(file, 'utf8'));
   for (const [id, record] of Object.entries(records)) {
-    const roles = record.roles;
+    // Role names can carry invisible characters (the staff role is spelled with a zero-width space), so match on the
+    // visible name.
+    const roles = record.roles.map((role) => role.replace(/[\u200B-\u200D\uFEFF]/g, ''));
     insertMember.run(
       id,
       record.name,
