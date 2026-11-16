@@ -22,11 +22,9 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { SpaceCapabilities } from '#types';
 
-import { FOLLOW_LOST_TIMEOUT, getPeerFocus, getPresenceKeyFromPath } from '../util/presence.ts';
+import { FOLLOW_KEEP_SELECTOR, FOLLOW_LOST_TIMEOUT, getPeerFocus, getPresenceKeyFromPath } from '../util/presence.ts';
 
-/** How long a plank has to mount once it is open; its anchor is revealed again on every tick meanwhile. */
-const MOUNT_TIMEOUT = 5_000;
-
+/** How often the follow updates, which also advances each extension's view. */
 const TICK_INTERVAL = 500;
 
 /** Keys that do nothing on their own, so pressing one does not break a follow. */
@@ -47,9 +45,10 @@ type Session = {
   /** The attended object as last opened here when no extension opens it, and whether that open failed. */
   opened?: string;
   openFailed?: boolean;
-  /** When each plank appeared in the layout, and the anchor last revealed in it. */
+  /** When each plank appeared in the layout, the anchor its view last confirmed revealing, and the one being revealed. */
   mounted: Map<string, number>;
   revealed: Map<string, string>;
+  revealing: Map<string, string>;
   fibers: Set<Fiber.Fiber<unknown>>;
   unsubscribes: (() => void)[];
 };
@@ -72,6 +71,10 @@ const isTreeNavigation = (target: EventTarget | null): boolean => {
   return !!id && getPresenceKeyFromPath(id) !== undefined;
 };
 
+/** Whether an event lands in a presence control, such as the viewers list a follower opens to stop. */
+const isPresenceControl = (target: EventTarget | null): boolean =>
+  target instanceof Element && !!target.closest(FOLLOW_KEEP_SELECTOR);
+
 /** Whether an event lands in the deck's main area, which holds and scrolls the planks, or in an object's companion. */
 const isInDeck = (target: EventTarget | null): boolean =>
   (target instanceof Element && !!target.closest('main')) || isInObject(target);
@@ -80,8 +83,8 @@ const isInDeck = (target: EventTarget | null): boolean =>
  * Follows the peer named by the ephemeral `following` state. The follower loads the object the leader attends, reveals
  * the leader's anchor in each object it shows of them through the type's `Locator`, and hands each `LocatorExtension`
  * the leader's view with the leader's value for it. An extension that navigates opens what the leader shows; with none,
- * the follower opens the attended object itself. The local user's own input in the deck or an object's companion,
- * selecting an object in the navtree, Escape, attending an object outside what is shown of the leader, leaving the
+ * the follower opens the attended object itself. The local user's own input in the deck or an object's companion
+ * (outside the presence controls), * selecting an object in the navtree, Escape, attending an object outside what is shown of the leader, leaving the
  * space's workspace, or the leader leaving the space ends it.
  */
 export default Capability.makeModule(
@@ -200,7 +203,7 @@ export default Capability.makeModule(
       );
     };
 
-    // With no extension that navigates, the follower switches to the space and opens the attended object at its own path.
+    // With no extension that navigates, the follower opens the attended object at its own path, in the space's workspace.
     // Each target is opened once: one the layout refuses keeps the follow paused until the leader attends another.
     const open = (current: Session) => {
       const { spaceId, attended } = current.view;
@@ -211,13 +214,12 @@ export default Capability.makeModule(
       }
       current.opened = target;
       current.openFailed = false;
-      const workspace = GraphPath.getSpacePath(spaceId);
+      // One operation carries the workspace, so switching to the space and opening do not race.
       fork(
-        Effect.gen(function* () {
-          if (registry.get(layoutAtom).workspace !== workspace) {
-            yield* invoke(LayoutOperation.SwitchWorkspace, { subject: workspace });
-          }
-          yield* invoke(LayoutOperation.Open, { subject: [localPath], focus: false });
+        invoke(LayoutOperation.Open, {
+          subject: [localPath],
+          workspace: GraphPath.getSpacePath(spaceId),
+          focus: false,
         }).pipe(
           Effect.catchCause((cause) =>
             Effect.sync(() => {
@@ -233,7 +235,7 @@ export default Capability.makeModule(
     // Reveals the leader's anchor in each object this session shows of them, at the path its layout holds it at. A plank
     // just opened may not have mounted, so its anchor is revealed again on every update until it has had time to.
     const revealAnchors = (current: Session, anchors: ReadonlyMap<EID.EID, string>) => {
-      const now = Date.now();
+      const { now } = current.view;
       const { active } = registry.get(layoutAtom);
       for (const path of current.mounted.keys()) {
         if (!active.includes(path)) {
@@ -255,14 +257,26 @@ export default Capability.makeModule(
             : active.find((plank) => getPresenceKeyFromPath(plank) === key);
         const typename = load(current.view.spaceId, key)?.typename;
         const locator = typename && registry.get(locatorsAtom).find(({ id }) => id === typename);
-        const mounting = path !== undefined && now < (current.mounted.get(path) ?? 0) + MOUNT_TIMEOUT;
-        if (!path || !locator || (anchor === current.revealed.get(path) && !mounting)) {
+        const mounting =
+          path !== undefined && now < (current.mounted.get(path) ?? 0) + AppCapabilities.FOLLOW_MOUNT_TIMEOUT;
+        if (
+          !path ||
+          !locator ||
+          current.revealing.get(path) === anchor ||
+          (anchor === current.revealed.get(path) && !mounting)
+        ) {
           continue;
         }
-        current.revealed.set(path, anchor);
+        // Only an anchor its view confirms is settled; one it could not reveal yet (unmounted, or not loaded) is asked
+        // again on the next update.
+        current.revealing.set(path, anchor);
         fork(
           invoke(locator.reveal, { subject: path, anchor, follow: true }).pipe(
+            Effect.tap((done) => Effect.sync(() => done && current.revealed.set(path, anchor))),
             Effect.catch((err) => Effect.sync(() => log.warn('follow reveal failed', { err }))),
+            Effect.ensuring(
+              Effect.sync(() => current.revealing.get(path) === anchor && current.revealing.delete(path)),
+            ),
           ),
         );
       }
@@ -307,6 +321,7 @@ export default Capability.makeModule(
       const path = active.find((plank) => getPresenceKeyFromPath(plank) === focus.key);
       const localPath = getLocalPath(following.spaceId, focus.key);
       const view: AppCapabilities.FollowView = {
+        now,
         spaceId: following.spaceId,
         active,
         attended: { key: focus.key, ...(path && { path }), ...(localPath && { localPath }) },
@@ -319,6 +334,7 @@ export default Capability.makeModule(
         showing: new Map(),
         mounted: new Map(),
         revealed: new Map(),
+        revealing: new Map(),
         fibers: new Set(),
         unsubscribes: [],
       };
@@ -333,7 +349,7 @@ export default Capability.makeModule(
         const viewAtom = current.views.get(extension.id);
         if (!viewAtom) {
           startExtension(current, extension, extensionView);
-        } else if (JSON.stringify(extensionView) !== JSON.stringify(registry.get(viewAtom))) {
+        } else {
           registry.set(viewAtom, extensionView);
         }
       }
@@ -373,7 +389,11 @@ export default Capability.makeModule(
     });
 
     const onPointer = (event: Event) => {
-      if (isFollowing() && (isInDeck(event.target) || isTreeNavigation(event.target))) {
+      if (
+        isFollowing() &&
+        !isPresenceControl(event.target) &&
+        (isInDeck(event.target) || isTreeNavigation(event.target))
+      ) {
         stop();
       }
     };
@@ -381,6 +401,7 @@ export default Capability.makeModule(
       if (
         isFollowing() &&
         !MODIFIER_KEYS.has(event.key) &&
+        !isPresenceControl(event.target) &&
         (event.key === 'Escape' || isInDeck(event.target) || (event.key === 'Enter' && isTreeNavigation(event.target)))
       ) {
         stop();

@@ -171,9 +171,11 @@ export class DiagramApp {
   /** Follows the first person in the presence list; the list closes itself. */
   async follow(): Promise<void> {
     await this.presence().first().click();
-    const follow = this.page.getByTestId('spacePlugin.presence.follow').first();
-    await follow.click();
-    await follow.waitFor({ state: 'detached' });
+    await this.page.getByTestId('spacePlugin.presence.follow').first().click();
+    // The followed row carries Stop in place of Follow; clicking the avatar again closes the list and keeps the follow.
+    await this.page.getByTestId('spacePlugin.presence.stopFollowing').waitFor();
+    await this.presence().first().click();
+    await this.page.getByTestId('spacePlugin.presence.stopFollowing').waitFor({ state: 'detached' });
   }
 
   /** Clicks Stop on the followed person's row in the presence list. */

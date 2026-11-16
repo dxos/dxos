@@ -411,8 +411,8 @@ test QA-7: Follow a collaborator
       do: As Ada, draw a rectangle and share; as Ben, open the link. As Ada, add a diagram "Roadmap" and draw a rectangle on it.
       expect: each shows the other's avatar beside Share; Ada is on "Roadmap" and Ben on "Untitled"
     - name: Ben follows Ada
-      do: As Ben, click Ada's avatar beside Share and click Follow on her row.
-      expect: the list closes, Ben's canvas shows "Roadmap" at Ada's path, and both pills take the follow's indigo wash and underline
+      do: As Ben, click Ada's avatar beside Share, click Follow on her row, then click her avatar again.
+      expect: Ada's row carries Stop in place of Follow; the second click closes the list and the follow continues; Ben's canvas shows "Roadmap" at Ada's path, and both pills take the follow's amber wash and underline
     - name: Ada moves
       do: As Ada, zoom in with Ctrl and the wheel, then scroll the canvas.
       expect: within a second Ben's view shows Ada's rectangle at the same place and size as hers
@@ -1482,4 +1482,13 @@ decision D-113: Below 800 px the pill reserves room only for the folded inspecto
   supersedes: D-112
   affects: [F-1.7]
   why: The editor docks its inspector only in frames at least 800 px wide (the panel's 320 px plus 480 px for the canvas and its bars), and the canvas article fills the app's viewport.
+```
+
+```mdl
+decision D-114: In QA-7, Ben closes the presence list by clicking the avatar again after Follow, and the follow's wash is amber. Follows from [org.dxos.plugin.space#D-83] and [org.dxos.plugin.space#F-8.22].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-7]
+  why: The space plugin now colours a follow amber and leaves its presence list open after a row's action, with clicks in the presence controls keeping the follow; the step expected indigo and a list that closed itself.
 ```

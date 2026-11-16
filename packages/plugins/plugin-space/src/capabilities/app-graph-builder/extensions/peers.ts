@@ -5,10 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
+import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -17,7 +19,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { type Key, Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { EID } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -39,9 +41,19 @@ import {
   isSameFollowTarget,
 } from '../../../util/presence.ts';
 
-const JUMP_LABEL: Label = ['presence-jump.label', { ns: SpaceNamespace.key }];
 const GO_TO_LABEL: Label = ['presence-go-to.label', { ns: SpaceNamespace.key }];
 const FOLLOW_LABEL: Label = ['presence-follow.label', { ns: SpaceNamespace.key }];
+
+/** How often Go to asks a plank it opened to reveal the peer's anchor, until the follow's mount window ends. */
+const REVEAL_RETRY = Schedule.spaced('100 millis').pipe(
+  Schedule.upTo({ duration: AppCapabilities.FOLLOW_MOUNT_TIMEOUT }),
+);
+
+const loadObject = Effect.fnUntraced(function* (spaceId: Key.SpaceId, key: EID.EID) {
+  const client = yield* Capability.get(ClientCapabilities.Client);
+  const space = client.spaces.get().find((space) => space.id === spaceId);
+  return space && (yield* Effect.promise(() => space.db.makeRef(key).tryLoad()));
+});
 
 /** The Members tab's dot while this session follows someone or someone follows it. */
 const followBadge = Atom.family((ephemeralAtom: Atom.Atom<SpaceCapabilities.SpaceEphemeralState>) =>
@@ -134,17 +146,15 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
       },
     }),
 
-    // Per object the node's session attends: Jump when it is open in this deck, otherwise Go to opens it; then Follow,
-    // unless already following them. Each action names its object, so a list of one object's viewers shows only the
-    // actions on that object.
+    // Per object the node's session attends: Go to, then Follow unless already following them. Each action names its
+    // object, so a list of one object's viewers shows only the actions on that object.
     AppGraphBuilder.createExtension({
       id: 'peerActions',
       match: matchPeerNode,
       actions: ({ spaceId, identityKey, sessionId }, get) => {
         const [ephemeralAtom] = get(ephemeralCapAtom);
         const [layoutAtom] = get(layoutCapAtom);
-        const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
-        if (!ephemeralAtom || !layoutAtom || !appGraph) {
+        if (!ephemeralAtom || !layoutAtom) {
           return Effect.succeed([]);
         }
 
@@ -163,93 +173,71 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
             }
 
             const suffix = EID.getEntityId(focus.key) ?? 'space';
-            const follow = followed
-              ? []
-              : [
-                  AppGraphNode.makeAction({
-                    id: `follow-${suffix}`,
-                    data: () =>
-                      Effect.gen(function* () {
-                        const registry = yield* Capability.get(Capabilities.AtomRegistry);
-                        registry.update(ephemeralAtom, (state) => ({ ...state, following: target }));
-                      }),
-                    properties: {
-                      label: FOLLOW_LABEL,
-                      icon: 'ph--eye--regular',
-                      disposition: 'list-item',
-                      testId: 'spacePlugin.presence.follow',
-                      presenceKey: focus.key,
-                    },
-                  }),
-                ];
             const openPath = active.find((path) => getPresenceKeyFromPath(path) === focus.key);
-            if (openPath) {
-              const node = Option.getOrUndefined(get(appGraph.graph.node(openPath)));
-              const typename = node && Obj.isObject(node.data) ? Obj.getTypename(node.data) : undefined;
-              const locator = locators.find(({ id }) => id === typename);
-              const anchor = focus.location?.selection ?? focus.location?.viewport;
-              return locator && anchor
-                ? [
-                    AppGraphNode.makeAction({
-                      id: `jump-${suffix}`,
-                      data: () => Operation.invoke(locator.reveal, { subject: openPath, anchor }),
-                      properties: {
-                        label: JUMP_LABEL,
-                        icon: 'ph--crosshair-simple--regular',
-                        disposition: 'list-item',
-                        testId: 'spacePlugin.presence.jump',
-                        presenceKey: focus.key,
-                      },
-                    }),
-                    ...follow,
-                  ]
-                : follow;
-            }
-
             // At the path the session has the object open at, so the navtree shows it where the peer does.
             const peerPath = getPeerPlankPath(peerDecks, spaceId, identityKey, focus.sessionId, focus.key);
+            const anchor = focus.location?.selection ?? focus.location?.viewport;
+            const goTo = AppGraphNode.makeAction({
+              id: `goTo-${suffix}`,
+              data: () =>
+                Effect.gen(function* () {
+                  // A peer on the space's Home attends the space itself, whose key names no object.
+                  if (!EID.getEntityId(focus.key)) {
+                    yield* Operation.invoke(LayoutOperation.Open, { subject: [GraphPath.getSpaceHomePath(spaceId)] });
+                    return;
+                  }
+
+                  // An open object is read from its graph node without waiting, so the reveal's focus is the last word.
+                  const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+                  const openObject = openPath && Option.getOrUndefined(AppGraph.getNode(graph, openPath))?.data;
+                  const object = Obj.isObject(openObject) ? openObject : yield* loadObject(spaceId, focus.key);
+                  if (!Obj.isObject(object)) {
+                    return;
+                  }
+
+                  const path = openPath ?? peerPath ?? GraphPath.getObjectPathFromObject(object);
+                  const locator = locators.find(({ id }) => id === Obj.getTypename(object));
+                  if (!openPath) {
+                    yield* Operation.invoke(LayoutOperation.Open, { subject: [path] });
+                  } else if (!locator || !anchor) {
+                    yield* Operation.invoke(LayoutOperation.ScrollIntoView, { subject: path });
+                  }
+
+                  // A plank it just opened reveals nothing until it mounts, so the reveal is asked again until then.
+                  if (locator && anchor) {
+                    yield* Operation.invoke(locator.reveal, { subject: path, anchor }).pipe(
+                      Effect.repeat({ schedule: REVEAL_RETRY, until: (revealed) => revealed }),
+                    );
+                  }
+                }),
+              properties: {
+                label: GO_TO_LABEL,
+                icon: 'ph--arrow-right--regular',
+                disposition: 'list-item',
+                testId: 'spacePlugin.presence.goTo',
+                presenceKey: focus.key,
+              },
+            });
+            if (followed) {
+              return [goTo];
+            }
+
             return [
+              goTo,
               AppGraphNode.makeAction({
-                id: `goTo-${suffix}`,
-                data: () =>
-                  Effect.gen(function* () {
-                    if (peerPath) {
-                      yield* Operation.invoke(LayoutOperation.Open, { subject: [peerPath] });
-                      return;
-                    }
-
-                    // A peer on the space's Home attends the space itself, whose key names no object.
-                    if (!EID.getEntityId(focus.key)) {
-                      yield* Operation.invoke(LayoutOperation.Open, {
-                        subject: [GraphPath.getSpaceHomePath(spaceId)],
-                      });
-                      return;
-                    }
-
-                    const client = yield* Capability.get(ClientCapabilities.Client);
-                    const space = client.spaces.get().find((space) => space.id === spaceId);
-                    if (!space) {
-                      return;
-                    }
-
-                    const object = yield* Effect.promise(() => space.db.makeRef(focus.key).tryLoad());
-                    if (!Obj.isObject(object)) {
-                      return;
-                    }
-
-                    yield* Operation.invoke(LayoutOperation.Open, {
-                      subject: [GraphPath.getObjectPathFromObject(object)],
-                    });
-                  }),
+                id: `follow-${suffix}`,
+                data: Effect.fnUntraced(function* () {
+                  const registry = yield* Capability.get(Capabilities.AtomRegistry);
+                  registry.update(ephemeralAtom, (state) => ({ ...state, following: target }));
+                }),
                 properties: {
-                  label: GO_TO_LABEL,
-                  icon: 'ph--arrow-right--regular',
+                  label: FOLLOW_LABEL,
+                  icon: 'ph--eye--regular',
                   disposition: 'list-item',
-                  testId: 'spacePlugin.presence.goTo',
+                  testId: 'spacePlugin.presence.follow',
                   presenceKey: focus.key,
                 },
               }),
-              ...follow,
             ];
           }),
         );

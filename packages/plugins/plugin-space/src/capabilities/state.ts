@@ -33,18 +33,7 @@ export default Capability.makeModule(
     });
 
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
-    const ephemeralAtom = Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-      sdkMigrationRunning: {},
-      navigableCollections: false,
-      viewersByObject: {},
-      peerDecks: {},
-      mergePreview: undefined,
-      following: undefined,
-      sessionId: PublicKey.random().toHex(),
-      followedSpaces: [],
-      peerFollowing: {},
-      lastMergeAt: undefined,
-    }).pipe(Atom.keepAlive);
+    const ephemeralAtom = SpaceCapabilities.makeEphemeralState(PublicKey.random().toHex());
 
     const manager = yield* Capabilities.PluginManager;
     // Layout is optional and lands after this module: no plugin contributes it in standalone

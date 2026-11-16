@@ -6,6 +6,12 @@ version: 0.1.0
 
 Core workspace container plugin for `DXOS` Composer — creates, manages, and shares collaborative spaces with full membership control, object lifecycle management, schema registration, and navigation.
 
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.deck: A follower's deck opens what the leader shows through the deck's `LocatorExtension`.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -226,7 +232,7 @@ component SpacePresence
   props:
     spaceId?: SpaceId
     presenceKey?: EID   # the object's EID, or the space's own EID for a space-level view
-    everyone?: boolean  # list everyone attending something in the space (F-8.27)
+    everyone?: boolean  # list everyone attending something in the space (F-8.25)
     size?: AvatarSize   # the avatars' size; medium by default
 ```
 
@@ -581,11 +587,11 @@ feat F-8: Presence and Sync Status
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
   req F-8.7: A space's navtree row counts the peers viewing the space itself.
   req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence, and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
-  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise. Go to opens the object at the graph path the peer's session has it open at, so the navtree shows it where the peer does. A peer on the space's Home views the space itself, so Go to opens that Home, and the Members companion lists them under Home.
-  req F-8.10: Jump reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus.
-  req F-8.11: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; a button at the end of its header opens the Members companion. Rows are Listbox rows whose actions are labelled buttons.
+  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Go to and Follow. Go to opens the object when the deck does not show it, at the graph path the peer's session has it open at, so the navtree shows it where the peer does. A peer on the space's Home views the space itself, so Go to opens that Home, and the Members companion lists them under Home.
+  req F-8.10: Go to then reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus; a plank it opened is asked again until it mounts, for up to the follow's mount window.
+  req F-8.11: Clicking an avatar in SpacePresence opens the list of the object's viewers; a button at the end of its header opens the Members companion. Rows are Listbox rows that select nothing; their actions are labelled buttons.
   req F-8.12: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
-  req F-8.18: A presence row's avatar sits inside the row's hover and highlight. A person's row and their session rows hover and highlight together, as one block.
+  req F-8.18: The viewers list and the Members companion are one presence list, of one object or of the whole space, with the same header, rows and follow. A row takes no hover; a person's row and their session rows take the keyboard highlight together, as one block, with the avatar inside it.
   req F-8.15: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
   req F-8.13: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on whichever of those sessions moved its anchor most recently, never on a session attending another object; with none attending the object, the row has no actions. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions while it attends the object; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
   req F-8.14: The viewing message carries the sender's session id, its device, the location in each object its deck holds, the graph paths of its deck's planks in the space, and each `LocatorExtension`'s value for the space by extension id, which presence carries without reading; it is sent with the heartbeat, at once when a session the sender has not heard from in the space speaks, and at most once per second when a location changes, or every 100 ms while followed ([F-8.20]). A session runs one heartbeat at a time.
@@ -593,13 +599,11 @@ feat F-8: Presence and Sync Status
   req F-8.17: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
   req F-8.19: A peer's node carries Follow, which follows whichever of their sessions moved most recently, switching as that changes; a session's node carries Follow for that session alone. Neither shows while it is already the followed target.
   req F-8.20: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
-  req F-8.21: While following, the follower shows the leader's view. It loads the object the leader attends, reveals the leader's anchor in each object it shows of them (the top of their viewport there, or their selection when they report no viewport) through the type's `Locator`, and hands each `LocatorExtension` with a `follow` the leader's planks in the space, the attended object with the path they have it open at, and the leader's value for that extension. An extension that opens what the leader shows (the deck, plugin-deck F-1.12) does so; with none, the follower switches to the space and opens the attended object. Planks have five seconds from appearing to mount, during which their anchors are revealed again. None of it moves the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can, and so does an extension that reports it cannot show the view.
-  req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing.
-  req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
-  req F-8.24: A follow is marked in indigo on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an indigo dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows. Those rows wash in indigo, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. While the session follows or is followed in the space its deck shows, every plank heading there, companions included and in a flat or sliding deck, takes a light indigo wash over a one-pixel indigo underline. The follow is also a state of the presence indicator: the avatars of those in the session's follow ring in indigo.
-  req F-8.25: In SpacePresence's list too, the row of the person this session follows carries Stop (and Paused while paused) in place of their actions, so a host with no Members companion can end a follow from where it started it. That row comes first, and stays while the person is on another object, as it does while the follow is paused.
-  req F-8.26: Running an action from SpacePresence's list, Stop included, closes the list, so the follow or jump it starts is in view and closing the list by hand, with Escape or a click on the object, does not end the follow at once.
-  req F-8.27: SpacePresence can list everyone attending something in its space instead of one object's viewers. Each row carries the actions on what that person (or session) attends, and when the host names an object, the avatars of those on it are lit and the rest dimmed.
+  req F-8.21: While following, the follower shows the leader's view. It loads the object the leader attends, reveals the leader's anchor in each object it shows of them (the top of their viewport there, or their selection when they report no viewport) through the type's `Locator`, and hands each `LocatorExtension` with a `follow` the leader's planks in the space, the attended object with the path they have it open at, and the leader's value for that extension. An extension that opens what the leader shows (the deck, org.dxos.plugin.deck#F-1.12) does so; with none, the follower opens the attended object with one `LayoutOperation.Open` that names the space's workspace. Planks have five seconds from appearing to mount, during which their anchors are revealed again, and an anchor the view could not reveal yet (not mounted, or not loaded) is revealed again on every update until it can. None of it moves the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can, and so does an extension that reports it cannot show the view.
+  req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing. Input in the presence indicator or its viewers list, Escape included, ends nothing, since a follower opens that list to see the follow and stop it.
+  req F-8.23: While following, the Members companion's rail tab shows a dot, and the presence list starts with the leader's row under a Following heading, carrying Stop (and Paused while paused) in place of their actions; the viewers list does so while the leader views its object. Stopping returns the row to its object's group and clears the dot. Below a follow section, the viewers list heads the rest of its viewers Viewing; the Members companion heads each group with its object's label.
+  req F-8.24: A follow is marked in amber on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an amber dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows. Those rows wash in amber, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. While the session follows or is followed in the space its deck shows, every plank heading there, companions included and in a flat or sliding deck, takes a light amber wash over a one-pixel amber underline. The follow is also a state of the presence indicator: the avatars of those in the session's follow ring in amber.
+  req F-8.25: SpacePresence can list everyone attending something in its space instead of one object's viewers. Each row carries the actions on what that person (or session) attends, and when the host names an object, the avatars of those on it are lit and the rest dimmed.
 ```
 
 ## Acceptance
@@ -755,12 +759,12 @@ test QA-2: Register a schema and add a typed relation
 
 ```mdl
 test QA-3: Act on a peer from their avatar
-  desc: A peer's avatar opens the object's viewers, Jump reveals what they are looking at, and the Members companion lists everyone in the space.
+  desc: A peer's avatar opens the object's viewers, Go to reveals what they are looking at, and the Members companion lists everyone in the space.
   actors: human
   covers: [F-8.9, F-8.10, F-8.11, F-8.12]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › a peer's avatar opens the viewers list and jumps to their selection
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a peer's avatar opens the viewers list and goes to their selection
   given:
     - host: a booted app with a space containing one document, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space
@@ -770,9 +774,9 @@ test QA-3: Act on a peer from their avatar
       expect: the host's plank header shows the guest's avatar
     - name: Open the viewers list
       do: On the host, click the guest's avatar.
-      expect: a list of the document's viewers opens with the guest's row highlighted, and a Jump action on it
-    - name: Jump to the guest
-      do: Click Jump on the guest's row.
+      expect: a list of the document's viewers opens with the guest's row, and a Go to action on it
+    - name: Go to the guest
+      do: Click Go to on the guest's row.
       expect: the host's editor takes focus with its caret at the guest's selection
     - name: See everyone
       do: Open the viewers list again and click the members button in its header.
@@ -784,12 +788,12 @@ test QA-3: Act on a peer from their avatar
 
 ```mdl
 test QA-4: Tell a peer's sessions apart
-  desc: A peer with the object open in two tabs shows as one row, and the sessions toggle lists their sessions under it, each with its own Jump.
+  desc: A peer with the object open in two tabs shows as one row, and the sessions toggle lists their sessions under it, each with its own Go to.
   actors: human
   covers: [F-8.13, F-8.16]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › the sessions toggle lists a peer's sessions under their row, each with its own Jump
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › the sessions toggle lists a peer's sessions under their row, each with its own Go to
   given:
     - host: a booted app with a space containing one document, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space
@@ -799,12 +803,12 @@ test QA-4: Tell a peer's sessions apart
       expect: the host's plank header shows one avatar for the guest
     - name: Open the viewers list
       do: On the host, click the guest's avatar.
-      expect: the guest's row carries a Jump action
+      expect: the guest's row carries a Go to action
     - name: Show each session
       do: Click the sessions toggle in the list's header.
-      expect: a row per session appears under the guest's row, each named by its device with a dot and a Jump action, and the guest's own row no longer carries Jump
-    - name: Jump to a session
-      do: Click Jump on the first session's row.
+      expect: a row per session appears under the guest's row, each named by its device with a dot and a Go to action, and the guest's own row no longer carries Go to
+    - name: Go to a session
+      do: Click Go to on the first session's row.
       expect: the host's editor takes focus
 ```
 
@@ -815,7 +819,7 @@ test QA-5: Follow a peer around the space
   covers: [F-8.19, F-8.20, F-8.21, F-8.22, F-8.23]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › following a peer opens what they open and mirrors their scroll until Escape or leaving the space
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follow shows on both sides and mirrors what the leader opens and scrolls, until Stop
   given:
     - host: a booted app with a space containing two documents, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space
@@ -825,7 +829,7 @@ test QA-5: Follow a peer around the space
       expect: the host's plank header shows the guest's avatar
     - name: Follow the guest
       do: On the host, open the Members companion and click Follow on the guest's row.
-      expect: the Members tab shows a dot, and the guest's row is first and highlighted, with Stop in place of its actions
+      expect: the Members tab shows a dot, and the guest's row is first, in amber, with Stop in place of its actions
     - name: The guest opens the other document
       do: On the guest, open the second document and type enough lines to scroll it, ending at the bottom.
       expect: the host's deck opens the second document and scrolls it down with the guest's, while the host's caret and focus stay where they were
@@ -844,7 +848,7 @@ test QA-6: Follow a peer's deck side by side
   covers: [F-8.21, F-8.22]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follower whose deck lays planks side by side mirrors the leader's planks and scroll until it scrolls or navigates
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follower whose deck lays planks side by side mirrors the leader's planks and scroll until it selects one in the navtree
   given:
     - host: a booted app with the deck's flatten setting off, and a space containing three documents, shared with a guest
     - guest: a second browser profile with its own identity and the flatten setting off, a member of that space
@@ -868,12 +872,12 @@ test QA-6: Follow a peer's deck side by side
 
 ```mdl
 test QA-7: See a follow on both sides
-  desc: While the host follows the guest, both sides show it in indigo, in Members and on every plank heading, and Stop clears it on both.
+  desc: While the host follows the guest, both sides show it in amber, in Members and on every plank heading, and Stop clears it on both.
   actors: human
   covers: [F-8.23, F-8.24]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follow shows on both sides, in Members and on every plank heading, until it stops
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follow shows on both sides and mirrors what the leader opens and scrolls, until Stop
   given:
     - host: a booted app with a space containing a document, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space
@@ -883,13 +887,13 @@ test QA-7: See a follow on both sides
       expect: the host's plank header shows the guest's avatar
     - name: Follow the guest
       do: On the host, open the Members companion and click Follow on the guest's row.
-      expect: the guest's row rises to the top of the host's list in indigo, with Stop in place of Jump and Follow, and the host's plank heading takes an indigo wash and underline
+      expect: the guest's row rises to the top of the host's list in amber, with Stop in place of Go to and Follow, and the host's plank heading takes an amber wash and underline
     - name: The guest sees the follow
       do: On the guest, open the Members companion.
-      expect: the Members tab showed an indigo dot, the list starts with the host under "Following you" in indigo, and the guest's plank heading takes the same wash
+      expect: the Members tab showed an amber dot, the list starts with the host under "Following you" in amber, and the guest's plank heading takes the same wash
     - name: Stop
       do: On the host, click Stop on the guest's row.
-      expect: the indigo clears and the Members tab's dot clears on both sides
+      expect: the amber clears and the Members tab's dot clears on both sides
 ```
 
 ---
@@ -1597,7 +1601,90 @@ decision D-79: Any plugin can add its own data to a session's location through a
 ```
 
 ```mdl
-decision D-80: `MembersContainer` takes an optional `heading`, on by default; a host that already names the panel, such as a dialog titled "Share", turns off the panel's own title and description.
+decision D-80: With no extension that navigates, the follow opens the attended object with one `LayoutOperation.Open` carrying the space's workspace, not a `SwitchWorkspace` followed by an `Open`. Fills in [D-79].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.21]
+  why: The workspace switch seeds the space's first plank, which raced the open that followed it; one operation lands the view in one write.
+```
+
+```mdl
+decision D-81: A `Locator`'s `reveal` answers whether it revealed the anchor, and the follow treats an anchor as shown only once its view says so; the markdown, sheet and project reveals answer false while their view has not mounted or cannot resolve the anchor. Fills in [D-79].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.21]
+  why: An editor that mounted after the five-second window kept the position it opened at, because the follow had already recorded the anchor as revealed; it was corrected only when the leader moved.
+  rejected:
+    - A longer mount window; a slow document can take longer than any fixed window.
+    - Markdown applying a pending anchor when its editor mounts; each type would need its own pending store.
+```
+
+```mdl
+decision D-82: The follow owns the clock: the view it hands each extension carries `now`, which advances on every tick, and the mount window is `FOLLOW_MOUNT_TIMEOUT` in app-toolkit. An extension re-applies what has not mounted from those, with no timer of its own. Fills in [D-79].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.21]
+  why: The core and the deck's extension each ran a 500 ms interval and a five-second mount window, so every extension would repeat them.
+  rejected:
+    - The view listing the follower's paths still mounting; the deck's window runs from when it lands the view, which the core does not know.
+```
+
+```mdl
+decision D-83: The follow's colour is the palette's amber, in every place [D-73] used indigo.
+  date: 2026-11-15
+  by: user:wittjosiah
+  supersedes: D-73
+  affects: [F-8.24]
+  why: Indigo sat beside the accent blue of the Share button and the selection, so the follow ring read as part of them.
+  rejected:
+    - Fuchsia, which stands apart from blue but sits close to red avatars.
+```
+
+```mdl
+decision D-84: The viewers list and the Members companion are one `PresenceList`: the same toolbar (title, sessions toggle, one action of the host's), the leader's row with Stop and Paused, the "Following you" group and the follow's wash; the viewers list is scoped to its object. Rows select nothing and take no hover, so only the keyboard highlight marks a person's rows. Fills in [D-49], [D-75].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-55
+  affects: [F-8.11, F-8.18, F-8.23]
+  why: Selecting a row did nothing, and the two lists had drifted apart: only the companion washed the follow or carried Stop, and each built its own sessions toggle.
+  rejected:
+    - Sharing only the rows and keeping a list per host, which left the follow drawn two ways.
+    - Another list component; the design system builds every list on `Listbox`, whose `none` selection keeps keyboard movement.
+```
+
+```mdl
+decision D-85: Jump and Go to are one action, Go to, on every row: it opens the peer's object when the deck does not show it, then reveals their anchor with the caret and focus, asking a plank it opened again every 100 ms until it mounts or the follow's mount window (`FOLLOW_MOUNT_TIMEOUT`) ends. An open object with nothing to reveal scrolls its plank into view.
+  date: 2026-11-15
+  by: user:wittjosiah
+  supersedes: D-14
+  affects: [F-8.9, F-8.10]
+  why: Both took you to the peer, and which one a row showed depended only on what this deck had open. D-14 split them because a plank opened by the action had not mounted when it returned; a reveal that answers whether it landed, retried through the mount window as the follow does, closes that gap.
+  rejected:
+    - Keeping Jump as the name; it reads oddly for an object that first has to open.
+
+decision D-86: Clicks, keys and Escape in the presence indicator and its viewers list leave a follow running; the elements carry `data-follow-keep`, and follow.ts skips input inside them.
+  date: 2026-11-15
+  by: agent:claude-opus-5-5
+  affects: [F-8.22, F-8.23]
+  why: The indicator sits in the plank heading, inside the deck, so clicking an avatar ended the follow before the list opened, and a follower could never see the leader's row with Stop that F-8.23 puts at the top of that list.
+  rejected:
+    - Exempting the whole plank heading; its other controls change what the follower sees.
+
+decision D-87: The presence list heads each section: Following (the leader), Following you (followers), and Viewing for the rest of the viewers list's viewers when a follow section is above them. Stop is a primary button.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-8.23]
+  why: The viewers list's other viewers had no heading, so they read as part of the Following you group above them, and an outline Stop barely showed on the leader's amber row.
+  rejected:
+    - Always heading the viewers list's viewers; with no follow, Viewing repeats the list's own title.
+```
+
+```mdl
+decision D-88: `MembersContainer` takes an optional `heading`, on by default; a host that already names the panel, such as a dialog titled "Share", turns off the panel's own title and description.
   date: 2026-11-14
   by: agent:claude-code
   for: user:wittjosiah
@@ -1606,7 +1693,7 @@ decision D-80: `MembersContainer` takes an optional `heading`, on by default; a 
 ```
 
 ```mdl
-decision D-81: `SpacePresence` takes the avatars' size, so a host with a smaller header than a plank's, such as the diagram app's pill, shows the same list.
+decision D-89: `SpacePresence` takes the avatars' size, so a host with a smaller header than a plank's, such as the diagram app's pill, shows the same list.
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
@@ -1615,27 +1702,7 @@ decision D-81: `SpacePresence` takes the avatars' size, so a host with a smaller
 ```
 
 ```mdl
-decision D-82: The followed person's row in SpacePresence's list carries the Members companion's Stop and Paused, from one shared control.
-  date: 2026-11-15
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.25, SpacePresence]
-  why: The diagram app follows from this list and has no Members companion, so once a follow started its row showed nothing and only Escape ended it; Composer's plank-heading list had the same gap.
-```
-
-```mdl
-decision D-83: SpacePresence's list closes when one of its actions, or Stop, runs. Fills in [D-82].
-  date: 2026-11-15
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.26, SpacePresence]
-  why: After Follow the list stayed open over the view, and the two ways to close it, Escape and a click on the object, are both ways a follow ends ([F-8.22]), so a follow from this list ended as soon as the list was put away.
-  rejected:
-    - Exempting the list's own dismissal from ending a follow: the follower's Escape and clicks would then mean different things depending on what was open before.
-```
-
-```mdl
-decision D-84: The space surface module declares the Members companion's role, which it binds.
+decision D-90: The space surface module declares the Members companion's role, which it binds.
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
@@ -1644,21 +1711,23 @@ decision D-84: The space surface module declares the Members companion's role, w
 ```
 
 ```mdl
-decision D-85: The followed person's row in SpacePresence's list comes first and stays while they are on another object. Fills in [D-82].
+decision D-91: `SpacePresence` takes `everyone`, which lists everyone attending something in the space. Fills in [D-89].
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-8.25, SpacePresence]
-  why: The list shows the object's viewers, so a leader who moved to something the follower could not show, which is when the follow pauses, dropped out of it and took Paused and Stop with them; the Members companion keeps its leader row the same way.
+  why: The diagram app's pill is its only presence list and has no Members companion, so a list of one diagram's viewers left nobody to follow onto another diagram.
 ```
 
 ```mdl
-decision D-86: `SpacePresence` takes `everyone`, which lists everyone attending something in the space. Fills in [D-81].
+decision D-92: A session sends its viewing message as soon as it hears a session it had not heard from in the space, and keeps one heartbeat however its broadcast is set up again.
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.27, SpacePresence]
-  why: The diagram app's pill is its only presence list and has no Members companion, so a list of one diagram's viewers left nobody to follow onto another diagram.
+  affects: [F-8.14]
+  why: A peer who joined saw nobody until their next heartbeat, up to 30 seconds. And setting the broadcast up read the location extensions' atom, whose first build set the broadcast up again from inside; the outer setup then dropped the inner one's handle, so a second heartbeat ran forever with what the session showed at boot, and every 30 seconds peers saw it attend nothing until the live heartbeat corrected them.
+  rejected:
+    - Read the extensions' atom before subscribing to it: it fixes this read only, and the next atom a send reads would bring the leak back.
 ```
 
 ## Appendix: Extension Definitions
@@ -1724,15 +1793,3 @@ ext op
     requires?: ServiceList
     note?: Prose
 ```
-
-```mdl
-decision D-87: A session sends its viewing message as soon as it hears a session it had not heard from in the space, and keeps one heartbeat however its broadcast is set up again.
-  date: 2026-11-15
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.14]
-  why: A peer who joined saw nobody until their next heartbeat, up to 30 seconds. And setting the broadcast up read the location extensions' atom, whose first build set the broadcast up again from inside; the outer setup then dropped the inner one's handle, so a second heartbeat ran forever with what the session showed at boot, and every 30 seconds peers saw it attend nothing until the live heartbeat corrected them.
-  rejected:
-    - Read the extensions' atom before subscribing to it: it fixes this read only, and the next atom a send reads would bring the leak back.
-```
-

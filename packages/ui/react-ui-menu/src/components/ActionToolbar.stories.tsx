@@ -609,6 +609,45 @@ export const Narrow: Story = {
   },
 };
 
+const SeparatorsStory = () => {
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action('snap', { label: 'Snap', icon: 'ph--magnet--regular', placement: { collapse: 1 } }, () => {})
+        .separator('line')
+        .action('axes', { label: 'Axes', icon: 'ph--vector-two--regular', placement: { collapse: 1 } }, () => {})
+        .separator('line')
+        .custom('zoom', { label: 'Zoom' }, () => <Toolbar.Text classNames='flex-none'>Zoom</Toolbar.Text>)
+        .separator('line')
+        .action('grid', { label: 'Grid', icon: 'ph--grid-four--regular', placement: { collapse: 1 } }, () => {})
+        .separator('gap')
+        .action('guides', { label: 'Guides', icon: 'ph--squares-four--regular', placement: { collapse: 1 } }, () => {})
+        .separator('line')
+        .custom('theme', { label: 'Theme' }, () => <Toolbar.Text classNames='flex-none'>Theme</Toolbar.Text>)
+        .build(),
+    [],
+  );
+  return (
+    <div className='p-8 w-[8rem]'>
+      <ActionToolbar {...menu} alwaysActive data-testid='separators' />
+    </div>
+  );
+};
+
+/**
+ * Collapsing the items between rules leaves none of them: a rule stays only between two items, and of the rules left
+ * between two, the gap.
+ */
+export const Separators: Story = {
+  render: () => <SeparatorsStory />,
+  play: async ({ canvasElement }) => {
+    const row = within(canvasElement).getByTestId('separators');
+    await waitFor(() => expect(labels(canvasElement)).toEqual(['More']));
+    await expect(row.querySelector('[data-scope=separator]')).toBeNull();
+    await expect(row.querySelectorAll('[data-part=gap]')).toHaveLength(1);
+  },
+};
+
 /** The same graph rendered as a menu: named groups are submenus. */
 export const AsMenu: Story = {
   render: () => <LayoutStory contributors={['review']} asMenu />,

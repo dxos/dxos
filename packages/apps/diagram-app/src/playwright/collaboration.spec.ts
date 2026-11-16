@@ -114,8 +114,8 @@ test.describe('Collaboration', () => {
     await test.step('Ben follows Ada', async () => {
       await ben.follow();
       await expect.poll(() => ben.path(), { timeout: 20_000 }).toBe(ada.path());
-      await expect.poll(() => ben.accent()).toBe('indigo');
-      await expect.poll(() => ada.accent(), { timeout: 20_000 }).toBe('indigo');
+      await expect.poll(() => ben.accent()).toBe('amber');
+      await expect.poll(() => ada.accent(), { timeout: 20_000 }).toBe('amber');
     });
 
     await test.step('Ada moves', async () => {

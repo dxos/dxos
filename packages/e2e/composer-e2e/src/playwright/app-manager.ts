@@ -429,8 +429,20 @@ export class AppManager {
   async createSpaceInvitation(): Promise<string> {
     this._invitationCode = new Trigger<string>();
     this._authCode = new Trigger<string>();
-    await this.page.getByTestId('membersContainer.createInvitation.more').click();
-    await this.page.getByTestId('membersContainer.inviteOne').click();
+    const more = this.page.getByTestId('membersContainer.createInvitation.more');
+    const inviteOne = this.page.getByTestId('membersContainer.inviteOne');
+    // A click on the members page can land while a new space settles, and the contact picker loads lazily and can
+    // push the trigger down mid-click, so either click is retried.
+    await expect(async () => {
+      if (!(await more.isVisible())) {
+        await this.shareSpace(2_000);
+      }
+      if ((await more.getAttribute('aria-expanded', { timeout: 2_000 })) !== 'true') {
+        await more.click({ timeout: 2_000 });
+      }
+      await expect(inviteOne).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
+    await inviteOne.click();
     await this.page.getByTestId('membersContainer.createInvitation').click();
     return await this._invitationCode.wait();
   }
@@ -950,8 +962,11 @@ export class AppManager {
     await this.openSettings();
     const item = this.page.getByTestId(`settings.${plugin}`);
     await expect(item).toBeVisible();
-    await item.click();
-    await expect(item).toHaveAttribute('aria-selected', 'true');
+    // The settings tree can re-render under the first click, so it is retried until the row is selected.
+    await expect(async () => {
+      await item.click({ timeout: 2_000 });
+      await expect(item).toHaveAttribute('aria-selected', 'true', { timeout: 2_000 });
+    }).toPass({ timeout: 15_000 });
   }
 
   /** The registry's dev-plugin URL field — an ordinary synced plugin setting. */

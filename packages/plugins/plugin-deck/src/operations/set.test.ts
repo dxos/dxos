@@ -5,7 +5,7 @@
 // @vitest-environment happy-dom
 
 import * as Effect from 'effect/Effect';
-import { describe, test } from 'vitest';
+import { beforeEach, describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -19,7 +19,7 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
 import * as DeckPlugin from '#meta';
-import { DeckCapabilities } from '#types';
+import { DeckCapabilities, DeckOperation } from '#types';
 
 await Harness.preload({ plugins: [DeckPlugin.make()] });
 
@@ -29,17 +29,17 @@ const WORKSPACE = 'root/ws';
 const PLANKS = [`${WORKSPACE}/docA`, `${WORKSPACE}/docB`];
 
 describe('LayoutOperation.Set', () => {
+  // The URL outlives a test, and an app boots by projecting it, which would attend the last test's chain end.
+  beforeEach(() => window.history.replaceState(null, '', '/'));
+
   test('focuses the plank attention falls to by default', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({ plugins: [DocsPlugin(), DeckPlugin.make()] });
     expect(await setDeck(harness)).toEqual({ active: PLANKS, scrollIntoView: { id: PLANKS[0] } });
   });
 
-  test('focuses no plank with `focus: false`', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [DocsPlugin(), DeckPlugin.make()] });
-    expect(await setDeck(harness, false)).toEqual({ active: PLANKS, scrollIntoView: undefined });
-  });
-
-  test('`focus: false` clears a scroll intent left pending by an earlier navigation', async ({ expect }) => {
+  test('`focus: false` focuses no plank, clearing a scroll intent left pending by an earlier navigation', async ({
+    expect,
+  }) => {
     await using harness = await Harness.createComposerTestApp({ plugins: [DocsPlugin(), DeckPlugin.make()] });
     await harness.runPromise(Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: WORKSPACE }));
     const registry = harness.get(Capabilities.AtomRegistry);
@@ -47,7 +47,10 @@ describe('LayoutOperation.Set', () => {
     registry.update(ephemeralAtom, (ephemeral) => ({ ...ephemeral, scrollIntoView: { id: PLANKS[1] } }));
 
     await harness.runPromise(Operation.invoke(LayoutOperation.Set, { subject: PLANKS, focus: false }));
-    expect(registry.get(ephemeralAtom).scrollIntoView).toBeUndefined();
+    expect(registry.get(ephemeralAtom)).toMatchObject({
+      open: { [WORKSPACE]: { active: PLANKS } },
+      scrollIntoView: undefined,
+    });
   });
 
   test('a sliding deck reports a front only while it was measured against the planks it shows', async ({ expect }) => {
@@ -76,14 +79,14 @@ describe('LayoutOperation.Set', () => {
 type TestApp = Awaited<ReturnType<typeof Harness.createComposerTestApp>>;
 
 /** Sets the deck to {@link PLANKS} in {@link WORKSPACE}, answering the plank the write asks to focus. */
-const setDeck = async (harness: TestApp, focus?: false) => {
-  await harness.runPromise(Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: WORKSPACE }));
+const setDeck = async (harness: TestApp) => {
   const registry = harness.get(Capabilities.AtomRegistry);
   const ephemeralAtom = harness.get(DeckCapabilities.EphemeralState);
+  // The app restores the URL it booted at once that handler loads; this lands that restore first, so it does not
+  // re-project the URL the write pushes.
+  await harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, {}));
   registry.update(ephemeralAtom, (ephemeral) => ({ ...ephemeral, scrollIntoView: undefined }));
-  await harness.runPromise(
-    Operation.invoke(LayoutOperation.Set, { subject: PLANKS, ...(focus === false && { focus }) }),
-  );
+  await harness.runPromise(Operation.invoke(LayoutOperation.Set, { subject: PLANKS, workspace: WORKSPACE }));
   const ephemeral = registry.get(ephemeralAtom);
   return { active: ephemeral.open[WORKSPACE]?.active, scrollIntoView: ephemeral.scrollIntoView };
 };
@@ -91,8 +94,10 @@ const setDeck = async (harness: TestApp, focus?: false) => {
 /** A workspace of two documents, each addressable by URL. */
 const DocsPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.docs'), name: 'Docs' })).pipe(
   Plugin.addModule<void>(
-    Capability.inlineModule('docs', { provides: [AppCapabilities.AppGraphBuilder] }, () =>
-      Effect.gen(function* () {
+    Capability.inlineModule(
+      'docs',
+      { provides: [AppCapabilities.AppGraphBuilder] },
+      Effect.fnUntraced(function* () {
         const workspaces = yield* AppGraphBuilder.createExtension({
           id: 'workspaces',
           match: GraphNodeMatcher.whenRoot,

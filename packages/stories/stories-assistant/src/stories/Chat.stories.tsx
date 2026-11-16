@@ -20,13 +20,13 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import {
   Calculate,
   CalculatorSkill,
-  ModuleContainer,
   config,
   createDecorators,
   findPromptEditor,
@@ -35,9 +35,9 @@ import {
   storyParameters,
 } from '../testing/index.ts';
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Chat',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 

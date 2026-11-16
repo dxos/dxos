@@ -35,7 +35,7 @@ const variant: IllustratorCapabilities.DrawingVariant = {
 const variant3d: IllustratorCapabilities.DrawingVariant = {
   ...variant,
   id: `${Canvas.SCENE_SCHEMA}#3d`,
-  label: '3D Canvas',
+  label: 'Canvas (3D)',
   icon: 'ph--cube--regular',
   createOnly: true,
   createCanvas: () => addCanvas({ dimension: '3d' }),

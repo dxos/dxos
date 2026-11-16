@@ -81,6 +81,17 @@ const scrolledToEnd = (page) =>
   plank(page)
     .locator('.cm-scroller')
     .evaluate((element) => element.scrollHeight - element.clientHeight - element.scrollTop < 120);
+/** The first word of the topmost line in view, which names its section ("Risks note 3: …" → "Risks"). */
+const topSection = (page) =>
+  plank(page)
+    .locator('.cm-scroller')
+    .evaluate((scroller) => {
+      const top = scroller.getBoundingClientRect().top;
+      const line = [...scroller.querySelectorAll('.cm-line')].find(
+        (line) => line.getBoundingClientRect().bottom > top + 1,
+      );
+      return line?.textContent?.split(' ')[0];
+    });
 /** The graph paths of the deck's planks, in order. */
 const planks = (page) =>
   page.getByTestId('deck.plank').evaluateAll((planks) => planks.map((plank) => plank.dataset.attendableId));
@@ -145,8 +156,8 @@ const unflatten = async (peer) => {
       page.evaluate((workspace) => {
         const { manager } = globalThis.composer;
         const [layout] = manager.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.layout' });
-        const { flat, workspace: current } = manager.registry.get(layout);
-        return flat === false && current === workspace;
+        const [view] = manager.capabilities.getAll({ identifier: 'org.dxos.plugin.deck.capability.view' });
+        return manager.registry.get(view).flat === false && manager.registry.get(layout).workspace === workspace;
       }, workspace),
     { what: 'the space to open with its deck unflattened' },
   );
@@ -368,12 +379,12 @@ export const steps = [
     run: async ({ peers: { alice, bob } }) => {
       await alice.click(plank(alice.page).getByText('Pricing note 3', { exact: false }).first());
       await alice.page.keyboard.press('ControlOrMeta+End');
-      for (const [peer, who] of [
-        [alice, 'Alice’s'],
-        [bob, 'Bob’s'],
-      ]) {
-        await waitFor(() => scrolledToEnd(peer.page), { what: `${who} view to reach the end` });
-      }
+      await waitFor(() => scrolledToEnd(alice.page), { what: 'Alice’s view to reach the end' });
+      // Bob's plank is narrower, so his lines wrap more and the end of the document sits further down; he keeps her
+      // top line, not her distance from the end.
+      await waitFor(async () => (await topSection(bob.page)) === (await topSection(alice.page)), {
+        what: 'Bob’s top line to reach Alice’s section',
+      });
     },
     pace: 3_500,
   },

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect, test } from '@playwright/test';
+import { type Locator, expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager.ts';
 import { Markdown, Projects } from './plugins/index.ts';
@@ -25,6 +25,14 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   await navigateToNewDocument(host);
 };
 
+/** The editor is read-only until the replicated document binds to it, and can remount once while the guest navigates. */
+const fillWhenEditable = async (textbox: Locator, text: string) => {
+  await expect(async () => {
+    await expect(textbox).toBeEditable({ timeout: 5_000 });
+    await textbox.fill(text, { timeout: 5_000 });
+  }).toPass({ timeout: 45_000 });
+};
+
 const navigateToNewDocument = async (app: AppManager) => {
   await app.navigateToObject(0); // New document.
 };
@@ -41,26 +49,6 @@ const unflattenDeck = async (app: AppManager) => {
 /** The graph paths of the deck's planks, in order. */
 const getPlanks = (app: AppManager) =>
   app.page.getByTestId('deck.plank').evaluateAll((planks) => planks.map((plank) => plank.dataset.attendableId));
-
-/** The planks of a sliding deck that are not folded and have at least half their width inside the deck's viewport. */
-const getShownPlanks = (app: AppManager) =>
-  app.page.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('[role="listitem"][data-object-id]')]
-      .filter((tile) => {
-        let viewport = tile.parentElement;
-        while (viewport && !['auto', 'scroll'].includes(getComputedStyle(viewport).overflowX)) {
-          viewport = viewport.parentElement;
-        }
-        const rect = tile.getBoundingClientRect();
-        const bounds = viewport?.getBoundingClientRect() ?? { left: 0, right: window.innerWidth };
-        const shown = Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left);
-        return !tile.hasAttribute('data-folded') && shown >= rect.width / 2;
-      })
-      .map((tile) => tile.getAttribute('data-object-id')),
-  );
-
-/** The plank a sliding deck is scrolled to: the first one shown. */
-const getFrontPlank = async (app: AppManager) => (await getShownPlanks(app))[0] ?? undefined;
 
 test.describe('Collaboration tests', () => {
   let host: AppManager;
@@ -285,7 +273,7 @@ test.describe('Collaboration tests', () => {
     ]);
   });
 
-  test("a peer's avatar opens the viewers list and jumps to their selection", { tag: ['@space:QA-3'] }, async () => {
+  test("a peer's avatar opens the viewers list and goes to their selection", { tag: ['@space:QA-3'] }, async () => {
     test.setTimeout(120_000);
 
     await host.createSpace();
@@ -299,9 +287,7 @@ test.describe('Collaboration tests', () => {
     await guest.expandSection('spacePlugin.collectionsSection');
     await navigateToNewDocument(guest);
     const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
-    await guestTextbox.waitFor();
-    await guestTextbox.focus();
-    await guestTextbox.fill('Hello from the guest');
+    await fillWhenEditable(guestTextbox, 'Hello from the guest');
 
     const hostPresence = hostPlank.membersPresence();
     await expect(hostPresence).toHaveCount(1, { timeout: 45_000 });
@@ -309,10 +295,8 @@ test.describe('Collaboration tests', () => {
 
     const row = host.page.getByTestId('spacePlugin.presence.row');
     await expect(row).toHaveCount(1);
-    await expect(row).toHaveAttribute('aria-selected', 'true');
 
-    // The guest's document is open on the host, so the action is Jump rather than Go to.
-    await row.getByTestId('spacePlugin.presence.jump').click({ timeout: 30_000 });
+    await row.getByTestId('spacePlugin.presence.goTo').click({ timeout: 30_000 });
     await expect(hostTextbox).toBeFocused();
 
     await hostPresence.first().click();
@@ -327,7 +311,7 @@ test.describe('Collaboration tests', () => {
   });
 
   test(
-    "the sessions toggle lists a peer's sessions under their row, each with its own Jump",
+    "the sessions toggle lists a peer's sessions under their row, each with its own Go to",
     { tag: ['@space:QA-4'] },
     async () => {
       test.setTimeout(150_000);
@@ -342,9 +326,7 @@ test.describe('Collaboration tests', () => {
       await guest.expandSection('spacePlugin.collectionsSection');
       await navigateToNewDocument(guest);
       const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
-      await guestTextbox.waitFor();
-      await guestTextbox.focus();
-      await guestTextbox.fill('Hello from the guest');
+      await fillWhenEditable(guestTextbox, 'Hello from the guest');
 
       // A second tab of the guest's is a second session of the same identity.
       const secondTab = await guest.page.context().newPage();
@@ -364,16 +346,16 @@ test.describe('Collaboration tests', () => {
       await expect(sessions).toHaveCount(2, { timeout: 45_000 });
       // Listed, the actions move from the person's row to their sessions' rows.
       await expect(row).toHaveCount(1);
-      await expect(row.getByTestId('spacePlugin.presence.jump')).toHaveCount(0);
+      await expect(row.getByTestId('spacePlugin.presence.goTo')).toHaveCount(0);
 
-      await sessions.first().getByTestId('spacePlugin.presence.jump').click({ timeout: 30_000 });
+      await sessions.first().getByTestId('spacePlugin.presence.goTo').click({ timeout: 30_000 });
       await expect(hostTextbox).toBeFocused();
     },
   );
 
   test(
-    'following a peer opens what they open and mirrors their scroll until Escape or leaving the space',
-    { tag: ['@space:QA-5'] },
+    'a follow shows on both sides and mirrors what the leader opens and scrolls, until Stop',
+    { tag: ['@space:QA-5', '@space:QA-7'] },
     async () => {
       test.setTimeout(150_000);
 
@@ -389,9 +371,21 @@ test.describe('Collaboration tests', () => {
       const rows = sidebar.getByTestId('spacePlugin.presence.row');
       await host.openCompanion('members');
       await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
+
+      // The follower's row for the leader carries Stop, its Members tab a dot, and its plank headings the follow's hue.
+      const hostFollow = sidebar.locator('[data-member][data-follow]');
+      await expect(hostFollow.getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
       await expect(host.getCompanionTab('members')).toHaveAttribute('data-badge', '');
-      await expect(rows.first().getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
-      await expect(rows.first()).toHaveAttribute('aria-selected', 'true');
+      const hostHeadings = host.page.locator('[data-testid="deck.plank"] [data-accent]');
+      await expect(hostHeadings.first()).toHaveAttribute('data-accent', 'amber');
+
+      // The leader sees it too: the dot, its follower under "Following you", and the same heading.
+      await expect(guest.getCompanionTab('members')).toHaveAttribute('data-badge', '', { timeout: 30_000 });
+      await guest.openCompanion('members');
+      const guestFollowers = guest.page.getByTestId('spacePlugin.presence.followers');
+      await expect(guestFollowers.locator('[data-member][data-follow]')).toHaveCount(1);
+      const guestHeadings = guest.page.locator('[data-testid="deck.plank"] [data-accent]');
+      await expect(guestHeadings.first()).toHaveAttribute('data-accent', 'amber');
 
       // The guest opens the other document and scrolls to its end; the host's deck goes with them.
       await guest.navigateToObject(1);
@@ -411,30 +405,20 @@ test.describe('Collaboration tests', () => {
         .poll(() => hostScroller.evaluate((element) => element.scrollTop), { timeout: 30_000 })
         .toBeGreaterThan(0);
 
-      await host.page.keyboard.press('Escape');
-      await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
-      await expect(rows.getByTestId('spacePlugin.presence.stopFollowing')).toHaveCount(0);
+      // Stop clears the follow on both sides and gives the leader's row its actions back.
+      await hostFollow.getByTestId('spacePlugin.presence.stopFollowing').click();
+      await expect(hostFollow).toHaveCount(0);
       await expect(rows.getByTestId('spacePlugin.presence.follow')).toHaveCount(1);
-
-      // Leaving the space for Settings ends a follow too.
-      await rows.getByTestId('spacePlugin.presence.follow').click();
-      await expect(rows.first().getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
-      const workspace = host.workspaceId;
-      await host.openSettings();
-      await host.page.locator(`[data-testid="spacePlugin.space"][data-object-id="root/${workspace}"]`).click();
-      await expect.poll(() => host.workspaceId).toBe(workspace);
+      await expect(hostHeadings).toHaveCount(0);
       await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
-      // Clicking the tab of an open companion would close it.
-      if ((await sidebar.getAttribute('data-state')) !== 'expanded') {
-        await host.openCompanion('members');
-      }
-      await expect(rows.getByTestId('spacePlugin.presence.stopFollowing')).toHaveCount(0);
-      await expect(rows.getByTestId('spacePlugin.presence.follow')).toHaveCount(1, { timeout: 30_000 });
+      await expect(guestFollowers).toHaveCount(0, { timeout: 30_000 });
+      await expect(guestHeadings).toHaveCount(0);
+      await expect(guest.getCompanionTab('members')).not.toHaveAttribute('data-badge', { timeout: 30_000 });
     },
   );
 
   test(
-    "a follower whose deck lays planks side by side mirrors the leader's planks and scroll until it scrolls or navigates",
+    "a follower whose deck lays planks side by side mirrors the leader's planks and scroll until it selects one in the navtree",
     { tag: ['@space:QA-6'] },
     async () => {
       test.setTimeout(150_000);
@@ -463,74 +447,28 @@ test.describe('Collaboration tests', () => {
       await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
       await expect.poll(() => getPlanks(host), { timeout: 30_000 }).toEqual(await getPlanks(guest));
 
-      // The guest brings the first plank to the front, then the last; the host's deck scrolls to show it. A wider deck
-      // shows more planks, so the host's front plank can differ from the guest's.
+      // The guest brings the first plank to the front, then the last; the host's deck scrolls to show it.
       const planks = await getPlanks(guest);
       for (const subject of [planks[0], planks[2]]) {
-        await guest.page.evaluate(
-          (subject) =>
-            globalThis.composer?.invoke?.('org.dxos.operation.appToolkit.scrollIntoView', { subject, focus: false }),
-          subject,
-        );
-        await expect.poll(() => getFrontPlank(guest), { timeout: 10_000 }).toBe(subject);
-        await expect.poll(() => getShownPlanks(host), { timeout: 30_000 }).toContain(subject);
+        await guest.page.evaluate((subject) => {
+          const invoke = globalThis.composer?.invoke;
+          if (!invoke) {
+            throw new Error('composer.invoke is not exposed');
+          }
+          return invoke('org.dxos.operation.appToolkit.scrollIntoView', { subject, focus: false });
+        }, subject);
+        await expect(host.page.locator(`[data-testid="deck.plank"][data-attendable-id="${subject}"]`)).toBeInViewport({
+          ratio: 0.5,
+          timeout: 30_000,
+        });
       }
 
-      // Scrolling the deck itself, outside any plank, ends the follow.
-      const follow = rows.getByTestId('spacePlugin.presence.follow');
+      // Selecting a document the deck already shows in the navtree, which scrolls the deck to it, ends the follow.
       const badge = host.getCompanionTab('members');
-      await host.page.getByTestId('deck.viewport').dispatchEvent('wheel', { deltaX: 200 });
-      await expect(badge).not.toHaveAttribute('data-badge');
-
-      // So does selecting a document the deck already shows in the navtree, which scrolls the deck to it.
-      await follow.click({ timeout: 30_000 });
       await expect(badge).toHaveAttribute('data-badge', '');
       await host.expandSection('spacePlugin.collectionsSection');
       await host.getObjectLinks().first().click();
       await expect(badge).not.toHaveAttribute('data-badge');
-    },
-  );
-
-  test(
-    'a follow shows on both sides, in Members and on every plank heading, until it stops',
-    { tag: ['@space:QA-7'] },
-    async () => {
-      test.setTimeout(150_000);
-
-      await host.createSpace();
-      await host.createObject({ type: 'Document' });
-      await perfomInvitation(host, guest);
-      await guest.expandSection('spacePlugin.collectionsSection');
-      await navigateToNewDocument(guest);
-
-      const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
-      const rows = sidebar.getByTestId('spacePlugin.presence.row');
-      await host.openCompanion('members');
-      await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
-
-      // The follower's row for the leader rises to the top in the follow's hue, with Stop in place of its actions.
-      const hostFollow = sidebar.locator('[data-member][data-follow]');
-      await expect(hostFollow).toHaveCount(1);
-      await expect(hostFollow.getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
-      const hostHeadings = host.page.locator('[data-testid="deck.plank"] [data-accent]');
-      await expect(hostHeadings.first()).toHaveAttribute('data-accent', 'indigo');
-
-      // The leader sees it too: the Members dot, its follower under "Following you", and the same heading.
-      await expect(guest.getCompanionTab('members')).toHaveAttribute('data-badge', '', { timeout: 30_000 });
-      await guest.openCompanion('members');
-      const guestFollowers = guest.page.getByTestId('spacePlugin.presence.followers');
-      await expect(guestFollowers).toContainText('Following you');
-      await expect(guestFollowers.locator('[data-member][data-follow]')).toHaveCount(1);
-      const guestHeadings = guest.page.locator('[data-testid="deck.plank"] [data-accent]');
-      await expect(guestHeadings.first()).toHaveAttribute('data-accent', 'indigo');
-
-      await hostFollow.getByTestId('spacePlugin.presence.stopFollowing').click();
-      await expect(hostFollow).toHaveCount(0);
-      await expect(hostHeadings).toHaveCount(0);
-      await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
-      await expect(guestFollowers).toHaveCount(0, { timeout: 30_000 });
-      await expect(guestHeadings).toHaveCount(0);
-      await expect(guest.getCompanionTab('members')).not.toHaveAttribute('data-badge', { timeout: 30_000 });
     },
   );
 });

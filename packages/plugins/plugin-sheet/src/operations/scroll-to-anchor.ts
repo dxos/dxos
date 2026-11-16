@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = She
       const gridInstances = yield* Capability.get(SheetCapabilities.GridInstances);
       const entry = gridInstances.get(subject);
       if (!entry) {
-        return;
+        return false;
       }
 
       const range = SheetUtil.rangeFromAnchor(entry.sheet, anchor);
@@ -23,7 +23,7 @@ const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = She
         if (range) {
           entry.grid.scrollToCoord({ coords: { ...range.from, plane: 'grid' } });
         }
-        return;
+        return !!range;
       }
 
       // Cells mark their threads by URI, so the grid highlights the cells whose `data-refs` hold this one.
@@ -31,6 +31,7 @@ const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = She
       if (range) {
         entry.grid.setFocus({ ...range.to, plane: 'grid' }, true);
       }
+      return !!range;
     }),
   ),
 );

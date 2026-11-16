@@ -276,7 +276,7 @@ export const steps = [
       await bob.click(bob.page.getByTestId('spacePlugin.presence.member').first());
       await bob.click(bob.page.getByTestId('spacePlugin.presence.follow').first());
       await waitFor(
-        async () => (await bob.page.getByTestId('diagram-app.pill').getAttribute('data-accent')) === 'indigo',
+        async () => (await bob.page.getByTestId('diagram-app.pill').getAttribute('data-accent')) === 'amber',
         {
           what: "Bob's pill to take the follow's accent",
         },

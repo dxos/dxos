@@ -45,7 +45,10 @@ export const LOCATION_BROADCAST_INTERVAL = 1_000;
 export const FOLLOW_BROADCAST_INTERVAL = 100;
 
 /** The hue that marks every follow, on the leader's screen and each follower's alike. */
-export const FOLLOW_HUE: ChromaticPalette = 'indigo';
+export const FOLLOW_HUE: ChromaticPalette = 'amber';
+
+/** Presence controls (`data-follow-keep`) are for looking at the follow, so input in them never ends it. */
+export const FOLLOW_KEEP_SELECTOR = '[data-follow-keep]';
 
 /** How long a follower waits for its leader to attend an object in the space again before it stops following. */
 export const FOLLOW_LOST_TIMEOUT = 5_000;
@@ -561,26 +564,56 @@ export const getFollowGroupMembers = (group: FollowGroup, identityKey: string): 
     [group.leader, ...group.followers.map((follower) => follower.identityKey)].filter((key) => key !== identityKey),
   );
 
-export type LocationScheduler = {
-  /** Notes that `key`'s location may have changed; a change goes out with the next send. */
-  schedule: (key: string) => void;
+export type SendScheduler = {
+  /** Adds `spaceIds` to the next send, starting its timer if none is running. */
+  schedule: (spaceIds: Iterable<string>) => void;
   dispose: () => void;
 };
 
 /**
- * Batches location changes of `keys` into one send per `interval()` ({@link LOCATION_BROADCAST_INTERVAL} by default),
- * to the spaces of the keys whose location differs from the last one seen, so an unchanged location (a remote edit, a
- * resize) sends nothing.
+ * Batches sends into one per `interval()` ({@link LOCATION_BROADCAST_INTERVAL} by default), to every space asked for
+ * since the last. The interval is read when a send is scheduled, so a session that gains a follower speeds up.
+ */
+export const makeSendScheduler = (
+  send: (spaceIds: ReadonlySet<string>) => void,
+  interval: () => number = () => LOCATION_BROADCAST_INTERVAL,
+): SendScheduler => {
+  const pending = new Set<string>();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return {
+    schedule: (spaceIds) => {
+      for (const spaceId of spaceIds) {
+        pending.add(spaceId);
+      }
+      if (pending.size === 0) {
+        return;
+      }
+      timer ??= setTimeout(() => {
+        timer = undefined;
+        const due = new Set(pending);
+        pending.clear();
+        send(due);
+      }, interval());
+    },
+    dispose: () => clearTimeout(timer),
+  };
+};
+
+export type LocationScheduler = {
+  /** Notes that `key`'s location may have changed; a change goes out with the next send. */
+  schedule: (key: string) => void;
+};
+
+/**
+ * Schedules a send through `sends` for the spaces of the keys whose location differs from the last one seen, so an
+ * unchanged location (a remote edit, a resize) sends nothing.
  */
 export const makeLocationScheduler = (
   keys: readonly string[],
   read: (key: string) => SpaceSchema.PeerLocation | undefined,
-  send: (spaceIds: ReadonlySet<string>) => void,
-  interval: () => number = () => LOCATION_BROADCAST_INTERVAL,
+  sends: SendScheduler,
 ): LocationScheduler => {
   const seen = new Map(keys.map((key) => [key, read(key)]));
-  const pending = new Set<string>();
-  let timer: ReturnType<typeof setTimeout> | undefined;
   return {
     schedule: (key) => {
       const location = read(key);
@@ -590,14 +623,7 @@ export const makeLocationScheduler = (
         return;
       }
       seen.set(key, location);
-      pending.add(spaceId);
-      timer ??= setTimeout(() => {
-        timer = undefined;
-        const spaceIds = new Set(pending);
-        pending.clear();
-        send(spaceIds);
-      }, interval());
+      sends.schedule([spaceId]);
     },
-    dispose: () => clearTimeout(timer),
   };
 };

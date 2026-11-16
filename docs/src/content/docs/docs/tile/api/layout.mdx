@@ -1,0 +1,77 @@
+---
+title: Layout
+description: Flex, Grid, Columns, Block, Container and Separator.
+---
+
+```ts
+import * as Layout from '@dxos/react-ui/Layout';
+```
+
+`Layout` arranges children without hand-written flex or grid classes. [Layout](/docs/tile/concepts/layout/) explains
+how the primitives fit with `Panel` and `ScrollArea`. Every primitive takes `classNames` and `asChild`.
+
+## `Layout.Flex`
+
+One axis.
+
+| Prop      | Type                                                     | Effect                                                    |
+| --------- | -------------------------------------------------------- | --------------------------------------------------------- |
+| `column`  | boolean                                                  | Stack on the block axis instead of the inline axis        |
+| `gap`     | `Gap`                                                    | Space between children, as a step of the spacing ramp     |
+| `align`   | `'start' \| 'center' \| 'end' \| 'baseline' \| 'stretch'` | Cross-axis alignment. Unset, children stretch             |
+| `justify` | main-axis alignment                                      | As CSS `justify-content`                                  |
+| `wrap`    | boolean                                                  | Wrap onto more lines                                      |
+| `grow`    | boolean                                                  | Take the parent's slack and clip what overflows           |
+| `center`  | boolean                                                  | Center on both axes                                       |
+
+## `Layout.Grid`
+
+Two axes.
+
+| Prop       | Type                                     | Effect                                                                     |
+| ---------- | ---------------------------------------- | -------------------------------------------------------------------------- |
+| `cols`     | number, `'subgrid'` or a list of tracks  | `3` for three equal columns; a list for anything else; `'subgrid'` to share the parent's |
+| `rows`     | as `cols`                                | The same for rows                                                          |
+| `gap`      | `Gap`                                    | Space between cells                                                        |
+| `align`    | as `Flex`                                | Alignment within each cell                                                 |
+| `center`   | boolean                                  | Center children on both axes                                               |
+| `grow`     | boolean                                  | Fill and clip the parent                                                   |
+| `contents` | boolean                                  | Render as `display: contents`, so children join the parent grid            |
+
+A track in the list is `'fill'` (the rest of the space, able to shrink), a number (a share of the rest, so `[2, 1]` is
+two thirds and one third), `'min'`, `'max'` or `'auto'` (sized to the content), or a length such as `'12rem'`.
+
+## `Gap`
+
+`'none'`, `'xs'`, `'sm'`, `'md'`, `'lg'`, `'xl'`, `'2xl'`, and `'form'` and `'form-section'` for the spacing between
+fields and between groups of fields.
+
+## `Layout.Container`
+
+Content between two gutters, so rows line up with the panel's edges.
+
+| Prop      | Type                                                       | Effect                                                    |
+| --------- | ---------------------------------------------------------- | --------------------------------------------------------- |
+| `gutter`  | `'rail' \| 'inset' \| 'sm' \| 'md' \| 'lg' \| 'none' \| 'inherit'` | The gutter width; `rail` leaves room for an icon column |
+| `layout`  | `'stack' \| 'row'`                                         | `row` lays a child's parts across the container's tracks  |
+| `size`    | `Size`                                                     | The size for everything inside. See [Density and sizes](/docs/tile/concepts/density-and-sizes/) |
+
+## `Layout.Block`
+
+One slot in a container's rail, sized so a passive icon and an icon button line up. `rail='start'` or `rail='end'`.
+
+## `Layout.Columns`
+
+A horizontal run of as many columns as fit, each an equal share of the width, which scrolls a column at a time when
+there are more.
+
+| Prop             | Type    | Effect                                         |
+| ---------------- | ------- | ---------------------------------------------- |
+| `minColumnWidth` | number  | The narrowest a column may be, in rem          |
+| `maxColumns`     | number  | The most columns shown at once                 |
+| `gap`            | number  | Space between columns, in rem                  |
+| `follow`         | boolean | Scroll to a newly added column                 |
+
+## `Layout.Separator`
+
+A rule between groups of content.

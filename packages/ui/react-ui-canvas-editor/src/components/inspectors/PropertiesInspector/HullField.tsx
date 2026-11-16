@@ -7,7 +7,7 @@ import React from 'react';
 import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '@dxos/react-ui-form';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
-import { HULL_SHAPES, HullNode } from '@dxos/scene';
+import { DEFAULT_HULL_SHAPE, HULL_SHAPES, HullNode } from '@dxos/scene';
 
 const SHAPE_LABELS: Record<(typeof HULL_SHAPES)[number], string> = { perimeter: 'Perimeter', box: 'Box' };
 const SHAPES = HULL_SHAPES.map((value) => ({ value, label: SHAPE_LABELS[value] }));
@@ -34,7 +34,7 @@ export const HullField: FormFieldRenderer = ({ type, label, jsonPath, readonly, 
       <Form.Field path={jsonPath} label={label} readonly={readonly}>
         <SelectControl
           items={SHAPES}
-          value={typeof shape === 'string' ? shape : HULL_SHAPES[0]}
+          value={typeof shape === 'string' ? shape : DEFAULT_HULL_SHAPE}
           readonly={readonly}
           onValueChange={(next) => {
             // A choice is a commit: the select never blurs, so it commits itself.

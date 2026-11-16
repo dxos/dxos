@@ -11,7 +11,9 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { FullPresence, type Member, type MemberPresenceProps, SmallPresence } from './SpacePresence.tsx';
+import { FOLLOW_HUE } from '../../util/index.ts';
+import { type Member, type PresenceRows } from './PresenceList.tsx';
+import { FullPresence, SmallPresence } from './SpacePresence.tsx';
 
 const viewers = (n: number, currentlyAttended = true): Member[] =>
   Array.from({ length: n }, (_, i) => {
@@ -49,6 +51,9 @@ const viewers = (n: number, currentlyAttended = true): Member[] =>
     };
   });
 
+/** One object's viewers, with no one in a follow. */
+const onObject = (members: Member[]): PresenceRows => ({ followers: [], groups: [{ members }] });
+
 const meta = {
   title: 'plugins/plugin-space/containers/SpacePresence',
   decorators: [withTheme()],
@@ -59,39 +64,37 @@ const meta = {
 
 export default meta;
 
-export const Full = (props: MemberPresenceProps) => {
-  const p: MemberPresenceProps = {
-    ...props,
-  };
+export const Full = ({ showSessions }: { showSessions?: boolean }) => {
+  const p = { showSessions };
 
   return (
     <div className='p-4'>
       <div className='p-trim-md'>
-        <FullPresence members={viewers(1)} {...p} />
+        <FullPresence {...onObject(viewers(1))} {...p} />
       </div>
       <div className='p-trim-md'>
-        <FullPresence members={viewers(2)} {...p} />
+        <FullPresence {...onObject(viewers(2))} {...p} />
       </div>
       <div className='p-trim-md'>
-        <FullPresence members={viewers(3)} {...p} />
+        <FullPresence {...onObject(viewers(3))} {...p} />
       </div>
       <div className='p-trim-md'>
-        <FullPresence members={viewers(3, false)} {...p} />
+        <FullPresence {...onObject(viewers(3, false))} {...p} />
       </div>
       <div className='p-trim-md'>
-        <FullPresence members={viewers(4)} {...p} />
+        <FullPresence {...onObject(viewers(4))} {...p} />
       </div>
       <div className='p-trim-md'>
-        <FullPresence members={viewers(5)} {...p} />
+        <FullPresence {...onObject(viewers(5))} {...p} />
       </div>
       <div className='p-trim-md'>
-        <FullPresence members={viewers(5, false)} {...p} />
+        <FullPresence {...onObject(viewers(5, false))} {...p} />
       </div>
       <div className='p-trim-md'>
-        <FullPresence members={viewers(10)} {...p} />
+        <FullPresence {...onObject(viewers(10))} {...p} />
       </div>
       <div className='p-trim-md'>
-        <FullPresence members={viewers(100)} {...p} />
+        <FullPresence {...onObject(viewers(100))} {...p} />
       </div>
     </div>
   );
@@ -99,61 +102,79 @@ export const Full = (props: MemberPresenceProps) => {
 
 export const Sessions = () => <Full showSessions />;
 
+const [leader, follower, ...others] = viewers(4);
+
+/** The follow on one object: the leader with Stop (and Paused), then the follow's other members, then the rest. */
+export const Follow = {
+  render: () => (
+    <div className='p-4'>
+      <FullPresence
+        leader={leader}
+        paused
+        followers={[follower]}
+        groups={[{ members: others }]}
+        followHue={FOLLOW_HUE}
+        followMembers={new Set([leader.identityKey, follower.identityKey].filter((key): key is string => !!key))}
+      />
+    </div>
+  ),
+  play: async () => {
+    await userEvent.click(screen.getAllByTestId('spacePlugin.presence.member')[0]);
+    await waitFor(() => expect(screen.getAllByTestId('spacePlugin.presence.row')).toHaveLength(4));
+    // Each section has its own heading, so the rest of the viewers never read as part of the follow.
+    const headings = document.querySelectorAll('[data-part="item-group-label"]');
+    await expect(Array.from(headings, (heading) => heading.textContent)).toEqual([
+      'Following',
+      'Following you',
+      'Viewing',
+    ]);
+  },
+};
+
 const keyboardMembers = viewers(4);
 
 /** The avatars and the "+N" overflow open the viewers list from the keyboard. */
 export const TestKeyboard = {
   render: () => (
     <div className='p-4'>
-      <FullPresence members={keyboardMembers} />
+      <FullPresence {...onObject(keyboardMembers)} />
     </div>
   ),
   play: async () => {
+    const rows = () => screen.queryAllByTestId('spacePlugin.presence.row');
     await userEvent.tab();
     const avatar = document.activeElement;
     await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(screen.getAllByTestId('spacePlugin.presence.row')).toHaveLength(4));
-    await expect(screen.getAllByTestId('spacePlugin.presence.row')[0]).toHaveAttribute('aria-selected', 'true');
+    await waitFor(() => expect(rows()).toHaveLength(4));
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryAllByTestId('spacePlugin.presence.row')).toHaveLength(0));
+    await waitFor(() => expect(rows()).toHaveLength(0));
     // Closing returns the keyboard to the avatar that opened the list, and so does tabbing back out of it.
     await waitFor(() => expect(document.activeElement).toBe(avatar));
     await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(screen.getAllByTestId('spacePlugin.presence.row')).toHaveLength(4));
-    await expect(screen.getAllByTestId('spacePlugin.presence.row')[0]).toHaveAttribute('aria-selected', 'true');
+    await waitFor(() => expect(rows()).toHaveLength(4));
     await waitFor(() => expect(document.activeElement).not.toBe(avatar));
     await userEvent.tab({ shift: true });
     await waitFor(() => expect(document.activeElement).toBe(avatar));
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryAllByTestId('spacePlugin.presence.row')).toHaveLength(0));
+    await waitFor(() => expect(rows()).toHaveLength(0));
 
-    // Reopening from an avatar highlights its row again, even after another row was selected.
+    // A row's buttons act on it, so clicking the row selects nothing.
     await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(screen.getAllByTestId('spacePlugin.presence.row')).toHaveLength(4));
-    await userEvent.click(screen.getAllByTestId('spacePlugin.presence.row')[1]);
-    await expect(screen.getAllByTestId('spacePlugin.presence.row')[1]).toHaveAttribute('aria-selected', 'true');
+    await waitFor(() => expect(rows()).toHaveLength(4));
+    await userEvent.click(rows()[1]);
+    await expect(rows()[1]).not.toHaveAttribute('aria-selected', 'true');
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryAllByTestId('spacePlugin.presence.row')).toHaveLength(0));
-    avatar instanceof HTMLElement && avatar.focus();
-    await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(screen.getAllByTestId('spacePlugin.presence.row')).toHaveLength(4));
-    await expect(screen.getAllByTestId('spacePlugin.presence.row')[0]).toHaveAttribute('aria-selected', 'true');
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryAllByTestId('spacePlugin.presence.row')).toHaveLength(0));
+    await waitFor(() => expect(rows()).toHaveLength(0));
 
-    // Switching to another avatar while open reseeds the selection, and closing returns to that avatar.
+    // Switching to another avatar while open keeps the list open, and closing returns to that avatar.
     const avatars = within(screen.getByTestId('spacePlugin.presence')).getAllByRole('button');
     avatars[0].focus();
     await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(screen.getAllByTestId('spacePlugin.presence.row')).toHaveLength(4));
-    await userEvent.click(screen.getAllByTestId('spacePlugin.presence.row')[2]);
+    await waitFor(() => expect(rows()).toHaveLength(4));
     await userEvent.click(avatars[1]);
-    await waitFor(() =>
-      expect(screen.getAllByTestId('spacePlugin.presence.row')[1]).toHaveAttribute('aria-selected', 'true'),
-    );
-    await expect(screen.getAllByTestId('spacePlugin.presence.row')[2]).not.toHaveAttribute('aria-selected', 'true');
+    await waitFor(() => expect(rows()).toHaveLength(4));
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryAllByTestId('spacePlugin.presence.row')).toHaveLength(0));
+    await waitFor(() => expect(rows()).toHaveLength(0));
     await waitFor(() => expect(document.activeElement).toBe(avatars[1]));
 
     const overflow = screen.getByRole('button', { name: /· 4/ });
@@ -220,7 +241,7 @@ export const TestEmptied = {
     }, []);
     return (
       <div className='p-4'>
-        <FullPresence members={members} />
+        <FullPresence {...onObject(members)} />
       </div>
     );
   },
@@ -253,7 +274,7 @@ export const TestOpenerLeaves = {
     }, []);
     return (
       <div className='p-4'>
-        <FullPresence members={members} />
+        <FullPresence {...onObject(members)} />
       </div>
     );
   },

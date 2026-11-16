@@ -144,7 +144,7 @@ export const Apply = Operation.make({
     key: DXN.make('org.dxos.operation.canvas.apply'),
     name: 'Apply canvas intents',
     description:
-      "Applies intents to a canvas, freehand, and returns the heads before and after and the paths written, which undo patches back. It takes layout intents (create, delete, update, reorder, bind, move, rotate, scale, layout, batch; 3D also extrude, join, subtract) in its layout's dimension; a legacy scene canvas is first moved onto the scene canvas its drawing opens as.",
+      "Applies intents to a canvas, freehand, and returns the heads before and after and the paths written, which undo patches back. It takes layout intents (create, delete, update, reorder, bind, move, rotate, scale, layout, batch, join, subtract; 3D also extrude) in its layout's dimension; a legacy scene canvas is first moved onto the scene canvas its drawing opens as.",
     icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
@@ -206,5 +206,7 @@ export const ScrollToAnchor = Operation.make({
     follow: Schema.optional(Schema.Boolean.annotate({ description: 'Move the camera without taking focus.' })),
     thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'Unused: a canvas anchors no comments.' })),
   }),
-  output: Schema.Void,
+  output: Schema.Boolean.annotate({
+    description: 'Whether the camera was requested; a view that mounts later applies the request then.',
+  }),
 });

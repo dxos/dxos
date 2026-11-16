@@ -18,10 +18,11 @@ const handler: Operation.WithHandler<typeof CanvasOperation.ScrollToAnchor> = Ca
     Effect.fnUntraced(function* ({ subject, anchor, follow }) {
       const centre = parseCameraAnchor(anchor);
       if (!centre) {
-        return;
+        return false;
       }
       const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
       viewState.update(cameraRequestAspect, subject, ({ seq = 0 }) => ({ centre, focus: !follow, seq: seq + 1 }));
+      return true;
     }),
   ),
 );

@@ -1,0 +1,81 @@
+---
+title: Custom themes and dark mode
+description: Change the theme's tokens, and follow or force dark mode.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+TILE's look is its tokens. To change it, set new token values in your own stylesheet. No component changes, and no theme
+function of your own. [Theme and tokens](/docs/tile/concepts/theme-and-tokens/) explains the tokens.
+
+## Override tokens
+
+The theme declares its tokens in the `theme` cascade layer. Declare yours in `user-tokens`, which comes later, so yours
+win wherever both apply:
+
+```css title="src/theme.css"
+@layer user-tokens {
+  :root {
+    /* A green accent: primary buttons, links and selection. */
+    --color-accent-bg: light-dark(var(--color-emerald-600), var(--color-emerald-700));
+    --color-accent-bg-hover: light-dark(var(--color-emerald-700), var(--color-emerald-800));
+    --color-accent-text: light-dark(var(--color-emerald-600), var(--color-emerald-400));
+  }
+}
+```
+
+Import it after the theme:
+
+```tsx title="src/main.tsx"
+import '@dxos-theme';
+import '@dxos/react-ui/theme.css';
+import './theme.css';
+```
+
+Override semantic tokens, such as `accent-*`, `fg-*` or a surface, rather than the scale. A semantic token is what the
+components read; a scale value such as `--color-blue-600` is also read by everything else that happens to use blue.
+
+Give every override a light and a dark value with `light-dark()`, in that order. A plain value applies in both themes.
+
+## Override a part of the page
+
+Tokens are custom properties, so an override on an element applies to everything inside it:
+
+```css
+.compact-sidebar {
+  --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-950));
+}
+```
+
+## Follow the system theme
+
+The dark values apply under a `dark` class on the root element. [Installation](/docs/tile/learn/installation/) sets it from
+the system setting and keeps it in step:
+
+<Snippet file="tile-setup" region="dark" lang="tsx" />
+
+Run it before the first paint, in a `<script>` in `index.html` or at the top of your entry, so the page never shows the
+wrong theme for a frame.
+
+## Force light or dark
+
+To let the user choose, store their choice and set the class from it instead of from the media query:
+
+```ts
+type Choice = 'light' | 'dark' | 'system';
+
+const apply = (choice: Choice) => {
+  const dark = choice === 'dark' || (choice === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.classList.toggle('dark', dark);
+};
+```
+
+Pass the same mode to `Theme.Provider`'s `themeMode`, so `useThemeMode` reports it to components that draw their own
+canvas or chart.
+
+## Limits
+
+- A token you add, rather than override, yields no utility class unless Tailwind sees it in the theme. Prefer
+  overriding an existing token.
+- Classes that a component's stylesheet builds from a token pick up the new value at once. A color copied into your own
+  CSS as a literal does not.

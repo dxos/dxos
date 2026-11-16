@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Atom from 'effect/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import type { ComponentType } from 'react';
@@ -73,6 +73,21 @@ export type SpaceEphemeralState = {
   /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
   lastMergeAt: number | undefined;
 };
+
+/** An empty {@link SpaceEphemeralState} for the running app `sessionId`, kept alive so it never resets. */
+export const makeEphemeralState = (sessionId: string): Atom.Writable<SpaceEphemeralState> =>
+  Atom.make<SpaceEphemeralState>({
+    sdkMigrationRunning: {},
+    navigableCollections: false,
+    viewersByObject: {},
+    peerDecks: {},
+    mergePreview: undefined,
+    following: undefined,
+    sessionId,
+    followedSpaces: [],
+    peerFollowing: {},
+    lastMergeAt: undefined,
+  }).pipe(Atom.keepAlive);
 
 /** Transient/ephemeral state (not persisted). */
 export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEphemeralState>>()(

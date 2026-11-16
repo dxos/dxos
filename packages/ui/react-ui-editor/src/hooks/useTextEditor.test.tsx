@@ -39,6 +39,14 @@ const mount = async (element: React.ReactElement): Promise<HTMLElement> => {
 
 const mountAutoFocusEditor = () => mount(<AutoFocusEditor />);
 
+/** An `editorLocation` extension whose `next` resolves with the next location it reports. */
+const locationReporter = () => {
+  const waiters: ((location: EditorLocation) => void)[] = [];
+  const extension = editorLocation((_id, location) => waiters.splice(0).forEach((resolve) => resolve(location)));
+  const next = () => new Promise<EditorLocation>((resolve) => waiters.push(resolve));
+  return { extension, next };
+};
+
 describe('useTextEditor', () => {
   beforeAll(() => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
@@ -129,14 +137,14 @@ describe('useTextEditor', () => {
 
   // Peers' Jump reads the reported selection; the caret the editor places at mount is not the reader's.
   test("the selection placed at mount is not reported as the reader's", async ({ expect }) => {
-    const reports: EditorLocation[] = [];
+    const { extension, next } = locationReporter();
     let mounted: EditorView | undefined;
     await mount(
       <RestoringEditor
         id='doc'
         initialValue={'line one\nline two\n'}
         selectionEnd
-        extensions={[editorLocation((_id, location) => reports.push(location))]}
+        extensions={[extension]}
         onView={(view) => (mounted = view)}
       />,
     );
@@ -146,13 +154,12 @@ describe('useTextEditor', () => {
       mounted.posAtCoords = () => 10;
       mounted.scrollDOM.dispatchEvent(new Event('scroll'));
     }
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    expect(reports.at(-1)).toEqual({ selection: undefined, viewport: expect.any(String) });
+    expect(await next()).toEqual({ selection: undefined, viewport: expect.any(String) });
   });
 
   // A reopened document restores the reader's last caret; that is not where they are now.
   test("a selection restored at mount is not reported as the reader's", async ({ expect }) => {
-    const reports: EditorLocation[] = [];
+    const { extension, next } = locationReporter();
     let mounted: EditorView | undefined;
     await mount(
       <RestoringEditor
@@ -160,7 +167,7 @@ describe('useTextEditor', () => {
         initialValue={'line one\nline two\n'}
         selection={{ anchor: 3 }}
         selectionEnd
-        extensions={[editorLocation((_id, location) => reports.push(location))]}
+        extensions={[extension]}
         onView={(view) => (mounted = view)}
       />,
     );
@@ -169,7 +176,6 @@ describe('useTextEditor', () => {
       mounted.posAtCoords = () => 10;
       mounted.scrollDOM.dispatchEvent(new Event('scroll'));
     }
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    expect(reports.at(-1)).toEqual({ selection: undefined, viewport: expect.any(String) });
+    expect(await next()).toEqual({ selection: undefined, viewport: expect.any(String) });
   });
 });

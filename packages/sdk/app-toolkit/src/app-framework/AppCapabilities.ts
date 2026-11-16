@@ -100,8 +100,13 @@ export const LayoutAccent = Capability$.make<Atom.Atom<ChromaticPalette | undefi
   'org.dxos.app-framework.capability.layoutAccent',
 );
 
+/** How long what a follow opens has to mount; it is applied again on every update of the {@link FollowView} meanwhile. */
+export const FOLLOW_MOUNT_TIMEOUT = 5_000;
+
 /** What a follower shows of the session it follows, as handed to each {@link LocatorExtension}. */
-export type FollowView<T = unknown> = Readonly<{
+export type FollowView = Readonly<{
+  /** When the follow last updated the view; it advances on every tick, so an extension needs no timer of its own. */
+  now: number;
   spaceId: string;
   /** The leader's open items in the space, in order. */
   active: readonly string[];
@@ -111,7 +116,7 @@ export type FollowView<T = unknown> = Readonly<{
    */
   attended: Readonly<{ key: EID.EID; path?: string; localPath?: string }>;
   /** The leader's value for this extension in the space, when they sent one. */
-  value?: T;
+  value?: unknown;
 }>;
 
 /**
@@ -127,7 +132,8 @@ export type LocatorExtension = Readonly<{
   navigates?: boolean;
   /**
    * Applies the leader's view until the scope closes, without moving focus or the caret. The returned atom holds whether
-   * it shows the view; any extension holding false pauses the follow.
+   * it shows the view; any extension holding false pauses the follow. It runs synchronously when the follow starts, so the
+   * effect must not suspend: fork any asynchronous work into the scope.
    */
   follow?: (view: Atom.Atom<FollowView>) => Effect$.Effect<Atom.Atom<boolean>, never, Scope$.Scope>;
 }>;
@@ -490,7 +496,8 @@ export type RevealInput = {
  */
 export type Locator = Readonly<{
   id: string;
-  reveal: Operation.Definition<RevealInput, void>;
+  /** Answers whether it revealed the anchor: false while the view has not mounted or cannot resolve it yet. */
+  reveal: Operation.Definition<RevealInput, boolean>;
 }>;
 
 /**
