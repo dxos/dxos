@@ -267,8 +267,8 @@ const inWindow = (thread: Channel, after: string): boolean => BigInt(threadActiv
 /**
  * A channel's threads whose last activity is within the window. A user token reaches them through the client's thread
  * search, which pages by offset; a bot uses the guild's active list plus the channel's archived public threads, paged
- * by archive time. Both archived lists are newest-first, so enumeration stops at the first thread older than `after`
- * instead of walking a forum's entire history.
+ * by archive time. Both archived lists are newest-first, so enumeration stops once it passes the window (by last
+ * message for the search, by archive time for the bot list) instead of walking a forum's entire history.
  */
 const threadsOf = (client: Client, kind: 'user' | 'bot', channel: Channel, after: string) =>
   Effect.gen(function* () {
@@ -306,9 +306,11 @@ const threadsOf = (client: Client, kind: 'user' | 'bot', channel: Channel, after
         const page = yield* client.get<{ threads: Channel[]; has_more: boolean }>(
           `channels/${channel.id}/threads/archived/public?limit=100${before ? `&before=${encodeURIComponent(before)}` : ''}`,
         );
-        const within = keep(page.threads);
+        keep(page.threads);
         const last = page.threads[page.threads.length - 1]?.thread_metadata?.archive_timestamp;
-        if (!page.has_more || !last || !within) {
+        // Pages are ordered by archive time, not last message: only a thread archived before the window proves the
+        // rest of the walk is older, since a thread archived recently can have gone quiet long before.
+        if (!page.has_more || !last || BigInt(snowflakeForTimestamp(Date.parse(last))) < BigInt(after)) {
           break;
         }
         before = last;
