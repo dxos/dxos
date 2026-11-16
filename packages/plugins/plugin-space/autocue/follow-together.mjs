@@ -4,9 +4,9 @@
 
 /**
  * Alice, Bob and Carol share a plan. Bob follows whoever sits last in his Members list: their row rises to the top,
- * takes the follow's indigo and swaps Follow for Stop, and the leader sees him under "Following you". Every plank
- * heading on both screens, companions included, washes in indigo. The leader opens and closes the plan's companion,
- * types, and opens the notes, and Bob's deck goes along; Bob clicking in to type ends the follow, and the indigo clears.
+ * takes the follow's amber and swaps Follow for Stop, and the leader sees him under "Following you". Every plank
+ * heading on both screens, companions included, washes in amber. The leader opens and closes the plan's companion,
+ * types, and opens the notes, and Bob's deck goes along; Bob clicking in to type ends the follow, and the amber clears.
  * Recorded side by side, three panes.
  */
 
@@ -256,7 +256,7 @@ export const steps = [
   {
     name: 'Bob follows the person at the bottom of his list',
     subtitle:
-      'QA-7 step 2: their row rises to the top, turns indigo and swaps Follow for Stop; every heading turns indigo',
+      'QA-7 step 2: their row rises to the top, turns amber and swaps Follow for Stop; every heading turns amber',
     run: async ({ peers, sleep }) => {
       const { bob } = peers;
       const last = presenceRows(bob.page).last();
@@ -280,7 +280,7 @@ export const steps = [
   },
   {
     name: 'The leader sees Bob following',
-    subtitle: 'QA-7 step 3: an indigo dot on Members, Bob under “Following you”, the same indigo on the heading',
+    subtitle: 'QA-7 step 3: an amber dot on Members, Bob under “Following you”, the same amber on the heading',
     run: async ({ sleep }) => {
       await waitFor(async () => (await membersTab(leader.page).getAttribute('data-badge')) !== null, {
         what: 'the dot on the leader’s Members tab',
@@ -295,7 +295,7 @@ export const steps = [
   },
   {
     name: 'The leader opens the plan’s companion; Bob’s opens too',
-    subtitle: 'Companions are content: the follow mirrors which one is open, and its heading takes the indigo too',
+    subtitle: 'Companions are content: the follow mirrors which one is open, and its heading takes the amber too',
     run: async ({ peers: { bob }, sleep }) => {
       await closeSidebar(leader, { companions: true });
       await leader.click(plank(leader.page).getByTestId('plankHeading.companion'));
@@ -340,7 +340,7 @@ export const steps = [
   },
   {
     name: 'Bob clicks in and types; his own input ends the follow',
-    subtitle: 'The indigo clears on both screens',
+    subtitle: 'The amber clears on both screens',
     run: async ({ peers: { bob }, sleep }) => {
       await bob.click(plank(bob.page).getByText('Who signs off?', { exact: false }).first());
       await bob.page.keyboard.press('End');

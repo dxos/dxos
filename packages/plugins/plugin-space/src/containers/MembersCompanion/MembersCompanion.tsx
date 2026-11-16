@@ -238,7 +238,7 @@ export const MembersCompanion = () => {
                           renderActions={() => (
                             <>
                               {following?.paused && (
-                                <span className='text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>
+                                <span className='pe-2 text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>
                               )}
                               <Button.Root
                                 variant='outline'

@@ -45,7 +45,7 @@ export const LOCATION_BROADCAST_INTERVAL = 1_000;
 export const FOLLOW_BROADCAST_INTERVAL = 100;
 
 /** The hue that marks every follow, on the leader's screen and each follower's alike. */
-export const FOLLOW_HUE: ChromaticPalette = 'indigo';
+export const FOLLOW_HUE: ChromaticPalette = 'amber';
 
 /** How long a follower waits for its leader to attend an object in the space again before it stops following. */
 export const FOLLOW_LOST_TIMEOUT = 5_000;
