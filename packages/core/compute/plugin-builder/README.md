@@ -22,9 +22,11 @@ check below on it. The plugin runs alone on EDGE, so no other plugin's bundle is
 
 ## Shipping the bundle in the package
 
-The same packages inherit `prepack-edge-release`, which runs `check-edge-release` and drops the bundle's source maps.
-The pkg.pr.new and npm publish workflows run it before packing, so each package's tarball carries `dist/plugin` and
-dxos/edge seeds its registry from `node_modules/@dxos/<plugin>/dist/plugin`. No `exports` entry names it.
+The same packages inherit `prepack-edge-release`, which runs `check-edge-release` and drops the bundle's source maps
+(`moon run plugin-markdown:check-edge-release --force` brings them back). The pkg.pr.new and npm publish workflows run
+it before packing, so each package's tarball carries `dist/plugin`, from which dxos/edge can seed its registry
+(`node_modules/@dxos/<plugin>/dist/plugin`). A plugin whose check fails publishes without one. No `exports` entry names
+it.
 
 ## Publishing a plugin to EDGE
 

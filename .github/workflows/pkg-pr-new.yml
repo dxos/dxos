@@ -90,12 +90,19 @@ jobs:
       - name: Smoke test CLI
         run: moon run cli:smoke
 
-      # Each `edge-release` plugin ships its EDGE bundle in `dist/plugin`, which dxos/edge installs from here. No
-      # `NODE_ENV`, so it is the bundle `Check` and Deploy Apps build. A plugin whose check fails stops neither the others
-      # nor the publish: its package ships the bundle as built, which EDGE's registry refuses if it does not describe.
+      # Each `edge-release` plugin ships its checked EDGE bundle in `dist/plugin`, which dxos/edge installs from here.
+      # A plugin whose check fails stops neither the others nor the publish: its package ships no bundle.
       - name: Build EDGE plugin bundles
-        continue-on-error: true
-        run: moon exec --on-failure continue '#edge-release:prepack-edge-release'
+        run: |
+          if ! moon exec --on-failure continue '#edge-release:prepack-edge-release'; then
+            # A bundle whose check failed keeps its maps, since `prepack-edge-release` did not run; it ships none.
+            for bundle in packages/plugins/*/dist/plugin; do
+              if [ -n "$(find "$bundle" -name '*.map' -print -quit)" ]; then
+                rm -rf "$bundle"
+                echo "::warning::$bundle failed check-edge-release; its package publishes without an EDGE bundle."
+              fi
+            done
+          fi
 
       - name: Publish to pkg.pr.new
         run: .github/workflows/scripts/pkg-pr-new-publish.sh

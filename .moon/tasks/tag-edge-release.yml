@@ -27,9 +27,10 @@ tasks:
       timeout: 900
 
   prepack-edge-release:
-    # Readies the bundle `check-edge-release` built and checked to ship in the package tarball, where dxos/edge seeds
-    # its registry from (`node_modules/@dxos/<plugin>/dist/plugin`): drops the source maps, two thirds of the bundle,
-    # which EDGE never reads. The pkg.pr.new and npm publish workflows run it before packing.
+    # Readies the bundle `check-edge-release` built and checked to ship in the package tarball, from which dxos/edge can
+    # seed its registry (`node_modules/@dxos/<plugin>/dist/plugin`): drops the source maps, more than half the bundle,
+    # which EDGE reads only with `DX_PLUGIN_SOURCEMAPS=1`. The pkg.pr.new and npm publish workflows run it before
+    # packing. moon restores outputs only when they are missing, so `check-edge-release --force` brings the maps back.
     script: find dist/plugin -name '*.map' -type f -delete
     deps:
       - check-edge-release
