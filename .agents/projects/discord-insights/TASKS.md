@@ -36,11 +36,16 @@ fact stores in `~/.local/share/dxos/discord-pipeline/`. Fixtures catalog: `tools
 
 ## Tasks
 
-- [ ] Headless SPARQL / report CLI over a facts DB.
-- [ ] Re-scan channels; classify product vs general vs social; crawl product channels and forums, 60 days.
-- [ ] Per-message classification stage: products mentioned, sentiment per product, message kind (question, answer,
+- [x] Headless SPARQL / report CLI over a facts DB.
+- [x] Re-scan channels; classify product vs general vs social; crawl product channels and forums, 60 days.
+- [x] Per-message classification stage: products mentioned, sentiment per product, message kind (question, answer,
       bug report, feature request, praise, complaint).
-- [ ] User roles: staff / external, asker / helper / both, from message and reply structure.
-- [ ] Blog ingest: Cloudflare blog RSS as dated product announcements.
-- [ ] Reports: histograms, top helpers with mini profiles, question categories, recurring questions, product sentiment
+- [x] User roles: staff / external, asker / helper / both, from message and reply structure.
+- [x] Blog ingest: Cloudflare blog RSS as dated product announcements.
+- [x] Reports: histograms, top helpers with mini profiles, question categories, recurring questions, product sentiment
       by week against blog launches.
+- [ ] Answered threads we could have answered (idea 9): match unanswered `#help` threads to earlier answers.
+- [ ] Track the stale-graph follow-up in plugin-finance (annotations that change or empty keep their old graph).
+- [ ] New Discord token before any further crawl (the old one returned 401 after the member lookups).
+
+Results: `REPORT.md`.
