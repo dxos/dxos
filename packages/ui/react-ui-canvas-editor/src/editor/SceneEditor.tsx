@@ -512,10 +512,13 @@ const GROUP_COLLAPSE: readonly number[] = [1, 3, 4];
 /** The dimension's own commands (2D: auto layout, debug) are the rarest, so they collapse before any group. */
 const OWN_COLLAPSE = 5;
 
-/** A command as a button, or a toggle when it has a pressed state. */
+/**
+ * A command as a button, or a toggle when it has a pressed state; its node id is prefixed, as the bar shares one graph
+ * with the camera and display parts.
+ */
 const addCommand = (builder: ActionGroupBuilder, command: Command, collapse?: number) =>
   builder.action(
-    command.id,
+    `scene-command:${command.id}`,
     {
       label: command.shortcut ? `${command.label} (${command.shortcut})` : command.label,
       icon: command.icon,

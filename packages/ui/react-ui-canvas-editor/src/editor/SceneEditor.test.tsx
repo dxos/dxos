@@ -71,7 +71,9 @@ const Editor = ({
   onDisplayChange,
   onCameraChange = () => {},
   refitKey,
+  commands,
 }: {
+  commands?: DimensionConfig<TestCamera>['commands'];
   dim: Scene.Dimension;
   role?: string;
   readonly?: boolean;
@@ -80,7 +82,7 @@ const Editor = ({
   refitKey?: string | number;
 }) => (
   <SceneEditor.Root
-    config={config(dim)}
+    config={{ ...config(dim), commands }}
     document={DOCUMENT}
     scene='s'
     role={role}
@@ -443,6 +445,19 @@ describe('SceneEditor', () => {
     fireEvent.keyDown(editor, { key: 'z', metaKey: true });
     expect(undo).toHaveBeenCalledTimes(1);
     menu.remove();
+  });
+
+  test("a configured command keeps its button when its id is a display control's", async () => {
+    const run = vi.fn();
+    render(
+      <Editor
+        dim='2d'
+        commands={[{ id: 'theme', label: 'Recolor', icon: 'ph--palette--regular', enabled: () => true, run }]}
+      />,
+    );
+    await userEvent.click(screen.getByTestId('scene-action-theme'));
+    expect(run).toHaveBeenCalledOnce();
+    expect(screen.getByTestId('theme-trigger')).toBeTruthy();
   });
 
   test("the config's constrain rewrites or refuses every write, and sees the snap and lattice toggles", () => {
