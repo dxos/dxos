@@ -100,7 +100,7 @@ export const steps = [
     narration: 'Each sheet holds its finding as a table, with its chart below.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Who answers first: the table, and its chart below', subtitle: 'finding 1' });
-      await openTab({ demo, page }, 'sheet', /who answers|first/i, 'Sheet');
+      await openTab({ demo, page }, 'sheet', /who answers/i, 'Sheet');
       await page.locator('dx-grid').first().waitFor({ state: 'visible', timeout: 10_000 });
       await page
         .locator('svg')
@@ -115,7 +115,7 @@ export const steps = [
     narration: 'Product mentions and tone, charted the way the agent chose.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Product mentions and tone', subtitle: 'finding 4 — the agent picks the chart' });
-      await openTab({ demo, page }, 'sheet', /product|tone|mention/i, 'Sheet');
+      await openTab({ demo, page }, 'sheet', /product/i, 'Sheet');
       await page.locator('dx-grid').first().waitFor({ state: 'visible', timeout: 10_000 });
       await demo.sleep({ ms: 3000 });
     },
