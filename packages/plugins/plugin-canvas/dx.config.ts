@@ -134,6 +134,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
+    AppCapability.locator(() => import('./src/capabilities/locator.ts', { with: { type: 'module-url' } }), {
+      activatesOn: IllustratorEvents.Start,
+    }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),

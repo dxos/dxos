@@ -9,6 +9,7 @@ export default defineConfig({
     index: 'src/index.ts',
     Canvas: 'src/types/Canvas.ts',
     CanvasCapabilities: 'src/types/CanvasCapabilities.ts',
+    CanvasFrame: 'src/containers/CanvasArticle/CanvasFrame.tsx',
     CanvasOperation: 'src/types/CanvasOperation.ts',
     Generator: 'src/types/Generator.ts',
     MeshPresets: 'src/samples/presets/MeshPresets.ts',

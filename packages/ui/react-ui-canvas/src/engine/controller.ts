@@ -40,6 +40,7 @@ import {
   between,
   chainEdits,
   childFrame,
+  clampZoom,
   classedLink,
   classedNode,
   clipboardBounds,
@@ -163,6 +164,8 @@ export type NavigationCommands = {
   /** Zooms about the view's centre from where the camera is headed, so quick clicks compound rather than jump. */
   zoomTo: (zoom: number) => void;
   zoomBy: (factor: number) => void;
+  /** Puts `point` at the view's centre at `zoom`, leaving fit mode; how a follower shows the scene where another viewer does. */
+  centreOn: (point: Point, zoom: number) => void;
   /** Back to true size about the view's centre, from where the camera is now. */
   resetZoom: () => void;
   /** A child scene's frame inside its portal, as drilling in maps it. */
@@ -620,6 +623,14 @@ export const createCanvasController = ({
     camera().animateTo(zoomAt(camera().target(), centre(), zoom));
   };
 
+  const centreOn = (point: Point, zoom: number) => {
+    fitMode().takeOver();
+    fitMode().exitFit();
+    const clamped = clampZoom(zoom);
+    const { x, y } = centre();
+    camera().animateTo({ zoom: clamped, x: x / clamped - point.x, y: y / clamped - point.y });
+  };
+
   /**
    * Out to the shared ancestor of the open path and `target`, then in through each frame, animating only the last step;
    * false when `target` starts elsewhere (another root, or out of isolation), so nothing is selected there.
@@ -715,6 +726,7 @@ export const createCanvasController = ({
       }
     },
     zoomTo,
+    centreOn,
     // Steps from the in-flight target: clicks in quick succession compound into one move instead of several jumps.
     zoomBy: (factor) => zoomTo(camera().target().zoom * factor),
     resetZoom: () => {

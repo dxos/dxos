@@ -616,6 +616,8 @@ feat F-1: Depth and navigation
   req F-1.7: Alt+Left / Alt+Right walk the canvas's own camera history.
   req F-1.8: An Object is never drilled into: opening it from the Objects panel shows its definition in
     isolation; Escape returns to the View and camera the user left.
+  req F-1.9: A host can put a scene point at the view's centre at a given zoom, which leaves fit mode,
+    so a view of any size shows where another viewer looks.
 ```
 
 ```mdl
@@ -1648,6 +1650,15 @@ decision D-63: The standalone 2D engine's action bar, display panel and inspecto
 ```
 
 ---
+
+```mdl
+decision D-64: The navigation commands gain `centreOn(point, zoom)`, which leaves fit mode and moves the camera so `point` is at the view's centre at `zoom`.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.9]
+  why: Following a collaborator in the diagram app and Composer shows the scene where they look; a view's centre and zoom mean the same at any size, where the camera's offset does not, and only the controller knows the view's size.
+```
 
 ## Appendix: Extension Definitions
 

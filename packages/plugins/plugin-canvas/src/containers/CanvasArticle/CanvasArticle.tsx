@@ -17,10 +17,12 @@ import { canvasDimension, sceneClipboardCodec } from '#model';
 import { Canvas } from '#types';
 
 import { useCanvasLoaded } from '../CanvasStage/index.ts';
+import { CanvasCamera } from './CanvasCamera.tsx';
 import { CanvasCursors } from './CanvasCursors.tsx';
 import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { type SceneDimension } from './dimension.ts';
+import { SceneEditorParts } from './SceneEditorParts.tsx';
 import { type CanvasEditorHost, useCanvasEditor } from './use-canvas-editor.ts';
 import { useDimension2D } from './use-dimension2d.ts';
 import { useDimension3D } from './use-dimension3d.ts';
@@ -128,19 +130,13 @@ const SceneEditorArticle = <C,>({
             onShotChange={host.onShotChange}
           >
             <CanvasEditCommands element={element} />
-            <SceneEditor.Viewport>
-              {/* First, so the floating panels draw over the pointers. */}
+            <SceneEditorParts catalogs={dimension.catalogs}>
               {cursors && <CanvasCursors object={canvas} />}
-              <SceneEditor.Navigation />
-              <SceneEditor.Tools />
-              <SceneEditor.Actions />
-              <SceneEditor.Camera />
-              <SceneEditor.Display />
-              <SceneEditor.ContextMenu />
-              <SceneEditor.Notice />
-              <SceneEditor.Timeline />
-            </SceneEditor.Viewport>
-            <SceneEditor.Inspector catalogs={dimension.catalogs} />
+              {/* Only an article is the view a peer's location names; a section shows the drawing inside another object. */}
+              {cursors && role === AppSurface.Article.role && attendableId && (
+                <CanvasCamera attendableId={attendableId} />
+              )}
+            </SceneEditorParts>
           </SceneEditor.Root>
         </CanvasDatabaseContext.Provider>
       </Panel.Body>
