@@ -81,18 +81,17 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
         () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
-        'Followable',
+        'LayoutViewState',
         {
           requires: [
             Capabilities.AtomRegistry,
-            Capabilities.OperationInvoker,
             AppCapabilities.Layout,
             DeckCapabilities.View,
             AttentionCapabilities.ViewState,
           ],
-          provides: [AppCapabilities.Followable],
+          provides: [],
         },
-        () => import('./src/capabilities/followable.ts', { with: { type: 'module-url' } }),
+        () => import('./src/capabilities/layout-view-state.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'GraphRetention',

@@ -113,7 +113,7 @@ feat F-4: A project's specs
               view menu names them: Markdown (the forms), Read only or Plain text. Unset, a spec opens as Markdown;
               changing it leaves a spec already open in the view it shows.
   req F-4.17: A peer following another (org.dxos.plugin.space#F-8.21) shows the tab, the spec and the chart the
-              leader has open in each project, since the article's view state is followable.
+              leader has open in each project, since the article's view state aspect is followed.
 ```
 
 ```mdl
@@ -2992,11 +2992,11 @@ decision D-268: A map row's trailing comment is its Description, the last column
 ```
 
 ```mdl
-decision D-269: The project article's view state is keyed by the project's EID and contributed as an `AppCapabilities.Followable`, so a follower takes the leader's tab, spec and chart with no follow code of the plugin's own. A reader's tab, spec and chart picked under the project's bare id before this change are not carried over.
+decision D-269: The project article's view state is keyed by the project's EID and declared `follow: 'write'`, so a follower takes the leader's tab, spec and chart with no follow code of the plugin's own. A reader's tab, spec and chart picked under the project's bare id before this change are not carried over.
   date: 2026-11-16
   by: user:wittjosiah
   affects: [F-4.17]
   why: Presence keys an object's state by its EID, as it does locations, so the key is what lets the leader's value reach the follower's article.
   rejected:
-    - Keeping the bare id and translating at the presence boundary; every followable would need the translation.
+    - Keeping the bare id and translating at the presence boundary; every followed aspect would need the translation.
 ```

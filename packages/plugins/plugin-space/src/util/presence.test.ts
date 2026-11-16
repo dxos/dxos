@@ -22,6 +22,7 @@ import {
   getPeerNodeIds,
   getPeerPlankPath,
   getPresenceKeyFromPath,
+  getPresenceKeyFromSpace,
   getSessionNodeId,
   groupPresenceChangesBySpace,
   groupPresenceKeysBySpace,
@@ -116,7 +117,7 @@ describe('parseViewingMessage', () => {
 
   test("keeps a deck's view state by aspect and context, dropping aspects that are not an object", ({ expect }) => {
     const message = { identityKey: 'peer', added: [], removed: [] };
-    const deck = { 'org.dxos.plugin.deck.location': { 'echo://space': { front: 'root/a' } } };
+    const deck = { 'org.dxos.app-framework.companions': { 'echo://space': { planks: ['root/a'] } } };
     expect(
       parseViewingMessage({ ...message, deck: { planks: ['root/a'], viewState: { ...deck, tab: ['spec'] } } })?.deck,
     ).toEqual({ planks: ['root/a'], viewState: deck });
@@ -291,6 +292,17 @@ describe('getPeerNodeIds', () => {
       getPeerNodeId(spaceId, 'peer'),
       getSessionNodeId(spaceId, 'peer', 's1'),
     ]);
+  });
+});
+
+describe('applyPeerDeck', () => {
+  test('takes a deck’s front plank from the location it reports for the space', ({ expect }) => {
+    const message = { identityKey: 'peer', sessionId: 's1', added: [], removed: [], attended: [] };
+    const deck = { planks: ['root/a', 'root/b'] };
+    const locations = { [getPresenceKeyFromSpace(spaceId)]: { viewport: 'root/b' } };
+    expect(applyPeerDeck({}, spaceId, 'peer', { ...message, deck, locations })).toEqual({
+      [spaceId]: { peer: { s1: { ...deck, front: 'root/b' } } },
+    });
   });
 });
 
