@@ -54,11 +54,18 @@ const DimensionArticle = (props: DimensionArticleProps) => {
 
 const CanvasArticle2D = (props: DimensionArticleProps) => {
   const host = useCanvasEditor(props.canvas, '2d');
-  // The 3D camera is an orbit, which the drawing's camera does not carry.
-  const dimension = useDimension2D(props.canvas, props.camera, props.onCameraChange);
-  // A slide is a picture placed on another drawing; collaborators point at the drawing itself.
+  const dimension = useDimension2D(props.canvas);
+  // The drawing's camera is the view a follower shares; the 3D camera is an orbit, which it does not carry. A slide is a
+  // picture placed on another drawing, where collaborators point at the drawing itself.
   return (
-    <SceneEditorArticle {...props} host={host} dimension={dimension} cursors={props.role !== AppSurface.Slide.role} />
+    <SceneEditorArticle
+      {...props}
+      host={host}
+      dimension={dimension}
+      sharedCamera={props.camera}
+      onSharedCameraChange={props.onCameraChange}
+      cursors={props.role !== AppSurface.Slide.role}
+    />
   );
 };
 
@@ -69,9 +76,12 @@ const CanvasArticle3D = (props: DimensionArticleProps) => {
   return <SceneEditorArticle {...props} host={host} dimension={dimension} />;
 };
 
-type SceneEditorArticleProps<C> = DimensionArticleProps & {
+type SceneEditorArticleProps<C> = Omit<DimensionArticleProps, 'camera' | 'onCameraChange'> & {
   host: CanvasEditorHost;
   dimension: SceneDimension<C>;
+  /** The view a peer follows, in the dimension's terms. */
+  sharedCamera?: C;
+  onSharedCameraChange?: (camera: C) => void;
   /** Shows collaborators' pointers; 2D only, since they read the 2D camera. */
   cursors?: boolean;
 };
@@ -84,6 +94,8 @@ const SceneEditorArticle = <C,>({
   extrinsic,
   host,
   dimension,
+  sharedCamera,
+  onSharedCameraChange,
   cursors,
 }: SceneEditorArticleProps<C>) => {
   const [element, setElement] = useState<HTMLElement | null>(null);
@@ -125,6 +137,8 @@ const SceneEditorArticle = <C,>({
             camera={dimension.camera}
             authoredCamera={dimension.authoredCamera}
             onCameraChange={dimension.onCameraChange}
+            sharedCamera={sharedCamera}
+            onSharedCameraChange={onSharedCameraChange}
             refitKey={host.refitKey}
             docked={host.docked}
             onDockedChange={host.onDockedChange}

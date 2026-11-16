@@ -512,3 +512,38 @@ decision D-30: A drawing reports no presence location and contributes no `Locato
   rejected:
     - Keeping the `Locator` for Jump alone: Jump then places the camera by the centre while follow places it by the offset, so the two disagree on a view of another size.
 ```
+
+```mdl
+decision D-31: A follower's camera matches the leader's from the moment the follow starts, through every zoom and pan, including when the leader has not moved the view since the drawing opened.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [CanvasArticle]
+```
+
+```mdl
+decision D-32: The camera the 2D article writes to the drawing's view state is whatever this viewer shows: the view the drawing opened with, a fitted one included, and every pan and zoom as it moves, at most every 100 ms. The camera saved for the next visit stays this viewer's own and is written only when the viewer moves the view. Fills in [D-31]; supersedes the settled-camera report of [D-26].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [CanvasArticle]
+  why: A leader whose view was fitted on open reported nothing, so a follower started from its own view; and a camera reported only once it settled reached the follower after the zoom had ended.
+  rejected:
+    - Sharing the saved camera: a fitted view would then be saved and reopen at a stale size.
+```
+
+```mdl
+decision D-33: The view-state camera is the scene point at the view's centre and the zoom, so it shows the same part of the drawing in views of any size. The follower glides to it over 120 ms and does not report the camera it was moved to. Fills in [D-31].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [CanvasArticle]
+  why: The engine's camera places the scene against the view's top left, so a follower with a smaller window lined up the leader's corner and showed another part; a follower that echoed its glide overwrote the leader's newer camera.
+  rejected:
+    - Compensating for the size difference in the follower: the leader's view would still be missing whenever it opened fitted.
+```
+
+```mdl
+decision D-34: Approve [D-32] and [D-33].
+  date: 2026-11-16
+  by: user:wittjosiah
+```

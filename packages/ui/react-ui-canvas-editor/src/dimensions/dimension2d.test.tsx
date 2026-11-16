@@ -97,6 +97,35 @@ describe('the 2D dimension under SceneEditor', () => {
     expect(screen.getByText('125%')).toBeDefined();
   });
 
+  test('the shared camera is the scene point at the view’s centre: a fitted view shares it, and a peer’s is taken, not echoed', async () => {
+    const config = createConfig2D();
+    const shared: Camera[] = [];
+    const Host = ({ sharedCamera }: { sharedCamera?: Camera }) => (
+      <SceneEditor.Root
+        config={config}
+        document={DOCUMENT}
+        scene='s'
+        onIntent={() => {}}
+        display={DISPLAY}
+        authoredCamera={AUTHORED}
+        onCameraChange={() => {}}
+        sharedCamera={sharedCamera}
+        onSharedCameraChange={(camera) => shared.push(camera)}
+      >
+        <SceneEditor.Viewport>
+          <SceneEditor.Camera />
+        </SceneEditor.Viewport>
+      </SceneEditor.Root>
+    );
+    const { rerender } = render(<Host />);
+    // Nobody moved the view, which opened fitted round both shapes, so it shares their middle.
+    await waitFor(() => expect(shared.at(-1)).toMatchObject({ x: expect.closeTo(150, 1), y: expect.closeTo(0, 1) }));
+    rerender(<Host sharedCamera={{ x: 300, y: 0, zoom: 2 }} />);
+    await waitFor(() => expect(screen.getByText('200%')).toBeDefined(), { timeout: 2_000 });
+    // The peer's camera is not shared back.
+    expect(shared.at(-1)).toMatchObject({ x: expect.closeTo(150, 1) });
+  });
+
   test('the display panel offers dots and lines, or on a lattice its cells and the grid, as the engine draws them', async () => {
     const config = createConfig2D();
     const display = { current: DISPLAY };
