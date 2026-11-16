@@ -43,11 +43,11 @@ import { TableOperation } from '#types';
 
 import { TableNamespace } from '../../namespace.ts';
 
-export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
+export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table, { readonly?: boolean }>;
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
-  ({ role, subject: object, attendableId }, forwardedRef) => {
+  ({ role, subject: object, attendableId, readonly }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const { invokePromise } = Hooks.useOperationInvoker();
     const tableRef = useRef<TableController>(null);
@@ -90,11 +90,11 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const schemaEditable = schema != null && Type.getDatabase(schema) != null;
     const features: Partial<TableFeatures> = useMemo(
       () => ({
-        selection: { enabled: true, mode: 'multiple' },
-        dataEditable: true,
-        schemaEditable,
+        selection: { enabled: !readonly, mode: 'multiple' },
+        dataEditable: !readonly,
+        schemaEditable: !readonly && schemaEditable,
       }),
-      [schemaEditable],
+      [readonly, schemaEditable],
     );
 
     const handleCellUpdate = useCallback<Required<TableModelProps>['onCellUpdate']>((cell) => {
@@ -195,11 +195,15 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     const handleRowClick = useCallback(
       (row: any) => {
-        if (model?.getDraftRowCount() === 0 && ['frozenRowsEnd', 'fixedEndStart', 'fixedEndEnd'].includes(row?.plane)) {
+        if (
+          !readonly &&
+          model?.getDraftRowCount() === 0 &&
+          ['frozenRowsEnd', 'fixedEndStart', 'fixedEndEnd'].includes(row?.plane)
+        ) {
           handleInsertRow();
         }
       },
-      [model],
+      [readonly, model],
     );
 
     return (
@@ -209,10 +213,11 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
             <TableComponent.Toolbar
               attendableId={attendableId}
               customActions={customActions}
+              readonly={readonly}
               viewDirty={model?.getViewDirty()}
               onAdd={handleInsertRow}
               onExport={handleExport}
-              onSave={handleSave}
+              onSave={readonly ? undefined : handleSave}
             />
           </Panel.Header>
           <Panel.Body asChild>

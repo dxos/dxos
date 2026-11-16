@@ -19,7 +19,7 @@ import { Drawing, DrawingOperation, IllustratorCapabilities } from '#types';
 import { IllustratorNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ readOnly = false }: IllustratorCapabilities.IllustratorPluginOptions = {}) {
     // Read reactively so the actions appear once renderer plugins contribute their variants.
     const variantsAtom = yield* Capability.atom(IllustratorCapabilities.VariantProvider);
 
@@ -78,6 +78,7 @@ export default Capability.makeModule(
       },
     });
 
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, [companion, convertActions]);
+    // A conversion writes a copy, which a read-only drawing has nowhere to put.
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, readOnly ? [companion] : [companion, convertActions]);
   }),
 );

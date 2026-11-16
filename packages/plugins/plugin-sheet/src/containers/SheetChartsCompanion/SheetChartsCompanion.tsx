@@ -15,10 +15,11 @@ import { useSheetModel } from '../../model/index.ts';
 export type SheetChartsCompanionProps = {
   role?: string;
   subject: Sheet.Sheet;
+  readonly?: boolean;
 };
 
 /** Charts of the sheet's ranges, kept on the sheet; shares the sheet's selection through the `Selection` view state. */
-export const SheetChartsCompanion = ({ subject }: SheetChartsCompanionProps) => {
+export const SheetChartsCompanion = ({ subject, readonly }: SheetChartsCompanionProps) => {
   const registry = Hooks.useCapability(SheetCapabilities.ComputeGraphRegistry);
   const space = getSpace(subject);
   if (!space) {
@@ -27,16 +28,24 @@ export const SheetChartsCompanion = ({ subject }: SheetChartsCompanionProps) => 
 
   return (
     <ComputeGraphContextProvider registry={registry}>
-      <SheetChartsCompanionInner sheet={subject} space={space} />
+      <SheetChartsCompanionInner sheet={subject} space={space} readonly={readonly} />
     </ComputeGraphContextProvider>
   );
 };
 
 SheetChartsCompanion.displayName = 'SheetChartsCompanion';
 
-const SheetChartsCompanionInner = ({ sheet, space }: { sheet: Sheet.Sheet; space: Space }) => {
+const SheetChartsCompanionInner = ({
+  sheet,
+  space,
+  readonly,
+}: {
+  sheet: Sheet.Sheet;
+  space: Space;
+  readonly?: boolean;
+}) => {
   const graph = useComputeGraph(space);
-  const model = useSheetModel(graph, sheet);
+  const model = useSheetModel(graph, sheet, { readonly });
   const chartTypes = Hooks.useCapabilities(SheetCapabilities.ChartType);
-  return model ? <SheetCharts sheet={sheet} model={model} chartTypes={chartTypes} /> : null;
+  return model ? <SheetCharts sheet={sheet} model={model} chartTypes={chartTypes} readonly={readonly} /> : null;
 };

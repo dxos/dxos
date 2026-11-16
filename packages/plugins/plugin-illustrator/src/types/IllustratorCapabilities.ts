@@ -186,3 +186,9 @@ export const editLabel = (variant: Pick<DrawingVariant, 'label'>): Theme.Label =
 export const Refit = Capability.makeSingleton<Atom.Writable<Record<string, number>>>()(
   `${IllustratorNamespace.key}.capability.refit`,
 );
+
+/** Options for {@link IllustratorPlugin}. */
+export type IllustratorPluginOptions = {
+  /** Offers no action that writes, such as converting a drawing to another variant. */
+  readOnly?: boolean;
+};

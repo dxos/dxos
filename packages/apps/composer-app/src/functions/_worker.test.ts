@@ -2,19 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import handler from './_worker.ts';
+import { PNG_SIGNATURE, pngSize } from './preview-image/testing.ts';
+
+// Vitest cannot import `.wasm` as a module the way the Worker's bundle does.
+vi.mock('./preview-image/worker-assets.ts', async () => {
+  const { loadRenderAssets } = await import('./preview-image/testing.ts');
+  return { assets: await loadRenderAssets() };
+});
 
 const INDEX_HTML = '<!doctype html><html><head><title>Composer</title></head><body></body></html>';
+const VIEWER_HTML = '<!doctype html><html><head><title>Viewer</title></head><body></body></html>';
 const ARCHIVED_CHUNK = 'assets/async-OLDHASH0.js';
 
-/** The asset server as the Worker sees it: `index.html` at `/`, and a 404 for everything it misses. */
+const PAGES: Record<string, string> = { '/': INDEX_HTML, '/viewer.html': VIEWER_HTML };
+
+/** The asset server as the Worker sees it: the two HTML entries, and a 404 for everything it misses. */
 const assets = {
-  fetch: async (request: Request) =>
-    new URL(request.url).pathname === '/'
-      ? new Response(INDEX_HTML, { headers: { 'Content-Type': 'text/html' } })
-      : new Response('Not Found', { status: 404 }),
+  fetch: async (request: Request) => {
+    const page = PAGES[new URL(request.url).pathname];
+    return page
+      ? new Response(page, { headers: { 'Content-Type': 'text/html' } })
+      : new Response('Not Found', { status: 404 });
+  },
 };
 
 /** A retention bucket holding one chunk a previous build shipped. */
@@ -30,11 +42,16 @@ const archive = {
 };
 
 const fetch = handler.fetch!;
-const env = { ASSETS: assets, ASSET_ARCHIVE: archive, APPLE_TEAM_ID: 'TEAM' } as unknown as Parameters<typeof fetch>[1];
+const env = {
+  ASSETS: assets,
+  ASSET_ARCHIVE: archive,
+  APPLE_TEAM_ID: 'TEAM',
+  EDGE_URL: 'https://edge.test',
+} as unknown as Parameters<typeof fetch>[1];
 
-const get = (path: string, secFetchMode?: string) =>
+const get = (path: string, secFetchMode?: string, host = 'composer.test') =>
   fetch(
-    new Request(`https://composer.test${path}`, { headers: secFetchMode ? { 'Sec-Fetch-Mode': secFetchMode } : {} }),
+    new Request(`https://${host}${path}`, { headers: secFetchMode ? { 'Sec-Fetch-Mode': secFetchMode } : {} }),
     env,
     {} as never,
   );
@@ -57,6 +74,125 @@ describe('asset misses', () => {
     const response = await get('/assets/async-GONE0000.js', 'cors');
     expect(response.status).toBe(404);
     expect(response.headers.get('Cache-Control')).toBe('no-store');
+  });
+});
+
+describe('viewer host', () => {
+  test('a navigation on a view. host gets viewer.html', async () => {
+    const response = await get('/pub-1/db/org.dxos.type.document+01ABC', 'navigate', 'view.composer.test');
+    expect(await response.text()).toBe(VIEWER_HTML);
+  });
+
+  test('the same navigation on the app host gets index.html', async () => {
+    const response = await get('/pub-1/db/org.dxos.type.document+01ABC', 'navigate');
+    expect(await response.text()).toBe(INDEX_HTML);
+  });
+});
+
+describe('publications on the viewer host', () => {
+  const VIEWER = 'view.composer.test';
+  const MANIFEST = {
+    version: 1,
+    name: 'Field notes',
+    publishedAt: '2026-11-16T00:00:00Z',
+    plugins: [],
+    objects: ['01ROADMAP'],
+    preview: {
+      description: 'Release notes and the roadmap.',
+      types: [{ label: 'Document', count: 1 }],
+      objects: { '01ROADMAP': { title: 'Q4 roadmap', type: 'Document', description: 'We ship publishing first.' } },
+    },
+  };
+  const SPACE_IMAGE = 'https://view.composer.test/publications/abc_123/preview.png';
+
+  /** EDGE's public reads, answering for one publication. */
+  const edge = (publicId = 'abc_123') => {
+    const requested: string[] = [];
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = new URL(input instanceof Request ? input.url : String(input));
+      requested.push(url.toString());
+      if (url.pathname === `/publications/${publicId}/manifest.json`) {
+        return Response.json(MANIFEST);
+      }
+      if (url.pathname === `/publications/${publicId}/archive.json`) {
+        return Response.json({ objects: [] });
+      }
+      return new Response('Not found', { status: 404 });
+    });
+    return requested;
+  };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('a public file is read from EDGE and open to any origin', async () => {
+    const requested = edge();
+    const response = await get('/publications/abc_123/archive.json', 'cors', VIEWER);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    expect(await response.json()).toEqual({ objects: [] });
+    expect(requested).toEqual(['https://edge.test/publications/abc_123/archive.json']);
+  });
+
+  test('anything but the archive or manifest of a well-formed id never reaches EDGE', async () => {
+    const requested = edge();
+    expect((await get('/publications/abc_123/record.json', 'cors', VIEWER)).status).toBe(404);
+    expect((await get('/publications/..%2Fspaces/archive.json', 'cors', VIEWER)).status).toBe(404);
+    expect(requested).toEqual([]);
+  });
+
+  test('a crawler reading a space link sees the space, described and drawn', async () => {
+    edge();
+    const html = await (await get('/abc_123', undefined, VIEWER)).text();
+    expect(html).toContain('<title>Field notes | Composer</title>');
+    expect(html).toContain('<meta property="og:description" content="Release notes and the roadmap." />');
+    expect(html).toContain(`<meta property="og:image" content="${SPACE_IMAGE}" />`);
+    expect(html).toContain('<meta name="twitter:card" content="summary_large_image" />');
+  });
+
+  test('a crawler reading an object link sees the object the manifest describes', async () => {
+    edge();
+    const html = await (await get('/w/SPACE/db/org.dxos.type.document+01ROADMAP?p=abc_123', 'navigate', VIEWER)).text();
+    expect(html).toContain('<meta property="og:title" content="Q4 roadmap" />');
+    expect(html).toContain('<meta property="og:description" content="We ship publishing first." />');
+    expect(html).toContain(`<meta property="og:image" content="${SPACE_IMAGE}?object=01ROADMAP" />`);
+  });
+
+  test('an object the manifest does not describe is named by its link, from the space', async () => {
+    edge();
+    const html = await (
+      await get('/w/SPACE/db/org.dxos.type.document+01A?p=abc_123&title=Plan', 'navigate', VIEWER)
+    ).text();
+    expect(html).toContain('<meta property="og:title" content="Plan" />');
+    expect(html).toContain('<meta property="og:description" content="From Field notes, published from Composer." />');
+    expect(html).toContain(`<meta property="og:image" content="${SPACE_IMAGE}" />`);
+  });
+
+  test('the preview image is a PNG card, of the object when one is named', async () => {
+    edge();
+    const space = await get('/publications/abc_123/preview.png', 'no-cors', VIEWER);
+    const object = await get('/publications/abc_123/preview.png?object=01ROADMAP', 'no-cors', VIEWER);
+    for (const response of [space, object]) {
+      expect(response.status).toBe(200);
+      expect(response.headers.get('Content-Type')).toBe('image/png');
+    }
+    const [spacePng, objectPng] = await Promise.all(
+      [space, object].map(async (response) => new Uint8Array(await response.arrayBuffer())),
+    );
+    expect([...spacePng.slice(0, 8)]).toEqual(PNG_SIGNATURE);
+    expect(pngSize(objectPng)).toEqual({ width: 1200, height: 630 });
+    expect(objectPng).not.toEqual(spacePng);
+  });
+
+  test('a publication EDGE does not have has no preview image', async () => {
+    edge('other');
+    expect((await get('/publications/abc_123/preview.png', 'no-cors', VIEWER)).status).toBe(404);
+  });
+
+  test('a link to a publication EDGE does not have gets the viewer untouched', async () => {
+    edge('other');
+    expect(await (await get('/abc_123', 'navigate', VIEWER)).text()).toBe(VIEWER_HTML);
   });
 });
 

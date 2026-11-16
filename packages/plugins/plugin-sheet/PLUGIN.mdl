@@ -315,6 +315,12 @@ feat F-8: Chart Types
     then: the chart shows a message naming the type in place of the chart, and keeps its settings
 ```
 
+```mdl
+feat F-9: Read-only Host
+
+  req F-9.1: With the plugin's `readOnly` option, no cell can be edited, the toolbar shows with every action disabled, and the Charts companion shows each chart with no way to add, edit or remove one.
+```
+
 ## Acceptance
 
 ```mdl
@@ -633,6 +639,23 @@ decision D-9: The reveal's flag is `focus`, true by default; `focus: false` is w
   by: user:wittjosiah
   affects: [op:scrollToAnchor]
   why: What the flag decides is whether the reveal takes the caret and focus; following is only one reason not to.
+```
+
+```mdl
+decision D-10: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-11: A `readOnly` option makes every cell read-only, disables the toolbar rather than hiding it, and withholds the chart editing controls. Fills in [D-10].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1]
+  why: A disabled toolbar keeps the article's layout the same as in Composer, as the markdown editor's does in a read-only host.
+  rejected: Hiding the toolbar; the article loses its toolbar row and readers cannot see what the sheet offers.
 ```
 
 ## Appendix: Extension Definitions

@@ -104,6 +104,11 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/types/Settings.mjs"
     },
+    "./Publication": {
+      "source": "./src/types/Publication.ts",
+      "types": "./dist/types/src/types/Publication.d.ts",
+      "import": "./dist/lib/Publication.mjs"
+    },
     "./SpaceCapabilities": {
       "source": "./src/types/SpaceCapabilities.ts",
       "types": "./dist/types/src/types/SpaceCapabilities.d.ts",
@@ -165,6 +170,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "Publication": [
+        "dist/types/src/types/Publication.d.ts"
+      ],
       "SpaceCapabilities": [
         "dist/types/src/types/SpaceCapabilities.d.ts"
       ],

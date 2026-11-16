@@ -38,14 +38,20 @@ import { SupportNamespace } from '../../namespace.ts';
 // `data: 'help'`, parent article is an ECHO object) but this component only
 // consumes `companionTo`, so we pick it off the article shape rather than
 // requiring callers to thread the rest.
-export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj.Any>, 'companionTo' | 'attendableId'>;
+export type SupportCompanionProps = Pick<
+  AppSurface.ArticleProps<'help', {}, Obj.Any>,
+  'companionTo' | 'attendableId'
+> & {
+  /** Leaves out the object's tours, which drive edits. */
+  readonly?: boolean;
+};
 
 /**
  * Plank companion panel showing help for any open ECHO article. Resolves the
  * article's typename to the plugin that registered its schema and renders that
  * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
-export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanionProps) => {
+export const SupportCompanion = ({ companionTo, attendableId, readonly }: SupportCompanionProps) => {
   const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -97,7 +103,7 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          {tours.map((tour) => (
+          {(readonly ? [] : tours).map((tour) => (
             <Button.Root
               key={tour.id}
               icon='ph--path--regular'

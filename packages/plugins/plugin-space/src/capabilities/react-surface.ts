@@ -56,6 +56,8 @@ import {
   NavbarPresenceSurface,
   NavtreePresenceSurface,
   SelectedObjectsSurface,
+  ReadOnlySpaceHomeDashboardSurface,
+  ReadOnlySpaceHomeRecentSurface,
   SpaceHomeDashboardSurface,
   SpaceHomeRecentSurface,
   SpaceMembersSurface,
@@ -84,13 +86,13 @@ export default Capability.makeModule(
       Surface.create({
         id: 'spaceHomeRecent',
         filter: Surface.makeFilter(SpaceHomeContent),
-        component: SpaceHomeRecentSurface,
+        component: options.readOnly ? ReadOnlySpaceHomeRecentSurface : SpaceHomeRecentSurface,
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
         id: 'spaceHomeDashboard',
         filter: Surface.makeFilter(SpaceHomeContent),
-        component: SpaceHomeDashboardSurface,
+        component: options.readOnly ? ReadOnlySpaceHomeDashboardSurface : SpaceHomeDashboardSurface,
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
@@ -118,6 +120,7 @@ export default Capability.makeModule(
           type: subject,
           attendableId,
           properties,
+          readonly: options.readOnly,
         }),
       }),
       Surface.create({
@@ -133,7 +136,12 @@ export default Capability.makeModule(
           AppSurface.companion(AppSurface.Article),
         ),
         component: DefaultProperties,
-        props: ({ role, ref, data: { companionTo } }) => ({ role, subject: companionTo, ref }),
+        props: ({ role, ref, data: { companionTo } }) => ({
+          role,
+          subject: companionTo,
+          ref,
+          readonly: options.readOnly,
+        }),
       }),
       Surface.create({
         id: 'companion.related',

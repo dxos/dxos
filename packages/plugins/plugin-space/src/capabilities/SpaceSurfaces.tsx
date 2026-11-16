@@ -56,21 +56,32 @@ export const SpaceHomeDashboardSurface = ({ space }: SpaceHomeSectionProps) => {
   return visible ? <SpaceHomeDashboard space={space} onClose={hide} /> : null;
 };
 
+/** Read-only homes have nothing to dismiss. */
+export const ReadOnlySpaceHomeRecentSurface = ({ space }: SpaceHomeSectionProps) => <SpaceHomeRecent space={space} />;
+
+/** What a space holds, without who worked on it or when, and nothing to dismiss. */
+const READ_ONLY_STATS = ['objects', 'types', 'collections'] as const;
+
+export const ReadOnlySpaceHomeDashboardSurface = ({ space }: SpaceHomeSectionProps) => (
+  <SpaceHomeDashboard space={space} stats={READ_ONLY_STATS} activity={false} />
+);
+
 export type TypeArticleSurfaceProps = {
   role: string;
   attendableId: string;
   type: Type.AnyEntity;
   /** The navtree node's properties bag, which carries the space for a type collection. */
   properties?: Record<string, unknown>;
+  readonly?: boolean;
 };
 
-export const TypeArticleSurface = ({ role, attendableId, type, properties }: TypeArticleSurfaceProps) => {
+export const TypeArticleSurface = ({ role, attendableId, type, properties, readonly }: TypeArticleSurfaceProps) => {
   const space = isSpace(properties?.space) ? properties.space : undefined;
   if (!space) {
     return null;
   }
 
-  return <TypeArticle role={role} space={space} type={type} attendableId={attendableId} />;
+  return <TypeArticle role={role} space={space} type={type} attendableId={attendableId} readonly={readonly} />;
 };
 
 export type SpaceSettingsSurfaceProps = {

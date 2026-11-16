@@ -80,10 +80,17 @@ export class TablePresentation<T extends TableRow = TableRow> {
         cells = {};
     }
 
-    if (plane === 'grid' && this.model.features.dataEditable === false) {
-      Object.values<DxGridCellValue>(cells).forEach((cell) => {
-        cell.readonly = 'text-select';
-      });
+    if (this.model.features.dataEditable === false) {
+      if (plane === 'grid') {
+        Object.values<DxGridCellValue>(cells).forEach((cell) => {
+          cell.readonly = 'text-select';
+        });
+      } else if (plane === 'frozenColsStart') {
+        // Pinned data columns sit beside the selection column, which keeps its own setting.
+        Object.values<DxGridCellValue>(cells).forEach((cell) => {
+          cell.readonly ||= 'text-select';
+        });
+      }
     }
 
     return cells;

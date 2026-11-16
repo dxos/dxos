@@ -13,7 +13,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
 import { DeckCapabilities } from '#types';
-import { CompanionViewState, DeckSchema } from '#types';
+import { CompanionViewState } from '#types';
 
 import {
   closeCompanionPlank,
@@ -109,6 +109,7 @@ const sameMap = (a: Record<string, string> | undefined, b: Record<string, string
 /** Move the deck onto `workspace`, creating its deck on first visit. */
 export const applyWorkspace = Effect.fnUntraced(function* (workspace: string) {
   const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
+  const newDeck = yield* Capability.get(DeckCapabilities.NewDeck);
   const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
   const shouldUpdatePrevious = Option.match(AppGraph.getNode(graph, state.activeDeck), {
     onNone: () => true,
@@ -118,7 +119,7 @@ export const applyWorkspace = Effect.fnUntraced(function* (workspace: string) {
     ...current,
     previousDeck: shouldUpdatePrevious ? current.activeDeck : current.previousDeck,
     activeDeck: workspace,
-    decks: current.decks[workspace] ? current.decks : { ...current.decks, [workspace]: { ...DeckSchema.defaultDeck } },
+    decks: current.decks[workspace] ? current.decks : { ...current.decks, [workspace]: { ...newDeck } },
   }));
   yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (current) => ({
     ...current,

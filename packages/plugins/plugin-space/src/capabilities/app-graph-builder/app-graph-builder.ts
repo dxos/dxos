@@ -20,15 +20,17 @@ import {
 } from './extensions/index.ts';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ shareableLinkOrigin = window.location.origin }: SpaceSchema.SpacePluginOptions = {}) {
+  Effect.fnUntraced(function* ({
+    shareableLinkOrigin = window.location.origin,
+    publication,
+    readOnly = false,
+  }: SpaceSchema.SpacePluginOptions = {}) {
     const extensions = yield* Effect.all([
-      createSpaceExtensions(),
-      createSettingsExtensions(),
-      createDatabaseExtensions(),
-      createCollectionExtensions({ shareableLinkOrigin }),
-      createCompanionExtensions(),
-      createExportExtensions(),
-      createPeerExtensions(),
+      createSpaceExtensions({ publication, readOnly }),
+      createCollectionExtensions({ shareableLinkOrigin, publication, readOnly }),
+      createCompanionExtensions({ readOnly }),
+      createDatabaseExtensions({ readOnly }),
+      ...(readOnly ? [] : [createSettingsExtensions(), createExportExtensions(), createPeerExtensions()]),
     ]);
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());

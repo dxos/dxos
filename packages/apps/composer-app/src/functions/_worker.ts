@@ -8,11 +8,25 @@
 import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
-import { injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
+import { type LinkPreviewDetails, injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
+import { phosphorPath, renderCard } from './preview-image/index.ts';
+import { assets as previewAssets } from './preview-image/worker-assets.ts';
+import {
+  PUBLICATIONS_PATH,
+  type RenderPreview,
+  cardOf,
+  handlePublicationRead,
+  objectIdOf,
+  previewImageUrl,
+  publicIdOf,
+  readManifest,
+} from './publications.ts';
 
 type Env = {
   ASSETS: Fetcher;
   APPLE_TEAM_ID?: string;
+  /** EDGE origin, which stores publications; the viewer host reads them through it. */
+  EDGE_URL?: string;
   ENVIRONMENT?: string;
   /**
    * Assets from previous builds, keyed by their path. Optional: while it is unbound the Worker
@@ -359,9 +373,17 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
     );
   }
 
+  // The read-only viewer is a second page of the same build, served for every route on its own host.
+  if (isViewerHost(url.hostname)) {
+    const page = await env.ASSETS.fetch(new Request(new URL('/viewer.html', url), request));
+    return withPublicationPreview(request, page, url, env);
+  }
   const page = await env.ASSETS.fetch(new Request(new URL('/', url), request));
   return withLinkPreview(request, page, url);
 };
+
+/** Hosts that serve published spaces (`view.composer.space` and its per-environment twins). */
+export const isViewerHost = (hostname: string): boolean => hostname.startsWith('view.');
 
 /**
  * Name a client-side route's `index.html` after the `title` its URL carries, so a link pasted into a
@@ -369,20 +391,58 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
  */
 const withLinkPreview = async (request: Request, page: Response, url: URL): Promise<Response> => {
   const title = readLinkTitle(url);
-  if (
-    !title ||
-    request.method !== 'GET' ||
-    page.status !== 200 ||
-    !page.headers.get('Content-Type')?.includes('text/html')
-  ) {
+  return title && isPreviewable(request, page) ? rewritePreview(page, title) : page;
+};
+
+/**
+ * Name a viewer page for crawlers after what it opens: an object the manifest titles (or the URL's
+ * `title`), else the published space, described as its card is and with that card as the preview image.
+ */
+const withPublicationPreview = async (request: Request, page: Response, url: URL, env: Env): Promise<Response> => {
+  const publicId = publicIdOf(url);
+  if (!publicId || !env.EDGE_URL || !isPreviewable(request, page)) {
     return page;
   }
+  const manifest = await readManifest(env.EDGE_URL, publicId);
+  const objectId = objectIdOf(url);
+  const card = manifest && cardOf(manifest, objectId);
+  const object = card?.kind === 'object' ? card.title : readLinkTitle(url);
+  const space = manifest?.name;
+  const title = object ?? space;
+  if (!title) {
+    return page;
+  }
+  // A link to an object the manifest does not describe draws the space, but must not borrow its description.
+  const described = card && (card.kind === 'object' || !object) ? card.description : undefined;
+  return rewritePreview(page, title, {
+    description:
+      described ?? (object && space ? `From ${space}, published from Composer.` : 'A space published from Composer.'),
+    image: card && previewImageUrl(url.origin, publicId, card.kind === 'object' ? objectId : undefined).toString(),
+  });
+};
 
+/** Draws preview cards with icons from the build's own Phosphor assets. */
+const previewRenderer =
+  (request: Request, env: Env): RenderPreview =>
+  (card) =>
+    renderCard(card, {
+      assets: previewAssets,
+      loadIcon: async (id) => {
+        const path = phosphorPath(id);
+        const response = path ? await env.ASSETS.fetch(new Request(new URL(path, request.url))) : undefined;
+        return response?.ok ? response.text() : undefined;
+      },
+    });
+
+const isPreviewable = (request: Request, page: Response): boolean =>
+  request.method === 'GET' && page.status === 200 && !!page.headers.get('Content-Type')?.includes('text/html');
+
+const rewritePreview = async (page: Response, title: string, details?: LinkPreviewDetails): Promise<Response> => {
   const headers = new Headers(page.headers);
   // The body changes, so the asset's length and validator no longer describe it.
   headers.delete('Content-Length');
   headers.delete('ETag');
-  return new Response(injectLinkPreview(await page.text(), title), { status: page.status, headers });
+  return new Response(injectLinkPreview(await page.text(), title, details), { status: page.status, headers });
 };
 
 const OTEL_PREFIX = '/api/otel';
@@ -502,6 +562,10 @@ const handler: ExportedHandler<Env> = {
 
     if (url.pathname === '/api/rss') {
       return handleRssProxy(request);
+    }
+
+    if (isViewerHost(url.hostname) && url.pathname.startsWith(`${PUBLICATIONS_PATH}/`)) {
+      return handlePublicationRead(request, env.EDGE_URL, previewRenderer(request, env));
     }
 
     // OTel ingestion proxy.

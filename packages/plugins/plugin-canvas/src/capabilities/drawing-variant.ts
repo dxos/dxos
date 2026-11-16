@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
-import { CanvasArticle, CanvasCard } from '#containers';
+import { CanvasArticle, CanvasCard, ReadonlyCanvasArticle } from '#containers';
 import { CanvasLayoutBuilder, addCanvas, canvasDimension, removeCanvas } from '#model';
-import { Canvas } from '#types';
+import { Canvas, type CanvasCapabilities } from '#types';
 
 // New drawings are a `Canvas` over a model, layouts and scenes; a conversion asks for `diagramShapes`, so a laid-out
 // diagram keeps the look its renderer gave it.
@@ -41,9 +41,10 @@ const variant3d: IllustratorCapabilities.DrawingVariant = {
   createCanvas: () => addCanvas({ dimension: '3d' }),
 };
 
-export default Capability.makeModule(() =>
-  Effect.succeed([
-    Capability.contribute(IllustratorCapabilities.VariantProvider, variant),
-    Capability.contribute(IllustratorCapabilities.VariantProvider, variant3d),
-  ]),
-);
+export default Capability.makeModule(({ readOnly = false }: CanvasCapabilities.CanvasPluginOptions = {}) => {
+  const article = readOnly ? ReadonlyCanvasArticle : CanvasArticle;
+  return Effect.succeed([
+    Capability.contribute(IllustratorCapabilities.VariantProvider, { ...variant, article }),
+    Capability.contribute(IllustratorCapabilities.VariantProvider, { ...variant3d, article }),
+  ]);
+});

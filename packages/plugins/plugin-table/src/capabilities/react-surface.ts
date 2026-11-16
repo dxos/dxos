@@ -11,8 +11,9 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { TableArticle, TableCard } from '#containers';
+import { type TableCapabilities } from '#types';
 
-export default Capability.makeModule(() =>
+export default Capability.makeModule(({ readOnly = false }: TableCapabilities.TablePluginOptions = {}) =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -24,7 +25,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Slide, Table.Table),
         ),
         component: TableArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId, readonly: readOnly }),
       }),
       Surface.create({
         id: 'tableCard',

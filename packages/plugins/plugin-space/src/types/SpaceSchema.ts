@@ -91,6 +91,23 @@ export type SpacePluginOptions = {
    * Whether to send observability events.
    */
   observability?: boolean;
+
+  /** Enables publishing spaces to the read-only viewer, and forking publications back in. */
+  publication?: PublicationOptions;
+
+  /**
+   * Builds a navigation-only graph: no space or object actions, no settings, database, export or
+   * peer nodes, and no object properties companion. For hosts whose spaces nobody should edit.
+   * @default false
+   */
+  readOnly?: boolean;
+};
+
+export type PublicationOptions = {
+  /** Origin of the read-only viewer, e.g. `https://view.composer.space`. */
+  viewerOrigin: string;
+  /** Where publications are read from; defaults to `/publications` on the viewer origin. */
+  publicationsUrl?: string;
 };
 
 /** One session's view of an object: a tab or app instance of a peer. */
@@ -230,6 +247,7 @@ const SPACE_FORM_LAYOUT_CREATE = trim`
 // TOOD(burdon): Use SpacePropertiesSchema.
 export const SpaceForm = Schema.Struct({
   name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
   icon: Schema.optional(Schema.String.annotate({ title: 'Icon', [IconAnnotationId]: true })),
   hue: Schema.optional(Schema.String.annotate({ title: 'Color', [HueAnnotationId]: true })),
   private: Schema.optional(Schema.Boolean.annotate({ title: 'Private space' })),

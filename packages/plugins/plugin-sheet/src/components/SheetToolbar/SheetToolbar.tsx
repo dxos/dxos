@@ -65,7 +65,8 @@ export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((
         <FormattingToolbar
           formatting={formatting}
           onChange={handleChange}
-          disabled={!cursorFallbackRange}
+          // A read-only sheet shows what applies at the cursor without letting it change.
+          disabled={!!model.readonly || !cursorFallbackRange}
           testId='grid.toolbar'
         />
       </Toolbar.Root>

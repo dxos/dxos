@@ -16,4 +16,7 @@ DX_OTEL_ENDPOINT=https://staging.composer.space/api/otel
 DX_ENVIRONMENT=staging
 DX_POSTHOG_API_HOST=https://o.composer.space
 IPFS_API_SECRET=${IPFS_API_SECRET}
+# Where publications are viewed: a second hostname on this channel's Worker, which serves the viewer
+# on any `view.` host and reads publications from this channel's EDGE.
+DX_VIEWER_URL=https://view.staging.composer.space
 # End common vars

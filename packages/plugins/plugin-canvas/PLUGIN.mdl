@@ -451,3 +451,19 @@ decision D-26: The 2D article takes the drawing's camera: one that changes while
   affects: [CanvasArticle]
   why: A follower's canvas has to move with the leader's.
 ```
+
+```mdl
+decision D-27: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [CanvasArticle]
+```
+
+```mdl
+decision D-28: A `readOnly` option locks every canvas and withholds the unlock action. Fills in [D-27].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [CanvasPlugin, CanvasArticle]
+  why: The canvas already has a locked mode, so the option only has to pin it.
+```

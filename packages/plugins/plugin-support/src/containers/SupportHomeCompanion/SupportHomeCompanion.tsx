@@ -23,7 +23,8 @@ const WELCOME_SLIDE = {
   description: 'Welcome to DXOS',
 };
 
-export const SupportHomeCompanion = () => {
+/** `readonly` leaves out the welcome tour, which walks through creating and editing. */
+export const SupportHomeCompanion = ({ readonly }: { readonly?: boolean }) => {
   const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
@@ -31,12 +32,14 @@ export const SupportHomeCompanion = () => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Root
-            icon='ph--path--regular'
-            label={t('start-tour.button')}
-            onClick={() => invokePromise(HelpOperation.Start)}
-            data-testid='supportPlugin.startTour'
-          />
+          {!readonly && (
+            <Button.Root
+              icon='ph--path--regular'
+              label={t('start-tour.button')}
+              onClick={() => invokePromise(HelpOperation.Start)}
+              data-testid='supportPlugin.startTour'
+            />
+          )}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

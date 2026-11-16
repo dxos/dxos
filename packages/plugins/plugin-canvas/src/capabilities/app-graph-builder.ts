@@ -14,7 +14,7 @@ import { Entity, Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
-import { Canvas } from '#types';
+import { Canvas, type CanvasCapabilities } from '#types';
 
 import { canvasViewAspect } from '../containers/CanvasArticle/view-state.ts';
 import { CanvasNamespace } from '../namespace.ts';
@@ -25,7 +25,12 @@ const LOCK_LABEL: LabelTuple = ['lock-drawing.label', { ns: CanvasNamespace.key 
 const UNLOCK_LABEL: LabelTuple = ['unlock-drawing.label', { ns: CanvasNamespace.key }];
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ readOnly = false }: CanvasCapabilities.CanvasPluginOptions = {}) {
+    // A read-only canvas stays locked, so there is nothing to toggle.
+    if (readOnly) {
+      return Capability.contribute(AppCapabilities.AppGraphBuilder, []);
+    }
+
     // Read reactively, so the action appears once the capability lands.
     const viewStateCapabilityAtom = yield* Capability.atom(AttentionCapabilities.ViewState);
 

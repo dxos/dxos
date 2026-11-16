@@ -28,8 +28,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 type Presentation
   desc: |
     An ordered deck of slides. Typename `org.dxos.type.presentation@0.2.0`. Each slide is a `Slide` object owned
-    by the presentation. It is tagged as a collection item, so it is filed into the space's Collections. Its
-    navtree node lists `slides`; deleting a slide deletes its `Slide` (and the slide's owned `Text`), while a
+    by the presentation. It is tagged as a collection item, so it is filed into the space's Collections. Its type
+    icon is indigo. Its navtree node lists `slides`; deleting a slide deletes its `Slide` (and the slide's owned `Text`), while a
     linked object it shows is only unlinked. Deleting the Presentation deletes its slides; linked objects stay.
     Version 0.1.0 held `sections: Ref<Obj>[]` directly; its migration wraps each section in a `Slide`.
     A plugin-projects showcase is a Presentation (see CreateShowcase); a `Showcase` 0.1.0 migrates into one in
@@ -49,7 +49,7 @@ type Slide
     ECHO object, rendered through its `role=slide` surface. The fields hold what applies to any content, so a
     linked object can be hidden, annotated and given an image as a markdown slide can; `layout` and
     `background` stay in a markdown slide's frontmatter. A slide opened from the navtree or the grid opens the
-    `Slide`, so the assistant beside it has the slide as its context.
+    `Slide`, so the assistant beside it has the slide as its context. Its type icon is indigo.
   fields:
     content: Ref<Obj>           # owned Text or a linked object
     title?: string              # overrides the label read from the content's first heading
@@ -572,6 +572,12 @@ feat F-12: Speaker Notes
   req F-12.5: When the browser refuses the notes window, the deck shows a button that opens it.
   req F-12.6: A slide has an optional desired length (`duration`, seconds), edited with its other properties.
   req F-12.7: Other plugins add toolbar items and overlays through `PresenterSurface.Toolbar` and `PresenterSurface.Overlay`, and follow a presentation through `PresentationEventHandler`.
+```
+
+```mdl
+feat F-13: Read-only Host
+
+  req F-13.1: With the plugin's `readOnly` option, a Presentation's grid plays the deck: no slide can be added, moved, hidden or edited, a tile plays from its slide, and a markdown document's Presenter companion previews it without editing.
 ```
 
 ## Acceptance
@@ -1615,7 +1621,37 @@ decision D-92: The slide view state is followed with `write`, so a follower show
     - Following the index alone; the grid size travels with it in one aspect and costs a follower nothing it would not want.
 ```
 
+```mdl
+decision D-93: The Presentation type's icon hue is indigo, and a new Presentation is filed into a collection when it is created, as documents and sheets are.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [Presentation, F-3.1]
+```
+
 ---
+
+```mdl
+decision D-94: A Slide's type icon is indigo, as the Presentation's is.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [Slide]
+```
+
+```mdl
+decision D-95: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-13.1]
+```
+
+```mdl
+decision D-96: A `readOnly` option drops the slide preview and slide actions from the graph and makes the Presentation grid play rather than edit. Fills in [D-95].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.1]
+  why: A read-only slide already opens as its preview, and hiding a slide writes to the deck.
+```
 
 ## Appendix: Extension Definitions
 

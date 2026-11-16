@@ -11,9 +11,9 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 
 import { ChartArticle, RangeList, SheetArticle, SheetChartsCompanion } from '#containers';
-import { Sheet } from '#types';
+import { Sheet, type SheetCapabilities } from '#types';
 
-export default Capability.makeModule(() =>
+export default Capability.makeModule(({ readOnly = false }: SheetCapabilities.SheetPluginOptions = {}) =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Slide, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
         ),
         component: SheetArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId, readonly: readOnly }),
       }),
       Surface.create({
         id: 'charts',
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article, Sheet.Sheet),
         ),
         component: SheetChartsCompanion,
-        props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
+        props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo, readonly: readOnly }),
       }),
       Surface.create({
         id: 'chart',
@@ -44,7 +44,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Slide, Sheet.Chart, (data) => !!Obj.getDatabase(data.subject)),
         ),
         component: ChartArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId, readonly: readOnly }),
       }),
       Surface.create({
         id: 'objectProperties',

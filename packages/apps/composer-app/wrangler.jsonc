@@ -21,6 +21,7 @@
   // `ENVIRONMENT` is `local` rather than `dev` so it cannot be mistaken for the deployed `env.dev`.
   "vars": {
     "APPLE_TEAM_ID": "9428WC5MR8",
+    "EDGE_URL": "http://localhost:8787",
     "ENVIRONMENT": "local",
     "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
   },
@@ -46,6 +47,7 @@
       "name": "composer",
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
+        "EDGE_URL": "https://dxos.network",
         "ENVIRONMENT": "production",
         "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
@@ -59,6 +61,7 @@
       "name": "composer-staging",
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
+        "EDGE_URL": "https://dxos.network",
         "ENVIRONMENT": "staging",
         "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
@@ -74,6 +77,7 @@
       "name": "composer-preview",
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
+        "EDGE_URL": "https://dxos.network",
         "ENVIRONMENT": "preview",
         "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
@@ -88,6 +92,7 @@
       "name": "composer-dev",
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
+        "EDGE_URL": "https://preview.dxos.network",
         "ENVIRONMENT": "dev",
         "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },

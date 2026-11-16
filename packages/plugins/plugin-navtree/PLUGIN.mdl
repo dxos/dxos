@@ -20,6 +20,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -179,6 +180,7 @@ feat F-1: Sidebar Navigation
   req F-1.4:
     when: same active tab is clicked while sidebar is expanded
     then: sidebar collapses (state transitions to collapsed or closed on mobile)
+  req F-1.5: With the `rail` option off, the workspace rail (L0) is not shown and the tree takes the sidebar's full width.
 ```
 
 ```mdl
@@ -387,6 +389,24 @@ test QA-1: Expose a nested document and select it
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: A host can show the navigation tree without the workspace rail.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-1.5]
+```
+
+```mdl
+decision D-2: A `rail` plugin option, on by default, controls the rail. Fills in [D-1].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5]
+  why: Hosts that show one space have nothing to switch between.
+```
 
 ## Appendix: Extension Definitions
 

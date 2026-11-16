@@ -24,7 +24,10 @@ import { type CanvasEditorHost, useCanvasEditor } from './use-canvas-editor.ts';
 import { useDimension2D } from './use-dimension2d.ts';
 import { useDimension3D } from './use-dimension3d.ts';
 
-export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps<Obj.Unknown>;
+export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps<Obj.Unknown> & {
+  /** Locks the canvas with no way to unlock it. */
+  readonly?: boolean;
+};
 
 /**
  * The canvas variant's article, for either kind of scene: the shared scene editor over the open scene, with the
@@ -37,9 +40,13 @@ export const CanvasArticle = ({ canvas, ...props }: CanvasArticleProps) =>
 
 CanvasArticle.displayName = 'CanvasArticle';
 
+export const ReadonlyCanvasArticle = (props: CanvasArticleProps) => <CanvasArticle {...props} readonly />;
+
+ReadonlyCanvasArticle.displayName = 'ReadonlyCanvasArticle';
+
 type DimensionArticleProps = Pick<
   CanvasArticleProps,
-  'role' | 'attendableId' | 'extrinsic' | 'camera' | 'onCameraChange'
+  'role' | 'attendableId' | 'extrinsic' | 'camera' | 'onCameraChange' | 'readonly'
 > & {
   canvas: Canvas.Canvas;
 };
@@ -72,6 +79,7 @@ const SceneEditorArticle = <C,>({
   role,
   attendableId,
   extrinsic,
+  readonly,
   host,
   dimension,
 }: SceneEditorArticleProps<C>) => {
@@ -101,8 +109,8 @@ const SceneEditorArticle = <C,>({
             scene={stored.key}
             role={role}
             navigable={section && hasAttention}
-            readonly={host.readonly}
-            onReadonlyChange={host.onReadonlyChange}
+            readonly={readonly || host.readonly}
+            onReadonlyChange={readonly ? undefined : host.onReadonlyChange}
             onIntent={host.onIntent}
             history={host.history}
             onModelIntent={host.onModelIntent}

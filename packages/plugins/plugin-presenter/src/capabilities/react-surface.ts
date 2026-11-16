@@ -20,11 +20,11 @@ import {
   SlideObjectArticle,
   SlidePreviewArticle,
 } from '#containers';
-import { Presentation, SlideEditorViewState } from '#types';
+import { Presentation, type PresenterCapabilities, SlideEditorViewState } from '#types';
 
 import { PresenterNamespace } from '../namespace.ts';
 
-export default Capability.makeModule(() =>
+export default Capability.makeModule(({ readOnly = false }: PresenterCapabilities.PresenterPluginOptions = {}) =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -48,15 +48,22 @@ export default Capability.makeModule(() =>
         position: Position.first,
         filter: AppSurface.object(AppSurface.Article, Presentation.Presentation),
         component: PresentationArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId, readonly: readOnly }),
       }),
-      Surface.create({
-        id: 'slideEditor',
-        // A slide opens as its markdown in the slide editor, or as the linked object's own article.
-        filter: AppSurface.object(AppSurface.Article, Presentation.Slide),
-        component: SlideObjectArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
-      }),
+      readOnly
+        ? Surface.create({
+            id: 'slideEditor',
+            filter: AppSurface.object(AppSurface.Article, Presentation.Slide),
+            component: SlidePreviewArticle,
+            props: ({ role, data: { subject } }) => ({ role, subject }),
+          })
+        : Surface.create({
+            id: 'slideEditor',
+            // A slide opens as its markdown in the slide editor, or as the linked object's own article.
+            filter: AppSurface.object(AppSurface.Article, Presentation.Slide),
+            component: SlideObjectArticle,
+            props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+          }),
       Surface.create({
         id: 'slidePreview',
         filter: AppSurface.allOf(

@@ -43,6 +43,7 @@ The following extension dialects are used in this document.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -294,6 +295,12 @@ feat F-5: GitHub Issue Submission
   req F-5.7: type maps to GitHub's Issue Type field via `?type=Bug` / `?type=Feature`; severity is emitted as a label whose name matches the literal (e.g. `High priority`); area, when set, adds an `area/<plugin-id>` label. A `Composer` source-anchor label is always included.
 ```
 
+```mdl
+feat F-6: Read-only Host
+
+  req F-6.1: With the plugin's `readOnly` option, it contributes only the per-object and home Help companions, without tours: no feedback companion, Discord, tickets or welcome tour.
+```
+
 ## Acceptance
 
 ```mdl
@@ -409,3 +416,20 @@ test QA-2: Send one-shot feedback via the help companion
   # No `after` — feedback goes straight to the observability backend; no ECHO object is created to remove.
 ```
 
+## Changelog
+
+```mdl
+decision D-1: Help is available in a read-only host.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-6.1]
+```
+
+```mdl
+decision D-2: A `readOnly` option keeps the Help companions, without their tour buttons, and drops feedback, Discord, tickets and the welcome tour. Fills in [D-1].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.1]
+  why: Feedback, tickets and Discord act for a signed-in user, and a tour walks the reader through creating objects.
+```

@@ -12,6 +12,9 @@ export const StatusBar: Role.Role<Record<string, unknown>> = Role.make('org.dxos
 /** Slot for the status-bar footer region. */
 export const StatusBarFooter: Role.Role<Record<string, unknown>> = Role.make('org.dxos.plugin.statusBar.role.footer');
 
+/** Slot for actions at the end of the top banner, before the version info. */
+export const BannerEnd: Role.Role<Record<string, unknown>> = Role.make('org.dxos.plugin.deck.role.bannerEnd');
+
 /** Slot for the version-info widget in the banner. */
 export const VersionInfo: Role.Role<Record<string, unknown>> = Role.make('org.dxos.plugin.statusBar.role.versionInfo');
 

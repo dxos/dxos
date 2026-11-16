@@ -74,6 +74,8 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
             DeckCapabilities.EphemeralState,
             AppCapabilities.Layout,
             DeckCapabilities.Platform,
+            DeckCapabilities.Banner,
+            DeckCapabilities.NewDeck,
             DeckCapabilities.Projection,
             DeckCapabilities.View,
           ],

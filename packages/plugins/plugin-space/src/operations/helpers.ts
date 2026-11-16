@@ -7,12 +7,15 @@ import { DXN, Filter, type Obj, Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 
 import * as SpaceCapabilities from '../types/SpaceCapabilities.ts';
+import type * as SpaceSchema from '../types/SpaceSchema.ts';
 
 export type SpaceOperationConfig = {
   createInvitationUrl: (invitationCode: string) => string;
   createJoinUrl: (spaceKey: PublicKey) => string;
   /** Absent on a host with no public origin to link to. */
   createObjectUrl?: (object: Obj.Unknown) => string | undefined;
+  /** Absent where publishing is off. */
+  publication?: SpaceSchema.PublicationOptions;
 };
 
 export const SpaceOperationConfig = Capability.makeSingleton<SpaceOperationConfig>()(

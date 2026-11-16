@@ -53,6 +53,8 @@ export type TypeArticleProps = {
   space: Space;
   type: Type.AnyEntity;
   attendableId: string;
+  /** Lists and opens objects only: no selection, deletion, filing, merging or cell edits. */
+  readonly?: boolean;
 };
 
 /**
@@ -62,7 +64,7 @@ export type TypeArticleProps = {
  * Objects are not enumerated in the nav tree; each navigated object becomes a hidden child of the
  * type node resolved on demand.
  */
-export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProps) => {
+export const TypeArticle = ({ role, space, type, attendableId, readonly = false }: TypeArticleProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [layout, setLayout] = useState<Layout>('masonry');
@@ -122,9 +124,10 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
   // Duplicates is offered only for types some plugin registered an identity rule for:
   // there is nothing to scan otherwise.
+  // A merge writes, so a read-only list never offers it.
   const layouts = useMemo(
-    () => LAYOUTS.filter(({ value }) => value !== 'duplicates' || duplicates.spec),
-    [duplicates.spec],
+    () => LAYOUTS.filter(({ value }) => value !== 'duplicates' || (duplicates.spec && !readonly)),
+    [duplicates.spec, readonly],
   );
 
   const handleOpen = useCallback(
@@ -169,12 +172,12 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
   // literal here would discard and re-seed the table's selection on every render.
   const tableFeatures = useMemo(
     () => ({
-      selection: { enabled: true, mode: 'multiple' as const },
-      dataEditable: true,
+      selection: { enabled: !readonly, mode: 'multiple' as const },
+      dataEditable: !readonly,
       schemaEditable: false,
       pinColumns: 1,
     }),
-    [],
+    [readonly],
   );
 
   // Table rows are editable, so opening a row is a deliberate row action rather than `onRowClick`
@@ -182,7 +185,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
   const rowActions = useMemo(
     (): TableRowAction[] => [
       { id: 'open', label: ['open-object.label', { ns: SpaceNamespace.key }] },
-      ...(TypeOptions.isUserType(type)
+      ...(TypeOptions.isUserType(type) && !readonly
         ? [
             {
               id: 'addToCollection',
@@ -191,7 +194,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
           ]
         : []),
     ],
-    [type],
+    [type, readonly],
   );
 
   const handleRowAction = useCallback(
@@ -254,9 +257,10 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     const toTile = (object: Obj.Unknown): TileData => ({
       object,
       current: selectedIds.includes(object.id),
-      onSelect: toggleSelected,
+      onSelect: readonly ? undefined : toggleSelected,
       onOpen: handleOpen,
-      onDelete: Obj.getParent(object) ? undefined : handleDelete,
+      onDelete: readonly || Obj.getParent(object) ? undefined : handleDelete,
+      readonly,
     });
     // While a merge is staged the participants fold into one read-only result card; members the
     // selection excluded stay behind as normal cards.
@@ -268,7 +272,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
       ];
     }
     return tiles.map(toTile);
-  }, [layout, stagedPreview, tiles, selectedIds, toggleSelected, handleOpen, handleDelete]);
+  }, [layout, stagedPreview, tiles, selectedIds, toggleSelected, handleOpen, handleDelete, readonly]);
 
   // A type with no objects at all has nothing for any layout to show; past that each layout says
   // when it is empty for its own reason.

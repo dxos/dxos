@@ -213,3 +213,9 @@ export type ViewModeSelection =
   | { kind: 'contributed'; reviewMode: ReviewMode };
 
 export type UseEditorBinding = (props: EditorBindingProps) => EditorBinding;
+
+/** Options for {@link MarkdownPlugin}. */
+export type MarkdownPluginOptions = {
+  /** Opens every document read-only, with no view-mode switch. */
+  readOnly?: boolean;
+};

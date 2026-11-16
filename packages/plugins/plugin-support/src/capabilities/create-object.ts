@@ -12,8 +12,13 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Support } from '#types';
 
+import { type SupportPluginOptions } from '../types/SupportPluginOptions.ts';
+
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ readOnly = false }: SupportPluginOptions = {}) {
+    if (readOnly) {
+      return [];
+    }
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Support.Ticket),
       createObject: (props, options) =>

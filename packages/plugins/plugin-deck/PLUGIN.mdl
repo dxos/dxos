@@ -669,6 +669,19 @@ feat F-8: Flat Navigation (breadcrumbs)
           with no breadcrumbs
 ```
 
+```mdl
+feat F-9: Informational Banner
+
+  req F-9.1: With the `banner` option, the deck shows its top bar at every breakpoint except fullscreen, without command search.
+  req F-9.2: The top bar's end renders the `BannerEnd` surface, where a host puts its notice and actions.
+```
+
+```mdl
+feat F-10: Companions Start Closed
+
+  req F-10.1: With the `companionsClosed` option, each workspace's deck starts with every companion closed, so a plank shows a companion only once the reader opens one.
+```
+
 ## Acceptance
 
 ```mdl
@@ -984,6 +997,38 @@ decision D-4: `LayoutOperation.Set` takes an optional `workspace`, as `Open` doe
 ```
 
 ---
+
+```mdl
+decision D-5: A host can show a full-width top bar that carries information and actions but no command search.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-6: The `banner` option turns the top bar on, and a `BannerEnd` surface holds the host's content. Fills in [D-5].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+  why: The top bar already exists for Windows desktop; an option reuses it and a surface keeps host content out of the deck.
+```
+
+```mdl
+decision D-7: In a read-only host, companions start closed.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-10.1]
+```
+
+```mdl
+decision D-8: A `companionsClosed` option seeds each new workspace deck with an empty companion list, through a `NewDeck` capability that URL navigation also reads. Fills in [D-7].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10.1]
+  why: An empty list already means every companion was closed, so no new deck state is needed; a deck opened from a link is created by URL navigation and starts the same way.
+```
 
 ## Appendix: Extension Definitions
 

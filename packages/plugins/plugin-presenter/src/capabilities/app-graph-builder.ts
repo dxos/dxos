@@ -20,7 +20,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { firstHeading, slideSourcesAtom } from '#deck';
 import { meta } from '#meta';
-import { Presentation, PresenterOperation, SlideEditorViewState } from '#types';
+import { Presentation, type PresenterCapabilities, PresenterOperation, SlideEditorViewState } from '#types';
 
 import { isPresenting } from '../paths.ts';
 
@@ -118,7 +118,7 @@ export const createSlideActionsExtension = () =>
   });
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ readOnly = false }: PresenterCapabilities.PresenterPluginOptions = {}) {
     const companionExtensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
       relation: AppNode.companion,
@@ -168,11 +168,11 @@ export default Capability.makeModule(
     const slidePreviewExtensions = yield* createSlidePreviewExtension();
     const slideActionsExtensions = yield* createSlideActionsExtension();
 
+    // Read-only, a slide already opens as its preview, and hiding one writes to the deck.
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...companionExtensions,
       ...sectionsExtensions,
-      ...slidePreviewExtensions,
-      ...slideActionsExtensions,
+      ...(readOnly ? [] : [...slidePreviewExtensions, ...slideActionsExtensions]),
     ]);
   }),
 );

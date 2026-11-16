@@ -18,6 +18,7 @@ export type SheetArticleProps = AppSurface.ObjectArticleProps<
   Sheet.Sheet,
   {
     ignoreAttention?: boolean;
+    readonly?: boolean;
   }
 >;
 
@@ -45,6 +46,7 @@ const SheetArticleInner = ({
   attendableId,
   space,
   ignoreAttention,
+  readonly,
 }: SheetArticleProps & { space: Space }) => {
   const graph = useComputeGraph(space);
   // A slide shows the sheet as a picture: the used range fitted to the slide, with no status bar and no one's selection.
@@ -61,6 +63,7 @@ const SheetArticleInner = ({
       sheet={sheet}
       attendableId={attendableId!}
       ignoreAttention={ignoreAttention}
+      readonly={readonly}
       awareness={awareness}
     >
       <Panel.Root

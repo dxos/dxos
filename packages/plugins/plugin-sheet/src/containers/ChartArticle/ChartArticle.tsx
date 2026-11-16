@@ -15,13 +15,13 @@ import { Sheet, SheetCapabilities } from '#types';
 
 import { type SheetModel, useSheetModel } from '../../model/index.ts';
 
-export type ChartArticleProps = AppSurface.ObjectArticleProps<Sheet.Chart>;
+export type ChartArticleProps = AppSurface.ObjectArticleProps<Sheet.Chart, { readonly?: boolean }>;
 
 /**
  * A chart on its own, as an article or embedded in a document as a section or slide. It evaluates its sheet's range
  * in the sheet's compute graph.
  */
-export const ChartArticle = ({ role, subject }: ChartArticleProps) => {
+export const ChartArticle = ({ role, subject, readonly }: ChartArticleProps) => {
   const registry = Hooks.useCapability(SheetCapabilities.ComputeGraphRegistry);
   const space = getSpace(subject);
   if (!space) {
@@ -30,22 +30,24 @@ export const ChartArticle = ({ role, subject }: ChartArticleProps) => {
 
   return (
     <ComputeGraphContextProvider registry={registry}>
-      <ChartArticleInner role={role} chart={subject} space={space} />
+      <ChartArticleInner role={role} chart={subject} space={space} readonly={readonly} />
     </ComputeGraphContextProvider>
   );
 };
 
 ChartArticle.displayName = 'ChartArticle';
 
-const ChartArticleInner = ({ role, chart, space }: { role?: string; chart: Sheet.Chart; space: Space }) => {
+type ChartInnerProps = { role?: string; chart: Sheet.Chart; readonly?: boolean };
+
+const ChartArticleInner = ({ role, chart, space, readonly }: ChartInnerProps & { space: Space }) => {
   const [sheetRef] = useObject(chart, 'sheet');
   const sheet = useResolveRef(sheetRef);
   const graph = useComputeGraph(space);
-  const model = useSheetModel(graph, sheet);
-  return model ? <ChartContent role={role} chart={chart} model={model} /> : null;
+  const model = useSheetModel(graph, sheet, { readonly });
+  return model ? <ChartContent role={role} chart={chart} model={model} readonly={readonly} /> : null;
 };
 
-const ChartContent = ({ role, chart: chartProp, model }: { role?: string; chart: Sheet.Chart; model: SheetModel }) => {
+const ChartContent = ({ role, chart: chartProp, model, readonly }: ChartInnerProps & { model: SheetModel }) => {
   const [chart] = useObject(chartProp);
   const getValues = useRangeValues(model);
   const chartTypes = Hooks.useCapabilities(SheetCapabilities.ChartType);
@@ -64,7 +66,7 @@ const ChartContent = ({ role, chart: chartProp, model }: { role?: string; chart:
         <ChartView
           chart={props}
           getValues={getValues}
-          onUpdate={handleUpdate}
+          onUpdate={readonly ? undefined : handleUpdate}
           chrome={role !== AppSurface.Slide.role}
           chartTypes={chartTypes}
         />

@@ -38,12 +38,18 @@ import PresentedOverlay from '../PresentedOverlay/index.ts';
 const newSlideContent = (layout: LayoutName = 'default'): string =>
   layout === 'default' ? '# New slide' : `---\nlayout: ${layout}\n---\n\n# New slide`;
 
-export type PresentationArticleProps = AppSurface.ObjectArticleProps<Presentation.Presentation>;
+export type PresentationArticleProps = AppSurface.ObjectArticleProps<
+  Presentation.Presentation,
+  {
+    /** Plays the deck with no way to add, move or edit a slide; a tile plays from its slide. */
+    readonly?: boolean;
+  }
+>;
 
 /**
  * A presentation's slides as a grid, presented fullscreen in place; the current slide is per-viewer view state.
  */
-export const PresentationArticle = ({ role, subject, attendableId }: PresentationArticleProps) => {
+export const PresentationArticle = ({ role, subject, attendableId, readonly }: PresentationArticleProps) => {
   const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const slides = usePresentationDeck(subject);
   const [theme] = useObject(subject, 'theme');
@@ -107,6 +113,14 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
     [subject],
   );
 
+  const handlePlaySlide = useCallback(
+    (slideIndex: number) => {
+      setIndex(slideIndex, slides.length);
+      void setPresenting(true);
+    },
+    [slides.length, setIndex, setPresenting],
+  );
+
   const handleMoveSlide = useCallback(
     (from: number, to: number) => {
       Presentation.move(subject, from, to);
@@ -130,30 +144,34 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
           {!fullscreen && (
             <Panel.Header>
               <Toolbar.Root>
-                {/* A split button (the caret picks the layout the plus adds), unwrapped so the toolbar sees an icon button first. */}
-                <Button.Root
-                  data-testid='presenter.add-slide'
-                  icon='ph--plus--regular'
-                  iconOnly
-                  variant='ghost'
-                  label={t('add-slide.label')}
-                  onClick={handleAddSlide}
-                />
-                <LayoutPicker
-                  value={newSlideLayout}
-                  onChange={setNewSlideLayout}
-                  trigger={
+                {!readonly && (
+                  <>
+                    {/* A split button (the caret picks the layout the plus adds), unwrapped so the toolbar sees an icon button first. */}
                     <Button.Root
-                      data-testid='presenter.add-slide.layout'
-                      icon='ph--caret-down--regular'
+                      data-testid='presenter.add-slide'
+                      icon='ph--plus--regular'
                       iconOnly
                       variant='ghost'
-                      label={t('add-slide-layout.label')}
+                      label={t('add-slide.label')}
+                      onClick={handleAddSlide}
                     />
-                  }
-                />
+                    <LayoutPicker
+                      value={newSlideLayout}
+                      onChange={setNewSlideLayout}
+                      trigger={
+                        <Button.Root
+                          data-testid='presenter.add-slide.layout'
+                          icon='ph--caret-down--regular'
+                          iconOnly
+                          variant='ghost'
+                          label={t('add-slide-layout.label')}
+                        />
+                      }
+                    />
 
-                <SectionPicker presentation={subject} />
+                    <SectionPicker presentation={subject} />
+                  </>
+                )}
                 <div className='grow' />
                 <Surface.Surface type={PresenterSurface.Toolbar} data={{ subject }} />
                 <Button.Root
@@ -177,10 +195,10 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
             ) : (
               <Deck.Grid
                 size={gridSize}
-                onMove={handleMoveSlide}
-                onOpen={handleOpenSlide}
-                onAddSlide={handleAddSlide}
-                contextMenuId={contextMenuId}
+                onMove={readonly ? undefined : handleMoveSlide}
+                onOpen={readonly ? handlePlaySlide : handleOpenSlide}
+                onAddSlide={readonly ? undefined : handleAddSlide}
+                contextMenuId={readonly ? undefined : contextMenuId}
               />
             )}
           </Panel.Body>

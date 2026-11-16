@@ -3,6 +3,7 @@
 //
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -170,6 +171,21 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
         AppSurface.StatusIndicator,
       ],
     }),
+    Capability.lazyModule(
+      'ForkIntent',
+      { provides: [], activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/fork-intent.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'ForkPublication',
+      {
+        requires: [Capabilities.OperationInvoker, ClientCapabilities.Client, SpaceOperationConfig],
+        provides: [],
+        activatesOn: ClientEvents.SpacesAvailable,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/fork-publication.ts', { with: { type: 'module-url' } }),
+    ),
     Capability.lazyModule(
       'Repair',
       {

@@ -16,9 +16,14 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { HelpCapabilities, HelpOperation } from '#types';
 
+import { type SupportPluginOptions } from '../types/SupportPluginOptions.ts';
+
 /** Runs a matching `auto` tour the first time the reader attends something it applies to. */
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ readOnly = false }: SupportPluginOptions = {}) {
+    if (readOnly) {
+      return [];
+    }
     const client = yield* ClientCapabilities.Client;
     if (!Account.isAuthEnabled(client.config)) {
       return [];

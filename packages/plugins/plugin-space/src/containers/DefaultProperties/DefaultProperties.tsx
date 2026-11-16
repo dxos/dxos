@@ -18,7 +18,10 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
 
-export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
+export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown> & {
+  /** Shows the properties without editing; plugins' extra property rows are left out, as they edit. */
+  readonly?: boolean;
+};
 
 /**
  * Generic object-properties companion rendered for any object: a schema-driven {@link ObjectProperties}
@@ -26,7 +29,7 @@ export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknow
  * not register a bespoke surface (mirrors `DefaultSettings` for plugin settings).
  */
 export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesProps>(
-  ({ role, subject: object }, forwardedRef) => {
+  ({ role, subject: object, readonly }, forwardedRef) => {
     const manager = PluginManagerProvider.usePluginManager();
     const operationInvoker = Hooks.useOperationInvoker();
     // Demand signal: this companion can create related objects, so pull parked entry providers.
@@ -63,9 +66,9 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
           <Toolbar.Root classNames='dx-document' />
         </Panel.Header>
         <Panel.Body asChild>
-          <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry}>
+          <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry} readonly={readonly}>
             {/* TODO(burdon): Ambiguous naming since providers only replace parts; can't update Toolbar, etc. Consider DefaultSettings pattern. */}
-            <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
+            {!readonly && <Surface.Surface type={AppSurface.ObjectProperties} data={data} />}
           </ObjectProperties>
         </Panel.Body>
       </Panel.Root>

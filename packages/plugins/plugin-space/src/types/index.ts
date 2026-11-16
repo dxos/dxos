@@ -3,6 +3,7 @@
 //
 
 export * as CollectionOperation from './CollectionOperation.ts';
+export * as Publication from './Publication.ts';
 export * as Settings from './Settings.ts';
 export * as SpaceCapabilities from './SpaceCapabilities.ts';
 export * as SpaceCapability from './SpaceCapability.ts';

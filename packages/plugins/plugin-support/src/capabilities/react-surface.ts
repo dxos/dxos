@@ -28,9 +28,31 @@ import { Support } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants.ts';
 import { SupportNamespace } from '../namespace.ts';
+import { type SupportPluginOptions } from '../types/SupportPluginOptions.ts';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
+export default Capability.makeModule(({ readOnly = false }: SupportPluginOptions = {}) => {
+  const helpCompanion = Surface.create({
+    id: 'helpCompanion',
+    filter: AppSurface.allOf(AppSurface.literal(AppSurface.Article, 'help'), AppSurface.companion(AppSurface.Article)),
+    component: SupportCompanion,
+    props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId, readonly: readOnly }),
+  });
+  const homeHelpCompanion = Surface.create({
+    id: 'homeHelpCompanion',
+    filter: AppSurface.allOf(
+      AppSurface.literal(AppSurface.Article, 'help'),
+      AppSurface.companion(AppSurface.Article, SpaceSchema.SPACE_HOME_NODE_TYPE),
+    ),
+    component: SupportHomeCompanion,
+    props: () => ({ readonly: readOnly }),
+  });
+
+  // A read-only host gets the Help companions alone (see the app graph builder).
+  if (readOnly) {
+    return Effect.succeed(Capability.contribute(Capabilities.ReactSurface, [helpCompanion, homeHelpCompanion]));
+  }
+
+  return Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'supportTicket',
@@ -61,23 +83,8 @@ export default Capability.makeModule(() =>
       // owns the open article's typename. Matches any article via
       // `companion(Article)` with no schema filter; the resolver inside the
       // panel maps `companionTo` → owning plugin → `meta.description`.
-      Surface.create({
-        id: 'helpCompanion',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'help'),
-          AppSurface.companion(AppSurface.Article),
-        ),
-        component: SupportCompanion,
-        props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
-      }),
-      Surface.create({
-        id: 'homeHelpCompanion',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'help'),
-          AppSurface.companion(AppSurface.Article, SpaceSchema.SPACE_HOME_NODE_TYPE),
-        ),
-        component: SupportHomeCompanion,
-      }),
+      helpCompanion,
+      homeHelpCompanion,
       Surface.create({
         id: 'hints',
         filter: Surface.makeFilter(DeckSurface.Hints),
@@ -100,5 +107,5 @@ export default Capability.makeModule(() =>
         props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
-  ),
-);
+  );
+});
