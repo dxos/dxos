@@ -5,8 +5,10 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 
 import { type Chat, TrajectoryStore } from '@dxos/assistant';
+import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -43,17 +45,23 @@ const PULL_REQUEST_URL = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\d+/g;
 
 const LATEST_LIMIT = 2000;
 
-/** The agent's most recent text, trimmed to its end, which is where a turn says what it did. */
-const latestText = (messages: readonly Message.Message[]): string | undefined => {
-  const texts = messages
+/** What the agent did last: its last text, trimmed to its end (where a turn says what it did), or the tool it called. */
+export const latestText = (messages: readonly Message.Message[]): string | undefined => {
+  const block = messages
     .filter((message) => message.sender.role !== 'user')
-    .flatMap((message) => message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])));
-  const last = texts.at(-1)?.trim();
-  return last === undefined || last.length <= LATEST_LIMIT ? last : `…${last.slice(-LATEST_LIMIT)}`;
+    .flatMap((message) => message.blocks)
+    .findLast((block) => block._tag === 'text' || block._tag === 'toolCall');
+  const latest =
+    block?._tag === 'text'
+      ? block.text.trim()
+      : block?._tag === 'toolCall'
+        ? `→ ${block.name} ${block.input}`
+        : undefined;
+  return latest === undefined || latest.length <= LATEST_LIMIT ? latest : `…${latest.slice(-LATEST_LIMIT)}`;
 };
 
 /** Pull request URLs the agent wrote anywhere in the chat, in the order it wrote them. */
-const pullRequestsIn = (messages: readonly Message.Message[]): string[] => {
+export const pullRequestsIn = (messages: readonly Message.Message[]): string[] => {
   const urls = messages
     .filter((message) => message.sender.role !== 'user')
     .flatMap((message) =>
@@ -96,10 +104,13 @@ const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: r
 /** Folds the run for up to `windowMs`, and records its pull requests once the turn has ended. */
 const fold = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string, windowMs: number) {
   const control = yield* CodingAgentControl.CodingAgentControl;
+  // A GitHub App connection's token is custodied by EDGE; the resolver turns its placeholder into the token to lend.
+  const accessTokens = Layer.succeed(Credential.AccessTokenResolver, yield* Credential.AccessTokenResolver);
   const feed = yield* Database.load(chat.feed);
   const options: EdgeAgent.Options = {
     definition,
     control: () => EdgeAgent.fromRemoteControl(control),
+    accessTokens,
     // An MCP client may give up on a call; the agent works on, and the next call picks the turn up.
     detached: true,
   };

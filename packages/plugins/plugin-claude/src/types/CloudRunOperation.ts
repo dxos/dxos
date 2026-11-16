@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Credential from '@dxos/compute/Credential';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
@@ -47,7 +48,8 @@ const RunState = Schema.Struct({
       'Whether the turn has ended. While false the agent is still working: call Sync Cloud Coding Run again.',
   }),
   latest: Schema.optional(Schema.String).annotate({
-    description: "The agent's most recent text in the run, so the caller can follow it; at most 2000 characters.",
+    description:
+      'What the agent did last in the run, its text or the tool it called, so the caller can follow it; at most 2000 characters.',
   }),
   pullRequests: Schema.Array(Schema.String).annotate({
     description:
@@ -78,7 +80,13 @@ export const StartCloudRun = Operation.make({
     ),
   }),
   output: RunState,
-  services: [Database.Service, Trace.TraceService, Operation.Service, CodingAgentControl.CodingAgentControl],
+  services: [
+    Database.Service,
+    Trace.TraceService,
+    Operation.Service,
+    Credential.AccessTokenResolver,
+    CodingAgentControl.CodingAgentControl,
+  ],
   types,
 }).pipe(Operation.mutation('write'));
 
@@ -95,6 +103,12 @@ export const SyncCloudRun = Operation.make({
   },
   input: Schema.Struct({ chat: Ref.Ref(Chat.Chat) }),
   output: RunState,
-  services: [Database.Service, Trace.TraceService, Operation.Service, CodingAgentControl.CodingAgentControl],
+  services: [
+    Database.Service,
+    Trace.TraceService,
+    Operation.Service,
+    Credential.AccessTokenResolver,
+    CodingAgentControl.CodingAgentControl,
+  ],
   types,
 }).pipe(Operation.mutation('write'));
