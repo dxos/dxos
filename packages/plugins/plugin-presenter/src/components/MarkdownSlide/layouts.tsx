@@ -96,11 +96,12 @@ const TwoColsLayout = ({ slots, frontmatter }: LayoutProps) => {
   const padding = columns(frontmatter.bleed);
   return (
     <Frame name='two-cols' className={mx('grid grid-cols-2 gap-16', padding.frame)}>
-      <Slot name='default' className={padding.left}>
+      {/* Each column is read as its own block, so it is centred in its half rather than hung from the top. */}
+      <Slot name='default' className={mx('justify-center', padding.left)}>
         {slots.default}
         {slots.left}
       </Slot>
-      <Slot name='right' className={padding.right}>
+      <Slot name='right' className={mx('justify-center', padding.right)}>
         {slots.right}
       </Slot>
     </Frame>

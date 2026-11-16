@@ -170,7 +170,9 @@ export const Glow: Story = {
 export const Column: Story = {
   args: {
     content: slide(
-      { layout: 'two-cols', bleed: 'left' },
+      // The art carries its own ground (`rgb(29,31,32)`, the brand's fallback fill), so the slide takes the same one
+      // and the column's edge does not show as a seam.
+      { layout: 'two-cols', bleed: 'left', background: 'rgb(29,31,32)' },
       '<Box variant="fill">',
       '',
       `![](${BRAND}/backgrounds/bg-dxos.svg)`,

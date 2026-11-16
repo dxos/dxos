@@ -6,4 +6,4 @@ Two box styles for a title slide's artwork. `<Box variant="spread">` fills the s
 
 `<Box variant="watermark">` is removed; the column is the same idea without an oversized mark behind the words.
 
-A centred slide spaces its blocks to be read apart: a mark, a name and a date no longer sit one line from each other.
+A centred slide spaces its blocks to be read apart: a mark, a name and a date no longer sit one line from each other. A two-column slide centres each column in its half, so a column reads as its own block rather than hanging from the top.
