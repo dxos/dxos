@@ -97,6 +97,12 @@ export const theme = {
         img: 'w-full h-auto object-contain',
         p: '[&:has(>img)]:contents',
       },
+      // A title slide's name: set large in the slide's own foreground rather than its accent, so the accent is left
+      // free for what sits under it (the deck's links).
+      title: {
+        box: 'flex flex-col',
+        h1: 'text-[180px] leading-none font-(family-name:--slide-font-heading) text-(color:--slide-foreground)',
+      },
       // Artwork that carries the slide rather than sitting behind it: held to the end edge at full strength, running
       // past it so the slide crops it. It leaves the flow, as the watermark does, so the words ignore it.
       art: {

@@ -118,8 +118,13 @@ export const Split: Story = {
 export const Glow: Story = {
   args: {
     content: slide(
-      { layout: 'two-cols' },
+      // The deck's green is the accent here, which the links take; the title is set in the foreground instead.
+      { layout: 'two-cols', accent: 'rgb(31,213,138)' },
+      '<Box variant="title">',
+      '',
       '# composer',
+      '',
+      '</Box>',
       '',
       '[https://dxos.org/composer](https://dxos.org/composer)',
       '',
