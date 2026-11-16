@@ -48,6 +48,8 @@ export const VirtualList = Util.composable<HTMLDivElement, VirtualListProps>(
       paddingStart: padding,
       paddingEnd: padding,
       overscan: OVERSCAN,
+      // A row measured in its ref callback would otherwise flushSync inside React's commit, which React rejects.
+      useFlushSync: false,
     });
 
     useEffect(() => {

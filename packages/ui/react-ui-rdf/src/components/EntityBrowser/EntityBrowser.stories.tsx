@@ -109,7 +109,7 @@ export const Large: Story = {
     // Every card the filter leaves is a Person.
     await waitFor(() => {
       const shown = canvas.getAllByTestId('entity-card').map((card) => card.getAttribute('data-entity-id') ?? '');
-      expect(new Set(shown.map((id) => TYPE_BY_ID.get(id)))).toEqual(new Set(['Person']));
+      return expect(new Set(shown.map((id) => TYPE_BY_ID.get(id)))).toEqual(new Set(['Person']));
     });
 
     // Choosing the chosen class again clears the filter.
