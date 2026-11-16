@@ -153,7 +153,7 @@ feat F-2: Panel
     then: the envelope tab in R0 shows the unread count
   req F-2.2:
     when: the user clicks a notification
-    then: it is marked read and its first linked object is opened
+    then: it is marked read and its first linked object is opened, with the companion its `companion` property names
   req F-2.3:
     when: the user picks a filter
     then: only all / unread / invitation notifications are listed
@@ -230,4 +230,13 @@ decision D-3: Notifications comes second in the complementary rail, ahead of Mem
   date: 2026-11-04
   by: user:wittjosiah
   affects: [MessengerCompanion]
+```
+
+```mdl
+decision D-4: A notification may name, in its `companion` property, the companion its linked object opens with (a `~<variant>` segment); the panel passes it as `LayoutOperation.Open`'s `variant`, so the object and its companion open together. Fills in [F-2.2].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-2.2]
+  why: A comment notification opened only the commented object, so a reader opened Comments by hand to find the reply.
+  rejected: The panel knowing about comment threads; the sender names the companion, so the panel stays generic.
 ```
