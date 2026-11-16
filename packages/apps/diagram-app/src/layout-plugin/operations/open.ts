@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Semaphore from 'effect/Semaphore';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -20,6 +21,18 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { type Route, UNTITLED, getLastDrawing } from '../../shared/index.ts';
 import { fileDrawing, recordRoute } from '../util/index.ts';
 import { updateState } from './update-state.ts';
+
+/** One first-diagram check at a time per space, so two opens of a new space create one diagram between them. */
+const firstDiagramLocks = new Map<string, Semaphore.Semaphore>();
+
+const withFirstDiagramLock = (spaceId: string) => {
+  let lock = firstDiagramLocks.get(spaceId);
+  if (!lock) {
+    lock = Semaphore.makeUnsafe(1);
+    firstDiagramLocks.set(spaceId, lock);
+  }
+  return lock.withPermits(1);
+};
 
 /**
  * The first diagram of a space this identity created and that has none yet, as the create-space dialog makes. A
@@ -88,7 +101,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       if (named && !(yield* isDiagram(spaceId, named))) {
         return yield* Effect.fail(new NotADiagramError());
       }
-      const drawingId = named ?? getLastDrawing(spaceId) ?? (yield* firstDiagram(spaceId));
+      const drawingId =
+        named ?? getLastDrawing(spaceId) ?? (yield* firstDiagram(spaceId).pipe(withFirstDiagramLock(spaceId)));
       if (open !== latestOpen) {
         return subject;
       }

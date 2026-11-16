@@ -167,7 +167,7 @@ export const steps = [
             return !!box && Math.abs(box.x - point.x) < 8 && Math.abs(box.y - point.y) < 8;
           },
           { timeout: 5_000, what: "Ben's cursor at the same spot on Ada's canvas" },
-        ).catch((err) => console.warn(err.message));
+        );
       }
     },
   },
