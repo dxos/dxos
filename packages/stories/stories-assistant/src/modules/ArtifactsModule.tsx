@@ -76,7 +76,8 @@ const ArtifactsPanel = ({ space }: { space: Space }) => {
                 <ToggleGroup.Item
                   key={object.id}
                   value={object.id}
-                  icon={iconOf(object)}
+                  icon={ICONS[kindOf(object)]}
+                  data-artifact={kindOf(object)}
                   label={Obj.getLabel(object) ?? object.id}
                 />
               ))}
@@ -91,12 +92,20 @@ const ArtifactsPanel = ({ space }: { space: Space }) => {
   );
 };
 
-const iconOf = (object: Obj.Unknown): string =>
+type ArtifactKind = 'sheet' | 'presentation' | 'document';
+
+const ICONS: Record<ArtifactKind, string> = {
+  sheet: 'ph--grid-nine--regular',
+  presentation: 'ph--presentation--regular',
+  document: 'ph--article--regular',
+};
+
+const kindOf = (object: Obj.Unknown): ArtifactKind =>
   Obj.instanceOf(Sheet.Sheet, object)
-    ? 'ph--grid-nine--regular'
+    ? 'sheet'
     : Obj.instanceOf(Presentation.Presentation, object)
-      ? 'ph--presentation--regular'
-      : 'ph--article--regular';
+      ? 'presentation'
+      : 'document';
 
 /** One artifact through its article surface; a sheet also draws each of its charts below the grid. */
 const Artifact = ({ space, object }: { space: Space; object: Obj.Unknown }) => {
