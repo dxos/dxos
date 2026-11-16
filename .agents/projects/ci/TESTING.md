@@ -1,6 +1,6 @@
 # CI testing — gating, test ontology and result tracking
 
-Draft for discussion. Only the knip and boot-budget change is implemented.
+Draft for discussion. Nothing here is implemented yet; the knip and boot-budget change and other CI speed-ups are in dxos/dxos#14552.
 
 ## Problem
 
@@ -26,7 +26,7 @@ Basin on R2 is the fallback if we want one event per test.
   runs, real browsers end to end).
 - `nightly` tests run only in the nightly full run and on demand (a dispatched full run on a PR).
 - The nightly run executes everything, uncached and unscoped.
-- Already done: knip and the boot budget run nightly only.
+- knip and the boot budget move to nightly in dxos/dxos#14552.
 
 ### Stable, flaky, advisory
 
@@ -403,7 +403,7 @@ These cost as much as the tests, and no tag fixes them:
   compile gate's own ~38 min. That is ~80 min of duplicate work per nightly, and why 3 of the last 5
   nightly `check` jobs hit the 75-min timeout. PRs and the merge queue are not affected: the later
   stages hit the cache there.
-- **knip is never cached:** ~3.5 min on every run, the longest step on a warm PR. Now nightly only.
+- **knip is never cached:** ~3.5 min on every run, the longest step on a warm PR. Moves to nightly in dxos/dxos#14552.
 - **Cancelled runs are spent minutes.** A new push cancels the running Check: 49% of PR
   `e2e-composer` runs and 33% of `test-browser` runs, and 12% of edge `test-edge` minutes.
 - **Setup is paid per job:** 87 s in each edge job (~10 runner-minutes per Check run); dxos PR jobs
