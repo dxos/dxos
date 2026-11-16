@@ -641,17 +641,6 @@ decision D-5: A chart's `type` is a string naming a `SheetCapabilities.ChartType
     - A Sankey panel of its own beside every sheet: it leaves the chart out of the companion's list and out of documents and slides, which embed `Sheet.Chart` objects.
 ```
 
-```mdl
-decision D-6: The `addChart` operation takes the chart type as a string and names this plugin's types in its description, rather than a literal list in its schema. Follows [D-5].
-  date: 2026-11-16
-  by: agent:claude-code
-  for: user:dmaretskyi
-  affects: [op:addChart]
-  why: A type another plugin contributes is as valid as the sheet's own, and the agent learns the common ones from the description and the skill.
-  rejected:
-    - A literal union of the sheet's types in the input schema: the built-in list D-5 rejected, and it refuses contributed types.
-```
-
 ---
 
 ```mdl
@@ -685,6 +674,17 @@ decision D-9: The reveal's flag is `focus`, true by default; `focus: false` is w
   by: user:wittjosiah
   affects: [op:scrollToAnchor]
   why: What the flag decides is whether the reveal takes the caret and focus; following is only one reason not to.
+```
+
+```mdl
+decision D-10: The `addChart` operation takes the chart type as a string and names this plugin's types in its description, rather than a literal list in its schema. Follows [D-5].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [op:addChart]
+  why: A type another plugin contributes is as valid as the sheet's own, and the agent learns the common ones from the description and the skill.
+  rejected:
+    - A literal union of the sheet's types in the input schema: the built-in list D-5 rejected, and it refuses contributed types.
 ```
 
 ## Appendix: Extension Definitions
