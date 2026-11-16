@@ -661,14 +661,14 @@ decision D-4: The toolbar's tools sit in a Format group and an Insert group that
 ---
 
 ```mdl
-decision D-4: Revealing an anchor moves out of the comment config into a per-type `Locator`, which comments and peer presence both use.
+decision D-5: Revealing an anchor moves out of the comment config into a per-type `Locator`, which comments and peer presence both use.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [op:scrollToAnchor]
 ```
 
 ```mdl
-decision D-5: The editor publishes its selection and the top of its viewport, as cursors, to the `ViewLocation` view-state aspect for the document. Fills in [D-4].
+decision D-6: The editor publishes its selection and the top of its viewport, as cursors, to the `ViewLocation` view-state aspect for the document. Fills in [D-5].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
