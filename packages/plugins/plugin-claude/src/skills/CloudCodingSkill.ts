@@ -39,7 +39,7 @@ export const make = (): Skill.Skill =>
         1. Start Cloud Coding Run with the tasks. When a task has no assignee, pass \`assignee\` with the identityDid
            and name whoami returns: a delegated task answers to a person. It returns the run's chat and \`done\`.
         2. While \`done\` is false the agent is working: call Sync Cloud Coding Run with the chat, again and again. Each
-           call folds the agent's progress into the chat and waits up to a minute for more.
+           call folds the agent's progress into the chat and waits up to half a minute for more.
         3. When \`done\` is true, \`pullRequests\` lists the draft pull requests the agent opened. They are already
            attached to the tasks, which are now in review; report them.
 

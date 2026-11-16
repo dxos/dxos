@@ -22,11 +22,14 @@ import * as EdgeCredentials from '../agents/EdgeCredentials.ts';
 import * as CodingAgentControl from '../CodingAgentControl.ts';
 import { CLAUDE_CODE_EDGE_AGENT } from '../constants.ts';
 
-/** How long the starting call folds: enough to see the agent take the prompt, short of an MCP client's timeout. */
-const START_WINDOW_MS = 40_000;
+/**
+ * How long the starting call folds. Short: creating the chat and a cold bundle load already take much of an MCP
+ * client's sixty seconds, and the agent works on whether or not anything is folding.
+ */
+const START_WINDOW_MS = 10_000;
 
-/** How long a fold call waits for more: well inside EDGE's ten-minute invocation limit and an MCP client's patience. */
-const FOLD_WINDOW_MS = 45_000;
+/** How long a sync call waits for more: a cold bundle load plus this must stay inside an MCP client's sixty seconds. */
+const FOLD_WINDOW_MS = 25_000;
 
 /** The agent as an operation runs it: no Composer client, so no Composer MCP token, and the space's own tokens. */
 const definition: EdgeAgent.Definition = {
