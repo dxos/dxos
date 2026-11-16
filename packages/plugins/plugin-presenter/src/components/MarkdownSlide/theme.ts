@@ -105,14 +105,15 @@ export const theme = {
       },
     },
 
-    // A card is a filled surface holding art, a title and a line or two: the brand's own card. Its image sits above
-    // the text and is cropped to the box, so cards of different art still line their titles up.
+    // A card is a filled surface holding art, a title and a line or two: the brand's own card. The art is contained
+    // rather than cropped: `cover` scales by whichever axis is larger, so a card spanning two columns drew its mark
+    // close to twice the size of its neighbours'.
     card: {
       default: {
         card:
           'flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ' +
           '[grid-column:span_var(--slide-span-cols,1)] [grid-row:span_var(--slide-span-rows,1)]',
-        img: 'w-full grow min-h-0 object-cover',
+        img: 'w-full grow min-h-0 object-contain',
         h1: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
         h2: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
         h3: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
@@ -122,7 +123,7 @@ export const theme = {
         card:
           'flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ' +
           '[grid-column:span_var(--slide-span-cols,1)] [grid-row:span_var(--slide-span-rows,1)]',
-        img: 'w-full grow min-h-0 object-cover',
+        img: 'w-full grow min-h-0 object-contain',
         h1: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
         h2: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
         h3: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
