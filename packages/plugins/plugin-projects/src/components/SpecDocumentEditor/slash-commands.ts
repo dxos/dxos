@@ -3,7 +3,7 @@
 //
 
 import { type CompletionContext, type CompletionResult, autocompletion } from '@codemirror/autocomplete';
-import { type Extension, Facet, type Line } from '@codemirror/state';
+import { type EditorState, type Extension, Facet, type Line } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
 /** Where a slash command runs: the `/name` typed (`from`–`to`) and the text before it on its line. */
@@ -13,6 +13,8 @@ export type SlashCommandTarget = { view: EditorView; from: number; to: number; l
 export type SlashCommand = {
   /** What follows the slash. */
   name: string;
+  /** Shown beside it where the command is offered as a menu item. */
+  icon?: string;
   detail?: (before: string) => string | undefined;
   apply: (target: SlashCommandTarget) => void;
 };
@@ -20,8 +22,26 @@ export type SlashCommand = {
 /** The commands each extension package contributes; `slashCommands` lists them all. */
 export const slashCommand = Facet.define<SlashCommand>();
 
+/** Commands that depend on the text, such as one per block kind the spec defines; a contributed command of the same name wins. */
+export const slashCommandSource = Facet.define<(state: EditorState) => readonly SlashCommand[]>();
+
+/** Every command the text offers, contributed ones first. */
+export const slashCommandsOf = (state: EditorState): SlashCommand[] => {
+  const commands = [...state.facet(slashCommand)];
+  const names = new Set(commands.map(({ name }) => name));
+  for (const source of state.facet(slashCommandSource)) {
+    for (const command of source(state)) {
+      if (!names.has(command.name)) {
+        names.add(command.name);
+        commands.push(command);
+      }
+    }
+  }
+  return commands;
+};
+
 const source = (context: CompletionContext): CompletionResult | null => {
-  const commands = context.state.facet(slashCommand);
+  const commands = slashCommandsOf(context.state);
   const word = context.matchBefore(/\/[\w-]*$/);
   if (commands.length === 0 || !word || (word.from === word.to && !context.explicit)) {
     return null;
@@ -42,6 +62,12 @@ const source = (context: CompletionContext): CompletionResult | null => {
       apply: (view, _completion, from, to) => apply({ view, from, to, line, before }),
     })),
   };
+};
+
+/** Runs a command at the selection, as though its slash were typed there with no text before it. */
+export const runSlashCommand = (view: EditorView, command: SlashCommand) => {
+  const { head } = view.state.selection.main;
+  command.apply({ view, from: head, to: head, line: view.state.doc.lineAt(head), before: '' });
 };
 
 /** One completion for every contributed command, a single instance so packages contributing commands share it. */

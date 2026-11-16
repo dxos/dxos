@@ -26,7 +26,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
-import { Attention } from '@dxos/react-ui-attention/types';
+import { Attention, ViewState } from '@dxos/react-ui-attention/types';
 import { Expando } from '@dxos/schema';
 import { Thread } from '@dxos/types';
 
@@ -39,10 +39,24 @@ await Harness.preload({ plugins: [ClientPlugin.make({})] });
 
 const LEADER = 'a'.repeat(64);
 
-const EXTENSION_ID = 'test-extension';
+/** The aspect of the fake followable with a `follow`. */
+const DeckAspect = ViewState.define({
+  key: 'com.example.aspect.deck',
+  backend: 'memory',
+  schema: Schema.Struct({ front: Schema.String }),
+  defaultValue: () => ({ front: '' }),
+});
+
+/** The aspect of the fake followable without one, which the follow writes. */
+const TabAspect = ViewState.define({
+  key: 'com.example.aspect.tab',
+  backend: 'memory',
+  schema: Schema.Struct({ tab: Schema.String }),
+  defaultValue: () => ({ tab: 'overview' }),
+});
 
 describe('Follow', () => {
-  test('each extension is handed the leader’s view with the leader’s value for it alone, and one that navigates opens it', async ({
+  test('a followable’s `follow` is handed the leader’s view with their values of its aspect alone, and one that navigates opens it', async ({
     expect,
   }) => {
     const { calls, followed, ephemeral, registry, space, object } = await setup();
@@ -51,7 +65,10 @@ describe('Follow', () => {
     const other = GraphPath.getObjectPath(space.id, 'expando', EntityId.random());
     lead(registry, ephemeral, space.id, key, path, {
       planks: [path, other],
-      extensions: { [EXTENSION_ID]: { front: other }, 'other-extension': { zoom: 2 } },
+      viewState: {
+        [DeckAspect.key]: { [key]: { front: other }, [EID.make({ spaceId: space.id })]: { front: 7 } },
+        [TabAspect.key]: { [key]: { tab: 'spec' } },
+      },
     });
 
     await expect.poll(() => followed.views.at(-1)?.attended.localPath).toBe(path);
@@ -60,13 +77,32 @@ describe('Follow', () => {
       spaceId: space.id,
       active: [path, other],
       attended: { key, path, localPath: path },
-      value: { front: other },
+      values: { [key]: { front: other } },
     });
     await vi.advanceTimersByTimeAsync(600);
     expect(calls.filter(({ op }) => op === 'open')).toEqual([]);
   });
 
-  test('each tick advances an extension’s view, so it needs no timer of its own', async ({ expect }) => {
+  test('a followable without a `follow` takes each value the leader changes into this session’s view state', async ({
+    expect,
+  }) => {
+    const { ephemeral, registry, space, object, viewState } = await setup();
+    const key = EID.make({ spaceId: space.id, entityId: object.id });
+    const path = GraphPath.getObjectPathFromObject(object);
+    lead(registry, ephemeral, space.id, key, path, {
+      planks: [path],
+      viewState: { [TabAspect.key]: { [key]: { tab: 'spec' } } },
+    });
+    await expect.poll(() => viewState.get(TabAspect, key)).toEqual({ tab: 'spec' });
+
+    lead(registry, ephemeral, space.id, key, path, {
+      planks: [path],
+      viewState: { [TabAspect.key]: { [key]: { tab: 'tasks' } } },
+    });
+    await expect.poll(() => viewState.get(TabAspect, key)).toEqual({ tab: 'tasks' });
+  });
+
+  test('each tick advances a followable’s view, so it needs no timer of its own', async ({ expect }) => {
     const { followed, ephemeral, registry, space, object } = await setup();
     const path = GraphPath.getObjectPathFromObject(object);
     lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
@@ -78,7 +114,7 @@ describe('Follow', () => {
     expect(followed.views.length).toBeGreaterThan(updates);
   });
 
-  test('stopping a follow ends each extension’s follow', async ({ expect }) => {
+  test('stopping a follow ends each followable’s `follow`', async ({ expect }) => {
     const { followed, ephemeral, registry, space, object } = await setup();
     const path = GraphPath.getObjectPathFromObject(object);
     lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
@@ -88,7 +124,7 @@ describe('Follow', () => {
     await expect.poll(() => followed.closed).toBe(true);
   });
 
-  test('with no extension that navigates, the follower opens the attended object in its space, without focus', async ({
+  test('with no followable that navigates, the follower opens the attended object in its space, without focus', async ({
     expect,
   }) => {
     const { calls, ephemeral, registry, space, object } = await setup({ navigates: false });
@@ -149,7 +185,7 @@ describe('Follow', () => {
     await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(false);
   });
 
-  test('an extension that cannot show the view pauses the follow', async ({ expect }) => {
+  test('a followable that cannot show the view pauses the follow', async ({ expect }) => {
     const { shows, ephemeral, registry, space, object } = await setup();
     const path = GraphPath.getObjectPathFromObject(object);
     lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
@@ -300,8 +336,8 @@ const setupFollowing = async () => {
   return { ...context, main };
 };
 
-/** What the fake extension was handed: every view in order, and whether its follow ended. */
-type Followed = { views: AppCapabilities.FollowView[]; closed: boolean };
+/** What the fake followable's `follow` was handed: every view in order, and whether it ended. */
+type Followed = { views: AppCapabilities.FollowView<{ front: string }>[]; closed: boolean };
 
 /** A layout operation or reveal the follow asked for. */
 type Call = { op: string; input: unknown };
@@ -347,6 +383,7 @@ const setup = async ({ navigates = true }: { navigates?: boolean } = {}) => {
     space,
     object,
     attention: harness.get(AttentionCapabilities.Attention),
+    viewState: harness.get(AttentionCapabilities.ViewState),
   };
 };
 
@@ -354,15 +391,15 @@ const TestLayout = Capability.makeSingleton<Atom.Writable<AppCapabilities.Layout
   'org.dxos.plugin.space.test.follow.layout',
 );
 
-/** Whether the fake extension shows the view. */
+/** Whether the fake followable shows the view. */
 const TestShows = Capability.makeSingleton<Atom.Writable<boolean>>()('org.dxos.plugin.space.test.follow.shows');
 
 /** What the test `Locator`'s reveal answers: whether its view revealed the anchor. */
 const TestReveals = Capability.makeSingleton<Atom.Writable<boolean>>()('org.dxos.plugin.space.test.follow.reveals');
 
 /**
- * The follow module over a layout that records the operations it is asked for, a `Locator` for `Expando`, and an
- * extension that records each view it is handed.
+ * The follow module over a layout that records the operations it is asked for, a `Locator` for `Expando`, a followable
+ * whose `follow` records each view it is handed, and one without a `follow`.
  */
 const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean): Plugin.Plugin =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.space.test.follow'), name: 'Follow (test)' })).pipe(
@@ -374,7 +411,7 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
           provides: [
             AppCapabilities.Layout,
             AppCapabilities.Locator,
-            AppCapabilities.LocatorExtension,
+            AppCapabilities.Followable,
             Capabilities.OperationHandler,
             SpaceCapabilities.EphemeralState,
             TestLayout,
@@ -396,9 +433,8 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
           }).pipe(Atom.keepAlive);
           const shows = Atom.make(true).pipe(Atom.keepAlive);
           const reveals = Atom.make(true).pipe(Atom.keepAlive);
-          const extension: AppCapabilities.LocatorExtension = {
-            id: EXTENSION_ID,
-            location: Atom.make({}),
+          const deckFollowable = AppCapabilities.makeFollowable({
+            aspect: DeckAspect,
             navigates,
             follow: Effect.fnUntraced(function* (view) {
               followed.views.push(registry.get(view));
@@ -411,7 +447,7 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
               );
               return shows;
             }),
-          };
+          });
           const record = (op: string) => (input: unknown) => Effect.sync(() => void calls.push({ op, input }));
           return [
             Capability.contribute(AppCapabilities.Layout, layout),
@@ -419,7 +455,8 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
             Capability.contribute(TestReveals, reveals),
             Capability.contribute(TestShows, shows),
             Capability.contribute(AppCapabilities.Locator, { id: Type.getTypename(Expando.Expando), reveal: Reveal }),
-            Capability.contribute(AppCapabilities.LocatorExtension, extension),
+            Capability.contribute(AppCapabilities.Followable, deckFollowable),
+            Capability.contribute(AppCapabilities.Followable, AppCapabilities.makeFollowable({ aspect: TabAspect })),
             Capability.contribute(
               Capabilities.OperationHandler,
               OperationHandlerSet.make(
@@ -448,6 +485,7 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
             Capabilities.OperationInvoker,
             AppCapabilities.Layout,
             AttentionCapabilities.Attention,
+            AttentionCapabilities.ViewState,
             SpaceCapabilities.EphemeralState,
             ClientCapabilities.Client,
           ],

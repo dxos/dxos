@@ -255,6 +255,7 @@ op scrollToAnchor
 
 ```mdl
 feat F-1: Edit Document
+  uses: [Document]
 
   req F-1.1: Editor opens Document.content as a collaborative CodeMirror surface.
   req F-1.2: Edits replicate to all peers via ECHO Text.
@@ -263,6 +264,7 @@ feat F-1: Edit Document
 
 ```mdl
 feat F-2: View Modes
+  uses: [Document]
 
   req F-2.1: Document opens in settings.defaultViewMode (source | preview | readonly).
   req F-2.2:
@@ -280,6 +282,9 @@ feat F-3: Formatting Toolbar
     when: settings.toolbar is true
     then: formatting toolbar shown above editor with bold, italic, headings, lists, links
   req F-3.2: Toolbar surfaces toolbar-disposition actions from the app graph for the current attendable.
+  req F-3.3: Headings and marks form a Format group, and lists, blocks and image an Insert group. Each shows its
+             buttons while the toolbar has room and folds into a menu under its name when it does not, Insert first.
+             Insert then moves into More, before the other tools; Format moves last.
 ```
 
 ```mdl
@@ -306,6 +311,7 @@ feat F-5: File Upload
 
 ```mdl
 feat F-6: AI Editing
+  uses: [create, Document, open, update]
 
   req F-6.1: Plugin contributes a Skill exposing op:create, op:open, op:update as tools.
   req F-6.2:
@@ -324,6 +330,7 @@ feat F-7: Comments
 
 ```mdl
 feat F-8: Versioning (checkpoints, branches, merge)
+  uses: [CreateBranch, CreateCheckpoint, Document, HistoryProvider, MergeBranch, VersionToolbar]
 
   req F-8.1: The plugin MUST support named checkpoints (CreateCheckpoint), per-object branches
     (CreateBranch), and CRDT merge-back (MergeBranch) over Document.history (@dxos/versioning).
@@ -648,17 +655,27 @@ decision D-3: The `commentAgentMode` setting moves to plugin-review, which appli
   affects: [F-7.2]
 ```
 
+```mdl
+decision D-4: The toolbar's tools sit in a Format group and an Insert group that fold into menus as it narrows, rather than lists, blocks and headings moving into More one by one. A spec in a project's Specs tab shows the same toolbar.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-3.3]
+  why: The Specs tab put a second arrangement of the same tools beside the tabs, with its own separators.
+  rejected:
+    - A separate grouped layout for the Specs tab only.
+```
+
 ---
 
 ```mdl
-decision D-4: Revealing an anchor moves out of the comment config into a per-type `Locator`, which comments and peer presence both use.
+decision D-5: Revealing an anchor moves out of the comment config into a per-type `Locator`, which comments and peer presence both use.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [op:scrollToAnchor]
 ```
 
 ```mdl
-decision D-5: The editor publishes its selection and the top of its viewport, as cursors, to the `ViewLocation` view-state aspect for the document. Fills in [D-4].
+decision D-6: The editor publishes its selection and the top of its viewport, as cursors, to the `ViewLocation` view-state aspect for the document. Fills in [D-5].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -668,7 +685,7 @@ decision D-5: The editor publishes its selection and the top of its viewport, as
 ```
 
 ```mdl
-decision D-6: With `follow`, the reveal scrolls the anchor to the top of the view and leaves the selection and focus alone, for following a peer (org.dxos.plugin.space#F-8.20). The editor reports its location every 100 ms rather than 250 ms, so a followed peer's moves go out at the follow rate. Fills in [D-5].
+decision D-7: With `follow`, the reveal scrolls the anchor to the top of the view and leaves the selection and focus alone, for following a peer (org.dxos.plugin.space#F-8.20). The editor reports its location every 100 ms rather than 250 ms, so a followed peer's moves go out at the follow rate. Fills in [D-6].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah

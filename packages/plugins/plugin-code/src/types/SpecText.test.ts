@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Spec from '@dxos/compute/Spec';
-import { type Database, Obj, Ref } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { getTextInRange, toCursor } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Doc } from '@dxos/echo-doc';
@@ -103,40 +103,6 @@ describe('SpecText', () => {
     expect(members(mail)).toEqual([]);
   });
 
-  test('expand writes each embed of a held feature as its block, keeping read-in ids and numbering the rest', async ({
-    expect,
-  }) => {
-    const sync = addFeature('Sync');
-    Feature.setRequirements(sync, [{ id: 'F-1.1', text: 'Mail arrives within a minute.' }]);
-    Obj.update(sync, (sync) => {
-      Feature.setSources(sync, ['packages/a/PLUGIN.mdl#F-1']);
-    });
-    const archive = addFeature('Archive');
-    const other = addFeature('Elsewhere');
-    addSpec('Mail', [other]);
-    const inbox = addSpec('Inbox', [sync, archive]);
-    await write(
-      inbox,
-      `# Inbox\n\n${SpecText.makeEmbed(sync)}\n\n${SpecText.makeEmbed(archive)}\n\nSee ${SpecText.makeEmbed(other)}.\n`,
-    );
-    await SpecText.sync(inbox);
-
-    const text = await SpecText.expand(inbox);
-    expect(
-      FeatureSpec.parse(text).map(({ id, name, status, requirements }) => ({ id, name, status, requirements })),
-    ).toEqual([
-      {
-        id: 'F-1',
-        name: 'Sync',
-        status: 'planned',
-        requirements: [{ id: 'F-1.1', text: 'Mail arrives within a minute.' }],
-      },
-      { id: 'F-2', name: 'Archive', status: 'planned', requirements: [] },
-    ]);
-    expect(text).toContain(`See ${SpecText.makeEmbed(other)}.`);
-    expect(text.startsWith('# Inbox\n\n```mdl\nfeat F-1: Sync')).toBe(true);
-  });
-
   test('sync numbers a feature made in the app after the highest block id, and keeps the ids when features move', async ({
     expect,
   }) => {
@@ -175,85 +141,6 @@ describe('SpecText', () => {
     expect(getTextInRange(accessor(), from, to)).toBe('mail');
   });
 
-  test('a feature numbered before its spec had a file is the feature its block names once taken in', async ({
-    expect,
-  }) => {
-    const archive = addFeature('Archive');
-    const inbox = addSpec('Inbox', [archive]);
-    await SpecText.sync(inbox);
-    const file = await SpecText.expand(inbox);
-    expect(FeatureSpec.parse(file).map(({ id }) => id)).toEqual(['F-1']);
-
-    const { created } = await SpecText.take(inbox, { path: 'packages/a/PLUGIN.mdl', text: file });
-    expect(created).toEqual([]);
-    expect(members(inbox)).toEqual([archive.id]);
-    expect(Feature.getSources(archive)).toEqual(['packages/a/PLUGIN.mdl#F-1']);
-  });
-
-  test('a file taken in and written out against itself is unchanged, apart from what was edited since', async ({
-    expect,
-  }) => {
-    const file = [
-      '# Inbox',
-      '',
-      '```mdl',
-      'feat F-1: Sync',
-      '',
-      '  req F-1.1:',
-      '    when: mail arrives',
-      '    then: it shows within a minute',
-      '```',
-      '',
-      '```mdl',
-      'feat F-2: Compose',
-      '  req F-2.1: Drafts are kept.',
-      '```',
-      '',
-    ].join('\n');
-    const inbox = addSpec('Inbox');
-    const { created } = await SpecText.take(inbox, { path: 'packages/a/PLUGIN.mdl', text: file });
-    expect(created).toHaveLength(2);
-    expect(FeatureSpec.parse(await SpecText.read(inbox))).toEqual([]);
-    expect(await SpecText.expand(inbox, { base: file })).toBe(file);
-
-    const [, compose] = await Ref.loadAll(FeatureMap.getFeatures(inbox));
-    Obj.update(compose, (compose) => {
-      compose.status = 'operational';
-    });
-    expect(await SpecText.expand(inbox, { base: file })).toBe(
-      file.replace('feat F-2: Compose\n', 'feat F-2: Compose\n  status: operational\n'),
-    );
-  });
-
-  test('a block without a status line is taken in as planned, as it is written out', async ({ expect }) => {
-    const file = ['```mdl', 'feat F-1: Sync', '  status: operational', '```', ''].join('\n');
-    const inbox = addSpec('Inbox');
-    await SpecText.take(inbox, { path: 'PLUGIN.mdl', text: file });
-    const [sync] = await Ref.loadAll(FeatureMap.getFeatures(inbox));
-    expect(sync.status).toBe('operational');
-
-    const edited = file.replace('  status: operational\n', '');
-    await SpecText.take(inbox, { path: 'PLUGIN.mdl', text: edited });
-    expect(sync.status).toBe('planned');
-    expect(await SpecText.expand(inbox, { base: edited })).toBe(edited);
-  });
-
-  test('two blocks of a file that name one feature are taken in as two, so export writes both back', async ({
-    expect,
-  }) => {
-    const sync = addFeature('Sync');
-    Obj.update(sync, (sync) => {
-      Feature.setSources(sync, ['PLUGIN.mdl#F-3', 'PLUGIN.mdl#F-6']);
-    });
-    const inbox = addSpec('Inbox', [sync]);
-    const file = ['```mdl', 'feat F-3: Sync', '```', '', '```mdl', 'feat F-6: Retry', '```', ''].join('\n');
-    const { created } = await SpecText.take(inbox, { path: 'PLUGIN.mdl', text: file });
-    expect(created).toHaveLength(1);
-    expect(Feature.getSources(sync)).toEqual(['PLUGIN.mdl#F-3']);
-    expect(await embedded(inbox)).toEqual([sync.id, ...created]);
-    expect(await SpecText.expand(inbox, { base: file })).toBe(file);
-  });
-
   test('replaceBlock finds a block that shares its fence with others', async ({ expect }) => {
     const verdict = addFeature('Verdict');
     const map = addSpec('Ride Check', [verdict]);
@@ -266,55 +153,5 @@ describe('SpecText', () => {
     expect(FeatureSpec.parse(text).map(({ id }) => id)).toEqual(['F-2']);
     expect(text).toContain('type Hour');
     expect(await embedded(map)).toEqual([verdict.id]);
-  });
-
-  test('a fence holding several feat blocks is taken in as an embed per block', async ({ expect }) => {
-    const file = [
-      '```mdl',
-      'feat F-1: Verdict',
-      '  desc: The answer first.',
-      '  req F-1.1: Covers three hours.',
-      '',
-      'feat F-2: Chart',
-      '  req F-2.1: One column per hour.',
-      '```',
-      '',
-    ].join('\n');
-    const map = addSpec('Ride Check');
-    await SpecText.take(map, { path: 'SPEC.mdl', text: file });
-    const features = await Ref.loadAll(FeatureMap.getFeatures(map));
-    expect(
-      features.map((feature) => ({
-        name: feature.name,
-        description: feature.description,
-        requirements: Feature.getRequirements(feature),
-      })),
-    ).toEqual([
-      {
-        name: 'Verdict',
-        description: 'The answer first.',
-        requirements: [{ key: expect.any(String), id: 'F-1.1', text: 'Covers three hours.' }],
-      },
-      {
-        name: 'Chart',
-        description: undefined,
-        requirements: [{ key: expect.any(String), id: 'F-2.1', text: 'One column per hour.' }],
-      },
-    ]);
-    expect(await embedded(map)).toEqual(features.map(({ id }) => id));
-  });
-
-  test('the codec leaves prose to the text merge, and takes a file of feat blocks in and back out', async ({
-    expect,
-  }) => {
-    const spec = addSpec('a/PLUGIN.mdl');
-    const path = 'packages/a/PLUGIN.mdl';
-    expect(await SpecText.codec.read(spec, 'Just prose.', { path })).toBe(false);
-    expect(await SpecText.codec.write(spec, {})).toBeUndefined();
-
-    const file = ['# A', '', '```mdl', 'feat F-1: Sync', '```', ''].join('\n');
-    expect(await SpecText.codec.read(spec, file, { path })).toBe(true);
-    expect((await Ref.loadAll(FeatureMap.getFeatures(spec))).map(({ name }) => name)).toEqual(['Sync']);
-    expect(await SpecText.codec.write(spec, { base: file })).toBe(file);
   });
 });

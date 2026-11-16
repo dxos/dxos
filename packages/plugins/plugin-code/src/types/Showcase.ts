@@ -11,13 +11,13 @@ import { DXN, Migration, Obj, Relation, Type } from '@dxos/echo';
 import * as LegacyShowcase from './LegacyShowcase.ts';
 
 /**
- * Source demonstrates the target, a `Feature` or a `Task`. The source is the showcase, a presenter deck
- * (`org.dxos.type.presentation`), typed loosely because plugin-presenter depends on this plugin.
+ * Source demonstrates the target: one item of a spec, named by `item`, or a `Task`. The source is the showcase, a
+ * presenter deck (`org.dxos.type.presentation`), typed loosely because plugin-presenter depends on this plugin.
  */
 export class Demonstrates extends Type.makeRelation<Demonstrates>(DXN.make('org.dxos.relation.demonstrates', '0.2.0'))({
   source: Obj.Unknown,
   target: Obj.Unknown,
-})(Schema.Struct({ id: Obj.ID })) {}
+})(Schema.Struct({ id: Obj.ID, item: Schema.optional(Schema.String) })) {}
 
 export const makeDemonstrates = (props: Relation.MakeProps<typeof Demonstrates>) => Relation.make(Demonstrates, props);
 

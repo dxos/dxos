@@ -49,6 +49,11 @@ export const markerFrame = (marker: Marker, box: number, stroke: number): Marker
       const size = (box * 10) / 8;
       return { size, view: 10, refX: 9 + stroke / 2 / (size / 10), refY: 5 };
     }
+    case 'diamond':
+    case 'diamond-filled': {
+      const size = (box * 18) / 10;
+      return { size, view: 18, refX: 16 + miter(stroke) / (size / 18), refY: 5 };
+    }
     case 'many': {
       // The toes' round caps reach the anchor, where an arrow's tip does.
       const size = (box * 12) / 10;
@@ -71,6 +76,9 @@ export const markerTrim = (marker: Marker, box: number, stroke: number, shaft: S
       return miter(stroke) + (size / 12) * 10;
     case 'circle':
       return (size / 10) * 4 + stroke / 2;
+    case 'diamond':
+    case 'diamond-filled':
+      return miter(stroke) + (size / 18) * 16;
     case 'many':
       return 0;
   }
@@ -82,7 +90,9 @@ const grooveLength = (marker: Marker, width: number, size: number) =>
     ? Math.max(size, width * 2.5)
     : marker === 'triangle'
       ? Math.max(size * 1.25, width * 4)
-      : Math.max(size / 2, width * 1.5);
+      : marker === 'diamond' || marker === 'diamond-filled'
+        ? Math.max(size * 1.75, width * 6)
+        : Math.max(size / 2, width * 1.5);
 
 /**
  * How far back from the anchor a groove's track stops under its head, where the head's channel covers its round cap:
@@ -98,6 +108,9 @@ export const grooveTrim = (marker: Marker, width: number, size: number): number 
       return miter(width) + length;
     case 'circle':
       return length * 2 + width / 2;
+    case 'diamond':
+    case 'diamond-filled':
+      return miter(width) + length;
     case 'many':
       return width / 2;
   }
@@ -125,20 +138,23 @@ export type GrooveHeads = {
   outline: string;
   /** The inside of each hollow head (the triangle's and the ring's), filled: the track draws nothing there. */
   hollow: string;
+  /** The inside of each solid head (the filled diamond's), filled: the channel covers it. */
+  solid: string;
 };
 
 /**
  * The groove heads for a link's ends: an open chevron for `arrow`, a hollow triangle and a ring for `triangle` and
- * `circle`, and for `many` a chevron opening onto the end. A pointed head's mitred tip, the ring's far side and a
- * crow's foot's toes are at the route's end.
+ * `circle`, a diamond, hollow or solid, for `diamond` and `diamond-filled`, and for `many` a chevron opening onto the
+ * end. A pointed head's mitred tip, the ring's far side and a crow's foot's toes are at the route's end.
  */
 export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: number): GrooveHeads => {
   const points = flattenPath(path)[0] ?? [];
   if (points.length < 2) {
-    return { outline: '', hollow: '' };
+    return { outline: '', hollow: '', solid: '' };
   }
   const outline: string[] = [];
   const hollow: string[] = [];
+  const solid: string[] = [];
   const build = (marker: Marker | undefined, tip: Point, toward: Point | undefined) => {
     if (!marker || !toward) {
       return;
@@ -165,6 +181,20 @@ export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: n
         hollow.push(triangle);
         break;
       }
+      case 'diamond':
+      case 'diamond-filled': {
+        const back = miter(width);
+        const corners = [
+          local(back, 0),
+          local(back + length / 2, length / 3),
+          local(back + length, 0),
+          local(back + length / 2, -length / 3),
+        ];
+        const diamond = `M ${corners.map(at).join(' L ')} Z`;
+        outline.push(diamond);
+        (marker === 'diamond' ? hollow : solid).push(diamond);
+        break;
+      }
       case 'circle': {
         const centre = local(length + width / 2, 0);
         const radius = round(length);
@@ -187,7 +217,7 @@ export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: n
   const last = points[points.length - 1];
   build(ends.start, first, arrival(points.slice(1), first));
   build(ends.end, last, arrival([...points].reverse().slice(1), last));
-  return { outline: outline.join(' '), hollow: hollow.join(' ') };
+  return { outline: outline.join(' '), hollow: hollow.join(' '), solid: solid.join(' ') };
 };
 
 /** The box a groove's channel and its lips lie in, its route's box grown by a head's reach: a mask's region. */
