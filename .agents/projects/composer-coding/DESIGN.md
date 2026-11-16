@@ -43,3 +43,7 @@ the task's repositories, and the result is a pull request attached to the task.
   `org.dxos.operation.projects.updateRepositories`) rather than adding plugin-code to edge's
   operation-service — plugin-projects is already registered there and its skill is MCP-enabled, and
   plugin-code already depends on plugin-projects. Old key appears only in past execution traces.
+- 2026-11-16: merged dm/cool-shannon-1rf4dy (dxos#14555) into this branch so one ref carries the
+  dev-channel re-point and the brief change; composer-dev is deployed from it with `app: composer`
+  only, so the dev docs and other apps are left as they are. The first attempt (run 813) was
+  cancelled by another person's dev deploy — the `deploy-dev` concurrency group supersedes.
