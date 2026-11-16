@@ -200,6 +200,10 @@ const EditorShortcuts = () => {
         !(focus instanceof Node && element.contains(focus)) &&
         element.focus({ preventScroll: true });
     };
+    // A menu the editor opened sits in a portal outside it, so a press there disarms; its close returns focus here.
+    const onFocusIn = () => {
+      inside.current = true;
+    };
     const onKeyDown = (event: KeyboardEvent) => {
       const focus = globalThis.document.activeElement;
       if (
@@ -219,9 +223,11 @@ const EditorShortcuts = () => {
         command.run();
       }
     };
+    element.addEventListener('focusin', onFocusIn);
     window.addEventListener('pointerdown', onPointerDown, { capture: true });
     window.addEventListener('keydown', onKeyDown);
     return () => {
+      element.removeEventListener('focusin', onFocusIn);
       window.removeEventListener('pointerdown', onPointerDown, { capture: true });
       window.removeEventListener('keydown', onKeyDown);
     };
