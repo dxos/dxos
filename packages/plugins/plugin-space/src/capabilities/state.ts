@@ -36,6 +36,7 @@ export default Capability.makeModule(
       sdkMigrationRunning: {},
       navigableCollections: false,
       viewersByObject: {},
+      peerDecks: {},
       mergePreview: undefined,
       lastMergeAt: undefined,
     }).pipe(Atom.keepAlive);

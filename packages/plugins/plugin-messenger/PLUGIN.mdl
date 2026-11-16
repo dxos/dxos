@@ -109,7 +109,8 @@ component MessengerCompanion
   desc: |
     Deck companion `messenger` (icon ph--envelope--regular). Renders invitations through
     `AppSurface.SpaceInvitation` (plugin-client) and opens the first attachment with
-    `LayoutOperation.Open`. The companion's `badge` atom is the unread count.
+    `LayoutOperation.Open`. The companion's `badge` atom is the unread count. It sits second in the
+    complementary rail (position -2), ahead of plugin-space's Members companion.
 ```
 
 ## Operations
@@ -222,4 +223,11 @@ decision D-2: The capability is named `InboxSender` and its `send` fails with `E
   affects: [AppCapabilities.InboxSender]
   why: The error classes belong to this plugin, so the toolkit cannot name them without depending on it.
   rejected: Moving `UnknownRecipientError` and `MessageSendError` into the toolkit too.
+```
+
+```mdl
+decision D-3: Notifications comes second in the complementary rail, ahead of Members.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [MessengerCompanion]
 ```

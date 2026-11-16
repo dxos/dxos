@@ -429,8 +429,16 @@ export class AppManager {
   async createSpaceInvitation(): Promise<string> {
     this._invitationCode = new Trigger<string>();
     this._authCode = new Trigger<string>();
-    await this.page.getByTestId('membersContainer.createInvitation.more').click();
-    await this.page.getByTestId('membersContainer.inviteOne').click();
+    const more = this.page.getByTestId('membersContainer.createInvitation.more');
+    const inviteOne = this.page.getByTestId('membersContainer.inviteOne');
+    // The contact picker above loads lazily and can push the trigger down mid-click, so the menu may not open.
+    await expect(async () => {
+      if ((await more.getAttribute('aria-expanded')) !== 'true') {
+        await more.click();
+      }
+      await expect(inviteOne).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 15_000 });
+    await inviteOne.click();
     await this.page.getByTestId('membersContainer.createInvitation').click();
     return await this._invitationCode.wait();
   }

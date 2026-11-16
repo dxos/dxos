@@ -4,11 +4,35 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Key, Obj } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { EID } from '@dxos/keys';
+
+import { type SpaceSchema } from '#types';
+
+/** Identity → session → viewer state, for one object. */
+export type ObjectViewers = Record<string, Record<string, SpaceSchema.ObjectViewerProps>>;
+
+/** {@link ObjectViewers}, per presence key. */
+export type ViewersByObject = Record<string, ObjectViewers>;
+
+/** Space → identity → session → that session's deck in the space. */
+export type PeerDecks = Record<string, Record<string, Record<string, SpaceSchema.PeerDeck>>>;
 
 export const PRESENCE_BROADCAST_INTERVAL = 30_000;
 
 export const PRESENCE_EXPIRY = 2 * PRESENCE_BROADCAST_INTERVAL;
+
+/**
+ * How long a lapsed session is remembered: past any heartbeat gap a live tab leaves (a hidden tab's timers can run once
+ * a minute), so one that reports again keeps when it last moved.
+ */
+export const PRESENCE_RETENTION = 10 * PRESENCE_EXPIRY;
+
+/** A session whose anchor moved within this window of now is active; otherwise it is idle. */
+export const ACTIVITY_WINDOW = 60_000;
+
+/** Longest a move in an attended object waits before peers hear of it. */
+export const LOCATION_BROADCAST_INTERVAL = 1_000;
 
 export const getPresenceKeyFromPath = (path: string): EID.EID | undefined => {
   const spaceId = GraphPath.getSpaceIdFromPath(path);
@@ -55,3 +79,349 @@ export const getPresenceKeyFromObject = (object: Obj.Unknown): EID.EID | undefin
 };
 
 export const getPresenceKeyFromSpace = (spaceId: Key.SpaceId): EID.EID => EID.make({ spaceId });
+
+/**
+ * The `viewing` gossip message: the sender's open objects as deltas, the ones it attends, and where it is in those.
+ * One per session (a tab or app instance); a sender without `sessionId` counts as one session of its identity.
+ */
+export type ViewingMessage = {
+  identityKey: string;
+  sessionId?: string;
+  device?: SpaceSchema.SessionDevice;
+  added: string[];
+  removed: string[];
+  attended: string[];
+  locations: Record<string, SpaceSchema.PeerLocation>;
+  deck?: SpaceSchema.PeerDeck;
+};
+
+const isString = (value: unknown): value is string => typeof value === 'string';
+
+// A session id becomes a graph node segment, so it must carry no separator.
+const isSessionId = (value: unknown): value is string => isString(value) && /^[A-Za-z0-9_-]{1,64}$/.test(value);
+
+const parseLocation = (value: unknown): SpaceSchema.PeerLocation | undefined => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const { selection, viewport } = value as Record<string, unknown>;
+  const location = {
+    ...(isString(selection) && { selection }),
+    ...(isString(viewport) && { viewport }),
+  };
+  return location.selection || location.viewport ? location : undefined;
+};
+
+const parseDeck = (value: unknown): SpaceSchema.PeerDeck | undefined => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const { planks } = value as Record<string, unknown>;
+  return Array.isArray(planks) ? { planks: planks.filter(isString) } : undefined;
+};
+
+const DEVICE_KINDS: ReadonlySet<string> = new Set(['browser', 'native', 'mobile', 'agent', 'unknown']);
+
+const isDeviceKind = (value: unknown): value is NonNullable<SpaceSchema.SessionDevice['kind']> =>
+  isString(value) && DEVICE_KINDS.has(value);
+
+const parseDevice = (value: unknown): SpaceSchema.SessionDevice | undefined => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const { label, platform, os, kind } = value as Record<string, unknown>;
+  const device = {
+    ...(isString(label) && { label }),
+    ...(isString(platform) && { platform }),
+    ...(isString(os) && { os }),
+    ...(isDeviceKind(kind) && { kind }),
+  };
+  return Object.keys(device).length > 0 ? device : undefined;
+};
+
+/** Narrows a gossip payload, which arrives as opaque JSON, to a {@link ViewingMessage}. */
+export const parseViewingMessage = (payload: Record<string, unknown>): ViewingMessage | undefined => {
+  const { identityKey, sessionId, added, removed, attended, locations } = payload;
+  const device = parseDevice(payload.device);
+  const deck = parseDeck(payload.deck);
+  if (!isString(identityKey) || !Array.isArray(added) || !Array.isArray(removed)) {
+    return undefined;
+  }
+  const parsedLocations: Record<string, SpaceSchema.PeerLocation> = {};
+  if (typeof locations === 'object' && locations !== null) {
+    for (const [key, value] of Object.entries(locations)) {
+      const location = parseLocation(value);
+      if (location) {
+        parsedLocations[key] = location;
+      }
+    }
+  }
+  return {
+    identityKey,
+    ...(isSessionId(sessionId) && { sessionId }),
+    ...(device && { device }),
+    added: added.filter(isString),
+    removed: removed.filter(isString),
+    attended: Array.isArray(attended) ? attended.filter(isString) : [],
+    locations: parsedLocations,
+    ...(deck && { deck }),
+  };
+};
+
+const isSameLocation = (a?: SpaceSchema.PeerLocation, b?: SpaceSchema.PeerLocation) =>
+  a?.selection === b?.selection && a?.viewport === b?.viewport;
+
+/**
+ * Records `peer`'s {@link ViewingMessage} in the viewers map, seen at `lastSeen`. A session has moved when it first
+ * opens an object, comes back to it, or its anchor changes there. Sessions of any peer not heard from within
+ * {@link PRESENCE_RETENTION} of `lastSeen` are forgotten, since a closed or reloaded tab never sends their removal,
+ * and no identity or object is left without sessions.
+ */
+export const applyViewingMessage = (
+  viewersByObject: ViewersByObject,
+  peer: string,
+  { sessionId = peer, device, added, removed, attended, locations }: ViewingMessage,
+  lastSeen: number,
+): ViewersByObject => {
+  const next = { ...viewersByObject };
+  for (const key of added) {
+    const previous = next[key]?.[peer]?.[sessionId];
+    const location = locations[key];
+    const currentlyAttended = attended.includes(key);
+    const moved =
+      !previous || (currentlyAttended && (!previous.currentlyAttended || !isSameLocation(previous.location, location)));
+    next[key] = {
+      ...next[key],
+      [peer]: {
+        ...next[key]?.[peer],
+        [sessionId]: {
+          lastSeen,
+          movedAt: moved ? lastSeen : previous.movedAt,
+          currentlyAttended,
+          ...(location && { location }),
+          ...(device && { device }),
+        },
+      },
+    };
+  }
+  for (const key of removed) {
+    const sessions = next[key]?.[peer];
+    if (sessions?.[sessionId]) {
+      const { [sessionId]: _, ...rest } = sessions;
+      next[key] = { ...next[key], [peer]: rest };
+    }
+  }
+  return pruneViewers(next, lastSeen);
+};
+
+const isRetained = (viewer: SpaceSchema.ObjectViewerProps, now: number) => now - viewer.lastSeen < PRESENCE_RETENTION;
+
+/** `viewersByObject` without lapsed sessions past {@link PRESENCE_RETENTION}, nor the entries they leave empty. */
+const pruneViewers = (viewersByObject: ViewersByObject, now: number): ViewersByObject =>
+  Object.fromEntries(
+    Object.entries(viewersByObject).flatMap(([key, viewers]) => {
+      const kept = Object.entries(viewers).flatMap(([viewer, sessions]) => {
+        const retained = Object.entries(sessions).filter(([, session]) => isRetained(session, now));
+        return retained.length > 0 ? [[viewer, Object.fromEntries(retained)]] : [];
+      });
+      return kept.length > 0 ? [[key, Object.fromEntries(kept)]] : [];
+    }),
+  );
+
+/** Records the deck `peer`'s session reported in `spaceId`, replacing the one it reported before. */
+export const applyPeerDeck = (
+  peerDecks: PeerDecks,
+  spaceId: string,
+  peer: string,
+  { sessionId = peer, deck }: ViewingMessage,
+): PeerDecks =>
+  deck
+    ? {
+        ...peerDecks,
+        [spaceId]: { ...peerDecks[spaceId], [peer]: { ...peerDecks[spaceId]?.[peer], [sessionId]: deck } },
+      }
+    : peerDecks;
+
+/** `peerDecks` without the sessions no longer listed on any object of the deck's space. */
+export const prunePeerDecks = (peerDecks: PeerDecks, viewersByObject: ViewersByObject): PeerDecks =>
+  Object.fromEntries(
+    Object.entries(peerDecks).flatMap(([spaceId, peers]) => {
+      const listed = Object.entries(viewersByObject).filter(([key]) => isInSpace(key, spaceId));
+      const kept = Object.entries(peers).flatMap(([peer, decks]) => {
+        const sessions = Object.entries(decks).filter(([sessionId]) =>
+          listed.some(([, viewers]) => viewers[peer]?.[sessionId]),
+        );
+        return sessions.length > 0 ? [[peer, Object.fromEntries(sessions)]] : [];
+      });
+      return kept.length > 0 ? [[spaceId, Object.fromEntries(kept)]] : [];
+    }),
+  );
+
+/** The graph path a session of `peer` has the object `key` open at in its deck, when it reported one. */
+export const getPeerPlankPath = (
+  peerDecks: PeerDecks,
+  spaceId: string,
+  peer: string,
+  sessionId: string,
+  key: EID.EID,
+): string | undefined =>
+  peerDecks[spaceId]?.[peer]?.[sessionId]?.planks.find((path) => getPresenceKeyFromPath(path) === key);
+
+export const isFresh = (viewer: SpaceSchema.ObjectViewerProps, now: number) => now - viewer.lastSeen < PRESENCE_EXPIRY;
+
+/** Whether the session's anchor moved within {@link ACTIVITY_WINDOW} of `now`. */
+export const isMoving = (viewer: SpaceSchema.ObjectViewerProps, now: number) => now - viewer.movedAt < ACTIVITY_WINDOW;
+
+export type PeerSession = SpaceSchema.ObjectViewerProps & { sessionId: string };
+
+/** An identity's sessions on an object seen within {@link PRESENCE_EXPIRY}, the most recently moved first. */
+export const getFreshSessions = (
+  sessions: Record<string, SpaceSchema.ObjectViewerProps> | undefined,
+  now: number,
+): PeerSession[] =>
+  Object.entries(sessions ?? {})
+    .filter(([, viewer]) => isFresh(viewer, now))
+    .map(([sessionId, viewer]) => ({ ...viewer, sessionId }))
+    .toSorted((a, b) => b.movedAt - a.movedAt);
+
+/** How many identities have a fresh session on the object. */
+export const countViewers = (viewers: ObjectViewers | undefined, now: number) =>
+  Object.values(viewers ?? {}).filter((sessions) => getFreshSessions(sessions, now).length > 0).length;
+
+/** Id of the deck companion listing everyone in the active space. */
+export const MEMBERS_COMPANION_ID = 'members';
+
+/** Segment prefix of a peer's node under its space node. */
+export const PEER_SEGMENT_PREFIX = 'peer-';
+
+export const getPeerNodeId = (spaceId: string, identityKey: string): string =>
+  GraphNode.qualifyId(GraphPath.getSpacePath(spaceId), `${PEER_SEGMENT_PREFIX}${identityKey}`);
+
+/** Graph nodes of the peers with a fresh session on an object, and of those sessions. */
+export const getPeerNodeIds = (spaceId: string, viewers: ObjectViewers | undefined, now: number): string[] =>
+  Object.entries(viewers ?? {}).flatMap(([identityKey, sessions]) => {
+    const fresh = getFreshSessions(sessions, now);
+    return fresh.length > 0
+      ? [
+          getPeerNodeId(spaceId, identityKey),
+          ...fresh.map(({ sessionId }) => getSessionNodeId(spaceId, identityKey, sessionId)),
+        ]
+      : [];
+  });
+
+/** Segment prefix of a session's node under its peer's node. */
+export const SESSION_SEGMENT_PREFIX = 'session-';
+
+export const getSessionNodeId = (spaceId: string, identityKey: string, sessionId: string): string =>
+  GraphNode.qualifyId(getPeerNodeId(spaceId, identityKey), `${SESSION_SEGMENT_PREFIX}${sessionId}`);
+
+const isInSpace = (key: string, spaceId: string) => {
+  const eid = EID.tryParse(key);
+  return eid !== undefined && EID.getSpaceId(eid) === spaceId;
+};
+
+/** Peers seen in the space within {@link PRESENCE_EXPIRY} of `now`. */
+export const getSpacePeers = (viewersByObject: ViewersByObject, spaceId: string, now: number): string[] => {
+  const peers = new Set<string>();
+  for (const [key, viewers] of Object.entries(viewersByObject)) {
+    if (isInSpace(key, spaceId)) {
+      for (const [peer, sessions] of Object.entries(viewers)) {
+        if (getFreshSessions(sessions, now).length > 0) {
+          peers.add(peer);
+        }
+      }
+    }
+  }
+  return [...peers].sort();
+};
+
+/** Ids of `peer`'s sessions seen in the space within {@link PRESENCE_EXPIRY} of `now`. */
+export const getPeerSessionIds = (
+  viewersByObject: ViewersByObject,
+  spaceId: string,
+  peer: string,
+  now: number,
+): string[] => {
+  const sessionIds = new Set<string>();
+  for (const [key, viewers] of Object.entries(viewersByObject)) {
+    if (isInSpace(key, spaceId)) {
+      for (const { sessionId } of getFreshSessions(viewers[peer], now)) {
+        sessionIds.add(sessionId);
+      }
+    }
+  }
+  return [...sessionIds].sort();
+};
+
+export type PeerFocus = { key: EID.EID; sessionId: string; location?: SpaceSchema.PeerLocation };
+
+/**
+ * The object a session of `peer` attends in the space and where it is in it: the given session's, or else the session
+ * that moved most recently; with `objectKey`, only that object.
+ */
+export const getPeerFocus = (
+  viewersByObject: ViewersByObject,
+  spaceId: string,
+  peer: string,
+  now: number,
+  sessionId?: string,
+  objectKey?: EID.EID,
+): PeerFocus | undefined => {
+  let focus: (PeerFocus & { movedAt: number }) | undefined;
+  for (const [key, viewers] of Object.entries(viewersByObject)) {
+    const eid = EID.tryParse(key);
+    if (!eid || EID.getSpaceId(eid) !== spaceId || (objectKey !== undefined && eid !== objectKey)) {
+      continue;
+    }
+    for (const session of getFreshSessions(viewers[peer], now)) {
+      if (
+        session.currentlyAttended &&
+        (sessionId === undefined || session.sessionId === sessionId) &&
+        (!focus || session.movedAt > focus.movedAt)
+      ) {
+        focus = { key: eid, sessionId: session.sessionId, location: session.location, movedAt: session.movedAt };
+      }
+    }
+  }
+  return focus && { key: focus.key, sessionId: focus.sessionId, location: focus.location };
+};
+
+export type LocationScheduler = {
+  /** Notes that `key`'s location may have changed; a change goes out with the next send. */
+  schedule: (key: string) => void;
+  dispose: () => void;
+};
+
+/**
+ * Batches location changes of the attended `keys` into one send per {@link LOCATION_BROADCAST_INTERVAL}, to the spaces
+ * of the keys whose location differs from the last one seen, so an unchanged location (a remote edit, a resize) sends
+ * nothing.
+ */
+export const makeLocationScheduler = (
+  keys: readonly string[],
+  read: (key: string) => SpaceSchema.PeerLocation | undefined,
+  send: (spaceIds: ReadonlySet<string>) => void,
+): LocationScheduler => {
+  const seen = new Map(keys.map((key) => [key, read(key)]));
+  const pending = new Set<string>();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return {
+    schedule: (key) => {
+      const location = read(key);
+      const eid = EID.tryParse(key);
+      const spaceId = eid && EID.getSpaceId(eid);
+      if (isSameLocation(seen.get(key), location) || !spaceId) {
+        return;
+      }
+      seen.set(key, location);
+      pending.add(spaceId);
+      timer ??= setTimeout(() => {
+        timer = undefined;
+        const spaceIds = new Set(pending);
+        pending.clear();
+        send(spaceIds);
+      }, LOCATION_BROADCAST_INTERVAL);
+    },
+    dispose: () => clearTimeout(timer),
+  };
+};

@@ -32,6 +32,8 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 export const StateSchema = Schema.Struct({
   spaceNames: Schema.Record(Schema.String, Schema.String),
   enabledEdgeReplication: Schema.Boolean,
+  /** Presence lists show a row per session rather than per person. */
+  showSessions: Schema.optional(Schema.Boolean),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
@@ -55,8 +57,10 @@ export type MergePreview = {
 export type SpaceEphemeralState = {
   sdkMigrationRunning: Record<string, boolean>;
   navigableCollections: boolean;
-  /** Peers viewing each object, keyed by the object's EID and then by the peer's hex identity key. */
-  viewersByObject: Record<string, Record<string, SpaceSchema.ObjectViewerProps>>;
+  /** Sessions viewing each object, keyed by the object's EID, the peer's hex identity key, then the session id. */
+  viewersByObject: Record<string, Record<string, Record<string, SpaceSchema.ObjectViewerProps>>>;
+  /** Each peer session's deck as it last reported it, keyed by space id, the peer's hex identity key, then the session id. */
+  peerDecks: Record<string, Record<string, Record<string, SpaceSchema.PeerDeck>>>;
   mergePreview: MergePreview | undefined;
   /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
   lastMergeAt: number | undefined;
