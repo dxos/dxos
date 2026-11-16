@@ -500,7 +500,9 @@ export const createDimension2D =
       const { viewport, measured } = useCanvasGesture('SceneEditor.Root2D');
       const shown = useAtomValue(canvas.camera);
       const shared = useAtomValue(camera.shared);
-      const [share] = useState(() => new CameraShare((next) => camera.share(next)));
+      // Read in render: the compiler hoists a closure over the factory's `camera` out of its scope.
+      const shareCamera = camera.share;
+      const [share] = useState(() => new CameraShare(shareCamera));
       useEffect(() => () => share.dispose(), [share]);
       useEffect(() => {
         if (measured && shared && share.follow(shared)) {
