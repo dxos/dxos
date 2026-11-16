@@ -1688,6 +1688,13 @@ decision D-87: The presence list heads each section: Following (the leader), Fol
     - Always heading the viewers list's viewers; with no follow, Viewing repeats the list's own title.
 ```
 
+```mdl
+decision D-88: A `Locator`'s reveal takes `focus`, true by default, in place of [D-52]'s `follow`; the follow passes `focus: false`, and Go to and comments leave it out.
+  date: 2026-11-16
+  by: user:wittjosiah
+  why: What the flag decides is whether the reveal takes the caret and focus; following is only one reason not to.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

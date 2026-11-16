@@ -248,7 +248,7 @@ op SuggestEdit
 ```mdl
 op scrollToAnchor
   desc: Reveals an anchor in the editor for the attendable surface; it is the document type's `Locator` reveal, used for comments and peers alike.
-  input: { subject: string, anchor: string, follow?: boolean, thread?: Ref<Thread> }
+  input: { subject: string, anchor: string, focus?: boolean, thread?: Ref<Thread> }
 ```
 
 ## Features
@@ -692,6 +692,14 @@ decision D-7: With `follow`, the reveal scrolls the anchor to the top of the vie
   affects: [op:scrollToAnchor]
   why: The person who follows did not ask to move their caret, and their keys stay where they left them.
   rejected: A separate follow reveal operation.
+```
+
+```mdl
+decision D-8: The reveal's flag is `focus`, true by default; `focus: false` is what [D-7] called `follow`.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: What the flag decides is whether the reveal takes the caret and focus; following is only one reason not to.
 ```
 
 ## Appendix: Extension Definitions

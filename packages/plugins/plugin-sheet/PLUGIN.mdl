@@ -165,7 +165,7 @@ op scrollToAnchor
   input:
     subject: string              # attendable ID of the target sheet
     anchor: string               # cell-range anchor (see [F-7.3])
-    follow?: boolean             # scroll the range's first cell to the top left without moving the focused cell
+    focus?: boolean              # default true; false scrolls the range's first cell to the top left and leaves the focused cell
     thread?: any                 # active refs for highlight overlay
   output: void
   effects: [ui:scroll]
@@ -625,6 +625,14 @@ decision D-8: With `follow`, the reveal scrolls the anchor's first cell to the t
   for: user:wittjosiah
   affects: [op:scrollToAnchor]
   why: Following must not move the follower's focus, and the grid offers no scroll that keeps a cell merely in view.
+```
+
+```mdl
+decision D-9: The reveal's flag is `focus`, true by default; `focus: false` is what [D-8] called `follow`.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: What the flag decides is whether the reveal takes the caret and focus; following is only one reason not to.
 ```
 
 ## Appendix: Extension Definitions

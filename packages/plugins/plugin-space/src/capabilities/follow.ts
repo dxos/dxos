@@ -412,7 +412,7 @@ export default Capability.makeModule(
         // again on the next update.
         current.revealing.set(path, anchor);
         fork(
-          invoke(locator.reveal, { subject: path, anchor, follow: true }).pipe(
+          invoke(locator.reveal, { subject: path, anchor, focus: false }).pipe(
             Effect.tap((done) => Effect.sync(() => done && current.revealed.set(path, anchor))),
             Effect.catch((err) => Effect.sync(() => log.warn('follow reveal failed', { err }))),
             Effect.ensuring(
