@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { type RequestCapture, queuedAiService } from '../../testing/index.ts';
-import { ExtractPayload, extractChunk, parseExtractPayload } from './extract.ts';
+import { Ontology, Vocabularies } from '../../types/index.ts';
+import { ExtractPayload, buildExtractionInstructions, extractChunk, parseExtractPayload } from './extract.ts';
 
 describe('extractChunk request', () => {
   it.effect(
@@ -30,6 +31,21 @@ describe('extractChunk request', () => {
         ]);
       }),
   );
+});
+
+describe('buildExtractionInstructions', () => {
+  test('keeps learned predicates and entities out of the cached part', ({ expect }) => {
+    const minted = { ...Ontology.DEFAULT.resolve('forked'), creator: 'default/haiku' };
+    const { stable, varying } = buildExtractionInstructions({
+      ontology: Vocabularies.DEFAULT.include([minted]),
+      entities: [{ iri: 'https://example.com/effect', label: 'Effect' }],
+    });
+    expect(stable).toContain('- uses: "uses"');
+    expect(stable).not.toContain('- forked:');
+    expect(varying).toContain('- forked:');
+    expect(varying).toContain('- Effect');
+    expect(buildExtractionInstructions().varying).toBeUndefined();
+  });
 });
 
 describe('parseExtractPayload', () => {
