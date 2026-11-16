@@ -19,7 +19,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { ScrollScope, useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -77,10 +77,14 @@ export type PlankProps = Util.ThemedClassName<{
   popoverAnchorId?: string;
   /** Extra Article surface data merged over the computed defaults (e.g. companionTo/variant/path). */
   articleData?: Partial<AppSurface.ArticleData>;
+  /** The EID the article's scroll is kept under, so a follower restores it; none for a companion. */
+  scrollContextId?: string;
   /** Error fallback for the content surface. */
   fallback?: SurfaceProps['fallback'];
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
   headless?: boolean;
+  /** A palette hue the heading washes in; see `Pane.Toolbar`. */
+  accent?: string;
   // TODO(burdon): Why is this required?
   onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
 }>;
@@ -137,8 +141,10 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       pending,
       popoverAnchorId,
       articleData,
+      scrollContextId,
       fallback,
       headless,
+      accent,
       onKeyDown,
     },
     forwardedRef,
@@ -174,14 +180,21 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     //
     // Recorded after the commit, not during render: a render React discards never reaches the screen, and
     // holding its article would show one that was never displayed.
-    const current = articleReady && node.data !== undefined ? { key: node.id, data } : undefined;
+    // The scroll context travels with the article, so a held article never reports its scroll under the next one's.
+    const current = articleReady && node.data !== undefined ? { key: node.id, data, scrollContextId } : undefined;
     const [held, setHeld] = useState(current);
     useEffect(() => {
       if (current) {
-        setHeld((previous) => (previous?.key === current.key && previous.data === current.data ? previous : current));
+        setHeld((previous) =>
+          previous?.key === current.key &&
+          previous.data === current.data &&
+          previous.scrollContextId === current.scrollContextId
+            ? previous
+            : current,
+        );
       }
       // The identity of `current` changes with `data`, which is already memoized on what it is built from.
-    }, [current?.key, current?.data]);
+    }, [current?.key, current?.data, current?.scrollContextId]);
     const shown = current ?? held;
 
     // Anchor the sigil's popover only when this plank's menu is the active popover target.
@@ -198,7 +211,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
         data-testid='deck.plank'
       >
         {!headless && (
-          <Pane.Toolbar>
+          <Pane.Toolbar accent={accent}>
             <ActionRoot>
               {actions && actions.length > 0 ? (
                 <AttentionSigil.Root
@@ -274,14 +287,15 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
             // Nothing has resolved for this plank yet; from the second subject on, the one before is held.
             PLANK_LOADING
           ) : (
-            <Surface.Surface
-              key={shown.key}
-              type={AppSurface.Article}
-              data={shown.data}
-              limit={1}
-              fallback={fallback}
-              placeholder={PLANK_LOADING}
-            />
+            <ScrollScope key={shown.key} contextId={shown.scrollContextId}>
+              <Surface.Surface
+                type={AppSurface.Article}
+                data={shown.data}
+                limit={1}
+                fallback={fallback}
+                placeholder={PLANK_LOADING}
+              />
+            </ScrollScope>
           )}
         </Pane.Content>
       </Pane.Root>

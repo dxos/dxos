@@ -1007,7 +1007,13 @@ export const removeNode = <T extends WritableGraph>(graph: T, id: string, edges 
   const internal = getInternal(graph);
   internal._setNode(id, Option.none());
   graph.onNodeChanged.emit({ id, node: Option.none() });
-  // TODO(wittjosiah): Reset expanded and initialized flags?
+  // The builder drops the node's connectors with it, so its expansions wait to re-run when it comes back.
+  for (const key of internal._expanded) {
+    if (primaryParts(key)[0] === id) {
+      internal._expanded.delete(key);
+      internal._pendingExpands.add(key);
+    }
+  }
 
   if (edges) {
     const nodeEdges = internal._currentEdges(id);

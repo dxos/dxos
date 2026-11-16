@@ -253,7 +253,7 @@ service CommentAgentRunner
     (a hidden chat per thread, running on the thread's feed, bound to the subject); stories and tests
     pass a stub through `ReviewPluginOptions.agentRunner`. Without one the agent never fires.
   methods:
-    run(input: { thread: Thread, subject: Obj.Any, message: Message }) -> Effect<void>
+    run(input: { thread: Thread, subject: Obj.Any, message: Message }) -> Effect<string | undefined>
 ```
 
 ## Operations
@@ -291,7 +291,8 @@ op SendNotifications
     excerpt only when EDGE may already read the space (`contentCaptureAllowed`, true for every space
     until E2E spaces exist); otherwise it says "New comment" and carries the ref alone. The one
     attachment is the subject, named by its title under the same rule; the notifications panel opens
-    it. A failed send to one recipient is logged and skipped.
+    it with its Comments companion, which the message names in its `companion` property. A failed send
+    to one recipient is logged and skipped.
 ```
 
 ```mdl
@@ -360,7 +361,8 @@ op RespondToThread
   input: { thread: Ref<Thread>, subject: Ref<Obj.Any>, messageId: ObjectId }
   note: |
     Writes a pending reply in the agent's name, runs the turn through `AppCapabilities.CommentAgentRunner` (3-minute
-    timeout), then removes the pending reply, or rewrites it as a failure notice when the turn fails. An edit that
+    timeout), posts the reply text the run returns in the agent's name, then removes the pending reply, or rewrites it
+    as a failure notice when the turn fails. An edit that
     collapsed the thread's anchored range is re-anchored to the changed text.
 ```
 
@@ -627,6 +629,8 @@ feat F-8: Comment subscriptions
     carry the subject's title or the comment's text.
 
   req F-8.5: The Comments companion MUST let the current identity subscribe and unsubscribe by hand.
+
+  req F-8.6: Opening a comment's notification MUST show its subject with the Comments companion open.
 ```
 
 ## Acceptance
@@ -921,4 +925,21 @@ decision D-7: SendNotifications reaches the inbox through `AppCapabilities.Inbox
   date: 2026-11-03
   by: user:wittjosiah
   affects: [SendNotifications]
+```
+
+```mdl
+decision D-8: A comment's notification names the Comments companion (`~comments`) in its `companion` property, so opening it shows the subject with its comments ([org.dxos.plugin.messenger#D-3]). Fills in [F-8.6].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [SendNotifications, F-8.6]
+  why: Opening a notification showed the feature alone, and the reader opened Comments by hand to find the reply.
+```
+
+```mdl
+decision D-9: The comment agent's runner returns the text of the turn's final reply, and RespondToThread posts it to the thread as a message in the agent's name. An agent turn writes only trajectory events, on its own branch of the thread's feed, and the comment UI reads only messages.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.1, CommentAgentRunner, RespondToThread]
+  why: Since the assistant ran chats on trajectory events (dxos#13782), no reply showed in any comment thread, and the pending message vanished when the turn ended.
 ```
