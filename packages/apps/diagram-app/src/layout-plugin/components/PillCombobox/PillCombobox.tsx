@@ -4,11 +4,13 @@
 
 import React, { type ReactElement, type ReactNode, useRef, useState } from 'react';
 
+import { Picker } from '@dxos/react-ui-list';
+import { SearchList } from '@dxos/react-ui-search';
 import * as Button from '@dxos/react-ui/Button';
-import * as Combobox from '@dxos/react-ui/Combobox';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
+import * as Popover from '@dxos/react-ui/Popover';
 
 /** One thing to pick: a space or a diagram. */
 export type PillEntry = {
@@ -56,12 +58,10 @@ export type PillComboboxProps = {
 
 const ACTION_PREFIX = 'pill-action:';
 
-const matches = (option: Combobox.Option, query: string) =>
-  option.value.startsWith(ACTION_PREFIX) || option.label.toLowerCase().includes(query.toLowerCase());
-
 // Fixed columns, so every row's glyph, label, check and menu line up whatever the row holds.
 const LEADING = 'w-6 shrink-0';
 const TRAILING = 'w-7 shrink-0';
+const ROW = 'flex items-center gap-2 px-2 rounded-xs';
 
 /**
  * A pill menu (spec F-3, F-4): a button that opens a search over the entries, each with a leading glyph, the current
@@ -87,13 +87,8 @@ export const PillCombobox = ({
   // An action that opens a dialog waits for the popup to close, whose focus return would otherwise dismiss it.
   const pendingRef = useRef<() => void>(undefined);
 
-  const commands = actions(query);
-  const items: Combobox.Option[] = [
-    ...entries.map(({ value, label }) => ({ value, label })),
-    ...commands.map(({ value, label }) => ({ value: ACTION_PREFIX + value, label })),
-  ];
-  // The Root narrows its collection with the same filter; the rows must match it for keyboard order.
-  const visible = query ? entries.filter((entry) => matches(entry, query)) : entries;
+  const text = query.trim().toLowerCase();
+  const visible = text ? entries.filter(({ label }) => label.toLowerCase().includes(text)) : entries;
 
   const close = (then?: () => void) => {
     pendingRef.current = then;
@@ -102,77 +97,82 @@ export const PillCombobox = ({
   };
 
   return (
-    <Combobox.Root
-      items={items}
-      filter={matches}
+    <Popover.Root
       open={open}
-      onOpenChange={({ open }) => (open || !rowMenuOpen) && setOpen(open)}
+      onOpenChange={({ open }) => {
+        if (open || !rowMenuOpen) {
+          setOpen(open);
+          setQuery('');
+        }
+      }}
       onExitComplete={() => {
         pendingRef.current?.();
         pendingRef.current = undefined;
       }}
-      value={current ? [current] : []}
-      onValueChange={({ value: [value] }) => {
-        if (value?.startsWith(ACTION_PREFIX)) {
-          const text = query;
-          close(() => onAction(value.slice(ACTION_PREFIX.length), text));
-        } else if (value) {
-          onSelect(value);
-        }
-      }}
-      onInputValueChange={({ inputValue, reason }) => setQuery(reason === 'input-change' ? inputValue : '')}
     >
-      <Combobox.Trigger asChild>{trigger}</Combobox.Trigger>
-      <Combobox.Content classNames={width} data-testid={testId}>
-        <Combobox.Input placeholder={placeholder} data-testid={testId && `${testId}.find`} />
-        <Combobox.List>
-          {visible.map((entry) => (
-            <Combobox.Item
-              key={entry.value}
-              item={{ value: entry.value, label: entry.label }}
-              data-testid={entry.testId}
-            >
-              <Layout.Flex center classNames={LEADING}>
-                {entry.leading}
-              </Layout.Flex>
-              <Combobox.ItemText classNames='grow' />
-              <Icon.Icon
-                icon='ph--check--regular'
-                classNames={['shrink-0', entry.value === current ? undefined : 'invisible']}
-              />
-              {entryActions.length > 0 && (
-                <Layout.Flex center classNames={TRAILING}>
-                  <RowMenu
-                    entry={entry}
-                    actions={entryActions}
-                    onOpenChange={setRowMenuOpen}
-                    onAction={(action) => close(() => onEntryAction?.(action, entry.value))}
-                  />
+      <Popover.Trigger asChild>{trigger}</Popover.Trigger>
+      <Popover.Content arrow={false} classNames={[width, 'p-1']} data-testid={testId}>
+        <SearchList.Root debounceMs={0} onSearch={setQuery} resetSelectionOnChange>
+          <SearchList.Input autoFocus placeholder={placeholder} data-testid={testId && `${testId}.find`} />
+          <SearchList.Viewport padding={false} classNames='max-h-80 mt-1'>
+            {visible.map((entry) => (
+              <Picker.Item
+                key={entry.value}
+                value={entry.value}
+                classNames={ROW}
+                data-testid={entry.testId}
+                onSelect={() => {
+                  setOpen(false);
+                  onSelect(entry.value);
+                }}
+              >
+                <Layout.Flex center classNames={LEADING}>
+                  {entry.leading}
                 </Layout.Flex>
-              )}
-            </Combobox.Item>
-          ))}
-          <Layout.Separator decorative classNames='my-1' />
-          {commands.map((command) => (
-            <Combobox.Item
-              key={command.value}
-              item={{ value: ACTION_PREFIX + command.value, label: command.label }}
-              data-testid={command.testId}
-            >
-              <Layout.Flex center classNames={LEADING}>
-                <Icon.Icon icon={command.icon} />
-              </Layout.Flex>
-              <Combobox.ItemText classNames='grow' />
-              {command.shortcut && (
-                <kbd aria-hidden className='dx-menu-shortcut'>
-                  {command.shortcut}
-                </kbd>
-              )}
-            </Combobox.Item>
-          ))}
-        </Combobox.List>
-      </Combobox.Content>
-    </Combobox.Root>
+                <span className='w-0 grow truncate'>{entry.label}</span>
+                <Icon.Icon
+                  icon='ph--check--regular'
+                  classNames={['shrink-0', entry.value === current ? undefined : 'invisible']}
+                />
+                {entryActions.length > 0 && (
+                  <Layout.Flex center classNames={TRAILING}>
+                    <RowMenu
+                      entry={entry}
+                      actions={entryActions}
+                      onOpenChange={setRowMenuOpen}
+                      onAction={(action) => close(() => onEntryAction?.(action, entry.value))}
+                    />
+                  </Layout.Flex>
+                )}
+              </Picker.Item>
+            ))}
+            <Layout.Separator decorative classNames='my-1' />
+            {actions(query).map((command) => (
+              <Picker.Item
+                key={command.value}
+                value={ACTION_PREFIX + command.value}
+                classNames={ROW}
+                data-testid={command.testId}
+                onSelect={() => {
+                  const typed = query;
+                  close(() => onAction(command.value, typed));
+                }}
+              >
+                <Layout.Flex center classNames={LEADING}>
+                  <Icon.Icon icon={command.icon} />
+                </Layout.Flex>
+                <span className='w-0 grow truncate'>{command.label}</span>
+                {command.shortcut && (
+                  <kbd aria-hidden className='dx-menu-shortcut'>
+                    {command.shortcut}
+                  </kbd>
+                )}
+              </Picker.Item>
+            ))}
+          </SearchList.Viewport>
+        </SearchList.Root>
+      </Popover.Content>
+    </Popover.Root>
   );
 };
 

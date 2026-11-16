@@ -1586,3 +1586,14 @@ decision D-123: The layout answers `Set` by opening the last of its paths that n
   affects: [F-9.3]
   why: The space plugin's follow now replaces the follower's planks with the leader's through `Set`; the app shows one diagram, so the leader's last diagram is the one it shows.
 ```
+
+```mdl
+decision D-124: Each pill menu is a react-ui `Popover` holding react-ui-search's `SearchList` input and viewport, with each row and command a react-ui-list `Picker.Item`. The app filters the rows by the typed text, and the rows keep their leading glyph, check and row menu. This replaces the `Combobox` of [D-32]. Fills in [D-120].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3, F-4, PillCombobox]
+  why: `SearchList.Item` draws only an icon, a label, a suffix and a check, and a row needs an avatar and its own menu, so the rows are `Picker.Item`s under the search list's keyboard handling.
+  rejected:
+    - Adding an avatar slot and a row menu to `SearchList.Item`: it changes a shared component for one app.
+```
