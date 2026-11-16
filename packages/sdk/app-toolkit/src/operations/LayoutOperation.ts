@@ -321,7 +321,11 @@ export const Open = Operation.make({
         description: 'Navigation paths of the items to open.',
       }),
     ),
-    variant: Schema.optional(Schema.String.annotate({ description: 'The variant of the item to open.' })),
+    variant: Schema.optional(
+      Schema.String.annotate({
+        description: 'The variant of the item to open. A linked companion (`~comments`) opens beside it.',
+      }),
+    ),
     name: Schema.optional(
       Schema.String.annotate({
         description:
