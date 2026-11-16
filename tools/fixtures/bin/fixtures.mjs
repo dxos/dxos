@@ -42,6 +42,8 @@
 // A fixture is any file: JSON archives are checked as such, anything else (a `.wav`) is carried as-is with its
 // extension.
 //
+// What is in the `agents` scope, and how to use each fixture: `tools/fixtures/CATALOG.md`.
+//
 // Setup (once per developer):
 //   age-keygen -o ~/.config/dxos/fixtures.key     # then store it in 1Password
 //   export DX_FIXTURES_AGE_KEY=~/.config/dxos/fixtures.key

@@ -43,7 +43,8 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@dxos/ui-types": "workspace:*"
+    "@dxos/ui-types": "workspace:*",
+    "@tanstack/react-virtual": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -489,7 +489,7 @@ verdict F-8.3: Not started.
 verdict F-9.1: dxos CI checks the edge-release bundles but publishes none.
   status: missing
   evidence: [github:dxos/dxos/.moon/tasks/tag-edge-release.yml]
-  note: '`check-edge-release` runs in `Check`. No workflow runs `dx registry publish`, and `pkg-pr-new.yml` ships no `dist/plugin`. edge seeds bundles only locally and in `plugins-mode.yml`.'
+  note: '`check-edge-release` runs in `Check`. No workflow runs `dx registry publish`. `pkg-pr-new.yml` and `publish-all.yml` ship each checked `dist/plugin` in its package tarball. edge seeds bundles only locally and in `plugins-mode.yml`.'
 ```
 
 ```mdl

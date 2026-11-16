@@ -3,7 +3,7 @@ $schema: https://moonrepo.dev/schemas/tasks.json
 # A package opts in with a `vite.config.ts` that re-exports the root `defineConfig`.
 tasks:
   build:
-    command: pnpm exec vite build --logLevel silent
+    command: vite build --logLevel silent
     deps:
       # vite.base.config.ts now houses vitest project builders too — those import
       # `@dxos/esbuild-plugins` and `@dxos/vite-plugin-import-source` at config-load

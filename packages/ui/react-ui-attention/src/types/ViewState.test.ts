@@ -17,6 +17,18 @@ const Counter = define({
   defaultValue: () => ({ value: 0 }),
 });
 
+const Followed = define({ ...Counter, key: 'followed', follow: 'write' });
+
+const Camera = define({
+  key: 'camera',
+  backend: 'memory',
+  schema: Schema.Struct({ zoom: Schema.Number, grid: Schema.Boolean }).mapFields(Struct.map(Schema.mutableKey)),
+  defaultValue: () => ({ zoom: 1, grid: false }),
+  follow: { policy: 'write', fields: ['zoom'] },
+});
+
+const A = 'echo:@A';
+
 describe('Manager', () => {
   const make = () => {
     const registry = Registry.make();
@@ -51,5 +63,48 @@ describe('Manager', () => {
     manager.set(Counter, 'a', { value: 1 });
     manager.set(Counter, 'b', { value: 2 });
     expect(new Set(manager.contexts(Counter))).toEqual(new Set(['a', 'b']));
+  });
+
+  test("a follower takes the leader's encoded values of followed aspects, holding those for an aspect it has not used", ({
+    expect,
+  }) => {
+    const leader = make();
+    leader.set(Counter, 'a', { value: 1 });
+    leader.set(Followed, 'a', { value: 2 });
+    leader.set(Followed, 'b', { value: 3 });
+    const sent = leader.followed(['a']);
+    expect(sent).toEqual({ followed: { a: { value: 2 } } });
+
+    const follower = make();
+    follower.setEncoded('followed', 'a', sent.followed.a);
+    follower.setEncoded('followed', 'c', 'not a counter');
+    expect(follower.get(Followed, 'a')).toEqual({ value: 2 });
+    expect(follower.get(Followed, 'c')).toEqual({ value: 0 });
+  });
+
+  test("an aspect following some fields sends only those and merges the leader's into the follower's own", ({
+    expect,
+  }) => {
+    const leader = make();
+    leader.set(Camera, A, { zoom: 2, grid: true });
+    const sent = leader.followed([A]);
+    expect(sent).toEqual({ camera: { [A]: { zoom: 2 } } });
+
+    const follower = make();
+    follower.set(Camera, A, { zoom: 1, grid: false });
+    follower.setEncoded('camera', A, sent.camera[A]);
+    expect(follower.get(Camera, A)).toEqual({ zoom: 2, grid: false });
+  });
+
+  test('a value written from the leader has the follow origin until this session sets it', ({ expect }) => {
+    const manager = make();
+    const origins: string[] = [];
+    const dispose = manager.subscribe(Followed, A, (_, origin) => origins.push(origin));
+    manager.setEncoded('followed', A, { value: 2 });
+    expect(manager.origin(Followed, A)).toBe('follow');
+    manager.set(Followed, A, { value: 3 });
+    expect(manager.origin(Followed, A)).toBe('local');
+    expect(origins).toEqual(['follow', 'local']);
+    dispose();
   });
 });

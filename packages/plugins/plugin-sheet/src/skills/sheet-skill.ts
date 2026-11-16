@@ -9,7 +9,7 @@ import { trim } from '@dxos/util';
 
 import { Sheet, SheetOperation } from '#types';
 
-const operations = [SheetOperation.Create, SheetOperation.GetValues, SheetOperation.SetValues];
+const operations = [SheetOperation.Create, SheetOperation.GetValues, SheetOperation.SetValues, SheetOperation.AddChart];
 
 const make = () =>
   Skill.make({
@@ -35,6 +35,14 @@ const make = () =>
         Cell values can be plain scalars (string, number, boolean) or formula strings starting with "=".
         Formula examples: "=SUM(A1:A5)", "=A1*B1", "=IF(C2>0,\"yes\",\"no\")".
         Over 400 HyperFormula functions are available: arithmetic, statistical, text, date/time, financial, logical.
+
+        ## Charts
+
+        Use \`${Operation.toolName(SheetOperation.AddChart)}\` to draw a range as a chart; it appears in the sheet's charts
+        panel and can be linked into a presentation as a slide. Lay the data out first: a header row with the series
+        names, then the category (or x value) in the first column and one numeric column per series, and pass
+        \`header: true\`. Types: ${SheetOperation.CHART_TYPES.map((type) => `\`${type}\``).join(', ')}. Use \`bar\` to
+        compare categories, \`pie\` for shares of a whole (one series), \`xy\` for a series over time.
 
       `,
     }),
