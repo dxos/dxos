@@ -148,9 +148,9 @@ export const PillToolbar = ({ onShare, ...slots }: PillToolbarProps) => {
         () => shareRef.current?.(),
       );
     if (viewers) {
-      // The avatars sit inset like a labelled control's content, matching the space menu's avatar at the other end.
+      // Empty while no one else is here, so Share ends the row.
       builder.custom('presence', { label: 'Viewers' }, () => (
-        <Layout.Flex classNames='mx-(--dx-control-inset) px-(--dx-gap-size)'>
+        <Layout.Flex classNames='mx-(--dx-control-inset) ps-(--dx-gap-size) empty:hidden'>
           <PillSlot name='presence' />
         </Layout.Flex>
       ));
@@ -159,7 +159,12 @@ export const PillToolbar = ({ onShare, ...slots }: PillToolbarProps) => {
   }, [viewers]);
   return (
     <PillSlotsContext.Provider value={slots}>
-      <ActionToolbar {...menu} alwaysActive classNames='min-w-0 bg-transparent' />
+      {/* The toolbar's end padding plus the space menu's padding before its avatar, whether Share or a viewer ends the row. */}
+      <ActionToolbar
+        {...menu}
+        alwaysActive
+        classNames='min-w-0 bg-transparent pe-[calc(2*var(--dx-gap-size)_-_var(--dx-control-inset))]'
+      />
     </PillSlotsContext.Provider>
   );
 };
