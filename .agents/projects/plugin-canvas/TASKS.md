@@ -501,6 +501,10 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [ ] **Shape recipes, later**: a cog's hub hole needs an outline of more than one ring; the Shape field in
       Properties lists recipe ids, not names; adjust handles are 2D only (3D edits parameters in Properties);
       `SPEC-2D.mdl` does not yet record the `shape` type.
+- [ ] **The tool rail on react-ui-menu** (user, 2026-11-16): `ToolRail` should be a vertical `ActionToolbar` with
+      react-ui's own separators, as the bottom bar is. react-ui-menu first needs collapse by height, draggable
+      actions (drag-to-create) and a flyout fold: one click picks the shown tool, a hover opens the set, the last-used
+      tool shows, and the grid layout.
 - [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
       Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the
