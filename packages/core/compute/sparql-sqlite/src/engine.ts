@@ -20,11 +20,14 @@ import { parseSparql } from './parser.ts';
 import { type Program, pure, raw, rows, runSync } from './program.ts';
 import { type SqlStorage, asNumber } from './sql-storage.ts';
 import { type Enc, type IndexSet, TermStore, encKey, encodeTerm, toTerm } from './store.ts';
+import { tables } from './tables.ts';
 import { type Quad, type Row, type Term, XSD } from './terms.ts';
 
 export type EngineOptions = {
   /** Covering quad orderings to maintain; persisted on first init (default `spo,pos,osp`). */
   indexes?: IndexSet;
+  /** Prefix of the store's table and index names, so several stores can share one database (default none). */
+  prefix?: string;
 };
 
 type QueryPlan = {
@@ -87,7 +90,7 @@ export class EngineCore {
   readonly #absent = new Set<string>();
 
   constructor(options: EngineOptions & { inline?: SqlStorage } = {}) {
-    this.store = new TermStore(options.indexes);
+    this.store = new TermStore(options.indexes, tables(options.prefix));
     this.#inline = options.inline;
   }
 
@@ -116,8 +119,8 @@ export class EngineCore {
 
   *stats(): Program<Record<string, unknown>> {
     return {
-      terms: asNumber((yield* rows('SELECT COUNT(*) AS n FROM terms'))[0].n),
-      termLexBytes: (yield* rows('SELECT SUM(length(CAST(lex AS BLOB))) AS n FROM terms'))[0].n,
+      terms: asNumber((yield* rows(`SELECT COUNT(*) AS n FROM ${this.store.tables.terms}`))[0].n),
+      termLexBytes: (yield* rows(`SELECT SUM(length(CAST(lex AS BLOB))) AS n FROM ${this.store.tables.terms}`))[0].n,
       indexes: this.store.indexes,
     };
   }
@@ -278,28 +281,31 @@ export class EngineCore {
 
   #compiler(temps: Map<number, Term>, resolver: Resolver): Compiler {
     const tempIds = new Map<string, number>();
-    return new Compiler({
-      namedGraphs: this.store.namedGraphs,
-      constId: (term) => {
-        const value = toTerm(term);
-        const enc = encodeTerm(value);
-        const key = encKey(enc);
-        const id = resolver.termId(key, enc);
-        if (id !== undefined) {
-          return String(id);
-        }
-        let temp = tempIds.get(key);
-        if (temp === undefined) {
-          temp = -(tempIds.size + 1);
-          tempIds.set(key, temp);
-          temps.set(temp, value);
-        }
-        return String(temp);
+    return new Compiler(
+      {
+        namedGraphs: this.store.namedGraphs,
+        constId: (term) => {
+          const value = toTerm(term);
+          const enc = encodeTerm(value);
+          const key = encKey(enc);
+          const id = resolver.termId(key, enc);
+          if (id !== undefined) {
+            return String(id);
+          }
+          let temp = tempIds.get(key);
+          if (temp === undefined) {
+            temp = -(tempIds.size + 1);
+            tempIds.set(key, temp);
+            temps.set(temp, value);
+          }
+          return String(temp);
+        },
+        selectivity: this.selectivityHints
+          ? (p, o) => this.#selectivity(resolver, Number(p), o === undefined ? undefined : Number(o))
+          : undefined,
       },
-      selectivity: this.selectivityHints
-        ? (p, o) => this.#selectivity(resolver, Number(p), o === undefined ? undefined : Number(o))
-        : undefined,
-    });
+      this.store.tables,
+    );
   }
 
   /** Fractions for `likelihood()` hints: quads with predicate `p`, and of those with object `o`. */
@@ -322,7 +328,9 @@ export class EngineCore {
     let count = this.#counts.get(where);
     if (count === undefined) {
       count = asNumber(
-        (yield* rows(`SELECT COUNT(*) AS n FROM (SELECT 1 FROM quads WHERE ${where} LIMIT ${COUNT_CAP})`))[0].n,
+        (yield* rows(
+          `SELECT COUNT(*) AS n FROM (SELECT 1 FROM ${this.store.tables.quads} WHERE ${where} LIMIT ${COUNT_CAP})`,
+        ))[0].n,
       );
       if (this.#counts.size >= COUNT_CACHE_LIMIT) {
         this.#counts.clear();
@@ -338,7 +346,7 @@ export class EngineCore {
       if ((yield* rows(`SELECT 1 FROM sqlite_master WHERE name = 'sqlite_stat1'`)).length === 0) {
         this.#countsTotal = null;
       } else {
-        const [row] = yield* rows(`SELECT stat FROM sqlite_stat1 WHERE tbl = 'quads' LIMIT 1`);
+        const [row] = yield* rows(`SELECT stat FROM sqlite_stat1 WHERE tbl = ? LIMIT 1`, this.store.tables.quads);
         const total = row ? Number(String(row.stat).split(' ')[0]) : 0;
         this.#countsTotal = total > 0 ? total : null;
       }
@@ -361,7 +369,7 @@ export class EngineCore {
           `t${index}.lang AS g${index}`,
         );
         // `main.` bypasses the temp-terms CTE: temp ids are decoded in JS, and the base table keeps its index.
-        joins.push(`LEFT JOIN main.terms t${index} ON t${index}.id = ${ref}`);
+        joins.push(`LEFT JOIN main.${this.store.tables.terms} t${index} ON t${index}.id = ${ref}`);
       }
     });
     const all = tempTermsUsed && temps.size > 0 ? [this.#tempTerms(temps), ...ctes] : ctes;
@@ -377,14 +385,15 @@ export class EngineCore {
    * and comparisons over them (`VALUES ?x { "new" } FILTER(STRLEN(?x) > 1)`) see a real term.
    */
   #tempTerms(temps: Map<number, Term>): string {
-    const rows = [...temps].map(([id, term]) => {
+    const values = [...temps].map(([id, term]) => {
       const enc = encodeTerm(term);
       const dt = enc.dt === null ? 'NULL' : String(this.store.dtIdIfKnown(enc.dt));
       const text = (value: string | null) => (value === null ? 'NULL' : `'${value.replace(/'/g, "''")}'`);
       const num = enc.num === null || !Number.isFinite(enc.num) ? 'NULL' : String(enc.num);
       return `(${id}, 0, ${enc.kind}, ${text(enc.lex)}, ${dt}, ${text(enc.lang)}, ${num})`;
     });
-    return `terms(id, h, kind, lex, dt, lang, num) AS NOT MATERIALIZED (SELECT id, h, kind, lex, dt, lang, num FROM main.terms UNION ALL VALUES ${rows.join(', ')})`;
+    const { terms } = this.store.tables;
+    return `${terms}(id, h, kind, lex, dt, lang, num) AS NOT MATERIALIZED (SELECT id, h, kind, lex, dt, lang, num FROM main.${terms} UNION ALL VALUES ${values.join(', ')})`;
   }
 
   *#run(plan: Pick<QueryPlan, 'compiled' | 'temps'>): Program<Row[]> {

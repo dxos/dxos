@@ -43,15 +43,17 @@ const toStorageValue = (value: unknown): SqlStorageValue => {
   throw new TypeError(`Unexpected SQLite value: ${typeof value}`);
 };
 
-/** Advances a program; a SPARQL error it throws becomes a failure, anything else a defect. */
-const step = <A>(program: Program<A>, result?: Result) =>
+const sparqlError = (error: unknown): SparqlError | undefined =>
+  error instanceof UnsupportedSparqlError || error instanceof InvalidSparqlError ? error : undefined;
+
+/** Advances a program; what it throws becomes a failure when `toFailure` maps it, else a defect. */
+const step = <A, E>(program: Program<A>, toFailure: (error: unknown) => E | undefined, result?: Result) =>
   Effect.suspend(() => {
     try {
       return Effect.succeed(result === undefined ? program.next() : program.next(result));
     } catch (error) {
-      return error instanceof UnsupportedSparqlError || error instanceof InvalidSparqlError
-        ? Effect.fail(error)
-        : Effect.die(error);
+      const failure = toFailure(error);
+      return failure === undefined ? Effect.die(error) : Effect.fail(failure);
     }
   });
 
@@ -59,12 +61,20 @@ const step = <A>(program: Program<A>, result?: Result) =>
  * Runs a program through Effect's async `SqlClient`: each statement it yields is one round trip. Run it inside
  * `sql.withTransaction` to make its writes atomic.
  */
-export const runEffect = <A>(
+export const runEffect: {
+  <A>(program: Program<A>): Effect.Effect<A, SqlError.SqlError | SparqlError, SqlClient.SqlClient>;
+  /** With `toFailure`, an error the program throws fails the effect when it maps to a value, else is a defect. */
+  <A, E>(
+    program: Program<A>,
+    toFailure: (error: unknown) => E | undefined,
+  ): Effect.Effect<A, SqlError.SqlError | E, SqlClient.SqlClient>;
+} = <A, E>(
   program: Program<A>,
-): Effect.Effect<A, SqlError.SqlError | SparqlError, SqlClient.SqlClient> =>
+  toFailure: (error: unknown) => E | SparqlError | undefined = sparqlError,
+): Effect.Effect<A, SqlError.SqlError | E | SparqlError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
-    let next = yield* step(program);
+    let next = yield* step(program, toFailure);
     while (!next.done) {
       const { sql: text, params, mode } = next.value;
       const statement = sql.unsafe<Record<string, unknown>>(text, params);
@@ -77,7 +87,7 @@ export const runEffect = <A>(
               ),
             }
           : { mode, rows: (yield* statement.values).map((values) => values.map(toStorageValue)) };
-      next = yield* step(program, result);
+      next = yield* step(program, toFailure, result);
     }
     return next.value;
   });

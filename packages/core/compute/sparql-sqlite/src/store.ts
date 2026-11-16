@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { UnsupportedSparqlError } from './errors.ts';
 import { type Program, exec, raw, rows } from './program.ts';
 import { type SqlStorageValue, asNullableNumber, asNullableString, asNumber, asString } from './sql-storage.ts';
+import { DEFAULT_TABLES, type Tables } from './tables.ts';
 import { type Quad, RDF, type Term, XSD } from './terms.ts';
 
 /** Term kinds; the order matters for SPARQL ORDER BY (blank < IRI < literal). */
@@ -133,6 +134,7 @@ type IdRow = [s: number, p: number, o: number, g: number];
  * Every method that touches SQLite is a {@link Program}; the engine runs it with a sync or an async driver.
  */
 export class TermStore {
+  readonly tables: Tables;
   indexes: IndexSet;
   autoAnalyze = true;
   namedGraphs = false;
@@ -144,41 +146,45 @@ export class TermStore {
   #dtIds = new Map<string, number>();
   #dtIris = new Map<number, string>();
 
-  constructor(indexes: IndexSet = 'spo,pos,osp') {
+  constructor(indexes: IndexSet = 'spo,pos,osp', tables: Tables = DEFAULT_TABLES) {
     this.indexes = indexes;
+    this.tables = tables;
   }
 
   /** Creates the schema if missing and loads persisted metadata; idempotent. */
   *init(): Program<void> {
-    yield* exec('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)');
-    const meta = new Map((yield* rows('SELECT k, v FROM meta')).map((row) => [asString(row.k), asString(row.v)]));
+    const { quads, terms, dts, meta: metaTable, prefix } = this.tables;
+    yield* exec(`CREATE TABLE IF NOT EXISTS ${metaTable} (k TEXT PRIMARY KEY, v TEXT)`);
+    const meta = new Map(
+      (yield* rows(`SELECT k, v FROM ${metaTable}`)).map((row) => [asString(row.k), asString(row.v)]),
+    );
     const storedIndexes = INDEX_SETS.find((set) => set === meta.get('indexes'));
     if (storedIndexes) {
       this.indexes = storedIndexes;
     } else {
-      yield* exec(`INSERT OR REPLACE INTO meta (k, v) VALUES ('indexes', ?)`, this.indexes);
+      yield* exec(`INSERT OR REPLACE INTO ${metaTable} (k, v) VALUES ('indexes', ?)`, this.indexes);
     }
     this.#approxCount = Number(meta.get('approxCount') ?? 0);
     this.#analyzedAt = Number(meta.get('analyzedAt') ?? 0);
-    yield* exec('CREATE TABLE IF NOT EXISTS dts (id INTEGER PRIMARY KEY, iri TEXT NOT NULL UNIQUE)');
+    yield* exec(`CREATE TABLE IF NOT EXISTS ${dts} (id INTEGER PRIMARY KEY, iri TEXT NOT NULL UNIQUE)`);
     yield* exec(
-      'CREATE TABLE IF NOT EXISTS terms (id INTEGER PRIMARY KEY, h INTEGER NOT NULL, kind INTEGER NOT NULL, lex TEXT NOT NULL, dt INTEGER, lang TEXT, num REAL)',
+      `CREATE TABLE IF NOT EXISTS ${terms} (id INTEGER PRIMARY KEY, h INTEGER NOT NULL, kind INTEGER NOT NULL, lex TEXT NOT NULL, dt INTEGER, lang TEXT, num REAL)`,
     );
-    yield* exec('CREATE UNIQUE INDEX IF NOT EXISTS terms_h ON terms (h)');
+    yield* exec(`CREATE UNIQUE INDEX IF NOT EXISTS ${prefix}terms_h ON ${terms} (h)`);
     yield* exec(
-      'CREATE TABLE IF NOT EXISTS quads (s INTEGER NOT NULL, p INTEGER NOT NULL, o INTEGER NOT NULL, g INTEGER NOT NULL, PRIMARY KEY (s, p, o, g)) WITHOUT ROWID',
+      `CREATE TABLE IF NOT EXISTS ${quads} (s INTEGER NOT NULL, p INTEGER NOT NULL, o INTEGER NOT NULL, g INTEGER NOT NULL, PRIMARY KEY (s, p, o, g)) WITHOUT ROWID`,
     );
     const wanted = this.indexes.split(',');
     if (wanted.includes('pos')) {
-      yield* exec('CREATE INDEX IF NOT EXISTS quads_pos ON quads (p, o, s, g)');
+      yield* exec(`CREATE INDEX IF NOT EXISTS ${prefix}quads_pos ON ${quads} (p, o, s, g)`);
     }
     if (wanted.includes('osp')) {
-      yield* exec('CREATE INDEX IF NOT EXISTS quads_osp ON quads (o, s, p, g)');
+      yield* exec(`CREATE INDEX IF NOT EXISTS ${prefix}quads_osp ON ${quads} (o, s, p, g)`);
     }
     if (wanted.includes('gspo')) {
-      yield* exec('CREATE INDEX IF NOT EXISTS quads_gspo ON quads (g, s, p, o)');
+      yield* exec(`CREATE INDEX IF NOT EXISTS ${prefix}quads_gspo ON ${quads} (g, s, p, o)`);
     }
-    for (const row of yield* rows('SELECT id, iri FROM dts')) {
+    for (const row of yield* rows(`SELECT id, iri FROM ${dts}`)) {
       this.#dtIds.set(asString(row.iri), asNumber(row.id));
       this.#dtIris.set(asNumber(row.id), asString(row.iri));
     }
@@ -192,7 +198,7 @@ export class TermStore {
     }
     this.#approxCount = 0;
     this.#analyzedAt = 0;
-    for (const table of ['quads', 'terms', 'dts', 'meta']) {
+    for (const table of [this.tables.quads, this.tables.terms, this.tables.dts, this.tables.meta]) {
       yield* exec(`DROP TABLE IF EXISTS ${table}`);
     }
     this.#cache.clear();
@@ -245,14 +251,14 @@ export class TermStore {
         ]),
       );
       yield* exec(
-        `INSERT OR IGNORE INTO terms (h, kind, lex, dt, lang, num)
+        `INSERT OR IGNORE INTO ${this.tables.terms} (h, kind, lex, dt, lang, num)
          SELECT value->>0, value->>1, value->>2, value->>3, value->>4, value->>5 FROM json_each(?)`,
         payload,
       );
       const next: typeof todo = [];
       for (const [index, id, ok] of yield* raw(
         `SELECT j.key, t.id, (t.kind = j.value->>1 AND t.lex = j.value->>2 AND t.dt IS j.value->>3 AND t.lang IS j.value->>4)
-         FROM json_each(?) j LEFT JOIN terms t ON t.h = j.value->>0`,
+         FROM json_each(?) j LEFT JOIN ${this.tables.terms} t ON t.h = j.value->>0`,
         payload,
       )) {
         const item = todo[asNumber(index)];
@@ -279,7 +285,10 @@ export class TermStore {
       }
       const dt = enc.dt === null ? null : this.dtIdIfKnown(enc.dt);
       for (let seed = 0; ; seed++) {
-        const found = yield* rows('SELECT id, kind, lex, dt, lang FROM terms WHERE h = ?', hash53(key, seed));
+        const found = yield* rows(
+          `SELECT id, kind, lex, dt, lang FROM ${this.tables.terms} WHERE h = ?`,
+          hash53(key, seed),
+        );
         if (found.length === 0) {
           break;
         }
@@ -309,11 +318,17 @@ export class TermStore {
       // Without planner statistics SQLite guesses join orders and picks badly (Q6: 570 ms → 2 ms).
       yield* exec('ANALYZE');
       this.#analyzedAt = this.#approxCount;
-      yield* exec(`INSERT OR REPLACE INTO meta (k, v) VALUES ('analyzedAt', ?)`, String(this.#analyzedAt));
+      yield* exec(
+        `INSERT OR REPLACE INTO ${this.tables.meta} (k, v) VALUES ('analyzedAt', ?)`,
+        String(this.#analyzedAt),
+      );
     }
-    yield* exec(`INSERT OR REPLACE INTO meta (k, v) VALUES ('approxCount', ?)`, String(this.#approxCount));
+    yield* exec(
+      `INSERT OR REPLACE INTO ${this.tables.meta} (k, v) VALUES ('approxCount', ?)`,
+      String(this.#approxCount),
+    );
     if (named && !this.namedGraphs) {
-      yield* exec(`INSERT OR REPLACE INTO meta (k, v) VALUES ('named', '1')`);
+      yield* exec(`INSERT OR REPLACE INTO ${this.tables.meta} (k, v) VALUES ('named', '1')`);
       this.namedGraphs = true;
     }
   }
@@ -338,7 +353,7 @@ export class TermStore {
       return;
     }
     yield* exec(
-      `DELETE FROM quads WHERE (s, p, o, g) IN (SELECT value->>0, value->>1, value->>2, value->>3 FROM json_each(?))`,
+      `DELETE FROM ${this.tables.quads} WHERE (s, p, o, g) IN (SELECT value->>0, value->>1, value->>2, value->>3 FROM json_each(?))`,
       JSON.stringify(idRows),
     );
   }
@@ -348,13 +363,13 @@ export class TermStore {
       return;
     }
     yield* exec(
-      'INSERT OR IGNORE INTO quads (s, p, o, g) SELECT value->>0, value->>1, value->>2, value->>3 FROM json_each(?)',
+      `INSERT OR IGNORE INTO ${this.tables.quads} (s, p, o, g) SELECT value->>0, value->>1, value->>2, value->>3 FROM json_each(?)`,
       JSON.stringify(idRows),
     );
   }
 
   *count(): Program<number> {
-    return asNumber((yield* rows('SELECT COUNT(*) AS n FROM quads'))[0].n);
+    return asNumber((yield* rows(`SELECT COUNT(*) AS n FROM ${this.tables.quads}`))[0].n);
   }
 
   /** Rebuilds a term from its stored columns. */
@@ -379,8 +394,8 @@ export class TermStore {
   *#dtId(iri: string): Program<number> {
     let id = this.#dtIds.get(iri);
     if (id === undefined) {
-      yield* exec('INSERT OR IGNORE INTO dts (iri) VALUES (?)', iri);
-      id = asNumber((yield* rows('SELECT id FROM dts WHERE iri = ?', iri))[0].id);
+      yield* exec(`INSERT OR IGNORE INTO ${this.tables.dts} (iri) VALUES (?)`, iri);
+      id = asNumber((yield* rows(`SELECT id FROM ${this.tables.dts} WHERE iri = ?`, iri))[0].id);
       this.#dtIds.set(iri, id);
       this.#dtIris.set(id, iri);
     }

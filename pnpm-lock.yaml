@@ -6259,6 +6259,9 @@ importers:
         specifier: 'catalog:'
         version: 3.7.4
     devDependencies:
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(vitest@4.1.10)
