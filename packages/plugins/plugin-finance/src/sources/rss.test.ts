@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { parseFeed } from '@dxos/plugin-magazine/FeedParser';
+import * as FeedParser from '@dxos/plugin-magazine/FeedParser';
 
 import { lexiconSentiment } from '../pipeline/sentiment-lexicon.ts';
 import { type FeedSpec, FIXED_FEEDS, feedSpecs, googleNews, toPost, weeklyWindows } from './rss.ts';
@@ -43,7 +43,7 @@ const GOOGLE: FeedSpec = googleNews('AAPL Apple stock');
 const FED_SPEC = FIXED_FEEDS.find(({ id }) => id === 'fed:press');
 
 const posts = (spec: FeedSpec, xml: string) =>
-  parseFeed(spec.url, xml).posts.flatMap((post) => toPost(post, spec, FETCHED) ?? []);
+  FeedParser.parseFeed(spec.url, xml).posts.flatMap((post) => toPost(post, spec, FETCHED) ?? []);
 
 describe('feed posts', () => {
   test('Google News: keyed by guid, outlet split off the title, redundant description dropped', () => {

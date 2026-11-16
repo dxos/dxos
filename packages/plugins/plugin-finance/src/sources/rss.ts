@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
-import { parseFeed } from '@dxos/plugin-magazine/FeedParser';
+import * as FeedParser from '@dxos/plugin-magazine/FeedParser';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
 import { TICKERS } from '../pipeline/tickers.ts';
@@ -195,7 +195,7 @@ export const fetchFeed = (spec: FeedSpec, fetchedAt: string): Effect.Effect<Subs
   getText(spec.url, spec.userAgent ?? BROWSER_USER_AGENT).pipe(
     Effect.flatMap((xml) =>
       Effect.try({
-        try: () => parseFeed(spec.url, xml),
+        try: () => FeedParser.parseFeed(spec.url, xml),
         catch: (cause) => new SourceError({ message: `Unrecognized feed format: ${spec.url}`, cause }),
       }),
     ),

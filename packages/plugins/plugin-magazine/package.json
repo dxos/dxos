@@ -89,8 +89,8 @@
       "import": "./dist/lib/CreateSubscription.mjs"
     },
     "./FeedParser": {
-      "source": "./src/operations/sources/rss.ts",
-      "types": "./dist/types/src/operations/sources/rss.d.ts",
+      "source": "./src/FeedParser.ts",
+      "types": "./dist/types/src/FeedParser.d.ts",
       "import": "./dist/lib/FeedParser.mjs"
     },
     "./FeedOperation": {
@@ -128,7 +128,7 @@
         "dist/types/src/types/CreateSubscription.d.ts"
       ],
       "FeedParser": [
-        "dist/types/src/operations/sources/rss.d.ts"
+        "dist/types/src/FeedParser.d.ts"
       ],
       "FeedOperation": [
         "dist/types/src/types/FeedOperation.d.ts"
