@@ -27,7 +27,11 @@ export interface Aspect<T, Encoded = T> {
   readonly backend: BackendName;
   readonly schema: Schema.Codec<T, Encoded>;
   readonly defaultValue: () => T;
-  /** Set for state a follower takes from the session it follows; contexts are then EIDs of the space or its objects. */
+  /**
+   * Set for state a follower takes from the session it follows; contexts are then EIDs of the space or its objects.
+   * TODO(wittjosiah): Make following a view's scroll and camera automatic, or opt-out, rather than declared per aspect
+   *   and wired per renderer.
+   */
   readonly follow?: FollowPolicy;
 }
 

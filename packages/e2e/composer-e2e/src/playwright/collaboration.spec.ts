@@ -348,8 +348,11 @@ test.describe('Collaboration tests', () => {
       await expect(row).toHaveCount(1);
       await expect(row.getByTestId('spacePlugin.presence.goTo')).toHaveCount(0);
 
-      await sessions.first().getByTestId('spacePlugin.presence.goTo').click({ timeout: 30_000 });
-      await expect(hostTextbox).toBeFocused();
+      // A new session's location reaches peers up to a second after the session does; until then Go to only scrolls.
+      await expect(async () => {
+        await sessions.first().getByTestId('spacePlugin.presence.goTo').click();
+        await expect(hostTextbox).toBeFocused({ timeout: 2_000 });
+      }).toPass({ timeout: 30_000 });
     },
   );
 
