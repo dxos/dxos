@@ -251,8 +251,10 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
 
     const handlePaneKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
       // An IME may report its own cancel as Escape mid-composition, and discarding the draft on that would throw
-      // away far more than the composition it meant to end.
-      if (event.key !== 'Escape' || event.nativeEvent.isComposing) {
+      // away far more than the composition it meant to end. `keyCode` 229 as well as `isComposing`, because Safari
+      // is known to end a composition with an `isComposing` of false (see `useSubmitOnEnter`, for Enter); a real
+      // Escape carries 27, so this cannot swallow one.
+      if (event.key !== 'Escape' || event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) {
         return;
       }
 
