@@ -56,7 +56,7 @@ ext table
   hue: red
   fields:
     store: Prose                # the database, and its migration-history table in parentheses
-    columns: FieldMap           # `name[?]: SQLTYPE [constraint …]  # meaning`; `?` allows NULL
+    columns: ColumnMap          # `name[?]: SQLTYPE [constraint …]  # meaning`; `?` allows NULL
     key?: Prose                 # the primary key, as a column list
     unique?: ProseList          # other unique keys, as column lists
     indexes?: ProseList         # `name(columns): why a query needs it`

@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EditorState, type Extension, Prec } from '@codemirror/state';
+import { Compartment, EditorState, type Extension, Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Editor, type TextEditorProps } from '@dxos/react-ui-editor';
+import { useDynamicRef } from '@dxos/react-hooks';
+import { Editor, type EditorController, type TextEditorProps } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
-import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { createBasicExtensions, createThemeExtensions, emptyPlaceholder } from '@dxos/ui-editor';
 
 const multilineTheme = EditorView.theme({
   '&': { minHeight: '100%' },
@@ -27,6 +28,20 @@ const singleLine: Extension = [
       : tr,
   ),
   Prec.high(keymap.of([{ key: 'Enter', run: (view) => (view.contentDOM.blur(), true) }])),
+];
+
+/** A read-only editor refuses the user's edits; the binding's own writes still pass. */
+const settingsFor = ({ placeholder, readonly }: { placeholder?: string; readonly?: boolean }): Extension => [
+  placeholder ? emptyPlaceholder(placeholder) : [],
+  EditorState.readOnly.of(!!readonly),
+  readonly
+    ? EditorState.transactionFilter.of((tr) =>
+        tr.docChanged &&
+        (tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('undo') || tr.isUserEvent('redo'))
+          ? []
+          : tr,
+      )
+    : [],
 ];
 
 export type InputEditorProps = {
@@ -54,16 +69,24 @@ export const InputEditor = ({
 }: InputEditorProps) => {
   const themeMode = Hooks.useThemeMode();
   const multiline = rows !== undefined;
-  // Memoised: a new list each render would reconfigure the editor on every keystroke and drop its focus.
+  // The placeholder and read-only state reconfigure the editor rather than rebuild it, which would drop its focus.
+  const [settings] = useState(() => new Compartment());
+  const latest = useDynamicRef({ placeholder, readonly });
+  const controller = useRef<EditorController>(null);
+  // Memoised: a new list each render would rebuild the editor on every keystroke and drop its focus.
   const extensions = useMemo(
     () => [
-      createBasicExtensions({ placeholder, readOnly: readonly, lineWrapping: true }),
+      createBasicExtensions({ lineWrapping: true }),
       createThemeExtensions({ syntaxHighlighting: true, themeMode }),
+      settings.of(settingsFor(latest.current)),
       multiline ? multilineTheme : singleLine,
       extensionsProp ?? [],
     ],
-    [placeholder, readonly, multiline, themeMode, extensionsProp],
+    [multiline, themeMode, extensionsProp],
   );
+  useEffect(() => {
+    controller.current?.view?.dispatch({ effects: settings.reconfigure(settingsFor({ placeholder, readonly })) });
+  }, [placeholder, readonly]);
 
   const inPlace = variant === 'title' || variant === 'plain';
   return (
@@ -74,7 +97,7 @@ export const InputEditor = ({
       disabled={readonly}
       data-testid={testId}
     >
-      <Editor.Root>
+      <Editor.Root ref={controller}>
         <Editor.View {...props} extensions={extensions} onChange={readonly ? undefined : onChange} />
       </Editor.Root>
     </Input.Frame>

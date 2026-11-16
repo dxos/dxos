@@ -10,17 +10,14 @@ import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities'
 import { SpecSourcesProvider } from '#containers';
 import { FeatureMap } from '#types';
 
-import { featureEmbedExtensions } from '../extensions/feature-embed-extensions.ts';
-import { softwareCommands } from '../extensions/software-commands.ts';
 import { CodeNamespace } from '../namespace.ts';
 import { FEATURE_VIEWS, SOFTWARE_FACTS, SPEC_VIEWS } from '../spec-views.ts';
 
 const SOFTWARE_DIALECTS = [FeatureMap.SOFTWARE_DIALECT];
 
 /**
- * The software dialect and what it brings a spec: its data model, API and the code a review cites; its features on a
- * board, kept in step with their embeds in any editor of it; `/feature` and a slash command for each of its other
- * blocks. The views every spec has read the checkout through this plugin.
+ * The software dialect and what it brings a spec: its data model, API and the code a review cites, and the `feat`
+ * blocks of its text on a board. The views every spec has read the checkout through this plugin.
  */
 export default Capability.makeModule(() =>
   Effect.succeed([
@@ -49,16 +46,6 @@ export default Capability.makeModule(() =>
       dialects: SOFTWARE_DIALECTS,
       facts: SOFTWARE_FACTS,
     }),
-    Capability.contribute(ProjectCapabilities.SpecExtensions, (spec, { dialects, t }) =>
-      dialects.includes(FeatureMap.SOFTWARE_DIALECT)
-        ? [
-            ...featureEmbedExtensions(spec, {
-              newName: t('feature-map.new-feature.name', { ns: CodeNamespace.key }),
-            }),
-            ...softwareCommands,
-          ]
-        : [],
-    ),
     Capability.contribute(ProjectCapabilities.SpecSourcesProvider, SpecSourcesProvider),
   ]),
 );

@@ -29,7 +29,7 @@ import {
 import { ProjectCapabilities } from '#types';
 
 import { type SpecViewId } from '../../companion-views.ts';
-import { useSpecReviews } from '../../hooks/index.ts';
+import { useSpecFacts, useSpecReviews } from '../../hooks/index.ts';
 import * as SpecSession from '../../SpecSession.ts';
 
 const NO_REVIEWS: readonly ReviewData[] = [];
@@ -235,21 +235,6 @@ export const SpecCompanionView = ({
         />
       );
   }
-};
-
-/** The fact styles of the packages whose dialects the spec uses. */
-const useSpecFacts = (dialects: readonly string[]): ProjectCapabilities.SpecFacts => {
-  const packages = Hooks.useCapabilities(ProjectCapabilities.SpecPackage);
-  return useMemo(
-    () =>
-      Object.assign(
-        {},
-        ...packages
-          .filter((pkg) => pkg.facts && pkg.dialects.every((dialect) => dialects.includes(dialect)))
-          .map(({ facts }) => facts),
-      ),
-    [packages, dialects],
-  );
 };
 
 const NO_DIALECTS: readonly string[] = [];

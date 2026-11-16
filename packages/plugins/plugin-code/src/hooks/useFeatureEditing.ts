@@ -7,112 +7,54 @@ import { useMemo } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Operation from '@dxos/compute/Operation';
-import * as Spec from '@dxos/compute/Spec';
-import { type Database, Filter, Obj, Ref } from '@dxos/echo';
-import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
-import { Task } from '@dxos/types';
+import type * as Spec from '@dxos/compute/Spec';
+import { Obj, Ref } from '@dxos/echo';
+import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 
-import { CodeOperation, Feature, FeatureMap } from '#types';
-
+import { type FeatureChanges } from '../components/FeatureCard/index.ts';
 import { CodeNamespace } from '../namespace.ts';
 
 export type FeatureEditing = {
-  /** Writes the given fields of the feature. */
-  update: (featureId: string, changes: Partial<Pick<Feature.Feature, 'name' | 'description' | 'status'>>) => void;
-  addDependency: (featureId: string, dependsOnId: string) => void;
-  removeDependency: (featureId: string, dependsOnId: string) => void;
-  linkTask: (taskId: string, featureId: string) => void;
-  /** Files a new task into the project tracking the feature's spec and links it; resolves to whether it was filed. */
-  fileTask: (featureId: string, title: string) => Promise<boolean>;
-  /** Deletes the feature, with the spec that breaks it down. */
-  removeFeature: (featureId: string) => void;
-  /** Creates a planned feature under `parentId`, else on the map's spec; resolves to its id. */
-  createFeature: (name: string, parentId?: string) => Promise<string | undefined>;
+  /** Writes the block's title, prose or status. */
+  update: (key: string, changes: FeatureChanges) => void;
 };
 
 /**
- * Edits for a spec's feature map, each through the `CodeOperation` verb an agent would use, so a person and an agent
- * get the same rules. A refused edit (a dependency that would close a cycle) is shown as a toast carrying the
- * operation's own message, which names the features involved.
+ * Edits of a spec's `feat` blocks, each through the block operation an agent would use, so a person and an agent get
+ * the same rules. A refused edit is shown as a toast carrying the operation's own message.
  */
-export const useFeatureEditing = (db: Database.Database | undefined, spec?: Spec.Spec): FeatureEditing => {
+export const useFeatureEditing = (spec: Spec.Spec | undefined): FeatureEditing => {
   const { invokePromise } = Hooks.useOperationInvoker();
 
   return useMemo(() => {
-    // Narrowed by a guard rather than cast: an id from the UI may name an object of another type.
-    const refOf = async <T extends Obj.Unknown>(
-      id: string,
-      guard: (value: unknown) => value is T,
-    ): Promise<Ref.Ref<T> | undefined> => {
-      const [object] = db ? await db.query(Filter.id(id)).run() : [];
-      return guard(object) ? Ref.make(object) : undefined;
-    };
-    const featureRef = (id: string) => refOf(id, Feature.instanceOf);
-    const taskRef = (id: string) => refOf(id, (value): value is Task.Task => Obj.instanceOf(Task.Task, value));
-
+    const spaceId = spec && Obj.getDatabase(spec)?.spaceId;
+    const toast = (description: string) =>
+      void invokePromise(LayoutOperation.AddToast, {
+        id: `${CodeNamespace.key}/feature-edit-error/${Date.now()}`,
+        icon: 'ph--warning--regular',
+        duration: 6_000,
+        title: ['feature-edit-error.title', { ns: CodeNamespace.key }],
+        description,
+      });
     const run = async <I, O>(operation: Operation.Definition<I, O>, input: I): Promise<O | undefined> => {
-      if (!db) {
-        return undefined;
-      }
-      const { data, error } = await invokePromise(operation, input, { spaceId: db.spaceId });
+      const { data, error } = await invokePromise(operation, input, { spaceId });
       if (error) {
-        await invokePromise(LayoutOperation.AddToast, {
-          id: `${CodeNamespace.key}/feature-edit-error/${Date.now()}`,
-          icon: 'ph--warning--regular',
-          duration: 6_000,
-          title: ['feature-edit-error.title', { ns: CodeNamespace.key }],
-          description: error.message,
-        });
+        toast(error.message);
         return undefined;
       }
       return data;
     };
-
-    const specRef = spec ? Ref.make(spec) : undefined;
+    const set = (input: Omit<Operation.Definition.Input<typeof ProjectOperation.SetSpecBlock>, 'spec'>) =>
+      spec ? run(ProjectOperation.SetSpecBlock, { spec: Ref.make(spec), ...input }) : Promise.resolve(undefined);
 
     return {
-      update: (featureId, changes) =>
-        void featureRef(featureId).then(
-          (feature) => feature && run(CodeOperation.UpdateFeature, { feature, ...changes }),
-        ),
-      addDependency: (featureId, dependsOnId) =>
-        void Promise.all([featureRef(featureId), featureRef(dependsOnId)]).then(
-          ([feature, dependsOn]) =>
-            feature && dependsOn && run(CodeOperation.AddFeatureDependency, { feature, dependsOn }),
-        ),
-      removeDependency: (featureId, dependsOnId) =>
-        void Promise.all([featureRef(featureId), featureRef(dependsOnId)]).then(
-          ([feature, dependsOn]) =>
-            feature && dependsOn && run(CodeOperation.RemoveFeatureDependency, { feature, dependsOn }),
-        ),
-      linkTask: (taskId, featureId) =>
-        void Promise.all([taskRef(taskId), featureRef(featureId)]).then(
-          ([task, feature]) => task && feature && run(CodeOperation.LinkFeatureTask, { task, feature }),
-        ),
-      fileTask: async (featureId, title) => {
-        const [feature] = db ? await db.query(Filter.id(featureId)).run() : [];
-        const project = Feature.instanceOf(feature) ? FeatureMap.findProject(feature) : undefined;
-        if (!project?.taskSet) {
-          return false;
-        }
-        const created = await run(TaskOperation.CreateTask, { taskSet: project.taskSet, title });
-        const [task, featureRefValue] = await Promise.all([
-          created ? taskRef(created.task.id) : undefined,
-          featureRef(featureId),
-        ]);
-        if (!task || !featureRefValue) {
-          return false;
-        }
-        await run(CodeOperation.LinkFeatureTask, { task, feature: featureRefValue });
-        return true;
-      },
-      removeFeature: (featureId) =>
-        void featureRef(featureId).then((feature) => feature && run(CodeOperation.DeleteFeature, { feature })),
-      createFeature: async (name, parentId) => {
-        const parent = parentId ? await featureRef(parentId) : undefined;
-        const result = await run(CodeOperation.CreateFeature, parent ? { name, parent } : { name, spec: specRef });
-        return result?.feature.id;
-      },
+      update: (key, { name, description, status }) =>
+        void set({
+          block: key,
+          ...(name !== undefined && { title: name }),
+          ...(description !== undefined && { prose: description }),
+          ...(status !== undefined && { fields: { status } }),
+        }),
     };
-  }, [db, spec, invokePromise]);
+  }, [spec, invokePromise]);
 };

@@ -24,7 +24,6 @@ import { translations as projectsTranslations } from '@dxos/plugin-projects/tran
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import * as VideoPlugin from '@dxos/plugin-video/VideoPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
@@ -90,11 +89,50 @@ const pickSpec = async (canvas: ReturnType<typeof within>, name: string) => {
   });
 };
 
-/** Opens the Extensions menu and returns the item of the package labelled `label`. */
+const EXTENSIONS = 'projectsPlugin.specExtensions';
+
+/**
+ * Opens the Extensions menu and returns the item of the package labelled `label`. A narrow toolbar folds the menu into
+ * its overflow (⋮) menu as a submenu, under the same test id.
+ */
 const findPackage = async (canvas: ReturnType<typeof within>, label: string) => {
-  await userEvent.click(await canvas.findByTestId('projectsPlugin.specExtensions', undefined, { timeout: 10_000 }));
-  const item = within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText(label);
-  return item.closest<HTMLElement>('[role="menuitemcheckbox"]') ?? item;
+  const control = await waitFor(
+    () => {
+      const found = canvas.queryByTestId(EXTENSIONS) ?? canvas.queryByTestId('toolbar.overflow');
+      if (!found) {
+        throw new Error('Neither the Extensions menu nor the overflow menu is in the toolbar.');
+      }
+      return found;
+    },
+    { timeout: 10_000 },
+  );
+  await userEvent.click(control);
+  if (control.dataset.testid !== EXTENSIONS) {
+    await userEvent.click(await screen.findByTestId(EXTENSIONS, undefined, { timeout: 10_000 }));
+  }
+  return waitFor(
+    () => {
+      const item = screen
+        .getAllByRole('menuitemcheckbox')
+        .find((row) => within(row).queryByText(label, { exact: true }));
+      if (!item) {
+        throw new Error(`No package labelled ${label}.`);
+      }
+      return item;
+    },
+    { timeout: 10_000 },
+  );
+};
+
+/** Closes the open menus, a submenu and the menu that holds it. */
+const closeMenus = async () => {
+  await userEvent.keyboard('{Escape}');
+  await waitFor(async () => {
+    if (screen.queryAllByRole('menu').length > 0) {
+      await userEvent.keyboard('{Escape}');
+      throw new Error('A menu is still open.');
+    }
+  });
 };
 
 const meta = {
@@ -122,16 +160,13 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
-        // Draws the feature embeds.
         MarkdownPlugin.make(),
-        // The project article; the feature stack fills in the views and embeds.
+        // The project article; the feature stack fills in the views.
         ProjectsPlugin.make(),
         // plugin-projects' declared dependencies.
         AssistantPlugin.make(),
         TasksPlugin.make(),
         FeatureEditingPlugin.make(),
-        // A second plugin's extension package, beside the software one.
-        VideoPlugin.make(),
       ],
     }),
     // The deck provides the drag-and-drop root in the app; the Kanban view needs one here.
@@ -154,17 +189,23 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The project's Specs tab: a spec in the software dialect shows its features embedded in its text, and its board joins
- * its Structure companion.
+ * The project's Specs tab: a spec in the software dialect shows its features as block forms in its text, and its board
+ * joins its Structure companion.
  */
 export const SoftwareSpec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await showTab(canvas, 'spec');
     const document = await canvas.findByTestId('projectsPlugin.spec.document', undefined, { timeout: 10_000 });
-    await waitFor(() => expect(within(document).getAllByTestId('markdown.embed').length).toBeGreaterThan(0), {
-      timeout: 10_000,
-    });
+    await waitFor(
+      () =>
+        expect(
+          within(document)
+            .queryAllByTestId('spec-block')
+            .some((block) => block.dataset.kind === 'feat'),
+        ).toBe(true),
+      { timeout: 10_000 },
+    );
     await showBoard(canvas);
   },
 };
@@ -176,7 +217,7 @@ export const SoftwarePackage: Story = {
     await showTab(canvas, 'spec');
     await pickSpec(canvas, SPEC_NAME);
     await expect((await findPackage(canvas, 'Software')).getAttribute('aria-checked')).toBe('true');
-    await userEvent.keyboard('{Escape}');
+    await closeMenus();
 
     await pickSpec(canvas, TALK_SPEC_NAME);
     await expect(canvas.queryByTestId('spec-companion.view.kanban')).toBeNull();

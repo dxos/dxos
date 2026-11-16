@@ -95,7 +95,7 @@ ext deck
   role: structure
   fields:
     desc?: Prose
-    chain: PlankRefList          # ordered, e.g. Mailbox > Message > Attachment
+    chain: PlankRefChain         # ordered, e.g. Mailbox > Message > Attachment
   links:
     chain: aggregates
 ```

@@ -34,18 +34,21 @@ Links applies: an appendix declaration keeps this dialect's role, and its own li
 
 ```mdl
 ext feat
-  uri: org.dxos.mdl.feat@1.0
+  uri: org.dxos.mdl.feat@1.1
   desc: A named feature grouping one or more requirements.
   nesting: self
   inline-prose: true
   role: anchor
+  label: F
   icon: ph--star--regular
   hue: emerald
   fields:
+    status?: planned | in-progress | prototype | operational | failing
     desc?: Prose
     req: RequirementList
     depends?: FeatRef[]          # features this one needs first
     uses?: BlockRef[]            # the blocks this feature needs, other than features
+    spec?: Ref<spec>             # the spec that breaks this feature down
   links:
     depends: depends-on
     uses: depends-on

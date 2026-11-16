@@ -13,6 +13,9 @@ export type ToolbarZone = 'start' | 'end';
 
 export const TOOLBAR_OVERFLOW_TESTID = 'toolbar.overflow';
 
+/** On a folded group's trigger: the test ids of the items it holds, space-separated, so a guided tour can open it. */
+export const TOOLBAR_HOLDS_ATTRIBUTE = 'data-toolbar-holds';
+
 /** Where a toolbar item or named group goes; menus ignore it. */
 export type ToolbarPlacement = {
   /** Left or right of its row (default `start`). */
@@ -27,6 +30,11 @@ export type ToolbarPlacement = {
    * group holding one, never moves.
    */
   collapse?: number;
+  /**
+   * A named group shown inline first folds in place, into a dropdown of its items under its own label and icon, and
+   * moves into the overflow menu only after that. Groups fold in collapse order, all before any item moves.
+   */
+  fold?: boolean;
 };
 
 /** Shared presentation fields for menu actions and group triggers. */

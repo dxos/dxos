@@ -12,7 +12,7 @@ import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 
 import * as CodePlugin from '#meta';
-import { CodeOperation, Feature, Showcase } from '#types';
+import { CodeOperation, Showcase, SpecItem } from '#types';
 
 describe('CodePlugin in workerd', () => {
   // Feature maps are driven over MCP, whose hosts activate the plugin headless like this.
@@ -30,10 +30,10 @@ describe('CodePlugin in workerd', () => {
         TasksPlugin.make(),
       ]);
       expect(failures).toEqual([]);
-      for (const type of [Feature.Feature, Showcase.Demonstrates]) {
+      for (const type of [Showcase.Demonstrates, SpecItem.Implements]) {
         expect(typenames).toContain(Type.getTypename(type));
       }
-      expect(operationKeys).toContain(String(CodeOperation.GetFeatures.meta.key));
+      expect(operationKeys).toContain(String(CodeOperation.LinkTask.meta.key));
     },
   );
 });

@@ -160,6 +160,11 @@
       "types": "./dist/types/src/types/SourceFile.d.ts",
       "import": "./dist/lib/SourceFile.mjs"
     },
+    "./SpecItem": {
+      "source": "./src/types/SpecItem.ts",
+      "types": "./dist/types/src/types/SpecItem.d.ts",
+      "import": "./dist/lib/SpecItem.mjs"
+    },
     "./SpecText": {
       "source": "./src/types/SpecText.ts",
       "types": "./dist/types/src/types/SpecText.d.ts",
@@ -246,7 +251,6 @@
     "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
-    "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -276,7 +280,6 @@
     "@codemirror/lint": "catalog:",
     "@dxos/assistant": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/plugin-video": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",

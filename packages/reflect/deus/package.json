@@ -38,6 +38,11 @@
       "types": "./dist/types/src/review/index.d.ts",
       "import": "./dist/lib/review.mjs"
     },
+    "./schema": {
+      "source": "./src/schema/index.ts",
+      "types": "./dist/types/src/schema/index.d.ts",
+      "import": "./dist/lib/schema.mjs"
+    },
     "./spec-index": {
       "source": "./src/spec-index/index.ts",
       "types": "./dist/types/src/spec-index/index.d.ts",

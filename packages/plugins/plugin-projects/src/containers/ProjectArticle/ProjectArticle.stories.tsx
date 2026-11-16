@@ -32,7 +32,7 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import { SoftwareConfigPlugin, VideoPackagePlugin } from '@dxos/plugin-projects/testing';
+import { DialectSamples, SoftwareConfigPlugin, VideoPackagePlugin } from '@dxos/plugin-projects/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
@@ -42,6 +42,7 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
+import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -72,7 +73,49 @@ const SPEC_CONTENT = [
   'An inbox that sorts itself, and agents that answer what they can.',
   '',
   'Mail syncs from each provider into the space, where the agents read it.',
+  '',
+  '```mdl',
+  'feat k7q2x: Sorted inbox',
+  '  status: in-progress',
+  '  desc: Mail lands in the folder its sender and subject suggest.',
+  "  req m3pza: A message from a known sender goes to that sender's folder.",
+  '  req w8rtn: A message the rules cannot place stays in the inbox.',
+  '```',
+  '',
+  '```mdl',
+  'feat p4m8d: Agent replies',
+  '  status: planned',
+  '  desc: An agent drafts a reply to each message it can answer.',
+  '  req h2vqc: A draft waits in the thread until someone sends it.',
+  '```',
+  '',
+  '```mdl',
+  'type Message: One email in the inbox',
+  '  fields:',
+  '    subject: string',
+  '    sender: string',
+  '```',
+  '',
+  '```mdl',
+  'type Folder: Where sorted mail lands',
+  '  fields:',
+  '    name: string',
+  '```',
+  '',
+  '```mdl',
+  'op Sort: Moves a message to its folder',
+  '  desc: Reads the message, picks a folder by its rules, and moves it there.',
+  '  input:',
+  '    message: Message   # the message to sort',
+  '  output: Folder',
+  '```',
 ].join('\n');
+const INBOX_SPEC: { content: string; dialects: readonly string[] } = {
+  content: SPEC_CONTENT,
+  dialects: ['org.dxos.spec.software'],
+};
+/** The project's first spec; a story's `beforeEach` swaps it before the client seeds the project. */
+let firstSpec = INBOX_SPEC;
 const TALK_SPEC_NAME = 'Launch talk';
 const NEW_SPEC_NAME = 'Launch video';
 const TALK_SPEC_CONTENT = [
@@ -190,7 +233,9 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
 
   // The project's specs, which put the Specs tab and the overview's summary lines on the article.
-  const spec = space.db.add(Spec.make({ name: SPEC_NAME, content: SPEC_CONTENT }));
+  const spec = space.db.add(
+    Spec.make({ name: SPEC_NAME, content: firstSpec.content, dialects: [...firstSpec.dialects] }),
+  );
   const talk = space.db.add(Spec.make({ name: TALK_SPEC_NAME, content: TALK_SPEC_CONTENT }));
   Obj.update(project, (project) => {
     project.specs.push(Ref.make(spec), Ref.make(talk));
@@ -374,6 +419,7 @@ const meta = {
     translations: [
       ...translations,
       ...reactUiTranslations,
+      ...editorTranslations,
       ...formTranslations,
       ...routineTranslations,
       ...tasksTranslations,
@@ -384,6 +430,7 @@ const meta = {
   beforeEach: () => {
     seeded = undefined;
     generation += 1;
+    firstSpec = INBOX_SPEC;
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -400,7 +447,7 @@ export const Default: Story = {
 
 /**
  * A project with a spec: the overview lists its specs, each folded under its name, and its Spec tab shows the spec's
- * document. The toolbar holds the Specs tab's tools only.
+ * document. The toolbar holds the Specs tab's tools only, the editor's among them, and the document draws none of its own.
  */
 export const WithSpec: Story = {
   ...Default,
@@ -423,8 +470,165 @@ export const WithSpec: Story = {
     await expect(canvas.queryByTestId('projectsPlugin.overflow')).toBeNull();
     // With no plugin contributing a view for its dialects, a spec shows its text alone, with no view toggle.
     await expect(canvas.queryByTestId('projectsPlugin.specView.document')).toBeNull();
+
+    await expect(canvas.findByTestId('editor.toolbar.viewMode', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.getAllByRole('toolbar')).toHaveLength(1);
   },
 };
+
+/**
+ * A spec's blocks show as forms over their kinds' schemas: a feature's title, status and requirements. Editing a
+ * requirement in its form rewrites that requirement's line of the spec's text and nothing else.
+ */
+export const SpecBlockForms: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { project } = await seedContent();
+    await showTab(canvas, 'spec');
+    // The editor is rebuilt as the spec packages' extensions arrive, so each element is read from the settled editor.
+    const featureCard = () => {
+      const card = canvas.queryAllByTestId('spec-block').find((element) => element.dataset.kind === 'feat');
+      if (!card) {
+        throw new Error('no feature card');
+      }
+      return card;
+    };
+    await waitFor(() => expect(featureCard()).toHaveTextContent('Sorted inbox'), { timeout: 30_000 });
+    await expect(featureCard()).toHaveTextContent('F-1.2');
+    await expect(canvas.getAllByTestId('spec-block').map((element) => element.dataset.kind)).toEqual([
+      'feat',
+      'feat',
+      'type',
+      'type',
+      'op',
+    ]);
+    // A pressed card's typed map row names its type in a combobox over the spec's types.
+    const op = () => canvas.getAllByTestId('spec-block').find((element) => element.dataset.kind === 'op')!;
+    await userEvent.click(within(op()).getByTestId('spec-block.name'));
+    await waitFor(() => expect([...op().querySelectorAll('input')].map((input) => input.value)).toContain('Message'), {
+      timeout: 5_000,
+    });
+
+    // Each requirement is a bound editor of its own, labelled by its position.
+    const requirement = () => {
+      const view = [...featureCard().querySelectorAll<HTMLElement>('.cm-content')]
+        .map((content) => EditorView.findFromDOM(content))
+        .find((candidate) => candidate?.state.doc.toString().startsWith('A message from a known sender'));
+      if (!view) {
+        throw new Error('no requirement editor');
+      }
+      return view;
+    };
+    await waitFor(requirement, { timeout: 10_000 });
+    const view = requirement();
+    view.dispatch({ changes: { from: view.state.doc.length, insert: ' Always.' }, userEvent: 'input.type' });
+    const text = () => project.specs[0]?.target?.content.target?.content ?? '';
+    await waitFor(
+      () =>
+        expect(text()).toContain("  req m3pza: A message from a known sender goes to that sender's folder. Always.\n"),
+      { timeout: 5_000 },
+    );
+    await expect(text()).toContain('  req w8rtn: A message the rules cannot place stays in the inbox.\n');
+
+    // Typing keeps the field focused while each keystroke rewrites the spec's text around it.
+    view.focus();
+    view.dispatch({ selection: { anchor: view.state.doc.length } });
+    await userEvent.keyboard(' Twice.');
+    await waitFor(() => expect(text()).toContain("sender's folder. Always. Twice.\n"), { timeout: 5_000 });
+
+    // A requirement added and written keeps its text when another field of the block changes.
+    await userEvent.click(within(featureCard()).getByTestId('req.add'));
+    const added = await waitFor(() => {
+      const content = featureCard().querySelector<HTMLElement>('[data-testid="req[2].text"] .cm-content');
+      const editor = content && EditorView.findFromDOM(content);
+      if (!editor) {
+        throw new Error('no added requirement');
+      }
+      return editor;
+    });
+    added.dispatch({
+      changes: { from: 0, to: added.state.doc.length, insert: 'A muted sender is archived.' },
+      userEvent: 'input.type',
+    });
+    await waitFor(() => expect(text()).toContain(': A muted sender is archived.\n'), { timeout: 5_000 });
+    await userEvent.click(within(featureCard()).getByTestId('status'));
+    await userEvent.click(await screen.findByRole('option', { name: 'Prototype' }));
+    await waitFor(() => expect(text()).toContain('  status: prototype\n'), { timeout: 5_000 });
+    await expect(text()).toContain(': A muted sender is archived.\n');
+
+    // A card is a block the keys stop on: Enter goes into its first field and Escape comes back out to the card.
+    const frame = () => featureCard().closest<HTMLElement>('.dx-focus-item')!;
+    frame().focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(featureCard().querySelector('.cm-content')).toBe(document.activeElement));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(frame()));
+
+    // A type's name, heading its card, is a field of its form: renaming the block keeps the card and the focus in it.
+    const type = () => canvas.getAllByTestId('spec-block').find((element) => element.dataset.kind === 'type')!;
+    const card = type();
+    const name = EditorView.findFromDOM(
+      within(card).getByTestId('spec-block.name').querySelector<HTMLElement>('.cm-content')!,
+    )!;
+    name.focus();
+    name.dispatch({ selection: { anchor: 0, head: name.state.doc.length } });
+    await userEvent.keyboard('Email');
+    await waitFor(() => expect(text()).toContain('type Email: One email in the inbox'), { timeout: 5_000 });
+    await expect(type()).toBe(card);
+    await expect(name.hasFocus).toBe(true);
+
+    // A name the header cannot carry is not written, and leaving the field shows the block's name again.
+    name.dispatch({ selection: { anchor: 0, head: name.state.doc.length } });
+    await userEvent.keyboard('{Backspace}');
+    frame().focus();
+    await waitFor(() => expect(name.state.doc.toString()).toBe('Email'));
+    await expect(text()).toContain('type Email: One email in the inbox');
+  },
+};
+
+/**
+ * A spec in one dialect, drawn as forms: every kind the dialect defines draws a card, and every reference in the sample
+ * names a block it holds or something outside the spec, so nothing is flagged.
+ */
+const dialectStory = ({ content, dialects, kinds }: DialectSamples.Sample): Story => ({
+  ...Default,
+  beforeEach: () => {
+    firstSpec = { content, dialects };
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    await canvas.findAllByTestId('spec-block', undefined, { timeout: 30_000 });
+    // The editor draws only the blocks near its viewport, so each is read on the way down.
+    const scroller = canvasElement.querySelector<HTMLElement>('.cm-scroller')!;
+    const seen = new Set<string>();
+    const flagged: string[] = [];
+    for (let top = 0; top <= scroller.scrollHeight; top += scroller.clientHeight / 2) {
+      scroller.scrollTop = top;
+      // CodeMirror measures on a frame and draws the widgets it brought into view on the next.
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      for (const card of canvas.queryAllByTestId('spec-block')) {
+        seen.add(card.dataset.kind!);
+        card.querySelectorAll('.text-error-fg').forEach((element) => flagged.push(element.textContent ?? ''));
+      }
+    }
+    scroller.scrollTop = 0;
+    await expect([...seen]).toEqual(expect.arrayContaining([...kinds]));
+    await expect(flagged).toEqual([]);
+  },
+});
+
+export const AppDialect = dialectStory(DialectSamples.samples.app);
+export const ChangelogDialect = dialectStory(DialectSamples.samples.changelog);
+export const CodeDialect = dialectStory(DialectSamples.samples.code);
+export const CoreDialect = dialectStory(DialectSamples.samples.core);
+export const FeaturesDialect = dialectStory(DialectSamples.samples.features);
+export const PluginDialect = dialectStory(DialectSamples.samples.plugin);
+export const QaDialect = dialectStory(DialectSamples.samples.qa);
+export const ReviewDialect = dialectStory(DialectSamples.samples.review);
+export const SqlDialect = dialectStory(DialectSamples.samples.sql);
 
 /** Each tab's tools follow the tabs: the agent and the chart on Tasks; the Overview adds artifacts in their section. */
 export const ToolbarByTab: Story = {
@@ -486,7 +690,7 @@ export const SpecDocument: Story = {
     await expectSpecShown(canvas, SPEC_NAME);
     const document = canvas.getByTestId('projectsPlugin.spec.document');
     await waitFor(() => expect(document.textContent).toContain('sorts itself'), { timeout: 10_000 });
-    await expect(document.textContent).not.toContain('name:');
+    await expect(document.textContent).not.toContain(`name: ${SPEC_NAME}`);
   },
 };
 
