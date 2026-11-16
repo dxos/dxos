@@ -3,12 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { type ComponentType } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { query, slide } from '../../testing/slideStory.tsx';
 import { SlideWorkbench, type SlideWorkbenchProps } from '../../testing/SlideWorkbench.tsx';
+import { SlideThemeProvider } from '../SlideTheme/index.ts';
 
 /**
  * Title slides, as a set to choose between. Each draws the brand's own lockup — the mark with `DXOS` under it in the
@@ -125,12 +127,20 @@ export const Split: Story = {
   },
 };
 
+/** The deck's own face: Poiret One, the thin geometric display the Figma slide sets its name in. */
+const display = (Story: ComponentType) => (
+  <SlideThemeProvider settings={{ font: 'display' }}>
+    <Story />
+  </SlideThemeProvider>
+);
+
 /**
  * 6. The deck's own title slide, reproduced from the Figma deck it was designed in: the artwork is that slide
  * exported as SVG and published to the brand bucket, and the words sit at its own measurements rather than in the
  * layout's padding.
  */
 export const Glow: Story = {
+  decorators: [display],
   args: {
     content: slide(
       // The art carries the slide's background, black included, so the frontmatter names no color of its own; the
@@ -181,7 +191,11 @@ export const Column: Story = {
       '',
       '::right::',
       '',
-      '# DXOS',
+      '<Box variant="lockup">',
+      '',
+      `![DXOS](${WORDMARK})`,
+      '',
+      '</Box>',
       '',
       '## The decentralized operating system',
       '',
@@ -192,12 +206,16 @@ export const Column: Story = {
     const frame = await query(canvasElement, '[data-layout="two-cols"]');
     const art = frame.querySelector('[data-variant="fill"] img')!;
     await waitFor(() => expect((art as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
-    // 1. The art runs to the slide's own start and bottom edges rather than sitting inside the layout's padding.
+    // 1. The art runs to the slide's own top and bottom edges rather than sitting inside the layout's padding.
     const picture = art.getBoundingClientRect();
     const slideBox = frame.getBoundingClientRect();
-    await expect(Math.abs(picture.left - slideBox.left)).toBeLessThan(2);
+    await expect(Math.abs(picture.top - slideBox.top)).toBeLessThan(2);
     await expect(Math.abs(picture.bottom - slideBox.bottom)).toBeLessThan(2);
-    // 2. It keeps to its own column, so the words beside it are clear of it.
-    await expect(picture.right).toBeLessThan(slideBox.left + slideBox.width / 2);
+    // 2. It runs past its column's sides, so the slide's own edge crops it rather than the column's.
+    await expect(picture.right).toBeGreaterThan(slideBox.left + slideBox.width / 2);
+    await expect(picture.left).toBeLessThan(slideBox.left);
+    // 3. The words beside it are laid out as though it were not there.
+    const words = frame.querySelector('[data-variant="lockup"] img')!.getBoundingClientRect();
+    await expect(words.left).toBeGreaterThan(slideBox.left + slideBox.width / 2);
   },
 };

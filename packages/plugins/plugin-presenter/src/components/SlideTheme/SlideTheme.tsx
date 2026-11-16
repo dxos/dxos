@@ -70,7 +70,10 @@ const FONTS: Record<SlideTheme.Font, FontDefinition> = {
     family: `'Source Serif 4 Variable', ${SERIF}`,
     load: () => import('@fontsource-variable/source-serif-4/index.css'),
   },
-  'display': { family: "'Poiret One', ui-sans-serif, sans-serif" },
+  'display': {
+    family: "'Poiret One', ui-sans-serif, sans-serif",
+    load: () => import('@fontsource/poiret-one/index.css'),
+  },
   'space-grotesk': {
     family: "'Space Grotesk Variable', ui-sans-serif, sans-serif",
     load: () => import('@fontsource-variable/space-grotesk/index.css'),

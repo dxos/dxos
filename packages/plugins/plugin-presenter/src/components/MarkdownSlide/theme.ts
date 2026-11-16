@@ -17,10 +17,10 @@ export const theme = {
 
   nodes: {
     // Headings set tight, so a title that wraps takes two short lines rather than the body's relaxed spacing.
-    h1: 'text-[80px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
-    h2: 'text-[60px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
-    h3: 'text-[48px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
-    h4: 'text-[40px] leading-tight uppercase font-(family-name:--slide-font-heading)',
+    h1: 'text-[80px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) text-balance',
+    h2: 'text-[60px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) text-balance',
+    h3: 'text-[48px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) text-balance',
+    h4: 'text-[40px] leading-tight uppercase font-(family-name:--slide-font-heading) text-balance',
 
     p: 'text-[48px]',
     a: 'text-(color:--slide-accent) underline',
@@ -100,21 +100,21 @@ export const theme = {
         img: 'h-[420px] w-auto max-w-full object-contain',
         p: '[&:has(>img)]:contents',
       },
-      // A mark run oversized off the slide's start edge, behind the words. It leaves the flow, so the text is laid
-      // out as though it were not there, and it is cropped by the slide rather than fitted to it.
-      //
-      // It is not tinted down with `opacity`, which would fade the relief with it. `brightness` takes the white mark
-      // to the surface's own value, and the two drop-shadows — dark down-end, light up-start — are then the only
-      // thing that reads, so the mark looks raised out of the slide rather than laid on it. The offsets are canvas
-      // units, scaled with everything else.
-      //
-      // The mark is drawn high in its own square (21 units of air above it, 218 below), so centring the file centres
-      // the air rather than the mark; the nudge is half that difference, as a share of the image's height.
-      // A picture that fills its column rather than sitting in it: it grows to the column's height and is cropped
-      // to its width, so the mark at the art's centre stays centred however narrow the column is.
+      // A picture drawn to the column's height and left to run past its sides, which the slide crops rather than the
+      // column: art cut at a column's edge ends in mid-air, and `bg-dxos.svg` stops short of its own frame (its
+      // drawing reaches x 226..1694 of 1920), so cropping it to the column shows exactly where its rays stop.
+      // It leaves no gap in the flow, so the words beside it are laid out as though it were not there.
       fill: {
-        box: 'grow min-h-0 self-stretch flex items-center justify-center overflow-hidden',
-        img: 'w-full h-full object-cover',
+        // The picture stays in the flow and simply overflows: positioning it would lift it above the words in the
+        // column beside it, which paint later but are not positioned themselves.
+        box: 'grow min-h-0 self-stretch flex items-center justify-center',
+        img: 'h-full w-auto max-w-none shrink-0 object-contain',
+        p: '[&:has(>img)]:contents',
+      },
+      // A brand mark standing in for a heading, at a heading's scale rather than a title slide's.
+      lockup: {
+        box: 'flex',
+        img: 'h-[180px] w-auto max-w-full object-contain',
         p: '[&:has(>img)]:contents',
       },
       // Blocks pushed to the slide's own top and bottom edges, which leaves the middle to whatever is behind them —
@@ -128,10 +128,16 @@ export const theme = {
       // the measurements come from the Figma deck this reproduces, scaled from its 1920-wide frame to the canvas.
       // The name takes the slide's own foreground, which leaves the accent free for the links.
       title: {
-        box: 'absolute start-[53px] top-[577px] flex flex-col gap-[209px]',
+        box: 'absolute start-[53px] top-[541px] flex flex-col gap-[209px]',
+        // The size is the one at which the deck's display face (Poiret One) draws the name to the width the Figma
+        // title covers, and `top` puts its baseline where that slide's is; both would need remeasuring under a
+        // different heading font.
+        //
         // Important: `cover` and the other emphasis layouts size their headings with a `[&_h1]` descendant rule,
         // which outranks a class on the heading itself, so a variant can only set its own size by overriding it.
-        h1: 'text-[208px]! leading-none! font-(family-name:--slide-font-heading) text-(color:--slide-foreground)',
+        h1:
+          'text-[244px]! leading-none! font-(family-name:--slide-font-heading) text-(color:--slide-foreground) ' +
+          'text-balance',
         p: 'text-[37px] leading-[1.4]',
         a: 'text-(color:--slide-accent) no-underline',
       },
@@ -175,26 +181,32 @@ export const theme = {
       default: {
         card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ${span}`,
         img: 'w-full grow min-h-0 object-cover',
-        h1: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
-        h2: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
-        h3: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
+        h1: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
+        h2: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
+        h3: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
       },
       outline: {
         card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ${span}`,
         img: 'w-full grow min-h-0 object-cover',
-        h1: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
-        h2: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
-        h3: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
+        h1:
+          'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
+          'text-balance',
+        h2:
+          'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
+          'text-balance',
+        h3:
+          'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
+          'text-balance',
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
       },
       // No surface of its own: the art and the text sit straight on the slide, for a grid that is all pictures.
       plain: {
         card: `flex flex-col min-w-0 ${span}`,
         img: 'w-full grow min-h-0 object-contain',
-        h1: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
-        h2: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
-        h3: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
+        h1: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
+        h2: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
+        h3: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         p: 'pt-4 text-[32px] leading-snug opacity-80 [&:has(>img)]:contents',
       },
     },
