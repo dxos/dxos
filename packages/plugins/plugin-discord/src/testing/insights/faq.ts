@@ -67,8 +67,8 @@ console.log(`${items.length} questions and bug reports; grouping ${products.leng
 const insert = db.prepare('INSERT INTO faq VALUES (?, ?, ?, ?, ?)');
 const textOf = db.prepare('SELECT text FROM message WHERE id = ?');
 
-const groupProduct = (product: string, group: readonly Item[]) =>
-  Effect.gen(function* () {
+const groupProduct = Effect.fn(
+  function* (product: string, group: readonly Item[]) {
     const listing = group.map((item) => `${item.id} [${item.kind}] ${item.topic}`).join('\n');
     const response = yield* LanguageModel.generateObject({
       schema: Payload,
@@ -89,17 +89,20 @@ const groupProduct = (product: string, group: readonly Item[]) =>
       });
       insert.run(product, problem.problem, ids.length, problem.gap, examples.join(' | '));
     }
-  }).pipe(
-    AiUsage.withStage('faq'),
-    Effect.provide(AiService.languageModel(DEFAULT_MODEL, { thinking: true })),
-    // A product the model could not group (e.g. too many questions for one answer) is reported, and the run fails.
-    Effect.catch((error) =>
-      Effect.sync(() => {
-        failed.push(product);
-        console.warn(`${product} failed: ${String(error)}`);
-      }),
+  },
+  (effect, product, group) =>
+    effect.pipe(
+      AiUsage.withStage('faq'),
+      Effect.provide(AiService.languageModel(DEFAULT_MODEL, { thinking: true })),
+      // A product the model could not group (e.g. too many questions for one answer) is reported, and the run fails.
+      Effect.catch((error) =>
+        Effect.sync(() => {
+          failed.push(product);
+          console.warn(`${product} failed: ${String(error)}`);
+        }),
+      ),
     ),
-  );
+);
 
 const failed: string[] = [];
 

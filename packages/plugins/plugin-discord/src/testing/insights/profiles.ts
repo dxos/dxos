@@ -105,8 +105,8 @@ const lineOf = (row: unknown): string =>
     ? `[#${row.channel}${row.thread ? ` / ${row.thread}` : ''}] ${row.text.replace(/\s+/g, ' ').slice(0, 400)}`
     : '';
 
-const profile = (person: Person) =>
-  Effect.gen(function* () {
+const profile = Effect.fn(
+  function* (person: Person) {
     const lines = messagesOf.all(person.author_id).map(lineOf).filter(Boolean);
     const response = yield* LanguageModel.generateObject({
       schema: Payload,
@@ -128,16 +128,19 @@ const profile = (person: Person) =>
       value.notable,
       lines.length,
     );
-  }).pipe(
-    AiUsage.withStage('profiles'),
-    Effect.provide(AiService.languageModel(DEFAULT_MODEL, { thinking: true })),
-    Effect.catch((error) =>
-      Effect.sync(() => {
-        failed++;
-        console.warn(`${person.author} failed: ${String(error)}`);
-      }),
+  },
+  (effect, person) =>
+    effect.pipe(
+      AiUsage.withStage('profiles'),
+      Effect.provide(AiService.languageModel(DEFAULT_MODEL, { thinking: true })),
+      Effect.catch((error) =>
+        Effect.sync(() => {
+          failed++;
+          console.warn(`${person.author} failed: ${String(error)}`);
+        }),
+      ),
     ),
-  );
+);
 
 let failed = 0;
 

@@ -107,43 +107,42 @@ const annotationHash = (item: TextItem, options: AnnotateOptions): string =>
  * Fact extraction over items, a batch at a time through {@link indexFactsBatch} with the finance ontology, the news
  * rules and the known companies. Items already indexed are skipped by their cursor.
  */
-export const extractFacts = (
+export const extractFacts = Effect.fn(function* (
   items: ReadonlyArray<TextItem>,
   options: IndexBatchOptions = {},
   concurrency = 4,
-): Effect.Effect<{ extracted: number; facts: number; failed: number }, never, FactStore | AiService.AiService> =>
-  Effect.gen(function* () {
-    const { batchSize = DEFAULT_INDEX_BATCH_SIZE, ...extract } = options;
-    const extractOptions = {
-      ontology: ontology(),
-      entities: KNOWN_COMPANIES,
-      ...extract,
-      rules: [...NEWS_RULES, ...(extract.rules ?? [])],
-    };
-    const results = yield* Effect.forEach(
-      Array.chunksOf(items.map(extractDocument), batchSize),
-      (docs) =>
-        indexFactsBatch(docs, extractOptions).pipe(
-          Effect.map((indexed) => ({
-            extracted: indexed.length,
-            facts: indexed.reduce((sum, { facts }) => sum + facts.length, 0),
-            failed: 0,
-          })),
-          Effect.catch((error: SemanticIndexError) =>
-            Effect.sync(() => {
-              log.warn('extraction batch failed', { error: String(error) });
-              return { extracted: 0, facts: 0, failed: 1 };
-            }),
-          ),
+) {
+  const { batchSize = DEFAULT_INDEX_BATCH_SIZE, ...extract } = options;
+  const extractOptions = {
+    ontology: ontology(),
+    entities: KNOWN_COMPANIES,
+    ...extract,
+    rules: [...NEWS_RULES, ...(extract.rules ?? [])],
+  };
+  const results = yield* Effect.forEach(
+    Array.chunksOf(items.map(extractDocument), batchSize),
+    (docs) =>
+      indexFactsBatch(docs, extractOptions).pipe(
+        Effect.map((indexed) => ({
+          extracted: indexed.length,
+          facts: indexed.reduce((sum, { facts }) => sum + facts.length, 0),
+          failed: 0,
+        })),
+        Effect.catch((error: SemanticIndexError) =>
+          Effect.sync(() => {
+            log.warn('extraction batch failed', { error: String(error) });
+            return { extracted: 0, facts: 0, failed: 1 };
+          }),
         ),
-      { concurrency },
-    );
-    return {
-      extracted: results.reduce((sum, { extracted }) => sum + extracted, 0),
-      facts: results.reduce((sum, { facts }) => sum + facts, 0),
-      failed: results.reduce((sum, { failed }) => sum + failed, 0),
-    };
-  });
+      ),
+    { concurrency },
+  );
+  return {
+    extracted: results.reduce((sum, { extracted }) => sum + extracted, 0),
+    facts: results.reduce((sum, { facts }) => sum + facts, 0),
+    failed: results.reduce((sum, { failed }) => sum + failed, 0),
+  };
+});
 
 const extractorFor = (stage: string, model: string): Extractor => ({
   id: `finance-${stage}`,

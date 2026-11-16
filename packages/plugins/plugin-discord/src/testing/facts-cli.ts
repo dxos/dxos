@@ -144,8 +144,8 @@ const runSql = (path: string) => {
   }
 };
 
-const runSparql = (path: string) =>
-  Effect.gen(function* () {
+const runSparql = Effect.fn(
+  function* (path: string) {
     const store = yield* FactStore;
     const rows = yield* store.rows(`${PROLOGUE}\n${query}`);
     const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))];
@@ -159,7 +159,9 @@ const runSparql = (path: string) =>
         rows.map((row) => columns.map((name) => cellOf(row, name))),
       );
     }
-  }).pipe(Effect.provide(FactStoreLive.layerFile(path)));
+  },
+  (effect, path) => effect.pipe(Effect.provide(FactStoreLive.layerFile(path))),
+);
 
 if (mode === 'sql') {
   const path = flags.crawl ?? process.env.DISCORD_CRAWL_DB ?? join(DEFAULT_DIR, 'crawl.db');
