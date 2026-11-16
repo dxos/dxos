@@ -74,6 +74,10 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
 
 ## Blocked
 
+- [ ] dxos/edge: the space's GitHub connection (a GitHub App user token, `ghu_`) gets 403 "Write access
+      to repository not granted" cloning dxos/edge — the Composer GitHub App is not installed on
+      dxos/edge (or lacks contents write). Needs an org admin to install it; blocks DoD item 2.
+
 - [ ] dxos#14557 CI is red on a bad moon remote-cache entry (`mcp-server:build` 04bd11f8 restores no
       files), not on the diff. Needs eviction: an operator, or a CI `moon run mcp-server:build --force`.
       Root cause (a cancelled shard uploading an empty entry) is suggested as a separate task.
@@ -84,6 +88,7 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
 
 ## PRs
 
+- dxos/edge#1537 — compute-service `CodingAgentControl` host service (stacked on edge#1535). Draft.
 - dxos/dxos#14557 — this project: draft-PR brief, repositories over MCP, specs. Draft; CI red on
   the cache entry above.
 - dxos/dxos#14555 — whoami on Composer's in-app MCP; dev channel → EDGE dev. Draft, green.
