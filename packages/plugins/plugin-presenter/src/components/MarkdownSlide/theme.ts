@@ -97,6 +97,13 @@ export const theme = {
         img: 'w-full h-auto object-contain',
         p: '[&:has(>img)]:contents',
       },
+      // Artwork that carries the slide rather than sitting behind it: held to the end edge at full strength, running
+      // past it so the slide crops it. It leaves the flow, as the watermark does, so the words ignore it.
+      art: {
+        box: 'absolute -inset-y-[12%] -end-[22%] w-[86%] flex items-center pointer-events-none',
+        img: 'w-full h-auto object-contain',
+        p: '[&:has(>img)]:contents',
+      },
     },
 
     // A grid lays down equal tracks from the counts `<Grid cols rows>` set; `minmax(0,1fr)` keeps a long word in one

@@ -34,6 +34,8 @@ const LOCKUP = `${BRAND}/logotypes/dxos-hero-white.svg`;
 const WORDMARK = `${BRAND}/logotypes/dxos-text-white.svg`;
 /** The mark alone, for the oversized watermark. */
 const MARK = `${BRAND}/logotypes/dxos-logo-white.svg`;
+/** The deck's own art: the mark drawn as a lit volume, exported from the Figma title slide. */
+const GLOW = `${BRAND}/backgrounds/bg-dxos-glow.svg`;
 
 const hero = (source: string) => ['<Box variant="hero">', '', `![DXOS](${source})`, '', '</Box>'];
 
@@ -106,6 +108,39 @@ export const Split: Story = {
       '',
       '*November 2026*',
     ),
+  },
+};
+
+/**
+ * 6. The deck's own title slide: the lit mark held to the end edge, the words down the start edge. The art carries
+ * the slide, so the words stay small and out of its way.
+ */
+export const Glow: Story = {
+  args: {
+    content: slide(
+      { layout: 'two-cols' },
+      '# composer',
+      '',
+      '[https://dxos.org/composer](https://dxos.org/composer)',
+      '',
+      '*November 2026*',
+      '',
+      '::right::',
+      '',
+      '<Box variant="art">',
+      '',
+      `![](${GLOW})`,
+      '',
+      '</Box>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const frame = await query(canvasElement, '[data-layout="two-cols"]');
+    const art = frame.querySelector('[data-variant="art"] img')!;
+    await waitFor(() => expect((art as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
+    // The title holds the start edge, clear of the art.
+    const title = frame.querySelector('h1')!.getBoundingClientRect();
+    await expect(title.left).toBeLessThan(frame.getBoundingClientRect().width / 2);
   },
 };
 
