@@ -72,6 +72,66 @@ The fact model is the one `@dxos/pipeline-rdf` defines today, moved here unchang
 facts and their JSON stay valid [F-2.1]. Every type below is an Effect `Schema` with an interface of the
 same name.
 
+### What a fact records
+
+A fact is not just a triple. It is a triple plus everything needed to decide how far to trust it, and
+whether it still holds. Take one sentence from a chat:
+
+> Bob, 2026-11-03: "I think Alice will probably join Acme in January."
+
+That sentence becomes one Fact with these parts:
+
+| Part          | Question it answers                          | For the example                                                     |
+| ------------- | -------------------------------------------- | ------------------------------------------------------------------- |
+| `assertion`   | What is claimed?                             | subject `alice`, predicate `joins`, object `acme`, `validFrom: 2026-01` |
+| `factuality`  | How committed is the speaker to it?          | `PR+`: probable and positive ("I think … probably")                 |
+| `illocution`  | What was the speaker doing by saying it?     | absent, so `assertive`: Bob informs; he does not ask or promise     |
+| `attribution` | Who said it, where, and when?                | agent `bob`, source the message's DXN, `generatedAtTime` 2026-11-03 |
+| `recordedAt`  | When did memory learn it?                    | the time the extractor stored it, e.g. 2026-11-16                   |
+| `extractor`   | Which program and model read it?             | the extractor id, its model and version                             |
+
+The parts in detail:
+
+- **Assertion** is the proposition itself: a subject, a predicate and an object (RDF's triple). A
+  subject or object is a Term, which is either an entity (`alice`, with its surface label `Alice` and
+  a kind such as `person`) or a literal value (`"January"`). `validFrom` and `validTo` bound when the
+  claimed state is true in the world, and `quote` keeps the words it was read from.
+- **Factuality** is the speaker's epistemic commitment, from FactBank. `value` combines a degree —
+  `CT` certain, `PR` probable, `PS` possible — with a polarity: `+` it is so, `-` it is not so.
+  `CTu` is certain but of unknown polarity; `Uu` is uncommitted, as in a question ("Is Alice joining
+  Acme?") or a request. `confidence` is the extractor's own confidence in its reading, 0..1, not the
+  speaker's.
+- **Illocution** is the speech act (Searle). `assertive` informs, `directive` asks someone to act or
+  answer (`mood` tells a question from a request), `commissive` commits the speaker ("I'll send it
+  Friday"), `expressive` states a feeling ("thanks"). Wake rules use it, so a question can wake an
+  agent that a statement would not.
+- **Attribution** is provenance, named after PROV-O: `agent` is who said it (an entity id, with
+  `agentLabel` for display), `source` is the DXN of the item it came from, `generatedAtTime` is when
+  it was said, and `span` locates it in that item.
+- **Two times.** `attribution.generatedAtTime` is when the statement was made (valid time of the
+  utterance); `recordedAt` is when memory stored it (transaction time). A mailbox read a month late
+  has old `generatedAtTime`s and new `recordedAt`s; ordering by the first replays the conversation,
+  by the second replays what memory learned.
+- **Run and change detection.** `extractor` names the program and model, `pass` groups the facts one
+  extraction run produced (so a run can be replayed or withdrawn as a whole), and `sourceHash` is the
+  hash of the source content read, so a changed source is re-read.
+
+### Graphs and revision
+
+Statements that share all of their provenance — same source, speaker, time, quote, factuality and run
+— are stored in one RDF named graph, `graph`, which carries that provenance once. A Fact is one
+statement in a graph; its `id` derives from the graph and the statement.
+
+Facts are never edited in place. A later graph changes what holds by naming earlier graphs:
+`supersedes` replaces them (Bob later says "Alice joins in March"), `retracts` withdraws them ("Alice
+is not joining after all"). `graphStatus` reads every graph as `active`, `superseded` or `retracted`,
+and `currentFacts(facts, now)` keeps only the facts of active graphs whose `validTo` has not passed
+[F-2.3].
+
+A graph with a `kind` records a free-text memory (a `preference`, a `commitment`) rather than a
+fact, and `currentFacts` leaves it out; `origin` says whether the speaker `stated` it or the
+agent `inferred` it.
+
 ```mdl
 type Fact
   desc: |
