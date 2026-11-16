@@ -42,6 +42,14 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
 - [ ] Run the sample task "Rework space selection for mcp auth" to a draft PR.
 - [ ] Run a dxos/edge task to a draft PR.
 
+## Phase 2b: Runs on dev (server-started)
+
+- [x] Run 1–3 (sample task): exposed and fixed the remote-CreateChat copy, missing bundle types, the
+      unflushed turn key, MCP-timeout-length calls, and interruptions cancelling the agent.
+- [x] Run 3 (sample task): the agent worked end to end and stopped on dxos/edge access (403).
+- [x] Run 4 (test task): the agent finished the work (9 tests passing) and stopped on push/PR access.
+- [ ] Run with an app connection, once the App is installed: expect a draft PR attached to the task.
+
 ## Phase 3: Gaps
 
 - [ ] Delegation brief told the agent not to push: a delegated task could never end in a PR. Now it
@@ -74,9 +82,14 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
 
 ## Blocked
 
-- [ ] dxos/edge: the space's GitHub connection (a GitHub App user token, `ghu_`) gets 403 "Write access
-      to repository not granted" cloning dxos/edge — the Composer GitHub App is not installed on
-      dxos/edge (or lacks contents write). Needs an org admin to install it; blocks DoD item 2.
+- [ ] GitHub write access for cloud runs (blocks DoD items 1 and 2). The space's GitHub connection is a
+      user token (`ghu_`, the user's own authorization of the dev app): run 3 got 403 cloning
+      dxos/edge; run 4 (tests for the cloud run's helpers) wrote and passed 9 tests but `git push` got
+      403 "Permission to dxos/dxos.git denied" and `gh pr create` "Resource not accessible by
+      integration". Fix: an org admin installs the dev GitHub App `composer-space-dev` on dxos/dxos and
+      dxos/edge with Contents and Pull requests read & write, and the space reconnects GitHub as an app
+      connection. Server-started runs can lend that managed token now (`AccessTokenResolver` is served
+      to EDGE operations).
 
 - [ ] dxos#14557 CI is red on a bad moon remote-cache entry (`mcp-server:build` 04bd11f8 restores no
       files), not on the diff. Needs eviction: an operator, or a CI `moon run mcp-server:build --force`.
