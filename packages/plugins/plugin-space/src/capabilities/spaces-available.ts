@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -18,7 +19,7 @@ import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { DeviceType, getDeviceLabel } from '@dxos/client/halo';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
-import { PublicKey } from '@dxos/keys';
+import { EID, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -28,20 +29,28 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { unpackJson } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ViewLocation } from '@dxos/react-ui-attention/types';
+import { type JsonValue, isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities, type SpaceSchema } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
 import {
+  FOLLOW_BROADCAST_INTERVAL,
+  LOCATION_BROADCAST_INTERVAL,
   PRESENCE_BROADCAST_INTERVAL,
+  PRESENCE_EXPIRY,
   applyPeerDeck,
+  applyPeerFollowing,
   applyViewingMessage,
   getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
   groupPresenceKeysBySpace,
+  isFollowTargetOf,
+  isSameFollowTarget,
   makeLocationScheduler,
+  makeSendScheduler,
   parseViewingMessage,
-  prunePeerDecks,
+  prunePeerSessions,
 } from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
@@ -105,6 +114,13 @@ const awaitChange = (client: Client, settingsSpace: Space | undefined): Effect.E
       unsubscribe?.();
     });
   });
+
+const toJsonValue = (json: Schema.Json): JsonValue =>
+  json === null || typeof json !== 'object'
+    ? json
+    : Array.isArray(json)
+      ? json.map(toJsonValue)
+      : Object.fromEntries(Object.entries(json).map(([key, value]) => [key, toJsonValue(value)]));
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -229,8 +245,7 @@ export default Capability.makeModule(
         }),
       );
 
-    // One session per running app, so peers tell this tab apart from the same identity's others.
-    const sessionId = PublicKey.random().toHex();
+    const { sessionId } = registry.get(ephemeralAtom);
     const getDevice = (): SpaceSchema.SessionDevice | undefined => {
       const profile = client.halo.device?.profile;
       if (!profile) {
@@ -246,6 +261,22 @@ export default Capability.makeModule(
       };
     };
 
+    // Sessions that follow this one, by space, identity and session, with when they last said so.
+    const followers = new Map<string, number>();
+    const isFollowed = (now: number) => [...followers.values()].some((lastSeen) => now - lastSeen < PRESENCE_EXPIRY);
+    // The follow pointer posts in the spaces where this session is followed; a lapsed follower drops out here.
+    const syncFollowedSpaces = (now: number) => {
+      for (const [follower, lastSeen] of followers) {
+        if (now - lastSeen >= PRESENCE_EXPIRY) {
+          followers.delete(follower);
+        }
+      }
+      const followedSpaces = [...new Set([...followers.keys()].map((follower) => follower.split('/')[0]))].sort();
+      registry.update(ephemeralAtom, (state) =>
+        state.followedSpaces.join() === followedSpaces.join() ? state : { ...state, followedSpaces },
+      );
+    };
+
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
     let broadcastCleanup: (() => void) | undefined;
     let previousActive: readonly string[] = [];
@@ -258,12 +289,52 @@ export default Capability.makeModule(
       const departed = previousActive.filter((id) => !active.includes(id));
       const inactive = [...layout.inactive, ...departed];
       previousActive = active;
+      // The space's own location is the deck's front plank there.
+      const locationKeys = [
+        ...new Set(
+          [...current, ...active].flatMap((path) => {
+            const spaceId = GraphPath.getSpaceIdFromPath(path);
+            return [getPresenceKeyFromPath(path), spaceId && EID.make({ spaceId })].filter(isNonNullable);
+          }),
+        ),
+      ];
+
+      // Followed view state is read for each space and each object open in it, by their EIDs.
+      const viewStateContexts = new Map<string, EID.EID[]>(
+        client.spaces
+          .get()
+          .map((space) => [
+            space.id,
+            [
+              ...new Set([
+                EID.make({ spaceId: space.id }),
+                ...locationKeys.filter((key) => EID.getSpaceId(key) === space.id),
+              ]),
+            ],
+          ]),
+      );
+      const getViewState = (spaceId: string): { viewState?: Record<string, Record<string, JsonValue>> } => {
+        const followed = Object.entries(viewState.followed(viewStateContexts.get(spaceId) ?? []));
+        return followed.length > 0
+          ? {
+              viewState: Object.fromEntries(
+                followed.map(([key, values]) => [
+                  key,
+                  Object.fromEntries(
+                    Object.entries(values).map(([contextId, value]) => [contextId, toJsonValue(value)]),
+                  ),
+                ]),
+              ),
+            }
+          : {};
+      };
 
       const send = (spaceIds?: ReadonlySet<string>) => {
         const spaces = client.spaces.get().filter((space) => !spaceIds || spaceIds.has(space.id));
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
           const device = getDevice();
+          const following = registry.get(ephemeralAtom).following;
           const attendedBySpace = groupPresenceKeysBySpace([...current]);
           const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 
@@ -278,8 +349,18 @@ export default Capability.makeModule(
                 attended,
                 added,
                 removed,
-                locations: getLocations(attended),
-                deck: { planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id) },
+                // Every plank's, so a follower mirroring this deck scrolls each of them, not only the attended one.
+                locations: getLocations([...new Set([...attended, ...added, EID.make({ spaceId: space.id })])]),
+                ...(following?.spaceId === space.id && {
+                  following: {
+                    identityKey: following.identityKey,
+                    ...(following.sessionId && { sessionId: following.sessionId }),
+                  },
+                }),
+                deck: {
+                  planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id),
+                  ...getViewState(space.id),
+                },
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
               .catch((err) => {
@@ -293,19 +374,35 @@ export default Capability.makeModule(
 
       send();
       // Send at interval to allow peers to expire entries if they become disconnected.
-      const interval = setInterval(() => send(), PRESENCE_BROADCAST_INTERVAL);
+      const interval = setInterval(() => {
+        syncFollowedSpaces(Date.now());
+        send();
+      }, PRESENCE_BROADCAST_INTERVAL);
 
-      // Moving or scrolling in an attended object re-sends to its space, at most once per interval.
-      const attendedKeys = [...current].flatMap((path) => getPresenceKeyFromPath(path) ?? []);
-      const locationScheduler = makeLocationScheduler(attendedKeys, getLocation, send);
-      const locationSubscriptions = attendedKeys.map((key) =>
+      // Moving or scrolling in an open object re-sends to its space, at most once per interval, which is shorter while
+      // followed; every plank's location goes out, so a follower mirroring this deck scrolls each of them.
+      const sendInterval = () => (isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL);
+      // Locations and followed view state (the deck's front, say) share one send, so together they keep to its rate.
+      const sends = makeSendScheduler(send, sendInterval);
+      const locationScheduler = makeLocationScheduler(locationKeys, getLocation, sends);
+      const locationSubscriptions = locationKeys.map((key) =>
         viewState.subscribe(ViewLocation.aspect, key, () => locationScheduler.schedule(key)),
       );
+      const unsubscribeViewState = viewState.subscribeFollowed((_, contextId) => {
+        if (!EID.isEID(contextId)) {
+          return;
+        }
+        const spaceId = EID.getSpaceId(contextId);
+        if (spaceId && viewStateContexts.get(spaceId)?.includes(contextId)) {
+          sends.schedule([spaceId]);
+        }
+      });
 
       broadcastCleanup = () => {
         clearInterval(interval);
-        locationScheduler.dispose();
+        sends.dispose();
         locationSubscriptions.forEach((unsubscribe) => unsubscribe());
+        unsubscribeViewState();
       };
     };
 
@@ -313,6 +410,16 @@ export default Capability.makeModule(
     subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
     // Subscribe to attention.current changes.
     subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
+    // Starting, retargeting or stopping a follow tells the space at once, so the leader's rate changes with it.
+    let previousFollowing = registry.get(ephemeralAtom).following;
+    subscriptions.add(
+      registry.subscribe(ephemeralAtom, ({ following }) => {
+        if (!isSameFollowTarget(following, previousFollowing)) {
+          previousFollowing = following;
+          setupBroadcast();
+        }
+      }),
+    );
     // Initial setup.
     setupBroadcast();
     // Cleanup.
@@ -332,13 +439,29 @@ export default Capability.makeModule(
             if (viewing && identityKey && currentIdentity?.identityKey !== identityKey.toHex()) {
               const peer = identityKey.toHex();
               const lastSeen = Date.now();
+              const follower = `${space.id}/${peer}/${viewing.sessionId ?? peer}`;
+              if (isFollowTargetOf(viewing.following, currentIdentity?.identityKey ?? '', sessionId)) {
+                // A new follower needs the location now, not at the next move or heartbeat.
+                const isNew = !followers.has(follower);
+                followers.set(follower, lastSeen);
+                if (isNew) {
+                  setupBroadcast();
+                }
+              } else {
+                followers.delete(follower);
+              }
+              syncFollowedSpaces(lastSeen);
               registry.update(ephemeralAtom, (ephemeral) => {
                 const viewersByObject = applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen);
                 return {
                   ...ephemeral,
                   viewersByObject,
-                  peerDecks: prunePeerDecks(
+                  peerDecks: prunePeerSessions(
                     applyPeerDeck(ephemeral.peerDecks, space.id, peer, viewing),
+                    viewersByObject,
+                  ),
+                  peerFollowing: prunePeerSessions(
+                    applyPeerFollowing(ephemeral.peerFollowing, space.id, peer, viewing),
                     viewersByObject,
                   ),
                 };

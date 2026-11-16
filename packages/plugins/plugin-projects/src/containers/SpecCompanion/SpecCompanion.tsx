@@ -115,7 +115,7 @@ const useGroupViews = (spec: Spec.Spec, group: SpecSession.Group): ProjectCapabi
 /** The spec itself, or the spec its project's Specs tab has picked at any depth (the first while none is picked). */
 const useCompanionSpec = (subject: Spec.Spec | Project.Project): Spec.Spec | undefined => {
   const project = Obj.instanceOf(Project.Project, subject) ? subject : undefined;
-  const { spec: picked } = useViewState(ProjectView.aspect, project?.id);
+  const { spec: picked } = useViewState(ProjectView.aspect, project && Obj.getURI(project));
   const [refs] = useObject(project, 'specs');
   // Through `ref.atom`, which tracks loading, since a snapshot's refs carry no resolver.
   const specs = useAtomValue(

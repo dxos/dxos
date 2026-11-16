@@ -27,8 +27,9 @@ import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
-import type { Selection } from '@dxos/react-ui-attention/types';
+import { type Selection, ViewState } from '@dxos/react-ui-attention/types';
 import type { AnchoredTo, Message, Thread } from '@dxos/types';
+import { type ChromaticPalette } from '@dxos/ui-types';
 import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -87,6 +88,40 @@ export type Layout = Readonly<{
  * @category Capability
  */
 export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>()(LAYOUT_CAPABILITY_ID);
+
+/**
+ * A hue the layout tints its chrome with while it is set, such as while the session takes part in a follow; the layout
+ * uses the first contribution that holds one.
+ * @category Capability
+ */
+export const LayoutAccent = Capability$.make<Atom.Atom<ChromaticPalette | undefined>>()(
+  'org.dxos.app-framework.capability.layoutAccent',
+);
+
+/** How long what a follow opens has to mount; the follow applies it again on every update meanwhile. */
+export const FOLLOW_MOUNT_TIMEOUT = 5_000;
+
+const CompanionsState = Schema$.Struct({
+  /** The planks in the space whose companion is open. */
+  planks: Schema$.Array(Schema$.String),
+  /** The companion tab they show. */
+  variant: Schema$.optional(Schema$.String),
+});
+
+export type Companions = Schema$.Schema.Type<typeof CompanionsState>;
+
+/**
+ * The companions the layout shows in a space, keyed by the space's EID. The layout reports them and a follower opens the
+ * same through `LayoutOperation.UpdateCompanion`.
+ */
+// TODO(follow): Consider making this the layout's source of truth for open companions, so it need not be kept in step.
+export const Companions: ViewState.Aspect<Companions> = ViewState.define({
+  key: 'org.dxos.app-framework.companions',
+  backend: 'memory',
+  schema: CompanionsState,
+  defaultValue: () => ({ planks: [] }),
+  follow: 'reveal',
+});
 
 /**
  * @category Capability
@@ -426,17 +461,21 @@ export type RevealInput = {
   subject: string;
   /** Position in the type's own anchor format (the format comments and presence locations use). */
   anchor: string;
+  /** Move the caret to the anchor and take focus (the default); false only scrolls the anchor to the top of the view, as a follow does. */
+  focus?: boolean;
   /** Comment thread to mark current, when revealing a comment. */
   thread?: Ref.Ref<Thread.Thread>;
 };
 
 /**
  * Reveals a position in an object, contributed per typename by plugins whose objects have anchors.
- * Comments and presence both reveal through it: `reveal` scrolls to the anchor, moves the caret there and focuses the view.
+ * Comments and presence both reveal through it: `reveal` scrolls to the anchor, moves the caret there and focuses the view,
+ * or with `focus: false` only scrolls.
  */
 export type Locator = Readonly<{
   id: string;
-  reveal: Operation.Definition<RevealInput, void>;
+  /** Answers whether it revealed the anchor: false while the view has not mounted or cannot resolve it yet. */
+  reveal: Operation.Definition<RevealInput, boolean>;
 }>;
 
 /**

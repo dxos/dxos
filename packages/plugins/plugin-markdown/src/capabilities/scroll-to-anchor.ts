@@ -16,7 +16,7 @@ const SCROLL_OPTIONS = { y: 'start', yMargin: 96 } as const;
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = MarkdownOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, anchor, thread }) {
+    Effect.fnUntraced(function* ({ subject, anchor, focus = true, thread }) {
       const editorViews = yield* Capability.get(MarkdownCapabilities.EditorViews);
       // Views register under `attendableId ?? documentId`, and callers hold one or the other — a
       // companion knows its context plank's attendable id, the graph knows the object URI. Accept
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
         // Loud, because the failure is otherwise invisible: the comment stays highlighted on whichever
         // thread was current while the app-side selection has already moved on.
         log.warn('no editor view for anchor target', { subject });
-        return;
+        return false;
       }
 
       // When a thread ref is supplied, delegate to the shared editor helper which
@@ -35,7 +35,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
       if (thread) {
         const { id } = yield* Effect.promise(() => thread.load());
         scrollCommentIntoView(entry.view, id, SCROLL_OPTIONS);
-        return;
+        return true;
       }
 
       // A change proposed at a single offset (a pure insertion) anchors as a zero-width range, which
@@ -45,7 +45,13 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
         Cursor.getRangeFromCursor(entry.view.state, anchor) ??
         Cursor.getRangeFromCursor(entry.view.state, `${from}:${from}`);
       if (!range) {
-        return;
+        return false;
+      }
+
+      // Without focus the view mirrors another's, such as a followed peer's: their top line goes to the top of this one.
+      if (!focus) {
+        entry.view.dispatch({ effects: EditorView.scrollIntoView(range.from, { y: 'start' }) });
+        return true;
       }
 
       // Put the caret at the start of the change and take focus: the reader lands where the change is
@@ -57,6 +63,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
           : { effects: EditorView.scrollIntoView(range.from, SCROLL_OPTIONS) }),
       });
       entry.view.focus();
+      return true;
     }),
   ),
 );

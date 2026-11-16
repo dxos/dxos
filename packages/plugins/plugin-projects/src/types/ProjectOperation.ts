@@ -246,7 +246,7 @@ export const ArtifactList = Operation.make({
 
 /**
  * Reveals a comment thread's span, or else an anchor's text, in whichever open editor shows it, such as a feature's
- * field or a spec's text; the comments companion and a peer's Jump invoke it.
+ * field or a spec's text; the comments companion, a peer's Go to and a follow invoke it.
  */
 export const ScrollToAnchor = Operation.make({
   meta: {
@@ -257,9 +257,16 @@ export const ScrollToAnchor = Operation.make({
   input: Schema.Struct({
     subject: Schema.String.annotate({ description: 'Attendable id of the commented object.' }),
     anchor: Schema.String.annotate({ description: 'The anchor to reveal.' }),
+    focus: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Select the anchor and take focus (default); false scrolls it to the top instead.',
+      }),
+    ),
     thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to mark current.' })),
   }),
-  output: Schema.Void,
+  output: Schema.Boolean.annotate({
+    description: 'Whether the anchor was revealed; false while its view is not ready.',
+  }),
 }).pipe(Operation.mutation('none'));
 
 //

@@ -28,7 +28,7 @@ export const SPACE_TYPE = 'org.dxos.type.space';
  */
 export const SPACE_HOME_NODE_TYPE = 'org.dxos.space.home';
 
-/** Type of a peer's hidden graph node; plugins contribute actions on a peer (jump to them, go to their object) here. */
+/** Type of a peer's hidden graph node; plugins contribute actions on a peer (go to them, follow them) here. */
 export const PEER_NODE_TYPE = 'org.dxos.space.peer';
 
 /** Data of a {@link PEER_NODE_TYPE} node. */
@@ -100,7 +100,7 @@ export type ObjectViewerProps = {
   movedAt: number;
   currentlyAttended: boolean;
   device?: SessionDevice;
-  /** Where the peer is in the object, while they attend it; see `ViewLocation` in react-ui-attention. */
+  /** Where the peer is in the object, for each object open in their deck; see `ViewLocation` in react-ui-attention. */
   location?: PeerLocation;
 };
 
@@ -114,6 +114,13 @@ export type SessionDevice = {
   kind?: 'browser' | 'native' | 'mobile' | 'agent' | 'unknown';
 };
 
+/** Whom a session follows: a peer's most recently moved session, or one session of theirs. */
+export type FollowTarget = {
+  spaceId: string;
+  identityKey: string;
+  sessionId?: string;
+};
+
 /** A peer's caret and top of view in an object, as anchors in the object type's own format. */
 export type PeerLocation = {
   selection?: string;
@@ -123,6 +130,10 @@ export type PeerLocation = {
 /** A session's deck in one space: the graph paths of its planks there, in order. */
 export type PeerDeck = {
   planks: string[];
+  /** The plank it is scrolled to: the viewport of the space's own location. */
+  front?: string;
+  /** The session's values of each followed view state aspect, by aspect key, then by the context's EID. */
+  viewState?: Record<string, Record<string, unknown>>;
 };
 
 export type ObjectId = string;

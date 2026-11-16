@@ -8,22 +8,29 @@ import { Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
 import {
+  FOLLOW_BROADCAST_INTERVAL,
   LOCATION_BROADCAST_INTERVAL,
   PRESENCE_EXPIRY,
   PRESENCE_RETENTION,
   applyPeerDeck,
+  applyPeerFollowing,
   applyViewingMessage,
+  getFollowGroup,
+  getFollowGroupMembers,
   getPeerFocus,
   getPeerNodeId,
   getPeerNodeIds,
   getPeerPlankPath,
   getPresenceKeyFromPath,
+  getPresenceKeyFromSpace,
   getSessionNodeId,
   groupPresenceChangesBySpace,
   groupPresenceKeysBySpace,
+  isFollowTargetOf,
   makeLocationScheduler,
+  makeSendScheduler,
   parseViewingMessage,
-  prunePeerDecks,
+  prunePeerSessions,
 } from './presence.ts';
 
 const spaceId = Key.SpaceId.random();
@@ -106,6 +113,25 @@ describe('parseViewingMessage', () => {
       locations: { [key]: { selection: 'a:b' } },
       deck: { planks: ['root/a'] },
     });
+  });
+
+  test("keeps a deck's view state by aspect and context, dropping aspects that are not an object", ({ expect }) => {
+    const message = { identityKey: 'peer', added: [], removed: [] };
+    const deck = { 'org.dxos.app-framework.companions': { 'echo://space': { planks: ['root/a'] } } };
+    expect(
+      parseViewingMessage({ ...message, deck: { planks: ['root/a'], viewState: { ...deck, tab: ['spec'] } } })?.deck,
+    ).toEqual({ planks: ['root/a'], viewState: deck });
+    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], viewState: ['deck'] } })?.deck).toEqual({
+      planks: ['root/a'],
+    });
+  });
+
+  test('keeps a well-formed follow target and drops a malformed one', ({ expect }) => {
+    const message = { identityKey: 'peer', added: [], removed: [] };
+    expect(parseViewingMessage({ ...message, following: { identityKey: 'leader', sessionId: 7 } })?.following).toEqual({
+      identityKey: 'leader',
+    });
+    expect(parseViewingMessage({ ...message, following: { sessionId: 's1' } })?.following).toBeUndefined();
   });
 
   test('drops a session id that could not name a graph segment', ({ expect }) => {
@@ -269,7 +295,18 @@ describe('getPeerNodeIds', () => {
   });
 });
 
-describe('prunePeerDecks', () => {
+describe('applyPeerDeck', () => {
+  test('takes a deck’s front plank from the location it reports for the space', ({ expect }) => {
+    const message = { identityKey: 'peer', sessionId: 's1', added: [], removed: [], attended: [] };
+    const deck = { planks: ['root/a', 'root/b'] };
+    const locations = { [getPresenceKeyFromSpace(spaceId)]: { viewport: 'root/b' } };
+    expect(applyPeerDeck({}, spaceId, 'peer', { ...message, deck, locations })).toEqual({
+      [spaceId]: { peer: { s1: { ...deck, front: 'root/b' } } },
+    });
+  });
+});
+
+describe('prunePeerSessions', () => {
   test("keeps only the decks of sessions still listed on an object in the deck's space", ({ expect }) => {
     const key = EID.make({ spaceId, entityId: objectId });
     const message = { identityKey: 'peer', sessionId: 's1', added: [key], removed: [], attended: [key], locations: {} };
@@ -280,8 +317,195 @@ describe('prunePeerDecks', () => {
       deck,
     });
     const viewers = applyViewingMessage({}, 'peer', message, 1);
-    expect(prunePeerDecks(decks, viewers)).toEqual({ [spaceId]: { peer: { s1: deck } } });
-    expect(prunePeerDecks(decks, {})).toEqual({});
+    expect(prunePeerSessions(decks, viewers)).toEqual({ [spaceId]: { peer: { s1: deck } } });
+    expect(prunePeerSessions(decks, {})).toEqual({});
+  });
+});
+
+describe('applyPeerFollowing', () => {
+  const key = EID.make({ spaceId, entityId: objectId });
+  const message = { identityKey: 'peer', sessionId: 's1', added: [key], removed: [], attended: [key], locations: {} };
+
+  test('records whom a session follows and forgets it once the session names nobody', ({ expect }) => {
+    const following = applyPeerFollowing({}, spaceId, 'peer', { ...message, following: { identityKey: 'leader' } });
+    expect(following).toEqual({ [spaceId]: { peer: { s1: { identityKey: 'leader' } } } });
+    expect(applyPeerFollowing(following, spaceId, 'peer', message)).toEqual({});
+  });
+
+  test('leaves other sessions of the peer alone', ({ expect }) => {
+    const both = applyPeerFollowing(
+      applyPeerFollowing({}, spaceId, 'peer', { ...message, following: { identityKey: 'leader' } }),
+      spaceId,
+      'peer',
+      { ...message, sessionId: 's2', following: { identityKey: 'leader' } },
+    );
+    expect(applyPeerFollowing(both, spaceId, 'peer', message)).toEqual({
+      [spaceId]: { peer: { s2: { identityKey: 'leader' } } },
+    });
+  });
+});
+
+describe('getFollowGroup', () => {
+  const key = EID.make({ spaceId, entityId: objectId });
+  const now = 1_000_000;
+  const view = (viewers: Parameters<typeof applyViewingMessage>[0], peer: string, sessionId: string, lastSeen = now) =>
+    applyViewingMessage(
+      viewers,
+      peer,
+      { identityKey: peer, sessionId, added: [key], removed: [], attended: [key], locations: {} },
+      lastSeen,
+    );
+  const viewersByObject = [
+    ['leader', 'l1'],
+    ['bob', 'b1'],
+    ['carol', 'c1'],
+  ].reduce((viewers, [peer, sessionId]) => view(viewers, peer, sessionId), {});
+  const peerFollowing = {
+    [spaceId]: { bob: { b1: { identityKey: 'leader' } }, carol: { c1: { identityKey: 'leader', sessionId: 'l1' } } },
+  };
+
+  test('a leader sees every session that follows it', ({ expect }) => {
+    const group = getFollowGroup({
+      spaceId,
+      identityKey: 'leader',
+      sessionId: 'l1',
+      peerFollowing,
+      viewersByObject,
+      now,
+    });
+    expect(group).toEqual({
+      spaceId,
+      leader: 'leader',
+      leaderSessionId: 'l1',
+      leading: true,
+      followers: [
+        { identityKey: 'bob', sessionId: 'b1' },
+        { identityKey: 'carol', sessionId: 'c1' },
+      ],
+    });
+    expect(group && [...getFollowGroupMembers(group, 'leader')]).toEqual(['bob', 'carol']);
+  });
+
+  test('a follower of the person counts only in the group of the session they track', ({ expect }) => {
+    // The leader's l1 moved last, so Bob, who follows the leader as a person, tracks l1; Carol follows l2 itself.
+    const twoSessions = view(view(viewersByObject, 'leader', 'l2', now - 1_000), 'leader', 'l1', now);
+    const following = {
+      [spaceId]: { bob: { b1: { identityKey: 'leader' } }, carol: { c1: { identityKey: 'leader', sessionId: 'l2' } } },
+    };
+    const carolGroup = getFollowGroup({
+      spaceId,
+      identityKey: 'carol',
+      sessionId: 'c1',
+      following: { spaceId, identityKey: 'leader', sessionId: 'l2' },
+      peerFollowing: following,
+      viewersByObject: twoSessions,
+      now,
+    });
+    expect(carolGroup?.followers).toEqual([]);
+    const l2Group = getFollowGroup({
+      spaceId,
+      identityKey: 'leader',
+      sessionId: 'l2',
+      peerFollowing: following,
+      viewersByObject: twoSessions,
+      now,
+    });
+    expect(l2Group?.followers).toEqual([{ identityKey: 'carol', sessionId: 'c1' }]);
+  });
+
+  test('a follower sees its leader and the other followers', ({ expect }) => {
+    const group = getFollowGroup({
+      spaceId,
+      identityKey: 'bob',
+      sessionId: 'b1',
+      following: { spaceId, identityKey: 'leader' },
+      peerFollowing,
+      viewersByObject,
+      now,
+    });
+    expect(group).toMatchObject({ leader: 'leader', leaderSessionId: 'l1', leading: false });
+    expect(group?.followers).toEqual([{ identityKey: 'carol', sessionId: 'c1' }]);
+    expect(group && [...getFollowGroupMembers(group, 'bob')]).toEqual(['leader', 'carol']);
+  });
+
+  test('a follower whose presence lapsed drops out of the group', ({ expect }) => {
+    const lapsed = view(viewersByObject, 'carol', 'c1', now - PRESENCE_EXPIRY);
+    const group = getFollowGroup({
+      spaceId,
+      identityKey: 'leader',
+      sessionId: 'l1',
+      peerFollowing,
+      viewersByObject: lapsed,
+      now,
+    });
+    expect(group?.followers).toEqual([{ identityKey: 'bob', sessionId: 'b1' }]);
+  });
+
+  test('a session in no follow has no group', ({ expect }) => {
+    expect(
+      getFollowGroup({ spaceId, identityKey: 'dan', sessionId: 'd1', peerFollowing, viewersByObject, now }),
+    ).toBeUndefined();
+    expect(
+      getFollowGroup({
+        spaceId: otherSpaceId,
+        identityKey: 'leader',
+        sessionId: 'l1',
+        peerFollowing,
+        viewersByObject,
+        now,
+      }),
+    ).toBeUndefined();
+  });
+});
+
+describe('makeSendScheduler', () => {
+  test('sends once per interval, to every space asked for since the last, and nothing for none', ({ expect }) => {
+    vi.useFakeTimers();
+    try {
+      const send = vi.fn();
+      const scheduler = makeSendScheduler(send);
+
+      scheduler.schedule([]);
+      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
+      expect(send).not.toHaveBeenCalled();
+
+      // Requests half an interval apart, from any source, still go out together.
+      scheduler.schedule([spaceId]);
+      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL / 2);
+      scheduler.schedule([otherSpaceId]);
+      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL / 2 - 1);
+      expect(send).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(send).toHaveBeenCalledExactlyOnceWith(new Set([spaceId, otherSpaceId]));
+
+      scheduler.schedule([spaceId]);
+      scheduler.dispose();
+      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
+      expect(send).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('reads its interval when a send is scheduled, so a session that gains a follower speeds up', ({ expect }) => {
+    vi.useFakeTimers();
+    try {
+      let followed = false;
+      const send = vi.fn();
+      const scheduler = makeSendScheduler(send, () =>
+        followed ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL,
+      );
+
+      followed = true;
+      scheduler.schedule([spaceId]);
+      vi.advanceTimersByTime(FOLLOW_BROADCAST_INTERVAL - 1);
+      expect(send).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(send).toHaveBeenCalledTimes(1);
+      scheduler.dispose();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -289,34 +513,30 @@ describe('makeLocationScheduler', () => {
   const key = EID.make({ spaceId, entityId: objectId });
   const otherKey = EID.make({ spaceId: otherSpaceId, entityId: childId });
 
-  test('sends once per interval, to the spaces whose locations changed, and not for an unchanged one', ({ expect }) => {
-    vi.useFakeTimers();
-    try {
-      const locations: Record<string, { selection: string }> = { [key]: { selection: 'a:a' } };
-      const send = vi.fn();
-      const scheduler = makeLocationScheduler([key, otherKey], (key) => locations[key], send);
+  test('asks for a send to the spaces whose locations changed, and not for an unchanged one', ({ expect }) => {
+    const locations: Record<string, { selection: string }> = { [key]: { selection: 'a:a' } };
+    const sends = { schedule: vi.fn(), dispose: vi.fn() };
+    const scheduler = makeLocationScheduler([key, otherKey], (key) => locations[key], sends);
 
-      locations[key] = { selection: 'a:a' };
-      scheduler.schedule(key);
-      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
-      expect(send).not.toHaveBeenCalled();
+    scheduler.schedule(key);
+    expect(sends.schedule).not.toHaveBeenCalled();
 
-      locations[key] = { selection: 'a:b' };
-      scheduler.schedule(key);
-      scheduler.schedule(key);
-      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
-      expect(send).toHaveBeenCalledTimes(1);
-      expect(send).toHaveBeenLastCalledWith(new Set([spaceId]));
+    locations[key] = { selection: 'a:b' };
+    scheduler.schedule(key);
+    scheduler.schedule(key);
+    locations[otherKey] = { selection: 'b:b' };
+    scheduler.schedule(otherKey);
+    expect(sends.schedule.mock.calls).toEqual([[[spaceId]], [[otherSpaceId]]]);
+  });
+});
 
-      scheduler.schedule(key);
-      locations[otherKey] = { selection: 'b:b' };
-      scheduler.schedule(otherKey);
-      scheduler.dispose();
-      vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
-      expect(send).toHaveBeenCalledTimes(1);
-    } finally {
-      vi.useRealTimers();
-    }
+describe('isFollowTargetOf', () => {
+  test('names every session of a peer followed as a person, and only the one session when pinned', ({ expect }) => {
+    expect(isFollowTargetOf({ identityKey: 'leader' }, 'leader', 's1')).toBe(true);
+    expect(isFollowTargetOf({ identityKey: 'leader', sessionId: 's1' }, 'leader', 's1')).toBe(true);
+    expect(isFollowTargetOf({ identityKey: 'leader', sessionId: 's1' }, 'leader', 's2')).toBe(false);
+    expect(isFollowTargetOf({ identityKey: 'other' }, 'leader', 's1')).toBe(false);
+    expect(isFollowTargetOf(undefined, 'leader', 's1')).toBe(false);
   });
 });
 

@@ -87,6 +87,35 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       () => import('./src/capabilities/dashboard.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.defaultParent(() => import('./src/capabilities/default-parent.ts', { with: { type: 'module-url' } })),
+    // Browser-only: it listens for the local user's input on the window.
+    Capability.lazyModule(
+      'Follow',
+      {
+        environments: ['browser', 'tauri'],
+        requires: [
+          Capabilities.AtomRegistry,
+          Capabilities.OperationInvoker,
+          AppCapabilities.Layout,
+          AttentionCapabilities.Attention,
+          AttentionCapabilities.ViewState,
+          SpaceCapabilities.EphemeralState,
+          ClientCapabilities.Client,
+        ],
+        provides: [],
+        activatesOn: ClientEvents.SpacesAvailable,
+      },
+      () => import('./src/capabilities/follow.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'FollowAccent',
+      {
+        environments: ['browser', 'tauri'],
+        requires: [SpaceCapabilities.EphemeralState, AppCapabilities.Layout],
+        provides: [AppCapabilities.LayoutAccent],
+        activatesOn: ClientEvents.SpacesAvailable,
+      },
+      () => import('./src/capabilities/follow-accent.ts', { with: { type: 'module-url' } }),
+    ),
     Capability.lazyModule(
       'IdentityCreated',
       {

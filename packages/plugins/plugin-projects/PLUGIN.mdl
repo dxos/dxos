@@ -112,6 +112,8 @@ feat F-4: A project's specs
   req F-4.16: The projects plugin's Default spec view setting picks the view a spec opens in, named as the toolbar's
               view menu names them: Markdown (the forms), Read only or Plain text. Unset, a spec opens as Markdown;
               changing it leaves a spec already open in the view it shows.
+  req F-4.17: A peer following another (org.dxos.plugin.space#F-8.21) shows the tab, the spec and the chart the
+              leader has open in each project, since the article's view state aspect is followed.
 ```
 
 ```mdl
@@ -2987,4 +2989,21 @@ decision D-268: A map row's trailing comment is its Description, the last column
   why: A row's comment usually describes the field, and the form hid it, so the form said less than the plain text. As the last column the table stays as dense as the text, and the comment's `#` column is kept.
   rejected:
     - A note under each row (D-255), which took room and read as part of the row.
+```
+
+```mdl
+decision D-269: The project article's view state is keyed by the project's EID and declared `follow: 'write'`, so a follower takes the leader's tab, spec and chart with no follow code of the plugin's own. A reader's tab, spec and chart picked under the project's bare id before this change are not carried over.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-4.17]
+  why: Presence keys an object's state by its EID, as it does locations, so the key is what lets the leader's value reach the follower's article.
+  rejected:
+    - Keeping the bare id and translating at the presence boundary; every followed aspect would need the translation.
+```
+
+```mdl
+decision D-270: The project reveal (`ProjectOperation.ScrollToAnchor`) takes `focus`, true by default, as the markdown and sheet reveals do. With it, the reveal selects the anchor's text and takes focus; with `focus: false`, which a follow passes, it scrolls the text to the top and leaves the selection alone.
+  date: 2026-11-16
+  by: user:wittjosiah
+  why: A follow moved the follower's selection in a project's text fields with every move of the leader's.
 ```

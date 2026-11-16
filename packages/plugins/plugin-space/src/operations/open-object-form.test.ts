@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -86,7 +85,10 @@ const makeStubLayoutPlugin = (onOpen: (handle: ObjectFormHandle) => void): Plugi
           Effect.succeed([
             // Read by the handler to decide whether a new collection is navigated to; normally
             // contributed by the space plugin's `state.ts`, which needs a layout to activate.
-            Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
+            Capability.contribute(
+              SpaceCapabilities.EphemeralState,
+              SpaceCapabilities.makeEphemeralState('local-session'),
+            ),
             Capability.contribute(
               Capabilities.OperationHandler,
               OperationHandlerSet.make(
@@ -106,16 +108,6 @@ const makeStubLayoutPlugin = (onOpen: (handle: ObjectFormHandle) => void): Plugi
     ),
     Plugin.make,
   )();
-
-const ephemeralState = () =>
-  Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-    sdkMigrationRunning: {},
-    navigableCollections: false,
-    viewersByObject: {},
-    peerDecks: {},
-    mergePreview: undefined,
-    lastMergeAt: undefined,
-  }).pipe(Atom.keepAlive);
 
 const setup = async (onOpen: (handle: ObjectFormHandle) => void) => {
   const harness = await Harness.createComposerTestApp({
