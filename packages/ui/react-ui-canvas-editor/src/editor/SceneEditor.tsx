@@ -811,17 +811,21 @@ const SceneEditorTimeline = ({ classNames = 'bottom-14' }: { classNames?: string
       shot?.id,
       keySelection({ timeline, document, layout, selection, t: time, fields: config.animatable ?? placementFields }),
     );
+  const shotsBar = shots.length > 1;
   // The bar is centred, the shots to its left in a column as wide as the one to its right, so they collapse to fit;
-  // that column never narrows past the collapsed shots' ⋮ (2.75rem), so a narrow frame moves the bar off centre instead.
+  // with shots that column never narrows past their ⋮ (2.75rem), so a narrow frame moves the bar off centre instead.
   return (
     <div
       className={mx(
-        'absolute inset-x-2 grid grid-cols-[minmax(2.75rem,1fr)_auto_minmax(0,1fr)] gap-1 items-center pointer-events-none',
+        'absolute inset-x-2 grid gap-1 items-center pointer-events-none',
+        shotsBar
+          ? 'grid-cols-[minmax(2.75rem,1fr)_auto_minmax(0,1fr)]'
+          : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]',
         classNames,
       )}
     >
       <div role='none' className='min-w-0'>
-        {shots.length > 1 && <ShotsBar shots={shots} current={shot?.id} onShotChange={commands.setShot} />}
+        {shotsBar && <ShotsBar shots={shots} current={shot?.id} onShotChange={commands.setShot} />}
       </div>
       <TimelineBar
         classNames={mx(FLOATING_BAR, 'pointer-events-auto')}
