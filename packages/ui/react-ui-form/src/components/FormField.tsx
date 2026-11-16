@@ -9,6 +9,7 @@ import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as Field from '@dxos/react-ui/Field';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { type FormFieldLabelPlacement, type FormPresentation } from '#types';
@@ -170,7 +171,10 @@ export const FormFieldRow = <T,>({
           {labelEnd}
           {error && (
             <Layout.Block>
-              <Icon.Icon icon='ph--warning--regular' valence='error' label={error} />
+              {/* The error itself, on hover: the icon alone says only that there is one. */}
+              <Tooltip.Trigger asChild content={error}>
+                <Icon.Icon icon='ph--warning--regular' valence='error' label={error} />
+              </Tooltip.Trigger>
             </Layout.Block>
           )}
         </Field.Header>

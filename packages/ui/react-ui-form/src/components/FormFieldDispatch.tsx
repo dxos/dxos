@@ -138,6 +138,13 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const fieldState = useFormFieldState(FormFieldDispatch.displayName, path);
   const jsonPath = SchemaEx.createJsonPath(path ?? []);
   const indeterminate = fieldState.getStatus().indeterminate;
+  // A field with no value shows the default its schema declares (`default`), which is what a reader of the value
+  // uses in its place; the form holds none until the field is edited. A value the selection disagrees on is not unset.
+  const fallback = SchemaEx.getAnnotation<unknown>(SchemaAST.DefaultAnnotationId)(type);
+  const getValue = useMemo(
+    () => (fallback === undefined || indeterminate ? fieldState.getValue : () => fieldState.getValue() ?? fallback),
+    [fieldState, fallback, indeterminate],
+  );
   const fieldProps: FormFieldRendererProps = {
     type,
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
@@ -161,6 +168,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     step: override?.step,
     db,
     ...fieldState,
+    getValue,
   };
 
   if (override?.hidden || ((readonly || presentation === 'static') && hideEmpty && fieldState.getValue() == null)) {

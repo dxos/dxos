@@ -14,7 +14,7 @@ export type LayerRun = { kind: 'links'; links: LinkGeometry[] } | { kind: 'nodes
 
 /**
  * A layer's nodes and links in one paint order, bottom first, grouped into runs of consecutive elements of one kind:
- * a shape drawn over a link covers it and a link drawn over a shape crosses it, exactly as the Views list lists them.
+ * a shape drawn over a link covers it and a link drawn over a shape crosses it, in the order the Views list lists them from its last row to its first.
  * An element written without a `z` sorts at the bottom, as it draws first. The selection is not raised: a shape sent
  * to the back stays there while it is worked on, its frame and handles being chrome at its edge.
  */

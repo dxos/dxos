@@ -39,7 +39,7 @@ export type IfElseShape = Schema.Schema.Type<typeof IfElseShape>;
 // Defs
 //
 
-export type CreateIfProps = CreateShapeProps<IfShape> & { if?: string };
+export type CreateIfProps = CreateShapeProps<IfShape>;
 
 export const createIf = (props: CreateIfProps) =>
   createShape<IfShape>({ type: 'if', size: { width: 3 * MAJOR_GRID, height: getHeight(IfInput) }, ...props });
@@ -55,7 +55,7 @@ export const ifNodeDef = defineComputeNode<IfShape>({
   ports: (shape) => createFunctionPorts(shape.size, IfInput, IfOutput),
 });
 
-export type CreateIfElseProps = CreateShapeProps<IfShape> & { if?: string };
+export type CreateIfElseProps = CreateShapeProps<IfElseShape>;
 
 export const createIfElse = (props: CreateIfElseProps) =>
   createShape<IfElseShape>({

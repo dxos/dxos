@@ -41,6 +41,7 @@ import {
   endpointNode,
   isDiagramNode,
   isEllipseNode,
+  isHullNode,
   isNoteNode,
 } from '@dxos/scene';
 
@@ -154,11 +155,19 @@ const nodeAt = (nodes: readonly Node[], point: { x: number; y: number }, slack =
     })
     .sort((left, right) => left.size.width * left.size.height - right.size.width * right.size.height)[0];
 
-/** The canvas markers of a connector's ends; a canvas end marker is one of arrow, circle or triangle. */
+/** The canvas markers of a connector's ends; one the canvas has no marker for is an arrow. */
 const endsOf = (arrow: Shape.Arrow): Link['ends'] => {
   const markers = Shape.markersOf(arrow);
   const marker = (value: Shape.Marker | undefined) =>
-    value === 'triangle' ? 'triangle' : value === 'circle' ? 'circle' : value ? 'arrow' : undefined;
+    value === 'triangle'
+      ? 'triangle'
+      : value === 'circle'
+        ? 'circle'
+        : value === 'crowsfoot'
+          ? 'many'
+          : value
+            ? 'arrow'
+            : undefined;
   const start = marker(markers.start);
   const end = marker(markers.end);
   return start || end ? { ...(start ? { start } : {}), ...(end ? { end } : {}) } : undefined;
@@ -178,8 +187,8 @@ const nodesIn = (content: ContentMap, scene: string): Node[] =>
     .filter((record): record is NodeRecord => isNodeRecord(record) && record.scene === scene)
     .map((record) => record.node);
 
-/** A group's backdrop: a guide, or a diagram's tinted group frame. */
-const isBackdrop = (node: Node): boolean => node.style?.guide === true || isDiagramBackdrop(node);
+/** A group's backdrop: a guide, a hull, or a diagram's tinted group frame. */
+const isBackdrop = (node: Node): boolean => node.style?.guide === true || isHullNode(node) || isDiagramBackdrop(node);
 
 /** Small text's width and height (scene px) as the diagram renderer sets it, for the frame of a diagram text node. */
 const textFrame = (element: Shape.Text, scale: number): { w: number; h: number } => {

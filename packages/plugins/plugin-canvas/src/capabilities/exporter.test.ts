@@ -22,6 +22,7 @@ import {
   createNode,
   defaultNodeRegistry,
   flattenPath,
+  gridPitch,
   viewLinkGeometry,
 } from '@dxos/react-ui-canvas';
 import { type NodeStyle, fromEcho } from '@dxos/scene';
@@ -207,8 +208,10 @@ describe('canvas exporter', () => {
 
     const view = readViews(readCanvasContent(canvas))[root];
     const links = [view.links.link];
-    const [routed] = viewLinkGeometry(view, defaultNodeRegistry, links, lattice);
-    const [free] = viewLinkGeometry(view, defaultNodeRegistry, links);
+    // The elbows are sized by the layout's own grid, on screen and in the export alike.
+    const grid = layout?.dim === '2d' ? gridPitch(layout) : undefined;
+    const [routed] = viewLinkGeometry(view, defaultNodeRegistry, links, lattice, grid);
+    const [free] = viewLinkGeometry(view, defaultNodeRegistry, links, undefined, grid);
     expect(routed.path).not.toEqual(free.path);
 
     const { content } = await save(drawingOf(canvas));

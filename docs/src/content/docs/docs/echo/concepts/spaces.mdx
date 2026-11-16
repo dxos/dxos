@@ -27,7 +27,8 @@ writes are on disk, and optionally until the index has them too.
 ### Replication
 
 There is no server that owns a space. Each member holds a full copy of the space's data and exchanges changes with the
-other members directly, over [WebRTC](https://en.wikipedia.org/wiki/WebRTC), or through EDGE, the DXOS sync service.
+other members directly, over [WebRTC](https://en.wikipedia.org/wiki/WebRTC), or through [EDGE](/docs/edge/concepts/replication/), the DXOS sync
+service. [MESH](/docs/mesh/concepts/transports/) carries both.
 Reads and writes work offline, and the changes merge when the device reconnects, by the rules in
 [Changes and branches](/docs/echo/concepts/changes/).
 

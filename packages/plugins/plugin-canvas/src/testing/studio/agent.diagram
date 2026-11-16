@@ -1,0 +1,89 @@
+# Agent: How agents pursue goals
+# Exported from studio assets/deck (slide "agent"), 1600 × 900 slide units.
+
+object title @ 80,40 {
+  text heading 0,0 "Agent"
+  text subtitle 0,44 "How agents pursue goals"
+}
+
+object layer-ui @ 344,126 {
+  rect frame 0,0 1072x221 "UI / Control" color=grey stroke=dashed
+}
+object layer-activity @ 344,384 {
+  rect frame 0,0 1072x221 "Activity" color=grey stroke=dashed
+}
+object layer-knowledge @ 344,642 {
+  rect frame 0,0 1072x221 "Knowledge" color=grey stroke=dashed
+}
+
+object goal @ 362,144 {
+  rect box 0,0 236x56 "Goal"
+}   # card icon=target
+object outcome @ 1162,144 {
+  rect box 0,0 236x56 "Outcome"
+}   # card icon=trophy
+object project @ 362,273 {
+  rect box 0,0 236x56 "Project"
+}   # card icon=folder
+object task @ 1162,273 {
+  rect box 0,0 236x56 "Task"
+}   # card icon=check-square
+object feed @ 362,402 {
+  rect box 0,0 236x56 "Feed"
+}   # card icon=queue
+object session @ 762,402 {
+  rect box 0,0 236x56 "Session"
+}   # card icon=play-circle
+object model @ 1162,402 {
+  rect box 0,0 236x56 "Model"
+}   # card icon=cpu
+object scheduler @ 362,531 {
+  rect box 0,0 236x56 "Scheduler"
+}   # card icon=alarm
+object tool @ 762,531 {
+  rect box 0,0 236x56 "Tool"
+}   # card icon=wrench
+object plan @ 1162,531 {
+  rect box 0,0 236x56 "Plan"
+}   # card icon=list-numbers
+object memory @ 362,660 {
+  rect box 0,0 236x56 "Memory"
+}   # card icon=brain
+object graph @ 762,660 {
+  rect box 0,0 236x56 "Graph"
+}   # card icon=graph
+object skill @ 1162,660 {
+  rect box 0,0 236x56 "Skill"
+}   # card icon=graduation-cap
+object schema @ 362,789 {
+  rect box 0,0 236x56 "Schema"
+}   # card icon=brackets-curly
+object artifact @ 762,789 {
+  rect box 0,0 236x56 "Artifact"
+}   # card icon=cube
+object spec @ 1162,789 {
+  rect box 0,0 236x56 "Specification"
+}   # card icon=clipboard-text
+
+object links @ 0,0 {
+  arrow project-goal project/box -> goal/box "serves" head=triangle
+  arrow outcome-goal outcome/box -> goal/box "achieves" head=triangle
+  arrow task-project task/box -> project/box "in" head=triangle
+  arrow task-spec task/box -> spec/box "implements" head=triangle   # route=via 1508,301 1508,829
+  arrow plan-spec plan/box -> spec/box "follows" head=triangle   # route=via 1458,559 1458,805
+  arrow task-outcome task/box -> outcome/box "produces" head=triangle
+  arrow session-task session/box -> task/box "works on" head=triangle
+  arrow session-model session/box -> model/box "run by" head=triangle
+  arrow session-tool session/box -> tool/box "uses" head=triangle
+  arrow session-feed session/box -> feed/box "writes" head=triangle
+  arrow scheduler-session scheduler/box -> session/box "starts" head=triangle
+  arrow scheduler-feed scheduler/box -> feed/box "watches" head=triangle
+  arrow feed-graph feed/box -> graph/box "updates" head=triangle
+  arrow memory-feed memory/box -> feed/box "learns from" head=triangle   # route=via 332,688 332,430
+  arrow memory-graph memory/box -> graph/box "part of" head=triangle
+  arrow tool-graph tool/box -> graph/box "acts on" head=triangle
+  arrow tool-artifact tool/box -> artifact/box "makes" head=triangle   # route=via 1060,688
+  arrow skill-tool skill/box -> tool/box "defines" head=triangle   # route=via 1010,559
+  arrow graph-schema graph/box -> schema/box "typed by" head=triangle
+  arrow artifact-graph artifact/box -> graph/box "stored in" head=triangle
+}

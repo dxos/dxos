@@ -8,6 +8,8 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import {
   type Bounds,
   type ElementId,
+  type LinkId,
+  type Marker,
   type Node,
   type NodeId,
   type Point,
@@ -66,9 +68,10 @@ import {
   ungroupInstance,
   unionBounds,
   updateElement,
+  withEndMarker,
   zoomAt,
 } from '../utils/index.ts';
-import { type CanvasAtoms, type HistoryEntry } from './atoms.ts';
+import { type CanvasAtoms, type HistoryEntry, type LinkEnd } from './atoms.ts';
 import { type DrawState, drawStateVersions } from './draw-state.ts';
 import { type DrawScene, readonlyCapabilities } from './draw.ts';
 import { type CanvasHistory, createCommitter } from './history.ts';
@@ -153,6 +156,9 @@ export type NavigationCommands = {
   /** Opens a composite on its own: its definition scene, fitted, on a plain background; Escape returns. */
   isolate: (composite: ViewId) => void;
   exitIsolation: () => void;
+  /** Enters an Instance to edit its parts where they are drawn, the rest of the scene faded; Escape leaves. */
+  enter: (instance: Node) => void;
+  exitInside: () => void;
   /** Frames the scene and keeps it framed (fit mode) until the user pans or zooms. */
   fit: () => void;
   /** Frames the selected nodes, leaving fit mode. */
@@ -214,6 +220,11 @@ export type DocumentEditCommands = {
    */
   /** Copies `ids` one step aside; without a `delta`, by the drawn major cell, as the duplicate shortcut does. */
   duplicate: (ids: Iterable<ElementId>, delta?: Point) => boolean;
+  /**
+   * Sets the marker a link of the open View draws at one end (none where `marker` is undefined), as one edit, and
+   * remembers the link's markers for the next link drawn; false when the link is not there or cannot be changed.
+   */
+  setEndMarker: (link: LinkId, end: LinkEnd, marker: Marker | undefined) => boolean;
 };
 
 /** Text editing and the clipboard (DESIGN.md §13.1, the Editing aspect). */
@@ -578,6 +589,27 @@ export const createCanvasController = ({
     }
   };
 
+  /**
+   * Enters an Object in place: its parts become what the editor acts on, the drawing around them is faded and locked,
+   * and the camera does not move — the Object is edited where it stands rather than opened somewhere else.
+   */
+  const enter = (instance: Node) => {
+    if (!isInstanceNode(instance) || !registry.get(store.views)[instance.composite]) {
+      return;
+    }
+    select([]);
+    registry.set(atoms.inside, { instance: instance.id, composite: instance.composite });
+  };
+
+  const exitInside = () => {
+    if (!registry.get(atoms.inside)) {
+      return;
+    }
+    const { instance } = registry.get(atoms.inside)!;
+    registry.set(atoms.inside, undefined);
+    select([instance]);
+  };
+
   const exitIsolation = () => {
     const current = registry.get(atoms.isolation);
     if (!current) {
@@ -647,9 +679,13 @@ export const createCanvasController = ({
   const navigation: NavigationCommands = {
     openView,
     openPlace,
-    drillIn: (node, animate) => (isInstanceNode(node) ? isolate(node.composite) : drillInto(node, animate)),
+    // An Object is edited where it stands; its definition is still opened on its own from the Objects panel.
+    drillIn: (node, animate) => (isInstanceNode(node) ? enter(node) : drillInto(node, animate)),
     drillOut,
-    back: () => (registry.get(atoms.isolation) ? exitIsolation() : drillOut()),
+    back: () =>
+      registry.get(atoms.inside) ? exitInside() : registry.get(atoms.isolation) ? exitIsolation() : drillOut(),
+    enter,
+    exitInside,
     goHistory: (offset) => {
       const history = registry.get(atoms.history);
       const index = history.index + offset;
@@ -774,6 +810,16 @@ export const createCanvasController = ({
         Object.keys(records).length > 0 ? { ...views, ...records } : views,
       );
       select(copy.ids);
+      return true;
+    },
+    setEndMarker: (id, end, marker) => {
+      const link = currentScene().links[id];
+      if (!link || link.locked || !capabilities().update) {
+        return false;
+      }
+      const ends = withEndMarker(link.ends, end, marker);
+      draw().apply(updateElement(id, { ends: ends.start || ends.end ? ends : undefined }));
+      registry.set(atoms.linkEnds, ends);
       return true;
     },
   };

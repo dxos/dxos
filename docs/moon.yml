@@ -16,6 +16,7 @@ tasks:
       - build
       - typedoc
     inputs:
+      - $DOCS_TWOSLASH
       - astro.config.ts
       - SPEC.mdl
       - '@group(sources)'

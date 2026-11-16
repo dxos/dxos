@@ -154,6 +154,7 @@ describe('SceneHandler', () => {
             origin: { x: 0, y: 0 },
             elements: [
               { kind: 'arrow', id: 'a-b-0', start: { x: 128, y: 128 }, end: { x: 128, y: 256 } },
+              { kind: 'arrow', id: 'a-b-1', start: { x: 96, y: 128 }, end: { x: 96, y: 256 }, head: 'crowsfoot' },
               { kind: 'text', id: 'a-b-0-label', x: 136, y: 180, text: 'calls', weight: 's' },
             ],
           },
@@ -172,6 +173,8 @@ describe('SceneHandler', () => {
       'calls',
     ]);
     expect(root.nodes[elementId('edges', 'a-b-0-label')]).toBeUndefined();
+    // A crow's foot is the canvas's `many` end.
+    expect(root.links[elementId('edges', 'a-b-1')].ends).toEqual({ end: 'many' });
     // The group is a guide (off the lattice) titled at its top-left corner; its title is no shape of its own.
     const group = root.nodes[elementId('group', 'frame')];
     expect(isRectNode(group) && [group.label, group.style]).toEqual([

@@ -15,7 +15,7 @@ const DEVICES: Record<Scene, number> = { new: 1, named: 1, invite: 2, book: 3, p
 
 <!-- The app runs on its own page so that its CSS stays off the docs pages; see `pages/embed/halo.astro`. -->
 <iframe
-  class="halo-embed not-content"
+  class="halo-embed dx-wide not-content"
   data-devices={DEVICES[scene]}
   src={`/embed/halo/?${new URLSearchParams({ stage, scene })}`}
   title="The contact book"

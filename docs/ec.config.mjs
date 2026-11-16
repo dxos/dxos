@@ -10,9 +10,12 @@ import ecTwoSlash from 'expressive-code-twoslash';
 import { codeThemes } from './src/theme/code-themes.mjs';
 import { twoslash } from './twoslash.mjs';
 
+// Samples import stylesheets for their side effects (`import '@dxos/react-ui/theme.css'`), which only Vite resolves.
+const twoslashOptions = { compilerOptions: { noUncheckedSideEffectImports: false } };
+
 export default defineEcConfig({
   themes: codeThemes,
-  plugins: [pluginCollapsibleSections(), pluginLineNumbers(), ...(twoslash ? [ecTwoSlash()] : [])],
+  plugins: [pluginCollapsibleSections(), pluginLineNumbers(), ...(twoslash ? [ecTwoSlash({ twoslashOptions })] : [])],
   minSyntaxHighlightingColorContrast: 5.5,
   defaultProps: { wrap: false, showLineNumbers: true },
   styleOverrides: {

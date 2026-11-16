@@ -96,8 +96,14 @@ describe('CrawlDiscordChannels', () => {
       expect(rest.calls.every(({ authorization }) => authorization === `Bearer ${TOKEN}`)).toBe(true);
       const items = yield* factItems(feed);
       expect(items.length).toBeGreaterThan(0);
+      // Facts cite the message they came from, except each author's profile, which cites the user.
       const sources = new Set(HISTORY.map(({ id }) => `discord:${id}`));
-      expect(items.every(({ fact }) => sources.has(fact.attribution.source))).toBe(true);
+      const profiles = items.filter(({ fact }) => fact.extractor.id === 'agent-registry');
+      expect(profiles.length).toBeGreaterThan(0);
+      expect(profiles.every(({ fact }) => fact.attribution.source.startsWith('https://discord.com/users/'))).toBe(true);
+      expect(
+        items.filter((item) => !profiles.includes(item)).every(({ fact }) => sources.has(fact.attribution.source)),
+      ).toBe(true);
       expect(CrawlState.listTargets(state)).toEqual([
         expect.objectContaining({ id: CHANNEL, status: 'done', cursor: HISTORY.at(-1)?.id }),
       ]);

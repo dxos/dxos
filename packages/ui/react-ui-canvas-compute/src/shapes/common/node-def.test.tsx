@@ -23,7 +23,8 @@ const setup = () => {
     model,
   );
   const gpt = circuit.nodes.find((node) => node.type === 'gpt');
-  if (!gpt || typeof gpt.node !== 'string') {
+  const computeId = gpt?.data?.node;
+  if (!gpt || computeId === undefined) {
     throw new Error('The circuit has no GPT shape with a compute node.');
   }
   const shape: Node = { ...gpt, z: 'a' };
@@ -45,7 +46,7 @@ const setup = () => {
         <NodeView {...props} />
       </ComputeContext.Provider>,
     );
-  return { model, computeId: gpt.node, render };
+  return { model, computeId, render };
 };
 
 describe('compute node view', () => {

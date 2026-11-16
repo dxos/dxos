@@ -247,9 +247,12 @@ jobs:
         run: pnpm run knip
 
       # `docs:bundle` IS the docs link check: `starlight-links-validator` runs as the last phase of
-      # `astro build`.
+      # `astro build`. Twoslash is off because it re-type-checks every snippet, which the compile gate
+      # already does, at a cost of ~11 minutes.
       - name: Check production plugin set and docs links
         if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
+        env:
+          DOCS_TWOSLASH: '0'
         run: >-
           env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD
           moon exec composer-app:check-plugin-set docs:bundle --on-failure continue

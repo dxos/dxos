@@ -12,6 +12,12 @@ packages=(
     "sdk/app-toolkit"
     "sdk/client"
     "sdk/react-client"
+    "ui/react-ui"
+    "ui/react-ui-editor"
+    "ui/react-ui-form"
+    "ui/react-ui-list"
+    "ui/react-ui-menu"
+    "ui/ui-theme"
 )
 
 mkdir -p ./public/typedoc

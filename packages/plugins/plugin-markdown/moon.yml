@@ -9,3 +9,12 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
+
+tasks:
+  test:
+    deps:
+      # `edge-bundle.test.ts` builds this plugin's bundle and the space plugin's, which resolve their own `#` imports
+      # from their dists and vendor the host from the host's dist.
+      - plugin-markdown:build
+      - plugin-space:build
+      - plugin-host-cloudflare:build

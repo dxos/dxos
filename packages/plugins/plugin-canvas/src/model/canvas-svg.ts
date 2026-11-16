@@ -7,6 +7,7 @@ import {
   defaultNodeRegistry,
   diagramLinkElements,
   flattenPath,
+  gridPitch,
   sortByZ,
   viewLinkGeometry,
   visibleView,
@@ -23,11 +24,11 @@ import { SceneHandler } from './handler.ts';
 /** The diagram a canvas's open Layout2D draws, as the command protocol's world objects. */
 export const canvasWorld = (canvas: Canvas.Canvas): ReadWorldObject[] => CanvasLayoutBuilder.read(canvas).scene.objects;
 
-/** How the canvas ends a plain link, in the markers the diagram renderer has at each end. */
+/** How the canvas ends a plain link, in the markers the diagram renderer has at each end: an arrow where it has no match. */
 const connectorOf = ({ connector, ends }: Link): DiagramConnector =>
   connector ?? {
-    head: ends?.end === 'circle' ? 'arrow' : (ends?.end ?? 'none'),
-    tail: ends?.start === 'triangle' ? 'arrow' : (ends?.start ?? 'none'),
+    head: ends?.end === 'circle' ? 'arrow' : ends?.end === 'many' ? 'crowsfoot' : (ends?.end ?? 'none'),
+    tail: ends?.start === 'triangle' || ends?.start === 'many' ? 'arrow' : (ends?.start ?? 'none'),
   };
 
 /**
@@ -50,6 +51,7 @@ const openViewWorld = (canvas: Canvas.Canvas): Scene.WorldObject[] => {
     defaultNodeRegistry,
     sortByZ(Object.values(visible.links)),
     layout?.dim === '2d' ? layout.lattice : undefined,
+    layout?.dim === '2d' ? gridPitch(layout) : undefined,
   ).map(({ link, path, diagram }) => ({
     id: linkKey(link.id),
     elements: diagramLinkElements(
