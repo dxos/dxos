@@ -58,7 +58,8 @@ const emphasis = '[&_h1]:text-[160px] [&_h1]:leading-tight [&_h2]:text-[96px]';
 const centered = ({ name, className }: { name: LayoutName; className?: string }): Layout => {
   const CenteredLayout = ({ slots }: LayoutProps) => (
     <Frame name={name} className={mx('grid place-content-center text-center', theme.padding, className)}>
-      <Slot name='default' className='items-center'>
+      {/* A centred slide is a few large blocks — a mark, a name, a date — so they are spaced to be read apart. */}
+      <Slot name='default' className='items-center gap-32'>
         {slots.default}
       </Slot>
     </Frame>

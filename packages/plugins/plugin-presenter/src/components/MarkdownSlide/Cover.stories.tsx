@@ -79,19 +79,35 @@ export const Eyebrow: Story = {
   },
 };
 
-/** 3. The brand's own art behind the slide draws the mark; only the wordmark and the title sit on top of it. */
+/** 3. The brand's own art draws the mark; the title holds the top edge and the wordmark the bottom, leaving it the middle. */
 export const Art: Story = {
   args: {
     content: slide(
       {
         layout: 'center',
         background: `${BRAND}/backgrounds/bg-dxos.svg`,
-        backgroundOpacity: 0.55,
+        // The art's mark is centred, so it is held down to where it reads as texture between the words rather than
+        // as a second mark competing with the wordmark.
+        backgroundOpacity: 0.22,
       },
-      ...hero(WORDMARK),
+      '<Box variant="spread">',
       '',
       '## The decentralized operating system',
+      '',
+      `![DXOS](${WORDMARK})`,
+      '',
+      '</Box>',
     ),
+  },
+  play: async ({ canvasElement }) => {
+    const frame = await query(canvasElement, '[data-layout="center"]');
+    const heading = frame.querySelector('h2')!.getBoundingClientRect();
+    const mark = frame.querySelector('[data-variant="spread"] img')!;
+    await waitFor(() => expect((mark as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
+    // The two blocks hold opposite edges, so the art has the slide's middle to itself.
+    const slideBox = frame.getBoundingClientRect();
+    await expect(heading.top - slideBox.top).toBeLessThan(slideBox.height / 4);
+    await expect(slideBox.bottom - mark.getBoundingClientRect().bottom).toBeLessThan(slideBox.height / 4);
   },
 };
 
@@ -152,7 +168,10 @@ export const Glow: Story = {
   },
 };
 
-/** 5. The mark run oversized off the start edge, behind the words, which take the rest of the slide. */
+/**
+ * 5. The mark run oversized off the start edge, behind the words, raised out of the slide rather than laid on it.
+ * Its central bar stands one bar-height in from that edge.
+ */
 export const Watermark: Story = {
   args: {
     content: slide(
@@ -180,5 +199,10 @@ export const Watermark: Story = {
     const art = mark.getBoundingClientRect();
     const slideBox = frame.getBoundingClientRect();
     await expect(art.left).toBeLessThan(slideBox.left);
+    // The central bar stands one bar-height in from that edge. Both come from the mark's own square: the bar starts
+    // 41.4% across it and is 20.0% of it tall (`dxos-logo-white.svg`, 1024 units: x from 424.4, y 311.6 to 516.2).
+    const barInset = art.left + art.width * 0.41445 - slideBox.left;
+    const barHeight = art.height * 0.1998;
+    await expect(Math.abs(barInset - barHeight)).toBeLessThan(slideBox.width * 0.005);
   },
 };

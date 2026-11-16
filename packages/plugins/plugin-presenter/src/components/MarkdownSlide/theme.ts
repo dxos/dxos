@@ -102,9 +102,29 @@ export const theme = {
       },
       // A mark run oversized off the slide's start edge, behind the words. It leaves the flow, so the text is laid
       // out as though it were not there, and it is cropped by the slide rather than fitted to it.
+      //
+      // It is not tinted down with `opacity`, which would fade the relief with it. `brightness` takes the white mark
+      // to the surface's own value, and the two drop-shadows — dark down-end, light up-start — are then the only
+      // thing that reads, so the mark looks raised out of the slide rather than laid on it. The offsets are canvas
+      // units, scaled with everything else.
+      //
+      // The mark is drawn high in its own square (21 units of air above it, 218 below), so centring the file centres
+      // the air rather than the mark; the nudge is half that difference, as a share of the image's height.
+      // The mark is drawn no taller than the slide and set so that its central bar stands one bar-height in from the
+      // start edge: at 56.25% of the slide's width the square is exactly its height, the bar is a fifth of that, and
+      // the bar's own start edge sits 41.4% into the square — so -12.07% puts the two distances equal.
       watermark: {
-        box: 'absolute inset-y-0 -start-[14%] w-[72%] flex items-center pointer-events-none opacity-[0.18]',
-        img: 'w-full h-auto object-contain',
+        box: 'absolute inset-y-0 -start-[12.07%] w-[56.25%] flex items-center pointer-events-none',
+        img:
+          'w-full h-auto object-contain translate-y-[9.6%] ' +
+          '[filter:brightness(0.14)_drop-shadow(8px_8px_12px_rgb(0_0_0/0.55))_drop-shadow(-5px_-5px_9px_rgb(255_255_255/0.05))]',
+        p: '[&:has(>img)]:contents',
+      },
+      // Blocks pushed to the slide's own top and bottom edges, which leaves the middle to whatever is behind them —
+      // the art on a title slide. It fills the slide, so it carries the slide's padding itself.
+      spread: {
+        box: 'absolute inset-0 flex flex-col justify-between items-center text-center px-40 py-24',
+        img: 'h-[200px] w-auto max-w-full object-contain',
         p: '[&:has(>img)]:contents',
       },
       // A title slide's name and the links under it, set against the slide's start edge rather than its padding:
