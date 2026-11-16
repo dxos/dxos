@@ -150,8 +150,12 @@ export const ingest = (options: IngestOptions = {}): Effect.Effect<SourceResult[
     }
 
     if (only.has('house')) {
-      const year = new Date().getUTCFullYear();
-      yield* run('house-disclosures', `${year}FD.zip`, Finance.Observation, houseFilings(year, since));
+      // Each year's reports are in that year's archive, so a lookback across New Year reads every year it spans.
+      const last = new Date().getUTCFullYear();
+      const first = Number(since.slice(0, 4));
+      for (let year = Number.isInteger(first) ? Math.min(first, last) : last; year <= last; year++) {
+        yield* run('house-disclosures', `${year}FD.zip`, Finance.Observation, houseFilings(year, since));
+      }
     }
 
     return results;

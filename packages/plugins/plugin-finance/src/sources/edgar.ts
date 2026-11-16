@@ -24,6 +24,8 @@ const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: '@_',
   parseTagValue: false,
+  // Filers may qualify every element (`ns1:informationTable`); lookups go by local name.
+  removeNSPrefix: true,
   isArray: (name) => ['entry', 'nonDerivativeTransaction', 'reportingOwner', 'infoTable', 'item'].includes(name),
 });
 
@@ -115,11 +117,44 @@ export const parseFilingFeed = (xml: string): FilingEntry[] =>
     return [{ accession, form, filed, link, ...(formName ? { formName } : {}), ...(items ? { items } : {}) }];
   });
 
-/** A company's filings of one form type (Form 4 lists the insiders' filings about the issuer). */
-export const companyFilings = (cik: string, form: string, count = 40): Effect.Effect<FilingEntry[], SourceError> =>
+// Bounds a feed walk, so a filer with years of filings in the window cannot page without end.
+const MAX_FILING_PAGES = 25;
+
+/**
+ * Collects a newest-first filing feed a page at a time (`fetchPage(start)`) until a page comes back short or reaches
+ * past `since` (ISO day), and keeps the filings on or after `since`.
+ */
+export const collectFilings = <E>(
+  fetchPage: (start: number) => Effect.Effect<FilingEntry[], E>,
+  since: string,
+  count: number,
+): Effect.Effect<FilingEntry[], E> =>
+  Effect.gen(function* () {
+    const filings: FilingEntry[] = [];
+    for (let page = 0; page < MAX_FILING_PAGES; page++) {
+      const entries = yield* fetchPage(page * count);
+      filings.push(...entries);
+      if (entries.length < count || entries.some(({ filed }) => filed < since)) {
+        break;
+      }
+    }
+    return filings.filter(({ filed }) => filed >= since);
+  });
+
+/** One page of a company's filings of one form type (Form 4 lists the insiders' filings about the issuer). */
+const filingsPage = (cik: string, form: string, count: number, start = 0): Effect.Effect<FilingEntry[], SourceError> =>
   secText(
-    `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${cik}&type=${encodeURIComponent(form)}&dateb=&owner=${form === '4' ? 'include' : 'exclude'}&count=${count}&output=atom`,
+    `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${cik}&type=${encodeURIComponent(form)}&dateb=&owner=${form === '4' ? 'include' : 'exclude'}&start=${start}&count=${count}&output=atom`,
   ).pipe(Effect.map(parseFilingFeed));
+
+/** A company's filings of one form type filed on or after `since` (ISO day), however many pages they span. */
+export const companyFilings = (
+  cik: string,
+  form: string,
+  since: string,
+  count = 40,
+): Effect.Effect<FilingEntry[], SourceError> =>
+  collectFilings((start) => filingsPage(cik, form, count, start), since, count);
 
 const IndexJson = Schema.Struct({
   directory: Schema.Struct({ item: Schema.Array(Schema.Struct({ name: Schema.String })) }),
@@ -206,8 +241,8 @@ export const insiderTrades = (
   isStored: (accession: string) => boolean = () => false,
 ): Effect.Effect<Finance.Observation[], SourceError> =>
   Effect.gen(function* () {
-    const filings = (yield* companyFilings(cik, '4')).filter(
-      ({ accession, form, filed }) => form === '4' && filed >= since && !isStored(accession),
+    const filings = (yield* companyFilings(cik, '4', since)).filter(
+      ({ accession, form }) => form === '4' && !isStored(accession),
     );
     const observations: Finance.Observation[] = [];
     for (const filing of filings) {
@@ -229,7 +264,7 @@ export const companyReports = (
   Effect.gen(function* () {
     const filings: FilingEntry[] = [];
     for (const form of ['8-K', '10-Q', '10-K', 'S-1']) {
-      filings.push(...(yield* companyFilings(cik, form, 10)).filter(({ filed }) => filed >= since));
+      filings.push(...(yield* companyFilings(cik, form, since, 10)));
     }
     return filings.map((filing) =>
       Finance.makeObservation({
@@ -265,15 +300,53 @@ const ISSUERS = new Map(
 /** The known listing a 13F issuer name (`APPLE INC`, `ALPHABET INC CL A`) names, by normalized name. */
 export const tickerForIssuer = (name: string): string | undefined => ISSUERS.get(issuerKey(name));
 
-/** A 13F information table's rows: issuer, CUSIP, value (USD) and shares. */
-export const parseInfoTable = (xml: string): Array<{ issuer: string; cusip: string; value: number; shares: number }> =>
+/** One row of a 13F information table; `putCall` marks an option position on the issuer rather than its shares. */
+export type InfoTableRow = {
+  readonly issuer: string;
+  readonly cusip: string;
+  readonly value: number;
+  readonly shares: number;
+  readonly putCall?: 'put' | 'call';
+};
+
+const putCallOf = (value: unknown): 'put' | 'call' | undefined => {
+  const text = str(value)?.toLowerCase();
+  return text === 'put' || text === 'call' ? text : undefined;
+};
+
+/** A 13F information table's rows: issuer, CUSIP, value (USD), shares, and whether the row is a put or call. */
+export const parseInfoTable = (xml: string): InfoTableRow[] =>
   list(field(parser.parse(xml), 'informationTable', 'infoTable')).flatMap((row) => {
     const issuer = str(field(row, 'nameOfIssuer'));
     const cusip = str(field(row, 'cusip'));
     const value = num(field(row, 'value'));
     const shares = num(field(row, 'shrsOrPrnAmt', 'sshPrnamt'));
-    return issuer && cusip && value !== undefined && shares !== undefined ? [{ issuer, cusip, value, shares }] : [];
+    const putCall = putCallOf(field(row, 'putCall'));
+    return issuer && cusip && value !== undefined && shares !== undefined
+      ? [{ issuer, cusip, value, shares, ...(putCall ? { putCall } : {}) }]
+      : [];
   });
+
+/**
+ * The share positions of an information table, summed per CUSIP (a filer lists one issuer once per share class and
+ * manager), largest first: rows in a known listing plus the ten largest. Put and call rows are left out, since a
+ * holding states ownership of the shares and an option's notional is not that.
+ */
+export const shareHoldings = (rows: ReadonlyArray<InfoTableRow>): InfoTableRow[] => {
+  const byCusip = new Map<string, InfoTableRow>();
+  for (const row of rows) {
+    if (row.putCall) {
+      continue;
+    }
+    const previous = byCusip.get(row.cusip);
+    byCusip.set(
+      row.cusip,
+      previous ? { ...previous, value: previous.value + row.value, shares: previous.shares + row.shares } : row,
+    );
+  }
+  const ranked = [...byCusip.values()].sort((left, right) => right.value - left.value);
+  return ranked.filter((row, rank) => rank < 10 || tickerForIssuer(row.issuer) !== undefined);
+};
 
 /** Well-known 13F filers whose latest holdings are read. */
 export const FILERS: ReadonlyArray<{ readonly cik: string; readonly name: string }> = [
@@ -284,15 +357,15 @@ export const FILERS: ReadonlyArray<{ readonly cik: string; readonly name: string
 ];
 
 /**
- * A filer's latest 13F holdings: rows in a known listing, plus its ten largest positions. The rows of one filing share
- * its accession; a row's key adds its CUSIP.
+ * A filer's latest 13F share holdings ({@link shareHoldings}). The rows of one filing share its accession; a row's key
+ * adds its CUSIP.
  */
 export const latestHoldings = (filer: {
   cik: string;
   name: string;
 }): Effect.Effect<Finance.Observation[], SourceError> =>
   Effect.gen(function* () {
-    const [filing] = (yield* companyFilings(filer.cik, '13F-HR', 2)).filter(({ form }) => form === '13F-HR');
+    const [filing] = (yield* filingsPage(filer.cik, '13F-HR', 2)).filter(({ form }) => form === '13F-HR');
     if (!filing) {
       return [];
     }
@@ -301,18 +374,7 @@ export const latestHoldings = (filer: {
     if (!table) {
       return [];
     }
-    const rows = parseInfoTable(yield* secText(`${folder}/${table}`));
-    // A filer lists one issuer once per share class and manager; rows are summed per CUSIP.
-    const byCusip = new Map<string, { issuer: string; cusip: string; value: number; shares: number }>();
-    for (const row of rows) {
-      const previous = byCusip.get(row.cusip);
-      byCusip.set(
-        row.cusip,
-        previous ? { ...previous, value: previous.value + row.value, shares: previous.shares + row.shares } : row,
-      );
-    }
-    const ranked = [...byCusip.values()].sort((left, right) => right.value - left.value);
-    const kept = ranked.filter((row, rank) => rank < 10 || tickerForIssuer(row.issuer) !== undefined);
+    const kept = shareHoldings(parseInfoTable(yield* secText(`${folder}/${table}`)));
     return kept.map((row) => {
       const ticker = tickerForIssuer(row.issuer);
       return Finance.makeObservation({

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { deflateRawSync } from 'node:zlib';
 import { describe, expect, test } from 'vitest';
 
@@ -9,7 +10,15 @@ import { Obj } from '@dxos/echo';
 
 import { observationFacts } from '../pipeline/observation-facts.ts';
 import { MARKET, companyIri } from '../pipeline/vocabulary.ts';
-import { parseFilingFeed, parseForm4, parseInfoTable, tickerForIssuer } from './edgar.ts';
+import {
+  type FilingEntry,
+  collectFilings,
+  parseFilingFeed,
+  parseForm4,
+  parseInfoTable,
+  shareHoldings,
+  tickerForIssuer,
+} from './edgar.ts';
 import { parseHouseIndex, unzip } from './house.ts';
 import { parseChart, parseShortVolume } from './market-data.ts';
 
@@ -53,6 +62,19 @@ const INFO_TABLE = `<?xml version="1.0" encoding="UTF-8"?>
 <informationTable xmlns="http://www.sec.gov/edgar/document/thirteenf/informationtable">
   <infoTable><nameOfIssuer>APPLE INC</nameOfIssuer><cusip>037833100</cusip><value>60000000000</value><shrsOrPrnAmt><sshPrnamt>280000000</sshPrnamt></shrsOrPrnAmt></infoTable>
   <infoTable><nameOfIssuer>OCCIDENTAL PETE CORP</nameOfIssuer><cusip>674599105</cusip><value>12000000000</value><shrsOrPrnAmt><sshPrnamt>264000000</sshPrnamt></shrsOrPrnAmt></infoTable>
+</informationTable>`;
+
+const PREFIXED_INFO_TABLE = `<?xml version="1.0" encoding="UTF-8"?>
+<ns1:informationTable xmlns:ns1="http://www.sec.gov/edgar/document/thirteenf/informationtable">
+  <ns1:infoTable><ns1:nameOfIssuer>APPLE INC</ns1:nameOfIssuer><ns1:cusip>037833100</ns1:cusip><ns1:value>60000000000</ns1:value><ns1:shrsOrPrnAmt><ns1:sshPrnamt>280000000</ns1:sshPrnamt></ns1:shrsOrPrnAmt></ns1:infoTable>
+</ns1:informationTable>`;
+
+const OPTIONS_INFO_TABLE = `<?xml version="1.0" encoding="UTF-8"?>
+<informationTable xmlns="http://www.sec.gov/edgar/document/thirteenf/informationtable">
+  <infoTable><nameOfIssuer>APPLE INC</nameOfIssuer><cusip>037833100</cusip><value>1000</value><shrsOrPrnAmt><sshPrnamt>10</sshPrnamt></shrsOrPrnAmt></infoTable>
+  <infoTable><nameOfIssuer>APPLE INC</nameOfIssuer><cusip>037833100</cusip><value>500</value><shrsOrPrnAmt><sshPrnamt>5</sshPrnamt></shrsOrPrnAmt></infoTable>
+  <infoTable><nameOfIssuer>APPLE INC</nameOfIssuer><cusip>037833100</cusip><value>9000</value><shrsOrPrnAmt><sshPrnamt>90</sshPrnamt></shrsOrPrnAmt><putCall>Put</putCall></infoTable>
+  <infoTable><nameOfIssuer>APPLE INC</nameOfIssuer><cusip>037833100</cusip><value>7000</value><shrsOrPrnAmt><sshPrnamt>70</sshPrnamt></shrsOrPrnAmt><putCall>Call</putCall></infoTable>
 </informationTable>`;
 
 const CHART = JSON.stringify({
@@ -176,6 +198,64 @@ describe('SEC EDGAR', () => {
     expect(tickerForIssuer('BANK AMERICA CORP')).toBe('BAC');
     expect(tickerForIssuer('OCCIDENTAL PETE CORP')).toBeUndefined();
   });
+
+  test('13F rows of a namespace-prefixed information table', () => {
+    expect(parseInfoTable(PREFIXED_INFO_TABLE)).toEqual([
+      { issuer: 'APPLE INC', cusip: '037833100', value: 60000000000, shares: 280000000 },
+    ]);
+  });
+
+  test('13F put and call rows are told apart and left out of share holdings', () => {
+    const rows = parseInfoTable(OPTIONS_INFO_TABLE);
+    expect(rows.map(({ shares, putCall }) => [shares, putCall])).toEqual([
+      [10, undefined],
+      [5, undefined],
+      [90, 'put'],
+      [70, 'call'],
+    ]);
+    expect(shareHoldings(rows)).toEqual([{ issuer: 'APPLE INC', cusip: '037833100', value: 1500, shares: 15 }]);
+  });
+
+  test('a filing feed is paged until it reaches past the window', () => {
+    const entry = (filed: string, index: number): FilingEntry => ({
+      accession: `a-${index}`,
+      form: '4',
+      filed,
+      link: `https://www.sec.gov/${index}`,
+    });
+    const feed = ['2026-11-10', '2026-11-08', '2026-11-05', '2026-11-01', '2026-10-20', '2026-10-01'].map(entry);
+    const starts: number[] = [];
+    const filings = Effect.runSync(
+      collectFilings(
+        (start) =>
+          Effect.sync(() => {
+            starts.push(start);
+            return feed.slice(start, start + 2);
+          }),
+        '2026-11-01',
+        2,
+      ),
+    );
+    expect(filings.map(({ filed }) => filed)).toEqual(['2026-11-10', '2026-11-08', '2026-11-05', '2026-11-01']);
+    expect(starts).toEqual([0, 2, 4]);
+  });
+
+  test('a short page ends the feed', () => {
+    const starts: number[] = [];
+    const filings = Effect.runSync(
+      collectFilings(
+        (start) =>
+          Effect.sync(() => {
+            starts.push(start);
+            return start === 0 ? [{ accession: 'a', form: '4', filed: '2026-11-10', link: 'x' }] : [];
+          }),
+        '2026-01-01',
+        2,
+      ),
+    );
+    expect(filings).toHaveLength(1);
+    expect(starts).toEqual([0]);
+  });
 });
 
 describe('market data', () => {
@@ -192,6 +272,27 @@ describe('market data', () => {
     );
     // Deterministic: the same row writes the same statements.
     expect(observationFacts(bars[1]).map(({ id }) => id)).toEqual(facts.map(({ id }) => id));
+  });
+
+  test('the bar of a session still open is left out until it closes', () => {
+    // 2026-11-16 14:30 to 21:00 UTC.
+    const session = { start: 1794839400, end: 1794862800 };
+    const chart = JSON.stringify({
+      chart: {
+        result: [
+          {
+            meta: { currentTradingPeriod: { regular: session } },
+            timestamp: [1794753000, session.start],
+            indicators: {
+              quote: [{ open: [180, 182], high: [185, 186], low: [179, 180], close: [184, 183], volume: [1e6, 5e5] }],
+            },
+          },
+        ],
+      },
+    });
+    const dates = (now: number) => parseChart('AAPL', chart, now).map(({ date }) => date);
+    expect(dates((session.start + 3600) * 1000)).toEqual(['2026-11-15']);
+    expect(dates(session.end * 1000)).toEqual(['2026-11-15', '2026-11-16']);
   });
 
   test('FINRA short volume, kept for known listings', () => {

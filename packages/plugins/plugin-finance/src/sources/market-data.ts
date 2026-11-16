@@ -22,6 +22,11 @@ const Chart = Schema.Struct({
   chart: Schema.Struct({
     result: Schema.Array(
       Schema.Struct({
+        meta: Schema.Struct({
+          currentTradingPeriod: Schema.Struct({
+            regular: Schema.Struct({ start: Schema.Number, end: Schema.Number }),
+          }).pipe(Schema.optional),
+        }).pipe(Schema.optional),
         timestamp: Schema.Array(Schema.Number),
         indicators: Schema.Struct({
           quote: Schema.Array(
@@ -34,21 +39,24 @@ const Chart = Schema.Struct({
 });
 
 /**
- * Daily OHLCV bars from a chart response, with each bar's return on the previous close. Bars with no close (a halt,
- * today's unfinished session in some responses) are left out.
+ * Daily OHLCV bars from a chart response, with each bar's return on the previous close. Bars with no close (a halt)
+ * are left out, and so is the bar of a session still open at `now` (epoch ms): its close is the last trade, and rows
+ * are deduped on `ticker@date`, so storing it would keep the final close from ever replacing it.
  */
-export const parseChart = (ticker: string, json: string): Finance.Observation[] => {
+export const parseChart = (ticker: string, json: string, now = Date.now()): Finance.Observation[] => {
   const decoded = Schema.decodeUnknownSync(Schema.fromJsonString(Chart))(json);
   const [result] = decoded.chart.result;
   if (!result) {
     return [];
   }
   const [quote] = result.indicators.quote;
+  const session = result.meta?.currentTradingPeriod?.regular;
+  const isOpen = (time: number) => session !== undefined && time >= session.start && now < session.end * 1000;
   const observations: Finance.Observation[] = [];
   let previous: number | undefined;
   result.timestamp.forEach((time, index) => {
     const close = quote?.close[index];
-    if (close == null) {
+    if (close == null || isOpen(time)) {
       return;
     }
     const date = new Date(time * 1000).toISOString().slice(0, 10);
