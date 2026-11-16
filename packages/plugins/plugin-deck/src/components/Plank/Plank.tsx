@@ -10,7 +10,6 @@ import React, {
   forwardRef,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 
@@ -172,11 +171,18 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     // is never empty between two subjects. Dropping it leaves the editor and its toolbar out of the DOM for
     // the frames in between — measured at ~90ms, which is the flicker on every move between articles — and
     // tears down what was there, so what returns measures its container again from scratch.
-    const shownRef = useRef<{ key: string; data: AppSurface.ArticleData } | undefined>(undefined);
-    if (articleReady && node.data !== undefined) {
-      shownRef.current = { key: node.id, data };
-    }
-    const shown = articleReady && node.data !== undefined ? { key: node.id, data } : shownRef.current;
+    //
+    // Recorded after the commit, not during render: a render React discards never reaches the screen, and
+    // holding its article would show one that was never displayed.
+    const current = articleReady && node.data !== undefined ? { key: node.id, data } : undefined;
+    const [held, setHeld] = useState(current);
+    useEffect(() => {
+      if (current) {
+        setHeld((previous) => (previous?.key === current.key && previous.data === current.data ? previous : current));
+      }
+      // The identity of `current` changes with `data`, which is already memoized on what it is built from.
+    }, [current?.key, current?.data]);
+    const shown = current ?? held;
 
     // Anchor the sigil's popover only when this plank's menu is the active popover target.
     const ActionRoot = popoverAnchorId === `${DeckNamespace.key}:${node.id}` ? Popover.Anchor : Fragment;

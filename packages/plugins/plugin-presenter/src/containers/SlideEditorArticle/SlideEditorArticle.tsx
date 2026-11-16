@@ -295,11 +295,10 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
     onObjectsOpenChange: setObjectsOpen,
     onInsertObject: (id: string) =>
       apply((content, cursor) => insertSnippet(content, cursor, surfaceSnippet(EID.make({ entityId: id })))),
-    onPreviewModeChange: (previewMode: SlideEditorViewState.PreviewMode) => {
-      update((state) => ({ ...state, previewMode }));
-      // The preview is the editor's own pane now, so either mode closes the companion it used to open.
-      void invokePromise(LayoutOperation.UpdateCompanion, { subject: null, anchor: attendableId });
-    },
+    // The preview is the editor's own pane, so showing or hiding it says nothing about the plank's
+    // companion — which another tool may have opened, and which closing here would take with it.
+    onPreviewModeChange: (previewMode: SlideEditorViewState.PreviewMode) =>
+      update((state) => ({ ...state, previewMode })),
     onPrevious: position > 0 ? () => open(position - 1) : undefined,
     onNext: position >= 0 && position < slides.length - 1 ? () => open(position + 1) : undefined,
     onPresent:
