@@ -2,14 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 
 /**
  * Persistence backend identifier. `personal` (ECHO/personal-space) is reserved for a future backend.
  */
 export type BackendName = 'memory' | 'local';
+
+/**
+ * How a session following another takes the leader's values of an aspect: `write` sets them into its own view state,
+ * which the view already reads; `reveal` leaves them to the follow, for state a view reports but does not read back.
+ */
+export type FollowPolicy = 'write' | 'reveal';
 
 /**
  * Declares a kind of per-context UI state. The value type `T` and its persisted wire type `Encoded`
@@ -20,6 +27,12 @@ export interface Aspect<T, Encoded = T> {
   readonly backend: BackendName;
   readonly schema: Schema.Codec<T, Encoded>;
   readonly defaultValue: () => T;
+  /**
+   * Set for state a follower takes from the session it follows; contexts are then EIDs of the space or its objects.
+   * TODO(wittjosiah): Make following a view's scroll and camera automatic, or opt-out, rather than declared per aspect
+   *   and wired per renderer.
+   */
+  readonly follow?: FollowPolicy;
 }
 
 /**
@@ -66,6 +79,11 @@ export interface ManagerOptions {
 export class Manager {
   readonly #registry: Registry.AtomRegistry;
   readonly #backends: Record<BackendName, Backend>;
+  // Aspects are declared where they are used, so the manager learns them from the calls that pass them.
+  readonly #aspects = new Map<string, Aspect<any, any>>();
+  // A leader's encoded values of an aspect this session has not used yet, decoded when it first is.
+  readonly #pending = new Map<string, Map<string, unknown>>();
+  readonly #followListeners = new Set<(key: string, contextId: string) => void>();
 
   constructor({ registry, backends }: ManagerOptions) {
     this.#registry = registry;
@@ -74,6 +92,7 @@ export class Manager {
 
   /** Reactive atom for `(aspect, contextId)`; pass to `registry.get` inside derived atoms/hooks. */
   atom<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string): Atom.Writable<T> {
+    this.#learn(aspect);
     return this.#backends[aspect.backend].atom(aspect, contextId);
   }
 
@@ -83,8 +102,11 @@ export class Manager {
 
   set<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string, value: T): void {
     const backend = this.#backends[aspect.backend];
-    this.#registry.set(backend.atom(aspect, contextId), value);
+    this.#registry.set(this.atom(aspect, contextId), value);
     backend.persist?.(aspect, contextId, value);
+    if (aspect.follow) {
+      this.#followListeners.forEach((listener) => listener(aspect.key, contextId));
+    }
   }
 
   update<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string, fn: (prev: T) => T): void {
@@ -97,6 +119,73 @@ export class Manager {
   }
 
   contexts<T, Encoded>(aspect: Aspect<T, Encoded>): string[] {
+    this.#learn(aspect);
     return this.#backends[aspect.backend].contexts(aspect);
+  }
+
+  /** The aspect with `key`, once this session has used it. */
+  aspect(key: string): Aspect<unknown, unknown> | undefined {
+    return this.#aspects.get(key);
+  }
+
+  /** This session's values of every followed aspect it has used, encoded as JSON, by aspect key and then context. */
+  followed(contextIds: readonly string[]): Record<string, Record<string, Schema.Json>> {
+    return Object.fromEntries(
+      [...this.#aspects.values()].flatMap((aspect) => {
+        if (!aspect.follow) {
+          return [];
+        }
+        const held = new Set(this.contexts(aspect));
+        const encode = Schema.encodeUnknownOption(Schema.toCodecJson(aspect.schema));
+        const values = Object.fromEntries(
+          contextIds.flatMap((contextId) =>
+            held.has(contextId)
+              ? Option.match(encode(this.get(aspect, contextId)), {
+                  onNone: () => [],
+                  onSome: (json) => [[contextId, json]],
+                })
+              : [],
+          ),
+        );
+        return Object.keys(values).length > 0 ? [[aspect.key, values]] : [];
+      }),
+    );
+  }
+
+  /** Calls `listener` when a followed aspect's value is set. */
+  subscribeFollowed(listener: (key: string, contextId: string) => void): () => void {
+    this.#followListeners.add(listener);
+    return () => this.#followListeners.delete(listener);
+  }
+
+  /** Sets a leader's encoded value of a `write` aspect; one not used yet is held until it is, and one that does not decode is dropped. */
+  setEncoded(key: string, contextId: string, value: unknown): void {
+    const aspect = this.#aspects.get(key);
+    if (aspect) {
+      this.#decodeInto(aspect, contextId, value);
+    } else {
+      this.#pending.set(key, (this.#pending.get(key) ?? new Map()).set(contextId, value));
+    }
+  }
+
+  #learn(aspect: Aspect<any, any>): void {
+    if (this.#aspects.has(aspect.key)) {
+      return;
+    }
+    this.#aspects.set(aspect.key, aspect);
+    const pending = this.#pending.get(aspect.key);
+    this.#pending.delete(aspect.key);
+    pending?.forEach((value, contextId) => this.#decodeInto(aspect, contextId, value));
+  }
+
+  // Only a `write` aspect takes a leader's value; a `reveal` one is the follow's to apply.
+  #decodeInto(aspect: Aspect<any, any>, contextId: string, value: unknown): void {
+    if (aspect.follow !== 'write') {
+      return;
+    }
+    Option.match(Schema.decodeUnknownOption(Schema.toCodecJson(aspect.schema))(value), {
+      onNone: () => {},
+      onSome: (decoded) => this.set(aspect, contextId, decoded),
+    });
   }
 }

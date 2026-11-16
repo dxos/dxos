@@ -277,19 +277,25 @@ const pruneViewers = (viewersByObject: ViewersByObject, now: number): ViewersByO
     }),
   );
 
-/** Records the deck `peer`'s session reported in `spaceId`, replacing the one it reported before. */
+/** Records the deck `peer`'s session reported in `spaceId`, with its front plank, replacing the one it reported before. */
 export const applyPeerDeck = (
   peerDecks: PeerDecks,
-  spaceId: string,
+  spaceId: Key.SpaceId,
   peer: string,
-  { sessionId = peer, deck }: ViewingMessage,
-): PeerDecks =>
-  deck
-    ? {
-        ...peerDecks,
-        [spaceId]: { ...peerDecks[spaceId], [peer]: { ...peerDecks[spaceId]?.[peer], [sessionId]: deck } },
-      }
-    : peerDecks;
+  { sessionId = peer, deck, locations }: ViewingMessage,
+): PeerDecks => {
+  if (!deck) {
+    return peerDecks;
+  }
+  const front = locations[getPresenceKeyFromSpace(spaceId)]?.viewport;
+  return {
+    ...peerDecks,
+    [spaceId]: {
+      ...peerDecks[spaceId],
+      [peer]: { ...peerDecks[spaceId]?.[peer], [sessionId]: { ...deck, ...(front && { front }) } },
+    },
+  };
+};
 
 /** Records whom `peer`'s session follows in `spaceId`, or forgets it once the session's message names nobody. */
 export const applyPeerFollowing = (

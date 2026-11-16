@@ -463,7 +463,15 @@ decision D-25: A contributed kind keeps its own fields under its element's `data
 ```
 
 ```mdl
-decision D-26: The 2D `CanvasArticle` renders `CanvasCursors`: react-ui-attention's `RemoteCursorLayer` as the first viewport child, fed by `usePointerCursors` on the drawing's canvas object, with a projection that maps the layer's pixels to scene coordinates through the canvas camera atom (`sceneToScreen`, `screenToScene`). A pointer carries the drilled-in view path, and peers filter by it. Extends [org.dxos.plugin.illustrator#D-5] to the Canvas variant.
+decision D-26: The 2D article takes the drawing's camera: one that changes while it is open moves this viewer's camera, which the engine applies as it changes, not only on open, and every camera the viewer settles on is reported back to the drawing. Fills in org.dxos.plugin.illustrator#D-8.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [CanvasArticle]
+  why: A follower's canvas has to move with the leader's.
+```
+
+```mdl
+decision D-27: The 2D `CanvasArticle` renders `CanvasCursors`: react-ui-attention's `RemoteCursorLayer` as the first viewport child, fed by `usePointerCursors` on the drawing's canvas object, with a projection that maps the layer's pixels to scene coordinates through the canvas camera atom (`sceneToScreen`, `screenToScene`). A pointer carries the drilled-in view path, and peers filter by it. Extends [org.dxos.plugin.illustrator#D-5] to the Canvas variant.
   date: 2026-11-14
   by: agent:claude-code
   for: user:wittjosiah
@@ -474,7 +482,7 @@ decision D-26: The 2D `CanvasArticle` renders `CanvasCursors`: react-ui-attentio
 ```
 
 ```mdl
-decision D-27: A drawing's presence location and `Locator` anchor are the 2D view's centre in scene coordinates and its zoom. The article reports it through the attention view state and shows a revealed one through `ScrollToAnchor`, which the article applies at its own size.
+decision D-28: A drawing's presence location and `Locator` anchor are the 2D view's centre in scene coordinates and its zoom. The article reports it through the attention view state and shows a revealed one through `ScrollToAnchor`, which the article applies at its own size.
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
@@ -485,7 +493,7 @@ decision D-27: A drawing's presence location and `Locator` anchor are the 2D vie
 ```
 
 ```mdl
-decision D-28: `CanvasFrame` renders the article's editor parts (`SceneEditorParts`, shared with `CanvasArticle`) over an empty in-memory scene, with the node registry built from the plugin's own `NodeType` contributions and no-op handlers wherever a handler decides whether a control shows. Fills in [F-2.1].
+decision D-29: `CanvasFrame` renders the article's editor parts (`SceneEditorParts`, shared with `CanvasArticle`) over an empty in-memory scene, with the node registry built from the plugin's own `NodeType` contributions and no-op handlers wherever a handler decides whether a control shows. Fills in [F-2.1].
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah

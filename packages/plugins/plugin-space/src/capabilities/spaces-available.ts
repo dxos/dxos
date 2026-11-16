@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -28,7 +29,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { unpackJson } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ViewLocation } from '@dxos/react-ui-attention/types';
-import { type JsonValue } from '@dxos/util';
+import { type JsonValue, isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities, type SpaceSchema } from '#types';
 
@@ -115,17 +116,21 @@ const awaitChange = (client: Client, settingsSpace: Space | undefined): Effect.E
     });
   });
 
+const toJsonValue = (json: Schema.Json): JsonValue =>
+  json === null || typeof json !== 'object'
+    ? json
+    : Array.isArray(json)
+      ? json.map(toJsonValue)
+      : Object.fromEntries(Object.entries(json).map(([key, value]) => [key, toJsonValue(value)]));
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const capabilities = yield* Capability.Service;
     const { invoke } = yield* Capabilities.OperationInvoker;
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
-    // Followables may contribute after this module.
-    const followablesAtom = capabilities.atom(AppCapabilities.Followable);
     const attention = yield* AttentionCapabilities.Attention;
     const viewState = yield* AttentionCapabilities.ViewState;
     const stateAtom = yield* SpaceCapabilities.State;
@@ -282,7 +287,15 @@ export default Capability.makeModule(
       const departed = previousActive.filter((id) => !active.includes(id));
       const inactive = [...layout.inactive, ...departed];
       previousActive = active;
-      const locationKeys = [...new Set([...current, ...active].flatMap((path) => getPresenceKeyFromPath(path) ?? []))];
+      // The space's own location is the deck's front plank there.
+      const locationKeys = [
+        ...new Set(
+          [...current, ...active].flatMap((path) => {
+            const spaceId = GraphPath.getSpaceIdFromPath(path);
+            return [getPresenceKeyFromPath(path), spaceId && EID.make({ spaceId })].filter(isNonNullable);
+          }),
+        ),
+      ];
 
       // Followed view state is read for each space and each object open in it, by their EIDs.
       const viewStateContexts = new Map<string, EID.EID[]>(
@@ -299,13 +312,19 @@ export default Capability.makeModule(
           ]),
       );
       const getViewState = (spaceId: string): { viewState?: Record<string, Record<string, JsonValue>> } => {
-        const aspects = Object.fromEntries(
-          registry.get(followablesAtom).flatMap((followable) => {
-            const values = followable.read(viewState, viewStateContexts.get(spaceId) ?? []);
-            return Object.keys(values).length > 0 ? [[followable.key, values]] : [];
-          }),
-        );
-        return Object.keys(aspects).length > 0 ? { viewState: aspects } : {};
+        const followed = Object.entries(viewState.followed(viewStateContexts.get(spaceId) ?? []));
+        return followed.length > 0
+          ? {
+              viewState: Object.fromEntries(
+                followed.map(([key, values]) => [
+                  key,
+                  Object.fromEntries(
+                    Object.entries(values).map(([contextId, value]) => [contextId, toJsonValue(value)]),
+                  ),
+                ]),
+              ),
+            }
+          : {};
       };
 
       const send = (spaceIds?: ReadonlySet<string>) => {
@@ -329,7 +348,7 @@ export default Capability.makeModule(
                 added,
                 removed,
                 // Every plank's, so a follower mirroring this deck scrolls each of them, not only the attended one.
-                locations: getLocations([...new Set([...attended, ...added])]),
+                locations: getLocations([...new Set([...attended, ...added, EID.make({ spaceId: space.id })])]),
                 ...(following?.spaceId === space.id && {
                   following: {
                     identityKey: following.identityKey,
@@ -367,19 +386,21 @@ export default Capability.makeModule(
       const locationSubscriptions = locationKeys.map((key) =>
         viewState.subscribe(ViewLocation.aspect, key, () => locationScheduler.schedule(key)),
       );
-      const viewStateSubscriptions = [...viewStateContexts].flatMap(([spaceId, contextIds]) =>
-        registry
-          .get(followablesAtom)
-          .flatMap((followable) =>
-            contextIds.map((contextId) => followable.subscribe(viewState, contextId, () => sends.schedule([spaceId]))),
-          ),
-      );
+      const unsubscribeViewState = viewState.subscribeFollowed((_, contextId) => {
+        if (!EID.isEID(contextId)) {
+          return;
+        }
+        const spaceId = EID.getSpaceId(contextId);
+        if (spaceId && viewStateContexts.get(spaceId)?.includes(contextId)) {
+          sends.schedule([spaceId]);
+        }
+      });
 
       return () => {
         clearInterval(interval);
         sends.dispose();
         locationSubscriptions.forEach((unsubscribe) => unsubscribe());
-        viewStateSubscriptions.forEach((unsubscribe) => unsubscribe());
+        unsubscribeViewState();
       };
     };
     // A send reads atoms whose first build notifies the subscriptions below, which set the broadcast up again.
@@ -387,8 +408,6 @@ export default Capability.makeModule(
 
     // Subscribe to layout changes for broadcast.
     subscriptions.add(registry.subscribe(layoutAtom, broadcast.restart));
-    // A followable contributed later is sent, and watched, from then on.
-    subscriptions.add(registry.subscribe(followablesAtom, broadcast.restart));
     // Subscribe to attention.current changes.
     subscriptions.add(attention.subscribeCurrent(broadcast.restart));
     // Starting, retargeting or stopping a follow tells the space at once, so the leader's rate changes with it.

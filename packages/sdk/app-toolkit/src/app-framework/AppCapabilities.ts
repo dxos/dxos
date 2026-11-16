@@ -7,10 +7,8 @@
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
-import * as Option$ from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema$ from 'effect/Schema';
-import type * as Scope$ from 'effect/Scope';
 
 import type { OpaqueToolkit, AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
@@ -26,14 +24,12 @@ import type { Database, Obj, Ref, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
-import { type EID, type URI } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
-import { type ViewState } from '@dxos/react-ui-attention/types';
-import type { Selection } from '@dxos/react-ui-attention/types';
+import { type Selection, ViewState } from '@dxos/react-ui-attention/types';
 import type { AnchoredTo, Message, Thread } from '@dxos/types';
 import { type ChromaticPalette } from '@dxos/ui-types';
-import { type JsonValue } from '@dxos/util';
 import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -102,106 +98,30 @@ export const LayoutAccent = Capability$.make<Atom.Atom<ChromaticPalette | undefi
   'org.dxos.app-framework.capability.layoutAccent',
 );
 
-/** How long what a follow opens has to mount; it is applied again on every update of the {@link FollowView} meanwhile. */
+/** How long what a follow opens has to mount; the follow applies it again on every update meanwhile. */
 export const FOLLOW_MOUNT_TIMEOUT = 5_000;
 
-/** What a follower shows of the session it follows, as handed to a {@link Followable}'s `follow`. */
-export type FollowView<T = unknown> = Readonly<{
-  /** When the follow last updated the view; it advances on every tick, so a `follow` needs no timer of its own. */
-  now: number;
-  spaceId: string;
-  /** The leader's open items in the space, in order. */
-  active: readonly string[];
-  /**
-   * The object the leader attends; the path they have it open at, when they reported one; and the path this session
-   * opens it at itself, absent while it cannot load the object yet.
-   */
-  attended: Readonly<{ key: EID.EID; path?: string; localPath?: string }>;
-  /** The leader's values of the followed view state, by context: the EID of the space or of an object they show. */
-  values: Readonly<Record<string, T>>;
-}>;
+const CompanionsState = Schema$.Struct({
+  /** The planks in the space whose companion is open. */
+  planks: Schema$.Array(Schema$.String),
+  /** The companion tab they show. */
+  variant: Schema$.optional(Schema$.String),
+});
+
+export type Companions = Schema$.Schema.Type<typeof CompanionsState>;
 
 /**
- * View state a follower takes from the session it follows. Presence sends this session's values of the aspect for the
- * space and each object open in it, keyed by their EIDs; a follower writes the leader's into its own view state, or
- * hands them to `follow` when merely writing them would not show the leader's view. Made with {@link makeFollowable}.
+ * The companions the layout shows in a space, keyed by the space's EID. The layout reports them and a follower opens the
+ * same through `LayoutOperation.UpdateCompanion`.
  */
-export type Followable = Readonly<{
-  /** The aspect's key; a follower takes a leader's values only for a followable with the same key. */
-  key: string;
-  /** Whether its `follow` opens what the leader shows; with no such followable the follower opens the attended object. */
-  navigates?: boolean;
-  /** This session's values for the given contexts, encoded as JSON, leaving out those it has not set. */
-  read: (viewState: ViewState.Manager, contextIds: readonly string[]) => Record<string, JsonValue>;
-  subscribe: (viewState: ViewState.Manager, contextId: string, onChange: () => void) => () => void;
-  /** Writes a leader's encoded value into this session's view state; one that does not decode is dropped. */
-  write: (viewState: ViewState.Manager, contextId: string, value: unknown) => void;
-  /**
-   * Applies the leader's view until the scope closes, without moving focus or the caret, in place of writing their
-   * values. The returned atom holds whether it shows the view; any followable holding false pauses the follow. It runs
-   * synchronously when the follow starts, so the effect must not suspend: fork any asynchronous work into the scope.
-   */
-  follow?: (view: Atom.Atom<FollowView>) => Effect$.Effect<Atom.Atom<boolean>, never, Scope$.Scope>;
-}>;
-
-const toJsonValue = (json: Schema$.Json): JsonValue =>
-  json === null || typeof json !== 'object'
-    ? json
-    : Array.isArray(json)
-      ? json.map(toJsonValue)
-      : Object.fromEntries(Object.entries(json).map(([key, value]) => [key, toJsonValue(value)]));
-
-/** Makes view state followable: a follower takes the leader's values of `aspect`, or `follow` applies them. */
-export const makeFollowable = <T, Encoded>({
-  aspect,
-  navigates,
-  follow,
-}: {
-  aspect: ViewState.Aspect<T, Encoded>;
-  navigates?: boolean;
-  follow?: (view: Atom.Atom<FollowView<T>>) => Effect$.Effect<Atom.Atom<boolean>, never, Scope$.Scope>;
-}): Followable => {
-  const codec = Schema$.toCodecJson(aspect.schema);
-  const encode = Schema$.encodeUnknownOption(codec);
-  const decode = Schema$.decodeUnknownOption(codec);
-  const decodeValues = (values: Readonly<Record<string, unknown>>): Record<string, T> =>
-    Object.fromEntries(
-      Object.entries(values).flatMap(([contextId, value]) =>
-        Option$.match(decode(value), { onNone: () => [], onSome: (decoded) => [[contextId, decoded]] }),
-      ),
-    );
-  return {
-    key: aspect.key,
-    ...(navigates && { navigates }),
-    read: (viewState, contextIds) => {
-      const set = new Set(viewState.contexts(aspect));
-      return Object.fromEntries(
-        contextIds.flatMap((contextId) =>
-          set.has(contextId)
-            ? Option$.match(encode(viewState.get(aspect, contextId)), {
-                onNone: () => [],
-                onSome: (json) => [[contextId, toJsonValue(json)]],
-              })
-            : [],
-        ),
-      );
-    },
-    subscribe: (viewState, contextId, onChange) => viewState.subscribe(aspect, contextId, onChange),
-    write: (viewState, contextId, value) =>
-      Option$.match(decode(value), {
-        onNone: () => {},
-        onSome: (decoded) => viewState.set(aspect, contextId, decoded),
-      }),
-    ...(follow && {
-      follow: (view) => follow(Atom.map(view, (current) => ({ ...current, values: decodeValues(current.values) }))),
-    }),
-  };
-};
-
-/**
- * @category Capability
- */
-export const Followable = Capability$.make<Followable>()('org.dxos.app-framework.capability.followable');
+// TODO(follow): Consider making this the layout's source of truth for open companions, so it need not be kept in step.
+export const Companions: ViewState.Aspect<Companions> = ViewState.define({
+  key: 'org.dxos.app-framework.companions',
+  backend: 'memory',
+  schema: CompanionsState,
+  defaultValue: () => ({ planks: [] }),
+  follow: 'reveal',
+});
 
 /**
  * @category Capability

@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -25,6 +25,9 @@ import { useCanvasProperties } from './use-canvas-properties.ts';
 import { createGeneratorWorker, useCanvasGenerators, useCanvasKinds, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
+const sameCamera = (left: Camera, right: Camera) =>
+  left.x === right.x && left.y === right.y && left.zoom === right.zoom;
+
 /** The camera a 2D viewer's camera bar resets to: the scene's origin at 1:1. */
 export const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
 
@@ -40,7 +43,11 @@ const DEFAULT_GRID_KIND = 'lines';
  * (`constrain2D`), with the canvas's node types and generators; the look and grid are the drawing's, snapping, guides, axes and the camera this
  * viewer's own.
  */
-export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Camera> => {
+export const useDimension2D = (
+  canvas: CanvasFormat.Canvas,
+  hostCamera?: Camera,
+  onHostCameraChange?: (camera: Camera) => void,
+): SceneDimension<Camera> => {
   const [snapshot] = useObject(canvas);
   const settings = snapshot.settings;
   const handleSettingsChange = useCallback(
@@ -101,9 +108,18 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
   const { camera, grid: snap, guides, axes } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   const onCameraChange = useCallback(
-    (next: Camera) => updateViewState((state) => ({ ...state, camera: next })),
-    [updateViewState],
+    (next: Camera) => {
+      updateViewState((state) => ({ ...state, camera: next }));
+      onHostCameraChange?.(next);
+    },
+    [updateViewState, onHostCameraChange],
   );
+  // The drawing's camera (a followed session's) moves this viewer's; the engine applies it as it changes.
+  useEffect(() => {
+    if (hostCamera && !(camera && sameCamera(camera, hostCamera))) {
+      updateViewState((state) => ({ ...state, camera: hostCamera }));
+    }
+  }, [hostCamera]);
   // A drawing may name a theme by an id since renamed; the picker marks it by its current one.
   const theme = currentLookId('themes', settings?.theme);
   const backgroundGrid = settings?.backgroundGrid ?? 'none';
