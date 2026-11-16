@@ -363,6 +363,40 @@ describe('EdgeAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
+  it.live('stops a bounded turn at its deadline, leaves it open, and finishes it on the next call', () =>
+    Effect.gen(function* () {
+      const { feed, chat, edge, options } = yield* setup((turnId) => [text(turnId, 'working')]);
+      const first = yield* EdgeAgent.runTurnUntil(
+        options,
+        { chat, feed },
+        { prompt: 'work in steps' },
+        Date.now() + 300,
+      );
+      expect(first).toEqual({ done: false });
+      // Still recorded for pick-up, and not cancelled on EDGE.
+      const [recorded] = Obj.getKeys(chat, EdgeAgent.turnKeySource('edge'));
+      expect(recorded).toBeDefined();
+      const turnId = recorded.id.split(':')[0];
+      expect(edge.inputs).not.toContainEqual({ _tag: 'cancel' });
+
+      edge.emit(text(turnId, 'done working'), { _tag: 'turn-end', turnId, stopReason: 'end_turn' });
+      const second = yield* EdgeAgent.runTurnUntil(
+        options,
+        { chat, feed },
+        { prompt: 'work in steps' },
+        Date.now() + 60_000,
+      );
+      expect(second.done).toBe(true);
+      expect(yield* transcript(feed)).toEqual([
+        ['user', 'text:work in steps'],
+        // Text streamed on either side of the stop is one message, neither lost nor repeated.
+        ['assistant', 'text:workingdone working'],
+        ['assistant', 'stats'],
+      ]);
+      expect(Obj.getKeys(chat, EdgeAgent.turnKeySource('edge'))).toEqual([]);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
   it.live("checks out the project's repositories in their order, then the chat's, each once", () =>
     Effect.gen(function* () {
       const { feed, chat, edge, options } = yield* setup((turnId) => [

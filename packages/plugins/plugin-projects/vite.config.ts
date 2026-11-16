@@ -25,6 +25,7 @@ export default defineConfig({
     'LegacyProject': 'src/types/LegacyProject.ts',
     'ProjectCapabilities': 'src/types/ProjectCapabilities.ts',
     'ProjectMailboxOperation': 'src/types/ProjectMailboxOperation.ts',
+    'Delegation': 'src/operations/Delegation.ts',
     'ProjectOperation': 'src/types/ProjectOperation.ts',
     'ProjectSurface': 'src/types/ProjectSurface.ts',
     'ProjectView': 'src/types/ProjectView.ts',

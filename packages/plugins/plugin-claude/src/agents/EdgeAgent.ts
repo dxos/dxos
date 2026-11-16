@@ -11,28 +11,22 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/reactivity/Atom';
 import type * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
-import * as Capability from '@dxos/app-framework/Capability';
 import { AiAssistantError, AiContext, type Chat, TrajectoryStore } from '@dxos/assistant';
-import { type Client } from '@dxos/client';
-import { type RemoteProcessManager, accessTokenResolverFromEdge } from '@dxos/compute-runtime';
+import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import { Annotation, Database, Feed, Obj, Query } from '@dxos/echo';
-import { EdgeProcessControl } from '@dxos/edge-compute';
-import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import type * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import { isManagedAccessToken } from '@dxos/protocols';
 import { type ContentBlock, Message, Repo } from '@dxos/types';
 
@@ -75,58 +69,6 @@ export type Definition = {
   credentials: Effect.Effect<Record<string, string>, never, Database.Service | Credential.AccessTokenResolver>;
 };
 
-/**
- * A coding agent EDGE runs in a sandbox container (compute-service's coding-agent process), as the
- * agent-registry entry a plugin contributes. The session lives on EDGE: it keeps working with no client
- * connected, and EDGE restarts the container and resumes the turn when the agent dies or stalls. A turn
- * here submits the prompt and folds the process's outputs into the chat as they arrive.
- */
-export const make = (
-  definition: Definition,
-): Effect.Effect<AssistantCapabilities.Agent, never, Scope.Scope | Capability.Service> =>
-  Effect.gen(function* () {
-    const manager = yield* Capability.Service;
-    let cached: { client: Client; control: ProcessControl } | undefined;
-    const control = (): ProcessControl | undefined => {
-      const client = manager.getAll(ClientCapabilities.Client).at(0);
-      if (!client) {
-        return undefined;
-      }
-      if (cached?.client !== client) {
-        cached = { client, control: fromRemoteControl(EdgeProcessControl.fromClient(client)) };
-      }
-      return cached.control;
-    };
-
-    // Resolves a token EDGE custodies (the GitHub App's) through the signed-in client.
-    const accessTokens = accessTokenResolverFromEdge(() => {
-      const client = manager.getAll(ClientCapabilities.Client).at(0);
-      invariant(client, 'no client to resolve the access token through');
-      return client.edge.http;
-    });
-
-    // Lent to every turn so the agent reaches the space through Composer's MCP server, as the signed-in identity.
-    const composerMcp = composerMcpCredentials(() => manager.getAll(ClientCapabilities.IdentityService).at(0));
-
-    const options: Options = { definition, control, accessTokens, composerMcp };
-    return {
-      id: definition.id,
-      label: definition.label,
-      icon: definition.icon,
-      availability: Atom.make<AssistantCapabilities.AgentAvailability>({ available: true }),
-      makeTurnProducer: makeTurnProducer(options),
-      respond: (response) =>
-        respond(options, response).pipe(
-          Effect.catch((error) =>
-            Effect.sync(() => {
-              log.warn('request not answered', { chat: response.chat.id, error });
-              return false;
-            }),
-          ),
-        ),
-    } satisfies AssistantCapabilities.Agent;
-  });
-
 /** What a turn needs of EDGE's process routes: the verbs it calls, and the process's RPC group. */
 export type ProcessControl = Pick<RemoteProcessManager.Control, 'spawn' | 'submitInput' | 'readEvents'> & {
   readonly rpc: (
@@ -134,7 +76,9 @@ export type ProcessControl = Pick<RemoteProcessManager.Control, 'spawn' | 'submi
   ) => Effect.Effect<RpcClient.RpcClient<EdgeProtocol.ControlRpcs>, never, Scope.Scope>;
 };
 
-export const fromRemoteControl = (control: RemoteProcessManager.Control): ProcessControl => ({
+export const fromRemoteControl = (
+  control: Pick<RemoteProcessManager.Control, 'spawn' | 'submitInput' | 'readEvents' | 'makeRpcClient'>,
+): ProcessControl => ({
   spawn: (request) => control.spawn(request),
   submitInput: (request) => control.submitInput(request),
   readEvents: (request) => control.readEvents(request),
@@ -153,7 +97,7 @@ export type Options = {
 /** The chat's process, and where to reach it. */
 type Target = { control: ProcessControl; spaceId: SpaceId; pid: Process.ID };
 
-const makeTurnProducer =
+export const makeTurnProducer =
   (options: Options): MakeTurnProducer =>
   ({ chat, feed }) =>
     Effect.succeed({
@@ -168,9 +112,29 @@ const makeTurnProducer =
 /** One turn of the EDGE agent against a chat. */
 export const runTurn = (
   options: Options,
-  { chat, feed }: { chat: Chat.Chat; feed: Feed.Feed },
+  context: { chat: Chat.Chat; feed: Feed.Feed },
   request: TurnRequest,
 ): Effect.Effect<Message.Message[], AgentError, Database.Service | Trace.TraceService> =>
+  runTurnUntil(options, context, request).pipe(
+    Effect.flatMap((progress) =>
+      progress.done ? Effect.succeed(progress.messages) : Effect.die('a turn with no deadline stopped early'),
+    ),
+  );
+
+/** How far a bounded turn got: finished, or still running on EDGE and recorded for the next call to pick up. */
+export type TurnProgress = { done: true; messages: Message.Message[] } | { done: false };
+
+/**
+ * A turn that stops folding at `deadline` (epoch ms) while the agent works on, so a caller with a bounded run
+ * time, such as an operation on EDGE, folds it in steps. A stop leaves the turn open and recorded, and the next
+ * call with the same prompt picks it up where it is.
+ */
+export const runTurnUntil = (
+  options: Options,
+  { chat, feed }: { chat: Chat.Chat; feed: Feed.Feed },
+  request: TurnRequest,
+  deadline?: number,
+): Effect.Effect<TurnProgress, AgentError, Database.Service | Trace.TraceService> =>
   Effect.gen(function* () {
     const started = Date.now();
     const target = yield* ensureProcess(options, chat);
@@ -331,7 +295,7 @@ export const runTurn = (
         }
         const output = Schema.decodeUnknownOption(EdgeProtocol.Output)(event.data);
         if (Option.isSome(output) && (yield* handle(output.value))) {
-          return produced;
+          return { done: true, messages: produced } satisfies TurnProgress;
         }
       }
       if (ENDED.has(page.snapshot.state)) {
@@ -339,13 +303,19 @@ export const runTurn = (
           new AgentError({ message: `The agent's process ended (${page.snapshot.state.toLowerCase()}).` }),
         );
       }
+      if (deadline !== undefined && Date.now() >= deadline) {
+        return { done: false } satisfies TurnProgress;
+      }
       yield* Effect.sleep(POLL_INTERVAL);
     }
   }).pipe(
     Effect.scoped,
-    // However this client sees the turn end, it closes into the conversation.
+    // However this client sees the turn end, it closes into the conversation; a turn stopped at its deadline has not ended.
     Effect.onExit((exit) =>
       Effect.gen(function* () {
+        if (Exit.isSuccess(exit) && !exit.value.done) {
+          return;
+        }
         const turnId = pendingTurnOf(chat, options.definition.id)?.turnId;
         const feed = turnId !== undefined ? yield* Database.load(chat.feed).pipe(Effect.option) : Option.none();
         const thread =
@@ -359,8 +329,10 @@ export const runTurn = (
     ),
     // However this client sees the turn end, nothing is left to pick up; only a client that vanished
     // mid-turn, which runs no finalizer, leaves the record behind.
-    Effect.ensuring(
-      Effect.sync(() => Obj.update(chat, (chat) => Obj.deleteKeys(chat, turnKeySource(options.definition.id)))),
+    Effect.onExit((exit) =>
+      Exit.isSuccess(exit) && !exit.value.done
+        ? Effect.void
+        : Effect.sync(() => Obj.update(chat, (chat) => Obj.deleteKeys(chat, turnKeySource(options.definition.id)))),
     ),
     // Interrupting the turn cancels it on EDGE; the session stays.
     Effect.onInterrupt(() =>
@@ -376,7 +348,7 @@ export const runTurn = (
   );
 
 /** Answers a request block the agent parked: hands the choice to EDGE, then records it. */
-const respond = (
+export const respond = (
   options: Options,
   { chat, message, requestId, optionId }: AssistantCapabilities.AgentResponse,
 ): Effect.Effect<boolean, AgentError, Database.Service> =>
@@ -603,6 +575,9 @@ type PendingTurn = { turnId: string; cursor: number; folded: number };
 const encodePendingTurn = ({ turnId, cursor, folded }: PendingTurn): string => `${turnId}:${cursor}:${folded}`;
 
 /** The turn the chat recorded as still running on EDGE, if a client closed before it ended. */
+/** Whether a turn some caller started is still open on the chat, for a later call to fold. */
+export const hasPendingTurn = (chat: Chat.Chat, agent: string): boolean => pendingTurnOf(chat, agent) !== undefined;
+
 const pendingTurnOf = (chat: Chat.Chat, agent: string): PendingTurn | undefined => {
   const id = Obj.getKeys(chat, turnKeySource(agent)).at(-1)?.id;
   const [turnId, cursor, folded] = id?.split(':') ?? [];

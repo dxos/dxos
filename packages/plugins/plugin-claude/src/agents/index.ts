@@ -6,4 +6,5 @@ export * as AcpAgent from './AcpAgent.ts';
 export * as CodeAgent from './CodeAgent.ts';
 export * as ComposerMcp from './ComposerMcp.ts';
 export * as EdgeAgent from './EdgeAgent.ts';
+export * as EdgeAgentClient from './EdgeAgentClient.ts';
 export * as HelperClient from './HelperClient.ts';

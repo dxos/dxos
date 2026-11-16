@@ -55,10 +55,20 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
       `OPERATION_ROUTING=plugins`. Two writes hit the client's 60 s limit yet landed. Signoz has no
       dev spans over 5 s, so it is not traced there. Matters for the loop: the coding agent marks
       tasks over the same MCP.
-- [ ] Starting an EDGE run needs a Composer client (`DelegateTaskToChat` uses Capability and
-      AgentService; spawn and every turn are client calls). An MCP-started or server-driven run is
-      the next structural gap.
-- [ ] Link the PR back to the task without relying on the agent calling MCP.
+- [x] Starting an EDGE run needs a Composer client. Now: `claude.startCloudRun` / `claude.syncCloudRun`
+      (Cloud Coding skill, `/cloudCoding`, served over MCP) start and follow a run from an operation on
+      EDGE — compute-service serves `CodingAgentControl` to plugin bundles (edge branch
+      claude/composer-coding-lz1sx2), `EdgeAgent.runTurnUntil` folds in bounded steps, delegation's
+      host-neutral half is `@dxos/plugin-projects/Delegation`, and plugin-claude ships as an EDGE plugin.
+- [ ] In-worker test for `CodingAgentControl` scoping (other space / other process key refused): needs
+      an edge test-plugin operation that calls the host service.
+- [ ] Server-started runs lend no Composer MCP token (needs a hub mint RPC bound to the caller), so
+      the agent cannot update its tasks itself; `syncCloudRun` attaches the PRs instead.
+- [ ] Sync must be driven by the caller (MCP client) today; a timer trigger per run would make it
+      autonomous.
+- [ ] The space's GitHub token is a `ghu_` GitHub App user token (expires ~8 h): long runs may lose push.
+- [x] Link the PR back to the task without relying on the agent calling MCP — `syncCloudRun` imports
+      each PR URL the agent wrote, attaches it to the run's tasks and moves them to review.
 - [ ] Remote permissions, MCP and shell e2e tests are `todo` placeholders.
 - [ ] sandbox-service runs `noAuth: true` (pending dxos#13056).
 

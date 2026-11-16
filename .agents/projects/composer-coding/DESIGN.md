@@ -62,3 +62,25 @@ the task's repositories, and the result is a pull request attached to the task.
 - 2026-11-16: a dev deploy dispatched with `app: composer` still runs the Tauri jobs: desktop and
   iOS builds go to CrabNebula's dev channel and iOS is uploaded to App Store Connect (run 815: the
   build passed, the App Store Connect upload failed). Redeploy dev only when the web app needs it.
+
+## Server-started runs (in progress)
+
+A run must start without a Composer client: from an MCP client or from EDGE. Nothing connects an
+EDGE operation to the coding-agent process today, and the client is the only writer of the chat
+feed. Design:
+
+1. `EdgeAgent.runTurn` splits into `startTurn` (ensure process, lend credentials, post prompt,
+   record the pending turn, submit) and `foldTurn({ deadline })` (fold output into the feed; at the
+   deadline return `done: false` and keep the pending key). `runTurn` = start + fold, unchanged.
+2. edge compute-service: a `PROCESS_CONTROL` host service for plugin bundles (spawn, submitInput,
+   readEvents, rpc), pinned to the invocation's space and to the coding-agent process key.
+3. plugin-claude: `org.dxos.operation.claude.startEdgeRun { chat, prompt? }`, which starts the turn
+   and folds for ~8 minutes, rescheduling itself until the turn ends (invocations cap at 10 min).
+4. Delegation over MCP: a project-skill verb that does what `DelegateTaskToChat` does for the
+   `claude-code-edge` harness without the client-only pieces, then invokes `startEdgeRun`.
+5. PR linking on the server: the fold step finds pull request URLs in the agent's output, imports
+   them and attaches each to the delegated task — the agent no longer has to remember.
+
+Deferred: Composer MCP credentials for server-started runs (needs a hub `mintApiToken` RPC bound to
+the caller; a security-review item). Without them the agent cannot update tasks itself; step 5
+covers the PR link.

@@ -3,3 +3,4 @@
 //
 
 export * as ClaudeSkill from './ClaudeSkill.ts';
+export * as CloudCodingSkill from './CloudCodingSkill.ts';

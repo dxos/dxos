@@ -3,6 +3,7 @@
 //
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
@@ -63,6 +64,16 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: AppActivationEvents.AssistantStart,
       },
       () => import('./src/capabilities/claude-code-edge-agent.ts', { with: { type: 'module-url' } }),
+    ),
+    // EDGE serves coding-agent control to the cloud coding run's operations as plain data.
+    Capability.lazyModule(
+      'CodingAgentControl',
+      {
+        provides: [Capabilities.HostServiceAdapter],
+        activatesOn: ActivationEvents.Startup,
+        environments: ['workerd'],
+      },
+      () => import('./src/capabilities/coding-agent-control.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'ClaudeCodeConnector',

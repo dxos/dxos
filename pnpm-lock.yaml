@@ -10608,6 +10608,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
+      '@dxos/plugin-github':
+        specifier: workspace:*
+        version: link:../plugin-github
       '@dxos/plugin-projects':
         specifier: workspace:*
         version: link:../plugin-projects
