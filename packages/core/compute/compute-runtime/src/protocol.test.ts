@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
@@ -14,14 +13,22 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
 import { Database, Filter, Hypergraph, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
+import { DatabaseImpl } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
-import { type EdgeFunctionEnv, type FunctionProtocol, type WorkingSetRow, makeInProcessClient } from '@dxos/protocols';
+import {
+  type EdgeFunctionEnv,
+  type FunctionProtocol,
+  type WorkingSetReport,
+  type WorkingSetRow,
+  type WorkingSetService,
+  makeInProcessClient,
+} from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
 import { makeOperationServiceLayer, wrapFunctionHandler } from './protocol.ts';
-import { WorkingSetHandoff } from './working-set-session.ts';
 
 describe('wrapFunctionHandler', () => {
   test('wraps reply function and executes handler', async ({ expect }) => {
@@ -492,8 +499,8 @@ describe('working set', () => {
   const makeWorkingSet = () => {
     const rows = new Map<string, WorkingSetRow>();
     const unindexed = new Set<string>();
-    const puts: EdgeFunctionEnv.WorkingSetReport[] = [];
-    const service: EdgeFunctionEnv.WorkingSetService = {
+    const puts: WorkingSetReport[] = [];
+    const service: WorkingSetService = {
       get: async () => ({ rows: [...rows.values()], unindexed: [...unindexed] }),
       put: async (report) => {
         puts.push(report);
@@ -507,7 +514,7 @@ describe('working set', () => {
   const setup = async () => {
     const { peer, services } = await openPeer({ hideFromIndex: (id) => id !== undefined });
     const db = await peer.createDatabase();
-    const context = (workingSetService?: EdgeFunctionEnv.WorkingSetService) => ({
+    const context = (workingSetService?: WorkingSetService) => ({
       services: { ...services, workingSetService },
       spaceId: db.spaceId,
       spaceKey: db.spaceKey.toHex(),
@@ -555,11 +562,10 @@ describe('working set', () => {
       Operation.withHandler(() =>
         Effect.gen(function* () {
           yield* Database.add(Obj.make(Note, { id, title: 'early' }));
-          const handoff = yield* Effect.serviceOption(WorkingSetHandoff);
-          yield* Effect.promise(async () => {
-            await Option.getOrThrow(handoff).settle();
-            heldDuringHandler = [...workingSet.unindexed];
-          });
+          const { db } = yield* Database.Service;
+          // A flush returns once what it stored has reached the working set.
+          yield* Effect.promise(() => db.flush({ indexes: false }));
+          heldDuringHandler = [...workingSet.unindexed];
         }),
       ),
     );
@@ -628,11 +634,11 @@ describe('working set', () => {
       Operation.withHandler(() =>
         Effect.gen(function* () {
           yield* Database.add(Obj.make(Note, { id: outer, title: 'outer' }));
-          const handoff = Option.getOrThrow(yield* Effect.serviceOption(WorkingSetHandoff));
           const { db } = yield* Database.Service;
-          // As plugin-host's nested call does: settle, run the callee in its own invocation, refresh, then absorb.
+          invariant(db instanceof DatabaseImpl);
+          // As plugin-host's nested call does: flush, run the callee in its own invocation, refresh, then absorb.
           yield* Effect.promise(async () => {
-            await handoff.settle();
+            await db.flush({ indexes: false });
             listedByNested = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
               data: {},
               context: context(workingSet.service),
@@ -643,7 +649,7 @@ describe('working set', () => {
             });
             // The test host pushes the space root's change; EDGE is pull-only, where plugin-host refreshes instead.
             await expect.poll(() => db.getObjectById(inner)).toBeDefined();
-            await handoff.absorb();
+            await db.absorbWorkingSet();
           });
           return { titles: yield* listNotes };
         }),
@@ -678,7 +684,7 @@ describe('working set', () => {
   test('a failing working set leaves the invocation as it is without one', async ({ expect }) => {
     const { peer, services } = await openPeer();
     const db = await peer.createDatabase();
-    const failing: EdgeFunctionEnv.WorkingSetService = {
+    const failing: WorkingSetService = {
       get: () => Promise.reject(new Error('unavailable')),
       put: () => Promise.reject(new Error('unavailable')),
     };

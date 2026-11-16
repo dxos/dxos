@@ -3,6 +3,7 @@
 //
 
 import { type EdgeFunctionEnv, type SerializedError } from './edge/index.ts';
+import { type WorkingSetService } from './working-set.ts';
 
 //
 // Plugin protocol: the contract between EDGE and a plugin bundle's Dynamic Worker.
@@ -105,7 +106,7 @@ export type InvocationScope = {
    * The caller's working set, which the host seeds the invocation's database from. Version 2; a host built before it
    * ignores the field.
    */
-  readonly workingSet?: EdgeFunctionEnv.WorkingSetService;
+  readonly workingSet?: WorkingSetService;
 };
 
 /** An identity EDGE verified. */

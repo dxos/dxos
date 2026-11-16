@@ -9,6 +9,7 @@ import { type EdgeFunctionEnv } from './edge/index.ts';
 import type * as FeedService from './FeedService.ts';
 import type * as QueryService from './QueryService.ts';
 import type * as TraceProtocol from './TraceProtocol.ts';
+import { type WorkingSetService } from './working-set.ts';
 
 //
 // Function protocol definition
@@ -100,7 +101,7 @@ export interface Context {
      * The working set of the caller that started the invocation.
      * Available when the caller keeps one; the invocation seeds its database from it and reports to it.
      */
-    workingSetService?: EdgeFunctionEnv.WorkingSetService;
+    workingSetService?: WorkingSetService;
 
     traceService?: TraceProtocol.TraceService;
   };

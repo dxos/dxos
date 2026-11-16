@@ -37,12 +37,6 @@ import {
   createS3Host,
   credentialsLayerFromDatabase,
 } from './services/index.ts';
-import {
-  WorkingSetHandoff,
-  type WorkingSetHandoffApi,
-  WorkingSetSession,
-  makeWorkingSetHandoff,
-} from './working-set-session.ts';
 
 /** Ceiling on opening a space in a function context; a worker holds a request that long only when the root never arrives. */
 const SPACE_OPEN_TIMEOUT = Duration.seconds(15);
@@ -62,8 +56,7 @@ export type EdgeFunctionServices =
   | Registry.Service
   // Provided by `FunctionContext.createLayer`, so a consumer that requires it (e.g. `AgentProcess`)
   // is satisfied by the same layer rather than having to merge its own provider.
-  | OpaqueToolkit.OpaqueToolkitProvider
-  | WorkingSetHandoff;
+  | OpaqueToolkit.OpaqueToolkitProvider;
 
 export interface FunctionWrappingOptions {
   /**
@@ -209,8 +202,6 @@ export const wrapFunctionHandler = (
         if ((Exit.isSuccess(exit) || isRunAgainExit(exit)) && funcContext.db) {
           await funcContext.db.flush({ disk: true, indexes: false });
         }
-        // Settled on failure too: what the host stored before the handler failed is what the caller reads next.
-        await funcContext.workingSet.settle();
 
         const result = EffectEx.unwrapExit(exit);
 
@@ -255,14 +246,11 @@ export class FunctionContext extends Resource {
   /** Released in `_close`: this is a `Resource`, so a reopen would otherwise stack registrations. */
   #unregisterBlobBackends: (() => void)[] = [];
   #unregisterTypeSource: (() => void) | undefined;
-  /** The caller's working set, which the database seeds from and sends what it stores and loads to. */
-  readonly workingSet: WorkingSetSession;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
     super();
     this.context = context;
     this.opts = opts;
-    this.workingSet = new WorkingSetSession(context.services.workingSetService);
     if (context.services.dataService && context.services.queryService) {
       this.client = new EchoClient().connectToService({
         dataService: context.services.dataService,
@@ -283,11 +271,12 @@ export class FunctionContext extends Resource {
             spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
             reactiveSchemaQuery: false,
             preloadSchemaOnOpen: false,
+            // The caller's working set, which the database opens from and keeps current as the host stores its writes.
+            workingSet: this.context.services.workingSetService,
           })
         : undefined;
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
-    const seededRows = this.db ? await this.workingSet.seed(this.db) : 0;
     const rootSetAt = Date.now();
     if (this.db) {
       const db = this.db;
@@ -318,14 +307,11 @@ export class FunctionContext extends Resource {
         ),
       );
     }
-    const seededUnindexed = this.db ? await this.workingSet.afterOpen(this.db) : 0;
     log.info('function context open timing', {
       spaceId: this.context.spaceId,
       clientOpenMs: clientOpenedAt - startedAt,
       setRootMs: rootSetAt - clientOpenedAt,
       dbOpenMs: Date.now() - rootSetAt,
-      seededRows,
-      seededUnindexed,
     });
 
     // Registered here rather than only in `wrapHandler` below: a hosted process builds its context
@@ -375,7 +361,6 @@ export class FunctionContext extends Resource {
     this.#unregisterBlobBackends = [];
     this.#unregisterTypeSource?.();
     this.#unregisterTypeSource = undefined;
-    this.workingSet.close();
     await this.db?.close();
     await this.client?.close();
   }
@@ -397,9 +382,8 @@ export class FunctionContext extends Resource {
       ? InternalAiServiceLayer(this.context.services.functionsAiService).pipe(Layer.provide(credentials))
       : AiService.notAvailable;
 
-    const handoff = makeWorkingSetHandoff(this.workingSet, this.db);
     const operationServiceLayer = this.context.services.functionsService
-      ? makeOperationServiceLayer(this.context.services.functionsService, handoff)
+      ? makeOperationServiceLayer(this.context.services.functionsService)
       : unavailableOperationServiceLayer;
 
     const traceWriterLayer = this.context.services.traceService
@@ -429,8 +413,6 @@ export class FunctionContext extends Resource {
     // `operation.invoke` calls, after ~1.8s of work.
     const hypergraphLayer = this.client ? Hypergraph.layer(this.client.graph) : Hypergraph.notAvailable;
 
-    const workingSetLayer = Layer.succeed(WorkingSetHandoff, handoff);
-
     return Layer.mergeAll(
       dbLayer,
       credentials,
@@ -440,7 +422,6 @@ export class FunctionContext extends Resource {
       traceWriterLayer,
       registryLayer,
       hypergraphLayer,
-      workingSetLayer,
     );
   }
 }
@@ -487,8 +468,6 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
  */
 export const makeOperationServiceLayer = (
   functionsService: EdgeFunctionEnv.FunctionsService,
-  /** The invoking invocation's working set: the callee starts from it, and the caller takes what the callee wrote. */
-  workingSet?: WorkingSetHandoffApi,
 ): Layer.Layer<Operation.Service> => {
   const invokeRemote = async (
     op: Operation.Definition.Any,
@@ -496,22 +475,16 @@ export const makeOperationServiceLayer = (
     options?: Operation.InvokeOptions,
   ): Promise<{ data?: unknown; error?: Error }> => {
     invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot invoke remotely.`);
-    await workingSet?.settle();
-    try {
-      const result = await functionsService.invoke(op.meta.deployedId, input, {
-        spaceId: options?.spaceId,
-        // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
-        // services (e.g. `HarnessService`) needed by operations like `GetContext`.
-        conversation: options?.conversation,
-      });
-      if (result._kind === 'success') {
-        return { data: result.data };
-      }
-      return { error: ErrorCodec.decode(result.error) };
-    } finally {
-      // Also after a failure: what the callee stored before it failed is what the caller reads next.
-      await workingSet?.absorb();
+    const result = await functionsService.invoke(op.meta.deployedId, input, {
+      spaceId: options?.spaceId,
+      // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
+      // services (e.g. `HarnessService`) needed by operations like `GetContext`.
+      conversation: options?.conversation,
+    });
+    if (result._kind === 'success') {
+      return { data: result.data };
     }
+    return { error: ErrorCodec.decode(result.error) };
   };
 
   return Layer.succeed(Operation.Service, {

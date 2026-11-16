@@ -60,8 +60,8 @@ import { log } from '@dxos/log';
 import {
   type ExportWorkingSetOptions,
   RpcClosedError,
-  type WorkingSetChanges,
   type WorkingSetRow,
+  type WorkingSetService,
   runServiceCall,
   subscribeStream,
 } from '@dxos/protocols';
@@ -89,6 +89,7 @@ import {
 } from '../echo-handler/index.ts';
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
+import { WorkingSetSync } from './working-set-sync.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -213,6 +214,12 @@ export type EchoDatabaseProps = {
 
   /** Which loaded object documents the database keeps in memory. */
   documentRetention?: DocumentRetention;
+
+  /**
+   * A working set its owner keeps across the databases it starts: the database opens from it and sends what the host
+   * stores and what it loads, so the owner's next database reads those writes before the index holds them.
+   */
+  workingSet?: WorkingSetService;
 
   /**
    * Run a reactive query for dynamic schemas.
@@ -370,14 +377,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   readonly _entityManager: EntityManager;
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
-  /** Documents whose state the host holds moved: a write it acknowledged, or bytes it sent; see {@link exportWorkingSetChanges}. */
-  readonly documentsHeld: ReadOnlyEvent<string[]>;
 
   private readonly _hypergraph: HypergraphImpl;
   private _rootUrl: string | undefined = undefined;
   private readonly _reactiveSchemaQuery: boolean;
   private readonly _preloadSchemaOnOpen: boolean;
   #seed?: readonly WorkingSetRow[];
+  readonly #workingSet: WorkingSetSync | undefined;
 
   /**
    * Backend for feed operations. Set on construction and refreshed on reconnect.
@@ -421,7 +427,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
-    this.documentsHeld = this._entityManager.documentsHeld;
+    this.#workingSet = params.workingSet ? new WorkingSetSync(params.workingSet, this._entityManager) : undefined;
 
     // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
     // that recurses through the whole entity graph and throws on the first strict-mode function it
@@ -500,7 +506,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   protected override async _open(): Promise<void> {
     await this._entityManager.open(this._ctx);
 
-    const seed = this.#seed;
+    const workingSet = await this.#workingSet?.load();
+    const seed = this.#seed ?? workingSet?.rows;
     this.#seed = undefined;
     if (seed) {
       this._entityManager.seedDocuments(seed);
@@ -527,10 +534,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       const unsubscribe = this.query(Filter.type(PersistentSchema)).subscribe(() => {});
       this._ctx.onDispose(unsubscribe);
     }
+
+    await this.#workingSet?.opened(workingSet?.unindexed ?? []);
   }
 
   @synchronized
   protected override async _close(ctx: Context): Promise<void> {
+    await this.#workingSet?.close();
     const disposals = await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
     for (const disposal of disposals) {
       if (disposal.status === 'rejected') {
@@ -559,11 +569,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._lifecycleState === LifecycleState.OPEN ? this._entityManager.exportWorkingSet(options) : [];
   }
 
-  /** Rows of the given documents as the host holds them, for a working set kept current as they change. */
-  exportWorkingSetChanges(documentIds: Iterable<string>, options: ExportWorkingSetOptions): WorkingSetChanges {
-    return this._lifecycleState === LifecycleState.OPEN
-      ? this._entityManager.exportWorkingSetChanges(documentIds, options)
-      : { rows: [], written: [] };
+  /**
+   * Takes the objects the owner's other databases wrote to the working set since this one opened, for a database that
+   * outlives them: a hosted process's, or one whose operation called another.
+   */
+  async absorbWorkingSet(): Promise<void> {
+    await this.#workingSet?.absorb();
   }
 
   // ── Space state ─────────────────────────────────────────────────────────
@@ -1009,6 +1020,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await Promise.all([
       ...[...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()),
       ...[...this.#retiredFeeds].map((disposal) => disposal.finally(() => this.#retiredFeeds.delete(disposal))),
+      // What the flush stored reaches the working set too, so whatever the owner starts next reads it.
+      this.#workingSet?.settle(),
     ]);
   }
 

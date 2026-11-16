@@ -20,7 +20,7 @@ import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
-import { type EdgeFunctionEnv, ErrorCodec, PluginProtocol } from '@dxos/protocols';
+import { type EdgeFunctionEnv, ErrorCodec, PluginProtocol, type WorkingSetService } from '@dxos/protocols';
 import { QueryResponseSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import * as PluginHost from './PluginHost.ts';
@@ -382,7 +382,7 @@ describe('PluginHost', () => {
       const spaceId = SpaceId.random();
       const unindexed = new Set<string>();
       let gets = 0;
-      const workingSet: EdgeFunctionEnv.WorkingSetService = {
+      const workingSet: WorkingSetService = {
         get: async () => {
           gets++;
           return { rows: [], unindexed: [...unindexed] };

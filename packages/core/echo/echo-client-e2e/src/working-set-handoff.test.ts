@@ -14,7 +14,12 @@ import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
-import { makeInProcessClient } from '@dxos/protocols';
+import {
+  type WorkingSetReport,
+  type WorkingSetRow,
+  type WorkingSetService,
+  makeInProcessClient,
+} from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -96,79 +101,117 @@ describe('working set handoff', () => {
     expect(changed.map((entry) => entry.id)).toEqual([task.id]);
     await client.close();
   });
-  test('a write the host acknowledges is announced and exported with the objects written in it', async ({ expect }) => {
+  test('a database sends a write to its working set once the host stores it, and a flush waits for it', async ({
+    expect,
+  }) => {
     const peer = await builder.createPeer({ types: [TestSchema.Task] });
-    const writer = await peer.createDatabase();
-    const held: string[][] = [];
-    writer.documentsHeld.on((documentIds) => held.push(documentIds));
+    const space = await peer.createDatabase();
+    const workingSet = makeWorkingSet();
+    const { client, database } = await openReader(scope, peer, space, new Set(), workingSet.service);
+    await database.open();
 
-    const task = writer.add(Obj.make(TestSchema.Task, { title: 'a' }));
-    await writer.flush({ disk: true, indexes: false });
-    const announced = new Set(held.flat());
-    const changes = writer.exportWorkingSetChanges(announced, { maxBytes: MAX_BYTES });
-
-    const taskRow = changes.rows.find((row) => row.objectId === task.id);
-    expect(taskRow).toBeDefined();
-    expect(changes.written).toEqual([task.id]);
-    // The space root links the new document, so its write is announced with the task's, and marked as the root.
-    expect(changes.root).toBeDefined();
-    expect(changes.rows[0].documentId).toBe(changes.root);
-
-    // Only the documents asked for are exported.
-    const onlyTask = writer.exportWorkingSetChanges([taskRow?.documentId ?? ''], { maxBytes: MAX_BYTES });
-    expect(onlyTask.rows.map((row) => row.objectId)).toEqual([task.id]);
-    expect(onlyTask.root).toBeUndefined();
+    const task = database.add(Obj.make(TestSchema.Task, { title: 'a' }));
+    await database.flush({ indexes: false });
+    const rows = workingSet.puts.flatMap((put) => put.rows);
+    expect(rows.some((row) => row.objectId === task.id)).toBe(true);
+    expect([...workingSet.unindexed]).toEqual([task.id]);
+    // The space root links the new document, so its write is sent too, named as the root.
+    expect(
+      workingSet.puts.some((put) => put.root !== undefined && rows.some((row) => row.documentId === put.root)),
+    ).toBe(true);
+    await client.close();
   });
 
-  test('a write the host has not acknowledged is not exported as written', async ({ expect }) => {
+  test("the next database opens from the working set and queries the first one's write", async ({ expect }) => {
     const peer = await builder.createPeer({ types: [TestSchema.Task] });
-    const writer = await peer.createDatabase();
-    const held: string[] = [];
-    writer.documentsHeld.on((documentIds) => held.push(...documentIds));
-    const task = writer.add(Obj.make(TestSchema.Task, { title: 'a' }));
-    await writer.flush({ disk: true, indexes: false });
-    const taskRow = writer
-      .exportWorkingSetChanges(held, { maxBytes: MAX_BYTES })
-      .rows.find((row) => row.objectId === task.id);
-    invariant(taskRow);
+    const space = await peer.createDatabase();
+    const workingSet = makeWorkingSet();
+    const first = await openReader(scope, peer, space, new Set(), workingSet.service);
+    await first.database.open();
+    const task = first.database.add(Obj.make(TestSchema.Task, { title: 'z' }));
+    await first.database.flush({ indexes: false });
+    await first.client.close();
 
-    // Changed again and not flushed: the document holds a change the host has not taken.
-    Obj.update(task, (task) => {
-      task.title = 'b';
-    });
-    const changes = writer.exportWorkingSetChanges([taskRow.documentId], { maxBytes: MAX_BYTES });
-    expect(changes.written).toEqual([]);
-    expect(changes.rows).toEqual([]);
+    const next = await openReader(scope, peer, space, new Set([task.id]), workingSet.service);
+    await next.database.open();
+    const all = await next.database.query(Filter.type(TestSchema.Task)).run();
+    expect(all.map((entry) => entry.id)).toEqual([task.id]);
+    const newest = await next.database
+      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'desc')).limit(1))
+      .run();
+    expect(newest.map((entry) => entry.id)).toEqual([task.id]);
+
+    // Only reading what it was seeded with, it sends no document back.
+    const sentBefore = workingSet.puts.length;
+    await next.database.flush({ indexes: false });
+    expect(workingSet.puts.slice(sentBefore).flatMap((put) => put.rows)).toEqual([]);
+    await next.client.close();
   });
 
-  test('a document loaded from the host is announced', async ({ expect }) => {
+  test('a database takes the writes another one made after it opened', async ({ expect }) => {
     const peer = await builder.createPeer({ types: [TestSchema.Task] });
-    const writer = await peer.createDatabase();
-    const task = writer.add(Obj.make(TestSchema.Task, { title: 'a' }));
-    await writer.flush();
+    const space = await peer.createDatabase();
+    const workingSet = makeWorkingSet();
+    // The waiting database's index answers leave the task out, as an index that has not caught up would.
+    const hidden = new Set<string>();
+    const waiting = await openReader(scope, peer, space, hidden, workingSet.service);
+    await waiting.database.open();
 
-    const { client, database: reader } = await openReader(scope, peer, writer, new Set());
-    const held: string[] = [];
-    reader.documentsHeld.on((documentIds) => held.push(...documentIds));
-    await reader.open();
-    // Loaded by id, as an invocation loads an object it is handed; a query row is the index's, not a document load.
-    await expect.poll(() => reader.getObjectById(task.id)).toBeDefined();
-    expect(reader.getObjectById(task.id)?.title).toBe('a');
+    const writer = await openReader(scope, peer, space, new Set(), workingSet.service);
+    await writer.database.open();
+    const task = writer.database.add(Obj.make(TestSchema.Task, { title: 'later' }));
+    await writer.database.flush({ indexes: false });
+    hidden.add(task.id);
+    await writer.client.close();
 
-    const changes = reader.exportWorkingSetChanges(held, { maxBytes: MAX_BYTES });
-    expect(changes.rows.some((row) => row.objectId === task.id)).toBe(true);
-    // Read, not written: nothing for the index to be behind on.
-    expect(changes.written).toEqual([]);
+    // The test host pushes the space root's change, which routes the task's id; EDGE re-reads it instead.
+    await expect.poll(() => waiting.database.getObjectById(task.id)).toBeDefined();
+    const window = Query.select(Filter.type(TestSchema.Task)).limit(10);
+    expect(await waiting.database.query(window).run()).toEqual([]);
+    await waiting.database.absorbWorkingSet();
+    expect((await waiting.database.query(window).run()).map((entry) => entry.id)).toEqual([task.id]);
+    await waiting.client.close();
+  });
+
+  test('a failing working set leaves the database as it is without one', async ({ expect }) => {
+    const peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const space = await peer.createDatabase();
+    const failing: WorkingSetService = {
+      get: () => Promise.reject(new Error('unavailable')),
+      put: () => Promise.reject(new Error('unavailable')),
+    };
+    const { client, database } = await openReader(scope, peer, space, new Set(), failing);
+    await database.open();
+    const task = database.add(Obj.make(TestSchema.Task, { title: 'kept' }));
+    await database.flush({ indexes: false });
+    expect((await database.query(Filter.id(task.id)).run()).map((entry) => entry.id)).toEqual([task.id]);
     await client.close();
   });
 });
 
-/** A second client of the peer's host, whose index answers leave out the `hidden` objects. */
+/** A working set kept in memory, as an EDGE owner keeps it in its storage: one row per document. */
+const makeWorkingSet = () => {
+  const rows = new Map<string, WorkingSetRow>();
+  const unindexed = new Set<string>();
+  const puts: WorkingSetReport[] = [];
+  const service: WorkingSetService = {
+    get: async () => ({ rows: [...rows.values()], unindexed: [...unindexed] }),
+    put: async (report) => {
+      puts.push(report);
+      report.rows.forEach((row) => rows.set(row.documentId, row));
+      report.unindexed.forEach((id) => unindexed.add(id));
+    },
+  };
+  return { service, unindexed, puts };
+};
+
+/** A second client of the peer's host, whose index answers leave out the `hidden` objects, over `workingSet` if given. */
 const openReader = async (
   scope: Scope.Scope,
   peer: EchoTestPeer,
   db: DatabaseImpl,
   hidden: ReadonlySet<string>,
+  workingSet?: WorkingSetService,
 ): Promise<{ client: EchoClient; database: DatabaseImpl }> => {
   const host = peer.host.queryService;
   const staleIndex: QueryService.Handlers = {
@@ -195,7 +238,7 @@ const openReader = async (
   await client.open();
   const rootUrl = db.rootUrl;
   invariant(rootUrl, 'database has no space root');
-  const database = client.constructDatabase({ spaceId: db.spaceId, spaceKey: db.spaceKey });
+  const database = client.constructDatabase({ spaceId: db.spaceId, spaceKey: db.spaceKey, workingSet });
   await database.setSpaceRoot(rootUrl);
   return { client, database };
 };

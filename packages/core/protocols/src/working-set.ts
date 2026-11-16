@@ -37,3 +37,30 @@ export type WorkingSetChanges = {
   /** Objects the client wrote in these documents, once the host holds the write, that the index may not hold yet. */
   written: string[];
 };
+
+/**
+ * What an owner holds of a database's working set for one space: the documents it recently read or wrote, and the
+ * objects it wrote that the index may not hold yet.
+ */
+export type WorkingSet = {
+  rows: WorkingSetRow[];
+  /** Ids of objects the owner wrote; a database counts them among its local writes the index has not seen. */
+  unindexed: string[];
+};
+
+/** What a database sends its working set as the host stores its writes and it loads documents. */
+export type WorkingSetReport = WorkingSet & {
+  /** Per document id, the heads the working set last had from this database; absent for a document it had none of. */
+  base: Record<string, string[]>;
+  /** The space root's document id, when the root is among the rows. */
+  root?: string;
+};
+
+/**
+ * A working set an owner keeps for the databases it starts, so that consecutive ones read each other's writes before
+ * the index holds them.
+ */
+export interface WorkingSetService {
+  get(): Promise<WorkingSet>;
+  put(report: WorkingSetReport): Promise<void>;
+}
