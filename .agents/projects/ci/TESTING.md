@@ -149,6 +149,47 @@ setup, snapshot mount and tool installs per cell) come from the PR runs of 2026-
 processes), storybook ~25%, sandbox tools baked into the snapshot, and edge `test-packages` run in
 parallel. These are estimates, ±30%.
 
+### Monthly savings
+
+Baseline is the last two weeks of CI. "After" assumes this proposal plus the CI speed-ups in
+dxos/dxos#14552 (no `pnpm exec`, knip and boot budget nightly) and edge's move to TypeScript 7
+(dxos/edge#1533: a clean edge build drops from ~1.5 min to ~32 s). The overhead cuts in
+`OPTIMIZATIONS.md` (dxos/dxos#14552) are not included.
+
+**dxos** — public repository on free standard runners, so the saving is runner capacity (queueing)
+and wait time, not money.
+
+| Job                        | Today (runner-h/month) | After      | Why                                                       |
+| :------------------------- | :--------------------- | :--------- | :-------------------------------------------------------- |
+| e2e composer + e2e rest    | 3,170                  | ~50        | Nightly only                                              |
+| test browser (storybook)   | 1,690                  | ~1,640     | Stays blocking; ~1 s less per task                        |
+| test node                  | 1,550                  | ~1,040     | ~30% of node task time goes nightly; ~1 s less per task   |
+| check                      | 670                    | ~350       | knip off PRs (~3.5 min × ~4,300 runs); ~1 s less per task |
+| boot-budget, advisory, cli | 680                    | ~5         | Nightly only                                              |
+| plan, native, other        | ~840                   | ~840       | Unchanged                                                 |
+| **Total**                  | **~8,600**             | **~3,900** | **~55% less**                                             |
+
+Per PR run that is ~100 runner-minutes today and ~45 after; the merge-queue run (~76) changes
+little, because it already runs only the blocking jobs.
+
+**edge** — private repository; `test-edge`, `test-packages`, `test-discord-agent` and `build` run on
+billed 4-core runners, `lint` on 2-core.
+
+| Job                  | Today (runner-min/month) | After                | Why                                                                        |
+| :------------------- | :----------------------- | :------------------- | :------------------------------------------------------------------------- |
+| test-edge (4 shards) | 47,800                   | ~1,400               | Edge harness nightly (22 runs × 64 min)                                    |
+| test-discord-agent   | ~10,800                  | ~270                 | Nightly; it became required this week, so ~880 runs × 12 min going forward |
+| test-packages        | 15,000                   | ~13,900              | Stays blocking; TS 7 cuts its build step from ~2 to ~0.75 min              |
+| build                | 5,100                    | ~4,100               | TS 7 build step                                                            |
+| lint                 | 3,800                    | 3,800                | Unchanged                                                                  |
+| **Total**            | **~82,500 (~1,375 h)**   | **~23,500 (~390 h)** | **~70% less**                                                              |
+
+At GitHub's list price for Linux runners (~$0.016 per minute on 4-core, ~$0.008 on 2-core; check
+the current rates and the org's included minutes), edge Check goes from ~$1,290 to ~$345 a month,
+~$950 saved. Running `test-packages` tasks in parallel (`OPTIMIZATIONS.md` #9) would take another
+~8,000 4-core minutes, ~$130 a month. The plugins-mode workflow cost another ~57,000 runner-minutes
+a month until it became dispatch-only on 2026-11-13; that saving has already happened.
+
 The rest of this document is the evidence behind these decisions.
 
 ## Test ontology
