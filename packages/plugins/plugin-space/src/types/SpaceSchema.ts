@@ -130,7 +130,9 @@ export type PeerLocation = {
 /** A session's deck in one space: the graph paths of its planks there, in order. */
 export type PeerDeck = {
   planks: string[];
-  /** The session's values of each `AppCapabilities.Followable` aspect, by aspect key, then by the context's EID. */
+  /** The plank it is scrolled to: the viewport of the space's own location. */
+  front?: string;
+  /** The session's values of each followed view state aspect, by aspect key, then by the context's EID. */
   viewState?: Record<string, Record<string, unknown>>;
 };
 

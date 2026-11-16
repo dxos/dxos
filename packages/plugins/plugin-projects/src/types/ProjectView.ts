@@ -43,4 +43,5 @@ export const aspect: ViewState.Aspect<State> = ViewState.define<State>({
   backend: 'local',
   schema: State,
   defaultValue: () => ({ tab: 'overview', pipeline: false }),
+  follow: 'write',
 });

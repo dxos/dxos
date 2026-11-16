@@ -26,7 +26,7 @@ const getEditorViews = (subject: string): EditorView[] => {
 // the editor that shows it.
 const handler: Operation.WithHandler<typeof ProjectOperation.ScrollToAnchor> = ProjectOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, anchor, thread: threadRef }) {
+    Effect.fnUntraced(function* ({ subject, anchor, focus = true, thread: threadRef }) {
       if (typeof document === 'undefined') {
         return false;
       }
@@ -45,13 +45,22 @@ const handler: Operation.WithHandler<typeof ProjectOperation.ScrollToAnchor> = P
       // A cursor resolves only in the text it was taken from.
       for (const view of getEditorViews(subject)) {
         const range = Cursor.getRangeFromCursor(view.state, anchor);
-        if (range) {
-          view.dispatch({
-            selection: { anchor: range.from, head: range.to },
-            ...(isRangeVisible(view, range) ? {} : { effects: EditorView.scrollIntoView(range.from, SCROLL_OPTIONS) }),
-          });
+        if (!range) {
+          continue;
+        }
+
+        // Without focus the view mirrors another's, such as a followed peer's: their text goes to the top of this one.
+        if (!focus) {
+          view.dispatch({ effects: EditorView.scrollIntoView(range.from, { y: 'start' }) });
           return true;
         }
+
+        view.dispatch({
+          selection: { anchor: range.from, head: range.to },
+          ...(isRangeVisible(view, range) ? {} : { effects: EditorView.scrollIntoView(range.from, SCROLL_OPTIONS) }),
+        });
+        view.focus();
+        return true;
       }
       return false;
     }),

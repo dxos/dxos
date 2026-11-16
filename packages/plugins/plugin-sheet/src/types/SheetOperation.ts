@@ -62,8 +62,10 @@ export const ScrollToAnchor = Operation.make({
   input: Schema.Struct({
     subject: Schema.String.annotate({ description: 'Attendable ID of the sheet.' }),
     anchor: Schema.String.annotate({ description: 'Cell range coordinates.' }),
-    follow: Schema.optional(
-      Schema.Boolean.annotate({ description: 'Scroll the range into view without moving the focused cell.' }),
+    focus: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Focus the range and highlight the thread (default); false only scrolls the range into view.',
+      }),
     ),
     thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to highlight.' })),
   }),

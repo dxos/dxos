@@ -16,7 +16,7 @@ const SCROLL_OPTIONS = { y: 'start', yMargin: 96 } as const;
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = MarkdownOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, anchor, follow, thread }) {
+    Effect.fnUntraced(function* ({ subject, anchor, focus = true, thread }) {
       const editorViews = yield* Capability.get(MarkdownCapabilities.EditorViews);
       // Views register under `attendableId ?? documentId`, and callers hold one or the other — a
       // companion knows its context plank's attendable id, the graph knows the object URI. Accept
@@ -48,8 +48,8 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
         return false;
       }
 
-      // Following a peer mirrors their view: their top line goes to the top of this one, and the caret stays put.
-      if (follow) {
+      // Without focus the view mirrors another's, such as a followed peer's: their top line goes to the top of this one.
+      if (!focus) {
         entry.view.dispatch({ effects: EditorView.scrollIntoView(range.from, { y: 'start' }) });
         return true;
       }

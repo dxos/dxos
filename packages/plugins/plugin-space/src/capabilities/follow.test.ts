@@ -39,53 +39,34 @@ await Harness.preload({ plugins: [ClientPlugin.make({})] });
 
 const LEADER = 'a'.repeat(64);
 
-/** The aspect of the fake followable with a `follow`. */
-const DeckAspect = ViewState.define({
-  key: 'com.example.aspect.deck',
-  backend: 'memory',
-  schema: Schema.Struct({ front: Schema.String }),
-  defaultValue: () => ({ front: '' }),
-});
-
-/** The aspect of the fake followable without one, which the follow writes. */
+/** A view's aspect a follower takes from the leader. */
 const TabAspect = ViewState.define({
   key: 'com.example.aspect.tab',
   backend: 'memory',
   schema: Schema.Struct({ tab: Schema.String }),
   defaultValue: () => ({ tab: 'overview' }),
+  follow: 'write',
 });
 
 describe('Follow', () => {
-  test('a followable’s `follow` is handed the leader’s view with their values of its aspect alone, and one that navigates opens it', async ({
-    expect,
-  }) => {
-    const { calls, followed, ephemeral, registry, space, object } = await setup();
-    const key = EID.make({ spaceId: space.id, entityId: object.id });
+  test.for([
+    { input: 'their planks', planks: true, op: 'set' },
+    { input: 'the object they attend, with no planks', planks: false, op: 'open' },
+  ])('the follower opens $input in the space, without focus', async ({ planks, op }, { expect }) => {
+    const { calls, ephemeral, registry, space, object } = await setup();
     const path = GraphPath.getObjectPathFromObject(object);
-    const other = GraphPath.getObjectPath(space.id, 'expando', EntityId.random());
-    lead(registry, ephemeral, space.id, key, path, {
-      planks: [path, other],
-      viewState: {
-        [DeckAspect.key]: { [key]: { front: other }, [EID.make({ spaceId: space.id })]: { front: 7 } },
-        [TabAspect.key]: { [key]: { tab: 'spec' } },
-      },
+    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path, {
+      planks: planks ? [path] : [],
     });
 
-    await expect.poll(() => followed.views.at(-1)?.attended.localPath).toBe(path);
-    expect(followed.views.at(-1)).toEqual({
-      now: expect.any(Number),
-      spaceId: space.id,
-      active: [path, other],
-      attended: { key, path, localPath: path },
-      values: { [key]: { front: other } },
-    });
+    await expect
+      .poll(() => calls.find((call) => call.op === op)?.input)
+      .toEqual({ subject: [path], workspace: GraphPath.getSpacePath(space.id), focus: false });
     await vi.advanceTimersByTimeAsync(600);
-    expect(calls.filter(({ op }) => op === 'open')).toEqual([]);
+    expect(calls.filter((call) => call.op === 'set' || call.op === 'open')).toHaveLength(1);
   });
 
-  test('a followable without a `follow` takes each value the leader changes into this session’s view state', async ({
-    expect,
-  }) => {
+  test('the follower takes the leader’s values of a followed aspect into its view state', async ({ expect }) => {
     const { ephemeral, registry, space, object, viewState } = await setup();
     const key = EID.make({ spaceId: space.id, entityId: object.id });
     const path = GraphPath.getObjectPathFromObject(object);
@@ -93,48 +74,35 @@ describe('Follow', () => {
       planks: [path],
       viewState: { [TabAspect.key]: { [key]: { tab: 'spec' } } },
     });
+
     await expect.poll(() => viewState.get(TabAspect, key)).toEqual({ tab: 'spec' });
-
-    lead(registry, ephemeral, space.id, key, path, {
-      planks: [path],
-      viewState: { [TabAspect.key]: { [key]: { tab: 'tasks' } } },
-    });
-    await expect.poll(() => viewState.get(TabAspect, key)).toEqual({ tab: 'tasks' });
   });
 
-  test('each tick advances a followable’s view, so it needs no timer of its own', async ({ expect }) => {
-    const { followed, ephemeral, registry, space, object } = await setup();
-    const path = GraphPath.getObjectPathFromObject(object);
-    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
-    await expect.poll(() => followed.views.length).toBeGreaterThan(0);
-
-    // Nothing else changes, so each view after the first is a tick.
-    const updates = followed.views.length;
-    await vi.advanceTimersByTimeAsync(600);
-    expect(followed.views.length).toBeGreaterThan(updates);
-  });
-
-  test('stopping a follow ends each followable’s `follow`', async ({ expect }) => {
-    const { followed, ephemeral, registry, space, object } = await setup();
-    const path = GraphPath.getObjectPathFromObject(object);
-    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
-    await expect.poll(() => followed.views.length).toBeGreaterThan(0);
-
-    registry.update(ephemeral, (state) => ({ ...state, following: undefined }));
-    await expect.poll(() => followed.closed).toBe(true);
-  });
-
-  test('with no followable that navigates, the follower opens the attended object in its space, without focus', async ({
+  test('the follower scrolls to the leader’s front plank and opens their companion once the layout holds it', async ({
     expect,
   }) => {
-    const { calls, ephemeral, registry, space, object } = await setup({ navigates: false });
+    const { calls, layout, ephemeral, registry, space, object } = await setup();
     const path = GraphPath.getObjectPathFromObject(object);
-    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
+    const other = GraphPath.getObjectPath(space.id, 'expando', EntityId.random());
+    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path, {
+      planks: [path, other],
+      front: other,
+      viewState: {
+        [AppCapabilities.Companions.key]: {
+          [EID.make({ spaceId: space.id })]: { planks: [other], variant: 'comments' },
+        },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(600);
+    expect(calls.filter(({ op }) => op === 'scrollIntoView' || op === 'updateCompanion')).toEqual([]);
 
+    registry.update(layout, (state) => ({ ...state, active: [path, other] }));
     await expect
-      .poll(() => calls.find(({ op }) => op === 'open')?.input)
-      .toEqual({ subject: [path], workspace: GraphPath.getSpacePath(space.id), focus: false });
-    expect(calls.filter(({ op }) => op === 'open')).toHaveLength(1);
+      .poll(() => calls.find(({ op }) => op === 'scrollIntoView')?.input)
+      .toEqual({ subject: other, focus: false });
+    await expect
+      .poll(() => calls.find(({ op }) => op === 'updateCompanion')?.input)
+      .toEqual({ subject: `${other}/~comments`, anchor: other });
   });
 
   test('the leader’s anchor is revealed in an object once the layout holds it, without moving the caret', async ({
@@ -149,7 +117,7 @@ describe('Follow', () => {
     registry.update(layout, (state) => ({ ...state, active: [path] }));
     await expect
       .poll(() => calls.find(({ op }) => op === 'reveal')?.input)
-      .toEqual({ subject: path, anchor: 'line-12', follow: true });
+      .toEqual({ subject: path, anchor: 'line-12', focus: false });
   });
 
   test('an anchor the view has not confirmed is revealed again after the mount window, and a confirmed one is not', async ({
@@ -185,14 +153,17 @@ describe('Follow', () => {
     await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(false);
   });
 
-  test('a followable that cannot show the view pauses the follow', async ({ expect }) => {
-    const { shows, ephemeral, registry, space, object } = await setup();
+  test('a follow pauses while the layout cannot open the leader’s planks, and resumes once it can', async ({
+    expect,
+  }) => {
+    const { blocked, ephemeral, registry, space, object } = await setup();
+    blocked.value = true;
     const path = GraphPath.getObjectPathFromObject(object);
     lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
-    await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(false);
-
-    registry.set(shows, false);
     await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(true);
+
+    blocked.value = false;
+    await expect.poll(() => registry.get(ephemeral).following?.paused).toBe(false);
   });
 
   test('a follow in a space this session does not have pauses', async ({ expect }) => {
@@ -281,10 +252,11 @@ describe('Follow', () => {
   });
 
   test('a leader on the space’s Home is followed there, not paused', async ({ expect }) => {
-    const { followed, ephemeral, registry, space } = await setup();
-    lead(registry, ephemeral, space.id, getPresenceKeyFromSpace(space.id), GraphPath.getSpaceHomePath(space.id));
+    const { calls, ephemeral, registry, space } = await setup();
+    const home = GraphPath.getSpaceHomePath(space.id);
+    lead(registry, ephemeral, space.id, getPresenceKeyFromSpace(space.id), home);
 
-    await expect.poll(() => followed.views.at(-1)?.attended.localPath).toBe(GraphPath.getSpaceHomePath(space.id));
+    await expect.poll(() => calls.find(({ op }) => op === 'set')?.input).toMatchObject({ subject: [home] });
     expect(registry.get(ephemeral).following?.paused).toBeFalsy();
   });
 });
@@ -330,14 +302,11 @@ const setupFollowing = async () => {
     EID.make({ spaceId: context.space.id, entityId: context.object.id }),
     path,
   );
-  await vi.waitUntil(() => context.followed.views.length > 0);
+  await vi.waitUntil(() => context.calls.some(({ op }) => op === 'set'));
   const main = document.body.appendChild(document.createElement('main'));
   onTestFinished(() => main.remove());
   return { ...context, main };
 };
-
-/** What the fake followable's `follow` was handed: every view in order, and whether it ended. */
-type Followed = { views: AppCapabilities.FollowView<{ front: string }>[]; closed: boolean };
 
 /** A layout operation or reveal the follow asked for. */
 type Call = { op: string; input: unknown };
@@ -348,20 +317,21 @@ const Reveal = Operation.make({
   input: Schema.Struct({
     subject: Schema.String,
     anchor: Schema.String,
-    follow: Schema.optional(Schema.Boolean),
+    focus: Schema.optional(Schema.Boolean),
     thread: Schema.optional(Ref.Ref(Thread.Thread)),
   }),
   output: Schema.Boolean,
 });
 
-const setup = async ({ navigates = true }: { navigates?: boolean } = {}) => {
-  const followed: Followed = { views: [], closed: false };
+const setup = async () => {
   const calls: Call[] = [];
+  // Set while the layout fails to open what it is asked for.
+  const blocked = { value: false };
   // The follow's update ticks run on this clock, which keeps pace with real time until a test jumps it.
   vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'], shouldAdvanceTime: true });
   onTestFinished(() => void vi.useRealTimers());
   const harness = await Harness.createComposerTestApp({
-    plugins: [ClientPlugin.make({}), makeFollowPlugin(followed, calls, navigates)],
+    plugins: [ClientPlugin.make({}), makeFollowPlugin(calls, blocked)],
   });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
@@ -373,11 +343,10 @@ const setup = async ({ navigates = true }: { navigates?: boolean } = {}) => {
   await space.db.flush();
   onTestFinished(() => harness[Symbol.asyncDispose]());
   return {
-    followed,
+    blocked,
     calls,
     registry: harness.get(Capabilities.AtomRegistry),
     layout: harness.get(TestLayout),
-    shows: harness.get(TestShows),
     reveals: harness.get(TestReveals),
     ephemeral: harness.get(SpaceCapabilities.EphemeralState),
     space,
@@ -391,17 +360,11 @@ const TestLayout = Capability.makeSingleton<Atom.Writable<AppCapabilities.Layout
   'org.dxos.plugin.space.test.follow.layout',
 );
 
-/** Whether the fake followable shows the view. */
-const TestShows = Capability.makeSingleton<Atom.Writable<boolean>>()('org.dxos.plugin.space.test.follow.shows');
-
 /** What the test `Locator`'s reveal answers: whether its view revealed the anchor. */
 const TestReveals = Capability.makeSingleton<Atom.Writable<boolean>>()('org.dxos.plugin.space.test.follow.reveals');
 
-/**
- * The follow module over a layout that records the operations it is asked for, a `Locator` for `Expando`, a followable
- * whose `follow` records each view it is handed, and one without a `follow`.
- */
-const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean): Plugin.Plugin =>
+/** The follow module over a layout that records the operations it is asked for, and a `Locator` for `Expando`. */
+const makeFollowPlugin = (calls: Call[], blocked: { value: boolean }): Plugin.Plugin =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.space.test.follow'), name: 'Follow (test)' })).pipe(
     Plugin.addModule<void>(
       Capability.inlineModule(
@@ -411,12 +374,10 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
           provides: [
             AppCapabilities.Layout,
             AppCapabilities.Locator,
-            AppCapabilities.Followable,
             Capabilities.OperationHandler,
             SpaceCapabilities.EphemeralState,
             TestLayout,
             TestReveals,
-            TestShows,
           ],
         },
         Effect.fnUntraced(function* () {
@@ -431,38 +392,24 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
             inactive: [],
             scrollIntoView: undefined,
           }).pipe(Atom.keepAlive);
-          const shows = Atom.make(true).pipe(Atom.keepAlive);
           const reveals = Atom.make(true).pipe(Atom.keepAlive);
-          const deckFollowable = AppCapabilities.makeFollowable({
-            aspect: DeckAspect,
-            navigates,
-            follow: Effect.fnUntraced(function* (view) {
-              followed.views.push(registry.get(view));
-              const unsubscribe = registry.subscribe(view, (next) => followed.views.push(next));
-              yield* Effect.addFinalizer(() =>
-                Effect.sync(() => {
-                  unsubscribe();
-                  followed.closed = true;
-                }),
-              );
-              return shows;
-            }),
-          });
           const record = (op: string) => (input: unknown) => Effect.sync(() => void calls.push({ op, input }));
           return [
             Capability.contribute(AppCapabilities.Layout, layout),
             Capability.contribute(TestLayout, layout),
             Capability.contribute(TestReveals, reveals),
-            Capability.contribute(TestShows, shows),
             Capability.contribute(AppCapabilities.Locator, { id: Type.getTypename(Expando.Expando), reveal: Reveal }),
-            Capability.contribute(AppCapabilities.Followable, deckFollowable),
-            Capability.contribute(AppCapabilities.Followable, AppCapabilities.makeFollowable({ aspect: TabAspect })),
             Capability.contribute(
               Capabilities.OperationHandler,
               OperationHandlerSet.make(
+                Operation.withHandler(LayoutOperation.Set, (input) =>
+                  blocked.value ? Effect.die(new Error('blocked')) : record('set')(input),
+                ),
                 Operation.withHandler(LayoutOperation.Open, (input) =>
                   record('open')(input).pipe(Effect.as(input.subject)),
                 ),
+                Operation.withHandler(LayoutOperation.ScrollIntoView, record('scrollIntoView')),
+                Operation.withHandler(LayoutOperation.UpdateCompanion, record('updateCompanion')),
                 Operation.withHandler(Reveal, (input) =>
                   record('reveal')(input).pipe(Effect.map(() => registry.get(reveals))),
                 ),

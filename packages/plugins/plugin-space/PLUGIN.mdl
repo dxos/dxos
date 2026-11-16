@@ -9,7 +9,7 @@ Core workspace container plugin for `DXOS` Composer — creates, manages, and sh
 ## Dependencies
 
 ```mdl
-uses org.dxos.plugin.deck: A follower's deck opens what the leader shows through the deck's followable location.
+uses org.dxos.plugin.deck: The deck reports its front plank and open companions in each space as view state (org.dxos.plugin.deck#F-1.11), which a follower takes from the leader.
 ```
 
 ## Extensions
@@ -64,7 +64,8 @@ type PeerDeck
   desc: A session's deck in one space, as its viewing message reports it.
   fields:
     planks: string[]            # graph paths of the deck's planks in that space, in order
-    viewState?: Record<string, Record<string, unknown>>  # each followable aspect's values, by aspect key, then by the EID of the space or an object in it
+    front?: string              # the plank the deck is scrolled to, from its location for the space
+    viewState?: Record<string, Record<string, unknown>>  # each followed aspect's values, by aspect key, then by the EID of the space or an object in it
 ```
 
 ```mdl
@@ -599,12 +600,12 @@ feat F-8: Presence and Sync Status
   req F-8.18: The viewers list and the Members companion are one presence list, of one object or of the whole space, with the same header, rows and follow. A row takes no hover; a person's row and their session rows take the keyboard highlight together, as one block, with the avatar inside it.
   req F-8.15: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
   req F-8.13: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on whichever of those sessions moved its anchor most recently, never on a session attending another object; with none attending the object, the row has no actions. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions while it attends the object; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
-  req F-8.14: The viewing message carries the sender's session id, its device, the location in each object its deck holds, the graph paths of its deck's planks in the space, and its values of each followable view-state aspect (`AppCapabilities.Followable`) for the space and each object its deck holds there, by aspect key and EID, which presence carries without reading; it is sent with the heartbeat and at most once per second when a location changes, or every 100 ms while followed ([F-8.20]).
+  req F-8.14: The viewing message carries the sender's session id, its device, the location in each object its deck holds, the graph paths of its deck's planks in the space, and its values of each view-state aspect declared with `follow` for the space and each object its deck holds there, by aspect key and EID, which presence carries without reading; it is sent with the heartbeat and at most once per second when a location changes, or every 100 ms while followed ([F-8.20]).
   req F-8.16: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
   req F-8.17: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
   req F-8.19: A peer's node carries Follow, which follows whichever of their sessions moved most recently, switching as that changes; a session's node carries Follow for that session alone. Neither shows while it is already the followed target.
   req F-8.20: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
-  req F-8.21: While following, the follower shows the leader's view. It loads the object the leader attends, reveals the leader's anchor in each object it shows of them (the top of their viewport there, or their selection when they report no viewport) through the type's `Locator`, and takes the leader's values of each followable aspect. A followable without a `follow` has each value the leader changes written into the follower's view state; one with a `follow` is handed the leader's planks in the space, the attended object with the path they have it open at, and the leader's values of its aspect. A followable that opens what the leader shows (the deck, org.dxos.plugin.deck#F-1.12) does so; with none, the follower opens the attended object with one `LayoutOperation.Open` that names the space's workspace. Planks have five seconds from appearing to mount, during which their anchors are revealed again, and an anchor the view could not reveal yet (not mounted, or not loaded) is revealed again on every update until it can. None of it moves the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can, and so does a followable that reports it cannot show the view.
+  req F-8.21: While following, the follower shows the leader's view, through the layout's operations and with none of it moving its caret or focus. It opens the leader's planks in the space, in order, with one `LayoutOperation.Set` that names the space's workspace, so a follower outside the space switches to it in the same write; with no planks reported, it opens the object the leader attends with one `Open`, at the leader's path when it has a URL binding for it and at the object's own path otherwise, first closing any planks stacked after it. A plank the follower's layout cannot bind is left out, and gaining a binding for one later (its plugin loads) opens the planks again. It scrolls to the leader's front plank with `ScrollIntoView` (when that plank is left out and the layout holds every other plank it can bind, to the first of their planks after it that it holds, else the last before it), opens in each plank shown of the leader the companion they have open there, in their tab, with `UpdateCompanion`, and closes one they closed. It reveals the leader's anchor in each object it shows of them (the top of their viewport there, or their selection when they report no viewport) through the type's `Locator`, and writes the leader's values of each `write` aspect into its own view state. Planks have five seconds from appearing to mount, during which their scroll, companions and anchors are applied again, and an anchor the view could not reveal yet (not mounted, or not loaded) is revealed again on every update until it can. An object the follower cannot load, or planks its layout fails to open, pause the follow until it can, trying again on every update.
   req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing. Input in the presence indicator or its viewers list, Escape included, ends nothing, since a follower opens that list to see the follow and stop it.
   req F-8.23: While following, the Members companion's rail tab shows a dot, and the presence list starts with the leader's row under a Following heading, carrying Stop (and Paused while paused) in place of their actions; the viewers list does so while the leader views its object. Stopping returns the row to its object's group and clears the dot. Below a follow section, the viewers list heads the rest of its viewers Viewing; the Members companion heads each group with its object's label.
   req F-8.24: A follow is marked in amber on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an amber dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows. Those rows wash in amber, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. While the session follows or is followed in the space its deck shows, every plank heading there, companions included and in a flat or sliding deck, takes a light amber wash over a one-pixel amber underline. The follow is also a state of the presence indicator: the avatars of those in the session's follow ring in amber.
@@ -1591,21 +1592,21 @@ decision D-78: The shared pointers were dropped on evidence. Placed by fractions
 ```
 
 ```mdl
-decision D-79: Any plugin can add its own data to a session's location through a `LocatorExtension` in app-toolkit: an id, an atom of its value in each space, and an optional `follow` that applies a leader's value and says whether it can show their view. The viewing message carries every extension's value by id, without presence reading it. plugin-space keeps whom a session follows, loading the attended object, revealing anchors through each type's `Locator`, pausing, and every way a follow ends; the deck contributes an extension that carries its front and companions and mirrors a leader's deck. The heading accent becomes `LayoutAccent`, a palette hue the layout tints its chrome with. Replaces the layout fields of [D-57], [D-76] and [D-77].
-  date: 2026-11-15
+decision D-79: Following carries layout and view state only. The viewing message carries the deck's planks in the space and the session's values of each view-state aspect declared with `follow`, by aspect key and EID, which presence carries without reading; the deck's front plank travels as the space's `ViewLocation` viewport. A follower opens the leader's planks with `LayoutOperation.Set`, scrolls to their front with `ScrollIntoView`, opens their companions with `UpdateCompanion`, and writes the leader's values of each `write` aspect into its own view state; a `reveal` aspect (the deck's companions) is the follow's to apply.
+  date: 2026-11-16
   by: user:wittjosiah
   affects: [F-8.14, F-8.21, PeerDeck]
-  why: A deck's front, flatness and companions are not properties of every layout, so they do not belong on app-toolkit's `Layout`, and other plugins may have state of their own worth following. Objects already reveal through a contributed `Locator` whose anchors presence carries without reading; extensions follow the same pattern for state that is not an object's.
+  why: One pattern for everything followed: state a view reads back lives in view state, and what needs navigating goes through the generic layout operations, so no plugin writes follow code and the follow names no layout plugin. The view-state manager learns each aspect as it is used, so declaring `follow` is all a plugin does.
   rejected:
-    - Generic names for the same layout fields; the follow would still carry the deck's sliding and binding rules.
+    - Fields on app-toolkit's `Layout` for the deck's front and companions; they are the deck's, not every layout's.
+    - A `LocatorExtension` or `Followable` capability with a `follow` of each plugin's own; every plugin repeated the follow's rules, and the deck carried most of them.
     - plugin-space reading plugin-deck's state; it ties follow to one layout plugin.
-    - A single `LayoutLocator` for the layout plugin alone; only layout state could travel with a location.
-    - The plank list as part of the deck's extension; it is the generic layout's `active`, and Go to reads it.
-    - Folding the object `Locator` into the same capability; it reveals an anchor in one object, keyed by type, not per-space state.
+    - Folding `ViewLocation` into the followed aspects; Go to and the viewers list read locations, and the follow reveals them through each type's `Locator` rather than writing them.
+    - Sending only values that differ from the aspect's default; a leader going back to the default would never reach the follower.
 ```
 
 ```mdl
-decision D-80: With no extension that navigates, the follow opens the attended object with one `LayoutOperation.Open` carrying the space's workspace, not a `SwitchWorkspace` followed by an `Open`. Fills in [D-79].
+decision D-80: With no planks reported, the follow opens the attended object with one `LayoutOperation.Open` carrying the space's workspace, not a `SwitchWorkspace` followed by an `Open`. Fills in [D-79].
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
@@ -1626,14 +1627,14 @@ decision D-81: A `Locator`'s `reveal` answers whether it revealed the anchor, an
 ```
 
 ```mdl
-decision D-82: The follow owns the clock: the view it hands each extension carries `now`, which advances on every tick, and the mount window is `FOLLOW_MOUNT_TIMEOUT` in app-toolkit. An extension re-applies what has not mounted from those, with no timer of its own. Fills in [D-79].
+decision D-82: The follow owns the clock: it updates every 500 ms, and the planks it opens have the mount window `FOLLOW_MOUNT_TIMEOUT` in app-toolkit, during which it applies their scroll, companions and anchors again. Fills in [D-79].
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-8.21]
-  why: The core and the deck's extension each ran a 500 ms interval and a five-second mount window, so every extension would repeat them.
+  why: A plank opened for the leader mounts after the operation that opened it returns, so what is applied to it before then is lost.
   rejected:
-    - The view listing the follower's paths still mounting; the deck's window runs from when it lands the view, which the core does not know.
+    - A timer in each view that applies a leader's value once it mounts; every view would repeat it.
 ```
 
 ```mdl
@@ -1688,15 +1689,10 @@ decision D-87: The presence list heads each section: Following (the leader), Fol
 ```
 
 ```mdl
-decision D-88: Followable view state replaces `LocatorExtension`. A plugin makes a `ViewState` aspect followable with `AppCapabilities.makeFollowable`; the viewing message carries the session's values of each followable aspect for the space and each object its deck holds, by aspect key and EID; a follower writes each value the leader changes into its own view state, or, for a followable with a `follow`, hands the values to it. The deck keeps its location in a memory aspect keyed by the space's EID and follows through its own `follow`; a project's tab is followable with no follow code. Selection and viewport stay `ViewLocation`, sent as `locations`. Replaces [D-79]'s extension.
+decision D-88: A `Locator`'s reveal takes `focus`, true by default, in place of [D-52]'s `follow`; the follow passes `focus: false`, and Go to and comments leave it out.
   date: 2026-11-16
   by: user:wittjosiah
-  affects: [F-8.14, F-8.21, PeerDeck]
-  why: Following a plugin's UI state was the same problem a locator extension solved, but each plugin had to publish its own atom of values per space. View state already holds that state per context, so marking an aspect followable is enough for most state, and only state that needs navigation to show, like the deck's, needs a `follow`.
-  rejected:
-    - A `followable` flag on `ViewState.define`; presence could not find the aspects, and the deck still needs a custom `follow`.
-    - Folding `ViewLocation` into the followable aspects; Go to and the viewers list read locations, and the follow reveals them through each type's `Locator` rather than writing them.
-    - Sending only values that differ from the aspect's default; a leader going back to the default would never reach the follower.
+  why: What the flag decides is whether the reveal takes the caret and focus; following is only one reason not to.
 ```
 
 ## Appendix: Extension Definitions
