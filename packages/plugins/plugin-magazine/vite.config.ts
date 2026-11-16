@@ -18,6 +18,7 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
     'CreateSubscription': 'src/types/CreateSubscription.ts',
     'FeedOperation': 'src/types/FeedOperation.ts',
+    'FeedParser': 'src/operations/sources/rss.ts',
     'Magazine': 'src/types/Magazine.ts',
     'MagazineEvents': 'src/types/MagazineEvents.ts',
     'Subscription': 'src/types/Subscription.ts',

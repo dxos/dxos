@@ -77,7 +77,7 @@ export const fetchRss: FeedFetcher = (url, options) =>
   }).pipe(Effect.provide(FetchHttpClient.layer));
 
 /** Parses RSS/Atom XML into a normalized {@link FetchResult}; throws on an unrecognized shape. */
-const parseFeed = (url: string, xml: string): FetchResult => {
+export const parseFeed = (url: string, xml: string): FetchResult => {
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '@_',
