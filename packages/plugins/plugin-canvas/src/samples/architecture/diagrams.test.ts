@@ -5,10 +5,11 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { DEFAULT_LATTICE, type RenderList2D, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas';
+import { DEFAULT_LATTICE, type RenderList2D, elementId, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas';
+import { isNodeRecord, readViews, rootOf } from '@dxos/react-ui-canvas/headless';
 import { isViewNode } from '@dxos/scene';
 
-import { elementId, isNodeRecord, objectUri, readViews, rootOf } from '#model';
+import { objectUri } from '#model';
 
 import { DIAGRAM_COMMANDS as files } from './compiled.ts';
 import {

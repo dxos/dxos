@@ -7,4 +7,8 @@ export * from './Editor/index.ts';
 export * from './EditorMenuProvider/index.ts';
 export * from './EditorPreviewProvider/index.ts';
 export * from './EditorToolbar/view-mode.ts';
-export { EDITOR_TOOLBAR_INSERT_GROUP } from './EditorToolbar/EditorToolbar.tsx';
+export {
+  EDITOR_TOOLBAR_INSERT_GROUP,
+  type EditorToolbarActionsProps,
+  createEditorToolbarActions,
+} from './EditorToolbar/EditorToolbar.tsx';

@@ -17,11 +17,15 @@ import { Presentation } from '#types';
  */
 const handler: Operation.WithHandler<typeof CodeOperation.CreateShowcase> = CodeOperation.CreateShowcase.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ name, content, targets, artifacts = [] }) {
+    Effect.fn(function* ({ name, content, targets = [], items = [], artifacts = [] }) {
       // Resolved before any write, so a stale ref leaves no orphaned deck behind.
       const resolvedTargets = [];
       for (const targetRef of targets) {
         resolvedTargets.push(yield* Database.load(targetRef));
+      }
+      const resolvedItems = [];
+      for (const { spec, item } of items) {
+        resolvedItems.push({ spec: yield* Database.load(spec), item });
       }
       const resolvedArtifacts = [];
       for (const artifactRef of artifacts) {
@@ -36,6 +40,11 @@ const handler: Operation.WithHandler<typeof CodeOperation.CreateShowcase> = Code
       }
       for (const target of resolvedTargets) {
         yield* Database.add(Showcase.makeDemonstrates({ [Relation.Source]: presentation, [Relation.Target]: target }));
+      }
+      for (const { spec, item } of resolvedItems) {
+        yield* Database.add(
+          Showcase.makeDemonstrates({ [Relation.Source]: presentation, [Relation.Target]: spec, item }),
+        );
       }
       yield* Database.flush();
       return { showcase: presentation };

@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -266,5 +266,81 @@ export const ThemeOverrides: Story = {
     // `tone="accent"` inside a toned box returns to the slide's accent instead of inheriting the box's.
     const nested = await query(canvasElement, 'ul[data-tone="accent"]');
     await expect(getComputedStyle(nested).getPropertyValue('--slide-accent').trim()).toBe('#ff7a1a');
+  },
+};
+
+/**
+ * `<List variant="flow">` lays the items out as a row of cards with an arrow in each gap, and `active` marks the
+ * one the story has reached. The item's own markdown names its parts: emphasis is the label, strong is the title.
+ */
+export const FlowVariant: Story = {
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '# How we got here',
+      '',
+      '<List variant="flow" active="4">',
+      '',
+      '1. **Chat** A model in a separate window',
+      '2. **Vibe coding** Describe it and the model builds it',
+      '3. *Now* **Cowork** Claude working inside your existing apps',
+      '4. *Next* **Replacing apps** The assistant becomes the app',
+      '',
+      '</List>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const flow = await query(canvasElement, 'ol[data-variant="flow"]');
+    const items = [...flow.querySelectorAll('li')];
+    await expect(items).toHaveLength(4);
+
+    // The cards share the row, so each one's top edge is the same and the last carries no arrow.
+    await expect(getComputedStyle(flow).gridAutoFlow).toContain('column');
+    await expect(items[3].getBoundingClientRect().top).toBeCloseTo(items[0].getBoundingClientRect().top, 0);
+    await expect(getComputedStyle(items[0], '::after').content).toBe('"→"');
+    await expect(getComputedStyle(items[3], '::after').content).toBe('none');
+
+    // `active` marks the fourth item, and only it.
+    await expect(items.filter((item) => item.dataset.active !== undefined)).toEqual([items[3]]);
+  },
+};
+
+/** The row composes with `<v-clicks>`, so a build reveals the cards one at a time. */
+export const FlowBuild: Story = {
+  args: {
+    step: 2,
+    content: slide(
+      { layout: 'default' },
+      '# How we got here',
+      '',
+      '<v-clicks>',
+      '',
+      '<List variant="flow" active="4">',
+      '',
+      '1. **Chat** A model in a separate window',
+      '2. **Vibe coding** Describe it and the model builds it',
+      '3. *Now* **Cowork** Claude working inside your existing apps',
+      '4. *Next* **Replacing apps** The assistant becomes the app',
+      '',
+      '</List>',
+      '',
+      '</v-clicks>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const flow = await query(canvasElement, 'ol[data-variant="flow"]');
+    const items = [...flow.querySelectorAll('li')];
+    // Two cards are out; the rest hold their place in the row so the layout never shifts as the build runs.
+    await expect(items.map((item) => item.classList.contains('invisible'))).toEqual([false, false, true, true]);
+    await expect(items[3].getBoundingClientRect().top).toBeCloseTo(items[0].getBoundingClientRect().top, 0);
+
+    // The arrow between the two revealed cards is drawn; the one that would point at a card still to come is not.
+    await expect(getComputedStyle(items[0], '::after').content).toBe('"→"');
+    await expect(getComputedStyle(items[1], '::after').content).toBe('none');
+
+    // Clicking the slide runs the build on, and the arrow that was waiting is drawn with the card it points at.
+    await userEvent.click(items[0]);
+    await waitFor(() => expect(items[2].classList.contains('invisible')).toBe(false));
+    await expect(getComputedStyle(items[1], '::after').content).toBe('"→"');
   },
 };

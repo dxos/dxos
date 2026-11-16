@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
@@ -13,47 +13,54 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
-import * as Typography from '@dxos/react-ui/Typography';
 import { Person } from '@dxos/types';
 
-import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
+import { NextJsonLayout, type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { ObjectForm, ObjectProperties } from './ObjectForm.tsx';
 
-type StoryArgs = PaneArgs & { component?: 'form' | 'properties' };
+type StoryArgs = PaneArgs & { component?: 'form' | 'properties' | 'transient' };
 
 const DefaultStory = ({ component = 'form' }: StoryArgs) => {
   const { space } = useClientStory();
   const [person] = useQuery(space?.db, Filter.type(Person.Person));
   const [snapshot] = useObject(person);
+  // Stands in for the popover's dismissal, so the test can assert that both buttons close their host.
+  const [closed, setClosed] = useState(0);
+  const handleClose = useCallback(() => setClosed((closed) => closed + 1), []);
   if (!person) {
     return <></>;
   }
 
-  const footer = (
-    <Panel.Footer>
-      <Typography.Text truncate data-testid='object'>
-        {JSON.stringify({ ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.label) })}
-      </Typography.Text>
-    </Panel.Footer>
-  );
-  return component === 'properties' ? (
-    <Panel.Root size='sm'>
-      <ObjectProperties object={person} />
-      {footer}
-    </Panel.Root>
-  ) : (
-    <Panel.Root size='sm'>
-      <Panel.Body asChild>
-        <ScrollArea.Root>
-          <ScrollArea.Viewport asChild>
-            <Layout.Container>
-              <ObjectForm object={person} type={Person.Person} />
-            </Layout.Container>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-      {footer}
-    </Panel.Root>
+  // `closed` rides along with the object so one JSON panel shows everything the story asserts.
+  const data = {
+    object: { ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.label) },
+    closed,
+  };
+
+  return (
+    <NextJsonLayout data={data}>
+      {/* The play functions read this, not the JSON panel beside it: the panel's `textContent` is the tokenizer's
+          span tree flattened, which drops spaces inside string values ("Alice Liddell" reads back as
+          "AliceLiddell"). `hidden` rather than a class, since these files carry no class names. */}
+      <span hidden data-testid='values-source'>
+        {JSON.stringify(data)}
+      </span>
+      <Panel.Root>
+        {component === 'form' ? (
+          <Panel.Body asChild>
+            <ScrollArea.Root>
+              <ScrollArea.Viewport asChild>
+                <Layout.Container>
+                  <ObjectForm object={person} type={Person.Person} />
+                </Layout.Container>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Body>
+        ) : (
+          <ObjectProperties object={person} onClose={component === 'transient' ? handleClose : undefined} />
+        )}
+      </Panel.Root>
+    </NextJsonLayout>
   );
 };
 
@@ -62,7 +69,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withNextPane({ height: '48rem' }),
+    withNextPane({ width: '100dvw', height: '100dvh' }),
     withClientProvider({
       types: [Person.Person, Tag.Tag],
       createIdentity: true,
@@ -94,8 +101,12 @@ export const Default: Story = {};
 
 export const Properties: Story = { args: { component: 'properties' } };
 
-const readObject = (canvasElement: HTMLElement) =>
-  JSON.parse(within(canvasElement).getByTestId('object').textContent ?? '{}');
+export const Transient: Story = { args: { component: 'transient' } };
+
+const readValues = (canvasElement: HTMLElement) =>
+  JSON.parse(within(canvasElement).getByTestId('values-source').textContent ?? '{}');
+
+const readObject = (canvasElement: HTMLElement) => readValues(canvasElement).object;
 
 /** 1. Test: the object's fields and meta tags edit the live object; a tag is picked and created inline. */
 export const Test: Story = {
@@ -157,5 +168,38 @@ export const TestProperties: Story = {
     await userEvent.type(title, ' II');
     await waitFor(() => expect(readObject(canvasElement).jobTitle).toBe('Engineer II'));
     await expect(within(canvas.getByTestId('_tags')).getByText('Friend')).toBeVisible();
+  },
+};
+
+const readClosed = (canvasElement: HTMLElement) => readValues(canvasElement).closed;
+
+/** 1. TestTransient: with `onClose`, the form holds its edits until Save; Cancel discards them. */
+export const TestTransient: Story = {
+  args: { component: 'transient' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 2. The pane shows the live object and, unlike the live variant, a Cancel and a Save.
+    const title = await canvas.findByDisplayValue('Engineer', {}, { timeout: 15_000 });
+    await expect(canvas.getByTestId('cancel-button')).toBeVisible();
+    await expect(canvas.getByTestId('save-button')).toBeVisible();
+
+    // 3. Typing writes nothing: the object still holds the value it opened with.
+    await userEvent.clear(title);
+    await userEvent.type(title, 'Architect');
+    await expect(readObject(canvasElement).jobTitle).toBe('Engineer');
+
+    // 4. Cancel leaves the object untouched and closes.
+    await userEvent.click(canvas.getByTestId('cancel-button'));
+    await waitFor(() => expect(readClosed(canvasElement)).toBe(1));
+    await expect(readObject(canvasElement).jobTitle).toBe('Engineer');
+
+    // 5. Save writes every edit at once and closes.
+    const reopened = canvas.getByDisplayValue('Architect');
+    await userEvent.clear(reopened);
+    await userEvent.type(reopened, 'Architect II');
+    await userEvent.click(canvas.getByTestId('save-button'));
+    await waitFor(() => expect(readObject(canvasElement).jobTitle).toBe('Architect II'));
+    await expect(readClosed(canvasElement)).toBe(2);
   },
 };

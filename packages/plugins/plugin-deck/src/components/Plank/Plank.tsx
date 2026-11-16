@@ -170,6 +170,23 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       [attendableId, node.id, node.data, node.properties, popoverAnchorId, articleData],
     );
 
+    // The article already on screen is held for the commit the shell paints alone, so the plank's content
+    // is never empty between two subjects. Dropping it leaves the editor and its toolbar out of the DOM for
+    // the frames in between — measured at ~90ms, which is the flicker on every move between articles — and
+    // tears down what was there, so what returns measures its container again from scratch.
+    //
+    // Recorded after the commit, not during render: a render React discards never reaches the screen, and
+    // holding its article would show one that was never displayed.
+    const current = articleReady && node.data !== undefined ? { key: node.id, data } : undefined;
+    const [held, setHeld] = useState(current);
+    useEffect(() => {
+      if (current) {
+        setHeld((previous) => (previous?.key === current.key && previous.data === current.data ? previous : current));
+      }
+      // The identity of `current` changes with `data`, which is already memoized on what it is built from.
+    }, [current?.key, current?.data]);
+    const shown = current ?? held;
+
     // Anchor the sigil's popover only when this plank's menu is the active popover target.
     const ActionRoot = popoverAnchorId === `${DeckNamespace.key}:${node.id}` ? Popover.Anchor : Fragment;
 
@@ -256,14 +273,14 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
           </Pane.Toolbar>
         )}
         <Pane.Content>
-          {node.data === undefined || !articleReady ? (
-            // No subject resolved yet, or a new subject whose shell paints before its article.
+          {shown === undefined ? (
+            // Nothing has resolved for this plank yet; from the second subject on, the one before is held.
             PLANK_LOADING
           ) : (
             <Surface.Surface
-              key={node.id}
+              key={shown.key}
               type={AppSurface.Article}
-              data={data}
+              data={shown.data}
               limit={1}
               fallback={fallback}
               placeholder={PLANK_LOADING}
