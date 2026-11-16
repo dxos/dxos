@@ -54,21 +54,104 @@ service MemoryService
     query<T>(query: MemoryQuery<T>) → T                         # every knowledge-base read [F-3.2]
     reset() → void                                              # [F-3.6]
     subscribe(subscription: Subscription) → boolean             # false at MAX_SUBSCRIPTIONS [F-4.1]
-    subscriptions(owner?: string) → Subscription[]              # oldest first [F-4.1]
-    unsubscribe(id: string) → boolean                           # [F-4.2]
-    take(id: string) → MemoryEvent[]                            # oldest first [F-4.4]
-    ack(id: string, events: string[]) → void                    # [F-4.4]
+    subscriptions(owner?: EntityKey) → Subscription[]           # oldest first [F-4.1]
+    unsubscribe(id: SubscriptionId) → boolean                   # [F-4.2]
+    take(id: SubscriptionId) → MemoryEvent[]                    # oldest first [F-4.4]
+    ack(id: SubscriptionId, events: MemoryEventId[]) → void     # [F-4.4]
   errors:
     MemoryError: the store refused, could not be reached, or the input does not compile; the message says which
   note: |
     An instance is scoped to one space, so no op takes a space or agent argument [F-5].
 ```
 
+### Operations
+
+**Knowledge base**
+
+- **`put(facts, options?) → number`** writes facts to the space's memory. Writing the same fact again
+  changes nothing, so a source can be re-read safely. Predicates the memory has not seen are added to
+  its ontology. `options.read` moves the source's read cursor in the same write, so memory never claims
+  to have read facts it does not hold; `put([], { read })` moves only the cursor. `options.quiet` lists
+  speakers whose facts are stored but wake no subscription on their own, so an agent is not woken by
+  its own words. Returns how many events the write queued across all subscriptions [F-3.1, F-4.3].
+- **`query(MemoryQuery<T>) → T`** is the only read of the knowledge base. The query's kind fixes what it
+  returns: facts matching a pattern, the facts in SPARQL-selected graphs, SPARQL rows, the known
+  predicates, or a source's read cursor (see [Queries](#queries)). It never changes the memory
+  [F-3.2 to F-3.5].
+- **`reset() → void`** forgets what the memory knows: facts, read cursors and queued events, and the
+  ontology goes back to the seed vocabulary. Subscriptions stay, with their rule state started over,
+  so a watch outlives a reset. Sources are read again from the start because their cursors are gone
+  [F-3.6].
+
+**Event base**
+
+A subscription is a standing question: "tell me when these rules hold". Its life is:
+
+1. `subscribe` registers it.
+2. Each `put`, and the passing of time, may wake its rules; every wake queues one MemoryEvent in the
+   subscription's own outbox.
+3. Its consumer calls `take` to read the outbox and `ack` once it has handled the events.
+4. `unsubscribe` ends it.
+
+- **`subscribe(subscription) → boolean`** adds a subscription, or replaces the one with the same id.
+  It wakes only on facts written from `createdAt` on, though its rules may read earlier facts. Returns
+  false, adding nothing, when the space already holds `MAX_SUBSCRIPTIONS` others; fails with MemoryError
+  when its rules do not compile [F-4.1].
+- **`subscriptions(owner?) → Subscription[]`** lists subscriptions, oldest first: all of them, or only
+  those whose `owner` is the given agent [F-4.1, F-5.3].
+- **`unsubscribe(id) → boolean`** removes a subscription and drops its outbox, events included. Returns
+  false when it was already gone, so when two consumers race to end a one-time subscription, exactly
+  one sees true and acts on it [F-4.2].
+- **`take(id) → MemoryEvent[]`** reads a subscription's unacknowledged events, oldest first, without
+  removing them; an unknown id gives an empty list. Calling it twice returns the same events, so a
+  consumer that fails before acknowledging sees them again [F-4.4].
+- **`ack(id, events) → void`** removes the named events from the outbox, once their consumer has handled
+  them. Ids it does not hold are ignored, so acknowledging twice is safe. An acknowledged event is not
+  queued again even if the same wake is derived later [F-4.4].
+
 ## Data model
 
 The fact model is the one `@dxos/pipeline-rdf` defines today, moved here unchanged in shape so stored
 facts and their JSON stay valid [F-2.1]. Every type below is an Effect `Schema` with an interface of the
 same name.
+
+### Identifiers
+
+Every id in the model is a branded string (Effect `Schema.String.pipe(Schema.brand(...))`): its JSON
+form is a plain string, so stored facts still decode [F-2.1], but the type checker keeps one kind of id
+from being passed where another is expected [F-2.4].
+
+```mdl
+type FactId
+  desc: A statement's id, derived from its graph and the statement; stable across writes.
+```
+
+```mdl
+type GraphIri
+  desc: The IRI of a named graph; what `graph`, `supersedes` and `retracts` hold.
+```
+
+```mdl
+type EntityKey
+  desc: |
+    An entity: an absolute IRI where one is known (`echo://…`, `did:…`, `mailto:…`, a URL), else a
+    normalized slug local to the graph that mentions it. Names speakers, subjects, objects and owners.
+```
+
+```mdl
+type SourceUri
+  desc: The item facts were read from, or a source read into facts: a DXN or another URI.
+```
+
+```mdl
+type SubscriptionId
+  desc: A subscription's id, unique in its space; chosen by the caller.
+```
+
+```mdl
+type MemoryEventId
+  desc: An event's id, stable per subscription, wake and facts, so a wake derived twice queues once.
+```
 
 ### What a fact records
 
@@ -136,8 +219,8 @@ type Fact
     One statement and what is known about it. Statements that share their provenance live in one named
     graph (`graph`), which carries that provenance once.
   fields:
-    id: string                    # the statement's id: derived from the graph and the statement
-    graph?: string                # IRI of the named graph holding the statement
+    id: FactId                    # the statement's id: derived from the graph and the statement
+    graph?: GraphIri              # the named graph holding the statement
     assertion: Assertion
     factuality: Factuality
     illocution?: Illocution       # absent ⇒ assertive
@@ -148,8 +231,8 @@ type Fact
     pass?: string                 # extraction pass id; groups one run's facts
     kind?: string                 # a free-text memory's sort (`preference`, `commitment`); absent for a fact
     origin?: stated | inferred
-    supersedes?: string[]         # IRIs of the graphs this one replaces
-    retracts?: string[]           # IRIs of the graphs this one withdraws
+    supersedes?: GraphIri[]       # the graphs this one replaces
+    retracts?: GraphIri[]         # the graphs this one withdraws
 ```
 
 ```mdl
@@ -175,7 +258,7 @@ type Term
 type EntityTerm
   fields:
     kind: entity
-    entity: string                # absolute IRI when known, else a normalized slug
+    entity: EntityKey
     label?: string                # surface form, for display
     type?: EntityKind
 ```
@@ -206,9 +289,9 @@ type Entity
 type Attribution
   desc: PROV-O-named provenance.
   fields:
-    agent?: string                # who said it: an entity id
+    agent?: EntityKey             # who said it
     agentLabel?: string
-    source: string                # DXN of the source item
+    source: SourceUri             # the item it came from
     generatedAtTime: string       # ISO
     wasDerivedFrom?: string[]
     span?: { start: number, end: number }
@@ -243,10 +326,10 @@ type GraphStatus
 type FactQuery
   desc: What a FactsQuery selects; every field set must hold.
   fields:
-    subjectEntity?: string        # entity key in the subject position
-    entity?: string               # entity key in the subject or object position
+    subjectEntity?: EntityKey     # in the subject position
+    entity?: EntityKey            # in the subject or object position
     predicate?: string            # IRI, or a surface form resolved through the memory's ontology
-    source?: string               # DXN the facts were read from
+    source?: SourceUri            # the item the facts were read from
     minConfidence?: number        # inclusive lower bound on factuality confidence
 ```
 
@@ -286,14 +369,14 @@ type PredicateEntry
 type ReadCursor
   desc: How far a source has been read into facts.
   fields:
-    source: string                # URI of the source read (a chat, a feed, a mailbox)
+    source: SourceUri             # the source read (a chat, a feed, a mailbox)
     through: string               # URI or hash of the last item read; the next read starts after it
 ```
 
 ```mdl
 type PutOptions
   fields:
-    quiet?: string[]              # speakers whose facts are stored but wake nothing on their own
+    quiet?: EntityKey[]           # speakers whose facts are stored but wake nothing on their own
     read?: ReadCursor             # moved in the same write as the facts
 ```
 
@@ -301,8 +384,8 @@ type PutOptions
 type Subscription
   desc: Goal rules held against a space's memory, and the caller's own record of why.
   fields:
-    id: string
-    owner?: string                # entity id of the agent that holds it; `subscriptions(owner)` filters by it
+    id: SubscriptionId
+    owner?: EntityKey             # the agent that holds it; `subscriptions(owner)` filters by it
     rules: string                 # Datalog goal rules (`@dxos/brain`)
     createdAt: string             # ISO; facts put before it wake nothing
     payload?: Json                # stored and returned as is; never interpreted by memory
@@ -312,8 +395,8 @@ type Subscription
 type MemoryEvent
   desc: One wake of a subscription's rules, queued in its outbox until acknowledged.
   fields:
-    id: string                    # stable per subscription, wake and facts
-    subscription: string
+    id: MemoryEventId             # stable per subscription, wake and facts
+    subscription: SubscriptionId
     label: string                 # the rules' wake label, `achieved`, or a sub-goal id
     facts: Fact[]                 # empty for a wake the clock caused
     at: string                    # ISO
@@ -373,7 +456,7 @@ type CursorQuery
   desc: How far a source has been read. Result: string | undefined, the cursor's `through` [F-3.5].
   fields:
     _tag: cursor
-    source: string
+    source: SourceUri
 ```
 
 ## Features
@@ -412,6 +495,12 @@ feat F-2: Fact data model
     then: echo-memory provides the pure functions `graphStatus(facts)`, `currentFacts(facts, now)`,
           `termValue(term)`, `termText(term)` and `factText(fact)`, with the behaviour they have today in
           `@dxos/pipeline-rdf` and `BrainService`
+
+  req F-2.4:
+    when: code passes an id
+    then: it is typed by its brand (FactId, GraphIri, EntityKey, SourceUri, SubscriptionId,
+          MemoryEventId); passing one kind where another is expected is a type error, while the encoded
+          form stays a plain string
 ```
 
 ```mdl
@@ -880,6 +969,25 @@ decision D-20: A native memory schedules its own time-driven evaluation in its l
   for: user:dmaretskyi
   affects: [F-7.5, F-7.4]
   why: A CLI memory backed by a file is not running while rules come due, so without catch-up a reminder due overnight would never wake.
+```
+
+```mdl
+decision D-21: Ids in the memory interface are branded types.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [MemoryService, F-2.4]
+```
+
+```mdl
+decision D-22: The branded ids are FactId, GraphIri, EntityKey, SourceUri, SubscriptionId and MemoryEventId, each a branded string whose JSON form is unchanged. Fills in [D-21].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FactId, GraphIri, EntityKey, SourceUri, SubscriptionId, MemoryEventId, F-2.4]
+  why: These are the ids the ops take or the model cross-links; a brand on the type alone keeps stored facts and wire JSON decoding as before (D-7).
+  rejected:
+    - Reusing `@dxos/keys` DXN for SourceUri, which would reject the non-DXN URIs read cursors already hold.
+    - Branding predicate IRIs, which callers pass as surface forms as often as IRIs.
 ```
 
 ## Appendix: Extension Definitions

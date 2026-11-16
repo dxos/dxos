@@ -20,6 +20,8 @@ block only the tasks that name them.
       `GraphStatus`.
 - [ ] Add the pure functions `graphStatus` (from `Graph.status`), `currentFacts`, `termValue`, `termText`,
       `factText` (from `BrainService`) [F-2.3]. Check each has no `n3` import.
+- [ ] Add the branded ids `FactId`, `GraphIri`, `EntityKey`, `SourceUri`, `SubscriptionId`,
+      `MemoryEventId` [F-2.4]; brand-only, so decoding existing JSON is unchanged.
 - [ ] Add `MemoryError` [F-6.1] and the `MemoryService` tag (`@dxos/echo-memory/MemoryService`) with its API.
 - [ ] Add `MAX_SUBSCRIPTIONS = 256` (replaces `BrainService.MAX_TRIGGERS` and edge's `MAX_TRIGGERS`).
 - [ ] Tests: T-6 (JSON round trip of `Fact`, `Subscription`, `MemoryEvent`, every MemoryQuery kind); a decode test over facts
