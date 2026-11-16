@@ -26,6 +26,17 @@ tasks:
     options:
       timeout: 900
 
+  prepack-edge-release:
+    # Readies the bundle `check-edge-release` built and checked to ship in the package tarball, where dxos/edge seeds
+    # its registry from (`node_modules/@dxos/<plugin>/dist/plugin`): drops the source maps, two thirds of the bundle,
+    # which EDGE never reads. The pkg.pr.new and npm publish workflows run it before packing.
+    script: find dist/plugin -name '*.map' -type f -delete
+    deps:
+      - check-edge-release
+    options:
+      # It edits `check-edge-release`'s outputs in place, which is nothing moon can cache.
+      cache: false
+
   publish-edge-release:
     # Uploads the bundle `check-edge-release` built and checked to the EDGE at `DX_EDGE_BASE_URL` as a first-party
     # plugin, with the admin key in `DX_HUB_API_KEY`. `-- --dry-run` lists what it would upload. Deploy Apps runs it

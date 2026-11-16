@@ -20,6 +20,12 @@ moon run plugin-markdown:check-edge-release
 It builds the package's bundle into `dist/plugin` (the same build `dx registry publish` uploads) and runs the bundle
 check below on it. The plugin runs alone on EDGE, so no other plugin's bundle is built beside it.
 
+## Shipping the bundle in the package
+
+The same packages inherit `prepack-edge-release`, which runs `check-edge-release` and drops the bundle's source maps.
+The pkg.pr.new and npm publish workflows run it before packing, so each package's tarball carries `dist/plugin` and
+dxos/edge seeds its registry from `node_modules/@dxos/<plugin>/dist/plugin`. No `exports` entry names it.
+
 ## Publishing a plugin to EDGE
 
 The same packages inherit `publish-edge-release` (all but `plugin-assistant`, which excludes it until its bundle

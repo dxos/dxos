@@ -91,9 +91,11 @@ jobs:
         run: moon run cli:smoke
 
       # Each `edge-release` plugin ships its EDGE bundle in `dist/plugin`, which dxos/edge installs from here. No
-      # `NODE_ENV`, so it is the bundle `Check` and Deploy Apps build.
+      # `NODE_ENV`, so it is the bundle `Check` and Deploy Apps build. A plugin whose check fails stops neither the others
+      # nor the publish: its package ships the bundle as built, which EDGE's registry refuses if it does not describe.
       - name: Build EDGE plugin bundles
-        run: .github/workflows/scripts/build-edge-plugin-bundles.sh
+        continue-on-error: true
+        run: moon exec --on-failure continue '#edge-release:prepack-edge-release'
 
       - name: Publish to pkg.pr.new
         run: .github/workflows/scripts/pkg-pr-new-publish.sh
