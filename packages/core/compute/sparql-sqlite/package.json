@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./async": {
+      "source": "./src/async.ts",
+      "types": "./dist/types/src/async.d.ts",
+      "import": "./dist/lib/async.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -37,6 +42,7 @@
   "devDependencies": {
     "@comunica/query-sparql-rdfjs": "catalog:",
     "@dxos/sql-sqlite": "workspace:*",
+    "@effect/sql-sqlite-node": "catalog:",
     "@types/n3": "catalog:",
     "@types/sparqljs": "catalog:",
     "effect": "catalog:",
@@ -46,6 +52,9 @@
     "oxigraph": "catalog:",
     "tsx": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

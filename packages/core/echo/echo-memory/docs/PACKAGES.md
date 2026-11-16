@@ -50,15 +50,9 @@ plugin-brain (existing)        page; the host-service proxy for agent memory
 
 ## Questions
 
-1. **Synchronous access to the host's database.** `@dxos/sparql-sqlite` runs synchronous SQL; the host
-   reaches its database through Effect's async `SqlClient`, over wa-sqlite's synchronous OPFS pool in the
-   worker and `node:sqlite` in node. Options:
-   1. **Share the connection:** expose a `SqlStorage` over the same wa-sqlite / node connection, and run
-      each memory call inside `SqlClient.withTransaction` so it never interleaves with an open ECHO
-      transaction (preferred).
-   2. **Second connection:** open the same database file again for memory. WAL with exclusive locking in
-      the worker rules this out there.
-   3. **Async port:** add an async storage interface to `@dxos/sparql-sqlite`. The most work.
+1. ~~Synchronous access to the host's database.~~ Resolved [F-9.7]: `@dxos/sparql-sqlite` has an async
+   engine (`@dxos/sparql-sqlite/async`) over Effect's `SqlClient`, so the backend uses its existing
+   connection as is. `MemorySqlite` and pipeline-rdf's store still need async variants on top of it.
 2. Where does the Composer capability live?
    1. A new `plugin-memory` that plugin-agent and plugin-brain both depend on (preferred).
    2. In `plugin-brain`, with plugin-agent depending on plugin-brain.

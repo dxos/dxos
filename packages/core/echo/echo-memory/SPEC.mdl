@@ -688,6 +688,11 @@ feat F-9: The app's memory: a fact feed and a backend store
   req F-9.6:
     when: subscriptions, outboxes and acknowledgements change
     then: they stay in the local database and are not written to the fact feed
+
+  req F-9.7:
+    when: the backend reaches its database only through an async connection (Effect's `SqlClient`)
+    then: it runs `@dxos/sparql-sqlite`'s async engine over that connection; the sync engine stays for hosts
+          with synchronous SQLite (Durable Objects, node, the CLI), and both give the same answers
 ```
 
 ## Acceptance
@@ -1096,6 +1101,24 @@ question Q-6: Should subscriptions also be written to the fact feed, so a watch 
   options:
     - Local: subscriptions and outboxes stay per device.
     - Replicated: subscriptions go to the feed; outboxes stay local.
+```
+
+```mdl
+decision D-29: `@dxos/sparql-sqlite` also runs over an async connection; it has a sync and an async variant.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-9.7]
+```
+
+```mdl
+decision D-30: Both variants share one engine: the store and engine logic yield SQL statements that a sync or an async driver runs, and the async variant compiles from caches and retries once with the store reads it missed. Fills in [D-29].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.7]
+  why: Two copies of the store and engine would drift; the compiler's lookups are synchronous callbacks, and fetch-and-retry keeps the compiler unchanged.
+  rejected:
+    - Running the sync engine against a synchronous handle borrowed from the host's async connection, which needs the SQLite clients to expose their connection.
 ```
 
 ## Appendix: Extension Definitions

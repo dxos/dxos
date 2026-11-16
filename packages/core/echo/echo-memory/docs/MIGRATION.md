@@ -65,9 +65,13 @@ Q-5 (event-base reads stay ops).
       writes and wakes its own subscriptions; rebuild from a real feed in the `facts` namespace.
 - [ ] Apply an entry and move the log cursor in one transaction (today a crash between them replays the
       entry, which is harmless since `put` is idempotent and `reset` replays to the same state).
+- [x] `@dxos/sparql-sqlite/async`: `SqlSparqlEngineAsync` over `SqlClient`, one engine shared with the sync
+      variant; every benchmark query answers the same on both [F-9.7].
+- [ ] Async variants of pipeline-rdf's store (`FactStoreLive`) and of `MemorySqlite`, over
+      `SqlSparqlEngineAsync` and `SqlClient`, so the backend needs no synchronous handle.
 - [ ] `MemoryHost` in client-services: one `MemorySqlite` per open space over the host's database, with a
       `FactLog.feed` over the host's `FeedStore`; served over the client-services bridge through
-      `MemoryWire` [F-9.1]. Blocked on `docs/PACKAGES.md` question 1 (synchronous access).
+      `MemoryWire` [F-9.1]. Needs the async `MemorySqlite`.
 - [ ] Choose the space's fact feed id (one feed per space) and create it with the space.
 - [ ] Replicate the `facts` namespace through the feed sync client; EDGE must accept it first
       (`docs/PACKAGES.md` question 3).

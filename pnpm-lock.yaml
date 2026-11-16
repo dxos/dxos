@@ -6458,6 +6458,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)
       '@types/n3':
         specifier: 'catalog:'
         version: 1.26.1
