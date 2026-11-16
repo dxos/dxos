@@ -6,11 +6,16 @@
 
 import * as Schema from 'effect/Schema';
 
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, DXN, Ref } from '@dxos/echo';
-import { Task } from '@dxos/types';
+import { Database, DXN, Feed, Ref } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
+import { Text } from '@dxos/schema';
+import { Repo, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as CodingAgentControl from '../CodingAgentControl.ts';
@@ -20,6 +25,20 @@ import * as CodingAgentControl from '../CodingAgentControl.ts';
 // itself) hands tasks to Claude Code on EDGE. The agent works on in its container between calls; each call folds what
 // it has produced into the chat and says whether the turn has ended.
 //
+
+/** Everything a run reads or writes in the space: an EDGE bundle's database knows only the types an operation names. */
+const types = [
+  Chat.Chat,
+  Feed.Feed,
+  ...TrajectoryStore.types,
+  Task.Task,
+  TaskSet.TaskSet,
+  Project.Project,
+  Instructions.Instructions,
+  Text.Text,
+  Repo.Repo,
+  AccessToken.AccessToken,
+];
 
 const RunState = Schema.Struct({
   chat: Ref.Ref(Chat.Chat).annotate({ description: 'The chat the run lives in; pass it to Sync Cloud Coding Run.' }),
@@ -57,6 +76,7 @@ export const StartCloudRun = Operation.make({
   }),
   output: RunState,
   services: [Database.Service, Trace.TraceService, Operation.Service, CodingAgentControl.CodingAgentControl],
+  types,
 }).pipe(Operation.mutation('write'));
 
 export const SyncCloudRun = Operation.make({
@@ -73,4 +93,5 @@ export const SyncCloudRun = Operation.make({
   input: Schema.Struct({ chat: Ref.Ref(Chat.Chat) }),
   output: RunState,
   services: [Database.Service, Trace.TraceService, Operation.Service, CodingAgentControl.CodingAgentControl],
+  types,
 }).pipe(Operation.mutation('write'));
