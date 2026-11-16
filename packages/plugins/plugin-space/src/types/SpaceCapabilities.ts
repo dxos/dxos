@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Atom from 'effect/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import type { ComponentType } from 'react';
@@ -32,6 +32,8 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 export const StateSchema = Schema.Struct({
   spaceNames: Schema.Record(Schema.String, Schema.String),
   enabledEdgeReplication: Schema.Boolean,
+  /** Presence lists show a row per session rather than per person. */
+  showSessions: Schema.optional(Schema.Boolean),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
@@ -55,12 +57,37 @@ export type MergePreview = {
 export type SpaceEphemeralState = {
   sdkMigrationRunning: Record<string, boolean>;
   navigableCollections: boolean;
-  /** Peers viewing each object, keyed by the object's EID and then by the peer's hex identity key. */
-  viewersByObject: Record<string, Record<string, SpaceSchema.ObjectViewerProps>>;
+  /** Sessions viewing each object, keyed by the object's EID, the peer's hex identity key, then the session id. */
+  viewersByObject: Record<string, Record<string, Record<string, SpaceSchema.ObjectViewerProps>>>;
+  /** Each peer session's deck as it last reported it, keyed by space id, the peer's hex identity key, then the session id. */
+  peerDecks: Record<string, Record<string, Record<string, SpaceSchema.PeerDeck>>>;
   mergePreview: MergePreview | undefined;
+  /** This session's id in its presence messages and follow pointer: one per running app, so peers tell its tabs apart. */
+  sessionId: string;
+  /** The spaces in which some session follows this one. */
+  followedSpaces: readonly string[];
+  /** Whom each peer session follows, keyed by space id, the peer's hex identity key, then the session id. */
+  peerFollowing: Record<string, Record<string, Record<string, Omit<SpaceSchema.FollowTarget, 'spaceId'>>>>;
+  /** The peer this session follows; `paused` while they view something this session cannot open. */
+  following: (SpaceSchema.FollowTarget & { paused?: boolean }) | undefined;
   /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
   lastMergeAt: number | undefined;
 };
+
+/** An empty {@link SpaceEphemeralState} for the running app `sessionId`, kept alive so it never resets. */
+export const makeEphemeralState = (sessionId: string): Atom.Writable<SpaceEphemeralState> =>
+  Atom.make<SpaceEphemeralState>({
+    sdkMigrationRunning: {},
+    navigableCollections: false,
+    viewersByObject: {},
+    peerDecks: {},
+    mergePreview: undefined,
+    following: undefined,
+    sessionId,
+    followedSpaces: [],
+    peerFollowing: {},
+    lastMergeAt: undefined,
+  }).pipe(Atom.keepAlive);
 
 /** Transient/ephemeral state (not persisted). */
 export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEphemeralState>>()(

@@ -439,7 +439,7 @@ feat F-4: Presentation Deck
   req F-4.6:
     when: user presses Escape in fullscreen
     then: the deck exits fullscreen
-  req F-4.7: The current slide index is per-user view state, kept across navigation and reloads, and never shared with collaborators.
+  req F-4.7: The current slide index is per-user view state, kept across navigation and reloads, and never written to the deck; a session following another takes the leader's.
   req F-4.8: Only an attended deck takes focus on mount.
   req F-4.9: A linked object with no slide surface renders as a title slide rather than failing.
   req F-4.10: A section whose target was deleted is omitted from the deck; one whose target has not loaded shows a pending slide.
@@ -1603,6 +1603,16 @@ decision D-91: [F-7.2], [F-7.3] and QA-4 step click steps with Down and Up, as [
   for: user:richburdon
   affects: [F-7.2, F-7.3, QA-4]
   why: Right and Left now move between slides, so QA-4 could not pass as written.
+```
+
+```mdl
+decision D-92: The slide view state is followed with `write`, so a follower shows the leader's slide and grid size. Fills in org.dxos.plugin.space#D-79.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-4.7]
+  why: A presentation is the case follow exists for, and the slide index is already the view state the deck reads.
+  rejected:
+    - Following the index alone; the grid size travels with it in one aspect and costs a follower nothing it would not want.
 ```
 
 ---

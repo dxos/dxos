@@ -443,3 +443,11 @@ decision D-25: A contributed kind keeps its own fields under its element's `data
   rejected:
     - Fields at the element's top (COMMON-CORE.md decision 13 as first built): the space graph had to call its radius `objectSize` because `size` was taken.
 ```
+
+```mdl
+decision D-26: The 2D article takes the drawing's camera: one that changes while it is open moves this viewer's camera, which the engine applies as it changes, not only on open, and every camera the viewer settles on is reported back to the drawing. Fills in org.dxos.plugin.illustrator#D-8.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [CanvasArticle]
+  why: A follower's canvas has to move with the leader's.
+```

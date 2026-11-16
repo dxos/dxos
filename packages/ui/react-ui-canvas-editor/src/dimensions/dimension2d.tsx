@@ -107,6 +107,9 @@ const useAidReport = (aid: Atom.Atom<boolean>, key: 'grid' | 'snap' | 'axes' | '
 };
 
 /** Thumbnail box of an object row, in px. */
+const sameCamera = (left: Camera, right: Camera) =>
+  left.x === right.x && left.y === right.y && left.zoom === right.zoom;
+
 const THUMBNAIL = { width: 40, height: 24 };
 
 /** A composite drawn small, read-only, fitted into an object row's thumbnail. */
@@ -500,6 +503,30 @@ export const createDimension2D =
       useAidReport(canvas.snap, 'snap', editing);
       useAidReport(canvas.axes, 'axes', editing);
       useAidReport(canvas.guides, 'guides', editing);
+      // A host camera that changes while open (a followed session's) moves the engine's, unless it is the echo of one
+      // the engine reported; the camera it opened with is `initialCamera`.
+      const hostCamera = useAtomValue(camera.host);
+      const openedCamera = useRef(hostCamera);
+      const reportedCamera = useRef<Camera>(undefined);
+      const report = useMemo(
+        () =>
+          editing && offers.camera
+            ? (next: Camera) => {
+                reportedCamera.current = next;
+                camera.report(next);
+              }
+            : undefined,
+        [editing, offers.camera],
+      );
+      useEffect(() => {
+        if (!editing || !hostCamera || hostCamera === openedCamera.current) {
+          return;
+        }
+        const seen = [reportedCamera.current, registry.get(canvas.camera)];
+        if (!seen.some((other) => other && sameCamera(other, hostCamera))) {
+          registry.set(canvas.camera, hostCamera);
+        }
+      }, [editing, hostCamera]);
       return (
         <Canvas.Root
           document={drawn}
@@ -519,7 +546,7 @@ export const createDimension2D =
           transparent={picture}
           margin={picture ? PICTURE_MARGIN : undefined}
           initialCamera={initialCamera}
-          onCameraChange={editing && offers.camera ? camera.report : undefined}
+          onCameraChange={report}
           hostKeys={options.standalone ? undefined : HOST_KEYS}
           onContextMenu={picture || options.standalone ? undefined : onContextMenu}
           shell={Frame}
