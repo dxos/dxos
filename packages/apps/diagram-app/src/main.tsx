@@ -16,7 +16,7 @@ import { Config, Defaults, Envs, Local, defs } from '@dxos/config';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
-import { showBootShell } from './layout-plugin/index.ts';
+import { showBootShell } from './boot-shell/index.ts';
 import { getPlugins } from './plugins.ts';
 
 const createDedicatedWorker = () =>

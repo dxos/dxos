@@ -9,7 +9,7 @@ import { useSpaceProperties } from '@dxos/react-client/echo';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import { getHashHue } from '@dxos/ui-theme';
 
-import { SpaceTrigger } from './Pill.tsx';
+import { SpaceTrigger } from '../../shared/index.ts';
 import { PillCombobox } from './PillCombobox.tsx';
 
 const UNTITLED_SPACE = 'Untitled space';

@@ -7,8 +7,12 @@ in the other. The spec is `spec/APP.mdl`.
 ## Source
 
 - `src/main.tsx` and `src/plugins.ts` wire the app: the client and its workers, the boot shell, and the plugin set.
+- `src/boot-shell/` is the shell painted before the plugins load: the pill and the canvas frame, and, for an
+  invitation link, a still copy of the join dialog over them.
 - `src/layout-plugin/` is `DiagramAppPlugin`, the layout plugin in place of Composer's deck. It holds the open space
   and diagram, answers the layout operations other plugins call, and renders everything on screen.
+- `src/shared/` is what the boot shell and the layout plugin both use: the pill, the route, local state, default
+  names, and the shell state through which the plugin dismisses the shell's parts.
 
 ## Run
 

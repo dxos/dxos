@@ -17,14 +17,13 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Typography from '@dxos/react-ui/Typography';
 
+import { type NavigateMode, PillFrame, PillToolbar, dismissShell, setBootLook } from '../../shared/index.ts';
 import { LayoutState } from '../DiagramAppCapabilities.ts';
 import { useCanvasDrawings, useLayoutAccent } from '../hooks/index.ts';
-import { type NavigateMode, removeDrawing, savePreload, setBootLook } from '../model/index.ts';
-import { dismissBootShell } from './BootShell.tsx';
+import { removeDrawing, savePreload } from '../model/index.ts';
 import { DIAGRAM_MENU_ANCHOR, SPACE_MENU_ANCHOR } from './DiagramLayout.tsx';
 import { DiagramMenu, useDrawingName } from './DiagramMenu.tsx';
 import { DrawingView } from './DrawingView.tsx';
-import { PillFrame, PillToolbar } from './Pill.tsx';
 import { ShareDialog } from './ShareDialog.tsx';
 import { SpaceMenu, type SpaceMenuProps, spaceLook } from './SpaceMenu.tsx';
 
@@ -78,7 +77,7 @@ export const SpaceView = ({
   // With a diagram, the boot shell waits for its frame (`DrawingView`); without one, it gives way to the empty state.
   useLayoutEffect(() => {
     if (!drawing && !pending) {
-      dismissBootShell();
+      dismissShell();
     }
   }, [drawing, pending]);
 

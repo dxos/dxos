@@ -5,8 +5,7 @@
 import { type Client } from '@dxos/client';
 import { type AuthenticatingInvitationObservable, Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 
-/** The query parameter Composer reads and writes, so a link opens in either app (spec F-5.2). */
-export const INVITATION_PARAM = 'spaceInvitationCode';
+import { INVITATION_PARAM } from '../../shared/index.ts';
 
 /** The invitation code in a pasted link, or the pasted text itself when it is not a link (spec F-3.4). */
 export const parseInvitationCode = (text: string): string | undefined => {

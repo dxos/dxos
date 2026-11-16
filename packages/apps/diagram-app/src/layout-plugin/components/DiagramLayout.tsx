@@ -16,8 +16,8 @@ import * as Theme from '@dxos/react-ui/Theme';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
+import { dismissJoinOnLiveDialog } from '../../shared/index.ts';
 import { LayoutState } from '../DiagramAppCapabilities.ts';
-import { dismissJoinDialogOnDialog } from './BootShell.tsx';
 
 // A popover opens a beat after it is asked for, once its anchor has rendered.
 const POPOVER_DELAY = 40;
@@ -63,7 +63,7 @@ export const DiagramLayout = ({ children }: PropsWithChildren) => {
   }, [layout.popoverOpen, layout.popoverAnchor, layout.popoverContent]);
 
   // A live dialog replaces the still copy of the join dialog.
-  useLayoutEffect(() => (layout.dialogOpen ? dismissJoinDialogOnDialog() : undefined), [layout.dialogOpen]);
+  useLayoutEffect(() => (layout.dialogOpen ? dismissJoinOnLiveDialog() : undefined), [layout.dialogOpen]);
 
   const handlePopoverChange = useCallback(
     ({ open }: { open: boolean }) =>

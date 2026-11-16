@@ -10,8 +10,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
+import { parseRoute } from '../../shared/index.ts';
 import { LayoutState } from '../DiagramAppCapabilities.ts';
-import { parseRoute } from '../model/index.ts';
 
 /** A diagram's graph path, as Composer names it: what presence sends and a follower opens. */
 const getDrawingPath = (spaceId: string, drawingId: string): string =>

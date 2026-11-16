@@ -4,7 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { INVITATION_PARAM, invitationUrl, parseInvitationCode } from './invitation.ts';
+import { INVITATION_PARAM } from '../../shared/index.ts';
+import { invitationUrl, parseInvitationCode } from './invitation.ts';
 
 describe('invitation links', () => {
   test('a link from this app or Composer yields its code; bare text is the code itself', () => {

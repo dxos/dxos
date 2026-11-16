@@ -10,10 +10,15 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { AttendableContainer, Attention, useAttentionContext } from '@dxos/react-ui-attention';
 
-import { dismissBootShell, isFrameShown } from './BootShell.tsx';
+import { dismissShell } from '../../shared/index.ts';
 
 // The boot shell already drew the frame and the theme's background wash (the canvas), so only the scene's other layers,
 // those with no controls, fade in.
+/** Whether `element` shows the live diagram's frame, or the error a surface shows in its place. */
+const isFrameShown = (element: HTMLElement): boolean =>
+  (element.querySelector('[data-testid="scene-view"] button')?.getClientRects().length ?? 0) > 0 ||
+  element.querySelector('[role="alert"]') !== null;
+
 const FADE_IN_CONTENT = '[&_[data-testid=scene-view]>*:not(:has(button)):not(canvas)]:animate-[fade-in_100ms_ease-out]';
 
 /** The open diagram in the canvas article, filling the viewport. */
@@ -55,13 +60,13 @@ export const DrawingView = ({ drawing }: { drawing: Drawing.Drawing }) => {
       return;
     }
     if (isFrameShown(element)) {
-      dismissBootShell();
+      dismissShell();
       return;
     }
     const observer = new MutationObserver(() => {
       if (isFrameShown(element)) {
         observer.disconnect();
-        dismissBootShell();
+        dismissShell();
       }
     });
     observer.observe(element, { childList: true, subtree: true, attributes: true });

@@ -10,13 +10,8 @@ import { type Space } from '@dxos/client/echo';
 import { Database } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
+import { getLastSpace } from '../../shared/index.ts';
 import { rootCollectionRule } from '../capabilities/default-parent.ts';
-import { getLastSpace } from './local-state.ts';
-
-/** The space a first run creates (spec F-2.1). */
-export const FIRST_SPACE_NAME = 'My diagrams';
-
-export const UNTITLED = 'Untitled';
 
 /** Waits for the client and creates the anonymous identity when there is none (spec F-2.1, F-2.3). */
 export const ensureIdentity = Effect.fn('ensureIdentity')(function* (client: Client) {

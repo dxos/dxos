@@ -222,15 +222,10 @@ component ShareDialog
 
 ```mdl
 component BootShell
-  desc: F-1.5. The pill as the last visit left it, painted before the client and plugins start, over the canvas plugin's `CanvasFrame` once the editor loads, under dialogs and toasts; for an invitation link, with the JoinShell over it.
+  desc: F-1.5, F-6.2. The app's own shell, painted before the client and plugins start, in two parts that show alone or together. The layout part is the pill as the last visit left it, over the canvas plugin's `CanvasFrame` once the editor loads, under dialogs and toasts. The join part, for an invitation link, is a still copy of Composer's join dialog as it connects, over the layout part; it takes no input.
   layout: |
     [◍ My diagrams ▾ │ ⚲ Untitled ▾  [Share]]
-```
 
-```mdl
-component JoinShell
-  desc: F-6.2. A still copy of Composer's join dialog as it connects, which takes no input.
-  layout: |
     Joining space                          ×
     Connecting…
                                 [Cancel] [Next]
@@ -1522,4 +1517,22 @@ decision D-117: The pill's toolbar measures the row the pill sits in, not its ow
   why: The pill is as wide as its content, so once collapsed its frame never widens and the toolbar never saw the room it had.
   rejected:
     - Stretch the pill across the gap between the breadcrumbs and the inspector: it would no longer centre in the page.
+```
+
+```mdl
+decision D-118: The boot shell and the still join dialog are one boot shell, whose parts show alone or together. It belongs to the app, not the layout plugin; what both use lives in a module of the app that each depends on. This replaces the separate overlay of [D-79].
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-1.5, F-6.2, BootShell]
+```
+
+```mdl
+decision D-119: The boot shell renders both parts from one root and holds which are shown in shell state in the shared module; the layout plugin shows and dismisses parts through that state, never the shell's components. A dismissed part is hidden in the same frame, before React removes it, so it leaves as its live replacement commits. Fills in [D-118].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [BootShell]
+  why: A dismissal comes from a layout effect in the live app's root, where the shell's root cannot render synchronously, so React alone would leave the part on screen for a frame over its replacement.
+  rejected:
+    - Keep the layout plugin importing the shell's components: the plugin would depend on the app's entry code.
 ```

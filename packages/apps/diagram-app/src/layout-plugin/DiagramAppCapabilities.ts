@@ -7,8 +7,8 @@ import type * as Atom from 'effect/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
+import { type Route } from '../shared/index.ts';
 import { DIAGRAM_APP_KEY } from './DiagramAppEvents.ts';
-import { type Route } from './model/index.ts';
 
 /** Where a popover sits: beside an element, or beside whichever part renders the anchor with this id. */
 export type PopoverAnchor = { anchor: Element; anchorId?: undefined } | { anchor?: undefined; anchorId: string };

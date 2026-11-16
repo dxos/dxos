@@ -17,7 +17,8 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import { toPublicKey } from '@dxos/protocols/buf';
 
-import { type Route, UNTITLED, fileDrawing, getLastDrawing, recordRoute } from '../model/index.ts';
+import { type Route, UNTITLED, getLastDrawing } from '../../shared/index.ts';
+import { fileDrawing, recordRoute } from '../model/index.ts';
 import { updateState } from './update-state.ts';
 
 /**

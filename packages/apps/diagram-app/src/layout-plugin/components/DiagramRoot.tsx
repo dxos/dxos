@@ -24,23 +24,20 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpaces } from '@dxos/react-client/echo';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { LayoutState } from '../DiagramAppCapabilities.ts';
-import * as DiagramAppEvents from '../DiagramAppEvents.ts';
 import {
   FIRST_SPACE_NAME,
   type NavigateMode,
   type Route,
   UNTITLED,
-  createSpace,
-  ensureIdentity,
-  fileDrawing,
+  dismissShell,
   getLastDrawing,
+  isShellShown,
   parseRoute,
-  preloadDrawing,
-  recordRoute,
-  startSpace,
-} from '../model/index.ts';
-import { dismissJoinDialog, isBootShellShown, showJoinDialog } from './BootShell.tsx';
+  showShell,
+} from '../../shared/index.ts';
+import { LayoutState } from '../DiagramAppCapabilities.ts';
+import * as DiagramAppEvents from '../DiagramAppEvents.ts';
+import { createSpace, ensureIdentity, fileDrawing, preloadDrawing, recordRoute, startSpace } from '../model/index.ts';
 import { DeleteSpaceDialog } from './DeleteSpaceDialog.tsx';
 import { DiagramLayout, SPACE_MENU_ANCHOR } from './DiagramLayout.tsx';
 import { SpaceView } from './SpaceView.tsx';
@@ -241,7 +238,7 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
         setJoining({ dismissals: dialogDismissals, opened: true });
         return;
       }
-      dismissJoinDialog();
+      dismissShell('join');
       await openStart(wanted);
       markOnce('diagram-app:space-open');
     })().catch((err) => {
@@ -279,10 +276,10 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
     if (!joined) {
       return;
     }
-    showJoinDialog();
+    showShell('join');
     return () => {
-      if (!isBootShellShown()) {
-        dismissJoinDialog();
+      if (!isShellShown('layout')) {
+        dismissShell('join');
       }
     };
   }, [joined]);
