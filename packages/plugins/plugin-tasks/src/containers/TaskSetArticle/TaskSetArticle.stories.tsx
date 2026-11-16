@@ -504,7 +504,8 @@ export const EmptySetOffersContacts: Story = {
     });
 
     await userEvent.click(
-      canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit.properties"] [data-testid="assignee"]')!,
+      // The control sits in the list's assignee column now, not in a trailing group of its own.
+      canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"] [data-testid="assignee"]')!,
     );
     await expect(body.findByText('Kai Watanabe')).resolves.toBeTruthy();
   },
