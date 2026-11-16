@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -18,7 +19,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { type Key, Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { EID } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -47,6 +48,12 @@ const FOLLOW_LABEL: Label = ['presence-follow.label', { ns: SpaceNamespace.key }
 const REVEAL_RETRY = Schedule.spaced('100 millis').pipe(
   Schedule.upTo({ duration: AppCapabilities.FOLLOW_MOUNT_TIMEOUT }),
 );
+
+const loadObject = Effect.fnUntraced(function* (spaceId: Key.SpaceId, key: EID.EID) {
+  const client = yield* Capability.get(ClientCapabilities.Client);
+  const space = client.spaces.get().find((space) => space.id === spaceId);
+  return space && (yield* Effect.promise(() => space.db.makeRef(key).tryLoad()));
+});
 
 /** The Members tab's dot while this session follows someone or someone follows it. */
 const followBadge = Atom.family((ephemeralAtom: Atom.Atom<SpaceCapabilities.SpaceEphemeralState>) =>
@@ -180,9 +187,10 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
                     return;
                   }
 
-                  const client = yield* Capability.get(ClientCapabilities.Client);
-                  const space = client.spaces.get().find((space) => space.id === spaceId);
-                  const object = space && (yield* Effect.promise(() => space.db.makeRef(focus.key).tryLoad()));
+                  // An open object is read from its graph node without waiting, so the reveal's focus is the last word.
+                  const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+                  const openObject = openPath && Option.getOrUndefined(AppGraph.getNode(graph, openPath))?.data;
+                  const object = Obj.isObject(openObject) ? openObject : yield* loadObject(spaceId, focus.key);
                   if (!Obj.isObject(object)) {
                     return;
                   }

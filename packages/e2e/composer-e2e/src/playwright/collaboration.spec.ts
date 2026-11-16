@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect, test } from '@playwright/test';
+import { type Locator, expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager.ts';
 import { Markdown, Projects } from './plugins/index.ts';
@@ -23,6 +23,14 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   await guest.waitForSpaceReady(30_000);
 
   await navigateToNewDocument(host);
+};
+
+/** The editor is read-only until the replicated document binds to it, and can remount once while the guest navigates. */
+const fillWhenEditable = async (textbox: Locator, text: string) => {
+  await expect(async () => {
+    await expect(textbox).toBeEditable({ timeout: 5_000 });
+    await textbox.fill(text, { timeout: 5_000 });
+  }).toPass({ timeout: 45_000 });
 };
 
 const navigateToNewDocument = async (app: AppManager) => {
@@ -279,10 +287,7 @@ test.describe('Collaboration tests', () => {
     await guest.expandSection('spacePlugin.collectionsSection');
     await navigateToNewDocument(guest);
     const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
-    // The editor stays read-only until the replicated document is bound to it.
-    await expect(guestTextbox).toBeEditable({ timeout: 30_000 });
-    await guestTextbox.focus();
-    await guestTextbox.fill('Hello from the guest');
+    await fillWhenEditable(guestTextbox, 'Hello from the guest');
 
     const hostPresence = hostPlank.membersPresence();
     await expect(hostPresence).toHaveCount(1, { timeout: 45_000 });
@@ -321,10 +326,7 @@ test.describe('Collaboration tests', () => {
       await guest.expandSection('spacePlugin.collectionsSection');
       await navigateToNewDocument(guest);
       const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
-      // The editor stays read-only until the replicated document is bound to it.
-      await expect(guestTextbox).toBeEditable({ timeout: 30_000 });
-      await guestTextbox.focus();
-      await guestTextbox.fill('Hello from the guest');
+      await fillWhenEditable(guestTextbox, 'Hello from the guest');
 
       // A second tab of the guest's is a second session of the same identity.
       const secondTab = await guest.page.context().newPage();
