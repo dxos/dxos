@@ -8,7 +8,7 @@
 // already extracted or annotated are skipped by their cursors. Every model call is metered: the run prints its cost
 // per stage at catalog list prices and appends its trace to trace.jsonl.
 //   [FINANCE_DIR=~/.local/share/dxos/magazine-pipeline/finance] [FINANCE_FACTS_DB=<dir>/facts.db] [FINANCE_DAYS=31]
-//   [FINANCE_SAMPLE=n] [FINANCE_THINKING=0] [FINANCE_SENTIMENT=llm|lexicon]  moon run plugin-magazine:finance-crawl
+//   [FINANCE_SAMPLE=n] [FINANCE_THINKING=1] [FINANCE_SENTIMENT=llm|lexicon]  moon run plugin-magazine:finance-crawl
 //
 // `moon run plugin-magazine:finance-experiment` instead runs several configurations over a sample (FINANCE_SAMPLE,
 // default 100), each into a fresh store under <dir>/experiments/, and prints a comparison.
@@ -78,7 +78,8 @@ describe('finance crawl', () => {
       const items = loadItems(process.env.FINANCE_SAMPLE ? Number(process.env.FINANCE_SAMPLE) : undefined);
       const factsPath = process.env.FINANCE_FACTS_DB ?? join(dir, 'facts.db');
       const options: FinancePipeline.FinancePipelineOptions = {
-        extract: { thinking: process.env.FINANCE_THINKING !== '0' },
+        // Without thinking: on the experiment sample it found more facts (0.97 against 0.71 per item) at half the cost.
+        extract: { thinking: process.env.FINANCE_THINKING === '1' },
         annotate: { sentiment: process.env.FINANCE_SENTIMENT === 'lexicon' ? 'lexicon' : 'llm' },
       };
       const range = perDay(items);
@@ -117,6 +118,8 @@ describe('finance crawl', () => {
         'finance+llm': { extract: { ontology: ontology() }, annotate: {} },
         // The finance packs without thinking.
         'finance-nothink': { extract: { ontology: ontology(), thinking: false }, annotate: false },
+        // The finance packs, thinking on, in transcripts of 10 headlines rather than 25.
+        'finance-batch10': { extract: { ontology: ontology(), batchSize: 10 }, annotate: false },
       };
       const only = process.env.FINANCE_CONFIGS?.split(',');
       log(`\n== experiment ${new Date().toISOString()}: ${items.length} items`);
