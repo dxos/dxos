@@ -23,8 +23,10 @@ export type ToolbarPlacement = {
   order?: number;
   /**
    * Rank for moving into the overflow menu when the row is too narrow: ranked items go first, higher ranks first; once
-   * they are all in the menu, unranked items follow, last first, so the row always fits. A `custom` or `text` item, or a
-   * group holding one, never moves.
+   * they are all in the menu, unranked items follow, last first, so the row always fits. Before anything moves, each
+   * ranked item with a compact form takes it, in the same order, staying in the row: a `custom` item renders with
+   * `collapsed`, and an action shown with its label and an icon (`iconOnly: false`) shows the icon alone. A `custom` or
+   * `text` item, or a group holding one, never moves.
    */
   collapse?: number;
 };
@@ -61,7 +63,12 @@ export type MenuActionChrome = MenuItemChrome & {
    * `'custom'`; the contributor owns the element (and its interactions) so the toolbar can host
    * affordances the action model cannot express (e.g. press-and-hold, an embedded dropdown).
    */
-  render?: () => ReactNode;
+  render?: (props: CustomRenderProps) => ReactNode;
+};
+
+export type CustomRenderProps = {
+  /** The toolbar is too narrow for the item's full form (see `ToolbarPlacement.collapse`). */
+  collapsed: boolean;
 };
 
 export type MenuActionProperties = MenuActionChrome & {

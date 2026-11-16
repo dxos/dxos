@@ -67,6 +67,8 @@ type ActionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children
   caretDown?: boolean;
   classNames?: ClassNameValue;
   testId?: string;
+  /** Shows the icon alone, as the toolbar does for a labelled action it has collapsed. */
+  compact?: boolean;
 };
 
 /**
@@ -74,7 +76,7 @@ type ActionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children
  * Forwards its ref and remaining props, since a `Menu.Trigger asChild` merges the trigger's onto it.
  */
 const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
-  ({ action, classNames, testId, ...props }, forwardedRef) => {
+  ({ action, classNames, testId, compact, ...props }, forwardedRef) => {
     const { t } = Hooks.useTranslation(translationKey);
     const { icon, iconOnly = true, spin } = action.properties;
     const common = {
@@ -84,7 +86,7 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
       ...(testId && { 'data-testid': testId }),
       ref: forwardedRef,
     };
-    return icon && iconOnly ? (
+    return icon && (iconOnly || compact) ? (
       <Button.Root {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
     ) : (
       <Button.Root {...common} icon={icon}>
@@ -94,7 +96,7 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
   },
 );
 
-const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) => {
+const ActionToolbarItem = ({ menu, action, compact }: ItemProps<{ action: MenuAction; compact?: boolean }>) => {
   const { onAction, caller, iconSize } = menu;
   const [pending, setPending] = useState(false);
   const pendingRef = useRef(false);
@@ -131,12 +133,13 @@ const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
       classNames={classNames}
       onClick={handleClick}
       testId={testId}
+      compact={compact}
     />
   );
 };
 
 /** A `toggle` action is a pressed button whose state is the action's `checked`. */
-const ToggleToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) => {
+const ToggleToolbarItem = ({ menu, action, compact }: ItemProps<{ action: MenuAction; compact?: boolean }>) => {
   const { onAction, caller, iconSize } = menu;
   const { t } = Hooks.useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, checked, classNames, spin } = action.properties;
@@ -164,7 +167,7 @@ const ToggleToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
     ...(testId && { 'data-testid': testId }),
   };
 
-  return icon && iconOnly ? (
+  return icon && (iconOnly || compact) ? (
     <Button.Toggle {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
   ) : (
     <Button.Toggle {...common} icon={icon}>
@@ -337,8 +340,15 @@ const TextToolbarItem = ({ action }: { action: MenuAction }) => {
   );
 };
 
-/** One menu item rendered as its toolbar control (button, toggle, switch, dropdown, toggle group or custom). */
-export const MenuToolbarItem = ({ menu, item }: ItemProps<{ item: MenuItem }>) => {
+/**
+ * One menu item rendered as its toolbar control (button, toggle, switch, dropdown, toggle group or custom); `collapsed`
+ * renders its compact form.
+ */
+export const MenuToolbarItem = ({
+  menu,
+  item,
+  collapsed = false,
+}: ItemProps<{ item: MenuItem; collapsed?: boolean }>) => {
   if (isSeparator(item)) {
     return <Toolbar.Separator variant={item.properties.variant === 'line' ? 'line' : 'gap'} />;
   }
@@ -356,14 +366,14 @@ export const MenuToolbarItem = ({ menu, item }: ItemProps<{ item: MenuItem }>) =
     case 'switch':
       return <SwitchToolbarItem menu={menu} action={action} />;
     case 'toggle':
-      return <ToggleToolbarItem menu={menu} action={action} />;
+      return <ToggleToolbarItem menu={menu} action={action} compact={collapsed} />;
     case 'custom':
       // The contributor owns the rendered element (interactions the action model cannot express).
-      return action.properties.render ? <>{action.properties.render()}</> : null;
+      return action.properties.render ? <>{action.properties.render({ collapsed })}</> : null;
     case 'text':
       return <TextToolbarItem action={action} />;
     default:
-      return <ActionToolbarItem menu={menu} action={action} />;
+      return <ActionToolbarItem menu={menu} action={action} compact={collapsed} />;
   }
 };
 
@@ -442,15 +452,35 @@ const isMenuable = (item: MenuItem): boolean =>
   !isSeparator(item) && item.properties.variant !== 'custom' && item.properties.variant !== 'text';
 
 /**
- * Moves items into the overflow menu while any row is too narrow, so the toolbar fills its container without
- * overflowing it: ranked items first (highest rank first), then the rest, last first. Each comes back once the toolbar
- * is wider than when it collapsed, so hidden items are never measured.
+ * A ranked item that has a compact form collapses in place to it: a `custom` item renders with `collapsed`, and an
+ * action shown with its label and an icon shows the icon alone.
  */
-const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>): MenuItem[] => {
+const isCompactable = (item: MenuItem): boolean => {
+  if (isSeparator(item) || isMenuGroup(item) || placementOf(item).collapse === undefined) {
+    return false;
+  }
+  const { variant, icon, iconOnly } = item.properties;
+  return variant === 'custom' || (!!icon && iconOnly === false && variant !== 'text' && variant !== 'switch');
+};
+
+type Collapsed = {
+  /** Items moved into the overflow menu. */
+  moved: MenuItem[];
+  /** Items shown in their compact form. */
+  compacted: MenuItem[];
+};
+
+/**
+ * Collapses items while any row is too narrow, so the toolbar fills its container without overflowing it. First each
+ * ranked item with a compact form takes it (highest rank first); then items move into the overflow menu, ranked ones
+ * first, then the rest, last first. Each step is undone once the toolbar is wider than when it was taken, so hidden
+ * items are never measured.
+ */
+const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>): Collapsed => {
   const registry = useContext(RegistryContext);
-  const collapsible = useMemo(() => {
+  const steps = useMemo(() => {
     // A named group collapses as a submenu, which can only hold what a menu shows; an empty one takes no room to free.
-    const canCollapse = (item: MenuItem) => {
+    const canMove = (item: MenuItem) => {
       if (!isMenuable(item)) {
         return false;
       }
@@ -462,23 +492,26 @@ const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTML
     };
     const ranked = units
       .map((item, index) => ({ item, rank: placementOf(item).collapse, index }))
-      .filter(({ item, rank }) => rank !== undefined && canCollapse(item))
+      .filter(({ rank }) => rank !== undefined)
       .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0) || b.index - a.index)
       .map(({ item }) => item);
-    const rest = units.filter((item) => placementOf(item).collapse === undefined && canCollapse(item)).reverse();
-    return [...ranked, ...rest];
+    const rest = units.filter((item) => placementOf(item).collapse === undefined).reverse();
+    return [
+      ...ranked.filter(isCompactable).map((item) => ({ item, compact: true })),
+      ...[...ranked, ...rest].filter(canMove).map((item) => ({ item, compact: false })),
+    ];
   }, [registry, menu, units]);
 
   const [count, setCount] = useState(0);
   const thresholds = useRef<number[]>([]);
   const [width, setWidth] = useState(0);
-  // Ids rather than the items: `collapsible` is rebuilt whenever a caller passes a fresh `onAction`.
-  const collapsibleKey = collapsible.map((item) => item.id).join('\n');
+  // Ids rather than the items: `steps` is rebuilt whenever a caller passes a fresh `onAction`.
+  const stepsKey = steps.map(({ item, compact }) => `${item.id}:${compact}`).join('\n');
 
   // Each read forces a layout, so measure only when the items (a new label or icon-only flag yields new items), the
-  // collapsible set, the collapse count or the frame width moved.
+  // steps, the step count or the frame width moved.
   useLayoutEffect(() => {
-    if (collapsible.length === 0 && count === 0) {
+    if (steps.length === 0 && count === 0) {
       return;
     }
     const elements = rows.current.filter((row): row is HTMLElement => !!row);
@@ -491,16 +524,16 @@ const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTML
       return;
     }
     const overflowing = elements.some((row) => row.scrollWidth > row.clientWidth + 1);
-    if (overflowing && count < collapsible.length) {
+    if (overflowing && count < steps.length) {
       thresholds.current[count] = width;
       setCount(count + 1);
     } else if (!overflowing && count > 0 && width > (thresholds.current[count - 1] ?? Infinity)) {
       setCount(count - 1);
     }
-  }, [units, collapsibleKey, count, width]);
+  }, [units, stepsKey, count, width]);
 
   // Re-render on resize only when something can collapse.
-  const observed = collapsible.length > 0;
+  const observed = steps.length > 0;
   useLayoutEffect(() => {
     const element = rows.current[0];
     if (!observed || !element) {
@@ -511,7 +544,13 @@ const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTML
     return () => observer.disconnect();
   }, [observed, rows]);
 
-  return useMemo(() => collapsible.slice(0, count), [collapsible, count]);
+  return useMemo(() => {
+    const taken = steps.slice(0, count);
+    return {
+      moved: taken.filter(({ compact }) => !compact).map(({ item }) => item),
+      compacted: taken.filter(({ compact }) => compact).map(({ item }) => item),
+    };
+  }, [steps, count]);
 };
 
 const setRef = <T,>(ref: ForwardedRef<T>, value: T | null) => {
@@ -601,7 +640,7 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
       defaultOverflowGroup;
     const units = useMemo(() => (rootItems ?? []).filter((item) => item.id !== TOOLBAR_OVERFLOW_ID), [rootItems]);
     const rows = useRef<(HTMLElement | null)[]>([]);
-    const collapsed = useCollapse(menu, units, rows);
+    const { moved, compacted } = useCollapse(menu, units, rows);
 
     const rowCount = Math.max(1, ...units.map((item) => (placementOf(item).row ?? 0) + 1));
     const zone = (row: number, zone: ToolbarZone) =>
@@ -609,7 +648,7 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
         byOrder(
           units.filter((item) => {
             const placement = placementOf(item);
-            return (placement.row ?? 0) === row && (placement.zone ?? 'start') === zone && !collapsed.includes(item);
+            return (placement.row ?? 0) === row && (placement.zone ?? 'start') === zone && !moved.includes(item);
           }),
         ),
       );
@@ -636,12 +675,12 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
                 isPlainGroup(item) ? (
                   <InlineGroup key={item.id} menu={menu} group={item} separated={index > 0} />
                 ) : (
-                  <MenuToolbarItem key={item.id} menu={menu} item={item} />
+                  <MenuToolbarItem key={item.id} menu={menu} item={item} collapsed={compacted.includes(item)} />
                 ),
               )}
             </Fragment>
           ))}
-          {first && <OverflowMenu menu={menu} group={overflow} collapsed={collapsed} />}
+          {first && <OverflowMenu menu={menu} group={overflow} collapsed={moved} />}
         </Toolbar.Root>
       );
     };

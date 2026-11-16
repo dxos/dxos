@@ -619,3 +619,51 @@ export const AsMenu: Story = {
     await expect(await body.findByRole('menuitem', { name: 'Comment' })).toBeVisible();
   },
 };
+
+const CompactStory = () => {
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .root({ label: 'Document' })
+        .custom('title', { label: 'Title', placement: { collapse: 1 } }, ({ collapsed }) => (
+          <Button.Root variant='ghost' icon='ph--file-text--regular' data-testid='story.title'>
+            {!collapsed && 'A rather long document title'}
+          </Button.Root>
+        ))
+        .action(
+          'share',
+          {
+            label: 'Share',
+            icon: 'ph--user-plus--regular',
+            iconOnly: false,
+            testId: 'story.share',
+            placement: { collapse: 2 },
+          },
+          () => log('share'),
+        )
+        .action('search', { label: 'Search', icon: 'ph--magnifying-glass--regular', testId: 'story.search' }, () =>
+          log('search'),
+        )
+        .build(),
+    [],
+  );
+  return (
+    <div className='p-8'>
+      <ActionToolbar {...menu} alwaysActive classNames='_border border-separator max-w-[12rem]' />
+    </div>
+  );
+};
+
+/** Too narrow for the labels, ranked items take their compact form in place, in rank order, before anything moves. */
+export const Compact: Story = {
+  render: () => <CompactStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() =>
+      expect(canvas.getByTestId('story.title')).not.toHaveTextContent('A rather long document title'),
+    );
+    await expect(canvas.getByTestId('story.share')).toHaveAttribute('aria-label', 'Share');
+    await expect(canvas.getByTestId('story.search')).toBeVisible();
+    await expect(canvas.queryByTestId('toolbar.overflow')).toBeNull();
+  },
+};
