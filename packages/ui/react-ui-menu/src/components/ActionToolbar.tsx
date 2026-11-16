@@ -48,6 +48,8 @@ import {
   type MenuItem,
   type MenuItemGroup,
   type MenuItemsAccessor,
+  type MenuSeparator,
+  MenuSeparatorType,
   isMenuGroup,
   isSeparator,
 } from '../types.ts';
@@ -392,11 +394,24 @@ const byOrder = (items: readonly MenuItem[]): MenuItem[] =>
     .sort((a, b) => a.order - b.order)
     .map(({ item }) => item);
 
-/** Drops separators left leading, trailing or doubled once items are placed elsewhere. */
+/**
+ * Drops separators left leading, trailing or doubled once items are placed elsewhere: of a run between two items, a gap
+ * stays if there is one, as it lays the row out, else the last.
+ */
 const trimSeparators = (items: readonly MenuItem[]): MenuItem[] =>
-  items.filter(
-    (item, index) => !isSeparator(item) || (index > 0 && index < items.length - 1 && !isSeparator(items[index + 1])),
-  );
+  items.filter((item, index) => {
+    if (!isSeparator(item)) {
+      return true;
+    }
+    const before = items.findLastIndex((other, at) => at < index && !isSeparator(other));
+    const after = items.findIndex((other, at) => at > index && !isSeparator(other));
+    if (before < 0 || after < 0) {
+      return false;
+    }
+    const run = items.slice(before + 1, after);
+    const gap = run.findLastIndex((separator) => isSeparator(separator) && separator.properties.variant === 'gap');
+    return index === before + 1 + (gap >= 0 ? gap : run.length - 1);
+  });
 
 /** A named group laid out inline, its own and contributed items in order; ruled off from what precedes it. */
 const InlineGroup = ({ menu, group, separated }: ItemProps<{ group: MenuItemGroup; separated: boolean }>) => {
@@ -415,10 +430,24 @@ const InlineGroup = ({ menu, group, separated }: ItemProps<{ group: MenuItemGrou
   );
 };
 
-/** The ⋮ menu: groups collapsed out of the rows (as submenus), then the overflow group's own and contributed items. */
+/** A rule in the ⋮ menu where the rows' items it lists change zone or row, or give way to its own. */
+const menuBreak = (id: string): MenuSeparator => ({
+  id: `toolbar-break-${id}`,
+  type: MenuSeparatorType,
+  properties: { variant: 'gap' },
+  data: undefined as never,
+});
+
+/**
+ * The ⋮ menu: what collapsed out of the rows, in the rows' order and ruled where they are (named groups as submenus),
+ * then the overflow group's own and contributed items.
+ */
 const OverflowMenu = ({ menu, group, collapsed }: ItemProps<{ group: MenuItemGroup; collapsed: MenuItem[] }>) => {
   const items = useMenuItems(menu, group);
-  const actions = useMemo(() => [...collapsed, ...byOrder(items ?? [])], [collapsed, items]);
+  const actions = useMemo(
+    () => trimSeparators([...collapsed, menuBreak('overflow'), ...byOrder(items ?? [])]),
+    [collapsed, items],
+  );
   return <OverflowMenuTrigger menu={menu} actions={actions} testId={group.properties.testId} />;
 };
 
@@ -653,15 +682,22 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
     const { moved: collapsed, folded } = useCollapse(menu, units, rows);
 
     const rowCount = Math.max(1, ...units.map((item) => (placementOf(item).row ?? 0) + 1));
+    // Sorted before `keep` filters, so an item's fallback order is its index in the whole zone.
+    const inZone = (row: number, zone: ToolbarZone, keep: (item: MenuItem) => boolean) =>
+      byOrder(
+        units.filter((item) => {
+          const placement = placementOf(item);
+          return (placement.row ?? 0) === row && (placement.zone ?? 'start') === zone;
+        }),
+      ).filter(keep);
     const zone = (row: number, zone: ToolbarZone) =>
-      trimSeparators(
-        byOrder(
-          units.filter((item) => {
-            const placement = placementOf(item);
-            return (placement.row ?? 0) === row && (placement.zone ?? 'start') === zone && !collapsed.includes(item);
-          }),
-        ),
-      );
+      trimSeparators(inZone(row, zone, (item) => !collapsed.includes(item)));
+    const moved = Array.from({ length: rowCount }, (_, row) =>
+      ZONES.flatMap((name) => [
+        menuBreak(`${row}-${name}`),
+        ...inZone(row, name, (item) => isSeparator(item) || collapsed.includes(item)),
+      ]),
+    ).flat();
 
     const renderRow = (row: number) => {
       const zones = ZONES.map((name) => ({ name, items: zone(row, name) }));
@@ -698,7 +734,7 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
               )}
             </Fragment>
           ))}
-          {first && <OverflowMenu menu={menu} group={overflow} collapsed={collapsed} />}
+          {first && <OverflowMenu menu={menu} group={overflow} collapsed={moved} />}
         </Toolbar.Root>
       );
     };
