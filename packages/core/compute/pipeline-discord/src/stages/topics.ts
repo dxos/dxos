@@ -71,7 +71,7 @@ export const summarizeSegment = (
   messages: readonly MessageStore.StoredMessage[],
 ): Effect.Effect<{ name: string; summary: string }, never, AiService.AiService> =>
   LanguageModel.generateObject({ schema: TopicShape, prompt: topicPrompt(segment, messages) }).pipe(
-    Effect.provide(AiService.languageModel(DEFAULT_MODEL).pipe(Layer.orDie)),
+    Effect.provide(AiService.languageModel(DEFAULT_MODEL, { thinking: false }).pipe(Layer.orDie)),
     AiUsage.withStage('topics'),
     Effect.map(({ value }) => value),
     Effect.catch(() => Effect.succeed({} as { name?: string; summary?: string })),
