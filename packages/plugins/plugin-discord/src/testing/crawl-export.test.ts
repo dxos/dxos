@@ -111,6 +111,7 @@ describe('crawl export', () => {
       expect(result.summary.done).toBe(true);
       expect(result.stored).toBeGreaterThan(0);
     },
-    60 * 60_000,
+    // A server's month of messages takes over an hour; the run resumes from its databases if it is cut short.
+    6 * 60 * 60_000,
   );
 });
