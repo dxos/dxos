@@ -12,9 +12,8 @@
 //
 
 import { type ContentMap } from '@dxos/diagram';
+import { elementId, nodeKey } from '@dxos/react-ui-canvas';
 
-import { nodeKey } from '../../model/content.ts';
-import { elementId } from '../../model/handler.ts';
 import { FAT_ARROW, TONES } from './studio.ts';
 
 /** A card: its id, what it says and the glyph it says it with. */

@@ -7,6 +7,8 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { type CSSProperties } from 'react';
 
+import { type Hue } from '@dxos/ui-types';
+
 import { recipes } from '../../recipes.ts';
 import { composableProps, slottable } from '../../util/slots.ts';
 import { type CSSVariables } from '../Container/Container.tsx';
@@ -25,6 +27,8 @@ type TypographyProps = {
   tone?: TypographyTone;
   /** Monospace, for keys, ids and code. */
   mono?: boolean;
+  /** Colours the text with a hue's text colour (`--color-<hue>-text`), as Icon's `hue` does; takes precedence over `tone`. */
+  hue?: Hue;
 };
 
 /**
@@ -32,7 +36,7 @@ type TypographyProps = {
  * it wraps to. Renders a `<p>`; `asChild` puts the metrics on a heading or other text element instead.
  */
 const Typography = slottable<HTMLParagraphElement, TypographyProps>(
-  ({ children, asChild, truncate, lines, tone, mono, ...props }, forwardedRef) => {
+  ({ children, asChild, truncate, lines, tone, mono, hue, ...props }, forwardedRef) => {
     const { className, style, ...rest } = composableProps(props, { classNames: recipes.typography() });
     const linesStyle: CSSProperties & CSSVariables = lines ? { '--dx-lines': String(lines) } : {};
     return (
@@ -45,6 +49,7 @@ const Typography = slottable<HTMLParagraphElement, TypographyProps>(
         data-lines={lines ? '' : undefined}
         data-tone={tone === 'default' ? undefined : tone}
         data-mono={mono ? '' : undefined}
+        data-hue={hue}
         style={{ ...linesStyle, ...style }}
         className={className}
         ref={forwardedRef}

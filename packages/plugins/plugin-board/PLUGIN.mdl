@@ -143,6 +143,7 @@ op moveItem
 
 ```mdl
 feat F-1: Create Board
+  uses: [Board]
 
   req F-1.1: A new Board is created with an empty items list and an empty layout.
   req F-1.2: The Board is added to the active space using SpaceOperation.AddObject.
@@ -151,6 +152,7 @@ feat F-1: Create Board
 
 ```mdl
 feat F-2: Add Item to Board
+  uses: [Board]
 
   req F-2.1:
     when: user clicks "+" on the grid backdrop at a specific position
@@ -169,6 +171,7 @@ feat F-2: Add Item to Board
 
 ```mdl
 feat F-3: Remove Item from Board
+  uses: [Board]
 
   req F-3.1:
     when: user deletes a cell
@@ -180,6 +183,7 @@ feat F-3: Remove Item from Board
 
 ```mdl
 feat F-4: Move Item on Board
+  uses: [Board, Position]
 
   req F-4.1:
     when: user drags a card to a new position
@@ -201,6 +205,7 @@ feat F-5: Render Items
 
 ```mdl
 feat F-6: Attention and Focus
+  uses: [Board]
 
   req F-6.1:
     when: the Board surface does not have attention

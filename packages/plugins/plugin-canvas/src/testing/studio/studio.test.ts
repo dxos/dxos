@@ -8,9 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
 import { type ContentMap, Dsl } from '@dxos/diagram';
-import { iconOf } from '@dxos/react-ui-canvas';
+import { ROOT_VIEW_ID, iconOf, isLinkRecord, isNodeRecord, readViews } from '@dxos/react-ui-canvas';
 
-import { ROOT_VIEW_ID, isLinkRecord, isNodeRecord, readViews } from '../../model/content.ts';
 import {
   STUDIO_CANVAS,
   STUDIO_GRID,

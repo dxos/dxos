@@ -120,7 +120,10 @@ type SelectTriggerProps = ThemedClassName<Omit<SelectPrimitive.TriggerProps, 'ch
    * in the value's cell, which CSS sizes without measuring.
    */
   fixed?: boolean;
-  /** Renders the trigger as a `Tag` holding the chosen option's icon and label, with no caret (a row of field values). */
+  /**
+   * Renders the trigger as a `Tag` holding the chosen option's icon and label, with no caret (a row of field values),
+   * filled in the option's `iconHue` when it has one.
+   */
   tag?: boolean;
   /** Shown where the chosen option has no icon, or nothing is chosen: the field's own glyph. */
   icon?: string;
@@ -146,7 +149,7 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
           aria-busy={loading || undefined}
           ref={forwardedRef}
         >
-          <Tag.Tag variant='outline' classNames={classNames}>
+          <Tag.Tag hue={selected?.iconHue} variant={selected?.iconHue ? 'fill' : 'outline'} classNames={classNames}>
             {glyph}
             <SelectPrimitive.ValueText placeholder={placeholder} />
           </Tag.Tag>
