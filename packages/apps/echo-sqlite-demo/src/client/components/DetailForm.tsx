@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Entity, Obj, Ref, Type } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
-import { foreignKey } from '@dxos/echo-worker';
+import { foreignKey } from '@dxos/echo-sqlite-sync';
 import { Form, type RefFieldDataProps, omitId } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Layout from '@dxos/react-ui/Layout';

@@ -18,7 +18,7 @@ import * as Theme from '@dxos/react-ui/Theme';
 import * as UiToolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Channel } from '@dxos/types';
-import { groupHoverControlItemWithTransition } from '@dxos/ui-theme';
+import { hoverableControlItem, mx } from '@dxos/ui-theme';
 
 import { CallsCapabilities } from '#types';
 
@@ -71,7 +71,10 @@ export const Toolbar = ({
 
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
-    <Layout.Flex justify='center' classNames={['z-20 m-8', autoHideControls && groupHoverControlItemWithTransition]}>
+    <Layout.Flex
+      justify='center'
+      classNames={['z-20 m-8', autoHideControls && mx('transition-opacity duration-200', hoverableControlItem)]}
+    >
       <UiToolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={audioEnabled}

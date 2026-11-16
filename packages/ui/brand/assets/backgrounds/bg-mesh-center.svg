@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1920 1080" color="rgb(30,99,139)">
+  <rect id="background" width="1920" height="1080" style="fill: var(--dx-bg-fill, rgb(29,31,32))"/>
+  <g id="lines" fill="none" stroke-width="14" style="stroke: var(--dx-bg-lines, currentColor)">
+    <path d="M1523.7,-20.0 L755.7,1100.0"/>
+    <path d="M1171.3,-20.0 L883.4,1100.0"/>
+    <path d="M748.5,-20.0 L1036.5,1100.0"/>
+    <path d="M1164.1,1100.0 L396.2,-20.0"/>
+    <path d="M1018.5,-20.0 L1306.5,1100.0"/>
+    <path d="M1459.6,1100.0 L595.7,-20.0"/>
+    <path d="M460.3,1100.0 L1324.2,-20.0"/>
+    <path d="M901.4,-20.0 L613.4,1100.0"/>
+  </g>
+  <g id="icon" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--dx-bg-icon, rgb(249,233,230))">
+    <path d="M960.3,802.7 L765.1,518.0"/>
+    <path d="M1094.9,277.3 L1230.0,802.7"/>
+    <path d="M825.0,277.3 L959.9,802.2"/>
+    <path d="M1156.2,515.9 L959.9,802.2 L763.6,515.9"/>
+    <path d="M1092.7,285.7 L962.4,792.6"/>
+    <path d="M1094.9,277.3 L1229.9,802.2 L825.0,277.3 L690.0,802.2 Z"/>
+  </g>
+</svg>

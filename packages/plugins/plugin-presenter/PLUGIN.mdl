@@ -372,6 +372,7 @@ op GenerateSlideImage
 
 ```mdl
 feat F-1: Presentation Mode
+  uses: [Presentation, TogglePresentation]
 
   req F-1.1: Every Markdown document in the workspace has a companion "Presenter" node in the app graph.
   req F-1.2:
@@ -387,6 +388,7 @@ feat F-1: Presentation Mode
 
 ```mdl
 feat F-2: Document Preview
+  uses: [Deck, DocumentArticle]
 
   req F-2.1:
     when: DocumentArticle mounts with a Markdown.Document
@@ -399,6 +401,7 @@ feat F-2: Document Preview
 
 ```mdl
 feat F-3: Presentation Object
+  uses: [Presentation, SectionPicker]
 
   req F-3.1: A Presentation is created from the space's create-object menu, is filed into the space's Collections, and holds an ordered `sections` array.
   req F-3.2: One section is exactly one slide; `---` inside a section is a horizontal rule, not a slide break.
@@ -420,6 +423,7 @@ feat F-3: Presentation Object
 
 ```mdl
 feat F-4: Presentation Deck
+  uses: [Deck, Presentation, PresentationArticle]
 
   req F-4.1:
     when: PresentationArticle mounts
@@ -450,6 +454,7 @@ feat F-4: Presentation Deck
 
 ```mdl
 feat F-6: Markdown Slides
+  uses: [Presentation]
 
   req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and F-8.5 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`, and for the DXOS layouts `three-cols` and `two-by-two` also `::middle::`, `::bottom-left::` and `::bottom-right::`; notes as the slide's last HTML comment.
   req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full and none.
@@ -508,6 +513,7 @@ feat F-9: Printing
 
 ```mdl
 feat F-10: Slide Editor
+  uses: [Slide]
 
   req F-10.1: The slide editor has a toolbar with markdown formatting, slide tools (layout, click step, column break, object, background, notes) and view controls (preview mode, previous/next slide, present from here).
   req F-10.2: Picking a layout writes the slide's `layout:` frontmatter, keeping its other keys; each toolbar edit is one undo step.
@@ -523,6 +529,7 @@ feat F-10: Slide Editor
 
 ```mdl
 feat F-5: Navtree Folder
+  uses: [Presentation, Slide, SlideEditorArticle]
 
   req F-5.1: A Presentation node lists its sections as children.
   req F-5.2: An owned slide is labelled by its name, else its first markdown heading, else "Slide N".
@@ -538,6 +545,7 @@ feat F-5: Navtree Folder
 
 ```mdl
 feat F-11: Slides as Objects
+  uses: [GenerateSlideImage, Presentation, Slide]
 
   req F-11.1: A Presentation's slides are `Slide` objects, each holding its content (an owned Text or a linked object) and the slide's own metadata (title, hidden, notes, image).
   req F-11.2: A Presentation has an optional description.
@@ -551,6 +559,7 @@ feat F-11: Slides as Objects
 
 ```mdl
 feat F-12: Speaker Notes
+  uses: [Presentation]
 
   req F-12.1: A slide's speaker notes are its `notes` text, else the markdown slide's trailing notes comment; they are read one line per bullet or paragraph, split again after each sentence.
   req F-12.2:

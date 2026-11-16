@@ -4,7 +4,7 @@
 
 import { useMemo, useRef } from 'react';
 
-import { type ElementId, type InstanceNode, type NodeId, type Size, type ViewId, isInstanceNode } from '@dxos/scene';
+import { type ElementId, type NodeId, type PlacedComposite, type Size, type ViewId, isInstanceNode } from '@dxos/scene';
 
 import {
   type CanvasAtoms,
@@ -122,7 +122,7 @@ export const useObjectActions = ({
           height: content.height,
         };
         const current = registry.get(draw.scene);
-        const instance: InstanceNode = {
+        const instance: PlacedComposite = {
           type: 'instance',
           id: createId('instance'),
           z: topZ(Object.values(current.nodes)),

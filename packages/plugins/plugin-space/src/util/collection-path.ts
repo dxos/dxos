@@ -20,8 +20,8 @@ const COLLECTION_WALK_MAX_DEPTH = 32;
  * path (`system/database/<type>/<objectId>`) exists for every object but names a hidden node — so both
  * URL resolution and navigation-target resolution answer with this when it exists.
  *
- * Returns undefined for an object outside the collection tree (one reachable only via its type
- * section or the database subtree).
+ * Returns undefined for an object outside the tree (one reachable only via its type section or the
+ * database subtree).
  */
 export const resolveCollectionObjectPath = ({
   objectId,
@@ -48,13 +48,14 @@ export const resolveCollectionObjectPath = ({
   });
 
 /**
- * Walk up a space's collection tree from `objectId` to the root collection. A single query loads the
+ * Walk up a space's containment tree from `objectId` to the root collection. A single query loads the
  * space's collections — each already carries its child refs — so the ancestry is a walk of a
  * child→collections index rather than a query per step. An object listed in several collections walks
- * through the one that is its parent, else the first indexed; a visited-set plus depth cap stop a cycle
- * from looping. Returns the intermediate collection ids in
- * root→leaf order (excluding the root collection, whose objects sit directly under
- * `content/collections`), or null if no path to the root exists.
+ * through the one that is its parent; an object listed in none walks through the object that owns it,
+ * which is how a slide reaches the collection its presentation sits in. A visited-set plus depth cap
+ * stop a cycle from looping. Returns the intermediate ids in root→leaf order (excluding the root
+ * collection, whose objects sit directly under `content/collections`), or null if no path to the root
+ * exists.
  */
 export const walkCollectionChainToRoot = ({
   objectId,
@@ -81,13 +82,17 @@ export const walkCollectionChainToRoot = ({
     let current = objectId;
     for (let depth = 0; depth < COLLECTION_WALK_MAX_DEPTH; depth++) {
       const candidates = listedIn.get(current) ?? [];
+      // The owner settles both ambiguous cases: which collection an object listed in several belongs to,
+      // and — for an object listed in none — what it hangs off instead. A presenter slide is the second
+      // kind: the collection holds its presentation, not the slide, so the walk steps to the presentation
+      // and carries on from there. Skipped when there is exactly one candidate, which needs no query.
       const owner =
-        candidates.length > 1
-          ? yield* Database.query(Filter.id(current)).run.pipe(
+        candidates.length === 1
+          ? undefined
+          : yield* Database.query(Filter.id(current)).run.pipe(
               Effect.map(([object]) => (Obj.isObject(object) ? Obj.getParent(object)?.id : undefined)),
-            )
-          : undefined;
-      const parent = candidates.find((id) => id === owner) ?? candidates[0];
+            );
+      const parent = candidates.find((id) => id === owner) ?? candidates[0] ?? owner;
       if (!parent) {
         return null;
       }

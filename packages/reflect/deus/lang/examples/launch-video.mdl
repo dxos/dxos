@@ -1,0 +1,197 @@
+---
+id: org.dxos.example.launch-video
+name: Launch video
+version: 0.1.0
+extends:
+  - org.dxos.spec.video
+---
+
+A 45-second launch video for Composer, written in the video dialect.
+
+## Extensions
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `asset`     | `org.dxos.mdl.asset@0.1`     |
+| `caption`   | `org.dxos.mdl.caption@0.1`   |
+| `character` | `org.dxos.mdl.character@0.1` |
+| `scene`     | `org.dxos.mdl.scene@0.1`     |
+| `screening` | `org.dxos.mdl.screening@0.1` |
+| `shot`      | `org.dxos.mdl.shot@0.1`      |
+| `voiceover` | `org.dxos.mdl.voiceover@0.1` |
+
+## Cast and assets
+
+```mdl
+character maya: Maya, a product designer
+```
+
+```mdl
+character sam: Sam, Maya's teammate
+```
+
+```mdl
+character narrator: The narrator
+  voice: warm, unhurried, never salesy
+```
+
+```mdl
+asset logo: Composer logo
+  source: brand kit, animated SVG
+```
+
+```mdl
+asset screen-capture: Screen capture of the app
+  source: recorded with autocue against a seeded space
+```
+
+```mdl
+asset theme: Theme track
+  source: licensed library track, 60 s cut
+```
+
+## Script
+
+```mdl
+scene SC-1: Cold open
+  duration: 8s
+  goal: The viewer sees their work scattered across five apps.
+  cast: [maya]
+```
+
+```mdl
+shot SH-1: Tabs pile up
+  scene: SC-1
+  camera: over Maya's shoulder, slow push in
+  action: Browser tabs multiply until they fill her screen.
+  assets: [theme]
+```
+
+```mdl
+scene SC-2: One space
+  duration: 15s
+  goal: The viewer sees the same work in one Composer space.
+  follows: SC-1
+  cast: [maya, narrator]
+```
+
+```mdl
+shot SH-2: Tabs collapse into a space
+  scene: SC-2
+  camera: match cut from SH-1, then pull back
+  action: The tabs fold into one Composer window.
+  assets: [screen-capture, theme]
+```
+
+```mdl
+shot SH-3: A document, a board and a chat side by side
+  scene: SC-2
+  camera: screen capture, slow pan
+  action: Maya drags a task from the chat onto the board.
+  assets: [screen-capture]
+```
+
+```mdl
+voiceover VO-1: Composer keeps your work together, and keeps it yours.
+  scene: SC-2
+  at: 3s
+  by: narrator
+  over: [SH-2, SH-3]
+```
+
+```mdl
+caption CA-1: Local-first. Yours.
+  scene: SC-2
+  at: 9s
+  transcribes: VO-1
+```
+
+```mdl
+scene SC-3: Together
+  duration: 14s
+  goal: The viewer sees two people edit one space at once.
+  follows: SC-2
+  cast: [maya, sam, narrator]
+```
+
+```mdl
+shot SH-4: Split screen
+  scene: SC-3
+  camera: two screens side by side
+  action: Sam's cursor appears in Maya's document and they finish a sentence together.
+  assets: [screen-capture]
+```
+
+```mdl
+voiceover VO-2: Invite anyone. Work at the same time, even offline.
+  scene: SC-3
+  at: 2s
+  by: narrator
+  over: [SH-4]
+```
+
+```mdl
+scene SC-4: Close
+  duration: 8s
+  goal: The viewer knows where to get it.
+  follows: SC-3
+  cast: [narrator]
+```
+
+```mdl
+shot SH-5: Logo on black
+  scene: SC-4
+  camera: centred title card
+  action: The logo draws itself in.
+  assets: [logo, theme]
+```
+
+```mdl
+voiceover VO-3: Composer. Get it at composer.space.
+  scene: SC-4
+  at: 1s
+  by: narrator
+  over: [SH-5]
+```
+
+```mdl
+caption CA-2: composer.space
+  scene: SC-4
+  at: 2s
+  transcribes: VO-3
+```
+
+## Screenings
+
+```mdl
+screening SN-1: First cut, internal
+  covers: [SC-1, SC-2, SC-3]
+  audience: five people who have not used Composer
+  expect: Each can say in one sentence what the app replaces.
+```
+
+```mdl
+screening SN-2: Final cut, launch partners
+  covers: [SC-1, SC-2, SC-3, SC-4]
+  audience: launch partners
+  expect: Each can name where to get it.
+```
+
+## Changelog
+
+```mdl
+decision D-1: The video opens on Maya alone, so the cut to one shared space in SC-2 is the turn.
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SC-1, SC-2]
+```
+
+```mdl
+decision D-2: Every voiceover line is the narrator's; Maya and Sam are seen, never heard.
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [VO-1, VO-2, VO-3, maya, sam]
+  why: One voice keeps 45 seconds easy to follow, and the cast can be recast without rerecording lines.
+```

@@ -78,6 +78,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@modelcontextprotocol/sdk": "catalog:",
+    "@playwright/test": "catalog:",
     "autoevals": "^0.0.132",
     "chess.js": "catalog:",
     "effect": "catalog:",

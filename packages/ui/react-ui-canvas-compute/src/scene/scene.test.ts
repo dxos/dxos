@@ -10,11 +10,11 @@ import { createHistory } from '@dxos/react-ui-canvas-editor';
 
 import { isValidComputeNode } from '../graph/index.ts';
 import { createComputeGraph } from '../hooks/index.ts';
-import { computeKinds, computeNodeRegistry } from '../registry.ts';
+import { computeKinds, computeNodeDefs, computeNodeRegistry } from '../registry.ts';
 import { createRowPorts } from '../shapes/index.ts';
 import { createControlCircuit, createTemplateCircuit, createTransformCircuit } from '../testing/index.ts';
 import { CanvasBoard } from '../types/index.ts';
-import { type BoardElement, boardLayout, createBoardStore } from './echo-store.ts';
+import { type BoardElement, boardLayout, computeNodeId, createBoardStore } from './echo-store.ts';
 import { createComputeProjection } from './projection.ts';
 
 /** The template circuit as a board, written through the compute projection, with undo. */
@@ -33,8 +33,8 @@ const setup = () => {
     return element;
   };
   const computeIdOf = (type: string): string => {
-    const node = elementOf(type).node;
-    if (typeof node !== 'string') {
+    const node = computeNodeId(elementOf(type));
+    if (node === undefined) {
       throw new Error(`${type} carries no compute node`);
     }
     return node;
@@ -63,14 +63,29 @@ describe('compute scene', () => {
       expect(computeKinds.validate(shape), shape.type).toEqual({ ok: true });
     }
     expect(
-      shapes.filter((shape) => isValidComputeNode(shape.type ?? '')).every((shape) => typeof shape.node === 'string'),
+      shapes
+        .filter((shape) => isValidComputeNode(shape.type ?? ''))
+        .every((shape) => computeNodeId(shape) !== undefined && !('node' in shape)),
     ).toBe(true);
+  });
+
+  test('every compute kind keeps its own fields under data, its compute node among them', ({ expect }) => {
+    for (const { type } of computeNodeDefs) {
+      expect(computeKinds.dataFields(type), type).toContain('node');
+    }
+    expect(computeKinds.dataFields('constant')).toEqual(['node', 'value']);
+    expect(computeKinds.dataFields('template')).toEqual(['node', 'valueType']);
+    expect(computeKinds.dataFields('rng')).toEqual(['node', 'min', 'max']);
+    expect(computeKinds.dataFields('trigger')).toEqual(['node', 'functionTrigger']);
+    // The engine's note is no compute kind, so its `text` stays its own.
+    expect(computeKinds.dataFields('note')).toEqual([]);
   });
 
   test('a kind refuses an element whose own fields are not its shape', ({ expect }) => {
     const layout = boardLayout('circuit', createTemplateCircuit());
     const gpt = Object.values(layout.elements).find((element) => element.type === 'gpt');
     expect(gpt && computeKinds.validate({ ...gpt, center: 'here' }).ok).toBe(false);
+    expect(gpt && computeKinds.validate({ ...gpt, data: { node: 7 } }).ok).toBe(false);
   });
 
   test('a note keeps its text, and links pin the property ports', ({ expect }) => {
@@ -103,16 +118,21 @@ describe('compute projection', () => {
     const nodes = model.nodes.length;
     const shape = { type: 'constant', z: 'zz', center: { x: 0, y: 0 }, size: { width: 192, height: 128 } };
     write({ kind: 'create', element: { id: 'k', ...shape } });
-    const node = store.read().elements.k.node;
+    const node = computeNodeId(store.read().elements.k);
     expect(typeof node).toBe('string');
     expect(model.findNode(String(node))?.type).toBe('constant');
-    const pasted = { id: 'k2', ...shape, node };
+    const pasted = { id: 'k2', ...shape, data: { node, value: 7 } };
     write({ kind: 'create', element: pasted });
-    const copy = store.read().elements.k2.node;
-    expect(copy).not.toBe(node);
+    const copy = store.read().elements.k2;
+    expect(computeNodeId(copy)).not.toBe(node);
+    // The copy keeps the rest of its data, and its compute node is made from it.
+    expect(copy.data).toEqual({ node: computeNodeId(copy), value: 7 });
+    expect(model.findNode(String(computeNodeId(copy)))?.value).toBe(7);
     expect(model.nodes.length).toBe(nodes + 2);
-    // The compute node id is stored with the shape.
-    expect(board.layout.nodes.find((shape) => shape.id === 'k')?.node).toBe(node);
+    // The compute node id is stored with the shape, under its data.
+    const stored = board.layout.nodes.find((shape) => shape.id === 'k');
+    expect(stored?.data).toEqual({ node });
+    expect(stored && 'node' in stored).toBe(false);
   });
 
   test('a link to itself or to a missing shape adds no edge', ({ expect }) => {

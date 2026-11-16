@@ -1,0 +1,63 @@
+---
+title: Feeds
+description: An append log of ECHO objects, as a tree of branches.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+A feed is a log that objects are appended to, such as the messages of a chat, and it can branch, so that a reader sees
+one line of the conversation at a time.
+
+## Model
+
+A feed is one append log of ECHO objects, usually messages. <SpecCite item="org.dxos.echo.feeds#F-1.1" /> The feed itself
+is an object in a space; the items appended to it are objects too, with types, ids and references, but they are not
+stored as objects of the space.
+
+<Snippet file="concept-feeds" region="append" />
+
+A feed is a **tree of branches**. Each branch has a parent and a fixed fork point, and a read of a branch gives the items
+of its ancestors up to the fork point, then the items of the branch. A branch costs about one record and needs no other
+object in the space. <SpecCite item="org.dxos.echo.feeds#F-1.2" />
+
+AI chat, comments and messaging all use this model. <SpecCite item="org.dxos.echo.feeds#F-3.1" /> These are uses of one
+model, not different kinds of feed: an AI chat where a person retries a reply forks a branch at the message before it,
+and the reader follows the newest branch.
+
+## Behavior
+
+- A **walk** reads a feed along one path of the tree: forward from the root to a branch, or backward from an item to the
+  root. A walk is a query with a feed scope, so any filter works with it.
+  <SpecCite item="org.dxos.echo.feeds#F-5.1" /> <SpecCite item="org.dxos.echo.feeds#F-5.2" />
+- A **cursor** marks where a reader stopped, and the branch it was on. A reader resumes after the cursor and reads only
+  what is new, without the items of other branches. <SpecCite item="org.dxos.echo.feeds#F-5.3" />
+
+  <Snippet file="concept-feeds" region="walk" />
+
+- `db.forkFeed` starts a branch at any item. A walk can also return the fork points it passes, so a reader can show
+  that other branches start there. <SpecCite item="org.dxos.echo.feeds#F-5.4" />
+
+  <Snippet file="concept-feeds" region="fork" />
+
+- A feed can have no index, which saves the cost of indexing a log that is only walked. Retention trims old items by
+  count or age. <SpecCite item="org.dxos.echo.feeds#F-2.1" />
+
+  <Snippet file="concept-feeds" region="options" />
+
+### When to use a feed
+
+Use a feed for data that grows by appending and is read in order: messages, comments, events, an agent's steps. Use
+objects for data that people edit in place and query by field. To try out a change to objects, such as a draft of a
+document, use a [branch of objects](/docs/echo/concepts/changes/#branches), not a feed.
+
+## Limits
+
+The design of feeds goes further than the code does today. These parts of
+[the feeds spec](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo/docs/FEEDS.mdl) are not built yet:
+
+- A list of a feed's branches and their heads, and a cheap call for the heads that changed.
+  <SpecCite item="org.dxos.echo.feeds#F-2.2" />
+- Sync of some branches only. A client syncs the whole feed. <SpecCite item="org.dxos.echo.feeds#F-2.3" />
+- Merging a branch back, and removing a branch from reads. <SpecCite item="org.dxos.echo.feeds#F-1.4" />
+- Retention per branch. Retention applies to the whole feed. <SpecCite item="org.dxos.echo.feeds#F-4.4" />

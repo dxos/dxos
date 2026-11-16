@@ -20,6 +20,7 @@ import { Text } from '@dxos/schema';
 import { Channel, Person } from '@dxos/types';
 
 import * as AgentEmail from './AgentEmail.ts';
+import * as AgentSession from './AgentSession.ts';
 import * as BrainService from './BrainService.ts';
 
 /**
@@ -103,6 +104,48 @@ export const EnsureChannelChat = Operation.make({
   output: Schema.Struct({
     chat: Ref.Ref(Chat.Chat),
     feed: Ref.Ref(Feed.Feed).annotate({ description: "The chat's message feed." }),
+  }),
+});
+
+/**
+ * Finds or creates an agent's chat for a session: a conversation with a caller that is not a channel, such as an MCP
+ * client (EDGE compute-service's `askAgent`). Idempotent on `(agent, kind, key)`: the chat carries
+ * `AgentSession.chatKey` as an `Obj.Meta` foreign key. A new chat binds the agent's context, its session skills and
+ * every channel's skills, so the agent can act in its channels from the session.
+ */
+export const EnsureSessionChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.ensureSessionChat'),
+    name: 'Ensure agent session chat',
+    description: "Finds or creates an agent's chat for a session (an MCP client's conversation with the agent).",
+  },
+  services: [Database.Service],
+  types: CHAT_TYPES,
+  input: Schema.Struct({
+    agent: Schema.optional(
+      Schema.String.annotate({ description: 'The agent: its URI or name; optional when the space has one agent.' }),
+    ),
+    kind: Schema.String.pipe(
+      Schema.check(
+        Schema.isPattern(AgentSession.KIND_PATTERN, {
+          toJsonSchema: () => ({ pattern: AgentSession.KIND_PATTERN.source }),
+        }),
+      ),
+    ).annotate({ description: 'The kind of caller, e.g. `mcp`; it contains no `:`.' }),
+    key: Schema.String.annotate({ description: "The caller's session id, unique within its kind." }),
+    title: Schema.optional(Schema.String.annotate({ description: 'Names a new chat.' })),
+    model: Schema.optional(
+      Schema.String.annotate({
+        description: "The model the session's chat runs on (a model NSID); kept for later turns of the session.",
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent),
+    agentName: Schema.optional(Schema.String),
+    chat: Ref.Ref(Chat.Chat),
+    feed: Ref.Ref(Feed.Feed),
+    created: Schema.Boolean,
   }),
 });
 

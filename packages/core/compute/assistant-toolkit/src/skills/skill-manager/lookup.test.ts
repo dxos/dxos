@@ -19,7 +19,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId, type URI } from '@dxos/keys';
 
-import { QueryOperations, QuerySkills, QueryTypes } from './operations/definitions.ts';
+import { EnableSkills, QueryOperations, QuerySkills, QueryTypes } from './operations/definitions.ts';
 import { SkillManagerHandlers } from './operations/index.ts';
 import * as SkillManagerSkill from './SkillManagerSkill.ts';
 
@@ -247,7 +247,7 @@ describe('Skill Manager lookups', () => {
   );
 
   it.effect(
-    'the tool-calling instructions list every skill and its flags; the code-mode ones list none',
+    'the tool-calling instructions list every skill and its flags; the code-mode ones list none and give no MCP',
     Effect.fnUntraced(
       function* (_) {
         const { conversation } = yield* TestConversation;
@@ -260,9 +260,12 @@ describe('Skill Manager lookups', () => {
         expect(listing).toContain('- com.example.skill.notes "Notes" -- Keeps a notebook. [agent-can-enable]');
 
         const codeMode = yield* render(SkillManagerSkill.makeForCodeMode());
-        expect(codeMode).toContain('Nothing about this workspace is listed in this prompt');
+        expect(codeMode).toContain('The skills enabled in this conversation are stated in this prompt');
         expect(codeMode).not.toContain('com.example.skill');
-        expect(SkillManagerSkill.makeForCodeMode().tools).toEqual(SkillManagerSkill.make().tools);
+        // The lookups only: an MCP connection is a bound Skill Manager's to give, not every conversation's.
+        expect(SkillManagerSkill.makeForCodeMode().tools).toEqual(
+          Skill.toolDefinitions({ operations: [QuerySkills, EnableSkills, QueryOperations, QueryTypes] }),
+        );
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

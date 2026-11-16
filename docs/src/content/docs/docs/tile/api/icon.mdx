@@ -1,0 +1,33 @@
+---
+title: Icon
+description: The icon component and its props.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+```ts
+import * as Icon from '@dxos/react-ui/Icon';
+```
+
+`Icon.Icon` draws one icon from the sprite. [Translations and icons](/docs/tile/concepts/translations-and-icons/)
+explains how names become the sprite.
+
+<Snippet file="tile-components" region="icons" lang="tsx" />
+
+<TilePreview id="icons" />
+
+## `Icon.Icon`
+
+| Prop      | Type                                           | Effect                                                         |
+| --------- | ---------------------------------------------- | -------------------------------------------------------------- |
+| `icon`    | string                                         | The name, such as `ph--house--regular`                         |
+| `label`   | string                                         | An accessible name. Without one the icon is decorative         |
+| `size`    | `Size`                                         | Its size. Unset, it takes the icon size of its surroundings    |
+| `hue`     | a palette hue                                  | Color it with a hue                                            |
+| `valence` | `'info' \| 'success' \| 'warning' \| 'error' \| 'neutral'` | Color it by status                                 |
+| `tone`    | `'muted' \| 'subtle'`                          | Dim it                                                         |
+| `spin`    | boolean                                        | Spin it, for a busy state                                      |
+
+Most components that show an icon, such as `Button.Root`, `Menu.Item` and `Status.Empty`, take an `icon` name and draw it
+themselves.

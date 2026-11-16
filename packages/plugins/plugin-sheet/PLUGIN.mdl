@@ -206,6 +206,7 @@ op setRange
 
 ```mdl
 feat F-1: Sheet Object
+  uses: [Sheet]
 
   req F-1.1: A Sheet is an ECHO object with typename org.dxos.type.sheet persisted in the user's space.
   req F-1.2: Cells are stored in a sparse map keyed by internal row/column indices.
@@ -226,6 +227,7 @@ feat F-2: Formula Evaluation
 
 ```mdl
 feat F-3: Row and Column Management
+  uses: [dropAxis, insertAxis, restoreAxis]
 
   req F-3.1:
     when: op:insertAxis is called
@@ -240,6 +242,7 @@ feat F-3: Row and Column Management
 
 ```mdl
 feat F-4: Cell Formatting
+  uses: [RangeList]
 
   req F-4.1: Ranges support alignment values: start | center | end.
   req F-4.2: Ranges support comment annotations displayed as a visual overlay on the cell.
@@ -272,6 +275,7 @@ feat F-6: Markdown Integration
 
 ```mdl
 feat F-7: Anchor Navigation
+  uses: [scrollToAnchor, SheetArticle]
 
   req F-7.1:
     when: op:scrollToAnchor is invoked with a sheet attendable ID and cursor
@@ -289,6 +293,18 @@ feat F-7: Anchor Navigation
   req F-7.4:
     when: the reader moves the cell cursor into a commented range
     then: that range's thread becomes the current comment
+```
+
+```mdl
+feat F-8: Chart Types
+
+  req F-8.1: Every chart type the Charts companion draws is a `SheetCapabilities.ChartType` contribution: the type a chart stores, a label, an icon and a component that draws the chart's range. The sheet contributes bar, pie, XY, scatter, heatmap, radar, map and timeline this way, and another plugin adds one the same way [D-5].
+  req F-8.2:
+    when: the reader edits a chart
+    then: the chart-type select lists every contributed type by its label and icon
+  req F-8.3:
+    when: a chart's type is not contributed by any enabled plugin
+    then: the chart shows a message naming the type in place of the chart, and keeps its settings
 ```
 
 ## Acceptance
@@ -563,6 +579,17 @@ decision D-4: The published selection is what the member's grid shows, kept by c
   rejected:
     - Keep the last cell selected while a header has focus: peers keep seeing a cell the member left.
     - Rename the selection to the row now at its position when its row is gone: a filter makes that a record the member never chose.
+```
+
+```mdl
+decision D-5: A chart's `type` is a string naming a `SheetCapabilities.ChartType` contribution, and the companion draws every chart through its type's component, which gets the chart's settings and its range as `PlotData` with the header row split off. The sheet's own types are contributions like any other plugin's; there is no built-in list. A new chart starts as the first contributed type. Contributed types add no settings of their own to the chart's form.
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [F-8.1, F-8.2, F-8.3]
+  why: One path for every chart type, with no split between a fixed list the companion draws itself and the types plugins add.
+  rejected:
+    - Built-in types as a literal list beside contributed ones: two ways to name and draw a chart type.
+    - A Sankey panel of its own beside every sheet: it leaves the chart out of the companion's list and out of documents and slides, which embed `Sheet.Chart` objects.
 ```
 
 ---

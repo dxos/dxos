@@ -1,0 +1,32 @@
+---
+title: SVG
+description: The SVG surface a graph draws on, with zoom, grid and markers.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui-graph/svg" height="20rem" />
+
+```ts
+import { SVG } from '@dxos/react-ui-graph';
+```
+
+```sh
+npm install @dxos/react-ui-graph @dxos/graph
+```
+
+`SVG` is the drawing surface for [`Graph`](/docs/tile/api/react-ui-graph/graph/). `SVG.Root` makes the SVG element
+and the context a projector needs, and the other parts add to it. Import the package's styles once in your app:
+`@dxos/react-ui-graph/styles/graph.css`.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `SVG.Root` | The SVG element, and the context the graph and its projector read |
+| `SVG.Zoom` | Lets the user zoom and pan what it holds |
+| `SVG.Graph` | The [`Graph`](/docs/tile/api/react-ui-graph/graph/) component |
+| `SVG.Grid` | A grid behind the drawing; `axis` adds the axes |
+| `SVG.Markers` | Arrowheads and other markers for edges |
+| `SVG.Mesh` | A hexagonal mesh |
+| `SVG.FPS` | The frame rate, for development |

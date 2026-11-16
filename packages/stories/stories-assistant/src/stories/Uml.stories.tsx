@@ -12,11 +12,13 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as UmlSkill from '@dxos/plugin-uml/UmlSkill';
 import { type Space } from '@dxos/react-client/echo';
-import { Cell, addToRootCollection } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
 
 type StoryArgs = {
   /** Name of the seeded document. */
@@ -28,7 +30,7 @@ type StoryArgs = {
 const meta: Meta<StoryArgs> = {
   title: 'stories/stories-assistant/Uml',
   // Args feed the decorator's seeding, not the container (its layout arrives via StoryLayout.Atom).
-  render: () => <ModuleContainer />,
+  render: () => <ModuleContainer.Root />,
   parameters: storyParameters,
 };
 
@@ -121,7 +123,7 @@ const decorators = createDecorators<StoryArgs>(({ args }) => ({
     const drawing = space.db.add(
       Drawing.make({ name: 'Class Diagram', canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }) }),
     );
-    addToRootCollection(space, [document, drawing]);
+    StoryHarness.addToRootCollection(space, [document, drawing]);
     return [[StoryRole.Chat], [Cell.article(document)], [Cell.article(drawing)]];
   },
   onChatCreated: async ({ db, binder }) => {

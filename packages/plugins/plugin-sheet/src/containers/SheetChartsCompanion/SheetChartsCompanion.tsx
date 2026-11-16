@@ -37,5 +37,6 @@ SheetChartsCompanion.displayName = 'SheetChartsCompanion';
 const SheetChartsCompanionInner = ({ sheet, space }: { sheet: Sheet.Sheet; space: Space }) => {
   const graph = useComputeGraph(space);
   const model = useSheetModel(graph, sheet);
-  return model ? <SheetCharts sheet={sheet} model={model} /> : null;
+  const chartTypes = Hooks.useCapabilities(SheetCapabilities.ChartType);
+  return model ? <SheetCharts sheet={sheet} model={model} chartTypes={chartTypes} /> : null;
 };

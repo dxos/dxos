@@ -1,0 +1,24 @@
+---
+title: ScrollContainer
+description: "A scroll area that follows new content, as a chat log does."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/scroll-container" />
+
+```ts
+import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
+```
+
+It stays pinned to the end as content is added. Scrolling up unpins it, and a button scrolls back down.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `ScrollContainer.Root` | Holds the pinned state |
+| `ScrollContainer.Content` | The frame |
+| `ScrollContainer.Viewport` | The scrolling element |
+| `ScrollContainer.Fade` | A gradient over an edge while content is hidden past it |
+| `ScrollContainer.ScrollDownButton` | Scrolls to the end and pins again |

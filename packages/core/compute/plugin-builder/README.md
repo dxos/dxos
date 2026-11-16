@@ -32,9 +32,12 @@ moon run plugin-markdown:publish-edge-release -- --dry-run
 ```
 
 It prints one line per plugin: `✓` published (or the same content was already there), `!` stale (the version already
-holds other content on EDGE, and only a version bump publishes it; a warning, not a failure), or `✗` failed. The
+holds other content on EDGE, and only a version bump publishes it; a warning, not a failure), or `✗` failed.
+
+`--build <id>` (or `DX_PLUGIN_BUILD`) publishes the bundle as `<version>+<id>`, rewriting its manifest to match. The
 nightly Deploy Apps run publishes every plugin that inherits it to preview with
-`moon exec --on-failure continue :publish-edge-release`.
+`DX_PLUGIN_BUILD=main.<sha> moon exec --on-failure continue :publish-edge-release`, so each snapshot of `main` gets a
+version of its own and becomes `latest`, where the bare release version would be `stale` after its first upload.
 
 ## Checking a plugin bundle
 

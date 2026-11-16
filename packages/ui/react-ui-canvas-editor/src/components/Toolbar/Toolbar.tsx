@@ -11,7 +11,7 @@
 
 import React, { type ReactNode } from 'react';
 
-import { FLOATING_BAR, shortcutFor } from '@dxos/react-ui-canvas';
+import { FLOATING_BAR, FLOATING_BAR_RULE, shortcutFor } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
@@ -69,7 +69,7 @@ export const NavigationToolbar = ({ classNames, actions, children }: NavigationT
       <Breadcrumbs path={path} nameOf={actions.nameOf} onSelect={actions.onPath} />
       {children && (
         <>
-          <Toolbar.Separator variant='line' />
+          <Toolbar.Separator variant='line' classNames={FLOATING_BAR_RULE} />
           <Toolbar.Text classNames={readoutClasses}>{children}</Toolbar.Text>
         </>
       )}
@@ -116,7 +116,7 @@ export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarPr
         data-testid='toolbar-zoom-out'
         onClick={actions.zoomOut}
       />
-      <Toolbar.Separator variant='line' />
+      <Toolbar.Separator variant='line' classNames={FLOATING_BAR_RULE} />
       <Toolbar.Text classNames={readoutClasses}>{children}</Toolbar.Text>
     </Toolbar.Root>
   );

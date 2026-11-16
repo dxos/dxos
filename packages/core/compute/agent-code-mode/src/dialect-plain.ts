@@ -121,10 +121,11 @@ export const PlainDialect: Dialect = {
           const invoke = (input: unknown = {}) => run(operation.invoke(input));
           // Bound under the tool name and its camelCase form: the derived names are kebab-case,
           // which is not an identifier, so `ops.researchOrg` would otherwise have to be bracketed.
-          return [
-            [operation.name, invoke],
-            [camelCase(operation.name), invoke],
-          ];
+          // Also under the operation's key, with and without `dxn:`, since the Skill Manager says an
+          // operation is called by its key or its tool name.
+          const key = operation.definition === undefined ? undefined : String(operation.definition.meta.key);
+          const keys = key === undefined ? [] : [...new Set([key, key.replace(/^dxn:/, '')])];
+          return [operation.name, camelCase(operation.name), ...keys].map((name) => [name, invoke] as const);
         }),
       ),
     };

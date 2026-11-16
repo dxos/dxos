@@ -1,0 +1,44 @@
+# Chat: What runs, what it records, what it uses and what it makes
+# Exported from studio assets/deck (slide "chat"), 1600 × 900 slide units.
+
+object title @ 80,40 {
+  text heading 0,0 "Chat"
+  text subtitle 0,44 "What runs, what it records, what it uses and what it makes"
+}
+
+object agent-box @ 260,285 {
+  rect frame 0,0 1080x430 color=grey stroke=dashed
+}
+
+object operator @ 682,147 {
+  rect box 0,0 236x66 "Operator"
+}   # card icon=user tone=var(--t-trip)
+object feed @ 682,307 {
+  rect box 0,0 236x66 "Feed"
+}   # card icon=queue
+object session @ 682,467 {
+  rect box 0,0 236x66 "Session"
+}   # card icon=play-circle
+object model @ 1082,467 {
+  rect box 0,0 236x66 "Model"
+}   # card icon=cpu
+object skill @ 282,627 {
+  rect box 0,0 236x66 "Skill"
+}   # card icon=graduation-cap
+object tool @ 682,627 {
+  rect box 0,0 236x66 "Tool"
+}   # card icon=wrench
+object artifact @ 682,787 {
+  rect box 0,0 236x66 "Artifact"
+}   # card icon=cube tone=var(--t-message)
+
+object links @ 0,0 {
+  arrow session-feed session/box -> feed/box "writes" head=triangle
+  arrow session-model session/box -> model/box "run by" head=triangle
+  arrow operator-feed operator/box -> feed/box "writes" head=triangle
+  arrow session-tool session/box -> tool/box "uses" head=triangle
+  arrow skill-tool skill/box -> tool/box "defines" head=triangle
+  arrow tool-artifact tool/box -> artifact/box "makes" head=triangle
+  arrow operator-skill operator/box -> skill/box head=triangle stroke=dashed   # route=elbow-hv
+  arrow operator-model operator/box -> model/box head=triangle stroke=dashed   # route=elbow-hv
+}

@@ -3,11 +3,23 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type PropsWithChildren } from 'react';
+import React, { Fragment, type PropsWithChildren } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
+import dxosBlack from '../../../assets/logotypes/dxos-horizontal-block.svg?raw';
+import dxosWhite from '../../../assets/logotypes/dxos-horizontal-white.svg?raw';
+import echoBlack from '../../../assets/logotypes/echo-horizontal-black.svg?raw';
+import echoWhite from '../../../assets/logotypes/echo-horizontal-white.svg?raw';
+import edgeBlack from '../../../assets/logotypes/edge-horizontal-black.svg?raw';
+import edgeWhite from '../../../assets/logotypes/edge-horizontal-white.svg?raw';
+import haloBlack from '../../../assets/logotypes/halo-horizontal-black.svg?raw';
+import haloWhite from '../../../assets/logotypes/halo-horizontal-white.svg?raw';
+import meshBlack from '../../../assets/logotypes/mesh-horizontal-black.svg?raw';
+import meshWhite from '../../../assets/logotypes/mesh-horizontal-white.svg?raw';
+import plexBlack from '../../../assets/logotypes/plex-horizontal-black.svg?raw';
+import plexWhite from '../../../assets/logotypes/plex-horizontal-white.svg?raw';
 import { DXOSHorizontalType } from './DXOSHorizontalType.tsx';
 import { DXOSType } from './DXOSType.tsx';
 import { DXOSVerticalType } from './DXOSVerticalType.tsx';
@@ -55,6 +67,41 @@ export const Default: Story = {
           <Cell dark>
             <DXOSVerticalType className='w-[128px]' />
           </Cell>
+        </div>
+      </div>
+    );
+  },
+};
+
+const horizontal: Record<string, { black: string; white: string }> = {
+  dxos: { black: dxosBlack, white: dxosWhite },
+  echo: { black: echoBlack, white: echoWhite },
+  halo: { black: haloBlack, white: haloWhite },
+  mesh: { black: meshBlack, white: meshWhite },
+  plex: { black: plexBlack, white: plexWhite },
+  edge: { black: edgeBlack, white: edgeWhite },
+};
+
+const Svg = ({ svg }: { svg: string }) => (
+  <div className='w-[320px] [&>svg]:w-full [&>svg]:h-auto' dangerouslySetInnerHTML={{ __html: svg }} />
+);
+
+/** The horizontal logotype of every product, from `assets/logotypes/`; the n-th letters line up across rows. */
+export const Products: Story = {
+  render: () => {
+    return (
+      <div className='absolute flex dx-fill items-center justify-center'>
+        <div className='grid grid-cols-2 gap-4'>
+          {Object.entries(horizontal).map(([name, { black, white }]) => (
+            <Fragment key={name}>
+              <Cell>
+                <Svg svg={black} />
+              </Cell>
+              <Cell dark>
+                <Svg svg={white} />
+              </Cell>
+            </Fragment>
+          ))}
         </div>
       </div>
     );

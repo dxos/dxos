@@ -1,0 +1,219 @@
+{
+  "id": "ontology",
+  "title": "Ontology",
+  "subtitle": "Entities and how they relate; value types and containers alongside",
+  "size": {
+    "w": 236,
+    "h": 66
+  },
+  "nodes": {
+    "organization": {
+      "icon": "buildings",
+      "title": "Organization",
+      "cx": 800,
+      "cy": 251
+    },
+    "group": {
+      "icon": "users-three",
+      "title": "Group",
+      "cx": 520,
+      "cy": 426
+    },
+    "transaction": {
+      "icon": "currency-circle-dollar",
+      "title": "Transaction",
+      "cx": 800,
+      "cy": 426
+    },
+    "project": {
+      "icon": "folder",
+      "title": "Project",
+      "cx": 1080,
+      "cy": 426
+    },
+    "person": {
+      "icon": "user",
+      "title": "Person",
+      "cx": 520,
+      "cy": 621
+    },
+    "task": {
+      "icon": "check-square",
+      "title": "Task",
+      "cx": 1080,
+      "cy": 621
+    },
+    "message": {
+      "icon": "chat-text",
+      "title": "Message",
+      "cx": 520,
+      "cy": 816
+    },
+    "event": {
+      "icon": "calendar-blank",
+      "title": "Event",
+      "cx": 800,
+      "cy": 816
+    },
+    "type-text": {
+      "icon": "text-t",
+      "title": "Text",
+      "cx": 188,
+      "cy": 254,
+      "w": 216,
+      "h": 52
+    },
+    "type-drawing": {
+      "icon": "scribble",
+      "title": "Drawing",
+      "cx": 188,
+      "cy": 320,
+      "w": 216,
+      "h": 52
+    },
+    "type-contact": {
+      "icon": "address-book",
+      "title": "Contact",
+      "cx": 188,
+      "cy": 386,
+      "w": 216,
+      "h": 52
+    },
+    "type-address": {
+      "icon": "map-pin",
+      "title": "Address",
+      "cx": 188,
+      "cy": 452,
+      "w": 216,
+      "h": 52
+    },
+    "type-account": {
+      "icon": "user-circle",
+      "title": "Account",
+      "cx": 188,
+      "cy": 518,
+      "w": 216,
+      "h": 52
+    },
+    "container-presentation": {
+      "icon": "presentation-chart",
+      "title": "Presentation",
+      "cx": 1412,
+      "cy": 254,
+      "w": 216,
+      "h": 52
+    },
+    "container-sheet": {
+      "icon": "grid-four",
+      "title": "Sheet",
+      "cx": 1412,
+      "cy": 320,
+      "w": 216,
+      "h": 52
+    },
+    "container-kanban": {
+      "icon": "kanban",
+      "title": "Kanban",
+      "cx": 1412,
+      "cy": 386,
+      "w": 216,
+      "h": 52
+    },
+    "container-transcript": {
+      "icon": "microphone",
+      "title": "Transcript",
+      "cx": 1412,
+      "cy": 452,
+      "w": 216,
+      "h": 52
+    },
+    "container-tag": {
+      "icon": "tag",
+      "title": "Tag",
+      "cx": 1412,
+      "cy": 518,
+      "w": 216,
+      "h": 52
+    },
+    "container-document": {
+      "icon": "file-text",
+      "title": "Document",
+      "cx": 1412,
+      "cy": 584,
+      "w": 216,
+      "h": 52
+    }
+  },
+  "edges": [
+    ["group", "organization", "part of"],
+    ["project", "organization", "owned by"],
+    ["transaction", "organization", "payer"],
+    ["transaction", "person", "payee"],
+    ["person", "group", "member of"],
+    ["task", "project", "in"],
+    ["task", "person", "assignee"],
+    ["message", "person", "sender"],
+    ["event", "person", "attendee"],
+    ["event", "task", "about"]
+  ],
+  "frames": [
+    {
+      "id": "col-types",
+      "x": 60,
+      "y": 208,
+      "w": 256,
+      "h": 356
+    },
+    {
+      "id": "col-containers",
+      "x": 1284,
+      "y": 208,
+      "w": 256,
+      "h": 422
+    }
+  ],
+  "texts": [
+    {
+      "id": "h-entities",
+      "x": 560,
+      "y": 134,
+      "text": "Entities",
+      "role": "heading"
+    },
+    {
+      "id": "c-entities",
+      "x": 560,
+      "y": 168,
+      "text": "Things in the world, one ID each",
+      "role": "caption"
+    },
+    {
+      "id": "h-types",
+      "x": 60,
+      "y": 134,
+      "text": "Types",
+      "role": "heading"
+    },
+    {
+      "id": "c-types",
+      "x": 60,
+      "y": 168,
+      "text": "Values with no identity",
+      "role": "caption"
+    },
+    {
+      "id": "h-containers",
+      "x": 1284,
+      "y": 134,
+      "text": "Containers",
+      "role": "heading"
+    },
+    {
+      "id": "c-containers",
+      "x": 1284,
+      "y": 168,
+      "text": "Made to hold and arrange",
+      "role": "caption"
+    }
+  ]
+}

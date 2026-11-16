@@ -18,7 +18,14 @@ import { withTheme } from '@dxos/react-ui/testing';
 import * as Typography from '@dxos/react-ui/Typography';
 import { hues } from '@dxos/ui-types';
 
-import { AutofillAnnotation, HueAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../annotations.ts';
+import {
+  AutofillAnnotation,
+  HueAnnotation,
+  OptionsLookupAnnotation,
+  autofill,
+  iconOptions,
+  optionsLookup,
+} from '../annotations.ts';
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { Organization } from '../testing/schema.ts';
 import { Form } from './Form.tsx';
@@ -29,6 +36,7 @@ const Base = Schema.Struct({
   query: Schema.optional(Schema.String.annotate({ title: 'Query', description: 'Loads the choices below.' })),
   choice: Schema.optional(Schema.String),
   tag: Schema.optional(Schema.String),
+  icon: Schema.optional(Schema.String),
   url: Schema.optional(Format.URL.annotate({ title: 'URL', description: 'A valid URL fills the name below.' })),
   name: Schema.optional(Schema.String),
 });
@@ -37,7 +45,10 @@ type BaseValues = Schema.Schema.Type<typeof Base>;
 
 const TAGS = ['react', 'effect', 'schema', 'echo', 'composer'];
 
-/** Every annotation-driven renderer: options lookup (Select and Combobox), autofill, hue, a key, an inline ref. */
+/**
+ * Every annotation-driven renderer: options lookup (Select, Combobox and the icon catalogue), autofill, hue, a key,
+ * an inline ref.
+ */
 const AnnotatedSchema = Schema.Struct({
   ...Base.fields,
   choice: Schema.optional(
@@ -61,6 +72,9 @@ const AnnotatedSchema = Schema.Struct({
       ),
       Schema.annotate({ title: 'Tag' }),
     ),
+  ),
+  icon: Schema.optional(
+    Schema.String.pipe(OptionsLookupAnnotation.set(iconOptions()), Schema.annotate({ title: 'Icon' })),
   ),
   name: Schema.optional(
     Schema.String.pipe(
@@ -160,19 +174,27 @@ export const Test: Story = {
     await userEvent.click(await body.findByRole('option', { name: 'custom' }));
     await waitFor(() => expect(readValues(canvasElement).tag).toBe('custom'));
 
-    // 4. Autofill: a valid URL fills the name.
+    // 4. The icon catalogue: typing narrows the whole Phosphor set, and each row draws its glyph.
+    const icon = canvas.getByRole('combobox', { name: 'Icon' });
+    await userEvent.type(icon, 'rocket-l');
+    const rocket = await body.findByRole('option', { name: 'rocket-launch' });
+    await expect(rocket.querySelector('[data-icon="ph--rocket-launch--regular"]')).toBeTruthy();
+    await userEvent.click(rocket);
+    await waitFor(() => expect(readValues(canvasElement).icon).toBe('rocket-launch'));
+
+    // 5. Autofill: a valid URL fills the name.
     await userEvent.type(canvas.getByRole('textbox', { name: 'URL' }), 'https://dxos.org');
     await waitFor(() => expect(readValues(canvasElement).name).toBe('Feed for https://dxos.org'));
 
-    // 5. Hue: a Select of hue swatches.
+    // 6. Hue: a Select of hue swatches.
     await userEvent.click(canvas.getByRole('combobox', { name: 'Accent' }));
     await userEvent.click(await body.findByRole('option', { name: 'Amber' }));
     await waitFor(() => expect(readValues(canvasElement).accent).toBe('amber'));
 
-    // 6. Key format: a monospace input.
+    // 7. Key format: a monospace input.
     await expect(getComputedStyle(canvas.getByRole('textbox', { name: 'API key' })).fontFamily).toMatch(/mono/i);
 
-    // 7. Inline ref: the target's fields as a nested group that writes back to the target.
+    // 8. Inline ref: the target's fields as a nested group that writes back to the target.
     const employer = canvas.getByRole('group', { name: 'Employer' });
     const name = within(employer).getByRole('textbox', { name: 'Full name' });
     await expect(name).toHaveValue('Acme');

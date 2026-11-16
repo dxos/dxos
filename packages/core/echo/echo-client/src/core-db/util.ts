@@ -3,10 +3,10 @@
 //
 
 import { next as A, type Patch } from '@automerge/automerge';
-import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 
+import { isValidAutomergeUrl } from '../automerge/automerge-url.ts';
 import { type ChangeEvent } from '../automerge/index.ts';
 import { type DocumentChanges } from './types.ts';
 

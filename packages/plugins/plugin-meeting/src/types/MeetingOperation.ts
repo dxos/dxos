@@ -57,10 +57,21 @@ export const HandlePayload = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
+    // The call activity's `MeetingPayload.meeting_id`: the meeting's URI.
     meetingId: Schema.optional(Schema.String),
-    // Matches the protobuf wire field `transcript_dxn` (MeetingPayload), carried verbatim from the call activity.
-    transcriptDxn: Schema.optional(Schema.String),
-    transcriptionEnabled: Schema.optional(Schema.Boolean),
+  }),
+  output: Schema.Void,
+});
+
+export const SetTranscription = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.meeting.setTranscription'),
+    name: 'Set Meeting Transcription',
+    icon: 'ph--subtitles--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    enabled: Schema.Boolean,
   }),
   output: Schema.Void,
 });

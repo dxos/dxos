@@ -1,0 +1,52 @@
+---
+title: Button
+description: Buttons, icon buttons, button groups and toggles.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+```ts
+import * as Button from '@dxos/react-ui/Button';
+```
+
+<Snippet file="tile-components" region="buttons" lang="tsx" />
+
+<TilePreview id="buttons" />
+
+## `Button.Root`
+
+A button. It takes the props of a `<button>`, plus:
+
+| Prop          | Type                                                                      | Effect                                                         |
+| ------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `variant`     | `'default' \| 'primary' \| 'ghost' \| 'outline' \| 'destructive' \| 'valence'` | The fill. `primary` for the one main action of a view       |
+| `valence`     | `'info' \| 'success' \| 'warning' \| 'error' \| 'neutral'`                | The status color, with `variant='valence'`                     |
+| `hue`         | a palette hue                                                             | A colored button                                              |
+| `icon`        | icon name                                                                 | A leading icon                                                 |
+| `iconEnd`     | icon name                                                                 | A trailing icon                                                |
+| `label`       | string                                                                    | The text, or with `iconOnly` the accessible name and tooltip   |
+| `iconOnly`    | boolean                                                                   | Show only the icon                                             |
+| `showTooltip` | boolean                                                                   | With `iconOnly`, show the label as a tooltip. On by default    |
+| `tooltipSide` | `'top' \| 'right' \| 'bottom' \| 'left'`                                  | Where that tooltip opens                                       |
+| `caretDown`   | boolean                                                                   | A trailing caret, for a button that opens a menu               |
+| `spin`        | boolean                                                                   | Spin the icon, for a busy state                                |
+| `compact`     | boolean                                                                   | Less padding                                                   |
+| `align`       | `'center' \| 'start'`                                                     | Where the content sits in a wide button                        |
+| `size`        | `Size`                                                                    | Override the inherited size                                    |
+
+A button with `icon` and `label` needs no children. Pass children instead for any other content.
+
+## `Button.Toggle`
+
+A button that stays pressed. It takes `Button.Root`'s props, plus `pressed`, `defaultPressed` and `onPressedChange`,
+and `activeIcon` for the icon while pressed.
+
+## `Button.Group`
+
+Buttons in a row with shared spacing. `justify` is `'start'`, `'end'` or `'between'`. `fill` shares the width equally,
+so a lone button stretches across the group. `compact` removes the gap, for a run of icon-only buttons.
+
+## `Button.Menu`
+
+A button that opens a menu of `items`, for when composing a full [`Menu`](/docs/tile/api/menu/) is more than you need.
