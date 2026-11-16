@@ -49,8 +49,9 @@ feat F-1: App shell
   req F-1.2: The plugin set is Attention, Canvas, Client, Graph, Illustrator, ProcessManager, Space, Theme and the app's own `DiagramAppPlugin`; Composer's deck is not loaded.
   req F-1.3: `DiagramAppPlugin` is the app's layout plugin. It contributes the `Layout` capability (a single-item workspace with no sidebars) and the React root, and handles the layout operations other plugins call: `AddToast`, `Open`, `SwitchWorkspace`, `UpdateDialog` and `UpdatePopover`. It shows one dialog surface, one popover surface and the toasts over the canvas, and registers the `Collection` schema before the first write.
   req F-1.4: The app's own UI uses only existing `@dxos/react-ui` components; the canvas toolbar and palette are the canvas plugin's.
-  req F-1.5: The app draws its pill and the diagram's frame at once, before the client is up: the space name and hue, diagram name and Share as the last visit left them, and the toolbars and panels the diagram opened with, without its content. The live app replaces them once its own frame is on screen, and until then they take no input. The diagram's content fades in over 100 ms; the frame does not, since it is already on screen. A first run draws "My diagrams / Untitled" and no frame, and a space the last visit did not show draws the pill without names. An invitation link draws the same, with the join dialog over it (F-6.2). The app shows no loading text.
+  req F-1.5: The app draws its pill at once, before the client is up: the space name and hue, diagram name and Share as the last visit left them. The diagram's frame, the canvas editor's own toolbars and panels over an empty scene, follows as soon as the editor's code loads, the same on a first run as on a return. The live app replaces them once its own frame is on screen, and until then they take no input. The diagram's content fades in over 100 ms; the frame and the theme's background do not, since they are already on screen. A first run draws "My diagrams / Untitled", and a space the last visit did not show draws the pill without names. An invitation link draws the same, with the join dialog over it (F-6.2). The app shows no loading text.
   req F-1.6: The app prepares in the background, all at once: plugins, identity and the open space. Opening a diagram loads every object it reached on its last open in one batch, not one reference at a time.
+  req F-1.7: The pill is a toolbar between the canvas's breadcrumbs and its inspector and never overlaps either; below 800 px, where the canvas folds the inspector to one icon, it leaves room for that icon alone. It centres in the page while both sides have room, then moves aside. As the page narrows, Share, then the space menu, then the diagram menu show only their icon or avatar (with the menus' caret), never a name cut short; the viewers' avatars never collapse. Where even that does not fit, Share moves into the pill's overflow menu (⋮), and past that the pill scrolls sideways. The menus are divided by the toolbar's own line separator.
 ```
 
 ```mdl
@@ -68,6 +69,7 @@ feat F-3: Space switcher
   req F-3.4: "Join with a link…" opens Composer's join dialog, which takes a pasted link or bare invitation code, joins, and switches to the joined space. A space this identity joined never gets a diagram it did not have.
   req F-3.5: A space joined from Composer is listed like any other.
   req F-3.6: New space and Join with a link follow the spaces under a separator and show whatever is typed.
+  req F-3.7: Each space row has its own menu that renames or deletes that space. Rename opens Composer's rename popover under the space button. Delete first asks in a dialog that names the space and says the deletion reaches every device and cannot be undone. Deleting the open space opens another space, else runs the first run (F-2.1); a space that cannot be deleted, such as the identity's default space, shows a toast and stays.
 ```
 
 ```mdl
@@ -101,7 +103,7 @@ feat F-6: Joining
 ```mdl
 feat F-7: EDGE
   req F-7.1: The client is configured with the EDGE endpoint and signaling, so peers find each other and Composer's agent-backed spaces can redeem invitations through EDGE.
-  req F-7.2: EDGE replicators and agents are off: an account-less identity syncs peer to peer while another member is online ([Q-2]).
+  req F-7.2: The client runs every EDGE feature Composer runs: signaling, the Subduction and feed replicators, and agents. Documents sync peer to peer, and through EDGE where EDGE accepts the identity.
 ```
 
 ```mdl
@@ -113,8 +115,12 @@ feat F-8: Addresses
 
 ```mdl
 feat F-9: Presence
-  req F-9.1: Avatars to the right of Share show the space's other online members, in this app or in Composer, those on the open diagram first. A member who shows the open diagram has an accent ring and any other a neutral ring, as Composer rings the viewers attending an object.
+  req F-9.1: Avatars to the right of Share show everyone else attending something in the space, in this app or in Composer, with the space plugin's presence list; those on the open diagram are lit and the rest dimmed. Clicking one opens the list with that person's row selected and their actions on it: Jump or Go to, and Follow.
   req F-9.2: Each other viewer's pointer shows on the canvas as a named cursor.
+  req F-9.3: Follow on a person's row shows what they show: the diagram they attend, with its centre and zoom kept in step with theirs as they move. The follow ends as Composer's does, on Escape, on one's own input in the canvas, or on switching space or diagram. While they attend something that is not a diagram, the follow shows Paused.
+  req F-9.4: While this session follows someone or is followed in the open space, the pill takes the follow's hue as Composer's plank headings do: a wash and a one-pixel underline.
+  req F-9.5: Presence, Jump and follow work between this app and Composer: the layout names the open space and diagram by the graph paths Composer uses, and a drawing's location is the scene point at the centre of the view and the zoom.
+  req F-9.6: "See everyone" in the presence list opens the Share dialog, which lists the space's members.
 ```
 
 ## Running against EDGE without an account
@@ -129,7 +135,12 @@ What EDGE `main` does for an identity with no Hub account, as of edge#1510 (2026
 | Space root and queue HTTP routes        | 403: an account is required.                                                          |
 | Creating an agent                       | 403: an account is required.                                                          |
 
-So, today:
+The preview EDGE (`preview.dxos.network`) behaves otherwise, as measured on 2026-11-15 with every EDGE feature on: an
+account-less identity's space root and notarization routes answer 200, nothing is refused after boot, and an edit made
+while the other member is offline reaches them when they return. Only the invitation `join` route and `/inbox` answer
+401 once, while a join is redeemed.
+
+So, on EDGE `main` today:
 
 - Two people on this app sync only while both are online. A delegated invitation one of them made is redeemed by
   any online member device.
@@ -149,7 +160,7 @@ component DiagramRoot
     joining: whether the join dialog an invitation link opened is still open
   layout: |
     ┌──────────────────────────────────────────────────────────────────────────────────┐
-    │ [↑ ⌂]     [◍ Team space ▾ / ⚲ Service map ▾  (A)(B)  [Share]]       [Inspector]│
+    │ [↑ ⌂]     [◍ Team space ▾ │ ⚲ Service map ▾  (A)(B)  [Share]]       [Inspector]│
     │ [▸]                                                                              │
     │ [▭]                   canvas article of the open drawing                         │
     │ [◯]                                                                              │
@@ -164,13 +175,18 @@ component SpaceMenu
     select: switch to a space
     create: open Composer's create-space dialog
     join: open Composer's join dialog
+    rename: open Composer's rename popover for a space from its row menu
+    delete: delete a space from its row menu, after a confirmation dialog
   layout: |
-    [Find a space                 ]
-      [MD] My diagrams
-      [TS] Team space          ✓
-    ───────────────────────────────
+    [Find a space                    ]
+      [MD] My diagrams               ⋯
+      [TS] Team space          ✓     ⋯
+    ──────────────────────────────────
       +    New space
       ⛓    Join with a link…
+    row menu (⋯):
+      Rename…
+      Delete
 ```
 
 ```mdl
@@ -206,9 +222,9 @@ component ShareDialog
 
 ```mdl
 component BootShell
-  desc: F-1.5. The pill as the last visit left it, over a copy of the diagram's frame without its content, painted before the client and plugins start, under dialogs and toasts; for an invitation link, with the JoinShell over it.
+  desc: F-1.5. The pill as the last visit left it, painted before the client and plugins start, over the canvas plugin's `CanvasFrame` once the editor loads, under dialogs and toasts; for an invitation link, with the JoinShell over it.
   layout: |
-    [◍ My diagrams ▾ / ⚲ Untitled ▾  [Share]]
+    [◍ My diagrams ▾ │ ⚲ Untitled ▾  [Share]]
 ```
 
 ```mdl
@@ -378,6 +394,63 @@ test QA-6: Two people draw together
     - name: Ada adds a diagram
       do: As Ada, open the diagram menu, type "Roadmap" and choose New diagram “Roadmap”.
       expect: Ada's pill reads "Roadmap", and Ben's diagram menu lists "Roadmap" beside "Untitled"
+```
+
+```mdl
+test QA-7: Follow a collaborator
+  desc: Two people on one space; one follows the other from the presence list, across a zoom, a pan and a switch of diagram, until Stop ends it.
+  actors: human
+  covers: [F-9.1, F-9.3, F-9.4]
+  status: passing # 2026-11-15, chromium
+  automated:
+    - diagram-app:collaboration.spec.ts#Collaboration › follow a collaborator
+  given:
+    - two browser profiles, Ada and Ben, that have never opened the app, both online
+  steps:
+    - name: Ada and Ben share a space
+      do: As Ada, draw a rectangle and share; as Ben, open the link. As Ada, add a diagram "Roadmap" and draw a rectangle on it.
+      expect: each shows the other's avatar beside Share; Ada is on "Roadmap" and Ben on "Untitled"
+    - name: Ben follows Ada
+      do: As Ben, click Ada's avatar beside Share and click Follow on her row.
+      expect: the list closes, Ben's canvas shows "Roadmap" at Ada's path, and both pills take the follow's indigo wash and underline
+    - name: Ada moves
+      do: As Ada, zoom in with Ctrl and the wheel, then scroll the canvas.
+      expect: within a second Ben's view shows Ada's rectangle at the same place and size as hers
+    - name: Ada switches diagram
+      do: As Ada, choose "Untitled" in the diagram menu.
+      expect: Ben's canvas switches to "Untitled" at Ada's path
+    - name: Ben stops
+      do: As Ben, click Ada's avatar and click Stop on her row.
+      expect: neither pill shows the follow's wash; Ada zooming and scrolling again leaves Ben's view where it is
+```
+
+```mdl
+test QA-8: Across this app and Composer
+  desc: A Composer user and a diagram-app user share a space, draw on one diagram together, and follow each other between the two apps.
+  actors: human
+  covers: [F-5.2, F-9.1, F-9.2, F-9.3, F-9.5]
+  status: passing # 2026-11-15, chromium, the autocue flow across-apps
+  given:
+    - a Composer profile, Alice, and a diagram-app profile, Bob, that has never opened the app; both apps on the same EDGE
+  steps:
+    - name: Alice shares from Composer
+      do: As Alice, in Composer, create a space with a diagram and a document, and copy an invitation link.
+      expect: the invitation's code is in the link
+    - name: Bob joins in this app
+      do: As Bob, open this app with the invitation's code.
+      expect: Bob's app joins Alice's space and opens its diagram
+    - name: Drawing together
+      do: As Alice, draw a rectangle in Composer; as Bob, draw an ellipse here.
+      expect: both shapes show in both apps, and each sees the other's cursor and avatar
+    - name: Bob follows Alice
+      do: As Bob, click Alice's avatar and Follow; as Alice, pan and zoom the diagram in Composer.
+      expect: Bob's canvas keeps Alice's centre and zoom, and his pill takes the follow's wash
+    - name: Alice opens the document
+      do: As Alice, open the document; as Bob, click Alice's avatar, then Stop.
+      expect: Bob stays on the diagram and his follow shows Paused until he stops it
+    - name: Alice follows Bob
+      do: As Alice, open the diagram, click Bob's avatar on its plank and Follow; as Bob, pan and zoom.
+      expect: Alice's Composer plank keeps Bob's centre and zoom, and its heading takes the follow's wash
 ```
 
 ## Changelog
@@ -1094,4 +1167,319 @@ decision D-79: The boot shell is always drawn, without names for a space the las
   why: Keeping the shell under the dialog is what makes closing it immediate, and the separate overlay lets the live dialog replace only the copy. Drawing both in one paint avoids a frame of shell without the dialog.
   rejected:
     - Moving the shell above the live dialog and hiding it there: the live dialog's scrim and toasts would sit under it.
+```
+
+```mdl
+decision D-80: Follow works from the presence list in this app, as in Composer.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-9.1, F-9.3]
+```
+
+```mdl
+decision D-81: The pill takes the layout accent that Composer's plank headings take during a follow.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-9.4]
+```
+
+```mdl
+decision D-82: Sharing, drawing together and following work between this app and Composer, and a recorded demonstration shows it.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-9.5]
+```
+
+```mdl
+decision D-83: The layout plugin names the open space as the workspace and the open diagram as the one active item, by their graph paths, and the diagram is attended whenever it shows. Presence is then the space plugin's own: its broadcast, its `SpacePresence` list with each peer's graph actions, and its follow core, which opens what the leader attends through the layout's `Open`. The app's own `viewing` posts are dropped. Fills in [D-80].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-30
+  affects: [F-9.1, F-9.3, F-9.5, DiagramRoot]
+  why: Follow, Jump and the follow accent read the generic layout and attention, so a layout that reports what it shows gets them all without code of its own, and Composer sees this app's sessions as it sees its own.
+  rejected:
+    - A locator extension of the app's own that navigates: it would repeat the core's open, pausing and stop rules for one item.
+```
+
+```mdl
+decision D-84: A drawing's anchor is the scene point at the centre of its 2D view and the zoom, as `x,y,zoom`. The canvas article reports it as its location, and the canvas plugin's `Locator` for drawings centres the view on it at that zoom. Fills in [D-80] and [D-82].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.3, F-9.5]
+  why: The centre and zoom mean the same in a view of any size, so a follower in a narrow Composer plank and a leader full-screen here look at the same place; the camera's own offset depends on the view's size.
+  rejected:
+    - The visible scene rectangle, fitted: a view of another shape zooms differently from the leader, so the shapes do not keep their size.
+```
+
+```mdl
+decision D-85: The layout's `Open` refuses an object that is not a diagram, so a follow of someone on another kind of object pauses rather than opening an empty canvas. Fills in [D-80].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.3]
+  why: The follow core shows Paused when its open fails, which is the truthful state for a view this app cannot show.
+```
+
+```mdl
+decision D-86: "See everyone" opens the Share dialog: the layout answers the request for the complementary Members panel with it. Fills in [D-80].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: The presence list's button asks the layout for Composer's Members companion; this app has no sidebar, and its Share dialog is the same members panel.
+```
+
+```mdl
+question Q-4: Do the pill's avatars list everyone online in the space, or only those on the open diagram?
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1]
+  context: D-59 asked for the whole space. Follow from the presence list ([D-80]) uses the space plugin's list, which since its follow work shows an object's viewers, as Composer's plank headings do; "See everyone" opens the Share dialog with the whole space. The pill now shows the diagram's viewers.
+  options:
+    - The open diagram: as Composer's plank headings; everyone else is one click away under "See everyone".
+    - The whole space: the space plugin's list gains a mode that lists every online member, with Follow on each.
+```
+
+```mdl
+decision D-87: The whole space, per [D-59]; the avatars of those on the open diagram are lit and the rest dimmed, in place of a ring colour per object.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  answers: Q-4
+  affects: [F-9.1]
+  why: A list of the diagram's viewers left out a collaborator on another diagram, so nobody could follow them there ([D-80]); D-59 already asked for the whole space.
+  rejected:
+    - A ring colour per object: the ring already marks a follow in indigo, and the list's rows say what each person's actions are on.
+```
+
+```mdl
+decision D-88: The diagram app's e2e tests run against the preview EDGE, as Composer's do.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [QA-6, QA-7]
+```
+
+```mdl
+decision D-89: The diagram app runs Subduction, the SDK default, as Composer does.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-7.2]
+```
+
+```mdl
+decision D-90: Only the Subduction replicator returns to its default; the feed replicator and agents stay off. Fills in [D-89].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.2]
+  why: With Subduction off, documents synced by classic automerge-repo sync, which Composer no longer speaks, so a space shared between the apps never loaded its documents. Subduction alone fixes that, and the other features have no part in it.
+```
+
+```mdl
+decision D-91: QA-8 gives Alice opening the document a step of its own, in which Bob ends his follow with Stop, so Alice follows Bob from the diagram with no Escape before it.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: Pausing and stopping are their own outcome, and Bob, no longer following, has nothing for Escape to end.
+```
+
+```mdl
+decision D-92: The client runs every EDGE feature Composer runs, the feed replicator and agents included. Supersedes [D-12] and [D-90].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-90
+  affects: [F-7.2]
+  why: On the preview EDGE neither the Subduction-only build nor the all-features build saw an error after boot in 90 seconds, solo or joined from Composer, and both relayed an edit made while the other member was offline. Where EDGE refuses an unbound identity, the features cost a few refused requests at boot and nothing more, so turning them off bought nothing and made the app differ from Composer.
+  rejected:
+    - Keep the feed replicator and agents off: no failure called for it, and an unbound identity gets nothing from EDGE that the features being on would break.
+```
+
+```mdl
+decision D-93: The boot shell draws the diagram's toolbars and panels with the canvas editor's own components, as it draws the pill, so a first run shows the same frame as a return. Supersedes [D-52].
+  date: 2026-11-15
+  by: user:wittjosiah
+  supersedes: D-52
+  affects: [F-1.5, BootShell]
+```
+
+```mdl
+decision D-94: The canvas editor still loads after first paint: the boot shell draws the pill at once and the frame as soon as the editor's code arrives, rather than holding first paint for the editor. Fills in [D-93].
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.5, BootShell]
+```
+
+```mdl
+decision D-95: The boot shell draws plugin-canvas's `CanvasFrame`, which the plugin builds from the same editor parts and node kinds as its article. Fills in [D-93].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5, BootShell]
+  why: The editor code and its dependencies come to about 2 MB gzipped against the 755 KB the shell paints with, and the frame chunk is the one the live app loads anyway, so the shell adds no bytes. Measured on a local build, the frame shows about 330 ms after the pill on a first run and on a reload. Owned by the plugin, the frame cannot drift from the article.
+  rejected:
+    - The frame written in the app over the editor's built-in config: it lacked the plugin's image and space-graph tools, the lock, the dock header, the camera bar and the display toggles, so the rail and panels shifted when the live app took over.
+```
+
+```mdl
+decision D-96: The theme's background wash shows at once with the frame; only the scene's other layers fade in. Fills in [D-93].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5, DrawingView]
+  why: The frame draws the wash too, so fading the live one in dipped the background for 100 ms as the shell left.
+```
+
+```mdl
+decision D-97: Each space has rename and delete actions, as each diagram has.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-3.7, SpaceMenu]
+```
+
+```mdl
+decision D-98: The app's controls must not collide as the page narrows.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.7]
+```
+
+```mdl
+decision D-99: The pill is a toolbar built from react-ui-menu actions rather than custom controls, so its items collapse into an overflow menu as it narrows.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.7, BootShell]
+```
+
+```mdl
+decision D-100: The space and diagram menus keep their search, as custom items in the pill's toolbar.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.7, SpaceMenu, DiagramMenu]
+```
+
+```mdl
+decision D-101: Deleting a space asks for confirmation first.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-3.7]
+```
+
+```mdl
+decision D-102: Rename and delete reuse the space plugin's operations: Rename anchors Composer's rename popover to the space button, and Delete runs the plugin's delete, which refuses the default space. Fills in [D-97] and [D-101].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.7, SpaceMenu]
+  why: The diagram rows already rename through Composer's popover anchored to the pill ([D-66]), and the space plugin's delete carries the rules Composer applies. Deleting the open space reuses the start-up path, which opens a remaining space or runs the first run.
+```
+
+```mdl
+decision D-103: The pill sits in a band across the top edge, between a floor for the breadcrumbs and the inspector's width plus its gap, centred while both sides have room. Fills in [D-98].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.7]
+  why: The breadcrumbs and inspector are absolutely placed by the canvas editor, so the band reserves their room rather than measuring them. Measured from 1440 to 560 px wide, the pill never reaches the inspector.
+  rejected:
+    - A second row for the pill on narrow pages: it would cover the inspector's top instead.
+```
+
+```mdl
+decision D-104: Share is the first item to collapse; the names truncate only once it has, down to about four letters each. Fills in [D-98] and [D-99].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.7]
+  why: At 760 px, keeping Share cut the names to "My di…" and "U…", which leaves neither menu readable; Share stays one click away in the overflow menu.
+  rejected:
+    - Names truncate first, Share collapses last.
+```
+
+```mdl
+decision D-105: The boot shell draws the same pill toolbar as the live app, which adds react-ui-menu to the entry, about 35 KB gzipped. Fills in [D-99].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5, BootShell]
+  why: One set of parts keeps the shell and live pill on the same pixels ([D-49]); measured at 1100 px, every item of the two lines up.
+  rejected:
+    - A hand-drawn copy of the toolbar in the shell: it drifts from the live pill.
+```
+
+```mdl
+decision D-106: The pill's menus are divided by react-ui-menu's own separator, not a slash.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.7, BootShell]
+```
+
+```mdl
+decision D-107: A space or diagram menu too narrow for its name shows only its icon, never a name cut short. Supersedes [D-104].
+  date: 2026-11-15
+  by: user:wittjosiah
+  supersedes: D-104
+  affects: [F-1.7]
+```
+
+```mdl
+decision D-108: react-ui-menu lets a ranked `custom` item collapse in its turn like any other, staying in the row and rendering its compact form, so the pill's menus collapse after Share through the toolbar's own measurement. Fills in [D-107].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.7]
+  why: The toolbar already measures overflow and restores items with hysteresis; a second measurement in the app would race it. The menus cannot move into ⋮ without losing their search ([D-100]).
+  rejected:
+    - The menus as submenus of ⋮: a submenu has no search field.
+    - A container query on the pill: names vary in length, so no fixed width marks when they no longer fit.
+```
+
+```mdl
+decision D-109: The space menu collapses before the diagram menu. Fills in [D-107].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.7]
+  why: The space's avatar still tells spaces apart by its initials and hue; every diagram shows the same icon.
+```
+
+```mdl
+decision D-110: Share collapses to its icon rather than leaving the pill, and the viewers' avatars are never hidden; the canvas folds its inspector on narrow pages, which leaves the pill the room.
+  date: 2026-11-15
+  by: user:wittjosiah
+  affects: [F-1.7]
+```
+
+```mdl
+decision D-111: react-ui-menu collapses a ranked item with a compact form in place before any item moves into the overflow menu: a labelled action with an icon shows the icon alone, and a `custom` item renders collapsed. Share shrinks first, then the space menu, then the diagram menu, as [D-109] ordered them. Fills in [D-110].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.7]
+  why: A label goes before a control leaves the row in any toolbar, and Share's compact form needs no custom control. The existing collapse ranks keep their meaning for every toolbar without a labelled ranked action.
+  rejected:
+    - Share as a custom item that renders its own icon-only button: the pill's controls were to be react-ui-menu actions ([D-99]).
+```
+
+```mdl
+decision D-112: Below 640 px the pill reserves room only for the folded inspector's icon. Fills in [D-110].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.7]
+  why: The canvas article fills the app's viewport, so the canvas editor's 640 px fold point is the page's width.
+```
+
+```mdl
+decision D-113: Below 800 px the pill reserves room only for the folded inspector's icon, the width under which the canvas editor now folds it. Supersedes [D-112].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-112
+  affects: [F-1.7]
+  why: The editor docks its inspector only in frames at least 800 px wide (the panel's 320 px plus 480 px for the canvas and its bars), and the canvas article fills the app's viewport.
 ```

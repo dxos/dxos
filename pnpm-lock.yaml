@@ -3372,12 +3372,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/halo':
+      '@dxos/errors':
         specifier: workspace:*
-        version: link:../../core/halo/halo
-      '@dxos/halo-react':
-        specifier: workspace:*
-        version: link:../../core/halo/halo-react
+        version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -3423,9 +3420,18 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../../ui/ui-types
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
       effect:
         specifier: 4.0.4
         version: 4.0.4

@@ -28,6 +28,8 @@ export type LayoutState = {
   popoverContent?: { component: string; props?: unknown } | { subject: unknown };
   popoverAnchor?: PopoverAnchor;
   popoverSide?: 'top' | 'right' | 'bottom' | 'left';
+  /** The Share dialog is open: the app's one panel beside the canvas, listing the space's members. */
+  sharing: boolean;
   toasts: LayoutOperation.Toast[];
   workspace: string;
 };

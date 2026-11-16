@@ -1,16 +1,15 @@
 version: 1
 
-# Account-less identities get only signaling from EDGE (swarm and signal frames): peers find each other there and
-# sync directly. Replicators and agents stay off until EDGE serves unbound identities (spec Q-2).
+# EDGE features as Composer sets them, so a space syncs between the two apps and through EDGE.
 runtime:
   client:
     storage:
       persistent: true
     edgeFeatures:
       signaling: true
-      subductionReplicator: false
-      feedReplicator: false
-      agents: false
+      subductionReplicator: true
+      feedReplicator: true
+      agents: true
 
   services:
     edge:

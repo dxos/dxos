@@ -41,7 +41,8 @@ import {
   startSpace,
 } from '../model/index.ts';
 import { dismissJoinDialog, isBootShellShown, showJoinDialog } from './BootShell.tsx';
-import { DiagramLayout } from './DiagramLayout.tsx';
+import { DeleteSpaceDialog } from './DeleteSpaceDialog.tsx';
+import { DiagramLayout, SPACE_MENU_ANCHOR } from './DiagramLayout.tsx';
 import { SpaceView } from './SpaceView.tsx';
 
 /** Records a boot milestone once, for the startup harness. */
@@ -113,6 +114,8 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
   // Set from asking for the join dialog until the joined space shows, or the dialog is dismissed: the space it started
   // on, the dismissals so far, and whether the dialog has opened.
   const [joining, setJoining] = useState<{ spaceId?: string; dismissals: number; opened: boolean }>();
+  // The space whose deletion waits on the user's confirmation.
+  const [deleting, setDeleting] = useState<Space>();
   const startedRef = useRef(false);
   const { route } = layout;
   const space = spaces.find(({ id }) => id === route.spaceId);
@@ -193,6 +196,28 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
     [client, notify, navigate, createDiagram],
   );
 
+  /** Deletes a confirmed space; leaving the one shown opens another, or runs the first run on a profile with none. */
+  const deleteSpace = useCallback(
+    async (target: Space) => {
+      setDeleting(undefined);
+      const { error } = await invokePromise(SpaceOperation.Delete, { space: target });
+      if (error) {
+        log.error('space not deleted', { error });
+        notify('delete-space-failed', 'The space could not be deleted.');
+        return;
+      }
+      if (target.id === spaceId) {
+        const next = spaces.find(({ id }) => id !== target.id);
+        if (next) {
+          openSpace(next, 'replace');
+        } else {
+          await openStart();
+        }
+      }
+    },
+    [invokePromise, notify, spaceId, spaces, openSpace, openStart],
+  );
+
   useEffect(() => {
     // A capability identity change reruns this effect; a second startup would race the first to create the space.
     if (startedRef.current) {
@@ -268,18 +293,29 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
   }, [spaceId, registry, layoutState, invokePromise]);
 
   return space ? (
-    <SpaceView
-      key={space.id}
-      space={space}
-      spaces={spaces}
-      drawingId={route.drawingId}
-      onSelect={openSpace}
-      onSelectDrawing={selectDrawing}
-      onCreate={() => void invokePromise(SpaceOperation.OpenCreateSpace)}
-      onJoin={handleJoin}
-      onCreateDiagram={createDiagram}
-      onError={(message) => notify('error', message)}
-    />
+    <>
+      <SpaceView
+        key={space.id}
+        space={space}
+        spaces={spaces}
+        drawingId={route.drawingId}
+        onSelect={openSpace}
+        onSelectDrawing={selectDrawing}
+        onCreate={() => void invokePromise(SpaceOperation.OpenCreateSpace)}
+        onJoin={handleJoin}
+        onRename={(target) => void invokePromise(SpaceOperation.Rename, { space: target, caller: SPACE_MENU_ANCHOR })}
+        onDelete={setDeleting}
+        onCreateDiagram={createDiagram}
+        onError={(message) => notify('error', message)}
+      />
+      {deleting && (
+        <DeleteSpaceDialog
+          space={deleting}
+          onDelete={(target) => void deleteSpace(target)}
+          onClose={() => setDeleting(undefined)}
+        />
+      )}
+    </>
   ) : (
     <Layout.Container classNames='fixed inset-0 bg-base-surface' data-testid='diagram-app.loading' />
   );

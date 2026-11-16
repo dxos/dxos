@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, Suspense, useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import React, { Fragment, Suspense, useCallback, useEffect, useLayoutEffect } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Space } from '@dxos/client/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Containers from '@dxos/plugin-space/Containers';
@@ -17,13 +18,13 @@ import * as Popover from '@dxos/react-ui/Popover';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { LayoutState } from '../DiagramAppCapabilities.ts';
-import { useCanvasDrawings, useViewers } from '../hooks/index.ts';
+import { useCanvasDrawings, useLayoutAccent } from '../hooks/index.ts';
 import { type NavigateMode, removeDrawing, savePreload, setBootLook } from '../model/index.ts';
 import { dismissBootShell } from './BootShell.tsx';
-import { DIAGRAM_MENU_ANCHOR } from './DiagramLayout.tsx';
+import { DIAGRAM_MENU_ANCHOR, SPACE_MENU_ANCHOR } from './DiagramLayout.tsx';
 import { DiagramMenu, useDrawingName } from './DiagramMenu.tsx';
 import { DrawingView } from './DrawingView.tsx';
-import { PillFrame, PillSeparator, ShareButton } from './Pill.tsx';
+import { PillFrame, PillToolbar } from './Pill.tsx';
 import { ShareDialog } from './ShareDialog.tsx';
 import { SpaceMenu, type SpaceMenuProps, spaceLook } from './SpaceMenu.tsx';
 
@@ -46,16 +47,20 @@ export const SpaceView = ({
   ...spaceMenu
 }: SpaceViewProps) => {
   const { drawings, pending } = useCanvasDrawings(space, drawingId);
-  const [sharing, setSharing] = useState(false);
   const { invokePromise } = Hooks.useOperationInvoker();
-  const { popoverAnchor } = Hooks.useAtomCapability(LayoutState);
-  const MenuAnchor = popoverAnchor?.anchorId === DIAGRAM_MENU_ANCHOR ? Popover.Anchor : Fragment;
+  const [{ popoverAnchor, sharing }, updateLayout] = Hooks.useAtomCapabilityState(LayoutState);
+  const setSharing = useCallback(
+    (next: boolean) => updateLayout((state) => ({ ...state, sharing: next })),
+    [updateLayout],
+  );
+  const DiagramAnchor = popoverAnchor?.anchorId === DIAGRAM_MENU_ANCHOR ? Popover.Anchor : Fragment;
+  const SpaceAnchor = popoverAnchor?.anchorId === SPACE_MENU_ANCHOR ? Popover.Anchor : Fragment;
   const named = drawings.find(({ id }) => id === drawingId);
   // While a named diagram's canvas is still loading, show nothing rather than flash another diagram.
   const drawing = named ?? (pending && drawingId ? undefined : drawings[0]);
-  const viewers = useViewers(space, drawing?.id);
   const [properties] = useSpaceProperties(space.id);
   const drawingName = useDrawingName(drawing);
+  const accent = useLayoutAccent();
 
   // What the diagram reached is saved as it is left, for the next load to fetch in one batch.
   useEffect(() => {
@@ -140,26 +145,40 @@ export const SpaceView = ({
         )
       )}
 
-      <PillFrame testId='diagram-app.pill'>
-        <SpaceMenu current={space} {...spaceMenu} />
-        <PillSeparator />
-        {/* A rename popover from the diagram's row menu sits under the menu's button, as Composer's under the row. */}
-        <MenuAnchor>
-          <DiagramMenu
-            drawings={drawings}
-            current={drawing}
-            onSelect={(next) => onSelectDrawing(next.id, 'push')}
-            onCreate={create}
-            onRename={(target) =>
-              void invokePromise(SpaceOperation.RenameObject, { object: target, caller: DIAGRAM_MENU_ANCHOR })
-            }
-            onDelete={handleDelete}
-          />
-        </MenuAnchor>
-        <ShareButton data-testid='diagram-app.share' onClick={() => setSharing(true)} />
-        <Suspense>
-          <Containers.FullPresence members={viewers} size='sm' />
-        </Suspense>
+      <PillFrame testId='diagram-app.pill' accent={accent}>
+        {/* A rename popover from a row menu sits under its menu's button, as Composer's under the row. */}
+        <PillToolbar
+          space={
+            <SpaceAnchor>
+              <SpaceMenu current={space} {...spaceMenu} />
+            </SpaceAnchor>
+          }
+          diagram={
+            <DiagramAnchor>
+              <DiagramMenu
+                drawings={drawings}
+                current={drawing}
+                onSelect={(next) => onSelectDrawing(next.id, 'push')}
+                onCreate={create}
+                onRename={(target) =>
+                  void invokePromise(SpaceOperation.RenameObject, { object: target, caller: DIAGRAM_MENU_ANCHOR })
+                }
+                onDelete={handleDelete}
+              />
+            </DiagramAnchor>
+          }
+          presence={
+            <Suspense>
+              <Containers.SpacePresence
+                spaceId={space.id}
+                presenceKey={drawing && EID.make({ spaceId: space.id, entityId: drawing.id })}
+                everyone
+                size='sm'
+              />
+            </Suspense>
+          }
+          onShare={() => setSharing(true)}
+        />
       </PillFrame>
 
       {sharing && <ShareDialog space={space} onClose={() => setSharing(false)} />}

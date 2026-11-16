@@ -4,7 +4,11 @@
 
 import { expect, test } from '@playwright/test';
 
-import { DiagramApp, INVITATION_PARAM } from './diagram-app.ts';
+import { DiagramApp, INVITATION_PARAM, type ShapeInView } from './diagram-app.ts';
+
+/** Whether two views show the scene alike: the same shape at the same place and size, to a pixel or two. */
+const sameView = (a?: ShapeInView, b?: ShapeInView): boolean =>
+  !!a && !!b && Math.abs(a.dx - b.dx) < 2 && Math.abs(a.dy - b.dy) < 2 && Math.abs(a.width - b.width) < 2;
 
 // The service worker breaks routing and interception.
 if (process.env.DX_PWA !== 'false') {
@@ -90,6 +94,51 @@ test.describe('Collaboration', () => {
         await expect(ben.diagramEntries().filter({ hasText: name })).toHaveCount(1);
       }
       await ben.closeMenu();
+    });
+  });
+  test('follow a collaborator', { tag: ['@QA-7'] }, async () => {
+    await test.step('Ada and Ben share a space', async () => {
+      await ada.open();
+      await ada.draw('node:rect', { x: 450, y: 250 }, { x: 650, y: 400 });
+      const { link } = await ada.share();
+      await ada.closeDialog();
+      await ben.open(link);
+      await expect(ben.toolbar()).toBeVisible({ timeout: 90_000 });
+      await expect(ada.presence()).toHaveCount(1, { timeout: 60_000 });
+      await expect(ben.presence()).toHaveCount(1, { timeout: 60_000 });
+      await ada.createDiagram('Roadmap');
+      await expect(ada.pill()).toContainText('Roadmap');
+      await ada.draw('node:rect', { x: 500, y: 300 }, { x: 600, y: 380 });
+    });
+
+    await test.step('Ben follows Ada', async () => {
+      await ben.follow();
+      await expect.poll(() => ben.path(), { timeout: 20_000 }).toBe(ada.path());
+      await expect.poll(() => ben.accent()).toBe('indigo');
+      await expect.poll(() => ada.accent(), { timeout: 20_000 }).toBe('indigo');
+    });
+
+    await test.step('Ada moves', async () => {
+      await ada.zoomAndPan({ x: 550, y: 340 }, { x: 150, y: 80 });
+      await expect
+        .poll(async () => sameView(await ada.shapeInView(), await ben.shapeInView()), { timeout: 10_000 })
+        .toBe(true);
+    });
+
+    await test.step('Ada switches diagram', async () => {
+      await ada.openDiagram('Untitled');
+      await expect(ada.pill()).toContainText('Untitled');
+      await expect.poll(() => ben.path(), { timeout: 20_000 }).toBe(ada.path());
+    });
+
+    await test.step('Ben stops', async () => {
+      await ben.stopFollowing();
+      await expect.poll(() => ben.accent()).toBeNull();
+      await expect.poll(() => ada.accent(), { timeout: 20_000 }).toBeNull();
+      const before = await ben.shapeInView();
+      await ada.zoomAndPan({ x: 550, y: 320 }, { x: -100, y: 40 });
+      await expect.poll(() => ada.shapeInView()).not.toEqual(before);
+      expect(await ben.shapeInView()).toEqual(before);
     });
   });
 });

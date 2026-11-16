@@ -16,6 +16,9 @@ export const INVITATION_PARAM = 'spaceInvitationCode';
 
 export type Point = { x: number; y: number };
 
+/** Where the first shape sits in the view: its centre's offset from the view's centre, and its width. */
+export type ShapeInView = { dx: number; dy: number; width: number };
+
 /** One person's browser profile driving the diagram app. */
 export class DiagramApp {
   page!: Page;
@@ -51,8 +54,13 @@ export class DiagramApp {
 
   // Locators.
 
+  /** The live app; the boot shell draws the same editor, test ids included, until the app replaces it. */
+  app(): Locator {
+    return this.page.getByTestId('diagram-app');
+  }
+
   toolbar(): Locator {
-    return this.page.getByTestId('canvas-toolbar');
+    return this.app().getByTestId('canvas-toolbar');
   }
 
   joinDialog(): Locator {
@@ -65,19 +73,39 @@ export class DiagramApp {
 
   /** The Views panel's shape rows; the layout row is there before anything is drawn. */
   shapes(): Locator {
-    return this.page.locator('[data-testid^="views-row-"]:not([data-testid="views-row-layout"])');
+    return this.app().locator('[data-testid^="views-row-"]:not([data-testid="views-row-layout"])');
   }
 
   presence(): Locator {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
 
+  /** The follow's hue on the pill, or null while the session is in no follow. */
+  accent(): Promise<string | null> {
+    return this.pill().getAttribute('data-accent');
+  }
+
+  async shapeInView(): Promise<ShapeInView | undefined> {
+    const view = await this.app().getByTestId('scene-view').boundingBox();
+    const shape = await this.app().getByTestId('scene-view').locator('[data-node-id]').first().boundingBox();
+    if (!view || !shape) {
+      return undefined;
+    }
+    return {
+      dx: shape.x + shape.width / 2 - (view.x + view.width / 2),
+      dy: shape.y + shape.height / 2 - (view.y + view.height / 2),
+      width: shape.width,
+    };
+  }
+
   remoteCursors(): Locator {
-    return this.page.getByTestId('remote-cursor');
+    return this.app().getByTestId('remote-cursor');
   }
 
   spaceEntries(): Locator {
-    return this.page.getByTestId('diagram-app.space-list').locator('[data-testid^="diagram-app.space."]');
+    return this.page
+      .getByTestId('diagram-app.space-list')
+      .locator('[data-testid^="diagram-app.space."]:not([data-testid$=".actions"])');
   }
 
   diagramEntries(): Locator {
@@ -90,12 +118,12 @@ export class DiagramApp {
 
   /** Drags out a shape with a toolbar tool, e.g. `node:rect`. */
   async draw(tool: string, from: Point, to: Point): Promise<void> {
-    await this.page.getByTestId(`canvas.tool.${tool}`).click();
+    await this.app().getByTestId(`canvas.tool.${tool}`).click();
     await this.page.mouse.move(from.x, from.y);
     await this.page.mouse.down();
     await this.page.mouse.move(to.x, to.y, { steps: 8 });
     await this.page.mouse.up();
-    await this.page.getByTestId('canvas.tool.select').click();
+    await this.app().getByTestId('canvas.tool.select').click();
   }
 
   /** Opens Share, creates a multi-use invitation, and returns the link its copy button copies. */
@@ -132,6 +160,37 @@ export class DiagramApp {
     await this.openDiagramMenu();
     await this.page.getByTestId('diagram-app.diagram-list.find').fill(name);
     await this.page.getByTestId('diagram-app.new-diagram').click();
+  }
+
+  /** Opens the diagram menu and chooses the diagram named `name`. */
+  async openDiagram(name: string): Promise<void> {
+    await this.openDiagramMenu();
+    await this.diagramEntries().filter({ hasText: name }).click();
+  }
+
+  /** Follows the first person in the presence list; the list closes itself. */
+  async follow(): Promise<void> {
+    await this.presence().first().click();
+    const follow = this.page.getByTestId('spacePlugin.presence.follow').first();
+    await follow.click();
+    await follow.waitFor({ state: 'detached' });
+  }
+
+  /** Clicks Stop on the followed person's row in the presence list. */
+  async stopFollowing(): Promise<void> {
+    await this.presence().first().click();
+    await this.page.getByTestId('spacePlugin.presence.stopFollowing').click();
+  }
+
+  /** Zooms in about `at` with Ctrl and the wheel, then scrolls the canvas by `pan`. */
+  async zoomAndPan(at: Point, pan: Point): Promise<void> {
+    await this.page.mouse.move(at.x, at.y);
+    await this.page.keyboard.down('Control');
+    for (let i = 0; i < 4; i++) {
+      await this.page.mouse.wheel(0, -120);
+    }
+    await this.page.keyboard.up('Control');
+    await this.page.mouse.wheel(pan.x, pan.y);
   }
 
   /** Moves the pointer over the canvas, a little further each call, so a peer sees it move. */

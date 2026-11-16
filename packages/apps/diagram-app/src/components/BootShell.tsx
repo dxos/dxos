@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode } from 'react';
+import React, { type ReactNode, Suspense, lazy } from 'react';
 import { flushSync } from 'react-dom';
 import { type Root, createRoot } from 'react-dom/client';
 
@@ -15,15 +15,13 @@ import {
   FIRST_SPACE_NAME,
   INVITATION_PARAM,
   UNTITLED,
-  getBootFrame,
   getBootLook,
   getLastDrawing,
   getLastSpace,
   parseRoute,
-  setBootFrame,
 } from '../model/index.ts';
 import { JoinShell } from './JoinShell.tsx';
-import { DiagramTrigger, PillFrame, PillSeparator, ShareButton, SpaceTrigger } from './Pill.tsx';
+import { DiagramTrigger, PillFrame, PillToolbar, SpaceTrigger } from './Pill.tsx';
 
 const isInvitation = () => new URL(window.location.href).searchParams.has(INVITATION_PARAM);
 
@@ -45,56 +43,34 @@ const expectedLook = (): BootLook => {
   return drawingId === look.drawingId ? look : { ...look, drawingId, drawingName: undefined };
 };
 
-// The scene's layers hold no controls, so whatever holds one is the frame.
-const SCENE = '[data-testid="scene-view"]';
-const MAX_FRAME = 256 * 1024;
-
-// A new build may style the frame's classes differently, so a frame is only drawn with the stylesheet it came from.
-const stylesheet = () => document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href ?? '';
-
-/** Saves the diagram's frame as drawn in `element`, for the next load to draw before its content. */
-export const saveBootFrame = (drawingId: string, element: HTMLElement) => {
-  if (!element.querySelector(`${SCENE} button`)) {
-    return;
-  }
-  const frame = element.cloneNode(true) as HTMLElement;
-  frame.querySelectorAll(`${SCENE} > *`).forEach((layer) => !layer.querySelector('button') && layer.remove());
-  // The copy must not answer the live diagram's ids, test ids included.
-  for (const node of [frame, ...frame.querySelectorAll('*')]) {
-    ['id', 'data-testid', 'aria-controls', 'aria-describedby', 'aria-labelledby'].forEach((name) =>
-      node.removeAttribute(name),
-    );
-  }
-  const html = frame.outerHTML;
-  if (html.length <= MAX_FRAME) {
-    setBootFrame({ drawingId, stylesheet: stylesheet(), html });
-  }
-};
+// The canvas editor loads with the canvas plugin, after first paint; the shell draws it as soon as it arrives.
+const CanvasFrame = lazy(() =>
+  import('@dxos/plugin-canvas/CanvasFrame').then(({ CanvasFrame }) => ({ default: CanvasFrame })),
+);
 
 /** Whether `element` shows the live diagram's frame, or the error a surface shows in its place. */
 export const isFrameShown = (element: HTMLElement): boolean =>
-  (element.querySelector(`${SCENE} button`)?.getClientRects().length ?? 0) > 0 ||
+  (element.querySelector('[data-testid="scene-view"] button')?.getClientRects().length ?? 0) > 0 ||
   element.querySelector('[role="alert"]') !== null;
-
-const expectedFrame = (look: BootLook): string | undefined => {
-  const frame = getBootFrame();
-  return frame && frame.drawingId === look.drawingId && frame.stylesheet === stylesheet() ? frame.html : undefined;
-};
 
 // The overlay takes the clicks meant for the app beneath it, and sits under dialogs and toasts so a live one shows over
 // it; its content is inert, so it neither focuses nor reads out.
-const BootShell = ({ look, frame }: { look: BootLook; frame?: string }) => (
+const BootShell = ({ look }: { look: BootLook }) => (
   <Layout.Container
     classNames='fixed inset-0 z-[calc(var(--dx-layer-toast)-1)] bg-base-surface'
     data-testid='diagram-app.boot-shell'
   >
     <div inert className='contents'>
-      {frame && <div className='dx-cover flex flex-col' dangerouslySetInnerHTML={{ __html: frame }} />}
+      <div className='dx-cover grid'>
+        <Suspense>
+          <CanvasFrame />
+        </Suspense>
+      </div>
       <PillFrame testId='diagram-app.boot-pill'>
-        <SpaceTrigger name={look.spaceName} hue={Avatar.toAvatarHue(look.spaceHue)} />
-        <PillSeparator />
-        <DiagramTrigger name={look.drawingName ?? '…'} />
-        <ShareButton />
+        <PillToolbar
+          space={<SpaceTrigger name={look.spaceName} hue={Avatar.toAvatarHue(look.spaceHue)} />}
+          diagram={<DiagramTrigger name={look.drawingName ?? '…'} />}
+        />
       </PillFrame>
     </div>
   </Layout.Container>
@@ -130,13 +106,13 @@ const unmount = ({ root, container }: Overlay) => {
 };
 
 /**
- * Draws the expected pill and diagram frame at once, ahead of the client and plugins; the live app replaces them. An
- * invitation link draws the join dialog over them, so closing it leaves the shell already in place.
+ * Draws the expected pill at once and the diagram's frame as soon as the canvas editor loads, ahead of the client and
+ * plugins; the live app replaces them. An invitation link draws the join dialog over them, so closing it leaves the
+ * shell already in place.
  */
 export const showBootShell = () => {
   document.documentElement.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const look = expectedLook();
-  shell = mount(<BootShell look={look} frame={expectedFrame(look)} />);
+  shell = mount(<BootShell look={expectedLook()} />);
   if (isInvitation()) {
     showJoinDialog();
   }

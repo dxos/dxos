@@ -15,6 +15,8 @@ import { PillCombobox } from './PillCombobox.tsx';
 const UNTITLED_SPACE = 'Untitled space';
 const NEW_SPACE = 'new-space';
 const JOIN = 'join';
+const RENAME = 'rename';
+const DELETE = 'delete';
 
 /** A space's name, which loads with its properties; one with none yet reads as untitled. */
 export const useSpaceName = (space: Space | undefined): string => {
@@ -43,11 +45,17 @@ export type SpaceMenuProps = {
   onSelect: (space: Space) => void;
   onCreate: () => void;
   onJoin: () => void;
+  onRename: (space: Space) => void;
+  onDelete: (space: Space) => void;
 };
 
-/** The space half of the pill (spec F-3): a search over the ready spaces, then New space and Join with a link. */
-export const SpaceMenu = ({ spaces, current, onSelect, onCreate, onJoin }: SpaceMenuProps) => {
+/**
+ * The space half of the pill (spec F-3): a search over the ready spaces, each with its own menu, then New space and
+ * Join with a link.
+ */
+export const SpaceMenu = ({ spaces, current, onSelect, onCreate, onJoin, onRename, onDelete }: SpaceMenuProps) => {
   const name = useSpaceName(current);
+  const find = (id: string) => spaces.find((space) => space.id === id);
   return (
     <PillCombobox
       trigger={<SpaceTrigger name={name} hue={spaceLook(current).hue} data-testid='diagram-app.space-menu' />}
@@ -61,17 +69,35 @@ export const SpaceMenu = ({ spaces, current, onSelect, onCreate, onJoin }: Space
         leading: <SpaceAvatar space={space} />,
         testId: `diagram-app.space.${space.id}`,
       }))}
+      entryActions={[
+        { value: RENAME, label: 'Rename…', icon: 'ph--pencil-simple--regular', testId: 'diagram-app.rename-space' },
+        {
+          value: DELETE,
+          label: 'Delete',
+          icon: 'ph--trash--regular',
+          destructive: true,
+          testId: 'diagram-app.delete-space',
+        },
+      ]}
       actions={() => [
         { value: NEW_SPACE, label: 'New space', icon: 'ph--plus--regular', testId: 'diagram-app.new-space' },
         { value: JOIN, label: 'Join with a link…', icon: 'ph--link--regular', testId: 'diagram-app.join' },
       ]}
       onSelect={(id) => {
-        const space = spaces.find((candidate) => candidate.id === id);
+        const space = find(id);
         if (space) {
           onSelect(space);
         }
       }}
       onAction={(action) => (action === NEW_SPACE ? onCreate() : action === JOIN && onJoin())}
+      onEntryAction={(action, id) => {
+        const space = find(id);
+        if (space && action === RENAME) {
+          onRename(space);
+        } else if (space && action === DELETE) {
+          onDelete(space);
+        }
+      }}
     />
   );
 };

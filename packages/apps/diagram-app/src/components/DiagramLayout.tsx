@@ -131,3 +131,6 @@ export const DiagramLayout = ({ children }: PropsWithChildren) => {
 
 /** The id a part passes as `caller` to anchor a popover on the diagram menu's button. */
 export const DIAGRAM_MENU_ANCHOR = 'diagram-app.diagram-menu';
+
+/** The id a part passes as `caller` to anchor a popover on the space menu's button. */
+export const SPACE_MENU_ANCHOR = 'diagram-app.space-menu';

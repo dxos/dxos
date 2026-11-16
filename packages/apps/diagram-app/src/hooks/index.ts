@@ -3,4 +3,4 @@
 //
 
 export * from './useCanvasDrawings.ts';
-export * from './useViewers.ts';
+export * from './useLayoutAccent.ts';

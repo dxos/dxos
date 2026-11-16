@@ -42,6 +42,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -64,12 +67,6 @@
     },
     {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../core/halo/halo"
-    },
-    {
-      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../core/protocols"
@@ -117,7 +114,13 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     }
   ]
 }
