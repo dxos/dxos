@@ -110,6 +110,45 @@ Blocking total  ~370 min per full run   (PRs: affected packages only)
 Nightly total   ~275 min per full run   (plus ~80 min of forced rebuilds to remove)
 ```
 
+### Typical PR runs, before and after
+
+Three PR shapes, one Check run each (a ready PR; the merge-queue run comes on top). Minutes are
+runner-minutes, the cost; wall is how long the author waits for the blocking checks.
+
+| PR                                                       | Today                           | With tags (this proposal) | With tags and overhead cuts |
+| :------------------------------------------------------- | :------------------------------ | :------------------------ | :-------------------------- |
+| **Core change** (`@dxos/echo`, 260 dependent packages)   | ~370 min; wall ~26 min          | ~185 min; wall ~23 min    | ~140 min; wall ~22 min      |
+| **One Composer plugin** (`plugin-kanban`, 12 dependents) | ~155 min; wall ~8 min (e2e ~12) | ~35 min; wall ~5 min      | ~25 min; wall ~5 min        |
+| **Edge `db-service`** (edge has no affected scoping)     | ~110 min; wall ~23 min          | ~34 min; wall ~23 min     | ~19 min; wall ~8 min        |
+
+Where the savings come from:
+
+- **Core change.** Today: `check` ~26 min (the compile gate rebuilds every dependent), `test-node`
+  4 cells (~215 task-minutes of tests), `test-browser` 8 cells (~85 task-minutes, mostly storybook),
+  all 14 e2e cells (~140 min), plus boot budget, advisory and CLI. With tags: e2e, boot budget,
+  advisory, CLI and knip leave the PR, and ~80 of the 215 node task-minutes (`client-e2e`, AI and
+  agent packages, heavy plugin files) go nightly. Storybook (~110 runner-min) is now the largest
+  blocking cost; `check` is the critical path for wall time.
+- **One plugin.** Today the PR pays ~90 min of Composer e2e, because every plugin is bundled into
+  `composer-app`, which re-triggers all 8 Composer e2e cells, plus ~15 min of kanban e2e. Its own
+  tests are ~14 task-minutes of node tests and ~8 of stories. With tags, the PR runs `check` without
+  knip, 4 node cells and the storybook cells for the affected packages.
+- **Edge `db-service`.** Edge Check runs every package on every PR: lint, build, `test-packages`
+  (23 min), 4 `test-edge` shards (64 min) and the Discord agent job (12 min). With tags, the edge
+  harness and Discord agent go nightly, leaving lint, build and `test-packages`, whose 23 min are
+  ~3 min of tests run one task at a time. Running those tasks in parallel (overhead cuts) brings the
+  wall time from 23 to ~8 min; affected scoping in edge would cut it further. Trade-off: the harness
+  is where `db-service` is exercised together with the rest of the worker, so a blocking subset of
+  harness files that cover `db-service` (one shard) may be worth keeping.
+
+Model and assumptions: test work is the nightly per-task moon time of the packages that depend on the
+changed one (from `package.json` workspace dependencies); job counts and per-job overhead (~2–3 min of
+setup, snapshot mount and tool installs per cell) come from the PR runs of 2026-11-07 to 11-14.
+`check` uses the measured PR median (8 min) for a leaf change and the p90 (26 min) for a core change.
+"Overhead cuts" assumes node test task time drops ~40% (no per-file isolation, fewer vitest
+processes), storybook ~25%, sandbox tools baked into the snapshot, and edge `test-packages` run in
+parallel. These are estimates, ±30%.
+
 The rest of this document is the evidence behind these decisions.
 
 ## Test ontology
