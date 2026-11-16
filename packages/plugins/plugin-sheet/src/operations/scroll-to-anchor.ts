@@ -11,7 +11,7 @@ import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 
 const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = SheetOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, anchor, follow, thread }) {
+    Effect.fnUntraced(function* ({ subject, anchor, focus = true, thread }) {
       const gridInstances = yield* Capability.get(SheetCapabilities.GridInstances);
       const entry = gridInstances.get(subject);
       if (!entry) {
@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = She
       }
 
       const range = SheetUtil.rangeFromAnchor(entry.sheet, anchor);
-      if (follow) {
+      if (!focus) {
         if (range) {
           entry.grid.scrollToCoord({ coords: { ...range.from, plane: 'grid' } });
         }

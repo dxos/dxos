@@ -3000,3 +3000,10 @@ decision D-269: The project article's view state is keyed by the project's EID a
   rejected:
     - Keeping the bare id and translating at the presence boundary; every followed aspect would need the translation.
 ```
+
+```mdl
+decision D-270: The project reveal (`ProjectOperation.ScrollToAnchor`) takes `focus`, true by default, as the markdown and sheet reveals do. With it, the reveal selects the anchor's text and takes focus; with `focus: false`, which a follow passes, it scrolls the text to the top and leaves the selection alone.
+  date: 2026-11-16
+  by: user:wittjosiah
+  why: A follow moved the follower's selection in a project's text fields with every move of the leader's.
+```

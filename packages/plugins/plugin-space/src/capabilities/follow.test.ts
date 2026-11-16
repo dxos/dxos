@@ -117,7 +117,7 @@ describe('Follow', () => {
     registry.update(layout, (state) => ({ ...state, active: [path] }));
     await expect
       .poll(() => calls.find(({ op }) => op === 'reveal')?.input)
-      .toEqual({ subject: path, anchor: 'line-12', follow: true });
+      .toEqual({ subject: path, anchor: 'line-12', focus: false });
   });
 
   test('an anchor the view has not confirmed is revealed again after the mount window, and a confirmed one is not', async ({
@@ -317,7 +317,7 @@ const Reveal = Operation.make({
   input: Schema.Struct({
     subject: Schema.String,
     anchor: Schema.String,
-    follow: Schema.optional(Schema.Boolean),
+    focus: Schema.optional(Schema.Boolean),
     thread: Schema.optional(Ref.Ref(Thread.Thread)),
   }),
   output: Schema.Boolean,

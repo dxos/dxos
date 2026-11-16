@@ -1693,7 +1693,14 @@ decision D-87: The presence list heads each section: Following (the leader), Fol
 ```
 
 ```mdl
-decision D-88: `MembersContainer` takes an optional `heading`, on by default; a host that already names the panel, such as a dialog titled "Share", turns off the panel's own title and description.
+decision D-88: A `Locator`'s reveal takes `focus`, true by default, in place of [D-52]'s `follow`; the follow passes `focus: false`, and Go to and comments leave it out.
+  date: 2026-11-16
+  by: user:wittjosiah
+  why: What the flag decides is whether the reveal takes the caret and focus; following is only one reason not to.
+```
+
+```mdl
+decision D-89: `MembersContainer` takes an optional `heading`, on by default; a host that already names the panel, such as a dialog titled "Share", turns off the panel's own title and description.
   date: 2026-11-14
   by: agent:claude-code
   for: user:wittjosiah
@@ -1702,7 +1709,7 @@ decision D-88: `MembersContainer` takes an optional `heading`, on by default; a 
 ```
 
 ```mdl
-decision D-89: `SpacePresence` takes the avatars' size, so a host with a smaller header than a plank's, such as the diagram app's pill, shows the same list.
+decision D-90: `SpacePresence` takes the avatars' size, so a host with a smaller header than a plank's, such as the diagram app's pill, shows the same list.
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
@@ -1711,7 +1718,7 @@ decision D-89: `SpacePresence` takes the avatars' size, so a host with a smaller
 ```
 
 ```mdl
-decision D-90: The space surface module declares the Members companion's role, which it binds.
+decision D-91: The space surface module declares the Members companion's role, which it binds.
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
@@ -1720,7 +1727,7 @@ decision D-90: The space surface module declares the Members companion's role, w
 ```
 
 ```mdl
-decision D-91: `SpacePresence` takes `everyone`, which lists everyone attending something in the space. Fills in [D-89].
+decision D-92: `SpacePresence` takes `everyone`, which lists everyone attending something in the space. Fills in [D-90].
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
@@ -1729,7 +1736,7 @@ decision D-91: `SpacePresence` takes `everyone`, which lists everyone attending 
 ```
 
 ```mdl
-decision D-92: A session sends its viewing message as soon as it hears a session it had not heard from in the space, and keeps one heartbeat however its broadcast is set up again.
+decision D-93: A session sends its viewing message as soon as it hears a session it had not heard from in the space, and keeps one heartbeat however its broadcast is set up again.
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
@@ -1740,7 +1747,7 @@ decision D-92: A session sends its viewing message as soon as it hears a session
 ```
 
 ```mdl
-decision D-93: `OpenDeleteSpace` opens the plugin's delete-space confirmation as a layout dialog, whose confirm runs `Delete`, so an app other than Composer asks before a space goes with no dialog of its own. `Delete` itself still deletes at once.
+decision D-94: `OpenDeleteSpace` opens the plugin's delete-space confirmation as a layout dialog, whose confirm runs `Delete`, so an app other than Composer asks before a space goes with no dialog of its own. `Delete` itself still deletes at once.
   date: 2026-11-16
   by: agent:claude-code
   for: user:wittjosiah
