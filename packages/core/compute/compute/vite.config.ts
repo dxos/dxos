@@ -9,6 +9,7 @@ export default defineConfig({
     'FunctionsAiError': 'src/FunctionsAiError.ts',
     'index': 'src/index.ts',
     'AgentIdentity': 'src/AgentIdentity.ts',
+    'AiMetering': 'src/AiMetering.ts',
     'AgentService': 'src/AgentService.ts',
     'Cancellation': 'src/Cancellation.ts',
     'Credential': 'src/Credential.ts',

@@ -41,6 +41,36 @@ tasks:
       runInCI: false
       cache: false
 
+  # Run the basic pipeline over a DiscordChatExporter JSON export (skipping bots) into persistent SQLite, e.g.
+  # `moon run plugin-discord:crawl-export`. Set DX_ANTHROPIC_API_KEY for the LLM extractor. See the test header.
+  crawl-export:
+    command: 'pnpm exec vitest run src/testing/crawl-export.test.ts'
+    env:
+      DISCORD_CRAWL_EXPORT: '1'
+    options:
+      runInCI: false
+      cache: false
+
+  # Export channels (and their threads) as DiscordChatExporter JSON with DISCORD_EXPORT_TOKEN, e.g.
+  # `moon run plugin-discord:export -- --guild <id> --days 30`. See the script header for flags.
+  export:
+    command: 'pnpm exec tsx src/testing/discord-export.ts'
+    options:
+      runInCI: false
+      cache: false
+
+  # Query a crawl's databases headlessly: `sparql <query>` against DISCORD_FACTS_DB, `sql <query>` against DISCORD_CRAWL_DB
+  # (both default to the Cloudflare run). See the script header.
+  facts:
+    command: 'pnpm exec tsx src/testing/facts-cli.ts'
+    deps:
+      - 'pipeline-rdf:build'
+    options:
+      runInCI: false
+      cache: false
+      # Queries carry spaces, parentheses and `?vars`; without a shell they reach the script as one argument each.
+      shell: false
+
   # Serve the RDF facts crawl-demo persisted (DISCORD_FACTS_DB) over HTTP on DISCORD_FACT_SERVER_PORT (7700) for the
   # stories-brain `FactExplorer` story. Runs until interrupted.
   fact-server:

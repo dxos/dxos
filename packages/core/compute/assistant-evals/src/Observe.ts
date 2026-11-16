@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto';
 import os from 'node:os';
 import { PostHog } from 'posthog-node';
 
-import type * as Usage from './Usage.ts';
+import { type AiUsage } from '@dxos/ai';
 
 /**
  * PostHog AI observability for a scenario's run: the model calls as `$ai_generation` on one trace,
@@ -59,7 +59,7 @@ export const enabled = (): boolean => posthog() !== undefined;
 /** One scenario run: a trace, its generations, and the flush that lets the process exit. */
 export type Run = {
   readonly traceId: string;
-  readonly generation: (call: Usage.Call) => void;
+  readonly generation: (call: AiUsage.Call) => void;
   /** Flushes the queue; per run rather than at exit, since vitest's worker does not wait for it. */
   readonly finish: () => Promise<void>;
 };

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -12,14 +14,15 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN } from '@dxos/keys';
 import { FactStore, type FactStoreApi, FactStoreHttp, type RDF } from '@dxos/pipeline-rdf';
-import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import * as BrainOperationHandlerSet from '@dxos/plugin-brain/BrainOperationHandlerSet';
-import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
+
+import { BrainOperationHandlerSet } from '#operations';
+import { BrainSkill } from '#skills';
+import { BrainCapabilities } from '#types';
 
 /** Where `moon run plugin-discord:fact-server` listens by default. */
-export const DEFAULT_FACT_SERVER_URL = 'http://127.0.0.1:7700';
+export const DEFAULT_URL = 'http://127.0.0.1:7700';
 
-export type RemoteFactStoreOptions = {
+export type Options = {
   /** Called with the facts each read by an operation (the Brain skill's tools) returns; the UI's own reads are not reported. */
   onOperationFacts?: (facts: readonly RDF.Fact[]) => void;
 };
@@ -37,7 +40,7 @@ const reporting = (store: FactStoreApi, report: (facts: readonly RDF.Fact[]) => 
  * are given, and the Brain skill with its operation handlers, so an agent can query the store. Use it instead of
  * `BrainPlugin`, whose registry capability is a singleton and whose other modules need the inbox and projects plugins.
  */
-export const RemoteFactStorePlugin = (url: string, { onOperationFacts }: RemoteFactStoreOptions = {}) =>
+export const make = (url: string, { onOperationFacts }: Options = {}) =>
   Plugin.define(
     Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.stories.brain.remoteFactStore'), name: 'Remote Fact Store' }),
   ).pipe(

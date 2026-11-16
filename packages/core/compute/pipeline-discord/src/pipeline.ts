@@ -43,6 +43,8 @@ export type RunOptions = {
   readonly db?: Database.Database;
   /** Topic-detection tuning (session gap, affinity threshold). */
   readonly detect?: DetectOptions;
+  /** Channels or threads whose topics are summarized at once (default 1); fact extraction's is `extract.concurrency`. */
+  readonly topicsConcurrency?: number;
 };
 
 export type RunSummary = {
@@ -84,7 +86,7 @@ export const DiscordPipeline = {
           agentProfileStage(),
           extractQuestionsStage({ db: options.db }),
           extractFactsStage(options.extract),
-          topicsStage({ db: options.db, detect: options.detect }),
+          topicsStage({ db: options.db, detect: options.detect, concurrency: options.topicsConcurrency }),
           answerQuestionsStage(),
           Pipeline.run({ sink: Crawler.commit }),
         );

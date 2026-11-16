@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AiMetering": {
+      "source": "./src/AiMetering.ts",
+      "types": "./dist/types/src/AiMetering.d.ts",
+      "import": "./dist/lib/AiMetering.mjs"
+    },
     "./AgentIdentity": {
       "source": "./src/AgentIdentity.ts",
       "types": "./dist/types/src/AgentIdentity.d.ts",
