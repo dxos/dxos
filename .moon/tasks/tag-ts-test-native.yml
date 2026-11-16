@@ -5,7 +5,7 @@ tasks:
     # `:test` sweep never reaches a native compile; Check's `native` job runs every `:test-native`. The
     # package adds its own `build-native` dependency.
     # Otherwise the same as `tag-ts-test.yml`'s `test`, whose comments explain the command and inputs.
-    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}" "$@"' --
+    command: bash -c 'dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}" "$@"' --
     deps:
       - esbuild-plugins:build
       - node-std:build

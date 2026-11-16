@@ -614,7 +614,6 @@ SceneEditorActions.displayName = 'SceneEditor.Actions';
 const SceneEditorCamera = ({ classNames = 'bottom-2 left-2' }: { classNames?: string }) => {
   const { atoms, commands } = useSceneNavigation('SceneEditor.Camera');
   const zoomable = useAtomValue(atoms.zoomable);
-  const percent = useAtomValue(atoms.percent);
   const actions = useMemo(
     () => ({
       fit: commands.fit,
@@ -625,14 +624,18 @@ const SceneEditorCamera = ({ classNames = 'bottom-2 left-2' }: { classNames?: st
     }),
     [commands],
   );
-  const graph = useMemo(
-    () => (zoomable ? cameraItems(actions, percent === undefined ? null : `${percent}%`) : undefined),
-    [zoomable, actions, percent],
-  );
+  // The readout reads the zoom itself, so a zoom leaves the bar's graph as it is.
+  const graph = useMemo(() => (zoomable ? cameraItems(actions, <ZoomReadout />) : undefined), [zoomable, actions]);
   return useBottomBar('camera', graph) || !graph ? null : <OwnBar graph={graph} classNames={classNames} />;
 };
 
 SceneEditorCamera.displayName = 'SceneEditor.Camera';
+
+const ZoomReadout = () => {
+  const { atoms } = useSceneNavigation('SceneEditor.Camera');
+  const percent = useAtomValue(atoms.percent);
+  return percent === undefined ? null : `${percent}%`;
+};
 
 /** The aids' state for a dimension that draws none of its own. */
 const NO_AID = Atom.make(false);
@@ -808,11 +811,12 @@ const SceneEditorTimeline = ({ classNames = 'bottom-14' }: { classNames?: string
       shot?.id,
       keySelection({ timeline, document, layout, selection, t: time, fields: config.animatable ?? placementFields }),
     );
-  // The bar is centred, the shots to its left in a column as wide as the one to its right, so they collapse to fit.
+  // The bar is centred, the shots to its left in a column as wide as the one to its right, so they collapse to fit;
+  // that column never narrows past the collapsed shots' ⋮ (2.75rem), so a narrow frame moves the bar off centre instead.
   return (
     <div
       className={mx(
-        'absolute inset-x-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-1 items-center pointer-events-none',
+        'absolute inset-x-2 grid grid-cols-[minmax(2.75rem,1fr)_auto_minmax(0,1fr)] gap-1 items-center pointer-events-none',
         classNames,
       )}
     >
