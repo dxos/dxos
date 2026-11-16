@@ -105,6 +105,7 @@ export const start: Operation.WithHandler<typeof CloudRunOperation.StartCloudRun
           tasks,
           harness: CLAUDE_CODE_EDGE_AGENT,
           delegator,
+          createChat: Delegation.createBareChat,
         });
         const prompt = yield* Delegation.brief(tasks, project);
         return yield* fold(chat, prompt, START_WINDOW_MS);

@@ -7,7 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { AiContext } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
@@ -76,11 +76,18 @@ export const fileChat = Effect.fnUntraced(function* ({
   tasks,
   harness,
   delegator,
+  createChat = createChatWithDefaults,
 }: {
   requested: readonly Task.Task[];
   tasks: readonly Task.Task[];
   harness: string;
   delegator: Actor | undefined;
+  /**
+   * Makes the chat, not yet added; by default `AssistantOperation.CreateChat`, which binds the chat's default skills.
+   * A host where that operation runs elsewhere (EDGE) passes {@link createBareChat}: an operation's output crosses
+   * that boundary as a copy, not the object to file.
+   */
+  createChat?: (name: string | undefined) => Effect.Effect<Chat.Chat, never, Database.Service | Operation.Service>;
 }) {
   const { db } = yield* Database.Service;
   invariant(
@@ -99,10 +106,8 @@ export const fileChat = Effect.fnUntraced(function* ({
   invariant(projects.size <= 1, 'Expected every delegated task to belong to the same project.');
   const [project] = projects.values();
 
-  const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {
-    // Named after the task only when it was handed exactly one: a chat holding three would claim to be about the first.
-    ...(requested.length === 1 && { name: requested[0].title }),
-  });
+  // Named after the task only when it was handed exactly one: a chat holding three would claim to be about the first.
+  const chat = yield* createChat(requested.length === 1 ? requested[0].title : undefined);
   // The tasks join the chat's checklist in the order they were given, which is the agent's working order.
   Obj.update(chat, (chat) => {
     chat.tasks.push(...tasks.map((task) => Ref.make(task)));
@@ -141,6 +146,19 @@ export const fileChat = Effect.fnUntraced(function* ({
   yield* bindDelegationContext(chat, project, sources);
   yield* Database.flush();
   return { chat, project, sources };
+});
+
+const createChatWithDefaults = (name: string | undefined) =>
+  Operation.invoke(AssistantOperation.CreateChat, { ...(name !== undefined && { name }) }).pipe(
+    Effect.map(({ object }) => object),
+    Effect.orDie,
+  );
+
+/** A chat with its own feed and no default bindings, for an agent that brings its own tools (an external coding agent). */
+export const createBareChat = Effect.fnUntraced(function* (name: string | undefined) {
+  const { db } = yield* Database.Service;
+  const feed = db.add(TrajectoryStore.makeFeed());
+  return Chat.make({ ...(name !== undefined && { name }), feed: Ref.make(feed) });
 });
 
 /** The opening prompt for an external coding agent: the tasks, the project and its instructions. */
