@@ -29,7 +29,7 @@ import { pathToFileURL } from 'node:url';
 import { composeSideBySide } from './compose.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
-import { recordingInfo } from './recording.mjs';
+import { flowSource, recordingInfo } from './recording.mjs';
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -264,7 +264,9 @@ const names = options.peers.split(',').map((name) => name.trim());
 const peerList = await Promise.all(names.map(createPeer));
 const peers = Object.fromEntries(peerList.map((peer) => [peer.name.toLowerCase(), peer]));
 
-const flow = await import(pathToFileURL(path.resolve(options.flow)).href);
+const flowFile = path.resolve(options.flow);
+const flow = await import(pathToFileURL(flowFile).href);
+const source = flowSource(flowFile);
 const steps = flow.steps ?? [];
 
 /** Caption timeline, in ms from the shared cut; empty until the take starts. */
@@ -342,10 +344,9 @@ try {
   // `stop` is what writes each pane's video, so it runs even after a failure: the take up to the failing step
   // is the evidence of where it went wrong.
   // Where the take was recorded, which `pack.mjs` needs to bundle it; read from a live page, so before the close.
-  const flowFile = path.resolve(options.flow);
   const recording = await recordingInfo({
     page: peerList[0].page,
-    flowFile,
+    source,
     appUrl: options.url,
     target: 'browser',
   }).catch(() => undefined);

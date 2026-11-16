@@ -39,12 +39,21 @@ const track = (viewport: HTMLElement, name: string, getOptions: () => ScrollTrac
 
   const reapply = () => restoring && applyScrollPosition(viewport, restoring.position);
   const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(reapply);
+  // A child added mid-restore is observed too; its first size report re-applies the position.
+  const observeChildren = () => {
+    for (const child of viewport.children) {
+      observer?.observe(child);
+    }
+  };
+  const mutations =
+    !observer || typeof MutationObserver === 'undefined' ? undefined : new MutationObserver(observeChildren);
 
   const stopRestoring = () => {
     if (restoring) {
       clearTimeout(restoring.timer);
       restoring = undefined;
       observer?.disconnect();
+      mutations?.disconnect();
     }
   };
 
@@ -66,9 +75,8 @@ const track = (viewport: HTMLElement, name: string, getOptions: () => ScrollTrac
     restoring = { position, timer: setTimeout(stopRestoring, getOptions().restoreWindow ?? DEFAULT_RESTORE_WINDOW) };
     applyScrollPosition(viewport, position);
     observer?.observe(viewport);
-    for (const child of viewport.children) {
-      observer?.observe(child);
-    }
+    observeChildren();
+    mutations?.observe(viewport, { childList: true });
   };
 
   viewport.addEventListener('scroll', onScroll, { passive: true });

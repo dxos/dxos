@@ -450,12 +450,35 @@ test.describe('Collaboration tests', () => {
         .click({ timeout: 45_000 });
       await expect(homeScroller(host)).toBeVisible({ timeout: 30_000 });
 
+      // The anchored section at the top of the view, and how far into it the view is, as a fraction of its height.
+      const topSection = (app: AppManager) =>
+        homeScroller(app).evaluate((viewport) => {
+          const top = viewport.getBoundingClientRect().top;
+          const section = [...viewport.querySelectorAll<HTMLElement>('[data-scroll-anchor]')].find(
+            (element) => element.getBoundingClientRect().bottom > top + 1,
+          );
+          const rect = section?.getBoundingClientRect();
+          return section && rect
+            ? { anchor: section.dataset.scrollAnchor, into: (top - rect.top) / rect.height }
+            : null;
+        });
+
+      await expect.poll(() => homeScroller(host).evaluate((element) => element.scrollTop)).toBe(0);
+      // Halfway, so neither view is clamped at an end.
       await homeScroller(guest).evaluate((element) => {
-        element.scrollTop = element.scrollHeight;
+        element.scrollTop = (element.scrollHeight - element.clientHeight) / 2;
       });
+      const leader = await topSection(guest);
+      expect(leader?.anchor).toBeDefined();
       await expect
-        .poll(() => homeScroller(host).evaluate((element) => element.scrollTop), { timeout: 30_000 })
-        .toBeGreaterThan(0);
+        .poll(
+          async () => {
+            const follower = await topSection(host);
+            return follower?.anchor === leader?.anchor && Math.abs((follower?.into ?? 0) - (leader?.into ?? 0)) < 0.15;
+          },
+          { timeout: 30_000 },
+        )
+        .toBe(true);
     },
   );
 

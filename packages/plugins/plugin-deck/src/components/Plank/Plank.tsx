@@ -180,14 +180,21 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     //
     // Recorded after the commit, not during render: a render React discards never reaches the screen, and
     // holding its article would show one that was never displayed.
-    const current = articleReady && node.data !== undefined ? { key: node.id, data } : undefined;
+    // The scroll context travels with the article, so a held article never reports its scroll under the next one's.
+    const current = articleReady && node.data !== undefined ? { key: node.id, data, scrollContextId } : undefined;
     const [held, setHeld] = useState(current);
     useEffect(() => {
       if (current) {
-        setHeld((previous) => (previous?.key === current.key && previous.data === current.data ? previous : current));
+        setHeld((previous) =>
+          previous?.key === current.key &&
+          previous.data === current.data &&
+          previous.scrollContextId === current.scrollContextId
+            ? previous
+            : current,
+        );
       }
       // The identity of `current` changes with `data`, which is already memoized on what it is built from.
-    }, [current?.key, current?.data]);
+    }, [current?.key, current?.data, current?.scrollContextId]);
     const shown = current ?? held;
 
     // Anchor the sigil's popover only when this plank's menu is the active popover target.
@@ -280,7 +287,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
             // Nothing has resolved for this plank yet; from the second subject on, the one before is held.
             PLANK_LOADING
           ) : (
-            <ScrollScope key={shown.key} contextId={scrollContextId}>
+            <ScrollScope key={shown.key} contextId={shown.scrollContextId}>
               <Surface.Surface
                 type={AppSurface.Article}
                 data={shown.data}
