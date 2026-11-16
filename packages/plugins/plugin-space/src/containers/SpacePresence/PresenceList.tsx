@@ -324,7 +324,7 @@ const PresenceListContent = ({ label, testId }: { label: string; testId?: string
                 <>
                   {paused && <span className='pe-2 text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>}
                   <Button.Root
-                    variant='outline'
+                    variant='primary'
                     icon='ph--stop--regular'
                     label={t('presence-stop-following.label')}
                     data-testid='spacePlugin.presence.stopFollowing'
