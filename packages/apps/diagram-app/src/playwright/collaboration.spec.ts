@@ -137,11 +137,12 @@ test.describe('Collaboration', () => {
       await expect.poll(() => ada.accent(), { timeout: 20_000 }).toBeNull();
       const before = await ben.shapeInView();
       const path = ben.path();
+      await expect(ben.presence()).toHaveAttribute('data-status', 'current');
       await ada.zoomAndPan({ x: 550, y: 320 }, { x: -100, y: 40 });
       await expect.poll(() => ada.shapeInView()).not.toEqual(before);
       // Ada's view and her next diagram travel in one location stream: once Ben sees her leave, he has had the pan.
       await ada.openDiagram('Roadmap');
-      await expect(ben.presence()).toHaveCount(0, { timeout: 20_000 });
+      await expect(ben.presence()).toHaveAttribute('data-status', 'inactive', { timeout: 20_000 });
       expect(ben.path()).toBe(path);
       expect(await ben.shapeInView()).toEqual(before);
     });

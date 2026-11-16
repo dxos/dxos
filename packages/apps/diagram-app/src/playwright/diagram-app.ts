@@ -76,8 +76,9 @@ export class DiagramApp {
     return this.app().locator('[data-testid^="views-row-"]:not([data-testid="views-row-layout"])');
   }
 
+  /** The avatars on the pill, not the rows of the presence list. */
   presence(): Locator {
-    return this.page.getByTestId('spacePlugin.presence.member');
+    return this.page.getByTestId('spacePlugin.presence').getByTestId('spacePlugin.presence.member');
   }
 
   /** The follow's hue on the pill, or null while the session is in no follow. */
