@@ -204,7 +204,14 @@ export const crossSourceReport = (
       `${ticker} (${company}): ${seen.size} articles with sentiment, ${prices.length} price days, ${shorts.length} short-volume days, ${trades.length} insider transactions`,
       `  ${'day'.padEnd(10)}  ${'news'.padStart(4)}  ${'sent'.padStart(5)}  ${'close'.padStart(8)}  ${'chg%'.padStart(6)}  ${'short'.padStart(5)}  insider trades`,
     ];
-    for (const [date, entry] of [...byDay.entries()].sort(([left], [right]) => left.localeCompare(right))) {
+    // Prices reach back further than the news; the table starts at the first day with news.
+    const first = [...byDay.entries()]
+      .filter(([, entry]) => entry.scores.length > 0)
+      .map(([date]) => date)
+      .sort()[0];
+    for (const [date, entry] of [...byDay.entries()]
+      .filter(([date]) => first === undefined || date >= first)
+      .sort(([left], [right]) => left.localeCompare(right))) {
       const mean =
         entry.scores.length > 0 ? entry.scores.reduce((sum, score) => sum + score, 0) / entry.scores.length : undefined;
       lines.push(
