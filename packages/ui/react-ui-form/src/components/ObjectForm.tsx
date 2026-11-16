@@ -21,6 +21,7 @@ import { omitId } from '../util/index.ts';
 import { HueField } from './fields/index.ts';
 import { Form } from './Form.tsx';
 import { FormField } from './FormField.tsx';
+import { type FormRootProps } from './FormRoot.tsx';
 import { META_TAGS_KEY, partitionMetaTags, resolveMetaTags, withMetaTags } from './meta-tags.ts';
 
 /** The tags row's create option: `Add tag “{query}”`. */
@@ -77,15 +78,8 @@ const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) =>
   const values = useMemo(() => ({ [META_TAGS_KEY]: tags.map((tag) => Ref.make(tag)), ...snapshot }), [snapshot, tags]);
   const handleCreate = useCreateObject(db);
 
-  const handleChange = useCallback(
-    (
-      { [META_TAGS_KEY]: metaTags, ...values }: ObjectFormValues,
-      { isValid, changed }: { isValid: boolean; changed: Record<SchemaEx.JsonPath, boolean> },
-    ) => {
-      if (!isValid) {
-        return;
-      }
-
+  const write = useCallback(
+    ({ [META_TAGS_KEY]: metaTags, ...values }: ObjectFormValues, changed: Record<SchemaEx.JsonPath, boolean>) => {
       const changedPaths = Object.keys(changed)
         .filter(SchemaEx.isJsonPath)
         .filter((path) => changed[path]);
@@ -109,7 +103,27 @@ const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) =>
     [object, preservedTags, db, tags],
   );
 
-  return { values, handleCreate, handleChange };
+  // A live form writes each keystroke, so it must hold back values that do not parse yet.
+  const handleChange = useCallback(
+    (
+      values: ObjectFormValues,
+      { isValid, changed }: { isValid: boolean; changed: Record<SchemaEx.JsonPath, boolean> },
+    ) => {
+      if (isValid) {
+        write(values, changed);
+      }
+    },
+    [write],
+  );
+
+  // The form validates before it calls `onSave`, and the `isValid` it reports alongside is derived from the
+  // error state of the previous render — so the save path writes through `write` rather than re-reading it.
+  const handleSave = useCallback(
+    (values: ObjectFormValues, { changed }: { changed: Record<SchemaEx.JsonPath, boolean> }) => write(values, changed),
+    [write],
+  );
+
+  return { values, handleCreate, handleChange, handleSave };
 };
 
 export type ObjectFormProps = {
@@ -156,7 +170,15 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
 };
 
 export type ObjectPropertiesProps = PropsWithChildren<
-  { object: Obj.Unknown } & Pick<RefFieldDataProps, 'getCreateDefaults' | 'resolveCreateEntry'>
+  {
+    object: Obj.Unknown;
+    /**
+     * Makes the form a transient editor rather than a live pane: edits are held until Save, which writes them and
+     * calls this, while Cancel discards them and calls this. A host that dismisses on either (a popover) passes its
+     * close; a pane that stays open leaves it unset, and every change writes as it is made.
+     */
+    onClose?: () => void;
+  } & Pick<RefFieldDataProps, 'getCreateDefaults' | 'resolveCreateEntry'>
 >;
 
 /**
@@ -165,10 +187,17 @@ export type ObjectPropertiesProps = PropsWithChildren<
  * the form's viewport.
  */
 export const ObjectProperties = Util.composable<HTMLDivElement, ObjectPropertiesProps>(
-  ({ children, object, getCreateDefaults, resolveCreateEntry, ...props }, forwardedRef) => {
+  ({ children, object, onClose, getCreateDefaults, resolveCreateEntry, ...props }, forwardedRef) => {
     const db = Obj.getDatabase(object);
     const [snapshot] = useObject(object);
-    const { values, handleCreate, handleChange } = useObjectFormModel({ object, snapshot, db });
+    const { values, handleCreate, handleChange, handleSave } = useObjectFormModel({ object, snapshot, db });
+    const save = useCallback<NonNullable<FormRootProps['onSave']>>(
+      (values, meta) => {
+        handleSave(values, meta);
+        onClose?.();
+      },
+      [handleSave, onClose],
+    );
     // `Obj.getType` misses database-registered (dynamic) schemas, which `useType` resolves by the stored type URI.
     const registered = useType(db, Obj.getTypeURI(object));
     const type = Obj.getType(object) ?? registered;
@@ -187,12 +216,13 @@ export const ObjectProperties = Util.composable<HTMLDivElement, ObjectProperties
         createOptionIcon='ph--tag--regular'
         createInitialValuePath='label'
         createFieldMap={createFieldMap}
-        onValuesChanged={handleChange}
         onCreate={handleCreate}
         getCreateDefaults={getCreateDefaults}
         resolveCreateEntry={resolveCreateEntry}
+        {...(onClose ? { onSave: save, onCancel: onClose } : { onValuesChanged: handleChange })}
       >
-        <Form.Viewport {...props} scroll ref={forwardedRef}>
+        {/* The actions sit in the pane's footer, so Save stays put while a form longer than the pane scrolls. */}
+        <Form.Viewport {...props} scroll footer={onClose && <Form.Actions />} ref={forwardedRef}>
           <Form.Content>
             <Form.Fields />
             {children && <Form.FieldSet>{children}</Form.FieldSet>}
