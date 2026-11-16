@@ -19,7 +19,7 @@ const ACTIVITY = '[data-testid="assistant.chat-activity"]';
 const TAB = (kind) => `[data-artifact="${kind}"]`;
 
 const REQUEST =
-  'Turn the five findings in the bound document into artifacts: for each finding create a sheet with its table and a chart that fits it (bar to compare, pie for shares, xy over time). Then create a presentation with a cover slide and one slide per chart, adding each chart object itself as its slide, and a short markdown summary of the five findings.';
+  'Turn the five findings in the bound document into artifacts: for each finding create a sheet with its table and a chart that fits it (bar to compare, pie for shares, xy over time). Then create a presentation with a cover slide and one slide per chart, adding each chart object itself as its slide, and a separate markdown document with a short summary of the five findings.';
 
 /** Resolves once the chat's activity line (Generating, Contacting inference provider, …) has been gone for `quiet` ms. */
 const agentIdle = async (page, { quiet = 4_000, timeout = 300_000 } = {}) => {
@@ -79,8 +79,7 @@ export const steps = [
       });
       await page.locator(TAB('sheet')).first().waitFor({ state: 'visible', timeout: 120_000 });
       await demo.speed({ factor: 6 });
-      await page.locator(TAB('document')).first().waitFor({ state: 'visible', timeout: 300_000 });
-      await page.locator(TAB('presentation')).first().waitFor({ state: 'visible', timeout: 60_000 });
+      await page.locator(TAB('presentation')).first().waitFor({ state: 'visible', timeout: 300_000 });
       await agentIdle(page);
       await demo.speed({ factor: 1 });
     },
@@ -124,9 +123,15 @@ export const steps = [
     name: 'Read the summary',
     narration: 'And a short summary of all five findings.',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'A markdown summary of the five findings', subtitle: 'markdown skill' });
-      await openTab({ demo, page }, 'document', /./, 'Summary');
-      await page.locator('[data-artifact="document"][data-state="on"]').waitFor({ timeout: 10_000 });
+      // The model sometimes files the summary as a slide instead; the take then shows it in the deck.
+      const inDocument = (await page.locator(TAB('document')).count()) > 0;
+      await demo.caption({
+        value: 'A markdown summary of the five findings',
+        subtitle: inDocument ? 'markdown skill' : 'filed by the agent as a slide in the deck',
+      });
+      const kind = inDocument ? 'document' : 'presentation';
+      await openTab({ demo, page }, kind, /./, 'Summary');
+      await page.locator(`${TAB(kind)}[data-state="on"]`).waitFor({ timeout: 10_000 });
       await demo.sleep({ ms: 3500 });
       await demo.clearCaption();
     },
