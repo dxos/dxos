@@ -545,10 +545,11 @@ op listLocalSpecs
 
 ```mdl
 op updateProjectRepositories
-  key: org.dxos.operation.code.updateProjectRepositories
+  key: org.dxos.operation.projects.updateRepositories
   desc: |
     Appends the repositories in `add` to a project's `Repo.RepositoriesAnnotation`, removes those in `remove`, and
     returns the list; with neither, only reads it. A repository already listed keeps its place, compared by entity id.
+    Defined and handled by plugin-projects (`ProjectOperation.UpdateRepositories`), whose project skill also lists it.
   input:
     project: Ref<Project>
     add?: Ref<Repo>[]
@@ -3059,4 +3060,15 @@ decision D-162: A breakdown nests in the Specs tab's spec picker by the `spec` f
   for: user:wittjosiah
   affects: [F-22.3]
   why: Specs left the nav tree for the picker, and with features as `feat` blocks a breakdown is linked to its feature only by the citation, so the picker nests by it.
+```
+
+```mdl
+decision D-163: op:updateProjectRepositories moves to plugin-projects as `ProjectOperation.UpdateRepositories`, keyed `org.dxos.operation.projects.updateRepositories` (tool `projects-update-repositories`), and the project skill lists it beside this plugin's Project Repositories skill.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-23]
+  why: Only a skill that opted into MCP is served there, and EDGE does not load this plugin, so no MCP client could give a project a repository; plugin-projects is loaded on EDGE and its skill is served over MCP.
+  rejected:
+    - Opting the Project Repositories skill into MCP and loading this plugin on EDGE, which brings the spec editor's dependencies onto EDGE for one operation.
 ```

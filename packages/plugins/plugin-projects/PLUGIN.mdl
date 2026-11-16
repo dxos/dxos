@@ -3007,3 +3007,22 @@ decision D-270: The project reveal (`ProjectOperation.ScrollToAnchor`) takes `fo
   by: user:wittjosiah
   why: A follow moved the follower's selection in a project's text fields with every move of the leader's.
 ```
+
+```mdl
+decision D-271: A task delegated to an external coding agent ends in a draft pull request. The delegation brief asks the agent to commit on a new branch, push it, open one draft PR per repository it changed, attach each PR to the task it implements and move that task to `review`; never to push to the default branch, force-push a branch it did not create, or merge.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The brief forbade pushing unless the person asked in the chat, and an unattended cloud run has nobody there to ask, so a delegated task could not end in the pull request the person reviews.
+  rejected:
+    - Pushing only when the person asks in the chat, which leaves every unattended run's work in its container.
+```
+
+```mdl
+decision D-272: The project skill lists `ProjectOperation.UpdateRepositories` (`org.dxos.operation.projects.updateRepositories`), which edits the repositories a project's cloud coding agents check out.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: A project's repositories are an annotation no generic object write reaches, and this skill is the one MCP clients are served, so a coding session or a remote MCP user can set up a project for coding.
+```
+
