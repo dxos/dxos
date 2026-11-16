@@ -92,6 +92,11 @@ export type Options = {
   accessTokens?: Layer.Layer<Credential.AccessTokenResolver>;
   /** The variables that authorize the agent against Composer's MCP server; without it, the agent has no Composer tools. */
   composerMcp?: Effect.Effect<Record<string, string>>;
+  /**
+   * The caller is bounded (an operation an MCP client calls, which it may abandon), not a person watching: being
+   * interrupted then leaves the turn running on EDGE and recorded for the next call, rather than cancelling it.
+   */
+  detached?: boolean;
 };
 
 /** The chat's process, and where to reach it. */
@@ -313,7 +318,7 @@ export const runTurnUntil = (
     // However this client sees the turn end, it closes into the conversation; a turn stopped at its deadline has not ended.
     Effect.onExit((exit) =>
       Effect.gen(function* () {
-        if (Exit.isSuccess(exit) && !exit.value.done) {
+        if (leftOpen(options, exit)) {
           return;
         }
         const turnId = pendingTurnOf(chat, options.definition.id)?.turnId;
@@ -330,13 +335,16 @@ export const runTurnUntil = (
     // However this client sees the turn end, nothing is left to pick up; only a client that vanished
     // mid-turn, which runs no finalizer, leaves the record behind.
     Effect.onExit((exit) =>
-      Exit.isSuccess(exit) && !exit.value.done
+      leftOpen(options, exit)
         ? Effect.void
         : Effect.sync(() => Obj.update(chat, (chat) => Obj.deleteKeys(chat, turnKeySource(options.definition.id)))),
     ),
     // Interrupting the turn cancels it on EDGE; the session stays.
     Effect.onInterrupt(() =>
       Effect.gen(function* () {
+        if (options.detached) {
+          return;
+        }
         const pid = processOf(chat, options.definition.id);
         const control = options.control();
         const spaceId = Obj.getDatabase(chat)?.spaceId;
@@ -346,6 +354,10 @@ export const runTurnUntil = (
       }),
     ),
   );
+
+/** Whether a turn's exit leaves it running on EDGE for a later call: stopped at its deadline, or a detached caller abandoned. */
+const leftOpen = (options: Options, exit: Exit.Exit<TurnProgress, unknown>): boolean =>
+  Exit.isSuccess(exit) ? !exit.value.done : options.detached === true && Exit.hasInterrupts(exit);
 
 /** Answers a request block the agent parked: hands the choice to EDGE, then records it. */
 export const respond = (

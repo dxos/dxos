@@ -397,6 +397,26 @@ describe('EdgeAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
+  it.live('a detached turn interrupted mid-way stays running on EDGE and recorded for the next call', () =>
+    Effect.gen(function* () {
+      const { feed, chat, edge, options } = yield* setup((turnId) => [text(turnId, 'working')]);
+      const fiber = yield* EdgeAgent.runTurnUntil(
+        { ...options, detached: true },
+        { chat, feed },
+        { prompt: 'keep going' },
+        Date.now() + 60_000,
+      ).pipe(Effect.forkChild);
+      yield* Effect.gen(function* () {
+        while (Obj.getKeys(chat, EdgeAgent.turnKeySource('edge')).length === 0) {
+          yield* Effect.sleep('20 millis');
+        }
+      });
+      yield* Fiber.interrupt(fiber);
+      expect(Obj.getKeys(chat, EdgeAgent.turnKeySource('edge'))).toHaveLength(1);
+      expect(edge.inputs).not.toContainEqual({ _tag: 'cancel' });
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
   it.live("checks out the project's repositories in their order, then the chat's, each once", () =>
     Effect.gen(function* () {
       const { feed, chat, edge, options } = yield* setup((turnId) => [

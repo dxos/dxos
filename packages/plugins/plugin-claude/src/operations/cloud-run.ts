@@ -29,7 +29,7 @@ import { CLAUDE_CODE_EDGE_AGENT } from '../constants.ts';
 const START_WINDOW_MS = 10_000;
 
 /** How long a sync call waits for more: a cold bundle load plus this must stay inside an MCP client's sixty seconds. */
-const FOLD_WINDOW_MS = 25_000;
+const FOLD_WINDOW_MS = 15_000;
 
 /** The agent as an operation runs it: no Composer client, so no Composer MCP token, and the space's own tokens. */
 const definition: EdgeAgent.Definition = {
@@ -86,8 +86,18 @@ const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: r
 const fold = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string, windowMs: number) {
   const control = yield* CodingAgentControl.CodingAgentControl;
   const feed = yield* Database.load(chat.feed);
-  const options: EdgeAgent.Options = { definition, control: () => EdgeAgent.fromRemoteControl(control) };
+  const options: EdgeAgent.Options = {
+    definition,
+    control: () => EdgeAgent.fromRemoteControl(control),
+    // An MCP client may give up on a call; the agent works on, and the next call picks the turn up.
+    detached: true,
+  };
   const progress = yield* EdgeAgent.runTurnUntil(options, { chat, feed }, { prompt }, Date.now() + windowMs);
+  log.info('cloud run folded', {
+    chat: chat.id,
+    done: progress.done,
+    pending: EdgeAgent.hasPendingTurn(chat, CLAUDE_CODE_EDGE_AGENT),
+  });
   if (!progress.done) {
     // The open turn's record is what the next call picks up, so it must be stored before this invocation ends.
     yield* Database.flush();
