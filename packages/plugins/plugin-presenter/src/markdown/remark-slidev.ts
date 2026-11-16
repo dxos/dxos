@@ -22,9 +22,17 @@ export const LIST_VARIANTS = ['default', 'cards', 'steps', 'outline', 'flow'] as
 export type ListVariant = (typeof LIST_VARIANTS)[number];
 
 /** Named box styles a `<Box>` may request; the first is an undecorated container. */
-export const BOX_VARIANTS = ['default', 'card', 'outline'] as const;
+export const BOX_VARIANTS = ['default', 'card', 'outline', 'hero', 'watermark', 'title', 'caption'] as const;
 
 export type BoxVariant = (typeof BOX_VARIANTS)[number];
+
+/** Named card styles a `<Card>` may request; the first is a filled surface, as the brand's own cards are. */
+export const CARD_VARIANTS = ['default', 'outline', 'plain'] as const;
+
+export type CardVariant = (typeof CARD_VARIANTS)[number];
+
+/** The widest grid, and the furthest a cell may span: a slide holds no more legibly. */
+export const MAX_TRACKS = 12;
 
 /** Named table styles a `<Table>` may request; the first is the plain markdown table. */
 export const TABLE_VARIANTS = ['default', 'rows', 'cards', 'outline'] as const;
@@ -76,6 +84,10 @@ const CONTAINER_TAGS = {
   'table': '',
   // `<Box>` is the one style tag with an element of its own: it wraps whatever it holds.
   'box': 'slide-box',
+  // Layout tags, each an element of its own: a grid of tracks, a cell spanning them, and a card to fill one.
+  'grid': 'slide-grid',
+  'cell': 'slide-cell',
+  'card': 'slide-card',
 } as const;
 
 type ContainerTag = keyof typeof CONTAINER_TAGS;
@@ -463,15 +475,68 @@ const styleBlocks = (
   return children;
 };
 
+/**
+ * A count of grid tracks: how many a `<Grid>` lays down, or how many a cell spans. Bounded by {@link MAX_TRACKS}, and
+ * absent when the tag does not ask for one, so the theme's own default applies.
+ */
+const trackCount = (
+  tag: ContainerTag,
+  name: string,
+  value: string | undefined,
+  issues: SlideIssue[],
+): number | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const count = Number(value);
+  if (Number.isInteger(count) && count >= 1 && count <= MAX_TRACKS) {
+    return count;
+  }
+  issues.push({
+    kind: 'html',
+    message: `Invalid ${tagLabel(tag)} ${name} "${value}"; 1 to ${MAX_TRACKS} expected, ignored.`,
+  });
+  return undefined;
+};
+
+/** The tracks a `<Grid>` lays down. */
+const gridProperties = (tag: ContainerTag, attributes: Record<string, string>, issues: SlideIssue[]): Properties => {
+  const cols = trackCount(tag, 'cols', attributes.cols, issues);
+  const rows = trackCount(tag, 'rows', attributes.rows, issues);
+  return { ...(cols && { cols }), ...(rows && { rows }) };
+};
+
+/**
+ * The tracks a grid's child covers, as `colSpan`/`rowSpan` — named as the table attributes and CSS's
+ * `grid-column: span n` are, so a count of tracks laid down never reads the same as a count of tracks covered.
+ */
+const spanProperties = (tag: ContainerTag, attributes: Record<string, string>, issues: SlideIssue[]): Properties => {
+  const colSpan = trackCount(tag, 'colSpan', attributes.colSpan, issues);
+  const rowSpan = trackCount(tag, 'rowSpan', attributes.rowSpan, issues);
+  return { ...(colSpan && { colSpan }), ...(rowSpan && { rowSpan }) };
+};
+
 const containerNodes = (
   open: Extract<Token, { kind: 'open' }>,
   children: RootContent[],
   issues: SlideIssue[],
 ): RootContent[] => {
-  if (open.tag === 'box') {
-    const variant = variantName(open.tag, open.attributes.variant, BOX_VARIANTS, issues);
+  if (open.tag === 'grid' || open.tag === 'cell') {
+    // Neither takes a named style, but both carry the only one they have so the renderer finds their classes where
+    // every other tag's live.
+    const tracks =
+      open.tag === 'grid'
+        ? gridProperties(open.tag, open.attributes, issues)
+        : spanProperties(open.tag, open.attributes, issues);
+    return [slideElement(CONTAINER_TAGS[open.tag], { variant: 'default', ...tracks }, children)];
+  }
+  if (open.tag === 'box' || open.tag === 'card') {
+    const variants = open.tag === 'box' ? BOX_VARIANTS : CARD_VARIANTS;
+    const variant = variantName(open.tag, open.attributes.variant, variants, issues);
     const tone = toneName(open.tag, open.attributes.tone, issues);
-    return [slideElement(CONTAINER_TAGS.box, { variant, ...(tone && { tone }) }, children)];
+    // A card is a grid child as often as not, so it takes a span of its own rather than needing a `<Cell>` around it.
+    const tracks = open.tag === 'card' ? spanProperties(open.tag, open.attributes, issues) : {};
+    return [slideElement(CONTAINER_TAGS[open.tag], { variant, ...(tone && { tone }), ...tracks }, children)];
   }
   if (isStyleTag(open.tag)) {
     return styleBlocks(open.tag, children, open.attributes, issues);
