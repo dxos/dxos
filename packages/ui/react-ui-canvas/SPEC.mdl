@@ -475,8 +475,8 @@ feat F-17: Camera
 ```mdl
 feat F-18: Panels and inspectors
   req F-18.1: The panels float over the viewport in the same places in both dimensions: the breadcrumbs top left,
-    the rail at the left below them, and one bar along the bottom with the Timeline above it: the camera's controls,
-    then the actions, and the display panel's at its end (D-59).
+    the rail at the left below them, and one bar along the bottom with the Timeline above it: the camera's controls
+    at its start, the actions, and the display panel's at its end, with space between the three (D-59).
   req F-18.2: One inspector panel serves both dimensions and docks in both; the dock choice is the canvas's view
     state, so it holds in either dimension ([org.dxos.scene#D-66]).
   req F-18.3: The sections are Properties, Views, Objects, Layers and Styles, in that order, then the dimension's
@@ -1048,7 +1048,7 @@ decision D-58: Below an 800 px frame the inspector panel folds to one icon in th
 ```
 
 ```mdl
-decision D-59: The camera, actions and display parts share one bottom bar, a react-ui-menu `ActionToolbar` that `SceneEditor.Root` composes from each part's item graph with `MenuBuilder.subgraph`: the camera's first, then the actions after a rule, then the display's after a gap that pushes them to the bar's end. The bar collapses all three by rank into one ⋮ menu. A `SceneEditor.Viewport` draws the bar along its bottom edge; a host that sets its parts beside a bare viewport, as `CanvasEditor` does, gets it from the root. A part outside a `SceneEditor.Root` draws a bar of its own.
+decision D-59: The camera, actions and display parts share one bottom bar, a react-ui-menu `ActionToolbar` that `SceneEditor.Root` composes from each part's item graph with `MenuBuilder.subgraph`: the camera's, the actions and the display's, each led by a gap separator that spaces it from the part before, so the camera's sit at the bar's start and the display's at its end. Each part's own groups keep the toolbar's standard line separators. The bar collapses all three by rank into one ⋮ menu. A `SceneEditor.Viewport` draws the bar along its bottom edge; a host that sets its parts beside a bare viewport, as `CanvasEditor` does, gets it from the root. A part outside a `SceneEditor.Root` draws a bar of its own.
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
