@@ -48,7 +48,7 @@ const firstDiagram = Effect.fnUntraced(function* (spaceId: string) {
 });
 
 /** The app shows only diagrams; a follow of someone on another kind of object pauses on this failure. */
-class NotADiagramError extends BaseError.extend('NotADiagramError', 'Only a diagram opens in this app.') {}
+export class NotADiagramError extends BaseError.extend('NotADiagramError', 'Only a diagram opens in this app.') {}
 
 /** Whether an object in a space is a diagram; one that cannot be loaded yet is not. */
 const isDiagram = Effect.fnUntraced(function* (spaceId: Key.SpaceId, objectId: string) {

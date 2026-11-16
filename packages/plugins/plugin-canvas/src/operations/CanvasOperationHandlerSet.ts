@@ -16,5 +16,4 @@ export const handlers = OperationHandlerSet.lazy([
   CanvasOperation.AddGenerator.pipe(Operation.lazyHandler(() => import('./add-generator.ts'))),
   CanvasOperation.Apply.pipe(Operation.lazyHandler(() => import('./apply.ts'))),
   CanvasOperation.Patch.pipe(Operation.lazyHandler(() => import('./patch.ts'))),
-  CanvasOperation.ScrollToAnchor.pipe(Operation.lazyHandler(() => import('./scroll-to-anchor.ts'))),
 ]);

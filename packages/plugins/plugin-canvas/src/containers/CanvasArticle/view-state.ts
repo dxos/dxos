@@ -82,33 +82,3 @@ export const scene3dViewAspect = ViewState.define<
   schema: Scene3DViewStateSchema,
   defaultValue: () => ({}),
 });
-
-/**
- * A camera a reveal asks a 2D canvas view to show, by the view's attendable id. `seq` changes on every request, so the
- * same camera asked for twice is shown twice; `focus` also focuses the view.
- */
-const CameraRequestSchema = Schema.Struct({
-  centre: Schema.optional(Schema.Struct({ x: Schema.Number, y: Schema.Number, zoom: Schema.Number })),
-  focus: Schema.optional(Schema.Boolean),
-  seq: Schema.optional(Schema.Number),
-});
-
-export type CameraRequest = Schema.Schema.Type<typeof CameraRequestSchema>;
-
-export const cameraRequestAspect = ViewState.define<CameraRequest>({
-  key: 'canvas-camera-request',
-  backend: 'memory',
-  schema: CameraRequestSchema,
-  defaultValue: () => ({}),
-});
-
-/** Where a 2D view looks: the scene point at its centre and its zoom. Presence carries it as the view's location. */
-export type CameraCentre = { x: number; y: number; zoom: number };
-
-export const formatCameraAnchor = ({ x, y, zoom }: CameraCentre): string =>
-  `${Math.round(x * 10) / 10},${Math.round(y * 10) / 10},${Math.round(zoom * 1000) / 1000}`;
-
-export const parseCameraAnchor = (anchor: string): CameraCentre | undefined => {
-  const [x, y, zoom] = anchor.split(',').map(Number);
-  return [x, y, zoom].every(Number.isFinite) && zoom > 0 ? { x, y, zoom } : undefined;
-};

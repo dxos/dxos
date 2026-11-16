@@ -618,8 +618,6 @@ feat F-1: Depth and navigation
   req F-1.7: Alt+Left / Alt+Right walk the canvas's own camera history.
   req F-1.8: An Object is never drilled into: opening it from the Objects panel shows its definition in
     isolation; Escape returns to the View and camera the user left.
-  req F-1.9: A host can put a scene point at the view's centre at a given zoom, which leaves fit mode,
-    so a view of any size shows where another viewer looks.
 ```
 
 ```mdl
@@ -1684,6 +1682,16 @@ decision D-65: The navigation commands gain `centreOn(point, zoom)`, which leave
 ```
 
 ---
+
+```mdl
+decision D-66: `centreOn` is removed from the navigation commands; no host uses it.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-65
+  affects: [F-1]
+  why: Its one caller, the canvas plugin's drawing `Locator`, is gone; a follower now sets the camera through the host's `camera` prop.
+```
 
 ## Appendix: Extension Definitions
 

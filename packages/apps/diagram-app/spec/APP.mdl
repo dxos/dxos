@@ -117,9 +117,9 @@ feat F-8: Addresses
 feat F-9: Presence
   req F-9.1: Avatars to the right of Share show everyone else attending something in the space, in this app or in Composer, with the space plugin's presence list; those on the open diagram are lit and the rest dimmed. Clicking one opens the list with that person's row selected and their actions on it: Jump or Go to, and Follow.
   req F-9.2: Each other viewer's pointer shows on the canvas as a named cursor.
-  req F-9.3: Follow on a person's row shows what they show: the diagram they attend, with its centre and zoom kept in step with theirs as they move. The follow ends as Composer's does, on Escape, on one's own input in the canvas, or on switching space or diagram. While they attend something that is not a diagram, the follow shows Paused.
+  req F-9.3: Follow on a person's row shows what they show: the diagram they attend, with its camera kept in step with theirs as they move. The follow ends as Composer's does, on Escape, on one's own input in the canvas, or on switching space or diagram. While they attend something that is not a diagram, the follow shows Paused.
   req F-9.4: While this session follows someone or is followed in the open space, the pill takes the follow's hue as Composer's plank headings do: a wash and a one-pixel underline.
-  req F-9.5: Presence, Jump and follow work between this app and Composer: the layout names the open space and diagram by the graph paths Composer uses, and a drawing's location is the scene point at the centre of the view and the zoom.
+  req F-9.5: Presence, Jump and follow work between this app and Composer: the layout names the open space and diagram by the graph paths Composer uses.
   req F-9.6: "See everyone" in the presence list opens the Share dialog, which lists the space's members.
 ```
 
@@ -1564,4 +1564,25 @@ question Q-5: The members article shows its own heading ("Manage space members")
   options:
     - Keep the heading: the dialog shows the article as the space plugin draws it, and F-5.3 drops "without its own heading".
     - Hide it: the members article hides its heading when its surface data marks it embedded, which adds that flag to the surface.
+```
+
+```mdl
+decision D-122: A follower shows the leader's drawing through the drawing's view state, which carries its camera, and no longer through a drawing anchor. Jump opens the drawing and leaves the camera where it was.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-84
+  affects: [F-9.3, F-9.5]
+  why: The space plugin's follow now carries the followed object's view state for every illustrator variant. The drawing anchor set the same camera from the centre while the view state set it from the offset, and the follower's view did not settle.
+  rejected:
+    - Keeping the anchor for Jump: the two paths would place the camera differently on views of different sizes.
+```
+
+```mdl
+decision D-123: The layout answers `Set` by opening the last of its paths that names a diagram, through the same handler as `Open`, and fails as `Open` does when none does. Fills in [D-122].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.3]
+  why: The space plugin's follow now replaces the follower's planks with the leader's through `Set`; the app shows one diagram, so the leader's last diagram is the one it shows.
 ```

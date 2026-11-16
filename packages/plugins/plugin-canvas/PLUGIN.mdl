@@ -76,8 +76,6 @@ feat F-1: Collaborator cursors
 
   req F-1.1: A 2D Canvas drawing's article and section show the other members' pointers on the drawing, each tagged with the member's name in their hue, on the illustrator's shared pointer channel. Pointers are shared in scene coordinates, so each sits over the same place for every peer whatever their pan and zoom.
   req F-1.2: A pointer shows only to peers in the same drilled-in view, and leaves when its member's pointer leaves the canvas. A slide, a card and a 3D Canvas show none.
-  req F-1.3: A 2D Canvas drawing's article reports where it looks as its presence location: the scene point at the centre of the view and the zoom, as `x,y,zoom`, while the drawing's own layout is open.
-  req F-1.4: The plugin contributes the drawing type's `Locator`: revealing an anchor centres the article on its point at its zoom, so a peer's Jump and follow show the canvas where the peer looks, and a Jump also focuses the canvas.
 ```
 
 ```mdl
@@ -501,4 +499,16 @@ decision D-29: `CanvasFrame` renders the article's editor parts (`SceneEditorPar
   why: The diagram app's user asked for its boot shell to draw the editor's real toolbars rather than a copy of the last frame. Shared parts and node kinds keep the frame from drifting from the article, and the handlers make the lock, the dock header, the camera bar and the display toggles show as they do in the article.
   rejected:
     - A frame in the app over the editor's built-in config: it lacked the image and space-graph tools and the handler-gated controls.
+```
+
+```mdl
+decision D-30: A drawing reports no presence location and contributes no `Locator`; `ScrollToAnchor` is removed. A follower takes the leader's camera from the drawing's view state, which the 2D article already reads and writes ([D-26]).
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-28
+  affects: [F-1, CanvasPlugin]
+  why: The space plugin's follow now carries each followed view-state aspect, the drawing's camera among them. With the `Locator` as well, two paths set the follower's camera from different values each time the leader moved, and the view did not settle.
+  rejected:
+    - Keeping the `Locator` for Jump alone: Jump then places the camera by the centre while follow places it by the offset, so the two disagree on a view of another size.
 ```

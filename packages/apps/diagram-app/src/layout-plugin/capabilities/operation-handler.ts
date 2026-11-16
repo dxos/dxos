@@ -17,6 +17,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 const handlers = OperationHandlerSet.lazy([
   LayoutOperation.AddToast.pipe(Operation.lazyHandler(() => import('../operations/add-toast.ts'))),
   LayoutOperation.Open.pipe(Operation.lazyHandler(() => import('../operations/open.ts'))),
+  LayoutOperation.Set.pipe(Operation.lazyHandler(() => import('../operations/set.ts'))),
   LayoutOperation.SwitchWorkspace.pipe(Operation.lazyHandler(() => import('../operations/switch-workspace.ts'))),
   LayoutOperation.UpdateComplementary.pipe(
     Operation.lazyHandler(() => import('../operations/update-complementary.ts')),

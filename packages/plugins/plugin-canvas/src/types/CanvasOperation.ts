@@ -6,13 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { Bounds } from '@dxos/scene';
-import { Thread } from '@dxos/types';
 
 import * as Generator from './Generator.ts';
 
@@ -187,26 +185,5 @@ export const Patch = Operation.make({
     written: Schema.Number,
     unchanged: Schema.Number,
     skipped: Schema.Number.annotate({ description: 'Paths left alone because someone changed them since.' }),
-  }),
-});
-
-/** Shows a drawing's 2D camera where a collaborator's is: the drawing's `Locator`, which presence's Jump and follow use. */
-export const ScrollToAnchor = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.canvas.scrollToAnchor'),
-    name: 'Scroll to anchor',
-    icon: 'ph--crosshair--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    subject: Schema.String.annotate({ description: 'Attendable ID of the canvas view.' }),
-    anchor: Schema.String.annotate({
-      description: 'The scene point at the centre of the view and the zoom, as `x,y,zoom`.',
-    }),
-    follow: Schema.optional(Schema.Boolean.annotate({ description: 'Move the camera without taking focus.' })),
-    thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'Unused: a canvas anchors no comments.' })),
-  }),
-  output: Schema.Boolean.annotate({
-    description: 'Whether the camera was requested; a view that mounts later applies the request then.',
   }),
 });

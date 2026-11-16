@@ -17,7 +17,6 @@ import { canvasDimension, sceneClipboardCodec } from '#model';
 import { Canvas } from '#types';
 
 import { useCanvasLoaded } from '../CanvasStage/index.ts';
-import { CanvasCamera } from './CanvasCamera.tsx';
 import { CanvasCursors } from './CanvasCursors.tsx';
 import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
@@ -136,10 +135,6 @@ const SceneEditorArticle = <C,>({
             <CanvasEditCommands element={element} />
             <SceneEditorParts catalogs={dimension.catalogs}>
               {cursors && <CanvasCursors object={canvas} />}
-              {/* Only an article is the view a peer's location names; a section shows the drawing inside another object. */}
-              {cursors && role === AppSurface.Article.role && attendableId && (
-                <CanvasCamera attendableId={attendableId} />
-              )}
             </SceneEditorParts>
           </SceneEditor.Root>
         </CanvasDatabaseContext.Provider>
