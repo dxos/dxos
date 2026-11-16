@@ -58,8 +58,6 @@ service MemoryService
     unsubscribe(id: string) → boolean                           # [F-4.2]
     take(id: string) → MemoryEvent[]                            # oldest first [F-4.4]
     ack(id: string, events: string[]) → void                    # [F-4.4]
-    tick() → number                                             # time-driven rules [F-4.5]
-    nextDueAt() → string | undefined                            # ISO [F-4.5]
   errors:
     MemoryError: the store refused, could not be reached, or the input does not compile; the message says which
   note: |
@@ -480,9 +478,9 @@ feat F-4: Event base
           event with an id already queued for that subscription is not queued again
 
   req F-4.5:
-    when: a host calls `tick` at or after `nextDueAt`
-    then: time-driven rules (`elapsed`, `every`, `due`) are re-evaluated and their wakes queued;
-          `nextDueAt` is undefined when no rule reads the clock
+    when: a time-driven rule (`elapsed`, `every`, `due`) comes due
+    then: the implementation re-evaluates it and queues its wakes by itself; the interface has no op for
+          the clock, and a caller only sees the events in the outbox
 
   req F-4.6:
     when: rules are evaluated by any implementation
@@ -538,6 +536,11 @@ feat F-7: Native implementations (@dxos/echo-memory-native)
     when: EDGE serves a space's memory
     then: one Durable Object per space builds MemoryService with `layer(ctx.storage.sql)` from echo-memory-native,
           so the client and EDGE run one implementation
+
+  req F-7.5:
+    when: a native memory is open
+    then: it schedules its own re-evaluation of time-driven rules in the layer's scope; a memory opened
+          from a file after rules came due while it was closed evaluates them on open
 ```
 
 ```mdl
@@ -861,6 +864,22 @@ question Q-5: Should the event-base reads (`subscriptions`, `take`, `nextDueAt`)
   options:
     - Ops: only knowledge-base reads are query kinds.
     - Kinds: `subscriptions`, `events` and `nextDueAt` join MemoryQuery.
+```
+
+```mdl
+decision D-19: When time-driven rules are evaluated is a detail of each implementation, not part of the interface; `tick` and `nextDueAt` are removed.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [MemoryService, F-4.5]
+```
+
+```mdl
+decision D-20: A native memory schedules its own time-driven evaluation in its layer's scope and catches up on open; EDGE drives the same evaluation from its Durable Object alarm. Fills in [D-19].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.5, F-7.4]
+  why: A CLI memory backed by a file is not running while rules come due, so without catch-up a reminder due overnight would never wake.
 ```
 
 ## Appendix: Extension Definitions

@@ -37,7 +37,8 @@ Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `Fa
       (`internal/sparql/*`, `Mapping`, `Vocab`, `Ontology` resolution, TriG) behind `MemoryService`,
       one store per space, with no space or agent argument on any op [F-3, F-5.1].
 - [ ] Event base, persisted: SQLite tables for subscriptions, outboxes, queued-event ids and read cursors;
-      rules run on `@dxos/brain`'s `Evaluator` [F-4, F-7.2]. Port the logic from `BrainMemory` (client)
+      rules run on `@dxos/brain`'s `Evaluator` [F-4, F-7.2]. Time-driven rules are scheduled inside the
+      layer's scope and caught up on open [F-4.5, F-7.5]. Port the logic from `BrainMemory` (client)
       and `BrainObject` (edge), which are two copies today.
 - [ ] `layer(storage)`, `layerFile(path)`, `layerMemory` [F-7.1].
 - [ ] HTTP client layer and fetch-style handler, from `FactStoreHttp` (extend it to the event-base ops)
@@ -50,7 +51,8 @@ Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `Fa
 
 - [ ] Memory moves from the per-agent `BrainObject` to one Durable Object per space, built with
       echo-memory-native's `layer(ctx.storage.sql)` [F-7.4]. `BrainObject` keeps sessions, provisioning
-      and identity, which are not memory.
+      and identity, which are not memory. The space DO's alarm drives time-driven rules; the memory
+      core exposes that to the DO, not through MemoryService [F-4.5].
 - [ ] Migrate data: merge each agent's facts, cursors, triggers and outboxes from its `BrainObject`
       into its space's memory; set each subscription's `owner` to the agent (Q-4 decides whether facts
       stay private to the agent).
@@ -79,6 +81,8 @@ Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `Fa
       `subscriptions(owner)` [F-5.3].
 - [ ] `brain/BrainWire.ts`, `capabilities/edge-brain.ts`: proxy `MemoryService` over the host wire.
 - [ ] `brain/BrainInspection.ts`, `operations/inspect-brain.ts`, `reset-brain.ts`.
+- [ ] `run-due` and the host timers stop calling `tick`/`nextDueAt`; they only drain and deliver
+      outboxes, since memory now schedules time-driven rules itself [F-4.5].
 - [ ] Operations: `recall`, `remember`, `knowledge`, `watch-facts`, `read-source`, `run-due`, `deliver`,
       `send-message`, `compose-update`, `update-profile`, `list-triggers`, `cancel-trigger`.
 - [ ] Types: `AgentOperation`, `TriggerOperation`, `MemoryOperation`, `AgentPresence`, `Profile`.
