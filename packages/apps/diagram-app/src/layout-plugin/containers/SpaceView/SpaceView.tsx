@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, Suspense, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { Fragment, Suspense, useCallback, useEffect, useLayoutEffect } from 'react';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Space } from '@dxos/client/echo';
 import { EID } from '@dxos/keys';
@@ -95,31 +96,24 @@ export const SpaceView = ({
     }
   }, [drawing, drawingId, onSelectDrawing]);
 
-  // A fresh entry per navigation, or none once this space has closed: a create or delete that finishes after the user
-  // has moved on, even back to the same diagram, leaves the view where they went.
-  const currentRef = useRef<{ drawingId?: string } | undefined>({ drawingId });
-  useLayoutEffect(() => {
-    currentRef.current = { drawingId };
-  }, [drawingId]);
-  useEffect(
-    () => () => {
-      currentRef.current = undefined;
-    },
-    [],
-  );
+  // Each navigation writes a new route: a create or delete that finishes after the user has moved on, even back to
+  // the same diagram, leaves the view where they went. Read from the registry, not render, so it is current at once.
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const layoutState = Hooks.useCapability(DiagramAppCapabilities.LayoutState);
+  const currentRoute = useCallback(() => registry.get(layoutState).route, [registry, layoutState]);
 
   const create = useCallback(
     (name?: string) => {
-      const from = currentRef.current;
+      const from = currentRoute();
       onCreateDiagram(space, name).then(
-        (created) => from && currentRef.current === from && onSelectDrawing(created.id, 'push'),
+        (created) => currentRoute() === from && onSelectDrawing(created.id, 'push'),
         (err) => {
           log.error('diagram not created', { err });
           onError('The diagram could not be created.');
         },
       );
     },
-    [space, onCreateDiagram, onSelectDrawing, onError],
+    [space, currentRoute, onCreateDiagram, onSelectDrawing, onError],
   );
 
   // Option-N types a character on macOS, so the physical key is matched, not the character.
@@ -138,12 +132,10 @@ export const SpaceView = ({
     (target: Drawing.Drawing) => {
       // Deleting the open diagram moves to another; deleting any other leaves the view where it is.
       const next = target.id === drawing?.id ? drawings.find(({ id }) => id !== target.id) : undefined;
-      const from = currentRef.current;
-      void removeDrawing(space, target).then(
-        () => next && from && currentRef.current === from && onSelectDrawing(next.id, 'replace'),
-      );
+      const from = currentRoute();
+      void removeDrawing(space, target).then(() => next && currentRoute() === from && onSelectDrawing(next.id, 'replace'));
     },
-    [space, drawing, drawings, onSelectDrawing],
+    [space, currentRoute, drawing, drawings, onSelectDrawing],
   );
 
   return (
