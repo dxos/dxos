@@ -75,7 +75,7 @@ const main = async () => {
 
   // Overwrites in place, over a public URL a third party may already serve. Outside CI that is a
   // production write from whatever the checkout happens to hold, which is worth one deliberate flag.
-  if (!dryRun && !process.env.CI && !process.argv.includes('--force')) {
+  if (!dryRun && process.env.CI !== 'true' && !process.argv.includes('--force')) {
     console.error(
       `refusing to publish to ${PUBLIC_BASE}/${PREFIX}/ outside CI: this overwrites live objects with\n` +
         "this checkout's copies, reverting anything published from a newer commit. Pass --dry-run to see\n" +

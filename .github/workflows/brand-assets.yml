@@ -39,6 +39,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # A rerun keeps its original commit, so without this it would republish that commit's assets over
+          # whatever has landed since; the bucket mirrors main's tip, never a past revision.
+          ref: main
+          persist-credentials: false
 
       # No `./.github/actions/setup`: the uploader signs with node's crypto and has no dependencies, so the
       # job needs neither pnpm nor moon.

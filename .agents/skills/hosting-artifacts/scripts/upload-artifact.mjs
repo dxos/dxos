@@ -165,14 +165,20 @@ const main = async () => {
   }
 
   const file = args[0] ?? fail('usage: upload-artifact.mjs <file> [slug] | --key <key>');
-  const cacheControlIndex = args.indexOf('--cache-control');
-  const cacheControl = cacheControlIndex > 0 ? args[cacheControlIndex + 1] : undefined;
-  const keyIndex = args.indexOf('--key');
+  // A flag whose operand is missing would otherwise read as an absent flag, uploading under a generated
+  // key or with no cache-control and still reporting success.
+  const operand = (flag) => {
+    const index = args.indexOf(flag);
+    if (index < 0) {
+      return undefined;
+    }
+    const value = args[index + 1];
+    return value && !value.startsWith('--') ? value : fail(`${flag} needs a value`);
+  };
+  const cacheControl = operand('--cache-control');
   const name = basename(file);
   const key =
-    keyIndex > 0
-      ? args[keyIndex + 1]
-      : `demos/${new Date().toISOString().slice(0, 10)}-${slugify(args[1] ?? 'artifact')}/${name}`;
+    operand('--key') ?? `demos/${new Date().toISOString().slice(0, 10)}-${slugify(args[1] ?? 'artifact')}/${name}`;
 
   const body = await readFile(file);
   const contentType = CONTENT_TYPES[extname(file).toLowerCase()];
