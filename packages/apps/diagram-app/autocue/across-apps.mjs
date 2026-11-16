@@ -114,11 +114,9 @@ const rename = async (page, from, to) => {
   const popover = page.locator('[data-scope="popover"][data-part="content"]');
   const field = popover.getByRole('textbox', { name: 'Name' });
   await field.fill(to);
-  await field.press('Escape');
-  for (let attempt = 0; attempt < 5 && (await popover.isVisible().catch(() => false)); attempt++) {
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(300);
-  }
+  // An object's name is held until Save; Escape would discard it.
+  await popover.getByTestId('save-button').click();
+  await popover.waitFor({ state: 'detached', timeout: TIMEOUT });
   await objectLink(page, to).waitFor({ timeout: TIMEOUT });
 };
 
