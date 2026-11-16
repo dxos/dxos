@@ -414,8 +414,7 @@ export class FunctionContext extends Resource {
 
     return Layer.mergeAll(
       dbLayer,
-      // Exposed, not only consumed by `credentials`: lending a server-custodied token (a GitHub App installation's) to a
-      // process the operation runs needs the token itself.
+      // Provided on its own too, because an operation that lends a server-custodied token to a process needs the token.
       accessTokenResolver,
       credentials,
       operationServiceLayer,
