@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Database, type Type } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
 import { Finance } from '#types';
@@ -88,8 +88,8 @@ export const ingest = (options: IngestOptions = {}): Effect.Effect<SourceResult[
           fetchFeed(spec, fetchedAt),
           (post) => [storyKey({ title: post.title ?? '', publisher: post.author ?? '' })],
         );
-        // Google News and Reddit throttle bursts.
-        yield* Effect.sleep(spec.family === 'reddit' ? '15 seconds' : '300 millis');
+        // Google News throttles bursts; Reddit allows an unauthenticated client about one feed a minute.
+        yield* Effect.sleep(spec.family === 'reddit' ? '65 seconds' : '300 millis');
       }
     }
 
@@ -104,6 +104,12 @@ export const ingest = (options: IngestOptions = {}): Effect.Effect<SourceResult[
           error: ciks.failure.message,
         });
       } else {
+        // A stored Form 4 keeps its transactions under `<accession>#<n>`; its documents need no second fetch.
+        const storedTrades = new Set(
+          (yield* FinanceSpace.items(yield* FinanceSpace.feedFor('sec-insider-trades'), Finance.Observation)).flatMap(
+            (item) => Obj.getMeta(item).keys.map(({ id }) => id.replace(/#\d+$/, '')),
+          ),
+        );
         for (const { ticker } of TICKERS) {
           const cik = ciks.success.get(ticker);
           if (!cik) {
@@ -116,7 +122,12 @@ export const ingest = (options: IngestOptions = {}): Effect.Effect<SourceResult[
             Finance.Observation,
             companyReports(cik, ticker, since),
           );
-          yield* run('sec-insider-trades', `${ticker} Form 4`, Finance.Observation, insiderTrades(cik, since));
+          yield* run(
+            'sec-insider-trades',
+            `${ticker} Form 4`,
+            Finance.Observation,
+            insiderTrades(cik, since, (accession) => storedTrades.has(accession)),
+          );
         }
         for (const filer of FILERS) {
           yield* run('sec-13f', `${filer.name} 13F`, Finance.Observation, latestHoldings(filer));
