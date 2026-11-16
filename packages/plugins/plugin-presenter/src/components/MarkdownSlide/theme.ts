@@ -17,10 +17,10 @@ export const theme = {
 
   nodes: {
     // Headings set tight, so a title that wraps takes two short lines rather than the body's relaxed spacing.
-    h1: 'text-[80px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
-    h2: 'text-[60px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
-    h3: 'text-[48px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
-    h4: 'text-[40px] leading-tight uppercase font-(family-name:--slide-font-heading)',
+    h1: 'text-[80px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) text-balance',
+    h2: 'text-[60px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) text-balance',
+    h3: 'text-[48px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) text-balance',
+    h4: 'text-[40px] leading-tight uppercase font-(family-name:--slide-font-heading) text-balance',
 
     p: 'text-[48px]',
     a: 'text-(color:--slide-accent) underline',
@@ -134,7 +134,9 @@ export const theme = {
         //
         // Important: `cover` and the other emphasis layouts size their headings with a `[&_h1]` descendant rule,
         // which outranks a class on the heading itself, so a variant can only set its own size by overriding it.
-        h1: 'text-[244px]! leading-none! font-(family-name:--slide-font-heading) text-(color:--slide-foreground)',
+        h1:
+          'text-[244px]! leading-none! font-(family-name:--slide-font-heading) text-(color:--slide-foreground) ' +
+          'text-balance',
         p: 'text-[37px] leading-[1.4]',
         a: 'text-(color:--slide-accent) no-underline',
       },
@@ -178,26 +180,32 @@ export const theme = {
       default: {
         card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ${span}`,
         img: 'w-full grow min-h-0 object-cover',
-        h1: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
-        h2: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
-        h3: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
+        h1: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
+        h2: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
+        h3: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
       },
       outline: {
         card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ${span}`,
         img: 'w-full grow min-h-0 object-cover',
-        h1: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
-        h2: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
-        h3: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
+        h1:
+          'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
+          'text-balance',
+        h2:
+          'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
+          'text-balance',
+        h3:
+          'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
+          'text-balance',
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
       },
       // No surface of its own: the art and the text sit straight on the slide, for a grid that is all pictures.
       plain: {
         card: `flex flex-col min-w-0 ${span}`,
         img: 'w-full grow min-h-0 object-contain',
-        h1: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
-        h2: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
-        h3: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
+        h1: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
+        h2: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
+        h3: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         p: 'pt-4 text-[32px] leading-snug opacity-80 [&:has(>img)]:contents',
       },
     },
