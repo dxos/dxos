@@ -10,23 +10,104 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
+/** An operation of a skill, as the lookups below describe it. */
+const ListedOperation = Schema.Struct({
+  key: Schema.String.annotate({ description: 'The operation key.' }),
+  tool: Schema.String.annotate({ description: 'Its tool name.' }),
+  name: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  skill: Schema.String.annotate({ description: 'Key of the skill that provides it.' }),
+  enabled: Schema.Boolean.annotate({
+    description: 'Whether its skill is enabled in this conversation, so it can be used now.',
+  }),
+  input: Schema.optional(Schema.String).annotate({
+    description: 'Its input, e.g. `{ title: string, owner?: Ref<org.dxos.type.person> }`; given when looked up by key.',
+  }),
+});
+
+export interface ListedOperation extends Schema.Schema.Type<typeof ListedOperation> {}
+
+/** A skill, as `query-skills` describes it. */
+const ListedSkill = Schema.Struct({
+  key: Schema.String,
+  name: Schema.String,
+  description: Schema.optional(Schema.String),
+  enabled: Schema.Boolean.annotate({ description: 'Whether the skill is enabled in this conversation.' }),
+  agentCanEnable: Schema.Boolean.annotate({ description: 'Whether `enable-skills` may enable it.' }),
+  instructions: Schema.optional(Schema.String).annotate({
+    description: "The skill's instructions; given when looked up by key.",
+  }),
+  operations: Schema.optional(Schema.Array(ListedOperation)).annotate({
+    description: 'Its operations; given when looked up by key.',
+  }),
+});
+
+export interface ListedSkill extends Schema.Schema.Type<typeof ListedSkill> {}
+
+/** A registered type, as `query-types` describes it. */
+const ListedType = Schema.Struct({
+  typename: Schema.String,
+  dxn: Schema.String.annotate({ description: 'The versioned DXN the type resolves by.' }),
+  kind: Schema.Literals(['object', 'relation']),
+  fields: Schema.optional(Schema.String).annotate({ description: 'Its fields; given when looked up by typename.' }),
+});
+
+export interface ListedType extends Schema.Schema.Type<typeof ListedType> {}
+
 export const QuerySkills = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.assistantToolkit.querySkills'),
     name: 'Query skills',
     description:
-      'Queries available skills, each with the tools (operations) it provides. ' +
+      'Queries available skills, each saying whether it is enabled here and whether you may enable it. ' +
       'Pass `query` to find the skill that provides a tool you lack: the words are matched against skill names, ' +
-      'descriptions and tool names, best match first.',
+      'descriptions and tool names, best match first. Pass `keys` to get those skills in full: their instructions ' +
+      'and operations.',
     icon: 'ph--student--regular',
   },
   input: Schema.Struct({
     query: Schema.optional(Schema.String).annotate({
       description: 'Words describing the tool or capability you need, e.g. "link task to feature".',
     }),
+    keys: Schema.optional(Schema.Array(Schema.String)).annotate({ description: 'Skills to return in full.' }),
   }),
-  output: Schema.Array(Type.getSchema(Skill.Skill)),
-  services: [Registry.Service],
+  output: Schema.Array(ListedSkill),
+  services: [Registry.Service, Harness.HarnessService],
+});
+
+export const QueryOperations = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.queryOperations'),
+    name: 'Query operations',
+    description:
+      'Searches the operations of the skills you can use (enabled here, or ones you may enable) by what they do; ' +
+      "`skill` narrows to one skill's. Pass `keys` to get each in full, with its input.",
+    icon: 'ph--magnifying-glass--regular',
+  },
+  input: Schema.Struct({
+    query: Schema.optional(Schema.String).annotate({ description: 'Words describing what the operation does.' }),
+    skill: Schema.optional(Schema.String).annotate({ description: "Only this skill's operations." }),
+    keys: Schema.optional(Schema.Array(Schema.String)).annotate({ description: 'Operations to return in full.' }),
+  }),
+  output: Schema.Array(ListedOperation),
+  services: [Registry.Service, Harness.HarnessService],
+});
+
+export const QueryTypes = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.queryTypes'),
+    name: 'Query types',
+    description: 'Searches the registered object and relation types. Pass `typenames` to get their fields.',
+    icon: 'ph--shapes--regular',
+  },
+  input: Schema.Struct({
+    query: Schema.optional(Schema.String).annotate({ description: 'Words in the type or field names.' }),
+    typenames: Schema.optional(Schema.Array(Schema.String)).annotate({
+      description: 'Types to return with their fields, by typename or DXN.',
+    }),
+  }),
+  output: Schema.Array(ListedType),
+  services: [Database.Service],
 });
 
 export const EnableSkills = Operation.make({
@@ -34,7 +115,8 @@ export const EnableSkills = Operation.make({
     key: DXN.make('org.dxos.operation.assistantToolkit.enableSkills'),
     name: 'Enable skills',
     description:
-      'Enables skills in the current conversation by their keys. Only skills with agentCanEnable=true can be enabled. The available keys are already listed in the system prompt, so call this directly rather than querying first.',
+      'Enables skills in the current conversation by their keys, as query-skills lists them. Only skills with ' +
+      'agentCanEnable=true can be enabled.',
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({

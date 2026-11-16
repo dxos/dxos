@@ -6,6 +6,7 @@ import { type Page, expect, test } from '@playwright/test';
 
 // The React-free entry, as the spec runs in node, where the scene barrel's components cannot load.
 import { NOMINAL_SIZES, nominalSize } from '@dxos/react-ui-canvas/headless';
+import { MAJOR_GRID } from '@dxos/scene';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { SceneManager } from './SceneManager.ts';
@@ -57,7 +58,7 @@ test.describe('create sizing', () => {
     // but it tracks the pointer rather than falling back to the type's default, whose 2:1 shape a
     // 240x160 sweep would not produce. The cell is read against the live zoom: the story fits itself to
     // the viewport, so a hard-coded percentage is a local accident.
-    const cell = (64 * (await scene.zoom())) / 100;
+    const cell = (MAJOR_GRID * (await scene.zoom())) / 100;
     expect(Math.abs(box.width - 240)).toBeLessThan(cell);
     expect(Math.abs(box.height - 160)).toBeLessThan(cell);
 
@@ -89,23 +90,28 @@ test.describe('create sizing', () => {
     const after = await scene.box(scene.node(id!));
     // A snapped move lands a whole visible cell away or not at all; the cell is derived from the zoom
     // this many steps out, never assumed.
-    const cell = (64 * (await scene.zoom())) / 100;
+    const cell = (MAJOR_GRID * (await scene.zoom())) / 100;
     const moved = Math.abs(after.x - before.x);
     expect(moved === 0 || moved > cell / 2).toBe(true);
   });
 
-  test('a toolbar create is the default size in scene units whatever the zoom', async () => {
-    const createFromToolbar = async () => {
-      await page.getByTestId('toolbar-create').click();
-      await page.getByRole('menuitem').first().click();
+  test('a node dragged from the palette is the default size in scene units whatever the zoom', async () => {
+    const dragFromPalette = async () => {
+      const view = await scene.box(scene.root);
+      const entry = await scene.box(page.getByTestId('canvas.tool.node:rect'));
+      await page.mouse.move(entry.x + entry.width / 2, entry.y + entry.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(entry.x + 40, entry.y + 40, { steps: 4 });
+      await page.mouse.move(view.x + view.width * 0.5, view.y + view.height * 0.6, { steps: 10 });
+      await page.mouse.up();
     };
     const widthAt = async (): Promise<number> => {
-      const id = await added(createFromToolbar);
+      const id = await added(dragFromPalette);
       expect(id).toBeDefined();
       return (await scene.box(scene.node(id!))).width;
     };
 
-    // A new rectangle is its nominal width (two major cells, 128 scene units) at any zoom, so on screen it
+    // A new rectangle is its nominal width (two major cells) at any zoom, so on screen it
     // scales with the zoom.
     const expectDefault = async () => {
       const width = await widthAt();

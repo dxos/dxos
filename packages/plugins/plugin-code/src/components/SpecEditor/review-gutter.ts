@@ -12,11 +12,11 @@ import {
   type Verdict,
   formatSourceKey,
   reviewAnnotations,
+  reviewItemId,
   walkthroughOf,
 } from '@dxos/deus/review';
-
-import { STATUS_STYLE } from '../SpecModel/index.ts';
-import { type SnippetCard, type SourceReader, snippetCard, walkthroughCard } from './snippet-card.ts';
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
+import * as SpecViews from '@dxos/plugin-projects/SpecViews';
 
 /** A block declaration line, `feat F-1: …`, `  req F-1.2: …` or `type Scene`, captured as its kind and id. */
 const DECLARATION = /^\s*([a-z]+)\s+([A-Za-z][\w.-]*)\s*(?::|$)/;
@@ -46,7 +46,7 @@ export type ReviewGutterCallbacks = {
   /** A code or test chip opens the file at its symbol. */
   onOpen?: (key: SourceKey) => void;
   /** The checkout's text of a file, for the declarations hover cards show. */
-  read?: SourceReader;
+  read?: SpecViews.SourceReader;
 };
 
 /** The gap between a chip and its card. */
@@ -59,12 +59,17 @@ const CARD_GAP = 4;
  */
 class HoverController {
   #timer: ReturnType<typeof setTimeout> | undefined;
-  #card: SnippetCard | undefined;
+  #card: SpecViews.SnippetCard | undefined;
   #chip: HTMLElement | undefined;
   readonly #reposition = () => this.#place();
 
   /** `description` carries the card's content to assistive tech, since the card itself is never focused. */
-  attach(view: EditorView, chip: HTMLElement, render: (dark: boolean) => SnippetCard, description: string): void {
+  attach(
+    view: EditorView,
+    chip: HTMLElement,
+    render: (dark: boolean) => SpecViews.SnippetCard,
+    description: string,
+  ): void {
     chip.setAttribute('aria-description', description);
     const show = () => {
       this.#cancel();
@@ -153,6 +158,8 @@ class ReviewWidget extends WidgetType {
       other.verdict.status === this.verdict.status &&
       other.verdict.summary === this.verdict.summary &&
       other.verdict.note === this.verdict.note &&
+      other.verdict.review?.commit === this.verdict.review?.commit &&
+      other.verdict.review?.date === this.verdict.review?.date &&
       other.verdict.walkthrough === this.verdict.walkthrough &&
       other.annotation?.testing === this.annotation?.testing &&
       keysEqual(other.annotation?.keys, this.annotation?.keys) &&
@@ -161,7 +168,9 @@ class ReviewWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView): HTMLElement {
-    const { id, status, summary, note } = this.verdict;
+    const { id, status, summary, note, review } = this.verdict;
+    const reviewed =
+      review && ['Reviewed', review.date, review.commit && `at ${review.commit.slice(0, 7)}`].filter(Boolean).join(' ');
     const { onSelect, onOpen, read } = this.callbacks;
     // Floated into the right margin, beside the decision chips, so the annotated line's text does not move.
     const row = document.createElement('span');
@@ -189,9 +198,11 @@ class ReviewWidget extends WidgetType {
     // An item implemented in several places shows its walkthrough on hover; the browser tooltip would cover it.
     const steps = walkthroughOf(this.verdict);
     const statusTag = tag(
-      STATUS_STYLE[status].label,
-      STATUS_STYLE[status].hue,
-      steps ? undefined : [`${STATUS_STYLE[status].label}: ${summary ?? id}`, note].filter(Boolean).join('\n\n'),
+      SpecModel.STATUS_STYLE[status].label,
+      SpecModel.STATUS_STYLE[status].hue,
+      steps
+        ? undefined
+        : [`${SpecModel.STATUS_STYLE[status].label}: ${summary ?? id}`, note, reviewed].filter(Boolean).join('\n\n'),
       'spec-review.gutter-chip',
       () => onSelect?.(id),
     );
@@ -200,10 +211,14 @@ class ReviewWidget extends WidgetType {
       this.hover.attach(
         view,
         statusTag,
-        (dark) => walkthroughCard(steps, { read, onOpen, dark }),
-        [`${STATUS_STYLE[status].label}: ${summary ?? id}`, ...steps.map((step) => `${step.text} ${step.key}`)].join(
-          '. ',
-        ),
+        (dark) => SpecViews.walkthroughCard(steps, { read, onOpen, dark }, reviewed),
+        [
+          `${SpecModel.STATUS_STYLE[status].label}: ${summary ?? id}`,
+          ...steps.map((step) => `${step.text} ${step.key}`),
+          reviewed,
+        ]
+          .filter(Boolean)
+          .join('. '),
       );
     }
 
@@ -211,7 +226,12 @@ class ReviewWidget extends WidgetType {
       keys.slice(0, MAX_CODE_CHIPS).forEach((key) => {
         const chip = tag(`</> ${labelOf(key)}`, hue, undefined, testId, () => onOpen?.(key));
         chip.dataset.key = formatSourceKey(key);
-        this.hover.attach(view, chip, (dark) => snippetCard(key, { read, onOpen, dark }), formatSourceKey(key));
+        this.hover.attach(
+          view,
+          chip,
+          (dark) => SpecViews.snippetCard(key, { read, onOpen, dark }),
+          formatSourceKey(key),
+        );
       });
       const rest = keys.slice(MAX_CODE_CHIPS);
       if (rest.length > 0) {
@@ -260,7 +280,7 @@ class ReviewWidget extends WidgetType {
           view,
           chip,
           (dark) =>
-            walkthroughCard(
+            SpecViews.walkthroughCard(
               tests.map((key) => ({ text: '', key: formatSourceKey(key) })),
               { read, onOpen, dark },
             ),
@@ -288,7 +308,8 @@ const buildDecorations = (
   for (let number = 1; number <= state.doc.lines; number++) {
     const line = state.doc.line(number);
     const [, kind, id] = DECLARATION.exec(line.text) ?? [];
-    const verdict = id && !seen.has(id) ? verdicts.get(id) : undefined;
+    const itemId = id && reviewItemId(kind, id);
+    const verdict = itemId && !seen.has(itemId) ? verdicts.get(itemId) : undefined;
     if (verdict) {
       // The first declaration wins; later mentions (a changelog's `affects:`) are not the item itself.
       seen.add(verdict.id);

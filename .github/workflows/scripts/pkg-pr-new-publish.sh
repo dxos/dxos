@@ -11,7 +11,7 @@ echo "Finding public packages..."
 # --filter-prod filters out packages with "private": true
 # --depth=-1 gets all nested packages
 # --json outputs JSON format
-PUBLIC_PACKAGES=$(pnpm list --filter-prod="./packages/**" --filter-prod="./vendor/**" --depth=-1 --json 2>/dev/null | \
+PUBLIC_PACKAGES=$(pnpm list --filter-prod="./packages/**" --filter-prod="./tools/**" --filter-prod="./vendor/**" --depth=-1 --json 2>/dev/null | \
   node -e "
     const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
     const packages = Array.isArray(data) ? data : [data];
@@ -30,6 +30,22 @@ fi
 # Convert to array
 read -ra PKG_ARRAY <<< "$PUBLIC_PACKAGES"
 echo "Found ${#PKG_ARRAY[@]} public packages to publish"
+
+# Private packages dxos/edge installs from pkg.pr.new before they have an npm trusted publisher. pkg-pr-new skips a
+# package marked private, so the flag is dropped in this job's throwaway checkout only; `changeset publish` and the npm
+# preflight still read it from the committed package.json and skip them.
+PKG_PR_NEW_ONLY=(packages/core/compute/plugin-host-cloudflare)
+for directory in "${PKG_PR_NEW_ONLY[@]}"; do
+  node -e "
+    const fs = require('fs');
+    const file = process.argv[1] + '/package.json';
+    const manifest = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    delete manifest.private;
+    fs.writeFileSync(file, JSON.stringify(manifest, null, 2) + '\\n');
+  " "$directory"
+  PKG_ARRAY+=("$directory")
+done
+echo "Added ${#PKG_PR_NEW_ONLY[@]} private packages published to pkg.pr.new only"
 
 # `@dxos/cli` publishes generated packages — a launcher plus one prebuilt binary per platform, written
 # to dist/ by `cli:bundle` — rather than its own source directory, which is private and has no binary.
@@ -57,6 +73,13 @@ done < <(node -p "Object.keys(require('./$CLI_DIST/cli/package.json').optionalDe
 
 echo "Found ${#CLI_PACKAGES[@]} generated CLI packages to publish"
 
+# The @dxos packages need these patches at runtime, and pnpm applies patches only inside this workspace,
+# so the patched installs are published beside them and pkg-pr-new points the dependencies at them.
+PATCHED_DIR=$(mktemp -d)
+mapfile -t PATCHED_PACKAGES < <(node .github/workflows/scripts/stage-patched-packages.mjs "$PATCHED_DIR" \
+  @automerge/automerge-repo @automerge/automerge-subduction)
+echo "Staged ${#PATCHED_PACKAGES[@]} patched third-party packages"
+
 # Run pkg-pr-new publish with all public packages
-pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}"
+pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}" "${PATCHED_PACKAGES[@]}"
 

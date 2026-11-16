@@ -4,6 +4,9 @@
 
 @layer dx-components {
   .dx-switch {
+    /* Holds the visually hidden input, which is positioned: left to an ancestor, it stays put while the switch
+       scrolls, and focusing it scrolls that ancestor to wherever it was. */
+    position: relative;
     display: inline-flex;
     align-items: center;
     /* Start, not centre: in a column (Field) the cross axis is horizontal, so centre would float it mid-track. */
@@ -16,6 +19,10 @@
   }
   .dx-switch[data-disabled] {
     opacity: 0.5;
+    cursor: default;
+  }
+  /* Read-only is not disabled: the switch reads as it does editable, and only stops taking presses. */
+  .dx-switch[data-readonly] {
     cursor: default;
   }
   /* Neither on nor off: the track is dimmed and the host's label says why. */
@@ -38,7 +45,7 @@
     background: var(--color-input-surface);
     transition: background-color 120ms ease-out;
   }
-  .dx-switch:hover:not([data-disabled]) .dx-switch-control:not([data-state='checked']) {
+  .dx-switch:hover:not([data-disabled], [data-readonly]) .dx-switch-control:not([data-state='checked']) {
     background: var(--color-hover-surface);
   }
   .dx-switch-control[data-state='checked'] {

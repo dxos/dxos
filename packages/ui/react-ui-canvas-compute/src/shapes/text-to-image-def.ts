@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { createPorts, defineComputeNode } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { TextToImageComponent } from './TextToImage.tsx';
@@ -23,7 +25,11 @@ export type TextToImageShape = Schema.Schema.Type<typeof TextToImageShape>;
 export type CreateTextToImageProps = CreateShapeProps<TextToImageShape>;
 
 export const createTextToImage = (props: CreateTextToImageProps) =>
-  createShape<TextToImageShape>({ type: 'text-to-image', size: { width: 128, height: 64 }, ...props });
+  createShape<TextToImageShape>({
+    type: 'text-to-image',
+    size: { width: 2 * MAJOR_GRID, height: MAJOR_GRID },
+    ...props,
+  });
 
 export const textToImageNodeDef = defineComputeNode<TextToImageShape>({
   type: 'text-to-image',

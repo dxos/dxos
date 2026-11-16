@@ -41,8 +41,7 @@ export const CreatePresentation = Operation.make({
     description: 'Creates a presentation from slides written in Slidev markdown and adds it to the space.',
     icon: 'ph--presentation--regular',
   },
-  // The capability manager carries the `DefaultParent` rule that files the presentation into the root collection.
-  services: [Capability.Service, Database.Service],
+  services: [Database.Service],
   input: Schema.Struct({
     name: Schema.String.annotate({ description: 'The presentation name.' }),
     slides: Schema.Array(Schema.String).annotate({

@@ -8,14 +8,50 @@
 // on each axis and covers the gutters between them, so every channel between shapes is one gutter wide.
 //
 
-import { type Bounds, type ElementId, type Node } from '@dxos/scene';
+import { type Bounds, DEFAULT_GRID, type ElementId, MAJOR_GRID_RATIO, type Node, isHullNode } from '@dxos/scene';
 
-import { nodeBounds } from './shapes.ts';
+import { nodeBounds, resizeNode } from './shapes.ts';
 
 /** The size of a one-cell shape and the gutter between shapes, in scene units. */
 export type LatticeSpec = { width: number; height: number; gutterX: number; gutterY: number };
 
-export const DEFAULT_LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
+/** The lattice a drawing takes by default: on its grid of 16 a cell is 16 by 8 and the gutter 8 each way. */
+export const DEFAULT_LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 128 };
+
+const gcd = (left: number, right: number): number => (right === 0 ? left : gcd(right, left % right));
+
+/** The minor grid pitches a canvas draws and its settings accept, in px. */
+export const GRID_PITCH_RANGE = { minimum: 4, maximum: 128 } as const;
+
+/**
+ * The minor grid pitch whose major lines (`ratio` minor cells) run along every cell edge of the lattice: the largest
+ * whole `GRID_PITCH_RANGE` pitch whose major cell divides the cells and gutters, since cell edges sit at
+ * `k x pitch +/- size / 2`; 0 when none does, so every caller falls back to the same grid.
+ */
+export const latticeGrid = ({ width, height, gutterX, gutterY }: LatticeSpec, ratio: number): number => {
+  const lengths = [width / 2, height / 2, gutterX, gutterY];
+  if (!lengths.every((length) => Number.isInteger(length) && length > 0)) {
+    return 0;
+  }
+  const major = lengths.reduce(gcd);
+  for (
+    let minor = Math.min(GRID_PITCH_RANGE.maximum, Math.floor(major / ratio));
+    minor >= GRID_PITCH_RANGE.minimum;
+    minor--
+  ) {
+    if (major % (minor * ratio) === 0) {
+      return minor;
+    }
+  }
+  return 0;
+};
+
+/**
+ * The minor grid pitch a drawing is on: its own, else the one its lattice's cell edges fall on, else the default.
+ * One rule, so the canvas, its forms and a hull's inset all count in the same cells.
+ */
+export const gridPitch = ({ grid, lattice }: { grid?: number; lattice?: LatticeSpec }): number =>
+  grid ?? ((lattice && latticeGrid(lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID);
 
 /** A shape on the lattice: its first (top-left) cell and how many cells it spans on each axis. */
 export type LatticeCell = { col: number; row: number; spanX: number; spanY: number };
@@ -95,6 +131,13 @@ export const resizeCell = (cell: LatticeCell, from: Bounds, to: Bounds, spec: La
 /** A frame snapped onto the lattice: the nearest whole spans at the nearest cells. */
 export const quantize = (bounds: Bounds, spec: LatticeSpec): Bounds => cellBounds(toCell(bounds, spec), spec);
 
+/**
+ * A frame moved from its cells of one lattice to the same cells of another: it keeps its column, row and spans, so it
+ * moves and resizes with the cells and gutters rather than being left where the old ones were.
+ */
+export const reseatBounds = (bounds: Bounds, from: LatticeSpec, to: LatticeSpec): Bounds =>
+  cellBounds(toCell(bounds, from), to);
+
 const cellKey = (col: number, row: number) => `${col},${row}`;
 
 /** Every lattice position a cell covers, as `col,row` keys. */
@@ -112,10 +155,12 @@ export const coveredCells = ({ col, row, spanX, spanY }: LatticeCell): string[] 
 export type Occupancy = ReadonlyMap<string, ElementId>;
 
 /**
- * Whether a node takes part in the lattice: a guide (a group's backdrop) or a bare caption annotates the shapes rather
- * than being one, so it neither snaps, occupies cells nor blocks a gutter route.
+ * Whether a node takes part in the lattice: a guide (a group's backdrop), a bare caption or a hull (as drawn, or as the
+ * group it is stored as) annotates the shapes rather than being one, so it neither snaps, occupies cells nor blocks a
+ * gutter route.
  */
-export const onLattice = (node: Node): boolean => !node.style?.guide && node.style?.border !== false;
+export const onLattice = (node: Node): boolean =>
+  !node.style?.guide && node.style?.border !== false && !isHullNode(node) && Reflect.get(node, 'hull') === undefined;
 
 export const occupancy = (
   nodes: Iterable<Node>,
@@ -157,3 +202,22 @@ export const nearestFree = (cell: LatticeCell, occupied: Occupancy, maxRadius = 
   }
   return undefined;
 };
+
+/**
+ * A scene whose lattice changed from `from` to `to`, with every shape on it re-seated on the cells it had
+ * ({@link reseatBounds}). What is off the lattice (a hull, a guide, a caption) and every link stays as it is: a hull is
+ * fitted round its shapes when it is drawn, and a link is routed between them.
+ */
+export const reseat = <S extends { readonly nodes: Readonly<Record<string, Node>> }>(
+  scene: S,
+  from: LatticeSpec,
+  to: LatticeSpec,
+): S => ({
+  ...scene,
+  nodes: Object.fromEntries(
+    Object.values(scene.nodes).map((node): [string, Node] => [
+      node.id,
+      onLattice(node) ? resizeNode(node, reseatBounds(nodeBounds(node), from, to)) : node,
+    ]),
+  ),
+});

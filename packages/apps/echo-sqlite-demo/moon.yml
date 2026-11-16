@@ -1,0 +1,15 @@
+layer: application
+language: typescript
+tags:
+  - typecheck
+  - vite
+tasks:
+  # `@dxos/*` resolve from source (vite-plugin-import-source), so the whole package graph needs no build.
+  bundle:
+    options:
+      mergeDeps: replace
+    deps: []
+  serve:
+    options:
+      mergeDeps: replace
+    deps: []

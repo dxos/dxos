@@ -52,7 +52,8 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "tokenx": "catalog:"
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",

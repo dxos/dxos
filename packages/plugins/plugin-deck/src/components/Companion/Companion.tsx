@@ -41,6 +41,8 @@ export type CompanionProps = Util.ThemedClassName<{
   controls?: ReactNode;
   /** Omit the toolbar (e.g. fullscreen). */
   headless?: boolean;
+  /** A palette hue the heading washes in; see `Pane.Toolbar`. */
+  accent?: string;
 }>;
 
 export const Companion = ({
@@ -52,6 +54,7 @@ export const Companion = ({
   companionTo,
   controls,
   headless,
+  accent,
 }: CompanionProps) => {
   const { t } = Hooks.useTranslation(DeckNamespace.key);
   const companions = companionsProp ?? [];
@@ -97,7 +100,7 @@ export const Companion = ({
       data-testid='deck.companion'
     >
       {!headless && (
-        <Pane.Toolbar>
+        <Pane.Toolbar accent={accent}>
           <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
           {controls}
         </Pane.Toolbar>

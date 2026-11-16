@@ -8,7 +8,7 @@ import { DEFAULT_INPUT } from '@dxos/conductor';
 
 import { createComputeGraph } from '../hooks/index.ts';
 import { computeKinds } from '../registry.ts';
-import { boardLayout } from '../scene/index.ts';
+import { boardLayout, computeNodeId } from '../scene/index.ts';
 import {
   createArtifactCircuit,
   createAudioCircuit,
@@ -55,7 +55,7 @@ describe('createComputeGraph', () => {
         expect(computeKinds.validate(shape), `${name} ${shape.type}`).toEqual({ ok: true });
         expect(computeKinds.has(shape.type ?? ''), `${name} ${shape.type}`).toBe(true);
       }
-      const nodes = shapes.flatMap(({ node }) => (typeof node === 'string' ? [node] : []));
+      const nodes = shapes.flatMap((shape) => computeNodeId(shape) ?? []);
       expect(nodes.every((id) => model.findNode(id) !== undefined)).toBe(true);
       expect(nodes.length).toBe(model.nodes.length);
     });

@@ -26,6 +26,7 @@ import {
 
 import {
   documentRename,
+  featureRequirements,
   featureSources,
   featureSubfeatures,
   makeFeatureSpecs,
@@ -63,6 +64,7 @@ describe('feature migrations', () => {
       LegacyFeature.Feature,
       LegacyFeature.FeatureV2,
       LegacyFeature.FeatureV3,
+      LegacyFeature.FeatureV4,
       Feature.Feature,
       Spec.Spec,
     ]);
@@ -172,6 +174,34 @@ describe('feature migrations', () => {
     expect(FeatureEmbed.parse(content)).toHaveLength(2);
   });
 
+  test('0.4.0 requirements are stored under their key, else spec id, else position, in the order they had', async ({
+    expect,
+  }) => {
+    const db = await open();
+    db.add(
+      Obj.make(LegacyFeature.FeatureV4, {
+        name: 'Sync',
+        status: 'planned',
+        requirements: [
+          { key: 'k', text: 'New mail shows within a minute.' },
+          { id: 'F-1.2', text: 'Sync resumes after sleep.' },
+          { id: 'F-1.2', text: 'Sync stops when offline.' },
+          { text: 'Undo restores it.' },
+        ],
+      }),
+    );
+    await db.flush();
+    await db.runMigrations([featureRequirements]);
+
+    const [feature] = await db.query(Filter.type(Feature.Feature)).run();
+    expect(Feature.getRequirements(feature)).toEqual([
+      { key: 'k', text: 'New mail shows within a minute.' },
+      { key: 'F_1_2', id: 'F-1.2', text: 'Sync resumes after sleep.' },
+      { key: 'F_1_2_1', id: 'F-1.2', text: 'Sync stops when offline.' },
+      { key: 'r3', text: 'Undo restores it.' },
+    ]);
+  });
+
   test('a nested spec left by an earlier run is reused rather than made again', async ({ expect }) => {
     const db = await open();
     const sync = db.add(Obj.make(LegacyFeature.FeatureV2, { name: 'Sync', status: 'planned' }));
@@ -253,7 +283,7 @@ describe('feature migrations', () => {
     await db.runMigrations([makeSpecContent()]);
 
     const [spec] = await db.query(Filter.type(Spec.Spec)).run();
-    expect(spec).toMatchObject({ id: legacy.id, name: 'Inbox', dialects: [...FeatureMap.SOFTWARE_DIALECTS] });
+    expect(spec).toMatchObject({ id: legacy.id, name: 'Inbox', dialects: [FeatureMap.SOFTWARE_DIALECT] });
     expect((await spec.content.load()).id).toBe(text.id);
     expect(Obj.getParent(text)?.id).toBe(spec.id);
     expect(Obj.getMeta(spec).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' }]);
@@ -279,6 +309,54 @@ describe('feature migrations', () => {
       { id: current.id, name: 'b/PLUGIN.mdl' },
     ]);
     expect(await SpecText.read(specs.find(({ id }) => id === renamed.id)!)).toBe('A');
+  });
+
+  test('a spec made from a 0.2.0 spec or a spec document takes its front matter into its fields', async ({
+    expect,
+  }) => {
+    const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
+    graph.registry.add([LegacySpec.SpecV2, LegacySpec.Document, Spec.Spec]);
+    const file = '---\nid: org.example.inbox\nname: Inbox\nextends: [org.dxos.spec.video]\n---\n\n# Inbox\n';
+    const held = db.add(
+      Obj.make(LegacySpec.Document, { name: 'Inbox', content: Ref.make(Text.make({ content: file })) }),
+    );
+    const legacy = db.add(Obj.make(LegacySpec.SpecV2, { name: 'Inbox', features: [], document: Ref.make(held) }));
+    Obj.setParent(held, legacy);
+    const loose = db.add(
+      Obj.make(LegacySpec.Document, { name: 'b/PLUGIN.mdl', content: Ref.make(Text.make({ content: file })) }),
+    );
+    await db.flush();
+    await db.runMigrations([makeSpecContent(), specDocuments]);
+
+    const specs = await db.query(Filter.type(Spec.Spec)).run();
+    const fields = async (id: string) => {
+      const spec = specs.find((spec) => spec.id === id)!;
+      return [spec.name, [...spec.dialects], Obj.getMeta(spec).key, await SpecText.read(spec)];
+    };
+    expect(await fields(legacy.id)).toEqual([
+      'Inbox',
+      [FeatureMap.SOFTWARE_DIALECT, 'org.dxos.spec.video'],
+      'org.example.inbox',
+      '# Inbox\n',
+    ]);
+    expect(await fields(loose.id)).toEqual(['Inbox', ['org.dxos.spec.video'], 'org.example.inbox', '# Inbox\n']);
+  });
+
+  test("a 0.2.0 spec whose front matter used the features dialect takes the software one in place of the package's", async ({
+    expect,
+  }) => {
+    const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
+    graph.registry.add([LegacySpec.SpecV2, LegacySpec.Document, Spec.Spec]);
+    const file = '---\nextends: [org.dxos.spec.features, org.dxos.spec.plugin, org.dxos.spec.video]\n---\n\n# Inbox\n';
+    const held = db.add(
+      Obj.make(LegacySpec.Document, { name: 'Inbox', content: Ref.make(Text.make({ content: file })) }),
+    );
+    const legacy = db.add(Obj.make(LegacySpec.SpecV2, { name: 'Inbox', features: [], document: Ref.make(held) }));
+    Obj.setParent(held, legacy);
+    await db.flush();
+    await db.runMigrations([makeSpecContent()]);
+    const [spec] = await db.query(Filter.type(Spec.Spec)).run();
+    expect([...spec.dialects]).toEqual([FeatureMap.SOFTWARE_DIALECT, 'org.dxos.spec.video']);
   });
 
   test('one pass takes a 0.6.0 project and its 0.1.0 spec to the current versions', async ({ expect }) => {
@@ -317,7 +395,7 @@ describe('feature migrations', () => {
     expect(Project.getOwner(spec)?.id).toBe(migrated.id);
     expect(migrated.specs.map((ref) => ref.peek()?.id)).toEqual([spec.id]);
     expect(await featureNames(spec)).toEqual(['Sync']);
-    expect(await SpecText.read(spec)).toContain('name: Inbox');
+    expect([spec.name, await SpecText.read(spec)]).toEqual(['Inbox', '']);
   });
 
   test('Demonstrates 0.1.0 edges become 0.2.0 with their endpoints, before the showcase itself migrates', async ({

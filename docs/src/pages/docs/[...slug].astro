@@ -1,0 +1,36 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+import { type SpecPage, type SpecTemplate, parsePages, parseTemplates, readSpec } from '../../echo/spec.ts';
+
+export const getStaticPaths = () => {
+  const source = readSpec();
+  const templates = parseTemplates(source);
+  return parsePages(source)
+    .filter((page) => page.status === 'planned')
+    .map((page) => ({
+      params: { slug: page.route.replace(/^\/docs\/|\/$/g, '') },
+      props: { page, template: templates.find((template) => template.id === page.template) },
+    }));
+};
+
+interface Props {
+  page: SpecPage;
+  template?: SpecTemplate;
+}
+
+const { page, template } = Astro.props;
+---
+<StarlightPage frontmatter={{ title: page.label, description: page.summary }}>
+  <p>{page.summary}</p>
+  <div class="label-mono">Planned · {page.template} template</div>
+  {page.covers.length > 0 && (
+    <>
+      <h2>What this page covers</h2>
+      <ul>{page.covers.map((point) => <li>{point}</li>)}</ul>
+    </>
+  )}
+  <h2>Parts</h2>
+  <p>{template?.purpose}</p>
+  <ol>{template?.parts.map((part) => <li>{part}</li>)}</ol>
+</StarlightPage>

@@ -11,6 +11,7 @@ import type { ReactNode } from 'react';
 
 import type * as Operation from '@dxos/compute/Operation';
 import type { Database, Obj } from '@dxos/echo';
+import type { Doc } from '@dxos/echo-doc';
 import type { ViewModeItem } from '@dxos/react-ui-editor';
 import type * as Theme from '@dxos/react-ui/Theme';
 import type { Text } from '@dxos/schema';
@@ -120,6 +121,11 @@ export type MarkdownExtensionProvider = (props: {
    * set — so a contribution that resolves against the object's project (a `#123` reference) can.
    */
   subject?: Obj.Unknown;
+  /**
+   * The string the editor is live-bound to when it is not a markdown document's content: a field of `subject` (a
+   * feature's name), or the text `subject` references (a spec's document). Anchors such as comments resolve against it.
+   */
+  binding?: { object: Obj.Unknown; path: Doc.KeyPath };
   viewMode?: EditorViewMode;
   /** The core branch the editor is currently showing (the branch under review); undefined = main. */
   reviewBranch?: string;

@@ -149,6 +149,41 @@ describe('type sources', () => {
       .resolveSchema(DXN.make(TYPENAME));
     expect(schema).toBeDefined();
   });
+
+  // A plugin bundle on EDGE loads an object another plugin published the type of, e.g. plugin-space updating a
+  // plugin-projects Project: the load has to resolve the type, or the object arrives with no schema to write through.
+  test('an object of an unregistered type loaded by reference has its schema', async ({ expect }) => {
+    const { db, peer } = await setup();
+    db.graph.registry.add([Remote]);
+    const written = db.add(Obj.make(Remote, { title: 'Published elsewhere' }));
+    await db.flush();
+
+    // A second client, as another bundle's isolate is: it never registered `Remote`, only the source knows it.
+    const reader = await peer.openDatabase(db.spaceKey, db.rootUrl, { client: await peer.createClient() });
+    const registry = makeMockRegistry();
+    reader.graph.registerTypeSource(registry.source);
+    expect(reader.graph.registry.getByURI(DXN.make(TYPENAME, VERSION))).toBeUndefined();
+
+    const loaded = await reader.makeRef(Obj.getURI(written)).load();
+    expect(Obj.getTypename(loaded)).toBe(TYPENAME);
+    Obj.update(loaded, (loaded) => {
+      Obj.setValue(loaded, ['title'], 'Updated by another plugin');
+    });
+    expect(Reflect.get(loaded, 'title')).toBe('Updated by another plugin');
+    expect(registry.requests).toHaveLength(1);
+  });
+
+  test('loading an object of a registered type does not ask the source', async ({ expect }) => {
+    const { db } = await setup();
+    db.graph.registry.add([Remote]);
+    const registry = makeMockRegistry();
+    db.graph.registerTypeSource(registry.source);
+    const written = db.add(Obj.make(Remote, { title: 'Registered' }));
+    await db.flush();
+
+    await db.makeRef(Obj.getURI(written)).load();
+    expect(registry.requests).toHaveLength(0);
+  });
 });
 
 /** A type another plugin publishes; this database never registers it and sees only its JSON Schema. */
@@ -180,7 +215,7 @@ const setup = async () => {
   await openAndClose(builder);
   const peer = await builder.createPeer();
   const db = await peer.createDatabase(PublicKey.random());
-  return { db };
+  return { db, peer };
 };
 
 /** The registrations of a typename; the registry asks the type sources for what it lacks. */

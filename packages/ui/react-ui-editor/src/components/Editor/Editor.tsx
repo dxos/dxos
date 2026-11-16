@@ -23,7 +23,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import type * as Util from '@dxos/react-ui/Util';
-import { handleBlockWidgetKey } from '@dxos/ui-editor';
+import { focusBlockField, handleBlockWidgetKey } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -286,8 +286,7 @@ const EditorBlockFrame = forwardRef<HTMLDivElement, EditorBlockFrameProps>(
           const target = ENTER_TARGETS.map((selector) => frame.querySelector<HTMLElement>(selector)).find(Boolean);
           if (target) {
             event.preventDefault();
-            target.focus();
-            target instanceof HTMLInputElement && target.select();
+            focusBlockField(target);
           }
         } else if (view && handleBlockWidgetKey(view, frame, event)) {
           event.preventDefault();

@@ -29,6 +29,7 @@ import {
   GeoPointField,
   HueField,
   InlineRefField,
+  LookupArrayField,
   MarkdownField,
   NumberField,
   PasswordField,
@@ -138,6 +139,13 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const fieldState = useFormFieldState(FormFieldDispatch.displayName, path);
   const jsonPath = SchemaEx.createJsonPath(path ?? []);
   const indeterminate = fieldState.getStatus().indeterminate;
+  // A field with no value shows the default its schema declares (`default`), which is what a reader of the value
+  // uses in its place; the form holds none until the field is edited. A value the selection disagrees on is not unset.
+  const fallback = SchemaEx.getAnnotation<unknown>(SchemaAST.DefaultAnnotationId)(type);
+  const getValue = useMemo(
+    () => (fallback === undefined || indeterminate ? fieldState.getValue : () => fieldState.getValue() ?? fallback),
+    [fieldState, fallback, indeterminate],
+  );
   const fieldProps: FormFieldRendererProps = {
     type,
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
@@ -145,6 +153,8 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     label,
     description,
     jsonPath,
+    path,
+    collaborative: override?.collaborative ?? false,
     // An indeterminate value reads as none, so its placeholder says why rather than naming the field.
     placeholder: indeterminate
       ? (override?.placeholder ?? t('indeterminate.placeholder'))
@@ -159,6 +169,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     step: override?.step,
     db,
     ...fieldState,
+    getValue,
   };
 
   if (override?.hidden || ((readonly || presentation === 'static') && hideEmpty && fieldState.getValue() == null)) {
@@ -202,6 +213,10 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         label={accessibleLabel}
         hideLabel={override?.hideLabel}
         section={presentation === 'section'}
+        placeholder={override?.placeholder}
+        newItem={override?.newItem}
+        rowAlign={override?.rowAlign}
+        keepColumns={override?.keepColumns}
         {...props}
         readonly={readonly || presentation === 'static'}
       />
@@ -282,6 +297,8 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       binding={binding}
       standalone={refArray ? true : scalar?.standalone}
       labelPlacement={scalar?.labelPlacement}
+      inlineLabel={override?.inlineLabel}
+      tone={override?.tone}
       renderStatic={
         resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name, type) : undefined
       }
@@ -311,6 +328,8 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         ) : (
           <AsyncSelectField {...fieldProps} lookup={resolution.lookup} />
         );
+      case 'lookupArray':
+        return <LookupArrayField {...fieldProps} lookup={resolution.lookup} ordered={resolution.ordered} />;
       case 'autofill':
         return <AutofillField {...fieldProps} autofill={resolution.autofill} />;
       case 'hue':

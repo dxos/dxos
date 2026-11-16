@@ -52,8 +52,16 @@ export type Entry = {
  * The lookup key for a surface predicate: pipeline-rdf's relation key (case, auxiliaries and head-verb
  * inflection collapse) with words joined by `_`, so `Will-Work-On`, `working on` and `works_on` compare equal.
  */
-export const key = (surface: string): string =>
-  Predicate.normalize(surface.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ')).replace(/\s+/g, '_');
+export const key = (surface: string): string => Predicate.normalize(words(surface)).replace(/\s+/g, '_');
+
+/**
+ * The shorthand a surface predicate is minted under: {@link key} without stemming, since the stem is a matching key
+ * nobody reads (`changed` keys to `chang`) while the shorthand names the predicate in its IRI and in rules.
+ */
+export const nameFor = (surface: string): string =>
+  Predicate.normalize(words(surface), { stem: false }).replace(/\s+/g, '_');
+
+const words = (surface: string): string => surface.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
 
 const camel = (name: string): string => name.replace(/_([a-z0-9])/g, (_, char: string) => char.toUpperCase());
 
@@ -166,7 +174,7 @@ export class Ontology {
     if (known) {
       return known;
     }
-    const name = key(surface);
+    const name = nameFor(surface);
     return { iri: iriFor(name, this.namespace), name, label: surface.trim(), definedBy: this.namespace };
   }
 
@@ -332,7 +340,7 @@ export const fromQuads = (quads: readonly Quad[]): Entry[] => {
     return [
       {
         iri,
-        name: one(Vocab.SX_SHORTHAND) ?? key(label),
+        name: one(Vocab.SX_SHORTHAND) ?? nameFor(label),
         label,
         ...Object.fromEntries(
           Object.entries(optional).filter(([, value]) =>
@@ -476,6 +484,13 @@ export const DEFAULT_ENTRIES: ReadonlyArray<Entry> = [
     description: 'An entity a document or message mentions without being about it.',
     definedBy: Vocab.SCHEMA,
   }),
+  entry('text', {
+    iri: schema('text'),
+    label: 'has text',
+    synonyms: ['wording'],
+    description: 'The wording of a message, question or document.',
+    definedBy: Vocab.SCHEMA,
+  }),
 
   // FOAF: social relations and accounts.
   entry('knows', {
@@ -533,6 +548,10 @@ export const DEFAULT_ENTRIES: ReadonlyArray<Entry> = [
   entry('completed', { synonyms: ['finished', 'done'], description: 'A task the subject finished.' }),
   entry('shipped', { synonyms: ['ships', 'released'], description: 'Something the subject released.' }),
   entry('proposes', { synonyms: ['suggests'], description: 'An idea or change the subject put forward.' }),
+  entry('asked', {
+    synonyms: ['asks', 'asked question'],
+    description: 'A question the subject asked: a node typed schema:Question whose `has text` is its wording.',
+  }),
   entry('received', { description: 'Something the subject was sent.' }),
   entry('archived', { description: 'Something the subject archived.' }),
   entry('deleted', { description: 'Something the subject deleted.' }),

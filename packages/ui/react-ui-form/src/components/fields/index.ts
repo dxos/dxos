@@ -13,6 +13,8 @@ export * from './DateField.tsx';
 export * from './GeoPointField.tsx';
 export * from './HueField.tsx';
 export * from './InlineRefField.tsx';
+export * from './InputEditor.tsx';
+export * from './LookupArrayField.tsx';
 export * from './MarkdownField.tsx';
 export * from './NumberField.tsx';
 export * from './PasswordField.tsx';

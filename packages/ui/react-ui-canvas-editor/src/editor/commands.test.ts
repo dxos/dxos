@@ -16,6 +16,7 @@ const state: SceneMenuState = {
   canPaste: true,
   canCreate: true,
   canDelete: true,
+  canOrder: true,
   canGroup: true,
   canUngroup: false,
   canMakeObject: true,
@@ -32,6 +33,8 @@ describe('sceneMenuItems', () => {
       'paste',
       'duplicate',
       'delete',
+      'bring-to-front',
+      'send-to-back',
       'group',
       'ungroup',
       'make-object',
@@ -50,6 +53,13 @@ describe('sceneMenuItems', () => {
     expect(ids).toEqual(['undo', 'redo', 'paste']);
   });
 
+  test('restacking is offered on an element, with nothing selected it is not', ({ expect }) => {
+    const items = sceneMenuItems({ ...state, canOrder: false });
+    expect(items.find((item) => item.id === 'bring-to-front')?.disabled).toBe(true);
+    expect(sceneMenuItems(state).find((item) => item.id === 'send-to-back')?.disabled).toBe(false);
+    expect(sceneMenuItems({ ...state, kind: 'canvas' }).some((item) => item.id === 'bring-to-front')).toBe(false);
+  });
+
   test('a command table gives the menu its states, so the bar, shortcuts and menu share one source', ({ expect }) => {
     const table = buildCommands({ state: { ...STATE, canRedo: false }, run: RUN });
     const items = table.menuItems('element');
@@ -66,6 +76,7 @@ const STATE: CommandState = {
   canRedo: true,
   canUngroup: false,
   canMakeObject: true,
+  canOrder: true,
 };
 
 const handlers = (onRun: (id: SceneMenuCommand) => void): Record<SceneMenuCommand, () => void> => ({
@@ -76,6 +87,8 @@ const handlers = (onRun: (id: SceneMenuCommand) => void): Record<SceneMenuComman
   'paste': () => onRun('paste'),
   'duplicate': () => onRun('duplicate'),
   'delete': () => onRun('delete'),
+  'bring-to-front': () => onRun('bring-to-front'),
+  'send-to-back': () => onRun('send-to-back'),
   'group': () => onRun('group'),
   'ungroup': () => onRun('ungroup'),
   'make-object': () => onRun('make-object'),
@@ -84,6 +97,14 @@ const handlers = (onRun: (id: SceneMenuCommand) => void): Record<SceneMenuComman
 const RUN = handlers(() => {});
 
 describe('buildCommands', () => {
+  test('a scene that draws by depth rather than in a stored order offers no restack', ({ expect }) => {
+    const table = buildCommands({ state: { ...STATE, canOrder: false }, run: RUN });
+    for (const id of ['bring-to-front', 'send-to-back']) {
+      expect(table.get(id)?.enabled, id).toBe(false);
+    }
+    expect(table.get('delete')?.enabled).toBe(true);
+  });
+
   test('2D and 3D configs yield the same shared commands for the same state', ({ expect }) => {
     const join: ExtraCommand = {
       id: 'join',

@@ -71,6 +71,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@effect/atom-react": "catalog:",
     "d3": "catalog:",
+    "js-clipper": "catalog:",
     "manifold-3d": "catalog:"
   },
   "devDependencies": {

@@ -2,22 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ViewPlugin } from '@codemirror/view';
 import { useAtomSet, useAtomValue } from '@effect/atom-react';
-import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import type * as Spec from '@dxos/compute/Spec';
-import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { dialectBlockTypes, resolveDialects } from '@dxos/deus/dialect';
+import { mdl, mdlBlockDescription, mdlSpec } from '@dxos/deus/extension';
 import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
+import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';
 import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
+import * as SpecSession from '@dxos/plugin-projects/SpecSession';
 import { getSpace } from '@dxos/react-client/echo';
-import { Attention } from '@dxos/react-ui-attention';
 import { Editor } from '@dxos/react-ui-editor';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -34,14 +36,14 @@ import {
   editorClassNames,
   widgetHost,
 } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { isTruthy } from '@dxos/util';
 
 import { SPEC_INDEX, decisionGutter, pendingReveal, reviewGutter, sourceLinks } from '#components';
+import { FrontMatter } from '#sync';
 
-import { SPEC_COMPANION } from '../../constants.ts';
 import { CodeNamespace } from '../../namespace.ts';
-import { type SpecSessionState, registerEditor, reveal } from './spec-session.ts';
-import { SpecPanel, useOpenSource } from './SpecPanel.tsx';
+import { SpecPanel, useNamedDialects, useOpenSource, useShowView } from './SpecPanel.tsx';
 import { useSpecModel } from './useSpecModel.ts';
 import { type DiffAgainst } from './useSpecSources.ts';
 
@@ -99,16 +101,28 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const themeMode = Hooks.useThemeMode();
     const identity = useIdentity();
     const space = spec ? getSpace(spec) : undefined;
-    const { invokePromise } = AppHooks.useOperationInvoker();
-    // Objects the text embeds render as their own plugin's widgets, through the editor's widget host.
-    const contributed = ProjectHooks.useSpecExtensions(spec, { attendableId, t });
     const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
     const source = { spec, content, sourceKey, base, review: staticReview };
     const { id, session, setSession, target, key, text, review, readLatest, decisions, baseText } =
       useSpecModel(source);
     const { fold } = session;
-    const open = useOpenSource({ ...source, id, key, setSession });
+    // A margin click or a code key shows its item in a view, opening the view's companion tab when the panel is not on
+    // the page.
+    const show = useShowView({ setSession, attendableId, panel });
+    const open = useOpenSource({ ...source, id, key, show });
+    // Objects the text embeds render as their own plugin's widgets, through the editor's widget host; comments on the
+    // spec anchor into the text the editor is bound to.
+    const binding = useMemo(() => (target ? { object: target, path: ['content'] } : undefined), [target]);
+    const contributed = ProjectHooks.useSpecExtensions(spec, { attendableId, t, binding });
+    const fieldExtensions = ProjectHooks.useSpecFieldExtensions(spec, binding);
+    const defaultView = ProjectHooks.useDefaultSpecView();
+    const [viewMode, setViewMode] = useState<EditorViewMode>(defaultView);
+    // Diff mode compares the text, so it keeps the blocks as text.
+    const forms = ProjectHooks.useSpecBlockForms(spec, {
+      viewMode: baseText === undefined ? viewMode : 'source',
+      fieldExtensions,
+    });
 
     useEffect(() => {
       if (defaultDiff) {
@@ -128,28 +142,29 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       }
     }, []);
 
-    // A margin click shows its item in the panel, opening the plank's companion when the panel is there.
-    const show = useCallback(
-      (patch: Partial<SpecSessionState>) => {
-        setSession((current) => ({ ...current, ...patch }));
-        if (!panel && attendableId) {
-          void invokePromise(LayoutOperation.UpdateCompanion, {
-            subject: Attention.linkedSegment(SPEC_COMPANION),
-            anchor: attendableId,
-          });
-        }
-      },
-      [setSession, panel, attendableId, invokePromise],
-    );
-
     // Another article that opened this spec at an item left it pending; the text may arrive after mount.
     const pending = useAtomValue(pendingReveal);
     const setPendingReveal = useAtomSet(pendingReveal);
+    const setCursor = useAtomSet(SpecSession.cursor(id));
+    const owner = useId();
     useEffect(() => {
-      if (pending && key && pending.path === key.path && reveal(id, pending.item)) {
+      if (pending && key && pending.path === key.path && SpecSession.reveal(id, pending.item)) {
         setPendingReveal(undefined);
       }
     }, [pending, id, key, text, setPendingReveal]);
+
+    // The file is compared in the form the text shows it: after its front matter (a spec's fields), or whole.
+    const original = useMemo(
+      () => (baseText === undefined || FrontMatter.body(text) !== text ? baseText : FrontMatter.body(baseText)),
+      [baseText, text],
+    );
+
+    // A bundled spec's dialects are its file's; a spec's come with its extensions.
+    const bundledDialects = useNamedDialects(spec, text);
+    const bundledFacts = useMemo(
+      () => (spec ? [] : [mdlSpec.of({ types: dialectBlockTypes(resolveDialects(bundledDialects)) })]),
+      [spec, bundledDialects],
+    );
 
     // A review keeps its `github:` evidence keys, which the index would report as errors.
     const isReviewFile = key?.path.endsWith('.review.mdl') ?? false;
@@ -161,28 +176,25 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
           mdl(isReviewFile ? {} : { index: SPEC_INDEX }),
+          ...bundledFacts,
           sourceLinks((target) => void open(target), SPEC_INDEX),
-          ViewPlugin.define((editor) => ({ destroy: registerEditor(id, editor) })),
+          SpecSession.editor(id, owner, setCursor),
           decisions.length > 0 &&
-            decisionGutter(decisions, (item) =>
-              // A question is answered in the log, which lists it; a decision shows in the graph.
-              show({
-                selectedDecision: item,
-                view: decisions.some(({ id, kind }) => id === item && kind === 'question') ? 'log' : 'decisions',
-              }),
-            ),
+            // The ledger opens a decision's thread, or lists a question among the questions.
+            decisionGutter(decisions, (item) => show('decisions', 'ledger', { selectedDecision: item })),
           review &&
             reviewGutter(review, {
-              onSelect: (verdict) => show({ selectedVerdict: verdict, view: 'review' }),
+              onSelect: (verdict) => show('review', 'review', { selectedVerdict: verdict, selectedReview: undefined }),
               onOpen: (target) => void open(target),
               read: readLatest,
             }),
           diagramPreview(),
+          forms.extension,
           widgetHost({ setWidgets }),
           ...contributed,
-          baseText !== undefined &&
+          original !== undefined &&
             diffView({
-              original: baseText,
+              original,
               orientation: 'changes',
               collapseUnchanged: fold ? FOLD_CONTEXT : undefined,
             }),
@@ -190,15 +202,19 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           spec &&
             target &&
             createDataExtensions({
-              id: spec.id,
+              // The awareness channel the project's spec editor uses too, so peers in either view see each other.
+              id: Obj.getURI(spec),
               text: Doc.createAccessor(target, ['content']),
               messenger: space,
               identity,
+              wrapAwareness: forms.wrapAwareness,
             }),
         ].filter(isTruthy),
       [
         id,
         identity,
+        owner,
+        setCursor,
         space,
         spec?.id,
         target,
@@ -210,9 +226,11 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         open,
         show,
         readLatest,
-        baseText,
+        original,
         fold,
         contributed,
+        bundledFacts,
+        forms,
       ],
     );
 
@@ -224,9 +242,11 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     );
 
     return (
-      <Editor.Root extensions={extensions} widgets={widgets}>
+      <Editor.Root extensions={extensions} widgets={widgets} viewMode={viewMode}>
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Header>{!readOnly && <Editor.Toolbar role={role} attendableId={attendableId} />}</Panel.Header>
+          {!readOnly && (
+            <SpecToolbar role={role} attendableId={attendableId} onViewModeChange={spec ? setViewMode : undefined} />
+          )}
           <Panel.Body>
             {/* Inside the body: a portal anchor beside the panel would be a row of the host's grid. */}
             <Editor.Blocks />
@@ -272,3 +292,35 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 );
 
 SpecArticle.displayName = 'SpecArticle';
+
+/**
+ * The editor's toolbar, with the toolbar actions other plugins give the spec's node, such as commenting, and the choice
+ * of text or a form per block. A host with a toolbar of its own (a project's Specs tab) takes them instead, and the
+ * article has no header.
+ */
+const SpecToolbar = ({
+  role,
+  attendableId,
+  onViewModeChange,
+}: Pick<SpecArticleProps, 'role' | 'attendableId'> & { onViewModeChange?: (mode: EditorViewMode) => void }) => {
+  const hosted = ProjectHooks.useSpecToolbar({ attendableId, onViewModeChange });
+  const { graph } = ToolkitHooks.useAppGraph();
+  const customActions = useMemo(
+    () =>
+      attendableId
+        ? Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }))
+        : undefined,
+    [graph, attendableId],
+  );
+
+  return hosted ? null : (
+    <Panel.Header>
+      <Editor.Toolbar
+        role={role}
+        attendableId={attendableId}
+        customActions={customActions}
+        onViewModeChange={onViewModeChange}
+      />
+    </Panel.Header>
+  );
+};

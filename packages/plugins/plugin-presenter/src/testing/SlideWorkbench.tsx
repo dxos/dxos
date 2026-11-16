@@ -1,0 +1,154 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { EditorView as NaturalEditorView } from '@codemirror/view';
+import React, { type KeyboardEvent, useCallback, useLayoutEffect, useMemo, useState } from 'react';
+
+import { Editor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import type * as Util from '@dxos/react-ui/Util';
+import {
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+  documentSlots,
+  editorClassNames,
+  scrollbarAutohide,
+} from '@dxos/ui-editor';
+
+import { parseSlide } from '#markdown';
+
+import { MarkdownSlide, type MarkdownSlideProps } from '../components/MarkdownSlide/index.ts';
+import { Slide } from '../components/Slide/index.ts';
+import { slideCompletion } from '../containers/SlideEditorArticle/slide-completion.ts';
+import { slideHighlight } from '../containers/SlideEditorArticle/slide-highlight.ts';
+
+export type SlideWorkbenchProps = Util.ThemedClassName<
+  Omit<MarkdownSlideProps, 'content'> & {
+    /** The slide's markdown; the editor starts from it and the slide follows every edit. */
+    content: string;
+    onContentChange?: (content: string) => void;
+    /** The click step to start on; the slide advances from there as it is clicked. */
+    step?: number;
+  }
+>;
+
+/**
+ * A slide over the markdown that renders it, in a live editor: typing in the lower pane re-renders the slide above
+ * it. Shared by the stories, where it is both the illustration of a feature and the way to try it.
+ */
+export const SlideWorkbench = ({
+  classNames,
+  content,
+  onContentChange,
+  step: initial,
+  ...props
+}: SlideWorkbenchProps) => {
+  const split = useSplit();
+  const [value, setValue] = useState(content);
+  const clicks = useMemo(() => parseSlide(value).clicks, [value]);
+  const [step, setStep] = useState(initial ?? 0);
+  // An edit that removes a click leaves the step past the end, which would hide nothing and reveal nothing.
+  useLayoutEffect(() => setStep((step) => Math.min(step, clicks)), [clicks]);
+  // Clicking the slide runs the build, wrapping at the end so a story can be stepped through again.
+  const advance = useCallback(
+    (delta: number) => setStep((step) => (step + delta + clicks + 1) % (clicks + 1)),
+    [clicks],
+  );
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'ArrowRight' || event.key === ' ') {
+        advance(1);
+      } else if (event.key === 'ArrowLeft') {
+        advance(-1);
+      }
+    },
+    [advance],
+  );
+  // A story that changes its `content` arg (the Storybook control) restarts the editor from it.
+  useLayoutEffect(() => setValue(content), [content]);
+  const handleChange = useCallback(
+    (value: string) => {
+      setValue(value);
+      onContentChange?.(value);
+    },
+    [onContentChange],
+  );
+
+  return (
+    <Splitter.Root {...split} orientation='horizontal' resizable classNames={classNames ?? 'size-full'}>
+      {/* `asChild`, so the pane itself takes the click and the keys rather than a box inside it. */}
+      <Splitter.Panel position='start' asChild>
+        <div tabIndex={0} onClick={() => clicks > 0 && advance(1)} onKeyDown={handleKeyDown}>
+          <Slide.Frame inset classNames='min-w-0 min-h-0'>
+            {/* A slide with no clicks of its own renders whole, as it does outside a build. */}
+            <MarkdownSlide content={value} step={clicks > 0 ? step : undefined} {...props} />
+          </Slide.Frame>
+        </div>
+      </Splitter.Panel>
+      <Splitter.ResizeTrigger aria-label='Resize' />
+      <Splitter.Panel position='end'>
+        <SlideSourceEditor value={value} onChange={handleChange} />
+      </Splitter.Panel>
+    </Splitter.Root>
+  );
+};
+
+type SlideSourceEditorProps = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+/** The slide's markdown in the same editor the plugin uses, minus the parts that need an ECHO document. */
+const SlideSourceEditor = ({ value, onChange }: SlideSourceEditorProps) => {
+  const themeMode = Hooks.useThemeMode();
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions({ lineWrapping: true }),
+      createThemeExtensions({ themeMode, slots: documentSlots }),
+      createMarkdownExtensions(),
+      // As in the slide editor: fenced code is drawn, the rest stays source so `---` frontmatter is not a rule.
+      decorateMarkdown({ nodes: ['FencedCode'] }),
+      slideHighlight(),
+      // Layout names only; a story has no translations to describe them with.
+      slideCompletion({ describeLayout: (layout) => layout }),
+      NaturalEditorView.theme({ '.cm-content': { paddingInlineStart: '32px' } }),
+      scrollbarAutohide(),
+    ],
+    [themeMode],
+  );
+
+  return (
+    <Editor.Root>
+      <Editor.View classNames={editorClassNames()} extensions={extensions} value={value} onChange={onChange} />
+    </Editor.Root>
+  );
+};
+
+/** The slide's share of the width; the editor takes the rest. */
+const SLIDE_SHARE = 0.7;
+
+/**
+ * Starts the seam at the slide's share of the container's width. The splitter sizes its panes in rem, so the share
+ * has to be measured; a container that is not laid out yet measures zero, so the observer waits for the first real
+ * width. After that the size is the user's, and the observer stops.
+ */
+const useSplit = () => {
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
+  const [size, setSize] = useState<number>();
+  useLayoutEffect(() => {
+    if (!root || size !== undefined) {
+      return;
+    }
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const apply = (width: number) => width > 0 && setSize((width * SLIDE_SHARE) / rem);
+    apply(root.getBoundingClientRect().width);
+    const observer = new ResizeObserver(([entry]) => apply(entry.contentRect.width));
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [root, size]);
+  return { ref: setRoot, size, onSizeChange: setSize };
+};

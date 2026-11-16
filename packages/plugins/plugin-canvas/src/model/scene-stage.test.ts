@@ -48,7 +48,7 @@ describe('scene stage', () => {
 
   test("a target's resting size is its object's when the element sets none", () => {
     const target = sceneTargets(read('links')).find((candidate) => candidate.id === 'b');
-    expect(target?.values.size).toEqual({ width: 128, height: 128 });
+    expect(target?.values.size).toEqual({ width: 96, height: 96 });
   });
 
   test('applySample patches a nested path in a copy and leaves the rest of the style', () => {

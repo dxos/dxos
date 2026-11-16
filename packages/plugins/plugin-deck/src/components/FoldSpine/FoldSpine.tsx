@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
@@ -32,16 +31,13 @@ export type FoldSpineProps = Util.ThemedClassName<{
  * (see `Deck.stories.tsx`); keep it on the root.
  */
 export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) => (
-  <Button.Root
-    variant='ghost'
+  <button
+    type='button'
     onClick={onClick}
     aria-label={label}
-    // `.dx-button` supplies `justify-center`, which in this column would centre the sigil vertically
-    // instead of aligning it with the plank heading, and `px-3`/`rounded-xs`/`font-medium`, which the
-    // utilities layer overrides here to keep the spine's own geometry and label weight.
-    classNames={mx(
-      'dx-fold-spine absolute inset-y-0 left-0 z-[1] flex w-11 flex-col items-center justify-start gap-0 rounded-none p-0',
-      'border-e border-separator bg-base-surface',
+    className={mx(
+      'dx-fold-spine dx-focus-ring absolute inset-y-0 left-0 z-[1] flex w-11 cursor-pointer flex-col items-center',
+      'border-e border-separator bg-base-surface hover:bg-hover-surface',
       'opacity-0 pointer-events-none transition-opacity duration-200 ease-out',
       'group-data-[folded]/tile:pointer-events-auto group-data-[folded]/tile:opacity-100',
       // Crossing into or out of the exposé refolds the whole deck at once; crossfading that would paint
@@ -56,7 +52,7 @@ export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) 
     </Layout.Flex>
     {/* TODO(wittjosiah): Plain span — no react-ui primitive renders a vertical (writing-mode) label. */}
     <span className='truncate text-sm font-normal text-fg-muted [writing-mode:vertical-rl] rotate-180'>{label}</span>
-  </Button.Root>
+  </button>
 );
 
 FoldSpine.displayName = 'FoldSpine';

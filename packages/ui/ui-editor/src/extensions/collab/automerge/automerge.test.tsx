@@ -15,7 +15,7 @@ import { Doc } from '@dxos/echo-doc';
 
 import { automerge } from './automerge.ts';
 
-const TestType = Schema.Struct({ text: Schema.String }).pipe(
+const TestType = Schema.Struct({ text: Schema.String, note: Schema.optional(Schema.String) }).pipe(
   Type.makeObject(DXN.make('com.example.test.editor', '0.1.0')),
 );
 type TestType = Type.InstanceType<typeof TestType>;
@@ -70,6 +70,19 @@ describe('Automerge', () => {
 
     generator.update('hello!');
     expect(editor.textContent).toBe('hello world!');
+  });
+
+  test('an unset string is created by the first local edit, not by attaching', async ({ expect }) => {
+    const obj = Obj.make(TestType, { text: '' });
+    const view = new EditorView({
+      state: EditorState.create({ doc: '', extensions: [automerge(Doc.createAccessor(obj, ['note']))] }),
+    });
+    await Promise.resolve();
+    expect(view.state.doc.toString()).toBe('');
+    expect(obj.note).toBeUndefined();
+    view.dispatch({ changes: { from: 0, insert: 'hi' } });
+    expect(obj.note).toBe('hi');
+    view.destroy();
   });
 
   test('edits from the document are marked remote', ({ expect }) => {

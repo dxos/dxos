@@ -41,6 +41,10 @@ export type FormFieldOverride = {
   /** Overrides the form's `layout` for this field alone. */
   presentation?: FormPresentation;
   description?: string;
+  /**
+   * An input's or a reference picker's placeholder; for an array of values or owned objects, the text shown in place
+   * of its rows while it has none.
+   */
   placeholder?: string;
   /** The field's glyph, shown where its value has none of its own (an unset tag, an option without an icon). */
   icon?: string;
@@ -60,6 +64,25 @@ export type FormFieldOverride = {
   onOpenChange?: (open: boolean) => void;
   /** A button at the end of a text control that sets its value. */
   action?: FormFieldAction;
+  /**
+   * An array's value for the row its add button creates, from the rows it has. A host that stores a new row differently
+   * from the schema's empty value (a minted key, default text) gives the stored value here, so the form holds no edit
+   * the source never matches.
+   */
+  newItem?: (values: readonly unknown[]) => unknown;
+  /** An array's rows top their handle, cells and remove button on the row's first line, for cells that wrap. */
+  rowAlign?: 'start';
+  /** An array keeps its handle and remove columns while read-only, so a form that toggles read-only moves nothing. */
+  keepColumns?: boolean;
+  /** The label sits beside the control, in the shared label column, rather than above it. */
+  inlineLabel?: boolean;
+  /** The value's text colour: `muted` for text that annotates the row rather than states it. */
+  tone?: 'muted';
+  /**
+   * Edits the string through the binding the form's `extensions` give the field's editor (`createDataExtensions`), so
+   * its edits reach the object directly rather than `onValuesChanged`.
+   */
+  collaborative?: boolean;
 };
 
 export type FormFieldAction = {
@@ -118,6 +141,10 @@ export type FormFieldRendererProps<T = any> = {
    * Dotted JSON path of this field within the form values (e.g. `runtime.client.storage.persistent`).
    */
   jsonPath?: string;
+  /** Key path of this field within the form values. */
+  path?: readonly (string | number)[];
+  /** Edited through the binding in the form's extensions rather than handing back values (see `FormFieldOverride`). */
+  collaborative?: boolean;
   placeholder?: string;
   /** The field's glyph (see `FormFieldOverride.icon`). */
   icon?: string;
@@ -195,6 +222,8 @@ export type RefOption = {
   label: string;
   /** Optional secondary line shown beneath the label in the picker list. */
   description?: string;
+  /** Muted text after the label on its line in the picker list, such as a title beside an id. */
+  detail?: string;
   /** Optional leading icon in the picker list (e.g. the object's type icon). */
   icon?: string;
   /** The icon's hue name (e.g. a type's `IconAnnotation` hue); a name that is no hue is ignored. */

@@ -12,6 +12,9 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/display-name"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -55,6 +58,9 @@
     },
     {
       "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../core/mesh/edge-client"

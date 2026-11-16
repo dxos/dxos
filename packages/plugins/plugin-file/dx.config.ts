@@ -58,13 +58,15 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'node', 'tauri', 'workerd'],
       },
     ),
+    // Not workerd: it requires the Client capability, which a standalone plugin bundle has no provider for, so
+    // activating it there fails the plugin and with it every file backend. `InlineBackend` below serves EDGE.
     Capability.lazyModule(
       'EdgeBackend',
       {
         requires: [ClientCapabilities.Client],
         provides: [FileCapabilities.Backend],
         activatesOn: FileEvents.Start,
-        environments: ['browser', 'node', 'tauri', 'workerd'],
+        environments: ['browser', 'node', 'tauri'],
       },
       () => import('./src/capabilities/edge-backend.ts', { with: { type: 'module-url' } }),
     ),

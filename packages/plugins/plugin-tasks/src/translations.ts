@@ -97,6 +97,7 @@ export const translations = [
         'task-deleted.label': 'Task deleted',
         'tasks-deleted.label': 'Tasks deleted',
         'create-outline.label': 'Create outline',
+        'outline.placeholder': 'Write notes, plans and next steps',
         'text.placeholder': 'Enter text...',
         'menu.label': 'Menu',
 

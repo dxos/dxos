@@ -5,4 +5,11 @@
 // @import-as-namespace
 
 export { DiscordEndpoint as Endpoint, type Endpoint as EndpointConfig } from './services/discord.ts';
+export {
+  DiscordHttp as Http,
+  type HttpRequest,
+  HttpResponse,
+  type DiscordHttpService as HttpService,
+} from './services/discord.ts';
+export { makeDiscordLayerFromToken as restLayerFromToken } from './services/discord.ts';
 export { type SourceOptions, discordSourceLayer as layer } from './services/discord-source.ts';

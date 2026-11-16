@@ -131,6 +131,41 @@ describe('ECHO flush on exit', () => {
     return { error, notes: await reopened.query(Filter.id(id)).run() };
   };
 
+  // Declares no services: an operation that only edits the object its input names needs none, and the context still
+  // gives it the database the ref is resolved from.
+  const RenamesNote = Operation.make({
+    meta: { key: DXN.make('com.example.operation.renamesNote'), name: 'Renames Note' },
+    input: Schema.Struct({ note: Ref.Ref(Note) }),
+    output: Schema.Void,
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ note }) {
+        const target = yield* Effect.promise(() => note.load());
+        Obj.update(target, (target) => {
+          target.title = 'renamed';
+        });
+      }),
+    ),
+  );
+
+  test('persists edits made by an operation that declares no Database.Service', async ({ expect }) => {
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    db.graph.registry.add([Note]);
+    const note = db.add(Obj.make(Note, { title: 'draft' }));
+    await db.flush();
+
+    await wrapFunctionHandler(RenamesNote, { types: [Note] }).handler({
+      data: { note: { '/': `echo:///${note.id}` } },
+      context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+    });
+
+    const reopened = await peer.openDatabase(db.spaceKey, db.rootUrl, { client: await peer.createClient() });
+    reopened.graph.registry.add([Note]);
+    const [renamed] = await reopened.query(Filter.id(note.id)).run();
+    expect((renamed as { title?: string } | undefined)?.title).toBe('renamed');
+  });
+
   test('persists writes made before Operation.runAgain', async ({ expect }) => {
     const { error, notes } = await runAndReopen(false);
 

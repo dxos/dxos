@@ -15,13 +15,15 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { random } from '@dxos/random';
 import { DEFAULT_CELL, fromRenderLists2D } from '@dxos/react-ui-canvas';
+import { linkKey, nodeKey } from '@dxos/react-ui-canvas/headless';
 import { createNestedDeepTree } from '@dxos/react-ui-canvas/testing';
 import { type Scene, toEcho } from '@dxos/scene';
-import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
 import * as CanvasPlugin from '#meta';
-import { linkKey, nodeKey } from '#model';
 import { translations } from '#translations';
 import { Canvas } from '#types';
 
@@ -39,7 +41,7 @@ const withDrawing = (
   seed: Seed = () => {},
   role: typeof AppSurface.Article | typeof AppSurface.Slide = AppSurface.Article,
 ) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
     onInit: async ({ space }) => {
@@ -73,7 +75,7 @@ const addDocumentDrawing = (db: Database.Database, document: Scene.SceneDocument
 
 /** A canvas over a scene document, opened through the illustrator's article as the app opens it. */
 const withDocument = (document: Scene.SceneDocument) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
@@ -86,9 +88,9 @@ const withDocument = (document: Scene.SceneDocument) =>
 /** A canvas over scenes written in `.dx`. */
 const withScenes = (text: string) => withDocument(Dsl.readScenes(text).document);
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'plugins/plugin-canvas/containers/CanvasArticle',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -125,9 +127,10 @@ const seedBasic: Seed = (_db, content, scene) => {
       ends: { end: 'arrow' },
     },
   });
-  content[nodeKey('a')] = box('a', -384, 'a1');
+  // Six cells apart, so the gap between two boxes is half a box: close enough to read as a chain.
+  content[nodeKey('a')] = box('a', -6 * DEFAULT_CELL, 'a1');
   content[nodeKey('b')] = box('b', 0, 'a2');
-  content[nodeKey('c')] = box('c', 384, 'a3');
+  content[nodeKey('c')] = box('c', 6 * DEFAULT_CELL, 'a3');
   content[linkKey('a-b')] = link('a', 'b', 'a4');
   content[linkKey('b-c')] = link('b', 'c', 'a5');
 };
@@ -339,7 +342,7 @@ export const Image: Story = {
 let describeEmbedTarget: (() => Promise<string>) | undefined;
 
 export const MarkdownEmbed: Story = {
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
     onInit: async ({ space }) => {

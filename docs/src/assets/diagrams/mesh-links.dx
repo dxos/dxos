@@ -1,0 +1,7 @@
+diagram flow=down
+node A "Device A" ref="packages/core/mesh/network-manager/src/network-manager.ts"
+node B "Device B" right-of A ref="packages/core/mesh/network-manager/src/network-manager.ts"
+node Edge "EDGE" ref="packages/core/mesh/edge-client/src/edge-client.ts"
+edge A -> B "WebRTC (Teleport)"
+edge A:bottom -> Edge:left "WebSocket"
+edge B:bottom -> Edge:right "WebSocket"

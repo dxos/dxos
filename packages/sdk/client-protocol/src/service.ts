@@ -129,6 +129,7 @@ export interface IdentityServicePromise {
     options?: RequestOptions,
   ) => Promise<Presentation>;
   createAuthCredential: (request: void, options?: RequestOptions) => Promise<Credential>;
+  migrateHaloRoot: (request: void, options?: RequestOptions) => Promise<RpcIdentityService.MigrateHaloRootResponse>;
 }
 
 export interface InvitationsServicePromise {

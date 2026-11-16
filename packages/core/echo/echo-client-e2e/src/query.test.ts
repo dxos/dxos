@@ -950,23 +950,15 @@ describe('Query', () => {
     });
 
     describe('reactivity', () => {
-      // Aggregate queries are index-backed (like order/limit queries), so `.runSync()`/`.results`
-      // only reflect real data after the first reactive round-trip completes; wait for it before
-      // asserting, following the pattern used for other index-only reactive queries in this file.
-      const subscribeAndWaitForFirstResult = async <T>(query: QueryResult.QueryResult<T>): Promise<T[]> => {
-        let lastResult: T[] = [];
-        const initial = new Trigger();
-        let fired = false;
-        const unsubscribe = query.subscribe(() => {
-          lastResult = query.results;
-          if (!fired) {
-            fired = true;
-            initial.wake();
-          }
-        });
-        await initial.wait();
-        onTestFinished(unsubscribe);
-        return lastResult;
+      // Aggregate queries are index-backed, so the first notification can carry the pending empty
+      // result; subscribe and wait for the expected initial results.
+      const subscribeAndWaitFor = async <T>(
+        query: QueryResult.QueryResult<T>,
+        condition: (results: T[]) => boolean,
+      ): Promise<T[]> => {
+        onTestFinished(query.subscribe(() => {}));
+        await waitForCondition({ condition: () => condition(query.results), timeout: 2000 });
+        return query.results;
       };
 
       test('adding an object creates a new group / updates counts', async () => {
@@ -980,7 +972,7 @@ describe('Query', () => {
             count: Aggregate.count(),
           }),
         );
-        let lastResult = await subscribeAndWaitForFirstResult(query);
+        let lastResult = await subscribeAndWaitFor(query, (results) => results.length === 1);
         expect(lastResult).to.have.length(1);
 
         // Without `items` the working set declines the aggregate, so the host answers after its
@@ -1017,7 +1009,7 @@ describe('Query', () => {
             .orderBy(Order.property('rank', 'asc'))
             .aggregate({ category: Aggregate.group('category'), count: Aggregate.count() }),
         );
-        const initialResult = await subscribeAndWaitForFirstResult(query);
+        const initialResult = await subscribeAndWaitFor(query, (results) => results.length === 2);
         expect(initialResult).to.have.length(2);
 
         Obj.update(boundary, (boundary) => {
@@ -1043,7 +1035,7 @@ describe('Query', () => {
         await db.flush();
 
         const query = db.query(Query.select(Filter.everything()).aggregate({ category: Aggregate.group('category') }));
-        const initialResult = await subscribeAndWaitForFirstResult(query);
+        const initialResult = await subscribeAndWaitFor(query, (results) => results.length === 2);
         expect(initialResult).to.have.length(2);
 
         db.remove(obj);
@@ -1071,10 +1063,8 @@ describe('Query', () => {
         }),
       );
 
-      const initial = new Trigger();
-      const unsubscribe = query.subscribe(() => initial.wake());
-      await initial.wait();
-      onTestFinished(unsubscribe);
+      onTestFinished(query.subscribe(() => {}));
+      await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
 
       const subscribed = query.results;
       const ran = await query.run();

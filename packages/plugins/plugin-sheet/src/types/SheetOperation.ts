@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Thread } from '@dxos/types';
 
 import * as Sheet from './Sheet.ts';
 
@@ -60,10 +61,17 @@ export const ScrollToAnchor = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.String.annotate({ description: 'Attendable ID of the sheet.' }),
-    cursor: Schema.String.annotate({ description: 'Cell range coordinates.' }),
-    id: Schema.optional(Schema.Any.annotate({ description: 'Active refs for highlighting.' })),
+    anchor: Schema.String.annotate({ description: 'Cell range coordinates.' }),
+    focus: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Focus the range and highlight the thread (default); false only scrolls the range into view.',
+      }),
+    ),
+    thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to highlight.' })),
   }),
-  output: Schema.Void,
+  output: Schema.Boolean.annotate({
+    description: 'Whether the anchor was revealed; false while its view is not ready.',
+  }),
 });
 
 export const Create = Operation.make({
@@ -81,9 +89,7 @@ export const Create = Operation.make({
   output: Schema.Struct({
     id: Schema.String.annotate({ description: 'The DXN of the created sheet.' }),
   }),
-  // The capability manager carries the `DefaultParent` rule that files the sheet into the root
-  // collection; an undeclared service is not provided, so without it the sheet is never filed.
-  services: [Capability.Service, Database.Service],
+  services: [Database.Service],
 });
 
 export const GetValues = Operation.make({

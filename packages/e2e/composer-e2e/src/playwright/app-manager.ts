@@ -90,6 +90,7 @@ const OBJECT_TYPENAMES: Record<string, string> = {
   Document: 'org.dxos.type.document',
   Mailbox: 'org.dxos.type.mailbox',
   Project: 'org.dxos.type.project',
+  Sheet: 'org.dxos.type.sheet',
   Table: 'org.dxos.type.table',
 };
 
@@ -674,13 +675,24 @@ export class AppManager {
     await this.#expandRow(this.getObjectLinks().nth(nth), timeout);
   }
 
-  async expandSection(testId: string, timeout = 15_000): Promise<void> {
+  async expandSection(testId: string | RegExp, timeout = 15_000): Promise<void> {
     const section = this.currentWorkspace.getByTestId(testId).first();
     await section.waitFor({ state: 'attached', timeout });
     await this.#expandRow(section, timeout);
   }
 
-  async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
+  /** `typename` picks the type a type-backed object (a Table) views, from the form's type select, at any version. */
+  async createObject({
+    type,
+    name,
+    nth,
+    typename,
+  }: {
+    type: string;
+    name?: string;
+    nth?: number;
+    typename?: string;
+  }): Promise<void> {
     if (nth !== undefined) {
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
@@ -698,18 +710,37 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
-    // A type either shows its form or creates at once and closes the dialog; wait for whichever happens.
+    // A type shows its form, shows a panel of its own (a project's template picker), or creates at once and closes
+    // the dialog; wait for whichever happens.
     const objectForm = this.page.getByTestId('create-object-form');
+    const projectName = this.page.getByTestId('create-project-panel.name-input');
     const openDialog = this.page.locator('[data-scope="dialog"][data-part="content"][data-state="open"]');
     await expect
-      .poll(async () => (await objectForm.isVisible()) || !(await openDialog.isVisible()), { timeout: 30_000 })
+      .poll(
+        async () =>
+          (await objectForm.isVisible()) || (await projectName.isVisible()) || !(await openDialog.isVisible()),
+        { timeout: 30_000 },
+      )
       .toBe(true);
+    if (await projectName.isVisible()) {
+      // The Default template is preselected.
+      if (name) {
+        await projectName.fill(name);
+      }
+      await openDialog.getByTestId('save-button').click();
+      await projectName.waitFor({ state: 'detached', timeout: 30_000 });
+      return;
+    }
     if (!(await objectForm.isVisible())) {
       return;
     }
 
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
+    }
+    if (typename) {
+      await objectForm.getByTestId('typename').click();
+      await this.page.locator(`[role="option"][data-value^="dxn:${typename}:"]`).click();
     }
     // The form's Create sits in the dialog's footer, outside the form element.
     await openDialog.getByTestId('save-button').click();
@@ -732,12 +763,12 @@ export class AppManager {
       .first()
       .click();
     await this.page.getByTestId('spacePlugin.renameObject').last().click();
-    // An object's rename popover is its properties form, whose Name field writes as it is typed; Escape closes it.
-    const name = this.page
-      .locator('[data-scope="popover"][data-part="content"]')
-      .getByRole('textbox', { name: 'Name' });
+    // An object's rename popover is its properties form, which holds what is typed until Save writes it and closes
+    // the popover; dismissing it any other way — Escape, a click outside — throws the edit away.
+    const popover = this.page.locator('[data-scope="popover"][data-part="content"]');
+    const name = popover.getByRole('textbox', { name: 'Name' });
     await name.fill(newName);
-    await name.press('Escape');
+    await popover.getByTestId('save-button').click();
     await this.page.mouse.move(0, 0, { steps: 4 });
   }
 
@@ -921,8 +952,11 @@ export class AppManager {
     await this.openSettings();
     const item = this.page.getByTestId(`settings.${plugin}`);
     await expect(item).toBeVisible();
-    await item.click();
-    await expect(item).toHaveAttribute('aria-selected', 'true');
+    // The settings tree can re-render under the first click, so it is retried until the row is selected.
+    await expect(async () => {
+      await item.click({ timeout: 2_000 });
+      await expect(item).toHaveAttribute('aria-selected', 'true', { timeout: 2_000 });
+    }).toPass({ timeout: 15_000 });
   }
 
   /** The registry's dev-plugin URL field — an ordinary synced plugin setting. */

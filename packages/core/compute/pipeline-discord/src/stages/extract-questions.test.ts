@@ -10,6 +10,7 @@ import { expect } from 'vitest';
 
 import { type Type } from '@dxos/crawler';
 import { Pipeline } from '@dxos/pipeline';
+import { FactStore, type RDF } from '@dxos/pipeline-rdf';
 
 import { DiscordPipeline } from '../pipeline.ts';
 import { replayStream } from '../replay.ts';
@@ -65,6 +66,39 @@ describe('extractQuestionsStage', () => {
       // Replaying again changes nothing (idempotent upsert).
       yield* replay;
       expect((yield* store.list()).length).toBe(1);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'records each question in the fact store around an anonymous question node',
+    Effect.fnUntraced(function* () {
+      yield* DiscordPipeline.run(CONFIG);
+      const facts = yield* FactStore;
+      const questionGraph = (all: readonly RDF.Fact[]) =>
+        all.filter((fact) => fact.extractor.id === 'extract-questions');
+
+      const recorded = questionGraph(yield* facts.query({ source: 'discord:1000' }));
+      expect(recorded).toHaveLength(3);
+      expect(new Set(recorded.map((fact) => fact.graph)).size).toBe(1);
+      expect(recorded.every((fact) => fact.attribution.agent === 'https://discord.com/users/Alice')).toBe(true);
+      expect(recorded.find((fact) => fact.assertion.predicate === 'asked')?.assertion).toMatchObject({
+        subject: { kind: 'entity', entity: 'https://discord.com/users/Alice' },
+        object: { kind: 'entity', entity: 'question', label: 'Should Composer use OPFS for local storage?' },
+      });
+      expect(recorded.find((fact) => fact.assertion.predicate === 'has text')?.assertion.object).toEqual({
+        kind: 'literal',
+        literal: 'Should Composer use OPFS for local storage?',
+      });
+      expect(recorded.find((fact) => fact.assertion.predicate === 'is a')?.assertion.object).toMatchObject({
+        entity: 'https://schema.org/Question',
+      });
+
+      // `asked` is a seed predicate, so a predicate query finds every question.
+      expect(questionGraph(yield* facts.query({ predicate: 'asked' }))).toHaveLength(1);
+
+      // A replay writes the same graph rather than a second copy.
+      yield* replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
+      expect(questionGraph(yield* facts.query({ source: 'discord:1000' }))).toHaveLength(3);
     }, Effect.provide(TestLayer)),
   );
 });

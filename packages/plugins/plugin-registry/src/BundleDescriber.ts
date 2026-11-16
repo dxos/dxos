@@ -19,7 +19,7 @@ export class DescribeError extends BaseError.extend('DescribeError', 'Plugin bun
 export class Service extends Context.Service<
   Service,
   {
-    /** Environment the plugin's build command runs with, so the bundle carries what `describe()` needs. */
+    /** Environment the plugin's build runs with, so the bundle carries what `describe()` needs. */
     readonly buildEnv: Effect.Effect<Readonly<Record<string, string>>, DescribeError>;
     /** Loads the bundle in `dir` and returns a one-line summary of what it contributes on EDGE. */
     readonly describe: (dir: string) => Effect.Effect<string, DescribeError>;

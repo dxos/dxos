@@ -225,6 +225,7 @@ op ToggleTracePanelDebug
 
 ```mdl
 feat F-1: AI Chat
+  uses: [Chat]
 
   req F-1.1: User can create a new Chat object in any space.
   req F-1.2: User can type a message and receive a streamed AI response.
@@ -236,6 +237,7 @@ feat F-1: AI Chat
 
 ```mdl
 feat F-2: Companion Chat
+  uses: [Chat, EnsureCompanionChat]
 
   req F-2.1:
     when: user opens an object that supports companions
@@ -252,6 +254,7 @@ feat F-2: Companion Chat
 
 ```mdl
 feat F-3: Skill System
+  uses: [RunPromptInNewChat]
 
   req F-3.1: Skills define named AI configurations (instructions, tools, model).
   req F-3.2: Built-in skills include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, SkillManager.
@@ -263,6 +266,7 @@ feat F-3: Skill System
 
 ```mdl
 feat F-4: Multi-Provider LLM
+  uses: [Settings]
 
   req F-4.1: Supported providers: DXOS Edge (remote), Ollama (local), LM Studio (local).
   req F-4.2: User can configure the active provider and per-provider default model in Settings.
@@ -273,6 +277,7 @@ feat F-4: Multi-Provider LLM
 
 ```mdl
 feat F-5: Tool Execution
+  uses: [Settings]
 
   req F-5.1: The assistant skill exposes LayoutOperation.Open and NavigationOperation.ResolveNavigationTargets
              as tools. Both are owned elsewhere — the assistant contributes no navigation operation of its
@@ -291,6 +296,7 @@ feat F-5: Tool Execution
 
 ```mdl
 feat F-6: ECHO Integration
+  uses: [Chat, Message, OnCreateSpace]
 
   req F-6.1: Chat, Skill, Feed, Message, Memory, Plan, Routine, Agent, and Sequence schemas are registered with ECHO. A chat's subject is recorded by Chat.CompanionChatAnnotation on that subject, not by a type.
   req F-6.2:
@@ -301,6 +307,7 @@ feat F-6: ECHO Integration
 
 ```mdl
 feat F-7: Execution Trace
+  uses: [ToggleTracePanelDebug, TracePanel]
 
   req F-7.1: Every AI operation produces a structured span tree captured in the TracePanel.
   req F-7.2: User can toggle between commit-graph and raw JSON views via op:ToggleTracePanelDebug.
@@ -308,6 +315,7 @@ feat F-7: Execution Trace
 
 ```mdl
 feat F-8: Agent Struggle Reports
+  uses: [AnalyzeTurn, Settings]
 
   req F-8.1: Reporting is opt-in via `Settings.reportStruggles`, off by default, and also requires telemetry to be enabled.
   req F-8.2:
@@ -319,6 +327,18 @@ feat F-8: Agent Struggle Reports
     then: the trajectory is uploaded to the feedback-logs bucket under `trajectories/` and an `agent_struggle` event is captured
           carrying the cause, model DXN, code mode, and enabled skills
   req F-8.4: A review that fails is logged and dropped; it never surfaces to the user.
+```
+
+```mdl
+feat F-9: Token Labels
+  uses: [Settings]
+
+  req F-9.1: Labels are opt-in via `Settings.showTokens`, off by default.
+  req F-9.2:
+    when: labels are on
+    then: each block of the thread (a prompt, a paragraph of the answer, a tool run) shows its estimated token count in
+          a gutter beside it, level with its first line
+  req F-9.3: The count is an estimate (tokenx, the estimator the preprocessor budgets with), since per-request usage covers a whole turn and cannot be attributed to one block; status and stats blocks count zero.
 ```
 
 ## Acceptance
@@ -577,6 +597,27 @@ test QA-5: A working agent marks its chat and its companion's subject in the nav
 ```
 
 
+```mdl
+test QA-6: Token labels beside each block
+  desc: The opt-in gutter that shows the estimated token count of each block in the thread.
+  actors: human
+  covers: [F-9.1, F-9.2, F-9.3]
+  status: unverified
+  given:
+    - a chat thread with prompts, answers and a tool run
+  steps:
+    - name: Labels are off by default
+      do: Open the chat with `showTokens` unset.
+      expect: no token labels; the blocks use the full width of the column
+    - name: Turn the labels on
+      do: Turn on "Show token counts" in the assistant settings.
+      expect: a muted count shows in a right-hand gutter beside every prompt, answer paragraph and tool run, level
+        with its first line
+    - name: Labels follow a streaming turn
+      do: Send a prompt and let the answer stream.
+      expect: each block of the answer gets its label as it arrives, and the labels never move a row
+```
+
 ## Changelog
 
 ```mdl
@@ -757,6 +798,48 @@ decision D-21: Each turn sends a status update keyed `<uri>#agent` on the chat a
     - A still amber outline on the edge: it kept presence visible but read as generic busy work and had no natural finished state.
     - The star on chats and the outline on companion subjects: kept a document's viewers visible, at the cost of two symbols for one thing.
     - An `ActivitySource` capability the glyph merges: a second channel beside the progress registry for the same signal.
+```
+
+```mdl
+decision D-22: The thread can show the estimated token count of each block in a gutter beside it, opt-in via `Settings.showTokens`. The count is estimated per block, since provider usage covers a whole request.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [F-9.1, F-9.2, F-9.3, QA-6]
+```
+
+```mdl
+decision D-23: plugin-assistant's operations must not require an atom registry; EDGE hosts do not provide one.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [CreateChat, RunPromptInNewChat]
+```
+
+```mdl
+decision D-24: CreateChat, BindChatContext and RunPromptInNewChat pass the atom registry to the context binder only when one is contributed; without one the binder uses a registry of its own. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [CreateChat, RunPromptInNewChat]
+  why: The registry only carries the binder's atoms to UI subscribers, and a headless host has none.
+  rejected:
+    - Contribute an atom registry on the EDGE hosts: the registry is a UI concept, and [D-23] keeps it off them.
+```
+
+```mdl
+decision D-25: GenerateHomeSuggestions reads and writes its suggestions cache only when both the atom registry and the cache are contributed; without them it generates prompts on every call. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The cache is per-client UI state, so a host without it has nothing to reuse.
+```
+
+```mdl
+decision D-26: RunPromptInNewChat binds context through the database it is given rather than looking the space up through the client. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [RunPromptInNewChat]
+  why: EDGE hosts contribute no client either, and the handler already provides that database.
 ```
 
 ---

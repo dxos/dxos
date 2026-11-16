@@ -40,11 +40,13 @@ import {
 } from '@dxos/react-ui-feed';
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
 import { type TaskColumn, TaskList, TaskQuestion } from '@dxos/react-ui-task';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as Util from '@dxos/react-ui/Util';
 import { type Actor, Message, Task } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 import { hexToFallback, keyToFallback, markWork } from '@dxos/util';
 
 import { type ChatSwitcher, bindMentions, useChatToolbarActions, useDebug, useSlashCommands } from '#hooks';
@@ -589,6 +591,8 @@ type ChatThreadProps = Util.ThemedClassName<{
   tailLines?: number;
   /** Hue of the user's messages; defaults to the identity's hue. */
   userHue?: string;
+  /** Shows each block's estimated token count beside it. */
+  showTokens?: boolean;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
 }>;
@@ -606,7 +610,14 @@ const useInPlaceUpdates = (model: FeedModel, messages: readonly Message.Message[
   }, [model, messages]);
 };
 
-const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
+const ChatThread = ({
+  classNames,
+  viewType,
+  tailLines,
+  userHue: userHueProp,
+  showTokens,
+  onViewUsage,
+}: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const { messages, tail, lanes, forks } = useChatThreadContext(CHAT_THREAD_NAME);
@@ -744,6 +755,7 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         // Forking needs the trajectory the Composer harness writes; an external agent keeps its own.
         fork={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
         getForks={getForks}
+        showTokens={showTokens}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
@@ -1045,7 +1057,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
             happened, so the answer is given here rather than in a pane the reader has to open. */}
         <ChatTaskQuestions tasks={tasks} />
         {/* Only creates: a task is changed through its own row controls, not by selecting it into the strip. */}
-        <TaskList.Editor createOnly inline />
+        <TaskList.Editor createOnly />
       </div>
     </TaskList.Root>
   );
@@ -1131,6 +1143,51 @@ const ChatActivity = ({ classNames }: Util.ThemedClassName) => {
 ChatActivity.displayName = CHAT_ACTIVITY_NAME;
 
 //
+// Suggestions
+//
+
+const CHAT_SUGGESTIONS_NAME = 'Chat.Suggestions';
+
+type ChatSuggestionsProps = Util.ThemedClassName<{
+  /** Prompts offered as one-click chips; nothing renders when there are none. */
+  suggestions: readonly string[];
+  /** Called after a chip's prompt is submitted, e.g. to stop offering it. */
+  onSelect?: (text: string) => void;
+}>;
+
+/**
+ * A row of premade prompts above the composer. A chip submits its prompt exactly as the thread's own suggestion chips
+ * do, through the chat's event bus, so slash commands and queueing behave as if it had been typed.
+ */
+const ChatSuggestions = ({ classNames, suggestions, onSelect }: ChatSuggestionsProps) => {
+  const { event } = useChatContext(CHAT_SUGGESTIONS_NAME);
+  if (suggestions.length === 0) {
+    return null;
+  }
+
+  return (
+    <div role='group' className={mx('flex flex-wrap gap-1', classNames)} data-testid='chat.suggestions'>
+      {suggestions.map((text) => (
+        <Button.Root
+          key={text}
+          classNames='max-w-full'
+          icon='ph--lightning--regular'
+          label={text}
+          size='sm'
+          data-testid='chat.suggestion'
+          onClick={() => {
+            event.emit({ type: 'submit', text });
+            onSelect?.(text);
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+ChatSuggestions.displayName = CHAT_SUGGESTIONS_NAME;
+
+//
 // Chat
 //
 
@@ -1140,6 +1197,7 @@ export const Chat = {
   Content: ChatContent,
   Prompt: ChatPrompt,
   Activity: ChatActivity,
+  Suggestions: ChatSuggestions,
   Status: ChatStatus,
   Thread: ChatThread,
   Outline: ChatOutline,
@@ -1151,6 +1209,7 @@ export type {
   ChatOutlineProps,
   ChatPromptProps,
   ChatRootProps,
+  ChatSuggestionsProps,
   ChatThreadProps,
   ChatToolbarProps,
 };

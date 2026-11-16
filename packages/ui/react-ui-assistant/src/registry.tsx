@@ -16,6 +16,7 @@ import {
   SuggestionWidget,
   SummaryWidget,
   SyntheticWidget,
+  TokensWidget,
   ToolWidget,
 } from './widgets/index.ts';
 
@@ -102,6 +103,14 @@ export const assistantRegistry: XmlWidgetRegistry = {
     factory: ({ children }) => {
       const text = getXmlTextChild(children ?? []);
       return text ? new StatsWidget(text) : null;
+    },
+  },
+
+  tokens: {
+    block: true,
+    factory: ({ children }) => {
+      const count = Number(getXmlTextChild(children ?? []));
+      return count > 0 ? new TokensWidget(count) : null;
     },
   },
 

@@ -47,7 +47,7 @@ const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => Compute
   'chat': () => createNode('chat'),
   'constant': (shape) =>
     createNode('constant', {
-      value: (shape as ConstantShape).value,
+      value: (shape as ConstantShape).data?.value,
     }),
   'make-queue': () => createNode('make-queue'),
   'database': () => createNode('database'),
@@ -67,7 +67,7 @@ const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => Compute
   'surface': () => createNode('surface'),
   'switch': () => createNode('switch'),
   'template': (shape) => {
-    const node = createNode('template', { valueType: (shape as TemplateShape).valueType, value: shape.text });
+    const node = createNode('template', { valueType: (shape as TemplateShape).data?.valueType, value: shape.text });
     // `toJsonSchema` reuses cached fragments (e.g. the `Schema.Any` JSON form) across calls; deep-copy so each
     // ECHO node owns its own schema record rather than reassigning ownership of a shared one.
     node.inputSchema = structuredClone(JsonSchema.toJsonSchema(getTemplateInputSchema(node)));

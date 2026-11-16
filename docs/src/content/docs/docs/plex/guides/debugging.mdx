@@ -1,0 +1,46 @@
+---
+title: Debugging
+description: Find out why a module did not activate or a contribution did not show.
+---
+
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
+
+Most plugin bugs are one of three things: the plugin did not load, a module did not activate, or a contribution
+reached the app but did not show where you expected. Start with the inspector, which shows all three.
+
+## Load the plugin into the inspector
+
+Start the plugin's dev server in its folder with `npm run dev`, then click **Load dev plugin** below. The inspector
+loads the plugin from `http://localhost:3967/manifest.json`, the same way Composer does.
+
+<InspectorEmbed adds={[]} />
+
+The sidebar lists each module with its status:
+
+- **Active:** the module ran and its contributions are in the app.
+- **Waiting:** its activation event has not fired yet. Check that the module lists the event you meant.
+- **Failed:** the module threw. Select it to read the error.
+
+## Load errors
+
+When the plugin does not load at all, the inspector names the reason:
+
+| Error | Meaning |
+| --- | --- |
+| Couldn't reach the manifest | The dev server is not running, is on another port, or the browser blocked the request to your local network. |
+| Not a plugin manifest | Something answered on port 3967, but `vite.config.ts` does not add `composerPlugin`. |
+| The plugin's code failed to load | A module threw while importing. The message is the module's own error. |
+| Metadata does not match | The key in `dx.config.ts` differs from the one the plugin's code declares. |
+
+## Debug in Composer Preview
+
+Load the plugin into [Composer Preview](https://preview.composer.space) as on
+[Run it in Composer](/docs/plex/learn/run-in-composer/), then open the browser's devtools. The plugin's source is
+served unbundled, so its files appear under `localhost:3967` in the Sources panel, and breakpoints and `console.log`
+work as in any Vite app. A reload of Composer loads your latest edit.
+
+## Limits
+
+- The inspector shows one plugin. A bug that depends on another plugin, such as a surface another plugin's surface
+  outranks, shows only in Composer.
+- Only Composer Preview loads dev plugins; composer.space does not.

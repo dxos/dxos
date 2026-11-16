@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { AudioComponent } from './Audio.tsx';
 import { createPorts, defineComputeNode } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
@@ -23,7 +25,7 @@ export type AudioShape = Schema.Schema.Type<typeof AudioShape>;
 export type CreateAudioProps = CreateShapeProps<AudioShape>;
 
 export const createAudio = (props: CreateAudioProps) =>
-  createShape<AudioShape>({ type: 'audio', size: { width: 64, height: 64 }, ...props });
+  createShape<AudioShape>({ type: 'audio', size: { width: MAJOR_GRID, height: MAJOR_GRID }, ...props });
 
 export const audioNodeDef = defineComputeNode<AudioShape>({
   type: 'audio',

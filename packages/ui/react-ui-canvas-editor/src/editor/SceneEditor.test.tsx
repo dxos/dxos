@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event';
 import React, { useEffect } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { type ViewportProps } from '@dxos/react-ui-canvas';
+import { type ConstrainContext, type ViewportProps } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
 import { config3d, createConfig2D } from '../dimensions/index.ts';
@@ -411,9 +411,9 @@ describe('SceneEditor', () => {
       outside.remove();
     }
   });
-  test("the config's constrain rewrites or refuses every write, and sees the snap toggle", () => {
+  test("the config's constrain rewrites or refuses every write, and sees the snap and lattice toggles", () => {
     const write = vi.fn();
-    const seen: boolean[] = [];
+    const seen: ConstrainContext[] = [];
     let send: ViewportProps<{ zoom: number }>['onIntent'] = () => {};
     const CapturingViewport = ({ onIntent }: ViewportProps<{ zoom: number }>) => {
       send = onIntent;
@@ -424,8 +424,8 @@ describe('SceneEditor', () => {
         config={{
           ...config('2d', CapturingViewport),
           // Refuses a delete and turns a move into one along x only.
-          constrain: (layout, intent, { snap }) => {
-            seen.push(snap);
+          constrain: (layout, intent, context) => {
+            seen.push(context);
             return layout.id !== 'root' || intent.kind === 'delete'
               ? undefined
               : intent.kind === 'move'
@@ -436,7 +436,8 @@ describe('SceneEditor', () => {
         document={DOCUMENT}
         scene='s'
         onIntent={write}
-        display={{ ...DISPLAY, snap: true }}
+        // Grid mode: a lattice scene's writes snap to the grid, not its cells.
+        display={{ ...DISPLAY, snap: true, guides: false }}
       >
         <SceneEditor.Viewport />
       </SceneEditor.Root>,
@@ -444,7 +445,10 @@ describe('SceneEditor', () => {
     send('root', { kind: 'move', ids: ['a'], delta: { x: 3, y: 4 } });
     send('root', { kind: 'delete', ids: ['a'] });
     expect(write.mock.calls).toEqual([['root', { kind: 'move', ids: ['a'], delta: { x: 3, y: 0 } }]]);
-    expect(seen).toEqual([true, true]);
+    expect(seen).toEqual([
+      { snap: true, lattice: false },
+      { snap: true, lattice: false },
+    ]);
   });
 });
 

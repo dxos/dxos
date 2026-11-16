@@ -37,7 +37,7 @@ const waitForNames = (page, expected) =>
   page.waitForFunction(
     ([selector, expected]) =>
       JSON.stringify(
-        [...document.querySelectorAll(`${selector} input[data-testid="name"]`)].map((input) => input.value),
+        [...document.querySelectorAll(`${selector} [data-testid="name"]`)].map((name) => name.textContent),
       ) === JSON.stringify(expected),
     [SECTION, expected],
     { timeout: 10_000 },

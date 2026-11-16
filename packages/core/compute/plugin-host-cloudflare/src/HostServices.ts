@@ -11,6 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -102,22 +103,50 @@ const makeProxy = (descriptor: PluginProtocol.ServiceDescriptor, host: PluginPro
   );
 };
 
+/** A service whose every method calls EDGE once, for a plugin's {@link Capabilities.HostServiceAdapter} to wrap. */
+const makeCallProxy = (key: string, host: PluginProtocol.ServiceHost): Capabilities.HostServiceProxy =>
+  new Proxy<Capabilities.HostServiceProxy>(
+    {},
+    {
+      get: (_target, property) =>
+        typeof property !== 'string' || NOT_METHODS.has(property)
+          ? undefined
+          : (...args: readonly unknown[]) => call(host, key, property, args),
+    },
+  );
+
 /**
  * Gives the handler every service EDGE serves to this invocation, keyed as the plugin declares it: Effect resolves a
  * service by its key, so a proxy under the same key satisfies the plugin's own tag.
  */
-export const withHostServices = (handler: Handler, services: PluginProtocol.HostServices | undefined): Handler =>
-  services === undefined || services.descriptors.length === 0
-    ? handler
-    : RequestContext.mapHandler(handler, (effect) =>
-        services.descriptors.reduce(
-          (provided, descriptor) =>
-            provided.pipe(
-              Effect.provideService(Context.Service<Proxied>(descriptor.key), makeProxy(descriptor, services.host)),
-            ),
-          effect,
-        ),
-      );
+export const withHostServices = (
+  handler: Handler,
+  services: PluginProtocol.HostServices | undefined,
+  adapters: readonly Capabilities.HostServiceAdapter[] = [],
+): Handler => {
+  if (services === undefined || services.descriptors.length === 0) {
+    return handler;
+  }
+  const proxies = new Map(
+    services.descriptors.map((descriptor) => [descriptor.key, makeProxy(descriptor, services.host)]),
+  );
+  const adapted = adapters.flatMap((adapter) =>
+    proxies.has(adapter.host)
+      ? [{ key: adapter.service, service: adapter.make(makeCallProxy(adapter.host, services.host)) }]
+      : [],
+  );
+  return RequestContext.mapHandler(handler, (effect) => {
+    // Provided innermost, so a plugin's own adapter wins over a generic proxy served under the same key.
+    const withAdapters = adapted.reduce(
+      (provided, { key, service }) => provided.pipe(Effect.provideService(Context.Service<unknown>(key), service)),
+      effect,
+    );
+    return [...proxies].reduce(
+      (provided, [key, proxy]) => provided.pipe(Effect.provideService(Context.Service<Proxied>(key), proxy)),
+      withAdapters,
+    );
+  });
+};
 
 /** The bare key EDGE routes by (`org.example.op`). */
 const bareKey = (key: string): string => (DXN.isDXN(key) ? DXN.getName(key) : key);
@@ -134,6 +163,12 @@ export type OperationsOptions = {
   /** The invocation's pid, every nested invocation's parent. */
   readonly pid: string;
   readonly idSeed: PluginProtocol.IdSeed | undefined;
+  /**
+   * Brings the invocation's documents up to date with EDGE (`ServiceContainer.refreshWorkingSet`). Called when a
+   * nested call to another invocation returns, since this invocation's data plane is pull-only and would otherwise
+   * continue on the space as it stood before the callee wrote to it.
+   */
+  readonly refreshWorkingSet?: () => Promise<void>;
 };
 
 /**
@@ -148,6 +183,7 @@ export const makeOperations = ({
   conversation,
   pid,
   idSeed,
+  refreshWorkingSet,
 }: OperationsOptions): Operation.OperationService => {
   const local = (op: Operation.Definition.Any): Handler | undefined => {
     const key = bareKey(String(op.meta.key));
@@ -169,7 +205,13 @@ export const makeOperations = ({
       // TEST-ONLY: a child seed drawn from the seeded stream keeps the whole call tree reproducible.
       ...(idSeed === undefined ? {} : { idSeed: { time: idSeed.time, seed: childSeed(EntityId.random()) } }),
     };
-    return Effect.promise(async () => host.invoke(bareKey(String(op.meta.key)), await byReference(input), nested)).pipe(
+    return Effect.promise(async () => {
+      const result = await host.invoke(bareKey(String(op.meta.key)), await byReference(input), nested);
+      // Whether it succeeded or not, the callee may have written: its output's refs, and anything this invocation
+      // reads next, resolve against the space as it left it.
+      await refreshWorkingSet?.();
+      return result;
+    }).pipe(
       Effect.flatMap((result) =>
         result.ok
           ? Effect.promise(() => loadEntities(result.output))

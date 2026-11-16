@@ -5,8 +5,10 @@ import IconDiscord from './svg/IconDiscord.astro';
 import IconX from './svg/IconX.astro';
 import IconBluesky from './svg/IconBluesky.astro';
 
+import { showBlog } from './site-links.ts';
+
 interface Props {
-  currentPage: 'home' | 'composer' | 'plugins' | 'blog';
+  currentPage: 'home' | 'composer' | 'echo' | 'plugins' | 'blog';
 }
 
 const { currentPage } = Astro.props;
@@ -33,8 +35,12 @@ const accent = currentPage !== 'home' ? ' c' : '';
       </div>
       <nav role="navigation" id="w-node-a9f227b2-b35e-a924-c5e6-c57d658ccfe2-658ccfd6" class="nav-menu is-page-height-tablet w-nav-menu">
         <div class="div-block-9">
-          <a href="/" {...(currentPage === 'home' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'home' ? ' w--current' : ''}`}>
-            <div>Home</div>
+          <!-- Docs comes first and the logo is the way home, so Docs sits where the docs header has it. -->
+          <a href="/docs/" class={`nav-link${accent} w-inline-block`}>
+            <div>Docs</div>
+          </a>
+          <a href="/echo" {...(currentPage === 'echo' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'echo' ? ' w--current' : ''}`}>
+            <div>ECHO</div>
           </a>
           <a href="/composer" {...(currentPage === 'composer' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'composer' ? ' w--current' : ''}`}>
             <div>Composer</div>
@@ -42,12 +48,11 @@ const accent = currentPage !== 'home' ? ' c' : '';
           <a href="/plugins" {...(currentPage === 'plugins' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'plugins' ? ' w--current' : ''}`}>
             <div>Plugins</div>
           </a>
-          <a href="/blog" {...(currentPage === 'blog' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'blog' ? ' w--current' : ''}`}>
-            <div>Blog</div>
-          </a>
-          <a href="/docs" class={`nav-link${accent} w-inline-block`}>
-            <div>Docs</div>
-          </a>
+          {showBlog && (
+            <a href="/blog" {...(currentPage === 'blog' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'blog' ? ' w--current' : ''}`}>
+              <div>Blog</div>
+            </a>
+          )}
         </div>
       </nav>
       <div id="w-node-a9f227b2-b35e-a924-c5e6-c57d658ccfea-658ccfd6" class="nav_button-wrap">
@@ -72,3 +77,39 @@ const accent = currentPage !== 'home' ? ' c' : '';
     </div>
   </div>
 </div>
+
+<!-- The links sit beside the logo rather than centred, matching the docs header. -->
+<style is:inline>
+  @media screen and (min-width: 992px) {
+    .nav_container {
+      display: flex;
+      gap: 1rem;
+    }
+    .nav_button-wrap {
+      margin-left: auto;
+    }
+  }
+
+  .nav_button-wrap {
+    flex-shrink: 0;
+  }
+
+  /* Below this the social links do not fit beside the menu button, logo and Try Composer. */
+  @media (max-width: 600px) {
+    .nav_button-wrap .hide-mobile {
+      display: none;
+    }
+  }
+
+  /* On the smallest phones Try Composer tightens up rather than run off the edge. */
+  @media (max-width: 400px) {
+    .nav_button-wrap {
+      margin-left: 0;
+    }
+    .nav_button-wrap .button {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
+</style>

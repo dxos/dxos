@@ -75,7 +75,8 @@ export const automerge = (accessor: Doc.Accessor): Extension => {
           // rAF is not reliable for correctness (hidden/throttled frames never fire it), and until
           // this replace runs every write maps view coordinates onto the wrong document.
           queueMicrotask(() => {
-            const value = Doc.getValue<string>(accessor);
+            // An unset string reads as empty until the first local edit creates it.
+            const value = Doc.getValue<string | undefined>(accessor) ?? '';
             const current = this._view.state.doc.toString();
             if (value !== current) {
               this._view.dispatch({

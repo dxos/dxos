@@ -121,10 +121,11 @@ export const PlainDialect: Dialect = {
           const invoke = (input: unknown = {}) => run(operation.invoke(input));
           // Bound under the tool name and its camelCase form: the derived names are kebab-case,
           // which is not an identifier, so `ops.researchOrg` would otherwise have to be bracketed.
-          return [
-            [operation.name, invoke],
-            [camelCase(operation.name), invoke],
-          ];
+          // Also under the operation's key, with and without `dxn:`, since the Skill Manager says an
+          // operation is called by its key or its tool name.
+          const key = operation.definition === undefined ? undefined : String(operation.definition.meta.key);
+          const keys = key === undefined ? [] : [...new Set([key, key.replace(/^dxn:/, '')])];
+          return [operation.name, camelCase(operation.name), ...keys].map((name) => [name, invoke] as const);
         }),
       ),
     };
@@ -165,7 +166,7 @@ export const PlainDialect: Dialect = {
       an id or a URI string: \`await make('example.com/type/Task', { title: 'Review', owner: ref(person) })\`.
       Where an operation's input takes references, pass \`ref(obj)\` too.
 
-    ${renderTypes(types.filter(({ kind }) => kind === 'object'))}
+    ${renderTypes(types?.filter(({ kind }) => kind === 'object'))}
 
     ${operations.length > 0 ? renderPlainOperations(operations) : NO_OPERATIONS}
   `,
@@ -190,7 +191,7 @@ const typeURI = (type: string) => (DXN.isDXN(type) ? type : DXN.make(type));
 const renderPlainOperations = (operations: readonly SandboxOperation[]): string => trim`
   ### Operations
 
-  The skills above describe their capabilities as tools; in code mode they are NOT tools. Each one
+  The skills' instructions describe their capabilities as tools; in code mode they are NOT tools. Each one
   is an async function on \`ops\`, taking one argument matching its parameter schema. A failed
   operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
   so they are indexed rather than dotted.

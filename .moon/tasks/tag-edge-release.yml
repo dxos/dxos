@@ -26,5 +26,17 @@ tasks:
     options:
       timeout: 900
 
+  publish-edge-release:
+    # Uploads the bundle `check-edge-release` built and checked to the EDGE at `DX_EDGE_BASE_URL` as a first-party
+    # plugin, with the admin key in `DX_HUB_API_KEY`. `-- --dry-run` lists what it would upload. Deploy Apps runs it
+    # for every `edge-release` plugin against preview. See `@dxos/plugin-builder`.
+    command: node $workspaceRoot/packages/core/compute/plugin-builder/dist/lib/bin/publish-release.mjs --package .
+    deps:
+      - check-edge-release
+      - plugin-builder:build
+    options:
+      # An upload is a side effect on EDGE, not an output moon can restore.
+      cache: false
+
 inheritedBy:
   tags: edge-release

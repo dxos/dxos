@@ -39,7 +39,7 @@ const waitForSelected = (page, name) =>
   page.waitForFunction(
     ([selector, name]) =>
       document.activeElement?.matches(selector) &&
-      document.activeElement.querySelector('input[data-testid="name"]')?.value === name,
+      document.activeElement.querySelector('[data-testid="name"]')?.textContent === name,
     [SECTION, name],
     { timeout: 5_000 },
   );
@@ -65,9 +65,9 @@ const waitForNames = (page, expected) =>
   page.waitForFunction(
     ([selector, expected]) =>
       JSON.stringify(
-        [...document.querySelectorAll(`${selector} input[data-testid="name"]`)]
+        [...document.querySelectorAll(`${selector} [data-testid="name"]`)]
           .slice(0, expected.length)
-          .map((input) => input.value),
+          .map((name) => name.textContent),
       ) === JSON.stringify(expected),
     [SECTION, expected],
     { timeout: 10_000 },
@@ -94,10 +94,7 @@ export const steps = [
     run: async ({ page }) => {
       // A cold preview bundles for a minute or more before its first story renders.
       await page.goto(STORY, { waitUntil: 'domcontentloaded', timeout: 180_000 });
-      await page
-        .locator(`${SECTION} input[data-testid="name"]`)
-        .first()
-        .waitFor({ state: 'visible', timeout: 180_000 });
+      await page.locator(`${SECTION} [data-testid="name"]`).first().waitFor({ state: 'visible', timeout: 180_000 });
       await waitForNames(page, [NAME, NEXT]);
     },
   },
@@ -121,18 +118,19 @@ export const steps = [
       await demo.press({ key: 'Enter' });
       await page.waitForFunction(
         () => {
-          const input = document.activeElement;
-          return (
-            input?.getAttribute('data-testid') === 'name' &&
-            input.selectionEnd - input.selectionStart === input.value.length
-          );
+          const name = document.activeElement?.closest('[data-testid="name"]');
+          const selection = document.getSelection();
+          return !!name && !!selection && selection.toString() === name.textContent;
         },
         undefined,
         { timeout: 5_000 },
       );
       await demo.sleep({ ms: 800 });
       await demo.press({ key: 'ArrowRight' });
-      await page.waitForFunction(() => document.activeElement?.selectionStart === document.activeElement?.value.length);
+      await page.waitForFunction(() => {
+        const selection = document.getSelection();
+        return !!selection?.isCollapsed && selection.focusOffset === selection.focusNode?.textContent?.length;
+      });
       await demo.keys({ key: ' (all providers)' });
       await page.keyboard.type(' (all providers)', { delay: 120 });
       await demo.sleep({ ms: 1_000 });

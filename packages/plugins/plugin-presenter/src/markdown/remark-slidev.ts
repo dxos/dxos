@@ -7,12 +7,47 @@ import type { Data, Html, Paragraph, Parent, Root, RootContent, Text } from 'mda
 
 import { EID } from '@dxos/keys';
 
+import { SlideTheme } from '#types';
+
 import { type SlideIssue } from './frontmatter.ts';
 
 /** Content regions of a slide, selected by `::name::` markers. */
 export const SLOTS = ['default', 'left', 'middle', 'right', 'bottom-left', 'bottom-right'] as const;
 
 export type SlotName = (typeof SLOTS)[number];
+
+/** Named list styles a `<List>` may request; the first is the plain markdown list. */
+export const LIST_VARIANTS = ['default', 'cards', 'steps', 'outline', 'flow'] as const;
+
+export type ListVariant = (typeof LIST_VARIANTS)[number];
+
+/** Named box styles a `<Box>` may request; the first is an undecorated container. */
+export const BOX_VARIANTS = [
+  'default',
+  'card',
+  'outline',
+  'hero',
+  'fill',
+  'lockup',
+  'spread',
+  'title',
+  'caption',
+] as const;
+
+export type BoxVariant = (typeof BOX_VARIANTS)[number];
+
+/** Named card styles a `<Card>` may request; the first is a filled surface, as the brand's own cards are. */
+export const CARD_VARIANTS = ['default', 'outline', 'plain'] as const;
+
+export type CardVariant = (typeof CARD_VARIANTS)[number];
+
+/** The widest grid, and the furthest a cell may span: a slide holds no more legibly. */
+export const MAX_TRACKS = 12;
+
+/** Named table styles a `<Table>` may request; the first is the plain markdown table. */
+export const TABLE_VARIANTS = ['default', 'rows', 'cards', 'outline'] as const;
+
+export type TableVariant = (typeof TABLE_VARIANTS)[number];
 
 /** Roles a `<Surface>` may request; the first is the default. */
 export const SURFACE_ROLES = ['slide', 'section', 'card'] as const;
@@ -54,9 +89,64 @@ const CONTAINER_TAGS = {
   'v-click': 'slide-click',
   'v-clicks': 'slide-clicks',
   'v-after': 'slide-after',
+  // A style tag leaves no element of its own; it names a style for the block it wraps (see `STYLE_TAGS`).
+  'list': '',
+  'table': '',
+  // `<Box>` is the one style tag with an element of its own: it wraps whatever it holds.
+  'box': 'slide-box',
+  // Layout tags, each an element of its own: a grid of tracks, a cell spanning them, and a card to fill one.
+  'grid': 'slide-grid',
+  'cell': 'slide-cell',
+  'card': 'slide-card',
 } as const;
 
 type ContainerTag = keyof typeof CONTAINER_TAGS;
+
+/** The tags that style the block they wrap: the mdast node each one looks for, and the variants it takes. */
+const STYLE_TAGS = {
+  list: { node: 'list', variants: LIST_VARIANTS as readonly string[] },
+  table: { node: 'table', variants: TABLE_VARIANTS as readonly string[] },
+} as const;
+
+type StyleTag = keyof typeof STYLE_TAGS;
+
+const isStyleTag = (tag: ContainerTag): tag is StyleTag => Object.hasOwn(STYLE_TAGS, tag);
+
+/**
+ * The tone a style tag asks for, or none when it asks for no tone: an untoned block inherits the tone of the block
+ * around it, while `tone="accent"` is a request to return to the slide's own accent. An unknown name falls back.
+ */
+const toneName = (tag: ContainerTag, value: string | undefined, issues: SlideIssue[]): SlideTheme.Tone | undefined => {
+  if (value === undefined || SlideTheme.isTone(value)) {
+    return value;
+  }
+  issues.push({
+    kind: 'html',
+    message: `Invalid ${tagLabel(tag)} tone "${value}"; using "${SlideTheme.TONES[0]}".`,
+  });
+  return SlideTheme.TONES[0];
+};
+
+/** A tag's name as it is written, for an issue message. */
+const tagLabel = (tag: ContainerTag): string => `<${tag[0].toUpperCase()}${tag.slice(1)}>`;
+
+/** The requested variant, or the first (plain) one when it is not a name this tag knows. */
+const variantName = (
+  tag: ContainerTag,
+  value: string | undefined,
+  variants: readonly string[],
+  issues: SlideIssue[],
+): string => {
+  const variant = value ?? variants[0];
+  if (variants.includes(variant)) {
+    return variant;
+  }
+  issues.push({
+    kind: 'html',
+    message: `Invalid ${tagLabel(tag)} variant "${variant}"; using "${variants[0]}".`,
+  });
+  return variants[0];
+};
 
 // Parents whose children are inline, so escaped HTML stays a bare text node instead of a paragraph.
 const PHRASING_PARENTS = new Set([
@@ -252,7 +342,7 @@ const transformChildren = (parent: Parent, issues: SlideIssue[]) => {
         const frame = top();
         if (frame.open?.tag === token.tag) {
           stack.pop();
-          top().children.push(containerElement(frame.open, frame.children, issues));
+          top().children.push(...containerNodes(frame.open, frame.children, issues));
         } else {
           issues.push({ kind: 'html', message: `Unmatched closing tag: ${token.raw}` });
           top().children.push(escaped(token.raw));
@@ -355,18 +445,119 @@ const positiveInteger = (value: string | undefined, name: string, issues: SlideI
   return 1;
 };
 
-const containerElement = (
+/**
+ * `<List>` and `<Table>` style the block they wrap and contribute no element, so a styled list is still a `<ul>` and
+ * a styled table still a `<table>`; the variant travels on the node for the renderer to turn into classes.
+ */
+/** The 1-based item a list marks as the one in hand (`<List active="3">`), or none. */
+const activeItem = (tag: ContainerTag, value: string | undefined, issues: SlideIssue[]): number | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const item = Number(value);
+  if (Number.isInteger(item) && item >= 1) {
+    return item;
+  }
+  issues.push({ kind: 'html', message: `Invalid ${tagLabel(tag)} active "${value}"; ignored.` });
+  return undefined;
+};
+
+const styleBlocks = (
+  tag: StyleTag,
+  children: RootContent[],
+  attributes: Record<string, string>,
+  issues: SlideIssue[],
+): RootContent[] => {
+  const { node, variants } = STYLE_TAGS[tag];
+  const variant = variantName(tag, attributes.variant, variants, issues);
+  const tone = toneName(tag, attributes.tone, issues);
+  const active = activeItem(tag, attributes.active, issues);
+  const blocks = children.filter((child) => child.type === node);
+  if (blocks.length === 0) {
+    issues.push({ kind: 'html', message: `${tagLabel(tag)} has no ${node} to style.` });
+  }
+  for (const block of blocks) {
+    block.data = {
+      ...block.data,
+      hProperties: { ...block.data?.hProperties, variant, ...(tone && { tone }), ...(active && { active }) },
+    };
+  }
+  return children;
+};
+
+/**
+ * A count of grid tracks: how many a `<Grid>` lays down, or how many a cell spans. Bounded by {@link MAX_TRACKS}, and
+ * absent when the tag does not ask for one, so the theme's own default applies.
+ */
+const trackCount = (
+  tag: ContainerTag,
+  name: string,
+  value: string | undefined,
+  issues: SlideIssue[],
+): number | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const count = Number(value);
+  if (Number.isInteger(count) && count >= 1 && count <= MAX_TRACKS) {
+    return count;
+  }
+  issues.push({
+    kind: 'html',
+    message: `Invalid ${tagLabel(tag)} ${name} "${value}"; 1 to ${MAX_TRACKS} expected, ignored.`,
+  });
+  return undefined;
+};
+
+/** The tracks a `<Grid>` lays down. */
+const gridProperties = (tag: ContainerTag, attributes: Record<string, string>, issues: SlideIssue[]): Properties => {
+  const cols = trackCount(tag, 'cols', attributes.cols, issues);
+  const rows = trackCount(tag, 'rows', attributes.rows, issues);
+  return { ...(cols && { cols }), ...(rows && { rows }) };
+};
+
+/**
+ * The tracks a grid's child covers, as `colSpan`/`rowSpan` — named as the table attributes and CSS's
+ * `grid-column: span n` are, so a count of tracks laid down never reads the same as a count of tracks covered.
+ */
+const spanProperties = (tag: ContainerTag, attributes: Record<string, string>, issues: SlideIssue[]): Properties => {
+  const colSpan = trackCount(tag, 'colSpan', attributes.colSpan, issues);
+  const rowSpan = trackCount(tag, 'rowSpan', attributes.rowSpan, issues);
+  return { ...(colSpan && { colSpan }), ...(rowSpan && { rowSpan }) };
+};
+
+const containerNodes = (
   open: Extract<Token, { kind: 'open' }>,
   children: RootContent[],
   issues: SlideIssue[],
-): SlideElement => {
+): RootContent[] => {
+  if (open.tag === 'grid' || open.tag === 'cell') {
+    // Neither takes a named style, but both carry the only one they have so the renderer finds their classes where
+    // every other tag's live.
+    const tracks =
+      open.tag === 'grid'
+        ? gridProperties(open.tag, open.attributes, issues)
+        : spanProperties(open.tag, open.attributes, issues);
+    return [slideElement(CONTAINER_TAGS[open.tag], { variant: 'default', ...tracks }, children)];
+  }
+  if (open.tag === 'box' || open.tag === 'card') {
+    const variants = open.tag === 'box' ? BOX_VARIANTS : CARD_VARIANTS;
+    const variant = variantName(open.tag, open.attributes.variant, variants, issues);
+    const tone = toneName(open.tag, open.attributes.tone, issues);
+    // A card is a grid child as often as not, so it takes a span of its own rather than needing a `<Cell>` around it.
+    const tracks = open.tag === 'card' ? spanProperties(open.tag, open.attributes, issues) : {};
+    return [slideElement(CONTAINER_TAGS[open.tag], { variant, ...(tone && { tone }), ...tracks }, children)];
+  }
+  if (isStyleTag(open.tag)) {
+    return styleBlocks(open.tag, children, open.attributes, issues);
+  }
   const hName = CONTAINER_TAGS[open.tag];
   if (open.tag !== 'v-clicks') {
-    return slideElement(hName, {}, children);
+    return [slideElement(hName, {}, children)];
   }
   const depth = positiveInteger(open.attributes.depth, 'depth', issues);
   const every = positiveInteger(open.attributes.every, 'every', issues);
-  return slideElement(hName, { depth, every }, children);
+  return [slideElement(hName, { depth, every }, children)];
 };
 
 /** Nodes revealed one by one by `<v-clicks>`: list items down to `depth`, otherwise each child. */

@@ -190,6 +190,12 @@ export const ToolsPanel = ({
   onToolChange,
 }: ToolsPanelProps) => {
   const groups = useMemo(() => toolGroups(nodes, links, capabilities), [nodes, links, capabilities]);
+  // A type drawn point by point or in a stroke has no shape to drop: its tool is picked, not dragged.
+  const dragData = useCallback(
+    (tool: Tool): Record<string, unknown> | undefined =>
+      tool.kind === 'node' && !nodes[tool.type]?.createFromPoints ? nodeDragData(tool.type) : undefined,
+    [nodes],
+  );
   // Read-only leaves only select and pan, so the toggle sits with them.
   const groupEnd = useMemo(
     () =>
@@ -206,7 +212,7 @@ export const ToolsPanel = ({
       same={sameTool}
       collapse={collapse}
       flyout={flyout}
-      dragData={paletteDragData}
+      dragData={dragData}
       testId={paletteTestId}
       groupEnd={groupEnd}
       onToolChange={onToolChange}
@@ -228,9 +234,6 @@ export const ReadonlyToggle = ({ readonly, onReadonlyChange }: ReadonlyTogglePro
     onPressedChange={() => onReadonlyChange(!readonly)}
   />
 );
-
-const paletteDragData = (tool: Tool): Record<string, unknown> | undefined =>
-  tool.kind === 'node' ? nodeDragData(tool.type) : undefined;
 
 const paletteTestId = (entry: ToolEntry): string =>
   `palette-${entry.key ?? ('type' in entry.tool ? entry.tool.type : entry.tool.kind)}`;

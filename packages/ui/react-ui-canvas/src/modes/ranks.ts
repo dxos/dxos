@@ -11,7 +11,7 @@ import { Layout } from '@dxos/diagram';
 import { type BuiltinNodeType, type Node, type NodeStyle, type Point, type Size } from '@dxos/scene';
 
 import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
-import { centeredOrigin, createNode, initialKeys, withTitle } from '../utils/index.ts';
+import { centeredOrigin, createNode, initialKeys, nominalSize, withTitle } from '../utils/index.ts';
 
 /** `subject <relation> object`: "A east of B", "A aligned with B" (same row). */
 export type Relation = 'east' | 'west' | 'north' | 'south' | 'aligned';
@@ -37,10 +37,10 @@ export type ConstrainedOptions = {
   origin?: Point;
 };
 
-/** Multiples of the major grid, so a solved layout is already snapped. */
+/** In major cells, so a solved layout is already snapped whatever the drawing's grid is. */
 export const CONSTRAINED_GRID: Required<Omit<ConstrainedOptions, 'origin' | 'nodes'>> = {
-  pitch: { width: 256, height: 192 },
-  size: { width: 192, height: 128 },
+  pitch: nominalSize({ width: 4, height: 3 }),
+  size: nominalSize({ width: 3, height: 2 }),
 };
 
 export const CONSTRAINED_VIEW_ID = 'constrained';

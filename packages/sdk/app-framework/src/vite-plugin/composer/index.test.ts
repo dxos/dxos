@@ -42,7 +42,19 @@ describe('composerPlugin', () => {
     expect(manifest.assets).toContain('index.mjs');
   });
 
-  test('a chunk that declares its own `Map` still loads', async ({ expect }) => {
+  test('a chunk with no CommonJS module imports no React', async ({ expect }) => {
+    await build({
+      root,
+      configFile: false,
+      logLevel: 'silent',
+      plugins: composerPlugin({ entry: 'src/plugin.ts', vendor: false }),
+    });
+
+    const code = readFileSync(join(root, 'dist', 'index.mjs'), 'utf8');
+    expect(code).not.toMatch(/from\s*["']react/);
+  });
+
+  test('a chunk that declares its own `Map` still loads its CommonJS requires', async ({ expect }) => {
     // Under the package's `node_modules`, so the externals the shim imports (`react`, …) resolve when the bundle runs.
     const packageRoot = mkdtempSync(join(import.meta.dirname, '../../../node_modules/.dx-'));
     try {
@@ -51,9 +63,16 @@ describe('composerPlugin', () => {
         join(packageRoot, 'dx.config.mjs'),
         `export default { plugin: { key: 'org.example.plugin.map', name: 'Map' } };\n`,
       );
+      // A bundled CommonJS module that requires an external is what makes the chunk carry the shim.
+      writeFileSync(join(packageRoot, 'src', 'react-version.cjs'), `module.exports = require('react').version;\n`);
       writeFileSync(
         join(packageRoot, 'src', 'plugin.ts'),
-        `export class Map { readonly kind = 'map'; }\nexport default new Map().kind;\n`,
+        [
+          `import version from './react-version.cjs';`,
+          `export class Map { readonly kind = 'map'; }`,
+          'export default `${new Map().kind}:${typeof version}`;',
+          '',
+        ].join('\n'),
       );
       await build({
         root: packageRoot,
@@ -63,7 +82,7 @@ describe('composerPlugin', () => {
       });
 
       const { default: kind } = await import(/* @vite-ignore */ join(packageRoot, 'dist', 'index.mjs'));
-      expect(kind).toBe('map');
+      expect(kind).toBe('map:string');
     } finally {
       rmSync(packageRoot, { recursive: true, force: true });
     }

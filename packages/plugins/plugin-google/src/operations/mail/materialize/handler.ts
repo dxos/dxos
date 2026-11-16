@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 
 import { GoogleOperation } from '#types';
+
+import { databaseOf } from '../../database-of.ts';
 
 /**
  * Eagerly materializes a local Mailbox so the sync cursor's target exists before the cursor is
@@ -26,13 +27,10 @@ const handler: Operation.WithHandler<typeof GoogleOperation.MaterializeGmailTarg
         //   have it provided by the OperationInvoker — composer's invoker is wired
         //   without a `databaseResolver`, so we derive the db from the connection ref's
         //   target and provide `Database.layer(db)` ourselves.
-        const connectionObj = connection.target;
-        const db = connectionObj ? Obj.getDatabase(connectionObj) : undefined;
-        if (!connectionObj || !db) {
-          return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
-        }
+        const db = yield* databaseOf(connection);
 
         return yield* Effect.gen(function* () {
+          const connectionObj = yield* Database.load(connection);
           const accessToken = yield* Database.load(Connection.getAccessToken(connectionObj));
           const name = accessToken.account ?? 'Inbox';
           const created = yield* Database.add(Mailbox.make({ name }));

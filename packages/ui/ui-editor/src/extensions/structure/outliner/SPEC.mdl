@@ -113,6 +113,7 @@ feat F-1: Document model
 
 ```mdl
 feat F-2: Editing constraints
+  uses: [menu, tree]
 
   req F-2.1:
     when: the caret is moved into an item's marker (before its content start)
@@ -163,6 +164,7 @@ feat F-3: Selection (single model, subtree unit)
 
 ```mdl
 feat F-4: Structural commands
+  uses: [commands]
 
   req F-4.1:
     when: Tab / Shift-Tab is pressed on an item
@@ -180,6 +182,7 @@ feat F-4: Structural commands
 
 ```mdl
 feat F-5: Drag and drop re-indent
+  uses: [menu]
 
   req F-5.1:
     when: an item is dragged
@@ -203,6 +206,7 @@ feat F-5: Drag and drop re-indent
 
 ```mdl
 feat F-6: Menu / action scope
+  uses: [menu]
 
   req F-6.1:
     when: a menu command runs with a block selection

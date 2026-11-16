@@ -24,6 +24,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import {
   type LinkWidgetState,
   type ObjectLinkProps,
+  focusBlockField,
   objectEmbedFocus,
   releaseBlockHeight,
   setLinkWidgetState,
@@ -194,8 +195,7 @@ export const PreviewComponent = ({
     const frame = requestAnimationFrame(() => {
       claimed.current = undefined;
       const element = (containerRef.current ?? cardRef.current)?.querySelector<HTMLElement>(selector);
-      element?.focus();
-      element instanceof HTMLInputElement && element.select();
+      element && focusBlockField(element);
     });
     return () => cancelAnimationFrame(frame);
   }, [hasAttention]);

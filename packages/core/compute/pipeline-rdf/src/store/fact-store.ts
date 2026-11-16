@@ -15,6 +15,15 @@ import { type Fact, type Ontology } from '../types/index.ts';
 // stay chunk-free — importing this file must never pull the SPARQL/SQLite machinery.
 //
 
+/** One RDF term a SPARQL solution binds; plain data, so rows cross the wire as JSON (xsd:string has no datatype). */
+export type SparqlTerm =
+  | { readonly termType: 'NamedNode'; readonly value: string }
+  | { readonly termType: 'BlankNode'; readonly value: string }
+  | { readonly termType: 'Literal'; readonly value: string; readonly datatype?: string; readonly language?: string };
+
+/** One SPARQL solution: each bound variable (named without `?`) to its term; an unbound variable is absent. */
+export type SparqlRow = Readonly<Record<string, SparqlTerm>>;
+
 export interface FactStoreApi {
   /** Persist facts as statements in their named graphs (idempotent appends; no write-time merge). */
   readonly putFacts: (facts: readonly Fact[]) => Effect.Effect<void, SemanticIndexError>;
@@ -28,6 +37,11 @@ export interface FactStoreApi {
   readonly query: (query: SemanticQuery) => Effect.Effect<Fact[], SemanticIndexError>;
   /** Execute a raw SPARQL `SELECT ?g` and reassemble every statement in the graphs it binds. */
   readonly select: (sparql: string) => Effect.Effect<Fact[], SemanticIndexError>;
+  /**
+   * Execute a raw SPARQL `SELECT` as written and return its solutions, for queries whose answer is not a set of
+   * facts (entities of a class, counts, labels). Anything but a `SELECT` (an update included) fails.
+   */
+  readonly rows: (sparql: string) => Effect.Effect<SparqlRow[], SemanticIndexError>;
   /** Read the ingest cursor (last processed source hash) keyed by source DXN. */
   readonly cursor: (source: string) => Effect.Effect<string | undefined, SemanticIndexError>;
   /** Upsert the ingest cursor for the given source DXN. */

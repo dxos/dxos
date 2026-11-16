@@ -15,7 +15,7 @@ import { type ComputeShape, type TriggerShape } from '../shapes/index.ts';
 import { createComputeNode, isValidComputeNode } from './node-defs.ts';
 
 /**
- * A compute node for the shape, added to the model; the shape's `node` is what it returns. `id` keeps
+ * A compute node for the shape, added to the model; the shape's `data.node` is what it returns. `id` keeps
  * a known compute id, so a shape restored by undo gets back the node its links name.
  */
 export const syncCreate = (model: ComputeGraphModel, shape: ComputeShape, id?: string): ComputeNode | undefined => {
@@ -87,7 +87,7 @@ export const syncDelete = (model: ComputeGraphModel, nodeIds: string[], links: C
 };
 
 const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode, triggerData: TriggerShape) => {
-  const functionTrigger = triggerData.functionTrigger?.target;
+  const functionTrigger = triggerData.data?.functionTrigger?.target;
   // A restored trigger whose object was removed with it keeps its node but cannot be wired.
   if (!functionTrigger) {
     return;
@@ -108,8 +108,9 @@ export const deleteTriggerObjects = (computeGraph: ComputeGraphModel, shapes: Co
   for (const shape of shapes) {
     if (shape.type === 'trigger') {
       const trigger = shape as TriggerShape;
-      if (trigger.functionTrigger?.target) {
-        db.remove(trigger.functionTrigger.target);
+      const functionTrigger = trigger.data?.functionTrigger?.target;
+      if (functionTrigger) {
+        db.remove(functionTrigger);
       }
     }
   }

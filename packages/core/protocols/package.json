@@ -17,6 +17,10 @@
       "browser": "./dist/src/index.js",
       "import": "./dist/src/index.js"
     },
+    "./Awareness": {
+      "browser": "./dist/src/Awareness.js",
+      "import": "./dist/src/Awareness.js"
+    },
     "./feed-replication": {
       "browser": "./dist/src/feed-replication.js",
       "import": "./dist/src/feed-replication.js"
@@ -61,6 +65,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*"
   },

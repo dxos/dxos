@@ -88,23 +88,28 @@ const isOpen = (task: Task.Task): boolean =>
  */
 const assignedTasks = (graph: Hypergraph.Hypergraph, session: RemoteSession.RemoteSession) =>
   Effect.promise(() => graph.query(Query.select(Filter.type(Task.Task)).from('all-accessible-spaces')).run()).pipe(
-    Effect.map((result) =>
-      [...result]
-        .filter((task) => objectId(Task.worker(task)?.subject?.uri) === objectId(Obj.getURI(session)))
-        .filter(isOpen)
-        .map((task) => {
-          // Containment, not a lookup: `TaskSet.tasks` and `Project.taskSet` both set parent, so the
-          // project is two hops up from any task filed in one.
-          const taskSet = Obj.getParent(task);
-          const project = taskSet && Obj.getParent(taskSet);
-          return {
-            title: task.title,
-            dxn: Obj.getURI(task).toString(),
-            status: task.status,
-            project: project && Obj.getLabel(project),
-            projectDxn: project && Obj.getURI(project).toString(),
-          };
-        }),
+    Effect.flatMap((result) =>
+      Effect.forEach(
+        [...result]
+          .filter((task) => objectId(Task.worker(task)?.subject?.uri) === objectId(Obj.getURI(session)))
+          .filter(isOpen),
+        (task) =>
+          Task.collectRoot(task).pipe(
+            Effect.map((root) => {
+              // Containment, not a lookup: `TaskSet.tasks` and `Project.taskSet` both set parent, so
+              // the project is two hops up from the root of the task's tree (a sub-task's parent is a task).
+              const taskSet = Obj.getParent(root);
+              const project = taskSet && Obj.getParent(taskSet);
+              return {
+                title: task.title,
+                dxn: Obj.getURI(task).toString(),
+                status: task.status,
+                project: project && Obj.getLabel(project),
+                projectDxn: project && Obj.getURI(project).toString(),
+              };
+            }),
+          ),
+      ),
     ),
   );
 

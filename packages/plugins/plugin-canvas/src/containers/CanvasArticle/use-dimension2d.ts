@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -13,6 +13,7 @@ import { useObject } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Camera, type CanvasServices, currentLookId } from '@dxos/react-ui-canvas';
 import { type EditorDisplay, createConfig2D } from '@dxos/react-ui-canvas-editor';
+import { type ThemeContextValue, useThemeContext } from '@dxos/react-ui/Theme';
 import { type Node, isViewNode } from '@dxos/scene';
 
 import { generatorCompiler, objectRef, parseLinkedViewId } from '#model';
@@ -24,18 +25,28 @@ import { useCanvasProperties } from './use-canvas-properties.ts';
 import { createGeneratorWorker, useCanvasGenerators, useCanvasKinds, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
+const sameCamera = (left: Camera, right: Camera) =>
+  left.x === right.x && left.y === right.y && left.zoom === right.zoom;
+
 /** The camera a 2D viewer's camera bar resets to: the scene's origin at 1:1. */
 const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
 
-/** The theme a canvas draws when neither it nor the app names one. */
-const FALLBACK_THEME = 'flat';
+/** The theme a canvas draws when neither it nor the app names one: Glass in dark mode, else Flat. */
+const fallbackTheme = (mode: ThemeContextValue['themeMode']): string => (mode === 'dark' ? 'glass-night' : 'flat');
+
+/** The grid a drawing shows when the panel turns one on without naming a kind. */
+const DEFAULT_GRID_KIND = 'lines';
 
 /**
  * A 2D canvas's dimension: react-ui-canvas's engine as the viewport, each layout in the mode its own fields name
  * (`constrain2D`), with the canvas's node types and generators; the look and grid are the drawing's, snapping, guides, axes and the camera this
  * viewer's own.
  */
-export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Camera> => {
+export const useDimension2D = (
+  canvas: CanvasFormat.Canvas,
+  hostCamera?: Camera,
+  onHostCameraChange?: (camera: Camera) => void,
+): SceneDimension<Camera> => {
   const [snapshot] = useObject(canvas);
   const settings = snapshot.settings;
   const handleSettingsChange = useCallback(
@@ -69,6 +80,7 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
   const generators = useCanvasGenerators(db);
   const library = useCanvasLibrary('2d');
   const appSettings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
+  const { themeMode } = useThemeContext();
   // The Properties form's host additions, over the views the 2D canvas holds.
   const useProperties = useCallback(
     (services: CanvasServices) =>
@@ -95,26 +107,42 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
   const { camera, grid: snap, guides, axes } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   const onCameraChange = useCallback(
-    (next: Camera) => updateViewState((state) => ({ ...state, camera: next })),
-    [updateViewState],
+    (next: Camera) => {
+      updateViewState((state) => ({ ...state, camera: next }));
+      onHostCameraChange?.(next);
+    },
+    [updateViewState, onHostCameraChange],
   );
+  // The drawing's camera (a followed session's) moves this viewer's; the engine applies it as it changes.
+  useEffect(() => {
+    if (hostCamera && !(camera && sameCamera(camera, hostCamera))) {
+      updateViewState((state) => ({ ...state, camera: hostCamera }));
+    }
+  }, [hostCamera]);
   // A drawing may name a theme by an id since renamed; the picker marks it by its current one.
   const theme = currentLookId('themes', settings?.theme);
+  const backgroundGrid = settings?.backgroundGrid ?? 'none';
   const display = useMemo<EditorDisplay>(
     () => ({
-      theme: theme ?? appSettings.theme ?? FALLBACK_THEME,
+      theme: theme ?? appSettings.theme ?? fallbackTheme(themeMode),
       themeOverride: theme,
-      grid: (settings?.backgroundGrid ?? 'none') !== 'none',
+      grid: backgroundGrid !== 'none',
+      // The kind the drawing stores, so the display panel marks the one it draws rather than always the lines.
+      ...(backgroundGrid === 'none' ? {} : { gridKind: backgroundGrid }),
       snap: snap ?? true,
       guides: guides ?? true,
       axes: axes ?? false,
     }),
-    [theme, settings?.backgroundGrid, appSettings.theme, snap, guides, axes],
+    [theme, backgroundGrid, appSettings.theme, themeMode, snap, guides, axes],
   );
   const onDisplayChange = useCallback(
     (next: Partial<EditorDisplay>) => {
       'themeOverride' in next && handleSettingsChange({ theme: next.themeOverride });
-      next.grid !== undefined && handleSettingsChange({ backgroundGrid: next.grid ? 'lines' : 'none' });
+      // The panel switches between the kinds and off, so the kind it picked is stored, not the grid's being on.
+      (next.grid !== undefined || next.gridKind !== undefined) &&
+        handleSettingsChange({
+          backgroundGrid: next.grid === false ? 'none' : (next.gridKind ?? DEFAULT_GRID_KIND),
+        });
       (next.snap !== undefined || next.guides !== undefined || next.axes !== undefined) &&
         updateViewState((state) => ({
           ...state,

@@ -48,7 +48,7 @@ test.describe('Tour tests', () => {
     await Support.walk(host.page, DOCUMENT_TOUR);
 
     await host.page.setViewportSize({ width: 1200, height: 800 });
-    await expect(host.page.getByTestId('editor.toolbar.viewMode')).toBeHidden();
+    await expect(host.page.getByTestId('editor.toolbar.strong')).toBeHidden();
     await Support.startFromCompanion(host.page);
     await Support.walk(host.page, DOCUMENT_TOUR);
 

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { type VersionedSource, combinedSource, readPath, sameValue, writePath } from '@dxos/react-ui-canvas/headless';
-import { LAYOUT_PATCH_FIELDS, type LayoutIntent, type LayoutPatch, Scene, applyIntent } from '@dxos/scene';
+import { LAYOUT_PATCH_FIELDS, type LayoutIntent, LayoutPatch, Scene, applyIntent } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 
@@ -30,9 +30,11 @@ const isHeads = (value: unknown): value is readonly string[] =>
 
 const isElement3D = Schema.is(Scene.Element3D);
 const isElement2D = Schema.is(Scene.Element2D);
+const isGridPitch = Schema.is(Scene.GridPitch);
 const isLattice = Schema.is(Scene.Lattice);
 const isConstraints = Schema.is(Schema.Array(Scene.Constraint));
 const isLayoutKind = Schema.is(Scene.LayoutKind);
+const isLayoutPatch = Schema.is(LayoutPatch);
 
 /** Writes `next` (undefined unsets it) to the 2D layout field `field`, inside an `Obj.update`. */
 const writeLayoutField = (layout: Obj.Mutable<Scene.Layout2D>, field: keyof LayoutPatch, next: unknown): void => {
@@ -46,6 +48,9 @@ const writeLayoutField = (layout: Obj.Mutable<Scene.Layout2D>, field: keyof Layo
     isLayoutKind(next) && (layout.kind = next);
   } else if (field === 'name') {
     typeof next === 'string' && (layout.name = next);
+  } else if (field === 'grid') {
+    // Snapping divides by the pitch, so anything under one, or not finite, would put every drop and nudge at `NaN`.
+    isGridPitch(next) && (layout.grid = next);
   } else {
     typeof next === 'boolean' && (layout.anonymous = next);
   }
@@ -142,6 +147,16 @@ export const applyLayoutIntent = (layout: Scene.Layout2D | Scene.Layout3D, inten
       ? LAYOUT_PATCH_FIELDS.filter((field) => !sameValue(before[field], after[field]))
       : [];
   if (changed.length === 0 && fields.length === 0) {
+    return;
+  }
+  // One invalid field refuses the whole intent. A batch's element writes would otherwise land while the field was
+  // dropped, leaving positions the caller computed against a pitch the layout never took.
+  if (
+    after.dim === '2d' &&
+    !isLayoutPatch(
+      Object.fromEntries(fields.flatMap((field) => (after[field] === undefined ? [] : [[field, after[field]]]))),
+    )
+  ) {
     return;
   }
   Obj.update(layout, (layout) => {

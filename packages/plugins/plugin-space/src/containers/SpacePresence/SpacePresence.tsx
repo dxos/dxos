@@ -2,53 +2,44 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ComponentProps, forwardRef, useEffect, useMemo, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { generateName } from '@dxos/display-name';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Key, Obj } from '@dxos/echo';
-import { type Space } from '@dxos/halo';
-import { useIdentity, useMembers } from '@dxos/halo-react';
 import { type EID } from '@dxos/keys';
 import { type Progress } from '@dxos/progress';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { type Activity } from '@dxos/react-ui-attention/types';
-import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
-import type * as Util from '@dxos/react-ui/Util';
 import { toLocalizedString } from '@dxos/ui-types/translations';
-import { hexToFallback } from '@dxos/util';
 
-import { SpaceCapabilities, SpaceSchema } from '#types';
+import { SpaceCapabilities } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
-import { PRESENCE_EXPIRY } from '../../util/index.ts';
+import { MEMBERS_COMPANION_ID, type ObjectViewers, countViewers, getPeerNodeIds } from '../../util/index.ts';
+import { useExpandPeerNodes } from './PeerActions.tsx';
+import {
+  type AvatarSize,
+  PresenceAvatar,
+  PresenceList,
+  type PresenceListAction,
+  type PresenceListProps,
+  getName,
+  getPresenceMembers,
+  isAttending,
+  useNow,
+  usePresenceList,
+} from './PresenceList.tsx';
 
-const REFRESH_INTERVAL = 5000;
-
-// TODO(wittjosiah): Factor out?
-const getName = (member: Space.Member) => member.displayName ?? generateName(member.identityKey ?? '0');
-
-const byIdentityKey = (a: Space.Member, b: Space.Member) => (a.identityKey ?? '').localeCompare(b.identityKey ?? '');
-
-const isActive = (viewer: SpaceSchema.ObjectViewerProps, now: number) => now - viewer.lastSeen < PRESENCE_EXPIRY;
-
-const useNow = () => {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), REFRESH_INTERVAL);
-    return () => clearInterval(interval);
-  }, []);
-  return now;
-};
-
-const useActiveViewerCount = (viewers?: Record<string, SpaceSchema.ObjectViewerProps>) => {
+const useActiveViewerCount = (viewers?: ObjectViewers) => {
   const now = useNow();
-  return viewers ? Object.values(viewers).filter((viewer) => isActive(viewer, now)).length : 0;
+  return countViewers(viewers, now);
 };
 
 export type SpacePresenceProps = {
@@ -57,160 +48,154 @@ export type SpacePresenceProps = {
 };
 
 export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
+  const { invokePromise } = Hooks.useOperationInvoker();
   const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
-  const identity = useIdentity();
-  const spaceMembers = useMembers(spaceId);
   const now = useNow();
+  const list = usePresenceList(spaceId, presenceKey);
+  const viewers = (presenceKey && ephemeral?.viewersByObject[presenceKey]) || {};
+  // Ready before the list opens, so its rows' actions do not appear after it.
+  useExpandPeerNodes(spaceId ? getPeerNodeIds(spaceId, viewers, now) : []);
+  const seeEveryone = useMemo(
+    (): PresenceListAction => ({
+      id: 'seeEveryone',
+      label: ['presence-see-everyone.label', { ns: SpaceNamespace.key }],
+      icon: 'ph--users--regular',
+      testId: 'spacePlugin.presence.seeEveryone',
+      onClick: () =>
+        void invokePromise(LayoutOperation.UpdateComplementary, { subject: MEMBERS_COMPANION_ID, state: 'expanded' }),
+    }),
+    [invokePromise],
+  );
 
-  if (!identity || !ephemeral || !presenceKey) {
-    return null;
-  }
-
-  const viewers = ephemeral.viewersByObject[presenceKey] ?? {};
-  const members = spaceMembers
-    .flatMap((member) => {
-      const viewer = member.identityKey ? viewers[member.identityKey] : undefined;
-      if (!member.online || member.identityKey === identity.identityKey || !viewer || !isActive(viewer, now)) {
-        return [];
-      }
-      return [{ ...member, currentlyAttended: viewer.currentlyAttended, lastSeen: viewer.lastSeen }];
-    })
-    .toSorted(byIdentityKey);
-
-  return <FullPresence members={members} />;
+  return presenceKey ? <FullPresence {...list} action={seeEveryone} /> : null;
 };
 
-export type Member = Space.Member & {
-  /**
-   * Last time a member was seen on this object.
-   */
-  lastSeen: number;
-  currentlyAttended: boolean;
-};
+const OVERFLOW_TRIGGER = 'overflow';
 
-type AvatarSize = ComponentProps<typeof Avatar.Root>['size'];
+type AvatarTriggerProps = ComponentPropsWithoutRef<'button'> & { tooltip: string };
 
-export type MemberPresenceProps = Util.ThemedClassName<{
+/** A button around an avatar; its tooltip finds it by the id the `asChild` Popover trigger gives it. */
+const AvatarTrigger = forwardRef<HTMLButtonElement, AvatarTriggerProps>(
+  ({ tooltip, children, ...props }, forwardedRef) => (
+    <Tooltip.Root ids={props.id ? { trigger: props.id } : undefined} positioning={{ placement: 'bottom' }}>
+      <Tooltip.Trigger asChild>
+        <button type='button' className='grid focus:outline-hidden' {...props} ref={forwardedRef}>
+          {children}
+        </button>
+      </Tooltip.Trigger>
+      <Tooltip.Content>{tooltip}</Tooltip.Content>
+    </Tooltip.Root>
+  ),
+);
+
+export type FullPresenceProps = PresenceListProps & {
   size?: AvatarSize;
-  members?: Member[];
-  showCount?: boolean;
-  onMemberClick?: (member: Member) => void;
-}>;
+  /** At the end of the list's header; taking it closes the list. */
+  action?: PresenceListAction;
+};
 
-export const FullPresence = (props: MemberPresenceProps) => {
-  const { size = 'md', onMemberClick } = props;
-  const members = UiHooks.useDefaultValue(props.members, () => []);
+/** Avatars of the members on an object; clicking any opens the presence list of the object. */
+export const FullPresence = ({ size = 'md', action, ...props }: FullPresenceProps) => {
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
+  const [open, setOpen] = useState(false);
+  const groupRef = useRef<HTMLDivElement>(null);
+  const members = getPresenceMembers(props);
+  const title = t('presence-in-object.heading', { count: members.length });
+  const closingAction = useMemo(
+    () =>
+      action && {
+        ...action,
+        onClick: () => {
+          setOpen(false);
+          action.onClick();
+        },
+      },
+    [action],
+  );
 
   if (members.length === 0) {
+    // A list emptied while open stays closed when viewers return.
+    if (open) {
+      setOpen(false);
+    }
     return null;
   }
 
+  // Each avatar and the overflow are the list's own triggers, so the popover returns focus to the one that opened it
+  // and keeps the list in the tab order after it (zag binds that tab order at open, not on a switch to another avatar).
   return (
-    <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
-      {members.slice(0, 3).map((member, i) => (
-        <Tooltip.Trigger
-          key={member.identityKey}
-          side='bottom'
-          content={getName(member)}
-          className='grid focus:outline-hidden'
+    <Popover.Root
+      open={open}
+      onOpenChange={({ open }) => setOpen(open)}
+      positioning={{ placement: 'bottom-end' }}
+      // zag focuses nothing when the opening avatar has left, so focus falls back to the first one.
+      finalFocusEl={() =>
+        groupRef.current?.querySelector<HTMLElement>('[data-part="trigger"][data-current]') ??
+        groupRef.current?.querySelector<HTMLElement>('[data-part="trigger"]') ??
+        null
+      }
+    >
+      <Popover.Anchor asChild>
+        {/* A row of overlapping avatars; the `dx-avatar-group` rule only styles lit avatars. */}
+        <Layout.Flex
+          ref={groupRef}
+          align='center'
+          classNames='dx-avatar-group inline-flex [&>*+*]:-ms-2'
+          data-testid='spacePlugin.presence'
+          data-follow-keep
         >
-          <PresenceAvatar
-            member={member}
-            match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
-            index={members.length - i}
-            onClick={() => onMemberClick?.(member)}
-            size={size}
-          />
-        </Tooltip.Trigger>
-      ))}
-
-      {members.length > 3 && (
-        <Popover.Root positioning={{ placement: 'bottom' }}>
-          <Popover.Trigger className='grid focus:outline-hidden'>
-            {/* TODO(wittjosiah): Make text fit. */}
-            <Avatar.Root
-              status='inactive'
-              style={{ zIndex: members.length - 4 }}
-              fallback={`+${members.length - 3}`}
-              size={size}
+          {members.slice(0, 3).map((member, i) => (
+            <Popover.Trigger key={member.identityKey} asChild value={member.rowId}>
+              <AvatarTrigger tooltip={getName(member)}>
+                <PresenceAvatar
+                  member={member}
+                  match={isAttending(member)}
+                  index={members.length - i}
+                  size={size}
+                  followHue={
+                    member.identityKey && props.followMembers?.has(member.identityKey) ? props.followHue : undefined
+                  }
+                />
+              </AvatarTrigger>
+            </Popover.Trigger>
+          ))}
+          {members.length > 3 && (
+            <Popover.Trigger asChild value={OVERFLOW_TRIGGER}>
+              <button type='button' className='grid focus:outline-hidden' aria-label={title}>
+                <Avatar.Root
+                  status='inactive'
+                  style={{ zIndex: members.length - 4 }}
+                  fallback={`+${members.length - 3}`}
+                  size={size}
+                />
+              </button>
+            </Popover.Trigger>
+          )}
+        </Layout.Flex>
+      </Popover.Anchor>
+      {/* The Members companion's size, so the two lists read alike; the plank header's would be larger. */}
+      <Popover.Content size='md' classNames='w-96' aria-label={title} data-follow-keep>
+        <PresenceList.Root {...props}>
+          <Popover.Header>
+            <PresenceList.Toolbar
+              title={['presence-in-object.heading', { ns: SpaceNamespace.key, count: members.length }]}
+              action={closingAction}
             />
-          </Popover.Trigger>
-          <Popover.Content>
-            <Popover.Body classNames='max-h-56'>
-              <Listbox.Root
-                items={members.map((member) => ({ value: member.identityKey ?? '', label: member.identityKey ?? '' }))}
-              >
-                <Listbox.Viewport>
-                  <Listbox.Content aria-label='members'>
-                    {members.map((member) => (
-                      <Listbox.Item
-                        key={member.identityKey}
-                        id={member.identityKey ?? ''}
-                        classNames='flex gap-2 items-center cursor-pointer mb-2'
-                        onClick={() => onMemberClick?.(member)}
-                        data-testid='identity-list-item'
-                      >
-                        {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                        <PresenceAvatar member={member} size={size} showName match={member.currentlyAttended} />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Viewport>
-              </Listbox.Root>
-            </Popover.Body>
-          </Popover.Content>
-        </Popover.Root>
-      )}
-    </div>
+          </Popover.Header>
+          {/* The header keeps a gap from the panel's top edge; the list keeps the same from its bottom. */}
+          <Popover.Body classNames='pb-2'>
+            <PresenceList.Content label={title} />
+          </Popover.Body>
+        </PresenceList.Root>
+      </Popover.Content>
+    </Popover.Root>
   );
 };
-
-type PresenceAvatarProps = {
-  member: Space.Member;
-  size?: AvatarSize;
-  showName?: boolean;
-  match?: boolean;
-  index?: number;
-  onClick?: () => void;
-};
-
-const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
-  ({ member, showName, match, index, onClick, size }, forwardedRef) => {
-    const status = match ? 'current' : 'inactive';
-    const fallbackValue = hexToFallback(member.identityKey ?? '0');
-    const name = getName(member);
-    const nameId = UiHooks.useId('presence-name');
-    const avatar = (
-      <Avatar.Root
-        status={status}
-        hue={Avatar.toAvatarHue(member.data?.hue || fallbackValue.hue)}
-        data-testid='spacePlugin.presence.member'
-        data-status={status}
-        size={size}
-        {...(index ? { style: { zIndex: index } } : {})}
-        onClick={onClick}
-        fallback={member.data?.emoji || fallbackValue.emoji}
-        {...(showName ? { 'aria-labelledby': nameId } : { label: name })}
-        ref={forwardedRef}
-      />
-    );
-    return showName ? (
-      <>
-        {avatar}
-        <span id={nameId} className='text-sm truncate px-2'>
-          {name}
-        </span>
-      </>
-    ) : (
-      avatar
-    );
-  },
-);
 
 export type SmallPresenceLiveProps = {
   id?: string;
   open?: boolean;
-  viewers?: Record<string, SpaceSchema.ObjectViewerProps>;
+  viewers?: ObjectViewers;
   /** The object the row stands for; its progress monitors join its presence. */
   object?: Obj.Unknown;
 };

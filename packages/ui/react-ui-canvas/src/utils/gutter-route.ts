@@ -7,11 +7,16 @@
 // straight out to the centre line of the gutter beside it, and the route between runs at right angles, with
 // as few bends as it can, along gutter centre lines and the lines through its own ports. A port line runs
 // straight through free cells, so a route detours into the gutters only around occupied ones; a gutter a
-// multi-cell shape spans is covered by the shape, so it is not a track.
+// multi-cell shape spans is covered by the shape, so it is not a track. A hull's border runs along a gutter's centre
+// line, so there the gutter has two tracks, a quarter of the gutter either side of the border, and no route runs
+// along the border itself; a route crosses a border only to reach an end the hull holds and the other end does not.
+// A hull drawn inset leaves the centre line clear: that line is then the track outside it, and the track inside it
+// is halfway between the border and the shapes.
 //
 
 import { type Bounds, type Node, type Point } from '@dxos/scene';
 
+import { type HullWalls, type Wall } from './hull.ts';
 import { type LatticeSpec, onLattice } from './lattice.ts';
 import { sideNormal } from './ports.ts';
 import { type RouteEnd } from './route.ts';
@@ -19,6 +24,12 @@ import { nodeBounds } from './shapes.ts';
 
 /** A bend costs as much as this much distance: turns dominate, length breaks ties. */
 const TURN_COST = 100_000;
+
+/**
+ * Crossing a hull's border costs more than any number of bends a route takes, so a route enters a hull once, to
+ * reach the end inside it, rather than cutting through a corner of it to save a turn.
+ */
+const CROSS_COST = TURN_COST * 32;
 
 /** Gutter lines beyond the ends and the shapes the search may use, so a route can go round the outermost. */
 const MARGIN = 3;
@@ -37,10 +48,66 @@ const crosses = (from: Point, to: Point, bounds: Bounds): boolean => {
   );
 };
 
-/** Where an end meets the gutter beside its port: straight out along the side's normal, half a gutter. */
-const gutterExit = (end: RouteEnd, spec: LatticeSpec): Point => {
+/** Whether two axis-aligned segments share a point. */
+const touches = (from: Point, to: Point, wall: Wall): boolean =>
+  Math.min(from.x, to.x) <= Math.max(wall.from.x, wall.to.x) + EPSILON &&
+  Math.max(from.x, to.x) >= Math.min(wall.from.x, wall.to.x) - EPSILON &&
+  Math.min(from.y, to.y) <= Math.max(wall.from.y, wall.to.y) + EPSILON &&
+  Math.max(from.y, to.y) >= Math.min(wall.from.y, wall.to.y) - EPSILON;
+
+/** Whether an axis-aligned segment runs along a wall for some of its length, rather than meeting it at a point. */
+const runsAlong = (from: Point, to: Point, wall: Wall): boolean => {
+  const overlap = (a: number, b: number, c: number, d: number) =>
+    Math.min(Math.max(a, b), Math.max(c, d)) - Math.max(Math.min(a, b), Math.min(c, d)) > EPSILON;
+  const level = (a: number, b: number, c: number, d: number) =>
+    Math.abs(a - b) < EPSILON && Math.abs(c - d) < EPSILON && Math.abs(a - c) < EPSILON;
+  return (
+    (level(from.y, to.y, wall.from.y, wall.to.y) && overlap(from.x, to.x, wall.from.x, wall.to.x)) ||
+    (level(from.x, to.x, wall.from.x, wall.to.x) && overlap(from.y, to.y, wall.from.y, wall.to.y))
+  );
+};
+
+/** The side of a wall its hull is on, as a unit step: a wall runs clockwise round the hull, so it is on the right. */
+const inwardOf = (wall: Wall): Point => ({
+  x: -Math.sign(wall.to.y - wall.from.y),
+  y: Math.sign(wall.to.x - wall.from.x),
+});
+
+/** How far inside a wall its hull's track is, across a gutter `gutter` wide: halfway from the wall to the shapes. */
+const insideTrack = (wall: Wall, gutter: number): number => (gutter / 2 - (wall.inset ?? 0)) / 2;
+
+/**
+ * The lines a wall at `at` adds to the search across a gutter `gutter` wide, `inward` being the step towards its
+ * hull: the track inside it, and outside it either a track a quarter of the gutter out, where the wall is on the
+ * centre line, or, where it is inset, the wall's own line, so the search has a point on the border to count a
+ * crossing at; the centre line it leaves clear is the track outside it, and a line of the grid already.
+ */
+const wallLines = (wall: Wall, at: number, inward: number, gutter: number): number[] => [
+  at + inward * insideTrack(wall, gutter),
+  wall.inset ? at : at - (inward * gutter) / 4,
+];
+
+/**
+ * Where an end meets the gutter beside its port: straight out along the side's normal, half a gutter. Where that is
+ * on a border closed to the route, the track on the end's own side of the border.
+ */
+const gutterExit = (end: RouteEnd, spec: LatticeSpec, walls?: HullWalls): Point => {
   const normal = sideNormal(end.side);
-  return { x: end.point.x + (normal.x * spec.gutterX) / 2, y: end.point.y + (normal.y * spec.gutterY) / 2 };
+  const gutter = Math.abs(normal.x) * spec.gutterX + Math.abs(normal.y) * spec.gutterY;
+  const out = (distance: number) => ({
+    x: end.point.x + normal.x * distance,
+    y: end.point.y + normal.y * distance,
+  });
+  const centre = out(gutter / 2);
+  // A wall on the centre line is met there, and one drawn inset is met on the way to it, from inside its hull.
+  const wall = walls?.closed.find((closed) => touches(end.point, centre, closed));
+  if (!wall) {
+    return centre;
+  }
+  // The end faces the wall from inside its hull when the way out of the shape is the way out of the hull.
+  const inward = inwardOf(wall);
+  const inside = normal.x * inward.x + normal.y * inward.y < 0;
+  return out(inside ? insideTrack(wall, gutter) : gutter / 4);
 };
 
 /** The gutter centre lines (`(k + 1/2) x pitch`) in `[low, high]`, widened by `MARGIN` lines either side. */
@@ -111,10 +178,34 @@ export const gutterRoute = (
   spec: LatticeSpec,
   from: RouteEnd,
   to: RouteEnd,
-): Point[] | undefined => gutterRouteWithCost(nodes, spec, from, to)?.points;
+  walls?: HullWalls,
+): Point[] | undefined => gutterRouteWithCost(nodes, spec, from, to, walls)?.points;
 
-/** A gutter route and what it cost the search: `TURN_COST` a bend, plus its length. */
-export type GutterRoute = { points: Point[]; cost: number };
+/**
+ * A gutter route, what it cost the search (`TURN_COST` a bend, plus its length), and how many hull borders it
+ * crosses.
+ */
+export type GutterRoute = { points: Point[]; cost: number; crossings: number };
+
+/** How many times a route of right-angled runs passes from one side of a wall to the other. */
+export const wallCrossings = (route: readonly Point[], walls: readonly Wall[]): number =>
+  route.slice(1).reduce((count, to, index) => {
+    const from = route[index];
+    const between = (value: number, a: number, b: number) =>
+      value > Math.min(a, b) + EPSILON && value < Math.max(a, b) - EPSILON;
+    return (
+      count +
+      walls.filter((wall) =>
+        Math.abs(wall.from.x - wall.to.x) < EPSILON
+          ? Math.abs(from.y - to.y) < EPSILON &&
+            between(from.y, wall.from.y, wall.to.y) &&
+            between(wall.from.x, from.x, to.x)
+          : Math.abs(from.x - to.x) < EPSILON &&
+            between(from.x, wall.from.x, wall.to.x) &&
+            between(wall.from.y, from.y, to.y),
+      ).length
+    );
+  }, 0);
 
 /** {@link gutterRoute} with its cost, so routes between different ports can be compared. */
 export const gutterRouteWithCost = (
@@ -122,14 +213,15 @@ export const gutterRouteWithCost = (
   spec: LatticeSpec,
   from: RouteEnd,
   to: RouteEnd,
+  walls?: HullWalls,
 ): GutterRoute | undefined => {
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
-  const start = gutterExit(from, spec);
-  const end = gutterExit(to, spec);
+  const start = gutterExit(from, spec, walls);
+  const end = gutterExit(to, spec, walls);
   const frames = nodes.filter(onLattice).map(nodeBounds);
   // The local grid finds almost every route; only when it offers no way round does the search widen.
   const search = (transitive: boolean) =>
-    searchGrid(from, to, start, end, frames, searchRegion(start, end, frames, pitchX, pitchY, transitive), spec);
+    searchGrid(from, to, start, end, frames, searchRegion(start, end, frames, pitchX, pitchY, transitive), spec, walls);
   return search(false) ?? search(true);
 };
 
@@ -142,12 +234,25 @@ const searchGrid = (
   frames: readonly Bounds[],
   region: Region,
   spec: LatticeSpec,
+  walls?: HullWalls,
 ): GutterRoute | undefined => {
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
   const verticals = gutterLines(region.left, region.right, pitchX);
   const horizontals = gutterLines(region.top, region.bottom, pitchY);
-  const xs = sortedUnique([...verticals, start.x, end.x]);
-  const ys = sortedUnique([...horizontals, start.y, end.y]);
+  // No route runs along a border, so each adds the lines either side of it that one may run along.
+  const within = (lines: readonly number[]) => (value: number) =>
+    value > lines[0] - EPSILON && value < lines[lines.length - 1] + EPSILON;
+  const borders = walls?.borders ?? [];
+  const tracksX = borders
+    .filter((wall) => Math.abs(wall.from.x - wall.to.x) < EPSILON)
+    .flatMap((wall) => wallLines(wall, wall.from.x, inwardOf(wall).x, spec.gutterX))
+    .filter(within(verticals));
+  const tracksY = borders
+    .filter((wall) => Math.abs(wall.from.y - wall.to.y) < EPSILON)
+    .flatMap((wall) => wallLines(wall, wall.from.y, inwardOf(wall).y, spec.gutterY))
+    .filter(within(horizontals));
+  const xs = sortedUnique([...verticals, ...tracksX, start.x, end.x]);
+  const ys = sortedUnique([...horizontals, ...tracksY, start.y, end.y]);
   const [columns, rows] = [xs.length, ys.length];
   // Only frames overlapping the grid can block one of its segments.
   const grid = { x: xs[0], y: ys[0], width: xs[columns - 1] - xs[0], height: ys[rows - 1] - ys[0] };
@@ -166,6 +271,24 @@ const searchGrid = (
   const acrossColumn = xs.map((x) =>
     near.filter((frame) => x > frame.x + EPSILON && x < frame.x + frame.width - EPSILON),
   );
+  const closed = walls?.closed ?? [];
+  const crossed = walls?.open ?? [];
+  // A crossing is two steps, onto the border and off it, so each is charged half; 0 unmeasured, 1 off, 2 on.
+  const onBorder = new Uint8Array(columns * rows);
+  const crossing = (i: number, j: number, ni: number, nj: number): number => {
+    if (crossed.length === 0) {
+      return 0;
+    }
+    const at = (column: number, row: number) => {
+      const index = row * columns + column;
+      if (onBorder[index] === 0) {
+        const point = { x: xs[column], y: ys[row] };
+        onBorder[index] = crossed.some((wall) => touches(point, point, wall)) ? 2 : 1;
+      }
+      return onBorder[index];
+    };
+    return at(i, j) === at(ni, nj) ? 0 : CROSS_COST / 2;
+  };
   // Each segment between neighbouring grid points is tested once, though the search reaches it from both axes:
   // 0 untested, 1 clear, 2 blocked; indexed by the segment's lower point.
   const blockedH = new Uint8Array(columns * rows);
@@ -179,7 +302,8 @@ const searchGrid = (
       const a = { x: xs[i], y: ys[j] };
       const b = { x: xs[ni], y: ys[nj] };
       const candidates = horizontal ? acrossRow[j] : acrossColumn[i];
-      cache[index] = candidates.some((frame) => crosses(a, b, frame)) ? 2 : 1;
+      const walled = closed.some((wall) => touches(a, b, wall)) || borders.some((wall) => runsAlong(a, b, wall));
+      cache[index] = walled || candidates.some((frame) => crosses(a, b, frame)) ? 2 : 1;
     }
     return cache[index] === 1;
   };
@@ -242,7 +366,11 @@ const searchGrid = (
       }
       const next = stateOf(i, j, axis);
       const nextCost =
-        currentCost + Math.abs(xs[i] - xs[ci]) + Math.abs(ys[j] - ys[cj]) + (axis === currentAxis ? 0 : TURN_COST);
+        currentCost +
+        Math.abs(xs[i] - xs[ci]) +
+        Math.abs(ys[j] - ys[cj]) +
+        (axis === currentAxis ? 0 : TURN_COST) +
+        crossing(ci, cj, i, j);
       if (nextCost < cost[next]) {
         cost[next] = nextCost;
         previous[next] = current;
@@ -259,7 +387,8 @@ const searchGrid = (
     const cell = state >> 1;
     corners.unshift({ x: xs[cell % columns], y: ys[Math.floor(cell / columns)] });
   }
-  return { points: collapse([from.point, ...corners, to.point]), cost: bestCost };
+  const points = collapse([from.point, ...corners, to.point]);
+  return { points, cost: bestCost, crossings: wallCrossings(points, borders) };
 };
 
 /** A binary min-heap of values by priority. */

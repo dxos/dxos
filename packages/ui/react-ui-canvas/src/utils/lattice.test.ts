@@ -4,22 +4,43 @@
 
 import { describe, test } from 'vitest';
 
+import { type HullNode, type Node, type RectNode } from '@dxos/scene';
+
 import {
-  DEFAULT_LATTICE,
+  type LatticeSpec,
   cellBounds,
   collides,
   coveredCells,
+  latticeGrid,
   nearestFree,
   occupancy,
   quantize,
+  reseat,
+  reseatBounds,
   resizeCell,
   toCell,
 } from './lattice.ts';
 import { createNode } from './shapes.ts';
 
-const spec = DEFAULT_LATTICE;
+// The lattice these positions are worked out on: a pitch of 384 by 192.
+const spec: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
 describe('lattice', () => {
+  test('the lattice grid puts a major line on every cell edge', ({ expect }) => {
+    const minor = latticeGrid(spec, 4);
+    expect(minor).toBe(16);
+    // A pitch the settings could not show falls back, so the canvas and its form agree.
+    expect(latticeGrid({ width: 32, height: 16, gutterX: 8, gutterY: 8 }, 4)).toBe(0);
+    // Too coarse a pitch takes the largest one in range that still lands on every cell edge.
+    expect(latticeGrid({ width: 4096, height: 2048, gutterX: 2048, gutterY: 2048 }, 4)).toBe(128);
+    for (let index = -2; index <= 2; index++) {
+      const { x, y, width, height } = cellBounds({ col: index, row: index, spanX: 2, spanY: 1 }, spec);
+      for (const edge of [x, x + width, y, y + height]) {
+        expect(Math.abs(edge % (minor * 4))).toBe(0);
+      }
+    }
+  });
+
   test('a one-cell shape is the spec size on its cell; a pitch is a shape plus a gutter', ({ expect }) => {
     expect(cellBounds({ col: 0, row: 0, spanX: 1, spanY: 1 }, spec)).toEqual({
       x: -128,
@@ -101,5 +122,30 @@ describe('lattice', () => {
     const moved = nearestFree({ col: 0, row: 0, spanX: 1, spanY: 1 }, occupied);
     expect(moved && collides(moved, occupied)).toBe(false);
     expect(moved && Math.max(Math.abs(moved.col), Math.abs(moved.row))).toBe(1);
+  });
+
+  test('a frame re-seated on another lattice keeps its cells, so it moves and resizes with them', ({ expect }) => {
+    const wider = { width: 192, height: 96, gutterX: 96, gutterY: 96 };
+    // One cell at column 2, row -1, and a frame spanning two columns from the origin.
+    const single = cellBounds({ col: 2, row: -1, spanX: 1, spanY: 1 }, spec);
+    const double = cellBounds({ col: 0, row: 0, spanX: 2, spanY: 1 }, spec);
+    expect(reseatBounds(single, spec, wider)).toEqual(cellBounds({ col: 2, row: -1, spanX: 1, spanY: 1 }, wider));
+    expect(reseatBounds(double, spec, wider)).toEqual({ x: -96, y: -48, width: 480, height: 96 });
+    expect(reseatBounds(single, spec, spec)).toEqual(single);
+  });
+
+  test('a scene re-seats the shapes on its lattice and leaves a hull and a guide where they are', ({ expect }) => {
+    const wider = { width: 192, height: 96, gutterX: 96, gutterY: 96 };
+    const frame = { z: 'a0', center: { x: 384, y: 192 }, size: { width: 256, height: 128 } };
+    const shape: RectNode = { type: 'rect', id: 'a', ...frame };
+    const guide: RectNode = { type: 'rect', id: 'g', ...frame, style: { guide: true } };
+    const hull: HullNode = { type: 'hull', id: 'h', ...frame };
+    const scene: { id: string; nodes: Record<string, Node> } = { id: 's', nodes: { a: shape, g: guide, h: hull } };
+    const seated = reseat(scene, spec, wider);
+    expect([seated.nodes.a.center, seated.nodes.a.size]).toEqual([
+      { x: 288, y: 192 },
+      { width: 192, height: 96 },
+    ]);
+    expect([seated.nodes.g, seated.nodes.h, seated.id]).toEqual([guide, hull, 's']);
   });
 });

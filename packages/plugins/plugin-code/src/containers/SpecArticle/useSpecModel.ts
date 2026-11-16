@@ -20,13 +20,15 @@ import {
 } from '@dxos/deus/review';
 import { useObject } from '@dxos/echo-react';
 import type * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
+import * as SpecSession from '@dxos/plugin-projects/SpecSession';
+import * as SpecViews from '@dxos/plugin-projects/SpecViews';
 import { type Text } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
-import { type GutterItem, SPEC_INDEX, buildChangelogGraph, resolveSpecRef } from '#components';
+import { type GutterItem, SPEC_INDEX } from '#components';
 import { getSpecKey } from '#sync';
 
-import { type SpecSessionState, specSession } from './spec-session.ts';
 import { fileKey, useLocalTexts, useResolvedPath, useSpecDiff } from './useSpecSources.ts';
 
 /** Whether a `<spec id>#<item>` reference names a spec the bundled index could describe. */
@@ -41,7 +43,7 @@ export type SpecSource = {
   sourceKey?: string;
   /** Base text that diff mode compares with, for hosts that cannot run git; git's base wins when both exist. */
   base?: string;
-  /** Review text (`<SPEC>.review.mdl`), for hosts that cannot read the checkout; the checkout's review wins. */
+  /** Review text (`<SPEC>.review.mdl`) of static content; an ECHO spec's reviews are its SpecReviews. */
   review?: string;
 };
 
@@ -49,11 +51,11 @@ export type SpecSource = {
 export const sessionId = ({ spec, sourceKey }: Pick<SpecSource, 'spec' | 'sourceKey'>): string =>
   spec?.id ?? sourceKey ?? 'static';
 
-export type SpecModel = {
+export type SpecArticleModel = {
   /** The session the editor and the panel share. */
   id: string;
-  session: SpecSessionState;
-  setSession: (update: (current: SpecSessionState) => SpecSessionState) => void;
+  session: SpecSession.State;
+  setSession: (update: (current: SpecSession.State) => SpecSession.State) => void;
   /** The ECHO text the editor binds to; undefined for static content. */
   target?: Text.Text;
   key?: SourceKey;
@@ -61,6 +63,9 @@ export type SpecModel = {
   text: string;
   /** Files read from the checkout, by file key. */
   texts: ReadonlyMap<string, string>;
+  /** The spec's reviews, newest first. */
+  reviews: readonly SpecModel.ReviewData[];
+  /** Each item's newest verdict across the reviews, or the static content's review. */
   review?: ReviewModel;
   read: (target: SourceKey) => string | undefined;
   /** Reads the latest files without rebuilding what holds it. */
@@ -76,13 +81,19 @@ export type SpecModel = {
 };
 
 /**
- * Everything the spec's editor and its panel read: its text, the files it names from the checkout, its latest review,
+ * Everything the spec's editor and its panel read: its text, the files it names from the checkout, its reviews,
  * its decisions and what diff mode compares it with. Both call it, so either can be shown without the other.
  */
-export const useSpecModel = ({ spec, content, sourceKey, base, review: staticReview }: SpecSource): SpecModel => {
+export const useSpecModel = ({
+  spec,
+  content,
+  sourceKey,
+  base,
+  review: staticReview,
+}: SpecSource): SpecArticleModel => {
   const id = sessionId({ spec, sourceKey });
-  const [session, setSession] = useAtom(specSession(id));
-  const { codeTarget } = session;
+  const [session, setSession] = useAtom(SpecSession.session(id));
+  const { evidence } = session;
 
   // Trigger re-render when the bound content ref resolves (no-op when there is no spec).
   const [snapshot] = useObject(spec?.content);
@@ -100,26 +111,30 @@ export const useSpecModel = ({ spec, content, sourceKey, base, review: staticRev
   const related = useMemo(
     () =>
       [
-        reviewKey,
+        !spec && reviewKey,
         !spec && key && fileKey(key),
-        codeTarget && fileKey(codeTarget),
+        evidence && fileKey(evidence),
         ...findSourceKeys(ownText)
           .map(({ key }) => key)
           .filter(isSpecKey)
           .map(fileKey),
         ...findSpecRefs(ownText)
           .filter(({ id }) => isIndexedSpec(id))
-          .map(({ id }) => resolveSpecRef(SPEC_INDEX, id))
+          .map(({ id }) => SpecModel.resolveSpecRef(SPEC_INDEX, id))
           .flatMap((resolved) => ('error' in resolved ? [] : [fileKey(resolved)])),
       ].filter(isTruthy),
-    [reviewKey, spec, key, codeTarget, ownText],
+    [reviewKey, spec, key, evidence, ownText],
   );
   // The code a review cites, for the declarations its chips and walkthroughs show.
   const [codeKeys, setCodeKeys] = useState<readonly string[]>([]);
   const texts = useLocalTexts(useMemo(() => [...related, ...codeKeys], [related, codeKeys]));
   const text = (!spec && key && texts.get(fileKey(key))) || ownText;
-  const reviewText = (reviewKey ? texts.get(reviewKey) : undefined) ?? staticReview;
-  const review = useMemo(() => (reviewText ? parseReview(reviewText) : undefined), [reviewText]);
+  const reviewText = (!spec && reviewKey ? texts.get(reviewKey) : undefined) ?? staticReview;
+  const { reviews, review: current } = SpecViews.useSpecReviews(spec);
+  const review = useMemo(
+    () => (spec ? current : reviewText ? parseReview(reviewText) : undefined),
+    [spec, current, reviewText],
+  );
   const citedKey = useMemo(() => (review ? citedFiles(review).join('\n') : ''), [review]);
   useEffect(() => setCodeKeys(citedKey ? citedKey.split('\n') : []), [citedKey]);
   const read = useCallback((target: SourceKey) => texts.get(fileKey(target)), [texts]);
@@ -134,14 +149,14 @@ export const useSpecModel = ({ spec, content, sourceKey, base, review: staticRev
     [texts, reviewKey],
   );
 
-  const codePath = useResolvedPath(codeTarget);
+  const codePath = useResolvedPath(evidence);
   const { git, baseText, available: diffAvailable } = useSpecDiff(key, { base, diff: session.diff });
 
   // A spec with no changelog has none; slicing from -1 would make the whole body the "changelog".
   const changelogStart = text.search(/^## Changelog/m);
   const changelog = changelogStart < 0 ? '' : text.slice(changelogStart);
   const parsedDecisions = useMemo(
-    () => buildChangelogGraph(changelog).nodes.filter((node): node is GutterItem => node.kind !== 'block'),
+    () => SpecModel.buildChangelogGraph(changelog).nodes.filter((node): node is GutterItem => node.kind !== 'block'),
     [changelog],
   );
   // Held stable while the decisions are unchanged, so typing does not rebuild the editor's extensions (which resets it).
@@ -164,6 +179,7 @@ export const useSpecModel = ({ spec, content, sourceKey, base, review: staticRev
     reviewKey,
     text,
     texts,
+    reviews,
     review,
     read,
     readLatest,

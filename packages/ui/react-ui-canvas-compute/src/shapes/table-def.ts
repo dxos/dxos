@@ -7,6 +7,7 @@ import * as Struct from 'effect/Struct';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
+import { MAJOR_GRID } from '@dxos/scene';
 import { Message } from '@dxos/types';
 
 import { createFunctionPorts, defineComputeNode } from './common/index.ts';
@@ -31,7 +32,7 @@ export type TableShape = Schema.Schema.Type<typeof TableShape>;
 export type CreateTableProps = CreateShapeProps<TableShape>;
 
 export const createTable = (props: CreateTableProps) =>
-  createShape<TableShape>({ type: 'table', size: { width: 320, height: 512 }, ...props });
+  createShape<TableShape>({ type: 'table', size: { width: 5 * MAJOR_GRID, height: 8 * MAJOR_GRID }, ...props });
 
 export const tableNodeDef = defineComputeNode<TableShape>({
   type: 'table',

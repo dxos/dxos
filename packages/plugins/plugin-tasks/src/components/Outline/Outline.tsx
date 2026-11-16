@@ -219,6 +219,7 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
   } = useOutlineContext(OUTLINE_CONTENT_NAME);
   const { t } = Hooks.useTranslation(TasksNamespace.key);
   const themeMode = Hooks.useThemeMode();
+  const placeholder = readonly ? undefined : t('outline.placeholder');
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
@@ -228,7 +229,11 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
       initialValue: text.content,
       extensions: [
         createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
-        createBasicExtensions({ readOnly: !!readonly, search: true }),
+        createBasicExtensions({
+          readOnly: !!readonly,
+          search: true,
+          placeholder,
+        }),
         createMarkdownExtensions(),
         createThemeExtensions({
           themeMode,
@@ -249,7 +254,7 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
         extensions ?? [],
       ],
     }),
-    [id, text, autoFocus, themeMode, readonly, extensions],
+    [id, text, autoFocus, themeMode, readonly, placeholder, extensions],
   );
 
   // Publish view to Root so the controller can access it.

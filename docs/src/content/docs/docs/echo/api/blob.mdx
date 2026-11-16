@@ -1,0 +1,50 @@
+---
+title: Blob
+description: Store binary data, such as images and files, beside objects.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { Blob } from '@dxos/echo';
+```
+
+A blob holds bytes, such as an image or a file. The `Blob` object stores the hash, size and type of the bytes and where
+they are; small blobs hold the bytes inline. An object points at a blob with a reference.
+
+## Declare a field
+
+<Snippet file="guide-blob" region="declare" />
+
+## Store a blob
+
+`db.createBlob` hashes the bytes and uploads them to the storage backend, and returns a `Blob` object that is not yet in
+the space. Add it, then reference it. Bytes over the backend's size limit reject with `BlobTooLargeError`.
+
+<Snippet file="guide-blob" region="store" />
+
+## Read a blob
+
+`db.readBlob` loads the bytes, from the object itself or from the backend, and rejects with `BlobNotAvailableError` when
+it cannot. `db.getBlobUrl` gives a URL to show the blob in a page.
+
+<Snippet file="guide-blob" region="read" />
+
+## Members at a glance
+
+| Member | Summary |
+| --- | --- |
+| `Blob` | The blob object type |
+| `db.createBlob` `db.createBlobFromUpload` | Store bytes, or adopt bytes uploaded elsewhere |
+| `db.readBlob` `db.blobExists` `db.getBlobUrl` | Read bytes, check them, or get a URL |
+| `MAX_INLINE_SIZE` | The largest blob stored inline |
+
+The full list is in the [API reference](/docs/additional-resources/api-reference/).
+
+## Related
+
+- [Ref](/docs/echo/api/ref/)
+- [Database](/docs/echo/api/database/)

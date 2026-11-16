@@ -167,6 +167,7 @@ const createPeer = async (name) => {
   const page = await context.newPage();
   page.setDefaultTimeout(options['action-timeout']);
   const overlay = createOverlay(page, { enabled: true, feed: false });
+  let lastPointer = { x: 0, y: 0 };
 
   // The app logs invitation and auth codes as JSON to the console (as the e2e `AppManager` reads them), so a
   // flow can hand a code from one peer to the other without reading it off the screen.
@@ -212,10 +213,25 @@ const createPeer = async (name) => {
       if (box) {
         const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
         await overlay.moveCursor(point);
+        lastPointer = point;
         await sleep(options.dwell);
         await overlay.click(point);
       }
       await locator.click(clickOptions);
+    },
+    /**
+     * Glides the real pointer and the overlay cursor together to `point` in `steps` moves, for flows where the
+     * pointer's path is the subject (hover, live cursors) rather than a click.
+     */
+    move: async (point, { steps = 20 } = {}) => {
+      const from = lastPointer;
+      for (let step = 1; step <= steps; step++) {
+        const x = from.x + ((point.x - from.x) * step) / steps;
+        const y = from.y + ((point.y - from.y) * step) / steps;
+        await page.mouse.move(x, y);
+        await overlay.moveCursor({ x, y });
+      }
+      lastPointer = point;
     },
     /** Types a character at a time so the text visibly arrives (and replicates) on camera. */
     type: async (text, { delay = 45 } = {}) => {

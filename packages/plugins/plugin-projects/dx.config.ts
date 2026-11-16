@@ -64,6 +64,20 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'tauri'],
       },
     ),
+    Capability.lazyModule(
+      'ProjectComments',
+      {
+        provides: [
+          AppCapabilities.AnchorResolver,
+          AppCapabilities.AnchorSort,
+          AppCapabilities.CommentConfig,
+          AppCapabilities.CommentScope,
+          AppCapabilities.Locator,
+        ],
+        activatesOn: ProjectsEvents.Start,
+      },
+      () => import('./src/capabilities/project-comments.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.navigationResolver(
       () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'module-url' } }),
     ),
@@ -73,6 +87,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ActivationEvents.Idle,
       },
     ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/editor-operation-handler.ts', { with: { type: 'module-url' } }),
+      { name: 'EditorOperationHandler', environments: ['browser', 'tauri'] },
+    ),
     // Bundled so a feature that cites this plugin's spec opens it rendered in the app.
     AppCapability.pluginAsset({
       pluginId: ProjectsNamespace.key,
@@ -81,7 +99,13 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppSurface.Article, AppSurface.Dialog, AppSurface.Section, ProjectSurface.Level],
+      roles: [
+        AppSurface.Article,
+        AppSurface.Dialog,
+        AppSurface.Section,
+        ProjectSurface.SpecCompanion,
+        ProjectSurface.SpecView,
+      ],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
@@ -90,6 +114,15 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'SpecViews',
+      {
+        provides: [ProjectCapabilities.SpecView],
+        activatesOn: ActivationEvents.Idle,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/spec-views.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'SubjectContext',

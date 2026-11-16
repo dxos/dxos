@@ -1,0 +1,48 @@
+---
+title: Configuration
+description: Load a client's config from files and environment variables instead of writing it in code.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+`new Client()` uses built-in defaults. Pass a `Config` to choose where settings come from. Each source is a function from `@dxos/config`, and earlier sources override later ones.
+
+## Defaults from a file
+
+`Defaults` returns the config in `dx.yml`. In Node it reads `config/default.yml` in your project instead.
+
+<Snippet file="configuration" region="defaults" />
+
+## Local development
+
+`Local` returns the config in `dx-local.yml`, so a development preset can sit beside the defaults. In Node, `Local` returns nothing.
+
+<Snippet file="configuration" region="local" />
+
+## Environment variables
+
+`Envs` maps environment variables to config paths, as listed in `dx-env.yml`.
+
+<Snippet file="configuration" region="envs" />
+
+Each entry in `dx-env.yml` names a variable, the config path it sets, and its type:
+
+```yml
+LOG_FILTER:
+  path: runtime.client.log.filter
+  type: string
+
+DX_PERSIST:
+  path: runtime.client.storage.persistence
+  type: boolean
+```
+
+## Loading the files in the browser
+
+In the browser, `Defaults`, `Local` and `Envs` read what the bundler puts in the page. Add `ConfigPlugin` from `@dxos/config/vite-plugin` to the `plugins` in `vite.config.ts`, and it loads the three files from the package root:
+
+```ts
+ConfigPlugin({ root: import.meta.dirname, env: ['MY_ENV_VAR'] }),
+```
+
+Vite exposes only variables prefixed with `VITE_`. To read any other variable at build time, list it in `env`. Its value appears at the config path `runtime.app.env.MY_ENV_VAR`. `@dxos/config/rollup-plugin` and `@dxos/config/esbuild-plugin` export the same `ConfigPlugin` for Rollup and esbuild. The tutorial app passes its config in code, as in [Installation](/docs/echo/learn/installation/), so it has no `ConfigPlugin`.

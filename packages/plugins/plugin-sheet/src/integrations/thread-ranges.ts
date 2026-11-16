@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -12,6 +13,7 @@ import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as CommentOperation from '@dxos/plugin-review/CommentOperation';
 import { Attention } from '@dxos/react-ui-attention/types';
+import { useGridContext } from '@dxos/react-ui-grid';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { useSheetContext } from '#components';
@@ -32,7 +34,9 @@ export const findThreadAnchorAtCell = (
   });
 
 export const useSelectThreadOnCellFocus = () => {
-  const { model, cursor } = useSheetContext();
+  const { model } = useSheetContext();
+  const { selection } = useGridContext('useSelectThreadOnCellFocus');
+  const local = useAtomValue(selection.local);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   const db = Obj.getDatabase(model.sheet);
@@ -61,11 +65,17 @@ export const useSelectThreadOnCellFocus = () => {
     return debounce((cellCoords: CellAddress) => requestAnimationFrame(() => selectClosestThread(cellCoords)), 50);
   }, [selectClosestThread]);
 
+  const latestDebounced = useRef(debounced);
   useEffect(() => {
-    if (!cursor) {
-      return;
-    }
+    latestDebounced.current = debounced;
+  }, [debounced]);
 
-    debounced(cursor);
-  }, [cursor, debounced]);
+  // Runs only when the focused cell's id changes. A row inserted above moves the cell and a new comment re-runs the
+  // anchors query; neither is the user focusing a cell.
+  const cellIndex = local && `${local.anchor.col}@${local.anchor.row}`;
+  useEffect(() => {
+    if (cellIndex) {
+      latestDebounced.current(SheetUtil.addressFromIndex(model.sheet, cellIndex));
+    }
+  }, [cellIndex, model.sheet]);
 };

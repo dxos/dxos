@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Spec from '@dxos/compute/Spec';
-import { type SourceKey, isSpecKey } from '@dxos/deus/review';
+import * as SpecReview from '@dxos/compute/SpecReview';
+import { type SourceKey, isSpecKey, reviewKeyOf } from '@dxos/deus/review';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
@@ -15,6 +16,7 @@ import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabili
 import * as FrontMatter from './front-matter.ts';
 import { resolvePath } from './repo-roots.ts';
 import { fromMetaKey } from './spec-key.ts';
+import * as SpecReviews from './spec-review.ts';
 
 /** What a sync pass did to one spec. */
 export type SyncStatus =
@@ -149,17 +151,23 @@ export const syncSpec = Effect.fnUntraced(
       return { status: 'missing', path } satisfies SyncResult;
     }
 
+    // Front matter that does not parse is neither the spec's fields nor its text, so nothing syncs until it parses.
+    if (!FrontMatter.readable(disk)) {
+      return { status: 'error', path, error: 'front matter does not parse' } satisfies SyncResult;
+    }
+
     const base = yield* bases.get(spec.id);
     // The file's front matter is the spec's fields, so codecs and the text see only what follows it.
-    const form = FrontMatter.fileForm(text.content);
-    const local = form.write(
+    FrontMatter.finishMigration(spec, text, base, disk);
+    FrontMatter.fill(spec, disk);
+    const local = FrontMatter.write(
       spec,
-      (yield* writeThrough(codecs, spec, base === undefined ? undefined : form.body(base))) ?? text.content,
+      (yield* writeThrough(codecs, spec, base === undefined ? undefined : FrontMatter.body(base))) ?? text.content,
       base,
     );
     const { action, status } = reconcile({ local, disk, base });
     if (action === 'pull') {
-      const next = form.read(spec, disk);
+      const next = FrontMatter.read(spec, disk, base);
       if (!(yield* readThrough(codecs, spec, next, key.path))) {
         Doc.updateText(text, ['content'], next);
       }
@@ -173,4 +181,43 @@ export const syncSpec = Effect.fnUntraced(
     return { status, path } satisfies SyncResult;
   },
   Effect.catch((error) => Effect.succeed<SyncResult>({ status: 'error', error: error.message })),
+);
+
+/**
+ * Records the review beside a linked spec (`PLUGIN.review.mdl` beside `PLUGIN.mdl`) as one of the spec's reviews.
+ * `seen` holds the review text last recorded per spec, so an unchanged file is not parsed again.
+ */
+export const syncReview = Effect.fnUntraced(
+  function* (
+    spec: Spec.Spec,
+    {
+      fs,
+      roots,
+      seen,
+    }: { fs: FileSystem.FileSystem; roots: readonly FileSystem.RepoRoot[]; seen: Map<string, string> },
+  ) {
+    const key = getSpecKey(spec);
+    const path = key && resolvePath(roots, reviewKeyOf(key));
+    const db = Obj.getDatabase(spec);
+    if (!path || !db) {
+      return;
+    }
+    const text = yield* fs.read(path);
+    if (text === undefined || seen.get(spec.id) === text) {
+      return;
+    }
+    seen.set(spec.id, text);
+    const fields = SpecReviews.fromText(text);
+    if (typeof fields === 'string') {
+      log.warn('review not recorded', { path, reason: fields });
+      return;
+    }
+    const reviews = yield* Effect.promise(() => db.query(SpecReview.query(spec)).run());
+    const { review, created } = SpecReviews.applyReview(spec, reviews, fields);
+    if (created) {
+      db.add(review);
+    }
+  },
+  // A defect too, since a review must not stop the spec's sync.
+  Effect.catchCause((cause) => Effect.sync(() => log.warn('review not recorded', { cause }))),
 );

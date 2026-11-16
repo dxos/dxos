@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseReview, statusOf, summarizeReview, walkthroughOf } from './review.ts';
+import { mergeReviews, parseReview, reviewItemId, statusOf, summarizeReview, walkthroughOf } from './review.ts';
 
 const fence = (body: string) => ['```mdl', body, '```'].join('\n');
 
@@ -15,6 +15,10 @@ const REVIEW = [
   'date: 2026-10-22',
   'by: agent:claude-code',
   '---',
+  '',
+  '# Review: X',
+  '',
+  'Two items: one done, one missing.',
   '',
   fence(
     [
@@ -31,9 +35,17 @@ const REVIEW = [
 ].join('\n\n');
 
 describe('review', () => {
+  test('frontmatter drops a trailing comment, as `deus review check` reads it', ({ expect }) => {
+    expect(parseReview(REVIEW.replace('date: 2026-10-22', 'date: 2026-10-22 # reviewed')).date).toBe('2026-10-22');
+  });
+
   test('parses frontmatter and verdicts, dropping unknown statuses', ({ expect }) => {
     const review = parseReview(REVIEW);
-    expect(review).toMatchObject({ commit: '0123456789abcdef', by: 'agent:claude-code' });
+    expect(review).toMatchObject({
+      commit: '0123456789abcdef',
+      by: 'agent:claude-code',
+      summary: 'Two items: one done, one missing.',
+    });
     expect(review.verdicts).toEqual([
       {
         id: 'F-1.1',
@@ -66,6 +78,21 @@ describe('review', () => {
       ['github:o/r/a.ts#A', 'github:o/r/b.ts#B'],
       ['github:o/r/c.ts#C'],
     ]);
+  });
+
+  test('reads a qualified id with its summary, as the worker and SQL dialects name items', ({ expect }) => {
+    const review = parseReview(
+      [
+        fence(['verdict table:feeds: Created by a migration.', '  status: done'].join('\n')),
+        fence(['verdict route:listFeeds', '  status: missing', '  note: No such route.'].join('\n')),
+      ].join('\n\n'),
+    );
+    expect(review.verdicts.map(({ id, summary }) => ({ id, summary }))).toEqual([
+      { id: 'table:feeds', summary: 'Created by a migration.' },
+      { id: 'route:listFeeds', summary: undefined },
+    ]);
+    expect(statusOf(review, reviewItemId('table', 'feeds'))).toBe('done');
+    expect(reviewItemId('type', 'Feed')).toBe('Feed');
   });
 
   test("a walkthrough is the reviewer's steps, or one per evidence key when there are several", ({ expect }) => {
@@ -107,5 +134,25 @@ describe('review', () => {
       { status: 'done', count: 1 },
       { status: 'missing', count: 1 },
     ]);
+  });
+
+  test('the current status takes each item from the newest review that judges it', ({ expect }) => {
+    const older = parseReview(REVIEW);
+    const newer = parseReview(
+      [
+        '---',
+        'commit: fedcba',
+        'date: 2026-11-01',
+        '---',
+        fence(['verdict F-1.2: Picker added.', '  status: done'].join('\n')),
+      ].join('\n'),
+    );
+    const current = mergeReviews([newer, older]);
+    expect(current?.commit).toBe('fedcba');
+    expect(current?.verdicts.map(({ id, status, review }) => [id, status, review?.commit])).toEqual([
+      ['F-1.2', 'done', 'fedcba'],
+      ['F-1.1', 'done', '0123456789abcdef'],
+    ]);
+    expect(mergeReviews([])).toBeUndefined();
   });
 });

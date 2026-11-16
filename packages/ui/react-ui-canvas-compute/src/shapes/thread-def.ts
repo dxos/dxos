@@ -7,6 +7,7 @@ import * as Struct from 'effect/Struct';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
+import { MAJOR_GRID } from '@dxos/scene';
 import { Message } from '@dxos/types';
 
 import { createFunctionPorts, defineComputeNode } from './common/index.ts';
@@ -31,7 +32,7 @@ export type ThreadShape = Schema.Schema.Type<typeof ThreadShape>;
 export type CreateThreadProps = CreateShapeProps<ThreadShape>;
 
 export const createThread = (props: CreateThreadProps) =>
-  createShape<ThreadShape>({ type: 'thread', size: { width: 384, height: 384 }, ...props });
+  createShape<ThreadShape>({ type: 'thread', size: { width: 6 * MAJOR_GRID, height: 6 * MAJOR_GRID }, ...props });
 
 export const threadNodeDef = defineComputeNode<ThreadShape>({
   type: 'thread',

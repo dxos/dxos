@@ -13,7 +13,7 @@ import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trigger from '@dxos/compute/Trigger';
-import { ConfigService, configPreset } from '@dxos/config';
+import { Config, ConfigService, configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
@@ -28,10 +28,19 @@ import { GMAIL_SOURCE } from '../src/constants.ts';
 import { type SpaceSnapshot, groupInvocations } from './checks.ts';
 import { CanaryError } from './mailbox.ts';
 
-/** An in-memory client against preview EDGE, destroyed when the scope closes. */
-export const previewClientLayer = clientLayer.pipe(
-  Layer.provide(Layer.succeed(ConfigService, configPreset({ edge: 'preview' }))),
-);
+/**
+ * A client against preview EDGE, destroyed when the scope closes. Its state is in memory, or with `dataRoot` in one
+ * SQLite file there, which is how it opens an unpacked profile.
+ */
+export const previewClientLayer = (dataRoot?: string) =>
+  clientLayer.pipe(Layer.provide(Layer.succeed(ConfigService, previewConfig(dataRoot))));
+
+const previewConfig = (dataRoot?: string): Config => {
+  const preset = configPreset({ edge: 'preview' });
+  return dataRoot
+    ? new Config({ runtime: { client: { storage: { persistent: true, dataRoot } } } }, preset.values)
+    : preset;
+};
 
 /** How long the canary waits on EDGE before failing a step with a reason instead of hanging the run. */
 export type EdgeWaits = {
@@ -58,15 +67,31 @@ const TYPES = [
   Trigger.Trigger,
 ];
 
-/** Signs the in-process client in as the canary identity; each run is a new device, keeping no device key. */
-export const recoverIdentity = Effect.fn('mail-canary.recoverIdentity')(function* (recoveryPhrase: string) {
+/**
+ * Signs the in-process client in as the canary identity. A client opened on the profile is that identity already, so
+ * it only waits for the identity to load; without a profile it recovers the identity, as a new device each run.
+ */
+export const signIn = Effect.fn('mail-canary.signIn')(function* (
+  recoveryPhrase: string,
+  { profile, wait }: { profile: boolean; wait: Duration.Duration },
+) {
   const client = yield* ClientService.client;
   yield* Effect.promise(() => client.addTypes(TYPES));
-  yield* Effect.tryPromise({
-    try: () => client.halo.recoverIdentity({ recoveryCode: recoveryPhrase }),
-    // The cause can carry the phrase, so it is not passed on.
-    catch: () => new CanaryError({ message: 'cannot recover the canary identity' }),
-  });
+  if (profile) {
+    yield* Effect.suspend(() =>
+      client.halo.identity.get()
+        ? Effect.void
+        : Effect.fail(new CanaryError({ message: 'the profile has no identity' })),
+    ).pipe(Effect.retry({ schedule: Schedule.spaced('1 second') }), timeout(wait, 'the profile identity to load'));
+  } else {
+    yield* Effect.tryPromise({
+      try: () => client.halo.recoverIdentity({ recoveryCode: recoveryPhrase }),
+      // The cause can carry the phrase, so it is not passed on.
+      catch: () => new CanaryError({ message: 'cannot recover the canary identity' }),
+    });
+  }
+  // A count that grows from run to run means runs are recovering instead of opening the profile.
+  log.info('signed in', { profile, devices: client.halo.devices.get().length });
 });
 
 /** A space of the canary identity, read through the in-process client. */
