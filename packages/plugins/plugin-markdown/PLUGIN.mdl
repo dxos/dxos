@@ -685,7 +685,7 @@ decision D-6: The editor publishes its selection and the top of its viewport, as
 ```
 
 ```mdl
-decision D-6: With `follow`, the reveal scrolls the anchor to the top of the view and leaves the selection and focus alone, for following a peer (org.dxos.plugin.space#F-8.20). The editor reports its location every 100 ms rather than 250 ms, so a followed peer's moves go out at the follow rate. Fills in [D-5].
+decision D-7: With `follow`, the reveal scrolls the anchor to the top of the view and leaves the selection and focus alone, for following a peer (org.dxos.plugin.space#F-8.20). The editor reports its location every 100 ms rather than 250 ms, so a followed peer's moves go out at the follow rate. Fills in [D-6].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
