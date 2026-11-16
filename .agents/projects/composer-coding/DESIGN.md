@@ -59,3 +59,6 @@ the task's repositories, and the result is a pull request attached to the task.
   publishes bundles to preview only, so this branch's bundle was published to dev by hand
   (`DX_PLUGIN_BUILD=dev.<sha>`, admin key from `op://eng-dev/network.dxos.hub/API_KEY`). The
   operation-service deploy above is therefore not what serves it; it is harmless.
+- 2026-11-16: a dev deploy dispatched with `app: composer` still runs the Tauri jobs: desktop and
+  iOS builds go to CrabNebula's dev channel and iOS is uploaded to App Store Connect (run 815: the
+  build passed, the App Store Connect upload failed). Redeploy dev only when the web app needs it.
