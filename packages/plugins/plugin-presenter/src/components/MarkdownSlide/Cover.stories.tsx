@@ -206,12 +206,16 @@ export const Column: Story = {
     const frame = await query(canvasElement, '[data-layout="two-cols"]');
     const art = frame.querySelector('[data-variant="fill"] img')!;
     await waitFor(() => expect((art as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
-    // 1. The art runs to the slide's own start and bottom edges rather than sitting inside the layout's padding.
+    // 1. The art runs to the slide's own top and bottom edges rather than sitting inside the layout's padding.
     const picture = art.getBoundingClientRect();
     const slideBox = frame.getBoundingClientRect();
-    await expect(Math.abs(picture.left - slideBox.left)).toBeLessThan(2);
+    await expect(Math.abs(picture.top - slideBox.top)).toBeLessThan(2);
     await expect(Math.abs(picture.bottom - slideBox.bottom)).toBeLessThan(2);
-    // 2. It keeps to its own column, so the words beside it are clear of it.
-    await expect(picture.right).toBeLessThan(slideBox.left + slideBox.width / 2);
+    // 2. It runs past its column's sides, so the slide's own edge crops it rather than the column's.
+    await expect(picture.right).toBeGreaterThan(slideBox.left + slideBox.width / 2);
+    await expect(picture.left).toBeLessThan(slideBox.left);
+    // 3. The words beside it are laid out as though it were not there.
+    const words = frame.querySelector('[data-variant="lockup"] img')!.getBoundingClientRect();
+    await expect(words.left).toBeGreaterThan(slideBox.left + slideBox.width / 2);
   },
 };

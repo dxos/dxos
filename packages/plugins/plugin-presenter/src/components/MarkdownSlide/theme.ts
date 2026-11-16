@@ -100,14 +100,15 @@ export const theme = {
         img: 'h-[420px] w-auto max-w-full object-contain',
         p: '[&:has(>img)]:contents',
       },
-      // A picture that fills its column rather than sitting in it: it grows to the column's height and is cropped
-      // to its width, so the mark at the art's centre stays centred however narrow the column is.
+      // A picture drawn to the column's height and left to run past its sides, which the slide crops rather than the
+      // column: art cut at a column's edge ends in mid-air, and `bg-dxos.svg` stops short of its own frame (its
+      // drawing reaches x 226..1694 of 1920), so cropping it to the column shows exactly where its rays stop.
+      // It leaves no gap in the flow, so the words beside it are laid out as though it were not there.
       fill: {
-        box: 'grow min-h-0 self-stretch flex items-center justify-center overflow-hidden',
-        // The art's own drawing stops short of its frame — `bg-dxos.svg` reaches x 226..1694 of 1920 — so `cover`
-        // alone leaves its rays ending in mid-air inside the column. The picture is drawn past the column's edges
-        // instead, which crops the rays rather than showing where they stop.
-        img: 'w-full h-full object-cover scale-[1.6] origin-center',
+        // The picture stays in the flow and simply overflows: positioning it would lift it above the words in the
+        // column beside it, which paint later but are not positioned themselves.
+        box: 'grow min-h-0 self-stretch flex items-center justify-center',
+        img: 'h-full w-auto max-w-none shrink-0 object-contain',
         p: '[&:has(>img)]:contents',
       },
       // A brand mark standing in for a heading, at a heading's scale rather than a title slide's.
