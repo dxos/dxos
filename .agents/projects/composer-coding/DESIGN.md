@@ -47,3 +47,15 @@ the task's repositories, and the result is a pull request attached to the task.
   dev-channel re-point and the brief change; composer-dev is deployed from it with `app: composer`
   only, so the dev docs and other apps are left as they are. The first attempt (run 813) was
   cancelled by another person's dev deploy — the `deploy-dev` concurrency group supersedes.
+- 2026-11-16: operation-service on edge-dev is deployed from edge main with the whole dxos
+  workspace linked from this branch (`pnpm link-packages`, version 0d726cfc), because edge pins dxos
+  at Nov 13 and linking only plugin-projects would mix two dxos versions. The overrides were undone
+  after the deploy; a later edge deploy from main reverts dev to the pinned catalog until the
+  catalog is bumped past this PR.
+- 2026-11-16: edge needs its own pinned moon (2.4.5); the proto shim on PATH picked dxos's 2.5.2,
+  whose task config edge rejects (`unknown variant tracing`).
+- 2026-11-16: dev serves plugin-projects from the plugin registry, not operation-service
+  (compute-service `OPERATION_ROUTING=plugins`; only assistant and agent are held back). CI
+  publishes bundles to preview only, so this branch's bundle was published to dev by hand
+  (`DX_PLUGIN_BUILD=dev.<sha>`, admin key from `op://eng-dev/network.dxos.hub/API_KEY`). The
+  operation-service deploy above is therefore not what serves it; it is harmless.
