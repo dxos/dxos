@@ -80,6 +80,7 @@ mapfile -t PATCHED_PACKAGES < <(node .github/workflows/scripts/stage-patched-pac
   @automerge/automerge-repo @automerge/automerge-subduction)
 echo "Staged ${#PATCHED_PACKAGES[@]} patched third-party packages"
 
-# Run pkg-pr-new publish with all public packages
-pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}" "${PATCHED_PACKAGES[@]}"
+# Run pkg-pr-new publish with all public packages. The workspace's pinned, patched pkg-pr-new: the stock one sends every
+# package of 5 MB or less in one request, which outgrew Cloudflare's 100 MB limit (see patches/README.md).
+pnpm exec pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}" "${PATCHED_PACKAGES[@]}"
 

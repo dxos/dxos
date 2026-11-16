@@ -1,7 +1,7 @@
 {
   "name": "@dxos/react-ui-plot",
   "version": "0.16.0",
-  "description": "Chart and plot components.",
+  "description": "Chart, plot and timeline components.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
   "repository": {

@@ -30,6 +30,7 @@ import {
   termKey,
 } from '../../types.ts';
 import { TurtleSnippet } from '../TurtleSnippet/index.ts';
+import { VirtualList } from '../VirtualList/index.ts';
 import { factViewerTheme } from './FactViewer.theme.ts';
 
 const styles = factViewerTheme.styles();
@@ -189,16 +190,33 @@ FactViewerToolbar.displayName = 'FactViewer.Toolbar';
 
 type FactViewerListProps = Util.ThemedClassName<{}>;
 
+/** A subject group's height before it is measured: its header and a few fact rows. */
+const ESTIMATED_GROUP_HEIGHT = 200;
+
+/** Space between groups, and above the first and below the last, in px. */
+const GROUP_GAP = 8;
+
 const FactViewerList = ({ classNames }: FactViewerListProps) => {
   const { groups } = useFactViewerContext('List');
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
   return (
     <Panel.Body asChild>
       <ScrollArea.Root classNames={classNames}>
-        <ScrollArea.Viewport classNames={styles.listViewport()}>
-          {groups.length === 0 && <Status.Empty>No facts.</Status.Empty>}
-          {groups.map((group) => (
-            <FactViewerGroup key={group.subject} group={group} />
-          ))}
+        <ScrollArea.Viewport classNames={styles.listViewport()} ref={setViewport}>
+          {groups.length === 0 ? (
+            <Status.Empty>No facts.</Status.Empty>
+          ) : (
+            // Groups have no fixed height (a quote, a TriG snippet), so each is measured as it scrolls into view.
+            <VirtualList
+              count={groups.length}
+              getKey={(index) => groups[index].subject}
+              renderItem={(index) => <FactViewerGroup group={groups[index]} />}
+              scrollElement={viewport}
+              estimateSize={ESTIMATED_GROUP_HEIGHT}
+              gap={GROUP_GAP}
+              padding={GROUP_GAP / 2}
+            />
+          )}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </Panel.Body>

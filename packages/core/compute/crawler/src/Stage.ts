@@ -19,16 +19,21 @@ export const tapStage = <E, R>(
   name: string,
   tags: ReadonlyArray<Type.EventTag>,
   fn: (event: Type.Event) => Effect.Effect<void, E, R>,
+  options: { readonly concurrency?: number } = {},
 ): Stage.Stage<Type.Event, Type.Event, StateError, R | StateStore.StateStore> =>
-  Stage.map(name, (event: Type.Event) =>
-    (tags.includes(event._tag) ? fn(event) : Effect.void).pipe(
-      Effect.catch((error) =>
-        StateStore.setStatus(
-          event.target.id,
-          event.target.status,
-          `${name}: ${error instanceof Error ? error.message : String(error)}`,
+  Stage.map(
+    name,
+    (event: Type.Event) =>
+      (tags.includes(event._tag) ? fn(event) : Effect.void).pipe(
+        Effect.catch((error) =>
+          StateStore.setStatus(
+            event.target.id,
+            event.target.status,
+            `${name}: ${error instanceof Error ? error.message : String(error)}`,
+          ),
         ),
+        Effect.as(event),
       ),
-      Effect.as(event),
-    ),
+    // Events still leave in order; only the work for several of them overlaps.
+    { concurrency: options.concurrency ?? 1 },
   );
