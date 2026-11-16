@@ -177,6 +177,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
