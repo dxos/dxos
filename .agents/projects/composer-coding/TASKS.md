@@ -68,8 +68,9 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
       EDGE — compute-service serves `CodingAgentControl` to plugin bundles (edge branch
       claude/composer-coding-lz1sx2), `EdgeAgent.runTurnUntil` folds in bounded steps, delegation's
       host-neutral half is `@dxos/plugin-projects/Delegation`, and plugin-claude ships as an EDGE plugin.
-- [ ] In-worker test for `CodingAgentControl` scoping (other space / other process key refused): needs
-      an edge test-plugin operation that calls the host service.
+- [x] Unit test for `CodingAgentControl` scoping (edge `coding-agent-control.test.ts`: another space's or
+      another kind's pid refused before the host is touched; spawn is the coding agent in its own space).
+- [ ] The same, end to end in the worker: needs an edge test-plugin operation that calls the host service.
 - [ ] Server-started runs lend no Composer MCP token (needs a hub mint RPC bound to the caller), so
       the agent cannot update its tasks itself; `syncCloudRun` attaches the PRs instead.
 - [ ] Sync must be driven by the caller (MCP client) today; a timer trigger per run would make it
