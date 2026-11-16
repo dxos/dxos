@@ -385,11 +385,24 @@ const byOrder = (items: readonly MenuItem[]): MenuItem[] =>
     .sort((a, b) => a.order - b.order)
     .map(({ item }) => item);
 
-/** Drops separators left leading, trailing or doubled once items are placed elsewhere. */
+/**
+ * Drops separators left leading, trailing or doubled once items are placed elsewhere: of a run between two items, a gap
+ * stays if there is one, as it lays the row out, else the last.
+ */
 const trimSeparators = (items: readonly MenuItem[]): MenuItem[] =>
-  items.filter(
-    (item, index) => !isSeparator(item) || (index > 0 && index < items.length - 1 && !isSeparator(items[index + 1])),
-  );
+  items.filter((item, index) => {
+    if (!isSeparator(item)) {
+      return true;
+    }
+    const before = items.findLastIndex((other, at) => at < index && !isSeparator(other));
+    const after = items.findIndex((other, at) => at > index && !isSeparator(other));
+    if (before < 0 || after < 0) {
+      return false;
+    }
+    const run = items.slice(before + 1, after);
+    const gap = run.findLastIndex((separator) => isSeparator(separator) && separator.properties.variant === 'gap');
+    return index === before + 1 + (gap >= 0 ? gap : run.length - 1);
+  });
 
 /** A named group laid out inline, its own and contributed items in order; ruled off from what precedes it. */
 const InlineGroup = ({ menu, group, separated }: ItemProps<{ group: MenuItemGroup; separated: boolean }>) => {

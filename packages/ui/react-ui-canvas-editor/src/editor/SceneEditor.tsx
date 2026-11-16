@@ -6,9 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, {
-  Fragment,
   type PropsWithChildren,
   type ReactNode,
+  createContext,
   useContext,
   useEffect,
   useLayoutEffect,
@@ -23,24 +23,30 @@ import {
   type ActiveTool,
   CREATE_GROUP,
   FLOATING_BAR,
-  FLOATING_BAR_RULE,
   SceneContextMenu,
   type ToolGroup,
   TOOLS_GROUP,
 } from '@dxos/react-ui-canvas';
+import {
+  type ActionGraphProps,
+  type ActionGroupBuilder,
+  ActionToolbar,
+  MenuBuilder,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Popover from '@dxos/react-ui/Popover';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { findLayout } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import {
-  CameraToolbar,
-  DisplayPanel,
   InspectorPanel,
   NavigationToolbar,
   ReadonlyToggle,
   ToolRail,
+  cameraItems,
+  displayItems,
+  menuBarClasses,
 } from '../components/index.ts';
 import {
   type SceneEditorHostProps,
@@ -141,18 +147,22 @@ const SceneEditorRoot = <C,>({
             onDockedChange={onDockedChange}
           >
             {shortcuts && <EditorShortcuts />}
-            <Root Frame={InspectorPanel.Frame}>{children}</Root>
+            <Root Frame={InspectorPanel.Frame}>
+              <BottomBarProvider>{children}</BottomBarProvider>
+            </Root>
           </InspectorPanel.Root>
         ) : (
           <Root>
-            <Viewport>
-              {navigable ? (
-                <>
-                  <SceneEditorNavigation />
-                  <SceneEditorCamera />
-                </>
-              ) : null}
-            </Viewport>
+            <BottomBarProvider>
+              <SceneEditorViewport>
+                {navigable ? (
+                  <>
+                    <SceneEditorNavigation />
+                    <SceneEditorCamera />
+                  </>
+                ) : null}
+              </SceneEditorViewport>
+            </BottomBarProvider>
           </Root>
         )}
       </SceneLookProvider>
@@ -219,10 +229,109 @@ const EditorShortcuts = () => {
   return <span ref={setFrame} hidden />;
 };
 
+/** The bottom bar's parts, in order, each led by a rule, or by a gap that pushes it to the bar's end. */
+const BAR_PARTS = { camera: 'line', actions: 'line', display: 'gap' } as const;
+
+type BarPart = keyof typeof BAR_PARTS;
+
+type BottomBarRegistry = {
+  /** Sets or, with no graph, removes a part's items. */
+  setPart: (part: BarPart, graph?: ActionGraphProps) => void;
+  /** Draws the bar in the caller until the returned release runs. */
+  claim: () => () => void;
+};
+
+const BottomBarContext = createContext<BottomBarRegistry | undefined>(undefined);
+
+const BottomBarSlotContext = createContext<ReactNode>(null);
+
+/**
+ * The editor's one bottom bar, which the camera, actions and display parts share, so a narrow editor collapses their
+ * controls, by rank, into its ⋮ menu. A `SceneEditor.Viewport` draws it; a host that composes its parts beside a bare
+ * viewport gets it from the root.
+ */
+const BottomBarProvider = ({ children }: PropsWithChildren) => {
+  const [parts, setParts] = useState<Partial<Record<BarPart, ActionGraphProps>>>({});
+  const [claims, setClaims] = useState(0);
+  const registry = useMemo<BottomBarRegistry>(
+    () => ({
+      setPart: (part, graph) => setParts((previous) => ({ ...previous, [part]: graph })),
+      claim: () => {
+        setClaims((count) => count + 1);
+        return () => setClaims((count) => count - 1);
+      },
+    }),
+    [],
+  );
+  const menu = useMenuBuilder(() => {
+    const builder = MenuBuilder.make();
+    for (const [part, lead] of Object.entries(BAR_PARTS)) {
+      builder.separator(lead).subgraph(parts[part as BarPart]);
+    }
+    return builder.build();
+  }, [parts]);
+  // Memoized, so the root's own renders (a stored camera) do not re-render the viewport that draws the bar.
+  const bar = useMemo(
+    () =>
+      Object.values(parts).some(Boolean) && (
+        <div role='none' className='absolute inset-x-2 bottom-2'>
+          <ActionToolbar
+            {...menu}
+            alwaysActive
+            // Visible overflow, so the focused theme trigger's ring is not clipped by the bar's horizontal scroll.
+            classNames={mx(menuBarClasses, 'w-full overflow-visible')}
+            data-testid='scene-bar'
+          />
+        </div>
+      ),
+    [menu, parts],
+  );
+  return (
+    <BottomBarContext.Provider value={registry}>
+      <BottomBarSlotContext.Provider value={bar}>{children}</BottomBarSlotContext.Provider>
+      {claims === 0 && bar}
+    </BottomBarContext.Provider>
+  );
+};
+
 /** The dimension's viewport, framed with the inspector panel; its children are the floating panels drawn over it. */
 const SceneEditorViewport = ({ children }: PropsWithChildren) => {
   const { Viewport } = useSceneServices('SceneEditor.Viewport');
-  return <Viewport>{children}</Viewport>;
+  const registry = useContext(BottomBarContext);
+  const bar = useContext(BottomBarSlotContext);
+  useLayoutEffect(() => registry?.claim(), [registry]);
+  return (
+    <Viewport>
+      {children}
+      {bar}
+    </Viewport>
+  );
+};
+
+/**
+ * Puts a part's items in the editor's bottom bar for as long as the part is mounted; false outside a
+ * `SceneEditor.Root`, where the part draws a bar of its own.
+ */
+const useBottomBar = (part: BarPart, graph: ActionGraphProps | undefined): boolean => {
+  const registry = useContext(BottomBarContext);
+  useEffect(() => {
+    if (!registry || !graph) {
+      return;
+    }
+    registry.setPart(part, graph);
+    return () => registry.setPart(part);
+  }, [registry, part, graph]);
+  return registry !== undefined;
+};
+
+/** A part's items as a bar of its own, floated at `classNames`, outside a viewport's bottom bar. */
+const OwnBar = ({ graph, classNames }: { graph: ActionGraphProps; classNames: string }) => {
+  const menu = useMenuBuilder(() => graph, [graph]);
+  return (
+    <div role='none' className={mx('absolute w-max', classNames)}>
+      <ActionToolbar {...menu} alwaysActive classNames={menuBarClasses} />
+    </div>
+  );
 };
 
 SceneEditorViewport.displayName = 'SceneEditor.Viewport';
@@ -391,60 +500,68 @@ const LibraryTool = ({ items, prefix }: { items: readonly LibraryItem[]; prefix:
   );
 };
 
+/** Collapse ranks by `ACTION_GROUPS` group: combining goes first, then putting together, then editing. */
+const GROUP_COLLAPSE: readonly number[] = [1, 3, 4];
+
+/** The dimension's own commands (2D: auto layout, debug) are the rarest, so they collapse before any group. */
+const OWN_COLLAPSE = 5;
+
+/** A command as a button, or a toggle when it has a pressed state. */
+const addCommand = (builder: ActionGroupBuilder, command: Command, collapse?: number) =>
+  builder.action(
+    command.id,
+    {
+      label: command.shortcut ? `${command.label} (${command.shortcut})` : command.label,
+      icon: command.icon,
+      disabled: !command.enabled,
+      testId: `scene-action-${command.id}`,
+      ...(command.pressed === undefined ? {} : { variant: 'toggle' as const, checked: command.pressed }),
+      ...(collapse === undefined ? {} : { placement: { collapse } }),
+    },
+    command.run,
+  );
+
 /**
  * The actions bar: the command table's commands in their groups (`ACTION_GROUPS`), then the dimension's others, then
- * undo and redo; locked, it hides, as every one edits the scene but Copy.
+ * undo and redo, which collapse last; locked, it hides, as every one edits the scene but Copy.
  */
 const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: { classNames?: string }) => {
   const { atoms } = useSceneDocument('SceneEditor.Actions');
   const readonly = useAtomValue(atoms.readonly);
-  const table = useAtomValue(useSceneCommands('SceneEditor.Actions').atoms.table);
-  if (readonly) {
-    return null;
-  }
-  const history = (command: Command) => command.id === 'undo' || command.id === 'redo';
-  const named = new Set(ACTION_GROUPS.flat());
-  const commands = new Map(table.commands.map((command) => [command.id, command]));
-  const groups = [
-    ...ACTION_GROUPS.map((ids) => ids.map((id) => commands.get(id)).filter((command) => command !== undefined)),
-    // The dimension's commands no group names (2D: auto layout, debug).
-    table.commands.filter(
-      (command) =>
-        !named.has(command.id) && !history(command) && !MENU_ONLY_COMMANDS.has(command.id) && command.id !== 'import',
-    ),
-    table.commands.filter(history),
-  ].filter((group) => group.length > 0);
-  return (
-    <div className={mx('absolute w-max', classNames)}>
-      <Toolbar.Root classNames={mx('w-full', FLOATING_BAR)} data-testid='scene-actions'>
-        {groups.map((group, index) => (
-          <Fragment key={index}>
-            {index > 0 && <Toolbar.Separator variant='line' classNames={FLOATING_BAR_RULE} />}
-            {group.map((command) => (
-              <CommandButton key={command.id} command={command} />
-            ))}
-          </Fragment>
-        ))}
-      </Toolbar.Root>
-    </div>
-  );
+  return readonly ? null : <ActionsBar classNames={classNames} />;
 };
 
-/** A command as a button, or a toggle when it has a pressed state. */
-const CommandButton = ({ command }: { command: Command }) => {
-  const props = {
-    'variant': 'ghost' as const,
-    'iconOnly': true,
-    'icon': command.icon,
-    'label': command.shortcut ? `${command.label} (${command.shortcut})` : command.label,
-    'disabled': !command.enabled,
-    'data-testid': `scene-action-${command.id}`,
-  };
-  return command.pressed === undefined ? (
-    <Button.Root {...props} onClick={command.run} />
-  ) : (
-    <Button.Toggle {...props} pressed={command.pressed} onPressedChange={command.run} />
-  );
+const ActionsBar = ({ classNames }: { classNames: string }) => {
+  const table = useAtomValue(useSceneCommands('SceneEditor.Actions').atoms.table);
+  const graph = useMemo(() => {
+    const history = (command: Command) => command.id === 'undo' || command.id === 'redo';
+    const named = new Set(ACTION_GROUPS.flat());
+    const commands = new Map(table.commands.map((command) => [command.id, command]));
+    const groups = [
+      ...ACTION_GROUPS.map((ids, index) => ({
+        collapse: GROUP_COLLAPSE[index],
+        commands: ids.map((id) => commands.get(id)).filter((command) => command !== undefined),
+      })),
+      {
+        collapse: OWN_COLLAPSE,
+        commands: table.commands.filter(
+          (command) =>
+            !named.has(command.id) &&
+            !history(command) &&
+            !MENU_ONLY_COMMANDS.has(command.id) &&
+            command.id !== 'import',
+        ),
+      },
+      { collapse: undefined, commands: table.commands.filter(history) },
+    ].filter((group) => group.commands.length > 0);
+    const builder = MenuBuilder.make();
+    groups.forEach((group, index) => {
+      index > 0 && builder.separator('line');
+      group.commands.forEach((command) => addCommand(builder, command, group.collapse));
+    });
+    return builder.build();
+  }, [table]);
+  return useBottomBar('actions', graph) ? null : <OwnBar graph={graph} classNames={classNames} />;
 };
 
 type SelectionAction = Pick<Command, 'id' | 'label' | 'icon' | 'run'>;
@@ -508,14 +625,11 @@ const SceneEditorCamera = ({ classNames = 'bottom-2 left-2' }: { classNames?: st
     }),
     [commands],
   );
-  if (!zoomable) {
-    return null;
-  }
-  return (
-    <div className={mx('absolute w-max', classNames)}>
-      <CameraToolbar actions={actions}>{percent === undefined ? null : `${percent}%`}</CameraToolbar>
-    </div>
+  const graph = useMemo(
+    () => (zoomable ? cameraItems(actions, percent === undefined ? null : `${percent}%`) : undefined),
+    [zoomable, actions, percent],
   );
+  return useBottomBar('camera', graph) || !graph ? null : <OwnBar graph={graph} classNames={classNames} />;
 };
 
 SceneEditorCamera.displayName = 'SceneEditor.Camera';
@@ -545,50 +659,59 @@ const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: 
   const snap = aids ? drawn.snap : display.snap;
   const guides = aids ? drawn.guides : display.guides;
   const axes = aids ? drawn.axes : display.axes;
-  // The engine's aid is set too, as its own keys may have moved it from the host's value.
-  const toggle = (aid: 'snap' | 'guides' | 'axes', value: boolean | undefined) => () => {
-    aids && atomRegistry.set(aids[aid], !value);
-    setDisplay?.({ [aid]: !value });
-  };
-  const { registry } = options;
-  const themes = useMemo(
-    () => options.themes.map(({ id, label, mode }) => ({ id, name: label, ...(mode ? { mode } : {}) })),
-    [options],
-  );
-  return (
-    <div className={mx('absolute w-max', classNames)}>
-      <DisplayPanel
-        readonly={readonly}
-        registry={registry}
-        theme={
-          registry?.themes[display.theme] ??
-          themes.find((option) => option.id === display.theme) ??
-          themes[0] ?? { id: display.theme, name: display.theme }
-        }
-        themes={themes}
-        override={display.themeOverride}
-        onThemeChange={setTheme}
-        grid={drawnGrid(options, display)}
-        gridOptions={options.grids}
-        onGridChange={
-          setDisplay &&
-          ((grid) =>
-            setDisplay(grid === undefined || grid === 'none' ? { grid: false } : { grid: true, gridKind: grid }))
-        }
-        snap={snap}
-        onSnapToggle={setDisplay && toggle('snap', snap)}
-        dim={config.dim}
-        axes={axes}
-        onAxesToggle={setDisplay && toggle('axes', axes)}
-        // A lattice's cells are its guides, so only a lattice has any to show.
-        guides={options.guides ? guides : undefined}
-        onGuidesToggle={options.guides && setDisplay && (!aids || lattice) ? toggle('guides', guides) : undefined}
-        lattice={lattice}
-        timeline={timeline}
-        onTimelineToggle={animation ? () => time.commands.setVisible(!timeline) : undefined}
-      />
-    </div>
-  );
+  const graph = useMemo(() => {
+    // The engine's aid is set too, as its own keys may have moved it from the host's value.
+    const toggle = (aid: 'snap' | 'guides' | 'axes', value: boolean | undefined) => () => {
+      aids && atomRegistry.set(aids[aid], !value);
+      setDisplay?.({ [aid]: !value });
+    };
+    const { registry } = options;
+    const themes = options.themes.map(({ id, label, mode }) => ({ id, name: label, ...(mode ? { mode } : {}) }));
+    return displayItems({
+      readonly,
+      registry,
+      theme: registry?.themes[display.theme] ??
+        themes.find((option) => option.id === display.theme) ??
+        themes[0] ?? { id: display.theme, name: display.theme },
+      themes,
+      override: display.themeOverride,
+      onThemeChange: setTheme,
+      grid: drawnGrid(options, display),
+      gridOptions: options.grids,
+      onGridChange:
+        setDisplay &&
+        ((grid) =>
+          setDisplay(grid === undefined || grid === 'none' ? { grid: false } : { grid: true, gridKind: grid })),
+      snap,
+      onSnapToggle: setDisplay && toggle('snap', snap),
+      dim: config.dim,
+      axes,
+      onAxesToggle: setDisplay && toggle('axes', axes),
+      // A lattice's cells are its guides, so only a lattice has any to show.
+      guides: options.guides ? guides : undefined,
+      onGuidesToggle: options.guides && setDisplay && (!aids || lattice) ? toggle('guides', guides) : undefined,
+      lattice,
+      timeline,
+      onTimelineToggle: animation ? () => time.commands.setVisible(!timeline) : undefined,
+    });
+  }, [
+    aids,
+    animation,
+    atomRegistry,
+    axes,
+    config.dim,
+    display,
+    guides,
+    lattice,
+    options,
+    readonly,
+    setDisplay,
+    setTheme,
+    snap,
+    time,
+    timeline,
+  ]);
+  return useBottomBar('display', graph) ? null : <OwnBar graph={graph} classNames={classNames} />;
 };
 
 SceneEditorDisplay.displayName = 'SceneEditor.Display';
@@ -636,7 +759,7 @@ SceneEditorNotice.displayName = 'SceneEditor.Notice';
  * shots staging the open scene, played and scrubbed by sampling the shot into the viewport (never written), and keyed
  * from the selection's animatable fields into the shot's timeline; with no shot, the first key makes one.
  */
-const SceneEditorTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' }: { classNames?: string }) => {
+const SceneEditorTimeline = ({ classNames = 'bottom-14' }: { classNames?: string }) => {
   const { registry } = useSceneServices('SceneEditor.Timeline');
   const { config, atoms } = useSceneDocument('SceneEditor.Timeline');
   const { atoms: timeAtoms, commands } = useSceneTime('SceneEditor.Timeline');
@@ -685,23 +808,19 @@ const SceneEditorTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2
       shot?.id,
       keySelection({ timeline, document, layout, selection, t: time, fields: config.animatable ?? placementFields }),
     );
+  // The bar is centred, the shots to its left in a column as wide as the one to its right, so they collapse to fit.
   return (
-    <div className={mx('absolute w-max max-w-[calc(100%-2rem)] flex gap-1 items-center', classNames)}>
-      {shots.length > 1 && (
-        <Toolbar.Root classNames={FLOATING_BAR} data-testid='timeline-shots'>
-          {shots.map((entry, index) => (
-            <Button.Root
-              key={entry.id}
-              variant={entry.id === shot?.id ? 'primary' : 'ghost'}
-              label={entry.name ?? `Shot ${index + 1}`}
-              data-testid={`timeline-shot-${entry.id}`}
-              onClick={() => commands.setShot(entry.id)}
-            />
-          ))}
-        </Toolbar.Root>
+    <div
+      className={mx(
+        'absolute inset-x-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-1 items-center pointer-events-none',
+        classNames,
       )}
+    >
+      <div role='none' className='min-w-0'>
+        {shots.length > 1 && <ShotsBar shots={shots} current={shot?.id} onShotChange={commands.setShot} />}
+      </div>
       <TimelineBar
-        classNames={FLOATING_BAR}
+        classNames={mx(FLOATING_BAR, 'pointer-events-auto')}
         time={time}
         duration={duration}
         playing={playing}
@@ -720,6 +839,41 @@ const SceneEditorTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2
 };
 
 SceneEditorTimeline.displayName = 'SceneEditor.Timeline';
+
+/** The shots staging the scene, the open one marked; the last collapse first. */
+const ShotsBar = ({
+  shots,
+  current,
+  onShotChange,
+}: {
+  shots: readonly { id: string; name?: string }[];
+  current?: string;
+  onShotChange: (id: string) => void;
+}) => {
+  const menu = useMenuBuilder(() => {
+    const builder = MenuBuilder.make();
+    shots.forEach((entry, index) =>
+      builder.action(
+        entry.id,
+        {
+          label: entry.name ?? `Shot ${index + 1}`,
+          variant: entry.id === current ? 'primary' : 'action',
+          testId: `timeline-shot-${entry.id}`,
+        },
+        () => onShotChange(entry.id),
+      ),
+    );
+    return builder.build();
+  }, [shots, current, onShotChange]);
+  return (
+    <ActionToolbar
+      {...menu}
+      alwaysActive
+      classNames={mx(menuBarClasses, 'ms-auto pointer-events-auto')}
+      data-testid='timeline-shots'
+    />
+  );
+};
 
 export const SceneEditor = {
   Root: SceneEditorRoot,

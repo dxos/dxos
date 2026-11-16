@@ -281,7 +281,8 @@ component SceneEditor.Root
 component SceneEditor.Viewport
   desc: >
     The dimension's viewport in the shared frame with the inspector panel (`InspectorPanel.Frame`); its children are
-    the floating panels drawn over it.
+    the floating panels drawn over it. It draws the editor's bottom bar (testid `scene-bar`), one `ActionToolbar` along
+    its bottom edge that the camera, actions and display parts add their items to (D-59).
 ```
 
 ```mdl
@@ -302,20 +303,22 @@ component SceneEditor.Tools
 
 ```mdl
 component SceneEditor.Actions
-  desc: The actions bar, bottom centre: the command table's commands. Locked, it hides, as every one edits but Copy.
+  desc: >
+    The actions, in the bottom bar after the camera's: the command table's commands. Locked, they go, as every one
+    edits but Copy.
 ```
 
 ```mdl
 component SceneEditor.Camera
   desc: >
-    The camera bar, bottom left: fit, actual size, zoom in and out by 1.25, and the zoom as a percentage of the
+    The camera bar, leading the bottom bar: fit, actual size, zoom in and out by 1.25, and the zoom as a percentage of the
     authored camera's. It moves only this viewer's camera, never the scene's.
 ```
 
 ```mdl
 component SceneEditor.Display
   desc: >
-    The display panel (`DisplayPanel`), bottom right: the look (each theme with its swatch and a sun or moon for its
+    The display panel (`DisplayPanel`), at the bottom bar's end: the look (each theme with its swatch and a sun or moon for its
     mode), the grid, snapping, the axes toggle (its icon by dimension: `vector-two` in 2D, `vector-three` in 3D),
     where the dimension has them guides, and, where the host has shots, the Timeline toggle.
 ```
@@ -343,7 +346,9 @@ component SceneEditor.Inspector
   desc: >
     The one inspector panel (`InspectorPanel`), docked beside the viewport or floating over it, with the dock toggle
     on its toolbar. Its sections stack in order — Properties, Views, Objects, Layers, Styles — then the dimension's
-    own; docked, Properties fills the upper half above the rest, split by a seam that can be dragged.
+    own; docked, Properties fills the upper half above the rest, split by a seam that can be dragged. In a frame
+    narrower than 800 px it folds to one icon (testid `dock-expand`) that opens it floating, closed again by its
+    `dock-collapse` button (D-58).
   slots:
     Properties: the config's form over the selection, shown as drawn (its object's size, type and look applied)
     Views: the scene's layout tree (`ViewsInspector`), with a composite's parts read-only under the element placing it
@@ -470,8 +475,8 @@ feat F-17: Camera
 ```mdl
 feat F-18: Panels and inspectors
   req F-18.1: The panels float over the viewport in the same places in both dimensions: the breadcrumbs top left,
-    the rail at the left below them, the actions bar at the bottom centre with the Timeline above it, the camera bar bottom left, the display panel bottom
-    right.
+    the rail at the left below them, and one bar along the bottom with the Timeline above it: the camera's controls,
+    then the actions, and the display panel's at its end (D-59).
   req F-18.2: One inspector panel serves both dimensions and docks in both; the dock choice is the canvas's view
     state, so it holds in either dimension ([org.dxos.scene#D-66]).
   req F-18.3: The sections are Properties, Views, Objects, Layers and Styles, in that order, then the dimension's
@@ -1031,6 +1036,24 @@ decision D-57: The library is the host's: `DimensionConfig.library` lists items 
   for: user:richburdon
   affects: [DimensionConfig, F-12.7]
   why: Defining once and placing many matches an import; keeping `make` with the host keeps the editor free of asset bundles, which the host can load on first pick.
+```
+
+```mdl
+decision D-58: Below an 800 px frame the inspector panel folds to one icon in the viewport's top right, and the icon opens it floating over the canvas whatever the dock choice; at 800 px or wider the dock choice holds again. 800 px is the docked panel's 320 px and 480 px left for the view and its bottom bar. The fold is the panel's own, so the stored dock choice does not change.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SceneEditor.Inspector, F-18.2]
+  why: The user asked for it (2026-11-15): on a phone the docked or open floating panel covered most of the canvas, and an icon keeps every inspector reachable. A first 640 px threshold left a docked panel's view too narrow for the bottom bars, which overflowed.
+```
+
+```mdl
+decision D-59: The camera, actions and display parts share one bottom bar, a react-ui-menu `ActionToolbar` that `SceneEditor.Root` composes from each part's item graph with `MenuBuilder.subgraph`: the camera's first, then the actions after a rule, then the display's after a gap that pushes them to the bar's end. The bar collapses all three by rank into one ⋮ menu. A `SceneEditor.Viewport` draws the bar along its bottom edge; a host that sets its parts beside a bare viewport, as `CanvasEditor` does, gets it from the root. A part outside a `SceneEditor.Root` draws a bar of its own.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-18.1, SceneEditor.Actions, SceneEditor.Camera, SceneEditor.Display, SceneEditor.Root, SceneEditor.Viewport]
+  why: The user chose one shared toolbar (2026-11-15) over three bars side by side, which needed measuring code to share the row; composing one toolbar's graph is react-ui-menu's existing pattern and ranks the three parts' controls together.
 ```
 
 ---

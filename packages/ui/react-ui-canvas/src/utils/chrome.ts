@@ -16,3 +16,7 @@ export const FLOATING_BAR = `gap-1 p-1 ${FLOATING_PANEL}`;
  * bar and takes back the bar's inset, where a toolbar's own rule is half a control tall.
  */
 export const FLOATING_BAR_RULE = 'self-stretch h-auto -my-1 mx-0';
+
+/** `FLOATING_BAR_RULE` on a bar's own rules, for a bar whose separators its builder draws (an `ActionToolbar`). */
+export const FLOATING_BAR_RULES =
+  '[&>[data-scope=separator]]:self-stretch [&>[data-scope=separator]]:h-auto [&>[data-scope=separator]]:-my-1 [&>[data-scope=separator]]:mx-0';

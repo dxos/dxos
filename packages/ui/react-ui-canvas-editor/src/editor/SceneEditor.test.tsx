@@ -110,7 +110,7 @@ describe('SceneEditor', () => {
 
   test('both configs render the same regions', () => {
     const regions = () =>
-      ['viewport', 'canvas-toolbar', 'palette', 'scene-actions', 'canvas-debug', 'canvas-display'].map(
+      ['viewport', 'canvas-toolbar', 'palette', 'scene-action-undo', 'canvas-debug', 'theme-trigger'].map(
         (id) => screen.queryByTestId(id) !== null,
       );
     render(<Editor dim='2d' />);
@@ -125,7 +125,7 @@ describe('SceneEditor', () => {
     render(<Editor dim='3d' role='card' />);
     expect(screen.getByTestId('viewport')).toBeDefined();
     expect(screen.getByTestId('viewport').dataset.grid).toBe('false');
-    for (const id of ['canvas-toolbar', 'palette', 'scene-actions', 'canvas-debug', 'canvas-display']) {
+    for (const id of ['canvas-toolbar', 'palette', 'scene-action-undo', 'canvas-debug', 'theme-trigger', 'scene-bar']) {
       expect(screen.queryByTestId(id)).toBeNull();
     }
   });

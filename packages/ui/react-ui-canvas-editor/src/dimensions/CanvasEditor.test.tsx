@@ -78,7 +78,7 @@ describe('CanvasEditor on the shared parts', () => {
       </Host>,
     );
     await waitFor(() => expect(document.querySelector('[data-node-id="b"]')).not.toBeNull());
-    const bar = await screen.findByTestId('scene-actions');
+    const bar = await screen.findByTestId('scene-bar');
     // A shape is made with its tool, so the bar has no button that makes one.
     expect(bar.querySelector('[data-testid="toolbar-create"]')).toBeNull();
     expect(bar.querySelector('[data-testid="scene-action-layout"]')).not.toBeNull();

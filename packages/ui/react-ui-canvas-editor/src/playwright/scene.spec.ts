@@ -391,7 +391,7 @@ test.describe('Canvas', () => {
     // Only the select and pan tools remain, beside the story's lock toggle, and the actions bar, which only edits, is gone.
     await expect(page.locator('[data-testid="palette"] button')).toHaveCount(3);
     await expect(page.getByTestId('palette-readonly')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByTestId('scene-actions')).toHaveCount(0);
+    await expect(page.locator('[data-testid^="scene-action-"]')).toHaveCount(0);
     // No panel floats over a read-only canvas.
     await expect(page.locator('[data-testid="properties"]')).toHaveCount(0);
     await expect(page.locator('[data-testid="layers"]')).toHaveCount(0);
