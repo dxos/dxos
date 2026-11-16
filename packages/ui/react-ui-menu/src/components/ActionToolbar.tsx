@@ -512,7 +512,7 @@ const isCompactable = (item: MenuItem): boolean => {
  * Collapses items while any row is too narrow, so the toolbar fills its container without overflowing it. First each
  * ranked item with a compact form takes it (highest rank first); then groups marked `fold` fold; then ranked items move
  * into the overflow menu, then the rest, last first. Each step is undone once the toolbar is wider than when it was
- * taken, so hidden items are never measured.
+ * taken, or tried again once an item's content changes, so hidden items are never measured.
  */
 const useCollapse = (
   menu: MenuActions,
@@ -553,8 +553,9 @@ const useCollapse = (
   const [count, setCount] = useState(0);
   const thresholds = useRef<number[]>([]);
   const [width, setWidth] = useState(0);
-  // Bumped when an item's own content (a custom item's children) grows a row past its width.
+  // Bumped when an item's own content (a custom item's children) changes.
   const [contentChanges, setContentChanges] = useState(0);
+  const measuredChanges = useRef(contentChanges);
   // Ids rather than the items: `steps` is rebuilt whenever a caller passes a fresh `onAction`.
   const stepsKey = steps.map(({ kind, item }) => `${kind}:${item.id}`).join('\n');
 
@@ -572,6 +573,11 @@ const useCollapse = (
     // A toolbar not laid out yet (a closed drawer, a hidden panel) has no width to fit; it is measured once it has one.
     if (width === 0) {
       return;
+    }
+    // Content that shrank may make room at this width for a step taken, so each step is tried again.
+    if (measuredChanges.current !== contentChanges) {
+      measuredChanges.current = contentChanges;
+      thresholds.current.fill(0);
     }
     const overflowing = elements.some((row) => row.scrollWidth > row.clientWidth + 1);
     if (overflowing && count < steps.length) {
@@ -600,11 +606,8 @@ const useCollapse = (
     if (!observed || elements.length === 0) {
       return;
     }
-    const observer = new MutationObserver(() => {
-      if (elements.some((row) => row.scrollWidth > row.clientWidth + 1)) {
-        setContentChanges((changes) => changes + 1);
-      }
-    });
+    // A step's own render changes the rows too; this observer is replaced then, which drops those records.
+    const observer = new MutationObserver(() => setContentChanges((changes) => changes + 1));
     elements.forEach((row) => observer.observe(row, { childList: true, subtree: true, characterData: true }));
     return () => observer.disconnect();
   }, [observed, rows, units, count]);

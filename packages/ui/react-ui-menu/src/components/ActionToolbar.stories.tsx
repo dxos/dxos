@@ -786,37 +786,49 @@ export const GrowBack: Story = {
 // Read by the item itself, so a change reaches its content without rebuilding the menu.
 const NamesContext = createContext<string[]>([]);
 
-const People = ({ collapsed }: { collapsed?: boolean }) => {
+// Like a list of viewers: it never collapses, so the items beside it make room for it.
+const People = () => {
   const names = useContext(NamesContext);
   return (
     <Button.Root variant='ghost' icon='ph--users--regular' data-testid='story.people'>
-      {!collapsed && names.join(', ')}
+      {names.join(', ')}
     </Button.Root>
   );
 };
 
-const GrowingContentStory = () => {
+const ChangingContentStory = () => {
   const [names, setNames] = useState(['Ada']);
   const [box, setBox] = useState<HTMLDivElement | null>(null);
   const menu = useMenuBuilder(
     () =>
       MenuBuilder.make()
         .root({ label: 'Document' })
-        .custom('people', { label: 'People', placement: { collapse: 1 } }, ({ collapsed }) => (
-          <People collapsed={collapsed} />
-        ))
-        .action('search', { label: 'Search', icon: 'ph--magnifying-glass--regular', testId: 'story.search' }, () =>
-          log('search'),
+        .custom('people', { label: 'People' }, () => <People />)
+        .action(
+          'share',
+          {
+            label: 'Share',
+            icon: 'ph--user-plus--regular',
+            iconOnly: false,
+            testId: 'story.share',
+            placement: { collapse: 1 },
+          },
+          () => log('share'),
         )
         .build(),
     [],
   );
   return (
     <div className='flex flex-col gap-4 p-8'>
-      <Button.Root data-testid='story.join' onClick={() => setNames((names) => [...names, 'Ben', 'Charlotte'])}>
-        Join
-      </Button.Root>
-      <div ref={setBox} className='flex w-[12rem]'>
+      <div className='flex gap-2'>
+        <Button.Root data-testid='story.join' onClick={() => setNames((names) => [...names, 'Ben', 'Charlotte'])}>
+          Join
+        </Button.Root>
+        <Button.Root data-testid='story.leave' onClick={() => setNames((names) => names.slice(0, 1))}>
+          Leave
+        </Button.Root>
+      </div>
+      <div ref={setBox} className='flex w-[16rem]'>
         <div role='none' className='flex min-w-0'>
           <NamesContext.Provider value={names}>
             <ActionToolbar {...menu} alwaysActive bounds={box} classNames='border border-separator' />
@@ -827,15 +839,19 @@ const GrowingContentStory = () => {
   );
 };
 
-/** A custom item whose content grows past the box it measures takes its compact form, though menu and box are unchanged. */
-export const GrowingContent: Story = {
-  render: () => <GrowingContentStory />,
+/**
+ * An item whose content grows past the box it measures makes the items beside it collapse, though menu and box are
+ * unchanged; once its content shrinks back, they take their full form again.
+ */
+export const ChangingContent: Story = {
+  render: () => <ChangingContentStory />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const people = canvas.getByTestId('story.people');
-    await expect(people).toHaveTextContent('Ada');
+    await expect(canvas.getByTestId('story.share')).toHaveTextContent('Share');
     await userEvent.click(canvas.getByTestId('story.join'));
-    await waitFor(() => expect(canvas.getByTestId('story.people')).not.toHaveTextContent('Ada'));
-    await expect(canvas.getByTestId('story.search')).toBeVisible();
+    await waitFor(() => expect(canvas.getByTestId('story.share')).not.toHaveTextContent('Share'));
+    await expect(canvas.getByTestId('story.people')).toHaveTextContent('Charlotte');
+    await userEvent.click(canvas.getByTestId('story.leave'));
+    await waitFor(() => expect(canvas.getByTestId('story.share')).toHaveTextContent('Share'));
   },
 };
