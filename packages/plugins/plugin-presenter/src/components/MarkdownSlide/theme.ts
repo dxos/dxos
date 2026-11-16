@@ -114,7 +114,16 @@ export const theme = {
       // to its width, so the mark at the art's centre stays centred however narrow the column is.
       fill: {
         box: 'grow min-h-0 self-stretch flex items-center justify-center overflow-hidden',
-        img: 'w-full h-full object-cover',
+        // The art's own drawing stops short of its frame — `bg-dxos.svg` reaches x 226..1694 of 1920 — so `cover`
+        // alone leaves its rays ending in mid-air inside the column. The picture is drawn past the column's edges
+        // instead, which crops the rays rather than showing where they stop.
+        img: 'w-full h-full object-cover scale-[1.6] origin-center',
+        p: '[&:has(>img)]:contents',
+      },
+      // A brand mark standing in for a heading, at a heading's scale rather than a title slide's.
+      lockup: {
+        box: 'flex',
+        img: 'h-[180px] w-auto max-w-full object-contain',
         p: '[&:has(>img)]:contents',
       },
       // Blocks pushed to the slide's own top and bottom edges, which leaves the middle to whatever is behind them —
@@ -128,10 +137,14 @@ export const theme = {
       // the measurements come from the Figma deck this reproduces, scaled from its 1920-wide frame to the canvas.
       // The name takes the slide's own foreground, which leaves the accent free for the links.
       title: {
-        box: 'absolute start-[53px] top-[577px] flex flex-col gap-[209px]',
+        box: 'absolute start-[53px] top-[541px] flex flex-col gap-[209px]',
+        // The size is the one at which the deck's display face (Poiret One) draws the name to the width the Figma
+        // title covers, and `top` puts its baseline where that slide's is; both would need remeasuring under a
+        // different heading font.
+        //
         // Important: `cover` and the other emphasis layouts size their headings with a `[&_h1]` descendant rule,
         // which outranks a class on the heading itself, so a variant can only set its own size by overriding it.
-        h1: 'text-[208px]! leading-none! font-(family-name:--slide-font-heading) text-(color:--slide-foreground)',
+        h1: 'text-[244px]! leading-none! font-(family-name:--slide-font-heading) text-(color:--slide-foreground)',
         p: 'text-[37px] leading-[1.4]',
         a: 'text-(color:--slide-accent) no-underline',
       },

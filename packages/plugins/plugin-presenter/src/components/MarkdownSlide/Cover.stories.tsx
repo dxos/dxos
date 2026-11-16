@@ -3,12 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { type ComponentType } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { query, slide } from '../../testing/slideStory.tsx';
 import { SlideWorkbench, type SlideWorkbenchProps } from '../../testing/SlideWorkbench.tsx';
+import { SlideThemeProvider } from '../SlideTheme/index.ts';
 
 /**
  * Title slides, as a set to choose between. Each draws the brand's own lockup — the mark with `DXOS` under it in the
@@ -125,12 +127,20 @@ export const Split: Story = {
   },
 };
 
+/** The deck's own face: Poiret One, the thin geometric display the Figma slide sets its name in. */
+const display = (Story: ComponentType) => (
+  <SlideThemeProvider settings={{ font: 'display' }}>
+    <Story />
+  </SlideThemeProvider>
+);
+
 /**
  * 6. The deck's own title slide, reproduced from the Figma deck it was designed in: the artwork is that slide
  * exported as SVG and published to the brand bucket, and the words sit at its own measurements rather than in the
  * layout's padding.
  */
 export const Glow: Story = {
+  decorators: [display],
   args: {
     content: slide(
       // The art carries the slide's background, black included, so the frontmatter names no color of its own; the
@@ -181,7 +191,11 @@ export const Column: Story = {
       '',
       '::right::',
       '',
-      '# DXOS',
+      '<Box variant="lockup">',
+      '',
+      `![DXOS](${WORDMARK})`,
+      '',
+      '</Box>',
       '',
       '## The decentralized operating system',
       '',

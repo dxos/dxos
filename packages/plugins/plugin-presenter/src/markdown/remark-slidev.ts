@@ -22,7 +22,17 @@ export const LIST_VARIANTS = ['default', 'cards', 'steps', 'outline', 'flow'] as
 export type ListVariant = (typeof LIST_VARIANTS)[number];
 
 /** Named box styles a `<Box>` may request; the first is an undecorated container. */
-export const BOX_VARIANTS = ['default', 'card', 'outline', 'hero', 'fill', 'spread', 'title', 'caption'] as const;
+export const BOX_VARIANTS = [
+  'default',
+  'card',
+  'outline',
+  'hero',
+  'fill',
+  'lockup',
+  'spread',
+  'title',
+  'caption',
+] as const;
 
 export type BoxVariant = (typeof BOX_VARIANTS)[number];
 
