@@ -137,6 +137,11 @@ jobs:
         env:
           NODE_ENV: production
 
+      # Each `edge-release` plugin ships its EDGE bundle in `dist/plugin`, which dxos/edge installs from npm. No
+      # `NODE_ENV`, so it is the bundle `Check` and Deploy Apps build.
+      - name: Build EDGE plugin bundles
+        run: .github/workflows/scripts/build-edge-plugin-bundles.sh
+
       # Runs directly rather than through changesets/action, which publishes only when no changesets are pending.
       - name: Publish (@latest)
         if: github.event_name == 'push'
