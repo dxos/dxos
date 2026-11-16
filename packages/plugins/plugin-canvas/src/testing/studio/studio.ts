@@ -13,10 +13,8 @@ import * as Schema from 'effect/Schema';
 
 import { type ContentMap, Dsl, type Scene, applyCommands } from '@dxos/diagram';
 import { invariant } from '@dxos/invariant';
+import { SceneHandler, elementId, isLinkRecord, isNodeRecord, nodeKey } from '@dxos/react-ui-canvas';
 import { type NodeBase, endpointNode } from '@dxos/scene';
-
-import { isLinkRecord, isNodeRecord, nodeKey } from '../../model/content.ts';
-import { SceneHandler, elementId } from '../../model/handler.ts';
 
 const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 

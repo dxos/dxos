@@ -303,6 +303,7 @@ op CurateMagazine
 
 ```mdl
 feat F-1: Magazine Type
+  uses: [Feed, Magazine, Post]
   desc: Introduce the Magazine ECHO type with feeds, instructions, and curated posts.
 
   req F-1.1: User can create a Magazine object via the plugin's create menu.
@@ -314,6 +315,7 @@ feat F-1: Magazine Type
 
 ```mdl
 feat F-2: Post Extensions
+  uses: [Post]
   desc: Add optional snippet, imageUrl, readAt, and tags to existing Post type.
 
   req F-2.1: All new fields are optional; existing Post objects load unchanged.
@@ -325,6 +327,7 @@ feat F-2: Post Extensions
 
 ```mdl
 feat F-3: Magazine Curate Flow
+  uses: [CurateMagazine, Magazine, MagazineArticle, SyncFeed]
   desc: Sync referenced feeds then invoke the agent to curate articles.
 
   req F-3.1: MagazineArticle toolbar includes a Curate button.
@@ -348,6 +351,7 @@ feat F-3: Magazine Curate Flow
 
 ```mdl
 feat F-4: Agent Curation Behavior
+  uses: [AddPostToMagazine, FetchArticleContent, ListCandidatePosts, Post]
   desc: Agent uses tools to select, fetch, and add Posts.
 
   req F-4.1: Agent reads magazine.instructions Text and magazine.feeds refs from context.
@@ -361,6 +365,7 @@ feat F-4: Agent Curation Behavior
 
 ```mdl
 feat F-5: Masonry Display
+  uses: [MagazineArticle, Post]
   desc: Render curated Posts in a Masonry grid with rich tiles.
 
   req F-5.1: MagazineArticle renders magazine.posts in reverse insertion order (newest first) in a Masonry grid.
@@ -375,6 +380,7 @@ feat F-5: Masonry Display
 
 ```mdl
 feat F-6: Post Article Detail (master-detail via layout dispatch)
+  uses: [Magazine, MagazineArticle, Post, PostArticle]
   desc: Post detail is rendered by a standalone PostArticle surface. The
         master (MagazineArticle) does not compose the detail inline;
         instead it asks the deck's `useShowItem` to select the post and
@@ -412,6 +418,7 @@ feat F-6: Post Article Detail (master-detail via layout dispatch)
 
 ```mdl
 feat F-7: Future Tagging (schema scaffolding only)
+  uses: [Feed, FetchArticleContent, MagazineSkill, MagazineTile, Post]
   desc: Schema fields in place so the tagging feature composes without migration.
 
   req F-7.1: Post.tags exists as Schema.Array(Schema.String).pipe(Schema.optional).

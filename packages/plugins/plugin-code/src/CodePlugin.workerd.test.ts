@@ -16,19 +16,24 @@ import { CodeOperation, Feature, Showcase } from '#types';
 
 describe('CodePlugin in workerd', () => {
   // Feature maps are driven over MCP, whose hosts activate the plugin headless like this.
-  test('activates headless and contributes the feature map operations and types', async ({ expect }) => {
-    const { failures, operationKeys, typenames } = await activateHeadlessPlugins([
-      CodePlugin.make(),
-      // Declared plugin dependencies, and theirs; the manager refuses to load the plugin without them.
-      AssistantPlugin.make(),
-      MarkdownPlugin.make(),
-      ProjectsPlugin.make(),
-      TasksPlugin.make(),
-    ]);
-    expect(failures).toEqual([]);
-    for (const type of [Feature.Feature, Showcase.Demonstrates]) {
-      expect(typenames).toContain(Type.getTypename(type));
-    }
-    expect(operationKeys).toContain(String(CodeOperation.GetFeatures.meta.key));
-  });
+  // Activation imports each plugin's modules lazily, which a cold transform in CI makes slow.
+  test(
+    'activates headless and contributes the feature map operations and types',
+    { timeout: 60_000 },
+    async ({ expect }) => {
+      const { failures, operationKeys, typenames } = await activateHeadlessPlugins([
+        CodePlugin.make(),
+        // Declared plugin dependencies, and theirs; the manager refuses to load the plugin without them.
+        AssistantPlugin.make(),
+        MarkdownPlugin.make(),
+        ProjectsPlugin.make(),
+        TasksPlugin.make(),
+      ]);
+      expect(failures).toEqual([]);
+      for (const type of [Feature.Feature, Showcase.Demonstrates]) {
+        expect(typenames).toContain(Type.getTypename(type));
+      }
+      expect(operationKeys).toContain(String(CodeOperation.GetFeatures.meta.key));
+    },
+  );
 });

@@ -20,6 +20,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import * as Spec from '@dxos/compute/Spec';
+import { mdlSpec } from '@dxos/deus/extension';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -551,7 +552,10 @@ const findPackage = async (canvas: ReturnType<typeof within>, label: string) => 
   return item.closest<HTMLElement>('[role="menuitemcheckbox"]') ?? item;
 };
 
-/** Another plugin's package adds no views, only its slash commands, which write its blocks' structure in place. */
+/**
+ * Another plugin's package adds no views, only its slash commands, which write its blocks' structure in place, and its
+ * block types, which the lint then knows.
+ */
 export const VideoPackage: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
@@ -589,6 +593,8 @@ export const VideoPackage: Story = {
     await new Promise((resolve) => setTimeout(resolve, 150));
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(view.state.doc.toString()).toContain('scene SC-1: '), { timeout: 5_000 });
+    // The lint reads the package's block types from the editor, so its blocks are not flagged as unknown.
+    await expect(view.state.facet(mdlSpec).types).toContain('scene');
   },
 };
 

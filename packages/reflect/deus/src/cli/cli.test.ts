@@ -89,6 +89,16 @@ describe('deus lint', () => {
       expect(line).toMatch(new RegExp(`^${file}:\\d+: error \\[mdl/decision\\]: `));
     }
   });
+  test("a block type of a dialect the spec's frontmatter extends is known", async ({ expect }) => {
+    const { exit, output } = await run(['lint', '--only', 'mdl/block-type', `${FIXTURES}video-spec.mdl`]);
+    expect(output).toEqual([]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+  });
+  test('a spec whose frontmatter extends no dialect is read as software', async ({ expect }) => {
+    const { exit, output } = await run(['lint', '--only', 'mdl/block-type', `${FIXTURES}plugin-spec.mdl`]);
+    expect(output).toEqual([]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+  });
 });
 
 describe('deus lint references', () => {

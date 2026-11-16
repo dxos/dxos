@@ -56,6 +56,8 @@ export type MenuActionChrome = MenuItemChrome & {
   variant?: 'action' | 'primary' | 'toggle' | 'switch' | 'custom' | 'text';
   value?: string;
   checked?: boolean;
+  /** Depth of the row in a menu listing a tree, which indents it beneath its parent row; a toolbar ignores it. */
+  indent?: number;
   /**
    * Renders an arbitrary control in place of the standard button. Required when `variant` is
    * `'custom'`; the contributor owns the element (and its interactions) so the toolbar can host
