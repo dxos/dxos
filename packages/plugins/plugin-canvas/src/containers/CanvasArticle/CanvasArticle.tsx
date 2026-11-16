@@ -145,11 +145,10 @@ const SceneEditorArticle = <C,>({
             sceneChoice={host.sceneChoice}
             shots={host.shots}
             onShotChange={host.onShotChange}
+            overlay={cursors && <CanvasCursors object={canvas} />}
           >
             <CanvasEditCommands element={element} />
-            <SceneEditorParts catalogs={dimension.catalogs}>
-              {cursors && <CanvasCursors object={canvas} />}
-            </SceneEditorParts>
+            <SceneEditorParts catalogs={dimension.catalogs} />
           </SceneEditor.Root>
         </CanvasDatabaseContext.Provider>
       </Panel.Body>

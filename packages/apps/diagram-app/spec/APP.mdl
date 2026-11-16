@@ -52,6 +52,7 @@ feat F-1: App shell
   req F-1.5: The app draws its pill at once, before the client is up: the space name and hue, diagram name and Share as the last visit left them. The diagram's frame, the canvas editor's own toolbars and panels over an empty scene, follows as soon as the editor's code loads, the same on a first run as on a return. The live app replaces them once its own frame is on screen, and until then they take no input. The diagram's content fades in over 100 ms; the frame and the theme's background do not, since they are already on screen. A first run draws "My diagrams / Untitled", and a space the last visit did not show draws the pill without names. An invitation link draws the same, with the join dialog over it (F-6.2). The app shows no loading text.
   req F-1.6: The app prepares in the background, all at once: plugins, identity and the open space. Opening a diagram loads every object it reached on its last open in one batch, not one reference at a time.
   req F-1.7: The pill is a toolbar between the canvas's breadcrumbs and its inspector and never overlaps either; below 800 px, where the canvas folds the inspector to one icon, it leaves room for that icon alone. It centres in the page while both sides have room, then moves aside. As the page narrows, Share, then the space menu, then the diagram menu show only their icon or avatar (with the menus' caret), never a name cut short; the viewers' avatars never collapse. Where even that does not fit, Share moves into the pill's overflow menu (⋮), and past that the pill scrolls sideways. As the page widens again, each takes its full form back in the reverse order. The menus are divided by the toolbar's own line separator.
+  req F-1.8: When the app fails, during boot or after, a reset dialog takes the place of the app and its boot shell: the error, its stack on request, a copy of both, Reload, and Reset, which wipes the device's data after a confirmation. Composer shows the same dialog, which app-toolkit provides.
 ```
 
 ```mdl
@@ -1616,4 +1617,29 @@ decision D-126: Each environment is its own assets-only Worker, `diagram-<env>`,
   why: Sharing Composer's environment files puts each deploy on the same EDGE as the Composer it shares spaces with, and the deploy pipeline derives everything else from the app's Workers config.
   rejected:
     - A production environment: the product name and its domain are still open ([Q-1]).
+```
+
+```mdl
+decision D-127: When the app fails, it shows a reset dialog in place of the app, like Composer's error boundary dialog. The dialog moves to app-toolkit so both apps share it.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-1.8]
+```
+
+```mdl
+decision D-128: A client that fails to initialize or times out shows the same dialog, replacing the boot shell, since the error boundary never sees a failure the client plugin catches. The dialog offers Reload, Reset, the error and its stack, and a copy of both. Safe mode, the recovery page, the log download and the crash report stay Composer's and reach the shared dialog as optional handlers, each adding its button. Fills in [D-127].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.8]
+  why: The app has no safe mode, recovery page, log store or support plugin, so the shared dialog carries only what every app can do and each host adds the rest.
+  rejected:
+    - Moving Composer's feedback form into app-toolkit: it depends on plugin-support, which app-toolkit must not.
+```
+
+```mdl
+decision D-129: The reset dialog offers Reset, which wipes the device's identity and data. [D-2] defers only a place for identity management in the app's own UI.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-1.8]
 ```

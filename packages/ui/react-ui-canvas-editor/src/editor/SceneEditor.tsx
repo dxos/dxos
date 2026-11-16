@@ -96,6 +96,8 @@ export type SceneEditorRootProps<C> = PropsWithChildren<
     onDockedChange?: (docked: boolean) => void;
     /** The inspector panel's actions, a hook called inside the dimension's root so it can read the dimension's engine. */
     useInspectorActions?: () => ReactNode;
+    /** Drawn over the viewport in every role, under the floating panels: collaborators' cursors, say. */
+    overlay?: ReactNode;
   }
 >;
 
@@ -111,6 +113,7 @@ const SceneEditorRoot = <C,>({
   docked = false,
   onDockedChange,
   useInspectorActions,
+  overlay,
   children,
   ...props
 }: SceneEditorRootProps<C>) => {
@@ -139,32 +142,34 @@ const SceneEditorRoot = <C,>({
   return (
     <SceneEditorServicesProvider {...services}>
       <SceneLookProvider {...look}>
-        {editsInRole(props.role) ? (
-          <InspectorPanel.Root
-            docked={!readonly && docked}
-            readonly={readonly}
-            useActions={useInspectorActions ?? useSelectionActions}
-            onDockedChange={onDockedChange}
-          >
-            {shortcuts && <EditorShortcuts />}
-            <Root Frame={InspectorPanel.Frame}>
-              <BottomBarProvider>{children}</BottomBarProvider>
+        <OverlayContext.Provider value={overlay}>
+          {editsInRole(props.role) ? (
+            <InspectorPanel.Root
+              docked={!readonly && docked}
+              readonly={readonly}
+              useActions={useInspectorActions ?? useSelectionActions}
+              onDockedChange={onDockedChange}
+            >
+              {shortcuts && <EditorShortcuts />}
+              <Root Frame={InspectorPanel.Frame}>
+                <BottomBarProvider>{children}</BottomBarProvider>
+              </Root>
+            </InspectorPanel.Root>
+          ) : (
+            <Root>
+              <BottomBarProvider>
+                <SceneEditorViewport>
+                  {navigable ? (
+                    <>
+                      <SceneEditorNavigation />
+                      <SceneEditorCamera />
+                    </>
+                  ) : null}
+                </SceneEditorViewport>
+              </BottomBarProvider>
             </Root>
-          </InspectorPanel.Root>
-        ) : (
-          <Root>
-            <BottomBarProvider>
-              <SceneEditorViewport>
-                {navigable ? (
-                  <>
-                    <SceneEditorNavigation />
-                    <SceneEditorCamera />
-                  </>
-                ) : null}
-              </SceneEditorViewport>
-            </BottomBarProvider>
-          </Root>
-        )}
+          )}
+        </OverlayContext.Provider>
       </SceneLookProvider>
     </SceneEditorServicesProvider>
   );
@@ -251,6 +256,9 @@ const BottomBarContext = createContext<BottomBarRegistry | undefined>(undefined)
 
 const BottomBarSlotContext = createContext<ReactNode>(null);
 
+/** The root's `overlay`, which whichever viewport the role draws puts under its children. */
+const OverlayContext = createContext<ReactNode>(null);
+
 /**
  * The editor's one bottom bar, which the camera, actions and display parts share, so a narrow editor collapses their
  * controls, by rank, into its ⋮ menu. A `SceneEditor.Viewport` draws it; a host that composes its parts beside a bare
@@ -305,9 +313,11 @@ const SceneEditorViewport = ({ children }: PropsWithChildren) => {
   const { Viewport } = useSceneServices('SceneEditor.Viewport');
   const registry = useContext(BottomBarContext);
   const bar = useContext(BottomBarSlotContext);
+  const overlay = useContext(OverlayContext);
   useLayoutEffect(() => registry?.claim(), [registry]);
   return (
     <Viewport>
+      {overlay}
       {children}
       {bar}
     </Viewport>
