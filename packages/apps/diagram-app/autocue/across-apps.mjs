@@ -175,7 +175,7 @@ export const steps = [
     setup: true,
     run: async ({ peers: { alice } }) => {
       const { page } = alice;
-      await page.waitForTimeout(3_000);
+      await page.getByTestId('spacePlugin.addSpace').waitFor({ timeout: TIMEOUT });
       await clearChrome(alice);
       await setName(page, 'Alice');
       await page.getByTestId('spacePlugin.addSpace').click();

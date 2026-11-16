@@ -3,7 +3,15 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { type PropsWithChildren, type ReactNode, createContext, useContext, useRef, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  type ReactNode,
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { Annotation, Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -131,7 +139,9 @@ export type PillToolbarProps = PillSlots & {
  */
 export const PillToolbar = ({ onShare, ...slots }: PillToolbarProps) => {
   const shareRef = useRef(onShare);
-  shareRef.current = onShare;
+  useLayoutEffect(() => {
+    shareRef.current = onShare;
+  }, [onShare]);
   const bounds = useContext(PillBoundsContext);
   const viewers = slots.presence !== undefined;
   const menu = useMenuBuilder(() => {

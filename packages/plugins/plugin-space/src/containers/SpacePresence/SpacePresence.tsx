@@ -110,6 +110,20 @@ export const SpacePresence = ({ spaceId, presenceKey, everyone, size }: SpacePre
 
 const OVERFLOW_TRIGGER = 'overflow';
 
+const uniqueMembers = (members: Member[]): Member[] => {
+  const seen = new Set<string>();
+  return members.filter(({ identityKey }) => {
+    if (!identityKey) {
+      return true;
+    }
+    if (seen.has(identityKey)) {
+      return false;
+    }
+    seen.add(identityKey);
+    return true;
+  });
+};
+
 type AvatarTriggerProps = ComponentPropsWithoutRef<'button'> & { tooltip: string };
 
 /** A button around an avatar; its tooltip finds it by the id the `asChild` Popover trigger gives it. */
@@ -139,7 +153,8 @@ export const FullPresence = ({ size = 'md', action, isLit = isAttending, ...prop
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const [open, setOpen] = useState(false);
   const groupRef = useRef<HTMLDivElement>(null);
-  const members = getPresenceMembers(props);
+  // Listing the space, a person attending several objects has a row under each, but one avatar.
+  const members = uniqueMembers(getPresenceMembers(props));
   const title = t('presence-in-object.heading', { count: members.length });
   const closingAction = useMemo(
     () =>

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Space } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
@@ -11,6 +11,8 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as Canvas from '@dxos/plugin-canvas/Canvas';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+
+const RETRY_DELAYS = [1_000, 5_000, 20_000];
 
 export type CanvasDrawings = {
   /** The space's canvas diagrams, newest first (spec F-4.3, F-4.4). */
@@ -45,6 +47,14 @@ export const useCanvasDrawings = (space: Space, expected?: string): CanvasDrawin
     };
   }, [space, expected]);
 
+  // A canvas not synced yet fails to load: its drawing is left out, so the list is not held pending, and is tried
+  // again a few times as sync catches up.
+  const retries = useRef({ attempts: new Map<string, number>(), timers: new Set<ReturnType<typeof setTimeout>>() });
+  useEffect(() => {
+    const { timers } = retries.current;
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     for (const drawing of all) {
@@ -54,8 +64,25 @@ export const useCanvasDrawings = (space: Space, expected?: string): CanvasDrawin
       drawing.canvas.load().then(
         (canvas) => !cancelled && setFormats((prev) => new Map(prev).set(drawing.id, Canvas.isCanvas(canvas))),
         (err) => {
+          if (cancelled) {
+            return;
+          }
           log.warn('drawing canvas did not load', { id: drawing.id, err });
-          !cancelled && setFormats((prev) => new Map(prev).set(drawing.id, false));
+          setFormats((prev) => new Map(prev).set(drawing.id, false));
+          const { attempts, timers } = retries.current;
+          const attempt = attempts.get(drawing.id) ?? 0;
+          if (attempt < RETRY_DELAYS.length) {
+            attempts.set(drawing.id, attempt + 1);
+            const timer = setTimeout(() => {
+              timers.delete(timer);
+              setFormats((prev) => {
+                const next = new Map(prev);
+                next.delete(drawing.id);
+                return next;
+              });
+            }, RETRY_DELAYS[attempt]);
+            timers.add(timer);
+          }
         },
       );
     }

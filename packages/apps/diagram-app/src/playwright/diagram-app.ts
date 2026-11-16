@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Browser, type Locator, type Page, expect } from '@playwright/test';
+import { type Browser, type Locator, type Page } from '@playwright/test';
 
 import { setupPage } from '@dxos/test-utils/playwright';
 
@@ -133,8 +133,10 @@ export class DiagramApp {
     await dialog.getByTestId('membersContainer.createInvitation').click();
     await dialog.getByTestId('copy-invitation').click();
     const link = await this.page.evaluate(() => (window as any).__copied as string | undefined);
-    expect(link, 'the copy button wrote no link').toBeDefined();
-    return { dialog, link: link! };
+    if (!link) {
+      throw new Error('the copy button wrote no link');
+    }
+    return { dialog, link };
   }
 
   async closeDialog(): Promise<void> {

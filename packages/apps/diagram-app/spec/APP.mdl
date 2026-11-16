@@ -638,6 +638,7 @@ question Q-3: Which diagram domain does the app use?
     - diagram.club: an open, social place to draw together; diagrams.club is also free.
     - diagram.is: short; reads as the start of a sentence.
     - diagramtogether.com: the only free .com found; long but says what the app does.
+```
 
 ```mdl
 decision D-18: Each space in the space menu shows the planet icon, and each diagram in the diagram menu shows an icon, so the rows do not look oddly indented.

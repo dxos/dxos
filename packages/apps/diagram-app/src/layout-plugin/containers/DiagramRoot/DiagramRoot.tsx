@@ -106,9 +106,9 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
   const layoutState = Hooks.useCapability(DiagramAppCapabilities.LayoutState);
   const [layout, updateLayout] = Hooks.useAtomCapabilityState(DiagramAppCapabilities.LayoutState);
   const spaces = useSpaces();
-  // Set from asking for the join dialog until the joined space shows, or the dialog is dismissed: the space it started
+  // Set from asking for the join dialog until the joined space opens, or the dialog is dismissed: the route it started
   // on, the dismissals so far, and whether the dialog has opened.
-  const [joining, setJoining] = useState<{ spaceId?: string; dismissals: number; opened: boolean }>();
+  const [joining, setJoining] = useState<{ route: Route; dismissals: number; opened: boolean }>();
   const startedRef = useRef(false);
   const { route } = layout;
   const space = spaces.find(({ id }) => id === route.spaceId);
@@ -128,12 +128,6 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
     },
     [updateLayout],
   );
-
-  useEffect(() => {
-    const handlePopState = () => updateLayout((state) => ({ ...state, route: parseRoute(window.location.pathname) }));
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [updateLayout]);
 
   const openSpace = useCallback(
     (next: Space, mode: NavigateMode = 'push') =>
@@ -177,7 +171,7 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
       if (!existing) {
         const created = await EffectEx.runPromise(createSpace(client, FIRST_SPACE_NAME));
         const drawing = await createDiagram(created);
-        navigate({ spaceId: created.id, drawingId: drawing.id }, 'push');
+        navigate({ spaceId: created.id, drawingId: drawing.id }, 'replace');
         return;
       }
       const drawingId = (existing.id === wanted.spaceId ? wanted.drawingId : undefined) ?? getLastDrawing(existing.id);
@@ -188,6 +182,20 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
     },
     [client, notify, navigate, createDiagram],
   );
+
+  // Back to an entry with no space, or to a space no longer here, opens the start space in its place.
+  useEffect(() => {
+    const handlePopState = () => {
+      const next = parseRoute(window.location.pathname);
+      if (client.spaces.get().some(({ id }) => id === next.spaceId)) {
+        updateLayout((state) => ({ ...state, route: next }));
+      } else {
+        void openStart();
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [client, updateLayout, openStart]);
 
   // A space deleted here or on another device leaves the view: another space opens, or the first run on a profile with
   // none.
@@ -224,9 +232,9 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
         );
       }
       // An invitation's handler has opened the join dialog by now.
-      const { dialogOpen, dialogDismissals } = registry.get(layoutState);
+      const { dialogOpen, dialogDismissals, route: startRoute } = registry.get(layoutState);
       if (dialogOpen) {
-        setJoining({ dismissals: dialogDismissals, opened: true });
+        setJoining({ route: startRoute, dismissals: dialogDismissals, opened: true });
         return;
       }
       dismissShell('join');
@@ -250,7 +258,8 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
       }
       return;
     }
-    if (space && space.id !== joining.spaceId) {
+    // The join opens the joined space, which writes a route even when it is the space already open.
+    if (space && route !== joining.route) {
       setJoining(undefined);
     } else if (!layout.dialogOpen && layout.dialogDismissals > joining.dismissals) {
       setJoining(undefined);
@@ -258,7 +267,7 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
         void openStart();
       }
     }
-  }, [joining, space, route.spaceId, layout.dialogOpen, layout.dialogDismissals, openStart]);
+  }, [joining, space, route, layout.dialogOpen, layout.dialogDismissals, openStart]);
 
   // A join that succeeded closes its dialog before the joined space shows; the still copy stands in until it does, and
   // over the boot shell until the shell gives way to the joined diagram.
@@ -276,9 +285,10 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
   }, [joined]);
 
   const handleJoin = useCallback(() => {
-    setJoining({ spaceId, dismissals: registry.get(layoutState).dialogDismissals, opened: false });
+    const { route: startRoute, dialogDismissals } = registry.get(layoutState);
+    setJoining({ route: startRoute, dismissals: dialogDismissals, opened: false });
     void invokePromise(SpaceOperation.Join, {});
-  }, [spaceId, registry, layoutState, invokePromise]);
+  }, [registry, layoutState, invokePromise]);
 
   return space ? (
     <SpaceView

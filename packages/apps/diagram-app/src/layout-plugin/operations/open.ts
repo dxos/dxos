@@ -67,9 +67,13 @@ const isDiagram = Effect.fnUntraced(function* (spaceId: Key.SpaceId, objectId: s
  * Opens the space a path names (spec F-8): the diagram it names, else the space's last one here. A new space of
  * one's own opens with one empty diagram (spec F-3.3).
  */
+// Each open takes a number; one that a newer open overtook while it loaded writes nothing.
+let latestOpen = 0;
+
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject }) {
+      const open = ++latestOpen;
       const [path] = subject;
       const spaceId = path && GraphPath.getSpaceIdFromPath(path);
       if (!spaceId) {
@@ -81,6 +85,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         return yield* Effect.fail(new NotADiagramError());
       }
       const drawingId = named ?? getLastDrawing(spaceId) ?? (yield* firstDiagram(spaceId));
+      if (open !== latestOpen) {
+        return subject;
+      }
       const route: Route = { spaceId, drawingId };
       recordRoute(route, 'push');
       yield* updateState(() => ({ route }));

@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Obj } from '@dxos/echo';
@@ -28,9 +28,11 @@ export const CanvasCursors = ({ object }: CanvasCursorsProps) => {
   const navigation = useCanvasNavigation('CanvasCursors');
   const camera = useAtomValue(navigation.atoms.camera);
   const path = useAtomValue(navigation.atoms.path);
-  // The scene's own layout is the path's first entry; a peer there shares no view.
-  const view = path.length > 1 ? path.slice(1).join('/') : undefined;
+  // The whole path, root layout included: peers on different scenes of one canvas share no view.
+  const view = path.length > 0 ? path.join('/') : undefined;
   const { cursors, update } = ToolkitHooks.usePointerCursors(object);
+  // A point published in the view being left would stay over it for its peers until the pointer moved again.
+  useEffect(() => () => update(undefined), [view, update]);
   const shown = useMemo(() => cursors.filter((cursor) => cursor.view === view), [cursors, view]);
   const projection = useMemo(() => makeProjection(camera), [camera]);
   const handlePointerChange = useCallback(

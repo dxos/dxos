@@ -10,21 +10,27 @@ export type Restartable = {
 };
 
 /**
- * Runs `setup` afresh on each restart, keeping only the latest run. A restart made while `setup` runs, by a
- * subscription it sets off, supersedes that run, which is disposed of as soon as it returns.
+ * Runs `setup` afresh on each restart, keeping only the latest run. A restart made while the last run is disposed of,
+ * or while `setup` runs, supersedes this one: the newer restart's run is the one kept.
  */
 export const makeRestartable = (setup: () => () => void): Restartable => {
   let disposeLast: (() => void) | undefined;
   let generation = 0;
-  const dispose = () => {
-    generation++;
+  const disposeCurrent = () => {
     const last = disposeLast;
     disposeLast = undefined;
     last?.();
   };
+  const dispose = () => {
+    generation++;
+    disposeCurrent();
+  };
   const restart = () => {
-    dispose();
-    const current = generation;
+    const current = ++generation;
+    disposeCurrent();
+    if (current !== generation) {
+      return;
+    }
     const disposeRun = setup();
     if (current === generation) {
       disposeLast = disposeRun;
