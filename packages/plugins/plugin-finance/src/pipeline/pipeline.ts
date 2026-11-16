@@ -155,57 +155,49 @@ const extractorFor = (stage: string, model: string): Extractor => ({
  * (model or lexicon) and event types. A batch is committed whole, its cursors advanced only when every model call
  * answered, so a failed batch is retried on the next run.
  */
-const annotateBatch = (
-  items: ReadonlyArray<TextItem>,
-  options: AnnotateOptions,
-): Effect.Effect<
-  { annotated: number; facts: number; failed: number },
-  SemanticIndexError,
-  FactStore | AiService.AiService
-> =>
-  Effect.gen(function* () {
-    const store = yield* FactStore;
-    const model = 'claude-haiku-5-5';
-    const found = items.map((item) => findTickers(itemText(item)));
-    const linked = options.linkNames === false ? items.map(() => []) : yield* linkTickers(items, options);
-    if (!linked) {
-      return { annotated: 0, facts: 0, failed: 1 };
-    }
-    const mentions: TickerMention[][] = found.map((mentions, index) => mergeMentions(mentions, linked[index] ?? []));
-    const modelSentiment =
-      options.sentiment === 'lexicon' ? undefined : yield* classifySentiment(items, mentions, options);
-    if (options.sentiment !== 'lexicon' && !modelSentiment) {
-      return { annotated: 0, facts: 0, failed: 1 };
-    }
-    const events = options.events === false ? items.map(() => []) : yield* classifyEvents(items, options);
-    if (!events) {
-      return { annotated: 0, facts: 0, failed: 1 };
-    }
+const annotateBatch = Effect.fn(function* (items: ReadonlyArray<TextItem>, options: AnnotateOptions) {
+  const store = yield* FactStore;
+  const model = 'claude-haiku-5-5';
+  const found = items.map((item) => findTickers(itemText(item)));
+  const linked = options.linkNames === false ? items.map(() => []) : yield* linkTickers(items, options);
+  if (!linked) {
+    return { annotated: 0, facts: 0, failed: 1 };
+  }
+  const mentions: TickerMention[][] = found.map((mentions, index) => mergeMentions(mentions, linked[index] ?? []));
+  const modelSentiment =
+    options.sentiment === 'lexicon' ? undefined : yield* classifySentiment(items, mentions, options);
+  if (options.sentiment !== 'lexicon' && !modelSentiment) {
+    return { annotated: 0, facts: 0, failed: 1 };
+  }
+  const events = options.events === false ? items.map(() => []) : yield* classifyEvents(items, options);
+  if (!events) {
+    return { annotated: 0, facts: 0, failed: 1 };
+  }
 
-    const facts = items.flatMap((item, index) => {
-      const lexicon = lexiconSentiment(itemText(item));
-      const sentiment = modelSentiment?.[index] ?? {
-        sentiment: lexicon,
-        tickers: lexiconTickers(mentions[index], lexicon),
-      };
-      const sentimentModel = modelSentiment?.[index] ? model : 'lexicon';
-      return [
-        ...articleFacts(item, extractorFor('article', 'feed')),
-        ...mentionFacts(
-          item,
-          mentions[index],
-          extractorFor('mentions', options.linkNames === false ? 'regex' : `regex+${model}`),
-        ),
-        ...sentimentFacts(item, sentiment.sentiment, sentiment.tickers, extractorFor('sentiment', sentimentModel)),
-        ...eventFacts(item, events[index] ?? [], extractorFor('events', model)),
-      ];
-    });
-    yield* store.putFacts(facts);
-    for (const item of items) {
-      yield* store.setCursor(annotationCursor(item), annotationHash(item, options));
-    }
-    return { annotated: items.length, facts: facts.length, failed: 0 };
+  const facts = items.flatMap((item, index) => {
+    const lexicon = lexiconSentiment(itemText(item));
+    const sentiment = modelSentiment?.[index] ?? {
+      sentiment: lexicon,
+      tickers: lexiconTickers(mentions[index], lexicon),
+    };
+    const sentimentModel = modelSentiment?.[index] ? model : 'lexicon';
+    return [
+      ...articleFacts(item, extractorFor('article', 'feed')),
+      ...mentionFacts(
+        item,
+        mentions[index],
+        extractorFor('mentions', options.linkNames === false ? 'regex' : `regex+${model}`),
+      ),
+      ...sentimentFacts(item, sentiment.sentiment, sentiment.tickers, extractorFor('sentiment', sentimentModel)),
+      ...eventFacts(item, events[index] ?? [], extractorFor('events', model)),
+    ];
   });
+  yield* store.putFacts(facts);
+  for (const item of items) {
+    yield* store.setCursor(annotationCursor(item), annotationHash(item, options));
+  }
+  return { annotated: items.length, facts: facts.length, failed: 0 };
+});
 
 /** The annotation stages over items, skipping the ones already annotated with the same options. */
 export const annotate = (

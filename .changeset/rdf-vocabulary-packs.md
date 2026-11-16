@@ -1,5 +1,6 @@
 ---
 '@dxos/pipeline-rdf': minor
+'@dxos/plugin-brain': minor
 '@dxos/plugin-magazine': minor
 '@dxos/plugin-sheet': minor
 ---
@@ -8,6 +9,6 @@ Fact extraction now seeds its ontology with curated predicates from published vo
 
 Model calls can be metered: `AiUsage.instrument` reports each language-model call's tokens, `AiUsage.withStage` attributes them to a pipeline stage, and `AiMetering.metered` (in `@dxos/compute`) is an `AiService` layer that writes each call as a durable `Trace.ModelCall` event, with `AiMetering.summarize` totalling them by model and stage at catalog prices. `Stage.batch` and the crawler's `tapStage` take a `concurrency`, which the crawler's fact extraction (`ExtractFactsOptions.concurrency`) and the Discord pipeline's topics stage (`RunOptions.topicsConcurrency`) pass through. Brain gains a Query SPARQL tool for raw SELECTs, and the fact tools cap what they return to the agent (50 rows, 500 characters a value) with a note to page with `LIMIT`/`OFFSET`; Query Facts takes an `offset` and returns `{ facts, total, note }`.
 
-The fact explorer's lists (`react-ui-rdf`'s entity browser, fact viewer and ontology list) render only the rows near the viewport, and the entity browser gains a row of type toggles with counts; new exports `VirtualList`, `TypeFilter` and `entityTypeCounts`. `@dxos/plugin-magazine` exports its RSS and Atom parser as `@dxos/plugin-magazine/FeedParser`. `@dxos/plugin-sheet` adds an Add Chart operation (`SheetOperation.AddChart`, in the sheet skill) so an agent can chart a range of a sheet it made.
+The fact explorer's lists (`react-ui-rdf`'s entity browser, fact viewer and ontology list) render only the rows near the viewport, and the entity browser gains a row of type toggles with counts; new exports `VirtualList`, `TypeFilter` and `entityTypeCounts`. `@dxos/plugin-magazine` exports its RSS and Atom parser as `@dxos/plugin-magazine/FeedParser`. `@dxos/plugin-sheet` adds an Add Chart operation (`SheetOperation.AddChart`, in the sheet skill) so an agent can chart a range of a sheet it made. `@dxos/plugin-brain/RemoteFactStorePlugin` gives every space a fact store served over HTTP (`RemoteFactStorePlugin.make(url)`) with the Brain skill and its operations, so a story or app can point an agent's memory at a fact server.
 
 Breaking: extraction without an explicit `ontology` now shows the model the vocabulary packs as well as the seed predicates, so it reuses published predicates and its prompt is longer; Query Facts returns `{ facts, total, note? }` instead of an array.
