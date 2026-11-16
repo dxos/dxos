@@ -14,9 +14,9 @@ import { SEC_USER_AGENT, SourceError, getText } from './http.ts';
 /** The foreign-key source of everything read from EDGAR. */
 export const SEC_SOURCE = 'sec.gov';
 
-// SEC fair access allows 10 requests a second; a pause after each keeps well under it.
+// SEC fair access allows 10 requests a second, but bursts near it are refused; a pause after each keeps well under.
 const polite = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
-  effect.pipe(Effect.tap(() => Effect.sleep('150 millis')));
+  effect.pipe(Effect.tap(() => Effect.sleep('250 millis')));
 
 const secText = (url: string) => polite(getText(url, SEC_USER_AGENT));
 

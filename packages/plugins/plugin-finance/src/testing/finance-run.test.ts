@@ -8,7 +8,8 @@
 // finance ontology, the ticker mention index, sentiment and event classification; structured rows (prices, FINRA short
 // volume, Form 4, 13F, filings, House disclosures) become facts without a model. Reruns resume: ingest adds only new
 // items, extraction skips items whose cursor matches. Every model call is metered into trace.jsonl.
-//   [FINANCE_DIR=~/.local/share/dxos/finance] [FINANCE_STEPS=ingest,extract] [FINANCE_DAYS=31]
+//   [FINANCE_DIR=~/.local/share/dxos/finance] [FINANCE_STEPS=ingest,extract] [FINANCE_SOURCES=text,edgar,market,house]
+//   [FINANCE_DAYS=31]
 //   [FINANCE_SAMPLE=n] [FINANCE_THINKING=1] [FINANCE_SENTIMENT=llm|lexicon]  moon run plugin-finance:run
 //
 // `moon run plugin-finance:experiment` compares text-extraction configurations over a sample of the ingested news,
@@ -35,7 +36,14 @@ import { Finance } from '#types';
 
 import * as FinancePipeline from '../pipeline/pipeline.ts';
 import { companyIri, ontology } from '../pipeline/vocabulary.ts';
-import { DATA_FEEDS, type SourceResult, TEXT_FEEDS, ingest } from '../sources/ingest.ts';
+import {
+  DATA_FEEDS,
+  SOURCE_GROUPS,
+  type SourceGroup,
+  type SourceResult,
+  TEXT_FEEDS,
+  ingest,
+} from '../sources/ingest.ts';
 import { type TextItem, fromPost } from '../sources/text-item.ts';
 import * as FinanceSpace from '../store/finance-space.ts';
 import { costReport, meter } from './metering.ts';
@@ -46,6 +54,8 @@ const dataRoot = join(dir, 'echo');
 const factsPath = join(dir, 'facts.db');
 const days = Number(process.env.FINANCE_DAYS ?? 31);
 const hasKey = Boolean(process.env.DX_ANTHROPIC_API_KEY);
+
+const isSourceGroup = (name: string): name is SourceGroup => SOURCE_GROUPS.some((group) => group === name);
 
 /** The text items and observations the ECHO feeds hold. */
 const readFeeds = () =>
@@ -106,6 +116,9 @@ describe('finance pipeline', () => {
         Effect.gen(function* () {
           if (steps.has('ingest')) {
             const results = yield* ingest({
+              ...(process.env.FINANCE_SOURCES
+                ? { only: process.env.FINANCE_SOURCES.split(',').filter(isSourceGroup) }
+                : {}),
               onResult: ({ feed, source, fetched, added, error }: SourceResult) =>
                 log(
                   `  ${feed.padEnd(20)} ${source.padEnd(46)} ${error ? `FAILED ${error}` : `${String(fetched).padStart(5)} fetched ${String(added).padStart(5)} new`}`,
