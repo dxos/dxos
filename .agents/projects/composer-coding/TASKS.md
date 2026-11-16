@@ -58,7 +58,15 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
 - [ ] Remote permissions, MCP and shell e2e tests are `todo` placeholders.
 - [ ] sandbox-service runs `noAuth: true` (pending dxos#13056).
 
+## Blocked
+
+- [ ] dxos#14557 CI is red on a bad moon remote-cache entry (`mcp-server:build` 04bd11f8 restores no
+      files), not on the diff. Needs eviction: an operator, or a CI `moon run mcp-server:build --force`.
+      Root cause (a cancelled shard uploading an empty entry) is suggested as a separate task.
+
 ## PRs
 
+- dxos/dxos#14557 — this project: draft-PR brief, repositories over MCP, specs. Draft; CI red on
+  the cache entry above.
 - dxos/dxos#14555 — whoami on Composer's in-app MCP; dev channel → EDGE dev. Draft, green.
 - dxos/edge#1535 — checkouts on container disk, per-turn snapshot. Ready, green.
