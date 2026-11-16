@@ -13,7 +13,6 @@ import React, {
   useLayoutEffect,
   useMemo,
   useRef,
-  useState,
 } from 'react';
 
 import { type ModuleCompiler } from '@dxos/animation';
@@ -228,6 +227,7 @@ export const createDimension2D =
     const engine: { controller?: CanvasController } = {};
     // The engine's services while mounted, for the commands that read the engine's own state (its undo history).
     const services = keep<CanvasServices | undefined>(undefined);
+    const sharing = new CameraShare(camera.share);
 
     const selection = Atom.keepAlive(
       Atom.writable<readonly string[], readonly string[]>(
@@ -497,20 +497,19 @@ export const createDimension2D =
 
     /** Shares this view as it moves, a view that opened fitted included, and glides to a followed peer's as it changes. */
     const Share = () => {
+      // The compiler moves a closure over the factory's values to module scope, out of their reach; this renders nothing.
+      'use no memo';
       const { viewport, measured } = useCanvasGesture('SceneEditor.Root2D');
       const shown = useAtomValue(canvas.camera);
       const shared = useAtomValue(camera.shared);
-      // Read in render: the compiler hoists a closure over the factory's `camera` out of its scope.
-      const shareCamera = camera.share;
-      const [share] = useState(() => new CameraShare(shareCamera));
-      useEffect(() => () => share.dispose(), [share]);
+      useEffect(() => () => sharing.dispose(), []);
       useEffect(() => {
-        if (measured && shared && share.follow(shared)) {
+        if (measured && shared && sharing.follow(shared)) {
           engine.controller?.navigation.moveTo(recentre(shared, viewport), FOLLOW_GLIDE_MS);
         }
       }, [measured, shared]);
       useEffect(() => {
-        measured && share.moved(recentre(shown, viewport));
+        measured && sharing.moved(recentre(shown, viewport));
       }, [measured, shown, viewport]);
       return null;
     };
