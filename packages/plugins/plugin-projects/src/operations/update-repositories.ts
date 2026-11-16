@@ -9,7 +9,7 @@ import { Database, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Repo } from '@dxos/types';
 
-import { CodeOperation } from '#types';
+import { ProjectOperation } from '#types';
 
 /** A space-qualified and a local URI may name the same repository. */
 const refKey = (ref: Ref.Ref<Repo.Repo>): string => {
@@ -17,8 +17,8 @@ const refKey = (ref: Ref.Ref<Repo.Repo>): string => {
   return (eid && EID.getEntityId(eid)) ?? ref.uri;
 };
 
-const handler: Operation.WithHandler<typeof CodeOperation.UpdateProjectRepositories> =
-  CodeOperation.UpdateProjectRepositories.pipe(
+const handler: Operation.WithHandler<typeof ProjectOperation.UpdateRepositories> =
+  ProjectOperation.UpdateRepositories.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ project: projectRef, add = [], remove = [] }) {
         const project = yield* Database.load(projectRef);

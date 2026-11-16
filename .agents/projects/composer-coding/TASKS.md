@@ -34,15 +34,22 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
 
 ## Phase 2: The loop, end to end
 
-- [ ] Map how a task starts an EDGE run, and what of it is reachable over MCP.
+- [x] Map how a task starts an EDGE run, and what of it is reachable over MCP. Findings in
+      DESIGN.md "How the remote loop works": the client drives every turn; nothing of it is on MCP.
 - [ ] Attach dxos/dxos and dxos/edge to project "DXOS".
 - [ ] Run the sample task "Rework space selection for mcp auth" to a draft PR.
 - [ ] Run a dxos/edge task to a draft PR.
 
 ## Phase 3: Gaps
 
-- [ ] `code.updateProjectRepositories` is not on the MCP server: plugin-code is not in
-      operation-service's registry, so a project's repositories can be set only in the UI.
+- [ ] Delegation brief told the agent not to push: a delegated task could never end in a PR. Now it
+      asks for a draft PR per repository, attached to the task, task → `review` (this branch).
+- [ ] `code.updateProjectRepositories` was not on the MCP server. Moved into plugin-projects as
+      `projects.updateRepositories` and listed in the project skill (this branch); then link and
+      deploy operation-service to edge-dev so the dev MCP serves it.
+- [ ] Starting an EDGE run needs a Composer client (`DelegateTaskToChat` uses Capability and
+      AgentService; spawn and every turn are client calls). An MCP-started or server-driven run is
+      the next structural gap.
 - [ ] Link the PR back to the task without relying on the agent calling MCP.
 - [ ] Remote permissions, MCP and shell e2e tests are `todo` placeholders.
 - [ ] sandbox-service runs `noAuth: true` (pending dxos#13056).

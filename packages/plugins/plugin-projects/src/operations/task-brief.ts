@@ -89,15 +89,23 @@ export const renderDelegationBrief = ({ tasks, project, context }: BriefInput): 
     '',
     concat`
       Work through the tasks in order, in your current working directory. Follow the repository's own
-      conventions for branches and commits, and do not push or merge unless the person who assigned
-      the tasks asks you to in this conversation. When you finish, say what you did and what is left:
-      they review the work here.
+      conventions for branches, commits, formatting and tests, and run the checks it asks for before
+      you push.
+    `,
+    '',
+    concat`
+      The result of code work is a draft pull request, which the person who assigned the tasks reviews.
+      Commit on a new branch, push that branch, and open the pull request as a draft with
+      \`gh pr create --draft\`, one per repository you changed. Never push to the default branch,
+      never force-push a branch you did not create, and never merge. When you finish, say what you did,
+      link each pull request, and say what is left.
     `,
     '',
     concat`
       Composer's own tools, when you have them, come from the \`composer\` MCP server: list its skills
       with loadSkill, and use the one for tasks to mark each task above as you start and finish it,
-      addressing it by its Task URI.
+      addressing it by its Task URI. Once a pull request is open, import it with the GitHub skill and
+      attach it to the task it implements, then move that task to \`review\`.
     `,
   );
 

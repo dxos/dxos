@@ -15,7 +15,7 @@ import * as Spec from '@dxos/compute/Spec';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Task, Thread } from '@dxos/types';
+import { Repo, Task, Thread } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 /**
@@ -243,6 +243,33 @@ export const ArtifactList = Operation.make({
   }),
   services: [Database.Service],
 }).pipe(Operation.mutation('none'));
+
+/** Edits the project's `Repo.RepositoriesAnnotation`, which no generic object write reaches. */
+export const UpdateRepositories = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.updateRepositories'),
+    name: 'Update Project Repositories',
+    icon: 'ph--git-branch--regular',
+    description: trim`
+      Add repositories to a project's repositories or remove them, and return the list. A cloud coding agent
+      checks the list out and works in the first. With neither \`add\` nor \`remove\`, returns the list unchanged.
+      A repository must already be an org.dxos.type.repo object in the space.
+    `,
+  },
+  input: Schema.Struct({
+    project: Ref.Ref(Project.Project).annotate({ description: 'The project (its reference is in the chat context).' }),
+    add: Schema.optional(
+      Schema.Array(Ref.Ref(Repo.Repo)).annotate({
+        description: 'Repositories to append, in order; one already listed keeps its place.',
+      }),
+    ),
+    remove: Schema.optional(Schema.Array(Ref.Ref(Repo.Repo)).annotate({ description: 'Repositories to remove.' })),
+  }),
+  output: Schema.Struct({
+    repositories: Schema.Array(Ref.Ref(Repo.Repo)).annotate({ description: "The project's repositories, in order." }),
+  }),
+  services: [Database.Service],
+}).pipe(Operation.mutation('write'));
 
 /**
  * Reveals a comment thread's span, or else an anchor's text, in whichever open editor shows it, such as a feature's

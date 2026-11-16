@@ -161,6 +161,11 @@ a value that already starts with `echo:`; that produces `echo:///echo://…`, wh
 - **Design document** — the durable _why_: decisions, findings, spec. Create the text object,
   then a document whose `content` references it (`space-add-object` typenames `org.dxos.type.text`
   and `org.dxos.type.document`).
+- **Repositories** — the ordered list of `org.dxos.type.repo` objects a cloud coding agent started
+  for the project checks out; it works in the first. Read or edit the list with
+  `projects-update-repositories { project, add?, remove? }`. A repository must already be an object
+  in the space: find it with `space-query-objects { typename: 'org.dxos.type.repo' }`, or create it
+  with `space-add-object`, giving `owner`, `name` and `url` (e.g. `https://github.com/dxos/dxos`).
 
 ## Tasks are a tree
 

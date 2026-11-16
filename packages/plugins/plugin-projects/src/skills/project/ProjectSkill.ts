@@ -59,6 +59,8 @@ export const operations: readonly Operation.Definition.Any[] = [
   RemoteSessionOperation.RecordSession,
   ProjectOperation.ArtifactAdd,
   ProjectOperation.ArtifactList,
+  // A project's repositories are an annotation, which no generic object write reaches.
+  ProjectOperation.UpdateRepositories,
 ];
 
 /**
