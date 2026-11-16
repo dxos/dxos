@@ -133,7 +133,9 @@ export const SpaceView = ({
       // Deleting the open diagram moves to another; deleting any other leaves the view where it is.
       const next = target.id === drawing?.id ? drawings.find(({ id }) => id !== target.id) : undefined;
       const from = currentRoute();
-      void removeDrawing(space, target).then(() => next && currentRoute() === from && onSelectDrawing(next.id, 'replace'));
+      void removeDrawing(space, target).then(
+        () => next && currentRoute() === from && onSelectDrawing(next.id, 'replace'),
+      );
     },
     [space, currentRoute, drawing, drawings, onSelectDrawing],
   );
