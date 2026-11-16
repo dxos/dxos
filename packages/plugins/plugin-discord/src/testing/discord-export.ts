@@ -12,7 +12,17 @@
 // is accepted.
 //
 //   pnpm exec tsx src/testing/discord-export.ts --channel <id>[,<id>…] | --guild <id>
-//     [--days <n> | --after <iso date>] [--before <iso date>] [--no-threads] [--out <dir>]
+//     [--days <n> | --after <iso date>] [--before <iso date>] [--no-threads] [--human-only] [--out <dir>]
+//   pnpm exec tsx src/testing/discord-export.ts --guild <id> --scan [--out <dir>]
+//   pnpm exec tsx src/testing/discord-export.ts --list-guilds
+//
+// Each channel or thread is written as JSON lines (`<guild> - [<parent> - ]<name> [<id>].jsonl`): a header line, then
+// one message per line, appended a page at a time. A restarted export continues each file after its last committed
+// message, so an interrupted run loses at most the page it was writing.
+//
+// `--scan` samples each channel's latest messages and classifies it (human discussion, bot feed, one-way broadcast,
+// empty), printing the table and saving it as `channels.json` in the output directory; `--human-only` exports only the
+// channels it classes as human discussion (and forums), reusing that file when present.
 
 import type * as Cause from 'effect/Cause';
 import * as Data from 'effect/Data';
@@ -25,6 +35,8 @@ import { parseArgs } from 'node:util';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { snowflakeForTimestamp } from '../services/discord-message.ts';
+import { type ChannelSample, classify } from './channel-scan.ts';
+import { appendPage, resumeFrom } from './export-format.ts';
 
 const API = 'https://discord.com/api/v10';
 const PAGE = 100;
@@ -49,6 +61,8 @@ type Message = {
   attachments: Attachment[];
   message_reference?: { message_id?: string; channel_id?: string; guild_id?: string };
   thread?: { id: string; name: string };
+  /** Set on messages a webhook posted (integrations such as GitHub feeds). */
+  webhook_id?: string;
 };
 type Channel = {
   id: string;
@@ -161,25 +175,84 @@ const authorize = (token: string) =>
 // Crawl.
 //
 
-/** Every message after `after` and before `before`, oldest first, a page of 100 per request. */
-const messagesOf = (client: Client, channelId: string, after: string, before: string | undefined) =>
+/**
+ * Every message after `after` and before `before`, oldest first, a page of 100 per request; each page is handed to
+ * `onPage` as it arrives, so it is committed before the next request. Returns how many messages there were.
+ */
+const messagesOf = (
+  client: Client,
+  channelId: string,
+  after: string,
+  before: string | undefined,
+  onPage: (messages: readonly Message[]) => void,
+) =>
   Effect.gen(function* () {
-    const all: Message[] = [];
+    let count = 0;
     let cursor = after;
     while (true) {
       const page = yield* client.get<Message[]>(`channels/${channelId}/messages?after=${cursor}&limit=${PAGE}`);
       const sorted = [...page].sort((left, right) => (BigInt(left.id) < BigInt(right.id) ? -1 : 1));
       const inRange = before ? sorted.filter((message) => BigInt(message.id) < BigInt(before)) : sorted;
-      all.push(...inRange);
-      process.stdout.write(`\r  ${all.length} messages`);
+      onPage(inRange);
+      count += inRange.length;
+      process.stdout.write(`\r  ${count} messages`);
       if (page.length < PAGE || inRange.length < sorted.length) {
         break;
       }
       cursor = sorted[sorted.length - 1].id;
     }
     process.stdout.write('\n');
-    return all;
+    return count;
   });
+
+/** The later of two snowflakes. */
+const later = (left: string, right: string | undefined): string =>
+  right !== undefined && BigInt(right) > BigInt(left) ? right : left;
+
+//
+// Channel classification.
+//
+
+/** Samples each channel's latest page and classifies it; a channel the token cannot read is `no-access`. */
+const scanChannels = (client: Client, channels: readonly Channel[]) =>
+  Effect.forEach(channels, (channel) =>
+    Effect.gen(function* () {
+      if (channel.type === 15) {
+        return classify(channel, []);
+      }
+      const latest = yield* client
+        .get<Message[]>(`channels/${channel.id}/messages?limit=${PAGE}`)
+        .pipe(Effect.catchIf(accessDenied, () => Effect.succeed(undefined)));
+      return latest === undefined
+        ? ({
+            id: channel.id,
+            name: channel.name ?? channel.id,
+            kind: 'no-access',
+            sampled: 0,
+            botShare: 0,
+            humans: 0,
+          } as const)
+        : classify(channel, latest);
+    }),
+  );
+
+const printScan = (samples: readonly ChannelSample[]) => {
+  for (const sample of [...samples].sort((left, right) => left.kind.localeCompare(right.kind))) {
+    console.log(
+      [
+        sample.kind.padEnd(10),
+        `#${sample.name}`.padEnd(40),
+        `bots ${Math.round(sample.botShare * 100)}%`.padEnd(10),
+        `humans ${sample.humans}`.padEnd(11),
+        sample.lastMessageAt?.slice(0, 10) ?? '',
+      ].join(' '),
+    );
+  }
+  const counts = Object.entries(Object.groupBy(samples, ({ kind }) => kind)).map(
+    ([kind, group]) => `${kind} ${group?.length ?? 0}`,
+  );
+  console.log(counts.join(', '));
+};
 
 /** A thread's last activity as a snowflake, so it compares to the window's `after` id: its last message, else its archive time. */
 const threadActivity = (thread: Channel): string =>
@@ -282,13 +355,8 @@ const exportMessage = (message: Message) => ({
     : {}),
 });
 
-const exportDocument = (
-  guild: Guild,
-  channel: Channel,
-  parent: Channel | undefined,
-  messages: Message[],
-  range: Range,
-) => ({
+/** An export file's header line: DiscordChatExporter's document without its messages. */
+const exportHeader = (guild: Guild, channel: Channel, parent: Channel | undefined, range: Range) => ({
   guild: { id: guild.id, name: guild.name },
   channel: {
     id: channel.id,
@@ -301,8 +369,6 @@ const exportDocument = (
   },
   dateRange: { after: range.afterDate ?? null, before: range.beforeDate ?? null },
   exportedAt: new Date().toISOString(),
-  messages: messages.map(exportMessage),
-  messageCount: messages.length,
 });
 
 type Range = { after: string; before?: string; afterDate?: string; beforeDate?: string };
@@ -333,6 +399,9 @@ const { values: args } = parseArgs({
     'after': { type: 'string' },
     'before': { type: 'string' },
     'no-threads': { type: 'boolean', default: false },
+    'scan': { type: 'boolean', default: false },
+    'human-only': { type: 'boolean', default: false },
+    'list-guilds': { type: 'boolean', default: false },
     'out': { type: 'string', default: join(homedir(), '.local/share/dxos/discord-export') },
   },
 });
@@ -358,11 +427,17 @@ const program = Effect.gen(function* () {
     );
   }
   const channelIds = args.channel?.split(',').map((id) => id.trim()) ?? [];
-  if (channelIds.length === 0 && !args.guild) {
+  if (channelIds.length === 0 && !args.guild && !args['list-guilds']) {
     return yield* Effect.fail(new ExportError({ message: 'Name --channel <id>[,<id>…] or --guild <id>.' }));
   }
   const { client, me, kind } = yield* authorize(token);
   console.log(`Authenticated as ${me.username} (${kind} token).`);
+  if (args['list-guilds']) {
+    for (const guild of yield* client.get<Guild[]>('users/@me/guilds')) {
+      console.log(`${guild.id}  ${guild.name}`);
+    }
+    return;
+  }
 
   const afterDate =
     args.after ?? (args.days ? new Date(Date.now() - Number(args.days) * 86_400_000).toISOString() : undefined);
@@ -372,46 +447,67 @@ const program = Effect.gen(function* () {
     ...(afterDate ? { afterDate } : {}),
   };
 
-  const channels: Channel[] = args.guild
+  const listed: Channel[] = args.guild
     ? (yield* client.get<Channel[]>(`guilds/${args.guild}/channels`)).filter((channel) => EXPORTABLE.has(channel.type))
     : yield* Effect.forEach(channelIds, (id) => client.get<Channel>(`channels/${id}`));
 
   mkdirSync(args.out, { recursive: true });
+  const scanFile = join(args.out, 'channels.json');
+  let channels = listed;
+  if (args.scan || args['human-only']) {
+    const samples: ChannelSample[] =
+      !args.scan && existsSync(scanFile)
+        ? JSON.parse(readFileSync(scanFile, 'utf8'))
+        : yield* scanChannels(client, listed);
+    if (args.scan) {
+      writeFileSync(scanFile, JSON.stringify(samples, null, 2));
+      printScan(samples);
+      console.log(`→ ${scanFile}`);
+      return;
+    }
+    const keep = new Set(samples.filter(({ kind }) => kind === 'human' || kind === 'forum').map(({ id }) => id));
+    channels = listed.filter(({ id }) => keep.has(id));
+    console.log(`Exporting ${channels.length} of ${listed.length} channels (human discussion and forums).`);
+  }
   const guilds = new Map<string, Guild>();
   for (const channel of channels) {
     const guildId = channel.guild_id ?? args.guild ?? '';
     const guild = guilds.get(guildId) ?? (yield* client.get<Guild>(`guilds/${guildId}`));
     guilds.set(guildId, guild);
-    const write = (target: Channel, parent: Channel | undefined, messages: Message[]) => {
-      const file = join(
-        args.out,
-        `${guild.name} - ${parent ? `${parent.name} - ` : ''}${target.name ?? target.id} [${target.id}].json`.replace(
-          /[/\\:]/g,
-          '_',
-        ),
-      );
-      writeFileSync(file, JSON.stringify(exportDocument(guild, target, parent, messages, range), null, 2));
-      console.log(`  → ${file}`);
-    };
+    /** Exports one channel or thread into its file, continuing after the last message a previous run committed. */
+    const exportTarget = (target: Channel, parent: Channel | undefined, what: string) =>
+      Effect.gen(function* () {
+        const file = join(
+          args.out,
+          `${guild.name} - ${parent ? `${parent.name} - ` : ''}${target.name ?? target.id} [${target.id}].jsonl`.replace(
+            /[/\\:]/g,
+            '_',
+          ),
+        );
+        const resumed = resumeFrom(file);
+        // An old thread usually has nothing in the window; its file is created only once a page has messages.
+        const count = yield* orSkip(
+          messagesOf(client, target.id, later(range.after, resumed), range.before, (messages) =>
+            appendPage(file, () => exportHeader(guild, target, parent, range), messages.map(exportMessage)),
+          ),
+          what,
+        );
+        if (count) {
+          console.log(`  → ${file}${resumed ? ` (resumed after ${resumed})` : ''}`);
+        }
+      });
 
     console.log(`#${channel.name} (${channel.id})`);
     // A forum holds no messages of its own, only threads.
     if (channel.type !== 15) {
-      const messages = yield* orSkip(messagesOf(client, channel.id, range.after, range.before), 'messages');
-      if (messages) {
-        write(channel, undefined, messages);
-      }
+      yield* exportTarget(channel, undefined, 'messages');
     }
     if (!args['no-threads']) {
       const found = yield* orSkip(threadsOf(client, kind, channel, range.after), 'threads');
       const threads = (found ?? []).filter((thread) => THREAD_TYPES.has(thread.type));
       for (const thread of threads) {
         console.log(` ↳ ${thread.name} (${thread.id})`);
-        const messages = yield* orSkip(messagesOf(client, thread.id, range.after, range.before), 'thread messages');
-        // An old thread usually has nothing in the window; a file per such thread would bury the ones that do.
-        if (messages && messages.length > 0) {
-          write(thread, channel, messages);
-        }
+        yield* exportTarget(thread, channel, 'thread messages');
       }
     }
   }

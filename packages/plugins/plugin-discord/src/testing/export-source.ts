@@ -4,35 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Source, type SourceApi, type Type } from '@dxos/crawler';
 
-/** A DiscordChatExporter author record (the fields this source reads). */
-type ExportAuthor = {
-  readonly id: string;
-  readonly name?: string;
-  readonly nickname?: string;
-  readonly isBot?: boolean;
-};
-
-/** A DiscordChatExporter message record (the fields this source reads). */
-type ExportMessage = {
-  readonly id: string;
-  readonly type?: string;
-  readonly timestamp?: string;
-  readonly content?: string;
-  readonly author: ExportAuthor;
-  readonly reference?: { readonly messageId?: string | null };
-};
-
-/** A DiscordChatExporter per-channel export file. */
-type ExportFile = {
-  readonly guild?: { readonly id?: string };
-  readonly channel: { readonly id: string; readonly name?: string };
-  readonly messages: readonly ExportMessage[];
-};
+import { type ExportFile, type ExportMessage, isExportFile, readExportFile } from './export-format.ts';
 
 export type ExportSourceOptions = {
   /** Drop messages whose author is a bot or webhook (e.g. the #github feed). Default true. */
@@ -56,18 +33,17 @@ const toMessage = (raw: ExportMessage): Type.Message => {
 };
 
 /**
- * A crawl {@link Source} backed by a directory of DiscordChatExporter JSON files (one per channel or
- * thread), so the pipeline runs over an exported corpus without touching the Discord API. Each file
+ * A crawl {@link Source} backed by a directory of export files (one per channel or thread, DiscordChatExporter JSON
+ * or this exporter's JSON lines), so the pipeline runs over an exported corpus without touching the Discord API. Each file
  * is an independent channel; bots and webhooks are dropped by default, and empty-content messages
  * (thread-starter stubs) are always dropped. `fetchMessages` returns the whole channel after the
  * cursor in one page, since the file already holds every message.
  */
 const makeSource = (dir: string, options: ExportSourceOptions = {}): SourceApi => {
   const skipBots = options.skipBots ?? true;
-  const files = readdirSync(dir).filter((name) => name.endsWith('.json'));
   const byChannel = new Map<string, ExportFile>();
-  for (const name of files) {
-    const file: ExportFile = JSON.parse(readFileSync(join(dir, name), 'utf8'));
+  for (const name of readdirSync(dir).filter(isExportFile)) {
+    const file = readExportFile(join(dir, name));
     byChannel.set(file.channel.id, file);
   }
 
@@ -107,8 +83,8 @@ const makeSource = (dir: string, options: ExportSourceOptions = {}): SourceApi =
 /** The channel ids of every export file in `dir`, so a run can seed the frontier with all of them. */
 export const exportChannelIds = (dir: string): string[] =>
   readdirSync(dir)
-    .filter((name) => name.endsWith('.json'))
-    .map((name) => (JSON.parse(readFileSync(join(dir, name), 'utf8')) as ExportFile).channel.id);
+    .filter(isExportFile)
+    .map((name) => readExportFile(join(dir, name)).channel.id);
 
 export const exportSourceLayer = (dir: string, options?: ExportSourceOptions): Layer.Layer<Source> =>
   Layer.succeed(Source, makeSource(dir, options));
