@@ -41,8 +41,8 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
     <NextJsonLayout data={data}>
       {/* The play functions read this, not the JSON panel beside it: the panel's `textContent` is the tokenizer's
           span tree flattened, which drops spaces inside string values ("Alice Liddell" reads back as
-          "AliceLiddell"), so parsing it asserts the highlighter's rendering rather than what the form wrote. */}
-      <span className='sr-only' data-testid='object'>
+          "AliceLiddell"). `hidden` rather than a class, since these files carry no class names. */}
+      <span hidden data-testid='values-source'>
         {JSON.stringify(data)}
       </span>
       <Panel.Root>
@@ -104,7 +104,7 @@ export const Properties: Story = { args: { component: 'properties' } };
 export const Transient: Story = { args: { component: 'transient' } };
 
 const readValues = (canvasElement: HTMLElement) =>
-  JSON.parse(within(canvasElement).getByTestId('object').textContent ?? '{}');
+  JSON.parse(within(canvasElement).getByTestId('values-source').textContent ?? '{}');
 
 const readObject = (canvasElement: HTMLElement) => readValues(canvasElement).object;
 

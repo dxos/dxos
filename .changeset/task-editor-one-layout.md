@@ -1,4 +1,6 @@
 ---
+# multiple-changesets: the rename popover's buttons and the task pane's layout are different components in
+# different packages; a reader reaches each from its own package's changelog.
 '@dxos/react-ui-task': minor
 '@dxos/plugin-assistant': patch
 ---
