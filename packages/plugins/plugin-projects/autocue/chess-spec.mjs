@@ -449,6 +449,11 @@ const pickDependency = async (peer, feature, name) => {
   await peer.click(form.getByTestId('spec-block.label').first());
   await page.waitForTimeout(300);
   const depends = form.getByTestId('depends').first();
+  await depends.waitFor({ timeout: 10_000 });
+  // The agent may already have made it a dependency; picking it again would take it away.
+  if ((await depends.innerText()).includes(name)) {
+    return;
+  }
   await peer.click(depends.locator('[data-scope="combobox"][data-part="trigger"]').first());
   const option = page
     .locator('[data-scope="combobox"][data-part="item"]')

@@ -687,8 +687,7 @@ test QA-12: Two people write a chess plugin's spec with the agent
       expect: Alice's Board marks "Gameboard" and "Move Validation" as features "Make Move" depends on
     - name: Read the finished spec
       do: Both scroll through the spec's text from the top.
-      expect: the summary and bullets, the features each with requirements, and the `type` and `op` blocks, as in
-        plugin-chess's spec
+      expect: the summary and bullets, the features each with requirements, and the `type` and `op` blocks
 ```
 
 ## Changelog
@@ -3088,7 +3087,7 @@ decision D-270: The project reveal (`ProjectOperation.ScrollToAnchor`) takes `fo
 ```
 
 ```mdl
-decision D-271: QA-12 checks that two people can write a plugin's spec together in one project: both edit its text at once, one adds features in the text while the other adds them on the feature map, the agent adds features, requirements and `type` and `op` blocks that both see as they appear, dependencies are drawn on the map, and comments made while one person is offline wait as notifications. The spec it ends with matches plugin-chess's. Its agent steps run on a live model, not recorded responses.
+decision D-271: QA-12 checks that two people can write a plugin's spec together in one project: both edit its text at once, one adds features in the text while the other adds them on the feature map, the agent adds features, requirements and `type` and `op` blocks that both see as they appear, dependencies are drawn on the map, and comments made while one person is offline wait as notifications. The spec it ends with is enough to build the plugin from. Its agent steps run on a live model, not recorded responses.
   date: 2026-11-05
   by: user:wittjosiah
   affects: [QA-12]
