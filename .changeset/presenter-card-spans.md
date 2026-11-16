@@ -9,4 +9,4 @@ Card art is cut to the card. `gen-card-art.mjs` writes one crop per mark per car
 
 The brand's `icons/{white,black}` marks carry their own size instead of `width="100%"`, which left them with no intrinsic size and collapsed them to nothing wherever they were drawn as an `<img>`.
 
-`<Box variant="hero">` draws a lone image at a title slide's scale, which is how the new cover story shows the DXOS mark.
+`<Box variant="hero">` draws a lone image at a title slide's scale and `<Box variant="watermark">` runs one oversized off the slide's start edge behind the words. Five cover stories draw the brand's own lockup with them, so a title slide sets the name in the brand face rather than as a heading.

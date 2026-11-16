@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, waitFor } from 'storybook/test';
+import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -71,42 +71,6 @@ export const SuiteGrid: Story = {
     // 2. ECHO spans two of the four columns; the rest take one.
     await expect(grid.getAttribute('style')).toContain('--slide-col-span: 2');
     await expect(cards[1].getAttribute('style') ?? '').not.toContain('--slide-col-span');
-  },
-};
-
-/**
- * A title slide: the brand's DXOS mark centred, with the deck's title under it. The `center` layout centres its slot,
- * so the mark is content rather than a background and the title never crosses it.
- */
-export const Cover: Story = {
-  args: {
-    content: slide(
-      { layout: 'center' },
-      '<Box variant="hero">',
-      '',
-      '![DXOS](https://assets.dxos.org/brand/icons/white/icon-dxos.svg)',
-      '',
-      '</Box>',
-      '',
-      '# DXOS',
-      '',
-      '## The decentralized operating system',
-    ),
-  },
-  play: async ({ canvasElement }) => {
-    const slide = await query(canvasElement, '[data-layout="center"]');
-    const mark = slide.querySelector('img');
-    // 1. The mark is drawn, and it is the brand's white one so it reads on the dark slide.
-    await expect(mark?.getAttribute('src')).toContain('/brand/icons/white/icon-dxos.svg');
-    await waitFor(() => expect(mark?.naturalWidth).toBeGreaterThan(0));
-    // 2. The title sits under the mark, not across it.
-    await expect(slide.querySelector('h1')?.textContent).toBe('DXOS');
-    const art = mark!.getBoundingClientRect();
-    const title = slide.querySelector('h1')!.getBoundingClientRect();
-    await expect(title.top).toBeGreaterThanOrEqual(art.bottom - 1);
-    // 3. The hero box draws it large enough to carry the slide, rather than at the file's own 256px.
-    await expect(art.height).toBeGreaterThan(art.width * 0.9);
-    await expect(slide.querySelector('[data-variant="hero"]')).not.toBeNull();
   },
 };
 

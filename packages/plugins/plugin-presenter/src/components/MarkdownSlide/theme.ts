@@ -90,6 +90,13 @@ export const theme = {
         img: 'h-[420px] w-auto max-w-full object-contain',
         p: '[&:has(>img)]:contents',
       },
+      // A mark run oversized off the slide's start edge, behind the words. It leaves the flow, so the text is laid
+      // out as though it were not there, and it is cropped by the slide rather than fitted to it.
+      watermark: {
+        box: 'absolute inset-y-0 -start-[14%] w-[72%] flex items-center pointer-events-none opacity-[0.18]',
+        img: 'w-full h-auto object-contain',
+        p: '[&:has(>img)]:contents',
+      },
     },
 
     // A grid lays down equal tracks from the counts `<Grid cols rows>` set; `minmax(0,1fr)` keeps a long word in one
