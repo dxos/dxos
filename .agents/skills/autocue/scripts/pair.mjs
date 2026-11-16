@@ -29,6 +29,7 @@ import { pathToFileURL } from 'node:url';
 import { composeSideBySide } from './compose.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
+import { recordingInfo } from './recording.mjs';
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -340,6 +341,14 @@ try {
 } finally {
   // `stop` is what writes each pane's video, so it runs even after a failure: the take up to the failing step
   // is the evidence of where it went wrong.
+  // Where the take was recorded, which `pack.mjs` needs to bundle it; read from a live page, so before the close.
+  const flowFile = path.resolve(options.flow);
+  const recording = await recordingInfo({
+    page: peerList[0].page,
+    flowFile,
+    appUrl: options.url,
+    target: 'browser',
+  }).catch(() => undefined);
   const stopped = await Promise.all(peerList.map((peer) => peer.recorder.stop().catch((error) => ({ error }))));
   await browser.close();
 
@@ -354,6 +363,8 @@ try {
     })),
     steps: captions,
     results,
+    flow: recording?.flow,
+    recording,
   };
   writeFileSync(path.join(options.out, 'timeline.json'), JSON.stringify(timeline, null, 2));
 
