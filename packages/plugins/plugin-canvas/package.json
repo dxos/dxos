@@ -74,8 +74,8 @@
       "import": "./dist/lib/CanvasCapabilities.mjs"
     },
     "./CanvasFrame": {
-      "source": "./src/containers/CanvasArticle/CanvasFrame.tsx",
-      "types": "./dist/types/src/containers/CanvasArticle/CanvasFrame.d.ts",
+      "source": "./src/CanvasFrame.ts",
+      "types": "./dist/types/src/CanvasFrame.d.ts",
       "import": "./dist/lib/CanvasFrame.mjs"
     },
     "./CanvasPlugin": {
