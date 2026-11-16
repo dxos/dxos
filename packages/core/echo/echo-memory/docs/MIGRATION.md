@@ -67,14 +67,24 @@ Q-5 (event-base reads stay ops).
       entry, which is harmless since `put` is idempotent and `reset` replays to the same state).
 - [x] `@dxos/sparql-sqlite/async`: `SqlSparqlEngineAsync` over `SqlClient`, one engine shared with the sync
       variant; every benchmark query answers the same on both [F-9.7].
-- [ ] Async variants of pipeline-rdf's store (`FactStoreLive`) and of `MemorySqlite`, over
-      `SqlSparqlEngineAsync` and `SqlClient`, so the backend needs no synchronous handle.
-- [ ] `MemoryHost` in client-services: one `MemorySqlite` per open space over the host's database, with a
-      `FactLog.feed` over the host's `FeedStore`; served over the client-services bridge through
-      `MemoryWire` [F-9.1]. Needs the async `MemorySqlite`.
-- [ ] Choose the space's fact feed id (one feed per space) and create it with the space.
-- [ ] Replicate the `facts` namespace through the feed sync client; EDGE must accept it first
-      (`docs/PACKAGES.md` question 3).
+- [x] Async variants of pipeline-rdf's store (`FactStoreLive.makeAsync`) and of `MemorySqlite`
+      (`makeAsync`), over the engine's programs and `SqlClient`; one implementation each, run by a sync or an async
+      driver.
+- [x] Table prefixes in `@dxos/sparql-sqlite`, the fact store and `MemorySqlite`, so a memory per space shares
+      the host database [F-9.8].
+- [x] `MemoryService` RPCs (`@dxos/protocols/rpc`), served by client-services' `MemoryHostLayer`: one async
+      memory per space, opened on first call, over the host database and a `FactLog.feed` on the host's
+      `FeedStore` [F-9.1, F-9.9].
+- [x] `client.memory(spaceId)`: the page's `MemoryService` over the bridge (`createRpcMemory`).
+- [x] The fact feed id is `EntityId.deterministic('org.dxos.memory.facts', spaceId)`, the same on every device.
+- [x] The feed syncer replicates `facts` when the stack option `replicateFacts` is set; a test shows a fact
+      feed replicating and a memory over it applying what arrives [F-9.5].
+- [ ] EDGE: bump the pinned `@dxos/feed` / `@dxos/protocols` so `FeedSpace` accepts `facts`, then add `facts` to
+      its space deletion (`FEED_SPACE_NAMESPACES`), backups (`FEED_NAMESPACES`) and `QueueSubspaceTag`; then turn
+      `replicateFacts` on by default.
+- [ ] Space archives: export and import map every non-trace namespace to `data`; keep `facts` as `facts`.
+- [ ] Composer: a capability giving each space its `MemoryService` from `client.memory(spaceId)`
+      (`docs/PACKAGES.md` question 2), replacing `FactStoreRegistry` and `BrainMemory`.
 
 ## 3. EDGE implementation (`dxos/edge`) — missing
 

@@ -31,6 +31,7 @@ import {
   InboxService,
   InvitationsService,
   LoggingService,
+  MemoryService,
   NetworkService,
   QueryService,
   SpacesService,
@@ -74,6 +75,7 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   EdgeAgentService.Rpcs,
   SqlService.Rpcs,
   BlobStoreService.Rpcs,
+  MemoryService.Rpcs,
   DevtoolsHost.Rpcs,
 ) {}
 
@@ -100,6 +102,7 @@ export type ClientServicesHandlers = {
   EdgeAgentService: EdgeAgentService.Handlers;
   SqlService: SqlService.Handlers;
   BlobStoreService: BlobStoreService.Handlers;
+  MemoryService: MemoryService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
 };
 
@@ -358,6 +361,7 @@ export interface ClientServicesRpc
     EdgeAgentService.Client,
     SqlService.Client,
     BlobStoreService.Client,
+    MemoryService.Client,
     DevtoolsHost.Client {}
 
 /**

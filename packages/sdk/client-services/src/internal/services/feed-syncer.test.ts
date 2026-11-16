@@ -5,12 +5,16 @@
 import { create } from '@bufbuild/protobuf';
 import { Encoder, decode as cborDecode } from 'cbor-x';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { Fact, MemoryQuery } from '@dxos/echo-memory';
+import { FactLog, MemorySqlite } from '@dxos/echo-memory-sqlite';
 import { type EdgeConnection, MessageSchema, type ReconnectListener } from '@dxos/edge-client';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore, SyncServer } from '@dxos/feed';
@@ -445,6 +449,59 @@ describe('FeedSyncer', () => {
       expect(traceResult.blocks).toHaveLength(1);
       expect(dataResult.blocks[0].data).toEqual(new Uint8Array([1, 2, 3]));
       expect(traceResult.blocks[0].data).toEqual(new Uint8Array([7, 8, 9]));
+    });
+  });
+
+  test('replicates a fact feed, and a memory over it applies what arrives', async () => {
+    const spaceId = SpaceId.random();
+    const feedId = EntityId.random();
+    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
+      spaceId,
+      syncNamespaces: [...syncNamespaces, FeedProtocol.WellKnownNamespaces.facts],
+    });
+
+    // A memory on this device, over its own fact feed, before anything has replicated.
+    const scope = Scope.makeUnsafe();
+    onTestFinished(() => clientRuntime.runPromise(Scope.close(scope, Exit.void)));
+    const memory = await clientRuntime.runPromise(
+      Effect.gen(function* () {
+        const log = yield* FactLog.feed({ feeds: clientFeedStore, spaceId, feedId });
+        return yield* MemorySqlite.makeAsync({ log, prefix: 'memory_test_' });
+      }).pipe(Scope.provide(scope)),
+    );
+
+    // Another device's write, as it reaches the server.
+    const fact = Fact.decode([
+      {
+        id: 'f1',
+        assertion: {
+          subject: { kind: 'entity', entity: 'dima' },
+          predicate: 'works on',
+          object: { kind: 'entity', entity: 'indexer' },
+        },
+        factuality: { value: 'CT+', polarity: '+' },
+        attribution: { agent: 'dima', source: 'chat:general/f1', generatedAtTime: '2026-11-16T00:00:00.000Z' },
+        recordedAt: '2026-11-16T00:00:00.000Z',
+        extractor: { id: 'test', model: 'none', version: '1' },
+        sourceHash: 'f1',
+      },
+    ])[0];
+    await serverFeedStore
+      .appendLocal([
+        {
+          spaceId,
+          feedId,
+          feedNamespace: FactLog.NAMESPACE,
+          data: FactLog.toBytes({ _tag: 'put', facts: [fact] }),
+        },
+      ])
+      .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
+
+    await syncer.open(new Context());
+
+    await vi.waitFor(async () => {
+      const facts = await clientRuntime.runPromise(memory.query(MemoryQuery.facts()));
+      expect(facts.map(({ id }) => id)).toEqual(['f1']);
     });
   });
 

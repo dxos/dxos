@@ -693,6 +693,16 @@ feat F-9: The app's memory: a fact feed and a backend store
     when: the backend reaches its database only through an async connection (Effect's `SqlClient`)
     then: it runs `@dxos/sparql-sqlite`'s async engine over that connection; the sync engine stays for hosts
           with synchronous SQLite (Durable Objects, node, the CLI), and both give the same answers
+
+  req F-9.8:
+    when: the backend holds memories for several spaces in its one database
+    then: each space's tables (the quad store's, the fact store's and the memory's own) carry a prefix of its
+          own, so spaces share no rows and no name meets one of the host's tables
+
+  req F-9.9:
+    when: a page calls a space's memory
+    then: `client.memory(spaceId)` returns a MemoryService whose calls cross the bridge as the `MemoryService`
+          RPCs; the backend opens that space's memory on its first call and closes it with the host
 ```
 
 ## Acceptance
@@ -1119,6 +1129,35 @@ decision D-30: Both variants share one engine: the store and engine logic yield 
   why: Two copies of the store and engine would drift; the compiler's lookups are synchronous callbacks, and fetch-and-retry keeps the compiler unchanged.
   rejected:
     - Running the sync engine against a synchronous handle borrowed from the host's async connection, which needs the SQLite clients to expose their connection.
+```
+
+```mdl
+decision D-31: Each space's memory lives in the host's database under a table prefix of its own; the store's legacy cleanup runs only for an unprefixed store. Fills in [D-24].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.8]
+  why: The store's tables (quads, terms, meta, …) had fixed names, so two spaces in one database would share one store and could meet the host's own tables; the old layout's cleanup drops tables named cursors and entities, which a shared database may own.
+  rejected:
+    - One SQLite database per space, which is not the database the backend already has.
+```
+
+```mdl
+decision D-32: The backend serves `MemoryService` RPCs and opens a space's memory on its first call; a space's fact feed id is derived from its space id, so every device addresses the same feed; the page gets a space's memory from `client.memory(spaceId)`. Fills in [D-24].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.9]
+  why: The host has no per-space open and close hook, and a random feed id per device would give each device its own fact feed instead of one replicated feed.
+```
+
+```mdl
+decision D-33: Replicating fact feeds is behind a client-services stack option, off by default, until EDGE accepts the `facts` namespace. Fills in [D-25].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.5]
+  why: EDGE's pinned feed store rejects appends to an unknown namespace, and the syncer pulls every listed namespace for every space on every poll, so turning it on first would fail pushes and add an EDGE round trip per space for spaces that never use memory.
 ```
 
 ## Appendix: Extension Definitions

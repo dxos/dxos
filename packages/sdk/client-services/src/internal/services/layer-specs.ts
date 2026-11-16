@@ -53,6 +53,7 @@ import {
   InboxService,
   InvitationsService,
   LoggingService,
+  MemoryService,
   NetworkService,
   QueryService,
   SpacesService,
@@ -97,6 +98,7 @@ import {
   InvitationsServiceLayer,
 } from '../invitations/index.ts';
 import { LoggingServiceLayer } from '../logging/index.ts';
+import { MemoryHostLayer } from '../memory/index.ts';
 import { IMetadataStoreService, SqliteMetadataStoreLayer } from '../metadata/index.ts';
 import { NetworkServiceLayer } from '../network/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
@@ -578,19 +580,24 @@ export const EdgeSubductionReplicatorRegistrationSpec = LayerSpec.make(
   () => registerReplicator(EdgeAutomergeReplicatorService),
 );
 
-export const FeedSyncerSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [Hook.Controller, SqlClient.SqlClient, EchoHostService, EdgeConnectionService],
-    provides: [FeedSyncerService],
-    eager: true,
-  },
-  () =>
-    FeedSyncerLayer({
-      peerId: '',
-      syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
-    }),
-);
+export const FeedSyncerSpec = (options: Pick<ServiceStackServices, 'replicateFacts'>) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [Hook.Controller, SqlClient.SqlClient, EchoHostService, EdgeConnectionService],
+      provides: [FeedSyncerService],
+      eager: true,
+    },
+    () =>
+      FeedSyncerLayer({
+        peerId: '',
+        syncNamespaces: [
+          FeedProtocol.WellKnownNamespaces.data,
+          FeedProtocol.WellKnownNamespaces.trace,
+          ...(options.replicateFacts ? [FeedProtocol.WellKnownNamespaces.facts] : []),
+        ],
+      }),
+  );
 
 //
 // RPC services. Each handler keeps its own tag, and its registration with the router is a separate
@@ -840,6 +847,16 @@ export const SqlServiceRegistrationSpec = LayerSpec.make(
   () => RegisterService(SqlService.Rpcs, SqlService.Tag),
 );
 
+export const MemoryServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [EchoHostService, SqlClient.SqlClient], provides: [MemoryService.Tag] },
+  () => MemoryHostLayer,
+);
+
+export const MemoryServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [MemoryService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(MemoryService.Rpcs, MemoryService.Tag),
+);
+
 export const LocalBlobStoreSpec = LayerSpec.make(
   { affinity: 'application', requires: [SqlClient.SqlClient], provides: [LocalBlobStoreService] },
   () => LocalBlobStoreLayer,
@@ -919,7 +936,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   ...(options.disableP2pReplication ? [] : [MeshReplicatorSpec, MeshReplicatorRegistrationSpec]),
   ...(subductionEnabled(options) ? [EdgeSubductionReplicatorSpec, EdgeSubductionReplicatorRegistrationSpec] : []),
   ...(options.edgeAvailable ? [IdentityEdgeServicesSpec(options)] : []),
-  FeedSyncerSpec,
+  FeedSyncerSpec(options),
 
   RpcRouterSpec,
   SystemServiceSpec,
@@ -950,6 +967,8 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   LoggingServiceRegistrationSpec,
   SqlServiceSpec,
   SqlServiceRegistrationSpec,
+  MemoryServiceSpec,
+  MemoryServiceRegistrationSpec,
   LocalBlobStoreSpec,
   BlobReplicationSpec(options),
   BlobStoreServiceSpec,

@@ -7866,6 +7866,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/echo-memory':
+        specifier: workspace:*
+        version: link:../echo/echo-memory
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -21855,6 +21858,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-memory':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-memory
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -22112,6 +22118,12 @@ importers:
       '@dxos/echo-host':
         specifier: workspace:*
         version: link:../../core/echo/echo-host
+      '@dxos/echo-memory':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-memory
+      '@dxos/echo-memory-sqlite':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-memory-sqlite
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol

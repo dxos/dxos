@@ -31,9 +31,10 @@ import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
+import { type MemoryService } from '@dxos/echo-memory';
 import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   ApiError,
@@ -57,6 +58,7 @@ import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
 import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
 import { createRpcBlobStore } from './rpc-blob-store.ts';
+import { createRpcMemory } from './rpc-memory.ts';
 
 /** Longest a destroy waits for a database's pending writes to reach the host. */
 const DESTROY_FLUSH_TIMEOUT = 5_000;
@@ -348,6 +350,14 @@ export class Client {
   get edge(): ClientEdgeAPI {
     invariant(this._edgeApi, 'Client not initialized or Edge not available.');
     return this._edgeApi;
+  }
+
+  /**
+   * The space's memory (`@dxos/echo-memory`), kept by the client services host in its own database and replicated
+   * through the space's fact feed.
+   */
+  memory(spaceId: SpaceId): MemoryService.Service {
+    return createRpcMemory(() => this.services.rpc, spaceId);
   }
 
   /**

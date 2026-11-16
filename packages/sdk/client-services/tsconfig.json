@@ -91,6 +91,12 @@
       "path": "../../core/echo/echo-host"
     },
     {
+      "path": "../../core/echo/echo-memory"
+    },
+    {
+      "path": "../../core/echo/echo-memory-sqlite"
+    },
+    {
       "path": "../../core/echo/echo-protocol"
     },
     {
