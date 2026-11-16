@@ -229,10 +229,10 @@ const EditorShortcuts = () => {
   return <span ref={setFrame} hidden />;
 };
 
-/** The bottom bar's parts, in order, each led by a rule, or by a gap that pushes it to the bar's end. */
-const BAR_PARTS = { camera: 'line', actions: 'line', display: 'gap' } as const;
+/** The bottom bar's parts, in order, spaced apart by gaps. */
+const BAR_PARTS = ['camera', 'actions', 'display'] as const;
 
-type BarPart = keyof typeof BAR_PARTS;
+type BarPart = (typeof BAR_PARTS)[number];
 
 type BottomBarRegistry = {
   /** Sets or, with no graph, removes a part's items. */
@@ -265,8 +265,8 @@ const BottomBarProvider = ({ children }: PropsWithChildren) => {
   );
   const menu = useMenuBuilder(() => {
     const builder = MenuBuilder.make();
-    for (const [part, lead] of Object.entries(BAR_PARTS)) {
-      builder.separator(lead).subgraph(parts[part as BarPart]);
+    for (const part of BAR_PARTS) {
+      builder.separator('gap').subgraph(parts[part]);
     }
     return builder.build();
   }, [parts]);

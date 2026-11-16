@@ -462,7 +462,8 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       (`MARKER_ITEMS`), with Phosphor's `minus` for None. They all point right, for a Start end too.
 - [x] **Bar rules run edge to edge** (user, 2026-11-13): the separators of the horizontal floating bars (camera,
       actions, display) are the bar's full height with the palette's 4 px either side (`FLOATING_BAR_RULE`), where
-      a toolbar's own rule is half a control tall. The primitive is unchanged.
+      a toolbar's own rule is half a control tall. The primitive is unchanged. Reversed (user, 2026-11-16): the shared
+      bottom bar keeps react-ui's standard line separators and spaces its parts apart with gap separators.
 - [x] **A `many` end, a crow's foot** (user, 2026-11-13): `Marker` gains `many`; drawn as two toes beside the line,
       which runs on to the connection point (`markerFrame`, `markerTrim` 0, `MANY_SPREAD`), and as a chevron
       opening onto the end in a groove. Icon `px--line-many--regular`; listed in the end's menu and Properties.
