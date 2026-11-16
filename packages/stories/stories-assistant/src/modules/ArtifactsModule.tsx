@@ -35,19 +35,9 @@ const ARTIFACTS = Filter.or(
   Filter.type(Markdown.Document),
 );
 
-/** Marks an object the story seeded rather than the agent made. */
-export const SEEDED_KEY_SOURCE = 'org.dxos.storybook.seed';
-
 const ArtifactsPanel = ({ space }: { space: Space }) => {
   const all = useQuery(space.db, ARTIFACTS);
-  // Objects the story seeded as input are keyed, so only what the agent made shows.
-  const artifacts = useMemo(
-    () =>
-      all
-        .filter((object) => !Obj.getMeta(object).keys.some((key) => key.source === SEEDED_KEY_SOURCE))
-        .sort((left, right) => (left.id < right.id ? 1 : -1)),
-    [all],
-  );
+  const artifacts = useMemo(() => [...all].sort((left, right) => (left.id < right.id ? 1 : -1)), [all]);
   const [picked, setPicked] = useState<string | undefined>();
   const [newest, setNewest] = useState<string | undefined>();
   // A new artifact is shown as it arrives, replacing the viewer's pick, so the panel follows the agent's work.

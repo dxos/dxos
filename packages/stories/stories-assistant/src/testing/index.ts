@@ -6,7 +6,6 @@ export * from './calculator.ts';
 export * from './chat-messages.ts';
 export * from './data.ts';
 export * from './decorators.tsx';
-export * from './findings.ts';
 export * from './prompt.ts';
 export * from './schema.ts';
 export * from './agent-claude-plugin.ts';

@@ -12,9 +12,10 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN } from '@dxos/keys';
 import { FactStore, type FactStoreApi, FactStoreHttp, type RDF } from '@dxos/pipeline-rdf';
-import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import * as BrainOperationHandlerSet from '@dxos/plugin-brain/BrainOperationHandlerSet';
-import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
+
+import { BrainOperationHandlerSet } from '#operations';
+import { BrainSkill } from '#skills';
+import { BrainCapabilities } from '#types';
 
 /** Where `moon run plugin-discord:fact-server` listens by default. */
 export const DEFAULT_FACT_SERVER_URL = 'http://127.0.0.1:7700';

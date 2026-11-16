@@ -559,30 +559,27 @@ test QA-5: See a collaborator's selection
 ```
 
 ```mdl
-test QA-6: An agent turns findings into sheets with charts, a deck and a summary
-  desc: The artifacts demo — an agent with the sheet, presenter and markdown skills makes a sheet and a chart for each finding in a document, a deck of the charts, and a summary.
+test QA-6: An agent turns what its memory says into sheets with charts, a deck and a summary
+  desc: The artifacts demo — an agent with a fact store of the Cloudflare Developers Discord and the brain, sheet, presenter and markdown skills finds five things worth reporting, and makes a sheet and a chart for each, a deck of the charts, and a summary.
   actors: human, agent
-  status: passing            # 2026-11-16, recorded by stories-assistant/autocue/findings-artifacts.mjs
+  status: unverified
   given:
-    - the stories-assistant `Artifacts › With Findings` story, which seeds a document of five Cloudflare Discord findings and binds it to the chat
-    - a live model (the story's default)
+    - a fact server over the Cloudflare 60-day crawl's facts DB (`moon run plugin-discord:fact-server`)
+    - the stories-assistant `Artifacts › From Memory` story pointed at it (`VITE_FACT_SERVER_URL`), with a live model
   steps:
-    - name: Ask for the artifacts
-      do: In the chat, ask the agent to make a sheet and a fitting chart for each finding, a presentation with one slide per chart, and a markdown summary.
-      expect: the agent creates the sheets one by one, each appearing as a tab in the Artifacts panel as it is made
+    - name: Ask for findings from memory
+      do: In the chat, ask the agent to explore its memory of the community, find the five most interesting things, and build a sheet and chart for each, a deck of the charts and a summary document.
+      expect: the agent queries the fact store, then creates the sheets one by one, each appearing as a tab in the Artifacts panel
     - name: Read the deck
-      do: Wait for the agent's reply, then look at the presentation it opened with.
+      do: Open the presentation's tab.
       expect: a cover slide and one slide per chart, each slide drawing its chart
-    - name: Open a sheet
-      do: Click the "Who Answers First" tab.
-      expect: the grid holds the responder table and its bar chart is drawn below it
-    - name: Open the product tone sheet
-      do: Click the product mentions sheet's tab.
-      expect: the mentions and tone table with the chart the agent chose for it
+    - name: Open a finding
+      do: Open a sheet's tab.
+      expect: the rows the agent queried, with its chart drawn below
     - name: Read the summary
-      do: Click the summary document's tab.
-      expect: a short markdown recap of the five findings
-  note: The model chooses the titles and chart types, so a take's tabs can be named differently; the flow finds them by what they hold.
+      do: Open the summary document's tab.
+      expect: a short markdown summary of the five findings, naming no person
+  note: Nothing is given to the agent but the request; what the findings are, their titles and their chart types are the model's, so they differ from take to take.
 ```
 
 ## Changelog

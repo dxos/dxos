@@ -4,8 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { Filter, Obj, Ref, Type, View } from '@dxos/echo';
+import { Filter, Ref, Type, View } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
+import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
+import { DEFAULT_FACT_SERVER_URL, RemoteFactStorePlugin } from '@dxos/plugin-brain/RemoteFactStorePlugin';
 import * as ChessSkill from '@dxos/plugin-chess/ChessSkill';
 import * as MapSkill from '@dxos/plugin-map/MapSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -15,9 +17,8 @@ import { ViewModel } from '@dxos/schema';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { trim } from '@dxos/util';
 
-import { SEEDED_KEY_SOURCE } from '../modules/ArtifactsModule.tsx';
 import { StoryRole } from '../modules/index.ts';
-import { CLOUDFLARE_FINDINGS, createDecorators, storyParameters } from '../testing/index.ts';
+import { createDecorators, storyParameters } from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Artifacts',
   render: ModuleContainer.Root,
@@ -216,12 +217,16 @@ export const WithBoard: Story = {
   },
 };
 
+/** The fact server the agent's memory is read from: `moon run plugin-discord:fact-server` over a crawl's facts DB. */
+const FACT_SERVER_URL = String(import.meta.env.VITE_FACT_SERVER_URL ?? DEFAULT_FACT_SERVER_URL);
+
 /**
- * Starts with only the agent: it reads five findings about the Cloudflare Developers Discord from a bound document and
- * builds artifacts from them — sheets with charts, a presentation linking the charts as slides, and a summary — each
- * shown in the artifacts panel as it is made. `autocue/findings-artifacts.mjs` prompts it and walks the result.
+ * Starts with only the agent and its memory: the Brain skill queries a fact store served over HTTP (e.g. the facts
+ * extracted from a Discord crawl), and the sheet, presenter and markdown skills turn what it finds into artifacts —
+ * sheets with charts, a deck of the charts and a summary — each shown in the artifacts panel as it is made. Nothing is
+ * seeded: the findings are whatever the agent derives from the store. `autocue/findings-artifacts.mjs` prompts it.
  */
-export const WithFindings: Story = {
+export const FromMemory: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [SheetPlugin, PresenterPlugin, MarkdownPlugin, SpacePlugin] = await Promise.all([
@@ -232,24 +237,17 @@ export const WithFindings: Story = {
       ]);
       return {
         // SpacePlugin handles `AddObject`, which the create operations of the artifact plugins file their objects with.
-        plugins: [SheetPlugin.make(), PresenterPlugin.make(), MarkdownPlugin.make(), SpacePlugin.make({})],
+        plugins: [
+          SheetPlugin.make(),
+          PresenterPlugin.make(),
+          MarkdownPlugin.make(),
+          SpacePlugin.make({}),
+          RemoteFactStorePlugin(FACT_SERVER_URL),
+        ],
         types: [Sheet.Sheet, Sheet.Chart, Presentation.Presentation],
       };
     },
-    onInit: async ({ space }) => {
-      space.db.add(
-        Markdown.make({
-          name: 'Cloudflare community findings',
-          content: CLOUDFLARE_FINDINGS,
-          [Obj.Meta]: { keys: [{ source: SEEDED_KEY_SOURCE, id: 'findings' }] },
-        }),
-      );
-    },
-    onChatCreated: async ({ db, binder }) => {
-      const documents = await db.query(Filter.type(Markdown.Document)).run();
-      await binder.bind({ objects: documents.map((document) => Ref.make(document)) });
-    },
-    skills: [AssistantSkill.key, Sheet.SKILL_KEY, Presentation.SKILL_KEY, Markdown.SKILL_KEY],
+    skills: [AssistantSkill.key, BrainSkill.key, Sheet.SKILL_KEY, Presentation.SKILL_KEY, Markdown.SKILL_KEY],
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Artifacts]],

@@ -15,6 +15,7 @@ import { RDF } from '@dxos/pipeline-rdf';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
+import { DEFAULT_FACT_SERVER_URL, RemoteFactStorePlugin } from '@dxos/plugin-brain/RemoteFactStorePlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { Config } from '@dxos/react-client';
@@ -25,7 +26,6 @@ import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { FactsStoryContext, type PredicateFilter, type QueryScope, StoryRole } from '../modules/index.ts';
 import { BrainChatPlugin } from '../testing/brain-chat.ts';
 import { StoryModulesPlugin } from '../testing/modules.tsx';
-import { DEFAULT_FACT_SERVER_URL, RemoteFactStorePlugin } from '../testing/remote-fact-store.ts';
 
 /**
  * Explores a fact store served over HTTP — by default the persisted Discord crawl that
