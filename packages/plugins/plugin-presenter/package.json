@@ -215,6 +215,7 @@
     "@fontsource/lxgw-wenkai": "catalog:",
     "@fontsource/mali": "catalog:",
     "@fontsource/opendyslexic": "catalog:",
+    "@fontsource/poiret-one": "catalog:",
     "hast-util-to-jsx-runtime": "catalog:",
     "remark-frontmatter": "catalog:",
     "remark-gfm": "catalog:",

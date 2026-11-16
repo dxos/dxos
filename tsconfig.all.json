@@ -991,6 +991,9 @@
       "path": "packages/stories/stories-compute/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-echo/tsconfig.json"
+    },
+    {
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {

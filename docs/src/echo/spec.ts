@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** The sections whose pages are exported to agents, by the path segment their routes and llms.txt files use. */
-export const AGENT_SECTION_IDS = ['echo', 'halo', 'plex'] as const;
+export const AGENT_SECTION_IDS = ['echo', 'halo', 'mesh', 'edge', 'sage', 'plex', 'tile'] as const;
 
 export type AgentSection = (typeof AGENT_SECTION_IDS)[number];
 
@@ -21,9 +21,28 @@ export const AGENT_SECTIONS: Record<AgentSection, { label: string; summary: stri
     summary:
       "Identity management for local-first apps: a user's identity, the devices and credentials that act for it, and who can join a space.",
   },
+  mesh: {
+    label: 'MESH',
+    summary:
+      'Peer networking for ECHO and HALO: swarms, signaling and the transports that carry replication, presence and invitations.',
+  },
+  edge: {
+    label: 'EDGE',
+    summary:
+      "DXOS's services on Cloudflare Workers: an always-online peer for every space and identity, with replication, indexing, identity services and compute.",
+  },
+  sage: {
+    label: 'SAGE',
+    summary:
+      'Durable AI agents with their own identity: typed operations as tools, skills loaded per task, and any model, local or hosted.',
+  },
   plex: {
     label: 'PLEX',
     summary: 'An agentic framework for building apps out of plugins.',
+  },
+  tile: {
+    label: 'TILE',
+    summary: 'The DXOS design system: themed UI components and the tokens behind them, usable in any React app.',
   },
 };
 
@@ -47,6 +66,10 @@ export type SpecPage = {
   section: string;
   route: string;
   group: string;
+  /** The component package a page documents. */
+  package?: string;
+  /** What the component does; it nests the page in a group of that name inside `group` [D-301]. */
+  family?: string;
   template: string;
   status: Status;
   covers: string[];
@@ -71,6 +94,9 @@ const field = (body: string, key: string): string => {
   return match[1];
 };
 
+const optionalField = (body: string, key: string): string | undefined =>
+  body.match(new RegExp(`^  ${key}: (.*)$`, 'm'))?.[1];
+
 /** The items of a block's list field, such as a page's `covers:`. */
 const listField = (body: string, key: string): string[] => {
   const match = body.match(new RegExp(`^  ${key}:\\n((?:    - .*\\n?)*)`, 'm'));
@@ -89,6 +115,8 @@ export const parsePages = (source: string): SpecPage[] =>
       section: field(body, 'section'),
       route: field(body, 'route'),
       group: field(body, 'group'),
+      package: optionalField(body, 'package'),
+      family: optionalField(body, 'family'),
       template: field(body, 'template'),
       status: parseStatus(field(body, 'status')),
       covers: listField(body, 'covers'),
@@ -126,18 +154,47 @@ export const assertContentExists = (pages: SpecPage[]): void => {
   }
 };
 
-/** The Starlight sidebar for one section of the spec's site map; group order is first appearance. */
+const sidebarLink = (page: SpecPage) => ({
+  label: page.label,
+  link: page.route,
+  ...(page.status === 'planned' ? { badge: { text: 'planned', variant: 'default' as const } } : {}),
+});
+
+const byLabel = (a: SpecPage, b: SpecPage) => a.label.localeCompare(b.label);
+
+/** Every section's sidebar groups in one order; a group not named here follows them [D-306]. */
+const GROUP_ORDER = ['Start here', 'Learning path', 'Core concepts', 'Guides', 'API', 'Resources'];
+
+const groupRank = (group: string) => {
+  const index = GROUP_ORDER.indexOf(group);
+  return index === -1 ? GROUP_ORDER.length : index;
+};
+
+/**
+ * The Starlight sidebar for one section of the spec's site map, its groups in `GROUP_ORDER`. A top-level group
+ * starts expanded; pages with a `family` follow the group's own pages in a nested group per family. Family groups,
+ * and every page in an API group, sort by label [D-298, D-301, D-302].
+ */
 export const sidebarFromSpec = (allPages: SpecPage[], section: string) => {
   const pages = allPages.filter((page) => page.section === section && page.status !== 'later');
-  const groups = [...new Set(pages.map((page) => page.group))];
-  return groups.map((label) => ({
-    label,
-    items: pages
-      .filter((page) => page.group === label)
-      .map((page) => ({
-        label: page.label,
-        link: page.route,
-        ...(page.status === 'planned' ? { badge: { text: 'planned', variant: 'default' as const } } : {}),
-      })),
-  }));
+  const groups = [...new Set(pages.map((page) => page.group))].sort((a, b) => groupRank(a) - groupRank(b));
+  return groups.map((label) => {
+    const inGroup = pages.filter((page) => page.group === label);
+    const families = [...new Set(inGroup.flatMap((page) => (page.family ? [page.family] : [])))].sort();
+    const own = inGroup.filter((page) => !page.family);
+    return {
+      label,
+      items: [
+        ...(label === 'API' ? own.sort(byLabel) : own).map(sidebarLink),
+        ...families.map((family) => ({
+          label: family,
+          collapsed: true,
+          items: inGroup
+            .filter((page) => page.family === family)
+            .sort(byLabel)
+            .map(sidebarLink),
+        })),
+      ],
+    };
+  });
 };

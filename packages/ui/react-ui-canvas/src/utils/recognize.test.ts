@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { type Point } from '@dxos/scene';
 
 import { parabolaPoint } from './polyline.ts';
-import { favorMajor, nearestSize, readStroke, recognizeShape, strokePauses } from './recognize.ts';
+import { favorMajor, nearestSize, readStroke, recognizeShape, strokeCloses, strokePauses } from './recognize.ts';
 
 /** A hand's wobble: a few px off the line, the same every run. */
 const wobble = (index: number, reach: number): Point => ({
@@ -146,6 +146,51 @@ describe('recognizeShape', () => {
     // Too few samples, and too small to be worth a shape.
     expect(recognizeShape(strokeRound(corners).slice(0, 5))).toBeUndefined();
     expect(recognizeShape(strokeRound(corners), 400)).toBeUndefined();
+  });
+});
+
+describe('strokeCloses', () => {
+  /** A stroke round most of a circle of `radius`, its two ends `gap` apart. */
+  const ring = (radius: number, gap: number): Point[] => {
+    const open = 2 * Math.asin(gap / (2 * radius));
+    return Array.from({ length: 60 }, (_, index) => {
+      const angle = open / 2 + (index / 59) * (2 * Math.PI - open);
+      return { x: radius * Math.cos(angle), y: radius * Math.sin(angle) };
+    });
+  };
+
+  test('the same gap closes a large stroke and leaves a small one open', ({ expect }) => {
+    expect(strokeCloses(ring(200, 30))).toBe(true);
+    expect(strokeCloses(ring(40, 30))).toBe(false);
+  });
+
+  test('the gap that closes a stroke grows with its bounds', ({ expect }) => {
+    expect(strokeCloses(ring(40, 6))).toBe(true);
+    expect(strokeCloses(ring(400, 60))).toBe(true);
+    expect(strokeCloses(ring(400, 200))).toBe(false);
+  });
+
+  test('a line that ends far from where it began, or has no extent, is open', ({ expect }) => {
+    const wave = Array.from({ length: 60 }, (_, index) => ({ x: index * 5, y: 60 * Math.sin(index / 6) }));
+    expect(strokeCloses(wave)).toBe(false);
+    expect(
+      strokeCloses([
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+      ]),
+    ).toBe(false);
+    expect(
+      strokeCloses([
+        { x: 0, y: 0 },
+        { x: 40, y: 0 },
+      ]),
+    ).toBe(false);
+  });
+
+  test('a share may be given, as it is for a stroke read as a shape', ({ expect }) => {
+    expect(strokeCloses(ring(100, 60))).toBe(false);
+    expect(strokeCloses(ring(100, 60), 0.25)).toBe(true);
   });
 });
 

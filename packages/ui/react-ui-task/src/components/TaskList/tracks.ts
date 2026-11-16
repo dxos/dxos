@@ -5,14 +5,19 @@
 /** A cell on a row's title line. A list's `columns` orders them, and its rows and its create row both follow it. */
 export type TaskColumn = 'gutter' | 'priority' | 'status' | 'title' | 'artifacts' | 'estimate' | 'assignee' | 'actions';
 
-/** The project list's order: priority and status ahead of the title, who has it after. */
+/**
+ * The project list's order: status ahead of the title, then who has it, how urgent it is and how big — the three
+ * read together at the end of the row rather than split either side of the title. `estimate` is a column like any
+ * other: a host that does not size its tasks leaves it out of its own `columns`.
+ */
 export const DEFAULT_COLUMNS: readonly TaskColumn[] = [
   'gutter',
-  'priority',
   'status',
   'title',
   'artifacts',
   'assignee',
+  'priority',
+  'estimate',
   'actions',
 ];
 

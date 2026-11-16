@@ -32,7 +32,8 @@
     row-gap: calc(var(--dx-gap-size) / 2);
     padding: var(--dx-gap-size);
     border: 1px solid var(--color-separator);
-    border-radius: var(--radius-md, 0.375rem);
+    /* A group inset in a form reads as part of its rows, so it takes the control radius rather than a card's. */
+    border-radius: var(--radius-sm, 0.25rem);
   }
   /* The set spans no `full` lines, so an inheriting grid inside it (a Collapsible Content) spans the set's tracks. */
   .dx-fieldset.dx-container[data-inset] > .dx-container[data-gutter='inherit'] {

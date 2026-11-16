@@ -7,9 +7,9 @@ import Anatomy from '../../../../components/Anatomy.astro';
 import Snippet from '../../../../components/Snippet.astro';
 import SpecCite from '../../../../components/SpecCite.astro';
 
-ECHO is the data model that applications and agents share. Plugins code against its objects instead of keeping private
-stores. An agent keeps its memory in the same graph, and can inspect the schema of everything in it. Data from external
-systems lands there as linked objects, so one query can reach all of it.
+ECHO is a typed object graph that lives on the user's devices and merges between them. An app and an agent read and
+write the same objects, and an agent can inspect the schema of everything in the graph at run time. Data from external
+systems lands there as linked objects, so one query can reach all of it, offline or on.
 
 ## Agents need memory they can query
 
@@ -52,11 +52,11 @@ new one, and the record does not end up in the graph twice.
 `plugin-github` and `plugin-linear` sync this way. Once the data is in the graph, the code that reads it does not need to
 know which system it came from.
 
-## Plugins code against the data model
+## One model for every reader
 
-A plugin declares its types with `Type.makeObject` and contributes them to the schema registry. Its UI, its operations and
-the agents that use it all read and write the same objects. There is no plugin-specific API in between, so a second plugin
-can select the first plugin's objects by type.
+In an app built from plugins, each plugin declares its types with `Type.makeObject` and contributes them to the schema
+registry. Its UI, its operations and the agents that use it all read and write the same objects, so a second plugin can
+select the first plugin's objects by type, with no plugin-specific API in between.
 
 The rest of this page is the argument for the model itself. Keeping state on a server means client code spends its time on
 copies: caches, optimistic updates, retry queues and conflict handling. ECHO moves the state onto the device. Objects are
@@ -119,7 +119,7 @@ same call that made it, so a list does not need an optimistic copy of itself. <S
 
 ### A query can see more than this device holds
 
-Queries also read the host index and EDGE, which hold objects this tab has not loaded. ECHO treats those answers as evidence.
+Queries also read the host index and [EDGE's index](/docs/edge/concepts/indexing/), which hold objects this tab has not loaded. ECHO treats those answers as evidence.
 It re-evaluates each remote entry against the local document and drops the entry when local state contradicts it, so a slow
 server cannot bring back an object you deleted. <SpecCite item="org.dxos.echo.query#F-5" />
 

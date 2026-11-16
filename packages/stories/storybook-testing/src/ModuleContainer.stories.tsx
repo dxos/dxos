@@ -21,7 +21,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { ModuleContainer } from './ModuleContainer.tsx';
+import * as ModuleContainer from './ModuleContainer.ts';
 
 // Example module role tokens (role-only dispatch). A real storybook defines these alongside its
 // module surfaces; here they exercise the container in isolation from any plugin.
@@ -77,9 +77,9 @@ const ExampleSurfacesPlugin = Plugin.define(
   Plugin.make,
 );
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/storybook-testing/ModuleContainer',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
