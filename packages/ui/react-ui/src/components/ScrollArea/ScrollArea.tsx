@@ -221,12 +221,12 @@ const ScrollAreaViewport = slottable<HTMLDivElement, ScrollAreaViewportProps>(
 
 ScrollAreaViewport.displayName = 'ScrollArea.Viewport';
 
-export { ScrollAreaRoot as Root, ScrollAreaViewport as Viewport, ScrollAreaTracking as Tracking, MAIN_AREA };
+export { MAIN_AREA, ScrollAreaRoot as Root, ScrollAreaTracking as Tracking, ScrollAreaViewport as Viewport };
 export type {
   ScrollAreaRootProps as RootProps,
-  ScrollAreaViewportProps as ViewportProps,
-  ScrollAreaTrackingProps as TrackingProps,
-  ScrollAreaTrackingHandle as TrackingHandle,
   ScrollPosition,
+  ScrollAreaTrackingHandle as TrackingHandle,
+  ScrollAreaTrackingProps as TrackingProps,
+  ScrollAreaViewportProps as ViewportProps,
 };
-export { SCROLL_ANCHOR_ATTRIBUTE, captureScrollPosition, applyScrollPosition } from './position.ts';
+export { SCROLL_ANCHOR_ATTRIBUTE, applyScrollPosition, captureScrollPosition } from './position.ts';
