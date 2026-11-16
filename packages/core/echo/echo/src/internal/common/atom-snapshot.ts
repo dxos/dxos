@@ -38,6 +38,30 @@ export const snapshotForComparison = <V>(value: V): V => {
   return value;
 };
 
+/**
+ * {@link snapshotForComparison} at every depth, for a value whose readers hold on to its nested records and arrays: a
+ * shallow copy would hand them the same nested reference after an in-place change below the top level.
+ */
+export const snapshotDeep = <V>(value: V): V => {
+  if (Array.isArray(value)) {
+    return value.map(snapshotDeep) as V;
+  }
+  if (isRefLike(value)) {
+    return value;
+  }
+  // Bytes and dates keep their class: the record branch below would turn them into plain objects.
+  if (value instanceof Uint8Array) {
+    return new Uint8Array(value) as V;
+  }
+  if (value instanceof Date) {
+    return new Date(value.getTime()) as V;
+  }
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, snapshotDeep(entry)])) as V;
+  }
+  return value;
+};
+
 // Refs compare by URI: `RefImpl` mints a fresh wrapper on every property read, so `Object.is` never
 // matches two reads of the same ref. The inlined target is part of the ref's encoded value
 // (`{'/': uri, target}` for an object not yet in the database), so `Ref.make(target)` and a
@@ -57,6 +81,43 @@ const valueEquals = (a: unknown, b: unknown): boolean => {
   // place is the same reference on both sides and would otherwise read as unchanged.
   if (isRecord(a) || isRecord(b)) {
     return false;
+  }
+  return Object.is(a, b);
+};
+
+/**
+ * Structural equality between two {@link snapshotDeep} results, which share no references below the top level, so
+ * records and arrays compare by content at every depth. Refs compare as in {@link snapshotEquals}.
+ */
+export const snapshotDeepEquals = (a: unknown, b: unknown): boolean => {
+  if (isRefLike(a) || isRefLike(b)) {
+    return valueEquals(a, b);
+  }
+  if (a instanceof Date || b instanceof Date) {
+    return a instanceof Date && b instanceof Date && Object.is(a.getTime(), b.getTime());
+  }
+  if (a instanceof Uint8Array || b instanceof Uint8Array) {
+    return (
+      a instanceof Uint8Array && b instanceof Uint8Array && a.length === b.length && a.every((byte, i) => byte === b[i])
+    );
+  }
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return (
+      Array.isArray(a) &&
+      Array.isArray(b) &&
+      a.length === b.length &&
+      a.every((item, index) => snapshotDeepEquals(item, b[index]))
+    );
+  }
+  if (isRecord(a) || isRecord(b)) {
+    if (!isRecord(a) || !isRecord(b)) {
+      return false;
+    }
+    const keys = Object.keys(a);
+    return (
+      keys.length === Object.keys(b).length &&
+      keys.every((key) => Object.hasOwn(b, key) && snapshotDeepEquals(a[key], b[key]))
+    );
   }
   return Object.is(a, b);
 };

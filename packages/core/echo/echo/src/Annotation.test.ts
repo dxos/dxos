@@ -524,6 +524,40 @@ describe('Annotation', () => {
       setOrder(obj, { typeA: ['x'] });
       expect(Option.getOrThrow(registry.get(wholeAtom))).toEqual({ typeA: ['x'] });
     });
+
+    test('atom hands a nested value changed in place to its readers as a new value, and keeps an unchanged one', ({
+      expect,
+    }) => {
+      const LayoutAnnotation = Annotation.make({
+        id: 'org.dxos.test.layout',
+        schema: Schema.Struct({ positions: Schema.Record(Schema.String, Schema.Struct({ x: Schema.Number })) }),
+      });
+      const registry = AtomRegistry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+      Obj.update(obj, (obj) => {
+        Annotation.set(obj, LayoutAnnotation, { positions: { a: { x: 0 } } });
+      });
+
+      const layoutAtom = Annotation.atom(obj, LayoutAnnotation);
+      let fires = 0;
+      registry.subscribe(layoutAtom, () => {
+        fires++;
+      });
+      const before = Option.getOrThrow(registry.get(layoutAtom)).positions;
+      Annotation.update(obj, LayoutAnnotation, (layout) => {
+        layout.positions.b = { x: 1 };
+      });
+
+      const after = Option.getOrThrow(registry.get(layoutAtom)).positions;
+      expect(after).toEqual({ a: { x: 0 }, b: { x: 1 } });
+      expect(after).not.toBe(before);
+
+      const changes = fires;
+      Obj.update(obj, (obj) => {
+        obj.name = 'B';
+      });
+      expect(fires).toBe(changes);
+    });
   });
 
   describe('reactive in-place mutation', () => {

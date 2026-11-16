@@ -22,6 +22,15 @@ export type SlashCommand = {
 /** The commands each extension package contributes; `slashCommands` lists them all. */
 export const slashCommand = Facet.define<SlashCommand>();
 
+/**
+ * The Markdown block markers at the start of a line: quotes and list items with their task boxes, stacked as in a
+ * quoted list item (`> - `), then a heading's, after which the rest is the heading's text (`# 1. Openings`).
+ */
+const BLOCK_MARKER = /^(?:>\s*|(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?)*(?:#{1,6}\s+)?/;
+
+/** The text of a line, without the marker that makes it a list item, quote or heading. */
+export const lineText = (text: string): string => text.trimStart().replace(BLOCK_MARKER, '').trim();
+
 /** Commands that depend on the text, such as one per block kind the spec defines; a contributed command of the same name wins. */
 export const slashCommandSource = Facet.define<(state: EditorState) => readonly SlashCommand[]>();
 
@@ -51,7 +60,7 @@ const source = (context: CompletionContext): CompletionResult | null => {
   if (word.from > line.from && !/\s/.test(context.state.sliceDoc(word.from - 1, word.from))) {
     return null;
   }
-  const before = context.state.sliceDoc(line.from, word.from).trim();
+  const before = lineText(context.state.sliceDoc(line.from, word.from));
   return {
     from: word.from,
     filter: true,
@@ -86,8 +95,8 @@ export type BlockTemplateProps = {
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
- * A command that writes a dialect block's structure in place, fenced as `mdl`. Text before the slash becomes the
- * block's title; otherwise the cursor waits where the title goes.
+ * A command that writes a dialect block's structure in place of its line, fenced as `mdl`. Text before the slash
+ * becomes the block's title; otherwise the cursor waits where the title goes.
  */
 export const blockTemplate = ({ name, kind, prefix, fields }: BlockTemplateProps): Extension[] => [
   slashCommand.of({
@@ -102,7 +111,8 @@ export const blockTemplate = ({ name, kind, prefix, fields }: BlockTemplateProps
       }
       const head = `${kind}${id}${prefix ? ':' : ''} `;
       const body = fields.map((field) => `  ${field}`).join('\n');
-      const start = before ? line.from : from;
+      // A title or a bare marker before the slash is replaced with the line, so a fence never opens after `> ` or `- `.
+      const start = before || !lineText(view.state.sliceDoc(line.from, from)) ? line.from : from;
       const opening = '```mdl\n';
       const insert = `${opening}${head}${before}\n${body}\n\`\`\``;
       const cursor = before

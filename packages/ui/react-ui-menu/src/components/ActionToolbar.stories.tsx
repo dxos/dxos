@@ -665,6 +665,36 @@ export const Separators: Story = {
   },
 };
 
+const OverflowOrderStory = () => {
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .custom('zoom', { label: 'Zoom' }, () => <Toolbar.Text classNames='flex-none'>Zoom</Toolbar.Text>)
+        .action('a', { label: 'A', icon: 'ph--circle--regular', placement: { collapse: 1 } }, () => {})
+        .action('b', { label: 'B', icon: 'ph--square--regular', placement: { collapse: 1, order: 0.5 } }, () => {})
+        .build(),
+    [],
+  );
+  return (
+    <div className='p-8 w-[8rem]'>
+      <ActionToolbar {...menu} alwaysActive data-testid='overflow-order' />
+    </div>
+  );
+};
+
+/** The ⋮ menu keeps the row's order when an item that stays in the row sets the others' fallback order. */
+export const OverflowOrder: Story = {
+  render: () => <OverflowOrderStory />,
+  play: async ({ canvasElement }) => {
+    const row = within(canvasElement).getByTestId('overflow-order');
+    await waitFor(() => expect(labels(canvasElement)).toEqual(['More']));
+    await userEvent.click(within(row).getByTestId('toolbar.overflow'));
+    const menu = await within(document.body).findByRole('menu');
+    const entries = Array.from(menu.querySelectorAll('[role=menuitem]')).map((entry) => entry.textContent?.trim());
+    await expect(entries).toEqual(['B', 'A']);
+  },
+};
+
 /** The same graph rendered as a menu: named groups are submenus. */
 export const AsMenu: Story = {
   render: () => <LayoutStory contributors={['review']} asMenu />,

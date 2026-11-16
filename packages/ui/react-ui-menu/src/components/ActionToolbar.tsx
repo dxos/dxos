@@ -737,13 +737,14 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
     const { moved: collapsed, folded, compacted } = useCollapse(menu, units, rows, bounds);
 
     const rowCount = Math.max(1, ...units.map((item) => (placementOf(item).row ?? 0) + 1));
+    // Sorted before `keep` filters, so an item's fallback order is its index in the whole zone.
     const inZone = (row: number, zone: ToolbarZone, keep: (item: MenuItem) => boolean) =>
       byOrder(
         units.filter((item) => {
           const placement = placementOf(item);
-          return (placement.row ?? 0) === row && (placement.zone ?? 'start') === zone && keep(item);
+          return (placement.row ?? 0) === row && (placement.zone ?? 'start') === zone;
         }),
-      );
+      ).filter(keep);
     const zone = (row: number, zone: ToolbarZone) =>
       trimSeparators(inZone(row, zone, (item) => !collapsed.includes(item)));
     const moved = Array.from({ length: rowCount }, (_, row) =>
