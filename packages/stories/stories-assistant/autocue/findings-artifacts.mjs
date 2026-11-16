@@ -19,7 +19,7 @@ const ACTIVITY = '[data-testid="assistant.chat-activity"]';
 const TAB = (kind) => `[data-artifact="${kind}"]`;
 
 const REQUEST =
-  'Turn the five findings in the bound document into artifacts: for each finding create a sheet with its table and a chart that fits it (bar to compare, pie for shares, xy over time). Then create a presentation with one slide per chart, and a short markdown summary of the five findings.';
+  'Turn the five findings in the bound document into artifacts: for each finding create a sheet with its table and a chart that fits it (bar to compare, pie for shares, xy over time). Then create a presentation with a cover slide and one slide per chart, adding each chart object itself as its slide, and a short markdown summary of the five findings.';
 
 /** Resolves once the chat's activity line (Generating, Contacting inference provider, …) has been gone for `quiet` ms. */
 const agentIdle = async (page, { quiet = 4_000, timeout = 300_000 } = {}) => {
