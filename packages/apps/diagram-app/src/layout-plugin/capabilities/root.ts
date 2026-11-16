@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { DiagramRoot } from '../components/index.ts';
+import { DiagramRoot } from '../containers/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

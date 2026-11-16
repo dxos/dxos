@@ -8,8 +8,8 @@ import { type Space } from '@dxos/client/echo';
 import * as Containers from '@dxos/plugin-space/Containers';
 import * as Dialog from '@dxos/react-ui/Dialog';
 
-import { invitationUrl } from '../model/index.ts';
-import { useSpaceName } from './SpaceMenu.tsx';
+import { useSpaceName } from '../../components/SpaceMenu/index.ts';
+import { invitationUrl } from '../../util/index.ts';
 
 export type ShareDialogProps = {
   space: Space;

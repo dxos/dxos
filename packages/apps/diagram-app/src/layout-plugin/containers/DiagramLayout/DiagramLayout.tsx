@@ -16,8 +16,8 @@ import * as Theme from '@dxos/react-ui/Theme';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
-import { dismissJoinOnLiveDialog } from '../../shared/index.ts';
-import { LayoutState } from '../DiagramAppCapabilities.ts';
+import { dismissJoinOnLiveDialog } from '../../../shared/index.ts';
+import { DiagramAppCapabilities } from '../../types/index.ts';
 
 // A popover opens a beat after it is asked for, once its anchor has rendered.
 const POPOVER_DELAY = 40;
@@ -48,7 +48,7 @@ const LayoutToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDis
 
 /** Composer's dialog and popover surfaces and the toasts, over the canvas, as the layout state asks for them. */
 export const DiagramLayout = ({ children }: PropsWithChildren) => {
-  const [layout, update] = Hooks.useAtomCapabilityState(LayoutState);
+  const [layout, update] = Hooks.useAtomCapabilityState(DiagramAppCapabilities.LayoutState);
   const anchorRef = useRef<Element | null>(null);
   anchorRef.current = layout.popoverAnchor?.anchor ?? null;
   const [popoverOpen, setPopoverOpen] = useState(false);

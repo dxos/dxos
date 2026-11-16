@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Atom from 'effect/reactivity/Atom';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
-import { type Route } from '../shared/index.ts';
-import { DIAGRAM_APP_KEY } from './DiagramAppEvents.ts';
+import { type Route } from '../../shared/index.ts';
+import { DiagramAppNamespace } from '../namespace.ts';
 
 /** Where a popover sits: beside an element, or beside whichever part renders the anchor with this id. */
 export type PopoverAnchor = { anchor: Element; anchorId?: undefined } | { anchor?: undefined; anchorId: string };
@@ -34,6 +35,4 @@ export type LayoutState = {
   workspace: string;
 };
 
-export const LayoutState = Capability.makeSingleton<Atom.Writable<LayoutState>>()(
-  `${DIAGRAM_APP_KEY}.capability.layoutState`,
-);
+export const LayoutState = DiagramAppNamespace.makeSingleton<Atom.Writable<LayoutState>>()('layoutState');

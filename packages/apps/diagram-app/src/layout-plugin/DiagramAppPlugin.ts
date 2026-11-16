@@ -14,18 +14,18 @@ import { Collection } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { LayoutState } from './DiagramAppCapabilities.ts';
-import * as DiagramAppEvents from './DiagramAppEvents.ts';
+import { DiagramAppNamespace } from './namespace.ts';
+import { DiagramAppCapabilities, DiagramAppEvents } from './types/index.ts';
 
 const meta = Plugin.makeMeta({
-  key: DXN.make(DiagramAppEvents.DIAGRAM_APP_KEY),
+  key: DXN.make(DiagramAppNamespace.key),
   name: 'Diagram',
   tags: ['system'],
 });
 
 const Layout = Capability.lazyModule(
   'Layout',
-  { provides: [AppCapabilities.Layout, LayoutState], activatesOn: ActivationEvents.Startup },
+  { provides: [AppCapabilities.Layout, DiagramAppCapabilities.LayoutState], activatesOn: ActivationEvents.Startup },
   () => import('./capabilities/layout.ts'),
 );
 

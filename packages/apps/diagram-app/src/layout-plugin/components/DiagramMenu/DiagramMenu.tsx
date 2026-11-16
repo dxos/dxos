@@ -8,8 +8,8 @@ import { useObject } from '@dxos/echo-react';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Icon from '@dxos/react-ui/Icon';
 
-import { DIAGRAM_ICON, DiagramTrigger, UNTITLED } from '../../shared/index.ts';
-import { PillCombobox } from './PillCombobox.tsx';
+import { DIAGRAM_ICON, DiagramTrigger, UNTITLED } from '../../../shared/index.ts';
+import { PillCombobox } from '../PillCombobox/index.ts';
 
 /** The shortcut that creates a diagram (spec F-4.7), as the menu shows it. */
 export const NEW_DIAGRAM_SHORTCUT = '⌥N';

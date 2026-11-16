@@ -7,7 +7,7 @@ import React from 'react';
 import { type Space } from '@dxos/client/echo';
 import * as AlertDialog from '@dxos/react-ui/AlertDialog';
 
-import { useSpaceName } from './SpaceMenu.tsx';
+import { useSpaceName } from '../SpaceMenu/index.ts';
 
 export type DeleteSpaceDialogProps = {
   space: Space;

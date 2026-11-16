@@ -34,13 +34,12 @@ import {
   isShellShown,
   parseRoute,
   showShell,
-} from '../../shared/index.ts';
-import { LayoutState } from '../DiagramAppCapabilities.ts';
-import * as DiagramAppEvents from '../DiagramAppEvents.ts';
-import { createSpace, ensureIdentity, fileDrawing, preloadDrawing, recordRoute, startSpace } from '../model/index.ts';
-import { DeleteSpaceDialog } from './DeleteSpaceDialog.tsx';
-import { DiagramLayout, SPACE_MENU_ANCHOR } from './DiagramLayout.tsx';
-import { SpaceView } from './SpaceView.tsx';
+} from '../../../shared/index.ts';
+import { DeleteSpaceDialog } from '../../components/DeleteSpaceDialog/index.ts';
+import { DiagramAppCapabilities, DiagramAppEvents } from '../../types/index.ts';
+import { createSpace, ensureIdentity, fileDrawing, preloadDrawing, recordRoute, startSpace } from '../../util/index.ts';
+import { DiagramLayout, SPACE_MENU_ANCHOR } from '../DiagramLayout/index.ts';
+import { SpaceView } from '../SpaceView/index.ts';
 
 /** Records a boot milestone once, for the startup harness. */
 const markOnce = (name: string) => {
@@ -105,8 +104,8 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
   const navigationHandlers = Hooks.useCapabilities(AppCapabilities.NavigationHandler);
   const { invokePromise } = Hooks.useOperationInvoker();
   const registry = Hooks.useCapability(Capabilities.AtomRegistry);
-  const layoutState = Hooks.useCapability(LayoutState);
-  const [layout, updateLayout] = Hooks.useAtomCapabilityState(LayoutState);
+  const layoutState = Hooks.useCapability(DiagramAppCapabilities.LayoutState);
+  const [layout, updateLayout] = Hooks.useAtomCapabilityState(DiagramAppCapabilities.LayoutState);
   const spaces = useSpaces();
   // Set from asking for the join dialog until the joined space shows, or the dialog is dismissed: the space it started
   // on, the dismissals so far, and whether the dialog has opened.

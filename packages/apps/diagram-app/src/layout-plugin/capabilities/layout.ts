@@ -11,7 +11,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import { parseRoute } from '../../shared/index.ts';
-import { LayoutState } from '../DiagramAppCapabilities.ts';
+import { DiagramAppCapabilities } from '../types/index.ts';
 
 /** A diagram's graph path, as Composer names it: what presence sends and a follower opens. */
 const getDrawingPath = (spaceId: string, drawingId: string): string =>
@@ -23,7 +23,7 @@ const getDrawingPath = (spaceId: string, drawingId: string): string =>
  */
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const state = Atom.make<LayoutState>({
+    const state = Atom.make<DiagramAppCapabilities.LayoutState>({
       route: parseRoute(window.location.pathname),
       dialogOpen: false,
       dialogType: 'default',
@@ -49,6 +49,9 @@ export default Capability.makeModule(() =>
       };
     });
 
-    return [Capability.contribute(LayoutState, state), Capability.contribute(AppCapabilities.Layout, layout)];
+    return [
+      Capability.contribute(DiagramAppCapabilities.LayoutState, state),
+      Capability.contribute(AppCapabilities.Layout, layout),
+    ];
   }),
 );

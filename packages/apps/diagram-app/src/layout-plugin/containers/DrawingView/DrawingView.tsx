@@ -10,7 +10,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { AttendableContainer, Attention, useAttentionContext } from '@dxos/react-ui-attention';
 
-import { dismissShell } from '../../shared/index.ts';
+import { dismissShell } from '../../../shared/index.ts';
 
 // The boot shell already drew the frame and the theme's background wash (the canvas), so only the scene's other layers,
 // those with no controls, fade in.
