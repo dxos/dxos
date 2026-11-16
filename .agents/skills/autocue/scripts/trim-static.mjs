@@ -243,6 +243,8 @@ const captions = (timeline.steps ?? [])
   .toSorted((a, b) => a.ms - b.ms)
   .map((step) => ({
     ...step,
+    // Step names mark code with backticks, which a chapter title would show as they are.
+    text: step.text.replace(/`([^`]*)`/g, '$1'),
     frame: Math.round((step.ms / 1000) * options.fps),
   }));
 
@@ -299,6 +301,30 @@ const decodeArgs = [
   '-',
 ];
 
+/**
+ * The whole frames of a raw video stream. Each chunk is copied once into the frame it fills: joining chunks onto the
+ * unread bytes copied a whole frame per pipe chunk, hundreds of times a frame at 2x side-by-side sizes. Every frame is
+ * a buffer of its own, so one kept as the previous frame or queued for the encoder stays intact.
+ */
+async function* framesOf(stream) {
+  let frame = Buffer.allocUnsafe(frameBytes);
+  let filled = 0;
+  for await (const chunk of stream) {
+    let offset = 0;
+    while (offset < chunk.length) {
+      const length = Math.min(frameBytes - filled, chunk.length - offset);
+      chunk.copy(frame, filled, offset, offset + length);
+      filled += length;
+      offset += length;
+      if (filled === frameBytes) {
+        yield frame;
+        frame = Buffer.allocUnsafe(frameBytes);
+        filled = 0;
+      }
+    }
+  }
+}
+
 // `--report` answers "where did the time go" without spending an encode: still runs long enough to be
 // capped are what a lower `--max-static` buys, and motion is the floor the trim can never go below.
 if (options.report) {
@@ -307,7 +333,6 @@ if (options.report) {
   // resolves, so a late listener turns an ffmpeg crash into a hang.
   const decoderClosed = once(decoder, 'close');
   decoder.stderr.pipe(process.stderr);
-  let pending = Buffer.alloc(0);
   let previous;
   let run = 0;
   let frames = 0;
@@ -317,24 +342,19 @@ if (options.report) {
   // under the truth on a 9-caption demo.
   const runs = [];
   let runStart = 0;
-  for await (const chunk of decoder.stdout) {
-    pending = pending.length ? Buffer.concat([pending, chunk]) : chunk;
-    while (pending.length >= frameBytes) {
-      const frame = pending.subarray(0, frameBytes);
-      pending = pending.subarray(frameBytes);
-      frames++;
-      if (!previous || moved(frame, previous)) {
-        if (run) {
-          runs.push({ length: run, start: runStart });
-        }
-        run = 0;
-        runStart = frames;
-        motion++;
-      } else {
-        run++;
+  for await (const frame of framesOf(decoder.stdout)) {
+    frames++;
+    if (!previous || moved(frame, previous)) {
+      if (run) {
+        runs.push({ length: run, start: runStart });
       }
-      previous = Buffer.from(frame);
+      run = 0;
+      runStart = frames;
+      motion++;
+    } else {
+      run++;
     }
+    previous = frame;
   }
   if (run) {
     runs.push({ length: run, start: runStart });
@@ -466,7 +486,6 @@ const bookend = async (clip) => {
 
 const openFrames = options.open ? await bookend(options.open) : 0;
 
-let pending = Buffer.alloc(0);
 let previous;
 let staticRun = 0;
 let read = 0;
@@ -484,32 +503,33 @@ const speedAt = (frame) => speedRanges.find(({ from, to }) => frame >= from && f
 // Source frame -> output frame, so the caption times can be remapped onto the trimmed timeline.
 const outputFrameOf = new Map();
 
-for await (const chunk of decoder.stdout) {
-  pending = pending.length ? Buffer.concat([pending, chunk]) : chunk;
-  while (pending.length >= frameBytes) {
-    const frame = pending.subarray(0, frameBytes);
-    pending = pending.subarray(frameBytes);
-    const index = read++;
+for await (const frame of framesOf(decoder.stdout)) {
+  const index = read++;
 
-    staticRun = !previous || moved(frame, previous) ? 0 : staticRun + 1;
-    longestRun = Math.max(longestRun, staticRun);
+  staticRun = !previous || moved(frame, previous) ? 0 : staticRun + 1;
+  longestRun = Math.max(longestRun, staticRun);
 
-    // A caption's reading pause is never held for less than any other pause.
-    const cap = Math.max(readingWindow.get(index) ?? 0, holdFrames);
-    // Inclusive: `--report` prices a run at `min(length, cap)`, and an exclusive test would keep one
-    // frame fewer than it promised, so the estimate could never be trusted for tuning.
-    const range = speedAt(index);
-    const skipped = range !== undefined && range.factor > 1 && (index - range.from) % range.factor !== 0;
-    if (staticRun <= cap && !skipped) {
-      if (!encoder.stdin.write(frame)) {
-        await once(encoder.stdin, 'drain');
+  // A caption's reading pause is never held for less than any other pause.
+  const cap = Math.max(readingWindow.get(index) ?? 0, holdFrames);
+  // Inclusive: `--report` prices a run at `min(length, cap)`, and an exclusive test would keep one
+  // frame fewer than it promised, so the estimate could never be trusted for tuning.
+  const range = speedAt(index);
+  const skipped = range !== undefined && range.factor > 1 && (index - range.from) % range.factor !== 0;
+  if (staticRun <= cap && !skipped) {
+    // An encoder that exits never drains, so its exit ends the wait too.
+    if (!encoder.stdin.write(frame)) {
+      const drained = await Promise.race([
+        once(encoder.stdin, 'drain').then(() => true),
+        encoderClosed.then(() => false),
+      ]);
+      if (!drained) {
+        break;
       }
-      outputFrameOf.set(index, kept);
-      kept++;
     }
-    // Copied because `frame` is a view into `pending`, which the next chunk replaces.
-    previous = Buffer.from(frame);
+    outputFrameOf.set(index, kept);
+    kept++;
   }
+  previous = frame;
 }
 
 const closeFrames = options.close ? await bookend(options.close) : 0;
