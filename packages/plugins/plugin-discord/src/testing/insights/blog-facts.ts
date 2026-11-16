@@ -10,6 +10,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import { dirname, join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { parseArgs } from 'node:util';
@@ -20,16 +21,14 @@ import { FactStoreLive, RDF, indexFactsBatch } from '@dxos/pipeline-rdf';
 
 import { costReport, meter } from '../metering.ts';
 
-type Announcement = {
-  readonly link: string;
-  readonly source: string;
-  readonly title: string;
-  readonly published: string;
-  readonly summary: string | null;
-};
-
-const isAnnouncement = (value: unknown): value is Announcement =>
-  typeof value === 'object' && value !== null && 'link' in value && 'title' in value && 'published' in value;
+const Announcement = Schema.Struct({
+  link: Schema.String,
+  source: Schema.String,
+  title: Schema.String,
+  published: Schema.String,
+  summary: Schema.NullOr(Schema.String),
+});
+const isAnnouncement = Schema.is(Announcement);
 
 const BATCH = 20;
 

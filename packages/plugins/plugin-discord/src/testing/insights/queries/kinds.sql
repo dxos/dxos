@@ -1,4 +1,4 @@
--- What kind of messages each product channel gets.
+-- What kind of messages mention each product (questions, bug reports, feature requests, feedback).
 SELECT p.product, c.kind, COUNT(*) AS messages
 FROM classification c JOIN product_mention p ON p.message_id = c.message_id
 WHERE c.kind IN ('question', 'bug-report', 'feature-request', 'feedback')

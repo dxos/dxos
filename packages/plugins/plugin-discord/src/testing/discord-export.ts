@@ -37,7 +37,14 @@ import { BaseError } from '@dxos/errors';
 
 import { snowflakeForTimestamp } from '../services/discord-message.ts';
 import { type ChannelSample, classify } from './channel-scan.ts';
-import { appendPage, isExportFile, readExportFile, resumeFrom } from './export-format.ts';
+import {
+  type MemberRecord,
+  appendPage,
+  isExportFile,
+  readExportFile,
+  readMembers,
+  resumeFrom,
+} from './export-format.ts';
 
 const API = 'https://discord.com/api/v10';
 const PAGE = 100;
@@ -79,8 +86,6 @@ type Role = { id: string; name: string };
 type Guild = { id: string; name: string; roles?: Role[] };
 type Member = { roles: string[]; joined_at?: string; user?: User };
 
-/** What `--members` records per author: their server roles by name, so staff and recognised experts can be told apart. */
-export type MemberRecord = { readonly name: string; readonly roles: readonly string[]; readonly joinedAt?: string };
 type ThreadSearch = { threads: Channel[]; has_more: boolean };
 
 /** Text, announcement and forum channels hold messages or threads; categories and voice channels are skipped. */
@@ -452,7 +457,7 @@ const exportMembers = (client: Client, guildId: string, dir: string) =>
       }
     }
     const file = join(dir, 'members.json');
-    const members: Record<string, MemberRecord> = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
+    const members: Record<string, MemberRecord> = readMembers(file);
     const pending = [...authors].filter(([id]) => members[id] === undefined);
     console.log(`${authors.size} authors, ${pending.length} to look up.`);
     for (const [index, [id, name]] of pending.entries()) {

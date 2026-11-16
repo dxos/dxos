@@ -36,10 +36,10 @@ const Payload = Schema.Struct({
 
 const SYSTEM = `You read the questions and bug reports developers posted about one Cloudflare product in its Discord community, each as an id and a short topic. Group them into the recurring problems behind them: a problem is one specific thing people get stuck on or report broken, worded so a product manager recognizes it ("D1 migrations fail when run from CI", not "D1 issues"). For each problem give the ids of every item that belongs to it and, in one sentence, the gap it reveals (missing or unclear docs, a missing feature, a bug, a limit people hit). Leave out one-off items that share no problem with another. List the problems most common first.`;
 
-type Item = { readonly id: string; readonly product: string; readonly topic: string; readonly kind: string };
-
-const isItem = (value: unknown): value is Item =>
-  typeof value === 'object' && value !== null && 'id' in value && 'product' in value && 'topic' in value;
+const Item = Schema.Struct({ id: Schema.String, product: Schema.String, topic: Schema.String, kind: Schema.String });
+type Item = typeof Item.Type;
+const isItem = Schema.is(Item);
+const isText = Schema.is(Schema.Struct({ text: Schema.String }));
 
 const { values: args } = parseArgs({
   options: { db: { type: 'string' }, min: { type: 'string', default: '12' } },
@@ -79,23 +79,29 @@ const groupProduct = (product: string, group: readonly Item[]) =>
     });
     const known = new Set(group.map((item) => item.id));
     for (const problem of response.value.problems) {
-      const ids = problem.ids.filter((id) => known.has(id));
+      const ids = [...new Set(problem.ids)].filter((id) => known.has(id));
       if (ids.length < 2) {
         continue;
       }
       const examples = ids.slice(0, 3).flatMap((id) => {
         const row = textOf.get(id);
-        return row && typeof row === 'object' && 'text' in row && typeof row.text === 'string'
-          ? [row.text.replace(/\s+/g, ' ').slice(0, 160)]
-          : [];
+        return isText(row) ? [row.text.replace(/\s+/g, ' ').slice(0, 160)] : [];
       });
       insert.run(product, problem.problem, ids.length, problem.gap, examples.join(' | '));
     }
   }).pipe(
     AiUsage.withStage('faq'),
     Effect.provide(AiService.languageModel(DEFAULT_MODEL, { thinking: true })),
-    Effect.catch((error) => Effect.logWarning(`${product} failed: ${String(error)}`)),
+    // A product the model could not group (e.g. too many questions for one answer) is reported, and the run fails.
+    Effect.catch((error) =>
+      Effect.sync(() => {
+        failed.push(product);
+        console.warn(`${product} failed: ${String(error)}`);
+      }),
+    ),
   );
+
+const failed: string[] = [];
 
 const metering = meter(DirectAiServiceLayer, join(dirname(args.db), 'faq-trace.jsonl'));
 const program = Effect.forEach(products, ([product, group]) => groupProduct(product, group), {
@@ -106,6 +112,10 @@ const program = Effect.forEach(products, ([product, group]) => groupProduct(prod
     Effect.sync(() => {
       for (const line of costReport(metering.events(), items.length)) {
         console.log(line);
+      }
+      if (failed.length > 0) {
+        console.error(`Not grouped: ${failed.join(', ')}`);
+        process.exitCode = 1;
       }
     }),
   ),

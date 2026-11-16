@@ -7,6 +7,7 @@
 //   moon run plugin-discord:facts -- sparql 'SELECT ?p (COUNT(*) AS ?n) WHERE { GRAPH ?g { ?s ?p ?o } } GROUP BY ?p'
 //   moon run plugin-discord:facts -- sql 'SELECT author_label, COUNT(*) n FROM message GROUP BY 1 ORDER BY 2 DESC'
 //   moon run plugin-discord:facts -- sparql @query.rq --facts <facts.db> --json
+//   moon run plugin-discord:facts -- sql @src/testing/insights/queries/product-weeks.sql --param product=D1 --crawl <db>
 //
 // `sparql` runs against the fact store (DISCORD_FACTS_DB or --facts); `sql` against the crawl's message store
 // (DISCORD_CRAWL_DB or --crawl), run as given, so keep to SELECT. A query starting with `@` is read from that file. IRIs print with the
@@ -106,12 +107,15 @@ const { values: flags, positionals } = parseArgs({
     crawl: { type: 'string' },
     json: { type: 'boolean', default: false },
     bars: { type: 'boolean', default: false },
+    param: { type: 'string', multiple: true },
   },
 });
 
 const [mode, rawQuery] = positionals;
 if ((mode !== 'sparql' && mode !== 'sql') || !rawQuery) {
-  console.error('Usage: facts-cli (sparql|sql) <query | @file> [--facts <db>] [--crawl <db>] [--json]');
+  console.error(
+    'Usage: facts-cli (sparql|sql) <query | @file> [--facts <db>] [--crawl <db>] [--param name=value] [--json] [--bars]',
+  );
   process.exit(1);
 }
 const query = rawQuery.startsWith('@') ? readFileSync(rawQuery.slice(1), 'utf8') : rawQuery;
@@ -121,7 +125,11 @@ const isRow = (value: unknown): value is Record<string, unknown> => typeof value
 const runSql = (path: string) => {
   const db = new DatabaseSync(path);
   try {
-    const rows = db.prepare(query).all().filter(isRow);
+    // `--param product=D1` binds `:product` in the query.
+    const params = Object.fromEntries(
+      (flags.param ?? []).map((entry) => [entry.slice(0, entry.indexOf('=')), entry.slice(entry.indexOf('=') + 1)]),
+    );
+    const rows = db.prepare(query).all(params).filter(isRow);
     const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
     if (flags.json) {
       rows.forEach((row) => console.log(JSON.stringify(row)));

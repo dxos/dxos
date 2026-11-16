@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { appendFileSync, existsSync, readFileSync, truncateSync, writeFileSync } from 'node:fs';
 
 /** A DiscordChatExporter author record (the fields readers rely on). */
@@ -100,3 +101,17 @@ export const appendPage = (path: string, header: () => unknown, messages: readon
   }
   appendFileSync(path, messages.map((message) => `${JSON.stringify(message)}\n`).join(''));
 };
+
+/** What `discord-export.ts --members` records per author: their server roles by name, to tell staff and experts apart. */
+export const MemberRecord = Schema.Struct({
+  name: Schema.String,
+  roles: Schema.Array(Schema.String),
+  joinedAt: Schema.optional(Schema.String),
+});
+export interface MemberRecord extends Schema.Schema.Type<typeof MemberRecord> {}
+
+const decodeMembers = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Record(Schema.String, MemberRecord)));
+
+/** The `members.json` of an export directory, keyed by author id; empty when the file is absent. */
+export const readMembers = (path: string): Record<string, MemberRecord> =>
+  existsSync(path) ? { ...decodeMembers(readFileSync(path, 'utf8')) } : {};

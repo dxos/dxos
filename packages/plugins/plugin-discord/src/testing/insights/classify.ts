@@ -42,16 +42,15 @@ const SYSTEM = `You classify messages from the Cloudflare Developers Discord ser
 - products: every Cloudflare product the message is about or uses, each with the author's sentiment toward that product from -1 to 1 (0 when it is only mentioned). Use these names exactly: ${PRODUCTS.join(', ')}. Name another Cloudflare product only if none of these fits. Leave out non-Cloudflare products.
 Read the channel and thread for context: a message in #d1-database without a product name is still about D1.`;
 
-type Row = {
-  readonly id: string;
-  readonly channel: string;
-  readonly thread_name: string | null;
-  readonly author: string | null;
-  readonly text: string;
-};
-
-const isRow = (value: unknown): value is Row =>
-  typeof value === 'object' && value !== null && 'id' in value && 'text' in value && 'channel' in value;
+const Row = Schema.Struct({
+  id: Schema.String,
+  channel: Schema.String,
+  thread_name: Schema.NullOr(Schema.String),
+  author: Schema.NullOr(Schema.String),
+  text: Schema.String,
+});
+type Row = typeof Row.Type;
+const isRow = Schema.is(Row);
 
 const { values: args } = parseArgs({
   options: {
@@ -61,8 +60,10 @@ const { values: args } = parseArgs({
     batch: { type: 'string', default: '30' },
   },
 });
-if (!args.db) {
-  console.error('Usage: classify.ts --db <insights.db> [--limit <n>]');
+const limit = args.limit === undefined ? -1 : Number(args.limit);
+const size = Number(args.batch);
+if (!args.db || !Number.isInteger(limit) || !Number.isInteger(size) || size < 1) {
+  console.error('Usage: classify.ts --db <insights.db> [--limit <n>] [--batch <n ≥ 1>] [--concurrency <n>]');
   process.exit(1);
 }
 if (!process.env.DX_ANTHROPIC_API_KEY) {
@@ -75,11 +76,10 @@ const pending = db
   .prepare(
     `SELECT m.id, m.channel, m.thread_name, m.author, m.text FROM message m
      LEFT JOIN classification c ON c.message_id = m.id
-     WHERE m.is_bot = 0 AND c.message_id IS NULL ORDER BY m.ts ${args.limit ? `LIMIT ${Number(args.limit)}` : ''}`,
+     WHERE m.is_bot = 0 AND c.message_id IS NULL ORDER BY m.ts LIMIT ?`,
   )
-  .all()
+  .all(limit)
   .filter(isRow);
-const size = Number(args.batch);
 const batches = Array.from({ length: Math.ceil(pending.length / size) }, (_, index) =>
   pending.slice(index * size, (index + 1) * size),
 );
@@ -105,22 +105,34 @@ const classifyBatch = (batch: readonly Row[]) =>
       ],
     });
     const known = new Set(batch.map((row) => row.id));
+    let stored = 0;
     for (const item of response.value.items) {
       if (!known.has(item.id)) {
         continue;
       }
+      known.delete(item.id);
+      stored++;
       const kind = KINDS.find((candidate) => candidate === item.kind) ?? 'other';
       insertClassification.run(item.id, kind, clamp(item.sentiment), item.topic, DEFAULT_MODEL);
       for (const mention of item.products) {
         insertMention.run(item.id, mention.product, clamp(mention.sentiment));
       }
     }
-    return response.value.items.length;
+    return stored;
   }).pipe(
     AiUsage.withStage('classify-messages'),
     Effect.provide(AiService.languageModel(DEFAULT_MODEL, { thinking: false })),
-    Effect.catch((error) => Effect.logWarning(`batch failed: ${String(error)}`).pipe(Effect.as(0))),
+    // One failed batch leaves its messages unclassified for the next run rather than ending this one.
+    Effect.catch((error) =>
+      Effect.sync(() => {
+        failed++;
+        console.warn(`\nbatch failed: ${String(error)}`);
+        return 0;
+      }),
+    ),
   );
+
+let failed = 0;
 
 const metering = meter(DirectAiServiceLayer, join(dirname(args.db), 'classify-trace.jsonl'));
 const program = Effect.gen(function* () {
@@ -139,8 +151,12 @@ const program = Effect.gen(function* () {
     { concurrency: Number(args.concurrency), discard: true },
   );
   process.stdout.write('\n');
+  console.log(`${done} of ${pending.length} classified; ${failed} batches failed.`);
   for (const line of costReport(metering.events(), done)) {
     console.log(line);
+  }
+  if (failed > 0) {
+    process.exitCode = 1;
   }
 }).pipe(Effect.provide(metering.layer));
 

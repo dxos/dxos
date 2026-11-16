@@ -41,10 +41,16 @@ const SYSTEM = `You write a short, factual profile of one member of the Cloudfla
 - notable: one sentence on why this person matters to Cloudflare (a power user who answers others, a frustrated customer at risk, a heavy user of a new product, …).
 Use only what the messages say; do not invent employers or projects.`;
 
-type Person = { readonly author_id: string; readonly author: string; readonly role: string; readonly n: number };
-
-const isPerson = (value: unknown): value is Person =>
-  typeof value === 'object' && value !== null && 'author_id' in value && 'author' in value && 'role' in value;
+const Person = Schema.Struct({
+  author_id: Schema.String,
+  author: Schema.String,
+  role: Schema.String,
+  n: Schema.Number,
+});
+type Person = typeof Person.Type;
+const isPerson = Schema.is(Person);
+const Line = Schema.Struct({ channel: Schema.String, thread: Schema.String, text: Schema.String });
+const isLine = Schema.is(Line);
 
 const { values: args } = parseArgs({
   options: {
@@ -66,20 +72,23 @@ CREATE TABLE profile (author_id TEXT PRIMARY KEY, author TEXT, role TEXT, why TE
 // External helpers: people who are not staff, answering in others' threads or replying to others.
 const helpers = db
   .prepare(
-    `SELECT m.author_id, m.author, 'helper' AS role, COUNT(*) AS n FROM message m
-     LEFT JOIN thread t ON t.id = m.thread LEFT JOIN member mb ON mb.id = m.author_id
-     WHERE m.is_bot = 0 AND COALESCE(mb.staff, 0) = 0 AND COALESCE(mb.former, 0) = 0
-       AND ((t.starter_id IS NOT NULL AND t.starter_id <> m.author_id)
-         OR (m.reply_author_id IS NOT NULL AND m.reply_author_id <> m.author_id))
-     GROUP BY m.author_id ORDER BY COUNT(DISTINCT COALESCE(t.starter_id, m.reply_author_id)) DESC, n DESC LIMIT ?`,
+    `SELECT author_id, COALESCE(MAX(author), author_id) AS author, 'helper' AS role, COUNT(*) AS n FROM (
+       SELECT m.author_id, m.author,
+         CASE WHEN m.reply_author_id IS NOT NULL AND m.reply_author_id <> m.author_id THEN m.reply_author_id
+              WHEN t.starter_id IS NOT NULL AND t.starter_id <> m.author_id THEN t.starter_id END AS person
+       FROM message m LEFT JOIN thread t ON t.id = m.thread LEFT JOIN member mb ON mb.id = m.author_id
+       WHERE m.is_bot = 0 AND COALESCE(mb.staff, 0) = 0 AND COALESCE(mb.former, 0) = 0
+     ) WHERE person IS NOT NULL
+     GROUP BY author_id ORDER BY COUNT(DISTINCT person) DESC, n DESC LIMIT ?`,
   )
   .all(Number(args.helpers))
   .filter(isPerson);
 const askers = db
   .prepare(
-    `SELECT m.author_id, m.author, 'asker' AS role, COUNT(*) AS n FROM message m
+    `SELECT m.author_id, COALESCE(MAX(m.author), m.author_id) AS author, 'asker' AS role, COUNT(*) AS n FROM message m
      JOIN classification c ON c.message_id = m.id LEFT JOIN member mb ON mb.id = m.author_id
-     WHERE m.is_bot = 0 AND COALESCE(mb.staff, 0) = 0 AND c.kind IN ('question', 'bug-report')
+     WHERE m.is_bot = 0 AND COALESCE(mb.staff, 0) = 0 AND COALESCE(mb.former, 0) = 0
+       AND c.kind IN ('question', 'bug-report')
      GROUP BY m.author_id ORDER BY n DESC LIMIT ?`,
   )
   .all(Number(args.askers))
@@ -92,8 +101,8 @@ const messagesOf = db.prepare(
 );
 const insert = db.prepare('INSERT OR REPLACE INTO profile VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 const lineOf = (row: unknown): string =>
-  row && typeof row === 'object' && 'channel' in row && 'text' in row && typeof row.text === 'string'
-    ? `[#${String(row.channel)}${'thread' in row && row.thread ? ` / ${String(row.thread)}` : ''}] ${row.text.replace(/\s+/g, ' ').slice(0, 400)}`
+  isLine(row)
+    ? `[#${row.channel}${row.thread ? ` / ${row.thread}` : ''}] ${row.text.replace(/\s+/g, ' ').slice(0, 400)}`
     : '';
 
 const profile = (person: Person) =>
@@ -122,8 +131,15 @@ const profile = (person: Person) =>
   }).pipe(
     AiUsage.withStage('profiles'),
     Effect.provide(AiService.languageModel(DEFAULT_MODEL, { thinking: true })),
-    Effect.catch((error) => Effect.logWarning(`${person.author} failed: ${String(error)}`)),
+    Effect.catch((error) =>
+      Effect.sync(() => {
+        failed++;
+        console.warn(`${person.author} failed: ${String(error)}`);
+      }),
+    ),
   );
+
+let failed = 0;
 
 const metering = meter(DirectAiServiceLayer, join(dirname(args.db), 'profiles-trace.jsonl'));
 const program = Effect.forEach(people, profile, { concurrency: 4, discard: true }).pipe(
@@ -131,6 +147,10 @@ const program = Effect.forEach(people, profile, { concurrency: 4, discard: true 
     Effect.sync(() => {
       for (const line of costReport(metering.events(), people.length)) {
         console.log(line);
+      }
+      if (failed > 0) {
+        console.error(`${failed} profiles failed.`);
+        process.exitCode = 1;
       }
     }),
   ),

@@ -12,13 +12,12 @@
 //   thread(id, channel, name, starter_id, created)
 //   member(id, name, roles, staff, expert, former)
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { parseArgs } from 'node:util';
 
-import { type MemberRecord } from '../discord-export.ts';
-import { isExportFile, readExportFile } from '../export-format.ts';
+import { isExportFile, readExportFile, readMembers } from '../export-format.ts';
 
 /** Roles the Cloudflare server gives its own people, and the ones it gives recognised community experts. */
 const STAFF_ROLES = new Set(['Cloudflare', 'Cloudflare (Server Owner)', 'Cloudflare Community Team']);
@@ -37,7 +36,7 @@ if (!args.export?.length || !args.db) {
   process.exit(1);
 }
 
-export const SCHEMA = `
+const SCHEMA = `
 CREATE TABLE IF NOT EXISTS message (
   id TEXT PRIMARY KEY, channel TEXT NOT NULL, thread TEXT, thread_name TEXT, author_id TEXT NOT NULL, author TEXT,
   ts TEXT NOT NULL, text TEXT NOT NULL, reply_to TEXT, reply_author_id TEXT, is_bot INTEGER NOT NULL
@@ -64,32 +63,35 @@ const insertThread = db.prepare('INSERT OR REPLACE INTO thread VALUES (?, ?, ?, 
 const insertMember = db.prepare('INSERT OR REPLACE INTO member VALUES (?, ?, ?, ?, ?, ?)');
 
 let messages = 0;
-const authorOf = new Map<string, string>();
+const authorOf = new Map<string, { readonly author: string; readonly ts: string }>();
+const threads: string[] = [];
 const pendingReplies: Array<{ readonly id: string; readonly replyTo: string }> = [];
 for (const dir of args.export) {
   for (const name of readdirSync(dir).filter(isExportFile)) {
     const file = readExportFile(join(dir, name));
     // A thread file names its parent channel as its category; a channel file has none.
-    const header = file;
-    const isThread = (header.channel.type ?? '').includes('Thread');
-    const channel = isThread ? (header.channel.category ?? 'unknown') : (header.channel.name ?? header.channel.id);
-    const thread = isThread ? header.channel.id : null;
+    const isThread = (file.channel.type ?? '').includes('Thread');
+    const channel = isThread ? (file.channel.category ?? 'unknown') : (file.channel.name ?? file.channel.id);
+    const thread = isThread ? file.channel.id : null;
     const sorted = [...file.messages].sort((left, right) => (BigInt(left.id) < BigInt(right.id) ? -1 : 1));
-    if (thread && sorted.length > 0) {
-      insertThread.run(thread, channel, header.channel.name ?? null, sorted[0].author.id, sorted[0].timestamp ?? null);
+    if (thread) {
+      // The starter is the message the thread grew from, which shares the thread's id; an export window can begin after
+      // it, so the first exported message is not necessarily the starter. Resolved once every file is read.
+      insertThread.run(thread, channel, file.channel.name ?? null, null, null);
+      threads.push(thread);
     }
     for (const message of sorted) {
       const text = (message.content ?? '').trim();
       if (text.length === 0) {
         continue;
       }
-      authorOf.set(message.id, message.author.id);
+      authorOf.set(message.id, { author: message.author.id, ts: message.timestamp ?? '' });
       const replyTo = message.reference?.messageId ?? null;
       insertMessage.run(
         message.id,
         channel,
         thread,
-        isThread ? (header.channel.name ?? null) : null,
+        isThread ? (file.channel.name ?? null) : null,
         message.author.id,
         message.author.nickname ?? message.author.name ?? null,
         message.timestamp ?? '',
@@ -109,20 +111,26 @@ for (const dir of args.export) {
 // Replies are resolved after every file is read, since a reply can quote a message from another export file.
 const setReplyAuthor = db.prepare('UPDATE message SET reply_author_id = ? WHERE id = ?');
 for (const { id, replyTo } of pendingReplies) {
-  const author = authorOf.get(replyTo);
-  if (author) {
-    setReplyAuthor.run(author, id);
+  const parent = authorOf.get(replyTo);
+  if (parent) {
+    setReplyAuthor.run(parent.author, id);
+  }
+}
+
+// A thread whose starter message is outside the exported window keeps a NULL starter, and the queries skip it.
+const setStarter = db.prepare('UPDATE thread SET starter_id = ?, created = ? WHERE id = ?');
+let started = 0;
+for (const thread of threads) {
+  const starter = authorOf.get(thread);
+  if (starter) {
+    setStarter.run(starter.author, starter.ts, thread);
+    started++;
   }
 }
 
 let members = 0;
 for (const dir of args.export) {
-  const file = join(dir, 'members.json');
-  if (!existsSync(file)) {
-    continue;
-  }
-  const records: Record<string, MemberRecord> = JSON.parse(readFileSync(file, 'utf8'));
-  for (const [id, record] of Object.entries(records)) {
+  for (const [id, record] of Object.entries(readMembers(join(dir, 'members.json')))) {
     // Role names can carry invisible characters (the staff role is spelled with a zero-width space), so match on the
     // visible name.
     const roles = record.roles.map((role) => role.replace(/[\u200B-\u200D\uFEFF]/g, ''));
@@ -138,5 +146,7 @@ for (const dir of args.export) {
   }
 }
 
-console.log(`${messages} messages, ${pendingReplies.length} replies, ${members} members → ${args.db}`);
+console.log(
+  `${messages} messages, ${pendingReplies.length} replies, ${started} of ${threads.length} thread starters, ${members} members → ${args.db}`,
+);
 db.close();
