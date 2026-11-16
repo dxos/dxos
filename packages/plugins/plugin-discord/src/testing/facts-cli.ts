@@ -41,7 +41,14 @@ const PREFIXES: ReadonlyArray<readonly [string, string]> = [
 /** The SPARQL prologue the prefixes above stand for, prepended to every query so it can use them. */
 const PROLOGUE = PREFIXES.map(([iri, prefix]) => `PREFIX ${prefix} <${iri}>`).join('\n');
 
+/** An entity minted inside one fact's graph (`…/semantic/graph/<hash>#python-workers`) reads best as its local name. */
+const GRAPH_LOCAL = /^https:\/\/dxos\.org\/semantic\/graph\/[^#]+#(.+)$/;
+
 const shorten = (value: string): string => {
+  const local = GRAPH_LOCAL.exec(value);
+  if (local) {
+    return `#${local[1]}`;
+  }
   for (const [iri, prefix] of PREFIXES) {
     if (value.startsWith(iri)) {
       return `${prefix}${value.slice(iri.length)}`;
