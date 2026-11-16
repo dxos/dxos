@@ -18,12 +18,14 @@ Each extension is defined in the Appendix or resolved via its URI.
 | Term        | URI                            |
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `op@1.1`    | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -201,7 +203,7 @@ op Open
     navigation?: immediate        # skip validation; expand path only
     scrollIntoView?: boolean      # default true; set false to suppress auto-scroll
     state?: any
-    variant?: string
+    variant?: string              # a linked companion (`~comments`) opens beside the last opened plank
   output: string[]
   effects: [echo:read, layout:state]
   requires: [AppGraph, AttentionCapabilities, ClientCapabilities, DeckCapabilities]
@@ -443,6 +445,23 @@ feat F-1: Deck Presentations
     when: viewing plank controls
     then: the reordering controls (increment-start / increment-end) are hidden pending a
           reordering UX revisit
+
+  req F-1.10:
+    when: a sliding deck scrolls, or a plank folds into or out of its left pile
+    then: the deck's front names the first plank not folded with at least half its width in view; a deck that is not
+          sliding names its first plank, and a flat deck (flattened, or mobile) its current one; a sliding deck whose
+          planks changed since it last measured names none until it measures the planks it shows
+
+  req F-1.11:
+    when: the deck shows planks in a space
+    then: it reports its front plank there, when that plank is in the space, as the viewport of the space's
+          `ViewLocation` (keyed by the space's EID), and its planks there whose companion is open, with the companion
+          tab it shows them in, as the space's `AppCapabilities.Companions` view state; a space it no longer shows goes
+          back to the defaults
+
+  req F-1.12:
+    when: a `LayoutAccent` contribution holds a palette hue
+    then: every plank heading, companions included, takes a light wash of that hue over a one-pixel underline in it
 ```
 
 ```mdl
@@ -916,6 +935,62 @@ test QA-2: Sidebar and companion toggles
       do: Click the companion toggle again.
       invoke: [op:UpdateCompanion] { open: false }
       expect: the companion pane closes
+```
+
+## Changelog
+
+```mdl
+decision D-1: The deck reports where it is scrolled as its front plank, the first one not folded with at least half its width in view, and whether it shows only its current plank, through `front` and `flat` on the layout. A follower in plugin-space mirrors a leader's deck scroll with them.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.10]
+  why: The scroll offset depends on the viewport's width and the planks' sizes; the plank at the front reads the same in another deck. The fold pass already measures every plank's place in the viewport. A plank that slides off the left edge without folding leaves a sliver, so being unfolded is not enough.
+  rejected: Expose the scroll offset in pixels.
+```
+
+```mdl
+decision D-2: A sliding deck re-measures its front when its planks change, not only their number, so a plank replaced in place is measured, and it keeps the planks each measurement was taken among; until it has measured the planks it shows (after a plank closes, before or at the front, a reorder, or the deck starting to slide), `front` is unset rather than naming a plank it may be nowhere near. Fills in [D-1].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.10]
+  why: The layout is broadcast the moment it changes, before the fold pass runs, so a stale fallback reached followers as the leader's front and slid them to the first plank and back.
+  rejected:
+    - Name the first plank while the front is stale; the first plank can be far from where the deck is scrolled.
+    - Withhold only a front plank that closed; a plank closing before it shifts the deck just as far.
+```
+
+```mdl
+decision D-3: The deck's front, flatness and open companions stay deck state rather than fields on the generic layout. The deck reports its front as the space's `ViewLocation` viewport and its open companions as `AppCapabilities.Companions` view state, and plugin-space's follow shows them with the generic `LayoutOperation.ScrollIntoView` and `UpdateCompanion` (org.dxos.plugin.space#D-79); the heading wash comes from a `LayoutAccent` contribution. Replaces how [D-1] publishes the front.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-1.10, F-1.11, F-1.12]
+  why: `front`, `flat` and companion state describe the deck, not every layout. Reporting them as view state lets the follow carry them like any other followed state, and applying them through layout operations keeps the follow free of deck code.
+  rejected:
+    - Generic layout fields for the front and companions; they are the deck's, not every layout's.
+    - A deck `follow` that opens what the leader shows; every plugin with state that needs navigating would need its own.
+    - plugin-space reading the deck's state directly; it ties follow to one layout plugin.
+```
+
+```mdl
+decision D-4: `LayoutOperation.Set` takes an optional `workspace`, as `Open` does, so a follow can land each view with one `Set` or `Open` that names the space's workspace rather than a `SwitchWorkspace` before it.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.11]
+  why: Two operations for one navigation race: the workspace switch seeds the space's first plank and scrolls to it while the open is still on its way. The URL a `Set` writes names its workspace, and projecting it switches the deck there.
+  rejected:
+    - Await `SwitchWorkspace` before opening; its seed still writes a plank and a scroll intent the follow then replaces.
+```
+
+```mdl
+decision D-5: `Open`'s `variant`, when it is a linked segment (`~comments`), opens that companion beside the plank the open lands on, in the same navigation.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [op Open]
+  why: Opening an object with a companion took `Open` and then `UpdateCompanion`, two navigations where `UpdateCompanion` read a deck that `Open`'s navigation may not have applied yet.
+  rejected: A new `companion` field, since `variant` was unread.
 ```
 
 ---

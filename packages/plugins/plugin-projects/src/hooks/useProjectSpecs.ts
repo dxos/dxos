@@ -8,7 +8,7 @@ import { useCallback, useMemo } from 'react';
 
 import type * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
-import { type Ref } from '@dxos/echo';
+import { Obj, type Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 
@@ -36,13 +36,13 @@ export const useProjectSpecTree = (project: Project.Project): SpecTreeEntry[] =>
 /** The spec the project's Specs tab shows: the reader's pick at any depth, else the project's first. */
 export const useSelectedSpec = (project: Project.Project): Spec.Spec | undefined => {
   const tree = useProjectSpecTree(project);
-  const { spec: selectedId } = useViewState(ProjectView.aspect, project.id);
+  const { spec: selectedId } = useViewState(ProjectView.aspect, Obj.getURI(project));
   return tree.find(({ spec }) => spec.id === selectedId)?.spec ?? tree[0]?.spec;
 };
 
 /** Shows `spec`, one of the project's or one nested beneath them, on the project's Specs tab. */
 export const useSelectSpec = (project: Project.Project) => {
-  const { update } = useViewStateActions(ProjectView.aspect, project.id);
+  const { update } = useViewStateActions(ProjectView.aspect, Obj.getURI(project));
   return useCallback((spec: Spec.Spec) => update((prev) => ({ ...prev, tab: 'spec', spec: spec.id })), [update]);
 };
 

@@ -120,7 +120,7 @@ const createSpecCompanionExtension = Effect.fnUntraced(function* () {
       const specs = get(Obj.atomReactive(get(Obj.atom(project)).specs ?? [])).filter(Spec.instanceOf);
       const tree = readSpecTree(specs, get);
       const [viewState] = get(viewStateAtom);
-      const picked = viewState ? get(viewState.atom(ProjectView.aspect, project.id)).spec : undefined;
+      const picked = viewState ? get(viewState.atom(ProjectView.aspect, Obj.getURI(project))).spec : undefined;
       const shown = (tree.find(({ spec }) => spec.id === picked) ?? tree[0])?.spec;
       return Effect.succeed(
         shown ? groupsFor(get(viewsAtom), get(Obj.atom(shown)).dialects).map(makeSpecCompanion) : [],

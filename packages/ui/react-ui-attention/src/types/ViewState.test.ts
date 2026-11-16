@@ -17,6 +17,8 @@ const Counter = define({
   defaultValue: () => ({ value: 0 }),
 });
 
+const Followed = define({ ...Counter, key: 'followed', follow: 'write' });
+
 describe('Manager', () => {
   const make = () => {
     const registry = Registry.make();
@@ -51,5 +53,22 @@ describe('Manager', () => {
     manager.set(Counter, 'a', { value: 1 });
     manager.set(Counter, 'b', { value: 2 });
     expect(new Set(manager.contexts(Counter))).toEqual(new Set(['a', 'b']));
+  });
+
+  test("a follower takes the leader's encoded values of followed aspects, holding those for an aspect it has not used", ({
+    expect,
+  }) => {
+    const leader = make();
+    leader.set(Counter, 'a', { value: 1 });
+    leader.set(Followed, 'a', { value: 2 });
+    leader.set(Followed, 'b', { value: 3 });
+    const sent = leader.followed(['a']);
+    expect(sent).toEqual({ followed: { a: { value: 2 } } });
+
+    const follower = make();
+    follower.setEncoded('followed', 'a', sent.followed.a);
+    follower.setEncoded('followed', 'c', 'not a counter');
+    expect(follower.get(Followed, 'a')).toEqual({ value: 2 });
+    expect(follower.get(Followed, 'c')).toEqual({ value: 0 });
   });
 });

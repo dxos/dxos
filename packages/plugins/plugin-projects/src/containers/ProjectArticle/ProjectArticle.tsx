@@ -91,10 +91,11 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
-  // The selected tab and the chart toggle are view state under the project's id, so they outlive
-  // the plank and the reload.
-  const { tab, pipeline: showPipeline, axis = 'time', legend = 'title' } = useViewState(ProjectView.aspect, subject.id);
-  const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
+  // The selected tab and the chart toggle are view state under the project's EID, so they outlive
+  // the plank and the reload, and a follower takes them.
+  const viewKey = Obj.getURI(subject);
+  const { tab, pipeline: showPipeline, axis = 'time', legend = 'title' } = useViewState(ProjectView.aspect, viewKey);
+  const { update: updateView } = useViewStateActions(ProjectView.aspect, viewKey);
   const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
   const invoker = Hooks.useOperationInvoker();
   const { invokePromise } = invoker;
