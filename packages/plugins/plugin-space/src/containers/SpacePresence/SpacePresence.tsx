@@ -114,6 +114,10 @@ export const FullPresence = ({ size = 'md', action, ...props }: FullPresenceProp
   );
 
   if (members.length === 0) {
+    // A list emptied while open stays closed when viewers return.
+    if (open) {
+      setOpen(false);
+    }
     return null;
   }
 
@@ -138,6 +142,7 @@ export const FullPresence = ({ size = 'md', action, ...props }: FullPresenceProp
           align='center'
           classNames='dx-avatar-group inline-flex [&>*+*]:-ms-2'
           data-testid='spacePlugin.presence'
+          data-follow-keep
         >
           {members.slice(0, 3).map((member, i) => (
             <Popover.Trigger key={member.identityKey} asChild value={member.rowId}>
@@ -169,7 +174,7 @@ export const FullPresence = ({ size = 'md', action, ...props }: FullPresenceProp
         </Layout.Flex>
       </Popover.Anchor>
       {/* The Members companion's size, so the two lists read alike; the plank header's would be larger. */}
-      <Popover.Content size='md' classNames='w-96' aria-label={title}>
+      <Popover.Content size='md' classNames='w-96' aria-label={title} data-follow-keep>
         <PresenceList.Root {...props}>
           <Popover.Header>
             <PresenceList.Toolbar
