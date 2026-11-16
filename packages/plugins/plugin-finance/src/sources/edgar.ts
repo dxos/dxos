@@ -196,10 +196,19 @@ export const parseForm4 = (xml: string, filing: Pick<FilingEntry, 'accession' | 
   });
 };
 
-/** A ticker's Form 4 transactions filed on or after `since` (ISO day). */
-export const insiderTrades = (cik: string, since: string): Effect.Effect<Finance.Observation[], SourceError> =>
+/**
+ * A ticker's Form 4 transactions filed on or after `since` (ISO day). `isStored` names filings already ingested,
+ * whose documents are not fetched again.
+ */
+export const insiderTrades = (
+  cik: string,
+  since: string,
+  isStored: (accession: string) => boolean = () => false,
+): Effect.Effect<Finance.Observation[], SourceError> =>
   Effect.gen(function* () {
-    const filings = (yield* companyFilings(cik, '4')).filter(({ form, filed }) => form === '4' && filed >= since);
+    const filings = (yield* companyFilings(cik, '4')).filter(
+      ({ accession, form, filed }) => form === '4' && filed >= since && !isStored(accession),
+    );
     const observations: Finance.Observation[] = [];
     for (const filing of filings) {
       const { folder, files } = yield* filingXmlFiles(filing.link);
