@@ -13,14 +13,16 @@ block only the tasks that name them.
       `tsconfig.json`, `vite.config.ts`. Dependencies: `effect`, `@dxos/errors`, `@dxos/util` only [F-1.2].
 - [ ] Move the fact schemas from `pipeline-rdf/src/types` unchanged: `Fact`, `Assertion`, `Term`
       (`EntityTerm`, `LiteralTerm`), `Entity`, `EntityKind`, `Attribution`, `Factuality`, `Illocution` [F-2.1].
-- [ ] Add `FactQuery` (merge of `BrainService.FactQuery` and `SemanticQuery`), `SparqlTerm`, `SparqlRow`,
+- [ ] Add `MemoryQuery<T>` and its kinds (`FactsQuery`, `GraphsQuery`, `SparqlQuery`, `PredicatesQuery`,
+      `CursorQuery`), with a typed constructor and a result schema per kind [F-3.2, F-3.7]. Add `FactQuery`
+      (merge of `BrainService.FactQuery` and `SemanticQuery`), `SparqlTerm`, `SparqlRow`,
       `PredicateEntry` (from `Ontology.Entry`), `ReadCursor`, `PutOptions`, `Subscription`, `MemoryEvent`,
       `GraphStatus`.
 - [ ] Add the pure functions `graphStatus` (from `Graph.status`), `currentFacts`, `termValue`, `termText`,
       `factText` (from `BrainService`) [F-2.3]. Check each has no `n3` import.
 - [ ] Add `MemoryError` [F-6.1] and the `MemoryService` tag (`@dxos/echo-memory/MemoryService`) with its API.
 - [ ] Add `MAX_SUBSCRIPTIONS = 256` (replaces `BrainService.MAX_TRIGGERS` and edge's `MAX_TRIGGERS`).
-- [ ] Tests: T-6 (JSON round trip of `Fact`, `Subscription`, `MemoryEvent`); a decode test over facts
+- [ ] Tests: T-6 (JSON round trip of `Fact`, `Subscription`, `MemoryEvent`, every MemoryQuery kind); a decode test over facts
       fixtures already in the repo (`pipeline-rdf` testing data) for [F-2.1].
 - [ ] Add a `## Rules` check run (`no-implementation-deps`) to CI's agentic review scope.
 
@@ -40,9 +42,9 @@ Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `Fa
 - [ ] `layer(storage)`, `layerFile(path)`, `layerMemory` [F-7.1].
 - [ ] HTTP client layer and fetch-style handler, from `FactStoreHttp` (extend it to the event-base ops)
       [F-7.3]. Move `pipeline-rdf/src/testing/fact-server.ts` here.
-- [ ] Tests T-1 to T-5; port `fact-store.test.ts`, `fact-store-live.test.ts`, `fact-store-http.test.ts`
+- [ ] Tests T-1 to T-5 and T-7; port `fact-store.test.ts`, `fact-store-live.test.ts`, `fact-store-http.test.ts`
       and `BrainMemory.test.ts`.
-- [ ] Decide `select`/`rows` per **Q-2** and change notifications per **Q-3** (plugin-brain's `withNotify`).
+- [ ] Decide the `graphs`/`sparql` kinds per **Q-2**, event-base reads per **Q-5**, and change notifications per **Q-3** (plugin-brain's `withNotify`).
 
 ## 3. EDGE implementation (`dxos/edge`) — missing
 
@@ -52,8 +54,8 @@ Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `Fa
 - [ ] Migrate data: merge each agent's facts, cursors, triggers and outboxes from its `BrainObject`
       into its space's memory; set each subscription's `owner` to the agent (Q-4 decides whether facts
       stay private to the agent).
-- [ ] `BrainServiceEntrypoint` and `api.ts`: expose the `MemoryService` ops over RPC (add `select`,
-      `rows`, `predicates` if Q-2 keeps them); remember `rpcMethods` in `durable-objects.ts`.
+- [ ] `BrainServiceEntrypoint` and `api.ts`: expose the `MemoryService` ops over RPC, with `query` taking a
+      MemoryQuery as JSON and returning its result encoded by kind [F-3.7]; remember `rpcMethods` in `durable-objects.ts`.
 - [ ] `brain/types.ts`: drop `BrainFactQuery`, `BrainReadCursor`, `MAX_TRIGGERS` in favour of the
       echo-memory types.
 - [ ] `operation-service/src/brain-service.ts`: provide `MemoryService` instead of `BrainService`.

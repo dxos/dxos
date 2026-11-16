@@ -45,17 +45,13 @@ The following extension dialects are used in this document.
 service MemoryService
   desc: |
     Memory of one space, in two halves over one store.
-    - Knowledge base: `put` stores facts; `query`, `select` and `rows` read them back.
+    - Knowledge base: `put` stores facts; `query` reads them back, with one MemoryQuery per kind of read.
     - Event base: a subscription carries goal rules; whenever put facts or the clock wake them, an event is
       queued in that subscription's own outbox, which its consumer drains with `take` and `ack`.
     Every op is an Effect that fails only with MemoryError. Context tag `@dxos/echo-memory/MemoryService`.
   ops:
     put(facts: Fact[], options?: PutOptions) → number           # events queued [F-3.1, F-4.3]
-    query(query: FactQuery) → Fact[]                            # [F-3.2]
-    select(sparql: string) → Fact[]                             # SELECT ?g; whole graphs [F-3.3]
-    rows(sparql: string) → SparqlRow[]                          # any SELECT, solutions as is [F-3.3]
-    predicates() → PredicateEntry[]                             # [F-3.4]
-    cursor(source: string) → string | undefined                 # [F-3.5]
+    query<T>(query: MemoryQuery<T>) → T                         # every knowledge-base read [F-3.2]
     reset() → void                                              # [F-3.6]
     subscribe(subscription: Subscription) → boolean             # false at MAX_SUBSCRIPTIONS [F-4.1]
     subscriptions(owner?: string) → Subscription[]              # oldest first [F-4.1]
@@ -187,7 +183,7 @@ type GraphStatus
 
 ```mdl
 type FactQuery
-  desc: A structured query; every field set must hold. Answered without SPARQL on every implementation.
+  desc: What a FactsQuery selects; every field set must hold.
   fields:
     subjectEntity?: string        # entity key in the subject position
     entity?: string               # entity key in the subject or object position
@@ -265,6 +261,63 @@ type MemoryEvent
     at: string                    # ISO
 ```
 
+## Queries
+
+A `MemoryQuery<T>` is one read of the knowledge base whose answer has type `T`. It is a tagged struct:
+`_tag` names the kind, the other fields are its parameters, and `T` is fixed by the kind. Each kind
+has a constructor that returns the typed query (`MemoryQuery.facts(pattern)` is a
+`MemoryQuery<Fact[]>`), so `query(MemoryQuery.facts(pattern))` is typed `Fact[]` at the call site
+[F-3.2]. A query is plain JSON, and each kind names the schema of its result, so a remote client
+decodes an answer by the query's `_tag` [F-3.7].
+
+```mdl
+type MemoryQuery
+  desc: One read of the knowledge base; the kind fixes the result type T.
+  literals: FactsQuery | GraphsQuery | SparqlQuery | PredicatesQuery | CursorQuery
+```
+
+```mdl
+type FactsQuery
+  desc: |
+    Facts whose statement matches a pattern. Result: Fact[]. Answered without SPARQL on every
+    implementation [F-3.2].
+  fields:
+    _tag: facts
+    pattern: FactQuery
+```
+
+```mdl
+type GraphsQuery
+  desc: |
+    Every fact in the named graphs a SPARQL `SELECT ?g` binds. Result: Fact[] [F-3.3].
+  fields:
+    _tag: graphs
+    sparql: string
+```
+
+```mdl
+type SparqlQuery
+  desc: Any SPARQL SELECT, its solutions returned as written. Result: SparqlRow[] [F-3.3].
+  fields:
+    _tag: sparql
+    sparql: string
+```
+
+```mdl
+type PredicatesQuery
+  desc: The predicates the memory knows. Result: PredicateEntry[] [F-3.4].
+  fields:
+    _tag: predicates
+```
+
+```mdl
+type CursorQuery
+  desc: How far a source has been read. Result: string | undefined, the cursor's `through` [F-3.5].
+  fields:
+    _tag: cursor
+    source: string
+```
+
 ## Features
 
 ```mdl
@@ -313,21 +366,22 @@ feat F-3: Knowledge base
           counts the events queued [F-4.3]; a put with no facts only moves the cursor
 
   req F-3.2:
-    when: `query` is called
-    then: it returns every stored fact whose statement matches all of the set fields, and an entity key
-          matches both a graph-local slug and its absolute IRI
+    when: `query` is called with a MemoryQuery<T>
+    then: it answers with a T for that query's kind; there is no other read op on the knowledge base. A
+          FactsQuery returns every stored fact whose statement matches all of the pattern's set fields,
+          and an entity key matches both a graph-local slug and its absolute IRI
 
   req F-3.3:
-    when: `select` or `rows` is called with SPARQL
-    then: `select` runs a `SELECT ?g` and returns every fact in the graphs it binds; `rows` returns the
-          solutions as SparqlRows; anything but a SELECT fails with MemoryError
+    when: `query` is called with a GraphsQuery or a SparqlQuery
+    then: a GraphsQuery runs a `SELECT ?g` and returns every fact in the graphs it binds; a SparqlQuery
+          returns the solutions as SparqlRows; anything but a SELECT fails with MemoryError
 
   req F-3.4:
-    when: `predicates` is called
+    when: `query` is called with a PredicatesQuery
     then: it returns the seed vocabulary every memory starts with, then the predicates its facts minted
 
   req F-3.5:
-    when: `cursor` is called for a source
+    when: `query` is called with a CursorQuery for a source
     then: it returns the `through` of the last ReadCursor put for that source, or undefined; a memory that
           loses its facts loses its cursors with them, so the source is read again
 
@@ -335,6 +389,11 @@ feat F-3: Knowledge base
     when: `reset` is called
     then: the memory's facts, cursors and queued events are removed and the seed vocabulary is restored;
           its subscriptions stay, with their rule state started over
+
+  req F-3.7:
+    when: a MemoryQuery crosses a wire
+    then: it is sent as JSON, and the answer is decoded with the result schema its `_tag` names; a kind
+          the implementation does not support fails with MemoryError
 ```
 
 ```mdl
@@ -445,7 +504,7 @@ feat F-8: Deprecation of BrainService and FactStore
 ```mdl
 scenario T-1: Facts round-trip
   given: two MemoryServices from `layerMemory`, for spaces A and B
-  when: three facts are put in A and queried by `entity`
+  when: three facts are put in A and read with a FactsQuery on `entity`
   then:
     - query in A returns the facts whose subject or object is the entity
     - the same query in B returns nothing
@@ -467,7 +526,7 @@ scenario T-3: Quiet speakers wake nothing
   when: the same fact is put with `quiet: [alice]` and alice as the speaker
   then:
     - put returns 0
-    - query returns the fact
+    - a FactsQuery returns the fact
 ```
 
 ```mdl
@@ -484,8 +543,8 @@ scenario T-5: Reset keeps subscriptions
   given: a memory with facts, a cursor, a subscription and a queued event
   when: reset is called
   then:
-    - query and cursor return nothing
-    - predicates returns only the seed vocabulary
+    - a FactsQuery and a CursorQuery return nothing
+    - a PredicatesQuery returns only the seed vocabulary
     - subscriptions still returns the subscription; take returns nothing
 ```
 
@@ -494,6 +553,15 @@ scenario T-6: Wire form is JSON
   given: a Fact, a Subscription with a payload, and a MemoryEvent
   when: each is encoded, passed through JSON.stringify and JSON.parse, and decoded
   then: each decodes to a value equal to the original
+```
+
+```mdl
+scenario T-7: One query op, typed per kind
+  given: a memory holding facts about `dxos`
+  when: query is called with MemoryQuery.facts, MemoryQuery.sparql and MemoryQuery.cursor
+  then:
+    - each call is typed at the call site as Fact[], SparqlRow[] and string | undefined
+    - each answer, sent through the HTTP handler and client, decodes to an equal value
 ```
 
 ## Rules
@@ -694,6 +762,45 @@ question Q-4: With one store per space, can an agent keep facts the other agents
   options:
     - Shared: all facts in a space are visible to all agents in it.
     - Owned graphs: a graph may name an owning agent, and query reads only shared graphs and the caller's own.
+```
+
+```mdl
+decision D-16: Memory has a typed query, `MemoryQuery<T>`. Every query option is combined into one op, `query(MemoryQuery<T>) → T`, and the spec describes each kind of query.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [MemoryService, MemoryQuery, F-3.2]
+```
+
+```mdl
+decision D-17: The query kinds are `facts`, `graphs`, `sparql`, `predicates` and `cursor`, replacing the ops `query`, `select`, `rows`, `predicates` and `cursor`; the event-base reads (`subscriptions`, `take`, `nextDueAt`) stay ops. Fills in [D-16].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryQuery, F-3.2, F-3.3, F-3.4, F-3.5]
+  why: Those five are the knowledge-base reads; the event-base reads are tied to subscription ids and outbox state, which the query kinds do not touch.
+```
+
+```mdl
+decision D-18: A MemoryQuery is a tagged JSON struct whose `_tag` names the schema of its result; a constructor per kind gives the typed `MemoryQuery<T>`, and an unsupported kind fails with MemoryError. Fills in [D-16].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryQuery, F-3.7]
+  why: The query crosses EDGE RPC and HTTP, so T must be recoverable from data; a phantom type alone would leave the remote client unable to decode the answer.
+  rejected:
+    - One op per kind, which is what D-16 replaces.
+```
+
+```mdl
+question Q-5: Should the event-base reads (`subscriptions`, `take`, `nextDueAt`) also be MemoryQuery kinds?
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryQuery, F-4]
+  context: D-17 keeps them as ops. As kinds, every read of memory goes through one op; as ops, `query` stays about facts.
+  options:
+    - Ops: only knowledge-base reads are query kinds.
+    - Kinds: `subscriptions`, `events` and `nextDueAt` join MemoryQuery.
 ```
 
 ## Appendix: Extension Definitions
