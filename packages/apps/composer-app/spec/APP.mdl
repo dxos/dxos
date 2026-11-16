@@ -680,10 +680,10 @@ test QA-9: The guided tours
       do: Reload the page and run the global tour again.
       expect: it runs from "Sharing" to "Feedback" as before
     - name: Run a document's tour on a narrow plank
-      do: Narrow the window until the editor toolbar folds view mode into its overflow (⋮) menu, then run the document tour.
+      do: Narrow the window until the editor toolbar folds its Format group into a menu, then run the document tour.
       expect: |
-        every step still runs, and the step for a folded control opens the ⋮ menu and points at it
-        there
+        every step still runs, and the step for a folded control opens the menu that holds it (the
+        Format menu, or else ⋮) and points at it there
       note: |
         Which control folds first is decided by a pixel budget the tour cannot see, so a tour that
         only works at one window size is passing by luck.
@@ -1202,4 +1202,13 @@ decision D-14: QA-8 checks that each peer sees the other's cursor once both focu
   for: user:wittjosiah
   affects: [QA-8]
   why: The cursor spec is enabled again now that awareness state reaches a peer that joins after the last cursor move.
+```
+
+```mdl
+decision D-15: QA-9 narrows the window until the editor folds its Format group, and a toolbar step opens the folded group that holds its control before it tries the overflow menu. Amends [D-5].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-9]
+  why: The editor's Format and Insert groups fold in place before any control moves into ⋮, so on a narrow plank Bold sits in the Format menu, where a step that only opened ⋮ never found it.
 ```

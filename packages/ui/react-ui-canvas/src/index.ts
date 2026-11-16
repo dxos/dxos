@@ -4,6 +4,7 @@
 
 export * from './builder/index.ts';
 export * from './components/index.ts';
+export * from './content/index.ts';
 export * from './engine/index.ts';
 export * from './generator/index.ts';
 export * from './hooks/index.ts';

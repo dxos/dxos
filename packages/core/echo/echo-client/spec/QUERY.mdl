@@ -248,6 +248,7 @@ service QueryService
 
 ```mdl
 feat F-1: One engine, local views, remote sources
+  uses: [LocalQueryEngine, QueryService]
 
   req F-1.1:
     when: a live query is created
@@ -288,6 +289,7 @@ feat F-2: Local writes are synchronous
 
 ```mdl
 feat F-3: Characteristics and completeness
+  uses: [BranchCharacteristics, Completeness]
 
   req F-3.1:
     when: Query.characteristics(ast) is called
@@ -304,6 +306,7 @@ feat F-3: Characteristics and completeness
 
 ```mdl
 feat F-4: Versions
+  uses: [Version]
 
   req F-4.1:
     when: a remote row is sent
@@ -358,6 +361,7 @@ feat F-6: By-id queries
 
 ```mdl
 feat F-7: Traversal paths
+  uses: [PathEdge]
 
   req F-7.1:
     when: a traversal reaches a hit

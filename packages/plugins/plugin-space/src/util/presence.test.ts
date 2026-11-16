@@ -114,14 +114,13 @@ describe('parseViewingMessage', () => {
     });
   });
 
-  test("keeps a deck's extension values by id and drops extensions that are not an object", ({ expect }) => {
+  test("keeps a deck's view state by aspect and context, dropping aspects that are not an object", ({ expect }) => {
     const message = { identityKey: 'peer', added: [], removed: [] };
-    const extensions = { deck: { front: 'root/a' } };
-    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], extensions } })?.deck).toEqual({
-      planks: ['root/a'],
-      extensions,
-    });
-    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], extensions: ['deck'] } })?.deck).toEqual({
+    const deck = { 'org.dxos.plugin.deck.location': { 'echo://space': { front: 'root/a' } } };
+    expect(
+      parseViewingMessage({ ...message, deck: { planks: ['root/a'], viewState: { ...deck, tab: ['spec'] } } })?.deck,
+    ).toEqual({ planks: ['root/a'], viewState: deck });
+    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], viewState: ['deck'] } })?.deck).toEqual({
       planks: ['root/a'],
     });
   });

@@ -231,6 +231,7 @@ component MermaidDialects
 
 ```mdl
 feat F-1: Diagram kinds
+  uses: [Diagram, Dsl]
 
   req F-1.1: `diagram kind=` selects the engine: `structure` (the default), `sequence` or `dataflow`. Every kind reads the same `node`, `edge` and `group` statements.
 
@@ -243,6 +244,7 @@ feat F-1: Diagram kinds
 
 ```mdl
 feat F-2: Sequence diagrams
+  uses: [Diagnostics]
 
   req F-2.1: Participants are the nodes, in declaration order from left to right; the members of a `group` stay adjacent and are framed together.
 
@@ -285,6 +287,7 @@ feat F-3: Data-flow diagrams
 
 ```mdl
 feat F-4: Mermaid is deprecated
+  uses: [Dsl]
 
   req F-4.1: The `generate` operation and the mermaid compilers are marked deprecated and keep working.
 

@@ -126,6 +126,9 @@ export const isSameFollowTarget = (a?: SpaceSchema.FollowTarget, b?: SpaceSchema
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 // A session id becomes a graph node segment, so it must carry no separator.
 const isSessionId = (value: unknown): value is string => isString(value) && /^[A-Za-z0-9_-]{1,64}$/.test(value);
 
@@ -153,14 +156,14 @@ const parseDeck = (value: unknown): SpaceSchema.PeerDeck | undefined => {
   if (typeof value !== 'object' || value === null) {
     return undefined;
   }
-  const { planks, extensions } = value as Record<string, unknown>;
+  const { planks, viewState } = value as Record<string, unknown>;
+  const aspects = isRecord(viewState)
+    ? Object.fromEntries(
+        Object.entries(viewState).flatMap(([key, values]) => (isRecord(values) ? [[key, { ...values }]] : [])),
+      )
+    : {};
   return Array.isArray(planks)
-    ? {
-        planks: planks.filter(isString),
-        ...(typeof extensions === 'object' &&
-          extensions !== null &&
-          !Array.isArray(extensions) && { extensions: { ...extensions } }),
-      }
+    ? { planks: planks.filter(isString), ...(Object.keys(aspects).length > 0 && { viewState: aspects }) }
     : undefined;
 };
 

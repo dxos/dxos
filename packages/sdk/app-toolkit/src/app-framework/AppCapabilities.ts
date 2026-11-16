@@ -7,6 +7,7 @@
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
+import * as Option$ from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema$ from 'effect/Schema';
 import type * as Scope$ from 'effect/Scope';
@@ -28,6 +29,7 @@ import { type Translator as Translator$ } from '@dxos/i18n';
 import { type EID, type URI } from '@dxos/keys';
 import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
+import { type ViewState } from '@dxos/react-ui-attention/types';
 import type { Selection } from '@dxos/react-ui-attention/types';
 import type { AnchoredTo, Message, Thread } from '@dxos/types';
 import { type ChromaticPalette } from '@dxos/ui-types';
@@ -103,9 +105,9 @@ export const LayoutAccent = Capability$.make<Atom.Atom<ChromaticPalette | undefi
 /** How long what a follow opens has to mount; it is applied again on every update of the {@link FollowView} meanwhile. */
 export const FOLLOW_MOUNT_TIMEOUT = 5_000;
 
-/** What a follower shows of the session it follows, as handed to each {@link LocatorExtension}. */
-export type FollowView = Readonly<{
-  /** When the follow last updated the view; it advances on every tick, so an extension needs no timer of its own. */
+/** What a follower shows of the session it follows, as handed to a {@link Followable}'s `follow`. */
+export type FollowView<T = unknown> = Readonly<{
+  /** When the follow last updated the view; it advances on every tick, so a `follow` needs no timer of its own. */
   now: number;
   spaceId: string;
   /** The leader's open items in the space, in order. */
@@ -115,35 +117,91 @@ export type FollowView = Readonly<{
    * opens it at itself, absent while it cannot load the object yet.
    */
   attended: Readonly<{ key: EID.EID; path?: string; localPath?: string }>;
-  /** The leader's value for this extension in the space, when they sent one. */
-  value?: unknown;
+  /** The leader's values of the followed view state, by context: the EID of the space or of an object they show. */
+  values: Readonly<Record<string, T>>;
 }>;
 
 /**
- * Data a plugin adds to a session's location, which presence carries to peers without reading it, and how a follower
- * applies a leader's value, as an object's `Locator` reveals a peer's anchor.
+ * View state a follower takes from the session it follows. Presence sends this session's values of the aspect for the
+ * space and each object open in it, keyed by their EIDs; a follower writes the leader's into its own view state, or
+ * hands them to `follow` when merely writing them would not show the leader's view. Made with {@link makeFollowable}.
  */
-export type LocatorExtension = Readonly<{
-  /** Names the data; a follower hands a leader's value only to its own extension with the same id. */
-  id: string;
-  /** This session's value in each space it shows, by space id; it travels to peers as JSON. */
-  location: Atom.Atom<Readonly<Record<string, JsonValue>>>;
-  /** Whether its `follow` opens what the leader shows; with no such extension the follower opens the attended object. */
+export type Followable = Readonly<{
+  /** The aspect's key; a follower takes a leader's values only for a followable with the same key. */
+  key: string;
+  /** Whether its `follow` opens what the leader shows; with no such followable the follower opens the attended object. */
   navigates?: boolean;
+  /** This session's values for the given contexts, encoded as JSON, leaving out those it has not set. */
+  read: (viewState: ViewState.Manager, contextIds: readonly string[]) => Record<string, JsonValue>;
+  subscribe: (viewState: ViewState.Manager, contextId: string, onChange: () => void) => () => void;
+  /** Writes a leader's encoded value into this session's view state; one that does not decode is dropped. */
+  write: (viewState: ViewState.Manager, contextId: string, value: unknown) => void;
   /**
-   * Applies the leader's view until the scope closes, without moving focus or the caret. The returned atom holds whether
-   * it shows the view; any extension holding false pauses the follow. It runs synchronously when the follow starts, so the
-   * effect must not suspend: fork any asynchronous work into the scope.
+   * Applies the leader's view until the scope closes, without moving focus or the caret, in place of writing their
+   * values. The returned atom holds whether it shows the view; any followable holding false pauses the follow. It runs
+   * synchronously when the follow starts, so the effect must not suspend: fork any asynchronous work into the scope.
    */
   follow?: (view: Atom.Atom<FollowView>) => Effect$.Effect<Atom.Atom<boolean>, never, Scope$.Scope>;
 }>;
 
+const toJsonValue = (json: Schema$.Json): JsonValue =>
+  json === null || typeof json !== 'object'
+    ? json
+    : Array.isArray(json)
+      ? json.map(toJsonValue)
+      : Object.fromEntries(Object.entries(json).map(([key, value]) => [key, toJsonValue(value)]));
+
+/** Makes view state followable: a follower takes the leader's values of `aspect`, or `follow` applies them. */
+export const makeFollowable = <T, Encoded>({
+  aspect,
+  navigates,
+  follow,
+}: {
+  aspect: ViewState.Aspect<T, Encoded>;
+  navigates?: boolean;
+  follow?: (view: Atom.Atom<FollowView<T>>) => Effect$.Effect<Atom.Atom<boolean>, never, Scope$.Scope>;
+}): Followable => {
+  const codec = Schema$.toCodecJson(aspect.schema);
+  const encode = Schema$.encodeUnknownOption(codec);
+  const decode = Schema$.decodeUnknownOption(codec);
+  const decodeValues = (values: Readonly<Record<string, unknown>>): Record<string, T> =>
+    Object.fromEntries(
+      Object.entries(values).flatMap(([contextId, value]) =>
+        Option$.match(decode(value), { onNone: () => [], onSome: (decoded) => [[contextId, decoded]] }),
+      ),
+    );
+  return {
+    key: aspect.key,
+    ...(navigates && { navigates }),
+    read: (viewState, contextIds) => {
+      const set = new Set(viewState.contexts(aspect));
+      return Object.fromEntries(
+        contextIds.flatMap((contextId) =>
+          set.has(contextId)
+            ? Option$.match(encode(viewState.get(aspect, contextId)), {
+                onNone: () => [],
+                onSome: (json) => [[contextId, toJsonValue(json)]],
+              })
+            : [],
+        ),
+      );
+    },
+    subscribe: (viewState, contextId, onChange) => viewState.subscribe(aspect, contextId, onChange),
+    write: (viewState, contextId, value) =>
+      Option$.match(decode(value), {
+        onNone: () => {},
+        onSome: (decoded) => viewState.set(aspect, contextId, decoded),
+      }),
+    ...(follow && {
+      follow: (view) => follow(Atom.map(view, (current) => ({ ...current, values: decodeValues(current.values) }))),
+    }),
+  };
+};
+
 /**
  * @category Capability
  */
-export const LocatorExtension = Capability$.make<LocatorExtension>()(
-  'org.dxos.app-framework.capability.locatorExtension',
-);
+export const Followable = Capability$.make<Followable>()('org.dxos.app-framework.capability.followable');
 
 /**
  * @category Capability

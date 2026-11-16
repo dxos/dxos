@@ -18,6 +18,19 @@ export const pickValues = (values: AnyProperties | undefined, deps: readonly str
   return subset;
 };
 
+const lookupIds = new WeakMap<object, number>();
+let nextLookupId = 0;
+
+/** The key a lookup's load runs under: the lookup itself and its dependency values, so a rebuilt lookup reloads. */
+export const lookupKey = (lookup: object, subset: Record<string, unknown>): string => {
+  let id = lookupIds.get(lookup);
+  if (id === undefined) {
+    id = nextLookupId++;
+    lookupIds.set(lookup, id);
+  }
+  return `${id}:${JSON.stringify(subset)}`;
+};
+
 export type AsyncFieldEffectState<A> = {
   loading: boolean;
   error: unknown;

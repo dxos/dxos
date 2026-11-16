@@ -1,0 +1,13 @@
+---
+id: com.example.plugin
+name: Example
+extends: [com.example.base@0.1.0]
+---
+
+# Example
+
+```mdl
+surface article
+  role: article
+  component: ExampleArticle
+```

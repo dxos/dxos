@@ -64,6 +64,7 @@ op queryComposerLogs
 
 ```mdl
 feat F-1: Self-introspection from skill
+  uses: [queryComposerLogs]
 
   req F-1.1:
     when: assistant has the Doctor skill loaded
