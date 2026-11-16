@@ -71,7 +71,8 @@ const slideHighlightTheme = EditorView.baseTheme({
     backgroundColor: 'var(--color-hover-surface-subtle)',
     borderRadius: '2px',
   },
-  '.cm-slide-tag': { color: 'var(--color-info-text)' },
+  // Green, so a tag reads apart from the accent its attributes and the slot markers take.
+  '.cm-slide-tag': { color: 'var(--color-green-text)' },
   '.cm-slide-tag-attribute': { color: 'var(--color-accent-text)' },
   '.cm-slide-embed': { color: 'var(--color-success-text)' },
   '.cm-slide-notes': { color: 'var(--color-fg-subtle)', fontStyle: 'italic' },

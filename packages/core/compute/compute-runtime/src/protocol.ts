@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
-import { AnthropicResolver } from '@dxos/ai/resolvers';
+import { AnthropicResolver } from '@dxos/ai/anthropic';
 import { type BlobBackend } from '@dxos/blob';
 import * as Credential from '@dxos/compute/Credential';
 import * as Header from '@dxos/compute/Header';
@@ -19,7 +19,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { Database, type Entity, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, type TypeSource, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -63,6 +63,11 @@ export interface FunctionWrappingOptions {
    * Additional types to register with the database.
    */
   types?: Type.AnyEntity[];
+
+  /**
+   * Entities other than types to add to the database's registry, e.g. skills a handler binds by registry URI.
+   */
+  registry?: readonly Entity.Unknown[];
 
   /**
    * Toolkits to make available via the `OpaqueToolkitProvider`.
@@ -313,6 +318,9 @@ export class FunctionContext extends Resource {
     // read the queue back empty, which reads as a lost write rather than a missing schema.
     if (this.opts.types?.length && this.db) {
       this.db.graph.registry.add(this.opts.types);
+    }
+    if (this.opts.registry?.length && this.db) {
+      this.db.graph.registry.add(this.opts.registry);
     }
     if (this.opts.typeSource && this.client) {
       this.#unregisterTypeSource = this.client.graph.registerTypeSource(this.opts.typeSource);

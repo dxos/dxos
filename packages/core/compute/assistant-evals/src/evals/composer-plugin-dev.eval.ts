@@ -37,8 +37,8 @@ import * as Usage from '../Usage.ts';
 // plugin itself and uses it as the user would: it reads the clocks against the browser's own
 // timezone data, adds a clock, reloads, and removes it.
 //
-// The plugin guide the skill follows carries World Clock as a worked example, so this case measures
-// following the guide more than building something new.
+// The plugin guide the skill follows has no World Clock example: its worked examples are Hello and
+// Bookmarks. The case measures building something the guide does not show, from its patterns.
 //
 // Needs `DX_ANTHROPIC_API_KEY`, `claude` on PATH, and Playwright's Chromium. Publishing is out of
 // scope.

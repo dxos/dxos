@@ -11,7 +11,7 @@ import { SceneManager } from './SceneManager.ts';
 const PORT = 9006;
 const LATTICE_URL = storybookUrl('ui-react-ui-canvas-editor-components-canvaseditor--lattice', PORT);
 
-// The fixture, on the default 256x128 lattice with 128x64 gutters, columns and rows -1..1: A, B, C down
+// The fixture, on the default 256x128 lattice with 128x128 gutters, columns and rows -1..1: A, B, C down
 // column -1; a free cell above D and E in column 0; F spanning all three rows of column 1.
 test.describe('Canvas lattice', () => {
   let page: Page;
@@ -95,7 +95,8 @@ test.describe('Canvas lattice', () => {
     // E's east neighbour is F, so grow downwards: the south face most of a row down.
     const handle = await scene.handle('e', 's');
     const from = { x: handle.x + handle.width / 2, y: handle.y + handle.height / 2 };
-    const row = (192 * (await scene.zoom())) / 100;
+    // A row is a cell and a gutter: 256 scene units.
+    const row = (256 * (await scene.zoom())) / 100;
     await scene.drag(from, { x: from.x, y: from.y + row * 0.8 });
     const after = await scene.box(scene.node('e'));
     expect(Math.abs(after.y - before.y)).toBeLessThan(2);

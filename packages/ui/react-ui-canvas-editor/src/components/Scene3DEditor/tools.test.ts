@@ -72,6 +72,14 @@ describe('tools', () => {
     expect(doubleClickTarget(undefined, undefined, { x: 0, y: 1, z: 0 })).toBeUndefined();
   });
 
+  test('while a composite is being edited, a double-click off its parts leaves it', () => {
+    expect(doubleClickTarget(undefined, undefined, undefined, true)).toEqual({ leave: true });
+    // On one of its parts the double-click still does what it does anywhere.
+    expect(doubleClickTarget('box', undefined, { x: 0, y: 1, z: 0 }, true)).toEqual({
+      face: { element: 'box', normal: { x: 0, y: 1, z: 0 } },
+    });
+  });
+
   test('the extrude tool offers the face under the pointer: the selected face once there is one, else any face', () => {
     const top = { x: 0.1, y: 0.95, z: 0 };
     expect(extrudesFace('extrude', 'box', top, undefined)).toBe(true);

@@ -92,7 +92,8 @@ const computeNodeView = <S extends ComputeShape>(
     }
     // A shape with no compute node behind it (the ghost of a create or palette drag, or one whose node a delete or a
     // peer removed first) has no runtime state to read, so it shows what it is rather than mounting the live component.
-    if (!node.node || !controller.graph.findNode(node.node)) {
+    const computeId = node.data?.node;
+    if (!computeId || !controller.graph.findNode(computeId)) {
       const def = nodeDef(registry, node);
       return (
         <div className='dx-cover flex flex-col items-center justify-center gap-1 text-fg-muted'>

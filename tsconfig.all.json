@@ -553,6 +553,9 @@
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-inspector/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-iroh-beacon/tsconfig.json"
     },
     {
@@ -614,6 +617,9 @@
     },
     {
       "path": "packages/plugins/plugin-onboarding/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-ontology/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-osrm/tsconfig.json"
@@ -983,6 +989,9 @@
     },
     {
       "path": "packages/stories/stories-compute/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-echo/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-inbox/tsconfig.json"

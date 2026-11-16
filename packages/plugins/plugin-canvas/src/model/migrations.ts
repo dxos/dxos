@@ -4,10 +4,9 @@
 
 import { Migration } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { upgradeSceneContent } from '@dxos/react-ui-canvas/headless';
 
 import { Canvas } from '#types';
-
-import { upgradeSceneContent } from './content.ts';
 
 const isContentMap = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);

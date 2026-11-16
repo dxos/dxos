@@ -560,6 +560,7 @@ feat F-3: Review workflow
 
 ```mdl
 feat F-4: Version history
+  uses: [HistoryProvider]
 
   req F-4.1: Checkpoint/fork/base views MUST render historical content read-only from detached
     snapshots (contentAt), never by binding the live doc to old heads (I-7).
@@ -571,6 +572,7 @@ feat F-4: Version history
 
 ```mdl
 feat F-5: Comment threads
+  uses: [Delete, DeleteMessage]
 
   req F-5.1: The comment extension MUST create anchored threads from selections, keep AnchoredTo
     cursors in sync with edits, scope visibility to the active review branch, and honour the render
@@ -585,6 +587,7 @@ feat F-5: Comment threads
 
 ```mdl
 feat F-6: Per-thread agent
+  uses: [AgentIdentity]
 
   req F-6.1: Thread.agent gates AI involvement (absent/disabled = none); the trigger gate fires only
     on non-assistant messages of unresolved threads, in auto mode or on @mention of the resolved

@@ -214,7 +214,8 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
     },
     async load(id) {
       const file = id.split('?')[0];
-      if (!CONFIG_FILE.test(file)) {
+      // `?raw` asks for the file's text, which Vite's own loader serves.
+      if (!CONFIG_FILE.test(file) || new URLSearchParams(id.split('?')[1] ?? '').has('raw')) {
         return null;
       }
 

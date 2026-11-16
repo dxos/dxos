@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./dialect": {
+      "source": "./src/dialect/index.ts",
+      "types": "./dist/types/src/dialect/index.d.ts",
+      "import": "./dist/lib/dialect.mjs"
+    },
     "./extension": {
       "source": "./src/extension/index.ts",
       "types": "./dist/types/src/extension/index.d.ts",
@@ -32,6 +37,11 @@
       "source": "./src/review/index.ts",
       "types": "./dist/types/src/review/index.d.ts",
       "import": "./dist/lib/review.mjs"
+    },
+    "./schema": {
+      "source": "./src/schema/index.ts",
+      "types": "./dist/types/src/schema/index.d.ts",
+      "import": "./dist/lib/schema.mjs"
     },
     "./spec-index": {
       "source": "./src/spec-index/index.ts",
@@ -64,7 +74,8 @@
     "@effect/platform-node": "catalog:",
     "@lezer/highlight": "catalog:",
     "@lezer/lr": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@lezer/generator": "catalog:",

@@ -439,6 +439,7 @@ op CollectionOperation.Create
 
 ```mdl
 feat F-1: Space Lifecycle
+  uses: [SpaceOperation.Create, SpaceOperation.Join, SpaceOperation.Reset]
 
   req F-1.1: User can create a new space via op:SpaceOperation.Create; the space appears in the navigation graph.
   req F-1.2: User can join a space via op:SpaceOperation.Join with an invitation code.
@@ -450,6 +451,7 @@ feat F-1: Space Lifecycle
 
 ```mdl
 feat F-2: Membership and Sharing
+  uses: [MembersContainer, SpaceOperation.GetShareLink, SpaceOperation.Share]
 
   req F-2.1:
     when: user triggers op:SpaceOperation.Share
@@ -462,6 +464,7 @@ feat F-2: Membership and Sharing
 
 ```mdl
 feat F-3: Object Lifecycle
+  uses: [SpaceOperation.AddObject, SpaceOperation.RemoveObjects, SpaceOperation.RestoreObjects]
 
   req F-3.1:
     when: user opens the create-object dialog
@@ -474,6 +477,7 @@ feat F-3: Object Lifecycle
 
 ```mdl
 feat F-4: Schema Registry
+  uses: [SchemaContainer, SpaceOperation.AddSchema]
 
   req F-4.1:
     when: a plugin registers a schema via AppPlugin.addSchemaModule
@@ -488,6 +492,7 @@ feat F-4: Schema Registry
 
 ```mdl
 feat F-5: Collections
+  uses: [CollectionArticle, CollectionOperation.Create]
 
   req F-5.1: A Collection is an ordered list of references to ECHO objects.
   req F-5.2: CollectionArticle renders collection contents with drag-to-reorder support.
@@ -507,6 +512,7 @@ feat F-5: Collections
 
 ```mdl
 feat F-6: Persistence and Migrations
+  uses: [SpaceOperation.ExportSpace, SpaceOperation.ImportSpace, SpaceOperation.Migrate]
 
   req F-6.1:
     when: client emits SetupMigration
@@ -522,6 +528,7 @@ feat F-6: Persistence and Migrations
 
 ```mdl
 feat F-7: View and Field Editing
+  uses: [SpaceOperation.DeleteField, SpaceOperation.RestoreField, ViewEditor]
 
   req F-7.1: op:SpaceOperation.DeleteField removes a field from a View and returns full undo state.
   req F-7.2: op:SpaceOperation.RestoreField reinstates a deleted field at its original position.
@@ -530,6 +537,7 @@ feat F-7: View and Field Editing
 
 ```mdl
 feat F-8: Presence and Sync Status
+  uses: [SpacePresence, SyncStatus]
 
   req F-8.1: SpacePresence tracks which peers are viewing which objects via the attention system.
   req F-8.2: SyncStatus reflects CRDT sync health; unsynchronised changes are indicated visually.

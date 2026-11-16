@@ -1,0 +1,55 @@
+---
+title: Surfaces
+description: How the framework decides which component renders an object in a given place.
+---
+
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+A surface is a named place in an app's UI that plugins fill with components. The host asks for "the article for this
+object" and does not know which plugin will answer.
+
+## Model
+
+A **role** names a place: `Article` is the main content area, `Section` is an object inside a stack, `CardContent` is
+the body of a card, and `StatusIndicator` is the status bar. Each role declares the shape of the data it passes, such as
+`{ subject, attendableId }` for an article.
+
+The roles a plugin fills most often, such as `Article` for the main content area, come from `AppSurface` in
+`@dxos/app-toolkit`. [App capabilities](/docs/plex/guides/app-capabilities/#surface-roles) lists them.
+
+[Surface](/docs/plex/guides/surface/) lists the rest and shows how to narrow a role's `subject` to one type.
+
+A **surface contribution** is a component plus a **filter**. The filter names one or more roles and a guard on the data,
+for example "the article role, when the subject is a Note". Plugins contribute surfaces through the `ReactSurface`
+capability.
+
+<Snippet file="app-framework-guide-surface" region="contribute" lang="tsx" />
+
+Stash's Surface module in the inspector renders its article with the sample link:
+
+<InspectorEmbed module="surface" />
+
+## Behavior
+
+- The host renders `<Surface.Surface type={role} data={data} />`. The framework collects every contribution whose filter
+  names that role and whose guard accepts the data.
+- Contributions are ordered by their `position`, then by plugin order. The host renders the first one, or the first
+  `limit` of them when it wants several, as a toolbar does.
+- A filter can match several roles at once with `AppSurface.oneOf`, or require two conditions with `AppSurface.allOf`.
+- A component can render another plugin's surface by rendering `Surface.Surface` itself. This is how a stack shows
+  each object with whatever plugin owns its type, and how a markdown document embeds a table.
+
+<Snippet file="app-framework-guide-surface" region="nested" lang="tsx" />
+
+- A surface module loads lazily. The manifest lists the roles the module serves, and the plugin manager imports the module the
+  first time one of those roles is requested.
+
+## Limits
+
+- A surface component gets only the data its role passes. It must not assume which container it is in, how wide it is,
+  or that it is the only surface on screen; the same article can show in a plank, a stack or a dialog.
+- The `props` mapper of a surface runs during the host's render, so it cannot call hooks. A component that needs hooks
+  is its own component.
+- A surface does not own the object it renders. Other surfaces, devices and agents edit the same object, so the
+  component reads it reactively.

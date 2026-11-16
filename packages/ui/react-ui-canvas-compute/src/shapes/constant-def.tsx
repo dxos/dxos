@@ -10,7 +10,7 @@ import { MAJOR_GRID } from '@dxos/scene';
 
 import { createPorts, defineComputeNode } from './common/index.ts';
 import { ConstantComponent } from './Constant.tsx';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
+import { ComputeShape, type CreateShapeProps, computeData, createAnchorId, createShape, withZ } from './defs.ts';
 
 // Kept out of `Constant.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
@@ -22,7 +22,7 @@ import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ
 export const ConstantShape = ComputeShape.mapFields(
   Struct.assign({
     type: Schema.Literal('constant'),
-    value: Schema.optional(Schema.Any),
+    data: computeData({ value: Schema.optional(Schema.Any) }),
   }),
 );
 

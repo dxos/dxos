@@ -30,13 +30,14 @@ export type ComputeNodeState = {
 export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   const { controller } = useComputeContext();
   invariant(controller);
+  const nodeId = shape.data?.node;
+  invariant(nodeId, 'Node not specified');
 
   const [meta, setMeta] = useState<ComputeNodeMeta>();
   useEffect(() => {
     let disposed = false;
     queueMicrotask(async () => {
-      invariant(shape.node, 'Node not specified');
-      const node = controller.getComputeNode(shape.node);
+      const node = controller.getComputeNode(nodeId);
       const meta = await controller.getMeta(node);
       if (disposed) {
         return;
@@ -48,34 +49,34 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
     return () => {
       disposed = true;
     };
-  }, [shape.node]);
+  }, [nodeId]);
 
   const evalNode = useCallback(() => {
-    return controller.evalNode(shape.node!);
-  }, [shape.node]);
+    return controller.evalNode(nodeId);
+  }, [nodeId]);
 
   const subscribeToEventLog = useCallback(
     (cb: (event: ComputeEvent) => void): (() => void) => {
       return controller.events.on((ev) => {
-        if (ev.nodeId === shape.node) {
+        if (ev.nodeId === nodeId) {
           cb(ev);
         }
       });
     },
-    [shape.node],
+    [nodeId],
   );
 
   return {
-    node: controller.getComputeNode(shape.node!),
+    node: controller.getComputeNode(nodeId),
     meta: meta ?? {
       input: Schema.Struct({}),
       output: Schema.Struct({}),
     },
     runtime: {
-      inputs: controller.getInputs(shape.node!),
-      outputs: controller.getOutputs(shape.node!),
+      inputs: controller.getInputs(nodeId),
+      outputs: controller.getOutputs(nodeId),
       setOutput: (property: string, value: any) => {
-        controller.setOutput(shape.node!, property, value);
+        controller.setOutput(nodeId, property, value);
       },
       evalNode,
       subscribeToEventLog,

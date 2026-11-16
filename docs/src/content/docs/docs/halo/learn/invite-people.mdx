@@ -1,0 +1,68 @@
+---
+title: Invite people
+description: Alice invites Bob into a space with an invitation code and an authorization code.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page Alice can invite Bob into Book club, and Bob joins with two codes: one she sends him and one she
+tells him.
+
+## Background
+
+An invitation takes two codes, which travel by different routes. The invitation code is long and goes in a message or a
+link. The authorization code is six digits, which the host sees once the guest connects and passes on another way, such
+as reading it aloud. Someone who intercepts only the message cannot get in.
+
+When the guest enters the right code, the two sides exchange contact cards: each names its identity and carries the keys
+the other needs. Then the host writes a delegation, a statement signed by a member allowed to make it, that admits the
+guest. Every member checks that delegation for itself, so no server has to vouch for the guest.
+
+An invitation is a `Flow`. Its events say where the handshake is: `connecting`, `connected`, `readyForAuthentication`,
+`authenticating`, then `success`, `cancelled` or `error`. [Invitations](/docs/halo/concepts/invitations/) covers the rest.
+
+## Steps
+
+<Steps>
+
+1. **Invite someone.** `Space.share` starts the invitation on the host, and `Invitation.code` is the code to send.
+   `shared-secret` makes the guest enter the authorization code. **Invite** calls this and shows the code.
+
+   <Snippet file="halo-tutorial/app/Invitations" region="invite" lang="tsx" />
+
+2. **Join.** On the guest, `Space.join` redeems the code and returns the guest's own flow. **Join** calls this.
+
+   <Snippet file="halo-tutorial/app/Invitations" region="join" lang="tsx" />
+
+3. **Follow the handshake.** `useInvitationFlow` returns the flow's latest event and re-renders on each one, until the
+   flow ends. Both sides follow their flow with it. On the host, `readyForAuthentication`
+   carries the authorization code to show; on the guest, it is the moment to ask for it.
+
+   <Snippet file="halo-tutorial/app/Invitations" region="events" lang="tsx" />
+
+4. **Send the authorization code.** On the guest, `Invitation.authenticate` sends the code the host showed. **Send**
+   calls this.
+
+   <Snippet file="halo-tutorial/app/Invitations" region="authenticate" lang="tsx" />
+
+</Steps>
+
+## Try it
+
+Alice has Book club; Bob has nothing yet.
+
+1. On Alice's device, press **Invite** and copy the code.
+2. On Bob's, press **Join**, paste it and press **Join**.
+3. Alice's device now shows an authorization code. Type it into Bob's and press **Send**.
+
+Bob's dropdown now has Book club, and both devices list Alice and Bob under People. Rename one of them and watch the
+other follow.
+
+<HaloEmbed stage="invite" scene="invite" />
+
+## What you can do now
+
+You can invite someone into a space and join one, with an authorization code. Next,
+[Your contacts](/docs/halo/learn/your-contacts/) gathers everyone you share a space with.

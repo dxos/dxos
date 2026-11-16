@@ -18,18 +18,19 @@ import {
 const labels = (items: { label: string }[]) => items.map((item) => item.label);
 
 describe('buildViewTree', () => {
-  test('a view lists its nodes in drawing order, then its links; a frame is the view it opens', ({ expect }) => {
+  test('a view lists its nodes front first, then its links; a frame is the view it opens', ({ expect }) => {
     const tree = createNestedSimpleTree();
     const view = buildViewTree(Object.fromEntries(tree.views.map((scene) => [scene.id, scene])), tree.root);
     expect(view.kind).toBe('view');
     const kinds = view.children.map((item) => item.kind);
-    expect(kinds.slice(0, 3)).toEqual(['node', 'node', 'view']);
+    // The frame is drawn last, so it is on top and its row is first.
+    expect(kinds.slice(0, 3)).toEqual(['view', 'node', 'node']);
     expect(kinds.slice(3)).toEqual(['link', 'link']);
     const nested = view.children.find((item) => item.kind === 'view');
     expect(nested?.path).toEqual([tree.root, 'c']);
-    expect(labels(nested?.children.filter((item) => item.kind === 'node') ?? [])).toEqual(['D', 'E']);
+    expect(labels(nested?.children.filter((item) => item.kind === 'node') ?? [])).toEqual(['E', 'D']);
     // A link is named by its ends, a View by the name of the View it opens.
-    expect(labels(view.children.filter((item) => item.kind === 'link'))).toEqual(['A → B', 'B → C']);
+    expect(labels(view.children.filter((item) => item.kind === 'link'))).toEqual(['B → C', 'A → B']);
   });
 
   test('an instance shows its object read-only, under every placement, with ids unique per path', ({ expect }) => {
@@ -153,13 +154,14 @@ describe('buildViewTree', () => {
     expect(canRestack(row('card-1'), row('section/caption'))).toBe(false);
     expect(canRestack(row('card-1'), row('logo-1/mark'))).toBe(false);
     expect(canRestack(row('card-1'), [...rows.values()].filter((item) => item.kind === 'link')[0])).toBe(false);
+    // The rows list front first: above a row is in front of its element, which is drawn after it.
     expect(viewReorder(row('card-1'), row('title'), 'reorder-above')).toEqual({
       container: root,
       element: 'card-1',
       target: 'title',
-      position: 'before',
+      position: 'after',
     });
-    expect(viewReorder(row('card-1'), row('title'), 'reorder-below')?.position).toBe('after');
+    expect(viewReorder(row('card-1'), row('title'), 'reorder-below')?.position).toBe('before');
     expect(viewReorder(row('card-1'), row('title'), 'make-child')).toBeUndefined();
   });
 });

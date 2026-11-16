@@ -6,4 +6,5 @@ export * from './atoms.ts';
 export * from './controller.ts';
 export * from './draw.ts';
 export * from './draw-state.ts';
+export * from './inside-scene.ts';
 export * from './history.ts';

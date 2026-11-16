@@ -8,8 +8,9 @@
 // and edits it as a `LayoutRecord2D` through `LayoutIntent`s. Three things are translated rather than migrated: z-order
 // (array order in the board, a fractional key on the element), style (`guide` / `style` / `class` on a shape,
 // `overrides` / `style` on the element) and link ends (a connection's `input` / `output` property names, an endpoint's
-// anchor-id port). A compute shape's own fields (its compute `node`, a value, a note's `text`) stay at the top of the
-// element, as a plugin kind's do (decision 13).
+// anchor-id port). A compute shape's own fields (its compute `node`, a value) are under the shape's `data` and the
+// element's alike, as a plugin kind's are (decisions 13 and 21); a board that stores them beside the shape's reads the
+// same, and its next write stores them under `data`.
 //
 
 import * as Equal from 'effect/Equal';
@@ -20,6 +21,7 @@ import { Obj } from '@dxos/echo';
 import { type VersionedSource, initialKeys, readPath, sortByZ, writePath } from '@dxos/react-ui-canvas/headless';
 import { type LayoutIntent, LINK_TYPES, NodeStyle, Scene, applyIntent } from '@dxos/scene';
 
+import { computeKinds } from '../registry.ts';
 import { createAnchorId, parseAnchorId } from '../shapes/defs.ts';
 import { type CanvasBoard } from '../types/index.ts';
 import { type ComputeProjection } from './projection.ts';
@@ -46,18 +48,25 @@ const isRecord = (value: unknown): value is Record<string, unknown> => typeof va
 
 const text = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
 
+/** The id of the compute node an element or a stored shape stands for, which it keeps under its `data`. */
+export const computeNodeId = (element: { readonly data?: unknown }): string | undefined =>
+  isRecord(element.data) ? text(element.data.node) : undefined;
+
 //
 // Read
 //
 
-/** The element a shape stands for: geometry and look in the element's slots, the rest as its kind's fields. */
+/**
+ * The element a shape stands for: geometry and look in the element's slots, its kind's own fields under `data`. A
+ * shape stored with those fields beside its own reads the same, a field `data` also holds giving way to it.
+ */
 export const elementFromShape = (shape: BoardShape, z: string): BoardElement => {
-  const { guide, style, class: named, z: _z, ...own } = shape;
+  const { id, guide, style, class: named, z: _z, ...own } = shape;
   const overrides = { ...(typeof guide === 'boolean' ? { guide } : {}), ...(isNodeStyle(style) ? style : {}) };
   const type = text(shape.type);
   return {
-    ...own,
-    ...(type !== undefined ? { type } : {}),
+    ...computeKinds.normalize({ ...own, ...(type !== undefined ? { type } : {}) }),
+    id,
     z,
     ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
     ...(typeof named === 'string' ? { style: named } : {}),
@@ -106,7 +115,7 @@ export const boardLayout = (
 // Write
 //
 
-/** The shape an element is stored as: its own fields, its look back in the shape's `guide` / `style` / `class`. */
+/** The shape an element is stored as: its fields and `data`, its look back in the shape's `guide` / `style` / `class`. */
 export const shapeFromElement = (element: BoardElement): BoardShape => {
   const { z: _z, overrides, style: named, ...own } = element;
   const { guide, ...look } = overrides ?? {};

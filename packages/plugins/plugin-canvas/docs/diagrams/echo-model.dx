@@ -1,4 +1,4 @@
-diagram @ -128,-64 flow=down box=256x128 grid=384x192
+diagram @ -128,-64 flow=down box=256x128 grid=384x256
 group space "Space" color=light-violet {
   node Space "Space" ref="packages/core/echo/echo/src/Database.ts" color=violet
   node Database "Database" ref="packages/core/echo/echo/src/Database.ts"

@@ -23,7 +23,7 @@ import { downloadUrl } from './download.ts';
 import { menuCaptionClasses } from './styles.ts';
 import { UpdateMenuItem } from './UpdateMenuItem.tsx';
 
-const DOCS_URL = 'https://dxos.org/docs/composer/introduction/';
+const DOCS_URL = 'https://dxos.org/docs/app-framework/introduction/';
 const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';
 

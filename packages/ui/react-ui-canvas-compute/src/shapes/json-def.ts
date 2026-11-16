@@ -60,7 +60,7 @@ export const jsonNodeDef = defineComputeNode<JsonShape>({
   resizable: true,
 });
 
-export type CreateJsonTransformProps = CreateShapeProps<JsonTransformShape> & { expression?: string };
+export type CreateJsonTransformProps = CreateShapeProps<JsonTransformShape>;
 
 export const createJsonTransform = (props: CreateJsonTransformProps) =>
   createShape<JsonTransformShape>({

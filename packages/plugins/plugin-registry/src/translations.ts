@@ -28,6 +28,16 @@ export const translations = [
           "This device's plugin choices will be replaced by the ones shared across your devices.",
         'plugin-scope.rejoin-dialog.cancel.label': 'Cancel',
         'plugin-scope.rejoin-dialog.confirm.label': 'Replace',
+        'space-plugins.label': 'Plugins',
+        'space-plugins.description':
+          'Plugins this space runs. Every member sees the same set, and Composer’s EDGE services use it when they run an operation in this space.',
+        'space-plugins.unscoped.description':
+          'This space names no plugins of its own, so each member runs the plugins they have enabled. Turn one on to make it part of the space for everyone.',
+        'space-plugins.empty.message': 'There are no optional plugins to choose from.',
+        'reset-space-plugins.label': 'Reset plugins',
+        'reset-space-plugins.description':
+          'Stop naming plugins for this space, so each member runs the set they have enabled themselves.',
+        'reset-space-plugins.button.label': 'Reset',
         'plugin-registry.label': 'Plugins',
         'plugin-settings.label': 'Plugin Settings',
         'bundled-plugins.label': 'Bundled',

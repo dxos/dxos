@@ -6,7 +6,7 @@ description: Composer plugin in its own repository, outside the dxos monorepo: b
 # Composer plugin development
 
 You build a plugin in the user's repository and load it into the **target**: the Composer the user
-has open in their browser, at the URL they name. The user enables your dev server in the target and
+has open in their browser. The user enables your dev server in the target and
 tries the plugin there.
 
 Two steps end in a **handoff**: something only the user can do in the target. Say exactly what to
@@ -27,7 +27,7 @@ When a command fails, look it up in [REFERENCE.md](REFERENCE.md).
 
 The target supplies `@dxos/*`, `react` and `effect` to the plugin at runtime, so compile against an
 API-compatible build: the newest `main` commit with packages on pkg.pr.new. Find its first 7
-characters, `<commit7>`, and save `{ "origin": "<target URL>", "commit": "<commit7>" }` as
+characters, `<commit7>`, and save `{ "commit": "<commit7>" }` as
 `.dxos/target.json`:
 
 ```bash
@@ -39,7 +39,8 @@ Use 7 characters everywhere; a longer SHA installs a second copy of the SDK.
 Fetch the plugin guide for that commit, and follow it for every file you write:
 
 ```bash
-mkdir -p .dxos && curl -fsSL https://raw.githubusercontent.com/dxos/dxos/<commit7>/docs/src/content/docs/docs/composer/publishing-plugins.md -o .dxos/guide.md
+mkdir -p .dxos && g=https://raw.githubusercontent.com/dxos/dxos/<commit7>/docs/src/content/docs/docs
+curl -fsSL $g/plex/publishing-plugins.md -o .dxos/guide.md || curl -fsSL $g/composer/publishing-plugins.md -o .dxos/guide.md
 ```
 
 A new plugin starts from the guide's "Example: a plugin with its own navtree group"; read the

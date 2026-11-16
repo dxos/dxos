@@ -3,7 +3,7 @@
 //
 
 //
-// Assistant-domain story harness, layered on `createStoryDecorators` from `@dxos/storybook-testing`
+// Assistant-domain story harness, layered on `StoryHarness.decorators` from `@dxos/storybook-testing`
 // (which owns the generic substrate: theme/layout, the plugin manager, client init/seeding/snapshot
 // import, and the runtime-layout atom). This wrapper adds what is assistant-specific: the assistant
 // plugin stack, chat/agent creation, skill binding, and the scripted (offline) model.
@@ -64,7 +64,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
-import { type StoryDecoratorsProps, createStoryDecorators, resolveStorySpace } from '@dxos/storybook-testing';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Outline, Task, TaskSet } from '@dxos/types';
 import { Merge, isNonNullable } from '@dxos/util';
 
@@ -155,7 +155,7 @@ type DecoratorsProps = Merge<
     /** Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. */
     assistantSettings?: Partial<Assistant.Settings>;
   },
-  Omit<StoryDecoratorsProps, 'Wrapper' | 'setupEvents'>,
+  Omit<StoryHarness.Options, 'Wrapper' | 'setupEvents'>,
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent' | 'onReady'>
 >;
 
@@ -240,7 +240,7 @@ const toStoryDecoratorsProps = ({
   onReady,
   assistantSettings,
   ...props
-}: DecoratorsProps): StoryDecoratorsProps => ({
+}: DecoratorsProps): StoryHarness.Options => ({
   ...props,
   config: configProp,
   types: [
@@ -289,7 +289,7 @@ const toStoryDecoratorsProps = ({
 export const createDecorators = <Args = any,>(
   input: DecoratorsProps | ((context: { args: Args }) => DecoratorsProps),
 ) =>
-  createStoryDecorators<Args>(
+  StoryHarness.decorators<Args>(
     typeof input === 'function' ? (context) => toStoryDecoratorsProps(input(context)) : toStoryDecoratorsProps(input),
   );
 
@@ -378,7 +378,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       const invoker = yield* Capabilities.OperationInvoker;
       const { invoke } = invoker;
       const client = yield* ClientCapabilities.Client;
-      const space = yield* resolveStorySpace(client);
+      const space = yield* StoryHarness.resolveSpace(client);
 
       // Ensure workspace is set. NOTE: the active workspace that surfaces read via
       // `useActiveSpace()` is set from the React tree in `ModuleContainer` (the plugin-module

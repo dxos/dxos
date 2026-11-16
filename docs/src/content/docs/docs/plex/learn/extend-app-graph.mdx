@@ -1,0 +1,64 @@
+---
+title: Extend the App Graph
+description: Put the plugin's objects and actions into the app's navigation.
+---
+
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page each space has a **Stashed links** section under **Content** in the navigation tree, and every
+link has **Mark as read** on its toolbar and in its menu in the tree.
+
+## Background
+
+A PLEX app draws its navigation tree, toolbars and menus from one graph, App Graph. In Composer that
+is the tree on the left, the object toolbar and the context menus. Its nodes are the things a
+person can open, and its action nodes are what they can do to them. Plugins add to the graph with builder extensions:
+functions that match a node and return its children or its actions. The app runs them only for the nodes a person
+expands. [App Graph](/docs/plex/guides/app-graph/) explains the model.
+
+## Steps
+
+1. **Start the module's file.** The extensions on this page go in `capabilities/app-graph-builder.ts`, with these
+   imports.
+
+   <Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="imports" />
+
+2. **Add a section for the type.** The navigation tree groups each space's sections under headings such as Content
+   and System. `TypeSection.createTypeSectionExtension` builds the usual section for an object type: it matches the
+   group you pass, lists the space's links under a **Stashed links** heading named and coloured from the type's
+   annotations, and hides the heading when the space has none. `urlKey` gives each link an address in the app's
+   URL, which is how Composer opens one when a person clicks it.
+
+   <Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="section" bare />
+
+3. **Attach the operation as an action.** `createTypeExtension` matches every node whose object is a link, and
+   this extension returns an action instead of children. Its `disposition` says where it shows: `toolbar` puts it on
+   the link's toolbar, and `list-item` in the link's menu in the navigation tree. The command palette lists it
+   either way. Its `data` invokes Mark as read from
+   [Add an operation](/docs/plex/learn/add-operation/) with a reference to the link, in the link's space.
+
+   <Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="actions" bare />
+
+4. **Contribute the extensions.** The module builds both and contributes them together as the App Graph builder
+   capability.
+
+   <Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="module" bare />
+
+5. **Add the module to the manifest.** The App Graph maker activates the module when the app is idle after startup.
+
+   <Snippet file="plex-tutorial/dx.config" region="app-graph" />
+
+6. **See the result.** Load or reload your plugin below, create a sample link with **New**, and select **App Graph**. The inspector shows the branches of the graph, as Composer builds it, that lead to what your plugin added, and marks those nodes.
+
+   <InspectorEmbed adds={['app-graph']} />
+
+   A **Stashed links** section appears in the space's Content group, with the link under it, and **Mark as read** is the link's
+   action.
+
+## What you can do now
+
+- Add a section for a type to a group in the navigation tree, with an address for each object.
+- Attach an operation to a type's nodes as an action.
+
+Next, [Add a surface](/docs/plex/learn/add-surface/) gives a link a view to open.

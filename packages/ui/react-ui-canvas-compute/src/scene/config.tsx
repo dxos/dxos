@@ -21,7 +21,7 @@ import { type LayoutIntent, type Port, type Scene, findLayout } from '@dxos/scen
 import { type ComputeGraphController } from '../graph/index.ts';
 import { computeKinds, computeNodeRegistry } from '../registry.ts';
 import { createFunctionPorts } from '../shapes/index.ts';
-import { type BoardElement } from './echo-store.ts';
+import { type BoardElement, computeNodeId } from './echo-store.ts';
 
 /** Re-renders the caller on every controller update, returning a count that changes with each. */
 const useControllerVersion = (controller: ComputeGraphController): number => {
@@ -32,7 +32,7 @@ const useControllerVersion = (controller: ComputeGraphController): number => {
 
 /** The compute node's runtime ports, one per property of its input and output schemas, where it declares them. */
 const runtimePorts = (controller: ComputeGraphController, element: BoardElement): readonly Port[] | undefined => {
-  const id = typeof element.node === 'string' ? element.node : undefined;
+  const id = computeNodeId(element);
   // `findNode`: a delete removes the compute node before the shape, and a peer's may land first.
   const computeNode = id === undefined ? undefined : controller.graph.findNode(id);
   if ((!computeNode?.inputSchema && !computeNode?.outputSchema) || !element.size) {
@@ -101,7 +101,7 @@ const ComputeSection = ({ controller }: { controller: ComputeGraphController }) 
   useControllerVersion(controller);
   const record = layout === undefined ? undefined : findLayout(document, layout);
   const element = selection.length === 1 && record?.dim === '2d' ? record.elements[selection[0]] : undefined;
-  const id = typeof element?.node === 'string' ? element.node : undefined;
+  const id = element === undefined ? undefined : computeNodeId(element);
   const node = id === undefined ? undefined : controller.graph.findNode(id);
   const data = node
     ? { type: node.type, id: node.id, inputs: controller.getInputs(node.id), outputs: controller.getOutputs(node.id) }

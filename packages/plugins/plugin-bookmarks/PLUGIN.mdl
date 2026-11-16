@@ -44,6 +44,7 @@ type Bookmark
 
 ```mdl
 feat F-1: Bookmark Schema
+  uses: [Bookmark]
 
   req F-1.1:
     when: plugin is activated
@@ -56,6 +57,7 @@ feat F-1: Bookmark Schema
 
 ```mdl
 feat F-2: AddFromSnapshot Operation
+  uses: [Bookmark]
 
   req F-2.1:
     when: the operation is invoked with { snapshot, target }
@@ -94,6 +96,7 @@ feat F-3: Page Action Contribution
 
 ```mdl
 feat F-4: Surfaces
+  uses: [Bookmark]
 
   req F-4.1:
     when: a Bookmark is the subject of an article surface
@@ -141,6 +144,7 @@ feat F-5: Summarize Operation
 
 ```mdl
 feat F-6: Comments
+  uses: [Bookmark]
 
   req F-6.1:
     when: a Bookmark is the active subject

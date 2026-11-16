@@ -17,10 +17,12 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { type Space } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
-import { Cell, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Task, TaskSet } from '@dxos/types';
 
-import { ModuleContainer, TaskDetail, storyParameters } from '../testing/index.ts';
+import { TaskDetail, storyParameters } from '../testing/index.ts';
 
 //
 // Delegation end to end with a simulated agent: the real plugin stack, the real delegation
@@ -126,7 +128,7 @@ const seedProject = async ({ space }: { space: Space }) => {
 
 /** The plugin stack, with the assistant's language model replaced by the simulator. */
 const createDecorators = (options: Omit<AgentSimulator.AgentSimulatorOptions, 'roots'> = {}) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task],
     onInit: seedProject,
     plugins: [
@@ -253,9 +255,9 @@ const makePlay =
     }
   };
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-projects/AgentSimulation',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
   args: { columns: '2fr_1fr' },
   beforeEach: () => {

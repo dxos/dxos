@@ -3,7 +3,7 @@ name: Deploy Apps
 # Single workflow for all app deploys. The deployable apps are listed in scripts/apps.mjs (a package dir
 # per app); everything else — Worker name, bundle task, output dir, and which environments it targets — is
 # derived from that app's `wrangler.jsonc`. The app set for an env follows its config's `env.*` sections:
-# preview → all preview-enabled apps (auto, daily); dev → composer; staging → composer + docs;
+# preview → all preview-enabled apps (auto, daily); dev → composer + docs; staging → composer + docs;
 # production → all (docs alone daily too, dispatched by deploy-docs-daily.yml). Fully decoupled from npm publishing.
 #
 # Production additionally cuts a versioned Composer release (bump composer-app/crx, commit to main, tag
@@ -25,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        # Defaults the app set (each app's wrangler.jsonc `env.*`): dev → composer, preview → all,
+        # Defaults the app set (each app's wrangler.jsonc `env.*`): dev → composer + docs, preview → all,
         # staging → composer + docs, production → all. Choose the commit via the branch/tag selector.
         description: Target environment
         type: choice

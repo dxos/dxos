@@ -13,6 +13,7 @@ import React, {
   useState,
 } from 'react';
 
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -315,82 +316,84 @@ const CalendarWeek = Util.composable<HTMLDivElement, CalendarWeekProps>(
       >
         <Weekdays weekStartsOn={weekStartsOn} gutter={GUTTER_WIDTH} dates={weekDays} />
 
-        <div ref={scrollRef} className='flex-1 overflow-y-auto _scrollbar-thin'>
-          <div
-            className='grid relative'
-            style={{
-              height: minutesToY(MINUTES_PER_DAY, HOUR_HEIGHT),
-              gridTemplateColumns: `${GUTTER_WIDTH}px repeat(7, 1fr)`,
-            }}
-          >
-            {/* Hour gutter + faint hour lines spanning all columns. */}
-            <div className='relative'>
-              {Array.from({ length: 24 }, (_, hour) => (
-                <div
-                  key={hour}
-                  className='absolute right-1 -translate-y-1/2 text-xs text-fg-muted tabular-nums'
-                  style={{ top: minutesToY(hour * 60, HOUR_HEIGHT) }}
-                >
-                  {hour === 0 ? '' : `${hour.toString().padStart(2, '0')}:00`}
-                </div>
-              ))}
+        <ScrollArea.Root classNames='flex-1'>
+          <ScrollArea.Viewport ref={scrollRef}>
+            <div
+              className='grid relative'
+              style={{
+                height: minutesToY(MINUTES_PER_DAY, HOUR_HEIGHT),
+                gridTemplateColumns: `${GUTTER_WIDTH}px repeat(7, 1fr)`,
+              }}
+            >
+              {/* Hour gutter + faint hour lines spanning all columns. */}
+              <div className='relative'>
+                {Array.from({ length: 24 }, (_, hour) => (
+                  <div
+                    key={hour}
+                    className='absolute right-1 -translate-y-1/2 text-xs text-fg-muted tabular-nums'
+                    style={{ top: minutesToY(hour * 60, HOUR_HEIGHT) }}
+                  >
+                    {hour === 0 ? '' : `${hour.toString().padStart(2, '0')}:00`}
+                  </div>
+                ))}
+              </div>
+
+              {weekDays.map((day, dayIndex) => {
+                const dayEvents = eventsByDay[dayIndex];
+                const layout = layoutDayEvents(dayEvents);
+                const isToday = isSameDay(day, today);
+                // The draft when it currently belongs to this column (origin for resize, target for a cross-day move).
+                const draftHere = draft && isSameDay(day, draft.start) ? draft : undefined;
+                return (
+                  <div
+                    key={day.toISOString()}
+                    ref={(node) => {
+                      columnsRef.current[dayIndex] = node;
+                    }}
+                    data-date={day.toISOString()}
+                    className={mx(
+                      'relative border-l border-separator cursor-cell select-none',
+                      dayIndex === 6 && 'border-r',
+                      isToday && 'bg-primary-500/5',
+                    )}
+                    onPointerDown={(ev) => handleColumnPointerDown(day, ev)}
+                  >
+                    {/* Faint hour lines. */}
+                    {Array.from({ length: 24 }, (_, hour) => (
+                      <div
+                        key={hour}
+                        className='absolute inset-x-0 border-t border-separator/60'
+                        style={{ top: minutesToY(hour * 60, HOUR_HEIGHT) }}
+                      />
+                    ))}
+
+                    {/* Events. */}
+                    {dayEvents.map((event, index) => {
+                      const slot = layout.get(index) ?? { columnIndex: 0, columnCount: 1 };
+                      const editing = draft && draft.eventId === event.id ? draft : undefined;
+                      // Dropped from this column while the move drags it onto another day.
+                      if (editing && !isSameDay(editing.start, day)) {
+                        return null;
+                      }
+                      const start = editing ? editing.start : event.start;
+                      const end = editing ? editing.end : event.end;
+                      return renderEvent(event, day, start, end, slot.columnIndex, slot.columnCount);
+                    })}
+
+                    {/* Event being dragged in from another day — rendered full-width above this column's events. */}
+                    {draftHere &&
+                      draggedEvent &&
+                      !dayEvents.some((event) => event.id === draggedEvent.id) &&
+                      renderEvent(draggedEvent, day, draftHere.start, draftHere.end, 0, 1)}
+
+                    {/* Pending create rectangle. */}
+                    {draftHere && !draftHere.eventId && <PendingBlock start={draftHere.start} end={draftHere.end} />}
+                  </div>
+                );
+              })}
             </div>
-
-            {weekDays.map((day, dayIndex) => {
-              const dayEvents = eventsByDay[dayIndex];
-              const layout = layoutDayEvents(dayEvents);
-              const isToday = isSameDay(day, today);
-              // The draft when it currently belongs to this column (origin for resize, target for a cross-day move).
-              const draftHere = draft && isSameDay(day, draft.start) ? draft : undefined;
-              return (
-                <div
-                  key={day.toISOString()}
-                  ref={(node) => {
-                    columnsRef.current[dayIndex] = node;
-                  }}
-                  data-date={day.toISOString()}
-                  className={mx(
-                    'relative border-l border-separator cursor-cell select-none',
-                    dayIndex === 6 && 'border-r',
-                    isToday && 'bg-primary-500/5',
-                  )}
-                  onPointerDown={(ev) => handleColumnPointerDown(day, ev)}
-                >
-                  {/* Faint hour lines. */}
-                  {Array.from({ length: 24 }, (_, hour) => (
-                    <div
-                      key={hour}
-                      className='absolute inset-x-0 border-t border-separator/60'
-                      style={{ top: minutesToY(hour * 60, HOUR_HEIGHT) }}
-                    />
-                  ))}
-
-                  {/* Events. */}
-                  {dayEvents.map((event, index) => {
-                    const slot = layout.get(index) ?? { columnIndex: 0, columnCount: 1 };
-                    const editing = draft && draft.eventId === event.id ? draft : undefined;
-                    // Dropped from this column while the move drags it onto another day.
-                    if (editing && !isSameDay(editing.start, day)) {
-                      return null;
-                    }
-                    const start = editing ? editing.start : event.start;
-                    const end = editing ? editing.end : event.end;
-                    return renderEvent(event, day, start, end, slot.columnIndex, slot.columnCount);
-                  })}
-
-                  {/* Event being dragged in from another day — rendered full-width above this column's events. */}
-                  {draftHere &&
-                    draggedEvent &&
-                    !dayEvents.some((event) => event.id === draggedEvent.id) &&
-                    renderEvent(draggedEvent, day, draftHere.start, draftHere.end, 0, 1)}
-
-                  {/* Pending create rectangle. */}
-                  {draftHere && !draftHere.eventId && <PendingBlock start={draftHere.start} end={draftHere.end} />}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </div>
     );
   },

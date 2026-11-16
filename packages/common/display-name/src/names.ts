@@ -7,6 +7,9 @@ import { data } from './data.ts';
 const capitalize = (input: string): string => input.charAt(0).toUpperCase() + input.slice(1);
 
 // TODO(burdon): Rename package (for related things to do with human readable hashes?)
+/**
+ * Maps a hex string (e.g. a public key) to a stable "Adjective Animal" name.
+ */
 export const generateName = (input: string): string => {
   const split = (input.length * 2) / 3;
   const firstInput = input.substring(0, split);

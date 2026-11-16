@@ -160,6 +160,7 @@ op quickJournalEntry
 
 ```mdl
 feat F-1: Outline Editor
+  uses: [Outline]
 
   req F-1.1: Outline content is stored as a CRDT Text object referenced via Ref; concurrent edits merge automatically.
   req F-1.2: The outliner supports nested list items with Tab / Shift-Tab for indent / outdent.
@@ -171,6 +172,7 @@ feat F-1: Outline Editor
 
 ```mdl
 feat F-2: Journal
+  uses: [Journal]
 
   req F-2.1: A Journal holds entries keyed by ISO date string; each entry owns an independent CRDT Text.
   req F-2.2:
@@ -196,6 +198,7 @@ feat F-3: Calendar Sidebar
 
 ```mdl
 feat F-4: Quick Journal Entry
+  uses: [Journal, JournalEntry, QuickEntryDialog, quickJournalEntry]
 
   req F-4.1:
     when: op:quickJournalEntry is invoked with non-empty text
@@ -212,6 +215,7 @@ feat F-4: Quick Journal Entry
 
 ```mdl
 feat F-5: ECHO Persistence and Collaboration
+  uses: [Journal, Outline]
 
   req F-5.1: Outline and Journal objects are stored in ECHO and replicated to all peers in the space.
   req F-5.2:

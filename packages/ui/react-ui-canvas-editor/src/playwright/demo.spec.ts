@@ -51,11 +51,10 @@ test.describe('demo', () => {
     await page.keyboard.press('r');
     await drag({ x: 900, y: 250 }, { x: 900, y: 250 });
 
-    // A toolbar create holds its screen size across zooms.
+    // A box drawn at any zoom is the sweep.
     for (const step of ['toolbar-zoom-in', 'toolbar-zoom-in', 'toolbar-zoom-out', 'toolbar-zoom-out']) {
-      await page.getByTestId('toolbar-create').click();
-      await page.getByRole('menuitem').first().click();
-      await settle();
+      await page.keyboard.press('r');
+      await drag({ x: 620, y: 520 }, { x: 780, y: 620 });
       await page.getByTestId(step).click();
       await settle();
     }

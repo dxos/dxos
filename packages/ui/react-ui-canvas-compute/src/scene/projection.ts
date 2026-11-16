@@ -22,7 +22,7 @@ import {
   syncLink,
 } from '../graph/index.ts';
 import { ComputeShape, parseAnchorId } from '../shapes/index.ts';
-import { type BoardElement, shapeFromElement } from './echo-store.ts';
+import { type BoardElement, computeNodeId, shapeFromElement } from './echo-store.ts';
 
 /** What the projection needs of the controller: the compute graph it mirrors into. */
 export type ComputeGraphSource = Pick<ComputeGraphController, 'graph'>;
@@ -44,11 +44,9 @@ export type ComputeProjection = {
 
 const isComputeShape = Schema.is(ComputeShape);
 
-const text = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
-
 /** The compute node id an element carries, when it is a compute shape. */
 const computeId = (element: BoardElement | undefined): string | undefined =>
-  element && element.type !== undefined && isValidComputeNode(element.type) ? text(element.node) : undefined;
+  element && element.type !== undefined && isValidComputeNode(element.type) ? computeNodeId(element) : undefined;
 
 type Ends = { readonly source?: { readonly node?: string }; readonly target?: { readonly node?: string } };
 
@@ -108,12 +106,12 @@ export const createComputeProjection = ({ controller }: ComputeProjectionOptions
         if (element.type === undefined || !isValidComputeNode(element.type)) {
           return intent;
         }
-        const node = text(Reflect.get(element, 'node'));
+        const node = computeNodeId(element);
         if (node !== undefined && !claimed.has(node)) {
           claimed.add(node);
           return intent;
         }
-        const copy = { ...element, node: Obj.ID.random() };
+        const copy = { ...element, data: { ...element.data, node: Obj.ID.random() } };
         return { kind: 'create', element: copy };
       }
       case 'bind':
