@@ -77,16 +77,31 @@ export type HandlerOptions = {
   host: McpServer.HostShape;
   /** The path the server answers on, which is where the helper relays its requests. */
   path: `/${string}`;
+  /** Who the session runs as and the spaces it may address, served as `whoami`; omitted, the tool is not offered. */
+  whoami?: () => Effect.Effect<McpServer.WhoAmIResult, McpServer.ToolFailure>;
 };
+
+/** Tools this server defines itself, which no operation may also project as. */
+const STATIC_TOOL_NAMES = [McpServer.WhoAmI.name];
 
 /**
  * Composer's MCP surface (discovery, dispatch and skill loading over the registry) as a fetch
  * handler, with the same response passes every host applies.
  */
-export const handler = ({ registry, host, path }: HandlerOptions) => {
+export const handler = ({ registry, host, path, whoami }: HandlerOptions) => {
+  const surface = McpServer.layer({ reservedToolNames: STATIC_TOOL_NAMES }).pipe(
+    Layer.provide(Layer.mergeAll(Layer.succeed(Registry.Service, registry), Layer.succeed(McpServer.Host, host))),
+  );
   const web = HttpRouter.toWebHandler(
-    McpServer.layer().pipe(
-      Layer.provide(Layer.mergeAll(Layer.succeed(Registry.Service, registry), Layer.succeed(McpServer.Host, host))),
+    (whoami
+      ? Layer.mergeAll(
+          surface,
+          McpServer.toolkit(McpServer.WhoAmIToolkit).pipe(
+            Layer.provide(McpServer.WhoAmIToolkit.toLayer(McpServer.WhoAmIToolkit.of({ whoami }))),
+          ),
+        )
+      : surface
+    ).pipe(
       Layer.provide(
         McpServer$.layerHttp({
           name: McpServer.identity.name,

@@ -871,6 +871,90 @@ export const CreateDownload = Tool.make('createDownload', {
 
 export const DownloadToolkit = Toolkit.make(CreateDownload);
 
+//
+// Identity.
+//
+
+export const SpaceInfo = Schema.Struct({
+  spaceId: Schema.String,
+  name: Schema.optional(Schema.String).annotate({
+    description: 'Display name of the space. Absent when the space is unnamed or its properties are unreadable.',
+  }),
+  memberCount: Schema.optional(Schema.Number).annotate({
+    description:
+      'Number of identities with membership. 1 means the space is private to this identity; more ' +
+      'means it is shared. Absent when membership could not be read.',
+  }),
+});
+export type SpaceInfo = Schema.Schema.Type<typeof SpaceInfo>;
+
+export const WhoAmIResult = Schema.Struct({
+  // The DID, not the identity key: it is the identity's public name — what EDGE authorizes
+  // against and what every other surface reports — where the key is an implementation detail.
+  identityDid: Schema.String,
+  displayName: Schema.optional(Schema.String),
+  spaces: Schema.Array(SpaceInfo).annotate({
+    description:
+      'The data spaces this session can operate on. None of them is a default: a call that acts ' +
+      'on a space must name one.',
+  }),
+});
+export type WhoAmIResult = Schema.Schema.Type<typeof WhoAmIResult>;
+
+/**
+ * Identity and session spaces, mirroring EDGE's `mcp-space-service` tool of the same name. Every host that
+ * holds a client serves it — the project skill confirms its space with it before any write — while the
+ * handler stays the host's, since only the host knows whose identity and which spaces the session has.
+ */
+export const WhoAmI = Tool.make('whoami', {
+  description:
+    'Returns the authenticated DXOS identity and the data spaces this session can operate on, each ' +
+    'with its name and member count — refer to a space by name when talking to the user, and pass ' +
+    'its id when calling a tool.',
+  parameters: Tool.EmptyParams,
+  success: WhoAmIResult,
+  failure: ToolFailure,
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
+
+export const WhoAmIToolkit = Toolkit.make(WhoAmI);
+
+/** What {@link describeSpace} reads of a space: the client's `Space`, without depending on the client. */
+export type DescribableSpace = {
+  readonly id: string;
+  readonly properties: { readonly name?: unknown };
+  readonly members: { get(): readonly unknown[] };
+};
+
+/**
+ * Describes one of the session's spaces. Best-effort per field: a space whose properties or membership
+ * cannot be read yet is still listed, with whatever did resolve.
+ */
+export const describeSpace = (spaceId: string, space: DescribableSpace | undefined): SpaceInfo => {
+  if (!space) {
+    return { spaceId };
+  }
+  const name = readSpaceField(space, 'properties', () => space.properties.name);
+  // `undefined` rather than 0 when the read fails: a space always has a member, so 0 would be a claim about it.
+  const memberCount = readSpaceField(space, 'members', () => space.members.get().length);
+  return {
+    spaceId,
+    ...(typeof name === 'string' && { name }),
+    ...(typeof memberCount === 'number' && { memberCount }),
+  };
+};
+
+/** Properties and members are unreadable until the space is open, which a listing must not wait on. */
+const readSpaceField = <T>(space: DescribableSpace, field: string, read: () => T): T | undefined => {
+  try {
+    return read();
+  } catch (error) {
+    log.warn('failed to read space field', { spaceId: space.id, field, error });
+    return undefined;
+  }
+};
+
 /** Resolves a file reference through the host to the id the host signs a download URL for. */
 export const resolveDownload = (
   registry: Registry.Registry,

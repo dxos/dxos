@@ -8,7 +8,7 @@ DOCS_POSTHOG_API_KEY=phc_5PMOqYy30CdIv0hIzqspq0Go8LKbNKG8bISJb5CViTQ
 POSTHOG_CLI_API_KEY=${POSTHOG_CLI_API_KEY}
 # Same EDGE host as DX_EDGE_BASE_URL below, so this is the hub that EDGE's `HUB_SERVICE` binding
 # resolves to -- a hub from another environment mints magic links no redemption can resolve.
-DX_HUB_URL="https://preview.dxos.network/hub/"
+DX_HUB_URL="https://dev.dxos.network/hub/"
 DX_IPDATA_API_KEY=${IPDATA_API_KEY}
 # Absolute so native builds, which serve their own frontend, reach this channel's deployment.
 DX_FEEDBACK_LOGS_ENDPOINT=https://dev.composer.space/api/feedback-logs
@@ -22,4 +22,6 @@ IPFS_API_SECRET=${IPFS_API_SECRET}
 DX_PWA=false
 DX_MINIFY=true
 DX_EDGE_ECHO_REPLICATOR=true
-DX_EDGE_BASE_URL="https://preview.dxos.network/"
+DX_EDGE_BASE_URL="https://dev.dxos.network/"
+# The account app paired with EDGE dev; the default is production's, whose accounts dev's hub does not know.
+DX_AUTH_URL="https://account.dev.composer.space"
