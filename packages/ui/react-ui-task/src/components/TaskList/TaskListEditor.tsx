@@ -193,8 +193,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       }
     }, [task, current, commitTitle]);
 
-    // Assigned below, where `handleCancel` is declared: the key handler must exist before it.
-    const cancelRef = useRef<() => void>(() => {});
     const handleTitleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
@@ -247,7 +245,9 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       setFiles([]);
       onTaskSelect?.(undefined);
     }, [task, current, updateDraft, onTaskSelect]);
-    cancelRef.current = handleCancel;
+    // Synced in an effect, as `submitRef` is: a render React abandons would otherwise leave this pointing at a
+    // handler from a render that never committed (see the note on `editingId`).
+    const cancelRef = Hooks.useDynamicRef(handleCancel);
 
     const handlePaneKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
       // An IME may report its own cancel as Escape mid-composition, and discarding the draft on that would throw
