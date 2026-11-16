@@ -59,6 +59,7 @@ import {
   isCompanionShown,
   layoutAppliesTopbar,
 } from '../../util/index.ts';
+import { canTransition, transitionWhenRendered } from '../DeckLayout/transition.ts';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
@@ -299,6 +300,52 @@ const useRenderedPlanks = (): RenderedPlanks => {
   // Stable identity: this shape is the `PlankContext` value, so a new object per render would re-render
   // every tile on every deck render.
   return useMemo(() => ({ planks, attendedPlankId }), [planks, attendedPlankId]);
+};
+
+/**
+ * The plank a solo deck is leaving, held over the one it is entering until that has rendered and then faded
+ * out — the per-plank form of {@link useWorkspaceTransition}, so moving between two articles crossfades
+ * rather than cutting.
+ *
+ * Solo only. A sliding deck lays its planks out side by side, so a held plank would appear beside the new
+ * one rather than over it; and the presentation is derived from how many planks are rendered, so a held
+ * plank there would flip the deck out of fullbleed as it faded.
+ *
+ * The held plank is a second live article for the length of the fade. That is the cost this buys the
+ * crossfade with, and the reason it is bounded by `maxHoldMs` and skipped whenever motion is reduced.
+ */
+const usePlankCrossfade = (planks: readonly string[]) => {
+  const solo = planks.length === 1 ? planks[0] : undefined;
+  const [previous, setPrevious] = useState(solo);
+  const [leaving, setLeaving] = useState<string>();
+  const elements = useRef<{ leaving?: HTMLElement | null; entering?: HTMLElement | null }>({});
+  if (previous !== solo) {
+    setPrevious(solo);
+    // Only between two solo planks: an open that grows or collapses the deck is a layout change, not a swap.
+    setLeaving(solo && previous && canTransition() ? previous : undefined);
+  }
+
+  useEffect(() => {
+    if (!leaving) {
+      return;
+    }
+    const { leaving: from, entering: to } = elements.current;
+    if (!from || !to) {
+      setLeaving(undefined);
+      return;
+    }
+    return transitionWhenRendered(from, to, () => setLeaving((id) => (id === leaving ? undefined : id)));
+  }, [leaving]);
+
+  return {
+    leaving,
+    leavingRef: (element: HTMLElement | null) => {
+      elements.current.leaving = element;
+    },
+    enteringRef: (element: HTMLElement | null) => {
+      elements.current.entering = element;
+    },
+  };
 };
 
 //
@@ -1429,6 +1476,7 @@ export const DeckPlanks = () => {
   const { overscroll, flatten } = useDeckSettings();
   const rendered = useRenderedPlanks();
   const { planks, attendedPlankId } = rendered;
+  const { leaving, leavingRef, enteringRef } = usePlankCrossfade(planks);
   // The last plank's companion feeds both the fullbleed pair (a singleton deck's only plank *is* the
   // last) and the overscroll runway, which is sized to the last tile.
   const lastPlankId = planks[planks.length - 1];
@@ -1854,7 +1902,11 @@ export const DeckPlanks = () => {
           // DOM mounted across 1↔2 plank transitions; a separate fullbleed branch here remounted the
           // surviving plank on every message open/close (the mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
           // resolves against the viewport instead of a shrink-wrapped flex row.
-          <Mosaic.Container orientation='horizontal' classNames='dx-cover dx-main-content-padding-transitions'>
+          <Mosaic.Container
+            ref={enteringRef}
+            orientation='horizontal'
+            classNames='dx-cover dx-main-content-padding-transitions'
+          >
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
               <ScrollArea.Viewport
                 ref={viewportRef}
@@ -1898,6 +1950,13 @@ export const DeckPlanks = () => {
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Mosaic.Container>
+        )}
+        {/* The plank being left, over the one being entered until it has rendered. Inert and hidden from the
+            accessibility tree: it is the outgoing frame of a crossfade, not a second article to read or reach. */}
+        {leaving && (
+          <div ref={leavingRef} aria-hidden inert className='dx-cover pointer-events-none z-[2]'>
+            <DeckPlank id={leaving} part='main' classNames='dx-cover dx-main-intrinsic-size' />
+          </div>
         )}
       </div>
     </PlankContext.Provider>
