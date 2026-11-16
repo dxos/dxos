@@ -110,14 +110,11 @@ export const theme = {
       //
       // The mark is drawn high in its own square (21 units of air above it, 218 below), so centring the file centres
       // the air rather than the mark; the nudge is half that difference, as a share of the image's height.
-      // The mark is drawn no taller than the slide and set so that its central bar stands one bar-height in from the
-      // start edge: at 56.25% of the slide's width the square is exactly its height, the bar is a fifth of that, and
-      // the bar's own start edge sits 41.4% into the square — so -12.07% puts the two distances equal.
-      watermark: {
-        box: 'absolute inset-y-0 -start-[12.07%] w-[56.25%] flex items-center pointer-events-none',
-        img:
-          'w-full h-auto object-contain translate-y-[9.6%] ' +
-          '[filter:brightness(0.14)_drop-shadow(8px_8px_12px_rgb(0_0_0/0.55))_drop-shadow(-5px_-5px_9px_rgb(255_255_255/0.05))]',
+      // A picture that fills its column rather than sitting in it: it grows to the column's height and is cropped
+      // to its width, so the mark at the art's centre stays centred however narrow the column is.
+      fill: {
+        box: 'grow min-h-0 self-stretch flex items-center justify-center overflow-hidden',
+        img: 'w-full h-full object-cover',
         p: '[&:has(>img)]:contents',
       },
       // Blocks pushed to the slide's own top and bottom edges, which leaves the middle to whatever is behind them —

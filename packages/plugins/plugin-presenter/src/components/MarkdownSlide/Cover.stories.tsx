@@ -32,8 +32,6 @@ const BRAND = 'https://assets.dxos.org/brand';
 const LOCKUP = `${BRAND}/logotypes/dxos-hero-white.svg`;
 /** The wordmark alone, for a slide whose mark is drawn by the art behind it. */
 const WORDMARK = `${BRAND}/logotypes/dxos-text-white.svg`;
-/** The mark alone, for the oversized watermark. */
-const MARK = `${BRAND}/logotypes/dxos-logo-white.svg`;
 /** The deck's own art: the mark drawn as a lit volume, exported from the Figma title slide. */
 const GLOW = `${BRAND}/backgrounds/bg-dxos-glow.svg`;
 
@@ -168,17 +166,14 @@ export const Glow: Story = {
   },
 };
 
-/**
- * 5. The mark run oversized off the start edge, behind the words, raised out of the slide rather than laid on it.
- * Its central bar stands one bar-height in from that edge.
- */
-export const Watermark: Story = {
+/** 4. The art fills a column of its own, bleeding to the slide's edges, with the words in the column beside it. */
+export const Column: Story = {
   args: {
     content: slide(
-      { layout: 'two-cols' },
-      '<Box variant="watermark">',
+      { layout: 'two-cols', bleed: 'left' },
+      '<Box variant="fill">',
       '',
-      `![](${MARK})`,
+      `![](${BRAND}/backgrounds/bg-dxos.svg)`,
       '',
       '</Box>',
       '',
@@ -193,16 +188,14 @@ export const Watermark: Story = {
   },
   play: async ({ canvasElement }) => {
     const frame = await query(canvasElement, '[data-layout="two-cols"]');
-    const mark = frame.querySelector('[data-variant="watermark"] img')!;
-    await waitFor(() => expect((mark as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
-    // The mark is cropped by the slide's start edge rather than fitted inside it.
-    const art = mark.getBoundingClientRect();
+    const art = frame.querySelector('[data-variant="fill"] img')!;
+    await waitFor(() => expect((art as HTMLImageElement).naturalWidth).toBeGreaterThan(0));
+    // 1. The art runs to the slide's own start and bottom edges rather than sitting inside the layout's padding.
+    const picture = art.getBoundingClientRect();
     const slideBox = frame.getBoundingClientRect();
-    await expect(art.left).toBeLessThan(slideBox.left);
-    // The central bar stands one bar-height in from that edge. Both come from the mark's own square: the bar starts
-    // 41.4% across it and is 20.0% of it tall (`dxos-logo-white.svg`, 1024 units: x from 424.4, y 311.6 to 516.2).
-    const barInset = art.left + art.width * 0.41445 - slideBox.left;
-    const barHeight = art.height * 0.1998;
-    await expect(Math.abs(barInset - barHeight)).toBeLessThan(slideBox.width * 0.005);
+    await expect(Math.abs(picture.left - slideBox.left)).toBeLessThan(2);
+    await expect(Math.abs(picture.bottom - slideBox.bottom)).toBeLessThan(2);
+    // 2. It keeps to its own column, so the words beside it are clear of it.
+    await expect(picture.right).toBeLessThan(slideBox.left + slideBox.width / 2);
   },
 };
