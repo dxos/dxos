@@ -81,6 +81,25 @@ export class DiagramApp {
     return this.page.getByTestId('spacePlugin.presence').getByTestId('spacePlugin.presence.member');
   }
 
+  /** Starts recording every route the app writes from here on, read back by `recordedRoutes`. */
+  async recordRoutes(): Promise<void> {
+    await this.page.evaluate(() => {
+      const routes: string[] = [];
+      (window as any).__routes = routes;
+      for (const method of ['pushState', 'replaceState'] as const) {
+        const write = history[method].bind(history);
+        history[method] = (...args: Parameters<History['pushState']>) => {
+          write(...args);
+          routes.push(location.pathname);
+        };
+      }
+    });
+  }
+
+  recordedRoutes(): Promise<string[]> {
+    return this.page.evaluate(() => (window as any).__routes as string[]);
+  }
+
   /** The follow's hue on the pill, or null while the session is in no follow. */
   accent(): Promise<string | null> {
     return this.pill().getAttribute('data-accent');
