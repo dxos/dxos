@@ -51,5 +51,5 @@ export interface FactStoreApi {
   readonly clear: () => Effect.Effect<void, SemanticIndexError>;
 }
 
-/** @deprecated Use `MemoryService` from `@dxos/echo-memory`, with `MemoryNative` from `@dxos/echo-memory-native`. */
+/** @deprecated Use `MemoryService` from `@dxos/echo-memory`, with `MemorySqlite` from `@dxos/echo-memory-sqlite`. */
 export class FactStore extends Context.Service<FactStore, FactStoreApi>()('@dxos/pipeline-rdf/FactStore') {}

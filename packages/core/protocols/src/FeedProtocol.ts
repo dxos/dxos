@@ -494,6 +494,8 @@ export type ProtocolMessage = Schema.Schema.Type<typeof ProtocolMessage>;
 export const WellKnownNamespaces = {
   data: 'data',
   trace: 'trace',
+  /** A space's memory: the log of knowledge-base writes its fact store is rebuilt from (`@dxos/echo-memory`). */
+  facts: 'facts',
 } as const;
 
 export const isWellKnownNamespace = (namespace: string) =>

@@ -28,15 +28,15 @@ block only the tasks that name them.
 - [ ] `MemoryWire`: the JSON-in / JSON-out codec every transport shares (`docs/PACKAGES.md`).
 - [ ] Add the `## Rules` check (`no-implementation-deps`) to CI's agentic review scope.
 
-## 2. `@dxos/echo-memory-native` (local implementations) — first cut
+## 2. `@dxos/echo-memory-sqlite` (local implementations) — first cut
 
-`MemoryNative.make(storage)` serves `MemoryService` over one SQLite database. The knowledge base is
+`MemorySqlite.make(storage)` serves `MemoryService` over one SQLite database. The knowledge base is
 `FactStoreLive` from `@dxos/pipeline-rdf`, used as a library. The event base is new tables beside it,
 evaluated by `@dxos/brain`'s `Evaluator`. The code assumes the first option of each open question:
 Q-1 (keep the compute dependencies), Q-2 (keep SPARQL), Q-3 (no change stream), Q-4 (shared facts),
 Q-5 (event-base reads stay ops).
 
-- [x] Package `packages/core/echo/echo-memory-native` (`"private": true`).
+- [x] Package `packages/core/echo/echo-memory-sqlite` (`"private": true`).
 - [x] Event base, persisted: `memory_subscriptions`, `memory_events` (acknowledged rows kept as the dedup
       record, at most `MAX_EVENTS` each), `memory_state` (last evaluation time) [F-4, F-7.2]. Ported from
       EDGE's `BrainObject`.
@@ -53,10 +53,29 @@ Q-5 (event-base reads stay ops).
       [F-7.3]. Move `pipeline-rdf/src/testing/fact-server.ts` here.
 - [ ] Port the remaining cases of `fact-store.test.ts`, `fact-store-live.test.ts` and `BrainMemory.test.ts`.
 
+## 2b. The fact feed [F-9] — first cut
+
+- [x] `facts` is a `FeedProtocol.WellKnownNamespaces` entry.
+- [x] `FactLog`: `put` and `reset` entries; `FactLog.memory()` and `FactLog.feed({ feeds, spaceId, feedId })`
+      over `@dxos/feed`'s `FeedStore`.
+- [x] `MemorySqlite.make(storage, { log })`: writes go to the log first and are applied by reading it back;
+      the store keeps its log cursor (`memory_state.log_cursor`), catches up on open, and follows entries
+      other replicas add.
+- [x] Tests (T-8): an empty store rebuilds from the log; resets replay; a replica follows another's
+      writes and wakes its own subscriptions; rebuild from a real feed in the `facts` namespace.
+- [ ] Apply an entry and move the log cursor in one transaction (today a crash between them replays the
+      entry, which is harmless since `put` is idempotent and `reset` replays to the same state).
+- [ ] `MemoryHost` in client-services: one `MemorySqlite` per open space over the host's database, with a
+      `FactLog.feed` over the host's `FeedStore`; served over the client-services bridge through
+      `MemoryWire` [F-9.1]. Blocked on `docs/PACKAGES.md` question 1 (synchronous access).
+- [ ] Choose the space's fact feed id (one feed per space) and create it with the space.
+- [ ] Replicate the `facts` namespace through the feed sync client; EDGE must accept it first
+      (`docs/PACKAGES.md` question 3).
+
 ## 3. EDGE implementation (`dxos/edge`) — missing
 
 - [ ] Memory moves from the per-agent `BrainObject` to one Durable Object per space, built with
-      echo-memory-native's `layer(ctx.storage.sql)` [F-7.4]. `BrainObject` keeps sessions, provisioning
+      echo-memory-sqlite's `layer(ctx.storage.sql)` [F-7.4]. `BrainObject` keeps sessions, provisioning
       and identity, which are not memory. The space DO's alarm drives time-driven rules; the memory
       core exposes that to the DO, not through MemoryService [F-4.5].
 - [ ] Migrate data: merge each agent's facts, cursors, triggers and outboxes from its `BrainObject`
@@ -83,7 +102,7 @@ Q-5 (event-base reads stay ops).
       `wakeBlocks` there.
 - [ ] `Trigger` stays; map it to `Subscription` (`rules` + `payload: encodeTrigger(trigger)`) and back.
       Replaces `toSubscription`, `fromEvaluator`, `encodeEvent`/`decodeEvent`.
-- [ ] `brain/BrainMemory.ts` → the space's `MemoryService` from echo-memory-native `layerMemory` (or
+- [ ] `brain/BrainMemory.ts` → the space's `MemoryService` from echo-memory-sqlite `layerMemory` (or
       `layerFile` for persistence) plus the trigger mapping; `subscriptions(agent)` becomes
       `subscriptions(owner)` [F-5.3].
 - [ ] `brain/BrainWire.ts`, `capabilities/edge-brain.ts`: proxy `MemoryService` over the host wire.

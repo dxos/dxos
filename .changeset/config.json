@@ -70,7 +70,7 @@
       "@dxos/echo-generator",
       "@dxos/echo-host",
       "@dxos/echo-memory",
-      "@dxos/echo-memory-native",
+      "@dxos/echo-memory-sqlite",
       "@dxos/echo-panproto",
       "@dxos/echo-protocol",
       "@dxos/echo-query",

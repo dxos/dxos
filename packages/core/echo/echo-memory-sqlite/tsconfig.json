@@ -9,6 +9,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../../common/sql-sqlite"
     },
     {
@@ -21,7 +24,13 @@
       "path": "../../compute/sparql-sqlite"
     },
     {
+      "path": "../../protocols"
+    },
+    {
       "path": "../echo-memory"
+    },
+    {
+      "path": "../feed"
     }
   ]
 }

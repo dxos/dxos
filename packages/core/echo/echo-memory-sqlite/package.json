@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/echo-memory-native",
+  "name": "@dxos/echo-memory-sqlite",
   "version": "0.16.0",
   "private": true,
   "description": "Local MemoryService implementations: an RDF quad store and goal-rule subscriptions over SQLite.",
@@ -29,11 +29,15 @@
   "dependencies": {
     "@dxos/brain": "workspace:*",
     "@dxos/echo-memory": "workspace:*",
+    "@dxos/feed": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/sparql-sqlite": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/keys": "workspace:*",
+    "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:",
     "effect": "catalog:",
     "vitest": "catalog:"

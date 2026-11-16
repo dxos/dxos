@@ -19,13 +19,20 @@ import { type FactStoreApi, FactStoreLive } from '@dxos/pipeline-rdf';
 import { type SqlStorage, type SqlStorageValue } from '@dxos/sparql-sqlite';
 import * as SqliteStorage from '@dxos/sql-sqlite/SqlStorage';
 
+import * as FactLog from './FactLog.ts';
+
 export type Options = {
   /** Makes each write atomic; a Durable Object passes `(fn) => ctx.storage.transactionSync(fn)`. */
   readonly transactionSync?: <T>(fn: () => T) => T;
+  /**
+   * The log knowledge-base writes go to first. With one, the store applies what it reads back from the log, remembers
+   * how far it has read, follows entries other replicas add, and an empty store rebuilds itself from the log.
+   */
+  readonly log?: FactLog.FactLog;
 };
 
 /** Storage that runs its own transactions, as every `@dxos/sql-sqlite/SqlStorage` database does. */
-type TransactionalStorage = SqlStorage & Required<Options>;
+type TransactionalStorage = SqlStorage & Required<Pick<Options, 'transactionSync'>>;
 
 /**
  * Most acknowledged events one subscription remembers: an acknowledged event's row is what stops the same wake from
@@ -41,6 +48,9 @@ const Table = {
 
 /** When the rules were last evaluated, so a reopened memory replays as of then and catches up from there. */
 const EVALUATED_AT = 'evaluated_at';
+
+/** How far the store has applied the fact log. */
+const LOG_CURSOR = 'log_cursor';
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS ${Table.SUBSCRIPTIONS} (
@@ -107,12 +117,19 @@ export const make = (
 
     const exec = (query: string, ...bindings: (string | number | null)[]) => storage.exec(query, ...bindings).toArray();
 
-    const saveEvaluatedAt = (at: number) =>
+    const saveState = (key: string, value: string) =>
       exec(
         `INSERT INTO ${Table.STATE} (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-        EVALUATED_AT,
-        String(at),
+        key,
+        value,
       );
+
+    const saveEvaluatedAt = (at: number) => saveState(EVALUATED_AT, String(at));
+
+    const readState = (key: string): string | undefined => {
+      const [row] = exec(`SELECT value FROM ${Table.STATE} WHERE key = ?`, key);
+      return row === undefined ? undefined : asString(row.value);
+    };
 
     /** Queues the events not queued before (acknowledged or not); returns how many were new. */
     const enqueue = (events: readonly Evaluator.Event[]): number => {
@@ -209,25 +226,87 @@ export const make = (
       }
     };
 
+    /** Stores facts, moves the read cursor, and queues what the facts wake; returns how many events were queued. */
+    const applyPut = (entry: Extract<FactLog.Entry, { _tag: 'put' }>) =>
+      Effect.gen(function* () {
+        yield* store.putFacts(entry.facts);
+        // Moved only once the facts are stored, so a failed put is read again rather than skipped.
+        if (entry.read) {
+          yield* store.setCursor(entry.read.source, entry.read.through);
+        }
+        if (entry.facts.length === 0) {
+          return 0;
+        }
+        const at = yield* Clock.currentTimeMillis;
+        const queued = enqueue(evaluator.current.push(entry.facts, { at, quiet: entry.quiet }));
+        saveEvaluatedAt(at);
+        return queued;
+      });
+
+    /** Forgets facts, cursors and queued events; the subscriptions stay, with their rule state started over. */
+    const applyReset = Effect.gen(function* () {
+      yield* store.clear();
+      exec(`DELETE FROM ${Table.EVENTS}`);
+      const at = yield* Clock.currentTimeMillis;
+      // A fresh evaluator holds no facts; the subscriptions are added back so they keep waking.
+      const fresh = Evaluator.make();
+      fresh.hydrate(readSubscriptions(storage).map(toRules), [], at);
+      evaluator.current = fresh;
+      saveEvaluatedAt(at);
+      return 0;
+    });
+
+    const apply = (entry: FactLog.Entry) => (entry._tag === 'put' ? applyPut(entry) : applyReset);
+
+    /** Applies the log entries the store has not read yet, then records how far it read; returns events queued. */
+    const catchUp = (log: FactLog.FactLog) =>
+      Effect.gen(function* () {
+        const page = yield* log.read(readState(LOG_CURSOR));
+        let queued = 0;
+        for (const entry of page.entries) {
+          queued += yield* apply(entry);
+        }
+        if (page.next !== undefined) {
+          saveState(LOG_CURSOR, page.next);
+        }
+        return queued;
+      });
+
+    /** Writes go to the log first, then the store applies them from it; without a log they apply directly. */
+    const write = (entry: FactLog.Entry) =>
+      writing(
+        Effect.gen(function* () {
+          const queued = options.log
+            ? yield* options.log.append(entry).pipe(Effect.andThen(catchUp(options.log)))
+            : yield* apply(entry);
+          yield* wake;
+          return queued;
+        }),
+      );
+
+    const { log } = options;
+    if (log) {
+      // Listening before the first read means no entry lands between them unseen.
+      const changes = yield* Queue.sliding<void>(1);
+      yield* log.listen(() => void Queue.offerUnsafe(changes, undefined));
+      // Rebuilds an empty store, and applies what other replicas wrote while it was closed.
+      yield* writing(catchUp(log)).pipe(Effect.orDie);
+      yield* Effect.forkScoped(
+        Effect.forever(
+          Queue.take(changes).pipe(
+            Effect.andThen(writing(catchUp(log))),
+            Effect.andThen(wake),
+            Effect.catchCause((cause) => Effect.logError('Failed to apply the fact log', cause)),
+          ),
+        ),
+      );
+    }
+
     const service: MemoryService.Service = {
       put: (facts, putOptions) =>
-        writing(
-          Effect.gen(function* () {
-            yield* store.putFacts(facts);
-            // Moved only once the facts are stored, so a failed put is read again rather than skipped.
-            if (putOptions?.read) {
-              yield* store.setCursor(putOptions.read.source, putOptions.read.through);
-            }
-            if (facts.length === 0) {
-              return 0;
-            }
-            const at = yield* Clock.currentTimeMillis;
-            const queued = enqueue(evaluator.current.push(facts, { at, quiet: putOptions?.quiet }));
-            saveEvaluatedAt(at);
-            yield* wake;
-            return queued;
-          }),
-        ).pipe(Effect.mapError(MemoryError.MemoryError.wrap({ message: 'Failed to put facts' }))),
+        write({ _tag: 'put', facts, read: putOptions?.read, quiet: putOptions?.quiet }).pipe(
+          Effect.mapError(MemoryError.MemoryError.wrap({ message: 'Failed to put facts' })),
+        ),
 
       query: (query) =>
         queryRaw(query).pipe(
@@ -236,19 +315,10 @@ export const make = (
         ),
 
       reset: () =>
-        writing(
-          Effect.gen(function* () {
-            yield* store.clear();
-            exec(`DELETE FROM ${Table.EVENTS}`);
-            const at = yield* Clock.currentTimeMillis;
-            // A fresh evaluator holds no facts; the subscriptions are added back so they keep waking.
-            const fresh = Evaluator.make();
-            fresh.hydrate(readSubscriptions(storage).map(toRules), [], at);
-            evaluator.current = fresh;
-            saveEvaluatedAt(at);
-            yield* wake;
-          }),
-        ).pipe(Effect.mapError(MemoryError.MemoryError.wrap({ message: 'Failed to reset memory' }))),
+        write({ _tag: 'reset' }).pipe(
+          Effect.asVoid,
+          Effect.mapError(MemoryError.MemoryError.wrap({ message: 'Failed to reset memory' })),
+        ),
 
       subscribe: (subscription) =>
         writing(

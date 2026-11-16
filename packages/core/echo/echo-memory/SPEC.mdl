@@ -18,9 +18,15 @@ model and the small pure functions over it. It contains no storage, no SPARQL en
 evaluator, so any package can import it — an operation definition, a UI component, an EDGE worker —
 without pulling an implementation into its bundle [F-1].
 
-Implementations live elsewhere. `@dxos/echo-memory-native` holds the local ones — for the CLI, tests,
-node servers and the client — over an RDF quad store in SQLite (`@dxos/sparql-sqlite`) [F-7]. EDGE
-serves the same interface from a Durable Object over that same core [F-7.4].
+Implementations live elsewhere. `@dxos/echo-memory-sqlite` holds the SQLite one — an RDF quad store
+(`@dxos/sparql-sqlite`) with goal-rule subscriptions beside it — used directly by the CLI, tests and node
+servers [F-7]. EDGE serves the same interface from a Durable Object over that same core [F-7.4].
+
+In the app the memory runs in the client-services backend, not in the page. The page sends memory calls,
+SPARQL included, over the client-services bridge; the backend runs `@dxos/sparql-sqlite` over the SQLite
+database it already holds. Every write goes first to the space's feed in the `facts` namespace, which is
+durable and replicates like any feed, and only then to the store, which remembers how far it has read
+the feed and can be rebuilt from it [F-9].
 
 `BrainService` and `FactStore` are deprecated in favour of `MemoryService`; `docs/MIGRATION.md` lists the
 work to get there, both the implementations still missing and the call sites to move [F-8].
@@ -604,10 +610,10 @@ feat F-6: Errors
 ```
 
 ```mdl
-feat F-7: Native implementations (@dxos/echo-memory-native)
+feat F-7: SQLite implementation (@dxos/echo-memory-sqlite)
 
   req F-7.1:
-    when: `@dxos/echo-memory-native` is used
+    when: `@dxos/echo-memory-sqlite` is used
     then: it provides MemoryService over the `@dxos/sparql-sqlite` quad store, with
           `layer(storage: SqlStorage)`, `layerFile(path)` (node) and `layerMemory` (a private in-memory
           SQLite), each a `Layer<MemoryService>`
@@ -619,15 +625,15 @@ feat F-7: Native implementations (@dxos/echo-memory-native)
 
   req F-7.3:
     when: memory must be reached from another process (a dev fact server, a CLI against a running node)
-    then: echo-memory-native provides an HTTP client layer and a fetch-style handler for MemoryService
+    then: echo-memory-sqlite provides an HTTP client layer and a fetch-style handler for MemoryService
 
   req F-7.4:
     when: EDGE serves a space's memory
-    then: one Durable Object per space builds MemoryService with `layer(ctx.storage.sql)` from echo-memory-native,
+    then: one Durable Object per space builds MemoryService with `layer(ctx.storage.sql)` from echo-memory-sqlite,
           so the client and EDGE run one implementation
 
   req F-7.5:
-    when: a native memory is open
+    when: a SQLite memory is open
     then: it schedules its own re-evaluation of time-driven rules in the layer's scope; a memory opened
           from a file after rules came due while it was closed evaluates them on open
 ```
@@ -649,6 +655,39 @@ feat F-8: Deprecation of BrainService and FactStore
     when: an agent's turn must be started from a wake
     then: that is not memory's job: `wake` leaves the interface and stays with the agent runtime in
           `@dxos/plugin-agent`
+```
+
+```mdl
+feat F-9: The app's memory: a fact feed and a backend store
+
+  req F-9.1:
+    when: a page in the app uses MemoryService
+    then: its calls, SPARQL queries included, cross the client-services bridge to a backend that runs
+          `@dxos/sparql-sqlite` over the backend's existing SQLite database; the page holds no store
+
+  req F-9.2:
+    when: a knowledge-base write (`put` or `reset`) is made
+    then: it is appended to the space's fact feed, in the `facts` feed namespace, before the store
+          changes; the store applies it by reading the feed back
+
+  req F-9.3:
+    when: the store applies feed entries
+    then: it records the feed cursor it has read through in the same database, and on open applies only
+          the entries after that cursor
+
+  req F-9.4:
+    when: the store is empty or lost and the feed is not
+    then: opening the memory replays the whole feed and the store answers every query as before; resets
+          in the feed are replayed in order
+
+  req F-9.5:
+    when: another replica appends to the fact feed
+    then: the store applies the new entries as they arrive, and they wake its subscriptions as a local
+          `put` would, `quiet` included
+
+  req F-9.6:
+    when: subscriptions, outboxes and acknowledgements change
+    then: they stay in the local database and are not written to the fact feed
 ```
 
 ## Acceptance
@@ -714,6 +753,15 @@ scenario T-7: One query op, typed per kind
   then:
     - each call is typed at the call site as Fact[], SparqlRow[] and string | undefined
     - each answer, sent through the HTTP handler and client, decodes to an equal value
+```
+
+```mdl
+scenario T-8: The store is rebuilt from the fact feed
+  given: a memory over an empty database and a feed store, with facts put and a read cursor moved
+  when: a second memory opens over a new, empty database and the same fact feed
+  then:
+    - a FactsQuery returns the same facts and a CursorQuery the same cursor
+    - a fact put through the first memory afterwards appears in the second without a write to it
 ```
 
 ## Rules
@@ -988,6 +1036,66 @@ decision D-22: The branded ids are FactId, GraphIri, EntityKey, SourceUri, Subsc
   rejected:
     - Reusing `@dxos/keys` DXN for SourceUri, which would reject the non-DXN URIs read cursors already hold.
     - Branding predicate IRIs, which callers pass as surface forms as often as IRIs.
+```
+
+```mdl
+decision D-23: The SQLite implementation package is `@dxos/echo-memory-sqlite`, not `@dxos/echo-memory-native`.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-7]
+```
+
+```mdl
+decision D-24: In the app, memory calls, SPARQL queries included, go over the client-services bridge to a backend, and the backend runs `@dxos/sparql-sqlite` over the SQLite database it already has.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-25: Every write goes first to a new feed in the `facts` namespace, for durability and replication, and then to the store. The store remembers its feed cursor and can be rebuilt from the feed, and that rebuild is tested.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-9.2, F-9.3, F-9.4, T-8]
+```
+
+```mdl
+decision D-26: The fact feed records `put` (with its facts, read cursor and quiet speakers) and `reset` as entries; subscriptions, outboxes and acknowledgements stay local. Fills in [D-25].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.2, F-9.6]
+  why: Replaying puts and resets in order is enough to rebuild the knowledge base; an outbox is one consumer's progress, so replicating it would drain a subscription for every device at once.
+```
+
+```mdl
+decision D-27: A memory applies entries other replicas append as they arrive, and they wake its own subscriptions as a local put would; it starts listening to the feed before its first read, so no entry lands unseen between them. Fills in [D-25].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.5]
+  why: A fact said on another device is new to this device's watches; without the listen-then-read order, a write made just after open was never applied.
+```
+
+```mdl
+decision D-28: `facts` is a protocol well-known feed namespace beside `data` and `trace`. Fills in [D-25].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.2]
+  why: The feed store and replication only carry well-known namespaces; ECHO's indexer reads only `data` and `trace`, so fact blocks never reach the object index.
+```
+
+```mdl
+question Q-6: Should subscriptions also be written to the fact feed, so a watch set on one device runs on every device?
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.6]
+  context: D-26 keeps them local, so each device evaluates only the watches made on it, and a rebuilt store has none.
+  options:
+    - Local: subscriptions and outboxes stay per device.
+    - Replicated: subscriptions go to the feed; outboxes stay local.
 ```
 
 ## Appendix: Extension Definitions
