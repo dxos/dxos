@@ -196,7 +196,6 @@ export const translations = [
         'presence-stop-following.label': 'Stop',
         'presence-following-you.heading': 'Following you',
         'presence-go-to.label': 'Go to',
-        'presence-jump.label': 'Jump',
         'presence-in-object.heading': 'Viewers · {{count}}',
         'presence-see-everyone.label': 'See everyone in this space',
         'presence-show-sessions.label': 'Show each session',

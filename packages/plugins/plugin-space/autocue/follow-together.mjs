@@ -246,7 +246,7 @@ export const steps = [
   },
   {
     name: 'Bob opens Members',
-    subtitle: 'Everyone viewing the plan, each with Jump and Follow',
+    subtitle: 'Everyone viewing the plan, each with Go to and Follow',
     run: async ({ peers: { bob } }) => {
       await bob.click(membersTab(bob.page));
       await waitFor(async () => (await presenceRows(bob.page).count()) >= 2, { what: 'both people in Bob’s list' });

@@ -3,8 +3,8 @@
 //
 
 /**
- * Alice acts on Bob from his avatar: the viewers list, Jump to his selection, one row per tab of his, and the
- * Members companion with Go to. Recorded side by side.
+ * Alice acts on Bob from his avatar: the viewers list, Go to his selection, one row per tab of his, and the
+ * Members companion, whose Go to opens what he views. Recorded side by side.
  *
  * @mdl packages/plugins/plugin-space/PLUGIN.mdl test QA-3
  * @app composer-app `bundle-e2e` output, served by `vite preview` on 127.0.0.1:4173 (EDGE signaling)
@@ -176,9 +176,9 @@ const openViewers = async (alice) => {
   await viewerRows(alice.page).first().waitFor({ timeout: TIMEOUT });
 };
 
-/** Clicks a Jump and waits for Alice's editor to take focus with its view settled. */
-const jump = async (alice, row, sleep) => {
-  const action = row.getByTestId('spacePlugin.presence.jump');
+/** Clicks a Go to and waits for Alice's editor to take focus with its view settled. */
+const goTo = async (alice, row, sleep) => {
+  const action = row.getByTestId('spacePlugin.presence.goTo');
   await action.waitFor({ state: 'attached', timeout: TIMEOUT });
   await row.hover();
   await alice.click(action);
@@ -305,10 +305,10 @@ export const steps = [
     pace: 2_500,
   },
   {
-    name: 'Alice clicks Jump; her view goes to Bob’s selection',
+    name: 'Alice clicks Go to; her view goes to Bob’s selection',
     subtitle: 'QA-3 step 3',
     run: async ({ peers: { alice }, sleep }) => {
-      const top = await jump(alice, viewerRows(alice.page).first(), sleep);
+      const top = await goTo(alice, viewerRows(alice.page).first(), sleep);
       if (top < 400) {
         throw new Error(`Alice's view did not move to Bob's selection (scrollTop ${top})`);
       }
@@ -326,17 +326,17 @@ export const steps = [
     pace: 3_000,
   },
   {
-    name: 'Each tab has its own Jump',
+    name: 'Each tab has its own Go to',
     subtitle: 'QA-4 step 4',
     run: async ({ peers: { alice }, sleep }) => {
       const tops = [];
       for (const index of [0, 1]) {
         await openViewers(alice);
-        tops.push(await jump(alice, sessionRows(alice.page).nth(index), sleep));
+        tops.push(await goTo(alice, sessionRows(alice.page).nth(index), sleep));
         await sleep(1_000);
       }
       if (Math.abs(tops[0] - tops[1]) < 200) {
-        throw new Error(`the two sessions' Jumps landed in the same place (${tops.join(', ')})`);
+        throw new Error(`the two sessions' Go tos landed in the same place (${tops.join(', ')})`);
       }
     },
     pace: 2_500,
@@ -353,16 +353,20 @@ export const steps = [
   },
   {
     name: 'Bob opens the agenda; Alice goes to it from Members',
-    subtitle: 'Go to opens what a peer views when it is not open here',
+    subtitle: 'Go to opens what a peer views when it is not open here, at their selection',
     run: async ({ peers: { alice, bob } }) => {
       await bob.click(objectLink(bob.page, AGENDA));
-      const goTo = sidebar(alice.page).getByTestId('spacePlugin.presence.goTo').first();
-      await goTo.waitFor({ state: 'attached', timeout: TIMEOUT });
-      await goTo
+      const action = sidebar(alice.page)
+        .locator('[data-part="item-group"]')
+        .filter({ hasText: AGENDA })
+        .getByTestId('spacePlugin.presence.goTo')
+        .first();
+      await action.waitFor({ state: 'attached', timeout: TIMEOUT });
+      await action
         .locator('xpath=ancestor::*[contains(@class,"dx-row")][1]')
         .hover()
         .catch(() => {});
-      await alice.click(goTo);
+      await alice.click(action);
       await waitFor(async () => (await textbox(alice.page).innerText()).includes('Walk through'), {
         what: 'the agenda in Alice’s deck',
       });

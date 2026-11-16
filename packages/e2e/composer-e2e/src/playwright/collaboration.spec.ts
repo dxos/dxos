@@ -285,7 +285,7 @@ test.describe('Collaboration tests', () => {
     ]);
   });
 
-  test("a peer's avatar opens the viewers list and jumps to their selection", { tag: ['@space:QA-3'] }, async () => {
+  test("a peer's avatar opens the viewers list and goes to their selection", { tag: ['@space:QA-3'] }, async () => {
     test.setTimeout(120_000);
 
     await host.createSpace();
@@ -311,8 +311,7 @@ test.describe('Collaboration tests', () => {
     const row = host.page.getByTestId('spacePlugin.presence.row');
     await expect(row).toHaveCount(1);
 
-    // The guest's document is open on the host, so the action is Jump rather than Go to.
-    await row.getByTestId('spacePlugin.presence.jump').click({ timeout: 30_000 });
+    await row.getByTestId('spacePlugin.presence.goTo').click({ timeout: 30_000 });
     await expect(hostTextbox).toBeFocused();
 
     await hostPresence.first().click();
@@ -327,7 +326,7 @@ test.describe('Collaboration tests', () => {
   });
 
   test(
-    "the sessions toggle lists a peer's sessions under their row, each with its own Jump",
+    "the sessions toggle lists a peer's sessions under their row, each with its own Go to",
     { tag: ['@space:QA-4'] },
     async () => {
       test.setTimeout(150_000);
@@ -365,9 +364,9 @@ test.describe('Collaboration tests', () => {
       await expect(sessions).toHaveCount(2, { timeout: 45_000 });
       // Listed, the actions move from the person's row to their sessions' rows.
       await expect(row).toHaveCount(1);
-      await expect(row.getByTestId('spacePlugin.presence.jump')).toHaveCount(0);
+      await expect(row.getByTestId('spacePlugin.presence.goTo')).toHaveCount(0);
 
-      await sessions.first().getByTestId('spacePlugin.presence.jump').click({ timeout: 30_000 });
+      await sessions.first().getByTestId('spacePlugin.presence.goTo').click({ timeout: 30_000 });
       await expect(hostTextbox).toBeFocused();
     },
   );

@@ -528,7 +528,7 @@ export const PresenceItems = ({ member, showSessions, renderActions, followHue }
           <PresenceAvatar member={member} size='sm' followHue={followHue} />
         </Listbox.ItemIcon>
         <Listbox.ItemText>{getName(member)}</Listbox.ItemText>
-        {/* The person's own actions: Jump and Go to act on their session that last moved here, Follow on the person. */}
+        {/* The person's own actions: Go to acts on their session that last moved here, Follow on the person. */}
         {!showSessions && renderActions?.(member)}
       </Listbox.Item>
       {showSessions &&

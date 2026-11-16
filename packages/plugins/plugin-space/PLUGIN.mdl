@@ -584,8 +584,8 @@ feat F-8: Presence and Sync Status
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
   req F-8.7: A space's navtree row counts the peers viewing the space itself.
   req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence, and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
-  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise. Go to opens the object at the graph path the peer's session has it open at, so the navtree shows it where the peer does. A peer on the space's Home views the space itself, so Go to opens that Home, and the Members companion lists them under Home.
-  req F-8.10: Jump reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus.
+  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Go to and Follow. Go to opens the object when the deck does not show it, at the graph path the peer's session has it open at, so the navtree shows it where the peer does. A peer on the space's Home views the space itself, so Go to opens that Home, and the Members companion lists them under Home.
+  req F-8.10: Go to then reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus; a plank it opened is asked again until it mounts, for up to the follow's mount window.
   req F-8.11: Clicking an avatar in SpacePresence opens the list of the object's viewers; a button at the end of its header opens the Members companion. Rows are Listbox rows that select nothing; their actions are labelled buttons.
   req F-8.12: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
   req F-8.18: The viewers list and the Members companion are one presence list, of one object or of the whole space, with the same header, rows and follow. A row takes no hover; a person's row and their session rows take the keyboard highlight together, as one block, with the avatar inside it.
@@ -755,12 +755,12 @@ test QA-2: Register a schema and add a typed relation
 
 ```mdl
 test QA-3: Act on a peer from their avatar
-  desc: A peer's avatar opens the object's viewers, Jump reveals what they are looking at, and the Members companion lists everyone in the space.
+  desc: A peer's avatar opens the object's viewers, Go to reveals what they are looking at, and the Members companion lists everyone in the space.
   actors: human
   covers: [F-8.9, F-8.10, F-8.11, F-8.12]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › a peer's avatar opens the viewers list and jumps to their selection
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a peer's avatar opens the viewers list and goes to their selection
   given:
     - host: a booted app with a space containing one document, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space
@@ -770,9 +770,9 @@ test QA-3: Act on a peer from their avatar
       expect: the host's plank header shows the guest's avatar
     - name: Open the viewers list
       do: On the host, click the guest's avatar.
-      expect: a list of the document's viewers opens with the guest's row, and a Jump action on it
-    - name: Jump to the guest
-      do: Click Jump on the guest's row.
+      expect: a list of the document's viewers opens with the guest's row, and a Go to action on it
+    - name: Go to the guest
+      do: Click Go to on the guest's row.
       expect: the host's editor takes focus with its caret at the guest's selection
     - name: See everyone
       do: Open the viewers list again and click the members button in its header.
@@ -784,12 +784,12 @@ test QA-3: Act on a peer from their avatar
 
 ```mdl
 test QA-4: Tell a peer's sessions apart
-  desc: A peer with the object open in two tabs shows as one row, and the sessions toggle lists their sessions under it, each with its own Jump.
+  desc: A peer with the object open in two tabs shows as one row, and the sessions toggle lists their sessions under it, each with its own Go to.
   actors: human
   covers: [F-8.13, F-8.16]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › the sessions toggle lists a peer's sessions under their row, each with its own Jump
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › the sessions toggle lists a peer's sessions under their row, each with its own Go to
   given:
     - host: a booted app with a space containing one document, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space
@@ -799,12 +799,12 @@ test QA-4: Tell a peer's sessions apart
       expect: the host's plank header shows one avatar for the guest
     - name: Open the viewers list
       do: On the host, click the guest's avatar.
-      expect: the guest's row carries a Jump action
+      expect: the guest's row carries a Go to action
     - name: Show each session
       do: Click the sessions toggle in the list's header.
-      expect: a row per session appears under the guest's row, each named by its device with a dot and a Jump action, and the guest's own row no longer carries Jump
-    - name: Jump to a session
-      do: Click Jump on the first session's row.
+      expect: a row per session appears under the guest's row, each named by its device with a dot and a Go to action, and the guest's own row no longer carries Go to
+    - name: Go to a session
+      do: Click Go to on the first session's row.
       expect: the host's editor takes focus
 ```
 
@@ -883,7 +883,7 @@ test QA-7: See a follow on both sides
       expect: the host's plank header shows the guest's avatar
     - name: Follow the guest
       do: On the host, open the Members companion and click Follow on the guest's row.
-      expect: the guest's row rises to the top of the host's list in amber, with Stop in place of Jump and Follow, and the host's plank heading takes an amber wash and underline
+      expect: the guest's row rises to the top of the host's list in amber, with Stop in place of Go to and Follow, and the host's plank heading takes an amber wash and underline
     - name: The guest sees the follow
       do: On the guest, open the Members companion.
       expect: the Members tab showed an amber dot, the list starts with the host under "Following you" in amber, and the guest's plank heading takes the same wash
@@ -1650,6 +1650,17 @@ decision D-84: The viewers list and the Members companion are one `PresenceList`
   rejected:
     - Sharing only the rows and keeping a list per host, which left the follow drawn two ways.
     - Another list component; the design system builds every list on `Listbox`, whose `none` selection keeps keyboard movement.
+```
+
+```mdl
+decision D-85: Jump and Go to are one action, Go to, on every row: it opens the peer's object when the deck does not show it, then reveals their anchor with the caret and focus, asking a plank it opened again every 100 ms until it mounts or the follow's mount window (`FOLLOW_MOUNT_TIMEOUT`) ends. An open object with nothing to reveal scrolls its plank into view.
+  date: 2026-11-15
+  by: user:wittjosiah
+  supersedes: D-14
+  affects: [F-8.9, F-8.10]
+  why: Both took you to the peer, and which one a row showed depended only on what this deck had open. D-14 split them because a plank opened by the action had not mounted when it returned; a reveal that answers whether it landed, retried through the mount window as the follow does, closes that gap.
+  rejected:
+    - Keeping Jump as the name; it reads oddly for an object that first has to open.
 ```
 
 ## Appendix: Extension Definitions

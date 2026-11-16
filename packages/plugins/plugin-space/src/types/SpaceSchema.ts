@@ -28,7 +28,7 @@ export const SPACE_TYPE = 'org.dxos.type.space';
  */
 export const SPACE_HOME_NODE_TYPE = 'org.dxos.space.home';
 
-/** Type of a peer's hidden graph node; plugins contribute actions on a peer (jump to them, go to their object) here. */
+/** Type of a peer's hidden graph node; plugins contribute actions on a peer (go to them, follow them) here. */
 export const PEER_NODE_TYPE = 'org.dxos.space.peer';
 
 /** Data of a {@link PEER_NODE_TYPE} node. */
