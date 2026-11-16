@@ -503,7 +503,8 @@ export type CommentScope = Readonly<{
 export const CommentScope = Capability$.make<CommentScope>()('org.dxos.app-framework.capability.commentScope');
 
 /**
- * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed.
+ * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed, and returns
+ * the text of the turn's final reply (absent when the turn produced none), which the review plugin posts to the thread.
  * Contributed by the assistant, so the review plugin owns threads without depending on any AI stack.
  */
 export type CommentAgentRunner = Readonly<{
@@ -511,7 +512,7 @@ export type CommentAgentRunner = Readonly<{
     thread: Thread.Thread;
     subject: Obj.Unknown;
     message: Message.Message;
-  }) => Effect$.Effect<void, Error, Capability$.Service>;
+  }) => Effect$.Effect<string | undefined, Error, Capability$.Service>;
 }>;
 
 /**
