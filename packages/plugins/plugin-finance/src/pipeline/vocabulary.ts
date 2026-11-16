@@ -162,5 +162,44 @@ export const ANNOTATIONS = {
   eventType: RDF.Ontology.entry('event_type', { iri: fin('eventType'), label: 'reports event', definedBy: FIN }),
 } as const;
 
+const term = (name: string, local: string, label: string): RDF.Ontology.Entry =>
+  RDF.Ontology.entry(name, { iri: fin(local), label, definedBy: FIN });
+
+/**
+ * Predicates the structured sources (prices, short volume, Form 4, 13F, filings, House disclosures) are written with,
+ * deterministically. Each row is a node of its own graph that is `about` the company, so a query joins it to the
+ * news about the same {@link companyIri}.
+ */
+export const MARKET = {
+  about: RDF.Ontology.entry('about', { iri: schema('about'), definedBy: RDF.Vocab.SCHEMA }),
+  observedOn: term('observed_on', 'observedOn', 'observed on'),
+  open: term('open_price', 'openPrice', 'open price'),
+  high: term('high_price', 'highPrice', 'high price'),
+  low: term('low_price', 'lowPrice', 'low price'),
+  close: term('close_price', 'closePrice', 'close price'),
+  volume: term('trading_volume', 'tradingVolume', 'trading volume'),
+  changePercent: term('daily_return_percent', 'dailyReturnPercent', 'daily return percent'),
+  shortVolume: term('short_volume', 'shortVolume', 'short volume'),
+  shortRatio: term('short_volume_ratio', 'shortVolumeRatio', 'short volume ratio'),
+  insider: term('insider', 'insider', 'traded by insider'),
+  insiderRole: term('insider_role', 'insiderRole', 'insider role'),
+  insiderBuys: term('insider_buys', 'insiderBuys', 'insider buys shares of'),
+  insiderSells: term('insider_sells', 'insiderSells', 'insider sells shares of'),
+  transactionCode: term('transaction_code', 'transactionCode', 'transaction code'),
+  shares: term('shares', 'shares', 'shares'),
+  pricePerShare: term('price_per_share', 'pricePerShare', 'price per share'),
+  sharesAfter: term('shares_owned_after', 'sharesOwnedAfter', 'shares owned after'),
+  holdsPositionIn: RDF.Ontology.entry('holds_position_in', {
+    iri: fin('holdsPositionIn'),
+    label: 'holds position in',
+    definedBy: FIN,
+  }),
+  positionValue: term('position_value_usd', 'positionValueUsd', 'position value usd'),
+  files: term('files', 'files', 'files'),
+  formType: term('form_type', 'formType', 'form type'),
+  filingItems: term('filing_items', 'filingItems', 'filing items'),
+  disclosesTrades: term('discloses_trades', 'disclosesTrades', 'discloses trades in'),
+} as const;
+
 /** The IRI of the company a ticker names. */
 export const companyIri = (ticker: string): string => `${COMPANY}${encodeURIComponent(ticker.toUpperCase())}`;

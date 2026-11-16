@@ -88,6 +88,11 @@
       "types": "./dist/types/src/types/CreateSubscription.d.ts",
       "import": "./dist/lib/CreateSubscription.mjs"
     },
+    "./FeedParser": {
+      "source": "./src/operations/sources/rss.ts",
+      "types": "./dist/types/src/operations/sources/rss.d.ts",
+      "import": "./dist/lib/FeedParser.mjs"
+    },
     "./FeedOperation": {
       "source": "./src/types/FeedOperation.ts",
       "types": "./dist/types/src/types/FeedOperation.d.ts",
@@ -121,6 +126,9 @@
     "*": {
       "CreateSubscription": [
         "dist/types/src/types/CreateSubscription.d.ts"
+      ],
+      "FeedParser": [
+        "dist/types/src/operations/sources/rss.d.ts"
       ],
       "FeedOperation": [
         "dist/types/src/types/FeedOperation.d.ts"
@@ -177,7 +185,6 @@
     "@dxos/ai": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo-client": "workspace:*",
-    "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",

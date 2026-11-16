@@ -18,6 +18,9 @@ import {
 } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
+import { type Finance } from '#types';
+
+import { type TextItem, itemSource, itemText } from '../sources/text-item.ts';
 import {
   type AnnotateModelOptions,
   classifyEvents,
@@ -26,7 +29,7 @@ import {
   linkTickers,
 } from './annotate.ts';
 import { type Extractor, articleFacts, eventFacts, mentionFacts, publisherAgent, sentimentFacts } from './facts.ts';
-import { type NewsItem, itemSource, itemText } from './news-item.ts';
+import { OBSERVATION_EXTRACTOR, observationFacts, observationSource } from './observation-facts.ts';
 import { lexiconSentiment } from './sentiment-lexicon.ts';
 import { type TickerMention, TICKERS, findTickers, mergeMentions } from './tickers.ts';
 import { companyIri, ontology } from './vocabulary.ts';
@@ -66,9 +69,9 @@ export type FinancePipelineSummary = {
   readonly failedBatches: number;
 };
 
-/** Rules extraction adds for news headlines. */
+/** Rules extraction adds for finance text. */
 export const NEWS_RULES: ReadonlyArray<string> = [
-  'Each message is a finance news headline, sometimes followed by a summary, and its author is the outlet that published it. State what the news says about companies, people, markets and the economy as facts about them, not as things the outlet says.',
+  "Each message is a finance news headline, press release, central-bank or statistics release, or investor forum post, sometimes followed by a summary, and its author is the outlet, wire, institution or forum that published it. State what it reports about companies, people, markets and the economy as facts about them, not as things the author says; a forum post's predictions and opinions stay the author's (factuality PR or PS), never certain facts.",
   'Name a company by its usual name ("Apple", not "AAPL" or "Apple Inc. (NASDAQ: AAPL)"), and when the text gives its ticker add "has ticker symbol" with the symbol as a literal.',
   'Keep figures in the object as written, with units and periods ("$94.9 billion", "Q3 2026", "$250 price target"), and put the date the figure refers to in validFrom when the text names it.',
   'Skip opinion framing with no fact in it ("Is X a buy?", "3 stocks to watch"), and questions in headlines.',
@@ -83,7 +86,7 @@ export const KNOWN_COMPANIES: ReadonlyArray<RDF.KnownEntity> = TICKERS.map(({ ti
 }));
 
 /** The document fact extraction reads for an item. */
-export const extractDocument = (item: NewsItem): RDF.ExtractDocument => ({
+export const extractDocument = (item: TextItem): RDF.ExtractDocument => ({
   text: itemText(item),
   source: itemSource(item),
   author: item.publisher,
@@ -94,8 +97,8 @@ export const extractDocument = (item: NewsItem): RDF.ExtractDocument => ({
 // Bumped when the annotation stages change what they write, so a rerun re-annotates.
 const ANNOTATION_VERSION = '1';
 
-const annotationCursor = (item: NewsItem): string => `${itemSource(item)}#annotations`;
-const annotationHash = (item: NewsItem, options: AnnotateOptions): string =>
+const annotationCursor = (item: TextItem): string => `${itemSource(item)}#annotations`;
+const annotationHash = (item: TextItem, options: AnnotateOptions): string =>
   hashText(
     `${ANNOTATION_VERSION}|${options.linkNames ?? true}|${options.sentiment ?? 'llm'}|${options.events ?? true}|${itemText(item)}`,
   );
@@ -105,7 +108,7 @@ const annotationHash = (item: NewsItem, options: AnnotateOptions): string =>
  * rules and the known companies. Items already indexed are skipped by their cursor.
  */
 export const extractFacts = (
-  items: ReadonlyArray<NewsItem>,
+  items: ReadonlyArray<TextItem>,
   options: IndexBatchOptions = {},
   concurrency = 4,
 ): Effect.Effect<{ extracted: number; facts: number; failed: number }, never, FactStore | AiService.AiService> =>
@@ -154,7 +157,7 @@ const extractorFor = (stage: string, model: string): Extractor => ({
  * answered, so a failed batch is retried on the next run.
  */
 const annotateBatch = (
-  items: ReadonlyArray<NewsItem>,
+  items: ReadonlyArray<TextItem>,
   options: AnnotateOptions,
 ): Effect.Effect<
   { annotated: number; facts: number; failed: number },
@@ -207,7 +210,7 @@ const annotateBatch = (
 
 /** The annotation stages over items, skipping the ones already annotated with the same options. */
 export const annotate = (
-  items: ReadonlyArray<NewsItem>,
+  items: ReadonlyArray<TextItem>,
   options: AnnotateOptions = {},
   concurrency = 4,
 ): Effect.Effect<
@@ -217,7 +220,7 @@ export const annotate = (
 > =>
   Effect.gen(function* () {
     const store = yield* FactStore;
-    const pending: NewsItem[] = [];
+    const pending: TextItem[] = [];
     for (const item of items) {
       if ((yield* store.cursor(annotationCursor(item))) !== annotationHash(item, options)) {
         pending.push(item);
@@ -237,7 +240,7 @@ export const annotate = (
 
 /** Runs fact extraction and the annotation stages over the items into the {@link FactStore}. Resumable. */
 export const run = (
-  items: ReadonlyArray<NewsItem>,
+  items: ReadonlyArray<TextItem>,
   { extract = {}, annotate: annotateOptions = {}, concurrency = 4 }: FinancePipelineOptions = {},
 ): Effect.Effect<FinancePipelineSummary, SemanticIndexError, FactStore | AiService.AiService> =>
   Effect.gen(function* () {
@@ -256,6 +259,43 @@ export const run = (
       failedBatches: extracted.failed + annotated.failed,
     };
   });
+
+/** What deterministic extraction did. */
+export type ObservationSummary = { readonly observations: number; readonly extracted: number; readonly facts: number };
+
+/**
+ * Structured rows into facts, without a model ({@link observationFacts}); a row whose content is unchanged since it
+ * was last written is skipped by its cursor.
+ */
+export const extractObservations = (
+  observations: ReadonlyArray<Finance.Observation>,
+): Effect.Effect<ObservationSummary, SemanticIndexError, FactStore> =>
+  Effect.gen(function* () {
+    const store = yield* FactStore;
+    let extracted = 0;
+    let written = 0;
+    for (const chunk of Array.chunksOf(observations, 500)) {
+      const pending: Finance.Observation[] = [];
+      for (const observation of chunk) {
+        if ((yield* store.cursor(observationSource(observation))) !== observationHash(observation)) {
+          pending.push(observation);
+        }
+      }
+      const facts = pending.flatMap(observationFacts);
+      yield* store.putFacts(facts);
+      for (const observation of pending) {
+        yield* store.setCursor(observationSource(observation), observationHash(observation));
+      }
+      extracted += pending.length;
+      written += facts.length;
+    }
+    return { observations: observations.length, extracted, facts: written };
+  });
+
+const observationHash = (observation: Finance.Observation): string =>
+  hashText(
+    `${OBSERVATION_EXTRACTOR.version}|${JSON.stringify([observation.values, observation.labels, observation.date])}`,
+  );
 
 /** A one-line description of a pipeline configuration, for the run log. */
 export const describe = (options: FinancePipelineOptions): string =>

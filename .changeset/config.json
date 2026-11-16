@@ -294,6 +294,7 @@
       "@dxos/plugin-explorer",
       "@dxos/plugin-file",
       "@dxos/plugin-file-system",
+      "@dxos/plugin-finance",
       "@dxos/plugin-freeq",
       "@dxos/plugin-game",
       "@dxos/plugin-github",

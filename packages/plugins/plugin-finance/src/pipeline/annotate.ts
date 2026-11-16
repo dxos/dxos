@@ -12,8 +12,8 @@ import { log } from '@dxos/log';
 import { DEFAULT_MODEL } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
+import { type TextItem } from '../sources/text-item.ts';
 import { EVENT_TYPES, type EventType, type TickerSentiment } from './facts.ts';
-import { type NewsItem } from './news-item.ts';
 import { type Sentiment, polarityOf } from './sentiment-lexicon.ts';
 import { type TickerMention, canonicalTicker } from './tickers.ts';
 
@@ -51,7 +51,7 @@ const EventPayload = Schema.Struct({
 });
 
 /** The headline lines a prompt lists, each tagged `a1`, `a2`, … so the answer can cite them. */
-const listing = (items: ReadonlyArray<NewsItem>, extra?: (item: NewsItem) => string): string =>
+const listing = (items: ReadonlyArray<TextItem>, extra?: (item: TextItem) => string): string =>
   items
     .map(
       (item, index) =>
@@ -88,7 +88,7 @@ const generate = <A, E>(
  * index does not know. Returns one list per item, in order; undefined when the model call failed.
  */
 export const linkTickers = (
-  items: ReadonlyArray<NewsItem>,
+  items: ReadonlyArray<TextItem>,
   options: AnnotateModelOptions = {},
 ): Effect.Effect<Array<Array<{ ticker: string; name: string }>> | undefined, never, AiService.AiService> =>
   Effect.gen(function* () {
@@ -127,7 +127,7 @@ const clamp = (value: number): number => Math.max(-1, Math.min(1, value));
  * result per item, in order (undefined for an item the model skipped); undefined when the call failed.
  */
 export const classifySentiment = (
-  items: ReadonlyArray<NewsItem>,
+  items: ReadonlyArray<TextItem>,
   mentions: ReadonlyArray<ReadonlyArray<TickerMention>>,
   options: AnnotateModelOptions = {},
 ): Effect.Effect<Array<ModelSentiment | undefined> | undefined, never, AiService.AiService> =>
@@ -189,7 +189,7 @@ const isEventType = (value: string): value is EventType => EVENT_TYPES.some((typ
 
 /** LLM event classification: the event types each headline reports. Undefined when the call failed. */
 export const classifyEvents = (
-  items: ReadonlyArray<NewsItem>,
+  items: ReadonlyArray<TextItem>,
   options: AnnotateModelOptions = {},
 ): Effect.Effect<EventType[][] | undefined, never, AiService.AiService> =>
   Effect.gen(function* () {
