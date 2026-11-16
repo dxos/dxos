@@ -31,8 +31,11 @@ export type ExportHeader = {
 /** One channel's export: its header and its messages, oldest first. */
 export type ExportFile = ExportHeader & { readonly messages: readonly ExportMessage[] };
 
-/** File extensions of the two layouts: DiscordChatExporter's one JSON document, and this exporter's JSON lines. */
-export const isExportFile = (name: string): boolean => name.endsWith('.jsonl') || name.endsWith('.json');
+/**
+ * A channel export in either layout (DiscordChatExporter's one JSON document, or this exporter's JSON lines). Both name
+ * the file after the channel id, which keeps other JSON in the directory (the scan's `channels.json`) out.
+ */
+export const isExportFile = (name: string): boolean => /\[\d+\]\.jsonl?$/.test(name);
 
 /**
  * Reads an export file in either layout. A `.jsonl` file is a header line followed by one message per line, appended a

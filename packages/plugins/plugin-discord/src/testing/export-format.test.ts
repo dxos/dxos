@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
-import { appendPage, readExportFile, resumeFrom } from './export-format.ts';
+import { appendPage, isExportFile, readExportFile, resumeFrom } from './export-format.ts';
 
 const message = (id: string) => ({ id, content: `message ${id}`, author: { id: 'u1', name: 'ana' } });
 const header = () => ({ guild: { id: 'g1' }, channel: { id: 'c1', name: 'general' } });
@@ -40,5 +40,11 @@ describe('export format', () => {
     const path = join(mkdtempSync(join(tmpdir(), 'export-')), 'c1.json');
     writeFileSync(path, JSON.stringify({ ...header(), messages: [message('1')] }));
     expect(readExportFile(path).messages[0].id).toBe('1');
+  });
+
+  test('recognises channel exports by their id suffix, not every JSON file', ({ expect }) => {
+    expect(isExportFile('Cloudflare Developers - general [909458221419356210].jsonl')).toBe(true);
+    expect(isExportFile('Effect Community - help [1000].json')).toBe(true);
+    expect(isExportFile('channels.json')).toBe(false);
   });
 });
