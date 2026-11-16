@@ -647,7 +647,7 @@ const SeparatorsStory = () => {
 
 /**
  * Collapsing the items between rules leaves none of them: a rule stays only between two items, and of the rules left
- * between two, the gap.
+ * between two, the gap. The ⋮ menu lists them in the row's order, ruled where the row is.
  */
 export const Separators: Story = {
   render: () => <SeparatorsStory />,
@@ -656,6 +656,12 @@ export const Separators: Story = {
     await waitFor(() => expect(labels(canvasElement)).toEqual(['More']));
     await expect(row.querySelector('[data-scope=separator]')).toBeNull();
     await expect(row.querySelectorAll('[data-part=gap]')).toHaveLength(1);
+    await userEvent.click(within(row).getByTestId('toolbar.overflow'));
+    const menu = await within(document.body).findByRole('menu');
+    const entries = Array.from(menu.querySelectorAll('[role=menuitem], [role=separator]')).map((entry) =>
+      entry.getAttribute('role') === 'separator' ? '|' : entry.textContent?.trim(),
+    );
+    await expect(entries).toEqual(['Snap', '|', 'Axes', '|', 'Grid', '|', 'Guides']);
   },
 };
 
