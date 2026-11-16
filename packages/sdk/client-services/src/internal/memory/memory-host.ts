@@ -11,7 +11,6 @@ import * as SqlClient from 'effect/sql/SqlClient';
 
 import { EchoHostService } from '@dxos/echo-host';
 import { type MemoryService as Memory, MemoryError, MemoryQuery } from '@dxos/echo-memory';
-import { FactLog, MemorySqlite } from '@dxos/echo-memory-sqlite';
 import { EntityId, type SpaceId } from '@dxos/keys';
 import { MemoryService } from '@dxos/protocols/rpc';
 
@@ -48,6 +47,8 @@ export const MemoryHostLayer: Layer.Layer<MemoryService.Tag, never, EchoHostServ
             if (!echoHost.spaceIds.includes(spaceId)) {
               return yield* Effect.fail(new MemoryError.MemoryError({ message: `Unknown space: ${spaceId}` }));
             }
+            // Loaded on first use: the SPARQL store and its RDF libraries stay out of the host's (and every bundle's) boot.
+            const { FactLog, MemorySqlite } = yield* Effect.promise(() => import('@dxos/echo-memory-sqlite'));
             const log = yield* FactLog.feed({ feeds: echoHost.feedStore, spaceId, feedId: factFeedId(spaceId) });
             const memory = yield* MemorySqlite.makeAsync({ log, prefix: tablePrefix(spaceId) });
             memories.set(spaceId, memory);
