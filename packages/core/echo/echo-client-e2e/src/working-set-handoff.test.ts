@@ -96,6 +96,71 @@ describe('working set handoff', () => {
     expect(changed.map((entry) => entry.id)).toEqual([task.id]);
     await client.close();
   });
+  test('a write the host acknowledges is announced and exported with the objects written in it', async ({ expect }) => {
+    const peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const writer = await peer.createDatabase();
+    const held: string[][] = [];
+    writer.documentsHeld.on((documentIds) => held.push(documentIds));
+
+    const task = writer.add(Obj.make(TestSchema.Task, { title: 'a' }));
+    await writer.flush({ disk: true, indexes: false });
+    const announced = new Set(held.flat());
+    const changes = writer.exportWorkingSetChanges(announced, { maxBytes: MAX_BYTES });
+
+    const taskRow = changes.rows.find((row) => row.objectId === task.id);
+    expect(taskRow).toBeDefined();
+    expect(changes.written).toEqual([task.id]);
+    // The space root links the new document, so its write is announced with the task's, and marked as the root.
+    expect(changes.root).toBeDefined();
+    expect(changes.rows[0].documentId).toBe(changes.root);
+
+    // Only the documents asked for are exported.
+    const onlyTask = writer.exportWorkingSetChanges([taskRow?.documentId ?? ''], { maxBytes: MAX_BYTES });
+    expect(onlyTask.rows.map((row) => row.objectId)).toEqual([task.id]);
+    expect(onlyTask.root).toBeUndefined();
+  });
+
+  test('a write the host has not acknowledged is not exported as written', async ({ expect }) => {
+    const peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const writer = await peer.createDatabase();
+    const held: string[] = [];
+    writer.documentsHeld.on((documentIds) => held.push(...documentIds));
+    const task = writer.add(Obj.make(TestSchema.Task, { title: 'a' }));
+    await writer.flush({ disk: true, indexes: false });
+    const taskRow = writer
+      .exportWorkingSetChanges(held, { maxBytes: MAX_BYTES })
+      .rows.find((row) => row.objectId === task.id);
+    invariant(taskRow);
+
+    // Changed again and not flushed: the document holds a change the host has not taken.
+    Obj.update(task, (task) => {
+      task.title = 'b';
+    });
+    const changes = writer.exportWorkingSetChanges([taskRow.documentId], { maxBytes: MAX_BYTES });
+    expect(changes.written).toEqual([]);
+    expect(changes.rows).toEqual([]);
+  });
+
+  test('a document loaded from the host is announced', async ({ expect }) => {
+    const peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const writer = await peer.createDatabase();
+    const task = writer.add(Obj.make(TestSchema.Task, { title: 'a' }));
+    await writer.flush();
+
+    const { client, database: reader } = await openReader(scope, peer, writer, new Set());
+    const held: string[] = [];
+    reader.documentsHeld.on((documentIds) => held.push(...documentIds));
+    await reader.open();
+    // Loaded by id, as an invocation loads an object it is handed; a query row is the index's, not a document load.
+    await expect.poll(() => reader.getObjectById(task.id)).toBeDefined();
+    expect(reader.getObjectById(task.id)?.title).toBe('a');
+
+    const changes = reader.exportWorkingSetChanges(held, { maxBytes: MAX_BYTES });
+    expect(changes.rows.some((row) => row.objectId === task.id)).toBe(true);
+    // Read, not written: nothing for the index to be behind on.
+    expect(changes.written).toEqual([]);
+    await client.close();
+  });
 });
 
 /** A second client of the peer's host, whose index answers leave out the `hidden` objects. */

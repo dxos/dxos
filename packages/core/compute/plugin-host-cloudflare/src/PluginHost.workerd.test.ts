@@ -18,6 +18,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, ErrorCodec, PluginProtocol } from '@dxos/protocols';
 import { QueryResponseSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
@@ -35,6 +36,7 @@ import {
   Inspect,
   InspectEvent,
   Nest,
+  RecordThenDelegate,
   ResolveRegistry,
   TEST_PLUGIN_KEY,
   TestFailure,
@@ -372,6 +374,40 @@ describe('PluginHost', () => {
       expect(invoked).toEqual([
         { operationKey: 'com.example.operation.fib', input: { iterations: 10 }, options: { parentPid: 'outer' } },
       ]);
+    });
+
+    test("a nested call starts after the caller's writes reach its working set, and the caller takes the callee's", async ({
+      expect,
+    }) => {
+      const spaceId = SpaceId.random();
+      const unindexed = new Set<string>();
+      let gets = 0;
+      const workingSet: EdgeFunctionEnv.WorkingSetService = {
+        get: async () => {
+          gets++;
+          return { rows: [], unindexed: [...unindexed] };
+        },
+        put: async (report) => {
+          report.unindexed.forEach((id) => unindexed.add(id));
+        },
+      };
+      let heldAtCall: string[] = [];
+      const operations: PluginProtocol.OperationHost = {
+        invoke: async () => {
+          heldAtCall = [...unindexed];
+          return { ok: true, output: { result: '1' } };
+        },
+      };
+      const result = await makeHost().invoke(
+        { operationKey: String(RecordThenDelegate.meta.key), spaceId, input: { name: 'Ada' } },
+        makeSpaceEnv(spaceId),
+        { operations, workingSet },
+      );
+      invariant(result.ok, 'the operation failed');
+      const { id } = Schema.decodeUnknownSync(Schema.Struct({ id: Schema.String }))(result.output);
+      expect(heldAtCall).toEqual([id]);
+      // One get seeds the invocation; one after the call takes what the callee wrote.
+      expect(gets).toBe(2);
     });
   });
 });

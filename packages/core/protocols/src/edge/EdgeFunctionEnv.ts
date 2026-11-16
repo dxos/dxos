@@ -111,10 +111,12 @@ export type WorkingSet = {
   unindexed: string[];
 };
 
-/** What an invocation tells the caller's working set when it ends. */
+/** What an invocation sends the caller's working set as the host stores its writes and it loads documents. */
 export type WorkingSetReport = WorkingSet & {
-  /** Per document id, the heads the invocation was seeded with; absent for a document it loaded itself. */
+  /** Per document id, the heads the working set last had from this database; absent for a document it had none of. */
   base: Record<string, string[]>;
+  /** The space root's document id, when the root is among the rows. */
+  root?: string;
 };
 
 /**

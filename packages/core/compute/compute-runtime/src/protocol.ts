@@ -37,7 +37,12 @@ import {
   createS3Host,
   credentialsLayerFromDatabase,
 } from './services/index.ts';
-import { WorkingSetSession } from './working-set-session.ts';
+import {
+  WorkingSetHandoff,
+  type WorkingSetHandoffApi,
+  WorkingSetSession,
+  makeWorkingSetHandoff,
+} from './working-set-session.ts';
 
 /** Ceiling on opening a space in a function context; a worker holds a request that long only when the root never arrives. */
 const SPACE_OPEN_TIMEOUT = Duration.seconds(15);
@@ -57,7 +62,8 @@ export type EdgeFunctionServices =
   | Registry.Service
   // Provided by `FunctionContext.createLayer`, so a consumer that requires it (e.g. `AgentProcess`)
   // is satisfied by the same layer rather than having to merge its own provider.
-  | OpaqueToolkit.OpaqueToolkitProvider;
+  | OpaqueToolkit.OpaqueToolkitProvider
+  | WorkingSetHandoff;
 
 export interface FunctionWrappingOptions {
   /**
@@ -203,10 +209,8 @@ export const wrapFunctionHandler = (
         if ((Exit.isSuccess(exit) || isRunAgainExit(exit)) && funcContext.db) {
           await funcContext.db.flush({ disk: true, indexes: false });
         }
-        // Reported on failure too: what the handler wrote before failing is what the caller's next invocation reads.
-        if (funcContext.db) {
-          await funcContext.workingSet.report(funcContext.db);
-        }
+        // Settled on failure too: what the host stored before the handler failed is what the caller reads next.
+        await funcContext.workingSet.settle();
 
         const result = EffectEx.unwrapExit(exit);
 
@@ -251,7 +255,7 @@ export class FunctionContext extends Resource {
   /** Released in `_close`: this is a `Resource`, so a reopen would otherwise stack registrations. */
   #unregisterBlobBackends: (() => void)[] = [];
   #unregisterTypeSource: (() => void) | undefined;
-  /** The caller's working set, which the database seeds from and reports to. */
+  /** The caller's working set, which the database seeds from and sends what it stores and loads to. */
   readonly workingSet: WorkingSetSession;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
@@ -371,6 +375,7 @@ export class FunctionContext extends Resource {
     this.#unregisterBlobBackends = [];
     this.#unregisterTypeSource?.();
     this.#unregisterTypeSource = undefined;
+    this.workingSet.close();
     await this.db?.close();
     await this.client?.close();
   }
@@ -392,8 +397,9 @@ export class FunctionContext extends Resource {
       ? InternalAiServiceLayer(this.context.services.functionsAiService).pipe(Layer.provide(credentials))
       : AiService.notAvailable;
 
+    const handoff = makeWorkingSetHandoff(this.workingSet, this.db);
     const operationServiceLayer = this.context.services.functionsService
-      ? makeOperationServiceLayer(this.context.services.functionsService)
+      ? makeOperationServiceLayer(this.context.services.functionsService, handoff)
       : unavailableOperationServiceLayer;
 
     const traceWriterLayer = this.context.services.traceService
@@ -423,6 +429,8 @@ export class FunctionContext extends Resource {
     // `operation.invoke` calls, after ~1.8s of work.
     const hypergraphLayer = this.client ? Hypergraph.layer(this.client.graph) : Hypergraph.notAvailable;
 
+    const workingSetLayer = Layer.succeed(WorkingSetHandoff, handoff);
+
     return Layer.mergeAll(
       dbLayer,
       credentials,
@@ -432,6 +440,7 @@ export class FunctionContext extends Resource {
       traceWriterLayer,
       registryLayer,
       hypergraphLayer,
+      workingSetLayer,
     );
   }
 }
@@ -478,6 +487,8 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
  */
 export const makeOperationServiceLayer = (
   functionsService: EdgeFunctionEnv.FunctionsService,
+  /** The invoking invocation's working set: the callee starts from it, and the caller takes what the callee wrote. */
+  workingSet?: WorkingSetHandoffApi,
 ): Layer.Layer<Operation.Service> => {
   const invokeRemote = async (
     op: Operation.Definition.Any,
@@ -485,16 +496,22 @@ export const makeOperationServiceLayer = (
     options?: Operation.InvokeOptions,
   ): Promise<{ data?: unknown; error?: Error }> => {
     invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot invoke remotely.`);
-    const result = await functionsService.invoke(op.meta.deployedId, input, {
-      spaceId: options?.spaceId,
-      // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
-      // services (e.g. `HarnessService`) needed by operations like `GetContext`.
-      conversation: options?.conversation,
-    });
-    if (result._kind === 'success') {
-      return { data: result.data };
+    await workingSet?.settle();
+    try {
+      const result = await functionsService.invoke(op.meta.deployedId, input, {
+        spaceId: options?.spaceId,
+        // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
+        // services (e.g. `HarnessService`) needed by operations like `GetContext`.
+        conversation: options?.conversation,
+      });
+      if (result._kind === 'success') {
+        return { data: result.data };
+      }
+      return { error: ErrorCodec.decode(result.error) };
+    } finally {
+      // Also after a failure: what the callee stored before it failed is what the caller reads next.
+      await workingSet?.absorb();
     }
-    return { error: ErrorCodec.decode(result.error) };
   };
 
   return Layer.succeed(Operation.Service, {

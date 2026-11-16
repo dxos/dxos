@@ -50,6 +50,7 @@ import { log } from '@dxos/log';
 import {
   type ExportWorkingSetOptions,
   RpcClosedError,
+  type WorkingSetChanges,
   type WorkingSetRow,
   runServiceCall,
   runServiceEffect,
@@ -209,6 +210,8 @@ export class EntityManager implements IDatabaseBinding {
   /** Routes {@link _updateEvent} to the live queries it can change; they stay registered across a close and reopen. */
   readonly updateDispatch = new UpdateDispatch(this._updateEvent, (id) => this.getObjectCoreById(id, { load: false }));
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+  /** Documents whose state the host holds moved; see {@link exportWorkingSetChanges}. */
+  readonly documentsHeld: ReadOnlyEvent<DocumentId[]>;
 
   /** Fires when the database has finished loading its initial space root document. */
   readonly opened = new Trigger();
@@ -318,6 +321,7 @@ export class EntityManager implements IDatabaseBinding {
     this._documentRetention = { ...DOCUMENT_RETENTION, ...options.documentRetention };
     this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
+    this.documentsHeld = this._repoProxy.documentsHeld;
   }
 
   get spaceId(): SpaceId {
@@ -666,20 +670,13 @@ export class EntityManager implements IDatabaseBinding {
    * document with a change the host has not taken.
    */
   exportWorkingSet({ maxBytes }: ExportWorkingSetOptions): WorkingSetRow[] {
-    const root = this._spaceRootDocHandle;
-    const rootState = root?._heldState();
-    if (!root?.documentId || !rootState || rootState.bytes.length > maxBytes) {
+    const rootRow = this.#rootRow();
+    if (!rootRow || rootRow.bytes.length > maxBytes) {
       return [];
     }
-    const rootRow: WorkingSetRow = { documentId: root.documentId, heads: [...rootState.heads], bytes: rootState.bytes };
-    // A passive root's text is what the host sent at these heads; a loaded one is acknowledged, so its doc is at them.
-    const rootJson = this.#directory?.text ?? directoryJson(root.doc());
-    if (rootJson !== undefined) {
-      rootRow.directoryJson = rootJson;
-    }
     const rows: WorkingSetRow[] = [rootRow];
-    let total = rootState.bytes.length;
-    const exported = new Set<string>([root.documentId]);
+    let total = rootRow.bytes.length;
+    const exported = new Set<string>([rootRow.documentId]);
     const cores = this.allObjectCores()
       .filter((core) => this.getCurrentBranch(core.id) === 'main')
       .sort((a, b) => b.activeAt - a.activeAt);
@@ -698,6 +695,62 @@ export class EntityManager implements IDatabaseBinding {
       rows.push(row);
     }
     return rows;
+  }
+
+  /**
+   * The rows of `documentIds`, for a working set kept current as they change: the documents whose state the host holds,
+   * leaving out what does not fit `maxBytes`, and the objects this client wrote in them that the host holds.
+   */
+  exportWorkingSetChanges(documentIds: Iterable<string>, { maxBytes }: ExportWorkingSetOptions): WorkingSetChanges {
+    const wanted = new Set(documentIds);
+    const rows: WorkingSetRow[] = [];
+    const written: string[] = [];
+    let total = 0;
+    const rootRow = this.#rootRow();
+    const root = rootRow && wanted.has(rootRow.documentId) && rootRow.bytes.length <= maxBytes ? rootRow : undefined;
+    if (root) {
+      rows.push(root);
+      total += root.bytes.length;
+    }
+    // The root's document is never exported as an object's, even when it did not fit.
+    const exported = new Set<string>(rootRow ? [rootRow.documentId] : []);
+    for (const core of this.allObjectCores()) {
+      const handle = core.handle;
+      const documentId = handle?.documentId;
+      if (!handle || !documentId || !wanted.has(documentId) || this.getCurrentBranch(core.id) !== 'main') {
+        continue;
+      }
+      if (this.#unindexedWrites.has(core.id) && handle._isAcknowledged()) {
+        written.push(core.id);
+      }
+      if (exported.has(documentId)) {
+        continue;
+      }
+      exported.add(documentId);
+      const row = this.#workingSetRow(core, handle, documentId);
+      if (!row || total + row.bytes.length > maxBytes) {
+        continue;
+      }
+      total += row.bytes.length;
+      rows.push(row);
+    }
+    return { rows, ...(root ? { root: root.documentId } : {}), written };
+  }
+
+  /** The space root as a row, once the host holds its state. */
+  #rootRow(): WorkingSetRow | undefined {
+    const root = this._spaceRootDocHandle;
+    const rootState = root?._heldState();
+    if (!root?.documentId || !rootState) {
+      return undefined;
+    }
+    const rootRow: WorkingSetRow = { documentId: root.documentId, heads: [...rootState.heads], bytes: rootState.bytes };
+    // A passive root's text is what the host sent at these heads; a loaded one is acknowledged, so its doc is at them.
+    const rootJson = this.#directory?.text ?? directoryJson(root.doc());
+    if (rootJson !== undefined) {
+      rootRow.directoryJson = rootJson;
+    }
+    return rootRow;
   }
 
   #workingSetRow(

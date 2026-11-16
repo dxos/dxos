@@ -164,6 +164,9 @@ export class RepoProxy extends Resource {
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
   private _lastSaveStateKey = '';
 
+  /** Documents whose state the host holds moved: it acknowledged a write, or sent bytes this client integrated. */
+  readonly documentsHeld = new Event<DocumentId[]>();
+
   constructor(
     private _dataService: DataService.Client,
     private readonly _runtime: Context.Context<never>,
@@ -914,13 +917,20 @@ export class RepoProxy extends Resource {
       return;
     }
     this.#draining = true;
+    const integrated: DocumentId[] = [];
     try {
       while (this.#inboxHead < this.#inbox.length && !this._ctx.disposed) {
         const { update, bulk } = this.#inbox[this.#inboxHead++];
         this.#integrate(update, bulk);
+        if (update.mutation) {
+          integrated.push(update.documentId as DocumentId);
+        }
         if (this.#inboxHead < this.#inbox.length) {
           await yieldOrContinue('smooth');
         }
+      }
+      if (integrated.length > 0 && !this._ctx.disposed) {
+        this.documentsHeld.emit(integrated);
       }
     } finally {
       this.#inbox = [];
@@ -1074,6 +1084,7 @@ export class RepoProxy extends Resource {
           // Handle may have been removed between RPC start and ack — skip silently.
           this._handles[documentId]?._confirmSync();
         }
+        this.documentsHeld.emit(updates.map(({ documentId }) => documentId as DocumentId));
       }
 
       this._sendRetryAttempts = 0;

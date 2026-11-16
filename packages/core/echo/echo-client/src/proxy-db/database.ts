@@ -60,6 +60,7 @@ import { log } from '@dxos/log';
 import {
   type ExportWorkingSetOptions,
   RpcClosedError,
+  type WorkingSetChanges,
   type WorkingSetRow,
   runServiceCall,
   subscribeStream,
@@ -369,6 +370,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   readonly _entityManager: EntityManager;
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+  /** Documents whose state the host holds moved: a write it acknowledged, or bytes it sent; see {@link exportWorkingSetChanges}. */
+  readonly documentsHeld: ReadOnlyEvent<string[]>;
 
   private readonly _hypergraph: HypergraphImpl;
   private _rootUrl: string | undefined = undefined;
@@ -418,6 +421,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
+    this.documentsHeld = this._entityManager.documentsHeld;
 
     // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
     // that recurses through the whole entity graph and throws on the first strict-mode function it
@@ -553,6 +557,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** The working set as rows to {@link seedWorkingSet} a later session with; empty until the space root is loaded. */
   exportWorkingSet(options: ExportWorkingSetOptions): WorkingSetRow[] {
     return this._lifecycleState === LifecycleState.OPEN ? this._entityManager.exportWorkingSet(options) : [];
+  }
+
+  /** Rows of the given documents as the host holds them, for a working set kept current as they change. */
+  exportWorkingSetChanges(documentIds: Iterable<string>, options: ExportWorkingSetOptions): WorkingSetChanges {
+    return this._lifecycleState === LifecycleState.OPEN
+      ? this._entityManager.exportWorkingSetChanges(documentIds, options)
+      : { rows: [], written: [] };
   }
 
   // ── Space state ─────────────────────────────────────────────────────────
