@@ -1,0 +1,59 @@
+# Mirrors the whitelisted brand asset folders into the public `assets` R2 bucket under `brand/`, so a mark
+# can be hot-linked at `https://assets.dxos.org/brand/<folder>/<file>` instead of copied into whatever needs
+# it. `.github/workflows/scripts/sync-brand-assets.mjs` decides what is published and verifies each object
+# through the public domain after uploading it.
+#
+# Adds and overwrites; never deletes — see the script's header for why.
+#
+# Secrets required:
+#   R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY — S3 write on `assets` (the pair deploy-apps.yml uses).
+
+name: Brand Assets
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/ui/brand/assets/**'
+      - '.github/workflows/brand-assets.yml'
+      - '.github/workflows/scripts/sync-brand-assets.mjs'
+      - '.agents/skills/hosting-artifacts/scripts/upload-artifact.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Objects are overwritten in place, so two runs racing could leave an older commit's bytes behind the newer
+# one. Only the newest matters.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    # The bucket mirrors what has landed, never a branch.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # A rerun keeps its original commit, so without this it would republish that commit's assets over
+          # whatever has landed since; the bucket mirrors main's tip, never a past revision.
+          ref: main
+          persist-credentials: false
+
+      # No `./.github/actions/setup`: the uploader signs with node's crypto and has no dependencies, so the
+      # job needs neither pnpm nor moon.
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Sync to R2
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: .github/workflows/scripts/sync-brand-assets.mjs
