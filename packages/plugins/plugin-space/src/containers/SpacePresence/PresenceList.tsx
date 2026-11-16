@@ -304,73 +304,72 @@ const PresenceListContent = ({ label, testId }: { label: string; testId?: string
   const inFollow = !!leader || followers.length > 0;
 
   return (
-    <div ref={listRef}>
-      <Listbox.Root
-        items={[
-          ...getPresenceOptions(leader ? [leader] : [], false, t),
-          ...getPresenceOptions(followers, false, t),
-          ...getPresenceOptions(
-            groups.flatMap((group) => group.members),
-            showSessions,
-            t,
-          ),
-        ]}
-        data-testid={testId}
-      >
-        <Listbox.Content aria-label={label}>
-          {leader && (
-            <Listbox.ItemGroup data-testid='spacePlugin.presence.following'>
-              <Listbox.ItemGroupLabel>{t('presence-following.heading')}</Listbox.ItemGroupLabel>
-              <PresenceItems
-                member={leader}
-                followHue={followHue}
-                renderActions={() => (
-                  <>
-                    {paused && <span className='pe-2 text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>}
-                    <Button.Root
-                      variant='primary'
-                      icon='ph--stop--regular'
-                      label={t('presence-stop-following.label')}
-                      data-testid='spacePlugin.presence.stopFollowing'
-                      onClick={onStop}
-                    />
-                  </>
-                )}
-              />
+    <Listbox.Root
+      ref={listRef}
+      items={[
+        ...getPresenceOptions(leader ? [leader] : [], false, t),
+        ...getPresenceOptions(followers, false, t),
+        ...getPresenceOptions(
+          groups.flatMap((group) => group.members),
+          showSessions,
+          t,
+        ),
+      ]}
+      data-testid={testId}
+    >
+      <Listbox.Content aria-label={label}>
+        {leader && (
+          <Listbox.ItemGroup data-testid='spacePlugin.presence.following'>
+            <Listbox.ItemGroupLabel>{t('presence-following.heading')}</Listbox.ItemGroupLabel>
+            <PresenceItems
+              member={leader}
+              followHue={followHue}
+              renderActions={() => (
+                <>
+                  {paused && <span className='pe-2 text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>}
+                  <Button.Root
+                    variant='primary'
+                    icon='ph--stop--regular'
+                    label={t('presence-stop-following.label')}
+                    data-testid='spacePlugin.presence.stopFollowing'
+                    onClick={onStop}
+                  />
+                </>
+              )}
+            />
+          </Listbox.ItemGroup>
+        )}
+        {followers.length > 0 && (
+          <Listbox.ItemGroup data-testid='spacePlugin.presence.followers'>
+            <Listbox.ItemGroupLabel>{t('presence-following-you.heading')}</Listbox.ItemGroupLabel>
+            {followers.map((member) => (
+              <PresenceItems key={member.rowId} member={member} followHue={followHue} />
+            ))}
+          </Listbox.ItemGroup>
+        )}
+        {groups.map((group, index) => {
+          const rows = group.members.map((member) => (
+            <PresenceItems
+              key={member.rowId}
+              member={member}
+              showSessions={showSessions}
+              renderActions={renderActions(group.objectKey)}
+            />
+          ));
+          // Below a follow section, the rest of one object's viewers need a heading of their own.
+          const heading = group.label ?? (inFollow ? t('presence-viewing.heading') : undefined);
+          return heading === undefined ? (
+            rows
+          ) : (
+            <Listbox.ItemGroup key={group.objectKey ?? index}>
+              <Listbox.ItemGroupLabel>{heading}</Listbox.ItemGroupLabel>
+              {rows}
             </Listbox.ItemGroup>
-          )}
-          {followers.length > 0 && (
-            <Listbox.ItemGroup data-testid='spacePlugin.presence.followers'>
-              <Listbox.ItemGroupLabel>{t('presence-following-you.heading')}</Listbox.ItemGroupLabel>
-              {followers.map((member) => (
-                <PresenceItems key={member.rowId} member={member} followHue={followHue} />
-              ))}
-            </Listbox.ItemGroup>
-          )}
-          {groups.map((group, index) => {
-            const rows = group.members.map((member) => (
-              <PresenceItems
-                key={member.rowId}
-                member={member}
-                showSessions={showSessions}
-                renderActions={renderActions(group.objectKey)}
-              />
-            ));
-            // Below a follow section, the rest of one object's viewers need a heading of their own.
-            const heading = group.label ?? (inFollow ? t('presence-viewing.heading') : undefined);
-            return heading === undefined ? (
-              rows
-            ) : (
-              <Listbox.ItemGroup key={group.objectKey ?? index}>
-                <Listbox.ItemGroupLabel>{heading}</Listbox.ItemGroupLabel>
-                {rows}
-              </Listbox.ItemGroup>
-            );
-          })}
-        </Listbox.Content>
-        <Listbox.Empty icon='ph--users--regular'>{t('members-empty.message')}</Listbox.Empty>
-      </Listbox.Root>
-    </div>
+          );
+        })}
+      </Listbox.Content>
+      <Listbox.Empty icon='ph--users--regular'>{t('members-empty.message')}</Listbox.Empty>
+    </Listbox.Root>
   );
 };
 
