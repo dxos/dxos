@@ -15,7 +15,7 @@ import { RDF } from '@dxos/pipeline-rdf';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import { DEFAULT_FACT_SERVER_URL, RemoteFactStorePlugin } from '@dxos/plugin-brain/RemoteFactStorePlugin';
+import * as RemoteFactStorePlugin from '@dxos/plugin-brain/RemoteFactStorePlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { Config } from '@dxos/react-client';
@@ -32,7 +32,7 @@ import { StoryModulesPlugin } from '../testing/modules.tsx';
  * `moon run plugin-discord:fact-server` exposes. Override the server with `VITE_FACT_SERVER_URL`. The left column is an
  * agent chat with the Brain skill over a SPARQL editor, and what either one reads scopes the facts and entities columns.
  */
-const FACT_SERVER_URL = String(import.meta.env.VITE_FACT_SERVER_URL ?? DEFAULT_FACT_SERVER_URL);
+const FACT_SERVER_URL = String(import.meta.env.VITE_FACT_SERVER_URL ?? RemoteFactStorePlugin.DEFAULT_URL);
 
 const LAYOUT: ModuleContainer.Layout = [[StoryRole.Chat, StoryRole.Query], [StoryRole.Facts], [StoryRole.Entities]];
 
@@ -105,7 +105,7 @@ const meta = {
       AssistantPlugin.make(),
       // Copies the skill definitions into the client registry, which resolves a chat's bound skills.
       RoutinePlugin.make(),
-      RemoteFactStorePlugin(FACT_SERVER_URL, {
+      RemoteFactStorePlugin.make(FACT_SERVER_URL, {
         onOperationFacts: (facts) => operationFactListeners.forEach((listener) => listener(facts)),
       }),
       BrainChatPlugin(),

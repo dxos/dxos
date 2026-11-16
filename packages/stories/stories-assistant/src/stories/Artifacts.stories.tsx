@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Filter, Ref, Type, View } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
-import { DEFAULT_FACT_SERVER_URL, RemoteFactStorePlugin } from '@dxos/plugin-brain/RemoteFactStorePlugin';
+import * as RemoteFactStorePlugin from '@dxos/plugin-brain/RemoteFactStorePlugin';
 import * as ChessSkill from '@dxos/plugin-chess/ChessSkill';
 import * as MapSkill from '@dxos/plugin-map/MapSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -218,7 +218,7 @@ export const WithBoard: Story = {
 };
 
 /** The fact server the agent's memory is read from: `moon run plugin-discord:fact-server` over a crawl's facts DB. */
-const FACT_SERVER_URL = String(import.meta.env.VITE_FACT_SERVER_URL ?? DEFAULT_FACT_SERVER_URL);
+const FACT_SERVER_URL = String(import.meta.env.VITE_FACT_SERVER_URL ?? RemoteFactStorePlugin.DEFAULT_URL);
 
 /**
  * Starts with only the agent and its memory: the Brain skill queries a fact store served over HTTP (e.g. the facts
@@ -242,7 +242,7 @@ export const FromMemory: Story = {
           PresenterPlugin.make(),
           MarkdownPlugin.make(),
           SpacePlugin.make({}),
-          RemoteFactStorePlugin(FACT_SERVER_URL),
+          RemoteFactStorePlugin.make(FACT_SERVER_URL),
         ],
         types: [Sheet.Sheet, Sheet.Chart, Presentation.Presentation],
       };
