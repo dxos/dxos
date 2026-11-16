@@ -46,6 +46,9 @@ const RunState = Schema.Struct({
     description:
       'Whether the turn has ended. While false the agent is still working: call Sync Cloud Coding Run again.',
   }),
+  latest: Schema.optional(Schema.String).annotate({
+    description: "The agent's most recent text in the run, so the caller can follow it; at most 2000 characters.",
+  }),
   pullRequests: Schema.Array(Schema.String).annotate({
     description:
       'Pull requests the agent opened in this run, as URLs, once the turn has ended; each is attached to the tasks.',

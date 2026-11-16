@@ -41,6 +41,17 @@ const definition: EdgeAgent.Definition = {
 
 const PULL_REQUEST_URL = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\d+/g;
 
+const LATEST_LIMIT = 2000;
+
+/** The agent's most recent text, trimmed to its end, which is where a turn says what it did. */
+const latestText = (messages: readonly Message.Message[]): string | undefined => {
+  const texts = messages
+    .filter((message) => message.sender.role !== 'user')
+    .flatMap((message) => message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])));
+  const last = texts.at(-1)?.trim();
+  return last === undefined || last.length <= LATEST_LIMIT ? last : `…${last.slice(-LATEST_LIMIT)}`;
+};
+
 /** Pull request URLs the agent wrote anywhere in the chat, in the order it wrote them. */
 const pullRequestsIn = (messages: readonly Message.Message[]): string[] => {
   const urls = messages
@@ -98,15 +109,16 @@ const fold = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string, windo
     done: progress.done,
     pending: EdgeAgent.hasPendingTurn(chat, CLAUDE_CODE_EDGE_AGENT),
   });
+  // The open turn's record is what the next call picks up, so it must be stored before this invocation ends.
+  yield* Database.flush();
+  const messages = yield* TrajectoryStore.messages(feed);
   if (!progress.done) {
-    // The open turn's record is what the next call picks up, so it must be stored before this invocation ends.
-    yield* Database.flush();
-    return { chat: Ref.make(chat), done: false, pullRequests: [] };
+    return { chat: Ref.make(chat), done: false, latest: latestText(messages), pullRequests: [] };
   }
-  const pullRequests = pullRequestsIn(yield* TrajectoryStore.messages(feed));
+  const pullRequests = pullRequestsIn(messages);
   yield* recordPullRequests(chat, pullRequests);
   yield* Database.flush();
-  return { chat: Ref.make(chat), done: true, pullRequests };
+  return { chat: Ref.make(chat), done: true, latest: latestText(messages), pullRequests };
 });
 
 export const start: Operation.WithHandler<typeof CloudRunOperation.StartCloudRun> =
@@ -136,7 +148,8 @@ export const syncRun: Operation.WithHandler<typeof CloudRunOperation.SyncCloudRu
         // A fold with no open turn would start a new one from an empty prompt, so it only reports what the run left.
         if (!EdgeAgent.hasPendingTurn(chat, CLAUDE_CODE_EDGE_AGENT)) {
           const feed = yield* Database.load(chat.feed);
-          return { chat: chatRef, done: true, pullRequests: pullRequestsIn(yield* TrajectoryStore.messages(feed)) };
+          const messages = yield* TrajectoryStore.messages(feed);
+          return { chat: chatRef, done: true, latest: latestText(messages), pullRequests: pullRequestsIn(messages) };
         }
         // The open turn is picked up where it is; the prompt goes again under the turn's key, which EDGE drops.
         return yield* fold(chat, '', FOLD_WINDOW_MS);
