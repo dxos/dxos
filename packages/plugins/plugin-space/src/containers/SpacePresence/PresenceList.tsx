@@ -301,6 +301,8 @@ const PresenceListContent = ({ label, testId }: { label: string; testId?: string
           ) : null
       : undefined;
 
+  const inFollow = !!leader || followers.length > 0;
+
   return (
     <div ref={listRef}>
       <Listbox.Root
@@ -317,22 +319,25 @@ const PresenceListContent = ({ label, testId }: { label: string; testId?: string
       >
         <Listbox.Content aria-label={label}>
           {leader && (
-            <PresenceItems
-              member={leader}
-              followHue={followHue}
-              renderActions={() => (
-                <>
-                  {paused && <span className='pe-2 text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>}
-                  <Button.Root
-                    variant='primary'
-                    icon='ph--stop--regular'
-                    label={t('presence-stop-following.label')}
-                    data-testid='spacePlugin.presence.stopFollowing'
-                    onClick={onStop}
-                  />
-                </>
-              )}
-            />
+            <Listbox.ItemGroup data-testid='spacePlugin.presence.following'>
+              <Listbox.ItemGroupLabel>{t('presence-following.heading')}</Listbox.ItemGroupLabel>
+              <PresenceItems
+                member={leader}
+                followHue={followHue}
+                renderActions={() => (
+                  <>
+                    {paused && <span className='pe-2 text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>}
+                    <Button.Root
+                      variant='primary'
+                      icon='ph--stop--regular'
+                      label={t('presence-stop-following.label')}
+                      data-testid='spacePlugin.presence.stopFollowing'
+                      onClick={onStop}
+                    />
+                  </>
+                )}
+              />
+            </Listbox.ItemGroup>
           )}
           {followers.length > 0 && (
             <Listbox.ItemGroup data-testid='spacePlugin.presence.followers'>
@@ -351,11 +356,13 @@ const PresenceListContent = ({ label, testId }: { label: string; testId?: string
                 renderActions={renderActions(group.objectKey)}
               />
             ));
-            return group.label === undefined ? (
+            // Below a follow section, the rest of one object's viewers need a heading of their own.
+            const heading = group.label ?? (inFollow ? t('presence-viewing.heading') : undefined);
+            return heading === undefined ? (
               rows
             ) : (
               <Listbox.ItemGroup key={group.objectKey ?? index}>
-                <Listbox.ItemGroupLabel>{group.label}</Listbox.ItemGroupLabel>
+                <Listbox.ItemGroupLabel>{heading}</Listbox.ItemGroupLabel>
                 {rows}
               </Listbox.ItemGroup>
             );

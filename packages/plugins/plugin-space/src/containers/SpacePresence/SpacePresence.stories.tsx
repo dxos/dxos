@@ -104,19 +104,32 @@ export const Sessions = () => <Full showSessions />;
 
 const [leader, follower, ...others] = viewers(4);
 
-/** The follow on one object: the leader first with Stop (and Paused), then the follow's other members, then the rest. */
-export const Follow = () => (
-  <div className='p-4'>
-    <FullPresence
-      leader={leader}
-      paused
-      followers={[follower]}
-      groups={[{ members: others }]}
-      followHue={FOLLOW_HUE}
-      followMembers={new Set([leader.identityKey, follower.identityKey].filter((key): key is string => !!key))}
-    />
-  </div>
-);
+/** The follow on one object: the leader with Stop (and Paused), then the follow's other members, then the rest. */
+export const Follow = {
+  render: () => (
+    <div className='p-4'>
+      <FullPresence
+        leader={leader}
+        paused
+        followers={[follower]}
+        groups={[{ members: others }]}
+        followHue={FOLLOW_HUE}
+        followMembers={new Set([leader.identityKey, follower.identityKey].filter((key): key is string => !!key))}
+      />
+    </div>
+  ),
+  play: async () => {
+    await userEvent.click(screen.getAllByTestId('spacePlugin.presence.member')[0]);
+    await waitFor(() => expect(screen.getAllByTestId('spacePlugin.presence.row')).toHaveLength(4));
+    // Each section has its own heading, so the rest of the viewers never read as part of the follow.
+    const headings = document.querySelectorAll('[data-part="item-group-label"]');
+    await expect(Array.from(headings, (heading) => heading.textContent)).toEqual([
+      'Following',
+      'Following you',
+      'Viewing',
+    ]);
+  },
+};
 
 const keyboardMembers = viewers(4);
 
