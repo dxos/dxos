@@ -5,7 +5,7 @@ tasks:
   # package does not re-run, and so each program covers one package rather than every
   # source file in the repo.
   test-types:
-    command: pnpm exec tstyche $projectSource
+    command: tstyche $projectSource
     deps:
       # This project's build, which brings its dependencies' builds with it. The type
       # test reads this package's source directly, so it does not consume the output,
