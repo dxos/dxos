@@ -434,7 +434,11 @@ test.describe('Collaboration tests', () => {
 
       const home = `root/${guest.workspaceId}/home`;
       const homeScroller = (app: AppManager) =>
-        app.page.locator(`[data-testid="deck.plank"][data-attendable-id="${home}"] .dx-scroll-viewport`).first();
+        app.page
+          .locator(
+            `[data-testid="deck.plank"][data-attendable-id="${home}"] [data-scope="scroll-area"][data-orientation="vertical"] .dx-scroll-viewport`,
+          )
+          .first();
       await guest.page.locator(`[data-object-id="${home}"]`).first().click();
       await expect(homeScroller(guest)).toBeVisible({ timeout: 30_000 });
 

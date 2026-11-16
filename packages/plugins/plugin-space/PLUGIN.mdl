@@ -1788,6 +1788,17 @@ decision D-95: QA-8 checks [F-8.25] on the space's Home, whose article scrolls i
   why: Home is in every space and scrolls in a short window, so the test needs no objects of a particular type.
 ```
 
+```mdl
+decision D-96: Each Home section (Recent, Activity, Get started) is a scroll anchor named for the section, so a follower whose Home is a different width has the leader's section at the top. Fills in [D-91].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25]
+  why: Home's sections lay out differently by width (Activity's stats wrap to one column in a narrow plank), so the fraction scrolled put a narrower follower a section ahead of the leader. Recent's cards cannot anchor, since they scroll in a masonry area of their own.
+  rejected:
+    - Anchor each Recent card by its object; anchors inside a nested scrolling area move with that area, not with Home.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
