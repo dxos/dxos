@@ -41,7 +41,8 @@ export const make = (): Skill.Skill =>
         2. While \`done\` is false the agent is working: call Sync Cloud Coding Run with the chat, again and again. Each
            call folds the agent's progress into the chat and waits up to half a minute for more.
         3. When \`done\` is true, \`pullRequests\` lists the draft pull requests the agent opened. They are already
-           attached to the tasks, which are now in review; report them.
+           attached to the tasks, which are now in review; report them. With no pull request the tasks are
+           blocked and \`latest\` says why (a refused push, a missing repository, a question): report that.
 
         A run takes minutes to hours. Do not start a second run for the same tasks: tasks an agent holds are skipped.
       `,

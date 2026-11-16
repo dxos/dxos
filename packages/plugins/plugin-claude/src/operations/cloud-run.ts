@@ -73,8 +73,8 @@ export const pullRequestsIn = (messages: readonly Message.Message[]): string[] =
 
 /**
  * Records each pull request on the run's tasks: imported into the space, attached to the first task that takes it
- * (a task holds one open PR, so a second PR lands on the next task), and the tasks moved to review. Best-effort: the
- * PR exists on GitHub either way.
+ * (a task holds one open PR, so a second PR lands on the next task), and the tasks moved to review, or to blocked when
+ * the run opened none. Best-effort: the PR exists on GitHub either way.
  */
 const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: readonly string[]) {
   const tasks = yield* Effect.forEach(chat.tasks, (ref) => Database.load(ref));
@@ -94,9 +94,12 @@ const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: r
       }
     }
   }
+  // A turn that ended without a pull request stopped on something (a refused push, a question, missing access) that
+  // its chat explains, so the tasks wait on their person rather than look ready for review.
+  const status = urls.length > 0 ? 'review' : 'blocked';
   for (const task of tasks) {
     if (task.status === 'started') {
-      yield* Operation.invoke(TaskOperation.UpdateTask, { task: Ref.make(task), status: 'review' }).pipe(Effect.exit);
+      yield* Operation.invoke(TaskOperation.UpdateTask, { task: Ref.make(task), status }).pipe(Effect.exit);
     }
   }
 });

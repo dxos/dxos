@@ -98,7 +98,7 @@ export const SyncCloudRun = Operation.make({
     description: trim`
       Fold what a cloud coding run has produced since the last call into its chat, waiting a few minutes for more.
       When the turn has ended, imports each pull request the agent opened, attaches it to the run's tasks and moves
-      them to review.
+      them to review; a run that opened none leaves them blocked, with the reason in its chat and in \`latest\`.
     `,
   },
   input: Schema.Struct({ chat: Ref.Ref(Chat.Chat) }),
