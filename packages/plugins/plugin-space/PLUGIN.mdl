@@ -815,7 +815,7 @@ test QA-5: Follow a peer around the space
   covers: [F-8.19, F-8.20, F-8.21, F-8.22, F-8.23]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › following a peer opens what they open and mirrors their scroll until Escape or leaving the space
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follow shows on both sides and mirrors what the leader opens and scrolls, until Stop
   given:
     - host: a booted app with a space containing two documents, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space
@@ -844,7 +844,7 @@ test QA-6: Follow a peer's deck side by side
   covers: [F-8.21, F-8.22]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follower whose deck lays planks side by side mirrors the leader's planks and scroll until it scrolls or navigates
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follower whose deck lays planks side by side mirrors the leader's planks and scroll until it selects one in the navtree
   given:
     - host: a booted app with the deck's flatten setting off, and a space containing three documents, shared with a guest
     - guest: a second browser profile with its own identity and the flatten setting off, a member of that space
@@ -873,7 +873,7 @@ test QA-7: See a follow on both sides
   covers: [F-8.23, F-8.24]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follow shows on both sides, in Members and on every plank heading, until it stops
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follow shows on both sides and mirrors what the leader opens and scrolls, until Stop
   given:
     - host: a booted app with a space containing a document, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space

@@ -60,22 +60,17 @@ describe('LocatorExtension', () => {
     });
   });
 
-  test('a flat deck opens what the leader attends without taking focus', async ({ expect }) => {
-    const { calls, follow, spaceId } = await setup();
-    const path = objectPath(spaceId);
+  test.for([
+    { deck: 'flat', flat: true, op: 'open' },
+    { deck: 'sliding', flat: false, op: 'set' },
+  ])('a $deck deck shows what the leader attends without taking focus', async ({ flat, op }, { expect }) => {
+    const { calls, follow, spaceId } = await setup({ flat });
+    const path = flat ? objectPath(spaceId) : boundPath(spaceId);
     await follow(view(spaceId, path));
 
-    await expect.poll(() => calls.find(({ op }) => op === 'open')).toBeDefined();
-    expect(calls.find(({ op }) => op === 'open')?.input).toMatchObject({ subject: [path], focus: false });
-  });
-
-  test('mirroring the leader’s deck does not take focus', async ({ expect }) => {
-    const { calls, follow, spaceId } = await setup({ flat: false });
-    const path = boundPath(spaceId);
-    await follow(view(spaceId, path));
-
-    await expect.poll(() => calls.find(({ op }) => op === 'set')).toBeDefined();
-    expect(calls.find(({ op }) => op === 'set')?.input).toMatchObject({ subject: [path], focus: false });
+    await expect
+      .poll(() => calls.find((call) => call.op === op)?.input)
+      .toMatchObject({ subject: [path], focus: false });
   });
 
   test('an object that is not yet available is opened once it is', async ({ expect }) => {
@@ -152,27 +147,29 @@ describe('LocatorExtension', () => {
       .toBeGreaterThan(1);
   });
 
-  test('a mirrored plank this deck has no binding for is left out, not retried', async ({ expect }) => {
+  test('a mirrored plank this deck has no binding for is left out, not set or scrolled to again', async ({
+    expect,
+  }) => {
     const unresolved = new Set<string>();
     const { calls, follow, registry, spaceId } = await setup({ flat: false, unresolved });
-    const path = boundPath(spaceId);
+    const [first, second] = [boundPath(spaceId), boundPath(spaceId)];
     const other = objectPath(spaceId);
     unresolved.add(other);
-    const { showing } = await follow(
-      view(spaceId, path, { active: [path, other], value: { front: other, companions: [] } }),
-    );
-    await expect.poll(() => calls.find(({ op }) => op === 'set')).toBeDefined();
-    // The leader's front plank is the one left out, so the deck slides to a plank of theirs it holds.
-    await expect.poll(() => calls.find(({ op }) => op === 'scrollIntoView')?.input.subject).toBe(path);
+    const leader = { active: [first, second, other], value: { front: other, companions: [] } };
+    const { viewAtom, showing } = await follow(view(spaceId, first, leader));
+    await expect.poll(() => calls.filter(({ op }) => op === 'set').length).toBe(1);
 
-    // The deck cannot bind it, now or later, so the follow shows the rest without retrying or re-scrolling past the
-    // mounting window.
+    // Past the mounting window the deck shows the rest without re-scrolling.
     await vi.advanceTimersByTimeAsync(6_000);
     const scrolls = calls.filter(({ op }) => op === 'scrollIntoView').length;
     await vi.advanceTimersByTimeAsync(1_500);
-    expect(calls.filter(({ op }) => op === 'set')).toHaveLength(1);
-    expect(calls.filter(({ op }) => op === 'scrollIntoView').length).toBe(scrolls);
+    expect(calls.filter(({ op }) => op === 'scrollIntoView')).toHaveLength(scrolls);
     expect(registry.get(showing)).toBe(true);
+
+    // The leader attends their other plank: the view changes, but the deck already holds all it can of theirs.
+    registry.set(viewAtom, view(spaceId, second, leader));
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(calls.filter(({ op }) => op === 'set')).toHaveLength(1);
   });
 
   test('a plank of the leader’s that gains a binding later joins the mirrored deck', async ({ expect }) => {
@@ -204,23 +201,6 @@ describe('LocatorExtension', () => {
     await expect.poll(() => calls.find(({ op }) => op === 'scrollIntoView')?.input.subject).toBe(late);
   });
 
-  test('a deck that holds the leader’s planks slides to a stand-in for their unbindable front', async ({ expect }) => {
-    const { calls, follow, registry, spaceId, state } = await setup({ flat: false });
-    const held = boundPath(spaceId);
-    const unbound = GraphPath.getSpacePath(spaceId, 'unbound', EntityId.random());
-    registry.update(state, (deck) => ({ ...deck, active: [held], front: held }));
-    // The attended object is never available, yet the deck already shows the leader's planks.
-    await follow(
-      view(spaceId, boundPath(spaceId), {
-        active: [held, unbound],
-        value: { front: unbound, companions: [] },
-        available: false,
-      }),
-    );
-
-    await expect.poll(() => calls.find(({ op }) => op === 'scrollIntoView')?.input.subject).toBe(held);
-  });
-
   test('a plank the leader opens slides the deck once, to it', async ({ expect }) => {
     const { calls, follow, registry, spaceId } = await setup({ flat: false });
     const [first, second, third] = [boundPath(spaceId), boundPath(spaceId), boundPath(spaceId)];
@@ -241,38 +221,25 @@ describe('LocatorExtension', () => {
     ]);
   });
 
-  test('a stand-in for an unbindable front is the first held plank after it, else the last before it', async ({
-    expect,
-  }) => {
+  // The attended object is never available, yet the deck already holds the leader's planks around their front.
+  test.for([
+    { standIn: 'the first held plank after it', after: true },
+    { standIn: 'else the last held plank before it', after: false },
+  ])('a stand-in for an unbindable front is $standIn', async ({ after }, { expect }) => {
     const { calls, follow, registry, spaceId, state } = await setup({ flat: false });
-    const [before, after] = [boundPath(spaceId), boundPath(spaceId)];
+    const [before, next] = [boundPath(spaceId), boundPath(spaceId)];
     const unbound = GraphPath.getSpacePath(spaceId, 'unbound', EntityId.random());
-    registry.update(state, (deck) => ({ ...deck, active: [before, after], front: before }));
+    const held = after ? [before, next] : [before];
+    registry.update(state, (deck) => ({ ...deck, active: held, front: before }));
     await follow(
       view(spaceId, boundPath(spaceId), {
-        active: [before, unbound, after],
+        active: [before, unbound, ...(after ? [next] : [])],
         value: { front: unbound, companions: [] },
         available: false,
       }),
     );
 
-    await expect.poll(() => calls.find(({ op }) => op === 'scrollIntoView')?.input.subject).toBe(after);
-  });
-
-  test('a deck short only of planks it cannot bind is not set again when the leader moves', async ({ expect }) => {
-    const unresolved = new Set<string>();
-    const { calls, follow, registry, spaceId } = await setup({ flat: false, unresolved });
-    const [first, second] = [boundPath(spaceId), boundPath(spaceId)];
-    const unbound = GraphPath.getSpacePath(spaceId, 'unbound', EntityId.random());
-    unresolved.add(unbound);
-    const leader = { active: [first, second, unbound], value: { front: first, companions: [] } };
-    const { viewAtom } = await follow(view(spaceId, first, leader));
-    await expect.poll(() => calls.filter(({ op }) => op === 'set').length).toBe(1);
-
-    // The leader attends their other plank: the view changes, but the deck already holds all it can of theirs.
-    registry.set(viewAtom, view(spaceId, second, leader));
-    await vi.advanceTimersByTimeAsync(1_000);
-    expect(calls.filter(({ op }) => op === 'set')).toHaveLength(1);
+    await expect.poll(() => calls.find(({ op }) => op === 'scrollIntoView')?.input.subject).toBe(after ? next : before);
   });
 
   test('a mirrored plank opens the companion the leader has open, in their tab, and closes it with them', async ({

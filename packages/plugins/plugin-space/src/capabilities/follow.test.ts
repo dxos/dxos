@@ -42,8 +42,10 @@ const LEADER = 'a'.repeat(64);
 const EXTENSION_ID = 'test-extension';
 
 describe('Follow', () => {
-  test('each extension is handed the leader’s view with the leader’s value for it alone', async ({ expect }) => {
-    const { followed, ephemeral, registry, space, object } = await setup();
+  test('each extension is handed the leader’s view with the leader’s value for it alone, and one that navigates opens it', async ({
+    expect,
+  }) => {
+    const { calls, followed, ephemeral, registry, space, object } = await setup();
     const key = EID.make({ spaceId: space.id, entityId: object.id });
     const path = GraphPath.getObjectPathFromObject(object);
     const other = GraphPath.getObjectPath(space.id, 'expando', EntityId.random());
@@ -60,6 +62,8 @@ describe('Follow', () => {
       attended: { key, path, localPath: path },
       value: { front: other },
     });
+    await vi.advanceTimersByTimeAsync(600);
+    expect(calls.filter(({ op }) => op === 'open')).toEqual([]);
   });
 
   test('each tick advances an extension’s view, so it needs no timer of its own', async ({ expect }) => {
@@ -95,16 +99,6 @@ describe('Follow', () => {
       .poll(() => calls.find(({ op }) => op === 'open')?.input)
       .toEqual({ subject: [path], workspace: GraphPath.getSpacePath(space.id), focus: false });
     expect(calls.filter(({ op }) => op === 'open')).toHaveLength(1);
-  });
-
-  test('an extension that navigates opens what the leader shows instead', async ({ expect }) => {
-    const { calls, followed, ephemeral, registry, space, object } = await setup();
-    const path = GraphPath.getObjectPathFromObject(object);
-    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
-
-    await expect.poll(() => followed.views.at(-1)?.attended.localPath).toBe(path);
-    await vi.advanceTimersByTimeAsync(600);
-    expect(calls.filter(({ op }) => op === 'open')).toEqual([]);
   });
 
   test('the leader’s anchor is revealed in an object once the layout holds it, without moving the caret', async ({
@@ -195,34 +189,50 @@ describe('Follow', () => {
     expect(registry.get(ephemeral).following).toBeUndefined();
   });
 
-  test('going back in history ends the follow', async ({ expect }) => {
-    const { followed, ephemeral, registry, space, object } = await setup();
-    const path = GraphPath.getObjectPathFromObject(object);
-    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
-    await expect.poll(() => followed.views.length).toBeGreaterThan(0);
-
-    window.dispatchEvent(new PopStateEvent('popstate'));
-    expect(registry.get(ephemeral).following).toBeUndefined();
+  test.for<{ input: string; act: (follow: Setup) => void }>([
+    {
+      input: 'a click in the deck',
+      act: ({ main }) => main.dispatchEvent(new Event('pointerdown', { bubbles: true })),
+    },
+    { input: 'a wheel over the deck', act: ({ main }) => main.dispatchEvent(new Event('wheel', { bubbles: true })) },
+    {
+      input: 'a key typed in the deck',
+      act: ({ main }) => main.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true })),
+    },
+    {
+      input: 'Escape anywhere',
+      act: () => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })),
+    },
+    {
+      input: 'selecting an object’s navtree row',
+      act: ({ main, object }) => {
+        const row = main.appendChild(document.createElement('div'));
+        row.setAttribute('data-tree-row', '');
+        row.setAttribute('data-object-id', GraphPath.getObjectPathFromObject(object));
+        row.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+      },
+    },
+    {
+      input: 'leaving the space’s workspace',
+      act: ({ registry, layout, space }) => {
+        registry.update(layout, (state) => ({ ...state, workspace: GraphPath.getSpacePath(space.id) }));
+        registry.update(layout, (state) => ({ ...state, workspace: 'root' }));
+      },
+    },
+    { input: 'going back in history', act: () => window.dispatchEvent(new PopStateEvent('popstate')) },
+  ])('$input ends the follow', async ({ act }, { expect }) => {
+    const follow = await setupFollowing();
+    act(follow);
+    expect(follow.registry.get(follow.ephemeral).following).toBeUndefined();
   });
 
-  test('a click in the deck ends the follow, but a click or Escape in the viewers list there does not', async ({
-    expect,
-  }) => {
-    const { followed, ephemeral, registry, space, object } = await setup();
-    const path = GraphPath.getObjectPathFromObject(object);
-    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
-    await expect.poll(() => followed.views.length).toBeGreaterThan(0);
-
-    const main = document.body.appendChild(document.createElement('main'));
-    onTestFinished(() => main.remove());
+  test('a click or Escape in the presence controls in the deck keeps the follow', async ({ expect }) => {
+    const { main, registry, ephemeral } = await setupFollowing();
     const presence = main.appendChild(document.createElement('div'));
     presence.setAttribute('data-follow-keep', '');
     presence.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     presence.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(registry.get(ephemeral).following).toBeDefined();
-
-    main.dispatchEvent(new Event('pointerdown', { bubbles: true }));
-    expect(registry.get(ephemeral).following).toBeUndefined();
   });
 
   test('going back in history while not following writes nothing', async ({ expect }) => {
@@ -270,6 +280,25 @@ const lead = (
     peerDecks: { [spaceId]: { [LEADER]: { [LEADER]: deck } } },
     following: { spaceId, identityKey: LEADER },
   }));
+
+type Setup = Awaited<ReturnType<typeof setupFollowing>>;
+
+/** Follows `LEADER` on the space's object, with a deck `main` to send input to. */
+const setupFollowing = async () => {
+  const context = await setup();
+  const path = GraphPath.getObjectPathFromObject(context.object);
+  lead(
+    context.registry,
+    context.ephemeral,
+    context.space.id,
+    EID.make({ spaceId: context.space.id, entityId: context.object.id }),
+    path,
+  );
+  await vi.waitUntil(() => context.followed.views.length > 0);
+  const main = document.body.appendChild(document.createElement('main'));
+  onTestFinished(() => main.remove());
+  return { ...context, main };
+};
 
 /** What the fake extension was handed: every view in order, and whether its follow ended. */
 type Followed = { views: AppCapabilities.FollowView[]; closed: boolean };
@@ -402,7 +431,10 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
                 ),
               ),
             ),
-            Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
+            Capability.contribute(
+              SpaceCapabilities.EphemeralState,
+              SpaceCapabilities.makeEphemeralState('local-session'),
+            ),
           ];
         }),
       ),
@@ -427,17 +459,3 @@ const makeFollowPlugin = (followed: Followed, calls: Call[], navigates: boolean)
     ),
     Plugin.make,
   )();
-
-const ephemeralState = () =>
-  Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-    sdkMigrationRunning: {},
-    navigableCollections: false,
-    viewersByObject: {},
-    peerDecks: {},
-    mergePreview: undefined,
-    following: undefined,
-    sessionId: 'local-session',
-    followedSpaces: [],
-    peerFollowing: {},
-    lastMergeAt: undefined,
-  }).pipe(Atom.keepAlive);

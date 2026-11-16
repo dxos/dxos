@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -60,7 +59,10 @@ const makeRecordingLayoutPlugin = (calls: { op: string; input: unknown }[]): Plu
         () =>
           Effect.succeed([
             // Normally contributed by the space plugin's `state.ts`, which needs a layout to activate.
-            Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
+            Capability.contribute(
+              SpaceCapabilities.EphemeralState,
+              SpaceCapabilities.makeEphemeralState('local-session'),
+            ),
             Capability.contribute(
               Capabilities.OperationHandler,
               OperationHandlerSet.make(
@@ -80,17 +82,3 @@ const makeRecordingLayoutPlugin = (calls: { op: string; input: unknown }[]): Plu
     ),
     Plugin.make,
   )();
-
-const ephemeralState = () =>
-  Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-    sdkMigrationRunning: {},
-    navigableCollections: false,
-    viewersByObject: {},
-    peerDecks: {},
-    mergePreview: undefined,
-    following: undefined,
-    sessionId: 'local-session',
-    followedSpaces: [],
-    peerFollowing: {},
-    lastMergeAt: undefined,
-  }).pipe(Atom.keepAlive);
