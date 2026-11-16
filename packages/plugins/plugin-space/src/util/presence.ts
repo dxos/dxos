@@ -47,6 +47,9 @@ export const FOLLOW_BROADCAST_INTERVAL = 100;
 /** The hue that marks every follow, on the leader's screen and each follower's alike. */
 export const FOLLOW_HUE: ChromaticPalette = 'amber';
 
+/** Presence controls (`data-follow-keep`) are for looking at the follow, so input in them never ends it. */
+export const FOLLOW_KEEP_SELECTOR = '[data-follow-keep]';
+
 /** How long a follower waits for its leader to attend an object in the space again before it stops following. */
 export const FOLLOW_LOST_TIMEOUT = 5_000;
 

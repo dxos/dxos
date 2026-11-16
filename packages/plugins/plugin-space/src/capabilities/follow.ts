@@ -22,7 +22,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { SpaceCapabilities } from '#types';
 
-import { FOLLOW_LOST_TIMEOUT, getPeerFocus, getPresenceKeyFromPath } from '../util/presence.ts';
+import { FOLLOW_KEEP_SELECTOR, FOLLOW_LOST_TIMEOUT, getPeerFocus, getPresenceKeyFromPath } from '../util/presence.ts';
 
 /** How often the follow updates, which also advances each extension's view. */
 const TICK_INTERVAL = 500;
@@ -71,6 +71,10 @@ const isTreeNavigation = (target: EventTarget | null): boolean => {
   return !!id && getPresenceKeyFromPath(id) !== undefined;
 };
 
+/** Whether an event lands in a presence control, such as the viewers list a follower opens to stop. */
+const isPresenceControl = (target: EventTarget | null): boolean =>
+  target instanceof Element && !!target.closest(FOLLOW_KEEP_SELECTOR);
+
 /** Whether an event lands in the deck's main area, which holds and scrolls the planks, or in an object's companion. */
 const isInDeck = (target: EventTarget | null): boolean =>
   (target instanceof Element && !!target.closest('main')) || isInObject(target);
@@ -79,8 +83,8 @@ const isInDeck = (target: EventTarget | null): boolean =>
  * Follows the peer named by the ephemeral `following` state. The follower loads the object the leader attends, reveals
  * the leader's anchor in each object it shows of them through the type's `Locator`, and hands each `LocatorExtension`
  * the leader's view with the leader's value for it. An extension that navigates opens what the leader shows; with none,
- * the follower opens the attended object itself. The local user's own input in the deck or an object's companion,
- * selecting an object in the navtree, Escape, attending an object outside what is shown of the leader, leaving the
+ * the follower opens the attended object itself. The local user's own input in the deck or an object's companion
+ * (outside the presence controls), * selecting an object in the navtree, Escape, attending an object outside what is shown of the leader, leaving the
  * space's workspace, or the leader leaving the space ends it.
  */
 export default Capability.makeModule(
@@ -384,7 +388,11 @@ export default Capability.makeModule(
     });
 
     const onPointer = (event: Event) => {
-      if (isFollowing() && (isInDeck(event.target) || isTreeNavigation(event.target))) {
+      if (
+        isFollowing() &&
+        !isPresenceControl(event.target) &&
+        (isInDeck(event.target) || isTreeNavigation(event.target))
+      ) {
         stop();
       }
     };
@@ -392,6 +400,7 @@ export default Capability.makeModule(
       if (
         isFollowing() &&
         !MODIFIER_KEYS.has(event.key) &&
+        !isPresenceControl(event.target) &&
         (event.key === 'Escape' || isInDeck(event.target) || (event.key === 'Enter' && isTreeNavigation(event.target)))
       ) {
         stop();

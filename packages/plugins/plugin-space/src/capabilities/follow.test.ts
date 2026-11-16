@@ -205,6 +205,26 @@ describe('Follow', () => {
     expect(registry.get(ephemeral).following).toBeUndefined();
   });
 
+  test('a click in the deck ends the follow, but a click or Escape in the viewers list there does not', async ({
+    expect,
+  }) => {
+    const { followed, ephemeral, registry, space, object } = await setup();
+    const path = GraphPath.getObjectPathFromObject(object);
+    lead(registry, ephemeral, space.id, EID.make({ spaceId: space.id, entityId: object.id }), path);
+    await expect.poll(() => followed.views.length).toBeGreaterThan(0);
+
+    const main = document.body.appendChild(document.createElement('main'));
+    onTestFinished(() => main.remove());
+    const presence = main.appendChild(document.createElement('div'));
+    presence.setAttribute('data-follow-keep', '');
+    presence.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    presence.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(registry.get(ephemeral).following).toBeDefined();
+
+    main.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(registry.get(ephemeral).following).toBeUndefined();
+  });
+
   test('going back in history while not following writes nothing', async ({ expect }) => {
     const { ephemeral, registry } = await setup();
     const states: SpaceCapabilities.SpaceEphemeralState[] = [];
