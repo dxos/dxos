@@ -59,5 +59,5 @@ export const getBytes = (url: string, userAgent = BROWSER_USER_AGENT): Effect.Ef
     Effect.provide(FetchHttpClient.layer),
   );
 
-/** Whether a failure was a 404, which several sources answer for a day with no file. */
-export const isNotFound = (error: SourceError): boolean => /\b404\b/.test(String(error.cause));
+/** Whether a failure was a 404 (or the 403 a CDN answers for a missing object), as for a day with no file. */
+export const isNotFound = (error: SourceError): boolean => /\b40[34]\b/.test(String(error.cause));

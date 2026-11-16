@@ -28,12 +28,16 @@ export type SourceResult = {
   readonly error?: string;
 };
 
+/** The source groups an ingest can run. */
+export const SOURCE_GROUPS = ['text', 'edgar', 'market', 'house'] as const;
+export type SourceGroup = (typeof SOURCE_GROUPS)[number];
+
 /** Options for {@link ingest}. */
 export type IngestOptions = FeedSpecsOptions & {
   /** ISO day the structured sources read back to (default 31 days ago). */
   readonly since?: string;
   /** Which source groups run (default all). */
-  readonly only?: ReadonlyArray<'text' | 'edgar' | 'market' | 'house'>;
+  readonly only?: ReadonlyArray<SourceGroup>;
   /** Called with each source's result as it lands. */
   readonly onResult?: (result: SourceResult) => void;
 };
@@ -48,7 +52,7 @@ const daysAgo = (days: number): string => new Date(Date.now() - days * 24 * 60 *
 export const ingest = (options: IngestOptions = {}): Effect.Effect<SourceResult[], never, Database.Service> =>
   Effect.gen(function* () {
     const since = options.since ?? daysAgo(31);
-    const only = new Set(options.only ?? ['text', 'edgar', 'market', 'house']);
+    const only = new Set<SourceGroup>(options.only ?? SOURCE_GROUPS);
     const results: SourceResult[] = [];
     const report = (result: SourceResult) => {
       results.push(result);
@@ -85,7 +89,7 @@ export const ingest = (options: IngestOptions = {}): Effect.Effect<SourceResult[
           (post) => [storyKey({ title: post.title ?? '', publisher: post.author ?? '' })],
         );
         // Google News and Reddit throttle bursts.
-        yield* Effect.sleep(spec.family === 'reddit' ? '3 seconds' : '300 millis');
+        yield* Effect.sleep(spec.family === 'reddit' ? '15 seconds' : '300 millis');
       }
     }
 
@@ -125,7 +129,10 @@ export const ingest = (options: IngestOptions = {}): Effect.Effect<SourceResult[
         yield* run('prices', `${ticker} daily`, Finance.Observation, dailyBars(ticker));
         yield* Effect.sleep('300 millis');
       }
-      const days = Array.from({ length: 45 }, (_, index) => daysAgo(index + 1)).filter((day) => day >= since);
+      // FINRA publishes trading days only.
+      const days = Array.from({ length: 45 }, (_, index) => daysAgo(index + 1)).filter(
+        (day) => day >= since && ![0, 6].includes(new Date(`${day}T00:00:00Z`).getUTCDay()),
+      );
       for (const day of days) {
         yield* run('finra-short-volume', day, Finance.Observation, shortVolume(day));
       }
