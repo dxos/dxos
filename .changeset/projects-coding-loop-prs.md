@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: composer-mcp-whoami.md arrives with dxos/dxos#14555, merged in as a base; it is a separate change and leaves this diff when #14555 lands
 '@dxos/plugin-projects': minor
 ---
 
