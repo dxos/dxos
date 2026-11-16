@@ -428,7 +428,7 @@ component Toolbar
     Optional chrome (decision 5): up and breadcrumbs, fit, zoom, snap, undo/redo, cut/copy/paste/delete,
     a create menu, auto layout, debug, and a readout of zoom, pointer and depth. Every label prints its
     chord from `model/keys.ts` rather than naming one. Each floating bar is a react-ui-menu `ActionToolbar`
-    whose controls collapse into its ⋮ menu by rank when the bar is narrower than they are (D-65).
+    whose controls collapse into its ⋮ menu by rank when the bar is narrower than they are (D-64).
   props: { actions, nodes, capabilities, snap, debug }
 ```
 
@@ -1651,21 +1651,21 @@ decision D-63: The standalone 2D engine's action bar, display panel and inspecto
 ```
 
 ```mdl
-decision D-64: The navigation commands gain `centreOn(point, zoom)`, which leaves fit mode and moves the camera so `point` is at the view's centre at `zoom`.
-  date: 2026-11-15
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-1.9]
-  why: Following a collaborator in the diagram app and Composer shows the scene where they look; a view's centre and zoom mean the same at any size, where the camera's offset does not, and only the controller knows the view's size.
-```
-
-```mdl
-decision D-65: The editor's floating bars (crumbs, the bottom bar and the Timeline's shots) are react-ui-menu `ActionToolbar`s with collapse ranks; the camera, actions and display share the bottom bar ([org.dxos.ui.react-ui-canvas#D-59]). A narrow view moves controls into the bar's ⋮ menu: the dimension's own commands first, then combining, the grid kinds and the lattice, then putting together, zooming, guides and axes, then actual size and the Timeline toggle, then Fit, editing and snap, and undo and redo last; the crumbs, the zoom readout and the theme selector stay. The tool rail keeps its own folds until `ActionToolbar` collapses a vertical toolbar.
+decision D-64: The editor's floating bars (crumbs, the bottom bar and the Timeline's shots) are react-ui-menu `ActionToolbar`s with collapse ranks; the camera, actions and display share the bottom bar ([org.dxos.ui.react-ui-canvas#D-59]). A narrow view moves controls into the bar's ⋮ menu: the dimension's own commands first, then combining, the grid kinds and the lattice, then putting together, zooming, guides and axes, then actual size and the Timeline toggle, then Fit, editing and snap, and undo and redo last; the crumbs, the zoom readout and the theme selector stay. The tool rail keeps its own folds until `ActionToolbar` collapses a vertical toolbar.
   date: 2026-11-15
   by: agent:claude-code
   for: user:wittjosiah
   affects: [Toolbar]
   why: Each bar floated as wide as its controls, so below about 1100 px the camera bar, actions bar and display panel overlapped at the bottom edge.
+```
+
+```mdl
+decision D-65: The navigation commands gain `centreOn(point, zoom)`, which leaves fit mode and moves the camera so `point` is at the view's centre at `zoom`.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.9]
+  why: Following a collaborator in the diagram app and Composer shows the scene where they look; a view's centre and zoom mean the same at any size, where the camera's offset does not, and only the controller knows the view's size.
 ```
 
 ---
