@@ -13,12 +13,13 @@ import { type Root, createRoot } from 'react-dom/client';
 import '@dxos/react-ui/theme.css';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ResetDialog from '@dxos/app-toolkit/ResetDialog';
-import { Client, type ClientServicesProvider, createClientServices } from '@dxos/client';
+import { Client, createClientServices } from '@dxos/client';
 import { Config, Defaults, Envs, Local, defs } from '@dxos/config';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
+import { clearIndexedDB, clearOPFS } from '@dxos/util';
 
 import { showBootShell } from './boot-shell/index.ts';
 import { getPlugins } from './plugins.ts';
@@ -34,33 +35,48 @@ const createCoordinatorWorker = () =>
     name: 'dxos-coordinator-worker',
   });
 
-/** Wipes this device's identity and data, then starts the app afresh. */
-const resetDevice = async (services: ClientServicesProvider) => {
-  await services.services.SystemService?.reset();
+/** Set by a reset the client could not run, so the next load wipes storage before anything opens it. */
+const WIPE_ON_LOAD = 'org.dxos.diagram-app.wipe-on-load';
+
+const wipeStorage = async () => {
   localStorage.clear();
+  await clearOPFS();
+  await clearIndexedDB();
+};
+
+/** Wipes this device's identity and data, then starts the app afresh. */
+const resetDevice = async (client?: Client) => {
+  const system = client?.servicesReady ? client.services.services.SystemService : undefined;
+  if (system) {
+    await system.reset();
+    localStorage.clear();
+  } else {
+    sessionStorage.setItem(WIPE_ON_LOAD, 'true');
+  }
   window.location.href = window.location.origin;
 };
 
-/**
- * The reset dialog in place of the app and its boot shell. Reset is offered once the client's services exist, since
- * only they can wipe what the client stored.
- */
-const Fallback = ({ error, services }: { error: Error; services?: ClientServicesProvider }) => {
+/** The reset dialog in place of the app and its boot shell. */
+const Fallback = ({ error, client }: { error: Error; client?: Client }) => {
   useLayoutEffect(() => dismissShell(), []);
   const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return (
     <Theme.Provider tx={Theme.defaultTx} themeMode={dark ? 'dark' : 'light'} resourceExtensions={reactUiTranslations}>
-      <ResetDialog.Root error={error} onReset={services ? () => resetDevice(services) : undefined} />
+      <ResetDialog.Root error={error} onReset={() => resetDevice(client)} />
     </Theme.Provider>
   );
 };
 
 // What boot reached, for the dialog a boot failure shows.
-let bootServices: ClientServicesProvider | undefined;
+let bootClient: Client | undefined;
 let reactRoot: Root | undefined;
 
 const main = Effect.gen(function* () {
   performance.mark('diagram-app:main');
+  if (sessionStorage.getItem(WIPE_ON_LOAD)) {
+    sessionStorage.removeItem(WIPE_ON_LOAD);
+    yield* Effect.promise(wipeStorage);
+  }
   showBootShell();
   const config = new Config(
     {
@@ -78,8 +94,8 @@ const main = Effect.gen(function* () {
   const services = yield* Effect.promise(() =>
     createClientServices(config, { createDedicatedWorker, createCoordinatorWorker }),
   );
-  bootServices = services;
   const client = new Client({ config, services });
+  bootClient = client;
   // Until `Main` mounts, a fatal error has nowhere to show but the log.
   let raiseFatalError = (error: Error) => log.error('fatal error before render', { error });
   const plugins = getPlugins({ client, config, services, onFatalError: (error) => raiseFatalError(error) });
@@ -93,10 +109,10 @@ const main = Effect.gen(function* () {
     const App = Hooks.useApp({
       plugins,
       defaults,
-      fallback: ({ error }) => <Fallback error={error} services={services} />,
+      fallback: ({ error }) => <Fallback error={error} client={client} />,
     });
     // Rendered instead of the app, not thrown: `Main` sits above the app's error boundary.
-    return fatalError ? <Fallback error={fatalError} services={services} /> : <App />;
+    return fatalError ? <Fallback error={fatalError} client={client} /> : <App />;
   };
 
   const root = document.getElementById('root');
@@ -116,7 +132,7 @@ const showBootFailure = (cause: Cause.Cause<unknown>) => {
     const container = document.getElementById('root') ?? document.body.appendChild(document.createElement('div'));
     reactRoot = createRoot(container);
   }
-  reactRoot.render(<Fallback error={error} services={bootServices} />);
+  reactRoot.render(<Fallback error={error} client={bootClient} />);
 };
 
 EffectEx.runDetached(main.pipe(Effect.tapCause((cause) => Effect.sync(() => showBootFailure(cause)))));

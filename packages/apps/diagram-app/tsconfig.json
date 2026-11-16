@@ -57,6 +57,9 @@
       "path": "../../common/test-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {

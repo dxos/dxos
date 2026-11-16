@@ -42,6 +42,7 @@
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",

@@ -1639,10 +1639,9 @@ decision D-128: A client that fails to initialize or times out shows the same di
 ```
 
 ```mdl
-decision D-129: The reset dialog offers Reset, which wipes the device's identity and data. Of [D-2], only a place for identity management in the app's own UI stays out of scope.
+decision D-129: The reset dialog offers Reset, which wipes the device's identity and data. [D-2] defers only a place for identity management in the app's own UI.
   date: 2026-11-16
   by: user:wittjosiah
-  supersedes: D-2
   affects: [F-1.8]
 ```
 
@@ -1654,4 +1653,23 @@ decision D-130: [D-92] replaces [D-12] as well as [D-90]: the client runs every 
   supersedes: D-12
   affects: [F-7.2]
   why: A decision names one entry it supersedes, and [D-92] names [D-90].
+```
+
+```mdl
+decision D-131: [D-129] supersedes [D-2]: resetting the identity is in scope through the reset dialog, and of [D-2] only a place for identity management in the app's own UI stays out of scope.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-2
+  affects: [F-1.8]
+  why: The changelog is append-only, so the link [D-129] lacked is recorded here.
+```
+
+```mdl
+decision D-132: Reset is offered whether or not the client's services are up. Without them, Reset reloads the app, which wipes the origin's local storage, OPFS and IndexedDB before anything opens them. Fills in [D-128].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.8]
+  why: The client's own reset needs its services. Without them, the page that failed may still hold a database open, which blocks its deletion, so the wipe runs on a fresh load.
 ```
