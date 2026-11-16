@@ -273,6 +273,8 @@ export const steps = [
           what: "Bob's pill to take the follow's accent",
         },
       );
+      // A closed overlay leaves the pointer over the canvas without a move; the nudge lets the canvas share it.
+      await bob.nudge();
       await zoomAndPan(alice, await inView(alice.page, -20, 0), { x: 120, y: 60 });
       await waitFor(() => sameView(alice.page, bob.page), { timeout: 10_000, what: "Bob's view to match Alice's" });
     },
@@ -292,6 +294,7 @@ export const steps = [
       });
       await sleep(2_000);
       await bob.click(stop);
+      await bob.nudge();
     },
   },
   {
@@ -304,6 +307,7 @@ export const steps = [
       await avatar.waitFor({ timeout: TIMEOUT });
       await alice.click(avatar);
       await alice.click(alice.page.getByTestId('spacePlugin.presence.follow').first());
+      await alice.nudge();
       await zoomAndPan(bob, await inView(bob.page, 40, 20), { x: -160, y: 40 }, 25);
       await waitFor(() => sameView(bob.page, alice.page), { timeout: 10_000, what: "Alice's view to match Bob's" });
     },

@@ -202,39 +202,40 @@ const createPeer = async (name) => {
   /** A selector string or a Locator. */
   const resolve = (target) => (typeof target === 'string' ? page.locator(target).first() : target);
 
+  /** Glides the real pointer and the overlay cursor together, so a peer sharing the pointer sees it where it is drawn. */
+  const glide = async (point, steps) => {
+    const from = lastPointer;
+    for (let step = 1; step <= steps; step++) {
+      const x = from.x + ((point.x - from.x) * step) / steps;
+      const y = from.y + ((point.y - from.y) * step) / steps;
+      await page.mouse.move(x, y);
+      await overlay.moveCursor({ x, y });
+    }
+    lastPointer = point;
+  };
+
   return {
     name,
     page,
     context,
     recorder,
-    /** Moves the overlay cursor to the target, rests on it, ripples, then clicks for real. */
+    /** Glides the cursor to the target, rests on it, ripples, then clicks for real. */
     click: async (target, clickOptions) => {
       const locator = resolve(target);
       await locator.waitFor({ state: 'visible' });
       const box = await locator.boundingBox();
       if (box) {
         const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-        await overlay.moveCursor(point);
-        lastPointer = point;
+        await glide(point, 12);
         await sleep(options.dwell);
         await overlay.click(point);
       }
       await locator.click(clickOptions);
     },
-    /**
-     * Glides the real pointer and the overlay cursor together to `point` in `steps` moves, for flows where the
-     * pointer's path is the subject (hover, live cursors) rather than a click.
-     */
-    move: async (point, { steps = 20 } = {}) => {
-      const from = lastPointer;
-      for (let step = 1; step <= steps; step++) {
-        const x = from.x + ((point.x - from.x) * step) / steps;
-        const y = from.y + ((point.y - from.y) * step) / steps;
-        await page.mouse.move(x, y);
-        await overlay.moveCursor({ x, y });
-      }
-      lastPointer = point;
-    },
+    /** Glides the cursor to `point` in `steps` moves, for flows where the pointer's path is the subject. */
+    move: (point, { steps = 20 } = {}) => glide(point, steps),
+    /** Moves the pointer a pixel in place, so a surface that a closed dialog uncovered learns where it is. */
+    nudge: () => glide({ x: lastPointer.x + 1, y: lastPointer.y }, 1),
     /** Types a character at a time so the text visibly arrives (and replicates) on camera. */
     type: async (text, { delay = 45 } = {}) => {
       await page.keyboard.type(text, { delay });

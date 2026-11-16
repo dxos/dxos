@@ -100,6 +100,8 @@ export const steps = [
       }
       await sleep(1_500);
       await ada.page.keyboard.press('Escape');
+      // A closed overlay leaves the pointer over the canvas without a move; the nudge lets the canvas share it.
+      await ada.nudge();
     },
   },
   {
@@ -120,6 +122,7 @@ export const steps = [
       );
       await sleep(1_500);
       await ben.page.keyboard.press('Escape');
+      await ben.nudge();
     },
   },
   {
@@ -188,6 +191,7 @@ export const steps = [
       await waitFor(async () => (await ada.page.getByTestId('diagram-app.pill').innerText()).includes('Roadmap'), {
         what: "Ada's pill on Roadmap",
       });
+      await ada.nudge();
       await ben.click(ben.page.getByTestId('diagram-app.diagram-menu'));
       const entries = ben.page
         .getByTestId('diagram-app.diagram-list')
@@ -195,6 +199,7 @@ export const steps = [
       await count(entries, 2, "Roadmap in Ben's diagram menu");
       await sleep(2_500);
       await ben.page.keyboard.press('Escape');
+      await ben.nudge();
     },
   },
   {

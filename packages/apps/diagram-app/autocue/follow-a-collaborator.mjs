@@ -139,7 +139,7 @@ export const steps = [
       await waitFor(async () => (await pill(ada.page).innerText()).includes('Roadmap'), { what: 'Ada on Roadmap' });
       await draw(ada, 'node:rect', { x: 500, y: 300 }, { x: 640, y: 400 });
       for (const peer of [ada, ben]) {
-        await peer.page.mouse.move(700, 600);
+        await peer.move({ x: 700, y: 600 }, { steps: 5 });
       }
     },
   },
@@ -159,6 +159,8 @@ export const steps = [
       for (const peer of [ada, ben]) {
         await waitFor(async () => (await accent(peer.page)) === 'amber', { what: `${peer.name}'s pill in amber` });
       }
+      // A closed overlay leaves the pointer over the canvas without a move; the nudge lets the canvas share it.
+      await ben.nudge();
       await sleep(1_500);
     },
   },
@@ -180,7 +182,10 @@ export const steps = [
     run: async ({ peers: { ada, ben }, sleep }) => {
       await openDiagram(ada, 'Untitled', sleep);
       await waitFor(async () => (await pill(ada.page).innerText()).includes('Untitled'), { what: 'Ada on Untitled' });
+      await ada.nudge();
       await waitFor(async () => path(ben.page) === path(ada.page), { timeout: 20_000, what: 'Ben on Untitled' });
+      // The follow swaps the canvas under Ben's still pointer, so the new one has not seen it yet.
+      await ben.nudge();
       await sleep(1_500);
     },
   },
@@ -199,6 +204,7 @@ export const steps = [
         await waitFor(async () => (await accent(peer.page)) === null, { what: `${peer.name}'s pill without amber` });
       }
       await ben.page.keyboard.press('Escape');
+      await ben.nudge();
       const before = await shapeInView(ben.page);
       await zoomAndPan(ada, { x: 550, y: 320 }, { x: -100, y: 40 }, sleep);
       await sleep(2_000);
