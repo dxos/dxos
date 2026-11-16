@@ -14,7 +14,7 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 
-import { DiagramAppPlugin } from './DiagramAppPlugin.ts';
+import { DiagramAppPlugin } from './layout-plugin/index.ts';
 
 export type PluginOptions = {
   client: Client;

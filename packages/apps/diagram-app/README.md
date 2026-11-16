@@ -4,6 +4,12 @@ A diagramming app that is one full-screen canvas. It makes an anonymous identity
 spaces, and shares a space with a link. Spaces, diagrams and links are Composer's, so a link from either app opens
 in the other. The spec is `spec/APP.mdl`.
 
+## Source
+
+- `src/main.tsx` and `src/plugins.ts` wire the app: the client and its workers, the boot shell, and the plugin set.
+- `src/layout-plugin/` is `DiagramAppPlugin`, the layout plugin in place of Composer's deck. It holds the open space
+  and diagram, answers the layout operations other plugins call, and renders everything on screen.
+
 ## Run
 
 ```bash
