@@ -118,6 +118,10 @@ const classifyBatch = (batch: readonly Row[]) =>
         insertMention.run(item.id, mention.product, clamp(mention.sentiment));
       }
     }
+    // Ids the model left out stay unclassified for the next run, and this one reports it.
+    if (known.size > 0) {
+      omitted += known.size;
+    }
     return stored;
   }).pipe(
     AiUsage.withStage('classify-messages'),
@@ -133,6 +137,7 @@ const classifyBatch = (batch: readonly Row[]) =>
   );
 
 let failed = 0;
+let omitted = 0;
 
 const metering = meter(DirectAiServiceLayer, join(dirname(args.db), 'classify-trace.jsonl'));
 const program = Effect.gen(function* () {
@@ -151,11 +156,13 @@ const program = Effect.gen(function* () {
     { concurrency: Number(args.concurrency), discard: true },
   );
   process.stdout.write('\n');
-  console.log(`${done} of ${pending.length} classified; ${failed} batches failed.`);
+  console.log(
+    `${done} of ${pending.length} classified; ${failed} batches failed; ${omitted} messages left out by the model.`,
+  );
   for (const line of costReport(metering.events(), done)) {
     console.log(line);
   }
-  if (failed > 0) {
+  if (failed > 0 || omitted > 0) {
     process.exitCode = 1;
   }
 }).pipe(Effect.provide(metering.layer));

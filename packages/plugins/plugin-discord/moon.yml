@@ -63,6 +63,8 @@ tasks:
   # (both default to the Cloudflare run). See the script header.
   facts:
     command: 'pnpm exec tsx src/testing/facts-cli.ts'
+    deps:
+      - 'pipeline-rdf:build'
     options:
       runInCI: false
       cache: false

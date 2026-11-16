@@ -27,7 +27,7 @@
 
 import type * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -471,7 +471,9 @@ const exportMembers = (client: Client, guildId: string, dir: string) =>
       }
       // Written every so often so an interrupted run keeps what it fetched.
       if (index % 50 === 49 || index === pending.length - 1) {
-        writeFileSync(file, JSON.stringify(members, null, 2));
+        // Replaced by a rename, so an interrupted write never leaves a truncated file for the next run to choke on.
+        writeFileSync(`${file}.tmp`, JSON.stringify(members, null, 2));
+        renameSync(`${file}.tmp`, file);
         process.stdout.write(`\r  ${index + 1}/${pending.length}`);
       }
     }

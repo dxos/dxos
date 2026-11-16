@@ -37,13 +37,25 @@ const stripHtml = (html: string): string =>
     .replace(/\s+/g, ' ')
     .trim();
 
-/** A changelog title names its product before " - "; a blog title is matched against the product names it contains. */
-const productOf = (source: string, title: string): string | undefined => {
+/**
+ * The products an announcement names, comma-separated as `product-weeks.sql` matches them: a changelog title names them
+ * before " - "; a blog title is searched for every product name, longest first, so "Workers AI" does not also count as
+ * "Workers".
+ */
+const productsOf = (source: string, title: string): string | undefined => {
   if (source === 'changelog') {
     const head = title.split(' - ')[0]?.trim();
     return head && head !== title ? head : undefined;
   }
-  return [...PRODUCTS].sort((left, right) => right.length - left.length).find((name) => title.includes(name));
+  let rest = title;
+  const found: string[] = [];
+  for (const name of [...PRODUCTS].sort((left, right) => right.length - left.length)) {
+    if (rest.includes(name)) {
+      found.push(name);
+      rest = rest.replaceAll(name, ' ');
+    }
+  }
+  return found.length > 0 ? found.join(', ') : undefined;
 };
 
 const { values: args } = parseArgs({ options: { db: { type: 'string' }, since: { type: 'string' } } });
@@ -52,6 +64,10 @@ if (!args.db) {
   process.exit(1);
 }
 const since = args.since ? Date.parse(args.since) : Date.now() - 90 * 86_400_000;
+if (!Number.isFinite(since)) {
+  console.error(`Not a date: ${args.since}`);
+  process.exit(1);
+}
 
 const db = new DatabaseSync(args.db);
 db.exec(`CREATE TABLE IF NOT EXISTS announcement (
@@ -82,7 +98,7 @@ for (const feed of FEEDS) {
     insert.run(
       link,
       feed.source,
-      productOf(feed.source, title) ?? null,
+      productsOf(feed.source, title) ?? null,
       title,
       new Date(published).toISOString(),
       stripHtml(text(item.description)).slice(0, 600),

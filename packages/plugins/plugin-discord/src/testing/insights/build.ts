@@ -56,6 +56,8 @@ CREATE INDEX IF NOT EXISTS message_thread ON message (thread);
 
 const db = new DatabaseSync(args.db);
 db.exec(SCHEMA);
+// One transaction for the whole rebuild: a run that fails part-way never commits, so the previous data stays intact.
+db.exec('BEGIN');
 db.exec('DELETE FROM message; DELETE FROM thread; DELETE FROM member;');
 
 const insertMessage = db.prepare('INSERT OR REPLACE INTO message VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
@@ -81,11 +83,12 @@ for (const dir of args.export) {
       threads.push(thread);
     }
     for (const message of sorted) {
+      // Recorded before the text check: an attachment-only message can still start a thread or be replied to.
+      authorOf.set(message.id, { author: message.author.id, ts: message.timestamp ?? '' });
       const text = (message.content ?? '').trim();
       if (text.length === 0) {
         continue;
       }
-      authorOf.set(message.id, { author: message.author.id, ts: message.timestamp ?? '' });
       const replyTo = message.reference?.messageId ?? null;
       insertMessage.run(
         message.id,
@@ -146,6 +149,7 @@ for (const dir of args.export) {
   }
 }
 
+db.exec('COMMIT');
 console.log(
   `${messages} messages, ${pendingReplies.length} replies, ${started} of ${threads.length} thread starters, ${members} members → ${args.db}`,
 );
