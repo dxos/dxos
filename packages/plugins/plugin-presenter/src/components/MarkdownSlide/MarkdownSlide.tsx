@@ -351,14 +351,14 @@ const VARIANT_PARTS: Record<string, string> = {
 
 const variantPart = (tagName: string): string => VARIANT_PARTS[tagName] ?? tagName;
 
-/** The axes a `<Grid>` lays down and a cell or card spans, written as `cols`/`rows` on either. */
-const TRACK_AXES = ['cols', 'rows'] as const;
-
-/** What a layout tag's `cols`/`rows` mean: the tracks a grid lays down, or the tracks one of its children spans. */
-const TRACK_PREFIXES: Record<string, string> = {
-  'slide-grid': 'grid',
-  'slide-cell': 'span',
-  'slide-card': 'span',
+/**
+ * The track counts a layout tag carries, and the custom property each becomes. A grid states the tracks it lays down
+ * (`cols`/`rows`); its children state the tracks they cover (`colSpan`/`rowSpan`), named as the table attributes are.
+ */
+const TRACK_PROPERTIES: Record<string, Record<string, string>> = {
+  'slide-grid': { cols: '--slide-grid-cols', rows: '--slide-grid-rows' },
+  'slide-cell': { colSpan: '--slide-col-span', rowSpan: '--slide-row-span' },
+  'slide-card': { colSpan: '--slide-col-span', rowSpan: '--slide-row-span' },
 };
 
 /** A variant in force: the kind of block that set it and the name it carries. */
@@ -445,16 +445,13 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     properties.dataTone = tone;
     declarations.push(`--slide-accent: ${TONE_COLORS[tone]}`);
   }
-  // The tracks a grid lays down, or the tracks its child spans; the theme's classes read them, so the markdown
-  // supplies a count and never CSS of its own. Only a layout tag carries them, so no other tag loses a `cols` of its.
-  const track = TRACK_PREFIXES[element.tagName];
-  if (track) {
-    for (const axis of TRACK_AXES) {
-      const count = Number(properties[axis]);
-      delete properties[axis];
-      if (Number.isInteger(count) && count >= 1) {
-        declarations.push(`--slide-${track}-${axis}: ${count}`);
-      }
+  // The tracks a grid lays down, or the tracks its child covers; the theme's classes read them, so the markdown
+  // supplies a count and never CSS of its own. Only a layout tag carries them, so no other tag loses an attribute.
+  for (const [attribute, property] of Object.entries(TRACK_PROPERTIES[element.tagName] ?? {})) {
+    const count = Number(properties[attribute]);
+    delete properties[attribute];
+    if (Number.isInteger(count) && count >= 1) {
+      declarations.push(`${property}: ${count}`);
     }
   }
   if (declarations.length > 0) {

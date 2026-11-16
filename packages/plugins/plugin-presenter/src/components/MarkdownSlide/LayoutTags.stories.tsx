@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -33,7 +33,7 @@ type Story = StoryObj<SlideWorkbenchProps>;
 const card = (index: number) => {
   const topic = SUITE[index];
   return [
-    `<Card${index === 0 ? ' cols="2"' : ''}>`,
+    `<Card${topic.colSpan > 1 ? ` colSpan="${topic.colSpan}"` : ''}>`,
     '',
     `![${topic.label}](${topic.image})`,
     '',
@@ -69,8 +69,37 @@ export const SuiteGrid: Story = {
     await expect(cards[0].querySelector('img')?.getAttribute('src')).toBe(SUITE[0].image);
     await expect(cards[0].textContent).toContain('context memory');
     // 2. ECHO spans two of the four columns; the rest take one.
-    await expect(grid.getAttribute('style')).toContain('--slide-span-cols: 2');
-    await expect(cards[1].getAttribute('style') ?? '').not.toContain('--slide-span-cols');
+    await expect(grid.getAttribute('style')).toContain('--slide-col-span: 2');
+    await expect(cards[1].getAttribute('style') ?? '').not.toContain('--slide-col-span');
+  },
+};
+
+/**
+ * A title slide: the brand's DXOS mark centred, with the deck's title under it. The `center` layout centres its slot,
+ * so the mark is content rather than a background and the title never crosses it.
+ */
+export const Cover: Story = {
+  args: {
+    content: slide(
+      { layout: 'center' },
+      '![DXOS](https://assets.dxos.org/brand/icons/white/icon-dxos.svg)',
+      '',
+      '# DXOS',
+      '',
+      '## The decentralized operating system',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const slide = await query(canvasElement, '[data-layout="center"]');
+    const mark = slide.querySelector('img');
+    // 1. The mark is drawn, and it is the brand's white one so it reads on the dark slide.
+    await expect(mark?.getAttribute('src')).toContain('/brand/icons/white/icon-dxos.svg');
+    await waitFor(() => expect(mark?.naturalWidth).toBeGreaterThan(0));
+    // 2. The title sits under the mark, not across it.
+    await expect(slide.querySelector('h1')?.textContent).toBe('DXOS');
+    const art = mark!.getBoundingClientRect();
+    const title = slide.querySelector('h1')!.getBoundingClientRect();
+    await expect(title.top).toBeGreaterThanOrEqual(art.bottom - 1);
   },
 };
 
@@ -81,7 +110,7 @@ export const CellSpans: Story = {
       { layout: 'default' },
       '<Grid cols="3" rows="2">',
       '',
-      '<Cell cols="2">',
+      '<Cell colSpan="2">',
       '',
       '<Box variant="card">',
       '',
@@ -91,7 +120,7 @@ export const CellSpans: Story = {
       '',
       '</Cell>',
       '',
-      '<Cell rows="2">',
+      '<Cell rowSpan="2">',
       '',
       '<Box variant="outline">',
       '',
@@ -121,9 +150,9 @@ export const CellSpans: Story = {
     await expect(grid.getAttribute('style')).toContain('--slide-grid-rows: 2');
     // 2. Each cell spans what it asked for, and a bare cell asks for nothing.
     const cells = grid.querySelectorAll(':scope > div');
-    await expect(cells[0].getAttribute('style')).toContain('--slide-span-cols: 2');
-    await expect(cells[1].getAttribute('style')).toContain('--slide-span-rows: 2');
-    await expect(cells[2].getAttribute('style') ?? '').not.toContain('--slide-span');
+    await expect(cells[0].getAttribute('style')).toContain('--slide-col-span: 2');
+    await expect(cells[1].getAttribute('style')).toContain('--slide-row-span: 2');
+    await expect(cells[2].getAttribute('style') ?? '').not.toContain('-span');
   },
 };
 

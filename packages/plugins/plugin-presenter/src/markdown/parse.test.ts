@@ -261,11 +261,11 @@ describe('parseSlide', () => {
 
   test('<Cell> and <Card> carry the tracks they span', () => {
     const slide = parseSlide(
-      '<Grid cols="3">\n\n<Cell cols="2">\n\nWide\n\n</Cell>\n\n<Card rows="2">\n\nTall\n\n</Card>\n\n</Grid>',
+      '<Grid cols="3">\n\n<Cell colSpan="2">\n\nWide\n\n</Cell>\n\n<Card rowSpan="2">\n\nTall\n\n</Card>\n\n</Grid>',
     );
-    expect(elements(slide.slots.default, 'slide-cell')[0].properties.cols).toBe(2);
+    expect(elements(slide.slots.default, 'slide-cell')[0].properties.colSpan).toBe(2);
     const [card] = elements(slide.slots.default, 'slide-card');
-    expect(card.properties.rows).toBe(2);
+    expect(card.properties.rowSpan).toBe(2);
     // A card still takes a named style, which a cell has no use for.
     expect(card.properties.variant).toBe('default');
     expect(slide.issues).toEqual([]);

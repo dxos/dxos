@@ -101,19 +101,19 @@ export const theme = {
     // A cell spans the tracks `cols`/`rows` ask for; with neither it is one cell, as any grid child is.
     cell: {
       default: {
-        cell: 'min-w-0 [grid-column:span_var(--slide-span-cols,1)] [grid-row:span_var(--slide-span-rows,1)]',
+        cell: 'min-w-0 [grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]',
       },
     },
 
-    // A card is a filled surface holding art, a title and a line or two: the brand's own card. The art is contained
-    // rather than cropped: `cover` scales by whichever axis is larger, so a card spanning two columns drew its mark
-    // close to twice the size of its neighbours'.
+    // A card is a filled surface holding art, a title and a line or two: the brand's own card. The art fills the box:
+    // its scale stays even across cards of different widths because each card crop (`brand/backgrounds/cards/`) carries
+    // a window of the same height, not because of anything the card does.
     card: {
       default: {
         card:
           'flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ' +
-          '[grid-column:span_var(--slide-span-cols,1)] [grid-row:span_var(--slide-span-rows,1)]',
-        img: 'w-full grow min-h-0 object-contain',
+          '[grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]',
+        img: 'w-full grow min-h-0 object-cover',
         h1: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
         h2: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
         h3: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
@@ -122,8 +122,8 @@ export const theme = {
       outline: {
         card:
           'flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ' +
-          '[grid-column:span_var(--slide-span-cols,1)] [grid-row:span_var(--slide-span-rows,1)]',
-        img: 'w-full grow min-h-0 object-contain',
+          '[grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]',
+        img: 'w-full grow min-h-0 object-cover',
         h1: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
         h2: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
         h3: 'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading)',
@@ -131,7 +131,7 @@ export const theme = {
       },
       // No surface of its own: the art and the text sit straight on the slide, for a grid that is all pictures.
       plain: {
-        card: 'flex flex-col min-w-0 [grid-column:span_var(--slide-span-cols,1)] [grid-row:span_var(--slide-span-rows,1)]',
+        card: 'flex flex-col min-w-0 [grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]',
         img: 'w-full grow min-h-0 object-contain',
         h1: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
         h2: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading)',
