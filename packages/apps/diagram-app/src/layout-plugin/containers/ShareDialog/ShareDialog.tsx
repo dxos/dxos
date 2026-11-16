@@ -2,21 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Suspense } from 'react';
+import React from 'react';
 
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Space } from '@dxos/client/echo';
-import * as Containers from '@dxos/plugin-space/Containers';
 import * as Dialog from '@dxos/react-ui/Dialog';
 
 import { useSpaceName } from '../../components/SpaceMenu/index.ts';
-import { invitationUrl } from '../../util/index.ts';
+
+/** The subject of the space plugin's members article, which shows the workspace's space. */
+const MEMBERS = 'org.dxos.plugin.space.members';
 
 export type ShareDialogProps = {
   space: Space;
   onClose: () => void;
 };
 
-/** Composer's members panel in a dialog (spec F-5): the members, the open invitations, and new ones. */
+/** The space plugin's members article in a dialog (spec F-5): the members, the open invitations, and new ones. */
 export const ShareDialog = ({ space, onClose }: ShareDialogProps) => {
   const name = useSpaceName(space);
   return (
@@ -27,15 +30,7 @@ export const ShareDialog = ({ space, onClose }: ShareDialogProps) => {
           <Dialog.CloseTrigger />
         </Dialog.Header>
         <Dialog.Body>
-          {/* The panel is a lazy chunk (Composer's forms and shell), loaded when Share is first pressed. */}
-          <Suspense>
-            <Containers.MembersContainer
-              space={space}
-              attendableId={space.id}
-              createInvitationUrl={invitationUrl}
-              heading={false}
-            />
-          </Suspense>
+          <Surface.Surface type={AppSurface.Article} data={{ subject: MEMBERS }} limit={1} />
         </Dialog.Body>
       </Dialog.Content>
     </Dialog.Root>

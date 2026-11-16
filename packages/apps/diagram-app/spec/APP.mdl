@@ -69,7 +69,7 @@ feat F-3: Space switcher
   req F-3.4: "Join with a link…" opens Composer's join dialog, which takes a pasted link or bare invitation code, joins, and switches to the joined space. A space this identity joined never gets a diagram it did not have.
   req F-3.5: A space joined from Composer is listed like any other.
   req F-3.6: New space and Join with a link follow the spaces under a separator and show whatever is typed.
-  req F-3.7: Each space row has its own menu that renames or deletes that space. Rename opens Composer's rename popover under the space button. Delete first asks in a dialog that names the space and says the deletion reaches every device and cannot be undone. Deleting the open space opens another space, else runs the first run (F-2.1); a space that cannot be deleted, such as the identity's default space, shows a toast and stays.
+  req F-3.7: Each space row has its own menu that renames or deletes that space. Rename opens Composer's rename popover under the space button. Delete first asks in the space plugin's confirmation dialog, which says the deletion reaches every device and cannot be undone. When the open space is deleted, here or on another device, another space opens, else the first run runs (F-2.1); a space that cannot be deleted, such as the identity's default space, shows a toast and stays.
 ```
 
 ```mdl
@@ -210,7 +210,7 @@ component DiagramMenu
 
 ```mdl
 component ShareDialog
-  desc: F-5. Composer's members panel in a dialog; mockup board 4 is superseded by it.
+  desc: F-5. The space plugin's members article, drawn through its surface, in a dialog; mockup board 4 is superseded by it.
   layout: |
     Share “Team space”                                  ×
     ┌ Composer members panel ───────────────────────┐
@@ -1535,4 +1535,33 @@ decision D-119: The boot shell renders both parts from one root and holds which 
   why: A dismissal comes from a layout effect in the live app's root, where the shell's root cannot render synchronously, so React alone would leave the part on screen for a frame over its replacement.
   rejected:
     - Keep the layout plugin importing the shell's components: the plugin would depend on the app's entry code.
+```
+
+```mdl
+decision D-120: The app reuses what other packages already provide in place of its own copies: the pill's space and diagram menus are built on react-ui-list's `Picker` and react-ui-search's `SearchList`, the delete-space confirmation comes from the space plugin, and the Share dialog draws the space plugin's members article through a surface. The layout's dialog, popover and toast handling stays the app's own, and nothing new is exported from a plugin for the app.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-3, F-4, F-3.7, F-5.3, ShareDialog, SpaceMenu, DiagramMenu]
+```
+
+```mdl
+decision D-121: The space plugin's `OpenDeleteSpace` operation opens its confirmation as a layout dialog, and its confirm runs `Delete`; the app invokes it from the space's row menu. The app leaves a space when it disappears from the client's list, so a deletion here or on another device moves the view the same way. Fills in [D-120].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.7]
+  why: A confirmation inside `Delete` would stall callers with no screen, such as agents; an operation that opens a dialog follows `OpenCreateSpace` and `OpenImportSpace`.
+  rejected:
+    - Ask inside `Delete`: an agent or MCP call would wait on a dialog nobody sees.
+```
+
+```mdl
+question Q-5: The members article shows its own heading ("Manage space members") under the dialog title, where [F-5.3] has the dialog title replace it. Which should hold?
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.3, ShareDialog]
+  options:
+    - Keep the heading: the dialog shows the article as the space plugin draws it, and F-5.3 drops "without its own heading".
+    - Hide it: the members article hides its heading when its surface data marks it embedded, which adds that flag to the surface.
 ```

@@ -35,7 +35,6 @@ import {
   parseRoute,
   showShell,
 } from '../../../shared/index.ts';
-import { DeleteSpaceDialog } from '../../components/DeleteSpaceDialog/index.ts';
 import { DiagramAppCapabilities, DiagramAppEvents } from '../../types/index.ts';
 import { createSpace, ensureIdentity, fileDrawing, preloadDrawing, recordRoute, startSpace } from '../../util/index.ts';
 import { DiagramLayout, SPACE_MENU_ANCHOR } from '../DiagramLayout/index.ts';
@@ -110,8 +109,6 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
   // Set from asking for the join dialog until the joined space shows, or the dialog is dismissed: the space it started
   // on, the dismissals so far, and whether the dialog has opened.
   const [joining, setJoining] = useState<{ spaceId?: string; dismissals: number; opened: boolean }>();
-  // The space whose deletion waits on the user's confirmation.
-  const [deleting, setDeleting] = useState<Space>();
   const startedRef = useRef(false);
   const { route } = layout;
   const space = spaces.find(({ id }) => id === route.spaceId);
@@ -192,27 +189,22 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
     [client, notify, navigate, createDiagram],
   );
 
-  /** Deletes a confirmed space; leaving the one shown opens another, or runs the first run on a profile with none. */
-  const deleteSpace = useCallback(
-    async (target: Space) => {
-      setDeleting(undefined);
-      const { error } = await invokePromise(SpaceOperation.Delete, { space: target });
-      if (error) {
-        log.error('space not deleted', { error });
-        notify('delete-space-failed', 'The space could not be deleted.');
-        return;
+  // A space deleted here or on another device leaves the view: another space opens, or the first run on a profile with
+  // none.
+  const shownRef = useRef<string>(undefined);
+  useEffect(() => {
+    if (space) {
+      shownRef.current = space.id;
+    } else if (shownRef.current && shownRef.current === route.spaceId) {
+      shownRef.current = undefined;
+      const next = spaces[0];
+      if (next) {
+        openSpace(next, 'replace');
+      } else {
+        void openStart();
       }
-      if (target.id === spaceId) {
-        const next = spaces.find(({ id }) => id !== target.id);
-        if (next) {
-          openSpace(next, 'replace');
-        } else {
-          await openStart();
-        }
-      }
-    },
-    [invokePromise, notify, spaceId, spaces, openSpace, openStart],
-  );
+    }
+  }, [space, route.spaceId, spaces, openSpace, openStart]);
 
   useEffect(() => {
     // A capability identity change reruns this effect; a second startup would race the first to create the space.
@@ -289,29 +281,20 @@ const DiagramApp = ({ prepared }: { prepared: Promise<void> }) => {
   }, [spaceId, registry, layoutState, invokePromise]);
 
   return space ? (
-    <>
-      <SpaceView
-        key={space.id}
-        space={space}
-        spaces={spaces}
-        drawingId={route.drawingId}
-        onSelect={openSpace}
-        onSelectDrawing={selectDrawing}
-        onCreate={() => void invokePromise(SpaceOperation.OpenCreateSpace)}
-        onJoin={handleJoin}
-        onRename={(target) => void invokePromise(SpaceOperation.Rename, { space: target, caller: SPACE_MENU_ANCHOR })}
-        onDelete={setDeleting}
-        onCreateDiagram={createDiagram}
-        onError={(message) => notify('error', message)}
-      />
-      {deleting && (
-        <DeleteSpaceDialog
-          space={deleting}
-          onDelete={(target) => void deleteSpace(target)}
-          onClose={() => setDeleting(undefined)}
-        />
-      )}
-    </>
+    <SpaceView
+      key={space.id}
+      space={space}
+      spaces={spaces}
+      drawingId={route.drawingId}
+      onSelect={openSpace}
+      onSelectDrawing={selectDrawing}
+      onCreate={() => void invokePromise(SpaceOperation.OpenCreateSpace)}
+      onJoin={handleJoin}
+      onRename={(target) => void invokePromise(SpaceOperation.Rename, { space: target, caller: SPACE_MENU_ANCHOR })}
+      onDelete={(target) => void invokePromise(SpaceOperation.OpenDeleteSpace, { space: target })}
+      onCreateDiagram={createDiagram}
+      onError={(message) => notify('error', message)}
+    />
   ) : (
     <Layout.Container classNames='fixed inset-0 bg-base-surface' data-testid='diagram-app.loading' />
   );
