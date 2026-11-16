@@ -58,4 +58,14 @@ describe('CameraShare', () => {
     vi.advanceTimersByTime(FOLLOW_GLIDE_MS * 2);
     expect(shared).toEqual([C]);
   });
+
+  test("a resized follower shows the peer's camera again, and a view of its own has none to show", () => {
+    share.follow(B);
+    vi.advanceTimersByTime(FOLLOW_GLIDE_MS * 2);
+    expect(share.refollow()).toEqual(B);
+    share.moved(C);
+    vi.advanceTimersByTime(FOLLOW_GLIDE_MS * 2);
+    expect(shared).toEqual([C]);
+    expect(share.refollow()).toBeUndefined();
+  });
 });

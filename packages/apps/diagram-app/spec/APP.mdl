@@ -606,7 +606,7 @@ decision D-15: A join fails only on a cancelled, expired or timed-out invitation
   date: 2026-11-14
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-6.3, F-6.5]
+  affects: [F-6.3]
   why: The guest runs EDGE and peer-to-peer redemption at once. EDGE refuses a space with no agent as retryable and sets ERROR, while a member online admits the joiner a moment later. Composer's join panel ignores the ERROR state the same way.
   rejected:
     - Fail on ERROR: every join of a space made in this app fell back to a new space even though the member admitted it.
@@ -1595,6 +1595,7 @@ decision D-124: Each pill menu is a react-ui `Popover` holding react-ui-search's
   date: 2026-11-16
   by: agent:claude-code
   for: user:wittjosiah
+  supersedes: D-32
   affects: [F-3, F-4, PillCombobox]
   why: `SearchList.Item` draws only an icon, a label, a suffix and a check, and a row needs an avatar and its own menu, so the rows are `Picker.Item`s under the search list's keyboard handling.
   rejected:
@@ -1638,8 +1639,19 @@ decision D-128: A client that fails to initialize or times out shows the same di
 ```
 
 ```mdl
-decision D-129: The reset dialog offers Reset, which wipes the device's identity and data. [D-2] defers only a place for identity management in the app's own UI.
+decision D-129: The reset dialog offers Reset, which wipes the device's identity and data. Of [D-2], only a place for identity management in the app's own UI stays out of scope.
   date: 2026-11-16
   by: user:wittjosiah
+  supersedes: D-2
   affects: [F-1.8]
+```
+
+```mdl
+decision D-130: [D-92] replaces [D-12] as well as [D-90]: the client runs every EDGE feature Composer runs.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-12
+  affects: [F-7.2]
+  why: A decision names one entry it supersedes, and [D-92] names [D-90].
 ```

@@ -508,6 +508,11 @@ export const createDimension2D =
           engine.controller?.navigation.moveTo(recentre(shared, viewport), FOLLOW_GLIDE_MS);
         }
       }, [measured, shared]);
+      // Before the move below, so the resize's own shift is not shared.
+      useEffect(() => {
+        const followed = measured ? sharing.refollow() : undefined;
+        followed && engine.controller?.navigation.moveTo(recentre(followed, viewport), 0);
+      }, [measured, viewport]);
       useEffect(() => {
         measured && sharing.moved(recentre(shown, viewport));
       }, [measured, shown, viewport]);

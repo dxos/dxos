@@ -23,6 +23,8 @@ export class CameraShare {
   #latest: Camera | undefined = undefined;
   #sharedAt = -Infinity;
   #glidingUntil = -Infinity;
+  // Whether the last shared camera is a peer's this view follows, not one of its own.
+  #following = false;
   #pending: ReturnType<typeof setTimeout> | undefined = undefined;
 
   constructor(share: (camera: Camera) => void) {
@@ -41,14 +43,31 @@ export class CameraShare {
     if (this.#last && nearCamera(this.#last, camera)) {
       return false;
     }
-    clearTimeout(this.#pending);
     this.#last = camera;
-    this.#glidingUntil = Date.now() + FOLLOW_GLIDE_MS * 2;
+    this.#following = true;
+    this.#glide();
     return true;
+  }
+
+  /**
+   * The followed peer's camera, to show again once the view resized: the resize moved this view's centre, not theirs.
+   * Undefined when the view last showed a camera of its own.
+   */
+  refollow(): Camera | undefined {
+    if (!this.#following || !this.#last) {
+      return undefined;
+    }
+    this.#glide();
+    return this.#last;
   }
 
   dispose(): void {
     clearTimeout(this.#pending);
+  }
+
+  #glide(): void {
+    clearTimeout(this.#pending);
+    this.#glidingUntil = Date.now() + FOLLOW_GLIDE_MS * 2;
   }
 
   #report(): void {
@@ -71,6 +90,7 @@ export class CameraShare {
       return;
     }
     this.#last = next;
+    this.#following = false;
     this.#sharedAt = now;
     this.#share(next);
   }
