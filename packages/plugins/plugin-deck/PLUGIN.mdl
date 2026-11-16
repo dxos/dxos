@@ -462,6 +462,12 @@ feat F-1: Deck Presentations
   req F-1.12:
     when: a `LayoutAccent` contribution holds a palette hue
     then: every plank heading, companions included, takes a light wash of that hue over a one-pixel underline in it
+
+  req F-1.13:
+    when: a plank shows an object's article
+    then: the article is inside a scroll scope keyed by the object's EID, so its outermost scrolling area reports and
+          restores its position as the object's `ScrollPosition` view state, which a follow carries; a companion's
+          scope has no EID and keeps no view state, and an article nested in another has no scope of its own
 ```
 
 ```mdl
@@ -991,6 +997,32 @@ decision D-5: `Open`'s `variant`, when it is a linked segment (`~comments`), ope
   affects: [op Open]
   why: Opening an object with a companion took `Open` and then `UpdateCompanion`, two navigations where `UpdateCompanion` read a deck that `Open`'s navigation may not have applied yet.
   rejected: A new `companion` field, since `variant` was unread.
+```
+
+```mdl
+decision D-6: Each plank puts a scroll scope keyed by its object's EID around its article, and companions get none, so a follower restores the leader's scroll in each plank it mirrors.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.13]
+  why: The plank is where the layout knows both the article and the object it shows. A companion of the same object would share the plank's position and move it.
+  rejected:
+    - A scope in every `Article` surface, nested ones included; an embedded article would track a second object's scroll inside the first.
+```
+
+```mdl
+decision D-7: Approve [D-6].
+  date: 2026-11-16
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-8: A companion's article sits in a scroll scope with no EID, which keeps no view state, rather than in no scope. Refines [D-6].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.13]
+  why: Every plank renders its article the same way; leaving out the EID is enough to keep a companion from sharing or moving the plank's position.
 ```
 
 ---

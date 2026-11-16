@@ -29,7 +29,7 @@ import { pathToFileURL } from 'node:url';
 import { canCompose, composeSideBySide } from './compose.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
-import { recordingInfo } from './recording.mjs';
+import { flowSource, recordingInfo } from './recording.mjs';
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -266,7 +266,17 @@ const names = options.peers.split(',').map((name) => name.trim());
 const peerList = await Promise.all(names.map(createPeer));
 const peers = Object.fromEntries(peerList.map((peer) => [peer.name.toLowerCase(), peer]));
 
-const flow = await import(pathToFileURL(path.resolve(options.flow)).href);
+const flowFile = path.resolve(options.flow);
+const flow = await import(pathToFileURL(flowFile).href);
+// A failed read leaves the source to be read again with the recording metadata, which tolerates failure.
+const source = (() => {
+  try {
+    return flowSource(flowFile);
+  } catch (error) {
+    console.error('could not read the flow source:', error);
+    return undefined;
+  }
+})();
 const steps = flow.steps ?? [];
 
 /** Caption timeline, in ms from the shared cut; empty until the take starts. */
@@ -392,7 +402,8 @@ try {
   // A failed read must not skip the stops and the close below, which save the take.
   const recording = await recordingInfo({
     page: peerList[0].page,
-    flowFile: path.resolve(options.flow),
+    flowFile,
+    source,
     appUrl: options.url,
     target: 'browser',
   }).catch((error) => {
