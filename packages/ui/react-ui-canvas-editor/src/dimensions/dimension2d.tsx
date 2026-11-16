@@ -13,6 +13,7 @@ import React, {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 
 import { type ModuleCompiler } from '@dxos/animation';
@@ -77,6 +78,7 @@ import {
   keep,
   useSceneLook,
 } from '../editor/index.ts';
+import { CameraShare, FOLLOW_GLIDE_MS } from './camera-share.ts';
 import { fromTool2D, toTool2D } from './tools2d.ts';
 
 /** The shortcuts the shared editor's command table handles, which the 2D engine leaves to it. */
@@ -112,10 +114,6 @@ const useAidReport = (aid: Atom.Atom<boolean>, key: 'grid' | 'snap' | 'axes' | '
 const sameCamera = (left: Camera, right: Camera) =>
   left.x === right.x && left.y === right.y && left.zoom === right.zoom;
 
-/** Least time between two shares of the view while it moves; a follower glides over about the same time. */
-const SHARE_INTERVAL_MS = 100;
-const FOLLOW_GLIDE_MS = 120;
-
 /**
  * Between the engine's camera and the shared one, the scene point at the centre of a view of `size` and its zoom: the
  * same view at any size. The map is its own inverse, so it converts either way.
@@ -125,10 +123,6 @@ const recentre = (camera: Camera, size: Size): Camera => ({
   y: size.height / 2 / camera.zoom - camera.y,
   zoom: camera.zoom,
 });
-
-// A camera converted to the shared form and back differs in the last places.
-const nearCamera = (left: Camera, right: Camera) =>
-  Math.abs(left.x - right.x) < 1e-3 && Math.abs(left.y - right.y) < 1e-3 && Math.abs(left.zoom - right.zoom) < 1e-6;
 
 const THUMBNAIL = { width: 40, height: 24 };
 
@@ -506,42 +500,15 @@ export const createDimension2D =
       const { viewport, measured } = useCanvasGesture('SceneEditor.Root2D');
       const shown = useAtomValue(canvas.camera);
       const shared = useAtomValue(camera.shared);
-      // The last shared camera either way: this view's own, or the peer's it glided to, so neither comes back as a move.
-      const last = useRef<Camera>(undefined);
-      const sharedAt = useRef(-Infinity);
-      const pending = useRef<ReturnType<typeof setTimeout>>(undefined);
-      // While it glides to a peer's camera the view moves on their behalf, so what it passes through is not shared.
-      const glidingUntil = useRef(-Infinity);
-      useEffect(() => () => clearTimeout(pending.current), []);
+      const [share] = useState(() => new CameraShare((next) => camera.share(next)));
+      useEffect(() => () => share.dispose(), [share]);
       useEffect(() => {
-        if (!measured || !shared || (last.current && nearCamera(last.current, shared))) {
-          return;
+        if (measured && shared && share.follow(shared)) {
+          engine.controller?.navigation.moveTo(recentre(shared, viewport), FOLLOW_GLIDE_MS);
         }
-        clearTimeout(pending.current);
-        last.current = shared;
-        glidingUntil.current = Date.now() + FOLLOW_GLIDE_MS * 2;
-        engine.controller?.navigation.moveTo(recentre(shared, viewport), FOLLOW_GLIDE_MS);
       }, [measured, shared]);
       useEffect(() => {
-        if (!measured || Date.now() < glidingUntil.current) {
-          return;
-        }
-        const next = recentre(shown, viewport);
-        if (last.current && nearCamera(last.current, next)) {
-          return;
-        }
-        const share = () => {
-          last.current = next;
-          sharedAt.current = Date.now();
-          camera.share(next);
-        };
-        clearTimeout(pending.current);
-        const wait = sharedAt.current + SHARE_INTERVAL_MS - Date.now();
-        if (wait <= 0) {
-          share();
-        } else {
-          pending.current = setTimeout(share, wait);
-        }
+        measured && share.moved(recentre(shown, viewport));
       }, [measured, shown, viewport]);
       return null;
     };
