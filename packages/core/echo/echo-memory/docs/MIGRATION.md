@@ -33,7 +33,7 @@ Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `Fa
       `@dxos/sparql-sqlite`, `@dxos/sql-sqlite`, `@dxos/brain`, `n3`, `sparqljs`.
 - [ ] Move the knowledge-base core from `pipeline-rdf/src/store/fact-store-live.ts` and its internals
       (`internal/sparql/*`, `Mapping`, `Vocab`, `Ontology` resolution, TriG) behind `MemoryService`,
-      keyed by `MemoryId` (one quad-store namespace or database per memory) [F-3, F-5.1].
+      one store per space, with no space or agent argument on any op [F-3, F-5.1].
 - [ ] Event base, persisted: SQLite tables for subscriptions, outboxes, queued-event ids and read cursors;
       rules run on `@dxos/brain`'s `Evaluator` [F-4, F-7.2]. Port the logic from `BrainMemory` (client)
       and `BrainObject` (edge), which are two copies today.
@@ -46,9 +46,12 @@ Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `Fa
 
 ## 3. EDGE implementation (`dxos/edge`) — missing
 
-- [ ] `compute-service` `BrainObject`: replace its own event-base code with echo-memory-native's
-      `layer(ctx.storage.sql)` [F-7.4]. Keep sessions, provisioning and identity, which are not memory.
-- [ ] Add a DO storage migration from today's trigger/outbox layout to echo-memory-native's tables.
+- [ ] Memory moves from the per-agent `BrainObject` to one Durable Object per space, built with
+      echo-memory-native's `layer(ctx.storage.sql)` [F-7.4]. `BrainObject` keeps sessions, provisioning
+      and identity, which are not memory.
+- [ ] Migrate data: merge each agent's facts, cursors, triggers and outboxes from its `BrainObject`
+      into its space's memory; set each subscription's `owner` to the agent (Q-4 decides whether facts
+      stay private to the agent).
 - [ ] `BrainServiceEntrypoint` and `api.ts`: expose the `MemoryService` ops over RPC (add `select`,
       `rows`, `predicates` if Q-2 keeps them); remember `rpcMethods` in `durable-objects.ts`.
 - [ ] `brain/types.ts`: drop `BrainFactQuery`, `BrainReadCursor`, `MAX_TRIGGERS` in favour of the
@@ -69,8 +72,9 @@ Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `Fa
       `wakeBlocks` there.
 - [ ] `Trigger` stays; map it to `Subscription` (`rules` + `payload: encodeTrigger(trigger)`) and back.
       Replaces `toSubscription`, `fromEvaluator`, `encodeEvent`/`decodeEvent`.
-- [ ] `brain/BrainMemory.ts` → `MemoryService` from echo-memory-native `layerMemory` (or `layerFile`
-      for persistence) plus the trigger mapping.
+- [ ] `brain/BrainMemory.ts` → the space's `MemoryService` from echo-memory-native `layerMemory` (or
+      `layerFile` for persistence) plus the trigger mapping; `subscriptions(agent)` becomes
+      `subscriptions(owner)` [F-5.3].
 - [ ] `brain/BrainWire.ts`, `capabilities/edge-brain.ts`: proxy `MemoryService` over the host wire.
 - [ ] `brain/BrainInspection.ts`, `operations/inspect-brain.ts`, `reset-brain.ts`.
 - [ ] Operations: `recall`, `remember`, `knowledge`, `watch-facts`, `read-source`, `run-due`, `deliver`,
@@ -82,8 +86,8 @@ Nothing of this exists yet; today's pieces are split across `FactStoreLive`, `Fa
 
 ## 6. Move `@dxos/plugin-brain` and other plugins
 
-- [ ] `plugin-brain` `capabilities/fact-store.ts` (`FactStoreRegistry`): one `MemoryService`, `MemoryId`
-      = space id; drop the per-space registry once Q-3 settles notifications.
+- [ ] `plugin-brain` `capabilities/fact-store.ts` (`FactStoreRegistry`): becomes the per-space
+      `MemoryService` provider [F-5.1]; keep its notify wrapper until Q-3 settles notifications.
 - [ ] `plugin-brain` operations: `query-facts`, `facts`, `summarize-subject`, `generate-reply`,
       `analyze-mailbox`; `capabilities/mailbox-processor.ts`; `types/BrainOperation.ts`,
       `BrainCapabilities.ts`; `containers/FactsCompanion/*`; `dx.config.ts`.

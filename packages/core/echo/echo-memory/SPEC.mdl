@@ -4,7 +4,7 @@ name: EchoMemory
 version: 0.1.0
 ---
 
-`@dxos/echo-memory` defines **memory**: what an agent, a space or a pipeline knows, held as attributed
+`@dxos/echo-memory` defines **memory**: what a space knows, held as attributed
 facts, and the subscriptions that wake when new facts arrive. It is the one interface that replaces two
 that grew separately and overlap:
 
@@ -44,31 +44,30 @@ The following extension dialects are used in this document.
 ```mdl
 service MemoryService
   desc: |
-    Memory, in two halves over one store per memory.
+    Memory of one space, in two halves over one store.
     - Knowledge base: `put` stores facts; `query`, `select` and `rows` read them back.
     - Event base: a subscription carries goal rules; whenever put facts or the clock wake them, an event is
       queued in that subscription's own outbox, which its consumer drains with `take` and `ack`.
     Every op is an Effect that fails only with MemoryError. Context tag `@dxos/echo-memory/MemoryService`.
   ops:
-    put(memory: MemoryId, facts: Fact[], options?: PutOptions) → number    # events queued [F-3.1, F-4.3]
-    query(memory: MemoryId, query: FactQuery) → Fact[]                      # [F-3.2]
-    select(memory: MemoryId, sparql: string) → Fact[]                       # SELECT ?g; whole graphs [F-3.3]
-    rows(memory: MemoryId, sparql: string) → SparqlRow[]                    # any SELECT, solutions as is [F-3.3]
-    predicates(memory: MemoryId) → PredicateEntry[]                         # [F-3.4]
-    cursor(memory: MemoryId, source: string) → string | undefined           # [F-3.5]
-    reset(memory: MemoryId) → void                                          # [F-3.6]
-    subscribe(subscription: Subscription) → boolean                         # false at MAX_SUBSCRIPTIONS [F-4.1]
-    subscriptions(memory: MemoryId) → Subscription[]                        # oldest first [F-4.1]
-    unsubscribe(id: string) → boolean                                       # [F-4.2]
-    take(id: string) → MemoryEvent[]                                        # oldest first [F-4.4]
-    ack(id: string, events: string[]) → void                                # [F-4.4]
-    tick(memory: MemoryId) → number                                         # time-driven rules [F-4.5]
-    nextDueAt(memory: MemoryId) → string | undefined                        # ISO [F-4.5]
+    put(facts: Fact[], options?: PutOptions) → number           # events queued [F-3.1, F-4.3]
+    query(query: FactQuery) → Fact[]                            # [F-3.2]
+    select(sparql: string) → Fact[]                             # SELECT ?g; whole graphs [F-3.3]
+    rows(sparql: string) → SparqlRow[]                          # any SELECT, solutions as is [F-3.3]
+    predicates() → PredicateEntry[]                             # [F-3.4]
+    cursor(source: string) → string | undefined                 # [F-3.5]
+    reset() → void                                              # [F-3.6]
+    subscribe(subscription: Subscription) → boolean             # false at MAX_SUBSCRIPTIONS [F-4.1]
+    subscriptions(owner?: string) → Subscription[]              # oldest first [F-4.1]
+    unsubscribe(id: string) → boolean                           # [F-4.2]
+    take(id: string) → MemoryEvent[]                            # oldest first [F-4.4]
+    ack(id: string, events: string[]) → void                    # [F-4.4]
+    tick() → number                                             # time-driven rules [F-4.5]
+    nextDueAt() → string | undefined                            # ISO [F-4.5]
   errors:
     MemoryError: the store refused, could not be reached, or the input does not compile; the message says which
   note: |
-    `MemoryId` is a string naming one memory: an agent's entity id, a space id, or any key a host picks [F-5].
-    Subscription ids are global, so the outbox ops take no MemoryId.
+    An instance is scoped to one space, so no op takes a space or agent argument [F-5].
 ```
 
 ## Data model
@@ -246,10 +245,10 @@ type PutOptions
 
 ```mdl
 type Subscription
-  desc: Goal rules held against one memory, and the caller's own record of why.
+  desc: Goal rules held against a space's memory, and the caller's own record of why.
   fields:
     id: string
-    memory: MemoryId
+    owner?: string                # entity id of the agent that holds it; `subscriptions(owner)` filters by it
     rules: string                 # Datalog goal rules (`@dxos/brain`)
     createdAt: string             # ISO; facts put before it wake nothing
     payload?: Json                # stored and returned as is; never interpreted by memory
@@ -375,12 +374,18 @@ feat F-4: Event base
 feat F-5: Memory scope
 
   req F-5.1:
-    when: two MemoryIds are used against one MemoryService
-    then: they share no facts, cursors, ontology entries or subscriptions
+    when: a host needs memory
+    then: it gets a MemoryService scoped to one space, as it gets the space's Database.Service; each space
+          has exactly one memory store
 
   req F-5.2:
-    when: a host serves an agent's brain
-    then: the MemoryId is the agent's entity id; a space-wide fact store uses the space id
+    when: two spaces' MemoryServices are used
+    then: they share no facts, cursors, ontology entries or subscriptions
+
+  req F-5.3:
+    when: several agents work in one space
+    then: they read and write the space's one store; a subscription's `owner` says which agent holds it,
+          and a fact's `attribution.agent` says who said it
 ```
 
 ```mdl
@@ -411,8 +416,8 @@ feat F-7: Native implementations (@dxos/echo-memory-native)
     then: echo-memory-native provides an HTTP client layer and a fetch-style handler for MemoryService
 
   req F-7.4:
-    when: EDGE serves memory
-    then: its Durable Object builds MemoryService with `layer(ctx.storage.sql)` from echo-memory-native,
+    when: EDGE serves a space's memory
+    then: one Durable Object per space builds MemoryService with `layer(ctx.storage.sql)` from echo-memory-native,
           so the client and EDGE run one implementation
 ```
 
@@ -439,16 +444,16 @@ feat F-8: Deprecation of BrainService and FactStore
 
 ```mdl
 scenario T-1: Facts round-trip
-  given: a MemoryService from `layerMemory`
-  when: three facts are put for memory `alice` and queried by `entity`
+  given: two MemoryServices from `layerMemory`, for spaces A and B
+  when: three facts are put in A and queried by `entity`
   then:
-    - query returns the facts whose subject or object is the entity
-    - query on memory `bob` returns nothing
+    - query in A returns the facts whose subject or object is the entity
+    - the same query in B returns nothing
 ```
 
 ```mdl
 scenario T-2: A subscription wakes and is drained
-  given: memory `alice` with a subscription whose rules match `works_on(alice, X)`
+  given: a space's memory with a subscription owned by `alice` whose rules match `works_on(alice, X)`
   when: a fact `alice works_on dxos` is put
   then:
     - put returns 1
@@ -658,6 +663,37 @@ question Q-3: Should MemoryService expose change notifications (a stream that fi
   options:
     - Add: `changes(memory) → Stream<void>` is part of the interface.
     - Leave: hosts wrap the service as they do today.
+```
+
+```mdl
+decision D-14: Each space has one memory store, and the MemoryService a caller gets is scoped to a space.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  supersedes: D-6
+  affects: [MemoryService, F-5]
+```
+
+```mdl
+decision D-15: No op takes a memory, space or agent argument; a Subscription carries an optional `owner`, and `subscriptions(owner?)` filters by it. Fills in [D-14].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryService, Subscription, F-5.3]
+  why: plugin-agent lists one agent's triggers; an owner field does that without memory reading the opaque payload.
+  rejected:
+    - Filtering by the payload in plugin-agent, which loads every subscription in the space to show one agent's.
+```
+
+```mdl
+question Q-4: With one store per space, can an agent keep facts the other agents in the space do not read?
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3]
+  context: BrainService today gives each agent its own facts; with a store per space, every agent in the space reads every fact.
+  options:
+    - Shared: all facts in a space are visible to all agents in it.
+    - Owned graphs: a graph may name an owning agent, and query reads only shared graphs and the caller's own.
 ```
 
 ## Appendix: Extension Definitions
