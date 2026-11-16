@@ -83,4 +83,10 @@
 <stop offset="1" stop-color="#1FD58A" stop-opacity="0"/>
 </radialGradient>
 </defs>
+<filter id="grain" x="0" y="0" width="100%" height="100%">
+<feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" stitchTiles="stitch" result="noise"/>
+<feColorMatrix type="saturate" values="0" in="noise" result="mono"/>
+<feComponentTransfer in="mono" result="grain"><feFuncA type="linear" slope="0.055" intercept="0"/></feComponentTransfer>
+</filter>
+<rect id="dither" width="2062" height="1874" filter="url(#grain)" style="mix-blend-mode:overlay"/>
 </svg>
