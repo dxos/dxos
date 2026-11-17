@@ -153,7 +153,7 @@ const Pipeline = ({ trace, stage }: { trace?: IngestTrace; stage: number }) => {
 };
 
 const MemoryTable = ({ rows }: { rows: MemoryRow[] }) => (
-  <table className='w-full text-xs' data-testid='agent-memory.table'>
+  <table className='w-full text-xs [&_td]:pr-3 [&_td]:py-0.5 [&_td]:align-top' data-testid='agent-memory.table'>
     <thead className='text-description text-left'>
       <tr>
         <th className='font-normal'>id (ULID)</th>
@@ -276,7 +276,7 @@ const AgentMemoryDemo = () => {
   const { memories, pending } = snapshot;
 
   return (
-    <div className='grid grid-cols-[1fr_1.2fr_1.2fr] grid-rows-[100%] gap-2 p-2 w-full h-full'>
+    <div className='grid grid-cols-[1fr_1.2fr_1.2fr] grid-rows-[100%] gap-2 p-2 dx-fill'>
       <Column title='Conversation'>
         <Conversation profile={profile} ingested={ingested} onIngest={handleIngest} />
       </Column>
@@ -313,7 +313,7 @@ const AgentMemoryDemo = () => {
         )}
       </Column>
       <Column title='recall()'>
-        <div className='flex flex-col items-start gap-1'>
+        <div className='grid justify-items-start gap-1'>
           {QUERIES.map((query, index) => (
             <Button.Root
               key={query}

@@ -97,7 +97,7 @@ export const steps = [
     name: 'Inspect the rows',
     narration: 'Rows carry ULIDs and a hidden topic key; superseded versions stay but are hidden from list().',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Rows: ULID ids, hidden topic_key; the superseded version is kept, struck through');
+      await caption(demo, 'Rows: ULID ids and a hidden topic_key; superseded rows are kept');
       await demo.click({ selector: testId('agent-memory.view.table'), label: 'Rows' });
       await page
         .locator(`${testId('agent-memory.table')} tr.line-through`)

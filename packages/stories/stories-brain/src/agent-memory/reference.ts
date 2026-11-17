@@ -218,7 +218,8 @@ export class ReferenceProfile implements Profile {
       ...new Set(
         active
           .map((row) => row.topicKey)
-          .filter((topicKey) => terms.some((term) => tokenize(topicKey.replace(/[.-]/g, ' ')).includes(term))),
+          // Two shared tokens, not one: a generic word like "service" alone must not pull in every topic using it.
+          .filter((topicKey) => overlap(terms, tokenize(topicKey.replace(/[.-]/g, ' '))) >= Math.min(2, terms.length)),
       ),
     ];
     const depth = PER_RETRIEVER[thinkingLevel];
