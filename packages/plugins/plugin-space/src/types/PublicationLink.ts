@@ -6,7 +6,7 @@
 
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 
-import { FORK_PARAM, PATH_PARAM } from './PublicationManifest.ts';
+import * as PublicationManifest from './PublicationManifest.ts';
 
 export const archiveUrl = (publicationsUrl: string, publicId: string): URL =>
   new URL(`${encodeURIComponent(publicId)}/archive.json`, withTrailingSlash(publicationsUrl));
@@ -16,9 +16,9 @@ export const viewerUrl = (viewerOrigin: string, publicId: string, path?: string)
 
 export const forkUrl = (composerOrigin: string, publicId: string, path?: string): URL => {
   const url = new URL('/', composerOrigin);
-  url.searchParams.set(FORK_PARAM, publicId);
+  url.searchParams.set(PublicationManifest.FORK_PARAM, publicId);
   if (path) {
-    url.searchParams.set(PATH_PARAM, path);
+    url.searchParams.set(PublicationManifest.PATH_PARAM, path);
   }
   return url;
 };

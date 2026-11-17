@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 // The Composer Worker imports this module, so it depends only on `effect`, never on ECHO.
