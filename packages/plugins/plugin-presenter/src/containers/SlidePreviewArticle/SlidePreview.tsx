@@ -58,7 +58,8 @@ export const SlidePreview = ({ subject }: SlidePreviewProps) => {
           activeSlot={activeSlot}
           onSourceClick={handleSourceClick}
         >
-          <Slide.Frame inset>
+          {/* The panel is part of Composer, not a projection, so its scrim is the app's rather than the deck's. */}
+          <Slide.Frame inset scrim='var(--color-scrim-surface)'>
             <Slide.Content />
           </Slide.Frame>
         </Slide.Root>

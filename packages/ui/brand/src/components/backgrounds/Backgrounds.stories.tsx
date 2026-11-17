@@ -8,28 +8,28 @@ import React, { useLayoutEffect, useRef } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import dxnsCenter from '../../../assets/backgrounds/bg-dxns-center.svg?raw';
-import dxnsLeft from '../../../assets/backgrounds/bg-dxns-left.svg?raw';
-import dxnsRight from '../../../assets/backgrounds/bg-dxns-right.svg?raw';
-import dxos from '../../../assets/backgrounds/bg-dxos.svg?raw';
-import echoCenter from '../../../assets/backgrounds/bg-echo-center.svg?raw';
-import echoLeft from '../../../assets/backgrounds/bg-echo-left.svg?raw';
-import echoRight from '../../../assets/backgrounds/bg-echo-right.svg?raw';
-import haloCenter from '../../../assets/backgrounds/bg-halo-center.svg?raw';
-import haloLeft from '../../../assets/backgrounds/bg-halo-left.svg?raw';
-import haloRight from '../../../assets/backgrounds/bg-halo-right.svg?raw';
-import kubeCenter from '../../../assets/backgrounds/bg-kube-center.svg?raw';
-import kubeLeft from '../../../assets/backgrounds/bg-kube-left.svg?raw';
-import kubeRight from '../../../assets/backgrounds/bg-kube-right.svg?raw';
-import meshCenter from '../../../assets/backgrounds/bg-mesh-center.svg?raw';
-import meshLeft from '../../../assets/backgrounds/bg-mesh-left.svg?raw';
-import meshRight from '../../../assets/backgrounds/bg-mesh-right.svg?raw';
-import plexCenter from '../../../assets/backgrounds/bg-plex-center.svg?raw';
-import plexLeft from '../../../assets/backgrounds/bg-plex-left.svg?raw';
-import plexRight from '../../../assets/backgrounds/bg-plex-right.svg?raw';
-import tileCenter from '../../../assets/backgrounds/bg-tile-center.svg?raw';
-import tileLeft from '../../../assets/backgrounds/bg-tile-left.svg?raw';
-import tileRight from '../../../assets/backgrounds/bg-tile-right.svg?raw';
+import dxos from '../../../assets/backgrounds/dxos-center.svg?raw';
+import echoCenter from '../../../assets/backgrounds/echo-center.svg?raw';
+import echoLeft from '../../../assets/backgrounds/echo-left.svg?raw';
+import echoRight from '../../../assets/backgrounds/echo-right.svg?raw';
+import edgeCenter from '../../../assets/backgrounds/edge-center.svg?raw';
+import edgeLeft from '../../../assets/backgrounds/edge-left.svg?raw';
+import edgeRight from '../../../assets/backgrounds/edge-right.svg?raw';
+import haloCenter from '../../../assets/backgrounds/halo-center.svg?raw';
+import haloLeft from '../../../assets/backgrounds/halo-left.svg?raw';
+import haloRight from '../../../assets/backgrounds/halo-right.svg?raw';
+import meshCenter from '../../../assets/backgrounds/mesh-center.svg?raw';
+import meshLeft from '../../../assets/backgrounds/mesh-left.svg?raw';
+import meshRight from '../../../assets/backgrounds/mesh-right.svg?raw';
+import plexCenter from '../../../assets/backgrounds/plex-center.svg?raw';
+import plexLeft from '../../../assets/backgrounds/plex-left.svg?raw';
+import plexRight from '../../../assets/backgrounds/plex-right.svg?raw';
+import sageCenter from '../../../assets/backgrounds/sage-center.svg?raw';
+import sageLeft from '../../../assets/backgrounds/sage-left.svg?raw';
+import sageRight from '../../../assets/backgrounds/sage-right.svg?raw';
+import tileCenter from '../../../assets/backgrounds/tile-center.svg?raw';
+import tileLeft from '../../../assets/backgrounds/tile-left.svg?raw';
+import tileRight from '../../../assets/backgrounds/tile-right.svg?raw';
 
 const PLACEMENTS = ['left', 'center', 'right'] as const;
 
@@ -37,10 +37,10 @@ type Placement = (typeof PLACEMENTS)[number];
 
 // Each mark comes with its icon on the left, in the centre and on the right; DXOS is drawn centred only.
 const marks: Record<string, Record<Placement, string>> = {
-  dxns: { left: dxnsLeft, center: dxnsCenter, right: dxnsRight },
+  sage: { left: sageLeft, center: sageCenter, right: sageRight },
   echo: { left: echoLeft, center: echoCenter, right: echoRight },
   halo: { left: haloLeft, center: haloCenter, right: haloRight },
-  kube: { left: kubeLeft, center: kubeCenter, right: kubeRight },
+  edge: { left: edgeLeft, center: edgeCenter, right: edgeRight },
   mesh: { left: meshLeft, center: meshCenter, right: meshRight },
   plex: { left: plexLeft, center: plexCenter, right: plexRight },
   tile: { left: tileLeft, center: tileCenter, right: tileRight },

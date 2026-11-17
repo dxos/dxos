@@ -49,7 +49,11 @@ const Slot = ({ name, className, children }: SlotProps) => {
 };
 
 const ImagePane = ({ frontmatter }: { frontmatter: SlideFrontmatter }) => (
-  <div data-image className='size-full' style={imageStyle(frontmatter.image, frontmatter.backgroundPosition)} />
+  <div
+    data-image
+    className='size-full'
+    style={imageStyle(frontmatter.image, frontmatter.backgroundPosition, frontmatter.backgroundFit)}
+  />
 );
 
 // Larger headings for layouts that carry a single statement.

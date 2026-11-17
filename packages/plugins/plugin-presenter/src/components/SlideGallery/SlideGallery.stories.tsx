@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SlideSource } from '#deck';
 import { translations } from '#translations';
 
-import { SlideGrid, type SlideGridProps } from './SlideGrid.tsx';
+import { SlideGallery, type SlideGalleryProps } from './SlideGallery.tsx';
 
 const CONTENT = [
   '# Title\n\nA presentation',
@@ -24,14 +24,14 @@ const CONTENT = [
   '# Questions?',
 ];
 
-type StoryProps = Pick<SlideGridProps, 'onPresent'>;
+type StoryProps = Pick<SlideGalleryProps, 'onPresent'>;
 
 const DefaultStory = ({ onPresent }: StoryProps) => {
   const [contents, setContents] = useState(CONTENT);
   const [index, setIndex] = useState(0);
   const slides = contents.map((content): SlideSource => ({ kind: 'markdown', id: content, content }));
   return (
-    <SlideGrid
+    <SlideGallery
       slides={slides}
       index={index}
       onIndexChange={setIndex}
@@ -49,7 +49,7 @@ const DefaultStory = ({ onPresent }: StoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-presenter/components/SlideGrid',
+  title: 'plugins/plugin-presenter/components/SlideGallery',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen', classNames: 'flex' })],
   args: { onPresent: fn() },
@@ -67,14 +67,18 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const first = await canvas.findByTestId('presenter.slide-grid.0', undefined, { timeout: 10_000 });
+    const first = await canvas.findByTestId('presenter.slide-gallery.0', undefined, { timeout: 10_000 });
     await expect(first).toHaveAttribute('aria-selected', 'true');
     await expect(first).toHaveAttribute('draggable', 'true');
-    await userEvent.click(canvas.getByTestId('presenter.slide-grid.2'));
-    await waitFor(() => expect(canvas.getByTestId('presenter.slide-grid.2')).toHaveAttribute('aria-selected', 'true'));
+    await userEvent.click(canvas.getByTestId('presenter.slide-gallery.2'));
+    await waitFor(() =>
+      expect(canvas.getByTestId('presenter.slide-gallery.2')).toHaveAttribute('aria-selected', 'true'),
+    );
     await userEvent.keyboard('{ArrowRight}');
-    await waitFor(() => expect(canvas.getByTestId('presenter.slide-grid.3')).toHaveAttribute('aria-selected', 'true'));
-    await userEvent.dblClick(canvas.getByTestId('presenter.slide-grid.1'));
+    await waitFor(() =>
+      expect(canvas.getByTestId('presenter.slide-gallery.3')).toHaveAttribute('aria-selected', 'true'),
+    );
+    await userEvent.dblClick(canvas.getByTestId('presenter.slide-gallery.1'));
     await expect(args.onPresent).toHaveBeenCalledWith(1);
   },
 };

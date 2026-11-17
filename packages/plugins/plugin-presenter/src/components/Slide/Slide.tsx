@@ -63,15 +63,17 @@ type SlideFrameProps = Util.ThemedClassName<
     inset?: boolean;
     /** Scale the canvas to fit (default); print lays it out at its nominal size instead. */
     scaled?: boolean;
+    /** The scrim to paint around the slide when neither the slide nor the deck names one. */
+    scrim?: string;
   }>
 >;
 
 /**
  * The 16:9 slide canvas, scaled to fit its container.
  */
-const SlideFrame = ({ children, classNames, inset, scaled = true }: SlideFrameProps) =>
+const SlideFrame = ({ children, classNames, inset, scaled = true, scrim }: SlideFrameProps) =>
   scaled ? (
-    <SlideCanvas inset={inset} classNames={classNames}>
+    <SlideCanvas inset={inset} classNames={classNames} scrim={scrim}>
       {children}
     </SlideCanvas>
   ) : (

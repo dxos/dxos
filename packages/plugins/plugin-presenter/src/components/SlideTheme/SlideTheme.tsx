@@ -25,6 +25,8 @@ type ThemeDefinition = {
   colorScheme?: 'light' | 'dark';
   vars: {
     background: string;
+    /** Outside the slide: the inset void in the editor, and the letterbox bands when presenting. */
+    scrim: string;
     foreground: string;
     accent: string;
     code: string;
@@ -37,6 +39,9 @@ type ThemeDefinition = {
 
 const BASE: ThemeDefinition['vars'] = {
   background: 'var(--dx-surface-base)',
+  // Black whatever the deck's background, as a projected slide is letterboxed in a dark room rather than on the
+  // deck's own ground; a deck that wants otherwise sets `scrim` in its theme, and a slide sets `scrim:`.
+  scrim: '#000000',
   foreground: 'var(--color-fg)',
   accent: 'var(--color-accent-text)',
   code: 'var(--color-input-surface)',
@@ -181,6 +186,22 @@ export const SlideThemeProvider = ({ settings = {}, children }: SlideThemeProvid
 export const useSlideThemeStyle = (): SlideThemeStyle => {
   const settings = useContext(SlideThemeContext);
   return useMemo(() => slideThemeStyle(settings), [settings]);
+};
+
+/**
+ * The deck's scrim color, or undefined when it sets none. Not a `--slide-*` variable: the scrim is painted outside
+ * the slide, by the canvas, which the slide's own variables never reach. Kept apart from the theme's own default so
+ * a host that supplies one (the editor's preview takes the app's) is only outranked by a deck that asked for a color.
+ */
+export const useSlideScrimSetting = (): string | undefined => {
+  const { scrim } = useContext(SlideThemeContext);
+  return SlideTheme.isColor(scrim) ? scrim : undefined;
+};
+
+/** The current theme's own scrim, which every slide falls back to. */
+export const useSlideThemeScrim = (): string => {
+  const settings = useContext(SlideThemeContext);
+  return THEMES[SlideTheme.isName(settings.base) ? settings.base : 'default'].vars.scrim;
 };
 
 /**

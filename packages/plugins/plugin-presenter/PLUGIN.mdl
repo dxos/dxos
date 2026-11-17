@@ -1620,9 +1620,18 @@ decision D-92: The slide view state is followed with `write`, so a follower show
   rejected:
     - Following the index alone; the grid size travels with it in one aspect and costs a follower nothing it would not want.
 ```
+```mdl
+decision D-93: `SlideGrid` is `SlideGallery`: the panel of slide thumbnails, named apart from the `<Grid>` tag and the `slide-grid` element that tag renders, both of which keep their names. Renames the component of [D-63], [D-64] and [D-65].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [PresentationArticle, Deck, SlideGallery]
+  why: One word meant two unrelated things -- a thumbnail panel and a layout tag -- and the tag is the one authors type.
+```
+
 
 ```mdl
-decision D-93: The Presentation type's icon hue is indigo, and a new Presentation is filed into a collection when it is created, as documents and sheets are.
+decision D-94: The Presentation type's icon hue is indigo, and a new Presentation is filed into a collection when it is created, as documents and sheets are.
   date: 2026-11-16
   by: user:wittjosiah
   affects: [Presentation, F-3.1]
@@ -1631,21 +1640,21 @@ decision D-93: The Presentation type's icon hue is indigo, and a new Presentatio
 ---
 
 ```mdl
-decision D-94: A Slide's type icon is indigo, as the Presentation's is.
+decision D-95: A Slide's type icon is indigo, as the Presentation's is.
   date: 2026-11-16
   by: user:wittjosiah
   affects: [Slide]
 ```
 
 ```mdl
-decision D-95: Read-only handling is per plugin, through each plugin's options.
+decision D-96: Read-only handling is per plugin, through each plugin's options.
   date: 2026-11-16
   by: user:wittjosiah
   affects: [F-13.1]
 ```
 
 ```mdl
-decision D-96: A `readOnly` option drops the slide preview and slide actions from the graph and makes the Presentation grid play rather than edit. Fills in [D-95].
+decision D-97: A `readOnly` option drops the slide preview and slide actions from the graph and makes the Presentation grid play rather than edit. Fills in [D-96].
   date: 2026-11-16
   by: agent:claude-code
   for: user:wittjosiah

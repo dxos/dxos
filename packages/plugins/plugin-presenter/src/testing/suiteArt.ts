@@ -4,8 +4,7 @@
 
 /**
  * The suite's background art, served from the brand asset bucket rather than bundled: `assets.dxos.org/brand/` mirrors
- * `packages/ui/brand/assets`, so a redrawn mark reaches a slide without a code change. EDGE is drawn with the brand's
- * KUBE mark and SAGE with DXNS, as the docs are, since neither has a mark of its own yet.
+ * `packages/ui/brand/assets`, so a redrawn mark reaches a slide without a code change.
  *
  * Each card takes the crop cut for its width (`gen-card-art.mjs`). Every crop is the same height and centred on the
  * mark, so a card spanning two columns fills its width without drawing its mark any larger than its neighbours'.
@@ -44,6 +43,6 @@ export const SUITE: SuiteTopic[] = [
   topic('MESH', 'mesh', 'Peer-to-peer networking that links devices directly.'),
   topic('PLEX', 'plex', 'Extensible app framework where everything is a plugin.'),
   topic('TILE', 'tile', 'Design system of accessible, reactive components.'),
-  topic('EDGE', 'kube', 'Always-on cloud peer for sync, backup and compute.'),
-  topic('SAGE', 'dxns', 'AI agents with their own identity, tools and skills.'),
+  topic('EDGE', 'edge', 'Always-on cloud peer for sync, backup and compute.'),
+  topic('SAGE', 'sage', 'AI agents with their own identity, tools and skills.'),
 ];

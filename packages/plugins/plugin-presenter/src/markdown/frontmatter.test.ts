@@ -52,6 +52,19 @@ describe('parseFrontmatter', () => {
     expect(parseFrontmatter('theme: dark').frontmatter).toEqual({ theme: 'dark' });
   });
 
+  test('keeps backgroundFit and backgroundColor, and reports a value neither accepts', () => {
+    expect(parseFrontmatter('backgroundFit: contain\nbackgroundColor: "#0b1f17"').frontmatter).toEqual({
+      backgroundFit: 'contain',
+      backgroundColor: '#0b1f17',
+    });
+    // `backgroundFit` takes the two CSS keywords only, and `backgroundColor` reaches an inline style, so it takes
+    // what the color pattern allows and nothing else.
+    expect(parseFrontmatter('backgroundFit: stretch').issues).toHaveLength(1);
+    expect(parseFrontmatter('backgroundColor: "url(x)"').issues).toHaveLength(1);
+    expect(parseFrontmatter('backgroundBlend: screen').frontmatter).toEqual({ backgroundBlend: 'screen' });
+    expect(parseFrontmatter('backgroundBlend: plus-lighter').issues).toHaveLength(1);
+  });
+
   test('empty input is valid', () => {
     expect(parseFrontmatter('')).toEqual({ frontmatter: {}, issues: [] });
   });
