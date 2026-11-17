@@ -19,9 +19,6 @@
     },
     {
       "path": "../../echo/echo-memory"
-    },
-    {
-      "path": "../pipeline-rdf"
     }
   ]
 }

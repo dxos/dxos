@@ -10,12 +10,16 @@ import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { Fact, Graph } from '@dxos/echo-memory';
+import { MemorySqlite } from '@dxos/echo-memory-sqlite';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreMemory } from '@dxos/pipeline-rdf';
 
 import { queryResolvedFacts } from './facts.ts';
 import { queryCompactFacts } from './query-facts.ts';
 import { summarizeSubject } from './summarize-subject.ts';
+
+/** A space memory, and the FactStore the pipelines write through over it, for seeding. */
+const MemoryLayer = FactStoreMemory.layer.pipe(Layer.provideMerge(MemorySqlite.layerMemory));
 
 const makeFact = (options: {
   id: string;
@@ -74,7 +78,7 @@ describe('QueryFacts', () => {
       Effect.gen(function* () {
         yield* seededStore;
         return yield* queryCompactFacts({ entity: 'acme' });
-      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+      }).pipe(Effect.provide(MemoryLayer)),
     );
     expect(facts.map((fact) => fact.id).sort()).toEqual(['f-1', 'f-3']);
     // `works-at` is the seeded `schema:worksFor`, read back under its label.
@@ -88,7 +92,7 @@ describe('QueryFacts', () => {
         const confident = yield* queryCompactFacts({ entity: 'alice', minConfidence: 0.9 });
         const bounded = yield* queryCompactFacts({ limit: 1 });
         return { confident, bounded };
-      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+      }).pipe(Effect.provide(MemoryLayer)),
     );
     expect(confident.map((fact) => fact.id)).toEqual(['f-1']);
     expect(bounded).toHaveLength(1);
@@ -127,7 +131,7 @@ describe('entity names', () => {
           bySubject: yield* queryCompactFacts({ subjectEntity: 'DMaretskyi' }),
           byIri: yield* queryCompactFacts({ entity: DISCORD_USER }),
         };
-      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+      }).pipe(Effect.provide(MemoryLayer)),
     );
     expect(byLabel.map((fact) => fact.id).sort()).toEqual(['d-1', 'd-2']);
     expect(bySubject.map((fact) => fact.id)).toEqual(['d-1']);
@@ -150,7 +154,7 @@ describe('entity names', () => {
           }),
         ]);
         return yield* queryCompactFacts({ entity: did });
-      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+      }).pipe(Effect.provide(MemoryLayer)),
     );
     expect(facts.map((fact) => fact.id)).toEqual(['k-1']);
   });
@@ -180,7 +184,7 @@ describe('entity names', () => {
         const store = yield* FactStore;
         yield* store.putFacts([old, current]);
         return yield* queryResolvedFacts({ entity: DISCORD_USER });
-      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+      }).pipe(Effect.provide(MemoryLayer)),
     );
     expect(facts.map((fact) => fact.assertion.object)).toEqual([{ kind: 'literal', literal: 'new_name' }]);
   });
@@ -198,7 +202,7 @@ describe('entity names', () => {
         const store = yield* FactStore;
         yield* store.putFacts([acme, contoso]);
         return yield* queryResolvedFacts({ entity: 'acme' });
-      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+      }).pipe(Effect.provide(MemoryLayer)),
     );
     expect(facts).toEqual([]);
   });
@@ -209,7 +213,7 @@ describe('entity names', () => {
         const store = yield* FactStore;
         yield* store.putFacts([...FACTS, ...DISCORD_FACTS]);
         return yield* summarizeSubject({ subject: 'dmaretskyi' });
-      }).pipe(Effect.provide(Layer.provideMerge(FactStoreLive.layerMemory, textAiService('Works on OPFS [d-1].')))),
+      }).pipe(Effect.provide(Layer.provideMerge(MemoryLayer, textAiService('Works on OPFS [d-1].')))),
     );
     expect(result.factCount).toBe(2);
   });
@@ -221,9 +225,7 @@ describe('SummarizeSubject', () => {
       Effect.gen(function* () {
         yield* seededStore;
         return yield* summarizeSubject({ subject: 'Alice' });
-      }).pipe(
-        Effect.provide(Layer.provideMerge(FactStoreLive.layerMemory, textAiService('Alice works at Acme [f-1].'))),
-      ),
+      }).pipe(Effect.provide(Layer.provideMerge(MemoryLayer, textAiService('Alice works at Acme [f-1].')))),
     );
     expect(result.factCount).toBe(2);
     expect(result.summary).toContain('[f-1]');
@@ -240,7 +242,7 @@ describe('SummarizeSubject', () => {
       }).pipe(
         Effect.provide(
           Layer.provideMerge(
-            FactStoreLive.layerMemory,
+            MemoryLayer,
             Layer.succeed(
               AiService.AiService,
               AiService.make({

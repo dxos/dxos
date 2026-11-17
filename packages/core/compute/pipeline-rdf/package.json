@@ -50,6 +50,7 @@
     "sparqljs": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-memory-sqlite": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/n3": "catalog:",

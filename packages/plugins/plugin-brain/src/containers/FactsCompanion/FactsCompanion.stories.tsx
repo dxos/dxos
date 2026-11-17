@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -16,15 +15,10 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
-import { BrainCapabilities } from '#types';
-
-import { makeFactStoreRegistry } from '../../capabilities/fact-store.ts';
 import { FactsCompanion } from './FactsCompanion.tsx';
 
 // A shared registry contributed as the `FactStoreRegistry` capability and seeded (below) for the story's
 // space, so `FactsCompanion` (space-scoped via `useActiveSpace`) renders real facts.
-const registry = makeFactStoreRegistry();
-
 /** Minimal RDF fact fixture (subject —predicate→ object) for the viewer. */
 const fact = (id: string, subject: string, predicate: string, object: string): Fact.Fact =>
   Fact.make({
@@ -50,15 +44,13 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      // Contribute the seeded registry directly so the companion resolves it without the full FactStore module.
-      capabilities: [Capability.contribute(BrainCapabilities.FactStoreRegistry, registry)],
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => EffectEx.runPromise(registry.forSpace(defaultSpace.id).putFacts(FACTS)));
+              yield* Effect.promise(() => EffectEx.runPromise(client.memory(defaultSpace.id).put(FACTS)));
             }),
         }),
         StorybookPlugin.make({}),

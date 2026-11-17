@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { Fact } from '@dxos/echo-memory';
+import { Fact, MemoryService } from '@dxos/echo-memory';
+import { MemorySqlite } from '@dxos/echo-memory-sqlite';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { queryFacts } from './use-facts.ts';
 
@@ -25,19 +26,21 @@ const mk = (over: Partial<Fact.Encoded> & Pick<Fact.Encoded, 'id'>): Fact.Fact =
     ...over,
   });
 
-describe('queryFacts', () => {
-  test('reads all facts from a seeded store', async ({ expect }) => {
-    const store = FactStoreLive.makeMemory();
-    await EffectEx.runPromise(store.putFacts([mk({ id: 'f1' })]));
+/** Runs `use` over a fresh in-memory memory, closed afterwards. */
+const withMemory = <A, E>(use: (memory: MemoryService.Service) => Effect.Effect<A, E>) =>
+  EffectEx.runPromise(MemoryService.MemoryService.pipe(Effect.flatMap(use), Effect.provide(MemorySqlite.layerMemory)));
 
-    const facts = await queryFacts(store);
+describe('queryFacts', () => {
+  test('reads all facts from a seeded memory', async ({ expect }) => {
+    const facts = await withMemory((memory) =>
+      memory.put([mk({ id: 'f1' })]).pipe(Effect.andThen(Effect.promise(() => queryFacts(memory)))),
+    );
     expect(facts).toHaveLength(1);
     expect(facts[0].assertion.predicate).toBe('travelsTo');
   });
 
-  test('returns an empty list for an empty store', async ({ expect }) => {
-    const store = FactStoreLive.makeMemory();
-    const facts = await queryFacts(store);
+  test('returns an empty list for an empty memory', async ({ expect }) => {
+    const facts = await withMemory((memory) => Effect.promise(() => queryFacts(memory)));
     expect(facts).toEqual([]);
   });
 });

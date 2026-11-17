@@ -13,12 +13,16 @@ import { Database, Obj } from '@dxos/echo';
 import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Fact } from '@dxos/echo-memory';
+import { MemorySqlite } from '@dxos/echo-memory-sqlite';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreMemory } from '@dxos/pipeline-rdf';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
 import { generateReply, replySubject } from './generate-reply.ts';
+
+/** A space memory, and the FactStore the pipelines write through over it, for seeding. */
+const MemoryLayer = FactStoreMemory.layer.pipe(Layer.provideMerge(MemorySqlite.layerMemory));
 
 const makeMessage = (sender: string, subject: string, text: string, created: string) =>
   Obj.make(Message.Message, {
@@ -94,11 +98,7 @@ describe('generateReply', () => {
         const store = yield* FactStore;
         yield* store.putFacts([ALICE_FACT]);
         return yield* generateReply({ mailbox, message: thread[0] });
-      }).pipe(
-        Effect.provide(
-          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
-        ),
-      ),
+      }).pipe(Effect.provide(Database.layer(db).pipe(Layer.provideMerge(MemoryLayer), Layer.provideMerge(ai.layer)))),
     );
 
     expect(result.subject).toBe('Re: Q2 report');
@@ -124,9 +124,7 @@ describe('generateReply', () => {
     const ai = capturingAiService('Sure, ask away.');
     const result = await EffectEx.runPromise(
       generateReply({ mailbox, message }).pipe(
-        Effect.provide(
-          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
-        ),
+        Effect.provide(Database.layer(db).pipe(Layer.provideMerge(MemoryLayer), Layer.provideMerge(ai.layer))),
       ),
     );
 

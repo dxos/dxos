@@ -3,9 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
-import { Fact, Vocab } from '@dxos/echo-memory';
-import { FactStore, type SemanticIndexError, type SemanticQuery, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { Fact, type MemoryError, MemoryQuery, MemoryService, Sparql, Vocab } from '@dxos/echo-memory';
+import { normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import { BrainOperation } from '#types';
 
@@ -52,24 +53,30 @@ const ABSOLUTE_IRI = /^[a-z][a-z0-9+.-]*:[^\s]+$/i;
  * The entity keys a name the model gives can mean: its slug (which also matches graph-local entities by suffix), and
  * every entity with an IRI of its own whose label is the name — a slug alone never finds `https://discord.com/users/…`.
  */
-export const resolveEntityKeys: (name: string) => Effect.Effect<string[], SemanticIndexError, FactStore> =
-  Effect.fnUntraced(function* (name: string) {
-    // An absolute IRI of any scheme (`did:…`, `echo://…`) is its own key; normalizing would slug it. A space rules out
-    // labels such as `Meeting: standup`, which also start with a word and a colon.
-    const raw = name.trim();
-    if (ABSOLUTE_IRI.test(raw)) {
-      return [raw];
-    }
-    const key = normalizeEntityId(name);
-    if (Vocab.isIri(key)) {
-      return [key];
-    }
-    const store = yield* FactStore;
-    const labels = [...new Set([name.trim(), key, key.replace(/-/g, ' ')].map((label) => label.toLowerCase()))];
-    const rows = yield* store.rows(labelledEntitiesSparql(labels));
-    const iris = rows.flatMap(({ entity }) => (entity?.termType === 'NamedNode' ? [entity.value] : []));
-    return [...new Set([key, ...iris])];
-  });
+export const resolveEntityKeys: (
+  name: string,
+) => Effect.Effect<string[], MemoryError.MemoryError, MemoryService.MemoryService> = Effect.fnUntraced(function* (
+  name: string,
+) {
+  // An absolute IRI of any scheme (`did:…`, `echo://…`) is its own key; normalizing would slug it. A space rules out
+  // labels such as `Meeting: standup`, which also start with a word and a colon.
+  const raw = name.trim();
+  if (ABSOLUTE_IRI.test(raw)) {
+    return [raw];
+  }
+  const key = normalizeEntityId(name);
+  if (Vocab.isIri(key)) {
+    return [key];
+  }
+  const memory = yield* MemoryService.MemoryService;
+  const labels = [...new Set([name.trim(), key, key.replace(/-/g, ' ')].map((label) => label.toLowerCase()))];
+  const rows = yield* memory.query(MemoryQuery.sparql(labelledEntitiesSparql(labels)));
+  const iris = rows.flatMap(({ entity }) => (entity?.termType === 'NamedNode' ? [entity.value] : []));
+  return [...new Set([key, ...iris])];
+});
+
+/** A pattern with plain-string keys, as an operation's input carries them, with the key brands applied. */
+const decodePattern = Schema.decodeSync(MemoryQuery.FactQuery);
 
 /** Every graph another graph supersedes or retracts, stated about the replacing graph in the default graph. */
 const replacedGraphsSparql = `SELECT DISTINCT ?graph WHERE {
@@ -81,20 +88,26 @@ const replacedGraphsSparql = `SELECT DISTINCT ?graph WHERE {
  * combination of the keys they resolve to, merged by fact id in first-seen order, without any graph another graph in
  * the store supersedes or retracts.
  */
-export const queryResolvedFacts = (query: SemanticQuery): Effect.Effect<Fact.Fact[], SemanticIndexError, FactStore> =>
+export const queryResolvedFacts = (
+  query: Sparql.Pattern,
+): Effect.Effect<Fact.Fact[], MemoryError.MemoryError, MemoryService.MemoryService> =>
   Effect.gen(function* () {
-    const store = yield* FactStore;
+    const memory = yield* MemoryService.MemoryService;
     const { entity, subjectEntity, ...rest } = query;
     const entities = entity === undefined ? [undefined] : yield* resolveEntityKeys(entity);
     const subjects = subjectEntity === undefined ? [undefined] : yield* resolveEntityKeys(subjectEntity);
     const byId = new Map<string, Fact.Fact>();
     for (const entityKey of entities) {
       for (const subjectKey of subjects) {
-        const facts = yield* store.query({
-          ...rest,
-          ...(entityKey !== undefined ? { entity: entityKey } : {}),
-          ...(subjectKey !== undefined ? { subjectEntity: subjectKey } : {}),
-        });
+        const facts = yield* memory.query(
+          MemoryQuery.facts(
+            decodePattern({
+              ...rest,
+              ...(entityKey !== undefined ? { entity: entityKey } : {}),
+              ...(subjectKey !== undefined ? { subjectEntity: subjectKey } : {}),
+            }),
+          ),
+        );
         for (const fact of facts) {
           if (!byId.has(fact.id)) {
             byId.set(fact.id, fact);
@@ -105,7 +118,7 @@ export const queryResolvedFacts = (query: SemanticQuery): Effect.Effect<Fact.Fac
     // The store keeps every version of a graph and only current ones answer. A replacement need not match the query
     // (Alice moving from Acme to Contoso answers a query for Acme with the old graph alone), so look up store-wide.
     const replaced = new Set(
-      (yield* store.rows(replacedGraphsSparql)).flatMap(({ graph }) =>
+      (yield* memory.query(MemoryQuery.sparql(replacedGraphsSparql))).flatMap(({ graph }) =>
         graph?.termType === 'NamedNode' ? [graph.value] : [],
       ),
     );

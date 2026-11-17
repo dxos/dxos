@@ -9,12 +9,16 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Fact } from '@dxos/echo-memory';
+import { MemorySqlite } from '@dxos/echo-memory-sqlite';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreMemory } from '@dxos/pipeline-rdf';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
+
+/** A space memory, and the FactStore the pipelines write through over it, for seeding. */
+const MemoryLayer = FactStoreMemory.layer.pipe(Layer.provideMerge(MemorySqlite.layerMemory));
 
 const makeMessage = (suffix: string, created: string) =>
   Obj.make(Message.Message, {
@@ -81,10 +85,7 @@ describe('runFactPipeline', () => {
       const storedFacts = yield* store.query({});
       const second = yield* runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 10 });
       return { first, second, storedFacts, cursorValue: Cursor.parseKey(cursor.max) };
-    }).pipe(
-      Effect.provide(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory)),
-      EffectEx.runAndForwardErrors,
-    );
+    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), MemoryLayer)), EffectEx.runAndForwardErrors);
 
     expect(result.first.processed).toBe(2);
     expect(result.first.facts).toBe(2);
@@ -120,10 +121,7 @@ describe('runFactPipeline', () => {
       extract: stubExtract,
       pageSize: 1,
       onProgress: (update) => progress.push(update),
-    }).pipe(
-      Effect.provide(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory)),
-      EffectEx.runAndForwardErrors,
-    );
+    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), MemoryLayer)), EffectEx.runAndForwardErrors);
 
     expect(result.processed).toBe(3);
     expect(Cursor.parseKey(cursor.max)).toBe(Date.parse('2026-06-03T00:00:00.000Z'));
@@ -152,7 +150,7 @@ describe('runFactPipeline', () => {
 
     const cursor = db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
     const result = await runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 1 }).pipe(
-      Effect.provide(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory)),
+      Effect.provide(Layer.provideMerge(Database.layer(db), MemoryLayer)),
       EffectEx.runAndForwardErrors,
     );
 

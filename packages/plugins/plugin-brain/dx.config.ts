@@ -33,16 +33,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['labs', 'assistant'],
   },
   modules: [
-    // Provisions the per-space FactStore LayerSpec + registry; the mailbox `AnalyzeMailbox` operation
-    // (in plugin-inbox) resolves these at invoke time, so BrainPlugin must be loaded wherever analysis
-    // runs.
-    // No `export * from './fact-store.ts'` here: that barrel re-export made the module a static import of
-    // the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
-    // pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
-    // `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
+    // Provides `FactStore` over the space's memory to operations that still declare it; loaded lazily, since it
+    // value-imports the `@dxos/pipeline-rdf` barrel.
     AppCapability.layerSpec(() => import('./src/capabilities/fact-store.ts', { with: { type: 'module-url' } }), {
       name: 'FactStore',
-      provides: [BrainCapabilities.FactStoreRegistry],
     }),
     // Injects the `Analyze` action into plugin-inbox's mailbox toolbar menu (fact analysis is owned by
     // brain); reads the settings atom live at invoke time. Shares the atom with the Settings module.
