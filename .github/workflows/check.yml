@@ -205,12 +205,10 @@ jobs:
         if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
         run: node packages/e2e/composer-e2e/scripts/check-qa-coverage.mjs
 
-      # `.npmrc` sets `strict-peer-dependencies` with `auto-install-peers=false`, so re-resolving is what
-      # surfaces an unsatisfiable peer. `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`.
+      # `pnpm-workspace.yaml` sets `strictPeerDependencies` with `autoInstallPeers: false`; this fails on any unmet
+      # or missing peer in the lockfile, without an install.
       - name: Check for peer dependency issues
-        run: |
-          trap 'git checkout -- pnpm-lock.yaml' EXIT
-          pnpm install --resolution-only --no-frozen-lockfile
+        run: pnpm peers check --lockfile-only
 
       # `pkg-lint` rejects a malformed `exports`/`imports` entry; this rejects a stale one. The toolbox is
       # the only writer of those maps, so anything it would change is drift a contributor fixes by running

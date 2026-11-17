@@ -221,7 +221,7 @@ is invisible there until something publishes it.
 
 - **When both repos are checked out, link locally — never publish to see your own change.** From the
   edge checkout: `pnpm link-packages` (`scripts/link-packages.mjs ../dxos --all --install`) packs this
-  workspace and installs it over `pnpm.overrides` `file:` entries. It is faster than a publish round
+  workspace and installs it over `file:` entries in the `overrides` of edge's `pnpm-workspace.yaml`. It is faster than a publish round
   trip, depends on no external service, and picks up an export or subpath that does not exist in any
   published build yet — which is exactly the inner loop for a feature spanning both repos.
 - Do not dispatch `.github/workflows/pkg-pr-new.yml` to unblock local work. A pinned build is for a
