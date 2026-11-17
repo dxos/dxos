@@ -21,7 +21,10 @@ import { isTauri } from '@dxos/util';
 import { CanvasComponent } from '#components';
 import { TldrawCapabilities } from '#types';
 
-export type TldrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
+export type TldrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps & {
+  /** Shows the drawing in tldraw's read-only mode, with the camera still free. */
+  readonly?: boolean;
+};
 
 export const TldrawArticle = ({
   role,
@@ -34,15 +37,18 @@ export const TldrawArticle = ({
   onActivate,
   camera,
   onCameraChange,
+  readonly = false,
 }: TldrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const [settings, updateSettings] = Hooks.useAtomCapabilityState(TldrawCapabilities.Settings);
   const id = Obj.getURI(drawing as Obj.Any);
   const { hasAttention } = useAttention(attendableId);
   const embedded = role === AppSurface.Section.role;
+  const slide = role === AppSurface.Slide.role;
 
   const props = {
-    readonly: role === AppSurface.Slide.role,
+    readonly: readonly || slide,
+    locked: slide,
     autoCenter: embedded ? true : undefined,
   };
 
@@ -64,7 +70,7 @@ export const TldrawArticle = ({
       // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
       hideUi={embedded ? !hasAttention : !hasAttention && !isTauri()}
       focusContainer={!embedded}
-      onThreadCreate={handleThreadCreate}
+      onThreadCreate={readonly ? undefined : handleThreadCreate}
       selection={selection}
       onSelectionChange={onSelectionChange}
       onActivate={onActivate}
@@ -98,3 +104,7 @@ const Container = Util.composable<HTMLDivElement, PropsWithChildren<{ fill?: boo
 );
 
 TldrawArticle.displayName = 'TldrawArticle';
+
+export const ReadonlyTldrawArticle = (props: TldrawArticleProps) => <TldrawArticle {...props} readonly />;
+
+ReadonlyTldrawArticle.displayName = 'ReadonlyTldrawArticle';

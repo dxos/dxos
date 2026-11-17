@@ -18,9 +18,20 @@ import { Journal } from '#types';
 
 import { TasksNamespace } from '../../namespace.ts';
 
-export type JournalArticleProps = AppSurface.ObjectArticleProps<Journal.Journal>;
+export type JournalArticleProps = AppSurface.ObjectArticleProps<
+  Journal.Journal,
+  {
+    /** Shows the entries with no way to edit one or start today's. */
+    readonly?: boolean;
+  }
+>;
 
-export const JournalArticle = ({ role, attendableId: _attendableId, subject: journal }: JournalArticleProps) => {
+export const JournalArticle = ({
+  role,
+  attendableId: _attendableId,
+  subject: journal,
+  readonly,
+}: JournalArticleProps) => {
   const { t } = Hooks.useTranslation(TasksNamespace.key);
   const [showCalendar, setShowCalendar] = useState(false);
   const controllerRef = useRef<CalendarController>(null);
@@ -74,7 +85,7 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
             </Calendar.Root>
           </Show.Show>
 
-          <JournalComponent journal={journal} classNames='dx-document' onSelect={handleSelect} />
+          <JournalComponent journal={journal} readonly={readonly} classNames='dx-document' onSelect={handleSelect} />
         </div>
       </Panel.Body>
     </Panel.Root>

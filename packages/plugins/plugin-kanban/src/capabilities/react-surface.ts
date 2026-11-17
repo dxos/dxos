@@ -12,12 +12,12 @@ import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as Position from '@dxos/util/Position';
 
 import { KanbanArticle, KanbanCard, KanbanProperties } from '#containers';
-import { Kanban } from '#types';
+import { Kanban, type KanbanCapabilities } from '#types';
 
 import { PivotColumnAnnotationId } from '../types/KanbanSchema.ts';
 import { PivotColumnField } from './PivotColumnField.tsx';
 
-export default Capability.makeModule(() =>
+export default Capability.makeModule(({ readOnly = false }: KanbanCapabilities.KanbanPluginOptions = {}) =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, Kanban.Kanban),
         ),
         component: KanbanArticle,
-        props: ({ role, data: { subject } }) => ({ role, subject }),
+        props: ({ role, data: { subject } }) => ({ role, subject, readonly: readOnly }),
       }),
       Surface.create({
         id: 'kanbanCard',
@@ -36,18 +36,25 @@ export default Capability.makeModule(() =>
         component: KanbanCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.create({
-        id: 'objectProperties',
-        position: Position.first,
-        filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
-        component: KanbanProperties,
-        props: ({ data: { subject } }) => ({ subject }),
-      }),
-      Surface.create({
-        id: 'createInitialSchemaForm',
-        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, PivotColumnAnnotationId)),
-        component: PivotColumnField,
-      }),
+      // Both write: the board's settings, and a new board's pivot field.
+      ...(readOnly
+        ? []
+        : [
+            Surface.create({
+              id: 'objectProperties',
+              position: Position.first,
+              filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
+              component: KanbanProperties,
+              props: ({ data: { subject } }) => ({ subject }),
+            }),
+            Surface.create({
+              id: 'createInitialSchemaForm',
+              filter: AppSurface.formInputBySchema(
+                (ast) => !!SchemaEx.findAnnotation<boolean>(ast, PivotColumnAnnotationId),
+              ),
+              component: PivotColumnField,
+            }),
+          ]),
     ]),
   ),
 );

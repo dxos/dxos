@@ -27,6 +27,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -288,6 +289,13 @@ feat F-7: Tile providers via API keys
     then: the map renders MapTiler tiles; otherwise OpenStreetMap is used
 ```
 
+```mdl
+feat F-8: Read-only Host
+  uses: [MapArticle, MapViewEditor]
+
+  req F-8.1: With the plugin's `readOnly` option, a map shows its markers and can be panned, zoomed and toggled between map and globe, and selecting a marker still selects its object, but the object properties have no MapViewEditor.
+```
+
 ## Acceptance
 
 ```mdl
@@ -421,6 +429,25 @@ test QA-2: Showcase clip
     - name: Spin the globe
       do: Click Toggle, then Start.
       expect: the globe shows and rotates
+```
+
+## Changelog
+
+```mdl
+decision D-1: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-2: A `readOnly` option drops the MapViewEditor properties row and keeps the rest of the map: pan, zoom, the map/globe toggle and marker selection. Fills in [D-1].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.1, F-8.1, MapViewEditor]
+  why: The view editor is the only part of the plugin that writes to the space; the viewport and the map/globe toggle live in device-local MapState, and selection writes layout state.
+  rejected: Showing MapViewEditor as a disabled form; the source view and location field already show in the map itself, and the generic properties are shown read-only by the space plugin.
 ```
 
 ---

@@ -45,6 +45,8 @@ type KanbanBoardRootProps = PropsWithChildren<
     items: Atom.Atom<Obj.Unknown[]>;
     onCardAdd?: (columnValue: string | undefined) => string | undefined;
     onCardRemove?: (card: Obj.Unknown) => void;
+    /** Ignores `onCardAdd` and `onCardRemove`, and accepts no drops. */
+    readonly?: boolean;
   } & Pick<KanbanBoardContextValue, 'change' | 'itemTile'> &
     ComponentPropsWithoutRef<'div'>
 >;
@@ -58,6 +60,7 @@ export const KanbanBoardRoot = ({
   itemTile = KanbanCard,
   onCardAdd,
   onCardRemove,
+  readonly = false,
 }: KanbanBoardRootProps) => {
   const registry = useContext(RegistryContext);
   const { t } = Hooks.useTranslation(KanbanNamespace.key);
@@ -108,8 +111,9 @@ export const KanbanBoardRoot = ({
       getPivotAttributes={getPivotAttributes}
       itemTile={itemTile}
       change={change}
-      onCardAdd={onCardAdd}
-      onCardRemove={onCardRemove}
+      readonly={readonly}
+      onCardAdd={readonly ? undefined : onCardAdd}
+      onCardRemove={readonly ? undefined : onCardRemove}
     >
       <Board.Root model={model}>{children}</Board.Root>
     </KanbanBoardContext>
@@ -128,7 +132,7 @@ type KanbanBoardContentProps = {};
 
 export const KanbanBoardContent = Util.composable<HTMLDivElement, KanbanBoardContentProps>((props, forwardedRef) => {
   const { model } = useBoard(KANBAN_BOARD_CONTENT);
-  const { kanbanId, projection, pivotFieldId, change } = useKanbanBoard(KANBAN_BOARD_CONTENT);
+  const { kanbanId, projection, pivotFieldId, change, readonly } = useKanbanBoard(KANBAN_BOARD_CONTENT);
 
   const columnEventHandler = useKanbanColumnEventHandler({
     id: `${kanbanId}-columns`,
@@ -142,7 +146,8 @@ export const KanbanBoardContent = Util.composable<HTMLDivElement, KanbanBoardCon
     <Board.Content
       {...Util.composableProps(props)}
       ref={forwardedRef}
-      eventHandler={columnEventHandler}
+      // Without a handler the container accepts no drops.
+      eventHandler={readonly ? undefined : columnEventHandler}
       Tile={KanbanColumn}
     />
   );

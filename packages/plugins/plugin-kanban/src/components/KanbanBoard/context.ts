@@ -41,6 +41,8 @@ export type KanbanBoardContextValue = {
   pivotFieldId: string | undefined;
   getPivotAttributes: (columnValue: string) => { title: string; color: string };
   itemTile?: ComponentType<KanbanCardProps>; // TODO(burdon): Prop.
+  /** Cards and columns cannot be moved, added or removed; a card tile omits its drag handle. */
+  readonly: boolean;
   onCardAdd?: (columnValue: string | undefined) => string | undefined;
   onCardRemove?: (card: Obj.Unknown) => void;
 };
@@ -56,4 +58,5 @@ export const [KanbanBoardContext, useKanbanBoard] = Hooks.createContext<KanbanBo
       ? KanbanConstants.UNCATEGORIZED_ATTRIBUTES
       : { title: id, color: 'neutral' },
   itemTile: (() => null) as ComponentType<KanbanCardProps>,
+  readonly: false,
 });

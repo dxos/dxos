@@ -20,6 +20,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -224,6 +225,15 @@ feat F-5: ECHO Persistence and Collaboration
   req F-5.3: The plugin registers Outline and Journal schemas so objects are queryable by type.
 ```
 
+```mdl
+feat F-6: Read-only Host
+  uses: [Outline, Journal, OutlineArticle, JournalArticle, QuickEntryDialog]
+
+  req F-6.1: With the plugin's `readOnly` option, outlines, journals, task sets and tasks can be read but not edited: an outline item cannot be typed into or promoted to a task, a task set offers no create pane, row edit controls, checkboxes, drag reordering or row actions, and a task shows its fields, properties, questions and attachments with no way to change, answer, attach or act on them.
+  req F-6.2: With the plugin's `readOnly` option, a reader can still open a task from its set or from an outline link, filter, sort and group a task set, collapse its branches, and toggle a journal's calendar.
+  req F-6.3: With the plugin's `readOnly` option, the plugin contributes no quick journal entry action or dialog, no "Start today" button, and no remote session card.
+```
+
 ## Acceptance
 
 ```mdl
@@ -388,6 +398,27 @@ test QA-3: Showcase clip
     - name: Write a plan
       do: Type a heading item and three indented items.
       expect: the items nest under the heading
+```
+
+## Changelog
+
+```mdl
+decision D-1: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-6]
+```
+
+```mdl
+decision D-2: A `readOnly` option shows outlines, journals, task sets and tasks without their editing affordances, and drops quick journal entry and the remote session card. Fills in [D-1].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.1, F-6.2, F-6.3]
+  why: The task list renders an affordance only when its callback is wired, so read-only withholds the callbacks that write and keeps selection, collapse and the per-device filter, sort and grouping, which write nothing to the space. Quick entry writes to today's journal entry, and a session's resume command is only of use to the harness that ran it.
+  rejected:
+    - Disabling the create pane and row controls in place: a reader would see controls that can never work.
+    - Hiding the task set's filter toolbar: filtering, sorting and grouping are per-device view state, so a reader can still narrow the list.
 ```
 
 ## Appendix: Extension Definitions

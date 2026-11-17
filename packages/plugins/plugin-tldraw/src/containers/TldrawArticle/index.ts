@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export { TldrawArticle as default } from './TldrawArticle.tsx';
+export { ReadonlyTldrawArticle, TldrawArticle as default } from './TldrawArticle.tsx';

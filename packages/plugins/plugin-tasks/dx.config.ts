@@ -12,14 +12,16 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
 import { TasksNamespace } from './src/namespace.ts';
+import * as TasksCapabilities from './src/types/TasksCapabilities.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
-const config: Plugin.PluginConfig = Plugin.config({
-  plugin: {
-    key: TasksNamespace.key,
-    name: 'Tasks',
-    author: 'DXOS',
-    description: trim`
+const config: Plugin.PluginConfig<TasksCapabilities.TasksPluginOptions> =
+  Plugin.config<TasksCapabilities.TasksPluginOptions>({
+    plugin: {
+      key: TasksNamespace.key,
+      name: 'Tasks',
+      author: 'DXOS',
+      description: trim`
       Owner of the task surface: markdown outlines (the fluid form of work) and durable Task
       objects in TaskSets (the assignable form), linked by convert-to-task promotion.
       Tree-structured note-taking editor for organizing ideas hierarchically.
@@ -33,47 +35,49 @@ const config: Plugin.PluginConfig = Plugin.config({
       A Quick Journal Entry dialog (accessible as a global operation) lets you append a checkbox bullet to today's entry without leaving your current context.
       Invoking the operation from an AI skill or keyboard shortcut creates the Journal and today's entry automatically if they do not yet exist.
     `,
-    icon: { key: 'ph--tree-structure--regular', hue: 'indigo' },
-    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-tasks',
-    spec: 'PLUGIN.mdl',
-    tags: ['alpha'],
-  },
-  modules: [
-    // Narrower than the `appGraphBuilder` family default: its nodes invoke
-    // `LayoutOperation.UpdateDialog`, which means nothing without an app shell.
-    AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
-      {
-        environments: ['browser', 'tauri'],
-      },
-    ),
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } })),
-    // Migration providers stay eager: a migration missing when a space opens is a data hazard.
-    Capability.lazyModule(
-      'TasksMigrations',
-      { provides: [ClientCapabilities.Migration] },
-      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
-    ),
-    AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      {
-        activatesOn: ActivationEvents.Idle,
-      },
-    ),
-    AppCapability.pluginAsset({
-      pluginId: TasksNamespace.key,
-      path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
-      mimeType: 'application/x-mdl',
-    }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppSurface.Article, AppSurface.CardContent, AppSurface.Dialog, AppSurface.Related, AppSurface.Section],
-    }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
-    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } })),
-  ],
-});
+      icon: { key: 'ph--tree-structure--regular', hue: 'indigo' },
+      source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-tasks',
+      spec: 'PLUGIN.mdl',
+      tags: ['alpha'],
+    },
+    modules: [
+      // Narrower than the `appGraphBuilder` family default: its nodes invoke
+      // `LayoutOperation.UpdateDialog`, which means nothing without an app shell.
+      AppCapability.appGraphBuilder(
+        () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+        {
+          environments: ['browser', 'tauri'],
+        },
+      ),
+      SpaceCapability.createObject(
+        () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      ),
+      // Migration providers stay eager: a migration missing when a space opens is a data hazard.
+      Capability.lazyModule(
+        'TasksMigrations',
+        { provides: [ClientCapabilities.Migration] },
+        () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
+      ),
+      AppCapability.operationHandler(
+        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+        {
+          activatesOn: ActivationEvents.Idle,
+        },
+      ),
+      AppCapability.pluginAsset({
+        pluginId: TasksNamespace.key,
+        path: 'PLUGIN.mdl',
+        content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+        mimeType: 'application/x-mdl',
+      }),
+      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+        roles: [AppSurface.Article, AppSurface.CardContent, AppSurface.Dialog, AppSurface.Related, AppSurface.Section],
+      }),
+      AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+      AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } })),
+    ],
+  });
 
 export const { meta, make } = config;
 

@@ -31,6 +31,12 @@ export type State = {
   zoom?: number;
 };
 
+/** Options for {@link MapPlugin}. */
+export type MapPluginOptions = {
+  /** Shows every map with no way to change its source view or location field. */
+  readOnly?: boolean;
+};
+
 export const State = Capability.makeSingleton<Atom.Writable<State>>()(`${MapNamespace.key}.capability.state`);
 
 /** Writable settings atom (also surfaced as a settings form via `AppCapabilities.Settings`). */

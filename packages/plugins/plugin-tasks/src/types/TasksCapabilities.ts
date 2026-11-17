@@ -25,3 +25,9 @@ export const DELEGATE_GROUP = 'delegate';
 
 // Multi: one menu item per contributed action, and more than one plugin may contribute.
 export const TaskAction = Capability.make<TaskAction>()(`${TasksNamespace.key}.capability.taskAction`);
+
+/** Options for {@link TasksPlugin}. */
+export type TasksPluginOptions = {
+  /** Shows outlines, task sets and tasks with no way to edit them. */
+  readOnly?: boolean;
+};

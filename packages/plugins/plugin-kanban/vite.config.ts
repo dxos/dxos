@@ -20,6 +20,7 @@ export default defineConfig({
     KanbanLayout: 'src/types/KanbanLayout.ts',
     KanbanConstants: 'src/types/KanbanConstants.ts',
     Kanban: 'src/types/Kanban.ts',
+    KanbanCapabilities: 'src/types/KanbanCapabilities.ts',
     KanbanEvents: 'src/types/KanbanEvents.ts',
     KanbanOperation: 'src/types/KanbanOperation.ts',
     types: 'src/types/index.ts',

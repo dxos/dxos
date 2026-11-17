@@ -12,13 +12,15 @@ import { useDelegateActions, useTaskActions, useTaskMembers, useTaskUpdate } fro
 
 export type TaskRowProps = {
   subject: Task.Task;
+  /** Shows the row with no edit controls or actions. */
+  readonly?: boolean;
 };
 
 /**
  * One task as a list row — status, title, assignee and the contributed actions menu — for a task shown
  * beside the object it relates to (e.g. under the email it was extracted from).
  */
-export const TaskRow = ({ subject: task }: TaskRowProps) => {
+export const TaskRow = ({ subject: task, readonly = false }: TaskRowProps) => {
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const getTaskActions = useTaskActions();
   const getDelegateActions = useDelegateActions();
@@ -33,9 +35,9 @@ export const TaskRow = ({ subject: task }: TaskRowProps) => {
       flush
       groupByStatus={false}
       members={members}
-      getTaskActions={getTaskActions}
-      getDelegateActions={getDelegateActions}
-      onTaskUpdate={handleUpdate}
+      getTaskActions={readonly ? undefined : getTaskActions}
+      getDelegateActions={readonly ? undefined : getDelegateActions}
+      onTaskUpdate={readonly ? undefined : handleUpdate}
     >
       <TaskList.Content />
     </TaskList.Root>

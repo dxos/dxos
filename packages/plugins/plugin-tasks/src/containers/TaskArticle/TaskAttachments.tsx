@@ -232,6 +232,8 @@ export type TaskAttachmentsProps = {
   canAttach?: boolean;
   pending?: readonly PendingAttachment[];
   detailOf?: string;
+  /** Cards carry no remove action. */
+  readonly?: boolean;
 };
 
 /**
@@ -242,7 +244,7 @@ export type TaskAttachmentsProps = {
  * over the pane, which takes the drop itself. Renders nothing only when there is nothing attached
  * and nothing could be.
  */
-export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: TaskAttachmentsProps) => {
+export const TaskAttachments = ({ task, canAttach, pending = [], detailOf, readonly }: TaskAttachmentsProps) => {
   const { t } = UiHooks.useTranslation(TasksNamespace.key);
   const [refs] = useObject(task, 'attachments');
   const dragging = useContext(FileDragContext);
@@ -293,7 +295,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
           {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
         >
           {hasCards ? (
-            <RemoveAttachmentContext.Provider value={handleRemove}>
+            <RemoveAttachmentContext.Provider value={readonly ? undefined : handleRemove}>
               <CardMasonry.CardMasonry
                 objects={refs ?? []}
                 size='compact'

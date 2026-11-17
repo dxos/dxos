@@ -36,7 +36,7 @@ const createOrg = () => ({
  * In-memory Kanban board: View + ProjectionModel + Kanban + items, no plugin manager or Space.
  * Similar to react-ui-kanban Kanban.stories.tsx.
  */
-const DefaultStory = () => {
+const DefaultStory = ({ readonly }: { readonly?: boolean }) => {
   const registry = useContext(RegistryContext);
   const items = useMemo(() => Atom.make<Obj.Unknown[]>([]), []);
   const [state, setState] = useState<{
@@ -129,6 +129,7 @@ const DefaultStory = () => {
       items={items}
       itemTile={KanbanCardTileSimple}
       change={state.change}
+      readonly={readonly}
       onCardAdd={handleCardAdd}
       onCardRemove={handleCardRemove}
     >
@@ -191,5 +192,24 @@ export const TestLayout: Story = {
       await expect(rect.left - (column?.left ?? Number.NaN)).toBeGreaterThanOrEqual(4);
       await expect((column?.right ?? Number.NaN) - rect.right).toBeGreaterThanOrEqual(4);
     }
+  },
+};
+
+/**
+ * A read-only board shows its cards with no drag handles and no way to add a card.
+ */
+export const ReadOnly: Story = {
+  args: { readonly: true },
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      () => {
+        if (canvasElement.querySelectorAll('[data-testid="board-item"]').length === 0) {
+          throw new Error('No cards.');
+        }
+      },
+      { timeout: 10_000 },
+    );
+    await expect(canvasElement.querySelector('[data-drag-handle]')).toBeNull();
+    await expect(canvasElement.querySelector('[data-testid="board-column-add-item"]')).toBeNull();
   },
 };

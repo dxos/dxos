@@ -21,7 +21,13 @@ import { Kanban, KanbanOperation } from '#types';
 
 import { makeItemsAtom } from '../../util/index.ts';
 
-export type KanbanArticleProps = AppSurface.ObjectArticleProps<Kanban.Kanban>;
+export type KanbanArticleProps = AppSurface.ObjectArticleProps<
+  Kanban.Kanban,
+  {
+    /** Shows the board with no way to move, add or remove a card or column. */
+    readonly?: boolean;
+  }
+>;
 
 export const KanbanArticle = (props: KanbanArticleProps) => {
   // Branch on `kanban.spec.kind`: view-variant runs a typename query through
@@ -34,7 +40,7 @@ export const KanbanArticle = (props: KanbanArticleProps) => {
   );
 };
 
-const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
+const ViewKanbanArticle = ({ role, subject: object, readonly }: KanbanArticleProps) => {
   const registry = useContext(RegistryContext);
   const schemas = Hooks.useCapabilities(AppCapabilities.Schema);
   const db = Obj.getDatabase(object);
@@ -99,6 +105,7 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
         projection={projection}
         items={items}
         change={change}
+        readonly={readonly}
         onCardAdd={handleCardAdd}
         onCardRemove={handleCardRemove}
       >
@@ -112,7 +119,7 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
 
 type ItemsKanbanArticleProps = Omit<KanbanArticleProps, 'subject'> & { subject: Kanban.KanbanItems };
 
-const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) => {
+const ItemsKanbanArticle = ({ role, subject: object, readonly }: ItemsKanbanArticleProps) => {
   const db = Obj.getDatabase(object);
   const projection = useItemsProjection(object);
   const change = useEchoChangeCallback(object);
@@ -151,6 +158,7 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
         projection={projection}
         items={itemsAtom}
         change={change}
+        readonly={readonly}
         onCardRemove={handleCardRemove}
       >
         <Panel.Body asChild>

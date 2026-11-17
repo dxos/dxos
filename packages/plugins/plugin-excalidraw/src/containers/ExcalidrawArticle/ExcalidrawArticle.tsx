@@ -28,7 +28,10 @@ import * as Util from '@dxos/react-ui/Util';
 
 import { useStoreAdapter } from '#hooks';
 
-export type ExcalidrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
+export type ExcalidrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps & {
+  /** Shows the drawing in Excalidraw's view mode and writes nothing back. */
+  readonly?: boolean;
+};
 
 const CAMERA_REPORT_MS = 100;
 
@@ -90,6 +93,7 @@ export const ExcalidrawArticle = ({
   onSelectionChange,
   camera,
   onCameraChange,
+  readonly = false,
 }: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
@@ -180,9 +184,12 @@ export const ExcalidrawArticle = ({
 
   // Track updates.
   const handleChange: ExcalidrawProps['onChange'] = (elements, appState) => {
-    const modified = adapter.update(elements);
-    if (!down && modified.length) {
-      adapter.save();
+    // View mode still reports element changes it makes itself, such as text re-measured after a font loads.
+    if (!readonly) {
+      const modified = adapter.update(elements);
+      if (!down && modified.length) {
+        adapter.save();
+      }
     }
     if (onSelectionChange) {
       const selected = selectedObjectIds(elements, appState.selectedElementIds);
@@ -269,6 +276,7 @@ export const ExcalidrawArticle = ({
         // gridModeEnabled={true}
         // detectScroll={false}
         theme={themeMode}
+        viewModeEnabled={readonly}
         onChange={handleChange}
         onPointerUpdate={handlePointerUpdate}
         onScrollChange={handleScrollChange}
@@ -280,6 +288,10 @@ export const ExcalidrawArticle = ({
     </Comp>
   );
 };
+
+export const ReadonlyExcalidrawArticle = (props: ExcalidrawArticleProps) => <ExcalidrawArticle {...props} readonly />;
+
+ReadonlyExcalidrawArticle.displayName = 'ReadonlyExcalidrawArticle';
 
 const Article = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
   <Panel.Root

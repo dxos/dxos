@@ -3,6 +3,7 @@
 //
 
 export * as Kanban from './Kanban.ts';
+export * as KanbanCapabilities from './KanbanCapabilities.ts';
 export * as KanbanConstants from './KanbanConstants.ts';
 export * as KanbanEvents from './KanbanEvents.ts';
 export * as KanbanLayout from './KanbanLayout.ts';

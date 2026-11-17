@@ -37,17 +37,22 @@ export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outl
    * toolbar, and a second one inside its section reads as a nested editor.
    */
   toolbar?: boolean;
+  /** Shows the outline, and any task it links to, with no way to edit or promote an item. */
+  readonly?: boolean;
 };
 
 export const OutlineArticle = ({
   role,
   attendableId,
   subject: outline,
-  taskSet,
+  taskSet: taskSetProp,
   toolbar = true,
+  readonly = false,
 }: OutlineArticleProps) => {
   const { t } = Hooks.useTranslation(TasksNamespace.key);
   const db = Obj.getDatabase(outline);
+  // Promotion writes a task, so a read-only outline has nowhere to file one.
+  const taskSet = readonly ? undefined : taskSetProp;
 
   // Link the user navigated into; the back button clears it to return to the outline.
   const [selected, setSelected] = useState<URI.URI>();
@@ -159,7 +164,7 @@ export const OutlineArticle = ({
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
         </Panel.Header>
         <Panel.Body>
-          <TaskForm task={task} />
+          <TaskForm task={task} readonly={readonly} />
         </Panel.Body>
       </Panel.Root>
     );
@@ -173,6 +178,7 @@ export const OutlineArticle = ({
           // The outline's URI, which keys the editor's comments as it does a Markdown document's.
           id={Obj.getURI(outline)}
           text={text}
+          readonly={readonly}
           onConvertToTask={taskSet ? handleConvertToTask : undefined}
           onConvertibleChange={setConvertible}
           onSelectLink={handleSelectLink}
@@ -197,7 +203,7 @@ export const OutlineArticle = ({
 
 OutlineArticle.displayName = 'OutlineArticle';
 
-const TaskForm = ({ task }: { task: Task.Task }) => {
+const TaskForm = ({ task, readonly }: { task: Task.Task; readonly?: boolean }) => {
   const schema = useMemo(() => omitId(Type.getSchema(Task.Task)), []);
   const [snapshot] = useObject(task);
 
@@ -215,7 +221,13 @@ const TaskForm = ({ task }: { task: Task.Task }) => {
   );
 
   return (
-    <Form.Root schema={schema} values={snapshot} autoSave onSave={handleSave}>
+    <Form.Root
+      schema={schema}
+      values={snapshot}
+      readonly={readonly}
+      autoSave={!readonly}
+      onSave={readonly ? undefined : handleSave}
+    >
       <Form.Viewport scroll width='document'>
         <Form.Content>
           <Form.Fields />
