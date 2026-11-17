@@ -80,7 +80,6 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
   const openDeadlineFamily = Atom.family((_spaceId: string) => makeStallDeadlineAtom(clientAtom));
-  const orderSettledAtom = Atom.make(false).pipe(Atom.keepAlive);
 
   return yield* Effect.all([
     AppGraphBuilder.createExtension({
@@ -268,18 +267,6 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
           const orderMap = new Map(order.map((id, index) => [id, index]));
           const lazySpaceOpen = !!client.config.values.runtime?.client?.lazySpaceOpen;
-          const orderSettled = get(orderSettledAtom);
-          const orderResolved =
-            orderSettled ||
-            isOrderResolved({
-              found: !!spacesOrder,
-              settingsSpaceState,
-              lazySpaceOpen,
-              timedOut: () => !!settingsSpace && get(openDeadlineFamily(settingsSpace.id)),
-            });
-          if (!orderSettled && orderResolved && spaces.length > 0) {
-            get.set(orderSettledAtom, true);
-          }
 
           // Keyed by id rather than position: the array below is re-sorted by `orderMap`, so a
           // positional lookup would test one space's readiness against another's state.
@@ -307,7 +294,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 }),
               )
               .map((space) =>
-                isPendingSpaceNode({ state: spaceStates.get(space.id), orderResolved })
+                isPendingSpaceNode(spaceStates.get(space.id))
                   ? constructPendingSpaceNode({ id: space.id, namesCache: state.spaceNames })
                   : constructSpaceNode({
                       space,
@@ -391,31 +378,11 @@ export const shouldListSpace = ({
   lazySpaceOpen?: boolean;
 }): boolean => state === SpaceState.SPACE_READY || (isPendingSpace(state, lazySpaceOpen) && !timedOut());
 
-export const isOrderResolved = ({
-  found,
-  settingsSpaceState,
-  lazySpaceOpen = false,
-  timedOut,
-}: {
-  found: boolean;
-  settingsSpaceState: SpaceState | undefined;
-  lazySpaceOpen?: boolean;
-  timedOut: () => boolean;
-}): boolean => {
-  if (found) {
-    return true;
-  }
-  const waiting = settingsSpaceState === SpaceState.SPACE_READY || isPendingSpace(settingsSpaceState, lazySpaceOpen);
-  return !waiting || timedOut();
-};
-
-export const isPendingSpaceNode = ({
-  state,
-  orderResolved,
-}: {
-  state: SpaceState | undefined;
-  orderResolved: boolean;
-}): boolean => !orderResolved || state !== SpaceState.SPACE_READY;
+/**
+ * Whether a space shows as a placeholder. A ready space shows as itself before the settings space yields its
+ * navtree order, since that order can wait on indexing the spaces still replicating; it re-sorts when it lands.
+ */
+export const isPendingSpaceNode = (state: SpaceState | undefined): boolean => state !== SpaceState.SPACE_READY;
 
 type SpaceNodeProperties = {
   label: Label;
