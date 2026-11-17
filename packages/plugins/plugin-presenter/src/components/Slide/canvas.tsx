@@ -77,9 +77,14 @@ export const SlideCanvas = ({ children, classNames, inset, scrim: hostScrim }: S
 type Size = { width: number; height: number };
 
 /**
- * The container's size, measured before the first paint and on every resize (no debounce), so the slide is scaled in
- * the same frame its container changes: a debounced measure painted it at the old scale first (entering fullscreen,
- * resizing the grid) and then jumped.
+ * The container's size, measured on every resize with no debounce, so the slide is scaled in the same frame its
+ * container changes: a debounced measure painted it at the old scale first (entering fullscreen, resizing the grid)
+ * and then jumped.
+ *
+ * The first measurement is the exception. A canvas mounted into a box that is still settling — the editor's preview
+ * panel, which is remounted inside a splitter on every slide — measures a height its container does not keep, and
+ * paints one frame at that scale before the observer corrects it, which reads as the slide's title jumping. So the
+ * first size is committed a frame later, once layout has run; every one after that is immediate, as before.
  */
 const useContainerSize = (ref: RefObject<HTMLDivElement | null>): Size | undefined => {
   const [size, setSize] = useState<Size>();
@@ -88,18 +93,29 @@ const useContainerSize = (ref: RefObject<HTMLDivElement | null>): Size | undefin
     if (!element) {
       return;
     }
+    let settled = false;
+    let frame = 0;
+    const commit = ({ width, height }: Size) =>
+      setSize((previous) => (previous?.width === width && previous?.height === height ? previous : { width, height }));
     const measure = () => {
       const { width, height } = element.getBoundingClientRect();
       if (width && height) {
-        setSize((previous) =>
-          previous?.width === width && previous?.height === height ? previous : { width, height },
-        );
+        if (settled) {
+          commit({ width, height });
+        } else {
+          settled = true;
+          // The frame after layout: the container has the height it will keep, so nothing paints at the other one.
+          frame = requestAnimationFrame(() => commit(element.getBoundingClientRect()));
+        }
       }
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, [ref]);
   return size;
 };

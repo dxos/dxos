@@ -14,4 +14,6 @@ The slide editor's toolbar carries the deck's own actions: the gallery the slide
 
 The completion list stops at its ends rather than wrapping. The list is short and ordered, so coming round again reads as the selection jumping rather than as having run out. The keymap has to sit before `autocompletion`, which registers its own at the same (highest) precedence: at equal precedence the handler registered first is asked first.
 
+The editor's preview no longer jumps as it moves between slides. The canvas scales itself to whatever it measures, and the preview is remounted inside a splitter on every slide, so its first measurement caught a height the container did not keep — one frame at the wrong scale, which read as the title jumping. Measured in the app: the slide painted 356px tall, then 316px a frame later. The first measurement now waits for the frame after layout; every one after it stays immediate, so resizing the grid or entering fullscreen is unchanged.
+
 `SlideGrid` is `SlideGallery`, since it is the panel of slide thumbnails rather than anything to do with the `<Grid>` tag or the `slide-grid` element that tag renders, both of which keep their names.
