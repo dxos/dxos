@@ -55,7 +55,7 @@ describe('Claude Code (cloud) credentials', () => {
       yield* addToken(CLAUDE_CODE_TOKEN_SOURCE, 'sk-ant-oat01-subscription');
       yield* addToken('github.com', 'ghu_test');
       expect(
-        yield* EdgeCredentials.credentialsWith(() => Effect.succeed(false)).pipe(
+        yield* EdgeCredentials.credentialsWith(() => Effect.succeed({ refused: false })).pipe(
           Effect.provide(Credential.AccessTokenResolver.notAvailable),
         ),
       ).toMatchObject({

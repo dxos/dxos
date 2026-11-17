@@ -490,7 +490,9 @@ describe('EdgeAgent', () => {
           return 'ghs-live';
         },
       });
-      const credential = EdgeAgent.githubCredentialsWith(() => Effect.succeed(false)).pipe(Effect.provide(resolver));
+      const credential = EdgeAgent.githubCredentialsWith(() => Effect.succeed({ refused: false })).pipe(
+        Effect.provide(resolver),
+      );
       expect(yield* credential).toEqual({});
 
       yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'anthropic.com', token: 'sk-ant' }));
@@ -501,7 +503,7 @@ describe('EdgeAgent', () => {
       expect(resolved).toEqual([github.id]);
 
       // One EDGE cannot resolve leaves the checkout to public repositories rather than failing the turn.
-      const unresolved = EdgeAgent.githubCredentialsWith(() => Effect.succeed(false)).pipe(
+      const unresolved = EdgeAgent.githubCredentialsWith(() => Effect.succeed({ refused: false })).pipe(
         Effect.provide(Credential.AccessTokenResolver.notAvailable),
       );
       expect(yield* unresolved).toEqual({});
@@ -527,7 +529,7 @@ describe('EdgeAgent', () => {
           },
         });
       yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'github.com', token: 'ghu-revoked' }));
-      const refuses = (token: string) => Effect.succeed(token === 'ghu-revoked');
+      const refuses = (token: string) => Effect.succeed({ refused: token === 'ghu-revoked' });
 
       const healed = yield* EdgeAgent.githubCredentialsWith(refuses).pipe(Effect.provide(resolver('ghu-fresh')));
       expect(healed).toEqual({ GITHUB_TOKEN: 'ghu-fresh', GH_TOKEN: 'ghu-fresh' });

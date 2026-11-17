@@ -545,8 +545,12 @@ export const composerMcpCredentials = (
 /** Set beside a stored GitHub token EDGE could not refresh, to the reason it gave. */
 export const GITHUB_TOKEN_ERROR_ENV = 'DX_GITHUB_TOKEN_ERROR';
 
-/** Whether GitHub refuses a token outright; any other answer, or none, counts as accepted. */
-export type GitHubTokenCheck = (token: string) => Effect.Effect<boolean>;
+/** GitHub's verdict on a token: refused outright (401), accepted, or unknown with the reason it could not be asked. */
+export type GitHubTokenVerdict = { refused: boolean; unchecked?: string };
+
+export type GitHubTokenCheck = (token: string) => Effect.Effect<GitHubTokenVerdict>;
+
+const firstLine = (cause: Cause.Cause<unknown>): string => Cause.pretty(cause).split('\n')[0];
 
 /** Asks GitHub who the token belongs to; only a 401 is a refusal. */
 export const githubRefuses: GitHubTokenCheck = (token) =>
@@ -555,11 +559,9 @@ export const githubRefuses: GitHubTokenCheck = (token) =>
       headers: { 'authorization': `Bearer ${token}`, 'user-agent': 'dxos-coding-agent' },
     }),
   ).pipe(
-    Effect.map((response) => response.status === 401),
-    Effect.orElseSucceed(() => false),
+    Effect.map((response): GitHubTokenVerdict => ({ refused: response.status === 401 })),
+    Effect.catchCause((cause) => Effect.succeed({ refused: false, unchecked: firstLine(cause) })),
   );
-
-const firstLine = (cause: Cause.Cause<unknown>): string => Cause.pretty(cause).split('\n')[0];
 
 /**
  * The space's GitHub connection as the environment the agent's `git` and `gh` read. Every token is resolved through
@@ -587,9 +589,13 @@ export const githubCredentialsWith = (
     }
     let token = Exit.isSuccess(first) ? first.value : accessToken.token;
     let error = Exit.isFailure(first) ? firstLine(first.cause) : undefined;
-    if (yield* refuses(token)) {
+    const verdict = yield* refuses(token);
+    if (verdict.unchecked !== undefined) {
+      error ??= `could not check the token with GitHub: ${verdict.unchecked}`;
+    }
+    if (verdict.refused) {
       const again = yield* resolve(true);
-      if (Exit.isSuccess(again) && !(yield* refuses(again.value))) {
+      if (Exit.isSuccess(again) && !(yield* refuses(again.value)).refused) {
         token = again.value;
         error = undefined;
       } else {
