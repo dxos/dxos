@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
@@ -25,7 +26,7 @@ export type PluginOptions = {
   client: Client;
   config: Config;
   services: ClientServicesProvider;
-  observability: Promise<Observability.Observability>;
+  observability: Fiber.Fiber<Observability.Observability, unknown>;
   /** Shows the reset dialog in place of the app. */
   onFatalError: (error: Error) => void;
 };
@@ -49,9 +50,8 @@ export const getPlugins = ({
     config,
     services,
     types: [Drawing.Drawing, Drawing.Canvas],
-    // Forked, so client startup does not wait on telemetry.
     onClientInitialized: ({ client }) =>
-      Effect.promise(() => observability).pipe(
+      Fiber.join(observability).pipe(
         Effect.flatMap((observability) => addClientProviders(observability, client)),
         Effect.catchCause((cause) => Effect.sync(() => log.warn('client telemetry not started', { cause }))),
         Effect.forkDetach,

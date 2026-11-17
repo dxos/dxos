@@ -411,7 +411,6 @@ const handler: ExportedHandler<Env> = {
       return handleRssProxy(request);
     }
 
-    // OTel ingestion proxy. Native builds export here cross-origin; their own asset server has no `/api` routes.
     const otel = OtelProxy.handle(request, {
       url: env.POSTHOG_OTLP_URL,
       token: env.POSTHOG_PROJECT_TOKEN,

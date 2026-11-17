@@ -25,13 +25,8 @@ export const dropBenignExceptions: BeforeSendFn = (capture) => {
   return benign ? null : capture;
 };
 
-/** A space invitation link's query parameter; the code in it lets anyone join the space. */
 const INVITATION_PARAM = 'spaceInvitationCode';
 
-/**
- * The URL without the invitation parameter, decoded and matched the way the app reads it (`URLSearchParams`), so an
- * encoded name or a repeat is removed too. Anything that is not an absolute URL with a query is returned as it was.
- */
 const redactUrl = (value: string): string => {
   if (!value.includes('?')) {
     return value;
@@ -66,11 +61,6 @@ const redactValue = (value: unknown): unknown => {
 const redactProperties = (properties: object): Properties =>
   Object.fromEntries(Object.entries(properties).map(([key, value]) => [key, redactValue(value)]));
 
-/**
- * Removes the invitation code from every URL an event carries (`$current_url`, `$referrer`, and their `$initial_*`
- * forms in `$set` and `$set_once`). The app strips it from the page URL only after the client initializes, and
- * PostHog captures before that.
- */
 export const redactInvitationCodes: BeforeSendFn = (capture) =>
   capture && {
     ...capture,

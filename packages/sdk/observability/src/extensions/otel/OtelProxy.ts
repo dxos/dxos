@@ -81,7 +81,6 @@ const forward = async (
     }
   }
 
-  // Counted as it streams, since `Content-Length` can be missing or false.
   let size = 0;
   let tooLarge = false;
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>({

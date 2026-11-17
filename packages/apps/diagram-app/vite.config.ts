@@ -32,7 +32,6 @@ const WORKER_ENTRIES: Record<string, string> = {
 
 // These packages' `browser` entrypoints initialize their wasm with top-level await, and Safari before 27 then
 // evaluates a module before its dependencies when plugins load concurrently (https://bugs.webkit.org/show_bug.cgi?id=242740).
-// The page and the client worker resolve them to `slim` and initialize the wasm themselves (`automerge-wasm.ts`).
 const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
 
 /** Resolves {@link SLIM_WASM_PACKAGES} to `slim`, and their subpaths without the `browser` condition, so one wasm instance serves every importer. */

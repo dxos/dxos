@@ -2,9 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// The diagram app's Cloudflare Worker. `wrangler.jsonc` routes only `/api/*` here; every other path is a static asset
-// with the SPA fallback.
-
 import * as OtelProxy from '@dxos/observability/OtelProxy';
 
 export type Env = {

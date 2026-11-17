@@ -5,7 +5,9 @@
 import '@dxos-theme';
 
 import * as Cause from 'effect/Cause';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { type Root, createRoot } from 'react-dom/client';
 
@@ -73,14 +75,10 @@ const Fallback = ({ error, client }: { error: Error; client?: Client }) => {
 let bootClient: Client | undefined;
 let reactRoot: Root | undefined;
 
-// Replay starts once boot settles, since the recorder's snapshot and compression cost main-thread time during startup.
-// Boot settles when the app activates or fails, or when it fails before the app renders (`showBootFailure`).
-let settleStartup = () => {};
-const startupSettled = new Promise<void>((resolve) => {
-  settleStartup = resolve;
-  window.addEventListener(Hooks.STARTUP_ACTIVATED_EVENT, () => resolve(), { once: true });
-  window.addEventListener(Hooks.STARTUP_FAILED_EVENT, () => resolve(), { once: true });
-});
+const startupSettled = Deferred.makeUnsafe<void>();
+const settleStartup = () => Deferred.doneUnsafe(startupSettled, Exit.void);
+window.addEventListener(Hooks.STARTUP_ACTIVATED_EVENT, settleStartup, { once: true });
+window.addEventListener(Hooks.STARTUP_FAILED_EVENT, settleStartup, { once: true });
 
 const main = Effect.gen(function* () {
   performance.mark('diagram-app:main');
@@ -103,13 +101,10 @@ const main = Effect.gen(function* () {
     Local(),
     Defaults(),
   );
-  // Not awaited: boot does not wait on telemetry.
-  const observability = initializeObservability(
-    config,
-    Effect.promise(() => startupSettled),
+  const observability = yield* initializeObservability(config, Deferred.await(startupSettled)).pipe(
+    Effect.tapCause((cause) => Effect.sync(() => log.warn('telemetry not started', { cause }))),
+    Effect.forkDetach,
   );
-  // Telemetry is best effort; plugins read this promise only once the client initializes, which may be never.
-  void observability.catch((err) => log.warn('telemetry not started', { err }));
   const services = yield* Effect.promise(() =>
     createClientServices(config, { createDedicatedWorker, createCoordinatorWorker }),
   );

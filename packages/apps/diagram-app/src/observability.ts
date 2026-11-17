@@ -17,14 +17,7 @@ const SERVICE_NAME = 'diagram';
 /** PostHog's own UI, for the replay and toolbar links that would otherwise point at the ingestion proxy. */
 const POSTHOG_UI_HOST = 'https://eu.posthog.com';
 
-/**
- * Starts telemetry, always on: OTel logs, metrics and traces, and PostHog analytics and session replay.
- * Each is a no-op when the build carries no endpoint or key for it. Replay masking is set in the PostHog project.
- */
-export const initializeObservability = (
-  config: Config,
-  sessionRecordingStart?: Effect.Effect<void>,
-): Promise<Observability.Observability> => {
+export const initializeObservability = (config: Config, sessionRecordingStart?: Effect.Effect<void>) => {
   const environment = getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown';
   return Function.pipe(
     Observability.make(),
@@ -55,11 +48,9 @@ export const initializeObservability = (
     Observability.addDataProvider(ObservabilityProvider.SpaceEvents.provider),
     Observability.addDataProvider(ObservabilityProvider.EventLoopLag.eventLoopLagProvider()),
     Observability.initialize,
-    Effect.runPromise,
   );
 };
 
-/** Identifies the device's identity and adds the client's metrics, once the client is initialized. */
 export const addClientProviders = (observability: Observability.Observability, client: Client) =>
   Effect.all(
     [

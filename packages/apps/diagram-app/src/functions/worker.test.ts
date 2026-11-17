@@ -22,7 +22,6 @@ const post = (path: string, origin = ORIGIN) =>
     body: '{}',
   });
 
-/** Records each upstream request, reading its body as PostHog would, and answers 200. */
 const stubUpstream = () => {
   const requests: { url: string; headers: Headers }[] = [];
   vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {

@@ -58,7 +58,6 @@ for (const { name, bundleTask, outDir } of apps) {
         LOG_FILTER: 'error',
       }
     : {};
-  // An app with its own ingestion route replaces the shared `DX_POSTHOG_API_HOST` and `DX_OTEL_ENDPOINT`.
   const endpoints = Object.fromEntries(
     [
       ['DX_OTEL_ENDPOINT', process.env[`${prefix}_OTEL_ENDPOINT`]],
