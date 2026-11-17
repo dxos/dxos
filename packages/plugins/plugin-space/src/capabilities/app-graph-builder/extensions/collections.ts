@@ -34,7 +34,7 @@ import { isNonNullable } from '@dxos/util';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { SpaceNamespace } from '../../../namespace.ts';
-import { resolveCollectionObjectPath } from '../../../util/index.ts';
+import { resolveObjectPath } from '../../../util/index.ts';
 import {
   ADD_TO_COLLECTION_LABEL,
   ARCHIVE_OBJECT_LABEL,
@@ -196,7 +196,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
       // through a space's collection tree, not just the root collection's direct children. The shape is
       // data-dependent (the object's collection ancestry), so the id is the object's own segment and
-      // `resolve` finds the rest — see `resolveCollectionObjectPath`.
+      // `resolve` finds the rest — see `resolveObjectPath`.
       url: {
         key: 'object',
         kind: 'item',
@@ -213,9 +213,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             if (!space) {
               return null;
             }
-            const path = yield* resolveCollectionObjectPath({ objectId: id }).pipe(
-              Effect.provide(Database.layer(space.db)),
-            );
+            const path = yield* resolveObjectPath({ objectId: id }).pipe(Effect.provide(Database.layer(space.db)));
             return path ?? null;
           }),
       },
