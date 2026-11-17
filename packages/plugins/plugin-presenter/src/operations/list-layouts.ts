@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { LAYOUT_SLOTS, LAYOUTS, SlideFrontmatter } from '@dxos/react-ui-slides';
+import { LAYOUT_SLOTS, LAYOUTS, SlideFrontmatter } from '@dxos/react-ui-slides/dialect';
 
 import { PresenterOperation } from '#types';
 

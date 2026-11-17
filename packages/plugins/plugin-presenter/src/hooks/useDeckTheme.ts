@@ -5,8 +5,7 @@
 import { useMemo } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { parseHeadmatterTheme } from '@dxos/react-ui-slides';
-import { type SlideTheme } from '@dxos/react-ui-slides';
+import { type SlideTheme, parseHeadmatterTheme } from '@dxos/react-ui-slides';
 
 import { type SlideSource } from '#deck';
 
