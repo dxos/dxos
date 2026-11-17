@@ -24,6 +24,7 @@ import * as SceneSvg from '@dxos/plugin-illustrator/SceneSvg';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { MarkdownSlide } from '@dxos/react-ui-slides';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -33,7 +34,6 @@ import { translations } from '#translations';
 import { Presentation } from '#types';
 
 import { SlideArticle } from '../../containers/SlideArticle/SlideArticle.tsx';
-import { MarkdownSlide } from '../MarkdownSlide/index.ts';
 import * as Slide from './Slide.tsx';
 
 /** One slide inset in a void, as the slide preview shows it. */

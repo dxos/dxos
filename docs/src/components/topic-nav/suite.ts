@@ -2,21 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+import echoCenter from '../../../../packages/ui/brand/assets/backgrounds/echo-center.svg?raw';
+import echoRight from '../../../../packages/ui/brand/assets/backgrounds/echo-right.svg?raw';
+import edgeCenter from '../../../../packages/ui/brand/assets/backgrounds/edge-center.svg?raw';
+import edgeRight from '../../../../packages/ui/brand/assets/backgrounds/edge-right.svg?raw';
+import haloCenter from '../../../../packages/ui/brand/assets/backgrounds/halo-center.svg?raw';
+import haloRight from '../../../../packages/ui/brand/assets/backgrounds/halo-right.svg?raw';
+import meshCenter from '../../../../packages/ui/brand/assets/backgrounds/mesh-center.svg?raw';
+import meshRight from '../../../../packages/ui/brand/assets/backgrounds/mesh-right.svg?raw';
+import plexCenter from '../../../../packages/ui/brand/assets/backgrounds/plex-center.svg?raw';
+import plexRight from '../../../../packages/ui/brand/assets/backgrounds/plex-right.svg?raw';
 // The brand's background art, one per docs topic, in the docs' own section colors [D-273].
-import sageCenter from '../../../../packages/ui/brand/assets/backgrounds/bg-dxns-center.svg?raw';
-import sageRight from '../../../../packages/ui/brand/assets/backgrounds/bg-dxns-right.svg?raw';
-import echoCenter from '../../../../packages/ui/brand/assets/backgrounds/bg-echo-center.svg?raw';
-import echoRight from '../../../../packages/ui/brand/assets/backgrounds/bg-echo-right.svg?raw';
-import haloCenter from '../../../../packages/ui/brand/assets/backgrounds/bg-halo-center.svg?raw';
-import haloRight from '../../../../packages/ui/brand/assets/backgrounds/bg-halo-right.svg?raw';
-import edgeCenter from '../../../../packages/ui/brand/assets/backgrounds/bg-kube-center.svg?raw';
-import edgeRight from '../../../../packages/ui/brand/assets/backgrounds/bg-kube-right.svg?raw';
-import meshCenter from '../../../../packages/ui/brand/assets/backgrounds/bg-mesh-center.svg?raw';
-import meshRight from '../../../../packages/ui/brand/assets/backgrounds/bg-mesh-right.svg?raw';
-import plexCenter from '../../../../packages/ui/brand/assets/backgrounds/bg-plex-center.svg?raw';
-import plexRight from '../../../../packages/ui/brand/assets/backgrounds/bg-plex-right.svg?raw';
-import tileCenter from '../../../../packages/ui/brand/assets/backgrounds/bg-tile-center.svg?raw';
-import tileRight from '../../../../packages/ui/brand/assets/backgrounds/bg-tile-right.svg?raw';
+import sageCenter from '../../../../packages/ui/brand/assets/backgrounds/sage-center.svg?raw';
+import sageRight from '../../../../packages/ui/brand/assets/backgrounds/sage-right.svg?raw';
+import tileCenter from '../../../../packages/ui/brand/assets/backgrounds/tile-center.svg?raw';
+import tileRight from '../../../../packages/ui/brand/assets/backgrounds/tile-right.svg?raw';
 
 /** Each topic's color: what its rays are drawn in, and what marks the topic wherever the art is not drawn. */
 export const SUITE_COLORS = {
@@ -85,7 +85,7 @@ const suite = (art: Record<SuiteTopic, string>): Record<SuiteTopic, string> => (
   tile: docsArt(art.tile, SUITE_COLORS.tile),
 });
 
-/** Hero art, with the mark on the right at (1440, 540). EDGE is drawn with the brand's KUBE mark and SAGE with DXNS. */
+/** Hero art, with the mark on the right at (1440, 540). */
 export const SUITE_BACKGROUNDS = suite({
   echo: echoRight,
   edge: edgeRight,

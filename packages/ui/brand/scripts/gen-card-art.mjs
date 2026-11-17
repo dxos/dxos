@@ -82,8 +82,8 @@ const fillWindow = (svg, box) => {
 mkdirSync(OUT, { recursive: true });
 
 let written = 0;
-for (const file of readdirSync(BACKGROUNDS).filter((name) => /^bg-.*-center\.svg$/.test(name))) {
-  const mark = file.replace(/^bg-(.*)-center\.svg$/, '$1');
+for (const file of readdirSync(BACKGROUNDS).filter((name) => /-center\.svg$/.test(name))) {
+  const mark = file.replace(/-center\.svg$/, '');
   const source = extendLines(readFileSync(join(BACKGROUNDS, file), 'utf8'));
   for (const width of WIDTHS) {
     const box = viewBox(width);

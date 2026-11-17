@@ -402,9 +402,15 @@ export class ChatModel {
     this.#feedMessages = Atom.make((get) => get(this.#selected).messages);
     this.thread = Atom.make((get) => {
       const view = get(this.#selected);
+      const thread = this._options.thread;
+      const pending = get(this.messages);
+      // A subagent's model adopts the whole process's stream, which carries main and every other lane as well.
+      const subagent = thread !== undefined && view.lanes.some((lane) => lane.id === thread && lane.kind === 'fresh');
       const projection = projectThread({
         feedMessages: get(this.#feedMessages),
-        pendingMessages: get(this.messages),
+        pendingMessages: subagent
+          ? pending.filter((message) => get(this.trajectory).laneOf.get(message.id) === thread)
+          : pending,
         discarded: view.discarded,
         rewindFrom: get(Obj.atom(this._feed)).rewindFrom,
         outbox: get(this.outbox),

@@ -65,8 +65,18 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
     provider === Provider.lmStudio.id && ollamaManager ? `${Provider.lmStudio.endpoint}/v1/models` : undefined;
   const lmStudioReachable = useEndpointReachable(lmStudioProbeUrl);
 
+  // Models other plugins serve; offered whatever provider is active, since their own resolver serves them.
+  const contributed = Hooks.useCapabilities(AssistantCapabilities.ModelPreset);
+
   const { presets, fallbackPresets } = useMemo(() => {
-    const edge = presetsForProvider(Provider.edge.id);
+    const extra = contributed.map(({ model, provider, label }): AiServicePreset => ({
+      id: model,
+      provider,
+      model,
+      backend: '',
+      label,
+    }));
+    const edge = [...presetsForProvider(Provider.edge.id), ...extra];
     if (provider === Provider.edge.id) {
       return { presets: edge, fallbackPresets: edge };
     }
@@ -79,7 +89,7 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
     }
     const runtime = local.map((preset) => ({ ...preset, local: true }));
     return { presets: [...edge, ...runtime], fallbackPresets: runtime };
-  }, [provider, ollamaManager, lmStudioReachable, localModels]);
+  }, [provider, ollamaManager, lmStudioReachable, localModels, contributed]);
 
   // The chat's selection when the active provider serves it, else the provider's configured model.
   // A selection the provider does not serve (the chat picked Claude, then the user went offline) is

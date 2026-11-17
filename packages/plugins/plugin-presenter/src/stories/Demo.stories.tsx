@@ -44,7 +44,7 @@ export const Demo: Story = {
       await expect(await canvas.findByText(`${position} / 10`)).toBeInTheDocument();
     };
 
-    await canvas.findByTestId('presenter.slide-grid.9', undefined, { timeout: 10_000 });
+    await canvas.findByTestId('presenter.slide-gallery.9', undefined, { timeout: 10_000 });
     await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
     // The article shows every slide as a thumbnail, so each one is checked alone by presenting; fullscreen fades in once
     // its size settles, so visibility is awaited.

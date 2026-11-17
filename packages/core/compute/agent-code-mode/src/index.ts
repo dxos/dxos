@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * as Runner from './Runner.ts';
 export * as Sandbox from './Sandbox.ts';
 export * as WorkerSandbox from './WorkerSandbox.ts';
 export * as WorkerSandboxBrowser from './WorkerSandboxBrowser.ts';

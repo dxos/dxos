@@ -7,6 +7,7 @@ import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo,
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { findFirstFocusable } from '@dxos/react-focus';
@@ -190,6 +191,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       onSelectBreadcrumb={onSelectBreadcrumb}
       popoverAnchorId={popoverAnchorId}
       articleData={articleData}
+      scrollContextId={part === 'main' ? GraphPath.getEidFromPath(id) : undefined}
       controls={controls}
       navbarEnd={navbarEnd}
       sigilFooter={sigilFooter}

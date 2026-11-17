@@ -488,10 +488,13 @@ export interface Manager {
    * Spawn a process at `options.location`. A remote host is sent only the definition's key; the
    * definition stays local, supplying the codecs and RPC group the handle is typed by.
    *
+   * A script operation spawns like a durable one: the runtime runs its code itself, so the run is a
+   * process like any other — a pid, a parent, its guard, children of its own.
+   *
    * Dies when the location is a remote runtime that offers no process control.
    */
   spawn<I, O, Rpcs extends Rpc.Any = never>(
-    definition: Operation.Durable<I, O, any, Rpcs>,
+    definition: Operation.Durable<I, O, any, Rpcs> | Operation.ScriptDefinition<I, O>,
     options?: SpawnOptions & LocationOptions,
   ): Effect.Effect<Process<I, O, Rpcs>>;
 
@@ -551,18 +554,19 @@ export class ManagerService extends Context.Service<ManagerService, Manager>()(
 ) {}
 
 /**
- * Spawns `durable` through the ambient {@link ManagerService} and submits `input`; read its result with
- * {@link awaitOutput}.
+ * Spawns `definition` — a durable operation or a script operation — through the ambient
+ * {@link ManagerService} and submits `input`; read its result with {@link awaitOutput}.
  */
 export const spawn = <I, O, Rpcs extends Rpc.Any = never>(
-  durable: Operation.Durable<I, O, any, Rpcs>,
+  definition: Operation.Durable<I, O, any, Rpcs> | Operation.ScriptDefinition<I, O>,
   input: I,
   options?: SpawnOptions & LocationOptions,
 ): Effect.Effect<Process<I, O, Rpcs>, never, ManagerService> =>
   Effect.gen(function* () {
     const manager = yield* ManagerService;
-    const handle = yield* manager.spawn(durable, {
-      ...(durable.name !== undefined ? { name: durable.name } : {}),
+    const name = Operation.isScript(definition) ? definition.meta.name : definition.name;
+    const handle = yield* manager.spawn(definition, {
+      ...(name !== undefined ? { name } : {}),
       ...options,
     });
     yield* handle.submitInput(input);
