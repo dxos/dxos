@@ -9,7 +9,6 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Filter, Obj } from '@dxos/echo';
-import { EID } from '@dxos/keys';
 
 import { Publication, SpaceOperation } from '#types';
 
@@ -33,7 +32,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ForkPublication> = Sp
       yield* Operation.invoke(SpaceOperation.Migrate, { space });
 
       yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
-      const objectId = path && (Publication.parseObjectPath(path)?.objectId ?? objectIdOf(space.id, path));
+      const objectId = path && Publication.objectIdOfPath(path);
       const object = objectId ? yield* Effect.promise(() => space.db.query(Filter.id(objectId)).first()) : undefined;
       if (object) {
         yield* Operation.invoke(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] });
@@ -42,10 +41,5 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ForkPublication> = Sp
     }),
   ),
 );
-
-const objectIdOf = (spaceId: string, path: string): string | undefined => {
-  const eid = GraphPath.getEidFromPath(GraphPath.getSpacePath(spaceId, path));
-  return eid && EID.getEntityId(eid);
-};
 
 export default handler;

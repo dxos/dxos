@@ -9,7 +9,9 @@ import { Annotation, Obj } from '@dxos/echo';
 
 import * as Publication from './Publication.ts';
 
-const OBJECT_PATH = 'db/org.dxos.type.document+01ABC';
+const OBJECT_ID = '01HZX00000000000000000000A';
+
+const OBJECT_PATH = `db/org.dxos.type.document+${OBJECT_ID}`;
 
 describe('Publication', () => {
   test('object paths round-trip between the viewer link, the fork link and Composer', ({ expect }) => {
@@ -21,13 +23,14 @@ describe('Publication', () => {
     expect(fork.searchParams.get(Publication.PATH_PARAM)).toBe(OBJECT_PATH);
 
     expect(Publication.objectPathOf(`/w/SPACE/${OBJECT_PATH}`)).toBe(OBJECT_PATH);
-    expect(Publication.parseObjectPath(OBJECT_PATH)).toEqual({ typeSlug: 'org.dxos.type.document', objectId: '01ABC' });
+    expect(Publication.objectIdOfPath(OBJECT_PATH)).toBe(OBJECT_ID);
+    expect(Publication.objectIdOfPath(`collection/01HZY000000000000000000000/${OBJECT_ID}`)).toBe(OBJECT_ID);
   });
 
   test('paths that name no object are rejected', ({ expect }) => {
     expect(Publication.objectPathOf('/w/SPACE')).toBeUndefined();
     expect(Publication.objectPathOf('/pub-1/db/x+y')).toBeUndefined();
-    expect(Publication.parseObjectPath('home')).toBeUndefined();
+    expect(Publication.objectIdOfPath('home')).toBeUndefined();
   });
 
   test('space properties keep the receipt until it is cleared on unpublish', ({ expect }) => {

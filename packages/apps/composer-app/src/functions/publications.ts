@@ -2,11 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { PUBLICATIONS_PATH, edgePublicationUrl } from '../util/publication-paths.ts';
 import { type Card } from './preview-image/index.ts';
-
-export const PUBLICATIONS_PATH = '/publications';
-
-const EDGE_PUBLICATIONS_PATH = '/db/publications';
 
 const VIEWER_PARAM = 'p';
 
@@ -200,7 +197,7 @@ const text = (value: unknown): string | undefined =>
   typeof value === 'string' && value.trim() ? value.trim().slice(0, MAX_TEXT_LENGTH) : undefined;
 
 const publicationFileUrl = (edgeUrl: string, publicId: string, file: string): URL =>
-  new URL(`${EDGE_PUBLICATIONS_PATH}/${publicId}/${file}`, edgeUrl);
+  edgePublicationUrl(`${PUBLICATIONS_PATH}/${publicId}/${file}`, edgeUrl);
 
 const notFound = () =>
   new Response('Not found', { status: 404, headers: { ...CORS_HEADERS, 'Content-Type': 'text/plain' } });

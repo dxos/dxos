@@ -5,6 +5,7 @@
 import { type Plugin } from 'vite';
 
 import { type EdgeConfig, resolveEdgeUrl } from '../util/edge-url.ts';
+import { PUBLICATIONS_PATH, edgePublicationUrl } from '../util/publication-paths.ts';
 
 const definedConfig = (define: Record<string, any> | undefined, key: string): EdgeConfig | undefined => {
   const value = define?.[key];
@@ -29,8 +30,8 @@ export const viewerRoutePlugin = (): Plugin => ({
         return;
       }
 
-      if (pathname.startsWith('/publications/') && edgeUrl) {
-        void proxyPublication(new URL(`/db${pathname}`, edgeUrl), req.method ?? 'GET').then(
+      if (pathname.startsWith(`${PUBLICATIONS_PATH}/`) && edgeUrl) {
+        void proxyPublication(edgePublicationUrl(pathname, edgeUrl), req.method ?? 'GET').then(
           ({ status, headers, body }) => {
             res.writeHead(status, headers);
             res.end(body);

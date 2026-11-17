@@ -7,7 +7,8 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, type Entity } from '@dxos/echo';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
+import { Annotation, type Entity, Key } from '@dxos/echo';
 
 export const PreviewType = Schema.Struct({
   typename: Schema.String,
@@ -97,18 +98,19 @@ export const forkUrl = (composerOrigin: string, publicId: string, path?: string)
 export const getReceipt = (properties: Entity.Unknown | Entity.Snapshot): Receipt | undefined =>
   Option.getOrUndefined(Annotation.get(properties, ReceiptAnnotation)) ?? undefined;
 
-/** Splits a URL object path (`db/<typeSlug>+<objectId>`), or `undefined` for any other shape. */
-export const parseObjectPath = (path: string): { typeSlug: string; objectId: string } | undefined => {
-  const match = /^db\/([^/+]+)\+([^/]+)$/.exec(path);
-  return match ? { typeSlug: match[1], objectId: match[2] } : undefined;
-};
+/**
+ * The object an object path opens: the last segment whose tail is an entity id, whichever key or route leads to it
+ * (`db/<typeSlug>+<objectId>`, or a collection's path).
+ */
+export const objectIdOfPath = (path: string): string | undefined =>
+  path
+    .split('/')
+    .map((segment) => segment.split(UrlPath.TAIL_SEPARATOR).at(-1) ?? '')
+    .findLast(Key.EntityId.isValid);
 
-/** The object path of a Composer pathname (`/w/<spaceId>/<objectPath>`), or `undefined` for none. */
 export const objectPathOf = (pathname: string): string | undefined => {
   const [key, , ...rest] = pathname.split('/').filter(Boolean);
-  return key === WORKSPACE_KEY && rest.length > 0 ? rest.join('/') : undefined;
+  return key === UrlPath.WORKSPACE_KEY && rest.length > 0 ? rest.join('/') : undefined;
 };
-
-const WORKSPACE_KEY = 'w';
 
 const withTrailingSlash = (url: string) => (url.endsWith('/') ? url : `${url}/`);
