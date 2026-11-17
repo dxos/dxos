@@ -16,6 +16,19 @@ import { FeedProtocol } from '@dxos/protocols';
 
 import { AUTOMERGE_NAMESPACE, type DocStore, objectOfFeed } from './doc-store.ts';
 
+/** Seven bound variables per row; 14 rows stay within Durable Object SQLite's 100 per statement. */
+const CHANGE_ROWS_PER_INSERT = 14;
+
+type ChangeRow = {
+  spaceId: SpaceId;
+  objectId: string;
+  hash: string;
+  actor: string;
+  seq: number;
+  time: number;
+  ops: number;
+};
+
 /**
  * Feeds the indexer the objects whose documents gained blocks since its cursor: one cursor per space
  * over the `automerge` namespace, in insertion order, so local writes and pulled blocks index alike.
@@ -83,12 +96,20 @@ export class AutomergeFeedSource implements IndexDataSource {
       const docs = yield* this.#docs.load([...updatedAt.keys()]);
       const objects: IndexerObject[] = [];
       const sql = yield* SqlClient.SqlClient;
+      const changes: ChangeRow[] = [];
       for (const [documentId, doc] of docs) {
         // Every change the document holds; ones recorded before are ignored.
         for (const meta of A.getChangesMetaSince(doc, [])) {
           if (meta.time > 0) {
-            yield* sql`INSERT OR IGNORE INTO echo_sqlite_changes (spaceId, objectId, hash, actor, seq, time, ops)
-              VALUES (${spaceId}, ${documentId}, ${meta.hash}, ${meta.actor}, ${meta.seq}, ${meta.time * 1000}, ${meta.maxOp - meta.startOp + 1})`;
+            changes.push({
+              spaceId,
+              objectId: documentId,
+              hash: meta.hash,
+              actor: meta.actor,
+              seq: meta.seq,
+              time: meta.time * 1000,
+              ops: meta.maxOp - meta.startOp + 1,
+            });
           }
         }
         for (const [objectId, structure] of Object.entries(doc.objects ?? {})) {
@@ -111,6 +132,11 @@ export class AutomergeFeedSource implements IndexDataSource {
             updatedAt: updatedAt.get(documentId) ?? Date.now(),
           });
         }
+      }
+
+      // Multi-row inserts: in the browser every statement is a round trip to the database worker.
+      for (let start = 0; start < changes.length; start += CHANGE_ROWS_PER_INSERT) {
+        yield* sql`INSERT OR IGNORE INTO echo_sqlite_changes ${sql.insert(changes.slice(start, start + CHANGE_ROWS_PER_INSERT))}`;
       }
 
       return {

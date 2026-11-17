@@ -146,9 +146,13 @@ export class SpaceSync {
     const ctx = Context.default();
     const spaceId = this.#db.spaceId;
     for (const feedNamespace of SYNC_NAMESPACES) {
-      while (!(await this.#db.runSql(this.#client.pull(ctx, { spaceId, feedNamespace, limit: BATCH }))).done) {}
+      let done = false;
+      while (!done) {
+        done = (await this.#db.runSql(this.#client.pull(ctx, { spaceId, feedNamespace, limit: BATCH }))).done;
+        // Applied per batch so a large catch-up shows up progressively rather than all at once at its end.
+        await this.#db.applyRemote();
+      }
     }
-    await this.#db.applyRemote();
     for (const feedNamespace of SYNC_NAMESPACES) {
       while (!(await this.#db.runSql(this.#client.push(ctx, { spaceId, feedNamespace, limit: BATCH }))).done) {}
     }
