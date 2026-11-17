@@ -232,6 +232,21 @@ describe('review verdicts', () => {
     });
   });
 
+  test('a verdict id resolves to the item judged by it, and only the id navigates as one', ({ expect }) => {
+    const { workspace } = setup();
+    const spec = ['```mdl', 'table feeds: The rows.', '```', '', '```mdl', 'type feeds:Summary', '```', ''].join('\n');
+    expect(itemLine(spec, 'feeds')).toBe(5);
+    expect(itemLine(spec, 'table:feeds')).toBe(1);
+
+    const review = toDocument(
+      REVIEW,
+      ['```mdl', 'verdict Thing: Stored as in F-1.2.', '  status: done', '```', ''].join('\n'),
+    );
+    const at = (needle: string) => review.lines.positionAt(review.text.indexOf(needle) + 1);
+    expect(definition(workspace, review, at('Thing'))?.range.start.line).toBe(itemLine(FILES[SPEC], 'Thing'));
+    expect(definition(workspace, review, at('F-1.2'))?.range.start.line).toBe(itemLine(FILES[SPEC], 'F-1.2'));
+  });
+
   test('verdict lines feed the margin colours', ({ expect }) => {
     const { workspace, document } = setup();
     expect(verdictLines(workspace, document)).toEqual([
