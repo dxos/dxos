@@ -33,11 +33,19 @@ export const createSceneEditorServices = <C,>(
     path: () => dimension.navigation.atoms.path,
   });
   const initial = latest.current.props;
-  const camera = { host: keep(initial.camera), authored: keep(initial.authoredCamera) };
+  const camera = {
+    host: keep(initial.camera),
+    authored: keep(initial.authoredCamera),
+    shared: keep(initial.sharedCamera),
+  };
   const dimension = create({
     registry,
     document,
-    camera: { ...camera, report: (next) => latest.current.props.onCameraChange?.(next) },
+    camera: {
+      ...camera,
+      report: (next) => latest.current.props.onCameraChange?.(next),
+      share: (next) => latest.current.props.onSharedCameraChange?.(next),
+    },
     preview: store.preview,
     setMenu: store.setMenu,
   });
@@ -70,6 +78,7 @@ export const createSceneEditorServices = <C,>(
     const { props } = latest.current;
     setChanged(registry, camera.host, props.camera);
     setChanged(registry, camera.authored, props.authoredCamera);
+    setChanged(registry, camera.shared, props.sharedCamera);
   };
   return { services, sync };
 };

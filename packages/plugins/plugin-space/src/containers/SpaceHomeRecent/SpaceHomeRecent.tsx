@@ -49,7 +49,7 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   }
 
   return (
-    <HomeSection.Root>
+    <HomeSection.Root anchor='recent'>
       <HomeSection.Header title={t('space-home.recent.heading')} onClose={onClose} />
       <Masonry.Root Tile={RecentTile}>
         <Masonry.Content padding={false} scrollbars={false}>

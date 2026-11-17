@@ -202,6 +202,39 @@ export const PriorityOrdering: Story = {
   },
 };
 
+/** Toggles are checkboxes, each pressed on its own; other checked actions in a run are one radio group. */
+export const Toggles: Story = {
+  render: () => {
+    const menu = useMenuActions();
+    const items = useMemo(
+      () => [
+        createMenuAction('snap', () => {}, { label: 'Snap', variant: 'toggle', checked: true }),
+        createMenuAction('axes', () => {}, { label: 'Axes', variant: 'toggle', checked: false }),
+        createMenuAction('dots', () => {}, { label: 'Dots', checked: true }),
+        createMenuAction('lines', () => {}, { label: 'Lines', checked: false }),
+      ],
+      [],
+    );
+    return (
+      <>
+        <Contributor menu={menu} id='toggles' items={items} />
+        <ActionMenu {...menu}>
+          <Button.Root icon='ph--list-checks--regular' label='Options' iconOnly />
+        </ActionMenu>
+      </>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const body = await openDropdown(canvasElement);
+    const checkboxes = await body.findAllByRole('menuitemcheckbox');
+    await expect(checkboxes.map((el) => [el.textContent, el.getAttribute('aria-checked')])).toEqual([
+      ['Snap', 'true'],
+      ['Axes', 'false'],
+    ]);
+    await expect((await body.findAllByRole('menuitemradio')).map((el) => el.textContent)).toEqual(['Dots', 'Lines']);
+  },
+};
+
 /** A menu that builds its machine on the trigger's first click; the click both builds and opens it. */
 export const DeferUntilOpen: Story = {
   render: () => {

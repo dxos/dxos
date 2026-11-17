@@ -14,6 +14,7 @@ import {
   createCompanionExtensions,
   createDatabaseExtensions,
   createExportExtensions,
+  createPeerExtensions,
   createSettingsExtensions,
   createSpaceExtensions,
 } from './extensions/index.ts';
@@ -27,6 +28,7 @@ export default Capability.makeModule(
       createCollectionExtensions({ shareableLinkOrigin }),
       createCompanionExtensions(),
       createExportExtensions(),
+      createPeerExtensions(),
     ]);
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());

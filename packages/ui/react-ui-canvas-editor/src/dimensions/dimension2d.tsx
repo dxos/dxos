@@ -49,6 +49,7 @@ import {
   rootLayoutOf,
   toViewportDocument,
   useCanvasDocument,
+  useCanvasGesture,
   useCanvasServices,
   viewLayers,
 } from '@dxos/react-ui-canvas';
@@ -56,6 +57,7 @@ import {
   type Layer,
   type LayoutIntent,
   type Scene,
+  type Size,
   type ViewId,
   findLayout,
   isInstanceNode,
@@ -75,6 +77,7 @@ import {
   keep,
   useSceneLook,
 } from '../editor/index.ts';
+import { CameraShare, FOLLOW_GLIDE_MS } from './camera-share.ts';
 import { fromTool2D, toTool2D } from './tools2d.ts';
 
 /** The shortcuts the shared editor's command table handles, which the 2D engine leaves to it. */
@@ -107,6 +110,19 @@ const useAidReport = (aid: Atom.Atom<boolean>, key: 'grid' | 'snap' | 'axes' | '
 };
 
 /** Thumbnail box of an object row, in px. */
+const sameCamera = (left: Camera, right: Camera) =>
+  left.x === right.x && left.y === right.y && left.zoom === right.zoom;
+
+/**
+ * Between the engine's camera and the shared one, the scene point at the centre of a view of `size` and its zoom: the
+ * same view at any size. The map is its own inverse, so it converts either way.
+ */
+const recentre = (camera: Camera, size: Size): Camera => ({
+  x: size.width / 2 / camera.zoom - camera.x,
+  y: size.height / 2 / camera.zoom - camera.y,
+  zoom: camera.zoom,
+});
+
 const THUMBNAIL = { width: 40, height: 24 };
 
 /** A composite drawn small, read-only, fitted into an object row's thumbnail. */
@@ -211,6 +227,7 @@ export const createDimension2D =
     const engine: { controller?: CanvasController } = {};
     // The engine's services while mounted, for the commands that read the engine's own state (its undo history).
     const services = keep<CanvasServices | undefined>(undefined);
+    const sharing = new CameraShare(camera.share);
 
     const selection = Atom.keepAlive(
       Atom.writable<readonly string[], readonly string[]>(
@@ -478,6 +495,30 @@ export const createDimension2D =
       return null;
     };
 
+    /** Shares this view as it moves, a view that opened fitted included, and glides to a followed peer's as it changes. */
+    const Share = () => {
+      // The compiler moves a closure over the factory's values to module scope, out of their reach; this renders nothing.
+      'use no memo';
+      const { viewport, measured } = useCanvasGesture('SceneEditor.Root2D');
+      const shown = useAtomValue(canvas.camera);
+      const shared = useAtomValue(camera.shared);
+      useEffect(() => () => sharing.dispose(), []);
+      useEffect(() => {
+        if (measured && shared && sharing.follow(shared)) {
+          engine.controller?.navigation.moveTo(recentre(shared, viewport), FOLLOW_GLIDE_MS);
+        }
+      }, [measured, shared]);
+      // Before the move below, so the resize's own shift is not shared.
+      useEffect(() => {
+        const followed = measured ? sharing.refollow() : undefined;
+        followed && engine.controller?.navigation.moveTo(recentre(followed, viewport), 0);
+      }, [measured, viewport]);
+      useEffect(() => {
+        measured && sharing.moved(recentre(shown, viewport));
+      }, [measured, shown, viewport]);
+      return null;
+    };
+
     const Root: Dimension['Root'] = ({ Frame, children }) => {
       const { display, options: look } = useSceneLook('SceneEditor.Root2D');
       const drawn = useDrawnDocument(useAtomValue(atoms.shown));
@@ -500,6 +541,30 @@ export const createDimension2D =
       useAidReport(canvas.snap, 'snap', editing);
       useAidReport(canvas.axes, 'axes', editing);
       useAidReport(canvas.guides, 'guides', editing);
+      // A host camera that changes while open (a followed session's) moves the engine's, unless it is the echo of one
+      // the engine reported; the camera it opened with is `initialCamera`.
+      const hostCamera = useAtomValue(camera.host);
+      const openedCamera = useRef(hostCamera);
+      const reportedCamera = useRef<Camera>(undefined);
+      const report = useMemo(
+        () =>
+          editing && offers.camera
+            ? (next: Camera) => {
+                reportedCamera.current = next;
+                camera.report(next);
+              }
+            : undefined,
+        [editing, offers.camera],
+      );
+      useEffect(() => {
+        if (!editing || !hostCamera || hostCamera === openedCamera.current) {
+          return;
+        }
+        const seen = [reportedCamera.current, registry.get(canvas.camera)];
+        if (!seen.some((other) => other && sameCamera(other, hostCamera))) {
+          registry.set(canvas.camera, hostCamera);
+        }
+      }, [editing, hostCamera]);
       return (
         <Canvas.Root
           document={drawn}
@@ -519,7 +584,7 @@ export const createDimension2D =
           transparent={picture}
           margin={picture ? PICTURE_MARGIN : undefined}
           initialCamera={initialCamera}
-          onCameraChange={editing && offers.camera ? camera.report : undefined}
+          onCameraChange={report}
           hostKeys={options.standalone ? undefined : HOST_KEYS}
           onContextMenu={picture || options.standalone ? undefined : onContextMenu}
           shell={Frame}
@@ -529,6 +594,7 @@ export const createDimension2D =
           {...host}
         >
           <Bind />
+          <Share />
           {children}
         </Canvas.Root>
       );

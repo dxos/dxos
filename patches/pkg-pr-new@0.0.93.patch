@@ -1,0 +1,35 @@
+diff --git a/dist/index.js b/dist/index.js
+index d1ad68a23d2afe024c6b91a7fe96d14db63c4ada..9b16ba7818642a4a332ea120752a71e8c3da565d 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -32738,11 +32738,29 @@ var main = defineCommand({
+             0
+           );
+           if (formDataPackagesSize > 1024 * 1024 * 99) {
++            // dxos patch: a package of one chunk or less stays in the final request, which Cloudflare caps at 100 MB, so
++            // the largest of those are uploaded separately as well until the rest fits.
++            const separateChunkSize = 1024 * 1024 * 5;
++            const packageEntries = [...formData.entries()]
++              .filter(([name]) => name.startsWith("package:"))
++              .sort(([, a], [, b]) => b.size - a.size);
++            let inlineSize = packageEntries
++              .filter(([, file]) => file.size <= separateChunkSize)
++              .reduce((size, [, file]) => size + file.size, 0);
++            const separatePackages = new Set();
++            for (const [name, file] of packageEntries) {
++              if (file.size > separateChunkSize) {
++                separatePackages.add(name);
++              } else if (inlineSize > 1024 * 1024 * 90) {
++                separatePackages.add(name);
++                inlineSize -= file.size;
++              }
++            }
+             for (const [name, entry] of formData) {
+               if (name.startsWith("package:")) {
+                 const file = entry;
+                 const chunkSize = 1024 * 1024 * 5;
+-                if (file.size <= chunkSize) {
++                if (!separatePackages.has(name)) {
+                   continue;
+                 }
+                 const totalChunks = Math.ceil(file.size / chunkSize);

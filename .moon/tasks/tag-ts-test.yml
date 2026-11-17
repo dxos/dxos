@@ -9,7 +9,7 @@ tasks:
     # Trailing `"$@"' --` forwards moon passthrough args (after `--`) to vitest, so
     # `moon run <pkg>:test -- src/foo.test.ts` filters to one file (needed by the DX_DEBUG_LEAKS
     # single-suite mode). The `--` is the `$0` placeholder; args land as `$1+` in `"$@"`.
-    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}" "$@"' --
+    command: bash -c 'dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}" "$@"' --
     deps:
       - esbuild-plugins:build
       - node-std:build
@@ -57,7 +57,7 @@ tasks:
     options:
       timeout: 600
   test-watch:
-    command: pnpm exec dx-killorphans vitest
+    command: dx-killorphans vitest
     deps:
       - esbuild-plugins:build
       - node-std:build

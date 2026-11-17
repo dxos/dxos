@@ -45,6 +45,12 @@ export type SceneEditorHostProps<C> = {
   camera?: C;
   authoredCamera?: C;
   onCameraChange?: (camera: C) => void;
+  /**
+   * The view a peer follows, in the dimension's terms (2D: the scene point at the view's centre, and the zoom), so it is
+   * the same view at any size. Applied as it changes; reported as this view moves, a view that opened fitted included.
+   */
+  sharedCamera?: C;
+  onSharedCameraChange?: (camera: C) => void;
   sceneChoice?: SceneChoice;
   /** The shots staging the scene, for the Timeline panel. */
   shots?: readonly EditorShot[];

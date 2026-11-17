@@ -31,6 +31,35 @@ describe('RemoteCursorLayer', () => {
     expect(onPointerChange).toHaveBeenLastCalledWith(undefined);
   });
 
+  test('reports a still pointer again when the projection moves the surface under it', ({ expect }) => {
+    const onPointerChange = vi.fn();
+    const shifted = (by: number): CursorProjection => ({
+      fromLayer: ({ x, y }) => ({ x: x + by, y }),
+      toLayer: ({ x, y }) => ({ x: x - by, y }),
+    });
+    const { getByTestId, rerender } = render(
+      <div data-testid='surface'>
+        <RemoteCursorLayer cursors={[]} projection={shifted(0)} onPointerChange={onPointerChange} />
+      </div>,
+    );
+    fireEvent.pointerMove(getByTestId('surface'), { clientX: 40, clientY: 20 });
+    rerender(
+      <div data-testid='surface'>
+        <RemoteCursorLayer cursors={[]} projection={shifted(100)} onPointerChange={onPointerChange} />
+      </div>,
+    );
+    expect(onPointerChange).toHaveBeenLastCalledWith({ x: 140, y: 20 });
+
+    fireEvent.pointerLeave(getByTestId('surface'));
+    onPointerChange.mockClear();
+    rerender(
+      <div data-testid='surface'>
+        <RemoteCursorLayer cursors={[]} projection={shifted(200)} onPointerChange={onPointerChange} />
+      </div>,
+    );
+    expect(onPointerChange).not.toHaveBeenCalled();
+  });
+
   test('places remote cursors through the projection', ({ expect }) => {
     const { getByTestId } = render(
       <div>

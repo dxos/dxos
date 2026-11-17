@@ -8,6 +8,10 @@
   .dx-popup .dx-panel[data-surface='base'] {
     --surface-bg: var(--dx-surface-popup);
   }
+  /* Likewise a pane in a dialog (a settings form) is the dialog's raised surface. */
+  .dx-dialog .dx-panel[data-surface='base'] {
+    --surface-bg: var(--dx-surface-raised);
+  }
 
   /* Header and footer rows size to their content, so a missing or empty one takes no space. */
   .dx-panel {

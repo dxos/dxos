@@ -16,6 +16,7 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { CompanionViewState, DeckCapabilities } from '#types';
 
@@ -82,6 +83,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       /** The plank the deck write below focuses, so the followups know whether one carried the intent. */
       let scrolled: string | undefined;
       let shownInCompanion = false;
+      /** The plank a linked companion opens beside, which attention has not reached yet. */
+      let companionAnchor: string | undefined;
       {
         const before = yield* DeckCapabilities.getDeck();
         previouslyOpenIds = new Set<string>(before.active);
@@ -130,6 +133,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         let companionPlanks = deckUpdates.companionPlanks;
         const main = next.at(-1);
+        const linked =
+          input.variant && Attention.isLinkedSegment(input.variant)
+            ? Attention.getLinkedVariant(input.variant)
+            : undefined;
         if (detailOpen?.inCompanion && main) {
           const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
           viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({
@@ -146,6 +153,18 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           // closing it mid-read would also narrow the deck, which the browser answers by clamping the
           // scroll — a one-frame snap measured at exactly the lost width.
           companionPlanks = openCompanionPlank(companionPlanks, flatten, input.subject[0]);
+        } else if (linked && main) {
+          const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+          viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({
+            ...prev,
+            variant: linked,
+          }));
+          // Beside the plank the open lands on, as the scroll intent below picks it: the first one it adds, else the
+          // subject it shows, which an open beside an origin places before the deck's last plank.
+          companionAnchor =
+            deckUpdates.active.find((id) => !previouslyOpenIds.has(id)) ??
+            (input.subject[0] && next.includes(input.subject[0]) ? input.subject[0] : main);
+          companionPlanks = openCompanionPlank(companionPlanks, flatten, companionAnchor);
         }
         const holder = input.subject[0];
         const plankNames =
@@ -168,6 +187,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           workspace,
           active: deckUpdates.active,
           companionPlanks,
+          companionAnchor,
           intent: { scrollIntoView: scrolled, focus: input.focus },
         });
       }
