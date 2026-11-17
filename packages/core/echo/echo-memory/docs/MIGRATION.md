@@ -73,7 +73,9 @@ two together over native SQLite for the CLI and tests. The package depends on no
 - [ ] Space archives: export and import map every non-trace namespace to `data`; keep `facts` as `facts`.
 - [x] Operations get `MemoryService` and `RdfStore` for their space from plugin-client's space-affinity layers,
       like `Database.Service` [F-1.5].
-- [ ] Move plugin-brain's `FactStoreRegistry` and plugin-agent's `BrainMemory` callers onto `MemoryService`.
+- [x] plugin-brain: operations declare `MemoryService`; `FactStoreRegistry` and the `FactStore` layer are over the
+      space memory (D-52, D-55).
+- [x] plugin-agent: `BrainMemory` is a `BrainService` over the space memory, provided by a space layer (D-53).
 - [ ] Carry `quiet` across replicas, if it turns out to matter [D-44].
 
 ## 3. EDGE implementation (`dxos/edge`) — missing
@@ -106,13 +108,12 @@ two together over native SQLite for the CLI and tests. The package depends on no
       `wakeBlocks` there.
 - [ ] `Trigger` stays; map it to `Subscription` (`rules` + `payload: encodeTrigger(trigger)`) and back.
       Replaces `toSubscription`, `fromEvaluator`, `encodeEvent`/`decodeEvent`.
-- [ ] `brain/BrainMemory.ts` → the space's `MemoryService` from echo-memory-sqlite `layerMemory` (or
-      `layerFile` for persistence) plus the trigger mapping; `subscriptions(agent)` becomes
-      `subscriptions(owner)` [F-5.3].
+- [x] `brain/BrainMemory.ts`: a `BrainService` over the space's `MemoryService`, a trigger stored as a subscription
+      owned by its agent with the trigger as payload (D-53).
 - [ ] `brain/BrainWire.ts`, `capabilities/edge-brain.ts`: proxy `MemoryService` over the host wire.
 - [ ] `brain/BrainInspection.ts`, `operations/inspect-brain.ts`, `reset-brain.ts`.
-- [ ] `run-due` and the host timers stop calling `tick`/`nextDueAt`; they only drain and deliver
-      outboxes, since memory now schedules time-driven rules itself [F-4.5].
+- [x] `tick` is a no-op and `nextDueAt` a one-minute poll while an agent has watches, so `run-due` and the host
+      timers only drain and deliver what the memory's own clock queued (D-53, D-54).
 - [ ] Operations: `recall`, `remember`, `knowledge`, `watch-facts`, `read-source`, `run-due`, `deliver`,
       `send-message`, `compose-update`, `update-profile`, `list-triggers`, `cancel-trigger`.
 - [ ] Types: `AgentOperation`, `TriggerOperation`, `MemoryOperation`, `AgentPresence`, `Profile`.
@@ -122,8 +123,7 @@ two together over native SQLite for the CLI and tests. The package depends on no
 
 ## 6. Move `@dxos/plugin-brain` and other plugins
 
-- [ ] `plugin-brain` `capabilities/fact-store.ts` (`FactStoreRegistry`): becomes the per-space
-      `MemoryService` provider [F-5.1]; keep its notify wrapper until Q-3 settles notifications.
+- [x] `plugin-brain` `FactStoreRegistry`: over the space memory, notified by the store's batches (D-55).
 - [ ] `plugin-brain` operations: `query-facts`, `facts`, `summarize-subject`, `generate-reply`,
       `analyze-mailbox`; `capabilities/mailbox-processor.ts`; `types/BrainOperation.ts`,
       `BrainCapabilities.ts`; `containers/FactsCompanion/*`; `dx.config.ts`.

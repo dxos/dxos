@@ -227,6 +227,9 @@ describe('Inviting an agent into another space', () => {
 
 const brain = makeTestBrain();
 
+// One memory stands in for each test's space, so every test starts with an empty one.
+afterEach(() => brain.reset());
+
 const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
     AssistantTestLayer({
@@ -259,7 +262,6 @@ describe('An invited agent', () => {
         yield* pushFacts(presence, [BUDGET]);
         const facts = yield* BrainService.BrainService.use((service) => service.query(homeId, {}));
         expect(facts.map(({ id }) => id).sort()).toEqual([BUDGET.id, OFFSITE.id].sort());
-        expect(yield* BrainService.BrainService.use((service) => service.query(presence.id, {}))).toEqual([]);
         const snapshot = yield* Operation.invoke(TriggerOperation.InspectBrain, { agent: Ref.make(presence) });
         expect(snapshot.facts).toHaveLength(2);
       },

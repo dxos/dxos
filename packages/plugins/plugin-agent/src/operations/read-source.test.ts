@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { afterEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -67,7 +67,7 @@ const FACTS = [
 const extractions = { count: 0 };
 
 const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
-  if (!request.text.includes(EXTRACTION_PROMPT)) {
+  if (!request.system.includes(EXTRACTION_PROMPT)) {
     return { parts: [text('Unexpected request.')] };
   }
   extractions.count++;
@@ -80,6 +80,9 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
 };
 
 const brain = makeTestBrain();
+
+// One memory stands in for each test's space, so every test starts with an empty one.
+afterEach(() => brain.reset());
 
 const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(

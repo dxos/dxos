@@ -138,6 +138,9 @@ const compiles = (rules: Evaluator.Subscription): boolean => {
  */
 export const make = (rdf: RdfStore.Service): Effect.Effect<MemoryService.Service, never, Scope.Scope> =>
   Effect.gen(function* () {
+    // The memory's time is its host's, read from the clock it was opened with, so a caller's context cannot skew it.
+    const clock = yield* Clock.Clock;
+    const currentTime = Effect.sync(() => clock.currentTimeMillisUnsafe());
     const lock = yield* Semaphore.make(1);
     const wakeups = yield* Queue.sliding<void>(1);
     /** The batches this memory wrote, which it has already pushed to the evaluator. */
@@ -326,7 +329,7 @@ export const make = (rdf: RdfStore.Service): Effect.Effect<MemoryService.Service
 
     const hydrate = Effect.gen(function* () {
       const facts = yield* factsMatching({});
-      const at = (yield* readEvaluatedAt) ?? (yield* Clock.currentTimeMillis);
+      const at = (yield* readEvaluatedAt) ?? (yield* currentTime);
       const subscriptions = (yield* readSubscriptions).map(({ value }) => toRules(value.subscription)).filter(compiles);
       const evaluator = Evaluator.make();
       evaluator.hydrate(
@@ -343,7 +346,7 @@ export const make = (rdf: RdfStore.Service): Effect.Effect<MemoryService.Service
 
     /** Evaluates the time-driven rules as of now, queues what woke, and records the time. */
     const tick = Effect.gen(function* () {
-      const at = yield* Clock.currentTimeMillis;
+      const at = yield* currentTime;
       const queued = yield* enqueue(evaluator.current.tick(at));
       yield* saveEvaluatedAt(at);
       return queued;
@@ -354,7 +357,7 @@ export const make = (rdf: RdfStore.Service): Effect.Effect<MemoryService.Service
         if (facts.length === 0) {
           return 0;
         }
-        const at = yield* Clock.currentTimeMillis;
+        const at = yield* currentTime;
         const queued = yield* enqueue(evaluator.current.push(facts, { at, quiet }));
         yield* saveEvaluatedAt(at);
         return queued;
@@ -362,7 +365,7 @@ export const make = (rdf: RdfStore.Service): Effect.Effect<MemoryService.Service
 
     /** Starts the rule state over with no facts; the subscriptions are added back so they keep waking. */
     const restart = Effect.gen(function* () {
-      const at = yield* Clock.currentTimeMillis;
+      const at = yield* currentTime;
       const fresh = Evaluator.make();
       fresh.hydrate(
         (yield* readSubscriptions).map(({ value }) => toRules(value.subscription)).filter(compiles),
@@ -426,7 +429,7 @@ export const make = (rdf: RdfStore.Service): Effect.Effect<MemoryService.Service
             yield* Queue.take(wakeups);
             return;
           }
-          const now = yield* Clock.currentTimeMillis;
+          const now = yield* currentTime;
           const woken = yield* Effect.raceFirst(
             Effect.as(Queue.take(wakeups), true),
             Effect.as(Effect.sleep(Duration.millis(Math.max(0, due - now))), false),
@@ -579,15 +582,26 @@ export const make = (rdf: RdfStore.Service): Effect.Effect<MemoryService.Service
           .pipe(Effect.mapError(MemoryError.MemoryError.wrap({ message: 'Failed to unsubscribe' }))),
 
       take: (id) =>
-        records(outboxGraph(id), decodeEventRecord).pipe(
-          Effect.map((outbox) =>
-            outbox
-              .filter(({ value }) => !value.acked)
-              .sort((left, right) => left.value.seq - right.value.seq)
-              .map(({ value }) => value.event),
+        // Rules that came due since the timer last ran are evaluated first, so a drain sees everything due by now.
+        lock
+          .withPermit(
+            Effect.gen(function* () {
+              const due = evaluator.current.nextDueAt();
+              if (due !== undefined && due <= (yield* currentTime)) {
+                yield* tick;
+              }
+            }),
+          )
+          .pipe(
+            Effect.andThen(records(outboxGraph(id), decodeEventRecord)),
+            Effect.map((outbox) =>
+              outbox
+                .filter(({ value }) => !value.acked)
+                .sort((left, right) => left.value.seq - right.value.seq)
+                .map(({ value }) => value.event),
+            ),
+            Effect.mapError(MemoryError.MemoryError.wrap({ message: 'Failed to read the outbox' })),
           ),
-          Effect.mapError(MemoryError.MemoryError.wrap({ message: 'Failed to read the outbox' })),
-        ),
 
       ack: (id, events) =>
         lock

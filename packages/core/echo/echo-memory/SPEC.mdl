@@ -1449,6 +1449,49 @@ decision D-51: The worker holds one store and one memory per space (`SpaceMemori
     - Moving the memory core to a package of its own, which adds a package for two modules.
 ```
 
+```mdl
+decision D-52: plugin-brain's fact store registry and plugin-agent's in-memory brain move onto MemoryService in this change.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-8.2]
+```
+
+```mdl
+decision D-53: plugin-agent's BrainService becomes an adapter over the space's MemoryService: a trigger is a subscription owned by its agent with the trigger as payload, facts and cursors are the space's, `reset` resets the space's memory, `tick` does nothing and `nextDueAt` asks the host back within a minute while the agent has watches. Fills in [D-52].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.2]
+  why: Every BrainService caller is an operation with a space, so a space layer reaches it, and keeping the BrainService API leaves its forty call sites and EDGE's wire unchanged while the facts move.
+  rejected:
+    - Rewriting every plugin-agent operation onto MemoryService now, which also moves EDGE's BrainObject and its wire.
+```
+
+```mdl
+decision D-54: A memory reads time from the clock it was opened with, and `take` first evaluates the time-driven rules that have come due. Fills in [D-19].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4]
+  why: A caller's context (an operation's test clock) must not move the memory's time, and a consumer that drains an outbox expects every wake due by now without depending on when the timer fiber last ran.
+```
+
+```mdl
+decision D-55: `FactStoreMemory` in `@dxos/pipeline-rdf` adapts both ways: a FactStore over a MemoryService for the pipelines that still take one, and a MemoryService over a FactStore (no event base) for a remote fact server, which a story plugin provides at process affinity so it outranks the client's space memory. Fills in [D-52].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.2]
+  why: The email, Discord and finance pipelines write through FactStore and run on EDGE too, so they keep that seam while the app's side of it becomes the memory.
+```
+
+```mdl
+decision D-56: The Discord, finance and System One extraction work merged from main uses the moved fact model, and its `Vocabularies` packs join `@dxos/echo-memory` as a noun module.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-1.4]
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

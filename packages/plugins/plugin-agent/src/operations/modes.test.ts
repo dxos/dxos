@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { afterEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -73,6 +73,9 @@ const SKILLS = [
 ];
 
 const brain = makeTestBrain();
+
+// One memory stands in for each test's space, so every test starts with an empty one.
+afterEach(() => brain.reset());
 
 const TestLayer = AssistantTestLayer({
   extraServices: Layer.merge(testSpaceLayer, brain.layer),

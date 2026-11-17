@@ -263,7 +263,7 @@ const makeScript =
     if (request.text.startsWith(COMPOSE_PROMPT)) {
       return { parts: [text(composeReply(request.text, COMPOSED))] };
     }
-    if (request.text.includes(EXTRACTION_PROMPT)) {
+    if (request.system.includes(EXTRACTION_PROMPT)) {
       const facts = FACTS.filter(({ quote }) => request.text.includes(quote)).map(({ factuality, ...fact }) => ({
         ...fact,
         factuality: factuality ?? 'CT+',
@@ -384,8 +384,8 @@ describe('AgentPresence.delivers', () => {
 });
 
 describe('end-of-turn triggers', () => {
-  afterEach(() => {
-    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+  afterEach(async () => {
+    await brain.reset();
   });
 
   it.effect(
@@ -605,7 +605,7 @@ const makePostedScript =
       postedPrompts.compose.push(request.text);
       return { parts: [text(composeReply(request.text, POSTED_COMPOSED))] };
     }
-    if (request.text.includes(EXTRACTION_PROMPT)) {
+    if (request.system.includes(EXTRACTION_PROMPT)) {
       postedPrompts.extraction.push(request.text);
       const facts = POSTED_FACTS.filter(({ quote }) => request.text.includes(quote)).map((fact) => ({
         ...fact,
@@ -679,8 +679,8 @@ const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
 );
 
 describe('keep me posted', () => {
-  afterEach(() => {
-    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+  afterEach(async () => {
+    await brain.clearTriggers();
     postedPrompts.extraction.length = 0;
     postedPrompts.compose.length = 0;
   });

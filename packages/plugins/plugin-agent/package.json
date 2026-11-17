@@ -380,6 +380,7 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-memory-sqlite": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/plugin-builder": "workspace:*",

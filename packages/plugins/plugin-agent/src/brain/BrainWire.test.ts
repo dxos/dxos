@@ -3,12 +3,16 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as TestClock from 'effect/testing/TestClock';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Obj, Ref } from '@dxos/echo';
-import { Fact } from '@dxos/echo-memory';
+import { Fact, MemoryService } from '@dxos/echo-memory';
+import { MemorySqlite } from '@dxos/echo-memory-sqlite';
 import { Person } from '@dxos/types';
 
 import { BrainService, Trigger } from '#types';
@@ -79,11 +83,16 @@ const serve = (brain: BrainService.Service, calls: unknown[][]): Capabilities.Ho
   );
 };
 
-const setup = () => {
+/** A wire to a brain over a fresh in-memory space memory whose clock reads {@link NOW}; scoped to the test. */
+const setup = Effect.gen(function* () {
+  yield* TestClock.setTime(NOW);
   const calls: unknown[][] = [];
-  const { service: memory } = BrainMemory.make(UNUSED_AGENTS, { now: () => NOW });
-  return { calls, brain: BrainWire.make(serve(memory, calls)) };
-};
+  const memory = yield* Layer.build(MemorySqlite.layerMemory).pipe(
+    Effect.map(Context.get(MemoryService.MemoryService)),
+  );
+  const { service } = BrainMemory.make(UNUSED_AGENTS, memory);
+  return { calls, brain: BrainWire.make(serve(service, calls)) };
+});
 
 const subscription = (): Trigger.Trigger => ({
   id: Trigger.makeId(AGENT),
@@ -101,21 +110,21 @@ const subscription = (): Trigger.Trigger => ({
 describe('BrainWire', () => {
   it.effect('a subscription crosses as JSON and comes back with its refs', ({ expect }) =>
     Effect.gen(function* () {
-      const { brain } = setup();
+      const { brain } = yield* setup;
       const trigger = subscription();
       expect(yield* brain.subscribe(trigger)).toBe(true);
 
       const [listed] = yield* brain.subscriptions(AGENT);
       expect(listed.id).toBe(trigger.id);
       expect(listed.then._tag === 'notify' && Ref.isRef(listed.then.recipient)).toBe(true);
-    }),
+    }).pipe(Effect.scoped),
   );
 
   it.effect(
     'pushed facts queue events, which are taken, acknowledged and dropped with the subscription',
     ({ expect }) =>
       Effect.gen(function* () {
-        const { brain, calls } = setup();
+        const { brain, calls } = yield* setup;
         const trigger = subscription();
         yield* brain.subscribe(trigger);
 
@@ -135,16 +144,16 @@ describe('BrainWire', () => {
         for (const call of calls) {
           expect(JSON.parse(JSON.stringify(call))).toEqual(call);
         }
-      }),
+      }).pipe(Effect.scoped),
   );
 
   it.effect('a subscription id that names no agent answers without calling EDGE', ({ expect }) =>
     Effect.gen(function* () {
-      const { brain, calls } = setup();
+      const { brain, calls } = yield* setup;
       expect(yield* brain.take('legacy')).toEqual([]);
       expect(yield* brain.unsubscribe('legacy')).toBe(false);
       expect(calls).toEqual([]);
-    }),
+    }).pipe(Effect.scoped),
   );
 
   it.effect('a call EDGE does not serve fails as a brain error', ({ expect }) =>
