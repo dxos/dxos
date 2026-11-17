@@ -19,7 +19,7 @@ const decodePattern = Schema.decodeUnknownEffect(MemoryQuery.FactQuery);
  */
 export const make = (memory: MemoryService.Service, rdf?: RdfStore.Service): FactStoreApi => {
   /** TriG crosses as bytes, serialized and parsed beside the store. */
-  const store = (op: string) =>
+  const store = (op: string): Effect.Effect<RdfStore.Service, SemanticIndexError> =>
     rdf ? Effect.succeed(rdf) : Effect.fail(new SemanticIndexError({ message: `${op} needs the space's RDF store` }));
   const wrap = (message: string) => (cause: unknown) => new SemanticIndexError({ message, cause });
   return {
