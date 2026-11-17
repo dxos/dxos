@@ -15,23 +15,6 @@ const options: OtelProxy.Options = {
   maxBodySize: 16,
 };
 
-const post = (path: string, origin: string | null = ORIGIN, body = '{}') =>
-  new Request(`${ORIGIN}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(origin ? { Origin: origin } : {}) },
-    body,
-  });
-
-const stubUpstream = () => {
-  const requests: { url: string; headers: Headers; body: string }[] = [];
-  vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
-    const body = await new Response(init.body).text();
-    requests.push({ url, headers: new Headers(init.headers), body });
-    return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
-  });
-  return requests;
-};
-
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -72,3 +55,20 @@ describe('OtelProxy', () => {
     expect(OtelProxy.handle(post('/api/feedback-logs'), options)).toBeUndefined();
   });
 });
+
+const post = (path: string, origin: string | null = ORIGIN, body = '{}') =>
+  new Request(`${ORIGIN}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(origin ? { Origin: origin } : {}) },
+    body,
+  });
+
+const stubUpstream = () => {
+  const requests: { url: string; headers: Headers; body: string }[] = [];
+  vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
+    const body = await new Response(init.body).text();
+    requests.push({ url, headers: new Headers(init.headers), body });
+    return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+  });
+  return requests;
+};
