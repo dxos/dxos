@@ -23,6 +23,11 @@
       "types": "./dist/types/src/async.d.ts",
       "import": "./dist/lib/async.mjs"
     },
+    "./exchange": {
+      "source": "./src/exchange.ts",
+      "types": "./dist/types/src/exchange.d.ts",
+      "import": "./dist/lib/exchange.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -37,6 +42,7 @@
   "dependencies": {
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "n3": "catalog:",
     "sparqljs": "catalog:"
   },
   "devDependencies": {
@@ -48,7 +54,6 @@
     "effect": "catalog:",
     "esbuild": "catalog:",
     "fast-xml-parser": "catalog:",
-    "n3": "catalog:",
     "oxigraph": "catalog:",
     "tsx": "catalog:",
     "vitest": "catalog:"

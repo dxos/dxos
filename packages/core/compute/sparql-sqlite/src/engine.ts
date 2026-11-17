@@ -109,6 +109,13 @@ export class EngineCore {
     this.#invalidate();
   }
 
+  /** Deletes quads; absent ones are ignored. */
+  *delete(quads: readonly Quad[]): Program<void> {
+    this.#invalidate();
+    yield* this.store.delete(quads);
+    this.#invalidate();
+  }
+
   *count(): Program<number> {
     return yield* this.store.count();
   }
