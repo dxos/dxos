@@ -514,7 +514,9 @@ describe('EdgeAgent', () => {
       });
       expect(yield* credential).toEqual({ GITHUB_TOKEN: 'ghs-live', GH_TOKEN: 'ghs-live' });
       expect(yield* unresolved).toMatchObject({ GITHUB_TOKEN: 'ghu-stale', GH_TOKEN: 'ghu-stale' });
-      expect((yield* unresolved)[EdgeAgent.GITHUB_TOKEN_ERROR_ENV]).toMatch(/No access token resolver configured/);
+      expect((yield* unresolved)[EdgeAgent.GITHUB_TOKEN_ERROR_ENV]).toMatch(
+        /^Error:_No_access_token_resolver_configured\S+$/,
+      );
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
@@ -537,7 +539,7 @@ describe('EdgeAgent', () => {
 
       const broken = yield* EdgeAgent.githubCredentialsWith(refuses).pipe(Effect.provide(resolver('ghu-revoked')));
       expect(broken).toMatchObject({ GH_TOKEN: 'ghu-revoked' });
-      expect(broken[EdgeAgent.GITHUB_TOKEN_ERROR_ENV]).toMatch(/reconnect GitHub/);
+      expect(broken[EdgeAgent.GITHUB_TOKEN_ERROR_ENV]).toMatch(/reconnect_GitHub/);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 

@@ -542,8 +542,11 @@ export const composerMcpCredentials = (
   );
 };
 
-/** Set beside a stored GitHub token EDGE could not refresh, to the reason it gave. */
-export const GITHUB_TOKEN_ERROR_ENV = 'DX_GITHUB_TOKEN_ERROR';
+/**
+ * Set beside a GitHub token EDGE could not make work, to why. EDGE reserves `DX_` names and refuses whitespace in a
+ * lent value, so the reason is kept to one word-joined line.
+ */
+export const GITHUB_TOKEN_ERROR_ENV = 'GITHUB_TOKEN_ERROR';
 
 /** GitHub's verdict on a token: refused outright (401), accepted, or unknown with the reason it could not be asked. */
 export type GitHubTokenVerdict = { refused: boolean; unchecked?: string };
@@ -604,11 +607,11 @@ export const githubCredentialsWith = (
           : 'GitHub refused the token, and the one EDGE exchanged it for too; reconnect GitHub in the space.';
       }
     }
-    return {
-      GITHUB_TOKEN: token,
-      GH_TOKEN: token,
-      ...(error === undefined ? {} : { [GITHUB_TOKEN_ERROR_ENV]: error }),
-    };
+    const reason = error
+      ?.replace(/\s+/g, '_')
+      .replace(/[^\x21-\x7e]/g, '')
+      .slice(0, 512);
+    return { GITHUB_TOKEN: token, GH_TOKEN: token, ...(reason ? { [GITHUB_TOKEN_ERROR_ENV]: reason } : {}) };
   }).pipe(
     Effect.catchCause((cause) =>
       Effect.sync(() => {
