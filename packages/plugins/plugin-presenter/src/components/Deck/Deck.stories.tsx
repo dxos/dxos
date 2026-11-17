@@ -401,7 +401,9 @@ const gridColumns = (canvasElement: HTMLElement) =>
   });
 
 const expectSelected = (canvas: ReturnType<typeof within>, index: number) =>
-  waitFor(() => expect(canvas.getByTestId(`presenter.slide-grid.${index}`)).toHaveAttribute('aria-selected', 'true'));
+  waitFor(() =>
+    expect(canvas.getByTestId(`presenter.slide-gallery.${index}`)).toHaveAttribute('aria-selected', 'true'),
+  );
 
 /** In the grid Up and Down move between rows and stop at the first and last, and the keys survive presenting. */
 export const GridKeys: Story = {
@@ -410,7 +412,7 @@ export const GridKeys: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deck = await canvas.findByTestId('presenter.deck');
-    await canvas.findByTestId('presenter.slide-grid.9');
+    await canvas.findByTestId('presenter.slide-gallery.9');
     const columns = await gridColumns(canvasElement);
     deck.focus();
     await expectSelected(canvas, 0);
@@ -440,8 +442,8 @@ export const GridKeysOnTile: Story = {
   decorators: [withEmptyPlugins],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByTestId('presenter.slide-grid.0'));
-    await canvas.findByTestId('presenter.slide-grid.9');
+    await userEvent.click(await canvas.findByTestId('presenter.slide-gallery.0'));
+    await canvas.findByTestId('presenter.slide-gallery.9');
     const columns = await gridColumns(canvasElement);
     await expectSelected(canvas, 0);
     await userEvent.keyboard('{ArrowDown}');
@@ -466,11 +468,13 @@ export const GridSpaceOnTile: Story = {
   decorators: [withEmptyPlugins],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByTestId('presenter.slide-grid.1'));
-    await waitFor(() => expect(canvas.getByTestId('presenter.slide-grid.1')).toHaveAttribute('aria-selected', 'true'));
+    await userEvent.click(await canvas.findByTestId('presenter.slide-gallery.1'));
+    await waitFor(() =>
+      expect(canvas.getByTestId('presenter.slide-gallery.1')).toHaveAttribute('aria-selected', 'true'),
+    );
     await userEvent.keyboard(' ');
     await expect(await canvas.findByRole('heading', { name: 'Plain' })).toBeInTheDocument();
-    await expect(canvas.queryByTestId('presenter.slide-grid.1')).toBeNull();
+    await expect(canvas.queryByTestId('presenter.slide-gallery.1')).toBeNull();
   },
 };
 

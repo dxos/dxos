@@ -182,7 +182,9 @@ export const InvitationListItemImpl = ({
           {status}
         </Listbox.ItemText>
       )}
-      {canOpen && invitationUrl && <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />}
+      {canOpen && invitationUrl && (
+        <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} data-testid='copy-invitation' />
+      )}
       <Button.Root
         icon='ph--x--regular'
         iconSize='md'

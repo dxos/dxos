@@ -1614,6 +1614,15 @@ decision D-92: The slide view state is followed with `write`, so a follower show
   rejected:
     - Following the index alone; the grid size travels with it in one aspect and costs a follower nothing it would not want.
 ```
+```mdl
+decision D-93: `SlideGrid` is `SlideGallery`: the panel of slide thumbnails, named apart from the `<Grid>` tag and the `slide-grid` element that tag renders, both of which keep their names. Renames the component of [D-63], [D-64] and [D-65].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [PresentationArticle, Deck, SlideGallery]
+  why: One word meant two unrelated things -- a thumbnail panel and a layout tag -- and the tag is the one authors type.
+```
+
 
 ---
 

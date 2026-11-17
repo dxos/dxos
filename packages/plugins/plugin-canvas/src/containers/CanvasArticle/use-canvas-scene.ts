@@ -32,61 +32,65 @@ const builtinGroup = (type: string): string | undefined => {
 };
 
 /**
- * The built-in node types and whatever plugins contribute (a contribution may replace a built-in, and is then
- * offered where the built-in was). The canvas's frame shows an object (`object`) as that object's surface.
+ * The built-in node types and the `contributed` ones (a contribution may replace a built-in, and is then offered where
+ * the built-in was). The canvas's frame shows an object (`object`) as that object's surface.
  */
+export const canvasNodes = (
+  contributed: readonly CanvasCapabilities.NodeTypeContribution[],
+  hostOpen?: (node: Node) => (() => void) | undefined,
+): NodeRegistry =>
+  createNodeRegistry(
+    {
+      ...defaultNodeTypes,
+      view: {
+        ...defaultNodeTypes.view,
+        schema: CanvasViewNode,
+        component: CanvasViewNodeView,
+        toolbar: CanvasViewToolbar,
+        hostOpen,
+      },
+      image: {
+        name: 'Image',
+        icon: 'ph--image--regular',
+        key: 'I',
+        schema: ImageNode,
+        component: ImageNodeView,
+        create: (props) => ({ type: 'image', ...props }),
+        defaultSize: { width: 4, height: 3 },
+        resizable: true,
+        minSize: { width: 32, height: 32 },
+        // The picture is the shape: no fill or border unless the style asks for them.
+        bare: true,
+      },
+      ...Object.fromEntries(
+        contributed.map(({ type, spec }) => [
+          type,
+          kindNodeDef(type, {
+            // A plugin's tools stand apart from the canvas's own shapes, in the group the card is in; a kind
+            // that replaces a built-in is offered where the built-in was.
+            group: builtinGroup(type) ?? (type in defaultNodeTypes ? undefined : EXTENSIONS_GROUP),
+            ...spec,
+          }),
+        ]),
+      ),
+    },
+    defaultNodePrototypes,
+  );
+
+/** The built-in node types and whatever plugins contribute. */
 export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefined): NodeRegistry => {
   const contributed = Hooks.useCapabilities(CanvasCapabilities.NodeType);
-  return useMemo(
-    () =>
-      createNodeRegistry(
-        {
-          ...defaultNodeTypes,
-          view: {
-            ...defaultNodeTypes.view,
-            schema: CanvasViewNode,
-            component: CanvasViewNodeView,
-            toolbar: CanvasViewToolbar,
-            hostOpen,
-          },
-          image: {
-            name: 'Image',
-            icon: 'ph--image--regular',
-            key: 'I',
-            schema: ImageNode,
-            component: ImageNodeView,
-            create: (props) => ({ type: 'image', ...props }),
-            defaultSize: { width: 4, height: 3 },
-            resizable: true,
-            minSize: { width: 32, height: 32 },
-            // The picture is the shape: no fill or border unless the style asks for them.
-            bare: true,
-          },
-          ...Object.fromEntries(
-            contributed.map(({ type, spec }) => [
-              type,
-              kindNodeDef(type, {
-                // A plugin's tools stand apart from the canvas's own shapes, in the group the card is in; a kind
-                // that replaces a built-in is offered where the built-in was.
-                group: builtinGroup(type) ?? (type in defaultNodeTypes ? undefined : EXTENSIONS_GROUP),
-                ...spec,
-              }),
-            ]),
-          ),
-        },
-        defaultNodePrototypes,
-      ),
-    [contributed, hostOpen],
-  );
+  return useMemo(() => canvasNodes(contributed, hostOpen), [contributed, hostOpen]);
 };
 
-/** The element kinds other plugins contribute, whose elements keep their own fields at their top (decision 13). */
+/** The `contributed` element kinds, whose elements keep their own fields at their top (decision 13). */
+export const canvasKinds = (contributed: readonly CanvasCapabilities.NodeTypeContribution[]): KindRegistry =>
+  kindRegistry(Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])));
+
+/** The element kinds other plugins contribute. */
 export const useCanvasKinds = (): KindRegistry => {
   const contributed = Hooks.useCapabilities(CanvasCapabilities.NodeType);
-  return useMemo(
-    () => kindRegistry(Object.fromEntries(contributed.map(({ type, spec }) => [type, spec]))),
-    [contributed],
-  );
+  return useMemo(() => canvasKinds(contributed), [contributed]);
 };
 
 /** The space's generators by the reference a generator node stores, as the view loads them; a revision updates it. */
