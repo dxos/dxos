@@ -18,7 +18,7 @@ describe('renderDelegationBrief', () => {
 
     expect(brief).toContain('`gh pr create --draft`');
     expect(brief).toContain('Never push to the default branch');
-    expect(brief).toContain('never merge');
+    expect(brief).toContain('never merge unless the person tells you to');
     expect(brief).toContain('attach it to the task it implements');
     expect(brief).not.toContain('do not push or merge');
   });

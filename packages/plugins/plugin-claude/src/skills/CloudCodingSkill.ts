@@ -43,6 +43,9 @@ export const make = (): Skill.Skill =>
         3. When \`done\` is true, \`pullRequests\` lists the draft pull requests the agent opened. They are already
            attached to the tasks, which are now in review; report them. With no pull request the tasks are
            blocked and \`latest\` says why (a refused push, a missing repository, a question): report that.
+        4. To answer the agent, or to pass on the person's approval to land its pull requests, call Sync Cloud Coding
+           Run with the chat and \`prompt\` set to the message, then keep syncing as in step 2. The agent continues in
+           the same session. When every pull request has merged, \`merged\` is true and the tasks are done.
 
         A run takes minutes to hours. Do not start a second run for the same tasks: tasks an agent holds are skipped.
       `,

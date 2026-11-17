@@ -16,7 +16,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Feed, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { Text } from '@dxos/schema';
-import { Repo, Task, TaskSet } from '@dxos/types';
+import { PullRequest, Repo, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as CodingAgentControl from '../CodingAgentControl.ts';
@@ -38,6 +38,7 @@ const types = [
   Instructions.Instructions,
   Text.Text,
   Repo.Repo,
+  PullRequest.PullRequest,
   AccessToken.AccessToken,
 ];
 
@@ -54,6 +55,9 @@ const RunState = Schema.Struct({
   pullRequests: Schema.Array(Schema.String).annotate({
     description:
       'Pull requests the agent opened in this run, as URLs, once the turn has ended; each is attached to the tasks.',
+  }),
+  merged: Schema.optional(Schema.Boolean).annotate({
+    description: 'Whether every pull request of the run has merged, as GitHub reported it when the turn ended.',
   }),
 });
 
@@ -98,10 +102,18 @@ export const SyncCloudRun = Operation.make({
     description: trim`
       Fold what a cloud coding run has produced since the last call into its chat, waiting a few minutes for more.
       When the turn has ended, imports each pull request the agent opened, attaches it to the run's tasks and moves
-      them to review; a run that opened none leaves them blocked, with the reason in its chat and in \`latest\`.
+      them to review, or to done once every one of them has merged; a run that opened none leaves them blocked, with
+      the reason in its chat and in \`latest\`. Pass \`prompt\` after the turn has ended to send the agent a follow-up
+      in the same chat, such as the person's answer or their approval to land the pull requests.
     `,
   },
-  input: Schema.Struct({ chat: Ref.Ref(Chat.Chat) }),
+  input: Schema.Struct({
+    chat: Ref.Ref(Chat.Chat),
+    prompt: Schema.optional(Schema.String).annotate({
+      description:
+        'A follow-up message for the agent, sent only once its turn has ended; it starts a new turn in the same chat and session. Ignored while a turn is still running.',
+    }),
+  }),
   output: RunState,
   services: [
     Database.Service,

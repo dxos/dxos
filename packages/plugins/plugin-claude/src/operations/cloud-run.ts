@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import * as GitHubOperation from '@dxos/plugin-github/GitHubOperation';
 import * as Delegation from '@dxos/plugin-projects/Delegation';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
-import { type Message } from '@dxos/types';
+import { type Message, type PullRequest } from '@dxos/types';
 
 import { CloudRunOperation } from '#types';
 
@@ -72,34 +72,52 @@ export const pullRequestsIn = (messages: readonly Message.Message[]): string[] =
 };
 
 /**
- * Records each pull request on the run's tasks: imported into the space, attached to the first task that takes it
- * (a task holds one open PR, so a second PR lands on the next task), and the tasks moved to review, or to blocked when
- * the run opened none. Best-effort: the PR exists on GitHub either way.
+ * Records each pull request on the run's tasks: imported into the space and refreshed from GitHub, attached to the
+ * first task that takes it (a task holds one open PR, so a second PR lands on the next task), and the started tasks
+ * moved to done once every pull request has merged, to review while any is open, or to blocked when the run opened
+ * none. Best-effort: the PRs exist on GitHub either way. Returns whether every pull request has merged.
  */
 const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: readonly string[]) {
   const tasks = yield* Effect.forEach(chat.tasks, (ref) => Database.load(ref));
+  const states: PullRequest.State[] = [];
   for (const url of urls) {
     const imported = yield* Operation.invoke(GitHubOperation.ImportPullRequest, { reference: url }).pipe(Effect.exit);
     if (Exit.isFailure(imported)) {
       log.warn('pull request not imported', { url, cause: Cause.pretty(imported.cause) });
       continue;
     }
+    const { pullRequest } = imported.value;
+    // An import of a pull request the space already holds returns it unchanged, so a merge since needs a refresh.
+    yield* Operation.invoke(GitHubOperation.SyncPullRequest, { pullRequest }).pipe(Effect.exit);
+    states.push((yield* Database.load(pullRequest)).state);
     for (const task of tasks) {
       const attached = yield* Operation.invoke(TaskOperation.AddArtifact, {
         task: Ref.make(task),
-        object: imported.value.pullRequest,
+        object: pullRequest,
       }).pipe(Effect.exit);
       if (Exit.isSuccess(attached)) {
         break;
       }
     }
   }
+  const merged = states.length > 0 && states.every((state) => state === 'merged');
   // A turn that ended without a pull request stopped on something (a refused push, a question, missing access) that
   // its chat explains, so the tasks wait on their person rather than look ready for review.
-  const status = urls.length > 0 ? 'review' : 'blocked';
+  const status = merged ? 'done' : urls.length > 0 ? 'review' : 'blocked';
   for (const task of tasks) {
     if (task.status === 'started') {
       yield* Operation.invoke(TaskOperation.UpdateTask, { task: Ref.make(task), status }).pipe(Effect.exit);
+    }
+  }
+  return merged;
+});
+
+/** A follow-up turn reopens the run's settled tasks, so the turn's end settles them again. */
+const reopenTasks = Effect.fnUntraced(function* (chat: Chat.Chat) {
+  for (const ref of chat.tasks) {
+    const task = yield* Database.load(ref);
+    if (task.status === 'review' || task.status === 'blocked') {
+      yield* Operation.invoke(TaskOperation.UpdateTask, { task: ref, status: 'started' }).pipe(Effect.exit);
     }
   }
 });
@@ -130,9 +148,9 @@ const fold = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string, windo
     return { chat: Ref.make(chat), done: false, latest: latestText(messages), pullRequests: [] };
   }
   const pullRequests = pullRequestsIn(messages);
-  yield* recordPullRequests(chat, pullRequests);
+  const merged = yield* recordPullRequests(chat, pullRequests);
   yield* Database.flush();
-  return { chat: Ref.make(chat), done: true, latest: latestText(messages), pullRequests };
+  return { chat: Ref.make(chat), done: true, latest: latestText(messages), pullRequests, merged };
 });
 
 export const start: Operation.WithHandler<typeof CloudRunOperation.StartCloudRun> =
@@ -157,10 +175,15 @@ export const start: Operation.WithHandler<typeof CloudRunOperation.StartCloudRun
 export const syncRun: Operation.WithHandler<typeof CloudRunOperation.SyncCloudRun> =
   CloudRunOperation.SyncCloudRun.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ chat: chatRef }) {
+      Effect.fnUntraced(function* ({ chat: chatRef, prompt }) {
         const chat = yield* Database.load(chatRef);
+        const open = EdgeAgent.hasPendingTurn(chat, CLAUDE_CODE_EDGE_AGENT);
+        if (!open && prompt !== undefined && prompt.trim().length > 0) {
+          yield* reopenTasks(chat);
+          return yield* fold(chat, prompt, START_WINDOW_MS);
+        }
         // A fold with no open turn would start a new one from an empty prompt, so it only reports what the run left.
-        if (!EdgeAgent.hasPendingTurn(chat, CLAUDE_CODE_EDGE_AGENT)) {
+        if (!open) {
           const feed = yield* Database.load(chat.feed);
           const messages = yield* TrajectoryStore.messages(feed);
           return { chat: chatRef, done: true, latest: latestText(messages), pullRequests: pullRequestsIn(messages) };
