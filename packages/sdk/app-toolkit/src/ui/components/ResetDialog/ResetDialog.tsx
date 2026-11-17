@@ -174,7 +174,7 @@ const ResetDialog = <Report,>({
               {showStack && (
                 <Banner.Root key={error.message}>
                   <Banner.Body asChild>
-                    <pre className='text-xs max-h-[136px] overflow-auto' data-testid='resetDialog.stackTrace'>
+                    <pre className='max-h-[136px] overflow-auto text-xs' data-testid='resetDialog.stackTrace'>
                       {error.stack}
                     </pre>
                   </Banner.Body>
