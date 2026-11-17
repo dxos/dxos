@@ -14,7 +14,10 @@ plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at mu
     - CanvasSettings: whether the toolbar and palette overlays show
     - DrawingVariant: the canvas drawing variant and its article, for the illustrator
     - Exporter: print and save a 2D canvas drawing as SVG
+    - ExtensionNodeTypes: the plugin's own extension tools for the canvas, the space graph first
     - LegacyMigration: moves a space's legacy scene drawings onto `Canvas`es when the space loads
+    - Library: the library objects the editor's library tool offers
+    - MarkdownExtension: a `diagram` fence in a markdown document, drawn as the canvas would draw it
     - Migrations: the Scene type migrations
     - OperationHandler: the canvas operations
     - PluginAsset: this document, served as the plugin's own spec
@@ -64,6 +67,22 @@ uses org.dxos.scene: The data a drawing stores — models, layouts and scenes as
 | `uses`     | `dxos.spec.core/uses`       |
 | `test`     | `org.dxos.mdl.test@1.0`     |
 | `decision` | `org.dxos.mdl.decision@1.0` |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+
+## Features
+
+```mdl
+feat F-1: Collaborator cursors
+
+  req F-1.1: A 2D Canvas drawing's article and section show the other members' pointers on the drawing, each tagged with the member's name in their hue, on the illustrator's shared pointer channel. Pointers are shared in scene coordinates, so each sits over the same place for every peer whatever their pan and zoom.
+  req F-1.2: A pointer shows only to peers in the same drilled-in view, and leaves when its member's pointer leaves the canvas. A slide, a card and a 3D Canvas show none.
+```
+
+```mdl
+feat F-2: Frame
+
+  req F-2.1: The plugin exports `CanvasFrame`: the 2D article as a new drawing opens, over an empty scene, with the toolbars and panels the article draws, for an app to show before its plugins start. It needs no plugin context, so it offers the plugin's own node kinds, and its controls change nothing.
+```
 
 ## QA
 
@@ -408,4 +427,123 @@ decision D-21: A canvas drawing saves and prints as SVG with every shape in the 
   for: user:richburdon
   affects: [CanvasPlugin]
   why: A printed or saved drawing must match what the user sees, so links keep the engine's routes; the diagram renderer is the only headless SVG renderer, so shapes it has no form for are approximated.
+```
+
+```mdl
+decision D-22: A `diagram` fence in a markdown document draws as a canvas diagram, in the editor's light or dark mode.
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-23: The space graph is an extension tool that plugin-canvas itself provides, and extension tools are offered in a group of their own in the tools panel.
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-24: The `ExtensionNodeTypes` module contributes the plugin's extension kinds through `CanvasCapabilities.NodeType`, as another plugin contributes its own; the space graph (`components/Graph`) is the first. The host offers a contributed kind in the `Extensions` group, beside the canvas's own card (react-ui-canvas's `EXTENSIONS_GROUP`), unless its spec names a group, and a kind that replaces a built-in stays where the built-in was. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: One contribution path means the canvas treats the plugin's own tools and another plugin's alike, and the host names the group so a contributor does not have to know how the rail is laid out.
+
+decision D-25: A contributed kind keeps its own fields under its element's `data` (`Schema.Struct({ ...Scene.Element2D.fields, type, data: Schema.Struct({ … }) })`), not at the element's top. `kindNodeDef` refuses a kind that declares a field of its own at the top unless the kind extends a core prototype, whose fields its frame reads there (a card's `icon`, `body` and `footer`). The space graph's fields are its `data`, so its object radius is `size`, the name the element's frame also has.
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  why: Only core shapes keep properties at an element's top; an extension's own go in one common sub-object so they cannot collide with the base's or another extension's (COMMON-CORE.md decision 21).
+  rejected:
+    - Fields at the element's top (COMMON-CORE.md decision 13 as first built): the space graph had to call its radius `objectSize` because `size` was taken.
+```
+
+```mdl
+decision D-26: The 2D article takes the drawing's camera: one that changes while it is open moves this viewer's camera, which the engine applies as it changes, not only on open, and every camera the viewer settles on is reported back to the drawing. Fills in org.dxos.plugin.illustrator#D-8.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [CanvasArticle]
+  why: A follower's canvas has to move with the leader's.
+```
+
+```mdl
+decision D-27: The 2D `CanvasArticle` renders `CanvasCursors`: react-ui-attention's `RemoteCursorLayer` as the first viewport child, fed by `usePointerCursors` on the drawing's canvas object, with a projection that maps the layer's pixels to scene coordinates through the canvas camera atom (`sceneToScreen`, `screenToScene`). A pointer carries the drilled-in view path, and peers filter by it. Extends [org.dxos.plugin.illustrator#D-5] to the Canvas variant.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.1, F-1.2, CanvasPlugin]
+  why: The user asked for collaborator cursors on canvas diagrams. The layer covers the canvas root, the same box the camera transform is drawn in, so the camera atom alone places a pointer, and a pan or zoom re-places every pointer through a new projection.
+  rejected:
+    - Reading the transform from the DOM, as the SVG article does: the camera is already an atom in the canvas services, and the DOM element carries no stable hook.
+```
+
+```mdl
+decision D-28: A drawing's presence location and `Locator` anchor are the 2D view's centre in scene coordinates and its zoom. The article reports it through the attention view state and shows a revealed one through `ScrollToAnchor`, which the article applies at its own size.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.3, F-1.4]
+  why: The diagram app's user asked for follow from the presence list, here and across Composer; the space plugin's follow core reveals a leader's anchor through the attended type's `Locator`, and a centre and zoom mean the same in views of any size.
+  rejected:
+    - The camera's own offset: it places the scene against the view's top left, so views of different sizes would show different parts.
+```
+
+```mdl
+decision D-29: `CanvasFrame` renders the article's editor parts (`SceneEditorParts`, shared with `CanvasArticle`) over an empty in-memory scene, with the node registry built from the plugin's own `NodeType` contributions and no-op handlers wherever a handler decides whether a control shows. Fills in [F-2.1].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.1, CanvasPlugin]
+  why: The diagram app's user asked for its boot shell to draw the editor's real toolbars rather than a copy of the last frame. Shared parts and node kinds keep the frame from drifting from the article, and the handlers make the lock, the dock header, the camera bar and the display toggles show as they do in the article.
+  rejected:
+    - A frame in the app over the editor's built-in config: it lacked the image and space-graph tools and the handler-gated controls.
+```
+
+```mdl
+decision D-30: A drawing reports no presence location and contributes no `Locator`; `ScrollToAnchor` is removed. A follower takes the leader's camera from the drawing's view state, which the 2D article already reads and writes ([D-26]).
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-28
+  affects: [F-1, CanvasPlugin]
+  why: The space plugin's follow now carries each followed view-state aspect, the drawing's camera among them. With the `Locator` as well, two paths set the follower's camera from different values each time the leader moved, and the view did not settle.
+  rejected:
+    - Keeping the `Locator` for Jump alone: Jump then places the camera by the centre while follow places it by the offset, so the two disagree on a view of another size.
+```
+
+```mdl
+decision D-31: A follower's camera matches the leader's from the moment the follow starts, through every zoom and pan, including when the leader has not moved the view since the drawing opened.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [CanvasArticle]
+```
+
+```mdl
+decision D-32: The camera the 2D article writes to the drawing's view state is whatever this viewer shows: the view the drawing opened with, a fitted one included, and every pan and zoom as it moves, at most every 100 ms. The camera saved for the next visit stays this viewer's own and is written only when the viewer moves the view. Fills in [D-31]; supersedes the settled-camera report of [D-26].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [CanvasArticle]
+  why: A leader whose view was fitted on open reported nothing, so a follower started from its own view; and a camera reported only once it settled reached the follower after the zoom had ended.
+  rejected:
+    - Sharing the saved camera: a fitted view would then be saved and reopen at a stale size.
+```
+
+```mdl
+decision D-33: The view-state camera is the scene point at the view's centre and the zoom, so it shows the same part of the drawing in views of any size. The follower glides to it over 120 ms and does not report the camera it was moved to. Fills in [D-31].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [CanvasArticle]
+  why: The engine's camera places the scene against the view's top left, so a follower with a smaller window lined up the leader's corner and showed another part; a follower that echoed its glide overwrote the leader's newer camera.
+  rejected:
+    - Compensating for the size difference in the follower: the leader's view would still be missing whenever it opened fitted.
+```
+
+```mdl
+decision D-34: Approve [D-32] and [D-33].
+  date: 2026-11-16
+  by: user:wittjosiah
 ```

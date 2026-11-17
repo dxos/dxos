@@ -17,6 +17,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -34,9 +39,11 @@
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/scene": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@effect/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:",
+    "react-resize-detector": "catalog:"
   },
   "devDependencies": {
     "@babylonjs/core": "catalog:",

@@ -1,0 +1,59 @@
+{
+  "name": "@dxos/plugin-ontology",
+  "version": "0.16.0",
+  "private": true,
+  "description": "Registers the base ECHO types that no product plugin owns.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "imports": {
+    "#meta": {
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/OntologyPlugin.workerd.mjs",
+      "node": "./dist/lib/OntologyPlugin.node.mjs",
+      "default": "./dist/lib/OntologyPlugin.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./OntologyPlugin": {
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/OntologyPlugin.workerd.mjs",
+      "node": "./dist/lib/OntologyPlugin.node.mjs",
+      "import": "./dist/lib/OntologyPlugin.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/link": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

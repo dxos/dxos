@@ -1,0 +1,17 @@
+diagram kind=sequence
+node A "Device A" ref="packages/core/mesh/network-manager/src/signal/swarm-messenger.ts"
+node Edge "EDGE" ref="packages/core/mesh/edge-client/src/edge-client.ts"
+node B "Device B" ref="packages/core/mesh/network-manager/src/signal/swarm-messenger.ts"
+edge A -> Edge "join topic"
+edge B -> Edge "join topic"
+edge Edge -> A "peer B joined"
+edge Edge -> B "peer A joined"
+edge A -> Edge "offer"
+edge Edge -> B "offer"
+edge B -> Edge "answer"
+edge Edge -> A "answer"
+fragment loop "until connected" {
+  edge A sends Edge "ICE candidates"
+  edge Edge sends B "ICE candidates"
+}
+edge A -> B "direct WebRTC link"

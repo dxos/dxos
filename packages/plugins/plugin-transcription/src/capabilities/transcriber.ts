@@ -7,7 +7,10 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { CallsServiceClient } from '@dxos/client/calls';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
+import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TranscriptionCapabilities } from '#types';
@@ -30,10 +33,17 @@ export default Capability.makeModule(
     }) => {
       const client = capabilities.get(ClientCapabilities.Client);
       const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
+      // `client.edge` is read only once a session joins: its getter invariants when EDGE is unconfigured, which
+      // would preempt the manager's own (actionable) error.
+      const configured = getEdgeServiceEndpoint(client.config, EdgeServiceName.Calls) !== undefined;
       const transcriptionManager = new TranscriptionManagerImpl({
-        // Deliberately no `client.edge`: its getter invariants when EDGE is unconfigured, which
-        // would preempt the transcription endpoint's own (actionable) error.
-        transcriptionEndpoint: getEdgeServiceEndpoint(client.config, EdgeServiceName.Transcription),
+        join: configured
+          ? () => {
+              const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
+              invariant(identity, 'Transcription needs an identity.');
+              return new CallsServiceClient(client.edge.http).joinTranscription(Context.default(), identity.did);
+            }
+          : undefined,
         messageEnricher,
         registry,
       });

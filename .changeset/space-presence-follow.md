@@ -1,0 +1,19 @@
+---
+'@dxos/app-toolkit': minor
+'@dxos/plugin-canvas': patch
+'@dxos/plugin-deck': patch
+'@dxos/plugin-excalidraw': patch
+'@dxos/plugin-illustrator': minor
+'@dxos/plugin-markdown': patch
+'@dxos/plugin-presenter': patch
+'@dxos/plugin-projects': patch
+'@dxos/plugin-sheet': patch
+'@dxos/plugin-space': patch
+'@dxos/plugin-tldraw': patch
+'@dxos/react-ui-attention': minor
+'@dxos/react-ui-canvas-editor': patch
+'@dxos/react-ui-form': patch
+'@dxos/ui-editor': patch
+---
+
+You can follow a peer around a space. Follow sits next to Jump and Go to on a peer's row and follows whichever of their sessions moved last; with the sessions toggle on, each session row has a Follow that stays on that session. While you follow, your deck shows theirs: the same planks in their order, scrolled to the plank at the front of theirs, with each plank keeping their top line at the top and the companions they have open. With no planks reported, it opens the object they attend, at the path they opened it from. None of it moves your caret or focus, and they send their location every 100 ms instead of every second. A plank your deck has no URL binding for (a type from a plugin you lack) is left out, and your deck scrolls to the nearest plank of theirs it holds instead. Scrolling, clicking or typing in a plank, attending an object outside what you show of them, going back or forward in history, or pressing Escape stops it, and so does the leader being gone from the space for five seconds. A follow pauses while you cannot open what they attend and picks up again once you can. The Members tab shows a dot while you follow, and the leader's row sits first in its list with Stop. A `Locator` reveal takes `follow` to scroll without moving the caret and answers whether it revealed the anchor, so a follower whose editor mounts late still lands on the leader's line, a deck companion's `badge` atom can hold `true` to draw a dot, and `LayoutOperation.Set` takes `focus: false` to focus no plank and a `workspace` to set the planks in, as `Open` does. View state can now be followed: a `ViewState` aspect declared with `follow: 'write'` has its values for the space and each open object sent with presence, and a follower writes the leader's into its own view state; one declared `follow: 'reveal'` is sent for the follow to apply. The deck reports its front plank as the space's `ViewLocation` and its open companions as `AppCapabilities.Companions`, and the follow applies them with `LayoutOperation.ScrollIntoView` and `UpdateCompanion`. A project's view state is followed, so a follower sees the leader's tab, spec and chart; so is a presentation's slide, and a drawing's camera in tldraw, excalidraw and the 2D canvas, which a drawing variant takes as `camera` and reports with `onCameraChange`. The 2D canvas editor applies a host camera that changes while it is open. A project's view state is now keyed by its EID, so the tab each project last showed resets once. `GraphPath.getEidFromPath` names the object a graph path points at. A schema form's boolean field carries its JSON path as `data-testid`, as text fields do. Leading shows too, in amber on every screen: the Members tab's dot appears on both sides, a follower's leader row rises to the top of Members and carries Stop, and a leader sees its followers under "Following you". Every plank heading, companions included, washes in amber over a one-pixel underline while you follow or are followed, through a new `AppCapabilities.LayoutAccent` the deck applies, and those people's avatars ring in amber. A deck companion takes a `badgeHue` for its rail dot.

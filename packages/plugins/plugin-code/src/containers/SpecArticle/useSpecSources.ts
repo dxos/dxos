@@ -13,6 +13,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { type SourceKey, formatSourceKey, parseSourceKey } from '@dxos/deus/review';
 import { log } from '@dxos/log';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+import type * as SpecSession from '@dxos/plugin-projects/SpecSession';
 
 import { resolvePath } from '#sync';
 import { CodeCapabilities } from '#types';
@@ -85,8 +86,7 @@ export const fileKey = (key: SourceKey): string => formatSourceKey(key, false);
 /** How often the branch, its pull request and HEAD are re-read; a commit or a checkout moves them. */
 const GIT_REFRESH = '10 seconds';
 
-/** What diff mode compares the spec with: where its branch forked from the base, or the last commit. */
-export type DiffAgainst = 'base' | 'head';
+export type DiffAgainst = SpecSession.DiffAgainst;
 
 /**
  * The git status of the repository holding `path`, re-read periodically; undefined where the host cannot run git or

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Source icon at the brand suite's 6.5 stroke; favicon.svg is the same drawing at a heavier stroke for 16-32 px. -->
+  <g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128,16L240,128L128,240L16,128Z"/>
+    <path d="M83.2,96.64L114.56,128L83.2,159.36L51.84,128Z"/>
+    <path d="M172.8,96.64L204.16,128L172.8,159.36L141.44,128Z"/>
+    <path d="M49.6,161.6L67.52,143.68"/>
+    <path d="M98.88,112.32L128,83.2L157.12,112.32"/>
+    <path d="M188.48,143.68L206.4,161.6"/>
+  </g>
+</svg>

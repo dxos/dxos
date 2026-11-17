@@ -1,0 +1,12 @@
+---
+id: com.example.launch
+name: Launch
+extends:
+  - org.dxos.spec.video
+---
+
+# Launch
+
+```mdl
+scene SC-1: Opening
+```

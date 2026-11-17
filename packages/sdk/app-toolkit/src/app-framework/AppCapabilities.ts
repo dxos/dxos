@@ -20,15 +20,16 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import type { Database, Obj, Type } from '@dxos/echo';
+import type { Database, Obj, Ref, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
-import type { Selection } from '@dxos/react-ui-attention/types';
+import { type Selection, ViewState } from '@dxos/react-ui-attention/types';
 import type { AnchoredTo, Message, Thread } from '@dxos/types';
+import { type ChromaticPalette } from '@dxos/ui-types';
 import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -87,6 +88,40 @@ export type Layout = Readonly<{
  * @category Capability
  */
 export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>()(LAYOUT_CAPABILITY_ID);
+
+/**
+ * A hue the layout tints its chrome with while it is set, such as while the session takes part in a follow; the layout
+ * uses the first contribution that holds one.
+ * @category Capability
+ */
+export const LayoutAccent = Capability$.make<Atom.Atom<ChromaticPalette | undefined>>()(
+  'org.dxos.app-framework.capability.layoutAccent',
+);
+
+/** How long what a follow opens has to mount; the follow applies it again on every update meanwhile. */
+export const FOLLOW_MOUNT_TIMEOUT = 5_000;
+
+const CompanionsState = Schema$.Struct({
+  /** The planks in the space whose companion is open. */
+  planks: Schema$.Array(Schema$.String),
+  /** The companion tab they show. */
+  variant: Schema$.optional(Schema$.String),
+});
+
+export type Companions = Schema$.Schema.Type<typeof CompanionsState>;
+
+/**
+ * The companions the layout shows in a space, keyed by the space's EID. The layout reports them and a follower opens the
+ * same through `LayoutOperation.UpdateCompanion`.
+ */
+// TODO(follow): Consider making this the layout's source of truth for open companions, so it need not be kept in step.
+export const Companions: ViewState.Aspect<Companions> = ViewState.define({
+  key: 'org.dxos.app-framework.companions',
+  backend: 'memory',
+  schema: CompanionsState,
+  defaultValue: () => ({ planks: [] }),
+  follow: 'reveal',
+});
 
 /**
  * @category Capability
@@ -411,7 +446,6 @@ export type CommentConfig = Readonly<{
   id: string;
   comments: 'anchored' | 'unanchored';
   selectionMode?: string;
-  scrollToAnchor?: Operation.Definition.Any;
   /** The anchor a new comment on `selection` stores, when the object's anchors are not the selection's own form. */
   anchorFromSelection?: (obj: any, selection: Selection.Selection | undefined) => string | undefined;
 }>;
@@ -420,6 +454,34 @@ export type CommentConfig = Readonly<{
  * @category Capability
  */
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
+
+/** Input of a {@link Locator}'s `reveal` operation. */
+export type RevealInput = {
+  /** Attendable id of the view, or the object's URI. */
+  subject: string;
+  /** Position in the type's own anchor format (the format comments and presence locations use). */
+  anchor: string;
+  /** Move the caret to the anchor and take focus (the default); false only scrolls the anchor to the top of the view, as a follow does. */
+  focus?: boolean;
+  /** Comment thread to mark current, when revealing a comment. */
+  thread?: Ref.Ref<Thread.Thread>;
+};
+
+/**
+ * Reveals a position in an object, contributed per typename by plugins whose objects have anchors.
+ * Comments and presence both reveal through it: `reveal` scrolls to the anchor, moves the caret there and focuses the view,
+ * or with `focus: false` only scrolls.
+ */
+export type Locator = Readonly<{
+  id: string;
+  /** Answers whether it revealed the anchor: false while the view has not mounted or cannot resolve it yet. */
+  reveal: Operation.Definition<RevealInput, boolean>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const Locator = Capability$.make<Locator>()('org.dxos.app-framework.capability.locator');
 
 /**
  * The comments of graph nodes that cover more than one commentable object (a project and its specs, a level of a spec):
@@ -441,7 +503,8 @@ export type CommentScope = Readonly<{
 export const CommentScope = Capability$.make<CommentScope>()('org.dxos.app-framework.capability.commentScope');
 
 /**
- * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed.
+ * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed, and returns
+ * the text of the turn's final reply (absent when the turn produced none), which the review plugin posts to the thread.
  * Contributed by the assistant, so the review plugin owns threads without depending on any AI stack.
  */
 export type CommentAgentRunner = Readonly<{
@@ -449,7 +512,7 @@ export type CommentAgentRunner = Readonly<{
     thread: Thread.Thread;
     subject: Obj.Unknown;
     message: Message.Message;
-  }) => Effect$.Effect<void, Error, Capability$.Service>;
+  }) => Effect$.Effect<string | undefined, Error, Capability$.Service>;
 }>;
 
 /**

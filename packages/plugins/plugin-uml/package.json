@@ -14,11 +14,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/components.mjs"
-    },
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",

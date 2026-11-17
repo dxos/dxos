@@ -28,6 +28,9 @@ export type PickerButtonProps = Util.ThemedClassName<{
 /** Menu value of the reset row; outside every picker's value set. */
 const RESET = '__reset__';
 
+/** The glyph size in the palette's cells, independent of the trigger's `iconSize`. */
+const ITEM_SIZE = 'xl' satisfies Icon.IconProps['size'];
+
 export const PickerButton = ({
   Component,
   disabled,
@@ -71,7 +74,9 @@ export const PickerButton = ({
           </Button.Root>
         </Tooltip.Trigger>
       </Menu.Trigger>
-      <Menu.Content columns={6}>
+      {/* A palette is picked by recognising a glyph, not by reading a label, so its cells and the glyphs
+          in them each run a size above what the menu and the cell would otherwise give them. */}
+      <Menu.Content size='lg' columns={6}>
         {values.map((_value) => {
           return (
             <Menu.CheckboxItem
@@ -80,13 +85,13 @@ export const PickerButton = ({
               checked={_value === value}
               onCheckedChange={() => setValue(_value)}
             >
-              <Component value={_value} size={iconSize} />
+              <Component value={_value} size={ITEM_SIZE} />
             </Menu.CheckboxItem>
           );
         })}
         {onReset && (
           <Menu.Item item={{ value: RESET, label: 'Reset' }} onClick={() => onReset()}>
-            <Icon.Icon icon='ph--x--regular' size={iconSize} />
+            <Icon.Icon icon='ph--x--regular' size={ITEM_SIZE} />
           </Menu.Item>
         )}
       </Menu.Content>

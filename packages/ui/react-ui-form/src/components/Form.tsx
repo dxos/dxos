@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, forwardRef, useRef } from 'react';
+import React, { type PropsWithChildren, type ReactNode, forwardRef, useRef } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
 import * as Button from '@dxos/react-ui/Button';
@@ -43,6 +43,11 @@ export type FormViewportProps = PropsWithChildren<{
   /** The form keeps the reading width (`document`, the default), centred in a wider host; `full` spans the host. */
   width?: 'document' | 'full';
   gutter?: Layout.Gutter;
+  /**
+   * Pinned below the scrolling fields, in the pane's footer (e.g. `Form.Actions`, so a long form's Save stays
+   * reachable without scrolling to the end). Only with `scroll`, which is what owns the pane.
+   */
+  footer?: ReactNode;
 }>;
 
 /**
@@ -51,7 +56,7 @@ export type FormViewportProps = PropsWithChildren<{
  * to the host's: a panel's (`sm`, the form inset) or a dialog or popover body's (`inherit`, joining its rails), else `sm`.
  */
 export const FormViewport = Util.composable<HTMLDivElement, FormViewportProps>(
-  ({ children, scroll, size, width = 'document', gutter, ...props }, forwardedRef) => {
+  ({ children, scroll, size, width = 'document', gutter, footer, ...props }, forwardedRef) => {
     const defaultGutter = Layout.useDefaultGutter();
     const documentWidth = width === 'document' ? width : undefined;
     return scroll ? (
@@ -70,6 +75,7 @@ export const FormViewport = Util.composable<HTMLDivElement, FormViewportProps>(
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>
+        {footer && <Panel.Footer>{footer}</Panel.Footer>}
       </Panel.Root>
     ) : (
       // Padded on the block axis as the scrolling form is, so a form in a host that scrolls it still ends a gutter in.

@@ -66,7 +66,7 @@ export const createTransformCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   {
     const a = model.createNode(createRandom(position({ x: -8, y: -1 })));
-    const b = model.createNode(createConstant({ value: '$[?(@ > 0.5)]', ...position({ x: -8, y: 4 }) }));
+    const b = model.createNode(createConstant({ data: { value: '$[?(@ > 0.5)]' }, ...position({ x: -8, y: 4 }) }));
     const c = model.createNode(createJsonTransform(position({ x: 0, y: 2 })));
     const d = model.createNode(createBeacon(position({ x: 8, y: 2 })));
 
@@ -106,9 +106,9 @@ export const createControlCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   {
     const s = model.createNode(createSwitch(position({ x: -10, y: 2 })));
-    const c1 = model.createNode(createConstant({ value: 'hello', ...position({ x: -11, y: -8 }) }));
-    const c2 = model.createNode(createConstant({ value: 'world', ...position({ x: -11, y: -2 }) }));
-    const c3 = model.createNode(createConstant({ value: true, ...position({ x: -11, y: 8 }) }));
+    const c1 = model.createNode(createConstant({ data: { value: 'hello' }, ...position({ x: -11, y: -8 }) }));
+    const c2 = model.createNode(createConstant({ data: { value: 'world' }, ...position({ x: -11, y: -2 }) }));
+    const c3 = model.createNode(createConstant({ data: { value: true }, ...position({ x: -11, y: 8 }) }));
     const if1 = model.createNode(createIf(position({ x: -1, y: 4 })));
     const if2 = model.createNode(createIfElse(position({ x: -1, y: -5 })));
     const b1 = model.createNode(createBeacon(position({ x: 8, y: 2 })));
@@ -146,10 +146,10 @@ export const createTemplateCircuit = () => {
   // Text
   {
     const text = model.createNode(
-      createConstant({ value: 'DXOS', ...position({ x: -13, y: -1, width: 8, height: 4 }) }),
+      createConstant({ data: { value: 'DXOS' }, ...position({ x: -13, y: -1, width: 8, height: 4 }) }),
     );
     const template = model.createNode(
-      createTemplate({ valueType: 'string', text: 'Hello, {{name}}!', ...position({ x: -1, y: -1 }) }),
+      createTemplate({ data: { valueType: 'string' }, text: 'Hello, {{name}}!', ...position({ x: -1, y: -1 }) }),
     );
     const view = model.createNode(createSurface(position({ x: 13, y: -1 })));
     model.createEdge({ source: text.id, target: template.id, input: 'name' });
@@ -159,17 +159,17 @@ export const createTemplateCircuit = () => {
   // Json
   {
     const sender = model.createNode(
-      createConstant({ value: 'alice@example.com', ...position({ x: -13, y: 8, width: 8, height: 4 }) }),
+      createConstant({ data: { value: 'alice@example.com' }, ...position({ x: -13, y: 8, width: 8, height: 4 }) }),
     );
     const body = model.createNode(
-      createConstant({ value: 'Hello', ...position({ x: -13, y: 13, width: 8, height: 4 }) }),
+      createConstant({ data: { value: 'Hello' }, ...position({ x: -13, y: 13, width: 8, height: 4 }) }),
     );
     const meta = model.createNode(
-      createConstant({ value: { location: 'Tokyo' }, ...position({ x: -13, y: 21, width: 8, height: 6 }) }),
+      createConstant({ data: { value: { location: 'Tokyo' } }, ...position({ x: -13, y: 21, width: 8, height: 6 }) }),
     );
     const template = model.createNode(
       createTemplate({
-        valueType: 'object',
+        data: { valueType: 'object' },
         text: JSON.stringify(
           {
             headers: {
@@ -235,7 +235,7 @@ export const createGptCircuit = (options: {
     if (options.history) {
       const queue = model.createNode(
         createConstant({
-          value: EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() }),
+          data: { value: EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() }) },
           ...position({ x: -19, y: 10, width: 8, height: 6 }),
         }),
       );

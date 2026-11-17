@@ -226,8 +226,8 @@ export const AddObject = Operation.make({
 // TODO(wittjosiah): Rename `objects` to `entities` (covers objects, relations, and persisted types).
 export const RemoveObjectsOutput = Schema.Struct({
   objects: Schema.Array(Entity.Unknown).annotate({ description: 'The removed entities.' }),
-  parentCollection: Type.getSchema(Collection.Collection).annotate({
-    description: 'The collection removed from.',
+  parentCollection: Schema.optional(Type.getSchema(Collection.Collection)).annotate({
+    description: 'The collection removed from; absent when the space has no root collection.',
   }),
   indices: Schema.Array(Schema.Number).annotate({ description: 'The indices the objects were at.' }),
   wasActive: Schema.Array(Schema.String).annotate({
@@ -387,6 +387,19 @@ export const OpenCreateSpace = Operation.make({
     icon: 'ph--plus--regular',
   },
   input: Schema.Void,
+  output: Schema.Void,
+});
+
+export const OpenDeleteSpace = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.openDelete'),
+    name: 'Open Delete Space Dialog',
+    description: 'Ask for confirmation before deleting a space.',
+    icon: 'ph--trash--regular',
+  },
+  input: Schema.Struct({
+    space: SpaceSchema,
+  }),
   output: Schema.Void,
 });
 
@@ -648,9 +661,14 @@ export const RestoreObjects = Operation.make({
     icon: 'ph--clock-counter-clockwise--regular',
   },
   input: Schema.Struct({
-    objects: Schema.Array(Entity.Unknown).annotate({ description: 'The entities to restore.' }),
-    parentCollection: Type.getSchema(Collection.Collection).annotate({
-      description: 'The collection to restore to.',
+    objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to restore.' }),
+    // A removed entity no longer resolves as a live handle across a process boundary, so a remote
+    // caller names it by reference. Exactly one of the two is required.
+    refs: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))).annotate({
+      description: 'References to the removed entities, when the entities themselves are not held.',
+    }),
+    parentCollection: Schema.optional(Type.getSchema(Collection.Collection)).annotate({
+      description: 'The collection to restore to; omitted when they were in none.',
     }),
     indices: Schema.Array(Schema.Number).annotate({ description: 'The indices to restore at.' }),
     wasActive: Schema.Array(Schema.String).annotate({

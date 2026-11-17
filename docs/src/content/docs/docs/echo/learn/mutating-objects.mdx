@@ -1,0 +1,61 @@
+---
+title: Mutating objects
+description: Create, change and remove the tutorial app's records, and observe each change.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
+
+By the end of this page the app will add, edit and remove records, and you will watch a record change.
+
+## Background
+
+An object you make with `Obj.make` exists only in memory until you add it to a database. `db.add` starts tracking it: from then on the database stores every change and sends it to the space's other peers.
+
+A tracked object is read like any other, but it is changed only inside `Obj.update`. The callback gets a mutable view of the object. Each update is one change, which peers apply whole, and which notifies subscribers once.
+
+Writes are local. `db.add` and `Obj.update` return once the change is in the local database, and replication runs after. Two peers that change the same object concurrently both keep their edits: ECHO merges them field by field.
+
+Each change goes in the component that makes it: adding and editing in `RecordForm.tsx`, removing in `Contacts.tsx`, and watching in `RecordGraph.tsx`.
+
+## Steps
+
+<Steps>
+
+1. **Add records.** `db.add` takes an object made with `Obj.make` and returns it, now tracked. The **New** form saves
+   with this.
+
+   <Snippet file="echo-tutorial/app/RecordForm" region="add" lang="tsx" />
+
+2. **Watch a record.** `Obj.subscribe` calls back after each change to the object, and returns a function that stops the
+   subscription. The graph redraws an edge with this when a reference moves.
+
+   <Snippet file="echo-tutorial/app/RecordGraph" region="subscribe" lang="tsx" />
+
+3. **Change a record.** Every change goes inside `Obj.update`, which hands the callback a mutable view. The form calls
+   this as you type.
+
+   <Snippet file="echo-tutorial/app/RecordForm" region="update" lang="tsx" />
+
+4. **Remove a record.** The **×** on a row calls this.
+
+   <Snippet file="echo-tutorial/app/Contacts" region="remove" lang="tsx" />
+
+   <Aside type="note">
+     ECHO does not delete a removed object at once. It marks the object as removed and keeps it in the change history
+     until the next [epoch](/docs/additional-resources/glossary#epoch), so a peer that wrote while offline can still
+     reconcile its changes when it reconnects.
+   </Aside>
+
+</Steps>
+
+## Try it
+
+Select a record and change a field: the form writes each change inside `Obj.update` as you type, and the list follows. Press **New** to add a record of the chosen type, and the **×** on a row removes it. The [React guide](/docs/echo/guides/react/) shows the form.
+
+<TutorialEmbed stage="records" />
+
+## What you can do now
+
+You can add records to a database, change them inside `Obj.update`, watch them change, and remove them.

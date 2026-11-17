@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AiMetering": {
+      "source": "./src/AiMetering.ts",
+      "types": "./dist/types/src/AiMetering.d.ts",
+      "import": "./dist/lib/AiMetering.mjs"
+    },
     "./AgentIdentity": {
       "source": "./src/AgentIdentity.ts",
       "types": "./dist/types/src/AgentIdentity.d.ts",
@@ -185,6 +190,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -202,6 +210,7 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "effect": "catalog:",
+    "typedoc": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

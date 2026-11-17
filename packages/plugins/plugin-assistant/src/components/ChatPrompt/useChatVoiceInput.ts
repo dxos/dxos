@@ -5,10 +5,9 @@
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
-import { useEdgeServiceEndpoint } from '@dxos/react-client';
+import { useJoinTranscription } from '@dxos/react-client';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
 import { isNativeAudioInput, useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -16,9 +15,6 @@ import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
 import { AssistantNamespace } from '../../namespace.ts';
-
-// Recorder chunk interval; the transcriber's chunk threshold is derived from the buffering setting.
-const RECORDER_INTERVAL_MS = 200;
 
 /**
  * Drives word-by-word streaming transcription into the chat editor via PendingTextStreamer.
@@ -30,7 +26,7 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
   // Voice input is optional: tolerate the transcription plugin being absent (no session ⇒ inactive).
   const [session, setSession] = Hooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings] = Hooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
-  const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
+  const join = useJoinTranscription();
 
   const active = !!session?.recording && session.id === docId;
 
@@ -95,21 +91,6 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
     }
   }, []);
 
-  // Derive the transcriber's chunk threshold from the configured initial buffering time.
-  const transcriberConfig = useMemo(
-    () => ({
-      transcribeAfterChunksAmount: Math.max(
-        1,
-        Math.round((settings?.transcribeAfterMs ?? 4000) / RECORDER_INTERVAL_MS),
-      ),
-      endpoint,
-    }),
-    [settings?.transcribeAfterMs, endpoint],
-  );
-
-  // Stable identity: a fresh object would change useTranscriber's memo deps every render.
-  const recorderConfig = useMemo(() => ({ interval: RECORDER_INTERVAL_MS }), []);
-
   const audioConstraints = useMemo<MediaTrackConstraints | undefined>(
     () =>
       // A native selection is routed through the audio session, not through constraints: WebKit
@@ -120,21 +101,19 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
     [settings?.audioDeviceId],
   );
 
-  // Gate the mic on the endpoint: `useAudioTrack` calls `getUserMedia` as soon as its flag is
-  // true, so without this the permission prompt and recording indicator appear before `open()`
-  // rejects for a transcription service that was never configured.
-  const track = useAudioTrack(active && !!endpoint, audioConstraints);
+  // Gate the mic on EDGE: `useAudioTrack` calls `getUserMedia` as soon as its flag is true, so without this the
+  // permission prompt and recording indicator appear before `open()` fails for a service that was never configured.
+  const track = useAudioTrack(active && !!join, audioConstraints);
 
   const transcriber = useTranscriber({
     audioStreamTrack: track,
-    transcriberConfig,
-    recorderConfig,
+    join,
     onSegments: handleSegments,
+    // The meeting ended for good, so end the session rather than keep showing a recording nothing hears.
+    onEnded: () => setSession?.(() => null),
   });
 
-  // `useTranscriber` only constructs (and eventually closes) the transcriber — opening it is the
-  // consumer's job, and this hook never did, so `Transcriber._open` never ran, its recorder never
-  // started, and no audio was captured. The placeholder appeared and nothing ever replaced it.
+  // `useTranscriber` only constructs (and eventually closes) the transcriber; opening it is the consumer's job.
   useEffect(() => {
     if (!transcriber) {
       return;
@@ -143,7 +122,7 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
     void transcriber.open().then(
       () => {
         if (!cancelled && active) {
-          transcriber.startChunksRecording();
+          transcriber.start();
         }
       },
       (err) => {

@@ -1,7 +1,7 @@
 {
   "name": "@dxos/av",
   "version": "0.16.0",
-  "description": "Audio/video runtime primitives (voice-activity detection, audio level monitoring).",
+  "description": "Audio/video runtime primitives (voice-activity detection, audio level monitoring, RealtimeKit sessions).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@cloudflare/realtimekit": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*"
   },

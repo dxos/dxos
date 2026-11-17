@@ -1,4 +1,4 @@
-diagram @ -128,-64 flow=right box=256x128 grid=384x192
+diagram @ -128,-64 flow=right box=256x128 grid=384x256
 group client "Client" {
   node Query "Query + Filter" ref="packages/core/echo/echo/src/Query.ts" color=blue
   node Atom "Reactive atom" ref="packages/core/echo/echo/src/internal/ref/atoms.ts"

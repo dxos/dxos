@@ -1,0 +1,33 @@
+---
+import { PAGE_LAYERS } from '../../demos/layers.ts';
+import { DemoEmbedPage } from '../../demos/DemoEmbedPage.tsx';
+---
+
+<!--
+  One `/echo` demo on a page of its own, which `DemoEmbed.astro` shows in an iframe. Astro scopes a stylesheet only to
+  a page of its own, so the demo's theme CSS stays off the docs pages. Query: `?id=<demo id>`. The demos are always
+  dark, as on `/echo`.
+-->
+<!doctype html>
+<html lang="en" class="dark" style="color-scheme: dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Live demo</title>
+    <style is:inline set:html={`@layer ${PAGE_LAYERS.join(', ')};`} />
+  </head>
+  <body>
+    <div id="root" class="dx-island"><DemoEmbedPage client:only="react" /></div>
+    <style is:global>
+      html,
+      body,
+      #root,
+      #root > astro-island {
+        display: block;
+        height: 100%;
+        margin: 0;
+      }
+    </style>
+  </body>
+</html>

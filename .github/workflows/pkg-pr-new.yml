@@ -90,5 +90,9 @@ jobs:
       - name: Smoke test CLI
         run: moon run cli:smoke
 
+      # Each `edge-release` plugin ships its checked EDGE bundle in `dist/plugin`, which dxos/edge installs from here.
+      - name: Build EDGE plugin bundles
+        run: .github/workflows/scripts/prepack-edge-release.sh
+
       - name: Publish to pkg.pr.new
         run: .github/workflows/scripts/pkg-pr-new-publish.sh

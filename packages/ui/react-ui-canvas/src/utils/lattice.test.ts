@@ -4,8 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import { type HullNode, type Node, type RectNode } from '@dxos/scene';
+
 import {
-  DEFAULT_LATTICE,
+  type LatticeSpec,
   cellBounds,
   collides,
   coveredCells,
@@ -13,12 +15,15 @@ import {
   nearestFree,
   occupancy,
   quantize,
+  reseat,
+  reseatBounds,
   resizeCell,
   toCell,
 } from './lattice.ts';
 import { createNode } from './shapes.ts';
 
-const spec = DEFAULT_LATTICE;
+// The lattice these positions are worked out on: a pitch of 384 by 192.
+const spec: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
 describe('lattice', () => {
   test('the lattice grid puts a major line on every cell edge', ({ expect }) => {
@@ -117,5 +122,30 @@ describe('lattice', () => {
     const moved = nearestFree({ col: 0, row: 0, spanX: 1, spanY: 1 }, occupied);
     expect(moved && collides(moved, occupied)).toBe(false);
     expect(moved && Math.max(Math.abs(moved.col), Math.abs(moved.row))).toBe(1);
+  });
+
+  test('a frame re-seated on another lattice keeps its cells, so it moves and resizes with them', ({ expect }) => {
+    const wider = { width: 192, height: 96, gutterX: 96, gutterY: 96 };
+    // One cell at column 2, row -1, and a frame spanning two columns from the origin.
+    const single = cellBounds({ col: 2, row: -1, spanX: 1, spanY: 1 }, spec);
+    const double = cellBounds({ col: 0, row: 0, spanX: 2, spanY: 1 }, spec);
+    expect(reseatBounds(single, spec, wider)).toEqual(cellBounds({ col: 2, row: -1, spanX: 1, spanY: 1 }, wider));
+    expect(reseatBounds(double, spec, wider)).toEqual({ x: -96, y: -48, width: 480, height: 96 });
+    expect(reseatBounds(single, spec, spec)).toEqual(single);
+  });
+
+  test('a scene re-seats the shapes on its lattice and leaves a hull and a guide where they are', ({ expect }) => {
+    const wider = { width: 192, height: 96, gutterX: 96, gutterY: 96 };
+    const frame = { z: 'a0', center: { x: 384, y: 192 }, size: { width: 256, height: 128 } };
+    const shape: RectNode = { type: 'rect', id: 'a', ...frame };
+    const guide: RectNode = { type: 'rect', id: 'g', ...frame, style: { guide: true } };
+    const hull: HullNode = { type: 'hull', id: 'h', ...frame };
+    const scene: { id: string; nodes: Record<string, Node> } = { id: 's', nodes: { a: shape, g: guide, h: hull } };
+    const seated = reseat(scene, spec, wider);
+    expect([seated.nodes.a.center, seated.nodes.a.size]).toEqual([
+      { x: 288, y: 192 },
+      { width: 192, height: 96 },
+    ]);
+    expect([seated.nodes.g, seated.nodes.h, seated.id]).toEqual([guide, hull, 's']);
   });
 });

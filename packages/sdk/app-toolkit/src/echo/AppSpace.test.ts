@@ -149,3 +149,59 @@ describe('space templates', () => {
     expect(AppSpace.getSpaceTemplateId(untagged)).toBeUndefined();
   });
 });
+
+describe('space plugins', () => {
+  const THREAD = 'org.dxos.plugin.thread';
+  const TABLE = 'org.dxos.plugin.table';
+
+  test('a space that names nothing defers to its members', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    expect(AppSpace.getSpacePlugins(space)).toEqual({});
+    expect(AppSpace.getSpacePluginIds(space)).toBeUndefined();
+  });
+
+  test('naming a plugin records the range the space accepts', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePlugin(space, THREAD, '^1.4.0');
+
+    expect(AppSpace.getSpacePlugins(space)).toEqual({ [THREAD]: '^1.4.0' });
+    expect(AppSpace.getSpacePluginIds(space)).toEqual([THREAD]);
+    expect(AppSpace.getSpacePluginRange(space, THREAD)).toBe('^1.4.0');
+    expect(AppSpace.getSpacePluginRange(space, TABLE)).toBeUndefined();
+  });
+
+  test('a second plugin joins the first rather than replacing the map', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePlugin(space, THREAD, '^1.4.0');
+    AppSpace.setSpacePlugin(space, TABLE, '*');
+
+    expect(AppSpace.getSpacePlugins(space)).toEqual({ [THREAD]: '^1.4.0', [TABLE]: '*' });
+  });
+
+  test('re-naming a plugin moves its range', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePlugin(space, THREAD, '^1.4.0');
+    AppSpace.setSpacePlugin(space, THREAD, '^2.0.0');
+
+    expect(AppSpace.getSpacePluginRange(space, THREAD)).toBe('^2.0.0');
+  });
+
+  test('clearing a range stops the space naming that plugin', ({ expect }) => {
+    // Absent, not present-and-off: there is no way to say "this space runs nothing".
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePlugin(space, THREAD, '^1.4.0');
+    AppSpace.setSpacePlugin(space, THREAD, undefined);
+
+    expect(AppSpace.getSpacePlugins(space)).toEqual({});
+    expect(AppSpace.getSpacePluginIds(space)).toBeUndefined();
+  });
+
+  test('a reset drops every plugin the space named', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePlugin(space, THREAD, '^1.4.0');
+    AppSpace.setSpacePlugin(space, TABLE, '*');
+    AppSpace.clearSpacePlugins(space);
+
+    expect(AppSpace.getSpacePluginIds(space)).toBeUndefined();
+  });
+});

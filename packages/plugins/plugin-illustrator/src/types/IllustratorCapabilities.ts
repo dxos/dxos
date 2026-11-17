@@ -115,6 +115,13 @@ export type DrawingVariantSurfaceProps<C extends Obj.Unknown = Drawing.Canvas> =
   onSelectionChange?: (objectIds: readonly string[]) => void;
   /** The user activated an object (double-click / enter): open what it depicts. */
   onActivate?: (objectId: string) => void;
+  /**
+   * Where the view looks, owned by the host so a follower sees the leader's; in the variant's own terms, since the leader
+   * and the follower render the same variant. A variant moves its view when this changes and is not its own camera.
+   */
+  camera?: { x: number; y: number; zoom: number };
+  /** The view's camera moved. */
+  onCameraChange?: (camera: { x: number; y: number; zoom: number }) => void;
 };
 
 /**

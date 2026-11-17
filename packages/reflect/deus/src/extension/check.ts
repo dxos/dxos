@@ -16,8 +16,6 @@ import {
 import { BLOCK_TYPES } from './constants.ts';
 import { findSpecKeys, findSpecRefs, specDependencies } from './refs.ts';
 
-const KNOWN_BLOCK_TYPES = new Set(BLOCK_TYPES);
-
 const USER_REF = /^user:\S+$/;
 const AGENT_REF = /^agent:\S+$/;
 
@@ -56,6 +54,8 @@ export type LintOptions = {
   index?: SpecIndex;
   /** The spec's own id; defaults to the frontmatter `id`. */
   selfId?: string;
+  /** Block types the spec's dialects declare, known besides the built-in ones and those the spec declares. */
+  types?: Iterable<string>;
 };
 
 const namespace = (id: string): string => id.split('.').slice(0, 2).join('.');
@@ -153,15 +153,20 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
  * Lints the text of a Spec .mdl document.
  *
  * Checks:
- *   - Unknown block types (first body line of ```mdl blocks) → error
+ *   - Block types that are not built in, in the `## Extensions` table, declared by an `ext` block, or in `types` → error
  *   - `decision` and `question` attribution (`by:` / `for:` actor prefixes) → error
  *   - `mdl/block`: a second block header inside one fence, which every tool reads as body → error
  *   - `mdl/ref` and `mdl/uses`: spec references and dependencies, when an index is given → error
  */
-export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: LintOptions = {}): Diagnostic[] => {
+export const lintMdl = (
+  text: string,
+  { index, selfId = frontmatter(text).id, types: dialectTypes = [] }: LintOptions = {},
+): Diagnostic[] => {
   const diagnostics: Diagnostic[] = [];
+  const declared = parseMdlBlocks(text).flatMap(({ type, id }) => (type === 'ext' && id ? [id] : []));
+  const types = new Set<string>([...BLOCK_TYPES, ...extensionTerms(text), ...declared, ...dialectTypes]);
   for (const { type, from, to, body } of parseBlockHeaders(text)) {
-    if (type && !KNOWN_BLOCK_TYPES.has(type as (typeof BLOCK_TYPES)[number])) {
+    if (type && !types.has(type)) {
       diagnostics.push({
         from,
         to,
@@ -175,7 +180,6 @@ export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: 
       }
     }
   }
-  const types = new Set<string>([...BLOCK_TYPES, ...extensionTerms(text)]);
   for (const { type, id, from, to } of findInnerBlockHeaders(text, types)) {
     diagnostics.push({
       from,
@@ -483,6 +487,39 @@ const checkQuestions = (prev: readonly ChangelogQuestion[], next: readonly Chang
   return errors;
 };
 
+/** An entry's text with its own id removed, so a copy moved to a new id compares equal to the original. */
+const withoutId = (text: string): string => normalize(text).replace(ENTRY_LINE, '$1');
+
+/**
+ * Pairs each base decision whose id the base already holds twice, and that no longer sits unchanged at that id, with
+ * an added decision of the same text: a duplicated id cannot pass the append-only rule as it stands, so a branch
+ * repairs it by moving a copy, unchanged, to the next free id.
+ */
+const matchRenumbered = (
+  prev: readonly ChangelogEntry[],
+  nextById: ReadonlyMap<string, ChangelogEntry>,
+  added: readonly ChangelogEntry[],
+): { moved: Set<ChangelogEntry>; renumbered: Set<ChangelogEntry> } => {
+  const prevIds = prev.map(({ id }) => id);
+  const duplicated = new Set(prevIds.filter((id, index) => prevIds.indexOf(id) !== index));
+  const moved = new Set<ChangelogEntry>();
+  const renumbered = new Set<ChangelogEntry>();
+  for (const entry of prev) {
+    const current = nextById.get(entry.id);
+    if (!duplicated.has(entry.id) || (current && normalize(current.text) === normalize(entry.text))) {
+      continue;
+    }
+    const copy = added.find(
+      (candidate) => !renumbered.has(candidate) && withoutId(candidate.text) === withoutId(entry.text),
+    );
+    if (copy) {
+      moved.add(entry);
+      renumbered.add(copy);
+    }
+  }
+  return { moved, renumbered };
+};
+
 /**
  * Checks one spec change against the changelog rules: every change except a trivial edit adds a decision, and the
  * log is append-only with monotonic ids. `before` is undefined for a new spec.
@@ -504,23 +541,27 @@ export const checkChangelogChange = (before: string | undefined, after: string):
   }
 
   const nextById = new Map(next.entries.map((entry) => [entry.id, entry]));
-  for (const { id, text } of prev.entries) {
-    const current = nextById.get(id);
+  const prevIds = new Set(prev.entries.map(({ id }) => id));
+  const added = next.entries.filter(({ id }) => !prevIds.has(id));
+  const { moved, renumbered } = matchRenumbered(prev.entries, nextById, added);
+  for (const entry of prev.entries) {
+    if (moved.has(entry)) {
+      continue;
+    }
+    const current = nextById.get(entry.id);
     if (!current) {
-      errors.push(`Decision ${id} was removed — the changelog is append-only; supersede it instead.`);
-    } else if (normalize(current.text) !== normalize(text)) {
-      errors.push(`Decision ${id} was edited — the changelog is append-only; supersede it instead.`);
+      errors.push(`Decision ${entry.id} was removed — the changelog is append-only; supersede it instead.`);
+    } else if (normalize(current.text) !== normalize(entry.text)) {
+      errors.push(`Decision ${entry.id} was edited — the changelog is append-only; supersede it instead.`);
     }
   }
 
-  const prevIds = new Set(prev.entries.map(({ id }) => id));
-  const added = next.entries.filter(({ id }) => !prevIds.has(id));
   const kept = ids.filter((id) => prevIds.has(id));
   const firstAdded = ids.findIndex((id) => !prevIds.has(id));
   const keptInOrder =
     kept.join() ===
     prev.entries
-      .filter(({ id }) => nextById.has(id))
+      .filter((entry) => nextById.has(entry.id) && !moved.has(entry))
       .map(({ id }) => id)
       .join();
   if (!keptInOrder || (firstAdded !== -1 && ids.slice(firstAdded).some((id) => prevIds.has(id)))) {
@@ -558,7 +599,7 @@ export const checkChangelogChange = (before: string | undefined, after: string):
     }
   }
 
-  if (added.length === 0 && (before === undefined || !isTrivialEdit(prev.rest, next.rest))) {
+  if (added.every((entry) => renumbered.has(entry)) && (before === undefined || !isTrivialEdit(prev.rest, next.rest))) {
     errors.push(
       before === undefined ? 'A new spec needs a `## Changelog` with at least one decision.' : MISSING_DECISION,
     );

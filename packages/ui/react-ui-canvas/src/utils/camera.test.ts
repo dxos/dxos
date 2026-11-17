@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ExpectStatic, describe, test } from 'vitest';
+import { type ExpectStatic, describe, test, vi } from 'vitest';
 
 import { type Bounds, type ViewNode } from '@dxos/scene';
 
@@ -10,6 +10,7 @@ import { type Camera } from '../model/index.ts';
 import {
   MAX_ZOOM,
   MIN_ZOOM,
+  animateCamera,
   coverage,
   enterPortal,
   exitPortal,
@@ -178,5 +179,32 @@ describe('camera', () => {
     const zooms = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1].map((t) => curve(t).zoom);
     expect(Math.max(...zooms)).toBeLessThanOrEqual(to.zoom + 1e-9);
     expectCamera(expect, curve(1), to);
+  });
+
+  test('animateCamera over no time lands on the target at the next frame, even from a move under way', ({ expect }) => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => frames.push(callback));
+    try {
+      const from = { x: 0, y: 0, zoom: 1 };
+      const to = { x: -200, y: 100, zoom: 2 };
+      const applied: Camera[] = [];
+      let done = false;
+      animateCamera(
+        from,
+        to,
+        viewport,
+        (camera) => applied.push(camera),
+        () => (done = true),
+        0,
+        [0.5, 0.5, 0.01],
+      );
+      // A frame stamped when the animation started, as one already under way is.
+      frames.shift()?.(performance.now() - 5);
+      expect(done).toBe(true);
+      expect(applied).toHaveLength(1);
+      expectCamera(expect, applied[0], to);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

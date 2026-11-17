@@ -5,7 +5,7 @@
 import { EID } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
-import type * as SlideTheme from '@dxos/plugin-presenter/SlideTheme';
+import { type SlideTheme } from '@dxos/react-ui-slides';
 
 import deck from './echo.md?raw';
 

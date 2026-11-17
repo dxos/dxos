@@ -8,7 +8,7 @@ import * as Struct from 'effect/Struct';
 import { MAJOR_GRID } from '@dxos/scene';
 
 import { createPorts, defineComputeNode } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
+import { ComputeShape, type CreateShapeProps, computeData, createAnchorId, createShape, withZ } from './defs.ts';
 import { RandomComponent } from './RNG.tsx';
 
 // Kept out of `RNG.tsx`: react-refresh only fast-refreshes a module whose
@@ -17,8 +17,7 @@ import { RandomComponent } from './RNG.tsx';
 export const RandomShape = ComputeShape.mapFields(
   Struct.assign({
     type: Schema.Literal('rng'),
-    min: Schema.optional(Schema.Number),
-    max: Schema.optional(Schema.Number),
+    data: computeData({ min: Schema.optional(Schema.Number), max: Schema.optional(Schema.Number) }),
   }),
 );
 

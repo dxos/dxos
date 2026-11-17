@@ -457,6 +457,32 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     'sharp',
     // Declared so `docs:typedoc`'s `^:typedoc` builds the API reference `collect-typedoc.sh` copies.
     '@dxos/app-framework',
+    '@dxos/halo-react',
+    // Read through `node_modules/@dxos/brand` paths for its fonts and logos, never imported.
+    '@dxos/brand',
+    // A peer of `expressive-code-twoslash`, which `ec.config.mjs` loads outside knip's graph.
+    'twoslash',
+    // Shared packages in the inspector page's import map, found by path in `docs/node_modules`, never imported.
+    '@dxos/client-protocol',
+    '@dxos/crypto',
+    '@dxos/debug',
+    '@dxos/display-name',
+    '@dxos/echo-protocol',
+    '@dxos/echo-query',
+    '@dxos/errors',
+    '@dxos/invariant',
+    '@dxos/operation',
+    '@dxos/random',
+    '@dxos/react-hooks',
+    '@dxos/react-ui-menu',
+    '@dxos/timeframe',
+    '@dxos/tracing',
+    '@dxos/ui',
+    '@dxos/ui-types',
+    '@dxos/util',
+    '@dxos/web-context',
+    '@dxos/web-context-react',
+    'decode-named-character-reference',
   ],
   // `@opentui/core` reaches its native library through a dynamic import interpolating
   // `process.platform`/`process.arch`, which bun folds into a constant per `--compile` target, so
@@ -643,6 +669,8 @@ const config: KnipConfig = {
     /^watch$/,
     // Bundler resource queries (`?raw`, `?url`, `?worker`) are not part of the module path.
     /\?[a-z]+$/,
+    // The model's program in a `WorkerdSandbox` isolate, which the sandbox writes beside `workerd/main.mjs` at runtime.
+    /^\.\/program\.mjs$/,
   ],
   // These plugins execute the config files they discover, and those import workspace packages
   // through `exports` conditions that only resolve after a build. The config files are covered

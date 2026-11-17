@@ -1,0 +1,247 @@
+{
+  "id": "agent",
+  "title": "Agent",
+  "subtitle": "How agents pursue goals",
+  "size": {
+    "w": 236,
+    "h": 56
+  },
+  "nodes": {
+    "goal": {
+      "icon": "target",
+      "title": "Goal",
+      "cx": 480,
+      "cy": 172
+    },
+    "outcome": {
+      "icon": "trophy",
+      "title": "Outcome",
+      "cx": 1280,
+      "cy": 172
+    },
+    "project": {
+      "icon": "folder",
+      "title": "Project",
+      "cx": 480,
+      "cy": 301
+    },
+    "task": {
+      "icon": "check-square",
+      "title": "Task",
+      "cx": 1280,
+      "cy": 301
+    },
+    "feed": {
+      "icon": "queue",
+      "title": "Feed",
+      "cx": 480,
+      "cy": 430
+    },
+    "session": {
+      "icon": "play-circle",
+      "title": "Session",
+      "cx": 880,
+      "cy": 430
+    },
+    "model": {
+      "icon": "cpu",
+      "title": "Model",
+      "cx": 1280,
+      "cy": 430
+    },
+    "scheduler": {
+      "icon": "alarm",
+      "title": "Scheduler",
+      "cx": 480,
+      "cy": 559
+    },
+    "tool": {
+      "icon": "wrench",
+      "title": "Tool",
+      "cx": 880,
+      "cy": 559
+    },
+    "plan": {
+      "icon": "list-numbers",
+      "title": "Plan",
+      "cx": 1280,
+      "cy": 559
+    },
+    "memory": {
+      "icon": "brain",
+      "title": "Memory",
+      "cx": 480,
+      "cy": 688
+    },
+    "graph": {
+      "icon": "graph",
+      "title": "Graph",
+      "cx": 880,
+      "cy": 688
+    },
+    "skill": {
+      "icon": "graduation-cap",
+      "title": "Skill",
+      "cx": 1280,
+      "cy": 688
+    },
+    "schema": {
+      "icon": "brackets-curly",
+      "title": "Schema",
+      "cx": 480,
+      "cy": 817
+    },
+    "artifact": {
+      "icon": "cube",
+      "title": "Artifact",
+      "cx": 880,
+      "cy": 817
+    },
+    "spec": {
+      "icon": "clipboard-text",
+      "title": "Specification",
+      "cx": 1280,
+      "cy": 817
+    }
+  },
+  "edges": [
+    ["project", "goal", "serves"],
+    ["outcome", "goal", "achieves"],
+    ["task", "project", "in"],
+    [
+      "task",
+      "spec",
+      "implements",
+      {
+        "via": [
+          {
+            "x": 1508,
+            "y": 301
+          },
+          {
+            "x": 1508,
+            "y": 829
+          }
+        ],
+        "labelAt": {
+          "x": 1508,
+          "y": 365.5
+        }
+      }
+    ],
+    [
+      "plan",
+      "spec",
+      "follows",
+      {
+        "via": [
+          {
+            "x": 1458,
+            "y": 559
+          },
+          {
+            "x": 1458,
+            "y": 805
+          }
+        ],
+        "labelAt": {
+          "x": 1458,
+          "y": 688
+        }
+      }
+    ],
+    ["task", "outcome", "produces"],
+    ["session", "task", "works on"],
+    ["session", "model", "run by"],
+    ["session", "tool", "uses"],
+    ["session", "feed", "writes"],
+    ["scheduler", "session", "starts"],
+    ["scheduler", "feed", "watches"],
+    ["feed", "graph", "updates"],
+    [
+      "memory",
+      "feed",
+      "learns from",
+      {
+        "via": [
+          {
+            "x": 332,
+            "y": 688
+          },
+          {
+            "x": 332,
+            "y": 430
+          }
+        ],
+        "labelAt": {
+          "x": 332,
+          "y": 623.5
+        }
+      }
+    ],
+    ["memory", "graph", "part of"],
+    ["tool", "graph", "acts on"],
+    [
+      "tool",
+      "artifact",
+      "makes",
+      {
+        "via": [
+          {
+            "x": 1060,
+            "y": 688
+          }
+        ],
+        "labelAt": {
+          "x": 1060,
+          "y": 688
+        }
+      }
+    ],
+    [
+      "skill",
+      "tool",
+      "defines",
+      {
+        "via": [
+          {
+            "x": 1010,
+            "y": 559
+          }
+        ],
+        "labelAt": {
+          "x": 1120,
+          "y": 609
+        }
+      }
+    ],
+    ["graph", "schema", "typed by"],
+    ["artifact", "graph", "stored in"]
+  ],
+  "frames": [
+    {
+      "id": "layer-ui",
+      "x": 344,
+      "y": 126,
+      "w": 1072,
+      "h": 221,
+      "label": "UI / Control"
+    },
+    {
+      "id": "layer-activity",
+      "x": 344,
+      "y": 384,
+      "w": 1072,
+      "h": 221,
+      "label": "Activity"
+    },
+    {
+      "id": "layer-knowledge",
+      "x": 344,
+      "y": 642,
+      "w": 1072,
+      "h": 221,
+      "label": "Knowledge"
+    }
+  ]
+}

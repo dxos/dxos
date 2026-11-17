@@ -40,8 +40,9 @@ import * as Trip from '@dxos/plugin-trip/Trip';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
-import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
+import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 import { Message as MessageType, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -204,7 +205,7 @@ const seedMessage = (space: Space) => {
   return message;
 };
 
-/** Role token for the story-local module, referenced by the `ModuleContainer` layout. */
+/** Role token for the story-local module, referenced by the `ModuleContainer.Root` layout. */
 const ExtractMessageRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.extractMessage');
 
 const ExtractMessageModule = () => {
@@ -227,7 +228,7 @@ const ExtractMessageModule = () => {
   );
 };
 
-/** Registers the story-local module surface for the `ModuleContainer` layout. */
+/** Registers the story-local module surface for the `ModuleContainer.Root` layout. */
 const StoryExtractMessagePlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('story.inbox.extractMessageModule'), name: 'Extract Message Story Module' }),
 ).pipe(
@@ -242,7 +243,7 @@ const StoryExtractMessagePlugin = Plugin.define(
             filter: Surface.makeFilter(ExtractMessageRole),
             component: ExtractMessageModule,
           }),
-          ...moduleSurfaces,
+          ...StoryModules.surfaces,
         ]),
       ]),
   }),
@@ -254,13 +255,17 @@ const DefaultStory = () => {
   // bind it into the layout via the surface cell's `data`.
   const [space] = useSpaces();
   const [message] = useQuery(space?.db, Filter.type(MessageType.Message));
-  return <ModuleContainer layout={[[ExtractMessageRole], [{ type: ModuleRole.Json, data: { subject: message } }]]} />;
+  return (
+    <ModuleContainer.Root
+      layout={[[ExtractMessageRole], [{ type: StoryModules.Role.Json, data: { subject: message } }]]}
+    />
+  );
 };
 
 const meta = {
   title: 'stories/stories-inbox/MessageExtractor',
   render: DefaultStory,
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     setupEvents: [
       // TripPlugin contributes TripMessageExtractor on Startup; fire it explicitly so the
       // capability is contributed before MessageArticle's toolbar reads the extractor list.

@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Presentation, PresenterOperation } from '#types';
 
@@ -21,11 +21,16 @@ const handler: Operation.WithHandler<typeof PresenterOperation.CreatePresentatio
         if (issues.length > 0) {
           return { issues };
         }
-        const presentation = yield* Database.add(Presentation.make({ name, slides: [...slides] }));
-        yield* DefaultParent.add({ object: presentation });
+        const { db } = yield* Database.Service;
+        // plugin-space files it: on EDGE this plugin's bundle has no default-parent rule.
+        const { id } = yield* Operation.invoke(
+          SpaceOperation.AddObject,
+          { object: Presentation.make({ name, slides: [...slides] }) },
+          { spaceId: db.spaceId },
+        );
         // Persist before returning the id so a later tool call (or another process) can resolve the presentation.
         yield* Database.flush();
-        return { id: Obj.getURI(presentation), issues };
+        return { id, issues };
       }),
     ),
   );

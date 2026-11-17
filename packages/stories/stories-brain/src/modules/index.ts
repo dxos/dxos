@@ -5,6 +5,7 @@
 import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 
+import { ChatModule } from './ChatModule.tsx';
 import { CrawlModule } from './CrawlModule.tsx';
 import { EntitiesModule } from './EntitiesModule.tsx';
 import { FactsModule } from './FactsModule.tsx';
@@ -24,6 +25,7 @@ export * from './pipeline-context.ts';
  */
 export const StoryRole = {
   // Facts story.
+  Chat: Role.make<Record<string, unknown>>('org.dxos.storybook.brain.chat'),
   Crawl: Role.make<Record<string, unknown>>('org.dxos.storybook.brain.crawl'),
   Query: Role.make<Record<string, unknown>>('org.dxos.storybook.brain.query'),
   Questions: Role.make<Record<string, unknown>>('org.dxos.storybook.brain.questions'),
@@ -37,6 +39,11 @@ export const StoryRole = {
 
 /** React surfaces for the stories-brain modules, one per `StoryRole` token. */
 export const moduleSurfaces: Surface.Definition[] = [
+  Surface.create({
+    id: 'brain.chat',
+    filter: Surface.makeFilter(StoryRole.Chat),
+    component: ChatModule,
+  }),
   Surface.create({
     id: 'brain.crawl',
     filter: Surface.makeFilter(StoryRole.Crawl),

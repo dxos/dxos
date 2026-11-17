@@ -49,15 +49,19 @@ export type FaceSelection = { element: string; normal: Scene.Vec3 };
 
 /**
  * What a double-click does: on a composite (`parts`), drill into its parts; on a plain element, select the face its
- * picked normal points out of; elsewhere, nothing.
+ * picked normal points out of; elsewhere, nothing, unless a composite's parts are being edited (`drilled`), which a
+ * double-click off them leaves, as one on the composite entered them.
  */
 export const doubleClickTarget = (
   element: string | undefined,
   parts: string | undefined,
   normal: Scene.Vec3 | undefined,
-): { drill: string } | { face: FaceSelection } | undefined =>
+  drilled = false,
+): { drill: string } | { face: FaceSelection } | { leave: true } | undefined =>
   element === undefined
-    ? undefined
+    ? drilled
+      ? { leave: true }
+      : undefined
     : parts !== undefined
       ? { drill: parts }
       : normal
