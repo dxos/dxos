@@ -1061,15 +1061,10 @@ export class FeedStore {
         }
       }
 
-      const feedPrivateIds = new Map<string, number>();
-      yield* Effect.forEach(
-        [...feedKeys.entries()],
-        ([key, { feedId }]) =>
-          Effect.gen({ self: this }, function* () {
-            const id = yield* this.#ensureFeed(request.spaceId!, feedId, request.feedNamespace);
-            feedPrivateIds.set(key, id);
-          }),
-        { concurrency: 'unbounded' },
+      const { feedPrivateIds, created } = yield* this.#ensureFeeds(
+        request.spaceId!,
+        [...feedKeys.keys()],
+        request.feedNamespace,
       );
 
       // 2. Get max position per namespace ONCE (not per block).
@@ -1097,6 +1092,20 @@ export class FeedStore {
         : sql`ON CONFLICT(feedPrivateId, sequence, actorId) DO UPDATE SET position = excluded.position
               WHERE excluded.position IS NOT NULL AND blocks.position IS NOT excluded.position`;
 
+      // A pulled batch normally lands on free slots and new rows, so one check replaces the per-block
+      // eviction; any collision takes the per-block path, which handles it exactly.
+      const evict =
+        !this.#options.assignPositions &&
+        (yield* this.#positionsCollide(
+          request.spaceId,
+          request.feedNamespace,
+          request.blocks,
+          feedPrivateIds,
+          created,
+        ));
+      // Feeds holding a branch row that still waits for its fork point, which a block of this batch may be.
+      const pendingForks = yield* this.#feedsWithPendingForks([...feedPrivateIds.values()]);
+
       const positions: number[] = [];
       let displaced = 0;
       let moved = 0;
@@ -1110,12 +1119,14 @@ export class FeedStore {
           positionToInsert = maxPositions.get(request.feedNamespace)! + 1;
         } else if (block.position != null) {
           positionToInsert = block.position;
-          const evicted = yield* this.#evictSlot(request.spaceId, request.feedNamespace, positionToInsert, {
-            ...block,
-            feedPrivateId,
-          });
-          displaced += evicted.displaced;
-          moved += evicted.moved;
+          if (evict) {
+            const evicted = yield* this.#evictSlot(request.spaceId, request.feedNamespace, positionToInsert, {
+              ...block,
+              feedPrivateId,
+            });
+            displaced += evicted.displaced;
+            moved += evicted.moved;
+          }
         }
 
         const predecessor = yield* this.#findPredecessor(feedPrivateId, block);
@@ -1138,6 +1149,11 @@ export class FeedStore {
         }
         if (inserted.length > 0) {
           yield* this.#noteBranchHead(feedPrivateId, block, branch, inserted[0].insertionId, predecessor);
+          if (branch !== null && !(block.fork === true && predecessor !== undefined)) {
+            pendingForks.add(feedPrivateId);
+          }
+        }
+        if (inserted.length > 0 && pendingForks.has(feedPrivateId)) {
           // A synced fork can arrive before its fork point; once the fork point lands, give its branch row the base.
           yield* sql`
             UPDATE branches
@@ -1189,6 +1205,120 @@ export class FeedStore {
       }
 
       return { positions, displaced, moved, feedPrivateIds: [...feedPrivateIds.values()] };
+    });
+
+  /**
+   * {@link #ensureFeed} for many feeds of one namespace in a few statements: one read per chunk of ids,
+   * then one insert per chunk of the missing ones.
+   *
+   * @returns Each feed's row id, and the ids of the feeds this call created.
+   */
+  #ensureFeeds = (
+    spaceId: string,
+    feedIds: readonly string[],
+    namespace: string,
+  ): Effect.Effect<
+    { feedPrivateIds: Map<string, number>; created: Set<string> },
+    SqlError.SqlError,
+    SqlClient.SqlClient
+  > =>
+    Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const feedPrivateIds = new Map<string, number>();
+      for (const chunk of chunked(feedIds, IN_CHUNK)) {
+        const rows = yield* sql<{
+          feedId: string;
+          feedPrivateId: number;
+          feedNamespace: string | null;
+          options: string | null;
+        }>`SELECT feedId, feedPrivateId, feedNamespace, options FROM feeds WHERE spaceId = ${spaceId} AND ${sql.in('feedId', chunk)}`;
+        for (const row of rows) {
+          this.#feedNamespaces.set(row.feedPrivateId, row.feedNamespace);
+          this.#feedOptions.set(row.feedPrivateId, decodeFeedOptions(row.options));
+          feedPrivateIds.set(row.feedId, row.feedPrivateId);
+        }
+      }
+      const missing = feedIds.filter((feedId) => !feedPrivateIds.has(feedId));
+      for (const chunk of chunked(missing, FEED_INSERT_CHUNK)) {
+        const rows = yield* sql<{ feedId: string; feedPrivateId: number }>`
+          INSERT INTO feeds ${sql.insert(chunk.map((feedId) => ({ spaceId, feedId, feedNamespace: namespace })))}
+          RETURNING feedId, feedPrivateId
+        `;
+        for (const row of rows) {
+          this.#feedNamespaces.set(row.feedPrivateId, namespace);
+          this.#feedOptions.set(row.feedPrivateId, undefined);
+          feedPrivateIds.set(row.feedId, row.feedPrivateId);
+        }
+      }
+      return { feedPrivateIds, created: new Set(missing) };
+    });
+
+  /**
+   * Whether any block of a pulled batch would make {@link #evictSlot} change a row: a slot of the
+   * namespace it names is taken, or a block of an existing feed already holds a position.
+   */
+  #positionsCollide = (
+    spaceId: string,
+    feedNamespace: string,
+    blocks: readonly Block[],
+    feedPrivateIds: ReadonlyMap<string, number>,
+    created: ReadonlySet<string>,
+  ): Effect.Effect<boolean, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const positioned = blocks.filter((block) => block.position != null);
+      for (const chunk of chunked(
+        positioned.map((block) => block.position),
+        IN_CHUNK,
+      )) {
+        const taken = yield* sql<{ one: number }>`
+          SELECT 1 AS one FROM blocks
+          WHERE feedPrivateId IN (
+              SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
+            )
+            AND ${sql.in('position', chunk)}
+          LIMIT 1
+        `;
+        if (taken.length > 0) {
+          return true;
+        }
+      }
+      // A feed this append created holds no blocks yet, so only blocks of existing feeds can be stored already.
+      const existing = positioned.filter((block) => !created.has(block.feedId!));
+      for (const chunk of chunked(existing, BLOCK_KEY_CHUNK)) {
+        const stored = yield* sql<{ one: number }>`
+          SELECT 1 AS one FROM blocks
+          WHERE position IS NOT NULL AND (${sql.or(
+            chunk.map(
+              (block) =>
+                sql`(feedPrivateId = ${feedPrivateIds.get(block.feedId!)} AND actorId = ${block.actorId} AND sequence = ${block.sequence})`,
+            ),
+          )})
+          LIMIT 1
+        `;
+        if (stored.length > 0) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+  /** Of `feedPrivateIds`, the feeds with a branch row whose fork point has not arrived yet. */
+  #feedsWithPendingForks = (
+    feedPrivateIds: readonly number[],
+  ): Effect.Effect<Set<number>, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const pending = new Set<number>();
+      for (const chunk of chunked(feedPrivateIds, IN_CHUNK)) {
+        const rows = yield* sql<{ feedPrivateId: number }>`
+          SELECT DISTINCT feedPrivateId FROM branches
+          WHERE ${sql.in('feedPrivateId', chunk)}
+            AND baseBranchId IS NULL AND forkInsertionId IS NULL AND branchId != ${ROOT_BRANCH_ROW}
+        `;
+        rows.forEach((row) => pending.add(row.feedPrivateId));
+      }
+      return pending;
     });
 
   /**
@@ -2093,6 +2223,23 @@ type BranchRow = {
 
 /** The key `branches.branchId` uses for the root branch, which blocks and scopes name `null`. */
 const ROOT_BRANCH_ROW = '';
+
+/** Ids per `IN (...)` list: Durable Object SQLite binds at most 100 variables per statement. */
+const IN_CHUNK = 90;
+
+/** Feed rows per multi-row insert, at three variables each. */
+const FEED_INSERT_CHUNK = 30;
+
+/** Block keys per lookup, at three variables each. */
+const BLOCK_KEY_CHUNK = 30;
+
+const chunked = <T>(items: readonly T[], size: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let start = 0; start < items.length; start += size) {
+    chunks.push(items.slice(start, start + size));
+  }
+  return chunks;
+};
 
 /** What the insert of a block reads of its predecessor. */
 type StoredPredecessor = { insertionId: number; branch: string | null };
