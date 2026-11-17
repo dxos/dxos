@@ -6,6 +6,8 @@
 
 import { DataFactory } from 'n3';
 
+import * as Fact from '../Fact.ts';
+
 const { namedNode, literal } = DataFactory;
 
 /** Semantic-index vocabulary (provenance and factuality predicates). */
@@ -106,9 +108,11 @@ export const entityNode = (key: string, graph?: string) =>
   isIri(key) ? namedNode(key) : graph !== undefined ? localEntityIri(graph, key) : entityIri(key);
 
 /** Inverse of {@link entityNode}: the slug for an IRI local to `graph` or under {@link ENTITY}, any other IRI unchanged. */
-export const entityKey = (iri: string, graph?: string): string =>
-  (graph !== undefined ? localEntityId(graph, iri) : undefined) ??
-  (iri.startsWith(ENTITY) ? entityIdFromIri(iri) : iri);
+export const entityKey = (iri: string, graph?: string): Fact.EntityKey =>
+  Fact.EntityKey.make(
+    (graph !== undefined ? localEntityId(graph, iri) : undefined) ??
+      (iri.startsWith(ENTITY) ? entityIdFromIri(iri) : iri),
+  );
 
 /** Plain string literal. */
 export const str = (value: string) => literal(value);

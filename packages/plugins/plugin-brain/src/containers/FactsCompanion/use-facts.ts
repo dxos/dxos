@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import { useEffect, useState } from 'react';
 
+import { type Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type FactStoreApi, type RDF } from '@dxos/pipeline-rdf';
+import { type FactStoreApi } from '@dxos/pipeline-rdf';
 
 import { type FactStoreRegistry } from '../../capabilities/fact-store.ts';
 
@@ -19,16 +20,16 @@ import { type FactStoreRegistry } from '../../capabilities/fact-store.ts';
  * unit-testable without provisioning the full capability/render stack. Falls back to an empty list
  * on query failure so the surface never crashes on a malformed store.
  */
-export const queryFacts = (store: FactStoreApi): Promise<RDF.Fact[]> =>
-  EffectEx.runPromise(store.query({}).pipe(Effect.orElseSucceed((): RDF.Fact[] => [])));
+export const queryFacts = (store: FactStoreApi): Promise<Fact.Fact[]> =>
+  EffectEx.runPromise(store.query({}).pipe(Effect.orElseSucceed((): Fact.Fact[] => [])));
 
 /**
  * Loads the facts for a space from the registry's shared in-memory store, re-querying whenever the
  * store mutates. The in-memory FactStore is not ECHO-reactive, so the registry's `subscribe` (fired
  * after `putFacts`/`clear`) is what keeps the view live as the analysis pipeline writes or a reset clears.
  */
-export const useFacts = (registry: FactStoreRegistry, spaceId: string | undefined): RDF.Fact[] => {
-  const [facts, setFacts] = useState<RDF.Fact[]>([]);
+export const useFacts = (registry: FactStoreRegistry, spaceId: string | undefined): Fact.Fact[] => {
+  const [facts, setFacts] = useState<Fact.Fact[]>([]);
   useEffect(() => {
     if (spaceId === undefined) {
       setFacts([]);

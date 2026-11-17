@@ -5,8 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
+import { Fact } from '@dxos/echo-memory';
+import { Graph, hashText } from '@dxos/echo-memory/rdf';
 import { Stage } from '@dxos/pipeline';
-import { DEFAULT_INDEX_BATCH_SIZE, FactStore, RDF, hashText, indexFactsBatch } from '@dxos/pipeline-rdf';
+import { DEFAULT_INDEX_BATCH_SIZE, FactStore, indexFactsBatch } from '@dxos/pipeline-rdf';
+import { type ExtractDocument, type KnownEntity } from '@dxos/pipeline-rdf';
 
 import * as AgentRegistry from '../AgentRegistry.ts';
 import { type StateError } from '../errors.ts';
@@ -28,7 +31,7 @@ export type ExtractFactsOptions = {
 type MessageEvent = Extract<Type.Event, { readonly _tag: 'Message' }>;
 
 /** Every user the registry knows as a known entity, keyed by source user id: their IRI, display name and usernames. */
-const knownUsers = (profiles: readonly AgentRegistry.Profile[]): Map<string, RDF.KnownEntity> =>
+const knownUsers = (profiles: readonly AgentRegistry.Profile[]): Map<string, KnownEntity> =>
   new Map(
     profiles.flatMap((profile) => {
       const user = AgentRegistry.userOf(profile);
@@ -36,7 +39,7 @@ const knownUsers = (profiles: readonly AgentRegistry.Profile[]): Map<string, RDF
         return [];
       }
       const usernames = AgentRegistry.usernamesOf(profile);
-      const entity: RDF.KnownEntity = {
+      const entity: KnownEntity = {
         iri: AgentRegistry.iriForUser(user),
         label: profile.label ?? usernames[0] ?? user.id,
         aliases: usernames,
@@ -47,7 +50,7 @@ const knownUsers = (profiles: readonly AgentRegistry.Profile[]): Map<string, RDF
   );
 
 /** Discord's `<@id>` / `<@!id>` mentions as `@name`, so the model reads a person it can link instead of an opaque id. */
-const resolveMentions = (text: string, users: ReadonlyMap<string, RDF.KnownEntity>): string =>
+const resolveMentions = (text: string, users: ReadonlyMap<string, KnownEntity>): string =>
   text.replace(/<@!?(\d+)>/g, (mention, id: string) => {
     const user = users.get(id);
     return user ? `@${user.label}` : mention;
@@ -67,7 +70,7 @@ const PROFILE_TIME = new Date(0).toISOString();
  * user's earlier profile graphs: `user —is a→ schema:Person` and
  * `user —has account→ "username"`, the subject carrying the display name, so the user's label comes from the source, never from a mention.
  */
-const profileFacts = (profile: AgentRegistry.Profile, supersedes: readonly string[] = []): RDF.Fact[] => {
+const profileFacts = (profile: AgentRegistry.Profile, supersedes: readonly string[] = []): Fact.Fact[] => {
   const user = AgentRegistry.userOf(profile);
   if (!user) {
     return [];
@@ -76,8 +79,8 @@ const profileFacts = (profile: AgentRegistry.Profile, supersedes: readonly strin
   const usernames = AgentRegistry.usernamesOf(profile);
   const label = profile.label ?? usernames[0] ?? user.id;
   const hash = hashText(`${label}\n${usernames.join('\n')}`);
-  const subject: RDF.EntityTerm = { kind: 'entity', entity: iri, label, type: 'person' };
-  const statement = (predicate: string, object: RDF.Term): RDF.Fact => ({
+  const subject = { kind: 'entity', entity: iri, label, type: 'person' } as const;
+  const statement = (predicate: string, object: Fact.Encoded['assertion']['object']): Fact.Encoded => ({
     id: '',
     assertion: { subject, predicate, object },
     factuality: { value: 'CT+', polarity: '+' },
@@ -87,7 +90,7 @@ const profileFacts = (profile: AgentRegistry.Profile, supersedes: readonly strin
     sourceHash: hash,
     ...(supersedes.length > 0 ? { supersedes: [...supersedes] } : {}),
   });
-  return RDF.Graph.assign(
+  return Graph.assign(
     [
       statement('is a', { kind: 'entity', entity: 'https://schema.org/Person', label: 'Person' }),
       ...usernames.map((username) => statement('has account', { kind: 'literal', literal: username })),
@@ -128,7 +131,7 @@ export const extractFactsStage = (
       authors.set(event.message.id, agent);
     }
     const users = knownUsers(yield* AgentRegistry.list());
-    const docs = events.map((event): RDF.ExtractDocument => {
+    const docs = events.map((event): ExtractDocument => {
       const user = event.message.author;
       return {
         text: resolveMentions(event.message.text, users),
@@ -153,7 +156,7 @@ export const extractFactsStage = (
       if (previous?.hash !== first.sourceHash) {
         const facts = profileFacts(profile, previous ? [previous.graph] : []);
         yield* store.putFacts(facts);
-        yield* store.setCursor(first.attribution.source, `${first.sourceHash} ${RDF.Mapping.graphOf(facts[0])}`);
+        yield* store.setCursor(first.attribution.source, `${first.sourceHash} ${Fact.graphOf(facts[0])}`);
       }
     }
   });

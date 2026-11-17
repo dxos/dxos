@@ -4,7 +4,8 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
+import { Ontology } from '@dxos/echo-memory/rdf';
 import { ENTITY_HUES, EntityBrowser, toEntityCards } from '@dxos/react-ui-rdf';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -20,11 +21,11 @@ type KnowledgeView = 'entities' | 'ontology';
 const isView = (value: string): value is KnowledgeView => value === 'entities' || value === 'ontology';
 
 export type KnowledgePanelProps = Util.ThemedClassName<{
-  facts: RDF.Fact[];
+  facts: Fact.Fact[];
   /** The entities (by slug) to show cards for; every entity the facts mention when undefined. */
   entities?: ReadonlySet<string>;
   /** The store's predicates; undefined until read. */
-  ontology?: RDF.Ontology.Ontology;
+  ontology?: Ontology.Ontology;
   /** The chosen entity's slug. */
   selected?: string;
   onSelect: (id: string | undefined) => void;

@@ -8,44 +8,46 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { Fact } from '@dxos/echo-memory';
+import { Mapping } from '@dxos/echo-memory/rdf';
 import { SqlSparqlEngine } from '@dxos/sparql-sqlite';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from '../errors.ts';
 import { buildSparql } from '../internal/sparql/query-builder.ts';
-import { type Fact } from '../types/index.ts';
-import * as Mapping from '../types/Mapping.ts';
 import * as FactStoreLive from './fact-store-live.ts';
 import { FactStore } from './fact-store.ts';
 
-const fact = (id: string, over: Partial<Fact> = {}): Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
-    predicate: 'travelsTo',
-    object: { kind: 'entity', entity: 'paris' },
-    validFrom: '2026-06-01T00:00:00.000Z',
-  },
-  factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
-  attribution: {
-    agent: 'alice',
-    source: 'dxn:q:m1',
-    generatedAtTime: '2026-06-06T00:00:00.000Z',
-    span: { start: 3, end: 10 },
-  },
-  recordedAt: '2026-06-06T12:00:00.000Z',
-  extractor: { id: 'default', model: 'm', version: '1' },
-  sourceHash: 'h1',
-  ...over,
-});
+const fact = (id: string, over: Partial<Fact.Encoded> = {}): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
+      predicate: 'travelsTo',
+      object: { kind: 'entity', entity: 'paris' },
+      validFrom: '2026-06-01T00:00:00.000Z',
+    },
+    factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
+    attribution: {
+      agent: 'alice',
+      source: 'dxn:q:m1',
+      generatedAtTime: '2026-06-06T00:00:00.000Z',
+      span: { start: 3, end: 10 },
+    },
+    recordedAt: '2026-06-06T12:00:00.000Z',
+    extractor: { id: 'default', model: 'm', version: '1' },
+    sourceHash: 'h1',
+    ...over,
+  });
 
 /** A fact as stored: named graphs key statements by predicate IRI, which reads back on the fact. */
-const stored = (written: Fact): Fact => ({
-  ...written,
-  assertion: { ...written.assertion, predicateIri: Mapping.predicateOf(written) },
-});
+const stored = (written: Fact.Fact): Fact.Fact =>
+  Fact.make({
+    ...written,
+    assertion: { ...written.assertion, predicateIri: Mapping.predicateOf(written) },
+  });
 
-const termOf = (found: Fact) =>
+const termOf = (found: Fact.Fact) =>
   found.assertion.subject.kind === 'entity' ? found.assertion.subject.entity : found.assertion.subject.literal;
 
 const withFile = <A, E>(run: (path: string) => Effect.Effect<A, E>): Effect.Effect<A, E> =>

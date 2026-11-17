@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -40,10 +40,10 @@ const VIEWER_LAYOUT: ModuleContainer.Layout = [[StoryRole.Facts], [StoryRole.Ent
  * Owns the cross-module display state (current facts view + selected entity) and drives the layout.
  * `seed` pre-populates the space's `FactStore` (the no-crawl variant).
  */
-const FactsStoryRoot = ({ layout, seed }: { layout: ModuleContainer.Layout; seed?: RDF.Fact[] }) => {
+const FactsStoryRoot = ({ layout, seed }: { layout: ModuleContainer.Layout; seed?: Fact.Fact[] }) => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const [space] = useSpaces();
-  const [facts, setFacts] = useState<RDF.Fact[]>([]);
+  const [facts, setFacts] = useState<Fact.Fact[]>([]);
   const [selected, setSelected] = useState<string | undefined>(undefined);
   const [predicate, setPredicate] = useState<PredicateFilter | undefined>(undefined);
   const [scope, setScope] = useState<QueryScope | undefined>(undefined);
@@ -67,21 +67,22 @@ const FactsStoryRoot = ({ layout, seed }: { layout: ModuleContainer.Layout; seed
 const DefaultStory = () => <FactsStoryRoot layout={CRAWL_LAYOUT} />;
 
 // A small hand-authored Alice/Bob corpus exercised by the in-memory variant.
-const sampleFact = (id: string, subject: string, predicate: string, object: string, confidence: number): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: subject, label: subject === 'dxos' ? 'DXOS' : subject },
-    predicate,
-    object: { kind: 'entity', entity: object, label: object === 'dxos' ? 'DXOS' : object },
-  },
-  factuality: { value: 'CT+', polarity: '+', confidence },
-  attribution: { source: `sample:${id}`, generatedAtTime: '2026-06-29T00:00:00.000Z' },
-  recordedAt: '2026-06-29T00:00:00.000Z',
-  extractor: { id: 'sample', model: 'sample', version: '1' },
-  sourceHash: id,
-});
+const sampleFact = (id: string, subject: string, predicate: string, object: string, confidence: number): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: subject, label: subject === 'dxos' ? 'DXOS' : subject },
+      predicate,
+      object: { kind: 'entity', entity: object, label: object === 'dxos' ? 'DXOS' : object },
+    },
+    factuality: { value: 'CT+', polarity: '+', confidence },
+    attribution: { source: `sample:${id}`, generatedAtTime: '2026-06-29T00:00:00.000Z' },
+    recordedAt: '2026-06-29T00:00:00.000Z',
+    extractor: { id: 'sample', model: 'sample', version: '1' },
+    sourceHash: id,
+  });
 
-const SAMPLE_FACTS: RDF.Fact[] = [
+const SAMPLE_FACTS: Fact.Fact[] = [
   sampleFact('s1', 'alice', 'works at', 'dxos', 0.95),
   sampleFact('s2', 'alice', 'met', 'bob', 0.8),
   sampleFact('s3', 'bob', 'works at', 'dxos', 0.9),

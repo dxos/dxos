@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EntityKind } from './Entity.ts';
-import type * as Ontology from './Ontology.ts';
+import { type Fact } from '@dxos/echo-memory';
+import { type Ontology } from '@dxos/echo-memory/rdf';
 
 /** An entity the extractor may name: a mention of it is stored under its stable IRI rather than a graph-local one. */
 export type KnownEntity = {
@@ -11,7 +11,7 @@ export type KnownEntity = {
   readonly iri: string;
   readonly label: string;
   readonly aliases?: ReadonlyArray<string>;
-  readonly type?: EntityKind;
+  readonly type?: Fact.EntityKind;
 };
 
 /** A source document for fact extraction: the text plus provenance carried onto each fact. */

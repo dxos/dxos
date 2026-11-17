@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
+import { Graph, Ontology, Vocab } from '@dxos/echo-memory/rdf';
 import { EntityId } from '@dxos/keys';
-import { RDF } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
 import { AgentPresence, BrainService, MemoryOperation, Profile } from '#types';
@@ -16,23 +17,28 @@ import { AgentOperationError } from './errors.ts';
 import { recordingAgent } from './knowledge.ts';
 import { agentId } from './members.ts';
 
-const entityType = (entity: Obj.Unknown): RDF.EntityKind | undefined =>
+const entityType = (entity: Obj.Unknown): Fact.EntityKind | undefined =>
   Obj.instanceOf(Person.Person, entity)
     ? 'person'
     : Obj.instanceOf(Organization.Organization, entity)
       ? 'org'
       : undefined;
 
-const entityTerm = (entity: Obj.Unknown): RDF.EntityTerm => {
+const entityTerm = (entity: Obj.Unknown): Fact.EntityTerm => {
   const type = entityType(entity);
-  return { kind: 'entity', entity: Obj.getURI(entity), label: Profile.displayName(entity), ...(type ? { type } : {}) };
+  return {
+    kind: 'entity',
+    entity: Fact.EntityKey.make(Obj.getURI(entity)),
+    label: Profile.displayName(entity),
+    ...(type ? { type } : {}),
+  };
 };
 
 /**
  * A fresh graph IRI per fact, so a correction replaces that fact alone. An entity id rather than a hash of the
  * provenance, whose time would give every run a different id: the model reads it back, and tests pin entity ids.
  */
-const makeGraph = (): string => RDF.Vocab.graphIri(`fact-${EntityId.random()}`).value;
+const makeGraph = (): string => Vocab.graphIri(`fact-${EntityId.random()}`).value;
 
 const handler: Operation.WithHandler<typeof MemoryOperation.Remember> = MemoryOperation.Remember.pipe(
   Operation.withHandler(
@@ -61,7 +67,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Remember> = MemoryOp
       const agent = yield* recordingAgent(agentRef);
       const speaker = agentId(agent);
       // A predicate outside the seed vocabulary is minted where extraction mints it, so both share it.
-      const ontology = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(AgentPresence.brainId(agent)));
+      const ontology = Ontology.DEFAULT.withNamespace(Vocab.brainNamespace(AgentPresence.brainId(agent)));
       const now = new Date().toISOString();
       const facts = yield* Effect.forEach(
         recorded,
@@ -71,8 +77,8 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Remember> = MemoryOp
           const entry = ontology.resolve(fact.predicate);
           const origin = fact.origin ?? 'stated';
           return {
-            id: '',
-            graph: makeGraph(),
+            id: Fact.FactId.make(''),
+            graph: Fact.GraphIri.make(makeGraph()),
             assertion: {
               subject: entityTerm(subject),
               predicate: entry.label,
@@ -88,24 +94,26 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Remember> = MemoryOp
               ...(fact.confidence !== undefined ? { confidence: fact.confidence } : {}),
             },
             attribution: {
-              agent: speaker,
+              agent: Fact.EntityKey.make(speaker),
               agentLabel: agent.name,
-              source: source?.uri ?? speaker,
+              source: Fact.SourceUri.make(source?.uri ?? speaker),
               generatedAtTime: now,
             },
             recordedAt: now,
             extractor: { id: 'remember', model: 'agent', version: '2' },
             sourceHash: now,
             origin,
-            ...(fact.supersedes?.length ? { supersedes: [...fact.supersedes] } : {}),
-          } satisfies RDF.Fact;
+            ...(fact.supersedes?.length
+              ? { supersedes: fact.supersedes.map((graph) => Fact.GraphIri.make(graph)) }
+              : {}),
+          } satisfies Fact.Fact;
         }),
       );
-      const placed = RDF.Graph.assign(facts, { ontology });
+      const placed = Graph.assign(facts, { ontology });
 
       // The agent's own words, so a watch never wakes on what it recorded.
       yield* (yield* BrainService.BrainService).push(AgentPresence.brainId(agent), placed, { quiet: [speaker] });
-      return { facts: placed.map(RDF.Mapping.graphOf) };
+      return { facts: placed.map(Fact.graphOf) };
     }),
   ),
 );

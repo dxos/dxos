@@ -18,9 +18,10 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
-import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
@@ -59,7 +60,11 @@ const DIMA = TEST_MEMBERS.dima;
 const RICH = TEST_MEMBERS.rich;
 
 /** A fact as `readSource` records it from a chat message. */
-const entityTerm = (label: string): RDF.Term => ({ kind: 'entity', entity: normalizeEntityId(label), label });
+const entityTerm = (label: string): Fact.Term => ({
+  kind: 'entity',
+  entity: Fact.EntityKey.make(normalizeEntityId(label)),
+  label,
+});
 
 const fact = ({
   speaker = DIMA,
@@ -79,23 +84,24 @@ const fact = ({
   polarity?: '+' | '-';
   force?: Trigger.Force;
   saidAt?: string;
-} = {}): RDF.Fact => ({
-  id: `fact-${subject}-${predicate}-${object}`,
-  assertion: { subject: entityTerm(subject), predicate, object: entityTerm(object), quote },
-  factuality: { value: polarity === '+' ? 'CT+' : 'CT-', polarity },
-  ...(force ? { illocution: { force } } : {}),
-  attribution: { agent: speaker, source: 'dxn:chat', generatedAtTime: saidAt },
-  recordedAt: saidAt,
-  extractor: { id: 'test', model: 'test', version: '1' },
-  sourceHash: 'hash',
-});
+} = {}): Fact.Fact =>
+  Fact.make({
+    id: `fact-${subject}-${predicate}-${object}`,
+    assertion: { subject: entityTerm(subject), predicate, object: entityTerm(object), quote },
+    factuality: { value: polarity === '+' ? 'CT+' : 'CT-', polarity },
+    ...(force ? { illocution: { force } } : {}),
+    attribution: { agent: speaker, source: 'dxn:chat', generatedAtTime: saidAt },
+    recordedAt: saidAt,
+    extractor: { id: 'test', model: 'test', version: '1' },
+    sourceHash: 'hash',
+  });
 
 const PR_IS_UP: Trigger.FactPattern = { speaker: DIMA, about: 'indexer PR', force: 'assertive', polarity: '+' };
 
 /** Whether the pattern, translated to rules and evaluated by the brain, wakes on the fact. */
 const wakes = (
   pattern: Trigger.FactPattern,
-  subject: RDF.Fact,
+  subject: Fact.Fact,
   { after = '2026-10-03T00:00:00.000Z' }: { after?: string } = {},
 ): boolean => {
   const evaluator = Evaluator.make();
@@ -124,10 +130,10 @@ describe('toRules', () => {
     // Someone who is no member is attributed by bare name, and a watch on that name matches them.
     expect(wakes({ speaker: 'Dima' }, fact({ speaker: 'Dima' }))).toBe(true);
     expect(wakes({ speaker: DIMA.toLowerCase() }, fact())).toBe(false);
-    const aboutDima: RDF.Fact = {
+    const aboutDima = Fact.make({
       ...fact(),
       assertion: { ...fact().assertion, subject: { kind: 'entity', entity: DIMA, label: 'Dima' } },
-    };
+    });
     expect(wakes({ subject: DIMA }, aboutDima)).toBe(true);
     expect(wakes({ subject: RICH }, aboutDima)).toBe(false);
     // `about` still finds a person by the name their entity carries as its label.

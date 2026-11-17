@@ -5,8 +5,9 @@
 // @import-as-namespace
 
 import { Obj, type Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
+import { Mapping, Ontology } from '@dxos/echo-memory/rdf';
 import { EID } from '@dxos/keys';
-import { RDF } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
 import * as BrainService from './BrainService.ts';
@@ -42,7 +43,7 @@ export type RenderProps = {
   name: string;
   goals: readonly Goal.Goal[];
   /** The facts that hold about the subject. */
-  facts: readonly RDF.Fact[];
+  facts: readonly Fact.Fact[];
   /** The entity keys facts about the subject use, so a fact it is the subject of reads as just its object. */
   keys: ReadonlySet<string>;
 };
@@ -73,8 +74,7 @@ export const render = ({ name, goals, facts, keys }: RenderProps): string => {
   for (const fact of facts) {
     const { subject, predicate, object } = fact.assertion;
     // Synonyms share their predicate's section, under its ontology label.
-    const label =
-      RDF.Ontology.DEFAULT.canonical(RDF.Mapping.predicateOf(fact))?.label ?? predicate.trim().toLowerCase();
+    const label = Ontology.DEFAULT.canonical(Mapping.predicateOf(fact))?.label ?? predicate.trim().toLowerCase();
     const isSubject = subject.kind === 'entity' && keys.has(subject.entity);
     const statement = isSubject
       ? `${fact.factuality.polarity === '-' ? 'not: ' : ''}${BrainService.termText(object)}`

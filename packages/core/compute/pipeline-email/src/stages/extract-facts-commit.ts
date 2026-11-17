@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { type Fact } from '@dxos/echo-memory';
 import { Stage } from '@dxos/pipeline';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import { messageSource } from './facts.ts';
@@ -13,12 +13,12 @@ import { messageSource } from './facts.ts';
 // Extract one message's facts WITHOUT persisting them. Distinct from `FactIndexer`, whose closure
 // also writes to the store: here persistence is the sink's responsibility, so a page of facts can
 // commit atomically with the cursor advance. Same signature, different contract.
-export type FactExtractor = (message: Message.Message) => Promise<RDF.Fact[]>;
+export type FactExtractor = (message: Message.Message) => Promise<Fact.Fact[]>;
 
 // Terminal unit for the cursored fact pipeline: extracted facts plus the keys the sink needs to
 // dedup and advance the cursor.
 export type FactUnit = {
-  readonly facts: RDF.Fact[];
+  readonly facts: Fact.Fact[];
   /** Stable per-message id (`messageSource`); the dedup foreign id. */
   readonly foreignId: string;
   /** Monotonic cursor key. */
@@ -41,7 +41,7 @@ export const extractFactsUnitStage = (
     (message) =>
       Effect.tryPromise(() => extract(message)).pipe(
         Effect.tapError((error) => Effect.logWarning('extract-facts-unit failed; degrading to no facts', error)),
-        Effect.catch(() => Effect.succeed<RDF.Fact[]>([])),
+        Effect.catch(() => Effect.succeed<Fact.Fact[]>([])),
         Effect.map((facts): FactUnit => ({ facts, foreignId: messageSource(message), key: keyOf(message) })),
       ),
     { concurrency },

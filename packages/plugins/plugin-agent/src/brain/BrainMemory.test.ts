@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Evaluator from '@dxos/brain/Evaluator';
 import { Obj, Ref } from '@dxos/echo';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 import { Person } from '@dxos/types';
 
 import { BrainService, Trigger } from '#types';
@@ -27,20 +27,21 @@ const fact = (
     quote = 'I am working on the indexer migration.',
     saidAt = '2026-10-07T11:00:00.000Z',
   }: { speaker?: string; quote?: string; saidAt?: string } = {},
-): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: speaker, label: speaker },
-    predicate: 'works on',
-    object: { kind: 'entity', entity: 'indexer-migration', label: 'indexer migration' },
-    quote,
-  },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { agent: speaker, source: 'dxn:chat', generatedAtTime: saidAt },
-  recordedAt: saidAt,
-  extractor: { id: 'test', model: 'test', version: '1' },
-  sourceHash: 'hash',
-});
+): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: speaker, label: speaker },
+      predicate: 'works on',
+      object: { kind: 'entity', entity: 'indexer-migration', label: 'indexer migration' },
+      quote,
+    },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { agent: speaker, source: 'dxn:chat', generatedAtTime: saidAt },
+    recordedAt: saidAt,
+    extractor: { id: 'test', model: 'test', version: '1' },
+    sourceHash: 'hash',
+  });
 
 const subscription = (id: string, when: Trigger.FactPattern, options: { ongoing?: boolean } = {}): Trigger.Trigger => ({
   id,

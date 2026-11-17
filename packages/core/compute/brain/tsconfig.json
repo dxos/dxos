@@ -18,6 +18,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../echo/echo-memory"
+    },
+    {
       "path": "../pipeline-rdf"
     }
   ]

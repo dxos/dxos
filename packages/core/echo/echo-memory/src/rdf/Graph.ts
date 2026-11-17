@@ -6,14 +6,14 @@
 
 import { type Quad, Writer } from 'n3';
 
-import { hashText } from '../internal/stages/reconcile.ts';
-import { type Fact } from './Fact.ts';
+import * as Fact from '../Fact.ts';
+import { hashText } from './hash.ts';
 import * as Mapping from './Mapping.ts';
 import * as Ontology from './Ontology.ts';
 import * as Vocab from './Vocab.ts';
 
 /** Everything a graph states once for all its statements: facts that differ in any of it need separate graphs. */
-const provenanceKey = (fact: Fact): string =>
+const provenanceKey = (fact: Fact.Fact): string =>
   JSON.stringify([
     fact.attribution.source,
     fact.attribution.agent,
@@ -38,49 +38,35 @@ const provenanceKey = (fact: Fact): string =>
 
 export type AssignOptions = {
   /** Names the graph for a fact; facts given the same name and provenance share a graph. Defaults to its source. */
-  readonly name?: (fact: Fact) => string;
+  readonly name?: (fact: Fact.Fact) => string;
   readonly ontology?: Ontology.Ontology;
 };
 
 /**
  * Puts facts into named graphs: facts that share their provenance (source, speaker, time, quote, factuality,
  * extraction pass, …) share a graph, and a fact that differs in any of it starts another. A fact that already names
- * a graph keeps it. Each fact gets its predicate IRI, and the id it will have once stored.
+ * a graph keeps it. Each fact gets its predicate IRI, and the id it will have once stored; facts come in their plain
+ * form, since the ids they will have are only known here.
  */
-export const assign = (facts: readonly Fact[], { name, ontology = Ontology.DEFAULT }: AssignOptions = {}): Fact[] =>
-  facts.map((fact) => {
+export const assign = (
+  facts: readonly Fact.Encoded[],
+  { name, ontology = Ontology.DEFAULT }: AssignOptions = {},
+): Fact.Fact[] =>
+  facts.map((input) => {
+    const fact = Fact.make(input);
     const label = name?.(fact) ?? fact.attribution.source;
     const key = provenanceKey(fact);
     // Two independent 32-bit hashes: every memory an agent records shares one label, so 32 bits would collide.
-    const graph = fact.graph ?? Vocab.graphIri(`${hashText(label)}-${hashText(key)}${hashText(`\u0000${key}`)}`).value;
-    const placed: Fact = {
+    const graph =
+      fact.graph ??
+      Fact.GraphIri.make(Vocab.graphIri(`${hashText(label)}-${hashText(key)}${hashText(`\u0000${key}`)}`).value);
+    const placed: Fact.Fact = {
       ...fact,
       graph,
       assertion: { ...fact.assertion, predicateIri: Mapping.predicateOf(fact, ontology) },
     };
     return { ...placed, id: Mapping.idInGraph(placed, graph, ontology) };
   });
-
-/** Whether a graph still holds: another graph can replace it (`supersedes`) or withdraw it (`retracts`). */
-export type Status = 'active' | 'superseded' | 'retracted';
-
-/** The status of every graph the facts mention, by graph IRI. */
-export const status = (facts: readonly Fact[]): Map<string, Status> => {
-  const statuses = new Map<string, Status>(facts.map((fact) => [Mapping.graphOf(fact), 'active']));
-  for (const fact of facts) {
-    for (const superseded of fact.supersedes ?? []) {
-      if (statuses.get(superseded) !== 'retracted') {
-        statuses.set(superseded, 'superseded');
-      }
-    }
-  }
-  for (const fact of facts) {
-    for (const retracted of fact.retracts ?? []) {
-      statuses.set(retracted, 'retracted');
-    }
-  }
-  return statuses;
-};
 
 /** Prefixes TriG output abbreviates. */
 export const PREFIXES: Readonly<Record<string, string>> = {
@@ -112,7 +98,7 @@ const write = (quads: Iterable<Quad>, prefixes: Record<string, string>): string 
     }
   }
   let output = '';
-  writer.end((error, result: string) => {
+  writer.end((error: Error | null, result: string) => {
     if (error) {
       throw error;
     }
@@ -125,7 +111,7 @@ const write = (quads: Iterable<Quad>, prefixes: Record<string, string>): string 
  * The facts as TriG: each graph's statements, then its provenance. The brain's namespace reads as `brain:`, and the
  * entities local to each graph as `g1:`, `g2:`, … so a graph-local entity is visibly not a shared one.
  */
-export const toTriG = (facts: readonly Fact[], ontology: Ontology.Ontology = Ontology.DEFAULT): string => {
+export const toTriG = (facts: readonly Fact.Fact[], ontology: Ontology.Ontology = Ontology.DEFAULT): string => {
   const quads = facts.flatMap((fact) => Mapping.factToTriples(fact, ontology));
   const graphs = [...new Set(quads.flatMap((quad) => (quad.graph.termType === 'NamedNode' ? [quad.graph.value] : [])))];
   const locals = graphs.filter(
@@ -152,7 +138,7 @@ export const ontologyToTriG = (ontology: Ontology.Ontology): string =>
  * extraction can reuse them; the first quote that used one is kept as its example.
  */
 export const mintedPredicates = (
-  facts: readonly Fact[],
+  facts: readonly Fact.Fact[],
   ontology: Ontology.Ontology = Ontology.DEFAULT,
 ): Ontology.Entry[] => {
   const minted = new Map<string, Ontology.Entry>();

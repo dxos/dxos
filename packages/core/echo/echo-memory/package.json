@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./rdf": {
+      "source": "./src/rdf/index.ts",
+      "types": "./dist/types/src/rdf/index.d.ts",
+      "import": "./dist/lib/rdf.mjs"
+    },
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
@@ -26,10 +31,12 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/errors": "workspace:*"
+    "@dxos/errors": "workspace:*",
+    "n3": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
+    "@types/n3": "catalog:",
     "effect": "catalog:",
     "vitest": "catalog:"
   },

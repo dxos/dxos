@@ -8,8 +8,8 @@ import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -26,21 +26,22 @@ import { FactsCompanion } from './FactsCompanion.tsx';
 const registry = makeFactStoreRegistry();
 
 /** Minimal RDF fact fixture (subject —predicate→ object) for the viewer. */
-const fact = (id: string, subject: string, predicate: string, object: string): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: subject.toLowerCase(), label: subject },
-    predicate,
-    object: { kind: 'entity', entity: object.toLowerCase(), label: object },
-  },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: 'story:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
-  recordedAt: '2026-01-01T00:00:00.000Z',
-  extractor: { id: 'story', model: 'story', version: '1' },
-  sourceHash: id,
-});
+const fact = (id: string, subject: string, predicate: string, object: string): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: subject.toLowerCase(), label: subject },
+      predicate,
+      object: { kind: 'entity', entity: object.toLowerCase(), label: object },
+    },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: 'story:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
+    recordedAt: '2026-01-01T00:00:00.000Z',
+    extractor: { id: 'story', model: 'story', version: '1' },
+    sourceHash: id,
+  });
 
-const FACTS: RDF.Fact[] = [fact('f1', 'Alice', 'worksAt', 'Acme'), fact('f2', 'Alice', 'knows', 'Bob')];
+const FACTS: Fact.Fact[] = [fact('f1', 'Alice', 'worksAt', 'Acme'), fact('f2', 'Alice', 'knows', 'Bob')];
 
 const meta = {
   title: 'plugins/plugin-brain/containers/FactsCompanion',

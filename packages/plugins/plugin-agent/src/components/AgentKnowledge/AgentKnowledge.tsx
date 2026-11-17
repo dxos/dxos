@@ -5,7 +5,8 @@
 import React, { type PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { Predicate } from '@dxos/echo-memory/rdf';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import {
@@ -191,7 +192,7 @@ type AgentKnowledgeFact = {
   speaker?: string;
   saidAt: string;
   /** The fact as stored, shown as its triple and metadata when the view asks for it. */
-  fact?: RDF.Fact;
+  fact?: Fact.Fact;
 };
 
 type AgentKnowledgeFactsProps = {
@@ -330,7 +331,7 @@ const AgentKnowledgePredicates = ({ predicates, trig }: AgentKnowledgePredicates
       getText={(predicate) =>
         [
           predicate.label,
-          RDF.Predicate.label(predicate.label),
+          Predicate.label(predicate.label),
           predicate.curie,
           predicate.description,
           ...(predicate.synonyms ?? []),
@@ -361,7 +362,7 @@ const PredicateCard = ({ predicate }: { predicate: AgentKnowledgePredicate }) =>
   return (
     <KnowledgeCard
       icon='ph--arrow-right--regular'
-      title={RDF.Predicate.label(predicate.label)}
+      title={Predicate.label(predicate.label)}
       testId='agent-knowledge-predicate'
       rows={[
         {

@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
-import { RDF, predicateSection } from '@dxos/pipeline-rdf';
+import { Ontology } from '@dxos/echo-memory/rdf';
+import { predicateSection } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
@@ -61,13 +62,13 @@ export type Origin = Schema.Schema.Type<typeof Origin>;
 const PROSE_PREDICATES = new Set(['claim', 'has_note']);
 
 /** The predicates an agent records facts with: the seed vocabulary extraction uses, less its prose predicates. */
-export const PREDICATES: RDF.Ontology.Ontology = RDF.Ontology.make(
-  RDF.Ontology.DEFAULT.entries.filter(({ name }) => !PROSE_PREDICATES.has(name)),
+export const PREDICATES: Ontology.Ontology = Ontology.make(
+  Ontology.DEFAULT.entries.filter(({ name }) => !PROSE_PREDICATES.has(name)),
 );
 
 /** Whether a surface form names one of the seed vocabulary's prose predicates. */
 export const isProsePredicate = (predicate: string): boolean => {
-  const entry = RDF.Ontology.DEFAULT.find(predicate);
+  const entry = Ontology.DEFAULT.find(predicate);
   return entry !== undefined && PROSE_PREDICATES.has(entry.name);
 };
 

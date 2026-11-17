@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
+import { Fact } from '@dxos/echo-memory';
+
 import { SemanticIndexError } from '../errors.ts';
-import { Fact } from '../types/index.ts';
 import { FactStore, type FactStoreApi } from './fact-store.ts';
 
 //
@@ -54,7 +55,7 @@ const SparqlTermSchema = Schema.Union([
 ]);
 
 // The argument and result schemas both sides share: the protocol, method by method.
-const Facts = Schema.Array(Fact);
+const Facts = Schema.Array(Fact.Fact);
 const Predicates = Schema.Array(OntologyEntry);
 const Rows = Schema.Array(Schema.Record(Schema.String, SparqlTermSchema));
 const Hash = Schema.NullOr(Schema.String);

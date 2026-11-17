@@ -10,8 +10,8 @@ import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { FactStore } from '@dxos/pipeline-rdf/fact-store';
-import * as RDF from '@dxos/pipeline-rdf/types';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as ReplyGeneration from '@dxos/plugin-inbox/ReplyGeneration';
 
@@ -68,7 +68,7 @@ export const CompactFact = Schema.Struct({
   subject: Schema.String,
   predicate: Schema.String,
   object: Schema.String,
-  factuality: RDF.FactualityValue,
+  factuality: Fact.FactualityValue,
   confidence: Schema.optional(Schema.Number),
   date: Schema.String,
   source: Schema.String,

@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { Ontology, Vocab } from '@dxos/echo-memory/rdf';
 import { formatTerm } from '@dxos/react-ui-rdf';
 
 export type EntityItem = {
@@ -17,9 +18,9 @@ export type EntityItem = {
  * Distinct entities mentioned across the facts (subject + object entity terms), deduped by id with a
  * display label and occurrence count, busiest first. Literal terms are not entities and are skipped.
  */
-export const entitiesFromFacts = (facts: RDF.Fact[]): EntityItem[] => {
+export const entitiesFromFacts = (facts: Fact.Fact[]): EntityItem[] => {
   const byId = new Map<string, EntityItem>();
-  const add = (term: RDF.Term) => {
+  const add = (term: Fact.Term) => {
     if (term.kind !== 'entity') {
       return;
     }
@@ -45,7 +46,7 @@ export type PredicateItem = {
 };
 
 /** Distinct predicates across the facts with occurrence counts, busiest first. */
-export const predicatesFromFacts = (facts: RDF.Fact[]): PredicateItem[] => {
+export const predicatesFromFacts = (facts: Fact.Fact[]): PredicateItem[] => {
   const byPredicate = new Map<string, number>();
   for (const fact of facts) {
     const { predicate } = fact.assertion;
@@ -57,5 +58,5 @@ export const predicatesFromFacts = (facts: RDF.Fact[]): PredicateItem[] => {
 };
 
 /** The ontology a space's pipeline extracts with: the seed vocabulary, minting new predicates in the space's brain. */
-export const spaceOntology = (spaceId: string): RDF.Ontology.Ontology =>
-  RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(spaceId));
+export const spaceOntology = (spaceId: string): Ontology.Ontology =>
+  Ontology.DEFAULT.withNamespace(Vocab.brainNamespace(spaceId));

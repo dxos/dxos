@@ -4,7 +4,8 @@
 
 import React, { type ReactNode, useMemo, useState } from 'react';
 
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { Graph, Ontology } from '@dxos/echo-memory/rdf';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -26,9 +27,9 @@ export type StatItem = { label: string; value: string | number };
 export type OutputDetail = { id: string; label: string; content: ReactNode };
 
 export type OutputPanelProps = Util.ThemedClassName<{
-  facts: RDF.Fact[];
+  facts: Fact.Fact[];
   /** The predicates the brain knows (Predicates tab). */
-  ontology: RDF.Ontology.Ontology;
+  ontology: Ontology.Ontology;
   objects: EchoObjectItem[];
   /** Common per-pipeline metrics (Stats tab). */
   stats?: StatItem[];
@@ -128,7 +129,7 @@ const StatsView = Util.composable<HTMLDivElement, { stats: StatItem[] }>(({ stat
 StatsView.displayName = 'StatsView';
 
 /** The facts serialised as the brain stores them: TriG, each named graph's statements followed by its provenance. */
-const TurtleView = ({ facts }: { facts: RDF.Fact[] }) => {
+const TurtleView = ({ facts }: { facts: Fact.Fact[] }) => {
   const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () => [
@@ -138,7 +139,7 @@ const TurtleView = ({ facts }: { facts: RDF.Fact[] }) => {
     ],
     [themeMode],
   );
-  const source = useMemo(() => RDF.Graph.toTriG(facts), [facts]);
+  const source = useMemo(() => Graph.toTriG(facts), [facts]);
   if (facts.length === 0) {
     return <Status.Empty>No facts.</Status.Empty>;
   }

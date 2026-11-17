@@ -10,8 +10,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
+import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { RDF } from '@dxos/pipeline-rdf';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
@@ -40,11 +40,11 @@ const LAYOUT: ModuleContainer.Layout = [[StoryRole.Chat, StoryRole.Query], [Stor
 const LOOKUP_WINDOW_MS = 3_000;
 
 /** Listeners for the facts the Brain operations read; the plugin is built once per story module, the listener per mount. */
-const operationFactListeners = new Set<(facts: readonly RDF.Fact[]) => void>();
+const operationFactListeners = new Set<(facts: readonly Fact.Fact[]) => void>();
 
 const ExplorerRoot = () => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
-  const [facts, setFacts] = useState<RDF.Fact[]>([]);
+  const [facts, setFacts] = useState<Fact.Fact[]>([]);
   const [selected, setSelected] = useState<string | undefined>(undefined);
   const [predicate, setPredicate] = useState<PredicateFilter | undefined>(undefined);
   const [scope, setScope] = useState<QueryScope | undefined>(undefined);
@@ -54,10 +54,10 @@ const ExplorerRoot = () => {
   // the graphs they read scope the views exactly as a SPARQL result binding `?g` does.
   const lookup = useRef<{ at: number; graphs: Set<string> }>({ at: 0, graphs: new Set() });
   useEffect(() => {
-    const listener = (read: readonly RDF.Fact[]) => {
+    const listener = (read: readonly Fact.Fact[]) => {
       const now = Date.now();
       const graphs = now - lookup.current.at > LOOKUP_WINDOW_MS ? new Set<string>() : lookup.current.graphs;
-      read.forEach((fact) => graphs.add(RDF.Mapping.graphOf(fact)));
+      read.forEach((fact) => graphs.add(Fact.graphOf(fact)));
       lookup.current = { at: now, graphs };
       // A fact the store gained after the views loaded must join them, or the scope would point at nothing.
       setFacts((current) => {

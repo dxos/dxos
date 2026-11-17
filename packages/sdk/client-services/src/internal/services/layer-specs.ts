@@ -53,9 +53,9 @@ import {
   InboxService,
   InvitationsService,
   LoggingService,
-  MemoryService,
   NetworkService,
   QueryService,
+  RdfStoreService,
   SpacesService,
   SqlService,
   SystemService,
@@ -98,10 +98,10 @@ import {
   InvitationsServiceLayer,
 } from '../invitations/index.ts';
 import { LoggingServiceLayer } from '../logging/index.ts';
-import { MemoryHostLayer } from '../memory/index.ts';
 import { IMetadataStoreService, SqliteMetadataStoreLayer } from '../metadata/index.ts';
 import { NetworkServiceLayer } from '../network/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
+import { RdfHostLayer } from '../rdf/index.ts';
 import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManagerLayer, SigningContextProviderLayer, SpacesServiceLayer } from '../spaces/index.ts';
 import { SqlServiceLayer } from '../sql/index.ts';
@@ -847,14 +847,14 @@ export const SqlServiceRegistrationSpec = LayerSpec.make(
   () => RegisterService(SqlService.Rpcs, SqlService.Tag),
 );
 
-export const MemoryServiceSpec = LayerSpec.make(
-  { affinity: 'application', requires: [EchoHostService, SqlClient.SqlClient], provides: [MemoryService.Tag] },
-  () => MemoryHostLayer,
+export const RdfStoreServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [EchoHostService, SqlClient.SqlClient], provides: [RdfStoreService.Tag] },
+  () => RdfHostLayer,
 );
 
-export const MemoryServiceRegistrationSpec = LayerSpec.make(
-  { affinity: 'application', requires: [MemoryService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
-  () => RegisterService(MemoryService.Rpcs, MemoryService.Tag),
+export const RdfStoreServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [RdfStoreService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(RdfStoreService.Rpcs, RdfStoreService.Tag),
 );
 
 export const LocalBlobStoreSpec = LayerSpec.make(
@@ -967,8 +967,8 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   LoggingServiceRegistrationSpec,
   SqlServiceSpec,
   SqlServiceRegistrationSpec,
-  MemoryServiceSpec,
-  MemoryServiceRegistrationSpec,
+  RdfStoreServiceSpec,
+  RdfStoreServiceRegistrationSpec,
   LocalBlobStoreSpec,
   BlobReplicationSpec(options),
   BlobStoreServiceSpec,

@@ -4,24 +4,26 @@
 
 import { describe, test } from 'vitest';
 
+import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { queryFacts } from './use-facts.ts';
 
-const mk = (over: Partial<RDF.Fact> & Pick<RDF.Fact, 'id'>): RDF.Fact => ({
-  assertion: {
-    subject: { kind: 'entity', entity: 'alice' },
-    predicate: 'travelsTo',
-    object: { kind: 'entity', entity: 'paris' },
-  },
-  factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
-  attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
-  recordedAt: '2026-06-06T12:00:00.000Z',
-  extractor: { id: 'default', model: 'm', version: '1' },
-  sourceHash: 'h1',
-  ...over,
-});
+const mk = (over: Partial<Fact.Encoded> & Pick<Fact.Encoded, 'id'>): Fact.Fact =>
+  Fact.make({
+    assertion: {
+      subject: { kind: 'entity', entity: 'alice' },
+      predicate: 'travelsTo',
+      object: { kind: 'entity', entity: 'paris' },
+    },
+    factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
+    attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
+    recordedAt: '2026-06-06T12:00:00.000Z',
+    extractor: { id: 'default', model: 'm', version: '1' },
+    sourceHash: 'h1',
+    ...over,
+  });
 
 describe('queryFacts', () => {
   test('reads all facts from a seeded store', async ({ expect }) => {

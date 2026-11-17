@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { DEFAULT_MODEL, type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
+import { DEFAULT_MODEL } from '@dxos/pipeline-rdf';
 
 import { BrainService } from '#types';
 
@@ -22,14 +23,14 @@ export type ComposeUpdateProps = {
   /** What the recipient asked for, in their words. */
   request: string;
   /** The facts that fired the watch. */
-  facts: readonly RDF.Fact[];
+  facts: readonly Fact.Fact[];
   /** The conversation the facts came from, oldest first. */
   transcript?: string;
   /** The templated message, sent instead when composing fails. */
   hint: string;
 };
 
-const factLine = (fact: RDF.Fact): string => {
+const factLine = (fact: Fact.Fact): string => {
   const quote = fact.assertion.quote ? ` — "${fact.assertion.quote}"` : '';
   const speaker = fact.attribution.agentLabel ? ` (said by ${fact.attribution.agentLabel})` : '';
   return `- ${BrainService.factText(fact)}${quote}${speaker}`;

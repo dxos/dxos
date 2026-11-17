@@ -10,8 +10,9 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
+import { Mapping, Ontology } from '@dxos/echo-memory/rdf';
 import { useQuery } from '@dxos/echo-react';
-import { RDF } from '@dxos/pipeline-rdf';
 import { type Organization, type Person } from '@dxos/types';
 
 import { type ProfileFact } from '#components';
@@ -27,7 +28,7 @@ const POLL_MS = 3_000;
  * The facts every agent in the space holds, re-read while mounted; an agent with a chat running on EDGE keeps its
  * brain there, so it is read there.
  */
-const useSpaceFacts = (db: ReturnType<typeof Obj.getDatabase>): RDF.Fact[] => {
+const useSpaceFacts = (db: ReturnType<typeof Obj.getDatabase>): Fact.Fact[] => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const agents = useQuery(db, Filter.type(Agent.Agent));
   const chats = useQuery(db, Filter.type(Chat.Chat));
@@ -42,7 +43,7 @@ const useSpaceFacts = (db: ReturnType<typeof Obj.getDatabase>): RDF.Fact[] => {
     [chats],
   );
 
-  const [facts, setFacts] = useState<RDF.Fact[]>([]);
+  const [facts, setFacts] = useState<Fact.Fact[]>([]);
   useEffect(() => {
     if (!db) {
       return;
@@ -98,7 +99,7 @@ export const useProfileKnowledge = (
       .map((fact): ProfileFact => ({
         id: fact.id,
         text: BrainService.factText(fact),
-        predicate: RDF.Ontology.DEFAULT.canonical(RDF.Mapping.predicateOf(fact))?.label ?? fact.assertion.predicate,
+        predicate: Ontology.DEFAULT.canonical(Mapping.predicateOf(fact))?.label ?? fact.assertion.predicate,
         ...(fact.origin === 'stated' || fact.origin === 'inferred' ? { origin: fact.origin } : {}),
         saidAt: fact.attribution.generatedAtTime,
       }));

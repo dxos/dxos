@@ -11,8 +11,8 @@ import * as Schema from 'effect/Schema';
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as AgentService from '@dxos/compute/AgentService';
 import type { Database } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { BaseError } from '@dxos/errors';
-import { RDF } from '@dxos/pipeline-rdf';
 import { ContentBlock } from '@dxos/types';
 
 import * as Trigger from './Trigger.ts';
@@ -55,7 +55,7 @@ export const Event = Schema.Struct({
   /** The rules' wake label (`match` for a translated pattern), `achieved`, or a sub-goal id. */
   label: Schema.String,
   /** The facts behind the wake; empty for a wake the clock caused. */
-  facts: Schema.Array(RDF.Fact),
+  facts: Schema.Array(Fact.Fact),
   /** When it woke (ISO). */
   at: Schema.String,
 });
@@ -102,7 +102,7 @@ export interface Service {
    */
   readonly push: (
     agent: string,
-    facts: readonly RDF.Fact[],
+    facts: readonly Fact.Fact[],
     options?: PushOptions,
   ) => Effect.Effect<number, BrainError>;
 
@@ -116,7 +116,7 @@ export interface Service {
   readonly nextDueAt: (agent: string) => Effect.Effect<string | undefined, BrainError>;
 
   /** The agent's facts matching the query. */
-  readonly query: (agent: string, query: FactQuery) => Effect.Effect<RDF.Fact[], BrainError>;
+  readonly query: (agent: string, query: FactQuery) => Effect.Effect<Fact.Fact[], BrainError>;
 
   /**
    * Forgets everything the agent's brain holds — facts, read cursors and queued events — so sources are read
@@ -193,7 +193,7 @@ export const fromEvaluator = (event: {
   readonly id: string;
   readonly subscription: string;
   readonly label: string;
-  readonly facts: ReadonlyArray<RDF.Fact>;
+  readonly facts: ReadonlyArray<Fact.Fact>;
   readonly at: number;
 }): Event => ({
   id: event.id,
@@ -204,26 +204,26 @@ export const fromEvaluator = (event: {
 });
 
 /** The text of a fact's subject or object. */
-export const termText = (term: RDF.Term): string =>
+export const termText = (term: Fact.Term): string =>
   term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
 
 /**
  * A fact as one line: subject, predicate, object; a negated fact is marked "not:", or a denial reads back as the
  * assertion it denies.
  */
-export const factText = (fact: RDF.Fact): string =>
+export const factText = (fact: Fact.Fact): string =>
   `${fact.factuality.polarity === '-' ? 'not: ' : ''}${termText(fact.assertion.subject)} ${fact.assertion.predicate} ${termText(fact.assertion.object)}`;
 
 /**
  * The facts that still hold at `now` (ISO): none another graph superseded or retracted, and none past its `validTo`.
  * A graph with a `kind` records a free-text memory rather than a fact, so it is left out.
  */
-export const currentFacts = (facts: readonly RDF.Fact[], now: string): RDF.Fact[] => {
-  const statuses = RDF.Graph.status(facts);
+export const currentFacts = (facts: readonly Fact.Fact[], now: string): Fact.Fact[] => {
+  const statuses = Fact.graphStatus(facts);
   return facts.filter(
     (fact) =>
       fact.kind === undefined &&
-      statuses.get(RDF.Mapping.graphOf(fact)) === 'active' &&
+      statuses.get(Fact.graphOf(fact)) === 'active' &&
       holdsAt(fact.assertion.validTo, Date.parse(now)),
   );
 };

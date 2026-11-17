@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
+import { Ontology, hashText } from '@dxos/echo-memory/rdf';
 import { Stage } from '@dxos/pipeline';
 
 import { type SemanticIndexError } from '../errors.ts';
-import { hashText } from '../internal/stages/reconcile.ts';
 import { FactStore } from '../store/index.ts';
-import { type ExtractDocument, type ExtractOptions, Ontology } from '../types/index.ts';
+import { type ExtractDocument, type ExtractOptions } from '../types/index.ts';
 import { type DocumentFacts, extractDocFacts, extractTranscriptFacts } from './extract-facts.ts';
 
 /**

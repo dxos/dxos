@@ -9,7 +9,7 @@ import { type AiService } from '@dxos/ai';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
 
 import { AgentPresence, BrainService, Goal, Profile, RelayOperation, Trigger } from '#types';
 
@@ -38,7 +38,7 @@ export type PushFactsOptions = {
 
 export const pushFacts: (
   agent: Agent.Agent,
-  facts: readonly RDF.Fact[],
+  facts: readonly Fact.Fact[],
   options?: PushFactsOptions,
 ) => Effect.Effect<
   { fired: string[]; undelivered: string[] },
@@ -177,8 +177,8 @@ const isSaidBy =
     did !== undefined && facts.length > 0 && facts.every(({ attribution }) => attribution.agent === did);
 
 /** The facts behind the events, each once, in the order they were queued. */
-const uniqueFacts = (events: readonly BrainService.Event[]): RDF.Fact[] => {
-  const seen = new Map<string, RDF.Fact>();
+const uniqueFacts = (events: readonly BrainService.Event[]): Fact.Fact[] => {
+  const seen = new Map<string, Fact.Fact>();
   for (const { facts } of events) {
     for (const fact of facts) {
       seen.set(fact.id, seen.get(fact.id) ?? fact);

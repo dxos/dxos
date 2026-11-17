@@ -15,9 +15,9 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Ontology } from '@dxos/echo-memory/rdf';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { RDF } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person, ProfileOf, Task, TaskSet } from '@dxos/types';
@@ -245,7 +245,7 @@ describe('Modes', () => {
         const store = brain.facts((yield* Database.load(agent)).id);
         const stored = store ? yield* store.query({}) : [];
         const fact = stored.find((fact) => fact.graph === owner);
-        expect(fact?.assertion.predicateIri).toBe(RDF.Ontology.DEFAULT.resolve('works on').iri);
+        expect(fact?.assertion.predicateIri).toBe(Ontology.DEFAULT.resolve('works on').iri);
         expect(fact?.attribution.agentLabel).toBe('Kai');
         expect(fact?.kind).toBeUndefined();
       },

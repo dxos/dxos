@@ -73,7 +73,7 @@ export type ServiceStackServices = ServiceContextRuntimeProps & {
   /** Replaces the EDGE inbox; tests share one relay between clients. */
   inboxRelay?: InboxRelay;
   /**
-   * Whether each space's fact feed (the `facts` namespace, which its memory writes go to first) syncs with EDGE.
+   * Whether each space's fact feed (the `facts` namespace, which its RDF store's writes go to first) syncs with EDGE.
    * Off until EDGE accepts the namespace; memory then stays on this device.
    */
   replicateFacts?: boolean;

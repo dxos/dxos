@@ -15,10 +15,11 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Hypergraph, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
+import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EID, EntityId, IdentityDid, PublicKey, SpaceId } from '@dxos/keys';
-import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
@@ -60,20 +61,21 @@ const TYPES = [
 const SAID_AT = '2026-10-09T10:00:00.000Z';
 
 /** A fact as the end-of-turn read records it from a conversation. */
-const fact = (subject: string, predicate: string, object: string, quote: string): RDF.Fact => ({
-  id: `fact-${normalizeEntityId(subject)}-${predicate}`,
-  assertion: {
-    subject: { kind: 'entity', entity: normalizeEntityId(subject), label: subject },
-    predicate,
-    object: { kind: 'literal', literal: object },
-    quote,
-  },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { agent: 'did:halo:mykola', agentLabel: 'Mykola', source: 'dxn:chat', generatedAtTime: SAID_AT },
-  recordedAt: SAID_AT,
-  extractor: { id: 'test', model: 'test', version: '1' },
-  sourceHash: 'hash',
-});
+const fact = (subject: string, predicate: string, object: string, quote: string): Fact.Fact =>
+  Fact.make({
+    id: `fact-${normalizeEntityId(subject)}-${predicate}`,
+    assertion: {
+      subject: { kind: 'entity', entity: normalizeEntityId(subject), label: subject },
+      predicate,
+      object: { kind: 'literal', literal: object },
+      quote,
+    },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { agent: 'did:halo:mykola', agentLabel: 'Mykola', source: 'dxn:chat', generatedAtTime: SAID_AT },
+    recordedAt: SAID_AT,
+    extractor: { id: 'test', model: 'test', version: '1' },
+    sourceHash: 'hash',
+  });
 
 const OFFSITE = fact('team offsite', 'is held in', 'Lisbon', 'The team offsite is in Lisbon on November 14.');
 const BUDGET = fact('team offsite', 'has budget', '8,000 euros', 'The budget is 8,000 euros.');

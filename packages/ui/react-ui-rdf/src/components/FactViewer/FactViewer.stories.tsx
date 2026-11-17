@@ -14,7 +14,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { FactViewer, type FactViewerRootProps } from './FactViewer.tsx';
@@ -29,7 +29,7 @@ const extractor = {
  * Static demo facts that exercise the viewer: an entity→entity conflict (f1 vs f2,
  * same subject + predicate, different objects/sources) plus a coherent pair (f3/f4).
  */
-const DEMO_FACTS: RDF.Fact[] = [
+const DEMO_FACTS = Fact.makeMany([
   {
     id: 'f1',
     assertion: {
@@ -86,7 +86,7 @@ const DEMO_FACTS: RDF.Fact[] = [
     extractor,
     sourceHash: 'demo',
   },
-] satisfies RDF.Fact[];
+]) satisfies Fact.Fact[];
 
 const DefaultStory = (props: FactViewerRootProps) => <FactViewer.Root {...props} />;
 

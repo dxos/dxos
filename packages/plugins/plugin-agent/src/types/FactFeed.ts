@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Type } from '@dxos/echo';
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 
 /** `kind` of a fact feed: a feed of {@link FactItem}s, which an agent's brain can index. */
 export const KIND = 'org.dxos.plugin.agent.facts';
@@ -17,8 +17,8 @@ export const KIND = 'org.dxos.plugin.agent.facts';
  * statement's IRI-derived id, which must not take the place of the ECHO object id.
  */
 export class FactItem extends Type.makeObject<FactItem>(DXN.make('org.dxos.type.agent.fact', '0.1.0'))(
-  Schema.Struct({ fact: RDF.Fact }),
+  Schema.Struct({ fact: Fact.Fact }),
 ) {}
 
 /** A fact as a fact feed item. */
-export const makeItem = (fact: RDF.Fact): FactItem => Obj.make(FactItem, { fact });
+export const makeItem = (fact: Fact.Fact): FactItem => Obj.make(FactItem, { fact });

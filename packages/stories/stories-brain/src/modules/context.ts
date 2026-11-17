@@ -4,7 +4,8 @@
 
 import { createContext, useContext } from 'react';
 
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { Mapping, Vocab } from '@dxos/echo-memory/rdf';
 
 /**
  * The only state genuinely shared across the Facts-story modules: the currently-displayed facts (a
@@ -13,8 +14,8 @@ import { RDF } from '@dxos/pipeline-rdf';
  * cross-module display/selection the {@link ModuleContainer} surfaces read and write.
  */
 export type FactsStoryState = {
-  facts: RDF.Fact[];
-  setFacts: (facts: RDF.Fact[]) => void;
+  facts: Fact.Fact[];
+  setFacts: (facts: Fact.Fact[]) => void;
   /** The selected entity slug scoping the viewer, or undefined for all. */
   selected: string | undefined;
   setSelected: (selected: string | undefined) => void;
@@ -46,8 +47,8 @@ export type PredicateFilter = {
 };
 
 /** Whether a fact states the filter's predicate (or one equivalent to it). */
-export const matchesPredicate = (fact: RDF.Fact, predicate: PredicateFilter): boolean =>
-  predicate.iris.has(RDF.Mapping.predicateOf(fact));
+export const matchesPredicate = (fact: Fact.Fact, predicate: PredicateFilter): boolean =>
+  predicate.iris.has(Mapping.predicateOf(fact));
 
 export const FactsStoryContext = createContext<FactsStoryState | undefined>(undefined);
 
@@ -61,20 +62,20 @@ export const useFactsStory = (): FactsStoryState => {
 };
 
 /** The IRI a fact's term is stored under in its graph; a literal subject is stored as the entity it names. */
-const termIri = (term: RDF.Term, graph: string, position: 'subject' | 'object'): string | undefined =>
+const termIri = (term: Fact.Term, graph: string, position: 'subject' | 'object'): string | undefined =>
   term.kind === 'entity'
-    ? RDF.Vocab.entityNode(term.entity, graph).value
+    ? Vocab.entityNode(term.entity, graph).value
     : position === 'subject'
-      ? RDF.Vocab.localEntityIri(graph, term.literal).value
+      ? Vocab.localEntityIri(graph, term.literal).value
       : undefined;
 
 /** Whether a fact's object is a literal the result binds. */
-const bindsObjectLiteral = (fact: RDF.Fact, scope: QueryScope): boolean =>
+const bindsObjectLiteral = (fact: Fact.Fact, scope: QueryScope): boolean =>
   fact.assertion.object.kind === 'literal' && scope.literals.has(fact.assertion.object.literal);
 
 /** Whether a SPARQL result touches a fact: it binds the fact's graph, else its subject, object or predicate. */
-export const factInScope = (fact: RDF.Fact, scope: QueryScope): boolean => {
-  const graph = RDF.Mapping.graphOf(fact);
+export const factInScope = (fact: Fact.Fact, scope: QueryScope): boolean => {
+  const graph = Fact.graphOf(fact);
   if (scope.graphs.size > 0) {
     return scope.graphs.has(graph);
   }
@@ -85,7 +86,7 @@ export const factInScope = (fact: RDF.Fact, scope: QueryScope): boolean => {
     (subject !== undefined && scope.iris.has(subject)) ||
     (object !== undefined && scope.iris.has(object)) ||
     bindsObjectLiteral(fact, scope) ||
-    scope.iris.has(RDF.Mapping.predicateOf(fact))
+    scope.iris.has(Mapping.predicateOf(fact))
   );
 };
 
@@ -93,11 +94,11 @@ export const factInScope = (fact: RDF.Fact, scope: QueryScope): boolean => {
  * The entities (by slug) a SPARQL result touches: those of every graph it binds, else those it binds directly and the
  * subjects of the facts whose literal object it binds.
  */
-export const entitiesInScope = (facts: readonly RDF.Fact[], scope: QueryScope): Set<string> => {
+export const entitiesInScope = (facts: readonly Fact.Fact[], scope: QueryScope): Set<string> => {
   const bindsGraphs = scope.graphs.size > 0;
   const entities = new Set<string>();
   for (const fact of facts) {
-    const graph = RDF.Mapping.graphOf(fact);
+    const graph = Fact.graphOf(fact);
     const whole = bindsGraphs && scope.graphs.has(graph);
     const literalObject = !bindsGraphs && bindsObjectLiteral(fact, scope);
     for (const [term, position] of [

@@ -2,20 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { Ontology, Vocab } from '@dxos/echo-memory/rdf';
 
 /**
  * Predicates whose object identifies the subject: an account (a username, a handle, an email address) or an explicit
  * same-as. The extractor mints one entity per mention it cannot resolve, so the same person read from a roster, a
  * Discord thread and an email arrives as several entities; these predicates are what ties them back together.
  */
-const IDENTIFYING_IRIS: ReadonlySet<string> = new Set([`${RDF.Vocab.FOAF}account`, RDF.Vocab.OWL_SAME_AS]);
+const IDENTIFYING_IRIS: ReadonlySet<string> = new Set([`${Vocab.FOAF}account`, Vocab.OWL_SAME_AS]);
 
 /** A predicate the ontology does not know, but whose words say its object is an address (`has email`, `email is`). */
 const ADDRESS_WORDS = /\b(e-?mail|email address|mailbox)\b/;
 
 const identifying = (predicate: string): boolean =>
-  IDENTIFYING_IRIS.has(RDF.Ontology.DEFAULT.resolve(predicate).iri) || ADDRESS_WORDS.test(predicate.toLowerCase());
+  IDENTIFYING_IRIS.has(Ontology.DEFAULT.resolve(predicate).iri) || ADDRESS_WORDS.test(predicate.toLowerCase());
 
 /**
  * The form two keys are compared in: a URI or DID as is, any other string (a name, a handle, an email address) as the
@@ -32,7 +33,7 @@ export const canonicalKey = (key: string): string =>
         .replace(/(^-|-$)/g, '');
 
 /** The key a term contributes to identity: an entity's key, or a literal's value (an account named as text). */
-const termKey = (term: RDF.Fact['assertion']['subject']): string =>
+const termKey = (term: Fact.Fact['assertion']['subject']): string =>
   term.kind === 'entity' ? term.entity : term.literal;
 
 /**
@@ -42,7 +43,7 @@ const termKey = (term: RDF.Fact['assertion']['subject']): string =>
  * key, every canonical key in its group.
  */
 export const identityGroups = (
-  facts: readonly RDF.Fact[],
+  facts: readonly Fact.Fact[],
   known: Iterable<readonly string[]> = [],
   now: string = new Date().toISOString(),
 ): Map<string, ReadonlySet<string>> => {

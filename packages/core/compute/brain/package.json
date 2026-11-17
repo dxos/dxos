@@ -72,6 +72,7 @@
   ],
   "dependencies": {
     "@dxos/datalog": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/util": "workspace:*"

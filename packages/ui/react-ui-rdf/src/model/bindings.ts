@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RDF, type SparqlRow, type SparqlTerm } from '@dxos/pipeline-rdf';
+import { Graph, Vocab } from '@dxos/echo-memory/rdf';
+import { type SparqlRow, type SparqlTerm } from '@dxos/pipeline-rdf';
 
 /** A prefixed name's local part, as SPARQL's PN_LOCAL allows it without escapes (kept conservative). */
 const LOCAL_NAME = /^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$/;
 
 /** Graphs the store mints entities in; an entity IRI local to one reads as `g1:alice` rather than its full IRI. */
-const isGraphNamespace = (base: string): boolean => base.startsWith(RDF.Vocab.GRAPH) || base.startsWith(RDF.Vocab.FACT);
+const isGraphNamespace = (base: string): boolean => base.startsWith(Vocab.GRAPH) || base.startsWith(Vocab.FACT);
 
 /** A literal in Turtle syntax, its datatype or language tag written with `datatype`. */
 const literal = (value: Extract<SparqlTerm, { termType: 'Literal' }>, datatype: (iri: string) => string): string =>
@@ -32,7 +33,7 @@ export const formatBindings = (
     return formatTsv(rows, variables);
   }
   const prefixes = new Map<string, string>([
-    ...Object.entries(RDF.Graph.PREFIXES),
+    ...Object.entries(Graph.PREFIXES),
     ...(options.namespace ? [['brain', options.namespace] as const] : []),
   ]);
   const used = new Map<string, string>();

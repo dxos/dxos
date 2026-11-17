@@ -10,7 +10,8 @@ import * as Layer from 'effect/Layer';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Evaluator from '@dxos/brain/Evaluator';
 import * as AgentService from '@dxos/compute/AgentService';
-import { type FactStoreApi, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
+import { type FactStoreApi, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { BrainService, Trigger } from '#types';
 
@@ -151,7 +152,7 @@ export const make = (
       facts(agent)
         .query(query)
         .pipe(
-          Effect.map((found): RDF.Fact[] => found),
+          Effect.map((found): Fact.Fact[] => found),
           Effect.mapError(toError),
         ),
     reset: Effect.fnUntraced(function* (agent) {

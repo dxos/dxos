@@ -31,7 +31,7 @@ import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
-import { type MemoryService } from '@dxos/echo-memory';
+import { type RdfStore } from '@dxos/echo-memory';
 import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -58,7 +58,7 @@ import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
 import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
 import { createRpcBlobStore } from './rpc-blob-store.ts';
-import { createRpcMemory } from './rpc-memory.ts';
+import { createRpcRdfStore } from './rpc-rdf.ts';
 
 /** Longest a destroy waits for a database's pending writes to reach the host. */
 const DESTROY_FLUSH_TIMEOUT = 5_000;
@@ -353,11 +353,11 @@ export class Client {
   }
 
   /**
-   * The space's memory (`@dxos/echo-memory`), kept by the client services host in its own database and replicated
-   * through the space's fact feed.
+   * The space's RDF store (`@dxos/echo-memory`'s `RdfStore` port), kept by the client services host in its own
+   * database and replicated through the space's fact feed; a memory runs over it in this process.
    */
-  memory(spaceId: SpaceId): MemoryService.Service {
-    return createRpcMemory(() => this.services.rpc, spaceId);
+  rdf(spaceId: SpaceId): RdfStore.Service {
+    return createRpcRdfStore(() => this.services.rpc, spaceId);
   }
 
   /**

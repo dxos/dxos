@@ -9,8 +9,10 @@ import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
+import { Fact } from '@dxos/echo-memory';
+import { Graph } from '@dxos/echo-memory/rdf';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive, RDF } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { queryResolvedFacts } from './facts.ts';
 import { queryCompactFacts } from './query-facts.ts';
@@ -22,28 +24,29 @@ const makeFact = (options: {
   predicate: string;
   object: string;
   confidence?: number;
-}): RDF.Fact => ({
-  id: options.id,
-  assertion: {
-    subject: { kind: 'entity', entity: options.subject, label: options.subject },
-    predicate: options.predicate,
-    object: { kind: 'entity', entity: options.object, label: options.object },
-  },
-  factuality: { value: 'CT+', polarity: '+', confidence: options.confidence ?? 0.9, nature: 'epistemic' },
-  attribution: {
-    source: 'dxn:echo:@:message-1',
-    generatedAtTime: '2026-07-01T00:00:00.000Z',
-  },
-  recordedAt: '2026-07-01T12:00:00.000Z',
-  extractor: { id: 'test', model: 'stub', version: '1' },
-  sourceHash: 'hash-1',
-});
+}): Fact.Fact =>
+  Fact.make({
+    id: options.id,
+    assertion: {
+      subject: { kind: 'entity', entity: options.subject, label: options.subject },
+      predicate: options.predicate,
+      object: { kind: 'entity', entity: options.object, label: options.object },
+    },
+    factuality: { value: 'CT+', polarity: '+', confidence: options.confidence ?? 0.9, nature: 'epistemic' },
+    attribution: {
+      source: 'dxn:echo:@:message-1',
+      generatedAtTime: '2026-07-01T00:00:00.000Z',
+    },
+    recordedAt: '2026-07-01T12:00:00.000Z',
+    extractor: { id: 'test', model: 'stub', version: '1' },
+    sourceHash: 'hash-1',
+  });
 
-const FACTS: RDF.Fact[] = [
+const FACTS = Fact.makeMany([
   makeFact({ id: 'f-1', subject: 'alice', predicate: 'works-at', object: 'acme', confidence: 0.95 }),
   makeFact({ id: 'f-2', subject: 'alice', predicate: 'travels-to', object: 'paris', confidence: 0.5 }),
   makeFact({ id: 'f-3', subject: 'bob', predicate: 'works-at', object: 'acme', confidence: 0.8 }),
-];
+]);
 
 const seededStore = Effect.gen(function* () {
   const store = yield* FactStore;
@@ -95,7 +98,7 @@ describe('QueryFacts', () => {
 
 /** A user with an IRI of its own (as the Discord pipeline names them), known by a display name, not a slug. */
 const DISCORD_USER = 'https://discord.com/users/1234';
-const DISCORD_FACTS: RDF.Fact[] = [
+const DISCORD_FACTS = Fact.makeMany([
   {
     ...makeFact({ id: 'd-1', subject: 'x', predicate: 'works on', object: 'opfs' }),
     assertion: {
@@ -112,7 +115,7 @@ const DISCORD_FACTS: RDF.Fact[] = [
       object: { kind: 'entity', entity: DISCORD_USER, label: 'dmaretskyi' },
     },
   },
-];
+]);
 
 describe('entity names', () => {
   test('finds an entity with an IRI of its own by its label, in either position', async ({ expect }) => {
@@ -138,14 +141,14 @@ describe('entity names', () => {
       Effect.gen(function* () {
         const store = yield* FactStore;
         yield* store.putFacts([
-          {
+          Fact.make({
             ...makeFact({ id: 'k-1', subject: 'x', predicate: 'works on', object: 'x' }),
             assertion: {
               subject: { kind: 'entity', entity: did },
               predicate: 'works on',
               object: { kind: 'entity', entity: 'opfs', label: 'OPFS' },
             },
-          },
+          }),
         ]);
         return yield* queryCompactFacts({ entity: did });
       }).pipe(Effect.provide(FactStoreLive.layerMemory)),
@@ -154,7 +157,7 @@ describe('entity names', () => {
   });
 
   test('leaves out a graph another result supersedes', async ({ expect }) => {
-    const [old] = RDF.Graph.assign([
+    const [old] = Graph.assign([
       {
         ...makeFact({ id: '', subject: 'x', predicate: 'has account', object: 'x' }),
         assertion: {
@@ -164,12 +167,12 @@ describe('entity names', () => {
         },
       },
     ]);
-    const [current] = RDF.Graph.assign([
+    const [current] = Graph.assign([
       {
         ...old,
         id: '',
         graph: undefined,
-        supersedes: [RDF.Mapping.graphOf(old)],
+        supersedes: [Fact.graphOf(old)],
         assertion: { ...old.assertion, object: { kind: 'literal', literal: 'new_name' } },
       },
     ]);
@@ -184,12 +187,13 @@ describe('entity names', () => {
   });
 
   test('leaves out a superseded graph even when its replacement does not match the query', async ({ expect }) => {
-    const statement = (object: string, supersedes?: string): RDF.Fact => ({
-      ...makeFact({ id: '', subject: 'alice', predicate: 'works for', object }),
-      ...(supersedes ? { supersedes: [supersedes] } : {}),
-    });
-    const [acme] = RDF.Graph.assign([statement('acme')]);
-    const [contoso] = RDF.Graph.assign([statement('contoso', RDF.Mapping.graphOf(acme))]);
+    const statement = (object: string, supersedes?: string): Fact.Fact =>
+      Fact.make({
+        ...makeFact({ id: '', subject: 'alice', predicate: 'works for', object }),
+        ...(supersedes ? { supersedes: [supersedes] } : {}),
+      });
+    const [acme] = Graph.assign([statement('acme')]);
+    const [contoso] = Graph.assign([statement('contoso', Fact.graphOf(acme))]);
     const facts = await EffectEx.runPromise(
       Effect.gen(function* () {
         const store = yield* FactStore;

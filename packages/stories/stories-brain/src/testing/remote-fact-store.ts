@@ -10,8 +10,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import { type Fact } from '@dxos/echo-memory';
 import { DXN } from '@dxos/keys';
-import { FactStore, type FactStoreApi, FactStoreHttp, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, type FactStoreApi, FactStoreHttp } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as BrainOperationHandlerSet from '@dxos/plugin-brain/BrainOperationHandlerSet';
 import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
@@ -21,11 +22,11 @@ export const DEFAULT_FACT_SERVER_URL = 'http://127.0.0.1:7700';
 
 export type RemoteFactStoreOptions = {
   /** Called with the facts each read by an operation (the Brain skill's tools) returns; the UI's own reads are not reported. */
-  onOperationFacts?: (facts: readonly RDF.Fact[]) => void;
+  onOperationFacts?: (facts: readonly Fact.Fact[]) => void;
 };
 
 /** The store with every fact-returning read reported, so a story can show what an agent's tool looked at. */
-const reporting = (store: FactStoreApi, report: (facts: readonly RDF.Fact[]) => void): FactStoreApi => ({
+const reporting = (store: FactStoreApi, report: (facts: readonly Fact.Fact[]) => void): FactStoreApi => ({
   ...store,
   query: (query) => store.query(query).pipe(Effect.tap((facts) => Effect.sync(() => report(facts)))),
   select: (sparql) => store.select(sparql).pipe(Effect.tap((facts) => Effect.sync(() => report(facts)))),

@@ -9,7 +9,7 @@ export default defineConfig({
     index: 'src/index.ts',
     // Its own entry, so a host on synchronous SQLite (a Durable Object) never loads `effect/sql`.
     async: 'src/async.ts',
-    exchange: 'src/exchange.ts',
+    exchange: 'src/Exchange.ts',
     testing: 'src/testing/index.ts',
   },
   test: { node: true },

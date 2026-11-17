@@ -9,6 +9,8 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { DataFactory, type Quad as RdfQuad } from 'n3';
 import { Parser } from 'sparqljs';
 
+import { Fact } from '@dxos/echo-memory';
+import { Graph, Mapping, Ontology, Sparql, Vocab, hashText } from '@dxos/echo-memory/rdf';
 import {
   EngineCore,
   type Program,
@@ -24,24 +26,7 @@ import { runEffect } from '@dxos/sparql-sqlite/async';
 import * as SqliteStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from '../errors.ts';
-import {
-  DESCRIBED_PREDICATES_SPARQL,
-  ONTOLOGY_SPARQL,
-  SEED_MARKER_SPARQL,
-  STORED_PREDICATES_SPARQL,
-  candidateGraphs,
-  deleteSeedSparql,
-  graphQuadsSparql,
-  graphValues,
-  predicateLabels,
-} from '../internal/sparql/fact-query.ts';
-import { matchingPredicates, statementMatches } from '../internal/sparql/match.ts';
 import { type SemanticQuery } from '../internal/sparql/query-builder.ts';
-import { boundGraphs, rowsToQuads, toQuad } from '../internal/sparql/terms.ts';
-import { hashText } from '../internal/stages/reconcile.ts';
-import { type Fact, Graph, Ontology } from '../types/index.ts';
-import * as Mapping from '../types/Mapping.ts';
-import * as Vocab from '../types/Vocab.ts';
 import { FactStore, type FactStoreApi, type SparqlRow } from './fact-store.ts';
 
 //
@@ -87,7 +72,7 @@ const SEED_MARKER = DataFactory.quad(
  * The quads persisting the facts, plus the provenance of each predicate they mint that the store has not described
  * yet, so a predicate records when, by what and from which quote it was first minted rather than every use.
  */
-const factQuads = (facts: readonly Fact[], described: ReadonlySet<string>): RdfQuad[] => [
+const factQuads = (facts: readonly Fact.Fact[], described: ReadonlySet<string>): RdfQuad[] => [
   ...facts.flatMap((fact) => Mapping.factToTriples(fact)),
   ...Graph.mintedPredicates(facts)
     .filter(({ iri }) => !described.has(iri))
@@ -130,7 +115,7 @@ const programs = (engine: EngineCore, prefix = '') => {
   const cursors = `${prefix}${CURSORS_TABLE}`;
 
   function* insert(rdfQuads: readonly RdfQuad[]): Program<void> {
-    const quads: Quad[] = rdfQuads.map(toQuad);
+    const quads: Quad[] = rdfQuads.map(Sparql.toQuad);
     for (let start = 0; start < quads.length; start += INSERT_BATCH) {
       yield* engine.insert(quads.slice(start, start + INSERT_BATCH));
     }
@@ -138,18 +123,18 @@ const programs = (engine: EngineCore, prefix = '') => {
 
   // A store whose seed is current holds the marker; one written by another seed has its seed predicates rewritten.
   function* seed(): Program<void> {
-    const [marker] = yield* engine.query(SEED_MARKER_SPARQL);
+    const [marker] = yield* engine.query(Sparql.SEED_MARKER_SPARQL);
     if (marker?.v?.value === SEED_VERSION) {
       return;
     }
-    for (const update of deleteSeedSparql(SEED_IRIS)) {
+    for (const update of Sparql.deleteSeedSparql(SEED_IRIS)) {
       yield* engine.query(update);
     }
     yield* insert([...SEED_QUADS, SEED_MARKER]);
   }
 
   function* ontologyQuads(): Program<RdfQuad[]> {
-    return rowsToQuads(yield* engine.query(ONTOLOGY_SPARQL));
+    return Sparql.rowsToQuads(yield* engine.query(Sparql.ONTOLOGY_SPARQL));
   }
 
   return {
@@ -163,9 +148,9 @@ const programs = (engine: EngineCore, prefix = '') => {
       yield* seed();
     },
 
-    *putFacts(facts: readonly Fact[]): Program<void> {
+    *putFacts(facts: readonly Fact.Fact[]): Program<void> {
       const described = new Set(
-        (yield* engine.query(DESCRIBED_PREDICATES_SPARQL)).flatMap(({ s: subject }) =>
+        (yield* engine.query(Sparql.DESCRIBED_PREDICATES_SPARQL)).flatMap(({ s: subject }) =>
           subject ? [subject.value] : [],
         ),
       );
@@ -178,34 +163,36 @@ const programs = (engine: EngineCore, prefix = '') => {
 
     // A graph found by one statement may hold others, so each reassembled statement is checked against the query
     // again; `triplesToFacts` validates via Schema, so malformed stored data fails here too.
-    *query(semanticQuery: SemanticQuery): Program<Fact[]> {
+    *query(semanticQuery: SemanticQuery): Program<Fact.Fact[]> {
       const ontology = yield* ontologyQuads();
       const predicates =
         semanticQuery.predicate === undefined
           ? undefined
-          : matchingPredicates(
+          : Sparql.matchingPredicates(
               semanticQuery.predicate,
-              predicateLabels(
-                (yield* engine.query(STORED_PREDICATES_SPARQL)).flatMap(({ p }) => (p ? [p.value] : [])),
+              Sparql.predicateLabels(
+                (yield* engine.query(Sparql.STORED_PREDICATES_SPARQL)).flatMap(({ p }) => (p ? [p.value] : [])),
                 ontology,
               ),
             );
-      const quads = rowsToQuads(yield* engine.query(graphQuadsSparql(candidateGraphs(semanticQuery, predicates))));
+      const quads = Sparql.rowsToQuads(
+        yield* engine.query(Sparql.graphQuadsSparql(Sparql.candidateGraphs(semanticQuery, predicates))),
+      );
       return Mapping.triplesToFacts([...quads, ...ontology]).filter((fact) =>
-        statementMatches(fact, semanticQuery, predicates),
+        Sparql.statementMatches(fact, semanticQuery, predicates),
       );
     },
 
-    *select(sparql: string): Program<Fact[]> {
+    *select(sparql: string): Program<Fact.Fact[]> {
       assertSelect(sparql);
-      const graphs = boundGraphs(yield* engine.query(sparql));
+      const graphs = Sparql.boundGraphs(yield* engine.query(sparql));
       if (graphs.length === 0) {
         return [];
       }
       const quads: RdfQuad[] = [];
       for (let start = 0; start < graphs.length; start += LOAD_BATCH) {
-        const batch = graphValues(graphs.slice(start, start + LOAD_BATCH));
-        quads.push(...rowsToQuads(yield* engine.query(graphQuadsSparql(batch))));
+        const batch = Sparql.graphValues(graphs.slice(start, start + LOAD_BATCH));
+        quads.push(...Sparql.rowsToQuads(yield* engine.query(Sparql.graphQuadsSparql(batch))));
       }
       return Mapping.triplesToFacts([...quads, ...(yield* ontologyQuads())]);
     },

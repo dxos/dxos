@@ -9,8 +9,9 @@ import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
 import { type AiService } from '@dxos/ai';
+import { Fact } from '@dxos/echo-memory';
 import { Pipeline } from '@dxos/pipeline';
-import { FactStore, type FactStoreApi, RDF, SemanticIndexError } from '@dxos/pipeline-rdf';
+import { FactStore, type FactStoreApi, SemanticIndexError } from '@dxos/pipeline-rdf';
 import { failingAiService } from '@dxos/pipeline-rdf/testing';
 
 import * as Crawler from '../Crawler.ts';
@@ -122,10 +123,10 @@ describe('extractFactsStage', () => {
       const profiles = (yield* store.query({ subjectEntity: 'https://discord.com/users/111' })).filter(
         (fact) => fact.extractor.id === 'agent-registry',
       );
-      const statuses = RDF.Graph.status(profiles);
-      const graphs = [...new Set(profiles.map((fact) => RDF.Mapping.graphOf(fact)))];
+      const statuses = Fact.graphStatus(profiles);
+      const graphs = [...new Set(profiles.map((fact) => Fact.graphOf(fact)))];
       expect(graphs.map((graph) => statuses.get(graph)).sort()).toEqual(['active', 'superseded']);
-      const current = profiles.filter((fact) => statuses.get(RDF.Mapping.graphOf(fact)) === 'active');
+      const current = profiles.filter((fact) => statuses.get(Fact.graphOf(fact)) === 'active');
       expect(
         current
           .flatMap((fact) => (fact.assertion.object.kind === 'literal' ? [fact.assertion.object.literal] : []))
@@ -157,8 +158,8 @@ describe('extractFactsStage', () => {
       const profiles = (yield* store.query({ subjectEntity: 'https://discord.com/users/111' })).filter(
         (fact) => fact.extractor.id === 'agent-registry',
       );
-      const statuses = RDF.Graph.status(profiles);
-      const graphs = [...new Set(profiles.map((fact) => RDF.Mapping.graphOf(fact)))];
+      const statuses = Fact.graphStatus(profiles);
+      const graphs = [...new Set(profiles.map((fact) => Fact.graphOf(fact)))];
       expect(graphs.map((graph) => statuses.get(graph))).toEqual(['active']);
     }).pipe(Effect.provide(layer(prompts)));
   });
@@ -177,7 +178,7 @@ describe('extractFactsStage', () => {
     });
     return Effect.gen(function* () {
       const memory = yield* FactStore;
-      const written: RDF.Fact[] = [];
+      const written: Fact.Fact[] = [];
       // Like the ECHO fact feed: writes and cursors work, reads fail.
       const writeOnly: FactStoreApi = {
         ...memory,
@@ -196,14 +197,12 @@ describe('extractFactsStage', () => {
         );
       }
       const profiles = written.filter((fact) => fact.extractor.id === 'agent-registry');
-      const [first, second] = [...new Set(profiles.map((fact) => RDF.Mapping.graphOf(fact)))];
+      const [first, second] = [...new Set(profiles.map((fact) => Fact.graphOf(fact)))];
       expect(second).toBeDefined();
       expect(
-        profiles
-          .filter((fact) => RDF.Mapping.graphOf(fact) === second)
-          .every((fact) => fact.supersedes?.includes(first)),
+        profiles.filter((fact) => Fact.graphOf(fact) === second).every((fact) => fact.supersedes?.includes(first)),
       ).toBe(true);
-      expect(RDF.Graph.status(profiles).get(first)).toBe('superseded');
+      expect(Fact.graphStatus(profiles).get(first)).toBe('superseded');
     }).pipe(Effect.provide(layer(prompts)));
   });
 

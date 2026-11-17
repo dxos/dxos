@@ -7,8 +7,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import * as Exchange from './exchange.ts';
-import * as QuadStore from './quad-store.ts';
+import * as Exchange from './Exchange.ts';
+import * as QuadStore from './QuadStore.ts';
 import { type Quad, XSD, iri, lit } from './terms.ts';
 
 const EX = 'http://example.com/';

@@ -8,6 +8,8 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import { readFileSync } from 'node:fs';
 
+import { Fact } from '@dxos/echo-memory';
+import { Ontology, Vocab } from '@dxos/echo-memory/rdf';
 import { Pipeline } from '@dxos/pipeline';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
@@ -24,7 +26,7 @@ import {
 } from './stages/index.ts';
 import { FactStore, FactStoreLive } from './store/index.ts';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing/index.ts';
-import { type ExtractDocument, type Fact, Ontology, Vocab } from './types/index.ts';
+import { type ExtractDocument } from './types/index.ts';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
@@ -569,16 +571,17 @@ describe('FactPipeline', () => {
 });
 
 /** Minimal grounded fact for stage-level tests; only the predicate varies. */
-const testFact = (predicate: string): Fact => ({
-  id: `test:doc#hash#${predicate}`,
-  assertion: {
-    subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
-    predicate,
-    object: { kind: 'entity', entity: 'acme', label: 'Acme' },
-  },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: 'test:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
-  recordedAt: '2026-01-01T00:00:00.000Z',
-  extractor: { id: 'test', model: 'test', version: '1' },
-  sourceHash: 'deadbeef',
-});
+const testFact = (predicate: string): Fact.Fact =>
+  Fact.make({
+    id: `test:doc#hash#${predicate}`,
+    assertion: {
+      subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
+      predicate,
+      object: { kind: 'entity', entity: 'acme', label: 'Acme' },
+    },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: 'test:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
+    recordedAt: '2026-01-01T00:00:00.000Z',
+    extractor: { id: 'test', model: 'test', version: '1' },
+    sourceHash: 'deadbeef',
+  });

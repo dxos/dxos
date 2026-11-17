@@ -24,8 +24,8 @@
       "import": "./dist/lib/async.mjs"
     },
     "./exchange": {
-      "source": "./src/exchange.ts",
-      "types": "./dist/types/src/exchange.d.ts",
+      "source": "./src/Exchange.ts",
+      "types": "./dist/types/src/Exchange.d.ts",
       "import": "./dist/lib/exchange.mjs"
     },
     "./testing": {

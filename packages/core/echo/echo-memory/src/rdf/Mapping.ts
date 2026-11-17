@@ -7,16 +7,14 @@
 import * as Schema from 'effect/Schema';
 import { DataFactory, type Literal, type NamedNode, type Quad, type Term as RdfTerm } from 'n3';
 
-import { hashText } from '../internal/stages/reconcile.ts';
-import { type Term } from './Assertion.ts';
-import { type EntityKind } from './Entity.ts';
-import { Fact } from './Fact.ts';
+import * as Fact from '../Fact.ts';
+import { hashText } from './hash.ts';
 import * as Ontology from './Ontology.ts';
 import * as Vocab from './Vocab.ts';
 
 const { quad, defaultGraph, namedNode } = DataFactory;
 
-const decodeFact = Schema.decodeUnknownSync(Fact);
+const decodeFact = Schema.decodeUnknownSync(Fact.Fact);
 
 const localName = (iri: string) => iri.replace(/^.*[#/]/, '');
 
@@ -31,7 +29,7 @@ const localName = (iri: string) => iri.replace(/^.*[#/]/, '');
 // never collide. `illocution` is flattened to `sx:force` / `sx:mood` / `sx:addressee`.
 //
 
-const CLASSES: Record<EntityKind, string> = {
+const CLASSES: Record<Fact.EntityKind, string> = {
   person: `${Vocab.SCHEMA}Person`,
   org: `${Vocab.SCHEMA}Organization`,
   place: `${Vocab.SCHEMA}Place`,
@@ -41,7 +39,7 @@ const CLASSES: Record<EntityKind, string> = {
 };
 
 // Facts stored before the kinds moved to schema.org typed entities with `dx:` classes.
-const LEGACY_CLASSES: Record<EntityKind, string> = {
+const LEGACY_CLASSES: Record<Fact.EntityKind, string> = {
   person: `${Vocab.DX}Person`,
   org: `${Vocab.DX}Organization`,
   place: `${Vocab.DX}Place`,
@@ -51,7 +49,7 @@ const LEGACY_CLASSES: Record<EntityKind, string> = {
 };
 
 const KINDS = new Map(
-  [...Object.entries(CLASSES), ...Object.entries(LEGACY_CLASSES)].map(([kind, iri]) => [iri, kind as EntityKind]),
+  [...Object.entries(CLASSES), ...Object.entries(LEGACY_CLASSES)].map(([kind, iri]) => [iri, kind as Fact.EntityKind]),
 );
 
 /** The class IRIs an entity's kind is typed with; an `rdf:type` to any other class is a statement, not a kind. */
@@ -62,23 +60,20 @@ export const isKindQuad = (predicate: string, object: string): boolean =>
   predicate === Vocab.RDF_TYPE && KINDS.has(object);
 
 /** The class IRI an entity of this kind is typed with. */
-export const classIri = (kind: EntityKind): string => CLASSES[kind];
+export const classIri = (kind: Fact.EntityKind): string => CLASSES[kind];
 
 /**
  * RDF has no literal subjects, so a literal subject is stored as the entity it names. An entity slug is local to the
  * graph: the extractor resolved it to no stable IRI, and a label alone does not say two graphs mean one thing.
  */
-const subjectNode = (term: Term, graph: string): NamedNode =>
+const subjectNode = (term: Fact.Term, graph: string): NamedNode =>
   term.kind === 'entity' ? Vocab.entityNode(term.entity, graph) : Vocab.localEntityIri(graph, term.literal);
 
-const objectNode = (term: Term, graph: string): NamedNode | Literal =>
+const objectNode = (term: Fact.Term, graph: string): NamedNode | Literal =>
   term.kind === 'entity' ? Vocab.entityNode(term.entity, graph) : Vocab.str(term.literal);
 
-/** The graph IRI a fact is stored in: its own graph unless it names one. */
-export const graphOf = (fact: Fact): string => fact.graph ?? Vocab.factIri(fact.id).value;
-
 /** The predicate IRI a fact is stored with. */
-export const predicateOf = (fact: Fact, ontology: Ontology.Ontology = Ontology.DEFAULT): string =>
+export const predicateOf = (fact: Fact.Fact, ontology: Ontology.Ontology = Ontology.DEFAULT): string =>
   fact.assertion.predicateIri ?? ontology.resolve(fact.assertion.predicate).iri;
 
 const nodeKey = (term: RdfTerm): string => (term.termType === 'Literal' ? JSON.stringify(term.value) : term.value);
@@ -88,19 +83,25 @@ const statementId = (graph: string, subject: RdfTerm, predicate: string, object:
   `${graph}#${hashText(`${nodeKey(subject)} ${predicate} ${nodeKey(object)}`)}`;
 
 /** The id a fact has once stored in `graph` ({@link triplesToFacts} reads it back). */
-export const idInGraph = (fact: Fact, graph: string, ontology: Ontology.Ontology = Ontology.DEFAULT): string =>
-  graph.startsWith(Vocab.FACT)
-    ? Vocab.factIdFromIri(graph)
-    : statementId(
-        graph,
-        subjectNode(fact.assertion.subject, graph),
-        predicateOf(fact, ontology),
-        objectNode(fact.assertion.object, graph),
-      );
+export const idInGraph = (
+  fact: Fact.Fact,
+  graph: string,
+  ontology: Ontology.Ontology = Ontology.DEFAULT,
+): Fact.FactId =>
+  Fact.FactId.make(
+    graph.startsWith(Vocab.FACT)
+      ? Vocab.factIdFromIri(graph)
+      : statementId(
+          graph,
+          subjectNode(fact.assertion.subject, graph),
+          predicateOf(fact, ontology),
+          objectNode(fact.assertion.object, graph),
+        ),
+  );
 
 /** Expands a fact into its statement, the descriptions of its entities, and its graph's provenance. */
-export const factToTriples = (fact: Fact, ontology: Ontology.Ontology = Ontology.DEFAULT): Quad[] => {
-  const graph = namedNode(graphOf(fact));
+export const factToTriples = (fact: Fact.Fact, ontology: Ontology.Ontology = Ontology.DEFAULT): Quad[] => {
+  const graph = namedNode(Fact.graphOf(fact));
   const meta = defaultGraph();
   const predicate = predicateOf(fact, ontology);
   const subject = subjectNode(fact.assertion.subject, graph.value);
@@ -183,11 +184,14 @@ export const factToTriples = (fact: Fact, ontology: Ontology.Ontology = Ontology
 };
 
 /** Reassembles (and validates) facts from quads: the inverse of {@link factToTriples}, one fact per statement. */
-export const triplesToFacts = (quads: readonly Quad[], ontology: Ontology.Ontology = Ontology.DEFAULT): Fact[] => {
+export const triplesToFacts = (quads: readonly Quad[], ontology: Ontology.Ontology = Ontology.DEFAULT): Fact.Fact[] => {
   const labels = new Map<string, string>();
   const comments = new Map<string, string>();
   const provenance = new Map<string, Map<string, RdfTerm[]>>();
-  const graphs = new Map<string, { statements: Quad[]; labels: Map<string, string>; types: Map<string, EntityKind> }>();
+  const graphs = new Map<
+    string,
+    { statements: Quad[]; labels: Map<string, string>; types: Map<string, Fact.EntityKind> }
+  >();
   const graphFor = (iri: string) => {
     let graph = graphs.get(iri);
     if (!graph) {
@@ -229,12 +233,12 @@ export const triplesToFacts = (quads: readonly Quad[], ontology: Ontology.Ontolo
     }
   }
 
-  const facts: Fact[] = [];
+  const facts: Fact.Fact[] = [];
   for (const [iri, graph] of graphs) {
     const props = provenance.get(iri) ?? new Map<string, RdfTerm[]>();
     const one = (name: string) => props.get(name)?.[0]?.value;
     const many = (name: string) => props.get(name)?.map((term) => term.value) ?? [];
-    const term = (node: RdfTerm): Term | undefined =>
+    const term = (node: RdfTerm): Fact.Term | undefined =>
       node.termType === 'Literal'
         ? { kind: 'literal', literal: node.value }
         : node.termType === 'NamedNode'

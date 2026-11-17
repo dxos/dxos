@@ -15,9 +15,9 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { type RDF } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
@@ -391,17 +391,18 @@ describe('ReadSource', () => {
           id: string,
           subject: string,
           predicate: string,
-          object: RDF.Fact['assertion']['object'],
+          object: Fact.Encoded['assertion']['object'],
           source: string,
-        ): RDF.Fact => ({
-          id,
-          assertion: { subject: { kind: 'entity', entity: subject }, predicate, object },
-          factuality: { value: 'CT+', polarity: '+' },
-          attribution: { source, generatedAtTime: '2026-10-14T10:00:00.000Z' },
-          recordedAt: '2026-10-14T10:00:00.000Z',
-          extractor: { id: 'test', model: 'test', version: '1' },
-          sourceHash: id,
-        });
+        ): Fact.Fact =>
+          Fact.make({
+            id,
+            assertion: { subject: { kind: 'entity', entity: subject }, predicate, object },
+            factuality: { value: 'CT+', polarity: '+' },
+            attribution: { source, generatedAtTime: '2026-10-14T10:00:00.000Z' },
+            recordedAt: '2026-10-14T10:00:00.000Z',
+            extractor: { id: 'test', model: 'test', version: '1' },
+            sourceHash: id,
+          });
         const brain = yield* BrainService.BrainService;
         yield* brain.push(agent.id, [
           // The roster resolved the name to the Person and named their Discord account.

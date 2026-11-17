@@ -4,16 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { FactStore, RDF, type SemanticIndexError, type SemanticQuery, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { Vocab } from '@dxos/echo-memory/rdf';
+import { FactStore, type SemanticIndexError, type SemanticQuery, normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import { BrainOperation } from '#types';
 
 /** Display form of a term: the preserved surface label, else the slug; literals render verbatim. */
-export const formatTerm = (term: RDF.Term): string =>
+export const formatTerm = (term: Fact.Term): string =>
   term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
 
 /** Projects a stored fact onto the LLM-facing {@link BrainOperation.CompactFact} shape. */
-export const toCompactFact = (fact: RDF.Fact): BrainOperation.CompactFact => ({
+export const toCompactFact = (fact: Fact.Fact): BrainOperation.CompactFact => ({
   id: fact.id,
   subject: formatTerm(fact.assertion.subject),
   predicate: fact.assertion.predicate,
@@ -36,12 +38,12 @@ export const factLine = (fact: BrainOperation.CompactFact): string =>
  */
 const labelledEntitiesSparql = (labels: readonly string[]): string => `
   SELECT DISTINCT ?entity WHERE {
-    GRAPH ?g { ?entity <${RDF.Vocab.RDFS_LABEL}> ?label }
+    GRAPH ?g { ?entity <${Vocab.RDFS_LABEL}> ?label }
     FILTER(
       isIRI(?entity) &&
       LCASE(STR(?label)) IN (${labels.map((label) => JSON.stringify(label)).join(', ')}) &&
-      !STRSTARTS(STR(?entity), ${JSON.stringify(RDF.Vocab.GRAPH)}) &&
-      !STRSTARTS(STR(?entity), ${JSON.stringify(RDF.Vocab.FACT)})
+      !STRSTARTS(STR(?entity), ${JSON.stringify(Vocab.GRAPH)}) &&
+      !STRSTARTS(STR(?entity), ${JSON.stringify(Vocab.FACT)})
     )
   }`;
 
@@ -60,7 +62,7 @@ export const resolveEntityKeys: (name: string) => Effect.Effect<string[], Semant
       return [raw];
     }
     const key = normalizeEntityId(name);
-    if (RDF.Vocab.isIri(key)) {
+    if (Vocab.isIri(key)) {
       return [key];
     }
     const store = yield* FactStore;
@@ -72,7 +74,7 @@ export const resolveEntityKeys: (name: string) => Effect.Effect<string[], Semant
 
 /** Every graph another graph supersedes or retracts, stated about the replacing graph in the default graph. */
 const replacedGraphsSparql = `SELECT DISTINCT ?graph WHERE {
-  { ?replacing <${RDF.Vocab.sx('supersedes').value}> ?graph } UNION { ?replacing <${RDF.Vocab.sx('retracts').value}> ?graph }
+  { ?replacing <${Vocab.sx('supersedes').value}> ?graph } UNION { ?replacing <${Vocab.sx('retracts').value}> ?graph }
 }`;
 
 /**
@@ -80,13 +82,13 @@ const replacedGraphsSparql = `SELECT DISTINCT ?graph WHERE {
  * combination of the keys they resolve to, merged by fact id in first-seen order, without any graph another graph in
  * the store supersedes or retracts.
  */
-export const queryResolvedFacts = (query: SemanticQuery): Effect.Effect<RDF.Fact[], SemanticIndexError, FactStore> =>
+export const queryResolvedFacts = (query: SemanticQuery): Effect.Effect<Fact.Fact[], SemanticIndexError, FactStore> =>
   Effect.gen(function* () {
     const store = yield* FactStore;
     const { entity, subjectEntity, ...rest } = query;
     const entities = entity === undefined ? [undefined] : yield* resolveEntityKeys(entity);
     const subjects = subjectEntity === undefined ? [undefined] : yield* resolveEntityKeys(subjectEntity);
-    const byId = new Map<string, RDF.Fact>();
+    const byId = new Map<string, Fact.Fact>();
     for (const entityKey of entities) {
       for (const subjectKey of subjects) {
         const facts = yield* store.query({
@@ -108,5 +110,5 @@ export const queryResolvedFacts = (query: SemanticQuery): Effect.Effect<RDF.Fact
         graph?.termType === 'NamedNode' ? [graph.value] : [],
       ),
     );
-    return [...byId.values()].filter((fact) => !replaced.has(RDF.Mapping.graphOf(fact)));
+    return [...byId.values()].filter((fact) => !replaced.has(Fact.graphOf(fact)));
   });

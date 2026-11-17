@@ -6,6 +6,8 @@ import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
+import { Fact } from '@dxos/echo-memory';
+import { Graph, Ontology, hashText } from '@dxos/echo-memory/rdf';
 import { Stage } from '@dxos/pipeline';
 
 import { type SemanticIndexError } from '../errors.ts';
@@ -17,16 +19,7 @@ import {
   extractChunk,
   extractTranscript,
 } from '../internal/stages/extract.ts';
-import { hashText } from '../internal/stages/reconcile.ts';
-import {
-  type EntityTerm,
-  type ExtractDocument,
-  type ExtractOptions,
-  type Fact,
-  Graph,
-  type KnownEntity,
-  Ontology,
-} from '../types/index.ts';
+import { type ExtractDocument, type ExtractOptions, type KnownEntity } from '../types/index.ts';
 
 const EMAIL = /^(?:mailto:)?([^\s@]+@[^\s@]+\.[^\s@]+)$/i;
 const URL_PATTERN = /^https?:\/\/\S+$/i;
@@ -83,12 +76,16 @@ const indexEntities = (entities: ReadonlyArray<KnownEntity>): Map<string, KnownE
  * The term for a mention: a known entity's stable IRI when the mention names one, else its slug, which the store keeps
  * local to the mention's graph.
  */
-const entityTerm = (surface: string, type: EntityTerm['type'], known: ReadonlyMap<string, KnownEntity>): EntityTerm => {
+const entityTerm = (
+  surface: string,
+  type: Fact.EntityTerm['type'],
+  known: ReadonlyMap<string, KnownEntity>,
+): Fact.EntityTerm => {
   const entity = known.get(nameKey(surface));
   const kind = type ?? entity?.type;
   return {
     kind: 'entity',
-    entity: entity?.iri ?? normalizeEntityId(surface),
+    entity: Fact.EntityKey.make(entity?.iri ?? normalizeEntityId(surface)),
     // A known entity keeps its own name, so every mention of it reads the same whichever form the text used.
     label: entity?.label ?? surface.trim(),
     ...(kind ? { type: kind } : {}),
@@ -115,7 +112,7 @@ const factContext = (options: ExtractOptions | undefined) =>
   });
 
 /** A candidate the model emitted, as a {@link Fact} attributed to `doc`; `undefined` when it is ungrounded. */
-const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactContext): Fact | undefined => {
+const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactContext): Fact.Fact | undefined => {
   // Drop ungrounded propositions before they become facts.
   if (!isGrounded(candidate.subject) || !isGrounded(candidate.object)) {
     return undefined;
@@ -136,7 +133,7 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
   const predicate = listed ?? context.ontology.resolve(candidate.predicate);
   return {
     // Replaced by the statement's id once the facts are placed in their graphs.
-    id: '',
+    id: Fact.FactId.make(''),
     assertion: {
       subject: entityTerm(candidate.subject, candidate.subjectType, context.known),
       predicate: listed?.label ?? candidate.predicate.trim(),
@@ -155,9 +152,13 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
     },
     ...(illocution ? { illocution } : {}),
     attribution: {
-      ...(doc.agent ? { agent: doc.agent } : doc.author ? { agent: normalizeEntityId(doc.author) } : {}),
+      ...(doc.agent
+        ? { agent: Fact.EntityKey.make(doc.agent) }
+        : doc.author
+          ? { agent: Fact.EntityKey.make(normalizeEntityId(doc.author)) }
+          : {}),
       ...(doc.agent && doc.author ? { agentLabel: doc.author } : {}),
-      source: doc.source,
+      source: Fact.SourceUri.make(doc.source),
       generatedAtTime: doc.date ?? context.recordedAt,
     },
     recordedAt: context.recordedAt,
@@ -169,9 +170,9 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
 /** Place one document's facts in their graphs: statements that share provenance and the model's graph label share one. */
 const placeFacts = (
   doc: ExtractDocument,
-  labelled: ReadonlyArray<readonly [Fact, string]>,
+  labelled: ReadonlyArray<readonly [Fact.Fact, string]>,
   ontology: Ontology.Ontology,
-): Fact[] => {
+): Fact.Fact[] => {
   const labels = new Map(labelled);
   const hash = hashText(doc.text);
   return Graph.assign(
@@ -188,11 +189,11 @@ const placeFacts = (
 export const extractDocFacts = (
   doc: ExtractDocument,
   options?: ExtractOptions,
-): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
+): Effect.Effect<Fact.Fact[], SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
     const context = yield* factContext(options);
     // The graph label the model gave each statement.
-    const labelled: Array<readonly [Fact, string]> = [];
+    const labelled: Array<readonly [Fact.Fact, string]> = [];
     for (const chunkText of chunk(doc.text)) {
       const payload = yield* extractChunk({ ...doc, text: chunkText }, options);
       for (const candidate of payload.facts) {
@@ -297,7 +298,7 @@ export const extractTranscriptFacts = (
   Effect.gen(function* () {
     const context = yield* factContext(options);
     const tagged = docs.map((doc, index): TaggedDoc => ({ tag: `m${index + 1}`, doc }));
-    const labelled = new Map<TaggedDoc, Array<readonly [Fact, string]>>(tagged.map((entry) => [entry, []]));
+    const labelled = new Map<TaggedDoc, Array<readonly [Fact.Fact, string]>>(tagged.map((entry) => [entry, []]));
     for (const transcript of packTranscripts(tagged, options?.maxTranscriptChars ?? DEFAULT_MAX_TRANSCRIPT_CHARS)) {
       const label = transcript.docs.map(({ doc }) => doc.source).join(',');
       const payload = yield* extractTranscript(transcript.text, label, options);
@@ -322,13 +323,13 @@ export const extractTranscriptFacts = (
 export const extractFacts = (
   docs: readonly ExtractDocument[],
   options?: ExtractOptions,
-): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
+): Effect.Effect<Fact.Fact[], SemanticIndexError, AiService.AiService> =>
   Effect.forEach(docs, (doc) => extractDocFacts(doc, options)).pipe(Effect.map((arrays) => arrays.flat()));
 
 /** Output of the fact stages: the source document together with the facts derived from it. */
 export type DocumentFacts = {
   readonly doc: ExtractDocument;
-  readonly facts: readonly Fact[];
+  readonly facts: readonly Fact.Fact[];
 };
 
 /**
@@ -355,7 +356,7 @@ export const growingOntology = (initial: Ontology.Ontology = Ontology.DEFAULT) =
   let ontology = initial;
   return {
     current: () => ontology,
-    learn: (facts: readonly Fact[]) => {
+    learn: (facts: readonly Fact.Fact[]) => {
       ontology = ontology.include(Graph.mintedPredicates(facts, ontology));
     },
   };

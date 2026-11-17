@@ -7,9 +7,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Query } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
+import { Ontology } from '@dxos/echo-memory/rdf';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Thread } from '@dxos/pipeline-email';
-import { RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
@@ -21,9 +22,9 @@ import { usePipelineStory } from './pipeline-context.ts';
  * Reads a space's facts from Brain's shared in-memory `FactStore`, re-querying whenever the store
  * mutates (the store is not ECHO-reactive, so the registry's `subscribe` is the change signal).
  */
-const useFacts = (spaceId: string): RDF.Fact[] => {
+const useFacts = (spaceId: string): Fact.Fact[] => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
-  const [facts, setFacts] = useState<RDF.Fact[]>([]);
+  const [facts, setFacts] = useState<Fact.Fact[]>([]);
   useEffect(() => {
     let cancelled = false;
     const refresh = () =>
@@ -43,9 +44,9 @@ const useFacts = (spaceId: string): RDF.Fact[] => {
 };
 
 /** The predicates a space's `FactStore` has learned, re-read whenever the store mutates. */
-const usePredicates = (spaceId: string): RDF.Ontology.Entry[] => {
+const usePredicates = (spaceId: string): Ontology.Entry[] => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
-  const [predicates, setPredicates] = useState<RDF.Ontology.Entry[]>([]);
+  const [predicates, setPredicates] = useState<Ontology.Entry[]>([]);
   useEffect(() => {
     let cancelled = false;
     const refresh = () =>

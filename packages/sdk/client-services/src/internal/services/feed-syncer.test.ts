@@ -13,8 +13,6 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Fact, MemoryQuery } from '@dxos/echo-memory';
-import { FactLog, MemorySqlite } from '@dxos/echo-memory-sqlite';
 import { type EdgeConnection, MessageSchema, type ReconnectListener } from '@dxos/edge-client';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore, SyncServer } from '@dxos/feed';
@@ -25,9 +23,11 @@ import { createBuf } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { QuadStore } from '@dxos/sparql-sqlite/async';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import { bufferToArray } from '@dxos/util';
 
+import { FACTS_NAMESPACE, batchToBytes, factFeedLog } from '../rdf/index.ts';
 import { FeedSyncer } from './feed-syncer.ts';
 
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
@@ -452,7 +452,7 @@ describe('FeedSyncer', () => {
     });
   });
 
-  test('replicates a fact feed, and a memory over it applies what arrives', async () => {
+  test('replicates a fact feed, and a store over it applies what arrives', async () => {
     const spaceId = SpaceId.random();
     const feedId = EntityId.random();
     const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
@@ -460,39 +460,39 @@ describe('FeedSyncer', () => {
       syncNamespaces: [...syncNamespaces, FeedProtocol.WellKnownNamespaces.facts],
     });
 
-    // A memory on this device, over its own fact feed, before anything has replicated.
+    // A store on this device, over its own fact feed, before anything has replicated.
     const scope = Scope.makeUnsafe();
     onTestFinished(() => clientRuntime.runPromise(Scope.close(scope, Exit.void)));
-    const memory = await clientRuntime.runPromise(
+    const store = await clientRuntime.runPromise(
       Effect.gen(function* () {
-        const log = yield* FactLog.feed({ feeds: clientFeedStore, spaceId, feedId });
-        return yield* MemorySqlite.makeAsync({ log, prefix: 'memory_test_' });
+        const log = yield* factFeedLog({ feeds: clientFeedStore, spaceId, feedId });
+        return yield* QuadStore.make({ prefix: 'rdf_test_', log });
       }).pipe(Scope.provide(scope)),
     );
 
     // Another device's write, as it reaches the server.
-    const fact = Fact.decode([
-      {
-        id: 'f1',
-        assertion: {
-          subject: { kind: 'entity', entity: 'dima' },
-          predicate: 'works on',
-          object: { kind: 'entity', entity: 'indexer' },
-        },
-        factuality: { value: 'CT+', polarity: '+' },
-        attribution: { agent: 'dima', source: 'chat:general/f1', generatedAtTime: '2026-11-16T00:00:00.000Z' },
-        recordedAt: '2026-11-16T00:00:00.000Z',
-        extractor: { id: 'test', model: 'none', version: '1' },
-        sourceHash: 'f1',
-      },
-    ])[0];
+    const name = { termType: 'NamedNode', value: 'https://example.com/name' } as const;
     await serverFeedStore
       .appendLocal([
         {
           spaceId,
           feedId,
-          feedNamespace: FactLog.NAMESPACE,
-          data: FactLog.toBytes({ _tag: 'put', facts: [fact] }),
+          feedNamespace: FACTS_NAMESPACE,
+          data: batchToBytes({
+            id: 'b1',
+            writes: [
+              {
+                _tag: 'insert',
+                quads: [
+                  {
+                    s: { termType: 'NamedNode', value: 'https://example.com/dima' },
+                    p: name,
+                    o: { termType: 'Literal', value: 'Dima' },
+                  },
+                ],
+              },
+            ],
+          }),
         },
       ])
       .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
@@ -500,8 +500,8 @@ describe('FeedSyncer', () => {
     await syncer.open(new Context());
 
     await vi.waitFor(async () => {
-      const facts = await clientRuntime.runPromise(memory.query(MemoryQuery.facts()));
-      expect(facts.map(({ id }) => id)).toEqual(['f1']);
+      const rows = await clientRuntime.runPromise(store.query('SELECT ?n WHERE { ?s <https://example.com/name> ?n }'));
+      expect(rows.map(({ n }) => n?.value)).toEqual(['Dima']);
     });
   });
 

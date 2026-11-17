@@ -4,28 +4,29 @@
 
 import { describe, test } from 'vitest';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 
 import { propertyKey, related, statements, toEntityCards } from './subgraph.ts';
 
-const fact = (id: string, subject: RDF.Term, predicate: string, object: RDF.Term): RDF.Fact => ({
-  id,
-  assertion: { subject, predicate, object },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: 'https://example.com/alice', generatedAtTime: '2026-10-13T07:30:00Z' },
-  recordedAt: '2026-10-13T07:30:05Z',
-  extractor: { id: 'default', model: 'model', version: '1' },
-  sourceHash: 'abc',
-});
+const fact = (id: string, subject: Fact.Term, predicate: string, object: Fact.Term): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: { subject, predicate, object },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: 'https://example.com/alice', generatedAtTime: '2026-10-13T07:30:00Z' },
+    recordedAt: '2026-10-13T07:30:05Z',
+    extractor: { id: 'default', model: 'model', version: '1' },
+    sourceHash: 'abc',
+  });
 
-const alice: RDF.Term = { kind: 'entity', entity: 'alice', label: 'Alice Chen' };
-const bob: RDF.Term = { kind: 'entity', entity: 'bob', label: 'Bob' };
-const acme: RDF.Term = { kind: 'entity', entity: 'acme', label: 'Acme' };
+const alice: Fact.Term = { kind: 'entity', entity: Fact.EntityKey.make('alice'), label: 'Alice Chen' };
+const bob: Fact.Term = { kind: 'entity', entity: Fact.EntityKey.make('bob'), label: 'Bob' };
+const acme: Fact.Term = { kind: 'entity', entity: Fact.EntityKey.make('acme'), label: 'Acme' };
 
 const FACTS = [
   fact('1', alice, 'works at', acme),
   fact('2', alice, 'knows', bob),
-  fact('3', alice, 'knows', { kind: 'entity', entity: 'carol', label: 'Carol' }),
+  fact('3', alice, 'knows', { kind: 'entity', entity: Fact.EntityKey.make('carol'), label: 'Carol' }),
   fact('4', bob, 'knows', alice),
   fact('5', alice, 'knows', bob),
 ];

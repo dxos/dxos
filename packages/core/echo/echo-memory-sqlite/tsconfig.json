@@ -18,19 +18,10 @@
       "path": "../../compute/brain"
     },
     {
-      "path": "../../compute/pipeline-rdf"
-    },
-    {
       "path": "../../compute/sparql-sqlite"
     },
     {
-      "path": "../../protocols"
-    },
-    {
       "path": "../echo-memory"
-    },
-    {
-      "path": "../feed"
     }
   ]
 }

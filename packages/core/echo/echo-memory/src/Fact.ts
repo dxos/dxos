@@ -164,6 +164,15 @@ export const Fact = Schema.Struct({
 });
 export interface Fact extends Schema.Schema.Type<typeof Fact> {}
 
+/** A fact before the id brands are applied: every id a plain string, as stored and as written by hand. */
+export type Encoded = Schema.Codec.Encoded<typeof Fact>;
+
+/** Builds a fact from its plain form, applying the id brands; throws on a malformed fact. */
+export const make: (fact: Encoded) => Fact = Schema.decodeSync(Fact);
+
+/** {@link make} over a list, so a literal list of facts is still checked against {@link Encoded}. */
+export const makeMany = (facts: readonly Encoded[]): Fact[] => facts.map((fact) => make(fact));
+
 /** Decodes facts from their JSON form, applying the id brands; throws on a malformed fact. */
 export const decode = Schema.decodeUnknownSync(Schema.Array(Fact));
 

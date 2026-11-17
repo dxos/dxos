@@ -5,18 +5,19 @@
 import { DataFactory } from 'n3';
 import { describe, test } from 'vitest';
 
-import { type Fact } from './Fact.ts';
+import * as Fact from '../Fact.ts';
 import * as Graph from './Graph.ts';
 import * as Mapping from './Mapping.ts';
 import * as Vocab from './Vocab.ts';
 
 /** A fact as stored: its predicate carries the IRI it resolved to. */
-const stored = (fact: Fact): Fact => ({
-  ...fact,
-  assertion: { ...fact.assertion, predicateIri: Mapping.predicateOf(fact) },
-});
+const stored = (fact: Fact.Fact): Fact.Fact =>
+  Fact.make({
+    ...fact,
+    assertion: { ...fact.assertion, predicateIri: Mapping.predicateOf(fact) },
+  });
 
-const FACT: Fact = {
+const FACT = Fact.make({
   id: 'fact-1',
   assertion: {
     subject: { kind: 'entity', entity: 'alice' },
@@ -29,7 +30,7 @@ const FACT: Fact = {
   recordedAt: '2026-06-06T12:00:00.000Z',
   extractor: { id: 'default', model: 'm', version: '1' },
   sourceHash: 'h1',
-};
+});
 
 describe('fact ↔ quads mapping', () => {
   test('round-trips a fact through its own graph', ({ expect }) => {
@@ -40,7 +41,7 @@ describe('fact ↔ quads mapping', () => {
   });
 
   test('round-trips a fact with a literal object and no agent', ({ expect }) => {
-    const fact: Fact = {
+    const fact = Fact.make({
       ...FACT,
       id: 'fact-2',
       assertion: {
@@ -49,13 +50,13 @@ describe('fact ↔ quads mapping', () => {
         object: { kind: 'literal', literal: '2026-07-15' },
       },
       attribution: { source: 'dxn:queue:x:m3', generatedAtTime: '2026-06-08T00:00:00.000Z' },
-    };
+    });
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
     expect(back).toEqual(stored(fact));
   });
 
   test('round-trips a fact with wasDerivedFrom and span', ({ expect }) => {
-    const fact: Fact = {
+    const fact = Fact.make({
       ...FACT,
       id: 'fact-3',
       attribution: {
@@ -64,19 +65,19 @@ describe('fact ↔ quads mapping', () => {
         wasDerivedFrom: ['dxn:a', 'dxn:b'],
         span: { start: 0, end: 12 },
       },
-    };
+    });
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
     expect(back).toEqual(stored(fact));
   });
 
   test('round-trips the extraction pass', ({ expect }) => {
-    const fact: Fact = { ...FACT, id: 'fact-pass', pass: 'pass-1' };
+    const fact = Fact.make({ ...FACT, id: 'fact-pass', pass: 'pass-1' });
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
     expect(back).toEqual(stored(fact));
   });
 
   test('round-trips entity display labels (preserving surface casing)', ({ expect }) => {
-    const fact: Fact = {
+    const fact = Fact.make({
       ...FACT,
       id: 'fact-4',
       assertion: {
@@ -84,7 +85,7 @@ describe('fact ↔ quads mapping', () => {
         predicate: 'is',
         object: { kind: 'entity', entity: 'open-source-project', label: 'an open source project' },
       },
-    };
+    });
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
     expect(back).toEqual(stored(fact));
   });
@@ -98,29 +99,33 @@ describe('fact ↔ quads mapping', () => {
   });
 
   test('round-trips a full illocution (force, mood, addressee)', ({ expect }) => {
-    const fact: Fact = {
+    const fact = Fact.make({
       ...FACT,
       id: 'fact-5',
       illocution: { force: 'directive', mood: 'interrogative', addressee: 'bob' },
-    };
+    });
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
     expect(back).toEqual(stored(fact));
   });
 
   test('round-trips an illocution with only force', ({ expect }) => {
-    const fact: Fact = { ...FACT, id: 'fact-6', illocution: { force: 'commissive' } };
+    const fact = Fact.make({ ...FACT, id: 'fact-6', illocution: { force: 'commissive' } });
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
     expect(back).toEqual(stored(fact));
   });
 
   test('round-trips an illocution with force and mood only', ({ expect }) => {
-    const fact: Fact = { ...FACT, id: 'fact-7', illocution: { force: 'directive', mood: 'imperative' } };
+    const fact = Fact.make({ ...FACT, id: 'fact-7', illocution: { force: 'directive', mood: 'imperative' } });
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
     expect(back).toEqual(stored(fact));
   });
 
   test('round-trips an illocution with force and addressee only', ({ expect }) => {
-    const fact: Fact = { ...FACT, id: 'fact-8', illocution: { force: 'expressive', addressee: 'carol@example.com' } };
+    const fact = Fact.make({
+      ...FACT,
+      id: 'fact-8',
+      illocution: { force: 'expressive', addressee: 'carol@example.com' },
+    });
     const [back] = Mapping.triplesToFacts(Mapping.factToTriples(fact));
     expect(back).toEqual(stored(fact));
   });
@@ -152,7 +157,7 @@ describe('fact ↔ quads mapping', () => {
   });
 
   test('keeps an IRI entity as itself, and its label and kind in the graph', ({ expect }) => {
-    const fact: Fact = {
+    const fact = Fact.make({
       ...FACT,
       id: 'fact-iri',
       assertion: {
@@ -161,7 +166,7 @@ describe('fact ↔ quads mapping', () => {
         object: { kind: 'entity', entity: 'founder', label: 'Founder' },
       },
       attribution: { agent: 'did:key:z6Mk', source: 'https://dxos.org/team', generatedAtTime: '2026-10-13T00:00:00Z' },
-    };
+    });
     const quads = Mapping.factToTriples(fact);
     expect(quads[0].subject.value).toBe('echo://SPACE/RICH');
     expect(quads[0].predicate.value).toBe('https://schema.org/jobTitle');
@@ -178,11 +183,11 @@ describe('fact ↔ quads mapping', () => {
   test('a graph holds several statements, each its own fact, sharing the provenance', ({ expect }) => {
     const [first, second] = Graph.assign([
       FACT,
-      {
+      Fact.make({
         ...FACT,
         id: 'other',
         assertion: { ...FACT.assertion, predicate: 'manages', object: { kind: 'entity', entity: 'bob' } },
-      },
+      }),
     ]);
     expect(first.graph).toBe(second.graph);
     expect(first.id).not.toBe(second.id);

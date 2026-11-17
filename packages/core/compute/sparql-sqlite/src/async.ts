@@ -64,4 +64,4 @@ export class SqlSparqlEngineAsync {
 }
 
 export { type SparqlError, runEffect } from './effect-driver.ts';
-export * as QuadStore from './quad-store.ts';
+export * as QuadStore from './QuadStore.ts';

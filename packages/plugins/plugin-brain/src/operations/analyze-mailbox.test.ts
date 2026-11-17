@@ -8,10 +8,11 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
@@ -22,23 +23,24 @@ const makeMessage = (suffix: string, created: string) =>
     blocks: [{ _tag: 'text', text: `Message ${suffix}` }],
   });
 
-const makeFact = (source: string, id: string, object = 'paris'): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: 'alice' },
-    predicate: 'travelsTo',
-    object: { kind: 'entity', entity: object },
-  },
-  factuality: { value: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
-  attribution: {
-    agent: 'alice',
-    source,
-    generatedAtTime: '2026-06-06T00:00:00.000Z',
-  },
-  recordedAt: '2026-06-06T12:00:00.000Z',
-  extractor: { id: 'default', model: 'ai.claude.model.claude-haiku-4-5', version: '1' },
-  sourceHash: 'abc123',
-});
+const makeFact = (source: string, id: string, object = 'paris'): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: 'alice' },
+      predicate: 'travelsTo',
+      object: { kind: 'entity', entity: object },
+    },
+    factuality: { value: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
+    attribution: {
+      agent: 'alice',
+      source,
+      generatedAtTime: '2026-06-06T00:00:00.000Z',
+    },
+    recordedAt: '2026-06-06T12:00:00.000Z',
+    extractor: { id: 'default', model: 'ai.claude.model.claude-haiku-4-5', version: '1' },
+    sourceHash: 'abc123',
+  });
 
 // Deterministic extractor: one distinct fact per message keyed off its stable source id (no LLM).
 const stubExtract: FactExtractor = (message) =>

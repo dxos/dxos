@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Predicate } from '@dxos/pipeline-rdf/types';
+import { Predicate } from '@dxos/echo-memory/rdf';
 
 import * as Vocabulary from './Vocabulary.ts';
 

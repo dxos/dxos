@@ -9,8 +9,10 @@ import React, { useCallback, useState } from 'react';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import { Fact } from '@dxos/echo-memory';
+import { Graph } from '@dxos/echo-memory/rdf';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { RDF, generateSparql } from '@dxos/pipeline-rdf';
+import { generateSparql } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { type Space } from '@dxos/react-client/echo';
 import { formatBindings } from '@dxos/react-ui-rdf';
@@ -90,7 +92,7 @@ const QueryModuleContainer = ({ space }: { space: Space }) => {
       let next: QueryPanelResult;
       if (graphs.size > 0) {
         const facts = await EffectEx.runPromise(store.select(query));
-        next = { kind: 'graphs', count: new Set(facts.map(RDF.Mapping.graphOf)).size, text: RDF.Graph.toTriG(facts) };
+        next = { kind: 'graphs', count: new Set(facts.map(Fact.graphOf)).size, text: Graph.toTriG(facts) };
       } else {
         next = { kind: 'rows', count: rows.length, text: formatBindings(rows) };
       }
