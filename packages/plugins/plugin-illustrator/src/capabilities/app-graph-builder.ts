@@ -28,15 +28,20 @@ export default Capability.makeModule(
       id: 'scores',
       relation: AppNode.companion,
       type: Drawing.Drawing,
-      connector: () =>
-        Effect.succeed([
-          AppNode.makeCompanion({
-            variant: 'scores',
-            label: ['scores.label', { ns: IllustratorNamespace.key }],
-            icon: 'ph--gauge--regular',
-            data: 'scores',
-          }),
-        ]),
+      // The scores serve an author improving a layout, so a read-only host has no use for them.
+      connector: (_, get) =>
+        Effect.succeed(
+          get(readOnlyAtom).length > 0
+            ? []
+            : [
+                AppNode.makeCompanion({
+                  variant: 'scores',
+                  label: ['scores.label', { ns: IllustratorNamespace.key }],
+                  icon: 'ph--gauge--regular',
+                  data: 'scores',
+                }),
+              ],
+        ),
     });
 
     const convertActions = yield* AppGraphBuilder.createTypeExtension({

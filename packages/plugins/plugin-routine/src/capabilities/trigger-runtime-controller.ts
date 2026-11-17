@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Obj } from '@dxos/echo';
@@ -33,6 +35,11 @@ import { type Space } from '@dxos/react-client/echo';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // A read-only host runs no triggers. `ReadOnly` is contributed at startup, before spaces are available.
+    if (Option.isSome(yield* Capability.getOption(AppCapabilities.ReadOnly))) {
+      return [];
+    }
+
     const client = yield* ClientCapabilities.Client;
     const runtime = yield* Capabilities.ProcessManagerRuntime;
 

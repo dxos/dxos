@@ -443,3 +443,10 @@ decision D-12: When the host contributes `ReadOnly`, the actions that convert a 
   supersedes: D-10
   why: A conversion writes a copy, which a read-only host has nowhere to put. The capability lands at startup with no order against module activation, so it is read when the graph expands.
 ```
+
+```mdl
+decision D-13: When the host contributes `ReadOnly`, a drawing has no Scores companion.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [VariantProvider]
+```

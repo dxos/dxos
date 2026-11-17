@@ -21,6 +21,7 @@ import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
@@ -67,6 +68,7 @@ export const getPlugins = ({ client, config, services, ...viewer }: ViewerPlugin
   MermaidPlugin.make(),
   PresenterPlugin.make(),
   ProjectsPlugin.make(),
+  RoutinePlugin.make(),
   SheetPlugin.make(),
   TablePlugin.make(),
   TasksPlugin.make(),

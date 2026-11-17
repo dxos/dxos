@@ -44,6 +44,7 @@ export const createRoutinesSettingsExtension = () =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Routine.Routine, {
         urlKey: 'routine',
@@ -61,15 +62,20 @@ export default Capability.makeModule(
         id: 'routineRuns',
         relation: AppNode.companion,
         type: Routine.Routine,
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeCompanion({
-              variant: 'runs',
-              label: ['routine-runs.label', { ns: RoutineNamespace.key }],
-              icon: 'ph--clock-countdown--regular',
-              data: 'runs',
-            }),
-          ]),
+        // Runs are this device's history, and a read-only host runs nothing.
+        connector: (_, get) =>
+          Effect.succeed(
+            get(readOnlyAtom).length > 0
+              ? []
+              : [
+                  AppNode.makeCompanion({
+                    variant: 'runs',
+                    label: ['routine-runs.label', { ns: RoutineNamespace.key }],
+                    icon: 'ph--clock-countdown--regular',
+                    data: 'runs',
+                  }),
+                ],
+          ),
       }),
     ]);
 
