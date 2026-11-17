@@ -108,6 +108,8 @@ const main = Effect.gen(function* () {
     config,
     Effect.promise(() => startupSettled),
   );
+  // Telemetry is best effort; plugins read this promise only once the client initializes, which may be never.
+  void observability.catch((err) => log.warn('telemetry not started', { err }));
   const services = yield* Effect.promise(() =>
     createClientServices(config, { createDedicatedWorker, createCoordinatorWorker }),
   );
