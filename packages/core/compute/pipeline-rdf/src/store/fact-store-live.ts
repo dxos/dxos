@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { DataFactory, type Quad as RdfQuad } from 'n3';
+import { DataFactory, type Quad as RdfQuad, Parser as TrigParser, Writer as TrigWriter } from 'n3';
 import { Parser } from 'sparqljs';
 
 import { type Quad, type Row, SqlSparqlEngine, type SqlStorage } from '@dxos/sparql-sqlite';
@@ -88,6 +88,46 @@ const dropLegacyTables = (storage: SqlStorage): void => {
     }
   }
 };
+
+/** Every quad: each statement in its named graph, then the default graph's statements about graphs. */
+const ALL_QUADS_SPARQL = 'SELECT ?g ?s ?p ?o WHERE { { GRAPH ?g { ?s ?p ?o } } UNION { ?g ?p ?o } }';
+
+/** Prefixes the TriG export abbreviates with, so the document reads as the vocabularies it uses. */
+const TRIG_PREFIXES: Record<string, string> = {
+  sx: Vocab.SX,
+  entity: Vocab.ENTITY,
+  fact: Vocab.FACT,
+  graph: Vocab.GRAPH,
+  brain: Vocab.BRAIN,
+  dx: Vocab.DX,
+  prov: Vocab.PROV,
+  rdf: Vocab.RDF,
+  rdfs: Vocab.RDFS,
+  owl: Vocab.OWL,
+  xsd: Vocab.XSD,
+  skos: Vocab.SKOS,
+  dcterms: Vocab.DCTERMS,
+  schema: Vocab.SCHEMA,
+  foaf: Vocab.FOAF,
+  org: Vocab.ORG,
+  sioc: Vocab.SIOC,
+};
+
+/** The seed marker names this store's seed version, so it is neither exported nor taken from another store. */
+const isSeedMarker = (quad: RdfQuad): boolean => quad.predicate.value === Vocab.SX_SEED;
+
+const writeTrig = (quads: readonly RdfQuad[]): Effect.Effect<string, SemanticIndexError> =>
+  Effect.callback<string, SemanticIndexError>((resume) => {
+    const writer = new TrigWriter({ format: 'application/trig', prefixes: TRIG_PREFIXES });
+    writer.addQuads([...quads]);
+    writer.end((error, result) =>
+      resume(
+        error
+          ? Effect.fail(new SemanticIndexError({ message: 'Failed to write TriG', cause: error }))
+          : Effect.succeed(result),
+      ),
+    );
+  });
 
 /** Fails unless `sparql` is a `SELECT`, since the engine would run an update as readily as a query. */
 const assertSelect = (sparql: string): void => {
@@ -209,6 +249,18 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
       );
     });
 
+  const exportTrig: FactStoreApi['exportTrig'] = () =>
+    attempt('Failed to read the store for export')(() =>
+      rowsToQuads(engine.query(ALL_QUADS_SPARQL)).filter((quad) => !isSeedMarker(quad)),
+    ).pipe(Effect.flatMap(writeTrig));
+
+  const importTrig: FactStoreApi['importTrig'] = (trig) =>
+    attempt('Failed to import TriG')(() => {
+      const quads = new TrigParser({ format: 'application/trig' }).parse(trig).filter((quad) => !isSeedMarker(quad));
+      transactionSync(() => insert(quads));
+      return quads.length;
+    });
+
   const clear: FactStoreApi['clear'] = () =>
     attempt('Failed to clear store')(() =>
       // One transaction, so a store is never left without its seed vocabulary.
@@ -219,7 +271,7 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
       }),
     );
 
-  return { putFacts, predicates, query, select, rows, cursor, setCursor, clear };
+  return { putFacts, predicates, query, select, rows, cursor, setCursor, exportTrig, importTrig, clear };
 };
 
 /** Storage that runs its own transactions, as every `@dxos/sql-sqlite/SqlStorage` database does. */
@@ -285,6 +337,8 @@ export const makeMemory = (): FactStoreApi => {
     rows: (sparql) => get.pipe(Effect.flatMap((opened) => opened.rows(sparql))),
     cursor: (source) => get.pipe(Effect.flatMap((opened) => opened.cursor(source))),
     setCursor: (source, hash) => get.pipe(Effect.flatMap((opened) => opened.setCursor(source, hash))),
+    exportTrig: () => get.pipe(Effect.flatMap((opened) => opened.exportTrig())),
+    importTrig: (trig) => get.pipe(Effect.flatMap((opened) => opened.importTrig(trig))),
     clear: () => get.pipe(Effect.flatMap((opened) => opened.clear())),
   };
 };
