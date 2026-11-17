@@ -21,7 +21,7 @@ import { BrainOperationHandlerSet } from '#operations';
 import { BrainSkill } from '#skills';
 import { BrainCapabilities } from '#types';
 
-import type * as QueryLog from './query-log.ts';
+import type * as QueryLog from './QueryLog.ts';
 
 /** Where `moon run plugin-discord:fact-server` listens by default. */
 export const DEFAULT_URL = 'http://127.0.0.1:7700';

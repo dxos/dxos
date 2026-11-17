@@ -19,7 +19,7 @@ import { BrainCapabilities } from '#types';
 
 import { type FactStoreRegistry } from '../../capabilities/fact-store-registry.ts';
 import { BrainNamespace } from '../../namespace.ts';
-import type * as QueryLog from '../../query-log.ts';
+import type * as QueryLog from '../../QueryLog.ts';
 import { downloadText, exportTrig, importTrig, runQuery, statementCount } from './memory.ts';
 import { useQueryLog } from './use-query-log.ts';
 

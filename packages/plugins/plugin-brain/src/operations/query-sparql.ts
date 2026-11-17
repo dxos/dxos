@@ -10,7 +10,7 @@ import { type MemoryError, MemoryQuery, MemoryService } from '@dxos/echo-memory'
 
 import { BrainOperation } from '#types';
 
-import * as QueryLog from '../query-log.ts';
+import * as QueryLog from '../QueryLog.ts';
 import { AGENT_MAX_ROWS, trimForAgent } from './trim.ts';
 
 export default BrainOperation.QuerySparql.pipe(Operation.withHandler(Effect.fn((input) => querySparql(input))));

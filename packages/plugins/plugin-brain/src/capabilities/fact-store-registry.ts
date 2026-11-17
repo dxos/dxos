@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Client } from '@dxos/client';
 import type * as MemoryService from '@dxos/echo-memory/MemoryService';
 import type * as RdfStore from '@dxos/echo-memory/RdfStore';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -18,7 +17,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { BrainCapabilities } from '#types';
 
-import * as QueryLog from '../query-log.ts';
+import * as QueryLog from '../QueryLog.ts';
 
 /**
  * Each space's facts as a {@link FactStoreApi}, for surfaces and stories that read through one: every store is the
