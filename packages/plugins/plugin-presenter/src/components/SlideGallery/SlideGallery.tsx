@@ -24,7 +24,7 @@ const TILE_WIDTH: Record<SlideViewState.GridSize, { min: number; max: number }> 
   large: { min: 360, max: 540 },
 };
 
-export type SlideGridProps = {
+export type SlideGalleryProps = {
   slides: SlideSource[];
   /** The current slide, shown selected. */
   index: number;
@@ -46,7 +46,7 @@ type Tile = { key: string; index: number; source: SlideSource };
 /**
  * Thumbnails of every slide, fully revealed, as a keyboard-navigable grid; the current slide is selected.
  */
-export const SlideGrid = ({
+export const SlideGallery = ({
   slides,
   index,
   size = 'small',
@@ -55,7 +55,7 @@ export const SlideGrid = ({
   onMove,
   onAdd,
   contextMenuId,
-}: SlideGridProps) => {
+}: SlideGalleryProps) => {
   const { t } = Hooks.useTranslation(PresenterNamespace.key);
   // An object linked twice yields two slides with one id, so options are keyed by position.
   const items = useMemo(
@@ -104,7 +104,7 @@ export const SlideGrid = ({
       classNames='dx-grow'
     >
       <Listbox.Viewport>
-        <Listbox.Content aria-label={t('slide-grid.label')} data-testid='presenter.slide-grid' classNames='p-4'>
+        <Listbox.Content aria-label={t('slide-gallery.label')} data-testid='presenter.slide-gallery' classNames='p-4'>
           {tiles.map((tile) => (
             <SlideTile
               key={tile.key}
@@ -119,7 +119,7 @@ export const SlideGrid = ({
             <div className='flex flex-col p-1 gap-1'>
               <button
                 type='button'
-                data-testid='presenter.slide-grid.add'
+                data-testid='presenter.slide-gallery.add'
                 aria-label={t('add-slide.label')}
                 className='flex aspect-video items-center justify-center rounded-sm border border-dashed border-separator text-description hover:bg-hover-surface'
                 onClick={onAdd}
@@ -134,7 +134,7 @@ export const SlideGrid = ({
   );
 };
 
-SlideGrid.displayName = 'SlideGrid';
+SlideGallery.displayName = 'SlideGallery';
 
 type SlideTileProps = {
   tile: Tile;
@@ -164,7 +164,7 @@ const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId }: Sl
     <Listbox.Item
       ref={ref}
       id={String(tile.index)}
-      data-testid={`presenter.slide-grid.${tile.index}`}
+      data-testid={`presenter.slide-gallery.${tile.index}`}
       data-hidden={hidden || undefined}
       {...(contextMenuId ? AppNode.contextMenuProps(contextMenuId) : {})}
       // The current slide is the grid's one outlined tile, so the pointer only tints the tile under it.

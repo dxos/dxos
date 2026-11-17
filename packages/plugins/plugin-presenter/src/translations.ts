@@ -32,7 +32,7 @@ export const translations = [
         'default-font.placeholder': '{{font}} (default)',
         'add-slide.label': 'Add slide',
         'add-slide-layout.label': 'Layout of new slides',
-        'slide-grid.label': 'Slides',
+        'slide-gallery.label': 'Slides',
         'grid-size-small.label': 'Small thumbnails',
         'grid-size-large.label': 'Large thumbnails',
         'add-section.label': 'Add to presentation',

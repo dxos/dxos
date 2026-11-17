@@ -398,16 +398,16 @@ verdict F-4.10: Deleted targets are omitted; unloaded ones are pending.
 ```mdl
 verdict F-4.11: Inline the Presentation is a scrolling grid of revealed thumbnails, the current one selected and moved by arrows or click.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.tsx#SlideGrid, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckGrid]
-  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGallery/SlideGallery.tsx#SlideGallery, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckGrid]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGallery/SlideGallery.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx]
 ```
 
 ```mdl
 verdict F-4.12: Dragging a thumbnail moves the slide and keeps it current.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.tsx#SlideGrid, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#move]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGallery/SlideGallery.tsx#SlideGallery, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#move]
   note: |
-    SlideGrid calls `onMove` then `onIndexChange(to)`; the story only asserts `draggable`, and no test performs a
+    SlideGallery calls `onMove` then `onIndexChange(to)`; the story only asserts `draggable`, and no test performs a
     drag.
 ```
 
@@ -415,7 +415,7 @@ verdict F-4.12: Dragging a thumbnail moves the slide and keeps it current.
 verdict F-4.13: In a Presentation, double-clicking a thumbnail opens the slide's editor instead of presenting.
   status: diverged
   evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.tsx#PresentationArticle, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckGrid]
-  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.stories.tsx]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGallery/SlideGallery.stories.tsx]
   note: |
     Deck.Grid presents only when no `onOpen` is given; PresentationArticle passes `onOpen` (handleOpenSlide), so a
     double-click opens the slide, as the OpenFromTile story asserts.
@@ -805,8 +805,8 @@ verdict T-4: Source mapping of an owned and a linked slide is tested; the grid w
 ```mdl
 verdict T-5: Arrow keys move the selected thumbnail in the grid.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.tsx#SlideGrid]
-  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.stories.tsx]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGallery/SlideGallery.tsx#SlideGallery]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGallery/SlideGallery.stories.tsx]
 ```
 
 ```mdl

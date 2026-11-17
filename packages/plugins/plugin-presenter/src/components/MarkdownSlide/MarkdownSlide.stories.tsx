@@ -16,10 +16,6 @@ import { MarkdownSlide, type MarkdownSlideProps } from './MarkdownSlide.tsx';
 const VIDEO =
   'data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAJVEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHWTbuMU6uEElTDZ1OsggEyTbuMU6uEHFO7a1OsggI/7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsCrXsYMPQkBNgIxMYXZmNjMuMS4xMDJXQYxMYXZmNjMuMS4xMDJEiYhAj0AAAAAAABZUrmvXrgEAAAAAAABO14EBc8WIgtz4bGKvzVCcgQAitZyDdW5kiIEAhoVWX1ZQOIOBASPjg4QO5rKA4JCwgSC6gRKagQJVsIRVuYEBVe6BAOwBAAAAAAAAAgAAElTDZ/pzc59jwIBnyJlFo4dFTkNPREVSRIeMTGF2ZjYzLjEuMTAyc3PVY8CLY8WIgtz4bGKvzVBnyKBFo4dFTkNPREVSRIeTTGF2YzYzLjEuMTAyIGxpYnZweGfIoUWjiERVUkFUSU9ORIeTMDA6MDA6MDEuMDAwMDAwMDAwAB9DtnVAiOeBAKO+gQAAgNACAJ0BKiAAEgAARwiFhYiFhIgCAgJ1qgP4AgghCD0A/vp5X/+p0/qdP6nT/6nT/9yAeyAeyAfv3ACjlYEA+gCxAQABEBAAGAAYWC/0AAhwAKOVgQH0ALEBAAEQEAAYABhYL/QACHAAo5WBAu4AsQEAARAQABgAGFgv9AAIcAAcU7trkbuPs4EAt4r3gQHxggGx8IED';
 
-const IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><defs><linearGradient id="g"><stop offset="0" stop-color="#2a6"/><stop offset="1" stop-color="#26a"/></linearGradient></defs><rect width="16" height="9" fill="url(#g)"/></svg>',
-)}`;
-
 const DefaultStory = (props: MarkdownSlideProps) => (
   <Slide.Frame inset>
     <MarkdownSlide {...props} />
@@ -27,9 +23,9 @@ const DefaultStory = (props: MarkdownSlideProps) => (
 );
 
 /**
- * What the renderer does with a slide's content, rather than how a layout arranges it: the scrim it decides on, the
- * background video it mounts, code fence directives, and click steps. The layouts themselves are a catalogue of
- * their own, under `layouts/`.
+ * What the renderer does with a slide's content, rather than what a slide can be made to look like: the background
+ * video it mounts, code fence directives, and click steps. What each layout and each tag offers is shown under
+ * `layouts/` and `tags/`.
  */
 const meta = {
   title: 'plugins/plugin-presenter/components/MarkdownSlide',
@@ -44,22 +40,6 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
-
-/** Text over a photo gets a scrim; a content-free image slide does not. */
-export const ImageScrim: Story = {
-  args: { content: slide({ layout: 'image', image: IMAGE }, '# Over image') },
-  play: async ({ canvasElement }) => {
-    await query(canvasElement, '[data-layout="image"] [data-scrim]');
-  },
-};
-
-export const ImageNoScrim: Story = {
-  args: { content: slide({ layout: 'image', image: IMAGE }) },
-  play: async ({ canvasElement }) => {
-    await query(canvasElement, '[data-layout="image"]');
-    await expect(canvasElement.querySelector('[data-scrim]')).toBeNull();
-  },
-};
 
 export const VideoBackground: Story = {
   args: {

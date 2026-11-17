@@ -1364,7 +1364,7 @@ decision D-62: Add two layouts beyond Slidev's built-ins: three-cols (slots `def
 decision D-63: In the presentation grid, double-clicking a slide or adding one opens it in the slide editor; the toolbar's add button is a split button whose caret sets the layout later adds use; a ghost tile after the last slide adds one; a tile's context menu hides or shows a slide and deletes it; the toolbar presents with the editor's present icon and has no fullscreen button; a slide can be hidden from the presentation.
   date: 2026-10-24
   by: user:richburdon
-  affects: [PresentationArticle, Deck, SlideGrid]
+  affects: [PresentationArticle, Deck, SlideGallery]
   why: The grid is where a deck is assembled, so opening, adding, hiding and removing slides belong there; presenting is the one way to go fullscreen.
 ```
 
@@ -1373,7 +1373,7 @@ decision D-64: A slide is hidden by Slidev's own frontmatter key, `hide: true`; 
   date: 2026-10-24
   by: agent:claude-code
   for: user:richburdon
-  affects: [F-6.1, PresentationArticle, SlideGrid]
+  affects: [F-6.1, PresentationArticle, SlideGallery]
   why: Keeping to Slidev's key keeps a deck portable; the stored index stays the grid's, so hiding a slide never moves the viewer's place.
   rejected: A `hidden` flag on the section ref, which a linked object could carry but plain markdown could not.
 ```
@@ -1382,7 +1382,7 @@ decision D-64: A slide is hidden by Slidev's own frontmatter key, `hide: true`; 
 decision D-65: A grid tile's right-click menu is the app's context menu for the slide's graph node, not a menu of the grid's own: it lists the node's navtree actions (delete, remove from presentation), and hiding or showing a slide is a graph action on owned slides. Supersedes the grid-local menu of [D-63].
   date: 2026-10-24
   by: user:richburdon
-  affects: [PresentationArticle, SlideGrid]
+  affects: [PresentationArticle, SlideGallery]
   why: One context menu for the whole app, whose items plugins contribute by context, rather than a menu per component.
 ```
 

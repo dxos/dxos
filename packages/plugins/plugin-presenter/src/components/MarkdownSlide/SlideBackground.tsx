@@ -4,7 +4,7 @@
 
 import React, { type CSSProperties } from 'react';
 
-import { type LayoutName, type SlideFrontmatter, isSafeUrl } from '#markdown';
+import { type BackgroundFit, type LayoutName, type SlideFrontmatter, isSafeUrl } from '#markdown';
 
 // A function-call color (`rgb(…)`, `oklch(…)`, …), a hex color, or a bare keyword such as `teal`.
 const COLOR = /^(#[0-9a-f]{3,8}|(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([^;{}]*\)|[a-z]+)$/i;
@@ -29,8 +29,11 @@ const safeVideoUrl = (url: string | undefined): string | undefined =>
     ? url.trim()
     : undefined;
 
-/** CSS that paints an image URL as a cover background, or `{}` when the URL is unsafe. */
-export const imageStyle = (url: string | undefined, position?: string): CSSProperties => {
+/**
+ * CSS that paints an image URL as a background, or `{}` when the URL is unsafe. `cover` fills the box and crops what
+ * does not fit; `contain` draws the whole picture, leaving the rest of the box to whatever is painted under it.
+ */
+export const imageStyle = (url: string | undefined, position?: string, fit: BackgroundFit = 'cover'): CSSProperties => {
   const safe = safeImageUrl(url);
   if (safe === undefined) {
     return {};
@@ -38,26 +41,35 @@ export const imageStyle = (url: string | undefined, position?: string): CSSPrope
   return {
     // JSON string quoting escapes `"` and `\`, so the URL cannot end the CSS string early.
     backgroundImage: `url(${JSON.stringify(safe)})`,
-    backgroundSize: 'cover',
+    backgroundSize: fit,
     backgroundRepeat: 'no-repeat',
     backgroundPosition: safePosition(position) ?? 'center',
   };
 };
 
 /**
- * Style for the frontmatter `background`: a CSS color (hex, color function, or keyword) or otherwise an image URL.
+ * Style for the frontmatter `background`: a CSS color (hex, color function, or keyword) or otherwise an image URL,
+ * over the ground `backgroundColor` paints. CSS draws a background color under its own background image, so one
+ * element carries both: the ground shows wherever a `contain` picture does not reach, or through a transparent one.
  */
 export const backgroundStyle = ({
   background,
   backgroundPosition,
-}: Pick<SlideFrontmatter, 'background' | 'backgroundPosition'>): CSSProperties => {
+  backgroundFit,
+  backgroundColor,
+}: Pick<
+  SlideFrontmatter,
+  'background' | 'backgroundPosition' | 'backgroundFit' | 'backgroundColor'
+>): CSSProperties => {
+  const ground: CSSProperties = backgroundColor === undefined ? {} : { backgroundColor: backgroundColor.trim() };
   if (background === undefined || background.trim().length === 0) {
-    return {};
+    return ground;
   }
   if (isColor(background)) {
+    // `background:` names the color itself, so there is no picture for a ground to sit under.
     return { backgroundColor: background.trim() };
   }
-  return imageStyle(background, backgroundPosition);
+  return { ...ground, ...imageStyle(background, backgroundPosition, backgroundFit) };
 };
 
 export type SlideBackgroundProps = {
@@ -70,10 +82,14 @@ export type SlideBackgroundProps = {
  * `backgroundVideo`, faded by `backgroundOpacity`.
  */
 export const SlideBackground = ({ frontmatter, layout }: SlideBackgroundProps) => {
-  // The `image` layout is a full-bleed picture, so its `image` takes the place of `background`.
+  // The `image` layout is a full-bleed picture, so its `image` takes the place of `background` — over the same
+  // ground, which is what a `contain` picture leaves the rest of the slide to.
   const style =
     layout === 'image' && frontmatter.image !== undefined
-      ? imageStyle(frontmatter.image, frontmatter.backgroundPosition)
+      ? {
+          ...(frontmatter.backgroundColor === undefined ? {} : { backgroundColor: frontmatter.backgroundColor.trim() }),
+          ...imageStyle(frontmatter.image, frontmatter.backgroundPosition, frontmatter.backgroundFit),
+        }
       : backgroundStyle(frontmatter);
   const video = safeVideoUrl(frontmatter.backgroundVideo);
   if (Object.keys(style).length === 0 && video === undefined) {

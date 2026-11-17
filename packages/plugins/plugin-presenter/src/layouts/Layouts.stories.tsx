@@ -8,7 +8,7 @@ import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type LayoutName } from '#markdown';
+import { type LayoutName, LAYOUTS } from '#markdown';
 
 import { MarkdownSlide, type MarkdownSlideProps } from '../components/MarkdownSlide/index.ts';
 import { Slide } from '../components/Slide/index.ts';
@@ -16,6 +16,11 @@ import { query, slide } from '../testing/slideStory.tsx';
 
 const IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><defs><linearGradient id="g"><stop offset="0" stop-color="#2a6"/><stop offset="1" stop-color="#26a"/></linearGradient></defs><rect width="16" height="9" fill="url(#g)"/></svg>',
+)}`;
+
+// A tall picture, so `cover` and `contain` do visibly different things inside a 16:9 slide.
+const TALL = `data:image/svg+xml;utf8,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 16"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a6"/><stop offset="1" stop-color="#26a"/></linearGradient></defs><rect width="9" height="16" fill="url(#g)"/></svg>',
 )}`;
 
 const DefaultStory = (props: MarkdownSlideProps) => (
@@ -26,8 +31,8 @@ const DefaultStory = (props: MarkdownSlideProps) => (
 
 /**
  * Every layout `layout:` names, one story each, in the order `LAYOUTS` declares them — the set a deck author chooses
- * from. Each shows the layout's own regions filled with the least content that makes them visible, so the stories
- * read as a catalogue; what a layout does with content beyond its regions belongs to the component's own stories.
+ * from, plus what a layout's own options do to it. Each slide holds the least content that makes the layout's regions
+ * visible, so the stories read as a catalogue; the renderer's own behaviour is tested under `components/`.
  */
 const meta = {
   title: 'plugins/plugin-presenter/layouts/Layouts',
@@ -43,159 +48,278 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A story asserting that `selector` (scoped to the layout root) contains `text`. */
-const layoutStory = (layout: LayoutName, content: string, selector: string, text: string): Story => ({
-  args: { content },
-  play: async ({ canvasElement }) => {
-    const element = await query(canvasElement, `[data-layout="${layout}"] ${selector}`);
-    await expect(element.textContent).toContain(text);
-  },
-});
-
 const lead = ['# Slide title', '', 'Supporting text for the slide.'];
 
-export const Default = layoutStory(
-  'default',
-  slide({ layout: 'default' }, ...lead),
-  '[data-slot="default"] h1',
-  'Slide title',
-);
+/**
+ * What each layout is shown with: the markdown, and the element that proves the layout placed it. One table, so the
+ * story per layout and the grid of all of them cannot drift apart.
+ */
+const CATALOGUE: Record<LayoutName, { content: string; selector: string; text: string }> = {
+  'default': {
+    content: slide({ layout: 'default' }, ...lead),
+    selector: '[data-slot="default"] h1',
+    text: 'Slide title',
+  },
+  'cover': {
+    content: slide(
+      { layout: 'cover', background: IMAGE, backgroundOpacity: 0.5 },
+      '# Presenter',
+      '',
+      'Composer slides',
+    ),
+    selector: 'h1',
+    text: 'Presenter',
+  },
+  'center': { content: slide({ layout: 'center' }, '# Centered'), selector: 'h1', text: 'Centered' },
+  'section': { content: slide({ layout: 'section' }, '# Part two'), selector: 'h1', text: 'Part two' },
+  'intro': {
+    content: slide({ layout: 'intro' }, '# Introduction', '', 'Speaker name, role'),
+    selector: 'p',
+    text: 'Speaker name',
+  },
+  'end': { content: slide({ layout: 'end' }, '# Thank you'), selector: 'h1', text: 'Thank you' },
+  'fact': {
+    content: slide({ layout: 'fact' }, '# 100%', '', 'Of slides are markdown'),
+    selector: 'h1',
+    text: '100%',
+  },
+  'statement': {
+    content: slide({ layout: 'statement' }, '# Local-first by default'),
+    selector: 'h1',
+    text: 'Local-first',
+  },
+  'quote': {
+    content: slide({ layout: 'quote' }, '> Simplicity is prerequisite for reliability.', '', 'Edsger Dijkstra'),
+    selector: 'blockquote',
+    text: 'Simplicity',
+  },
+  'two-cols': {
+    content: slide(
+      { layout: 'two-cols' },
+      '# Left',
+      '',
+      '- one',
+      '- two',
+      '',
+      '::right::',
+      '',
+      '# Right',
+      '',
+      'Right column',
+    ),
+    selector: '[data-slot="right"]',
+    text: 'Right column',
+  },
+  'two-cols-header': {
+    content: slide(
+      { layout: 'two-cols-header' },
+      '# Header',
+      '',
+      '::left::',
+      '',
+      'Left column',
+      '',
+      '::right::',
+      '',
+      'Right column',
+    ),
+    selector: '[data-slot="left"]',
+    text: 'Left column',
+  },
+  'three-cols': {
+    content: slide(
+      { layout: 'three-cols' },
+      '# One',
+      '',
+      '- first',
+      '',
+      '::middle::',
+      '',
+      '# Two',
+      '',
+      '- second',
+      '',
+      '::right::',
+      '',
+      '# Three',
+      '',
+      'Third column',
+    ),
+    selector: '[data-slot="right"]',
+    text: 'Third column',
+  },
+  'two-by-two': {
+    content: slide(
+      { layout: 'two-by-two' },
+      '# One',
+      '',
+      '::right::',
+      '',
+      '# Two',
+      '',
+      '::bottom-left::',
+      '',
+      '# Three',
+      '',
+      '::bottom-right::',
+      '',
+      '# Four',
+      '',
+      'Fourth region',
+    ),
+    selector: '[data-slot="bottom-right"]',
+    text: 'Fourth region',
+  },
+  'image': {
+    content: slide({ layout: 'image', image: IMAGE }, '# Over image'),
+    selector: 'h1',
+    text: 'Over image',
+  },
+  'image-left': {
+    content: slide({ layout: 'image-left', image: IMAGE }, '# Image left', '', 'Content on the right.'),
+    selector: '[data-image] + [data-slot="default"]',
+    text: 'Content on the right',
+  },
+  'image-right': {
+    content: slide({ layout: 'image-right', image: IMAGE }, '# Image right', '', 'Content on the left.'),
+    selector: '[data-slot="default"]:has(+ [data-image])',
+    text: 'Content on the left',
+  },
+  'full': {
+    content: slide({ layout: 'full' }, '# Full bleed'),
+    selector: '[data-slot="default"]',
+    text: 'Full bleed',
+  },
+  'none': { content: slide({ layout: 'none' }, '# Unstyled'), selector: 'h1', text: 'Unstyled' },
+};
 
-export const Cover = layoutStory(
-  'cover',
-  slide({ layout: 'cover', background: IMAGE, backgroundOpacity: 0.5 }, '# Presenter', '', 'Composer slides'),
-  'h1',
-  'Presenter',
-);
+/** A story drawing one layout, asserting the element the catalogue says proves it. */
+const layoutStory = (layout: LayoutName): Story => {
+  const { content, selector, text } = CATALOGUE[layout];
+  return {
+    args: { content },
+    play: async ({ canvasElement }) => {
+      const element = await query(canvasElement, `[data-layout="${layout}"] ${selector}`);
+      await expect(element.textContent).toContain(text);
+    },
+  };
+};
 
-export const Center = layoutStory('center', slide({ layout: 'center' }, '# Centered'), 'h1', 'Centered');
+export const Default = layoutStory('default');
 
-export const Section = layoutStory('section', slide({ layout: 'section' }, '# Part two'), 'h1', 'Part two');
+export const Cover = layoutStory('cover');
 
-export const Intro = layoutStory(
-  'intro',
-  slide({ layout: 'intro' }, '# Introduction', '', 'Speaker name, role'),
-  'p',
-  'Speaker name',
-);
+export const Center = layoutStory('center');
 
-export const End = layoutStory('end', slide({ layout: 'end' }, '# Thank you'), 'h1', 'Thank you');
+export const Section = layoutStory('section');
 
-export const Fact = layoutStory(
-  'fact',
-  slide({ layout: 'fact' }, '# 100%', '', 'Of slides are markdown'),
-  'h1',
-  '100%',
-);
+export const Intro = layoutStory('intro');
 
-export const Statement = layoutStory(
-  'statement',
-  slide({ layout: 'statement' }, '# Local-first by default'),
-  'h1',
-  'Local-first',
-);
+export const End = layoutStory('end');
 
-export const Quote = layoutStory(
-  'quote',
-  slide({ layout: 'quote' }, '> Simplicity is prerequisite for reliability.', '', 'Edsger Dijkstra'),
-  'blockquote',
-  'Simplicity',
-);
+export const Fact = layoutStory('fact');
 
-export const TwoCols = layoutStory(
-  'two-cols',
-  slide({ layout: 'two-cols' }, '# Left', '', '- one', '- two', '', '::right::', '', '# Right', '', 'Right column'),
-  '[data-slot="right"]',
-  'Right column',
-);
+export const Statement = layoutStory('statement');
 
-export const TwoColsHeader = layoutStory(
-  'two-cols-header',
-  slide(
-    { layout: 'two-cols-header' },
-    '# Header',
-    '',
-    '::left::',
-    '',
-    'Left column',
-    '',
-    '::right::',
-    '',
-    'Right column',
+export const Quote = layoutStory('quote');
+
+export const TwoCols = layoutStory('two-cols');
+
+export const TwoColsHeader = layoutStory('two-cols-header');
+
+export const ThreeCols = layoutStory('three-cols');
+
+export const TwoByTwo = layoutStory('two-by-two');
+
+export const Image = layoutStory('image');
+
+export const ImageLeft = layoutStory('image-left');
+
+export const ImageRight = layoutStory('image-right');
+
+export const Full = layoutStory('full');
+
+export const None = layoutStory('none');
+
+/** Text over a picture gets a scrim, so it stays readable; a picture with nothing on it does not. */
+export const ImageScrim: Story = {
+  args: { content: slide({ layout: 'image', image: IMAGE }, '# Over image') },
+  play: async ({ canvasElement }) => {
+    await query(canvasElement, '[data-layout="image"] [data-scrim]');
+  },
+};
+
+export const ImageNoScrim: Story = {
+  args: { content: slide({ layout: 'image', image: IMAGE }) },
+  play: async ({ canvasElement }) => {
+    await query(canvasElement, '[data-layout="image"]');
+    await expect(canvasElement.querySelector('[data-scrim]')).toBeNull();
+  },
+};
+
+/** The default: a picture fills the slide, and whatever does not fit its 16:9 is cropped away. */
+export const BackgroundCover: Story = {
+  args: { content: slide({ layout: 'cover', background: TALL }, '# Cover') },
+  play: async ({ canvasElement }) => {
+    const background = await query(canvasElement, '[data-slide-background] > div');
+    await expect(getComputedStyle(background).backgroundSize).toBe('cover');
+  },
+};
+
+/**
+ * `backgroundFit: contain` draws the whole picture instead, and `backgroundColor` is the ground it leaves the rest of
+ * the slide to — without one, the slide's own surface shows beside a picture that does not share its shape.
+ */
+export const BackgroundContain: Story = {
+  args: {
+    content: slide(
+      { layout: 'cover', background: TALL, backgroundFit: 'contain', backgroundColor: '#0b1f17' },
+      '# Contain',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const background = await query(canvasElement, '[data-slide-background] > div');
+    const style = getComputedStyle(background);
+    await expect(style.backgroundSize).toBe('contain');
+    await expect(style.backgroundColor).toBe('rgb(11, 31, 23)');
+  },
+};
+
+/** `backgroundColor` with no picture is simply the slide's own background, for this slide only. */
+export const BackgroundColor: Story = {
+  args: { content: slide({ layout: 'center', backgroundColor: '#2d0b1f' }, '# One slide, one color') },
+  play: async ({ canvasElement }) => {
+    const background = await query(canvasElement, '[data-slide-background] > div');
+    await expect(getComputedStyle(background).backgroundColor).toBe('rgb(45, 11, 31)');
+  },
+};
+
+/** Every layout at once, each at thumbnail size under its name — the whole set to choose from on one screen. */
+export const All: Story = {
+  // The story draws the whole catalogue rather than one slide, so the component's own `content` goes unused.
+  args: { content: '' },
+  render: () => (
+    <div className='dx-fill overflow-auto p-4 grid grid-cols-3 gap-4 auto-rows-min'>
+      {LAYOUTS.map((layout) => (
+        <figure key={layout} className='grid gap-1 min-w-0'>
+          {/* The canvas scales to its container and draws nothing until it has measured one, so the tile carries
+              the slide's own 16:9 rather than leaving its height to the grid row. */}
+          <div className='flex aspect-video'>
+            <Slide.Frame inset>
+              <MarkdownSlide content={CATALOGUE[layout].content} />
+            </Slide.Frame>
+          </div>
+          <figcaption className='text-center text-sm text-fg-subtle font-mono'>{layout}</figcaption>
+        </figure>
+      ))}
+    </div>
   ),
-  '[data-slot="left"]',
-  'Left column',
-);
-
-export const ThreeCols = layoutStory(
-  'three-cols',
-  slide(
-    { layout: 'three-cols' },
-    '# One',
-    '',
-    '- first',
-    '',
-    '::middle::',
-    '',
-    '# Two',
-    '',
-    '- second',
-    '',
-    '::right::',
-    '',
-    '# Three',
-    '',
-    'Third column',
-  ),
-  '[data-slot="right"]',
-  'Third column',
-);
-
-export const TwoByTwo = layoutStory(
-  'two-by-two',
-  slide(
-    { layout: 'two-by-two' },
-    '# One',
-    '',
-    '::right::',
-    '',
-    '# Two',
-    '',
-    '::bottom-left::',
-    '',
-    '# Three',
-    '',
-    '::bottom-right::',
-    '',
-    '# Four',
-    '',
-    'Fourth region',
-  ),
-  '[data-slot="bottom-right"]',
-  'Fourth region',
-);
-
-export const Image = layoutStory('image', slide({ layout: 'image', image: IMAGE }, '# Over image'), 'h1', 'Over image');
-
-export const ImageLeft = layoutStory(
-  'image-left',
-  slide({ layout: 'image-left', image: IMAGE }, '# Image left', '', 'Content on the right.'),
-  '[data-image] + [data-slot="default"]',
-  'Content on the right',
-);
-
-export const ImageRight = layoutStory(
-  'image-right',
-  slide({ layout: 'image-right', image: IMAGE }, '# Image right', '', 'Content on the left.'),
-  '[data-slot="default"]:has(+ [data-image])',
-  'Content on the left',
-);
-
-export const Full = layoutStory(
-  'full',
-  slide({ layout: 'full' }, '# Full bleed'),
-  '[data-slot="default"]',
-  'Full bleed',
-);
-
-export const None = layoutStory('none', slide({ layout: 'none' }, '# Unstyled'), 'h1', 'Unstyled');
+  play: async ({ canvasElement }) => {
+    await query(canvasElement, '[data-layout="none"]');
+    const drawn = [...canvasElement.querySelectorAll('[data-layout]')].map((element) =>
+      element.getAttribute('data-layout'),
+    );
+    // Every layout is drawn, once, in the order `LAYOUTS` declares them.
+    await expect(drawn).toEqual([...LAYOUTS]);
+  },
+};
