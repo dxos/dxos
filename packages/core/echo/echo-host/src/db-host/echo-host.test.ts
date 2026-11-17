@@ -898,6 +898,42 @@ describe('EchoHost storage wipe', () => {
     expect(await queueCursors()).not.toHaveLength(0);
     expect(await orphanedCursors()).toEqual([]);
   });
+
+  // A recovered identity takes its spaces back from EDGE, which sends only what the device lacks, and sends it with
+  // the heads it had before the wipe: a document still held, or still counted as saved, was never stored again.
+  test('a document the wipe deleted is stored and indexed again when it comes back unchanged', async () => {
+    const { host, runtime, spaceId, saveObject } = await setup();
+    const run = RuntimeProvider.runPromise(runtime);
+    const sql = await run(SqlClient.SqlClient);
+    const { documentId, bytes } = await (async () => {
+      using lease = await saveObject(EntityId.random());
+      return { documentId: lease.documentId, bytes: await host.automergeHost.exportDoc(lease.documentId) };
+    })();
+    await host.updateIndexes();
+    expect(await countQueryResults(host, spaceId)).toBe(1);
+
+    await host.wipeStorage(() =>
+      run(
+        Effect.gen(function* () {
+          yield* sql`DELETE FROM automerge_chunks`;
+          yield* sql`DELETE FROM automerge_heads`;
+          yield* sql`DELETE FROM indexCursor`;
+          yield* sql`DELETE FROM objectMeta`;
+          yield* sql`DELETE FROM reverseRef`;
+          yield* sql`DELETE FROM ftsIndex`;
+          yield* sql`DELETE FROM objectSnapshot`;
+        }),
+      ),
+    );
+    expect(await host.automergeHost.getHeads([documentId])).toEqual([undefined]);
+    expect(await countQueryResults(host, spaceId)).toBe(0);
+
+    using _restored = await host.automergeHost.createDoc(bytes, { preserveHistory: true, documentId });
+    await host.flush(Context.default());
+    expect(await host.automergeHost.getStoredHeads([documentId])).not.toEqual([undefined]);
+    await host.updateIndexes();
+    expect(await countQueryResults(host, spaceId)).toBe(1);
+  });
 });
 
 describe.each(['memory', 'sql'] as const)('EchoHost %s executor evidence', (queryExecutor) => {
