@@ -139,8 +139,16 @@ describe('working set handoff', () => {
     await expect.poll(() => waiting.database.getObjectById(task.id)).toBeDefined();
     const window = Query.select(Filter.type(TestSchema.Task)).limit(10);
     expect(await waiting.database.query(window).run()).toEqual([]);
+    const notified: string[][] = [];
+    const unsubscribe = waiting.database
+      .query(window)
+      .subscribe((query) => notified.push(query.results.map((entry) => entry.id)));
+    await expect.poll(() => notified).toEqual([[]]);
     await waiting.database.absorbWorkingSet();
     expect((await waiting.database.query(window).run()).map((entry) => entry.id)).toEqual([task.id]);
+    // A subscriber learns of the absorbed task too, not only a fresh run.
+    await expect.poll(() => notified.at(-1)).toEqual([task.id]);
+    unsubscribe();
     await waiting.client.close();
   });
 

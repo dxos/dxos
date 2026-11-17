@@ -473,15 +473,8 @@ export class LocalQueryEngine implements QueryContext {
     if (!plan.window) {
       const merged = plan.feed ? feedOrder(local, kept) : [...local, ...kept];
       if (plan.unorderedLimit !== undefined && remoteAnswered && remote.length < plan.unorderedLimit) {
-        merged.push(
-          ...this.#unindexedMatches(
-            query,
-            plan,
-            memo,
-            new Set(merged.map((entry) => entry.id)),
-            plan.unorderedLimit - kept.length,
-          ),
-        );
+        const seen = new Set(merged.map((entry) => entry.id));
+        merged.push(...this.#unindexedMatches(query, plan, memo, seen, plan.unorderedLimit - seen.size));
       }
       // Stable, so an in-process entry stays ahead of the remote duplicate that presentation drops.
       if (plan.order) {

@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import { Trigger, sleep } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -116,6 +117,34 @@ describe('WorkingSetSync', () => {
     expect([...database.unindexedWrites()]).toContain(task.id);
     await database.flush();
     expect([...database.unindexedWrites()]).toContain(task.id);
+  });
+
+  test('a close waits for an absorb in flight, which then takes nothing', async ({ expect }) => {
+    const { peer, writer } = await setup();
+    const task = writer.add(Obj.make(TestSchema.Task, { title: 'held' }));
+    await writer.flush({ indexes: false });
+    const workingSet = makeWorkingSet();
+    const released = new Trigger();
+    let gated = false;
+    const service: WorkingSetService = {
+      get: async () => {
+        if (gated) {
+          await released.wait();
+        }
+        return workingSet.service.get();
+      },
+      put: workingSet.service.put,
+    };
+    const database = await openWith(peer, writer, service);
+    await workingSet.service.put({ rows: writer.exportWorkingSet({ maxBytes: MAX_BYTES }), base: {} });
+
+    gated = true;
+    const absorbing = database.absorbWorkingSet();
+    const closing = database.close();
+    expect(await Promise.race([closing.then(() => 'closed'), sleep(200).then(() => 'waiting')])).toBe('waiting');
+    released.wake();
+    await Promise.all([absorbing, closing]);
+    expect([...database.unindexedWrites()]).not.toContain(task.id);
   });
 
   test('a working set that fails leaves the database as it is without one', async ({ expect }) => {

@@ -87,21 +87,22 @@ export class WorkingSetSync {
   /** Takes the working set's objects again, with what the owner's other databases wrote since this one opened. */
   async absorb(): Promise<void> {
     this.#absorbing = this.#absorbing.then(async () => {
-      const workingSet = await bestEffort('get', () => this.#service.get());
-      if (workingSet) {
+      const workingSet = this.#open ? await bestEffort('get', () => this.#service.get()) : undefined;
+      // A close during the get ends the lifetime it was for; a reopen takes the working set afresh.
+      if (workingSet && this.#open) {
         await this.#take(objectIds(workingSet.rows));
       }
     });
     await this.#absorbing;
   }
 
-  /** Sends what the host holds by now, stops tracking, and waits for the sends. */
+  /** Sends what the host holds by now, stops tracking, and waits for the sends and absorbs. */
   async close(): Promise<void> {
     this.#send();
     this.#stopTracking?.();
     this.#stopTracking = undefined;
     this.#open = false;
-    await this.#sending;
+    await Promise.all([this.#sending, this.#absorbing]);
   }
 
   /** Notes the working set's objects for the query merge, and loads them. */
