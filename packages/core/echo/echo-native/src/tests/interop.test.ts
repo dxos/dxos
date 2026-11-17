@@ -60,7 +60,7 @@ describe('echo-native syncs with echo-sqlite through one authority', () => {
 
     // An edit on each side to different fields, then a text edit merged as text.
     Obj.update(orgOnNative, (org) => {
-      org.website = 'https://dxos.org';
+      org.properties = { website: 'https://dxos.org' };
     });
     await settle(...pairs);
     Obj.update(org, (org) => {
@@ -69,13 +69,13 @@ describe('echo-native syncs with echo-sqlite through one authority', () => {
     await settle(...pairs);
     for (const db of [dbA, dbB] as const) {
       const [result] = await db.query(Filter.type(TestSchema.Organization)).run();
-      expect({ name: result.name, website: result.website }).toEqual({
+      expect({ name: result.name, website: result.properties?.website }).toEqual({
         name: 'DXOS.org',
         website: 'https://dxos.org',
       });
     }
     // The resident objects show the remote edits, not only fresh query results.
-    expect(org.website).toBe('https://dxos.org');
+    expect(org.properties?.website).toBe('https://dxos.org');
     expect(orgOnNative.name).toBe('DXOS.org');
 
     // A deletion on the native side reaches echo-sqlite.

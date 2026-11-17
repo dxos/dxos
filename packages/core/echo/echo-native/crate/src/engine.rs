@@ -81,7 +81,7 @@ CREATE INDEX IF NOT EXISTS idx_reverse_ref_target ON reverseRef (targetDXN);
 CREATE INDEX IF NOT EXISTS idx_reverse_ref_record ON reverseRef (recordId);
 CREATE TABLE IF NOT EXISTS echo_sqlite_redirects (spaceId TEXT NOT NULL, fromId TEXT NOT NULL, toId TEXT NOT NULL, PRIMARY KEY (spaceId, fromId));
 CREATE TABLE IF NOT EXISTS echo_sqlite_changes (spaceId TEXT NOT NULL, objectId TEXT NOT NULL, hash TEXT NOT NULL, actor TEXT NOT NULL, seq INTEGER NOT NULL, time INTEGER NOT NULL, ops INTEGER NOT NULL, PRIMARY KEY (spaceId, objectId, hash));
-CREATE TABLE IF NOT EXISTS ftsIndex (rowid INTEGER PRIMARY KEY, text TEXT);
+CREATE INDEX IF NOT EXISTS echo_sqlite_changes_time ON echo_sqlite_changes (spaceId, time);
 "#;
 
 /// What every connection to one file shares: the database, and the counters rows are numbered by.
@@ -142,6 +142,18 @@ pub struct Engine {
     /// The newest block of each feed, which the next local block names as its predecessor.
     heads: HashMap<String, (i64, String)>,
     record_ids: HashMap<String, i64>,
+    /// Each document's heads when its changes were last logged, so the next pass reads only newer ones.
+    logged: HashMap<String, Vec<ChangeHash>>,
+}
+
+/// One change of a document, as `echo_sqlite_changes` logs it for change queries.
+struct ChangeRow {
+    object_id: String,
+    hash: String,
+    actor: String,
+    seq: i64,
+    time: i64,
+    ops: i64,
 }
 
 fn feed_of(object_id: &str) -> String {
@@ -177,6 +189,7 @@ impl Engine {
             docs: HashMap::new(),
             heads: HashMap::new(),
             record_ids: HashMap::new(),
+            logged: HashMap::new(),
         })
     }
 
@@ -479,9 +492,25 @@ impl Engine {
         }
 
         let mut entries: Vec<(String, String, Json, String, i64)> = Vec::new();
+        let mut changes: Vec<ChangeRow> = Vec::new();
         for document_id in &documents {
             let Some(cached) = self.docs.get_mut(document_id) else { continue };
-            let heads = heads_json(&cached.doc.get_heads());
+            let current = cached.doc.get_heads();
+            let since = self.logged.get(document_id).cloned().unwrap_or_default();
+            for change in cached.doc.get_changes(&since) {
+                if change.timestamp() > 0 {
+                    changes.push(ChangeRow {
+                        object_id: document_id.clone(),
+                        hash: change.hash().to_string(),
+                        actor: change.actor_id().to_hex_string(),
+                        seq: change.seq() as i64,
+                        time: change.timestamp() * 1000,
+                        ops: (change.max_op() - change.start_op().get() + 1) as i64,
+                    });
+                }
+            }
+            self.logged.insert(document_id.clone(), current.clone());
+            let heads = heads_json(&current);
             for object_id in doc::object_ids(&cached.doc)? {
                 if let Some(structure) = doc::read_structure(&cached.doc, &object_id)? {
                     let updated_at = updated.get(document_id).copied().unwrap_or(0);
@@ -639,6 +668,25 @@ impl Engine {
                 }
                 self.db.execute(&sql, &params)?;
             }
+        }
+        for chunk in changes.chunks(ROWS_PER_STATEMENT) {
+            let sql = format!(
+                "INSERT OR IGNORE INTO echo_sqlite_changes (spaceId, objectId, hash, actor, seq, time, ops) VALUES {}",
+                placeholders(chunk.len(), 7)
+            );
+            let mut params = Vec::with_capacity(chunk.len() * 7);
+            for change in chunk {
+                params.extend([
+                    Param::Text(space_id.clone()),
+                    Param::Text(change.object_id.clone()),
+                    Param::Text(change.hash.clone()),
+                    Param::Text(change.actor.clone()),
+                    Param::Int(change.seq),
+                    Param::Int(change.time),
+                    Param::Int(change.ops),
+                ]);
+            }
+            self.db.execute(&sql, &params)?;
         }
         Ok(indexed)
     }
