@@ -5,6 +5,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
@@ -34,6 +35,22 @@ describe('Graph', () => {
     expect(root.value.id).toEqual(GraphNode.RootId);
     expect(root.value.type).toEqual(Node.RootType);
     expect(Graph.getGraph(root.value)).toEqual(graph);
+  });
+
+  test('a node hashes without walking the graph it belongs to', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    // A registry value whose getter throws, as `Client.shell` does without a shell.
+    registry.mount(
+      Atom.make({
+        get shell(): never {
+          throw new Error('walked into the registry');
+        },
+      }),
+    );
+    const root = registry.get(graph.node(GraphNode.RootId));
+    assert.ok(Option.isSome(root));
+    expect(() => Hash.hash(root.value)).not.toThrow();
   });
 
   test('add node', () => {

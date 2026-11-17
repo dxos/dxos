@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Function from 'effect/Function';
+import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Atom from 'effect/reactivity/Atom';
@@ -235,6 +236,16 @@ export class GraphImpl implements WritableGraph {
   pipe() {
     // eslint-disable-next-line prefer-rest-params
     return Pipeable.pipeArguments(this, arguments);
+  }
+
+  // Every node carries the graph, and atom families key on nodes: a structural hash would walk the whole
+  // registry, and throw on any getter that does (`Client.shell`).
+  [Hash.symbol](): number {
+    return Hash.random(this);
+  }
+
+  [Equal.symbol](that: unknown): boolean {
+    return this === that;
   }
 
   readonly onNodeChanged = new Event<{
