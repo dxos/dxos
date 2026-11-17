@@ -7,6 +7,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
@@ -40,6 +41,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     // the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
     // pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
     // `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.layerSpec(() => import('./src/capabilities/fact-store.ts', { with: { type: 'module-url' } }), {
       name: 'FactStore',
       provides: [BrainCapabilities.FactStoreRegistry],
@@ -75,7 +79,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/project-templates.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [BrainSurface.Facts],
+      roles: [BrainSurface.Facts, AppSurface.Article],
     }),
     Capability.lazyModule(
       'ReplyGenerator',

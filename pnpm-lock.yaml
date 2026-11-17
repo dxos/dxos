@@ -10145,6 +10145,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
@@ -10166,6 +10169,9 @@ importers:
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/pipeline-email':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-email
@@ -10181,6 +10187,9 @@ importers:
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../plugin-routine
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/react-ui-rdf':
         specifier: workspace:*
         version: link:../../ui/react-ui-rdf
