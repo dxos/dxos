@@ -23,6 +23,7 @@ import * as EdgeAgent from '../agents/EdgeAgent.ts';
 import * as EdgeCredentials from '../agents/EdgeCredentials.ts';
 import * as CodingAgentControl from '../CodingAgentControl.ts';
 import { CLAUDE_CODE_EDGE_AGENT } from '../constants.ts';
+import { ensureDriveTrigger } from './drive-trigger.ts';
 
 /**
  * How long the starting call folds. Short: creating the chat and a cold bundle load already take much of an MCP
@@ -75,11 +76,13 @@ export const pullRequestsIn = (messages: readonly Message.Message[]): string[] =
  * Records each pull request on the run's tasks: imported into the space and refreshed from GitHub, attached to the
  * first task that takes it (a task holds one open PR, so a second PR lands on the next task), and the started tasks
  * moved to done once every pull request has merged, to review while any is open, or to blocked when the run opened
- * none. Best-effort: the PRs exist on GitHub either way. Returns whether every pull request has merged.
+ * none. Best-effort: the PRs exist on GitHub either way. Returns whether every pull request has merged, and the
+ * pull requests that were imported.
  */
-const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: readonly string[]) {
+export const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: readonly string[]) {
   const tasks = yield* Effect.forEach(chat.tasks, (ref) => Database.load(ref));
   const states: PullRequest.State[] = [];
+  const recorded: { url: string; pullRequest: Ref.Ref<PullRequest.PullRequest> }[] = [];
   for (const url of urls) {
     const imported = yield* Operation.invoke(GitHubOperation.ImportPullRequest, { reference: url }).pipe(Effect.exit);
     if (Exit.isFailure(imported)) {
@@ -87,6 +90,7 @@ const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: r
       continue;
     }
     const { pullRequest } = imported.value;
+    recorded.push({ url, pullRequest });
     // Read from GitHub, not from the stored object: the sync below writes in another bundle's copy of the space, which
     // reaches this one later, so a merge just made would still read as open here.
     const status = yield* Operation.invoke(GitHubOperation.GetPullRequestStatus, { pullRequest }).pipe(Effect.exit);
@@ -120,11 +124,11 @@ const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: r
       yield* Operation.invoke(TaskOperation.UpdateTask, { task: Ref.make(task), status }).pipe(Effect.exit);
     }
   }
-  return merged;
+  return { merged, recorded };
 });
 
 /** A follow-up turn reopens the run's settled tasks, so the turn's end settles them again. */
-const reopenTasks = Effect.fnUntraced(function* (chat: Chat.Chat) {
+export const reopenTasks = Effect.fnUntraced(function* (chat: Chat.Chat) {
   for (const ref of chat.tasks) {
     const task = yield* Database.load(ref);
     if (task.status === 'review' || task.status === 'blocked') {
@@ -134,7 +138,7 @@ const reopenTasks = Effect.fnUntraced(function* (chat: Chat.Chat) {
 });
 
 /** Folds the run for up to `windowMs`, and records its pull requests once the turn has ended. */
-const fold = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string, windowMs: number) {
+export const fold = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string, windowMs: number) {
   const control = yield* CodingAgentControl.CodingAgentControl;
   // A GitHub App connection's token is custodied by EDGE; the resolver turns its placeholder into the token to lend.
   const accessTokens = Layer.succeed(Credential.AccessTokenResolver, yield* Credential.AccessTokenResolver);
@@ -159,7 +163,7 @@ const fold = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string, windo
     return { chat: Ref.make(chat), done: false, latest: latestText(messages), pullRequests: [] };
   }
   const pullRequests = pullRequestsIn(messages);
-  const merged = yield* recordPullRequests(chat, pullRequests);
+  const { merged } = yield* recordPullRequests(chat, pullRequests);
   yield* Database.flush();
   return { chat: Ref.make(chat), done: true, latest: latestText(messages), pullRequests, merged };
 });
@@ -178,6 +182,12 @@ export const start: Operation.WithHandler<typeof CloudRunOperation.StartCloudRun
           createChat: Delegation.createBareChat,
         });
         const prompt = yield* Delegation.brief(tasks, project);
+        // A run moves on only if something keeps folding it, so the space gets a timer that does.
+        yield* ensureDriveTrigger().pipe(
+          Effect.catchCause((cause) =>
+            Effect.sync(() => log.warn('drive trigger not set up', { cause: Cause.pretty(cause) })),
+          ),
+        );
         return yield* fold(chat, prompt, START_WINDOW_MS);
       }),
     ),
@@ -199,7 +209,7 @@ export const syncRun: Operation.WithHandler<typeof CloudRunOperation.SyncCloudRu
           const feed = yield* Database.load(chat.feed);
           const messages = yield* TrajectoryStore.messages(feed);
           const pullRequests = pullRequestsIn(messages);
-          const merged = pullRequests.length > 0 ? yield* recordPullRequests(chat, pullRequests) : undefined;
+          const merged = pullRequests.length > 0 ? (yield* recordPullRequests(chat, pullRequests)).merged : undefined;
           yield* Database.flush();
           return { chat: chatRef, done: true, latest: latestText(messages), pullRequests, merged };
         }

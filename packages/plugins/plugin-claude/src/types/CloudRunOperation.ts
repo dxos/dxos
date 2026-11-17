@@ -13,6 +13,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Feed, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { Text } from '@dxos/schema';
@@ -40,6 +41,8 @@ const types = [
   Repo.Repo,
   PullRequest.PullRequest,
   AccessToken.AccessToken,
+  // Starting a run files the timer trigger that drives it.
+  Trigger.Trigger,
 ];
 
 const RunState = Schema.Struct({
@@ -115,6 +118,41 @@ export const SyncCloudRun = Operation.make({
     }),
   }),
   output: RunState,
+  services: [
+    Database.Service,
+    Trace.TraceService,
+    Operation.Service,
+    Credential.AccessTokenResolver,
+    CodingAgentControl.CodingAgentControl,
+  ],
+  types,
+}).pipe(Operation.mutation('write'));
+
+export const DriveCloudRuns = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.claude.driveCloudRuns'),
+    name: 'Drive Cloud Coding Runs',
+    icon: 'px--anthropic--regular',
+    description: trim`
+      Move every cloud coding run in the space on by one step, with no caller watching: fold a turn that is still
+      running; for a turn that has ended, read the run's pull requests from GitHub and either mark the tasks done
+      (all merged), ask the agent to fix failed checks, or, once a person has approved landing (an approving review
+      or the \`land\` label) and nothing failed, ask it to land the pull requests. Each follow-up is sent once per
+      pull request, head commit and kind. A timer trigger in the space runs this every few minutes.
+    `,
+  },
+  input: Schema.Struct({}),
+  output: Schema.Struct({
+    runs: Schema.Array(
+      Schema.Struct({
+        chat: Ref.Ref(Chat.Chat),
+        step: Schema.Literals(['running', 'idle', 'merged', 'fix', 'land', 'failed']).annotate({
+          description:
+            'running: the turn is still going; idle: nothing to do yet; merged: every pull request merged; fix or land: the follow-up sent; failed: the step threw, see the log.',
+        }),
+      }),
+    ),
+  }),
   services: [
     Database.Service,
     Trace.TraceService,

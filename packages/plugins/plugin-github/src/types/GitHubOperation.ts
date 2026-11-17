@@ -423,6 +423,8 @@ export const GetPullRequestStatus = Operation.make({
     review: ReviewState,
     /** Reviewers whose latest verdict is an approval. */
     approvals: Schema.Number,
+    /** Names of the labels on the pull request. */
+    labels: Schema.Array(Schema.String),
   }),
   types: [PullRequest.PullRequest],
   services: [Credential.CredentialsService],

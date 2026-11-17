@@ -43,6 +43,7 @@ const handlers = OperationHandlerSet.make(
       runs: PULL_REQUEST_13348_RUNS,
       review: 'approved' as const,
       approvals: 1,
+      labels: [],
     }),
   ),
   Operation.withHandler(GitHubOperation.SyncPullRequest, () => Effect.succeed({ updated: [] })),
