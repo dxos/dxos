@@ -106,8 +106,18 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
       3. plugin-claude now resolves every GitHub token through EDGE, checks it with GitHub, asks KMS for a forced
          exchange on a 401 (new `refresh` flag through compute-service and kms-service), and lends the reason as
          `GITHUB_TOKEN_ERROR` (`DX_` names are reserved and values may not hold whitespace).
+      4. Why KMS stopped: the router marks a space active only on client websocket traffic, and KMS's refresh cron
+         and the trigger scheduler both sleep after the inactivity timeout. compute-service now counts an
+         operation called in a space as activity there (deployed to dev).
+      5. KMS writes a token it refreshes on demand back to the AccessToken object (deployed); plugin-claude forces
+         one exchange when the stored copy differs from EDGE's, which healed the Coding space.
+- [x] dxos#14563 merged 20:49 by the Composer agent unattended (checks waited, merge queue).
+- [x] The space's drive timer fires every 5 minutes on EDGE (`Scheduler:cronRun` → driveCloudRuns).
+- [ ] The drive step acts on every chat in one invocation; over MCP it outlives the gateway (502). Time-box it
+      or fan out per chat.
 - [ ] Gotcha: `check-release.mjs` alone bundles operations from the package's stale `dist/lib`; run the package
-      `build` first (moon's `check-edge-release` does).
+      `build` first (moon's `check-edge-release` does). E2E task filed: dxos#14580 (Composer).
+- [ ] Gotcha: a `moon` build with a conflicted `pnpm-lock.yaml` reinstalls and wipes `node_modules`.
 - [ ] Driver task (01M7NFT4E35WC6DMXZPQS84HXW): Composer wrote driveCloudRuns + a 5-minute space timer + `land`
       label approval; push pending.
 - [ ] Land task (01M7NHZTYR96PP1RK0Q0R6K7R7): Composer is landing dxos#14563 (approved by the user).
