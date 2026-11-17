@@ -122,6 +122,21 @@ export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
  */
 export const KIND_ATTR = 'kind';
 
+/**
+ * Prefix that marks a kind's own field whose name an element attribute already claims: `substrate` keeps a numeric
+ * `fill`, and `fill` is also the style attribute, so it is written `data-fill=0.55`. The prefix escapes itself, so
+ * a kind field genuinely named `data-fill` is written `data-data-fill` and reads back as its own name.
+ */
+export const DATA_PREFIX = 'data-';
+
+/** The DSL spelling of a kind's field, escaped where an element attribute claims the name. */
+export const dataAttrName = (name: string, claimed: ReadonlySet<string>): string =>
+  claimed.has(name) || name.startsWith(DATA_PREFIX) ? `${DATA_PREFIX}${name}` : name;
+
+/** The field name a DSL attribute spells, the inverse of {@link dataAttrName}. */
+export const dataFieldName = (name: string): string =>
+  name.startsWith(DATA_PREFIX) ? name.slice(DATA_PREFIX.length) : name;
+
 /** Object attributes other than `@ <origin>`, in the order they print. */
 export const OBJECT_ATTRS: readonly AttrSpec[] = [
   { name: 'scale', type: 'number' },

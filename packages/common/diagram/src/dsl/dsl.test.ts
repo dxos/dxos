@@ -124,6 +124,25 @@ describe('dsl round trip', () => {
     expect(parse('object A @ 0,0 {\n  arrow link a -> b via 10,_\n}\n').problems).toHaveLength(1);
   });
 
+  test("a kind's field escapes a name the element already claims", ({ expect }) => {
+    // `substrate` keeps a numeric `fill` and `fill` is also the style attribute, so without an escape the reader
+    // resolves it against `none|solid|pattern|tint` and rejects the value. The prefix escapes itself, so a field
+    // genuinely called `data-fill` is written `data-data-fill` and still reads back as its own name.
+    // The element's own attributes print first, then the kind's, each by name: the order is what makes the text
+    // stable, not the order the fields happened to be written in.
+    const source =
+      'object A @ 0,0 {\n  rect box 0,0 10x10 kind=substrate fill=solid data-data-fill=on data-fill=0.55\n}\n';
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [element] = toScene(commands).objects[0].elements;
+    expect(element.kind === 'rect' && [element.type, element.fill, element.data]).toEqual([
+      'substrate',
+      'solid',
+      { 'fill': 0.55, 'data-fill': 'on' },
+    ]);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
   test('whitespace is insignificant', ({ expect }) => {
     const dense = 'object A @ 0,0 {rect box 0,0 10x10 "hi" color=red}';
     const loose = 'object   A\n  @ 0 , 0\n{\n  rect\n    box\n    0,0\n    10x10\n    "hi"\n    color=red\n}\n';

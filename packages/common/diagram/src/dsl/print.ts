@@ -11,7 +11,7 @@
 import { Shape } from '@dxos/scene';
 
 import type * as Scene from '../scene.ts';
-import { BARE_ID, BARE_REF, ELEMENT_ATTRS, OBJECT_ATTRS, RESERVED } from './vocabulary.ts';
+import { BARE_ID, BARE_REF, ELEMENT_ATTRS, OBJECT_ATTRS, RESERVED, dataAttrName } from './vocabulary.ts';
 
 const ESCAPES: Record<string, string> = { '\\': '\\\\', '"': '\\"', '\n': '\\n', '\t': '\\t', '\r': '\\r' };
 
@@ -82,9 +82,10 @@ const formatAttrs = (kind: keyof typeof ELEMENT_ATTRS, values: Partial<Record<st
  * - a field holding a list or a nested object, which has no spelling in the DSL at all — printed as a string it
  *   would read back as that string;
  * - a field whose name the element's own table already claims (`substrate`'s numeric `fill` against the style
- *   attribute), since the reader resolves that name against the schema's literals and would reject the value.
+ *   attribute) is written with the {@link DATA_PREFIX}, since the reader would otherwise resolve that name against
+ *   the schema's literals and reject the value.
  *
- * Both are measured by the handler's conformance test rather than assumed away.
+ * The first is measured by the handler's conformance test rather than assumed away.
  */
 const formatData = (
   kind: keyof typeof ELEMENT_ATTRS,
@@ -94,8 +95,8 @@ const formatData = (
   return Object.entries(data ?? {})
     .sort(([left], [right]) => (left < right ? -1 : 1))
     .flatMap(([name, value]) =>
-      !claimed.has(name) && (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
-        ? [`${name}=${formatScalar(value)}`]
+      typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+        ? [`${dataAttrName(name, claimed)}=${formatScalar(value)}`]
         : [],
     );
 };

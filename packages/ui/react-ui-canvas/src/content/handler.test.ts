@@ -89,7 +89,7 @@ describe('SceneHandler', () => {
       size: { width: 200, height: 128 },
       label: 'Calendar',
       icon: { type: 'ph--calendar--regular' },
-      // `fill` is also a style attribute, and `marks` holds a list: neither can be written flat.
+      // `fill` is also a style attribute, so it needs escaping; `marks` holds a list, which has no spelling.
       data: { tone: 'event', variant: 'simple', fill: 0.55, marks: [1, 2] },
     };
     content['node:deck/card-1'] = { kind: 'node', scene, node, dsl: { object: 'deck', element: 'card-1' } };
@@ -107,14 +107,15 @@ describe('SceneHandler', () => {
     expect([rebuiltNode.type, nodeTitle(defaultNodeRegistry, rebuiltNode), Reflect.get(rebuiltNode, 'data')]).toEqual([
       'card',
       'Calendar',
-      { tone: 'event', variant: 'simple' },
+      { tone: 'event', variant: 'simple', fill: 0.55 },
     ]);
-    // Three gaps, asserted so they stay measured rather than assumed away. A field whose name an element
-    // attribute already claims is left out, since the reader resolves that name against the schema's literals; so
-    // is one holding a list, which the DSL cannot spell. And the kind's remaining top-level fields do not survive
-    // at all: putting a name back on the right side of the `data` split needs the kind's own schema, which only
-    // the registry holding the kind has.
-    expect(text).not.toContain('fill=');
+    // A field whose name an element attribute claims is escaped rather than dropped: `substrate` keeps a numeric
+    // `fill`, which is the cell density its hexagon is drawn at, and dropping it flattened the drawing.
+    expect(text).toContain('data-fill=0.55');
+
+    // Two gaps, asserted so they stay measured rather than assumed away. A field holding a list has no spelling in
+    // the DSL at all. And the kind's remaining top-level fields do not survive: putting a name back on the right
+    // side of the `data` split needs the kind's own schema, which only the registry holding the kind has.
     expect(text).not.toContain('marks=');
     expect(Reflect.get(rebuiltNode, 'icon')).toBeUndefined();
   });

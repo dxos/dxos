@@ -314,7 +314,23 @@ describe('studio deck slides on a canvas', () => {
       return histogram;
     };
 
+    // The kind's own fields, not just its name: a card that comes back as a card with none of its data is no
+    // better than a box. Scalars only — a field holding a list or a nested object has no spelling in the DSL, and
+    // `handler.test.ts` is where that gap is stated.
+    const dataOfKinds = (map: ContentMap) =>
+      Object.values(readViews(map)[ROOT_VIEW_ID].nodes)
+        .filter((node) => !NODE_TYPES.includes(node.type as (typeof NODE_TYPES)[number]))
+        .map((node) => {
+          const bag = Reflect.get(node, 'data');
+          const scalars = Object.entries(typeof bag === 'object' && bag !== null ? bag : {}).filter(
+            ([, value]) => typeof value !== 'object',
+          );
+          return JSON.stringify([node.type, scalars.sort(([left], [right]) => (left < right ? -1 : 1))]);
+        })
+        .sort();
+
     const before = kindsOf(content);
+    const beforeData = dataOfKinds(content);
     expect(Object.keys(before).length).toBeGreaterThan(0);
     const text = Dsl.print(SceneHandler.read(content).scene);
     const { commands, problems } = Dsl.read(text);
@@ -322,6 +338,7 @@ describe('studio deck slides on a canvas', () => {
     const rebuilt: ContentMap = {};
     applyCommands(rebuilt, commands, SceneHandler);
     expect(kindsOf(rebuilt)).toEqual(before);
+    expect(dataOfKinds(rebuilt)).toEqual(beforeData);
 
     // A link keeps its markers and its line style too. These live on the link itself on a plain canvas and on a
     // connector on a routed one, and `read` used to look only at the connector: 51 of the deck's 64 connectors

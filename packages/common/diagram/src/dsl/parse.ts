@@ -20,6 +20,7 @@ import * as SequenceEngine from '../sequence-engine.ts';
 import { parser } from './gen/diagram.ts';
 import {
   type AttrSpec,
+  DATA_PREFIX,
   DIAGRAM_ATTRS,
   EDGE_ATTRS,
   ELEMENT_ATTRS,
@@ -31,6 +32,7 @@ import {
   NOTE_ATTRS,
   OBJECT_ATTRS,
   REF_SHAPE,
+  dataFieldName,
 } from './vocabulary.ts';
 
 export type Problem = {
@@ -356,7 +358,9 @@ export const read = (text: string): Reading => {
     const extra: AttrSpec[] = declared
       ? attributeNodes.flatMap((node) => {
           const attrName = nameOf(node);
-          return attrName !== undefined && !ELEMENT_ATTRS[kind].some((spec) => spec.name === attrName)
+          // An escaped name is the kind's field whatever the table says: that is what the prefix is for.
+          return attrName !== undefined &&
+            (attrName.startsWith(DATA_PREFIX) || !ELEMENT_ATTRS[kind].some((spec) => spec.name === attrName))
             ? [{ name: attrName, type: 'scalar' as const }]
             : [];
         })
@@ -365,7 +369,7 @@ export const read = (text: string): Reading => {
     const data = Object.fromEntries(
       extra.flatMap((spec) => {
         const value = scalarAttr(attrs, spec.name);
-        return value === undefined ? [] : [[spec.name, value] as const];
+        return value === undefined ? [] : [[dataFieldName(spec.name), value] as const];
       }),
     );
     const style = readStyle(attrs);
