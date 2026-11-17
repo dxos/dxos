@@ -76,6 +76,16 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
       Needs EDGE logs (edge-dev sends none to SigNoz) or an exposed sync op to diagnose.
 - [ ] dxos#14563 (agent landing in progress): `review-present` fails for the same missing key.
 
+## Phase 3c: Cold MCP calls
+
+- [x] Found the 53 s: edge traces go to PostHog (tail-logger), not SigNoz. A cold plugin call spent ~25 s in
+      the Worker Loader callback reading a bundle's 383–500 module files from R2, six at a time.
+- [x] Fix (edge#1537, deployed to dev): the built worker code is cached as one R2 object per loader id
+      (`worker-code/v1/<hash>`). Measured cold call: 26–32 s → 5.8 s (load 1.1 s, start 0.9 s, invoke 2.7 s).
+      Invoke spans now carry `dx.plugin.cold`, `bundle.cached`, `bundle.load_ms`, `start_ms`, `invoke_ms`.
+- [ ] The first cold start after a bundle version is published still builds it (~25 s); building the entry at
+      publish time (registry) would remove that too.
+
 ## Phase 4: Control surfaces
 
 - [x] `dx` built from source (overlaying dxos#14313's CLI files, not committed), logged in through the dev
