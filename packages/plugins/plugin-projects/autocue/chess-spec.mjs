@@ -188,12 +188,61 @@ const treeRow = (page, heading) =>
  */
 const openProject = async (peer) => {
   const { page } = peer;
+  await setNavigation(peer, 'expanded');
   const projects = treeRow(page, 'Projects');
   await projects.waitFor({ timeout: 120_000 });
   await expandRow(projects);
   await peer.click(treeRow(page, PROJECT).getByTestId('treeItem.heading').first());
   await plank(page).getByTestId('projectsPlugin.tab.spec').waitFor({ timeout: TIMEOUT });
+  await setNavigation(peer, 'collapsed');
 };
+
+const navigation = (page) => page.locator('[data-scope="main"][data-part="navigation-sidebar"]');
+
+/** Opens the navigation sidebar to reach the navtree, and collapses it again so the spec has the width. */
+const setNavigation = async (peer, state) => {
+  const { page } = peer;
+  const expanded = async () =>
+    (await navigation(page)
+      .getAttribute('data-state')
+      .catch(() => null)) === 'expanded';
+  if ((await expanded()) === (state === 'expanded')) {
+    return;
+  }
+  const label = state === 'expanded' ? 'Open sidebar' : 'Close sidebar';
+  await peer.click(page.locator(`button:visible:has-text("${label}")`).first());
+  await waitFor(async () => (await expanded()) === (state === 'expanded'), {
+    timeout: 10_000,
+    what: `the navigation sidebar to be ${state}`,
+  });
+};
+
+/** The peers whose Specs tab shows the spec's plain text rather than a form per block. */
+const plainText = new WeakSet();
+
+/** Picks the Specs tab's view; a narrow toolbar folds the view menu into its overflow menu as a submenu. */
+const setView = async (peer, label) => {
+  const { page } = peer;
+  const viewMode = specToolbar(page).getByTestId('editor.toolbar.viewMode');
+  if (await viewMode.isVisible()) {
+    await peer.click(viewMode);
+  } else {
+    await peer.click(specToolbar(page).getByTestId('toolbar.overflow'));
+    await peer.click(page.locator('[role="menu"] [data-testid="editor.toolbar.viewMode"]'));
+  }
+  await peer.click(page.locator(`[role="menu"] >> [role^="menuitem"]:has-text("${label}")`).first());
+  for (let attempt = 0; attempt < 3 && (await page.locator('[role="menu"]').count()) > 0; attempt++) {
+    await page.keyboard.press('Escape');
+  }
+  if (label === 'Plain text') {
+    plainText.add(peer);
+  } else {
+    plainText.delete(peer);
+  }
+};
+
+/** The feature titled `name`: its form, or in the plain text its header line. */
+const feature = (peer, name) => (plainText.has(peer) ? specLine(peer.page, `: ${name}`) : featureForm(peer.page, name));
 
 /** Closes the companion, which narrows the plank until the spec toolbar overflows. */
 const closeCompanion = async (peer) => {
@@ -297,6 +346,27 @@ const makeFeature = async (peer, text, name) => {
   await page.waitForTimeout(400);
   await option.waitFor({ timeout: 1_000 });
   await page.keyboard.press('Enter');
+  if (plainText.has(peer)) {
+    // In the plain text the description is the indented line under the block's header.
+    await feature(peer, name).waitFor({ timeout: TIMEOUT });
+    await page.evaluate((title) => {
+      for (const content of document.querySelectorAll('.cm-content')) {
+        const view = content.cmTile?.view;
+        const doc = view?.state.doc;
+        for (let number = 1; doc && number <= doc.lines; number++) {
+          const line = doc.line(number);
+          if (line.text.startsWith('feat ') && line.text.endsWith(`: ${title}`)) {
+            view.dispatch({ changes: { from: line.to, insert: '\n  ' }, selection: { anchor: line.to + 3 } });
+            view.focus();
+            return;
+          }
+        }
+      }
+    }, name);
+    await page.waitForTimeout(300);
+    await peer.type(text);
+    return;
+  }
   const description = editable(featureForm(page, name).getByTestId('_prose').first());
   await description.waitFor({ timeout: TIMEOUT });
   await page.waitForTimeout(400);
@@ -583,7 +653,7 @@ export const steps = [
     },
   },
   {
-    name: 'Alice creates the project "Chess", adds the spec "Chess plugin" on its Specs tab and checks Software in Extensions.',
+    name: 'Alice creates the project "Chess", adds the spec "Chess plugin" on its Specs tab, checks Software in Extensions and sets the view to Plain text.',
     subtitle: 'QA-12 step 1',
     run: async ({ peers: { alice } }) => {
       const { page } = alice;
@@ -618,6 +688,8 @@ export const steps = [
       for (let attempt = 0; attempt < 3 && (await page.locator('[role="menu"]').count()) > 0; attempt++) {
         await page.keyboard.press('Escape');
       }
+      await setView(alice, 'Plain text');
+      await setNavigation(alice, 'collapsed');
       await specText(page).waitFor({ timeout: TIMEOUT });
     },
   },
@@ -683,13 +755,20 @@ export const steps = [
       // One at a time: a block landing from the other peer closes an open `/feat` menu.
       await makeFeature(alice, BOARD, 'Gameboard');
       await boardCard(bob.page, 'Gameboard').waitFor({ timeout: TIMEOUT });
+      // Alice's caret sits at the end of the description she typed, and in no other field of Bob's form.
+      const gameboard = featureForm(bob.page, 'Gameboard');
+      await gameboard.getByTestId('_prose').filter({ hasText: BOARD }).waitFor({ timeout: TIMEOUT });
+      await waitFor(async () => (await caretOf(gameboard, 'Alice').count()) === 1, {
+        timeout: 10_000,
+        what: "one caret of Alice's in Bob's Gameboard form",
+      });
       await makeFeature(bob, LOBBY, 'Start Game');
       await boardCard(bob.page, 'Start Game').waitFor({ timeout: TIMEOUT });
       await makeFeature(alice, MOVE, 'Make Move');
       await boardCard(bob.page, 'Make Move').waitFor({ timeout: TIMEOUT });
-      for (const { page } of [alice, bob]) {
+      for (const peer of [alice, bob]) {
         for (const name of ['Gameboard', 'Start Game', 'Make Move']) {
-          await featureForm(page, name).waitFor({ timeout: TIMEOUT });
+          await feature(peer, name).waitFor({ timeout: TIMEOUT });
         }
       }
       await hold(alice);
@@ -760,6 +839,7 @@ export const steps = [
       await plank(bob.page).waitFor({ timeout: 120_000 });
       await speed(1);
       await clearChrome(bob);
+      await setNavigation(bob, 'collapsed');
       // The project opens on the spec Bob picked last.
       await expectSpec(bob.page, SECOND_SPEC);
       await bob.page.locator('[role="tab"][aria-label="Notifications"][data-badge="1"]').waitFor({ timeout: TIMEOUT });

@@ -72,7 +72,7 @@ feat F-4: A project's specs
               other plugins give Markdown documents (`MarkdownCapabilities.ExtensionProvider`), such as diagrams. Its
               packages add their own editing on top.
   req F-4.13: A spec's text, and each block form drawn in it, shows the carets of the other peers editing it, each
-              with the peer's name.
+              with the peer's name, and a form shows a peer's caret only in the field it is in.
   req F-4.14: A spec's text opens in preview unless the Default spec view setting (F-4.16) names another view. In
               preview each block of a kind its schemas define is drawn as a form over that kind's fields, and the text
               offers readonly and source views. The text is the only store: a form edit changes only
@@ -617,7 +617,8 @@ test QA-11: Pick a nested spec from the Specs tab
 test QA-12: Two people write a chess plugin's spec with the agent
   desc: |
     Alice and Bob turn a few bullets into the spec for a Composer chess plugin. They write the draft together in real
-    time, then turn bullets into `feat` blocks in the text while Bob watches the features land on his Board. Bob
+    time, Alice in the spec's plain text and Bob in its forms, then turn bullets into `feat` blocks in the text while
+    Bob watches the features land on his Board. Bob
     leaves a question on a feature, starts a second spec and goes; Alice asks the agent to flesh the spec out and
     answers him. Bob's notification brings him back to the first spec, where he has the thread's agent add a
     requirement, and he picks a feature's dependencies in its form while Alice watches them light up on her Board. The spec they end with is enough to build the plugin from: its
@@ -633,9 +634,9 @@ test QA-12: Two people write a chess plugin's spec with the agent
     - no "Chess" project exists in the space
   steps:
     - name: Create the project and its spec
-      do: Alice creates the project "Chess", adds the spec "Chess plugin" on its Specs tab and checks Software in
-        Extensions.
-      expect: the Specs tab shows the empty spec's text
+      do: Alice creates the project "Chess", adds the spec "Chess plugin" on its Specs tab, checks Software in
+        Extensions and sets the tab's view to Plain text.
+      expect: the Specs tab shows the empty spec's plain text
     - name: Write the draft
       do: Alice types a line saying what the plugin is and two bullets under it.
       expect: the spec's text holds the line and the two bullets
@@ -649,8 +650,10 @@ test QA-12: Two people write a chess plugin's spec with the agent
     - name: Features from the bullets
       do: Bob opens Board in the Structure companion. Alice turns her first bullet into the feature "Gameboard" by
         typing `Gameboard /feat` over it, then Bob turns the lobby bullet into "Start Game" and Alice the move bullet
-        into "Make Move" the same way. Each describes the feature in its form with the bullet's words.
-      expect: Bob's Board shows each card as its feature is made, and both texts show the three features as forms
+        into "Make Move" the same way. Each describes the feature with the bullet's words, Bob in its form and Alice on
+        the indented line under its header.
+      expect: Bob's Board shows each card as its feature is made. Bob's text shows the three features as forms, with
+        Alice's caret only in the field she is typing in, and Alice's text shows them as `feat` blocks
       note: The text before `/feat` becomes the feature's title, and the block replaces the bullet, marker and all.
     - name: Bob asks a question and leaves
       do: Bob comments on "Make Move"'s description, "Who checks a move, the board or the engine?", adds the spec
@@ -3157,4 +3160,12 @@ decision D-277: A navigation target can carry view state, as patches the Open op
   rejected:
     - A path segment for the spec under its project; [D-275] keeps a spec off the graph.
     - Writing the view state while resolving the target; resolving also serves menus, search and agents that open nothing.
+```
+
+```mdl
+decision D-278: In QA-12 Alice writes in the spec's plain text and Bob in its forms, and a form shows a peer's caret only in the field it is in. A field redraws the other peers' carets when the spec's text changes, not only when a caret moves.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-4.13, QA-12]
+  why: The demo showed one peer's caret twice, at the end of a feature's title and in its description. A caret names the character after it, so typing ahead of it changes no presence state, and the title kept the caret it drew while the empty description shared its end.
 ```
