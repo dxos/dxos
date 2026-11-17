@@ -373,6 +373,31 @@ describe('PluginHost', () => {
         { operationKey: 'com.example.operation.fib', input: { iterations: 10 }, options: { parentPid: 'outer' } },
       ]);
     });
+
+    // A cloud run's handler reads and writes the space, so its nested calls run with a database and a space id.
+    test("in a space, reaches EDGE for another plugin's operation and not its own", async ({ expect }) => {
+      const spaceId = SpaceId.random();
+      const invoked: unknown[] = [];
+      const operations: PluginProtocol.OperationHost = {
+        invoke: async (operationKey, input, options) => {
+          invoked.push({ operationKey, input, options });
+          return { ok: true, output: { result: '55' } };
+        },
+      };
+      const result = await makeHost().invoke(
+        { operationKey: String(Delegate.meta.key), spaceId, input: { n: 10 } },
+        makeSpaceEnv(spaceId),
+        { operations, pid: 'outer' },
+      );
+      expect(result).toEqual({ ok: true, output: { reply: { n: 10 }, fibonacci: { result: '55' } } });
+      expect(invoked).toEqual([
+        {
+          operationKey: 'com.example.operation.fib',
+          input: { iterations: 10 },
+          options: { spaceId, parentPid: 'outer' },
+        },
+      ]);
+    });
   });
 });
 
