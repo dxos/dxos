@@ -9,8 +9,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 import * as Variant from '@dxos/plugin-studio/Variant';
-import { splitSlides } from '@dxos/react-ui-slides';
-import { SlideTheme } from '@dxos/react-ui-slides';
+import { SlideTheme, splitSlides } from '@dxos/react-ui-slides/dialect';
 import { Text } from '@dxos/schema';
 
 import { PresenterNamespace } from '../namespace.ts';

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Migration, Obj, Ref, Type } from '@dxos/echo';
-import { applyEdit, isHiddenSlide, setFrontmatter } from '@dxos/react-ui-slides';
+import { applyEdit, isHiddenSlide, setFrontmatter } from '@dxos/react-ui-slides/dialect';
 import { Text } from '@dxos/schema';
 
 import { Presentation, Slide } from './Presentation.ts';

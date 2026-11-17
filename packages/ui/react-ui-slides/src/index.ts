@@ -3,5 +3,4 @@
 //
 
 export * from './components/index.ts';
-export * from './markdown/index.ts';
-export * as SlideTheme from './SlideTheme.ts';
+export * from './dialect.ts';

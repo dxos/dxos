@@ -17,6 +17,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./dialect": {
+      "source": "./src/dialect.ts",
+      "types": "./dist/types/src/dialect.d.ts",
+      "import": "./dist/lib/dialect.mjs"
+    },
     "./editor": {
       "source": "./src/editor/index.ts",
       "types": "./dist/types/src/editor/index.d.ts",

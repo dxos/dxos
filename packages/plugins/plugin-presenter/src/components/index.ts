@@ -11,6 +11,5 @@ export * from './PresentationShell/index.ts';
 export * from './SectionPicker/index.ts';
 export * from './SlideGallery/index.ts';
 export * from './Slide/index.ts';
-export * from '@dxos/react-ui-slides';
 export * from './SlideToolbar/index.ts';
 export * from './SpeakerNotes/index.ts';
