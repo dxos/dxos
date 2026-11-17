@@ -20,10 +20,12 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { type Space } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
-import { Cell, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
-import { ModuleContainer, TaskDetail, storyParameters } from '../testing/index.ts';
+import { TaskDetail, storyParameters } from '../testing/index.ts';
 
 const TASK_TITLE = 'Ship the tasks section';
 // Carries both reference forms the markdown surfaces linkify: a bare URL and a `#nnn` issue.
@@ -87,12 +89,12 @@ const required = (element: HTMLElement | null, name: string): HTMLElement => {
   return element;
 };
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-projects/ProjectTaskDetail',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
   args: { columns: '3fr_2fr' },
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     types: [
       Project.Project,
       Instructions.Instructions,

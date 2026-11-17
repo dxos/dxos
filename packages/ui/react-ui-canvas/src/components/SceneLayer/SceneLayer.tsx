@@ -74,6 +74,7 @@ import {
   GROOVE_FILLS,
   type GrooveHeads,
   type LatticeSpec,
+  MANY_SPREAD,
   type MarkerFrame,
   NEU_CANVAS_FILL,
   type PartEditing,
@@ -305,6 +306,7 @@ export const SceneLayer = memo(
                               onPointerLeave={() => handlers.onLinkHover?.(undefined)}
                               onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
                               onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
+                              data-link-press={link.id}
                             />
                           )}
                           {diagram && link.connector ? (
@@ -364,6 +366,7 @@ export const SceneLayer = memo(
                             key={link.id}
                             d={path}
                             className='fill-none stroke-none'
+                            data-link-ends={link.id}
                             markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
                             markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
                           />
@@ -606,7 +609,8 @@ const MINOR_GRID = '--dx-minor-grid';
 
 /**
  * The space a text box leaves between the frame's edge and its text, set per node by the `padding` field of the types
- * that carry it. Unset, a text box pads itself by a minor grid cell, which is what puts its lines on the grid.
+ * that carry it, in scene px. Unset, a text box pads itself by a minor grid cell, which is what puts its lines on
+ * the grid.
  */
 const TEXT_PAD_X = '--dx-text-pad-x';
 const TEXT_PAD_Y = '--dx-text-pad-y';
@@ -621,6 +625,12 @@ const TEXT_PAD_Y = '--dx-text-pad-y';
 // so the text does not move when editing starts.
 const TEXT_BOX =
   'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>*]:px-[var(--dx-text-pad-x,var(--dx-minor-grid))]';
+
+/**
+ * A label is one run of lines placed by its alignment; unless its node says otherwise it keeps half a minor grid cell
+ * above and below, so a label aligned to the top or the bottom (a hull's name is) stands that far in from the edge.
+ */
+const LABEL_LINES = '[&>*]:py-[var(--dx-text-pad-y,calc(var(--dx-minor-grid)/2))]';
 
 /**
  * A text node's lines are a paragraph's, and its block is padded so the text sits a minor grid cell from the top and
@@ -652,10 +662,12 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
   const arrow = markerFrame('arrow', box, width);
   const triangle = markerFrame('triangle', box, width);
   const circle = markerFrame('circle', box, width);
+  const diamond = markerFrame('diamond', box, width);
+  const many = markerFrame('many', box, width);
   // An outline matches the line's width, in its marker's view units.
   const outline = ({ size, view }: MarkerFrame) => (width * view) / size;
   const ends = ['start', 'end'] as const;
-  // The mitred tip and the circle's far side sit at the anchor, so a marker reaches past its view box.
+  // The mitred tip, the circle's far side and a crow's foot's toes sit at the anchor, so a marker reaches past its view box.
   const frame = ({ size, refX, refY }: MarkerFrame, end: 'start' | 'end') => ({
     refX,
     refY,
@@ -690,10 +702,35 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
           />
         </marker>
       ))}
+      {/* Aggregation and composition (UML): a diamond at the owning end, hollow (filled with the canvas) or solid. */}
+      {ends.flatMap((end) =>
+        (['diamond', 'diamond-filled'] as const).map((kind) => (
+          <marker key={`${kind}-${end}`} id={`${id}-${kind}-${end}`} viewBox='-1 -1 18 18' {...frame(diamond, end)}>
+            <path
+              d='M 0 5 L 8 0 L 16 5 L 8 10 z'
+              className={mx(kind === 'diamond' ? canvasFill : line.fill, line.stroke)}
+              strokeWidth={outline(diamond)}
+              strokeLinejoin='miter'
+            />
+          </marker>
+        )),
+      )}
       {/* A circle filled with the canvas, its far side on the connection point, so the line stops under it. */}
       {ends.map((end) => (
         <marker key={`circle-${end}`} id={`${id}-circle-${end}`} viewBox='0 0 10 10' {...frame(circle, end)}>
           <circle cx={5} cy={5} r={4} className={mx(canvasFill, line.stroke)} strokeWidth={outline(circle)} />
+        </marker>
+      ))}
+      {/* Many (a crow's foot): two toes spread from the line onto the connection point, the line running between them. */}
+      {ends.map((end) => (
+        <marker key={`many-${end}`} id={`${id}-many-${end}`} viewBox='-1 -1 12 12' {...frame(many, end)}>
+          <path
+            d={`M 10 ${5 - 10 * MANY_SPREAD} L 0 5 L 10 ${5 + 10 * MANY_SPREAD}`}
+            className={mx('fill-none', line.stroke)}
+            strokeWidth={outline(many)}
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
         </marker>
       ))}
     </>
@@ -839,7 +876,7 @@ type GrooveStrokeProps = Pick<LinkStrokeProps, 'id' | 'path' | 'stroke' | 'empha
 };
 
 /** No groove heads: a link without ends. */
-const NO_HEADS: GrooveHeads = { outline: '', hollow: '' };
+const NO_HEADS: GrooveHeads = { outline: '', hollow: '', solid: '' };
 
 /**
  * A channel pressed into the Neu ground, its ends heads of the same channel. The channel is one shape, the track and
@@ -866,6 +903,7 @@ const GrooveStroke = ({ id, path, heads, bounds, stroke, emphasis, width, dash, 
         <path d={path} fill='none' stroke='white' strokeWidth={width} strokeDasharray={dash} strokeLinecap='round' />
       )}
       {heads.hollow && <path d={heads.hollow} fill='black' />}
+      {heads.solid && <path d={heads.solid} fill='white' />}
       {heads.outline && (
         <path d={heads.outline} fill='none' stroke='white' strokeWidth={width} strokeLinejoin='miter' />
       )}
@@ -909,6 +947,14 @@ const GrooveStroke = ({ id, path, heads, bounds, stroke, emphasis, width, dash, 
           {heads.outline && (
             <path d={heads.outline} className={mx('fill-none', stroke)} strokeWidth={width} strokeLinejoin='miter' />
           )}
+          {/* Masked to the channel, a stroke as wide as the region fills a solid head. */}
+          {heads.solid && (
+            <path
+              d={heads.solid}
+              className={mx('fill-none', stroke)}
+              strokeWidth={Math.max(bounds.width, bounds.height)}
+            />
+          )}
         </g>
       ) : (
         fill(GROOVE_FILLS.floor, masks.channel)
@@ -949,13 +995,15 @@ const LinkText = ({ path, text, backdrop, textClass, fontSize }: LinkTextProps) 
       return;
     }
     const room = at.room === undefined ? Infinity : at.room - LINK_TEXT_PAD.x * 2 - LINK_TEXT_CLEARANCE * 2;
-    if (text.length === 0 || element.getComputedTextLength() <= room) {
+    // Text not laid out yet (as in a hidden tab) has no characters to measure, so it is shown whole.
+    const chars = element.getNumberOfChars();
+    if (chars === 0 || element.getComputedTextLength() <= room) {
       setShown(text);
       return;
     }
     // The ellipsis takes about one character's width of what it replaces.
-    const ellipsis = element.getComputedTextLength() / text.length;
-    let count = text.length - 1;
+    const ellipsis = element.getComputedTextLength() / chars;
+    let count = chars - 1;
     while (count > 0 && element.getSubStringLength(0, count) + ellipsis > room) {
       count--;
     }
@@ -1443,6 +1491,7 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
       TEXT_BOX,
       'whitespace-pre-wrap',
       LINE_ON_GRID,
+      LABEL_LINES,
       alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
       // `DEFAULT_FONT_SIZE`, as a static class so Tailwind generates it.
       sizeClass(node, 'text-[24px]'),
@@ -1485,6 +1534,7 @@ export const HullNodeView = ({ node, editing }: NodeViewProps) => {
         TEXT_BOX,
         'whitespace-pre-wrap',
         LINE_ON_GRID,
+        LABEL_LINES,
         alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
         // `HULL_FONT_SIZE`, as a static class so Tailwind generates it.
         sizeClass(node, 'text-sm'),

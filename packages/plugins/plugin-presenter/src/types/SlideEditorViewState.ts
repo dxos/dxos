@@ -9,12 +9,12 @@ import * as Struct from 'effect/Struct';
 
 import { ViewState } from '@dxos/react-ui-attention/types';
 
-export const PREVIEW_MODES = ['split', 'companion'] as const;
+export const PREVIEW_MODES = ['split', 'off'] as const;
 
 export type PreviewMode = (typeof PREVIEW_MODES)[number];
 
 export const State = Schema.Struct({
-  /** Where the slide editor shows the rendered slide. */
+  /** Where the slide editor shows the rendered slide, or `off` to give the whole pane to the markdown. */
   previewMode: Schema.Literals(PREVIEW_MODES),
   /** Height of the editor pane in the split, in rem; unset until the user drags it, so the panes split evenly. */
   splitSize: Schema.optional(Schema.Number),

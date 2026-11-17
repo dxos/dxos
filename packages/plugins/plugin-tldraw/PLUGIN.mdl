@@ -176,6 +176,7 @@ op editSketch
 
 ```mdl
 feat F-1: Whiteboard Canvas
+  uses: [Canvas, Sketch]
 
   req F-1.1: Each Sketch owns exactly one Canvas; the Canvas holds the full tldraw store snapshot.
   req F-1.2: Canvas content is stored as a plain record in ECHO — no binary blobs.
@@ -184,6 +185,7 @@ feat F-1: Whiteboard Canvas
 
 ```mdl
 feat F-2: ECHO Persistence
+  uses: [Canvas, Sketch]
 
   req F-2.1:
     when: user makes any edit in the whiteboard
@@ -198,6 +200,7 @@ feat F-2: ECHO Persistence
 
 ```mdl
 feat F-3: Real-time Collaboration
+  uses: [Sketch]
 
   req F-3.1:
     when: two or more peers open the same Sketch
@@ -236,6 +239,7 @@ feat F-5: Comment Threads
 
 ```mdl
 feat F-6: Grid Settings
+  uses: [Settings]
 
   req F-6.1:
     when: Settings.showGrid is true
@@ -252,6 +256,7 @@ feat F-6: Grid Settings
 
 ```mdl
 feat F-7: Create Sketch Operation
+  uses: [Canvas, createSketch, Sketch]
 
   req F-7.1: Plugin contributes op:createSketch to the operation registry.
   req F-7.2:
@@ -261,6 +266,7 @@ feat F-7: Create Sketch Operation
 
 ```mdl
 feat F-8: Scene DSL and Agent Skill
+  uses: [editSketch, readSketch, Scene]
 
   req F-8.1: The scene model (src/model) is backend-neutral — no tldraw imports in scene.ts;
     the tldraw compiler (render.ts/read.ts) is one backend, Excalidraw can be added later.

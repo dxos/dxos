@@ -7,6 +7,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
+import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import { Text } from '@dxos/schema';
 
 import { CodeOperation } from '#types';
@@ -21,23 +22,18 @@ export const key = 'org.dxos.skill.code.featureMap';
  * session toolkit with only a log line.
  */
 export const operations: readonly Operation.Definition.Any[] = [
-  // Features are the goal states work moves; linking and showcasing are how the feature map shows that work.
-  CodeOperation.CreateFeature,
-  CodeOperation.UpdateFeature,
-  CodeOperation.DeleteFeature,
-  CodeOperation.CreateSpec,
-  CodeOperation.UpdateSpec,
-  CodeOperation.AddFeatureDependency,
-  CodeOperation.RemoveFeatureDependency,
-  CodeOperation.LinkFeatureTask,
+  // Features are blocks of a spec's text; linking and showcasing are how the map shows the work on them.
   CodeOperation.CreateShowcase,
-  CodeOperation.GetFeatures,
-  CodeOperation.ImportSpecFeatures,
-  CodeOperation.ExportSpecFeatures,
+  CodeOperation.CreateSpec,
+  CodeOperation.LinkTask,
+  CodeOperation.UpdateSpec,
+  ProjectOperation.DeleteSpecBlock,
+  ProjectOperation.GetSpecBlocks,
+  ProjectOperation.SetSpecBlock,
 ];
 
 /**
- * The feature map skill: a product's features on the specs of the project tracking its work, their dependencies, the
+ * The feature map skill: the `feat` blocks of the specs of the project tracking a product's work, their needs, the
  * tasks that move them and the showcases that prove them. It assumes the project skill for the tasks themselves.
  */
 export const make = (): Skill.Skill =>
@@ -45,9 +41,9 @@ export const make = (): Skill.Skill =>
     key,
     name: 'Feature map',
     description:
-      "Keep a product's feature map: features on the specs a project owns, their requirements, status and " +
-      'dependencies, the tasks that move them and the showcases that prove them. Use with the project skill when ' +
-      'work moves a product feature, or when extracting features from a spec.',
+      "Keep a product's feature map: the feat blocks of the specs a project owns, their requirements, status and " +
+      'needs, the tasks that move them and the showcases that prove them. Use with the project skill when work ' +
+      'moves a product feature.',
     agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make({ content: instructions })),

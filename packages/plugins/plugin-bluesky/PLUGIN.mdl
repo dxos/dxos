@@ -183,6 +183,7 @@ feat F-2: PDS Resolution
 
 ```mdl
 feat F-3: Target Discovery
+  uses: [GetBlueskyTargets]
 
   req F-3.1:
     when: GetBlueskyTargets is called
@@ -198,6 +199,7 @@ feat F-3: Target Discovery
 
 ```mdl
 feat F-4: Feed Sync
+  uses: [SyncBlueskyTargets]
 
   req F-4.1: SyncBlueskyTargets iterates over integration.targets; skips targets with no remoteId.
   req F-4.2:
@@ -220,6 +222,7 @@ feat F-4: Feed Sync
 
 ```mdl
 feat F-5: Page Budget
+  uses: [BlueskyTargetOptions]
 
   req F-5.1: Self-targets default to 5 XRPC pages per sync.
   req F-5.2: Custom feed generators default to 1 XRPC page per sync.

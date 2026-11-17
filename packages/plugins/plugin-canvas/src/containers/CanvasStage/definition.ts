@@ -44,7 +44,7 @@ export const canvasStage2D: AnimatorCapabilities.StageDef = {
 /** A 3D canvas scene as an animator stage: an orbit camera, the 3D layouts, and `3d` and overlay effects. */
 export const canvasStage3D: AnimatorCapabilities.StageDef = {
   typename: Type.getTypename(Scene.Scene3D),
-  label: '3D Canvas',
+  label: 'Canvas (3D)',
   targets: (object) => {
     const document = sceneDocumentOf(object);
     return document ? sceneTargets(document) : [];

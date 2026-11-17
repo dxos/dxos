@@ -22,6 +22,7 @@ import {
   Canvas,
   type CanvasAtoms,
   type CanvasController,
+  CanvasLinkEndMenu,
   type CanvasRootProps,
   type CanvasServices,
   type Capabilities,
@@ -30,6 +31,7 @@ import {
   type GeneratorSource,
   type KeyAction,
   type Kinds,
+  type MenuLinkEnd,
   type NodeRegistry,
   SceneLayer,
   type ViewPlace,
@@ -68,6 +70,7 @@ import {
   type DimensionInspector,
   type EditorNavigation,
   type EngineEdit,
+  type MenuAnchor,
   drawnGrid,
   keep,
   useSceneLook,
@@ -104,6 +107,9 @@ const useAidReport = (aid: Atom.Atom<boolean>, key: 'grid' | 'snap' | 'axes' | '
 };
 
 /** Thumbnail box of an object row, in px. */
+const sameCamera = (left: Camera, right: Camera) =>
+  left.x === right.x && left.y === right.y && left.zoom === right.zoom;
+
 const THUMBNAIL = { width: 40, height: 24 };
 
 /** A composite drawn small, read-only, fitted into an object row's thumbnail. */
@@ -129,9 +135,13 @@ const ObjectThumbnail = ({ id }: { id: ViewId }) => {
 
 /**
  * `Canvas.Root` props a host sets beyond the editor's, for a 2D canvas it drives itself (a drift across the scene, a view
- * listener, a refit timed to its own reveal); they change as the host renders, so they ride a context.
+ * listener, a refit timed to its own reveal, a cap on how far a fit zooms in); they change as the host renders, so they
+ * ride a context.
  */
-export type Canvas2DHostProps = Pick<CanvasRootProps, 'drift' | 'onViewChange' | 'refitKey' | 'refitDuration'>;
+export type Canvas2DHostProps = Pick<
+  CanvasRootProps,
+  'drift' | 'onViewChange' | 'refitKey' | 'refitDuration' | 'fitZoom'
+>;
 
 const Canvas2DHostContext = createContext<Canvas2DHostProps>({});
 
@@ -174,6 +184,9 @@ export type Dimension2DOptions = {
 const PICTURE_MARGIN = 0.25;
 
 const NO_PATH: readonly string[] = [];
+
+/** The context menu's section for what was pressed: a link end's marker, set by the engine the link is drawn by. */
+const MenuLead = ({ anchor }: { anchor: MenuAnchor }) => (anchor.end ? <CanvasLinkEndMenu {...anchor.end} /> : null);
 
 const useStoredDocument = (document: Scene.SceneDocument) => document;
 
@@ -446,7 +459,8 @@ export const createDimension2D =
     };
     // The engine restores only the camera it opened with; a picture opens fitted, under its own zoom bar.
     const initialCamera = registry.get(atoms.picture) ? undefined : registry.get(camera.host);
-    const onContextMenu = (at: { x: number; y: number }, kind: 'element' | 'canvas') => setMenu({ at, kind });
+    const onContextMenu = (at: { x: number; y: number }, kind: 'element' | 'canvas', end?: MenuLinkEnd) =>
+      setMenu({ at, kind, ...(end ? { end } : {}) });
 
     /** Binds the engine's controller to the editor's commands while the root is mounted. */
     const Bind = () => {
@@ -489,6 +503,30 @@ export const createDimension2D =
       useAidReport(canvas.snap, 'snap', editing);
       useAidReport(canvas.axes, 'axes', editing);
       useAidReport(canvas.guides, 'guides', editing);
+      // A host camera that changes while open (a followed session's) moves the engine's, unless it is the echo of one
+      // the engine reported; the camera it opened with is `initialCamera`.
+      const hostCamera = useAtomValue(camera.host);
+      const openedCamera = useRef(hostCamera);
+      const reportedCamera = useRef<Camera>(undefined);
+      const report = useMemo(
+        () =>
+          editing && offers.camera
+            ? (next: Camera) => {
+                reportedCamera.current = next;
+                camera.report(next);
+              }
+            : undefined,
+        [editing, offers.camera],
+      );
+      useEffect(() => {
+        if (!editing || !hostCamera || hostCamera === openedCamera.current) {
+          return;
+        }
+        const seen = [reportedCamera.current, registry.get(canvas.camera)];
+        if (!seen.some((other) => other && sameCamera(other, hostCamera))) {
+          registry.set(canvas.camera, hostCamera);
+        }
+      }, [editing, hostCamera]);
       return (
         <Canvas.Root
           document={drawn}
@@ -508,7 +546,7 @@ export const createDimension2D =
           transparent={picture}
           margin={picture ? PICTURE_MARGIN : undefined}
           initialCamera={initialCamera}
-          onCameraChange={editing && offers.camera ? camera.report : undefined}
+          onCameraChange={report}
           hostKeys={options.standalone ? undefined : HOST_KEYS}
           onContextMenu={picture || options.standalone ? undefined : onContextMenu}
           shell={Frame}
@@ -546,7 +584,6 @@ export const createDimension2D =
         atoms: { tool },
         commands: {
           setTool: (next) => registry.set(tool, next),
-          create: (kind) => registry.get(services)?.document.create(kind),
         },
       },
       Root,
@@ -555,6 +592,7 @@ export const createDimension2D =
       commands,
       edits,
       inspector,
+      MenuLead,
       aids: {
         snap: canvas.snap,
         guides: canvas.guides,

@@ -1,11 +1,6 @@
 ---
+// Starlight's sidebar without `starlight-sidebar-topics`' topic list: the header's topic nav switches topics.
 import Default from '@astrojs/starlight/components/Sidebar.astro';
-
-import SidebarTopics from './SidebarTopics.astro';
-
-const { hasSidebar } = Astro.locals.starlightRoute;
-const { isPageWithTopic } = Astro.locals.starlightSidebarTopics;
 ---
 
-{hasSidebar && isPageWithTopic && <SidebarTopics />}
 <Default><slot /></Default>

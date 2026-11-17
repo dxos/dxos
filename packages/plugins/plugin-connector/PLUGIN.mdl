@@ -238,6 +238,7 @@ op SetIntegrationTargets
 
 ```mdl
 feat F-1: Provider Registration
+  uses: [CustomTokenDialog, IntegrationProviderEntry, SyncTargetsChecklist]
 
   req F-1.1: Any plugin may contribute one or more IntegrationProviderEntry rows via the IntegrationProvider capability.
   req F-1.2: The integration UI queries IntegrationProvider at render time; adding or removing a provider plugin updates the list without a build step.
@@ -254,6 +255,7 @@ feat F-1: Provider Registration
 
 ```mdl
 feat F-2: OAuth Popup Flow
+  uses: [Integration]
 
   req F-2.1:
     when: user triggers auth for an OAuth provider (no credentialForm or loginHint already supplied)
@@ -269,6 +271,7 @@ feat F-2: OAuth Popup Flow
 
 ```mdl
 feat F-3: OAuth Redirect Flow
+  uses: [Integration]
 
   req F-3.1:
     when: provider declares oauth.useRedirectFlow = true
@@ -285,6 +288,7 @@ feat F-3: OAuth Redirect Flow
 
 ```mdl
 feat F-4: Custom / Non-OAuth Credentials
+  uses: [CustomTokenDialog, Integration]
 
   req F-4.1:
     when: provider has no oauth field
@@ -299,6 +303,7 @@ feat F-4: Custom / Non-OAuth Credentials
 
 ```mdl
 feat F-5: Target Selection
+  uses: [Integration, SetIntegrationTargets, SyncTargetsChecklist]
 
   req F-5.1:
     when: a provider has getSyncTargets and OAuth just completed
@@ -314,6 +319,7 @@ feat F-5: Target Selection
 
 ```mdl
 feat F-6: Integration Persistence and Navigation
+  uses: [Integration]
 
   req F-6.1:
     when: finalize completes
@@ -329,6 +335,7 @@ feat F-6: Integration Persistence and Navigation
 
 ```mdl
 feat F-7: Integration Article UI
+  uses: [Integration, IntegrationArticle, SyncTargetsChecklist]
 
   req F-7.1: IntegrationArticle is rendered for any ECHO object of type org.dxos.type.integration via the AppSurface.Article role.
   req F-7.2: The article lists all Integration.targets with their name, lastSyncAt, and lastError fields.
@@ -342,6 +349,7 @@ feat F-7: Integration Article UI
 
 ```mdl
 feat F-8: Provider Picker in Create Form
+  uses: [Integration]
 
   req F-8.1: The Integration create-object form schema carries IntegrationProviderAnnotationId on its providerId field.
   req F-8.2:

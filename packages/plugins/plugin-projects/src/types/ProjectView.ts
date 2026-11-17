@@ -30,19 +30,18 @@ export const State = Schema.Struct({
   legend: Schema.optional(Legend),
   /** The id of the spec the Specs tab shows; absent, or naming a spec since removed, reads as the first. */
   spec: Schema.optional(Schema.String),
-  /** The Specs tab's view of its spec: absent (its text), or the id of a {@link SpecView} another plugin offers. */
-  view: Schema.optional(Schema.String),
 });
 export type State = Schema.Schema.Type<typeof State>;
 
 /**
  * A project article's view state — the selected tab and whether the pipeline chart is open — keyed
- * by the project's id and persisted (localStorage) so reopening a project restores where the reader
- * left it.
+ * by the project's EID and persisted (localStorage) so reopening a project restores where the reader
+ * left it. A follower takes the leader's.
  */
 export const aspect: ViewState.Aspect<State> = ViewState.define<State>({
   key: 'org.dxos.plugin.projects.project',
   backend: 'local',
   schema: State,
   defaultValue: () => ({ tab: 'overview', pipeline: false }),
+  follow: 'write',
 });

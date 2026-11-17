@@ -204,6 +204,7 @@ type TestRun
 
 ```mdl
 feat F-1: Author and maintain plans
+  uses: [TestCase, TestPlan]
 
   req F-1.1: A TestPlan can be created empty, or generated from the `## QA` section of a
     PLUGIN.mdl — each `test QA-n` becoming a TestCase whose `key` is the test id and whose steps
@@ -216,6 +217,7 @@ feat F-1: Author and maintain plans
 
 ```mdl
 feat F-2: Record runs
+  uses: [startRun, TestRun]
 
   req F-2.1: Starting a run appends a TestRun with status `running` to the plan's feed and returns
     a ref to it; every later push names that ref.
@@ -248,6 +250,7 @@ feat F-4: Read the history
 
 ```mdl
 feat F-5: Agent access over MCP
+  uses: [QaSkill]
 
   req F-5.1: A `QaSkill` names the plan-editing and result-pushing operations in its `tools`, which
     is what makes them reachable from `queryOperations` / `invokeOperation`.

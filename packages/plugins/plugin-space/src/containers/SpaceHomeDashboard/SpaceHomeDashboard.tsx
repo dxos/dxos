@@ -58,7 +58,7 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
   }
 
   return (
-    <HomeSection.Root>
+    <HomeSection.Root anchor='dashboard'>
       <HomeSection.Header title={t('space-home.dashboard.heading')} onClose={onClose} />
       <Dashboard.Stats>
         {stats.map((id) => (

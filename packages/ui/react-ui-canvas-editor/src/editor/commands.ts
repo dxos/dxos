@@ -84,14 +84,24 @@ export const SHARED_COMMANDS: readonly SceneMenuCommand[] = [
   'copy',
   'paste',
   'duplicate',
+  'delete',
   'group',
   'ungroup',
   'make-object',
-  'delete',
   'bring-to-front',
   'send-to-back',
   'undo',
   'redo',
+];
+
+/**
+ * The actions bar's groups, each in the order it shows: editing the selection, putting it together, and combining
+ * solids. A dimension's command named here sits with the shared ones; any other follows, ahead of undo and redo.
+ */
+export const ACTION_GROUPS: readonly (readonly string[])[] = [
+  ['cut', 'copy', 'paste', 'duplicate', 'delete'],
+  ['group', 'ungroup', 'hull', 'make-object'],
+  ['join', 'subtract'],
 ];
 
 /** The shared commands the right-click menu offers and the actions bar leaves out, as the inspector restacks too. */

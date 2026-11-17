@@ -89,6 +89,7 @@ feat F-1: Camera
 
 ```mdl
 feat F-2: Selection, gizmos and faces
+  uses: [org.dxos.scene]
   req F-2.1: A click selects, Shift toggles and empty space clears; a selection is drawn in the theme's focus colour
     as a silhouette outline and a world-aligned bounding box per element ([org.dxos.scene#D-58]).
   req F-2.2: Move, Rotate and Scale put a gizmo on the one selected element; it moves the mesh in memory and its
@@ -103,6 +104,7 @@ feat F-2: Selection, gizmos and faces
 
 ```mdl
 feat F-3: Creating
+  uses: [org.dxos.scene]
   req F-3.1: The create tools are cube, sphere, cylinder and cone, then Link, which binds two clicked elements.
   req F-3.2: A drag on empty ground sweeps a shape's base, both corners snapped to the grid; releasing fixes it, the
     pointer's rise then sets the height (not for a sphere), and a click fixes that and makes the shape; Escape
@@ -114,6 +116,7 @@ feat F-3: Creating
 
 ```mdl
 feat F-4: Solids
+  uses: [org.dxos.scene]
   req F-4.1: Join makes a union of the selection and Subtract a difference of two (the first is the base, the
     second the tool cut from it), each a new solid element selected after it is made ([org.dxos.scene#D-52]).
   req F-4.2: Extrude drags a face along its normal by the distance the pointer moves along it on screen; a selected

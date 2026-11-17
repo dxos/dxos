@@ -5,6 +5,7 @@
 /**
  * Brand neutrals and accents, and the Paper and Graphite grounds, from the DXOS brand book.
  * Blue and purple are one step off the brand values, since those miss 4.5:1 as text.
+ * The accent is orange, two steps darker on Paper, where the brighter one misses 4.5:1 as text.
  */
 export const THEMES = {
   light: {
@@ -15,7 +16,7 @@ export const THEMES = {
     muted: '#5c5f66',
     hairline: '#e6e9eb',
     hairlineStrong: '#c9cdd1',
-    accent: '#1f5fe8',
+    accent: '#c2410c',
     onAccent: '#ffffff',
     mark: '#96254f',
     code: {
@@ -35,7 +36,7 @@ export const THEMES = {
     muted: '#9aa0a6',
     hairline: '#33373a',
     hairlineStrong: '#4a4f53',
-    accent: '#06c5fd',
+    accent: '#f97316',
     onAccent: '#020202',
     mark: '#ffffff',
     code: {

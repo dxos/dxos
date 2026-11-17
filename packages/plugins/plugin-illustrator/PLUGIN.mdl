@@ -399,3 +399,13 @@ decision D-7: `app-toolkit` defines the pointer's `Point` schema and its timing,
   affects: [QA-5]
   why: The shared channel defines no coordinates and defaults to the text cursor's timing, so the pointer type and its pace stay with the drawing surfaces that read them.
 ```
+
+```mdl
+decision D-8: The drawing article owns the camera as it owns the selection: a view-state aspect keyed by the drawing's URI and followed with `write`, handed to the variant as `camera` and `onCameraChange`. The camera is in the variant's own terms, since a leader and its follower render the same variant: tldraw and excalidraw report the scene point at the view's centre and the zoom, so views of different sizes look at the same place, and the 2D canvas its engine's camera. Sections, slides, the 3D canvas and the SVG viewer take none. Fills in org.dxos.plugin.space#D-79.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [VariantProvider]
+  why: Following a drawing should show what the leader sees, and the host already holds the state every variant shares.
+  rejected:
+    - Following each renderer's own view state; the 2D canvas keys its camera by the canvas, which presence does not report, and tldraw and excalidraw keep none.
+```

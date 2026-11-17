@@ -1,0 +1,50 @@
+---
+title: The TILE component
+description: What a TILE component is, and the contacts screen the learning path builds, running.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+The learning path builds one screen: a list of contacts beside the selected person's details, with a toolbar to add,
+edit and delete them. This page explains what a TILE component is, and shows the screen finished.
+
+## What a TILE component is
+
+A TILE component is a namespace of parts. A dialog is `Dialog.Root`, `Dialog.Trigger`, `Dialog.Content`,
+`Dialog.Title` and so on, each imported from its own entry point of `@dxos/react-ui`. `Root` holds the state, and each
+other part renders one element. You put the parts together in JSX, in the shape you want, and leave out the ones you
+don't need:
+
+<Snippet file="tile-components" region="dialog" lang="tsx" />
+
+<TilePreview id="dialog" />
+
+Every part takes its look from the theme, which `Theme.Provider` gives the whole app. The theme maps a part's props,
+such as `variant='primary'`, to classes built from tokens, so the same component follows light and dark and matches
+the rest of the app. To adjust one, pass `classNames`. The parts also handle the keyboard, focus and ARIA attributes,
+so a dialog traps focus and closes on Escape without code of yours.
+
+[Composite components](/docs/tile/concepts/composite-components/) and [Theme and tokens](/docs/tile/concepts/theme-and-tokens/)
+cover both in full.
+
+## The finished screen
+
+This is the screen at the end of the path, before its last page moves the contacts into ECHO. Select a contact, edit
+it, delete it or add one:
+
+<TilePreview id="learn-icons" height="22rem" />
+
+Each page of the path builds one piece of it. From Lay out a screen on, each page keeps its version of the screen in a
+folder of its own:
+
+| Page | Folder | What it adds |
+| --- | --- | --- |
+| [Installation](/docs/tile/learn/installation/) | `src/` | A Vite app with TILE's theme, icons and dark mode, and its first buttons |
+| [Lay out a screen](/docs/tile/learn/lay-out-a-screen/) | `src/layout/` | The list beside the detail, with a toolbar |
+| [Inputs and actions](/docs/tile/learn/inputs-and-actions/) | `src/inputs/` | An editor for the selected contact |
+| [Overlays](/docs/tile/learn/overlays/) | `src/overlays/` | An edit dialog, a delete confirmation, a tooltip and a toast |
+| [Icons and translations](/docs/tile/learn/icons-and-translations/) | `src/icons/` | Icons, an Add button, and the screen's strings in a resource |
+| [Connect to ECHO](/docs/tile/learn/connect-to-echo/) | `src/echo/` | The contacts as ECHO objects that sync, and a form built from their schema |
+
+Every page before Connect to ECHO keeps the contacts in React state, so the only new thing on each page is TILE.

@@ -1,0 +1,59 @@
+---
+title: Status
+description: Progress, skeletons, empty states, errors and deferred fallbacks.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+```ts
+import * as Status from '@dxos/react-ui/Status';
+```
+
+`Status` covers the states around content: loading, empty, failed and in progress.
+
+<Snippet file="tile-components" region="status" lang="tsx" />
+
+<TilePreview id="status" />
+
+## Which to use
+
+| Part                   | When                                                                            |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| `Status.Progress`      | A task with a known fraction, an unknown one (`indeterminate`) or a deadline (`countdown`) |
+| `Status.Steps`         | A task with named stages                                                        |
+| `Status.Skeleton`      | Content is loading and its shape is known                                       |
+| `Status.Deferred`      | Content is loading and may arrive at once; shows the fallback only if the wait lasts |
+| `Status.Empty`         | There is nothing to show: no items, no selection, no result                     |
+| `Status.Error`         | A view failed; shows the error and its stack                                    |
+| `Status.ErrorBoundary` | Catches a render error below it and shows `Status.Error`                        |
+
+## `Status.Progress`
+
+| Prop            | Type    | Effect                                                    |
+| --------------- | ------- | --------------------------------------------------------- |
+| `value`         | number  | How far through, from 0 to `max`                          |
+| `max`           | number  | Defaults to 1, so `value` is a fraction                   |
+| `indeterminate` | boolean | A sweep, for a task with nothing to count                 |
+| `error`         | boolean | Draw the bar in the error color, where a run stopped      |
+| `countdown`     | number  | Milliseconds to empty the bar over                        |
+| `paused`        | boolean | Hold a countdown where it is                              |
+| `label`         | string  | The accessible name                                       |
+
+## `Status.Deferred`
+
+`pending` says whether to show the fallback. The fallback appears only once `pending` has held for `delay`
+milliseconds, and then stays for at least `minDuration`, so a fast load never flickers. `fallback` is a function, so an
+expensive fallback costs nothing when it never shows.
+
+## `Status.Empty`
+
+Its children are the message, or the translated "No items" when there are none. `icon` adds an icon above it.
+
+## `Status.Skeleton`
+
+A placeholder block. `variant` is `'default'`, `'circle'` or `'text'`.
+
+## `Status.Steps`
+
+`steps` is a count, or the stages themselves; `active` is the stage in flight; `fraction` is how far through it.

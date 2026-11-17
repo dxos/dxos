@@ -25,6 +25,7 @@ import {
   DefaultProperties,
   ImportSpaceDialog,
   JoinDialog,
+  MembersCompanion,
   ObjectFormDialog,
   RecordArticle,
   RelatedArticle,
@@ -48,6 +49,7 @@ import { SpaceNamespace } from '../namespace.ts';
 import { getTypeInputOptions } from '../types/SpaceForm.ts';
 import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema.ts';
 import { SpaceHomeContent } from '../types/SpaceSurface.ts';
+import { MEMBERS_COMPANION_ID } from '../util/index.ts';
 import { makeCreateInvitationUrl } from './helpers.ts';
 import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
@@ -247,6 +249,11 @@ export default Capability.makeModule(
         filter: Surface.makeFilter(AppSurface.NavtreeItemEnd),
         component: SmallPresenceLive,
         props: ({ data: { id, open } }) => ({ id, open }),
+      }),
+      Surface.create({
+        id: 'membersCompanion',
+        filter: Surface.makeFilter(AppSurface.deckCompanion(MEMBERS_COMPANION_ID)),
+        component: MembersCompanion,
       }),
       Surface.create({
         id: 'navbarPresence',

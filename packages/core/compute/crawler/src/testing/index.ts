@@ -9,6 +9,7 @@ import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
+import { promptText } from '@dxos/pipeline-rdf/testing';
 
 import * as AgentRegistry from '../AgentRegistry.ts';
 import { type Page, Source, type SourceApi, type ThreadRef } from '../Source.ts';
@@ -279,10 +280,11 @@ export const deterministicAiService = (
       languageModel: () =>
         Layer.succeed(LanguageModel.LanguageModel, {
           generateText: () => Effect.succeed({ text: '', content: [] }),
-          generateObject: (request: { prompt: string }) =>
+          generateObject: (request: { prompt: unknown }) =>
             Effect.sync(() => {
-              prompts.push(request.prompt);
-              return { value: extractFromPrompt(request.prompt), content: [] };
+              const prompt = promptText(request.prompt);
+              prompts.push(prompt);
+              return { value: extractFromPrompt(prompt), content: [] };
             }),
           streamText: () => Stream.empty,
         } as any),

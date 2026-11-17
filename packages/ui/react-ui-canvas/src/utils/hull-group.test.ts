@@ -8,9 +8,9 @@ import { type HullNode, type Link, type Node, isHullNode, isInstanceNode } from 
 
 import { type RenderList2D, type RenderLists2D } from '../model/index.ts';
 import { fromRenderLists2D, toRenderLists2D } from '../viewport2d/index.ts';
-import { moveNodes } from './edits.ts';
+import { deleteElements, moveNodes } from './edits.ts';
 import { collapseHulls, expandHulls, groupHull } from './hull-group.ts';
-import { HULL_STYLE } from './hull.ts';
+import { HULL_STYLE, moveToHull } from './hull.ts';
 import { createLink, createNode } from './shapes.ts';
 
 const box = (id: string, x: number, y: number, parent?: string): Node => ({
@@ -154,6 +154,129 @@ describe('expandHulls', () => {
     // A part sharing an id with a node of the scene could not stand beside it.
     const clash = { ...stored, board: { ...stored.board, nodes: { ...stored.board.nodes, a: box('a', 900, 900) } } };
     expect(expandHulls(clash)).toBe(clash);
+  });
+});
+
+// A and B inside the hull H1, which stands with C inside the hull H2; X outside both. One link inside H1, one from C
+// into it, and one from outside both.
+const NESTED: RenderLists2D = {
+  board: listOf(
+    'board',
+    [
+      hull('h2', { label: 'Outer' }),
+      hull('h1', { z: 'a2', parent: 'h2' }),
+      box('a', 0, 0, 'h1'),
+      box('b', 300, 100, 'h1'),
+      box('c', 0, 400, 'h2'),
+      box('x', 800, 0),
+    ],
+    [smart('ab', 'a', 'b'), smart('ca', 'c', 'a'), smart('xa', 'x', 'a')],
+  ),
+};
+
+describe('a hull inside a hull', () => {
+  test('is stored as a group among the parts of the outer hull’s group', ({ expect }) => {
+    const { board, 'h2-parts': outer, 'h1-parts': inner } = collapseHulls(NESTED);
+    expect(Object.keys(board.nodes).sort()).toEqual(['h2', 'x']);
+    expect(Object.keys(outer.nodes).sort()).toEqual(['c', 'h1']);
+    expect(Object.keys(inner.nodes).sort()).toEqual(['a', 'b']);
+    const held = outer.nodes.h1;
+    expect(isInstanceNode(held) && [held.composite, groupHull(held), held.parent]).toEqual([
+      'h1-parts',
+      'box',
+      undefined,
+    ]);
+    // Each link is kept where both its ends are, and an end inside the inner hull names the way in.
+    expect([Object.keys(inner.links), Object.keys(outer.links), Object.keys(board.links)]).toEqual([
+      ['ab'],
+      ['ca'],
+      ['xa'],
+    ]);
+    expect(outer.links.ca.target).toEqual({ node: 'h1', port: 'a' });
+    expect(board.links.xa.target).toEqual({ node: 'h2', port: 'h1::a' });
+  });
+
+  test('is opened out with it: every shape back in the scene, inside the hull it was in', ({ expect }) => {
+    const { board, ...rest } = expandHulls(collapseHulls(NESTED));
+    expect(Object.keys(rest)).toEqual([]);
+    expect(['a', 'b', 'c', 'h1', 'h2', 'x'].map((id) => board.nodes[id]?.parent)).toEqual([
+      'h1',
+      'h1',
+      'h2',
+      'h2',
+      undefined,
+      undefined,
+    ]);
+    expect([isHullNode(board.nodes.h1), isHullNode(board.nodes.h2)]).toEqual([true, true]);
+    for (const id of ['a', 'b', 'c', 'x']) {
+      expect(board.nodes[id]).toEqual(NESTED.board.nodes[id]);
+    }
+    expect(board.links).toEqual(NESTED.board.links);
+  });
+
+  test('closing what was opened gives the same groups, and it survives the document', ({ expect }) => {
+    const stored = collapseHulls(NESTED);
+    expect(collapseHulls(expandHulls(stored))).toEqual(stored);
+    const document = fromRenderLists2D(Object.values(stored), { root: 'board' });
+    const { lists } = toRenderLists2D(document);
+    const { board, ...rest } = expandHulls(Object.fromEntries(lists.map((list) => [list.id, list])));
+    expect(Object.keys(rest)).toEqual([]);
+    expect(['a', 'c', 'h1'].map((id) => board.nodes[id]?.parent)).toEqual(['h1', 'h2', 'h2']);
+    expect([board.nodes.a.center, board.nodes.c.center]).toEqual([
+      { x: 0, y: 0 },
+      { x: 0, y: 400 },
+    ]);
+    expect([board.links.xa.target, board.links.ca.target]).toEqual([{ node: 'a' }, { node: 'a' }]);
+  });
+
+  test('moving the outer hull moves what the inner one holds', ({ expect }) => {
+    const moved = moveNodes(['h2'], { x: 50, y: 20 })(NESTED.board);
+    expect([moved.nodes.a.center, moved.nodes.b.center, moved.nodes.c.center, moved.nodes.x.center]).toEqual([
+      { x: 50, y: 20 },
+      { x: 350, y: 120 },
+      { x: 50, y: 420 },
+      { x: 800, y: 0 },
+    ]);
+  });
+
+  test('a hull moved into a hull is still painted under its own shapes, and over the hull it went into', ({
+    expect,
+  }) => {
+    // G holds A, H holds B and C: H is dropped on G, with no row to go beside.
+    const board = listOf('board', [
+      hull('g', { z: 'a1' }),
+      hull('h', { z: 'a2' }),
+      box('a', 0, 0, 'g'),
+      box('b', 300, 0, 'h'),
+      box('c', 600, 0, 'h'),
+    ]);
+    const moved = moveToHull(board, 'h', 'g');
+    expect(moved?.nodes.h.parent).toBe('g');
+    const z = (id: string) => moved?.nodes[id].z ?? '';
+    expect(z('g') < z('h') && z('h') < z('b') && z('h') < z('c')).toBe(true);
+    // A shape moved in the same way still goes on top.
+    const shape = moveToHull(board, 'a', 'h');
+    expect((shape?.nodes.a.z ?? '') > z('c')).toBe(true);
+  });
+
+  test('deleting the inner hull leaves its shapes in the outer; deleting both leaves them in none', ({ expect }) => {
+    const inner = deleteElements(['h1'])(NESTED.board);
+    expect(['a', 'b', 'c'].map((id) => inner.nodes[id].parent)).toEqual(['h2', 'h2', 'h2']);
+    expect(Object.keys(collapseHulls({ board: inner })['h2-parts'].nodes).sort()).toEqual(['a', 'b', 'c']);
+    const both = deleteElements(['h1', 'h2'])(NESTED.board);
+    expect(['a', 'b', 'c'].map((id) => both.nodes[id].parent)).toEqual([undefined, undefined, undefined]);
+    // The links on the shapes are kept: only the borders went.
+    expect(Object.keys(both.links).sort()).toEqual(['ab', 'ca', 'xa']);
+  });
+
+  test('two hulls each naming the other as its holder are closed without losing a shape', ({ expect }) => {
+    const loop = {
+      board: listOf('board', [hull('p', { parent: 'q' }), hull('q', { z: 'a2', parent: 'p' }), box('a', 0, 0, 'p')]),
+    };
+    const stored = collapseHulls(loop);
+    const ids = Object.values(stored).flatMap((list) => Object.keys(list.nodes));
+    expect(ids).toContain('a');
+    expect(Object.values(stored.board.nodes).every((node) => node.parent === undefined)).toBe(true);
   });
 });
 

@@ -11,7 +11,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DEFAULT_LAYER, between, initialKeys } from '@dxos/react-ui-canvas/headless';
+import { DEFAULT_LAYER, ROOT_VIEW_ID, between, initialKeys } from '@dxos/react-ui-canvas/headless';
 import {
   type Bounds,
   type BuiltinNode,
@@ -42,8 +42,6 @@ import {
   type StyleHue,
   endpointNode,
 } from '@dxos/scene';
-
-import { ROOT_VIEW_ID } from '../model/content.ts';
 
 //
 // tldraw records (v3), read loosely: only the fields the mapper uses are checked.

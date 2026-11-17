@@ -21,7 +21,7 @@ export const ZoomControls = ({ classNames, onAction }: ControlProps) => {
   const { t } = Hooks.useTranslation(translationKey);
 
   return (
-    <Toolbar.Root classNames={['gap-2', classNames]}>
+    <Toolbar.Root classNames={['gap-1', classNames]}>
       <Button.Root
         icon='ph--plus--regular'
         iconOnly
@@ -42,7 +42,7 @@ export const ActionControls = ({ classNames, onAction }: ControlProps) => {
   const { t } = Hooks.useTranslation(translationKey);
 
   return (
-    <Toolbar.Root classNames={['gap-2', classNames]}>
+    <Toolbar.Root classNames={['gap-1', classNames]}>
       <Button.Root
         icon='ph--path--regular'
         iconOnly

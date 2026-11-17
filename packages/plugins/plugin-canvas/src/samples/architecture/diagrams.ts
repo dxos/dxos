@@ -5,41 +5,16 @@
 import { type ContentMap } from '@dxos/diagram';
 import { type Database, type Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { type DiagramSet, nestDrills } from '@dxos/react-ui-canvas';
+import { isNodeRecord, rootOf } from '@dxos/react-ui-canvas/headless';
 
-import {
-  CanvasLayoutBuilder,
-  type LinkRecord,
-  type SceneRecord,
-  clone,
-  editCanvasContent,
-  elementId,
-  isLinkRecord,
-  isNodeRecord,
-  linkKey,
-  makeCanvas,
-  nodeKey,
-  putNodeRecord,
-  readCanvasContent,
-  rootOf,
-  sceneKey,
-  sceneRecordOf,
-  setLayoutLattice,
-} from '#model';
+import { CanvasLayoutBuilder, editCanvasContent, makeCanvas, readCanvasContent, setLayoutLattice } from '#model';
 import { Canvas } from '#types';
 
 import schemaTypes from '../../capabilities/schema.ts';
 import { type CompiledDiagrams } from './compiled.ts';
 
-export type DiagramSet = {
-  /** The diagram opened first. */
-  root: string;
-  /** Each diagram's compiled scene commands (from its `.dx` source), by diagram id. */
-  diagrams: CompiledDiagrams;
-  /** Each diagram's drawing name, by diagram id. */
-  names: Readonly<Record<string, string>>;
-  /** Per diagram, the boxes (by DSL node id) that open another diagram (by id) as a nested level. */
-  drills: Readonly<Record<string, Readonly<Record<string, string>>>>;
-};
+export type { DiagramSet };
 
 /** The schemas a space of canvas drawings registers: the drawing, and its canvas with the scene objects it reaches. */
 export const canvasDrawingSchemas: readonly Type.AnyEntity[] = [Drawing.Drawing, ...schemaTypes];
@@ -160,67 +135,4 @@ export const loadDiagramDrawings = async (
   }
 
   return drawings;
-};
-
-/**
- * Turns each drill-down box of `diagram` (in scene `scene` of `content`) into a frame onto a nested scene holding a copy
- * of the diagram it names, recursively, so zooming into a box drills into that diagram in place and zooming out comes
- * back. A copy rather than a link: a frame onto another drawing opens that drawing instead of drilling. The nested
- * scene's id prefixes its records' ids, so a diagram reached on two paths does not collide with itself.
- */
-const nestDrills = (
-  content: ContentMap,
-  set: DiagramSet,
-  own: ReadonlyMap<string, ContentMap>,
-  diagram: string,
-  scene: string | undefined,
-  visiting: ReadonlySet<string>,
-) => {
-  if (scene === undefined) {
-    return;
-  }
-  const prefix = scene === rootOf(content) ? '' : `${scene}.`;
-  for (const [box, target] of Object.entries(set.drills[diagram] ?? {})) {
-    // A semantic node compiles to the element `box` of the object it names.
-    const key = nodeKey(`${prefix}${elementId(box, 'box')}`);
-    const record = content[key];
-    const child = own.get(target);
-    const childRoot = child && rootOf(child);
-    if (!isNodeRecord(record) || !child || !childRoot || visiting.has(target)) {
-      continue;
-    }
-    const nested = `${prefix}${box}`;
-    const header = sceneRecordOf(child, childRoot);
-    content[sceneKey(nested)] = {
-      kind: 'scene',
-      id: nested,
-      name: set.names[target] ?? target,
-      ...(header?.layers ? { layers: clone(header.layers) } : {}),
-    } satisfies SceneRecord;
-    // The box becomes a frame in place, so its links stay attached.
-    content[key] = { ...record, node: { ...record.node, type: 'view', scene: nested } };
-    const rename = (id: string) => `${nested}.${id}`;
-    // An end attached to a node follows the node's new id; a free end (a point) stays where it is.
-    const renameEnd = (end: LinkRecord['link']['source']): LinkRecord['link']['source'] =>
-      'node' in end ? { ...end, node: rename(end.node) } : end;
-    for (const value of Object.values(child)) {
-      const copy: unknown = value;
-      if (isNodeRecord(copy) && copy.scene === childRoot) {
-        putNodeRecord(content, nested, { ...clone(copy.node), id: rename(copy.node.id) });
-      } else if (isLinkRecord(copy) && copy.scene === childRoot) {
-        const link = clone(copy.link);
-        content[linkKey(rename(link.id))] = {
-          kind: 'link',
-          scene: nested,
-          link: {
-            ...link,
-            id: rename(link.id),
-            source: renameEnd(link.source),
-            target: renameEnd(link.target),
-          },
-        } satisfies LinkRecord;
-      }
-    }
-    nestDrills(content, set, own, target, nested, new Set([...visiting, target]));
-  }
 };
