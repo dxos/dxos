@@ -20,7 +20,7 @@ pub const AUTOMERGE_NAMESPACE: &str = "automerge";
 /// Rows per multi-row statement; 22 columns × 40 rows stays well inside SQLite's variable limit.
 const ROWS_PER_STATEMENT: usize = 40;
 
-const SCHEMA: &str = r#"
+pub const SCHEMA: &str = r#"
 CREATE TABLE IF NOT EXISTS blocks (
   insertionId INTEGER PRIMARY KEY,
   namespace TEXT NOT NULL,

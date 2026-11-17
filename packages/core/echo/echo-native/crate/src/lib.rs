@@ -179,3 +179,6 @@ pub extern "C" fn db_statements(handle: u32) -> f64 {
         state.borrow().engines.get(handle as usize).and_then(Option::as_ref).map(|e| e.statements() as f64).unwrap_or(0.0)
     })
 }
+
+/// The engine's schema, for `examples/probe.rs`.
+pub const SCHEMA_FOR_PROBE: &str = engine::SCHEMA;
