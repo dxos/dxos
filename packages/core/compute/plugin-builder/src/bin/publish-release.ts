@@ -5,7 +5,6 @@
 
 /* eslint-disable no-console */
 
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
@@ -17,6 +16,7 @@ import { Context } from '@dxos/context';
 import { EdgeHttpClient, formatPluginBundleLoad } from '@dxos/edge-client';
 import { PluginLoader } from '@dxos/edge-compute/plugin-loader';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { EdgeCallFailedError } from '@dxos/protocols';
 
@@ -37,7 +37,7 @@ const readBundleFiles = async (bundleDir: string): Promise<BundleFile[]> => {
 };
 
 /** One failed upload attempt; `cause` is what the EDGE client threw. */
-class UploadFailedError extends Data.TaggedError('UploadFailedError')<{ readonly cause: unknown }> {}
+class UploadFailedError extends BaseError.extend('UploadFailedError', 'Plugin bundle upload failed.') {}
 
 /** Retries after the first attempt; with the backoff below they wait under half a minute in all. */
 const UPLOAD_RETRIES = 3;
