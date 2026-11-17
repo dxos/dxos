@@ -95,11 +95,12 @@ export const ChannelSendAnnotation = Annotation.make({
 /** Marks the operation as a {@link ChannelSendAnnotation channel send} whose output `field` says where it posted. */
 export const channelSend = (field: string) => Operation.annotate(ChannelSendAnnotation, field);
 
-/** The output field that says where a {@link ChannelSendAnnotation channel send} posted; undefined for other operations. */
-export const channelSendField = (op: Operation.Definition.Any): string | undefined =>
-  op.meta.annotations
-    ? Option.getOrUndefined(Annotation.getDictionary(op.meta.annotations, ChannelSendAnnotation))
-    : undefined;
+/**
+ * The output field that says where a {@link ChannelSendAnnotation channel send} posted, read from an operation's
+ * annotations (as its definition or a recorded tool call carries them); undefined for other operations.
+ */
+export const channelSendField = (annotations: Annotation.Dictionary | undefined): string | undefined =>
+  annotations ? Option.getOrUndefined(Annotation.getDictionary(annotations, ChannelSendAnnotation)) : undefined;
 
 /** `Obj.Meta` key source of a chat that mirrors one conversation (a channel, or a thread inside one). */
 export const CHAT_SOURCE = 'org.dxos.agent/channel';

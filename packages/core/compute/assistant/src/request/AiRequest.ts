@@ -614,6 +614,7 @@ const enrichToolCallBlock = (
     operationKey: meta.key,
     operationName: meta.name,
     operationIcon: meta.icon,
+    ...(meta.annotations && Object.keys(meta.annotations).length > 0 && { operationAnnotations: meta.annotations }),
   } satisfies ContentBlock.ToolCall;
 };
 
