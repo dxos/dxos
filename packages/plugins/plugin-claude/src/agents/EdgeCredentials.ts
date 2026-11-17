@@ -44,7 +44,30 @@ export const claudeCredentials = Effect.gen(function* () {
   Effect.orElseSucceed((): Record<string, string> => ({})),
 );
 
-/** Everything a turn lends the agent: its Claude credential, and the space's GitHub token for its repositories. */
-export const credentials = Effect.all([claudeCredentials, EdgeAgent.githubCredentials]).pipe(
-  Effect.map(([claude, github]): Record<string, string> => ({ ...github, ...claude })),
+/**
+ * Service tokens the agent may hold beside its Claude and GitHub credentials, by the source a space stores them under,
+ * and the variable the agent's tools read: a repository's own checks need them to land a pull request (the agentic
+ * review). Named one by one, so storing a token in the space never lends it on its own.
+ */
+export const SERVICE_TOKENS: Readonly<Record<string, string>> = {
+  'typesafe.ai': 'TYPESAFE_API_KEY',
+};
+
+/** The space's tokens for {@link SERVICE_TOKENS}, as the variables they are read from; a managed token is passed over. */
+export const serviceCredentials = Effect.gen(function* () {
+  const tokens = yield* Database.query(Query.type(AccessToken.AccessToken)).run;
+  return Object.fromEntries(
+    tokens.flatMap((accessToken) => {
+      const variable = SERVICE_TOKENS[accessToken.source];
+      return variable === undefined || isManagedAccessToken(accessToken.token) ? [] : [[variable, accessToken.token]];
+    }),
+  );
+}).pipe(Effect.orElseSucceed((): Record<string, string> => ({})));
+
+/**
+ * Everything a turn lends the agent: its Claude credential, the space's GitHub token for its repositories, and the
+ * service tokens its repositories' checks need.
+ */
+export const credentials = Effect.all([claudeCredentials, EdgeAgent.githubCredentials, serviceCredentials]).pipe(
+  Effect.map(([claude, github, services]): Record<string, string> => ({ ...services, ...github, ...claude })),
 );

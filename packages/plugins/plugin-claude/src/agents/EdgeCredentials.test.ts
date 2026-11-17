@@ -63,4 +63,12 @@ describe('Claude Code (cloud) credentials', () => {
       });
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('lends the service tokens it names, and no other token the space holds', () =>
+    Effect.gen(function* () {
+      yield* addToken('typesafe.ai', 'ts-key');
+      yield* addToken('example.com', 'other-secret');
+      expect(yield* EdgeCredentials.serviceCredentials).toEqual({ TYPESAFE_API_KEY: 'ts-key' });
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });
