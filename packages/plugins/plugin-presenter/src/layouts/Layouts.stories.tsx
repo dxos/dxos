@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -302,7 +302,8 @@ export const Scrim: Story = {
   args: { content: slide({ layout: 'center', scrim: '#3b0a1f' }, '# Framed') },
   play: async ({ canvasElement }) => {
     const surround = await query(canvasElement, '[data-scrim-surface]');
-    await expect(getComputedStyle(surround).backgroundColor).toBe('rgb(59, 10, 31)');
+    // The slide publishes its scrim to the canvas around it, so the surround takes the color a commit later.
+    await waitFor(() => expect(getComputedStyle(surround).backgroundColor).toBe('rgb(59, 10, 31)'));
     // The slide itself keeps the deck's background; only what is around it changed.
     const slideElement = await query(canvasElement, '[data-slide]');
     await expect(getComputedStyle(slideElement).backgroundColor).not.toBe('rgb(59, 10, 31)');
