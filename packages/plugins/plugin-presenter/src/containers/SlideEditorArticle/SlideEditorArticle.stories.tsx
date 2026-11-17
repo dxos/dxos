@@ -249,6 +249,24 @@ export const AtomicMarker: Story = {
   },
 };
 
+/**
+ * A tag is ordinary text: the caret goes inside it and its attributes are typed there. Were a tag atomic, the step
+ * left from the line's end would clear the whole tag and the attribute would land in front of it.
+ */
+export const EditableTag: Story = {
+  args: { slide: 2 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
+    // A synthetic click has no coordinates for CodeMirror to place the cursor, so it is moved by key instead.
+    await userEvent.click(await canvas.findByText(editorLine('- one')));
+    // To the opening tag's line, then one step in from its end: the position its attributes are typed at.
+    await userEvent.keyboard('{ArrowUp>8/}{ArrowDown>2/}{End}{ArrowLeft}');
+    await userEvent.keyboard(' every="2"');
+    await waitFor(() => expect(editor.textContent).toContain('<v-clicks every="2">'));
+  },
+};
+
 /** Typing a `layout:` value offers the matching layouts with their names; picking one changes the slide. */
 export const LayoutCompletion: Story = {
   args: { slide: 0 },
