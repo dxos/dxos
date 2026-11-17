@@ -17,6 +17,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { DXN } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
+import { Guard, Requirement } from '@dxos/permission';
 
 import * as ProcessManager from './ProcessManager.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
@@ -159,6 +160,16 @@ describe('script operations', () => {
       expect(exit._tag).toBe('Failure');
     }).pipe(Effect.provide(testLayer(failingRunner))),
   );
+
+  it.effect('a script that declares requirements is refused before it runs when the caller holds no guard', () => {
+    const echo = makeEchoRunner();
+    const Exec = Greet.pipe(Guard.requires(Requirement.make('/sandbox/exec')));
+    return Effect.gen(function* () {
+      const exit = yield* Operation.invoke(Exec, undefined, { on: 'local' }).pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+      expect(echo.requests).toHaveLength(0);
+    }).pipe(Effect.provide(testLayer(echo.runner)));
+  });
 
   it.effect('an edge invocation needs an operation host, and says so when there is none', () => {
     const echo = makeEchoRunner();

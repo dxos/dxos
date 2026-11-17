@@ -101,6 +101,10 @@ export const make = ({
       const parentThread = yield* Trace.CurrentThread;
       // A script operation is spawned as itself: the manager runs its code. Every other operation
       // spawns the process that runs its handler.
+      // A script runs no wrapping handler, so the caller's guard admits it here instead.
+      if (Operation.isScript(op)) {
+        yield* OperationProcess.admitOperation(op, input);
+      }
       const definition = Operation.isScript(op) ? op : OperationProcess.make(op);
       const handle = yield* Process.spawn(definition, input, {
         ...(detached ? { parentProcessId: undefined } : {}),
