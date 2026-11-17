@@ -7,9 +7,9 @@ import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { query, slide } from '../../testing/slideStory.tsx';
-import { SlideWorkbench, type SlideWorkbenchProps } from '../../testing/SlideWorkbench.tsx';
-import { SUITE } from '../../testing/suiteArt.ts';
+import { query, slide } from '../testing/slideStory.tsx';
+import { SlideWorkbench, type SlideWorkbenchProps } from '../testing/SlideWorkbench.tsx';
+import { SUITE } from '../testing/suiteArt.ts';
 
 /**
  * The layout tags — `<Grid>`, `<Cell>` and `<Card>` — which lay a slide out in tracks rather than down the page.
@@ -17,7 +17,7 @@ import { SUITE } from '../../testing/suiteArt.ts';
  * changed and seen without leaving the story.
  */
 const meta = {
-  title: 'plugins/plugin-presenter/components/LayoutTags',
+  title: 'plugins/plugin-presenter/layouts/LayoutTags',
   component: SlideWorkbench,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

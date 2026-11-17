@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: the brand asset rename and the editable-tag fix are separate stories for separate packages
 '@dxos/brand': minor
 '@dxos/plugin-presenter': patch
 ---

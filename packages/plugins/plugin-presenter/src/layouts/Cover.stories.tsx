@@ -8,16 +8,16 @@ import { expect, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { query, slide } from '../../testing/slideStory.tsx';
-import { SlideWorkbench, type SlideWorkbenchProps } from '../../testing/SlideWorkbench.tsx';
-import { SlideThemeProvider } from '../SlideTheme/index.ts';
+import { SlideThemeProvider } from '../components/SlideTheme/index.ts';
+import { query, slide } from '../testing/slideStory.tsx';
+import { SlideWorkbench, type SlideWorkbenchProps } from '../testing/SlideWorkbench.tsx';
 
 /**
  * Title slides, as a set to choose between. Each draws the brand's own lockup — the mark with `DXOS` under it in the
  * brand face — rather than setting the name as a heading, and each places the deck's title differently around it.
  */
 const meta = {
-  title: 'plugins/plugin-presenter/components/Cover',
+  title: 'plugins/plugin-presenter/layouts/Cover',
   component: SlideWorkbench,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
