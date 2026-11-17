@@ -73,6 +73,15 @@ const Fallback = ({ error, client }: { error: Error; client?: Client }) => {
 let bootClient: Client | undefined;
 let reactRoot: Root | undefined;
 
+// Replay starts once boot settles, since the recorder's snapshot and compression cost main-thread time during startup.
+// Boot settles when the app activates or fails, or when it fails before the app renders (`showBootFailure`).
+let settleStartup = () => {};
+const startupSettled = new Promise<void>((resolve) => {
+  settleStartup = resolve;
+  window.addEventListener(Hooks.STARTUP_ACTIVATED_EVENT, () => resolve(), { once: true });
+  window.addEventListener(Hooks.STARTUP_FAILED_EVENT, () => resolve(), { once: true });
+});
+
 const main = Effect.gen(function* () {
   performance.mark('diagram-app:main');
   if (sessionStorage.getItem(WIPE_ON_LOAD)) {
@@ -94,11 +103,6 @@ const main = Effect.gen(function* () {
     Local(),
     Defaults(),
   );
-  // Replay starts once boot settles: the recorder's snapshot and compression cost main-thread time during startup.
-  const startupSettled = new Promise<void>((resolve) => {
-    window.addEventListener(Hooks.STARTUP_ACTIVATED_EVENT, () => resolve(), { once: true });
-    window.addEventListener(Hooks.STARTUP_FAILED_EVENT, () => resolve(), { once: true });
-  });
   // Not awaited: boot does not wait on telemetry.
   const observability = initializeObservability(
     config,
@@ -145,6 +149,7 @@ const main = Effect.gen(function* () {
 /** A boot that fails before the app renders shows the reset dialog in its place. */
 const showBootFailure = (cause: Cause.Cause<unknown>) => {
   log.error('boot failed', { cause });
+  settleStartup();
   const failure = Cause.squash(cause);
   const error = failure instanceof Error ? failure : new Error(String(failure));
   if (!reactRoot) {

@@ -76,4 +76,29 @@ describe('redactInvitationCodes', () => {
       $referrer: 'https://drawing.sh/?a=1#top',
     });
   });
+
+  test('matches the parameter by its decoded name', () => {
+    const result = redactInvitationCodes(
+      capture({ $current_url: 'https://drawing.sh/?spaceInvitation%43ode=SECRET&a=1' }),
+    );
+    expect(result?.properties).toEqual({ $current_url: 'https://drawing.sh/?a=1' });
+  });
+
+  test('removes the code from person properties nested in the event properties', () => {
+    const result = redactInvitationCodes(
+      capture({
+        $set: { $initial_current_url: 'https://drawing.sh/?spaceInvitationCode=SECRET' },
+        $set_once: { urls: ['https://drawing.sh/?spaceInvitationCode=SECRET'] },
+      }),
+    );
+    expect(result?.properties).toEqual({
+      $set: { $initial_current_url: 'https://drawing.sh/' },
+      $set_once: { urls: ['https://drawing.sh/'] },
+    });
+  });
+
+  test('leaves strings without the parameter untouched', () => {
+    const properties = { $current_url: 'https://drawing.sh/?q=a%20b', title: 'what? no', count: 1 };
+    expect(redactInvitationCodes(capture(properties))?.properties).toEqual(properties);
+  });
 });

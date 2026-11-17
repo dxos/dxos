@@ -29,28 +29,52 @@ export const dropBenignExceptions: BeforeSendFn = (capture) => {
 const INVITATION_PARAM = 'spaceInvitationCode';
 
 /**
- * Each occurrence of the parameter with its value and the `&` after it. The lookbehind reads the input, not what an
- * earlier match consumed, so adjacent repeats all match.
+ * The URL without the invitation parameter, decoded and matched the way the app reads it (`URLSearchParams`), so an
+ * encoded name or a repeat is removed too. Anything that is not an absolute URL with a query is returned as it was.
  */
-const INVITATION_PATTERN = new RegExp(`(?<=[?&])${INVITATION_PARAM}=[^&#]*&?`, 'g');
+const redactUrl = (value: string): string => {
+  if (!value.includes('?')) {
+    return value;
+  }
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return value;
+  }
+  if (!url.searchParams.has(INVITATION_PARAM)) {
+    return value;
+  }
+  url.searchParams.delete(INVITATION_PARAM);
+  return url.toString();
+};
 
-const redactUrl = (value: unknown): unknown =>
-  typeof value === 'string' && value.includes(`${INVITATION_PARAM}=`)
-    ? value.replace(INVITATION_PATTERN, '').replace(/[?&](?=#|$)/, '')
-    : value;
+/** Redacts every string in a property value, including person properties nested as `properties.$set`. */
+const redactValue = (value: unknown): unknown => {
+  if (typeof value === 'string') {
+    return redactUrl(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map(redactValue);
+  }
+  if (value !== null && typeof value === 'object') {
+    return redactProperties(value);
+  }
+  return value;
+};
 
-const redactProperties = (properties?: Properties): Properties | undefined =>
-  properties && Object.fromEntries(Object.entries(properties).map(([key, value]) => [key, redactUrl(value)]));
+const redactProperties = (properties: object): Properties =>
+  Object.fromEntries(Object.entries(properties).map(([key, value]) => [key, redactValue(value)]));
 
 /**
  * Removes the invitation code from every URL an event carries (`$current_url`, `$referrer`, and their `$initial_*`
- * forms in `$set_once`). The app strips it from the page URL only after the client initializes, and PostHog captures
- * before that.
+ * forms in `$set` and `$set_once`). The app strips it from the page URL only after the client initializes, and
+ * PostHog captures before that.
  */
 export const redactInvitationCodes: BeforeSendFn = (capture) =>
   capture && {
     ...capture,
-    properties: redactProperties(capture.properties) ?? capture.properties,
+    properties: redactProperties(capture.properties),
     ...(capture.$set && { $set: redactProperties(capture.$set) }),
     ...(capture.$set_once && { $set_once: redactProperties(capture.$set_once) }),
   };
