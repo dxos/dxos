@@ -7,6 +7,7 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlError from 'effect/sql/SqlError';
 
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed';
@@ -48,6 +49,48 @@ describe('DocStore', () => {
 
       const reloaded = yield* new DocStore(feedStore, spaceId).load([objectId]);
       expect(reloaded.get(objectId)?.objects?.[objectId]?.data.value).toBe(3);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a failed persist is appended in full by the next one', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const objectId = 'object';
+      let failNext = false;
+      const feedStore = new FeedStore({ localActorId: 'test', assignPositions: false });
+      const appendLocal = feedStore.appendLocal;
+      feedStore.appendLocal = (messages) =>
+        failNext
+          ? Effect.fail(
+              new SqlError.SqlError({ reason: new SqlError.UnknownError({ cause: new Error('append failed') }) }),
+            )
+          : appendLocal(messages);
+      yield* feedStore.migrate();
+
+      const docs = new DocStore(feedStore, spaceId);
+      const first = A.change(A.init<DatabaseDirectory>(), (draft) => {
+        draft.objects = { [objectId]: { meta: { keys: [] }, data: { value: 1 } } };
+      });
+      yield* feedStore.appendLocal([
+        { spaceId, feedId: documentFeedId(objectId), feedNamespace: AUTOMERGE_NAMESPACE, data: A.save(first) },
+      ]);
+      yield* docs.load([objectId]);
+      const setValue = (value: number) =>
+        docs.change(objectId, (draft) => {
+          const object = draft.objects?.[objectId];
+          if (object) {
+            object.data.value = value;
+          }
+        });
+
+      expect(setValue(2)).toBe(true);
+      failNext = true;
+      yield* Effect.flip(docs.persist([objectId]));
+      failNext = false;
+      yield* docs.persist([objectId]);
+
+      const reloaded = yield* new DocStore(feedStore, spaceId).load([objectId]);
+      expect(reloaded.get(objectId)?.objects?.[objectId]?.data.value).toBe(2);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

@@ -54,6 +54,8 @@ export class DocStore {
   readonly #cache = new Map<string, Doc>();
   /** Documents edited in memory by {@link edit} whose changes no write has appended yet; never evicted. */
   readonly #unsaved = new Set<string>();
+  /** Documents whose last chunk failed to append; `saveIncremental` already counted it saved, so the next one is a full save. */
+  readonly #resave = new Set<string>();
 
   constructor(feedStore: FeedStore, spaceId: SpaceId) {
     this.#feedStore = feedStore;
@@ -241,16 +243,26 @@ export class DocStore {
     return Effect.gen({ self: this }, function* () {
       const messages = [...ids].flatMap((id) => {
         const doc = this.#unsaved.has(id) ? this.#cache.get(id) : undefined;
-        const chunk = doc ? A.saveIncremental(doc) : undefined;
+        // A full save holds the changes a failed append dropped; loading it next to earlier chunks is harmless.
+        const chunk = doc ? (this.#resave.has(id) ? A.save(doc) : A.saveIncremental(doc)) : undefined;
         return chunk && chunk.byteLength > 0
           ? [{ spaceId: this.#spaceId, feedId: documentFeedId(id), feedNamespace: AUTOMERGE_NAMESPACE, data: chunk }]
           : [];
       });
       if (messages.length > 0) {
-        yield* this.#feedStore.appendLocal(messages);
+        yield* this.#feedStore.appendLocal(messages).pipe(
+          Effect.onError(() =>
+            Effect.sync(() => {
+              for (const id of ids) {
+                this.#resave.add(id);
+              }
+            }),
+          ),
+        );
       }
       for (const id of ids) {
         this.#unsaved.delete(id);
+        this.#resave.delete(id);
       }
     });
   }
