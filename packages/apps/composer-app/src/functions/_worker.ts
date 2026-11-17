@@ -377,7 +377,8 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
 
   // The read-only viewer is a second page of the same build, served for every route on its own host.
   if (isViewerHost(url.hostname)) {
-    const page = await env.ASSETS.fetch(new Request(new URL('/viewer.html', url), request));
+    // `/viewer`, not `/viewer.html`: the asset server answers the `.html` path with a redirect to it.
+    const page = await env.ASSETS.fetch(new Request(new URL('/viewer', url), request));
     return withPublicationPreview(request, page, url, env);
   }
   const page = await env.ASSETS.fetch(new Request(new URL('/', url), request));

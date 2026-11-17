@@ -17,12 +17,19 @@ const INDEX_HTML = '<!doctype html><html><head><title>Composer</title></head><bo
 const VIEWER_HTML = '<!doctype html><html><head><title>Viewer</title></head><body></body></html>';
 const ARCHIVED_CHUNK = 'assets/async-OLDHASH0.js';
 
-const PAGES: Record<string, string> = { '/': INDEX_HTML, '/viewer.html': VIEWER_HTML };
+const PAGES: Record<string, string> = { '/': INDEX_HTML, '/viewer': VIEWER_HTML };
 
-/** The asset server as the Worker sees it: the two HTML entries, and a 404 for everything it misses. */
+/**
+ * The asset server as the Worker sees it: the two HTML entries at their pretty paths, a redirect to them
+ * from the `.html` path (`html_handling: auto-trailing-slash`), and a 404 for everything it misses.
+ */
 const assets = {
   fetch: async (request: Request) => {
-    const page = PAGES[new URL(request.url).pathname];
+    const { pathname } = new URL(request.url);
+    if (pathname.endsWith('.html')) {
+      return Response.redirect(new URL(pathname.slice(0, -'.html'.length), request.url).toString(), 307);
+    }
+    const page = PAGES[pathname];
     return page
       ? new Response(page, { headers: { 'Content-Type': 'text/html' } })
       : new Response('Not Found', { status: 404 });
