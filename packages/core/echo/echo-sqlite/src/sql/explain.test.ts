@@ -46,17 +46,17 @@ describe('Compiled SQL plans (T-4)', () => {
   it.effect('selects by type through the type index, and traverses refs through the ref keys', () =>
     withDatabase(async (db) => {
       expect(await db.explain(Filter.type(TestSchema.Person))).toContain(
-        'SEARCH e USING INDEX echo_entities_type (space_id=? AND type_dxn=?)',
+        'SEARCH e USING INDEX echo_sqlite_object_type (spaceId=? AND typeDXN=?)',
       );
       expect(await db.explain(Query.select(Filter.type(TestSchema.Person)).reference('employer'))).toContain(
-        'SEARCH r USING COVERING INDEX sqlite_autoindex_echo_refs_1 (space_id=? AND source_id=? AND prop_path=?)',
+        'SEARCH r USING INDEX sqlite_autoindex_reverseRef_1 (recordId=?)',
       );
       expect(
         await db.explain(
           Query.select(Filter.type(TestSchema.Organization)).referencedBy(TestSchema.Person, 'employer'),
         ),
       ).toContainEqual(
-        expect.stringMatching(/^SEARCH r USING (COVERING )?INDEX echo_refs_target \(space_id=\? AND target_id=\?/),
+        expect.stringMatching(/^SEARCH r USING (COVERING )?INDEX idx_reverse_ref_target \(targetDXN=\?/),
       );
     }),
   );
