@@ -52,6 +52,9 @@
       "path": "../../core/echo/echo-doc"
     },
     {
+      "path": "../../core/echo/echo-memory"
+    },
+    {
       "path": "../../core/echo/echo-react"
     },
     {

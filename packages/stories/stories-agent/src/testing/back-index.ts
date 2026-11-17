@@ -5,6 +5,7 @@
 import * as Trigger from '@dxos/compute/Trigger';
 import * as CrawlState from '@dxos/crawler/CrawlState';
 import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { AccessToken, Connection } from '@dxos/link';
 import * as FactFeed from '@dxos/plugin-agent/FactFeed';
 
@@ -21,19 +22,20 @@ const FACTS_PER_STEP = 2;
 const TICK_MS = 400;
 
 /** A fact citing a fake message, as the extractor would store it. */
-const fakeFact = (target: string, step: number): Parameters<typeof FactFeed.makeItem>[0] => ({
-  id: `fact-${target}-${step}-${Math.random().toString(36).slice(2)}`,
-  assertion: {
-    subject: { kind: 'entity', entity: 'dima', label: 'Dima' },
-    predicate: 'mentions',
-    object: { kind: 'literal', literal: `step ${step}` },
-  },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: `discord:${target}-${step}`, generatedAtTime: new Date().toISOString() },
-  recordedAt: new Date().toISOString(),
-  extractor: { id: 'fake', model: 'fake', version: '0' },
-  sourceHash: `${target}-${step}`,
-});
+const fakeFact = (target: string, step: number): Parameters<typeof FactFeed.makeItem>[0] =>
+  Fact.make({
+    id: `fact-${target}-${step}-${Math.random().toString(36).slice(2)}`,
+    assertion: {
+      subject: { kind: 'entity', entity: 'dima', label: 'Dima' },
+      predicate: 'mentions',
+      object: { kind: 'literal', literal: `step ${step}` },
+    },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: `discord:${target}-${step}`, generatedAtTime: new Date().toISOString() },
+    recordedAt: new Date().toISOString(),
+    extractor: { id: 'fake', model: 'fake', version: '0' },
+    sourceHash: `${target}-${step}`,
+  });
 
 /**
  * Stands in for EDGE running the back-index trigger: while the space's back-index trigger is enabled, each tick moves

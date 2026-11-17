@@ -1831,6 +1831,7 @@ patchedDependencies:
     path: patches/vitest@4.1.10.patch
 
 importers:
+
   .:
     dependencies:
       '@dxos/app-toolkit':
@@ -23224,6 +23225,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-memory':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-memory
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
