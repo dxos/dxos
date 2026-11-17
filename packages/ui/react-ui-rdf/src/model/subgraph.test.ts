@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Fact } from '@dxos/echo-memory';
 
-import { propertyKey, related, statements, toEntityCards } from './subgraph.ts';
+import { entityTypeCounts, propertyKey, related, statements, toEntityCards } from './subgraph.ts';
 
 const fact = (id: string, subject: Fact.Term, predicate: string, object: Fact.Term): Fact.Fact =>
   Fact.make({
@@ -93,5 +93,17 @@ describe('statements', () => {
     ]);
     expect(statements(card, { cardId: 'alice', property: propertyKey('out', 'know') })).toEqual([]);
     expect(statements(card, { cardId: 'alice', property: claim, entity: 'bob' })).toEqual([]);
+  });
+});
+
+describe('entityTypeCounts', () => {
+  test('counts the classes the cards state, most common first, ignoring untyped cards', ({ expect }) => {
+    const card = (id: string, type?: string) => ({ id, label: id, type, properties: [], inverse: [] });
+    const cards = [card('a', 'Topic'), card('b', 'Person'), card('c', 'Person'), card('d'), card('e', 'Question')];
+    expect(entityTypeCounts(cards)).toEqual([
+      { type: 'Person', count: 2 },
+      { type: 'Question', count: 1 },
+      { type: 'Topic', count: 1 },
+    ]);
   });
 });

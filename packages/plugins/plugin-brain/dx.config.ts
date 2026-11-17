@@ -7,6 +7,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
@@ -38,6 +39,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.layerSpec(() => import('./src/capabilities/fact-store.ts', { with: { type: 'module-url' } }), {
       name: 'FactStore',
     }),
+    Capability.lazyModule(
+      'FactStoreRegistry',
+      { provides: [BrainCapabilities.FactStoreRegistry], activatesOn: ClientEvents.Initialized },
+      () => import('./src/capabilities/fact-store-registry.ts', { with: { type: 'module-url' } }),
+    ),
     // Injects the `Analyze` action into plugin-inbox's mailbox toolbar menu (fact analysis is owned by
     // brain); reads the settings atom live at invoke time. Shares the atom with the Settings module.
     Capability.lazyModule(

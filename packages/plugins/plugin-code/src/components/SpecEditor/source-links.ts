@@ -5,11 +5,10 @@
 import { type Extension, type Range } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { findSpecRefs, specDependencies, specReferenceFilter } from '@dxos/deus/extension';
+import { findSpecRefs, mdlSpec, specDependencies, specReferenceFilter } from '@dxos/deus/extension';
 import { type SourceKey, findSourceKeys } from '@dxos/deus/review';
 import { type SpecIndex, frontmatter } from '@dxos/deus/spec-index';
-
-import { resolveSpecRef } from './spec-ref.ts';
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
 
 /** A span of the spec that names another spec or file: openable, or broken with the reason. */
 export type SourceLink = { from: number; to: number } & ({ target: SourceKey } | { error: string });
@@ -29,13 +28,12 @@ const brokenLink = (error: string): Decoration =>
  * Every link in a spec: `github:` keys, and, given the index, `<spec id>#<item>` references and `uses`/`dependsOn`
  * ids. Sorted by position; a span overlapping an earlier one is dropped.
  */
-export const findSourceLinks = (text: string, index?: SpecIndex): SourceLink[] => {
+export const findSourceLinks = (text: string, index?: SpecIndex, selfId = frontmatter(text).id): SourceLink[] => {
   const links: SourceLink[] = findSourceKeys(text).map(({ from, to, key }) => ({ from, to, target: key }));
   if (index) {
     const isReference = specReferenceFilter(index);
-    const selfId = frontmatter(text).id;
     const resolve = (from: number, to: number, id: string, item?: string): SourceLink => {
-      const resolved = resolveSpecRef(index, id, item);
+      const resolved = SpecModel.resolveSpecRef(index, id, item);
       return 'error' in resolved ? { from, to, error: resolved.error } : { from, to, target: resolved };
     };
     for (const { id, item, from, to } of findSpecRefs(text)) {
@@ -82,13 +80,13 @@ export const sourceLinks = (onOpen: (key: SourceKey) => void, index?: SpecIndex)
       links: SourceLink[];
       decorations: DecorationSet;
       constructor(view: EditorView) {
-        this.links = findSourceLinks(view.state.doc.toString(), index);
+        this.links = findSourceLinks(view.state.doc.toString(), index, view.state.facet(mdlSpec).id);
         this.decorations = decorate(this.links);
       }
 
       update(update: ViewUpdate) {
-        if (update.docChanged) {
-          this.links = findSourceLinks(update.state.doc.toString(), index);
+        if (update.docChanged || update.state.facet(mdlSpec) !== update.startState.facet(mdlSpec)) {
+          this.links = findSourceLinks(update.state.doc.toString(), index, update.state.facet(mdlSpec).id);
           this.decorations = decorate(this.links);
         }
       }

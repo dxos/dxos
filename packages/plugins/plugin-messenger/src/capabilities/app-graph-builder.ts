@@ -38,6 +38,8 @@ export default Capability.makeModule(
               icon: 'ph--envelope--regular',
               data: MESSENGER_COMPANION,
               badge: unreadAtom,
+              // Right after the pinned-first companions, ahead of Members (-1) and the unordered rest.
+              position: -2,
             }),
           ]),
       }),

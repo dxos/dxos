@@ -83,6 +83,11 @@
       "types": "./dist/types/src/Vocab.d.ts",
       "import": "./dist/lib/Vocab.mjs"
     },
+    "./Vocabularies": {
+      "source": "./src/Vocabularies.ts",
+      "types": "./dist/types/src/Vocabularies.d.ts",
+      "import": "./dist/lib/Vocabularies.mjs"
+    },
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",

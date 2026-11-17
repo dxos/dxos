@@ -4,7 +4,15 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type MouseEvent, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  type CSSProperties,
+  type MouseEvent,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -158,17 +166,30 @@ type ComplementarySidebarTriggerProps = {
   onClick: (event: MouseEvent) => void;
 };
 
-const NO_BADGE = Atom.make<number | undefined>(undefined);
+const NO_BADGE = Atom.make<number | true | undefined>(undefined);
 
 /** Largest count the rail pill spells out; anything above reads as `99+`. */
 const MAX_BADGE = 99;
 
-/** An R0 tab; subscribes to its companion's badge here so a count change re-renders only this tab. */
+/** The rail tab's `data-badge`: the count's text, empty for a dot, unset for none. */
+const getBadgeText = (badge: number | true | undefined): string | undefined =>
+  badge === true
+    ? ''
+    : badge !== undefined && badge > 0
+      ? badge > MAX_BADGE
+        ? `${MAX_BADGE}+`
+        : String(badge)
+      : undefined;
+
+/** An R0 tab; subscribes to its companion's badge here so a badge change re-renders only this tab. */
 const ComplementarySidebarTrigger = ({ companion, variant, onClick }: ComplementarySidebarTriggerProps) => {
   const { t } = UiHooks.useTranslation(DeckNamespace.key);
   const value = Attention.getLinkedVariant(companion.id);
-  const count = useAtomValue(companion.properties.badge ?? NO_BADGE);
-  const badge = count !== undefined && count > 0 ? (count > MAX_BADGE ? `${MAX_BADGE}+` : String(count)) : undefined;
+  const badge = getBadgeText(useAtomValue(companion.properties.badge ?? NO_BADGE));
+  const badgeHue = companion.properties.badgeHue;
+  const badgeStyle: (CSSProperties & Record<'--dx-badge-bg', string>) | undefined = badgeHue
+    ? { '--dx-badge-bg': `var(--color-${badgeHue}-border)` }
+    : undefined;
 
   return (
     <Tabs.Trigger
@@ -176,8 +197,12 @@ const ComplementarySidebarTrigger = ({ companion, variant, onClick }: Complement
       classNames={[
         'w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0',
         // A pseudo-element rather than a child, since an icon-only button renders no children.
-        badge &&
-          'relative after:absolute after:top-0 after:end-0 after:min-w-4 after:h-4 after:px-1 after:rounded-full after:bg-accent-bg after:text-accent-fg after:text-[10px] after:leading-4 after:text-center after:content-[attr(data-badge)]',
+        badge !== undefined && 'relative after:absolute after:rounded-full',
+        badge !== undefined && (badgeHue ? 'after:bg-(--dx-badge-bg)' : 'after:bg-accent-bg'),
+        badge === ''
+          ? 'after:top-1 after:end-1 after:size-2'
+          : badge !== undefined &&
+            'after:top-0 after:end-0 after:min-w-4 after:h-4 after:px-1 after:text-accent-fg after:text-[10px] after:leading-4 after:text-center after:content-[attr(data-badge)]',
       ]}
       label={Theme.toLocalizedString(companion.properties.label, t)}
       icon={companion.properties.icon}
@@ -185,6 +210,7 @@ const ComplementarySidebarTrigger = ({ companion, variant, onClick }: Complement
       tooltipSide='left'
       data-value={value}
       data-badge={badge}
+      style={badgeStyle}
       {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
       variant={variant}
       onClick={onClick}

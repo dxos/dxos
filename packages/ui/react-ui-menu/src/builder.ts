@@ -5,7 +5,12 @@
 import { type ReactNode } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import type { DropdownMenuItemGroupProperties, MenuActionProperties, MenuItemGroupProperties } from '@dxos/ui-types';
+import type {
+  CustomRenderProps,
+  DropdownMenuItemGroupProperties,
+  MenuActionProperties,
+  MenuItemGroupProperties,
+} from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -47,7 +52,11 @@ export interface ActionGroupBuilder {
   switch(id: string, props: Omit<MenuActionProperties, 'variant'> & { checked: boolean }, invoke: () => void): this;
 
   /** Add a control the caller renders itself (a picker, a field); it stays in the toolbar and never collapses. */
-  custom(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>, render: () => ReactNode): this;
+  custom(
+    id: string,
+    props: Omit<MenuActionProperties, 'variant' | 'render'>,
+    render: (props: CustomRenderProps) => ReactNode,
+  ): this;
 
   /** Add a plain label (e.g. a panel's name) that takes the toolbar's free space. */
   text(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>): this;
@@ -107,7 +116,11 @@ class MenuBuilderImpl implements MenuBuilder {
     return this.action(id, { ...props, variant: 'switch' }, invoke);
   }
 
-  custom(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>, render: () => ReactNode): this {
+  custom(
+    id: string,
+    props: Omit<MenuActionProperties, 'variant' | 'render'>,
+    render: (props: CustomRenderProps) => ReactNode,
+  ): this {
     return this.action(id, { ...props, variant: 'custom', render }, () => {});
   }
 

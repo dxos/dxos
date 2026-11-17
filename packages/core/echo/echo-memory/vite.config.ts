@@ -20,6 +20,7 @@ export default defineConfig({
     Sparql: 'src/Sparql.ts',
     Subscription: 'src/Subscription.ts',
     Vocab: 'src/Vocab.ts',
+    Vocabularies: 'src/Vocabularies.ts',
   },
   test: { node: true },
 });

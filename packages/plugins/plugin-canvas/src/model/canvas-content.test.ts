@@ -17,6 +17,7 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 import { TldrawBuilder } from '@dxos/plugin-tldraw/TldrawModel';
+import { readViews } from '@dxos/react-ui-canvas/headless';
 import { Scene } from '@dxos/scene';
 
 import { Canvas } from '#types';
@@ -27,7 +28,6 @@ import { frameWithChildren, groupAndRotation } from '../import/testing.ts';
 import { LegacyCanvasBuilder, makeLegacyCanvas } from '../testing/legacy-drawing.ts';
 import { CanvasLayoutBuilder, readCanvasContent } from './canvas-content.ts';
 import { addCanvas, openScene } from './canvas-document.ts';
-import { readViews } from './content.ts';
 import { makeLayoutWriter } from './layout-writer.ts';
 
 const FLOW = 'flowchart LR\n  A[Client] --> B[Server]';

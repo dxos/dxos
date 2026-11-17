@@ -15,3 +15,4 @@ export * as RdfStore from './RdfStore.ts';
 export * as Sparql from './Sparql.ts';
 export * as Subscription from './Subscription.ts';
 export * as Vocab from './Vocab.ts';
+export * as Vocabularies from './Vocabularies.ts';

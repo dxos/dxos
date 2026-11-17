@@ -84,11 +84,12 @@ describe('server', () => {
       textDocument,
       range: { start: { line: 0, character: 0 }, end: { line: 40, character: 0 } },
     });
-    expect(hints.map(({ position }) => position.line)).toEqual([16, 21]);
+    expect(hints.map(({ position }) => position.line)).toEqual([16, 21, 37]);
 
     expect(await client.sendRequest(VERDICT_LINES_REQUEST, { uri: textDocument.uri })).toEqual([
       { line: 16, status: 'done' },
       { line: 21, status: 'missing' },
+      { line: 37, status: 'partial' },
     ]);
   });
 });

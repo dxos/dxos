@@ -23,8 +23,11 @@ import {
   CollectionSection,
   CreateSpaceDialog,
   DefaultProperties,
+  DeleteSpaceDialog,
+  type DeleteSpaceDialogProps,
   ImportSpaceDialog,
   JoinDialog,
+  MembersCompanion,
   ObjectFormDialog,
   RecordArticle,
   RelatedArticle,
@@ -39,6 +42,7 @@ import { type SpaceSchema } from '#types';
 import {
   ADD_TO_COLLECTION_DIALOG,
   CREATE_SPACE_DIALOG,
+  DELETE_SPACE_DIALOG,
   IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
   OBJECT_FORM_DIALOG,
@@ -48,6 +52,7 @@ import { SpaceNamespace } from '../namespace.ts';
 import { getTypeInputOptions } from '../types/SpaceForm.ts';
 import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema.ts';
 import { SpaceHomeContent } from '../types/SpaceSurface.ts';
+import { MEMBERS_COMPANION_ID } from '../util/index.ts';
 import { makeCreateInvitationUrl } from './helpers.ts';
 import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
@@ -183,6 +188,12 @@ export default Capability.makeModule(
         component: CreateSpaceDialog,
       }),
       Surface.create({
+        id: DELETE_SPACE_DIALOG,
+        filter: AppSurface.component<DeleteSpaceDialogProps>(AppSurface.Dialog, DELETE_SPACE_DIALOG),
+        component: DeleteSpaceDialog,
+        props: ({ data: { props } }) => ({ ...props }),
+      }),
+      Surface.create({
         id: IMPORT_SPACE_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, IMPORT_SPACE_DIALOG),
         component: ImportSpaceDialog,
@@ -247,6 +258,11 @@ export default Capability.makeModule(
         filter: Surface.makeFilter(AppSurface.NavtreeItemEnd),
         component: SmallPresenceLive,
         props: ({ data: { id, open } }) => ({ id, open }),
+      }),
+      Surface.create({
+        id: 'membersCompanion',
+        filter: Surface.makeFilter(AppSurface.deckCompanion(MEMBERS_COMPANION_ID)),
+        component: MembersCompanion,
       }),
       Surface.create({
         id: 'navbarPresence',

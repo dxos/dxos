@@ -1,65 +1,39 @@
 # Feature map
 
-A **feature** is a goal state the product should reach ("Compose & send works against Gmail"). It holds:
+A **feature** is a goal state the product should reach ("Compose & send works against Gmail"). It is a `feat` block in
+a spec's `.mdl` text, and it holds:
 
-- a **description** of the ideal: what the feature does when it is complete and why it matters, in the present
-  tense. Never write the current state or what is missing there; that is what the status, the requirements and
-  the tasks say.
-- **requirements**: what the feature must do, one testable statement each. A reader should understand the feature
-  from its description and requirements alone, without opening a spec.
-- a **status** saying how far it has come: `planned`, `prototype`, `operational` or `failing`. Whether anyone is
-  working on it is a separate axis, read from its linked tasks: an operational feature can be under work too.
+- a **title** naming it: a noun phrase of two to five words ("Provider sync", not "Syncing mail with providers").
+- **prose** stating the ideal: what the feature does when it is complete, in the present tense, in one or two
+  sentences. Never write the current state or what is missing; the status, the requirements and the tasks say that.
+- **requirements** (`req` entries): what the feature must do, one short, testable sentence each.
+- a **status**: `planned`, `prototype`, `operational` or `failing`. Whether anyone works on it is a separate axis, read
+  from its linked tasks: an operational feature can be under work too.
+- **depends**: the features of the same spec it depends on. A dependency that would close a cycle is a mistake.
+- **spec**: the spec that breaks it down, whose features are its subfeatures.
 
-Features live on **specs**. A spec is a map of the features one product area should reach; every feature is on
-exactly one spec's map. Features **nest** through specs: a feature may own one spec of its own that breaks it down,
-and the features on that spec are its **subfeatures**, each a feature in its own right with its own description,
-requirements, status, dependencies and tasks. A reader zooms into a feature to see its subfeatures. A top-level spec
-may be owned by the **project** whose tasks deliver it. Every spec holds the normative `.mdl` document its features
-come from. A project has at most one spec: giving a spec to a project that already has one is refused, and the error names
-that spec. A breakdown spec belongs to its feature, so no project can own it; its work is tracked in the project of
-the spec above it.
-A dependency may cross specs: a feature can need a feature on another spec's map.
+The spec text is the source of truth. Every block has a stable **key**, which links, tasks and comments use; its `F-n`
+label is its position and changes when blocks move. A spec a project owns is one of the project's specs, and a spec
+that breaks a feature down sits beneath every spec citing it.
 
-**Keep every string short.** A feature map is read at a glance, so write the fewest words that say it:
+**Keep every string short.** A feature map is read at a glance: no preamble, no restating the title, no hedging.
 
-- a feature **name** is a noun phrase of two to five words ("Provider sync", not "Syncing mail with providers");
-- a **description** is one sentence, two at most;
-- a **requirement** is one short, testable sentence; split a long one rather than chaining clauses;
-- no preamble, no restating the name, no hedging, no lists of examples.
-
-**Specs are the unstructured source; features add the structure.** A spec's `feat` blocks and their `req` lines
-become features and requirements: extract them rather than linking to the spec.
-
-- Read a spec's features with `code-get-features { spec }` before changing them: it returns every feature on
-  the map and on the specs nested beneath it, with its description, status, requirements, spec, parent,
-  dependencies, linked tasks and showcases.
-- Make a spec with `code-create-spec { name, project?, feature? }`; pass `feature` for the spec that breaks that
-  feature down. Rename it, move it to another project, or release it (`project: null`) with `code-update-spec`.
-- Extract features from a spec document with
-  `code-import-spec-features { path, text, spec? | feature? | name?, project? }`: pass the repo path and the
-  text. The text becomes the spec's document, and each `feat` block becomes a feature (its prose the description,
-  its `req` lines the requirements) on the spec given, on the spec breaking `feature` down, or on a new spec.
-  Importing the same path again updates that spec and the features it made before from the file. Afterwards,
-  rewrite any description that states the current state rather than the ideal, and move features onto a parent's
-  spec where one is a part of another.
-- A spec's document embeds its features rather than spelling them out: the embeds say which features the spec holds
-  and in what order, and each feature holds its own text. Read a spec as text with
-  `code-export-spec-features { spec }`, which writes each embed out as its `feat` block. Moving an embed reorders
-  the spec and deleting one deletes its feature, but its id must be kept as it is; change what a feature says through
-  the feature operations.
-- Create a feature with `code-create-feature { name, description, requirements, spec? | parent? }`.
-  Change one with `code-update-feature`; `requirements` replaces the whole list, so give each requirement back
-  with the `key` `code-get-features` returned for it (comments on it stay anchored by that key), and `spec`
-  moves it onto that spec's map. `code-delete-feature` deletes a feature with its breakdown. Record that one
-  feature needs another with `code-add-feature-dependency { feature, dependsOn }` — a dependency that would close
-  a cycle is refused, and the error names the cycle. `code-remove-feature-dependency` undoes one.
-- **When you pick up a task that moves a feature**, link it with `code-link-feature-task { task, feature }`
-  and keep the task's status current: a started task is what marks the feature as being worked on.
-- **Set the status when you observe it**, with `code-update-feature { feature, status }`: `prototype` when it
-  works in a demo, `operational` when people can rely on it, and `failing` when it worked before and does not now.
+- Read a spec's features with `projects-get-spec-blocks { spec, kind: "feat" }` before changing them. Each block comes
+  back with its key, label, title, prose and fields; each requirement with its key.
+- Add or change a feature with `projects-set-spec-block { spec, block?, kind: "feat", title?, prose?, fields? }`. Name
+  an existing block by key or label to change it; leave `block` out to add one. Fields left out are kept, and a null
+  field is removed. Give requirements back with their keys, so comments on them stay anchored.
+- Delete a feature with `projects-delete-spec-block { spec, block }`.
+- Make a spec with `code-create-spec { name, project? }`. Pass `breaks: { spec, item }` for the spec that breaks that
+  feature down; the feature's `spec` field then cites it. Rename a spec, move it to another project or release it
+  (`project: null`) with `code-update-spec`.
+- **When you pick up a task that moves a feature**, link it with `code-link-task { task, spec, item }` and keep the
+  task's status current: a started task is what marks the feature as being worked on.
+- **Set the status when you observe it**: `prototype` when it works in a demo, `operational` when people can rely on
+  it, and `failing` when it worked before and does not now.
 - **When you finish work that shows a feature working**, make a showcase with
-  `code-create-showcase { name, content, targets, artifacts? }`. A showcase is a slide deck you can present:
+  `code-create-showcase { name, content, targets?, items?, artifacts? }`. A showcase is a slide deck you can present:
   `content` is its first slide, markdown saying what you showed and how to reproduce it, and each of `artifacts`
-  becomes a further slide showing that object — the screenshots and videos you uploaded as files, diagrams, the PRs
-  the work landed in — in the order given. Pass every feature and task it demonstrates in `targets`. An
-  `operational` feature without a showcase is flagged on the map.
+  becomes a further slide showing that object (uploaded screenshots and videos, diagrams, the PRs the work landed
+  in), in the order given. Pass every feature it demonstrates in `items` as `{ spec, item }`, and every task in
+  `targets`. An `operational` feature without a showcase is flagged on the map.

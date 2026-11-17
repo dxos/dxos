@@ -2,13 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Fact, MemoryQuery, MemoryService } from '@dxos/echo-memory';
+import { Fact, MemoryError, MemoryQuery, MemoryService } from '@dxos/echo-memory';
 
 import { SemanticIndexError } from '../errors.ts';
 import { FactStore, type FactStoreApi } from './fact-store.ts';
@@ -53,6 +51,48 @@ export const make = (memory: MemoryService.Service): FactStoreApi => {
         .put([], { read: { source: Fact.SourceUri.make(source), through: hash } })
         .pipe(Effect.asVoid, Effect.mapError(wrap('Failed to write cursor'))),
     clear: () => memory.reset().pipe(Effect.mapError(wrap('Failed to clear store'))),
+  };
+};
+
+/**
+ * A {@link MemoryService.Service} over a FactStore, for a store that holds facts but no event base (a remote fact
+ * server): the knowledge-base ops go to the store, and the subscription ops fail, since there is nothing to run them.
+ */
+export const toMemory = (store: FactStoreApi): MemoryService.Service => {
+  const wrap = (message: string) => MemoryError.MemoryError.wrap({ message });
+  const unsupported = (op: string) =>
+    Effect.fail(new MemoryError.MemoryError({ message: `A fact store has no event base: ${op} is not supported` }));
+  return {
+    put: (facts, options) =>
+      Effect.gen(function* () {
+        yield* store.putFacts(facts);
+        if (options?.read) {
+          yield* store.setCursor(options.read.source, options.read.through);
+        }
+        return 0;
+      }).pipe(Effect.mapError(wrap('Failed to put facts'))),
+    query: (query) => {
+      const answer: Effect.Effect<unknown, SemanticIndexError> =
+        query._tag === 'facts'
+          ? store.query(query.pattern)
+          : query._tag === 'graphs'
+            ? store.select(query.sparql)
+            : query._tag === 'sparql'
+              ? store.rows(query.sparql)
+              : query._tag === 'predicates'
+                ? store.predicates()
+                : store.cursor(query.source);
+      return answer.pipe(
+        Effect.flatMap(Schema.decodeUnknownEffect(MemoryQuery.resultOf(query))),
+        Effect.mapError(wrap(`Failed to answer a ${query._tag} query`)),
+      );
+    },
+    reset: () => store.clear().pipe(Effect.mapError(wrap('Failed to reset memory'))),
+    subscribe: () => unsupported('subscribe'),
+    subscriptions: () => Effect.succeed([]),
+    unsubscribe: () => Effect.succeed(false),
+    take: () => Effect.succeed([]),
+    ack: () => Effect.void,
   };
 };
 

@@ -10,7 +10,7 @@ const HEADER = `//
 // Copyright 2026 DXOS.org
 //
 
-import { Fact } from '@dxos/echo-memory';
+import { type Fact } from '@dxos/echo-memory';
 `;
 
 /**

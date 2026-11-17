@@ -5,7 +5,7 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useRef } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
 import { random } from '@dxos/random';
@@ -195,5 +195,53 @@ export const Test: Story = {
     const bare = byTestId(canvasElement, 'bare-md-root');
     await expect(bare.querySelector(':scope > .absolute')).toBeNull();
     await expect(getComputedStyle(byTestId(canvasElement, 'bare-md-viewport')).scrollbarWidth).toBe('none');
+  },
+};
+
+const ROWS = Array.from({ length: 60 }, (_, index) => ({ id: `row-${index}`, text: random.lorem.paragraph() }));
+
+/** A list whose rows are scroll anchors, in a pane of the given width. */
+const AnchoredList = ({ prefix, width }: { prefix: string; width: string }) => (
+  <ScrollArea.Root classNames={['h-[14rem] border border-separator bg-base-surface', width]}>
+    <ScrollArea.Viewport data-testid={`${prefix}-viewport`}>
+      {ROWS.map(({ id, text }) => (
+        <div key={id} data-scroll-anchor={id} className='p-2 border-b border-separator'>
+          {text}
+        </div>
+      ))}
+    </ScrollArea.Viewport>
+  </ScrollArea.Root>
+);
+
+/** Mirrors a wide pane's scroll into a narrow one, whose rows wrap to other heights, as a follower would. */
+const TrackingStory = () => {
+  const follower = useRef<ScrollArea.TrackingHandle>(null);
+  return (
+    <div className='flex gap-4'>
+      <ScrollArea.Tracking onScroll={(name, position) => follower.current?.restore(name, position)}>
+        <AnchoredList prefix='leader' width='w-[26rem]' />
+      </ScrollArea.Tracking>
+      <ScrollArea.Tracking ref={follower}>
+        <AnchoredList prefix='follower' width='w-[14rem]' />
+      </ScrollArea.Tracking>
+    </div>
+  );
+};
+
+/** The narrow pane lands on the row at the top of the wide one, not at the same offset or fraction. */
+export const Tracking: StoryObj = {
+  render: () => <TrackingStory />,
+  play: async ({ canvasElement }) => {
+    const leader = byTestId(canvasElement, 'leader-viewport');
+    const follower = byTestId(canvasElement, 'follower-viewport');
+    const row = leader.querySelector('[data-scroll-anchor="row-30"]');
+    if (!row) {
+      throw new Error('missing row-30');
+    }
+    leader.scrollTop += row.getBoundingClientRect().top - leader.getBoundingClientRect().top;
+    await waitFor(() =>
+      expect(ScrollArea.captureScrollPosition(follower)).toMatchObject({ anchor: 'row-30', offset: 0 }),
+    );
+    await expect(follower.scrollTop).not.toBeCloseTo(leader.scrollTop, 0);
   },
 };

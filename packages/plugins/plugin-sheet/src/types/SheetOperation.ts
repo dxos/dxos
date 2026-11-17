@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Thread } from '@dxos/types';
 
 import * as Sheet from './Sheet.ts';
 
@@ -60,10 +61,17 @@ export const ScrollToAnchor = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.String.annotate({ description: 'Attendable ID of the sheet.' }),
-    cursor: Schema.String.annotate({ description: 'Cell range coordinates.' }),
-    id: Schema.optional(Schema.Any.annotate({ description: 'Active refs for highlighting.' })),
+    anchor: Schema.String.annotate({ description: 'Cell range coordinates.' }),
+    focus: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Focus the range and highlight the thread (default); false only scrolls the range into view.',
+      }),
+    ),
+    thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to highlight.' })),
   }),
-  output: Schema.Void,
+  output: Schema.Boolean.annotate({
+    description: 'Whether the anchor was revealed; false while its view is not ready.',
+  }),
 });
 
 export const Create = Operation.make({
@@ -121,6 +129,40 @@ export const SetValues = Operation.make({
     }),
   }),
   output: Schema.Void,
+  services: [Database.Service],
+});
+
+/**
+ * The chart types this plugin contributes (`SheetCapabilities.ChartType`), named to the agent; other plugins may add
+ * more, so `AddChart` takes any name (PLUGIN.mdl D-5). Listed rather than imported since react-ui-plot's only entry brings React
+ * into operation definitions.
+ */
+export const CHART_TYPES = ['bar', 'pie', 'xy', 'scatter', 'heatmap', 'radar', 'map', 'timeline'] as const;
+
+export const AddChart = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.sheet.addChart'),
+    name: 'Add Chart',
+    description: 'Adds a chart of a range of a sheet; the chart is its own object, owned by the sheet.',
+    icon: 'ph--chart-bar--regular',
+  },
+  input: Schema.Struct({
+    sheet: Ref.Ref(Sheet.Sheet).annotate({ description: 'The sheet whose range the chart draws.' }),
+    range: Schema.String.annotate({
+      description:
+        'Range in A1 notation (e.g. "A1:C6"). The first column is the category (bar, pie), x axis (xy, scatter), row (heatmap), spoke (radar) or country (map); each other column is a series.',
+    }),
+    type: Schema.String.annotate({
+      description: `The contributed chart type that draws it; this plugin's are ${CHART_TYPES.join(', ')}.`,
+    }),
+    name: Schema.optional(Schema.String).annotate({ description: 'The chart title.' }),
+    header: Schema.optional(Schema.Boolean).annotate({ description: 'The first row holds the series names.' }),
+    horizontal: Schema.optional(Schema.Boolean).annotate({ description: 'Bars run along the x axis (bar).' }),
+    stacked: Schema.optional(Schema.Boolean).annotate({ description: 'Series stack on each other (bar).' }),
+  }),
+  output: Schema.Struct({
+    id: Schema.String.annotate({ description: 'The URI of the created chart.' }),
+  }),
   services: [Database.Service],
 });
 

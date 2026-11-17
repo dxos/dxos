@@ -25,19 +25,15 @@ A reader hands an agent a written spec of one page — should a cyclist ride now
 
 ### Spec (`spec.ts`, `SPEC.mdl`)
 
-- 1 `Spec.Spec` "Ride Check" (`@dxos/compute`) read from `SPEC.mdl`: `type:Hour`, `type:Verdict`, `type:Forecast`, `feat` F-1 to F-4 written, `scenario` T-1 (the page answers) and T-2 (a change ships), decision D-1. Each `feat` block becomes an embed of its feature (below), in the block's place.
-- Foreign key `{ source: 'github.com/dxos/dxos', id: 'ride-check/SPEC.mdl' }`, the path the features cite.
+- 1 `Spec.Spec` "Ride Check" (`@dxos/compute`) read from `SPEC.mdl`: `type:Hour`, `type:Verdict`, `type:Forecast`, `feat` F-1 to F-4 written, `scenario` T-1 (the page answers) and T-2 (a change ships), decision D-1.
+- Foreign key `{ source: 'github.com/dxos/dxos', id: 'ride-check/SPEC.mdl' }`, the file the spec syncs with.
 
 ### Features (`features.ts`)
 
-- The spec above is the feature map: the project owns it (`Project.specs`), and it holds the four features below in its features annotation (`FeatureMap.FeaturesAnnotation`).
-- 4 `Feature.Feature`, all `planned`, each citing one spec block (`specs: ['ride-check/SPEC.mdl#F-n']`):
-  - `verdict` "Go / no-go" (F-1), owning a `Spec.Spec` "Go / no-go" (`spec`), with text of its own, that holds its subfeatures "Rain rule" and "Wind rule", both `planned`; each feature carries its spec block's `req` lines as requirements.
-  - `hourly` "Hourly forecast" (F-2).
-  - `window` "Best window" (F-3).
-  - `daylight` "Daylight" (F-4).
-- 3 `Feature.DependsOn`: `hourly`, `window` and `daylight` → `verdict`.
-- 4 `Feature.Implements`: `build` → each feature.
+- The spec above is the feature map: the project owns it (`Project.specs`), and its text holds the four features below as `feat` blocks, all `status: planned`, in the blocks' own places:
+  - F-1 "Go / no-go", whose `spec:` cites a `Spec.Spec` "Go / no-go" that breaks it down, with text of its own holding the `feat` blocks "Rain rule" and "Wind rule", both `planned`. The project owns that spec too.
+  - F-2 "Hourly forecast", F-3 "Best window" and F-4 "Daylight", each `depends: [F-1]`.
+- 4 `SpecItem.Implements`: `build` → the spec, one per feature, each naming its block (`item: F-n`).
 
 ## Flows
 
@@ -48,10 +44,10 @@ A reader hands an agent a written spec of one page — should a cyclist ride now
 
 ## Checks
 
-- Exactly 1 project, 1 instructions, 1 task set, 3 tasks, 6 features (4 and 2 subfeatures), 2 specs and no documents.
+- Exactly 1 project, 1 instructions, 1 task set, 3 tasks, 2 specs holding 6 `feat` blocks (4 and 2 subfeatures) and no documents.
 - Every persisted typename is declared by a partial.
 - Tasks are `todo`, in order, each depending on the one before it, and none is assigned.
-- Features are `planned`, belong to the project, cite F-1 to F-4 in order, and the last three depend on the first.
+- Features are `planned`, F-1 to F-4 in order, and the last three depend on the first.
 - The build task implements every feature, and nothing else implements one.
-- The spec is the map, and its foreign key is the path the features cite.
-- The spec's text embeds F-1 to F-4 in order and holds no `feat` block.
+- The spec is the map, and its foreign key is the file it syncs with.
+- The map's text holds F-1 to F-4 in order, and no feature is an ECHO object.

@@ -167,6 +167,12 @@ export interface Fact extends Schema.Schema.Type<typeof Fact> {}
 /** A fact before the id brands are applied: every id a plain string, as stored and as written by hand. */
 export type Encoded = Schema.Codec.Encoded<typeof Fact>;
 
+/** A term before the id brands are applied, as a hand-built fact's {@link Encoded} assertion holds it. */
+export type EncodedTerm = Schema.Codec.Encoded<typeof Term>;
+
+/** An entity term before the id brands are applied. */
+export type EncodedEntityTerm = Schema.Codec.Encoded<typeof EntityTerm>;
+
 /** Builds a fact from its plain form, applying the id brands; throws on a malformed fact. */
 export const make: (fact: Encoded) => Fact = Schema.decodeSync(Fact);
 

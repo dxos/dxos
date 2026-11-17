@@ -232,6 +232,7 @@ op invokeFunction
 
 ```mdl
 feat F-1: Canvas Editor
+  uses: [ComputeEdge]
 
   req F-1.1: User can create a new compute graph via the "Create object" entry.
   req F-1.2: Canvas renders nodes as draggable, resizable shapes on an infinite panning surface.
@@ -254,6 +255,7 @@ feat F-2: Node Palette
 
 ```mdl
 feat F-3: Reactive Execution
+  uses: [ValueBag]
 
   req F-3.1:
     when: any upstream node value changes
@@ -272,6 +274,7 @@ feat F-3: Reactive Execution
 
 ```mdl
 feat F-4: AI Integration
+  uses: [invokeGpt]
 
   req F-4.1: GPT node connects to AiService; configuration includes model, system prompt, and tools.
   req F-4.2:
@@ -301,6 +304,7 @@ feat F-6: Logic and Control Flow
 
 ```mdl
 feat F-7: Persistence and Collaboration
+  uses: [ComputeGraph]
 
   req F-7.1: ComputeGraph is stored as an ECHO object; graph topology is replicated to peers.
   req F-7.2:

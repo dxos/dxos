@@ -9,6 +9,7 @@ import { Fact, Graph, Hash } from '@dxos/echo-memory';
 import { Stage } from '@dxos/pipeline';
 import { DEFAULT_INDEX_BATCH_SIZE, FactStore, indexFactsBatch } from '@dxos/pipeline-rdf';
 import { type ExtractDocument, type KnownEntity } from '@dxos/pipeline-rdf';
+import { type ExtractOptions, type Extractor, type SystemOneOptions } from '@dxos/pipeline-rdf';
 
 import * as AgentRegistry from '../AgentRegistry.ts';
 import { type StateError } from '../errors.ts';
@@ -25,6 +26,20 @@ export type ExtractFactsOptions = {
    * its own, as a single-document request.
    */
   readonly batchSize?: number;
+  /**
+   * Batches extracted at once (default 1). Each batch sees the predicates the store learned before it started, so
+   * batches running together reuse each other's new predicates less.
+   */
+  readonly concurrency?: number;
+  /** The predicates the extractor reuses (e.g. seeded with published vocabularies); defaults to the seed ontology. */
+  readonly ontology?: ExtractOptions['ontology'];
+  /** Drop relations no listed predicate fits instead of minting one. */
+  readonly closed?: boolean;
+  /** Whether the extraction model thinks first; see `ExtractOptions.thinking` (default on). */
+  readonly thinking?: boolean;
+  /** `system-one` extracts each message with Cloudflare's System One models, falling back to the LLM per claim. */
+  readonly extractor?: Extractor;
+  readonly systemOne?: SystemOneOptions;
 };
 
 type MessageEvent = Extract<Type.Event, { readonly _tag: 'Message' }>;
@@ -119,7 +134,14 @@ export const extractFactsStage = (
   AgentRegistry.AgentRegistry | FactStore | AiService.AiService | StateStore.StateStore
 > => {
   const namespace = options?.sourceNamespace ?? 'discord';
-  const extractOptions = options?.rules ? { rules: options.rules } : {};
+  const extractOptions: ExtractOptions = {
+    ...(options?.rules ? { rules: options.rules } : {}),
+    ...(options?.ontology ? { ontology: options.ontology } : {}),
+    ...(options?.closed ? { closed: true } : {}),
+    ...(options?.thinking !== undefined ? { thinking: options.thinking } : {}),
+    ...(options?.extractor ? { extractor: options.extractor } : {}),
+    ...(options?.systemOne ? { systemOne: options.systemOne } : {}),
+  };
   const extract = Effect.fnUntraced(function* (events: readonly MessageEvent[]) {
     const authors = new Map<string, AgentRegistry.Profile>();
     for (const event of events) {
@@ -164,6 +186,7 @@ export const extractFactsStage = (
     'extract-facts',
     {
       size: options?.batchSize ?? DEFAULT_INDEX_BATCH_SIZE,
+      concurrency: options?.concurrency ?? 1,
       weight: (event: Type.Event) => (isExtractable(event) ? 1 : 0),
     },
     (events: readonly Type.Event[]) => {

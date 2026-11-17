@@ -13,11 +13,20 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Util from '@dxos/react-ui/Util';
 
 import { translationKey } from '#translations';
 
-import { type BrowseSelection, type EntityCardModel, related, statements } from '../../model/index.ts';
+import {
+  type BrowseSelection,
+  type EntityCardModel,
+  entityTypeCounts,
+  related,
+  statements,
+} from '../../model/index.ts';
+import { TypeFilter } from '../TypeFilter/index.ts';
+import { VirtualList } from '../VirtualList/index.ts';
 import { EntityCard, type EntityCardProps } from './EntityCard.tsx';
 import { KnowledgeCard } from './KnowledgeCard.tsx';
 
@@ -48,8 +57,21 @@ const matches = (card: EntityCardModel, filter: string): boolean => {
 /** What a column stacks: entity cards, then the statements (a memory's claims) of the property that opened it. */
 type Column = { cards: readonly EntityCardModel[]; texts: readonly string[] };
 
+/** One row of a column's list. */
+type Row = { kind: 'card'; card: EntityCardModel } | { kind: 'text'; text: string };
+
+const rowKey = (row: Row): string => (row.kind === 'card' ? `card:${row.card.id}` : `text:${row.text}`);
+
+/** A card's height before it is measured: a type, a name and a couple of property rows. */
+const ESTIMATED_CARD_HEIGHT = 160;
+
+/** Space between cards, and above the first and below the last, in px. */
+const ROW_GAP = 8;
+
 type ColumnProps = Pick<EntityBrowserProps, 'icons' | 'hues'> & {
   column: Column;
+  /** Shows a toggle per entity class above the list, which narrows it to that class. */
+  typeFilter?: boolean;
   selection?: BrowseSelection;
   onChoose: (selection: BrowseSelection) => void;
   /** Closes this column (and every one after it); absent on the first, which always shows the whole graph. */
@@ -65,11 +87,44 @@ const CARD_SELECTOR = '[data-testid="entity-card"]';
  * (each card focused is chosen, as in Finder) and left and right leave.
  */
 const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
-  ({ column, selection, icons, hues, onChoose, onClose, onNavigate }, forwardedRef) => {
+  ({ column, typeFilter, selection, icons, hues, onChoose, onClose, onNavigate }, forwardedRef) => {
     const { t } = Hooks.useTranslation(translationKey);
     const [filter, setFilter] = useState('');
+    const [chosenType, setType] = useState<string | undefined>(undefined);
+    const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
     const [stackElement, setStackElement] = useState<HTMLDivElement | null>(null);
     const stackRef = useComposedRefs<HTMLDivElement>(forwardedRef, setStackElement);
+
+    const types = useMemo(() => (typeFilter ? entityTypeCounts(column.cards) : []), [typeFilter, column.cards]);
+    // A class the cards no longer state (the scope changed under it) filters nothing rather than everything.
+    const type = types.some((entry) => entry.type === chosenType) ? chosenType : undefined;
+    const rows = useMemo<Row[]>(() => {
+      const text = filter.trim().toLowerCase();
+      const cards = column.cards
+        .filter((card) => (!type || card.type === type) && matches(card, filter))
+        .map((card): Row => ({ kind: 'card', card }));
+      // Statements have no class, so a class filter leaves them out.
+      const texts = type
+        ? []
+        : column.texts
+            .filter((value) => value.toLowerCase().includes(text))
+            .map((value): Row => ({ kind: 'text', text: value }));
+      return [...cards, ...texts];
+    }, [column, filter, type]);
+    const activeIndex = useMemo(
+      () => rows.findIndex((row) => row.kind === 'card' && row.card.id === selection?.cardId),
+      [rows, selection?.cardId],
+    );
+    const activeIndexRef = useRef(activeIndex);
+    activeIndexRef.current = activeIndex;
+
+    // A narrower filter shortens the list under the old offset, so it starts again from the top, unless the chosen card
+    // survived it, which the list keeps in view instead.
+    useEffect(() => {
+      if (viewport && activeIndexRef.current < 0) {
+        viewport.scrollTop = 0;
+      }
+    }, [viewport, filter, type]);
 
     // Focus chooses the card it lands on (as in Finder); a card already chosen keeps its finer choice (a row, a chip).
     useEffect(() => {
@@ -123,23 +178,40 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
       <Panel.Root data-testid='entity-browser-column'>
         <Panel.Header>
           <ActionToolbar {...menuActions} alwaysActive />
+          {typeFilter && types.length > 0 && <TypeFilter types={types} value={type} onValueChange={setType} />}
         </Panel.Header>
         <Panel.Body asChild>
           <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
-              <Focus.Group asChild onKeyDown={handleKeyDown} ref={stackRef}>
-                <Layout.Flex column gap='sm' classNames='p-2'>
-                  {column.cards
-                    .filter((card) => matches(card, filter))
-                    .map((card) => {
+            <ScrollArea.Viewport ref={setViewport}>
+              {rows.length === 0 ? (
+                <Status.Empty>{t('entity-browser-empty.message')}</Status.Empty>
+              ) : (
+                <Focus.Group asChild onKeyDown={handleKeyDown} ref={stackRef}>
+                  <VirtualList
+                    count={rows.length}
+                    getKey={(index) => rowKey(rows[index])}
+                    scrollElement={viewport}
+                    estimateSize={ESTIMATED_CARD_HEIGHT}
+                    gap={ROW_GAP}
+                    padding={ROW_GAP}
+                    activeIndex={activeIndex}
+                    classNames='px-2'
+                    renderItem={(index) => {
+                      const row = rows[index];
+                      if (row.kind === 'text') {
+                        return (
+                          <KnowledgeCard
+                            icon='ph--quotes--regular'
+                            title={row.text}
+                            rows={[]}
+                            testId='entity-statement'
+                          />
+                        );
+                      }
+                      const { card } = row;
                       const chosen = selection?.cardId === card.id;
                       return (
-                        <Focus.Item
-                          key={card.id}
-                          asChild
-                          current={chosen}
-                          onCurrentChange={() => onChoose({ cardId: card.id })}
-                        >
+                        <Focus.Item asChild current={chosen} onCurrentChange={() => onChoose({ cardId: card.id })}>
                           <EntityCard
                             card={card}
                             icons={icons}
@@ -151,20 +223,10 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
                           />
                         </Focus.Item>
                       );
-                    })}
-                  {column.texts
-                    .filter((text) => text.toLowerCase().includes(filter.trim().toLowerCase()))
-                    .map((text) => (
-                      <KnowledgeCard
-                        key={text}
-                        icon='ph--quotes--regular'
-                        title={text}
-                        rows={[]}
-                        testId='entity-statement'
-                      />
-                    ))}
-                </Layout.Flex>
-              </Focus.Group>
+                    }}
+                  />
+                </Focus.Group>
+              )}
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>
@@ -258,6 +320,8 @@ export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>
           // Keyed by what opened the column, so its filter resets when a new choice replaces it.
           key={column === 0 ? 'root' : JSON.stringify(path[column - 1])}
           column={stack}
+          // The first column holds the whole graph, where narrowing by class is worth a row of its own.
+          typeFilter={column === 0}
           selection={path[column]}
           icons={icons}
           hues={hues}

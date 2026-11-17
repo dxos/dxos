@@ -390,6 +390,19 @@ export const OpenCreateSpace = Operation.make({
   output: Schema.Void,
 });
 
+export const OpenDeleteSpace = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.openDelete'),
+    name: 'Open Delete Space Dialog',
+    description: 'Ask for confirmation before deleting a space.',
+    icon: 'ph--trash--regular',
+  },
+  input: Schema.Struct({
+    space: SpaceSchema,
+  }),
+  output: Schema.Void,
+});
+
 export const OpenImportSpace = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.openImport'),

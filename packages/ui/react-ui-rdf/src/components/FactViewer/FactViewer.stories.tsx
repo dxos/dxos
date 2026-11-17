@@ -106,6 +106,33 @@ export const Default: Story = {
   },
 };
 
+/** 6,000 synthetic facts about 1,500 subjects: only the subject groups near the viewport render. */
+export const Large: Story = {
+  args: {
+    facts: Array.from({ length: 6_000 }, (_, index): Fact.Fact => {
+      const subject = index % 1_500;
+      return Fact.make({
+        id: `large-${index}`,
+        assertion: {
+          subject: { kind: 'entity', entity: `entity-${subject}` },
+          predicate: ['asked', 'works-on', 'uses', 'has-account'][index % 4],
+          object: { kind: 'entity', entity: `entity-${(subject * 7 + index) % 1_500}` },
+          ...(index % 3 === 0 && { quote: `Statement ${index} about entity ${subject}.` }),
+        },
+        factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
+        attribution: {
+          agent: 'crawler',
+          source: `dxn:discord:msg-${index}`,
+          generatedAtTime: '2026-11-01T09:00:00.000Z',
+        },
+        recordedAt: '2026-11-01T09:00:00.000Z',
+        extractor,
+        sourceHash: 'large',
+      });
+    }),
+  },
+};
+
 export const Empty: Story = {
   args: {
     facts: [],
