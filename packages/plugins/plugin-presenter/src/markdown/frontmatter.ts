@@ -45,6 +45,15 @@ export const BACKGROUND_FITS = ['cover', 'contain'] as const;
 
 export type BackgroundFit = (typeof BACKGROUND_FITS)[number];
 
+/**
+ * How a background picture is composited with the ground under it (`backgroundBlend:`). `screen` is the useful one
+ * for art that carries its own dark backdrop: black composites away, so the glow lands on `backgroundColor:` instead
+ * and the picture stops dictating the slide's color. A picture drawn on black is unchanged by it.
+ */
+export const BACKGROUND_BLENDS = ['normal', 'screen', 'multiply', 'overlay', 'lighten', 'darken'] as const;
+
+export type BackgroundBlend = (typeof BACKGROUND_BLENDS)[number];
+
 /** Theme colors a slide may override for itself, on top of the deck's theme. */
 export const SLIDE_COLORS = ['accent', 'foreground', 'code', 'separator'] as const;
 
@@ -69,6 +78,7 @@ const fields = {
   backgroundPosition: Schema.String,
   backgroundFit: Schema.Literals(BACKGROUND_FITS),
   backgroundColor: Color,
+  backgroundBlend: Schema.Literals(BACKGROUND_BLENDS),
   bleed: Schema.Literals(BLEED_SIDES),
   hide: Schema.Boolean,
   theme: Schema.String,
@@ -92,6 +102,8 @@ export const SlideFrontmatter = Schema.Struct({
   backgroundFit: Schema.optionalKey(fields.backgroundFit),
   /** DXOS: painted under the background picture, so `contain` leaves no gap and a transparent picture has a ground. */
   backgroundColor: Schema.optionalKey(fields.backgroundColor),
+  /** DXOS: how the picture meets that ground; `screen` composites away a picture's own black so the color shows. */
+  backgroundBlend: Schema.optionalKey(fields.backgroundBlend),
   /** DXOS: the outer column on this side reaches the slide's edges, with no padding (`two-cols`, `three-cols`). */
   bleed: Schema.optionalKey(fields.bleed),
   /** The slide is left out when the deck is presented; it still shows in the grid. */

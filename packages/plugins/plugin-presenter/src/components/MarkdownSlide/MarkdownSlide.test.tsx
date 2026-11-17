@@ -199,6 +199,23 @@ describe('backgroundStyle', () => {
     });
   });
 
+  test('backgroundBlend composites the picture with the ground, and means nothing without one', () => {
+    expect(
+      backgroundStyle({
+        background: 'https://example.com/a.png',
+        backgroundColor: '#000000',
+        backgroundBlend: 'screen',
+      }),
+    ).toMatchObject({ backgroundBlendMode: 'screen' });
+    // No picture to composite, and no ground to composite onto: neither carries a blend.
+    expect(backgroundStyle({ backgroundColor: '#000000', backgroundBlend: 'screen' })).toEqual({
+      backgroundColor: '#000000',
+    });
+    expect(backgroundStyle({ background: 'https://example.com/a.png', backgroundBlend: 'screen' })).not.toHaveProperty(
+      'backgroundBlendMode',
+    );
+  });
+
   test('values containing a declaration terminator are not used as raw CSS', () => {
     expect(backgroundStyle({ background: 'rgb(1, 2, 3); color: red' })).not.toHaveProperty('backgroundColor');
     expect(backgroundStyle({ background: 'red;color:blue' })).not.toHaveProperty('backgroundColor');

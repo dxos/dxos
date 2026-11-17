@@ -61,6 +61,8 @@ describe('parseFrontmatter', () => {
     // what the color pattern allows and nothing else.
     expect(parseFrontmatter('backgroundFit: stretch').issues).toHaveLength(1);
     expect(parseFrontmatter('backgroundColor: "url(x)"').issues).toHaveLength(1);
+    expect(parseFrontmatter('backgroundBlend: screen').frontmatter).toEqual({ backgroundBlend: 'screen' });
+    expect(parseFrontmatter('backgroundBlend: plus-lighter').issues).toHaveLength(1);
   });
 
   test('empty input is valid', () => {

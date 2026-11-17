@@ -139,32 +139,43 @@ const display = (Story: ComponentType) => (
  * exported as SVG and published to the brand bucket, and the words sit at its own measurements rather than in the
  * layout's padding.
  */
+/**
+ * The title slide on a named ground. The art carries its own black, so `screen` composites that away and
+ * `backgroundColor` is what shows behind the glow: the slide's color becomes a value rather than a decision baked
+ * into an SVG. The deck's green is the accent, which the links take.
+ */
+const glowSlide = (backgroundColor: string) =>
+  slide(
+    {
+      layout: 'cover',
+      accent: 'rgb(31,213,138)',
+      background: GLOW,
+      backgroundColor,
+      backgroundBlend: 'screen',
+    },
+    '<Box variant="title">',
+    '',
+    '# composer',
+    '',
+    // Two trailing spaces: the links are one block set on two lines, not two paragraphs the box would space apart.
+    '[https://dxos.org/composer](https://dxos.org/composer)  ',
+    '[https://dxos.org/xxx (video)](https://dxos.org/xxx)',
+    '',
+    '</Box>',
+    '',
+    '<Box variant="caption">',
+    '',
+    `![DXOS](${BRAND}/logotypes/dxos-horizontal-white.svg)`,
+    '',
+    'DXOS.org',
+    '',
+    '</Box>',
+  );
+
 export const Glow: Story = {
   decorators: [display],
-  args: {
-    content: slide(
-      // The art carries the slide's background, black included, so the frontmatter names no color of its own; the
-      // deck's green is the accent, which the links take.
-      { layout: 'cover', accent: 'rgb(31,213,138)', background: GLOW },
-      '<Box variant="title">',
-      '',
-      '# composer',
-      '',
-      // Two trailing spaces: the links are one block set on two lines, not two paragraphs the box would space apart.
-      '[https://dxos.org/composer](https://dxos.org/composer)  ',
-      '[https://dxos.org/xxx (video)](https://dxos.org/xxx)',
-      '',
-      '</Box>',
-      '',
-      '<Box variant="caption">',
-      '',
-      `![DXOS](${BRAND}/logotypes/dxos-horizontal-white.svg)`,
-      '',
-      'DXOS.org',
-      '',
-      '</Box>',
-    ),
-  },
+  // Black is what the art was drawn on, so the slide is unchanged by taking its color this way.
+  args: { content: glowSlide('#000000') },
   play: async ({ canvasElement }) => {
     const frame = await query(canvasElement, '[data-layout="cover"]');
     const lockup = frame.querySelector('[data-variant="caption"] img')!;
@@ -173,6 +184,26 @@ export const Glow: Story = {
     // 2. The title and the lockup share the slide's start edge, so the two blocks read as one column.
     const title = frame.querySelector('h1')!.getBoundingClientRect();
     await expect(Math.abs(title.left - lockup.getBoundingClientRect().left)).toBeLessThan(2);
+    // 3. The slide's own color is what shows behind the art, rather than the black the art carries.
+    const background = await query(canvasElement, '[data-slide-background] > div');
+    const style = getComputedStyle(background);
+    await expect(style.backgroundColor).toBe('rgb(0, 0, 0)');
+    await expect(style.backgroundBlendMode).toBe('screen');
+  },
+};
+
+/**
+ * 7. The same slide on a different ground. Nothing about the artwork changes: `screen` drops the black it was drawn
+ * on, so the glow lands on whatever `backgroundColor` names.
+ */
+export const GlowTinted: Story = {
+  decorators: [display],
+  args: { content: glowSlide('#0b1f17') },
+  play: async ({ canvasElement }) => {
+    const background = await query(canvasElement, '[data-slide-background] > div');
+    const style = getComputedStyle(background);
+    await expect(style.backgroundColor).toBe('rgb(11, 31, 23)');
+    await expect(style.backgroundBlendMode).toBe('screen');
   },
 };
 
