@@ -305,6 +305,9 @@ jobs:
         with:
           # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
           clean: false
+          # moon diffs against `main` in CI whatever the scope, so a shallow clone fails it.
+          fetch-depth: 0
+          filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
