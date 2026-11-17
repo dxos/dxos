@@ -36,6 +36,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-host-cloudflare": "workspace:*",

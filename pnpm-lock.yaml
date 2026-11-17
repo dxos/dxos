@@ -6489,6 +6489,9 @@ importers:
       '@dxos/edge-compute':
         specifier: workspace:*
         version: link:../edge-compute
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
