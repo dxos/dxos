@@ -23290,9 +23290,6 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
-      '@dxos/plugin-brain':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-brain
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer
@@ -23396,6 +23393,9 @@ importers:
       '@dxos/plugin-board':
         specifier: workspace:*
         version: link:../../plugins/plugin-board
+      '@dxos/plugin-brain':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-brain
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
