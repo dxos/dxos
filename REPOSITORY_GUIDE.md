@@ -186,9 +186,11 @@ bash tools/storybook-react/diagnose.sh --watch    # capture whenever it next wed
 ```
 
 **Do not restart before capturing** — that is the whole difficulty. And check for
-a second server first: an orphaned keeper daemon from a previous session was found
-restarting storybook on another port for five days, doubling the watcher and
-memory load against the same repo.
+an orphaned server first: each session runs its own storybook on its own port
+(`AGENTS.md`, "Long-running servers"), so several live ones are expected, but a
+keeper daemon left by a finished session was once found restarting storybook on
+another port for five days, adding a watcher and its memory to the same repo for
+nobody.
 
 ### Fast dev mode (`serve-fast`)
 
@@ -492,8 +494,8 @@ Run `pnpm lint:changed` to lint only what you've been working on using `pnpm cha
 ### Unused dependencies and dead code
 
 `pnpm knip` reports unused dependencies, dependencies that are imported without being declared, and
-source files nothing references. CI runs the same command in the **Check** workflow's `knip` job, so
-a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
+source files nothing references. CI runs the same command in the **Check** workflow's nightly run
+(not on PRs), so a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
 packages through their `source` export condition — so it needs no build and takes about 80 seconds.
 
 Most of what the config in `.config/knip.ts` does is teach knip the ways this repo reaches code

@@ -1,0 +1,70 @@
+---
+title: Ref
+description: Typed references between entities.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+```ts
+import { Ref } from '@dxos/echo';
+```
+
+A reference is a field that points at another entity. It stores the target's DXN, not a copy, and resolves the target
+only when you ask. <SpecCite item="org.dxos.echo#F-4.1" /> [References and DXNs](/docs/echo/concepts/references/)
+explains the model; this page is the API.
+
+## Declare a reference field
+
+`Ref.Ref(Type)` is the schema of a field that points at that type. Use it inside `Schema.optional` or `Schema.Array` like
+any other field schema. The tutorial's Person and Event declare both:
+
+<Snippet file="echo-tutorial/schema" region="person" />
+
+## Make a reference
+
+`Ref.make` takes an object you already hold. `db.makeRef` takes a URI and returns a reference bound to the database, so it
+can load its target. `Ref.fromURI` also takes a URI, but its reference has nothing to load from until a database binds
+it.
+
+<Snippet file="guide-ref" region="make" />
+
+## Resolve a reference
+
+`peek` returns the target if it is already in memory and never starts a load. `load` waits for the target, reading it
+from disk or the network, and throws if it cannot be found; `tryLoad` returns `undefined` instead. `Ref.loadAll` loads an
+array of references at once.
+
+Avoid `ref.target`. It is deprecated because reading it starts a load as a side effect and can throw.
+
+<Snippet file="guide-ref" region="resolve" />
+
+## Compare references
+
+Each read of a reference field returns a new wrapper, so `===` never matches. Compare with `Ref.equals`, or test the target
+id with `Ref.hasEntityId`.
+
+<Snippet file="guide-ref" region="compare" />
+
+## Members at a glance
+
+| Member                    | Summary                                                   |
+| ------------------------- | --------------------------------------------------------- |
+| `Ref(Type)`               | Schema of a reference field                               |
+| `Array(Type)`             | Schema of an array of references                          |
+| `make`                    | A reference to an object you hold                         |
+| `fromURI`                 | An unbound reference from a URI                           |
+| `loadAll`                 | Load many targets, skipping missing and deleted ones      |
+| `equals` `hasEntityId`    | Compare references                                        |
+| `isRef`                   | Predicate                                                 |
+| `ref.peek()` `ref.load()` `ref.tryLoad()` | Read the target in memory, or load it     |
+
+The full list is in the [API reference](/docs/additional-resources/api-reference/).
+
+## Related
+
+- [References and DXNs](/docs/echo/concepts/references/)
+- [Query](/docs/echo/api/query/) traverses references inside a query.

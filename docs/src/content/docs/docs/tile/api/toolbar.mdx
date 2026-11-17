@@ -1,0 +1,43 @@
+---
+title: Toolbar
+description: A row of controls that is one tab stop, with arrow keys between its items.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+```ts
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+```
+
+A toolbar is a row of buttons, inputs, selects and toggle groups. It is one tab stop, and the arrow keys move between its
+items. See [Focus and keyboard](/docs/tile/concepts/focus-and-keyboard/).
+
+<Snippet file="tile-components" region="sizes" lang="tsx" />
+
+<TilePreview id="sizes" />
+
+## Parts
+
+| Part                  | What it is                                                                     |
+| --------------------- | ------------------------------------------------------------------------------ |
+| `Toolbar.Root`        | The row. Any TILE control inside it joins its arrow-key order                  |
+| `Toolbar.Separator`   | A rule, or with `variant='gap'` a spacer that pushes the items after it to the end |
+| `Toolbar.Text`        | A label or count in the row                                                    |
+| `Toolbar.Link`        | A link that joins the arrow-key order                                          |
+| `Toolbar.ToggleGroup` | A set of toggles where one or several are on                                   |
+
+## `Toolbar.Root`
+
+| Prop          | Type                           | Effect                                                    |
+| ------------- | ------------------------------ | --------------------------------------------------------- |
+| `size`        | `Size`                         | The size of every control in it                           |
+| `orientation` | `'horizontal' \| 'vertical'`   | The axis the arrow keys move along                        |
+| `loop`        | boolean                        | Wrap from the last item to the first. On by default       |
+| `disabled`    | boolean                        | Disable every control                                     |
+| `inactive`    | boolean                        | Dim the controls without disabling them                   |
+
+## Toolbars built from actions
+
+In a PLEX plugin, a toolbar is usually built from the app's actions with `@dxos/react-ui-menu`, so other plugins can add
+to it. See [ActionToolbar](/docs/tile/api/react-ui-menu/action-toolbar/).

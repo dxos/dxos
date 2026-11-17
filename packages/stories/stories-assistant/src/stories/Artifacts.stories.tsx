@@ -6,17 +6,22 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { Filter, Ref, Type, View } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
+import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
+import * as RemoteFactStorePlugin from '@dxos/plugin-brain/RemoteFactStorePlugin';
 import * as ChessSkill from '@dxos/plugin-chess/ChessSkill';
 import * as MapSkill from '@dxos/plugin-map/MapSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Presentation from '@dxos/plugin-presenter/Presentation';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { ViewModel } from '@dxos/schema';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
-const meta: Meta<typeof ModuleContainer> = {
+import { createDecorators, storyParameters } from '../testing/index.ts';
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Artifacts',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 
@@ -209,5 +214,42 @@ export const WithBoard: Story = {
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Context]],
+  },
+};
+
+/** The fact server the agent's memory is read from: `moon run plugin-discord:fact-server` over a crawl's facts DB. */
+const FACT_SERVER_URL = String(import.meta.env.VITE_FACT_SERVER_URL ?? RemoteFactStorePlugin.DEFAULT_URL);
+
+/**
+ * Starts with only the agent and its memory: the Brain skill queries a fact store served over HTTP (e.g. the facts
+ * extracted from a Discord crawl), and the sheet, presenter and markdown skills turn what it finds into artifacts —
+ * sheets with charts, a deck of the charts and a summary — each shown in the artifacts panel as it is made. Nothing is
+ * seeded: the findings are whatever the agent derives from the store. `autocue/findings-artifacts.mjs` prompts it.
+ */
+export const FromMemory: Story = {
+  decorators: createDecorators({
+    lazyPlugins: async () => {
+      const [SheetPlugin, PresenterPlugin, MarkdownPlugin, SpacePlugin] = await Promise.all([
+        import('@dxos/plugin-sheet/SheetPlugin'),
+        import('@dxos/plugin-presenter/PresenterPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-space/SpacePlugin'),
+      ]);
+      return {
+        // SpacePlugin handles `AddObject`, which the create operations of the artifact plugins file their objects with.
+        plugins: [
+          SheetPlugin.make(),
+          PresenterPlugin.make(),
+          MarkdownPlugin.make(),
+          SpacePlugin.make({}),
+          RemoteFactStorePlugin.make(FACT_SERVER_URL),
+        ],
+        types: [Sheet.Sheet, Sheet.Chart, Presentation.Presentation],
+      };
+    },
+    skills: [AssistantSkill.key, BrainSkill.key, Sheet.SKILL_KEY, Presentation.SKILL_KEY, Markdown.SKILL_KEY],
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [StoryRole.Artifacts]],
   },
 };

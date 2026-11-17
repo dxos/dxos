@@ -9,11 +9,10 @@
 
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
+import { SceneHandler } from '@dxos/react-ui-canvas';
+import { type CanvasRecord, seedContent, updateCanvasRecord } from '@dxos/react-ui-canvas/headless';
 
 import { Canvas } from '#types';
-
-import { type CanvasRecord, seedContent, updateCanvasRecord } from '../model/content.ts';
-import { SceneHandler } from '../model/handler.ts';
 
 /** A fresh legacy scene canvas: the root scene with the drawing's `settings`. */
 export const makeLegacyCanvas = (settings: Partial<Omit<CanvasRecord, 'kind' | 'root'>> = {}): Drawing.Canvas => {

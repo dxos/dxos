@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService } from '@dxos/ai';
+import { AiService, AiUsage } from '@dxos/ai';
 import { type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -20,13 +20,15 @@ import { MessageStore } from '../stores/index.ts';
 import { type DetectOptions, type TopicSegment, detectTopics, salientTokens } from '../topics/detect-topics.ts';
 import { Topic } from '../types/index.ts';
 
-const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
+const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-5-5.default';
 
 // TODO(burdon): Reconcile with Topic.
 export type TopicsOptions = {
   /** ECHO database to upsert {@link Topic.Topic} objects into; detection-only when absent. */
   readonly db?: Database.Database;
   readonly detect?: DetectOptions;
+  /** Channels or threads summarized at once, and segments per channel summarized at once (default 1). */
+  readonly concurrency?: number;
 };
 
 const TopicShape = Schema.Struct({
@@ -71,7 +73,8 @@ export const summarizeSegment = (
   messages: readonly MessageStore.StoredMessage[],
 ): Effect.Effect<{ name: string; summary: string }, never, AiService.AiService> =>
   LanguageModel.generateObject({ schema: TopicShape, prompt: topicPrompt(segment, messages) }).pipe(
-    Effect.provide(AiService.languageModel(DEFAULT_MODEL).pipe(Layer.orDie)),
+    Effect.provide(AiService.languageModel(DEFAULT_MODEL, { thinking: false }).pipe(Layer.orDie)),
+    AiUsage.withStage('topics'),
     Effect.map(({ value }) => value),
     Effect.catch(() => Effect.succeed({} as { name?: string; summary?: string })),
     Effect.map(({ name, summary }) => ({
@@ -135,12 +138,19 @@ export const buildTopicsForTarget = (
     const messages = yield* MessageStore.listByTarget(target.id);
     const byId = new Map(messages.map((message) => [message.id, message]));
     const segments = detectTopics(target, messages, options.detect);
-    for (const segment of segments) {
-      const segmentMessages = segment.messageIds.flatMap((id) => {
-        const message = byId.get(id);
-        return message ? [message] : [];
-      });
-      const { name, summary } = yield* summarizeSegment(segment, segmentMessages);
+    const summarized = yield* Effect.forEach(
+      segments,
+      (segment) =>
+        summarizeSegment(
+          segment,
+          segment.messageIds.flatMap((id) => {
+            const message = byId.get(id);
+            return message ? [message] : [];
+          }),
+        ).pipe(Effect.map((result) => ({ segment, ...result }))),
+      { concurrency: options.concurrency ?? 1 },
+    );
+    for (const { segment, name, summary } of summarized) {
       log.info('topic', {
         target: segment.targetId,
         name,
@@ -171,6 +181,9 @@ export const topicsStage = (
   StateError,
   MessageStore.MessageStore | AiService.AiService | StateStore.StateStore
 > =>
-  tapStage('topics', ['ThreadEnd', 'ChannelEnd'], (event) =>
-    buildTopicsForTarget(event.target, options).pipe(Effect.asVoid),
+  tapStage(
+    'topics',
+    ['ThreadEnd', 'ChannelEnd'],
+    (event) => buildTopicsForTarget(event.target, options).pipe(Effect.asVoid),
+    { concurrency: options.concurrency },
   );

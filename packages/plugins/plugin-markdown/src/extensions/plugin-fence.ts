@@ -12,6 +12,8 @@ import { Domino } from '@dxos/ui';
  * string; a fence in one of these languages offers to enable the plugin while it is off.
  */
 export const FENCE_LANGUAGE_PLUGINS: Readonly<Record<string, string>> = {
+  diagram: 'org.dxos.plugin.canvas',
+  dxd: 'org.dxos.plugin.canvas',
   mermaid: 'org.dxos.plugin.mermaid',
 };
 

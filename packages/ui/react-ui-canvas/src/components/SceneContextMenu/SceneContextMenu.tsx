@@ -15,6 +15,8 @@ export type SceneContextMenuProps = {
   at?: Point;
   /** The shared commands (`sceneMenuItems`), the same in both dimensions. */
   items: readonly SceneMenuItem[];
+  /** Items for the part that was pressed (a link's end), ahead of the shared ones. */
+  lead?: ReactNode;
   /** Items only one view offers (a control point's, an instance's), after the shared ones. */
   extra?: ReactNode;
   onCommand: (command: string) => void;
@@ -25,7 +27,7 @@ export type SceneContextMenuProps = {
  * A scene's right-click menu, for 2D and 3D alike: it opens at the pointer, anchored to an empty element parked under
  * it (a menu positions itself at a real element), and lists the shared commands with their shortcuts.
  */
-export const SceneContextMenu = ({ at, items, extra, onCommand, onClose }: SceneContextMenuProps) => {
+export const SceneContextMenu = ({ at, items, lead, extra, onCommand, onClose }: SceneContextMenuProps) => {
   const anchorRef = useRef<HTMLSpanElement>(null);
   return (
     <>
@@ -40,6 +42,7 @@ export const SceneContextMenu = ({ at, items, extra, onCommand, onClose }: Scene
         positioning={{ ...VirtualAnchor.virtualAnchor(anchorRef), placement: 'right', gutter: 4, overflowPadding: 8 }}
       >
         <Menu.Content>
+          {lead}
           {items.map((item) => (
             <React.Fragment key={item.id}>
               {item.separated && <Menu.Separator />}

@@ -25,7 +25,7 @@ export type TranscriptSinkOptions = {
 /**
  * Writes transcript segments into a meeting's feed as `Message`s: source → stages → append.
  *
- * Every source (a live call, a simulated call, a scripted story) writes through one sink, and writes are queued: a
+ * Every source (a live call, a simulated call) writes through one sink, and writes are queued: a
  * stage that takes longer for one segment than for the next must not reorder an append-only feed.
  */
 export class TranscriptSink {

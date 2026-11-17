@@ -12,9 +12,11 @@ import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { useSpaces } from '@dxos/react-client/echo';
-import { ModuleContainer, type ModuleLayout, createStoryDecorators } from '@dxos/storybook-testing';
+import { translations as rdfTranslations } from '@dxos/react-ui-rdf/translations';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
-import { FactsStoryContext } from '../modules/index.ts';
+import { FactsStoryContext, type PredicateFilter, type QueryScope } from '../modules/index.ts';
 import { StoryRole } from '../modules/index.ts';
 import { CrawlerStoresPlugin } from '../testing/index.ts';
 import { StoryModulesPlugin } from '../testing/modules.tsx';
@@ -25,24 +27,26 @@ import { StoryModulesPlugin } from '../testing/modules.tsx';
  * consume the shared display state. Facts live in the `FactStoreRegistry`; crawler-only stores come
  * from the story-local {@link CrawlerStoresPlugin}.
  */
-const CRAWL_LAYOUT: ModuleLayout = [
+const CRAWL_LAYOUT: ModuleContainer.Layout = [
   [StoryRole.Crawl, StoryRole.Query, StoryRole.Questions],
   [StoryRole.Facts],
   [StoryRole.Entities],
 ];
 
 /** In-memory variant: just the viewer + entity nav over a seeded store. */
-const VIEWER_LAYOUT: ModuleLayout = [[StoryRole.Facts], [StoryRole.Entities]];
+const VIEWER_LAYOUT: ModuleContainer.Layout = [[StoryRole.Facts], [StoryRole.Entities]];
 
 /**
  * Owns the cross-module display state (current facts view + selected entity) and drives the layout.
  * `seed` pre-populates the space's `FactStore` (the no-crawl variant).
  */
-const FactsStoryRoot = ({ layout, seed }: { layout: ModuleLayout; seed?: RDF.Fact[] }) => {
+const FactsStoryRoot = ({ layout, seed }: { layout: ModuleContainer.Layout; seed?: RDF.Fact[] }) => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const [space] = useSpaces();
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [selected, setSelected] = useState<string | undefined>(undefined);
+  const [predicate, setPredicate] = useState<PredicateFilter | undefined>(undefined);
+  const [scope, setScope] = useState<QueryScope | undefined>(undefined);
 
   useEffect(() => {
     if (!seed || !space) {
@@ -52,8 +56,10 @@ const FactsStoryRoot = ({ layout, seed }: { layout: ModuleLayout; seed?: RDF.Fac
   }, [seed, space, registry]);
 
   return (
-    <FactsStoryContext.Provider value={{ facts, setFacts, selected, setSelected }}>
-      <ModuleContainer layout={layout} />
+    <FactsStoryContext.Provider
+      value={{ facts, setFacts, selected, setSelected, predicate, setPredicate, scope, setScope }}
+    >
+      <ModuleContainer.Root layout={layout} />
     </FactsStoryContext.Provider>
   );
 };
@@ -88,12 +94,13 @@ const InMemoryStory = () => <FactsStoryRoot layout={VIEWER_LAYOUT} seed={SAMPLE_
 const meta = {
   title: 'stories/stories-brain/Facts',
   render: DefaultStory,
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     plugins: [SpacePlugin.make({}), BrainPlugin.make(), CrawlerStoresPlugin(), StoryModulesPlugin()],
   }),
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
+    translations: rdfTranslations,
   },
 } satisfies Meta<typeof DefaultStory>;
 

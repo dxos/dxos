@@ -1,0 +1,8 @@
+---
+import { Code } from '@astrojs/starlight/components';
+
+import { PACKAGE_JSON, VITE_CONFIG } from '../plex/plugin-package.ts';
+---
+
+<Code code={`${JSON.stringify(PACKAGE_JSON, null, 2)}\n`} lang='json' title='package.json' />
+<Code code={VITE_CONFIG} lang='ts' title='vite.config.ts' />

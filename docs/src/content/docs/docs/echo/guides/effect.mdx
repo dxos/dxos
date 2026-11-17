@@ -1,0 +1,53 @@
+---
+title: Effect
+description: Use ECHO from Effect code, with Database.Service, layers and typed errors.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { Database, Hypergraph } from '@dxos/echo';
+```
+
+The rest of the ECHO docs use the promise API. This page is for code written with [Effect](https://effect.website/):
+there, the database is a service that a program asks for, and failures are typed errors. Composer's operations and
+plugins are written this way.
+
+## Ask for the database
+
+`Database.Service` is the database of one space. The functions of the `Database` module, such as `add`, `query`, `flush`
+and `load`, are Effects that need it, so a program that uses them says in its type that it acts on a space.
+
+<Snippet file="echo-guide-effect" region="service" />
+
+## Provide it
+
+`Database.layer` provides the service from a database you hold. Where a program has no database, `Database.notAvailable`
+stands in and fails on use, so a missing database shows up at the call rather than as a silent no-op.
+
+<Snippet file="echo-guide-effect" region="provide" />
+
+## Handle errors
+
+Failures carry a tag, so a program handles each by name. `Database.load` fails with `EntityNotFoundError` when a
+reference's target is missing; `Blob.read` fails with `BlobNotAvailableError` when the bytes cannot be reached.
+
+<Snippet file="echo-guide-effect" region="errors" />
+
+## Find a space
+
+Some work cannot be told its space in advance, such as a trigger that fires with a fixed payload. It asks for
+`Hypergraph.Service`, every space this device holds, and `Hypergraph.withDatabase` narrows that to one space's
+`Database.Service`. A space this device does not hold fails with `SpaceNotFoundError` when the layer is built.
+
+<Snippet file="echo-guide-effect" region="hypergraph" />
+
+## Effect versions of other modules
+
+`Feed` has Effect versions of the database's feed methods: `append`, `walk`, `query`, `fork`, `setIndexing` and
+`setRetention`. `Blob` has `fromBytes`, `read`, `exists` and `url`. Each needs `Database.Service`.
+
+## Related
+
+- [Database](/docs/echo/api/database/) for the promise API these mirror.
+- [Effect in plugins](/docs/plex/guides/effect/) for Effect in a Composer plugin.

@@ -11,7 +11,8 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin, initializeMailbox, seedSummaries } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Message, Person } from '@dxos/types';
 
 import { StoryRole, THREAD_CONTEXT_ID } from '../modules/index.ts';
@@ -28,13 +29,13 @@ type StoryArgs = {
  * the message.
  */
 const DefaultStory = () => (
-  <ModuleContainer layout={[[{ type: StoryRole.Thread, id: THREAD_CONTEXT_ID }], [StoryRole.ThreadJson]]} />
+  <ModuleContainer.Root layout={[[{ type: StoryRole.Thread, id: THREAD_CONTEXT_ID }], [StoryRole.ThreadJson]]} />
 );
 
 const meta = {
   title: 'stories/stories-inbox/MessageArticle',
   render: DefaultStory,
-  decorators: createStoryDecorators<StoryArgs>(({ args: { length = 8 } }) => ({
+  decorators: StoryHarness.decorators<StoryArgs>(({ args: { length = 8 } }) => ({
     types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
     plugins: [InboxPlugin.make(), PreviewPlugin.make(), StoryModulesPlugin()],
     onInit: async ({ space }) => {

@@ -4,6 +4,16 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-11-11 — plugin-meeting, plugin-transcription, plugin-calls (stories)
+
+- Never write `ref.current++` inside an effect or callback in a component: the React Compiler emits `ref.current = ref.current + 1` and then reads the new value, so a post-increment acts as a pre-increment (the first item of a script was skipped). Read the index, then assign `ref.current = index + 1`.
+- `useFeedModelAdapter(renderer, …)` rebuilds its `TranscriptModel` whenever `renderer` changes identity; hoist `renderByline([])` to module scope instead of calling it in render.
+- A story that reaches an account-only EDGE service (calls-service) gates its controls on `useTestAccount(hubUrl)` from `@dxos/plugin-client/testing`; binding in `onClientInitialized` is too late, since the story renders before that finishes and an early click gets a 403.
+- Hover-revealed toolbars (`groupHoverControlItemWithTransition`) need a `group` ancestor; `Call.Viewport` provides it for the call and lobby toolbars.
+- `initializeIdentity`'s default and settings spaces are `MembershipPolicy.LOCKED`, so `space.share()` fails with "No member management permission."; a story that invites another tab creates its own space (`client.spaces.create`) and enables EDGE replication on it.
+- `useSpace(id)` returns a space before it is ready, and reading its `db` throws "Space is not initialized"; find a just-joined space in `useSpaces()`, which lists ready spaces only.
+- `VideoObject` must clear `srcObject` when its stream goes away: a RealtimeKit camera turned off keeps a live track with no frames, so a kept stream freezes on its last frame.
+
 ## 2026-10-26 — plugin-recorder (new plugin) + plugin-presenter
 
 - Plugin layout is a single `dx.config.ts` (`Plugin.config`) + `src/namespace.ts` (`Plugin.namespace`); `src/meta.ts`, `src/capabilities/index.ts`, `src/plugin.ts(x)`, `src/FooPlugin.ts` and `#plugin`/`#capabilities` are gone. See SKILL.md **Plugin Definition**.

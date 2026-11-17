@@ -10,14 +10,24 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
+import { RDF, generateSparql } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { type Space } from '@dxos/react-client/echo';
+import { formatBindings } from '@dxos/react-ui-rdf';
 
-import { DEFAULT_SPARQL, QueryPanel } from '../components/index.ts';
+import {
+  DEFAULT_SPARQL,
+  QueryPanel,
+  type QueryPanelPending,
+  type QueryPanelProps,
+  type QueryPanelResult,
+} from '../components/index.ts';
 import { useFactsStory } from './context.ts';
 
-/** LEFT (middle): natural-language → SPARQL over Brain's per-space `FactStore`; results are the view. */
+/**
+ * LEFT: natural-language → SPARQL over Brain's per-space `FactStore`, run as written; the raw result shows under the
+ * query, and what it binds scopes the facts and entities views.
+ */
 export const QueryModule = () => {
   const space = ToolkitHooks.useActiveSpace();
   if (!space) {
@@ -28,54 +38,94 @@ export const QueryModule = () => {
 
 const QueryModuleContainer = ({ space }: { space: Space }) => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
-  const { setFacts } = useFactsStory();
+  const { setFacts, setScope } = useFactsStory();
 
   const [question, setQuestion] = useState('');
   const [query, setQuery] = useState(DEFAULT_SPARQL);
-  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<QueryPanelPending | undefined>(undefined);
+  const [error, setError] = useState<QueryPanelProps['error']>(undefined);
+  const [result, setResult] = useState<QueryPanelResult | undefined>(undefined);
 
-  const guard = useCallback((task: () => Promise<void>) => {
-    setBusy(true);
-    void task().finally(() => setBusy(false));
+  // One action at a time; its failure is shown in the panel rather than lost in an unhandled rejection.
+  const guard = useCallback((action: QueryPanelPending, task: () => Promise<void>) => {
+    setPending(action);
+    setError(undefined);
+    void task()
+      .catch((failure: unknown) =>
+        setError({ action, message: failure instanceof Error ? failure.message : String(failure) }),
+      )
+      .finally(() => setPending(undefined));
   }, []);
 
-  // Translate the question into SPARQL (LLM) and write it into the field; the user then runs it.
+  // Translate the question into SPARQL (LLM), grounded in the store's predicates; the user then runs it.
   const handleGenerate = useCallback(() => {
-    guard(async () => {
-      const structured = await EffectEx.runPromise(
-        generateQuery(question).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote')))),
+    guard('generate', async () => {
+      const store = registry.forSpace(space.id);
+      const predicates = await EffectEx.runPromise(store.predicates());
+      const sparql = await EffectEx.runPromise(
+        generateSparql(question, predicates).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote')))),
       );
-      setQuery(buildSparql(structured));
+      setQuery(sparql);
     });
-  }, [guard, question]);
+  }, [guard, registry, space.id, question]);
 
-  // Parse the SPARQL and run it over the store; the result set becomes the displayed view.
+  // Run the SPARQL as written: its solutions scope the views, and a query binding `?g` shows its graphs as TriG.
   const handleRun = useCallback(() => {
-    guard(async () => {
-      const results = await EffectEx.runPromise(registry.forSpace(space.id).query(parseSparqlToQuery(query)));
-      setFacts(results);
+    guard('run', async () => {
+      const store = registry.forSpace(space.id);
+      const rows = await EffectEx.runPromise(store.rows(query));
+      const graphs = new Set<string>();
+      const iris = new Set<string>();
+      const literals = new Set<string>();
+      for (const row of rows) {
+        for (const [name, term] of Object.entries(row)) {
+          if (term.termType === 'NamedNode') {
+            (name === 'g' ? graphs : iris).add(term.value);
+          } else if (term.termType === 'Literal') {
+            literals.add(term.value);
+          }
+        }
+      }
+      // The whole result is built before the scope is set, so a failing `select` leaves scope and result in step.
+      let next: QueryPanelResult;
+      if (graphs.size > 0) {
+        const facts = await EffectEx.runPromise(store.select(query));
+        next = { kind: 'graphs', count: new Set(facts.map(RDF.Mapping.graphOf)).size, text: RDF.Graph.toTriG(facts) };
+      } else {
+        next = { kind: 'rows', count: rows.length, text: formatBindings(rows) };
+      }
+      // The store may have grown since the views loaded; the scope can only show facts they hold.
+      const all = await EffectEx.runPromise(store.query({}));
+      setFacts(all);
+      setScope({ graphs, iris, literals });
+      setResult(next);
     });
-  }, [guard, registry, space.id, query, setFacts]);
+  }, [guard, registry, space.id, query, setFacts, setScope]);
 
-  // Reset the field and re-read all facts.
+  // Reset the field, drop the result's scope and re-read all facts.
   const handleReset = useCallback(() => {
-    guard(async () => {
+    guard('reset', async () => {
       setQuery(DEFAULT_SPARQL);
+      setScope(undefined);
+      setResult(undefined);
       const results = await EffectEx.runPromise(registry.forSpace(space.id).query({}));
       setFacts(results);
     });
-  }, [guard, registry, space.id, setFacts]);
+  }, [guard, registry, space.id, setFacts, setScope]);
 
   return (
     <QueryPanel
       question={question}
       query={query}
-      busy={busy}
+      pending={pending}
+      error={error}
+      result={result}
       onQuestionChange={setQuestion}
       onQueryChange={setQuery}
       onGenerate={handleGenerate}
       onRun={handleRun}
       onReset={handleReset}
+      onDismissError={() => setError(undefined)}
     />
   );
 };

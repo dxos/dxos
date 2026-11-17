@@ -3,7 +3,6 @@
 //
 
 import { next as A, type Doc } from '@automerge/automerge';
-import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -27,6 +26,7 @@ import {
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type EntityId } from '@dxos/keys';
 
+import { isValidAutomergeUrl } from '../automerge/automerge-url.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
 import { type ObjectCore } from '../core-db/index.ts';
 import { createObject, getObjectCore, isEchoObject } from '../echo-handler/index.ts';

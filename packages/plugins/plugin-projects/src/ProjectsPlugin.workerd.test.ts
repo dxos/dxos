@@ -14,7 +14,8 @@ import * as ProjectsPlugin from '#meta';
 import { ProjectOperation } from '#types';
 
 describe('ProjectsPlugin in workerd', () => {
-  test('activates headless and contributes its operations and types', async ({ expect }) => {
+  // Activation imports each plugin's modules lazily, which a cold transform in CI makes slow.
+  test('activates headless and contributes its operations and types', { timeout: 60_000 }, async ({ expect }) => {
     const { failures, operationKeys, typenames } = await activateHeadlessPlugins([
       ProjectsPlugin.make(),
       // Declared plugin dependencies; the manager refuses to load the plugin without them.

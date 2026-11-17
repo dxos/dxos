@@ -242,6 +242,11 @@
       "types": "./dist/types/src/echo/Query.d.ts",
       "import": "./dist/lib/echo/Query.mjs"
     },
+    "./ResetDialog": {
+      "source": "./src/ui/components/ResetDialog/ResetDialog.tsx",
+      "types": "./dist/types/src/ui/components/ResetDialog/ResetDialog.d.ts",
+      "import": "./dist/lib/ResetDialog.mjs"
+    },
     "./SampleSpace": {
       "source": "./src/sample/SampleSpace.ts",
       "types": "./dist/types/src/sample/SampleSpace.d.ts",
@@ -303,6 +308,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@bufbuild/protobuf": "catalog:",
@@ -354,7 +362,8 @@
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
     "@effect/atom-react": "catalog:",

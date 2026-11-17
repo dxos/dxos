@@ -1,0 +1,7 @@
+diagram flow=right
+node Laptop "Laptop" ref="packages/core/mesh/edge-client/src/edge-client.ts"
+node Copy "EDGE's copy"
+node Phone "Phone" ref="packages/core/mesh/edge-client/src/edge-client.ts"
+edge Laptop -> Copy "changes"
+edge Copy -> Phone "when it connects"
+edge Laptop -> Phone "MESH, when online" stroke=dashed

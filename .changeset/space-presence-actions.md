@@ -1,0 +1,21 @@
+---
+'@dxos/app-graph': patch
+'@dxos/app-toolkit': minor
+'@dxos/client': patch
+'@dxos/halo-adapter-client': patch
+'@dxos/plugin-client': patch
+'@dxos/plugin-code': patch
+'@dxos/plugin-markdown': patch
+'@dxos/plugin-projects': patch
+'@dxos/plugin-review': patch
+'@dxos/plugin-sheet': patch
+'@dxos/plugin-space': patch
+'@dxos/react-client': patch
+'@dxos/react-ui': patch
+'@dxos/react-ui-attention': patch
+'@dxos/react-ui-editor': patch
+'@dxos/shell': patch
+'@dxos/ui-editor': patch
+---
+
+Peers' avatars now act on what they view. Clicking an avatar opens the object's viewers with that row highlighted, each with Go to (open the object where the peer has it open in the tree, such as under a collection) or Jump (reveal the peer's selection or viewport, once the object is open). A peer with the object open in several tabs or on several devices is one row whose Jump goes to the session that moved last; a toggle in the list's toolbar lists their sessions under it, each named by its device ("Chrome on macOS"), with a dot for whether it moved in the last minute. A "See everyone in this space" button opens a Members companion listing every online peer by the object they view. Revealing an anchor moved from `CommentConfig.scrollToAnchor` to a per-type `AppCapabilities.Locator`, and `LayoutOperation.ScrollIntoView` drops `cursor`. New devices no longer get a placeholder label, and `getDeviceLabel` (from `@dxos/client/halo`) treats the old placeholders as no label, so devices are named from their platform and OS. A graph node that leaves and comes back, such as a peer who visits Settings, is expanded again, so its row keeps Go to and Jump. Jump goes to a peer's caret only once they have placed one, otherwise to the top of their viewport, and the avatars open the viewers list from the keyboard too.

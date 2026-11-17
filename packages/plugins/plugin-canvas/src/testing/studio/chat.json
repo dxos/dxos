@@ -1,0 +1,90 @@
+{
+  "id": "chat",
+  "title": "Chat",
+  "subtitle": "What runs, what it records, what it uses and what it makes",
+  "size": {
+    "w": 236,
+    "h": 66
+  },
+  "nodes": {
+    "operator": {
+      "icon": "user",
+      "title": "Operator",
+      "cx": 800,
+      "cy": 180,
+      "tone": "var(--t-trip)"
+    },
+    "feed": {
+      "icon": "queue",
+      "title": "Feed",
+      "cx": 800,
+      "cy": 340
+    },
+    "session": {
+      "icon": "play-circle",
+      "title": "Session",
+      "cx": 800,
+      "cy": 500
+    },
+    "model": {
+      "icon": "cpu",
+      "title": "Model",
+      "cx": 1200,
+      "cy": 500
+    },
+    "skill": {
+      "icon": "graduation-cap",
+      "title": "Skill",
+      "cx": 400,
+      "cy": 660
+    },
+    "tool": {
+      "icon": "wrench",
+      "title": "Tool",
+      "cx": 800,
+      "cy": 660
+    },
+    "artifact": {
+      "icon": "cube",
+      "title": "Artifact",
+      "cx": 800,
+      "cy": 820,
+      "tone": "var(--t-message)"
+    }
+  },
+  "edges": [
+    ["session", "feed", "writes"],
+    ["session", "model", "run by"],
+    ["operator", "feed", "writes"],
+    ["session", "tool", "uses"],
+    ["skill", "tool", "defines"],
+    ["tool", "artifact", "makes"],
+    [
+      "operator",
+      "skill",
+      "",
+      {
+        "elbow": "hv",
+        "dash": true
+      }
+    ],
+    [
+      "operator",
+      "model",
+      "",
+      {
+        "elbow": "hv",
+        "dash": true
+      }
+    ]
+  ],
+  "frames": [
+    {
+      "id": "agent-box",
+      "x": 260,
+      "y": 285,
+      "w": 1080,
+      "h": 430
+    }
+  ]
+}

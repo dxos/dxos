@@ -19,25 +19,25 @@ export const GRID_LEVELS = [1 / MAJOR_GRID_RATIO, 1, MAJOR_GRID_RATIO, MAJOR_GRI
 export const GRID_RANGE: [number, number] = [6, 2048];
 
 export type SceneSnap = {
-  /** The finest level drawn, in scene units; control points land on it. */
+  /** The finest level drawn, in scene units; everything a gesture places lands on it. */
   minor: number;
-  /** `MAJOR_GRID_RATIO` of those; moves, resizes and creation land on it. */
+  /** `MAJOR_GRID_RATIO` of those: the lines the grid draws heavier, and a type's fallback minimum size. */
   major: number;
+  /** Rounds to {@link minor}: the smallest cell on screen is the smallest step a gesture can take. */
   snap: (value: number) => number;
-  snapMinor: (value: number) => number;
   /** A press that has moved less than half a minor cell with snap on: a click, which moves and resizes nothing. */
   isClick: (offset: Point) => boolean;
   /** {@link DETENT_PX} in scene units at the zoom. */
   detent: number;
   /**
-   * The offset a move applies: on each axis the pressed node's top-left (`anchor`) is held on the major grid while
-   * within the detent of a line, and follows the pointer otherwise.
+   * The offset a move applies: on each axis the pressed node's top-left (`anchor`) is held on the grid while within
+   * the detent of a line, and follows the pointer otherwise.
    */
   moveDelta: (anchor: Point, offset: Point) => Point;
 };
 
 /**
- * What a gesture lands on: the grid levels actually drawn, which is what the user is aiming at. A level
+ * What a gesture lands on: the finest grid level actually drawn, which is what the user is aiming at. A level
  * fixed in scene units parts company with the lines as soon as the zoom moves — `Grid` keeps a level only
  * while its cells are legible on screen, so far enough in the drawn lines are finer than the snap and far
  * enough out (a nested scene, entered at a fraction of the parent's zoom) they are coarser and the snap
@@ -51,18 +51,18 @@ const minorLevel = (grid: number, zoom: number): number => {
 
 const snapOn = (minor: number, enabled: boolean, detent: number): SceneSnap => {
   const major = minor * MAJOR_GRID_RATIO;
-  const snap = (value: number) => (enabled ? Math.round(value / major) * major : value);
-  // A link's control point is finer than a node: a bend need not sit on a major line.
-  const snapMinor = (value: number) => (enabled ? Math.round(value / minor) * minor : value);
-  // A node off the major grid (a palette drop sits on the minor one) would otherwise jump to a line on a click's
-  // jitter, so a press that has not left half a minor cell does not move.
+  // The finest level drawn, not the major one: a gesture lands on the smallest cell the user can see, so a shape can
+  // be put beside another a cell away rather than four.
+  const snap = (value: number) => (enabled ? Math.round(value / minor) * minor : value);
+  // A node a cell off a line would otherwise jump to one on a click's jitter, so a press that has not left half a
+  // minor cell does not move.
   const isClick = (offset: Point) => enabled && Math.hypot(offset.x, offset.y) < minor / 2;
   const hold = (value: number) => detentOf(value, snap(value), detent);
   const moveDelta = (anchor: Point, offset: Point): Point =>
     isClick(offset)
       ? { x: 0, y: 0 }
       : { x: hold(anchor.x + offset.x) - anchor.x, y: hold(anchor.y + offset.y) - anchor.y };
-  return { minor, major, detent, snap, snapMinor, isClick, moveDelta };
+  return { minor, major, detent, snap, isClick, moveDelta };
 };
 
 /** The snap for a view's grid, zoom and snap toggle. */

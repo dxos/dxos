@@ -147,6 +147,32 @@ describe('SceneEditor sections', () => {
     );
   });
 
+  test("Views selects a hull's shape where it stands, without opening the hull's group", async () => {
+    // The same composite, placed by an element that draws a hull's border: its part is in the scene, not behind it.
+    const stored = document();
+    const doc: Scene.SceneDocument = {
+      ...stored,
+      layouts: stored.layouts.map((layout) =>
+        layout.id === 'root' && layout.dim === '3d'
+          ? {
+              ...layout,
+              elements: { ...layout.elements, c: { ...layout.elements.c, props: { canvas: { hull: 'perimeter' } } } },
+            }
+          : layout,
+      ),
+    };
+    render(<Editor doc={doc} />);
+    const hull = await screen.findByTestId('views-row-c');
+    await userEvent.click(hull.querySelector<HTMLElement>('[data-part="branch-trigger"]') ?? hull);
+    await userEvent.click(await screen.findByTestId('views-row-c/g'));
+    await waitFor(() =>
+      expect(screen.getByTestId('views-row-c/g').closest('[role="treeitem"]')?.getAttribute('aria-selected')).toBe(
+        'true',
+      ),
+    );
+    expect(screen.getByTestId('viewport').dataset.editing).toBe('');
+  });
+
   test('Objects place picks the place tool for that object', async () => {
     render(<Editor />);
     await userEvent.click(await screen.findByTestId('object-gear'));

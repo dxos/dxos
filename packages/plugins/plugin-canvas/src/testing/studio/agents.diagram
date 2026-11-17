@@ -1,0 +1,72 @@
+# Agents: Feeds route work to agents; agents delegate through feeds of their own
+# Exported from studio assets/deck (slide "agents"), 1600 × 900 slide units.
+
+object title @ 80,40 {
+  text heading 0,0 "Agents"
+  text subtitle 0,44 "Feeds route work to agents; agents delegate through feeds of their own"
+}
+
+object subagents @ 778,160 {
+  rect frame 0,0 336x648 "Sub-agents · child feeds" color=grey stroke=dashed
+}
+object space-frame @ 1108,258 {
+  rect frame 0,0 460x484 color=grey stroke=dashed
+}
+object l-inbound @ 70,172 {
+  text label 0,0 "Inbound feeds"
+}   # role=label
+object l-space @ 1142,702 {
+  text label 0,0 "One space · its graph"
+}   # role=label
+object l-triggers @ 287,543 {
+  text label 0,0 "triggers route each new message"
+}   # role=link-label for=email-triage,discord-triage,chat-planner
+object footnote @ 70,842 {
+  text label 0,0 "Feeds are append-only. A delegation is a block in the parent’s feed that opens a child feed, so every sub-agent’s work is attributable and replayable."
+}   # role=note
+
+object email @ 70,204 {
+  rect box 0,0 300x138 "Email"
+}   # card kind=feed-card icon=envelope feed=9 marks=8:accent footer="plugin-inbox · JMAP"
+object discord @ 70,364 {
+  rect box 0,0 300x138 "Discord"
+}   # card kind=feed-card icon=discord-logo feed=9 marks=8:accent footer="plugin-discord"
+object chat @ 70,590 {
+  rect box 0,0 300x138 "Chat"
+}   # card kind=feed-card icon=chat-circle-dots feed=9 marks=8:accent footer="plugin-thread"
+object triage @ 450,248 {
+  rect box 0,0 300x176 "Triage agent"
+}   # card kind=feed-card icon=robot tone=ink feed=9 marks=5:accent,6:accent feed-label="feed" footer="Agent DO · ProcessObject" body="Delegates tasks; each opens a child feed."
+object planner @ 450,572 {
+  rect box 0,0 300x176 "Planner agent"
+}   # card kind=feed-card icon=robot tone=ink feed=9 marks=4:accent,5:accent feed-label="feed" footer="Agent DO · ProcessObject" body="Delegates tasks; each opens a child feed."
+object research @ 796,206 {
+  rect box 0,0 300x120 "Research"
+}   # card kind=feed-card icon=magnifying-glass feed=6 marks=0:accent feed-label="task" footer="parent: triage agent"
+object reply @ 796,346 {
+  rect box 0,0 300x120 "Draft reply"
+}   # card kind=feed-card icon=pencil-simple-line feed=6 marks=0:accent feed-label="task" footer="parent: triage agent"
+object calendar @ 796,530 {
+  rect box 0,0 300x120 "Calendar"
+}   # card kind=feed-card icon=calendar-blank feed=6 marks=0:accent feed-label="task" footer="parent: planner agent"
+object travel @ 796,670 {
+  rect box 0,0 300x120 "Travel"
+}   # card kind=feed-card icon=airplane-tilt feed=6 marks=0:accent feed-label="task" footer="parent: planner agent"
+
+object space @ 1142,292 {
+  ellipse ring 0,0 392x392
+}   # component=space-graph seed=7 pitch=26 fill=0.6 extra=0.45 size=24 lit=15,20,28,37,38,63,80,96
+
+object links @ 0,0 {
+  arrow email-triage email/box -> triage/box head=triangle   # route=curve-h
+  arrow discord-triage discord/box -> triage/box head=triangle   # route=curve-h
+  arrow chat-planner chat/box -> planner/box head=triangle   # route=curve-h
+  arrow triage-research triage/box -> research/box head=triangle stroke=dashed   # route=curve-h color=accent
+  arrow triage-reply triage/box -> reply/box head=triangle stroke=dashed   # route=curve-h color=accent
+  arrow planner-calendar planner/box -> calendar/box head=triangle stroke=dashed   # route=curve-h color=accent
+  arrow planner-travel planner/box -> travel/box head=triangle stroke=dashed   # route=curve-h color=accent
+  arrow research-space research/box -> space/ring stroke=dashed   # route=curve-h color=accent arrow=none tap=28,37
+  arrow reply-space reply/box -> space/ring stroke=dashed   # route=curve-h color=accent arrow=none tap=80,15
+  arrow calendar-space calendar/box -> space/ring stroke=dashed   # route=curve-h color=accent arrow=none tap=63,96
+  arrow travel-space travel/box -> space/ring stroke=dashed   # route=curve-h color=accent arrow=none tap=38,20
+}

@@ -9,7 +9,11 @@ import './theme.css';
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
-import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
+import {
+  type ExcalidrawImperativeAPI,
+  type ExcalidrawProps,
+  type NormalizedZoomValue,
+} from '@excalidraw/excalidraw/types';
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -25,6 +29,8 @@ import * as Util from '@dxos/react-ui/Util';
 import { useStoreAdapter } from '#hooks';
 
 export type ExcalidrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
+
+const CAMERA_REPORT_MS = 100;
 
 /** Scene object ids of the selected elements; unmanaged elements carry no `customData.object`. */
 const selectedObjectIds = (
@@ -43,6 +49,34 @@ const selectedObjectIds = (
 const sameSet = (left: readonly string[], right: readonly string[]) =>
   left.length === right.length && left.every((id) => right.includes(id));
 
+type Camera = NonNullable<ExcalidrawArticleProps['camera']>;
+
+const sameCamera = (left: Camera, right: Camera) =>
+  left.x === right.x && left.y === right.y && left.zoom === right.zoom;
+
+/** The scene point at the view's centre and the zoom, so a view of another size looks at the same place. */
+const viewCamera = (api: ExcalidrawImperativeAPI): Camera => {
+  const { width, height, scrollX, scrollY, zoom } = api.getAppState();
+  return { x: width / (2 * zoom.value) - scrollX, y: height / (2 * zoom.value) - scrollY, zoom: zoom.value };
+};
+
+/** Excalidraw's zoom range, which its branded zoom value promises. */
+const isNormalizedZoom = (value: number): value is NormalizedZoomValue => value >= 0.1 && value <= 30;
+
+const applyCamera = (api: ExcalidrawImperativeAPI, camera: Camera) => {
+  if (sameCamera(viewCamera(api), camera) || !isNormalizedZoom(camera.zoom)) {
+    return;
+  }
+  const { width, height } = api.getAppState();
+  api.updateScene({
+    appState: {
+      scrollX: width / (2 * camera.zoom) - camera.x,
+      scrollY: height / (2 * camera.zoom) - camera.y,
+      zoom: { value: camera.zoom },
+    },
+  });
+};
+
 /**
  * Article surface for the excalidraw variant: binds the canvas store adapter to an Excalidraw
  * instance and mirrors selection to and from the host in scene object ids.
@@ -54,6 +88,8 @@ export const ExcalidrawArticle = ({
   attendableId,
   selection,
   onSelectionChange,
+  camera,
+  onCameraChange,
 }: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
@@ -69,6 +105,12 @@ export const ExcalidrawArticle = ({
   // and the <Excalidraw/> imperative API settle in (either order), we always hand
   // the current scene to the component once both are ready.
   const latestElementsRef = useRef<readonly ExcalidrawElement[]>([]);
+  // The host's camera, applied once the API binds; and the last one reported, whose echo is not applied.
+  const cameraRef = useRef(camera);
+  cameraRef.current = camera;
+  const reportedCameraRef = useRef<Camera>(undefined);
+  const cameraTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(cameraTimerRef.current), []);
 
   /** Select every element stamped with a selected scene object id. */
   const applySelection = (api: ExcalidrawImperativeAPI, elements: readonly ExcalidrawElement[]) => {
@@ -159,6 +201,29 @@ export const ExcalidrawArticle = ({
     }
   }, [adapter, selection]);
 
+  // Camera, editor → host, at most once per interval while the view moves.
+  const handleScrollChange: ExcalidrawProps['onScrollChange'] = () => {
+    if (!onCameraChange || cameraTimerRef.current !== undefined) {
+      return;
+    }
+    cameraTimerRef.current = setTimeout(() => {
+      cameraTimerRef.current = undefined;
+      const api = excalidrawAPIRef.current;
+      if (api) {
+        reportedCameraRef.current = viewCamera(api);
+        onCameraChange(reportedCameraRef.current);
+      }
+    }, CAMERA_REPORT_MS);
+  };
+
+  // Camera, host → editor.
+  useEffect(() => {
+    const api = excalidrawAPIRef.current;
+    if (api && camera && !(reportedCameraRef.current && sameCamera(reportedCameraRef.current, camera))) {
+      applyCamera(api, camera);
+    }
+  }, [camera]);
+
   // Save updates when mouse is released.
   const handlePointerUpdate: ExcalidrawProps['onPointerUpdate'] = ({ button }) => {
     switch (button) {
@@ -196,6 +261,9 @@ export const ExcalidrawArticle = ({
           if (buffered.length > 0) {
             api.updateScene({ elements: buffered });
           }
+          if (cameraRef.current) {
+            applyCamera(api, cameraRef.current);
+          }
         }}
         initialData={{ elements: adapter.getElements() }}
         // gridModeEnabled={true}
@@ -203,6 +271,7 @@ export const ExcalidrawArticle = ({
         theme={themeMode}
         onChange={handleChange}
         onPointerUpdate={handlePointerUpdate}
+        onScrollChange={handleScrollChange}
       >
         <MainMenu>
           <MainMenu.Item onSelect={handleRefresh}>Refresh</MainMenu.Item>

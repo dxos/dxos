@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect, test } from '@playwright/test';
+import { type Locator, expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager.ts';
 import { Markdown, Projects } from './plugins/index.ts';
@@ -25,13 +25,31 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   await navigateToNewDocument(host);
 };
 
+/** The editor is read-only until the replicated document binds to it, and can remount once while the guest navigates. */
+const fillWhenEditable = async (textbox: Locator, text: string) => {
+  await expect(async () => {
+    await expect(textbox).toBeEditable({ timeout: 5_000 });
+    await textbox.fill(text, { timeout: 5_000 });
+  }).toPass({ timeout: 45_000 });
+};
+
 const navigateToNewDocument = async (app: AppManager) => {
   await app.navigateToObject(0); // New document.
 };
 
-// Two-peer WebRTC runs on all browsers in CI. The Claude cloud sandbox is the exception — webkit peers
-// there time out waiting for transport, so cross-browser results come from CI, not local runs. Ignore
-// webkit's `'allow-presentation'` console flood here, from MediaPlayer's iframe sandbox.
+/** Turns the deck's flatten setting off, so the app lays planks side by side. */
+const unflattenDeck = async (app: AppManager) => {
+  await app.openPluginSettings('org.dxos.plugin.deck');
+  const flatten = app.page.getByTestId('flatten');
+  await expect(flatten).toBeChecked();
+  await flatten.click();
+  await expect(flatten).not.toBeChecked();
+};
+
+/** The graph paths of the deck's planks, in order. */
+const getPlanks = (app: AppManager) =>
+  app.page.getByTestId('deck.plank').evaluateAll((planks) => planks.map((plank) => plank.dataset.attendableId));
+
 test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;
@@ -254,4 +272,268 @@ test.describe('Collaboration tests', () => {
       expect(guestPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 }),
     ]);
   });
+
+  test("a peer's avatar opens the viewers list and goes to their selection", { tag: ['@space:QA-3'] }, async () => {
+    test.setTimeout(120_000);
+
+    await host.createSpace();
+    await host.createObject({ type: 'Document' });
+    const hostPlank = host.deck.plank();
+    const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
+    await hostTextbox.waitFor();
+    await hostTextbox.focus();
+
+    await perfomInvitation(host, guest);
+    await guest.expandSection('spacePlugin.collectionsSection');
+    await navigateToNewDocument(guest);
+    const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
+    await fillWhenEditable(guestTextbox, 'Hello from the guest');
+
+    const hostPresence = hostPlank.membersPresence();
+    await expect(hostPresence).toHaveCount(1, { timeout: 45_000 });
+    await hostPresence.first().click();
+
+    const row = host.page.getByTestId('spacePlugin.presence.row');
+    await expect(row).toHaveCount(1);
+
+    await row.getByTestId('spacePlugin.presence.goTo').click({ timeout: 30_000 });
+    await expect(hostTextbox).toBeFocused();
+
+    await hostPresence.first().click();
+    await host.page.getByTestId('spacePlugin.presence.seeEveryone').click();
+    const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+    await expect(sidebar.getByTestId('spacePlugin.presence.row')).toHaveCount(1, { timeout: 30_000 });
+    // The popover closed, so the companion's row is the only one left.
+    await expect(row).toHaveCount(1);
+
+    await sidebar.getByTestId('spacePlugin.membersCompanion.invite').click();
+    await expect(host.page.getByTestId('membersContainer.createInvitation.more')).toBeVisible({ timeout: 15_000 });
+  });
+
+  test(
+    "the sessions toggle lists a peer's sessions under their row, each with its own Go to",
+    { tag: ['@space:QA-4'] },
+    async () => {
+      test.setTimeout(150_000);
+
+      await host.createSpace();
+      await host.createObject({ type: 'Document' });
+      const hostPlank = host.deck.plank();
+      const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
+      await hostTextbox.waitFor();
+
+      await perfomInvitation(host, guest);
+      await guest.expandSection('spacePlugin.collectionsSection');
+      await navigateToNewDocument(guest);
+      const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
+      await fillWhenEditable(guestTextbox, 'Hello from the guest');
+
+      // A second tab of the guest's is a second session of the same identity.
+      const secondTab = await guest.page.context().newPage();
+      await secondTab.goto(guest.page.url());
+      const secondTextbox = Markdown.getMarkdownTextboxWithLocator(secondTab.getByTestId('deck.plank').first());
+      await secondTextbox.waitFor({ timeout: 60_000 });
+      await secondTextbox.focus();
+
+      const hostPresence = hostPlank.membersPresence();
+      await expect(hostPresence).toHaveCount(1, { timeout: 45_000 });
+      await hostPresence.first().click();
+
+      const row = host.page.getByTestId('spacePlugin.presence.row');
+      const sessions = host.page.getByTestId('spacePlugin.presence.session');
+      await expect(row).toHaveCount(1);
+      await host.page.getByTestId('spacePlugin.presence.showSessions').click();
+      await expect(sessions).toHaveCount(2, { timeout: 45_000 });
+      // Listed, the actions move from the person's row to their sessions' rows.
+      await expect(row).toHaveCount(1);
+      await expect(row.getByTestId('spacePlugin.presence.goTo')).toHaveCount(0);
+
+      // A new session's location reaches peers up to a second after the session does; until then Go to only scrolls.
+      await expect(async () => {
+        await sessions.first().getByTestId('spacePlugin.presence.goTo').click();
+        await expect(hostTextbox).toBeFocused({ timeout: 2_000 });
+      }).toPass({ timeout: 30_000 });
+    },
+  );
+
+  test(
+    'a follow shows on both sides and mirrors what the leader opens and scrolls, until Stop',
+    { tag: ['@space:QA-5', '@space:QA-7'] },
+    async () => {
+      test.setTimeout(150_000);
+
+      await host.createSpace();
+      await host.createObject({ type: 'Document' });
+      await host.createObject({ type: 'Document' });
+      await perfomInvitation(host, guest);
+      await guest.expandSection('spacePlugin.collectionsSection');
+      await navigateToNewDocument(guest);
+      await Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator).focus();
+
+      const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+      const rows = sidebar.getByTestId('spacePlugin.presence.row');
+      await host.openCompanion('members');
+      await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
+
+      // The follower's row for the leader carries Stop, its Members tab a dot, and its plank headings the follow's hue.
+      const hostFollow = sidebar.locator('[data-member][data-follow]');
+      await expect(hostFollow.getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
+      await expect(host.getCompanionTab('members')).toHaveAttribute('data-badge', '');
+      const hostHeadings = host.page.locator('[data-testid="deck.plank"] [data-accent]');
+      await expect(hostHeadings.first()).toHaveAttribute('data-accent', 'amber');
+
+      // The leader sees it too: the dot, its follower under "Following you", and the same heading.
+      await expect(guest.getCompanionTab('members')).toHaveAttribute('data-badge', '', { timeout: 30_000 });
+      await guest.openCompanion('members');
+      const guestFollowers = guest.page.getByTestId('spacePlugin.presence.followers');
+      await expect(guestFollowers.locator('[data-member][data-follow]')).toHaveCount(1);
+      const guestHeadings = guest.page.locator('[data-testid="deck.plank"] [data-accent]');
+      await expect(guestHeadings.first()).toHaveAttribute('data-accent', 'amber');
+
+      // The guest opens the other document and scrolls to its end; the host's deck goes with them.
+      await guest.navigateToObject(1);
+      // At the guest's own path, so the host's navtree shows the document where the guest's does.
+      await expect
+        .poll(() => new URL(host.page.url()).pathname, { timeout: 30_000 })
+        .toBe(new URL(guest.page.url()).pathname);
+      const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
+      // The editor can remount while the document loads, so a fill can land on the loading one; retry it.
+      await expect(async () => {
+        await guestTextbox.focus();
+        await guestTextbox.fill(Array.from({ length: 120 }, (_, i) => `Line ${i + 1}`).join('\n'));
+      }).toPass({ timeout: 30_000 });
+      await guest.page.keyboard.press('ControlOrMeta+End');
+      const hostScroller = host.deck.plank().locator.locator('.cm-scroller');
+      await expect
+        .poll(() => hostScroller.evaluate((element) => element.scrollTop), { timeout: 30_000 })
+        .toBeGreaterThan(0);
+
+      // Stop clears the follow on both sides and gives the leader's row its actions back.
+      await hostFollow.getByTestId('spacePlugin.presence.stopFollowing').click();
+      await expect(hostFollow).toHaveCount(0);
+      await expect(rows.getByTestId('spacePlugin.presence.follow')).toHaveCount(1);
+      await expect(hostHeadings).toHaveCount(0);
+      await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
+      await expect(guestFollowers).toHaveCount(0, { timeout: 30_000 });
+      await expect(guestHeadings).toHaveCount(0);
+      await expect(guest.getCompanionTab('members')).not.toHaveAttribute('data-badge', { timeout: 30_000 });
+    },
+  );
+
+  test(
+    "a follower takes the leader's scroll in an article with no follow code of its own",
+    { tag: ['@space:QA-8'] },
+    async () => {
+      test.setTimeout(150_000);
+
+      await host.createSpace();
+      await host.createObject({ type: 'Document' });
+      await perfomInvitation(host, guest);
+      // Short enough that Home scrolls.
+      await Promise.all([host, guest].map((app) => app.page.setViewportSize({ width: 1280, height: 520 })));
+
+      const home = `root/${guest.workspaceId}/home`;
+      const homeScroller = (app: AppManager) =>
+        app.page
+          .locator(
+            `[data-testid="deck.plank"][data-attendable-id="${home}"] [data-scope="scroll-area"][data-orientation="vertical"] .dx-scroll-viewport`,
+          )
+          .first();
+      await guest.page.locator(`[data-object-id="${home}"]`).first().click();
+      await expect(homeScroller(guest)).toBeVisible({ timeout: 30_000 });
+
+      const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+      await host.openCompanion('members');
+      await sidebar
+        .getByTestId('spacePlugin.presence.row')
+        .getByTestId('spacePlugin.presence.follow')
+        .click({ timeout: 45_000 });
+      await expect(homeScroller(host)).toBeVisible({ timeout: 30_000 });
+
+      // The anchored section at the top of the view, and how far into it the view is, as a fraction of its height.
+      const topSection = (app: AppManager) =>
+        homeScroller(app).evaluate((viewport) => {
+          const top = viewport.getBoundingClientRect().top;
+          const section = [...viewport.querySelectorAll<HTMLElement>('[data-scroll-anchor]')].find(
+            (element) => element.getBoundingClientRect().bottom > top + 1,
+          );
+          const rect = section?.getBoundingClientRect();
+          return section && rect
+            ? { anchor: section.dataset.scrollAnchor, into: (top - rect.top) / rect.height }
+            : null;
+        });
+
+      await expect.poll(() => homeScroller(host).evaluate((element) => element.scrollTop)).toBe(0);
+      // Halfway, so neither view is clamped at an end.
+      await homeScroller(guest).evaluate((element) => {
+        element.scrollTop = (element.scrollHeight - element.clientHeight) / 2;
+      });
+      const leader = await topSection(guest);
+      expect(leader?.anchor).toBeDefined();
+      await expect
+        .poll(
+          async () => {
+            const follower = await topSection(host);
+            return follower?.anchor === leader?.anchor && Math.abs((follower?.into ?? 0) - (leader?.into ?? 0)) < 0.15;
+          },
+          { timeout: 30_000 },
+        )
+        .toBe(true);
+    },
+  );
+
+  test(
+    "a follower whose deck lays planks side by side mirrors the leader's planks and scroll until it selects one in the navtree",
+    { tag: ['@space:QA-6'] },
+    async () => {
+      test.setTimeout(150_000);
+
+      await Promise.all([unflattenDeck(host), unflattenDeck(guest)]);
+      await host.createSpace();
+      for (let index = 0; index < 3; index++) {
+        await host.createObject({ type: 'Document' });
+      }
+      await perfomInvitation(host, guest);
+      await guest.expandSection('spacePlugin.collectionsSection');
+      await guest.navigateToObject(0);
+      await guest
+        .getObjectLinks()
+        .nth(1)
+        .click({ modifiers: ['Shift'] });
+      await guest
+        .getObjectLinks()
+        .nth(2)
+        .click({ modifiers: ['Shift'] });
+      await expect(guest.page.getByTestId('deck.plank')).toHaveCount(3);
+
+      const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+      const rows = sidebar.getByTestId('spacePlugin.presence.row');
+      await host.openCompanion('members');
+      await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
+      await expect.poll(() => getPlanks(host), { timeout: 30_000 }).toEqual(await getPlanks(guest));
+
+      // The guest brings the first plank to the front, then the last; the host's deck scrolls to show it.
+      const planks = await getPlanks(guest);
+      for (const subject of [planks[0], planks[2]]) {
+        await guest.page.evaluate((subject) => {
+          const invoke = globalThis.composer?.invoke;
+          if (!invoke) {
+            throw new Error('composer.invoke is not exposed');
+          }
+          return invoke('org.dxos.operation.appToolkit.scrollIntoView', { subject, focus: false });
+        }, subject);
+        await expect(host.page.locator(`[data-testid="deck.plank"][data-attendable-id="${subject}"]`)).toBeInViewport({
+          ratio: 0.5,
+          timeout: 30_000,
+        });
+      }
+
+      // Selecting a document the deck already shows in the navtree, which scrolls the deck to it, ends the follow.
+      const badge = host.getCompanionTab('members');
+      await expect(badge).toHaveAttribute('data-badge', '');
+      await host.expandSection('spacePlugin.collectionsSection');
+      await host.getObjectLinks().first().click();
+      await expect(badge).not.toHaveAttribute('data-badge');
+    },
+  );
 });

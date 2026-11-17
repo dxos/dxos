@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type DXN } from '@dxos/keys';
+
 import { type EntityKind } from './Entity.ts';
 import type * as Ontology from './Ontology.ts';
 
@@ -18,8 +20,44 @@ export type KnownEntity = {
 export type ExtractDocument = {
   readonly text: string;
   readonly source: string;
+  /** The author as the model reads it, e.g. a display name. */
   readonly author?: string;
+  /** The author's canonical id, stored as `attribution.agent`; defaults to `author` normalized. */
+  readonly agent?: string;
   readonly date?: string;
+  /**
+   * Earlier messages of the conversation this document continues, as `author: text` lines, read only to resolve its
+   * references; System One extracts one document at a time, so this is how it sees what a transcript would show it.
+   */
+  readonly context?: string;
+};
+
+/** Which extractor turns text into facts: the LLM alone, or System One with the LLM as its fallback. */
+export type Extractor = 'llm' | 'system-one';
+
+/** When System One keeps, drops or hands a claim to the LLM. Probabilities and confidences are in [0, 1]. */
+export type SystemOneThresholds = {
+  /** A claim less likely than this to state a fact is dropped as filler. */
+  readonly minIsFact: number;
+  /** A predicate chosen with less confidence sends the claim to the LLM. */
+  readonly minPredicateConfidence: number;
+  /** A mention linked with less confidence keeps its span instead of the known entity's IRI. */
+  readonly minEntityConfidence: number;
+  /** A claim the decision model flags as needing the LLM with more probability than this goes to it. */
+  readonly maxNeedsFallback: number;
+};
+
+/** System One extraction: Clairic finds claims and their spans, a decision model picks predicates and links entities. */
+export type SystemOneOptions = {
+  /** Defaults to Cloudflare's Clairic. */
+  readonly extractionModel?: DXN.DXN;
+  /** Defaults to Cloudflare's Clef. */
+  readonly decisionModel?: DXN.DXN;
+  readonly thresholds?: Partial<SystemOneThresholds>;
+  /** Send uncertain claims to the LLM extractor (default `true`); without it they are dropped. */
+  readonly fallback?: boolean;
+  /** Claims analysed at once (default 4). */
+  readonly concurrency?: number;
 };
 
 /** Options controlling fact extraction (model, provider, extra rules, strict-mode). */
@@ -38,10 +76,26 @@ export type ExtractOptions = {
    */
   readonly strict?: boolean;
   /**
+   * Whether a thinking model (Haiku 5.5) reasons before answering. Defaults to `true`. Measured on the Effect Discord
+   * export (1,232 messages, 51 transcript requests): with thinking, Haiku emitted 179 facts with 9 minted predicates;
+   * without it, 694 facts with 37 minted predicates used 268 times (167 of them a low-value "says"), for about the same
+   * output tokens (116K against 130K) and cost ($0.120 against $0.118). Turning it off buys recall, not savings, and the
+   * facts are noisier.
+   */
+  readonly thinking?: boolean;
+  /**
    * The predicates the extractor is shown and reuses; a relation none of them fits mints a predicate in the
    * ontology's namespace. Defaults to the seed ontology.
    */
   readonly ontology?: Ontology.Ontology;
+  /**
+   * Only the ontology's predicates are used: a relation none of them fits is dropped rather than minted, so the
+   * graph conforms to the seeded vocabularies.
+   */
+  readonly closed?: boolean;
   /** Entities the extractor is shown by name; a mention that names one is stored under its IRI. */
   readonly entities?: ReadonlyArray<KnownEntity>;
+  /** Defaults to `llm`; `model` and `provider` then name System One's fallback model. */
+  readonly extractor?: Extractor;
+  readonly systemOne?: SystemOneOptions;
 };

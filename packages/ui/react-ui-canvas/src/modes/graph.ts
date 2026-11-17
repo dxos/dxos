@@ -39,7 +39,13 @@ import {
   withTitle,
 } from '../utils/index.ts';
 
-export type GraphNode = { id: string; label?: string; type?: BuiltinNodeType };
+export type GraphNode = {
+  id: string;
+  label?: string;
+  type?: BuiltinNodeType;
+  /** The row the node takes, in place of its rank along the edges (a host's own bands, say). */
+  rank?: number;
+};
 export type GraphEdge = {
   id: string;
   from: string;
@@ -130,15 +136,26 @@ export const graphCenters = (
   };
   const origin =
     options.origin ?? (options.lattice ? latticeOrigin(extent, pitch) : centeredOrigin(extent, pitch, size));
-  return new Map(
-    graph.nodes.map(({ id }) => [
-      id,
-      overlay.positions[id] ?? {
-        x: origin.x + (slots.get(id)?.column ?? 0) * pitch.width,
-        y: origin.y + (slots.get(id)?.row ?? 0) * pitch.height,
-      },
-    ]),
+  const cellOf = ({ x, y }: Point) =>
+    `${Math.round((x - origin.x) / pitch.width)},${Math.round((y - origin.y) / pitch.height)}`;
+  // A node arranged into a cell a placed node holds moves along its row to the next free cell, so the two never stack.
+  const taken = new Set(
+    graph.nodes.flatMap(({ id }) => (overlay.positions[id] ? [cellOf(overlay.positions[id])] : [])),
   );
+  const arranged = graph.nodes
+    .filter(({ id }) => !overlay.positions[id])
+    .map(({ id }) => ({ id, column: slots.get(id)?.column ?? 0, row: slots.get(id)?.row ?? 0 }))
+    .sort((a, b) => a.row - b.row || a.column - b.column);
+  const centers = new Map<string, Point>();
+  for (const { id, column, row } of arranged) {
+    let center = { x: origin.x + column * pitch.width, y: origin.y + row * pitch.height };
+    while (taken.has(cellOf(center))) {
+      center = { x: center.x + pitch.width, y: center.y };
+    }
+    taken.add(cellOf(center));
+    centers.set(id, center);
+  }
+  return new Map(graph.nodes.map(({ id }) => [id, overlay.positions[id] ?? centers.get(id) ?? origin]));
 };
 
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
@@ -202,7 +219,12 @@ const slotsOf = (graph: GraphModel, options: GraphPlacement, cache?: SlotsCache)
   const known = new Set(ids);
   const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
   const ranks = Layout.rank(ids, edges);
-  const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange, options.force);
+  const seed = arrange(
+    new Map(graph.nodes.map(({ id, rank }) => [id, rank ?? ranks.get(id) ?? 0])),
+    edges,
+    options.arrange,
+    options.force,
+  );
   const { nodes, lattice } = options;
   const slots =
     options.arrange === 'routed' && lattice && nodes
@@ -231,7 +253,11 @@ const routedSlots = (
   options: DynamicOptions,
   lattice: LatticeSpec,
 ): Map<string, Slot> => {
-  const key = JSON.stringify([lattice, graph.nodes.map(({ id }) => id), edges.map(({ from, to }) => [from, to])]);
+  const key = JSON.stringify([
+    lattice,
+    graph.nodes.map(({ id, rank }) => [id, rank]),
+    edges.map(({ from, to }) => [from, to]),
+  ]);
   const cached = routedCache.get(key);
   if (cached) {
     return cached;

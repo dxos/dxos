@@ -62,10 +62,93 @@ export const objectEntries = (doc: Scene.SceneDocument): ObjectEntry[] => {
   );
 };
 
+/** Whether an element is a hull: the border as drawn with nothing inside it, or a group's Instance that draws one. */
+const isHull = (element: Scene.Element): boolean => {
+  const canvas: unknown = element.props?.canvas;
+  return (
+    element.type === 'hull' ||
+    (typeof canvas === 'object' && canvas !== null && Reflect.get(canvas, 'hull') !== undefined)
+  );
+};
+
+/** A selected element as its layout resolves it, and the layout that stores it. */
+export type SelectedElement = { element: ReturnType<typeof resolveLayout>[string]; layout: string };
+
+/** The layout a holder's parts are, where it has any the walk has not been through. */
+const partsOf = (
+  doc: Scene.SceneDocument,
+  layout: Scene.LayoutRecord,
+  holder: Scene.Element,
+  seen: ReadonlySet<string>,
+): Scene.LayoutRecord | undefined => {
+  const parts = resolveLayout(doc, layout)[holder.id]?.parts;
+  return parts === undefined || seen.has(parts) ? undefined : findLayout(doc, parts);
+};
+
+/** The groups of the hulls a layout places, and of the hulls inside those: every list whose shapes it draws as its own. */
+const hullGroups = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord): Scene.LayoutRecord[] => {
+  const seen = new Set([layout.id]);
+  const groups: Scene.LayoutRecord[] = [];
+  for (const queue = [layout]; queue.length > 0;) {
+    const current = queue.shift();
+    for (const holder of current ? Object.values(current.elements).filter(isHull) : []) {
+      const group = current && partsOf(doc, current, holder, seen);
+      if (group) {
+        seen.add(group.id);
+        groups.push(group);
+        queue.push(group);
+      }
+    }
+  }
+  return groups;
+};
+
+/**
+ * The element `id` selected in `layout`, and the layout it is stored in: `layout` itself, or the parts of something it
+ * places. A hull's shapes are drawn and selected in the scene but stored with its group, and so is a part of an Object
+ * edited in place, which is stored in the Object's definition. Every hull is looked in first, through the hulls inside
+ * it, and only then any Object: a hull's shapes' ids are the scene's own, where two Objects may each have a part of
+ * one name.
+ */
+export const selectedElement = (
+  doc: Scene.SceneDocument,
+  layout: Scene.LayoutRecord,
+  id: string,
+): SelectedElement | undefined => {
+  const found = (stored: Scene.LayoutRecord): SelectedElement | undefined => {
+    const element = stored.elements[id] && resolveLayout(doc, stored)[id];
+    return element ? { element, layout: stored.id } : undefined;
+  };
+  if (layout.elements[id]) {
+    return found(layout);
+  }
+  const groups = hullGroups(doc, layout);
+  const inHull = groups.flatMap((group) => found(group) ?? [])[0];
+  if (inHull) {
+    return inHull;
+  }
+  const drawn = new Set([layout.id, ...groups.map((group) => group.id)]);
+  for (const scope of [layout, ...groups]) {
+    for (const holder of Object.values(scope.elements).filter((element) => !isHull(element))) {
+      const definition = partsOf(doc, scope, holder, drawn);
+      const part = definition && found(definition);
+      if (part) {
+        return part;
+      }
+    }
+  }
+  return undefined;
+};
+
+/** The hull a row's element is inside, and the scene that hull is drawn in. */
+type Held = { scene: string; group: string };
+
 /**
  * The views tree over a document's scene, as the 2D tree has always read (VIEWS.md §4): its layout as the root row; an
  * element whose parts are a View is that View's row, with the View's path and its contents as children; an element
  * placing a composite shows the composite's parts read-only, each selected inside the composite opened on its own.
+ * A hull is the exception among composites: its shapes are drawn and edited in the scene that places it, so their
+ * rows are not read-only and select where they stand.
  */
 export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): ViewTreeItem => {
   const root = sceneLayout(doc, scene);
@@ -75,12 +158,14 @@ export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): Vi
     prefix: string,
     object: ViewPlace | undefined,
     seen: Set<string>,
+    held?: Held,
   ): ViewTreeItem[] => {
     const resolved = resolveLayout(doc, layout);
     const inObject = object ? { readonly: true, object } : {};
-    // Rows list in drawing order, so a drag among them restacks as it looks.
+    // Rows list front first, as a list of what is drawn reads: the row at the top is what is on top.
     return Object.values(layout.elements)
       .sort(byZ)
+      .reverse()
       .map((element): ViewTreeItem => {
         const item = resolved[element.id];
         const parts = item?.parts === undefined || seen.has(item.parts) ? undefined : findLayout(doc, item.parts);
@@ -92,6 +177,8 @@ export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): Vi
           label: element.label ?? element.id,
           type: item?.type,
           ...inObject,
+          ...held,
+          ...(isHull(element) ? { hull: true } : {}),
         };
         const inside = parts && new Set([...seen, parts.id]);
         if (parts && inside && parts.kind !== 'composite') {
@@ -108,7 +195,11 @@ export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): Vi
           kind: element.type === 'link' ? 'link' : parts ? 'instance' : 'node',
           path,
           children:
-            parts && inside ? rowsOf(parts, path, `${id}/`, { path: [parts.id], isolate: parts.id }, inside) : [],
+            !parts || !inside
+              ? []
+              : isHull(element)
+                ? rowsOf(parts, path, `${id}/`, object, inside, { scene: held?.scene ?? layout.id, group: element.id })
+                : rowsOf(parts, path, `${id}/`, { path: [parts.id], isolate: parts.id }, inside),
         };
       });
   };

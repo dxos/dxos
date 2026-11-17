@@ -16,6 +16,7 @@ import { buildSparql } from '../internal/sparql/query-builder.ts';
 import { type Fact } from '../types/index.ts';
 import * as Mapping from '../types/Mapping.ts';
 import * as FactStoreLive from './fact-store-live.ts';
+import { FactStore } from './fact-store.ts';
 
 const fact = (id: string, over: Partial<Fact> = {}): Fact => ({
   id,
@@ -81,6 +82,23 @@ describe('FactStoreLive', () => {
           expect(facts.map((found) => found.id).sort()).toEqual(['f1', 'f2']);
           expect(facts.find((found) => found.id === 'f1')).toEqual(stored(fact('f1')));
           expect(cursor).toBe('hashA');
+        }),
+      );
+    }),
+  );
+
+  it.effect(
+    'layerFile persists facts across layer lifetimes',
+    Effect.fnUntraced(function* () {
+      yield* withFile((path) =>
+        Effect.gen(function* () {
+          yield* Effect.flatMap(FactStore, (store) => store.putFacts([fact('f1')])).pipe(
+            Effect.provide(FactStoreLive.layerFile(path)),
+          );
+          const facts = yield* Effect.flatMap(FactStore, (store) => store.query({})).pipe(
+            Effect.provide(FactStoreLive.layerFile(path)),
+          );
+          expect(facts.map((found) => found.id)).toEqual(['f1']);
         }),
       );
     }),
@@ -165,6 +183,46 @@ describe('FactStoreLive', () => {
       const selected = yield* store.select(buildSparql({ source: 'dxn:q:m1' }));
       expect(selected.map((found) => termOf(found)).sort()).toEqual(['alice', 'bob']);
       expect(yield* store.select(buildSparql({ source: 'dxn:q:none' }))).toEqual([]);
+    }),
+  );
+
+  it.effect(
+    'answers any SELECT with its solutions, and refuses anything but a SELECT',
+    Effect.fnUntraced(function* () {
+      const store = FactStoreLive.makeMemory();
+      yield* store.putFacts([
+        fact('f1', {
+          assertion: {
+            subject: { kind: 'entity', entity: 'alice', label: 'Alice', type: 'person' },
+            predicate: 'works for',
+            object: { kind: 'entity', entity: 'acme', label: 'Acme', type: 'org' },
+          },
+        }),
+      ]);
+      const people = yield* store.rows(`
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT DISTINCT ?person ?label ?nickname WHERE {
+          GRAPH ?g { ?person a <https://schema.org/Person> . OPTIONAL { ?person rdfs:label ?label } }
+          OPTIONAL { ?person <urn:none> ?nickname }
+        }`);
+      expect(people).toHaveLength(1);
+      const [row] = people;
+      expect(row.person.termType).toBe('NamedNode');
+      expect(row.person.value).toContain('alice');
+      expect(row.label).toEqual({ termType: 'Literal', value: 'Alice' });
+      // An unbound variable is absent, so a row serializes without `undefined`s.
+      expect('nickname' in row).toBe(false);
+
+      const counted = yield* store.rows('SELECT (COUNT(?g) AS ?n) WHERE { GRAPH ?g { ?s ?p ?o } }');
+      expect(counted[0]?.n?.termType).toBe('Literal');
+
+      const update = yield* store.rows('DELETE WHERE { GRAPH ?g { ?s ?p ?o } }').pipe(Effect.flip);
+      expect(update).toBeInstanceOf(SemanticIndexError);
+      // `select` runs the same engine, so it refuses an update too rather than deleting the store.
+      const selected = yield* store.select('DELETE WHERE { GRAPH ?g { ?s ?p ?o } }').pipe(Effect.flip);
+      expect(selected).toBeInstanceOf(SemanticIndexError);
+      expect(yield* store.query({})).toHaveLength(1);
+      expect(yield* store.rows('this is not sparql').pipe(Effect.flip)).toBeInstanceOf(SemanticIndexError);
     }),
   );
 

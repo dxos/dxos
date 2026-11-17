@@ -1,0 +1,23 @@
+---
+title: DragHandle
+description: "The grip, drop line and drag preview for drag and drop."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/drag-handle" height="14.75rem" narrow />
+
+```ts
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+```
+
+These are the visible parts of a drag. The caller binds them to its own drag-and-drop logic.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `DragHandle.DragHandle` | The six-dot grip button |
+| `DragHandle.DropIndicator` | A line on the edge of a drop target |
+| `DragHandle.DragPreview` | The chip shown under the pointer while dragging |
+| `DragHandle.dragScope` | The data scope the parts share |

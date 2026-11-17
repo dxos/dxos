@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { CallsCapabilities } from '#types';
 
@@ -31,7 +31,10 @@ type LobbyRootProps = PropsWithChildren<Util.ThemedClassName>;
 // TODO(burdon): Make headless?
 const LobbyRoot = ({ children }: LobbyRootProps) => {
   return (
-    <Layout.Flex column classNames='relative grow overflow-hidden group'>
+    <Layout.Flex
+      column
+      classNames={mx('relative grow overflow-hidden', hoverableControls, hoverableFocusedWithinControls)}
+    >
       {children}
     </Layout.Flex>
   );

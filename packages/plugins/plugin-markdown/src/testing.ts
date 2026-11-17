@@ -11,8 +11,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { SpaceProperties } from '@dxos/client-protocol';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Collection, Feed } from '@dxos/echo';
+import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
 import { rootCollectionRule } from '@dxos/plugin-space/testing';
 import { HasSubject } from '@dxos/types';
 
@@ -23,7 +25,7 @@ export * as MarkdownPlugin from '#meta';
 
 export const testToolkit = Toolkit.empty as Toolkit.Toolkit<any>;
 
-/** The host's capability manager, carrying the default-parent rule that files a document into the root collection. */
+/** The host's capability manager, carrying the default-parent rule plugin-space's `AddObject` files a document by. */
 const makeCapabilities = () => {
   const manager = CapabilityManager.make({ registry: Registry.make() });
   manager.contribute({ module: 'test', interface: AppCapabilities.DefaultParent, implementation: rootCollectionRule });
@@ -31,12 +33,12 @@ const makeCapabilities = () => {
 };
 
 /**
- * Shared layer for the operation tests: every markdown handler and the types they touch, with no
- * language model. Defined once so a `.test.ts` per handler does not restate it.
+ * Shared layer for the operation tests: every markdown handler, plugin-space's (which file what markdown creates),
+ * and the types they touch, with no language model. Defined once so a `.test.ts` per handler does not restate it.
  */
 export const OperationTestLayer = AssistantTestLayer({
   extraServices: Layer.succeed(Capability.Service, makeCapabilities()),
-  operationHandlers: MarkdownOperationHandlerSet.handlers,
+  operationHandlers: OperationHandlerSet.merge(MarkdownOperationHandlerSet.handlers, SpaceOperationHandlerSet.handlers),
   types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
   disableLlmMemoization: true,
 });
