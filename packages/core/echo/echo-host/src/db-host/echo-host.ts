@@ -1619,13 +1619,15 @@ export class EchoHost extends Resource {
     }
 
     // A new root meanwhile cleared this collection and scheduled the announcement of its own.
+    const collectionId = deriveCollectionIdFromSpaceId(spaceId, spaceRootId);
     if (this._spaceStateManager.getSpaceRootDocumentId(spaceId) !== spaceRootId) {
       return;
     }
-    await this._automergeHost.updateLocalCollectionState(
-      deriveCollectionIdFromSpaceId(spaceId, spaceRootId),
-      announced,
-    );
+    await this._automergeHost.updateLocalCollectionState(collectionId, announced);
+    // The publication reads heads before it registers the collection, so a root change during it is undone here.
+    if (this._spaceStateManager.getSpaceRootDocumentId(spaceId) !== spaceRootId) {
+      await this._automergeHost.clearLocalCollectionState(collectionId);
+    }
   }
 
   /**

@@ -11,7 +11,7 @@ import {
 } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DatabaseDirectory, EncodedReference, SpaceDocVersion } from '@dxos/echo-protocol';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
@@ -135,13 +135,14 @@ describe('EchoHost.syncFirst', () => {
     // Linked, but never stored here: documents still to arrive from a peer.
     const referencedUrl = generateAutomergeUrl();
     const unrelatedMissingUrl = generateAutomergeUrl();
+    const links: Record<string, AutomergeUrl> = {
+      [shown]: shownUrl,
+      [referenced]: referencedUrl,
+      [unrelated]: unrelatedUrl,
+      [unrelatedMissing]: unrelatedMissingUrl,
+    };
     root.change((draft: DatabaseDirectory) => {
-      draft.links = {
-        [shown]: new A.RawString(shownUrl),
-        [referenced]: new A.RawString(referencedUrl),
-        [unrelated]: new A.RawString(unrelatedUrl),
-        [unrelatedMissing]: new A.RawString(unrelatedMissingUrl),
-      };
+      draft.links = Object.fromEntries(Object.entries(links).map(([id, url]) => [id, new A.RawString(url)]));
     });
     const everything = ids(root.url, shownUrl, referencedUrl, unrelatedUrl, unrelatedMissingUrl);
     const listed = announced(everything);
@@ -155,6 +156,9 @@ describe('EchoHost.syncFirst', () => {
       shown,
       referenced,
       unrelated,
+      links,
+      collectionId,
+      written,
       announced,
       createObjectDoc,
       everything,
@@ -197,5 +201,56 @@ describe('EchoHost.syncFirst', () => {
     const rest = announced(everything);
     host.syncFirst(spaceId, unrelated);
     await rest;
+  });
+
+  test('a root change during a publication leaves the old collection cleared', async () => {
+    const { host, spaceId, shown, links, collectionId, written, shownFirst } = await setup();
+    const automergeHost = host['_automergeHost'];
+
+    // The sync-first publication is held in its read of heads, before it registers the collection, while the root
+    // changes and clears that collection.
+    const held = new Trigger();
+    const release = new Trigger();
+    let holding = false;
+    const getHeads = automergeHost.getHeads.bind(automergeHost);
+    automergeHost.getHeads = async (documentIds) => {
+      if (holding) {
+        holding = false;
+        held.wake();
+        await release.wait();
+      }
+      return getHeads(documentIds);
+    };
+    const publish = automergeHost.updateLocalCollectionState.bind(automergeHost);
+    automergeHost.updateLocalCollectionState = (publishedId, documentIds) => {
+      holding = publishedId === collectionId && [...documentIds].sort().join() === shownFirst.join();
+      return publish(publishedId, documentIds);
+    };
+
+    host.syncFirst(spaceId, shown);
+    await held.wait();
+
+    using next = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId },
+      objects: {},
+      links: {},
+    });
+    next.change((draft: DatabaseDirectory) => {
+      draft.links = Object.fromEntries(Object.entries(links).map(([id, url]) => [id, new A.RawString(url)]));
+    });
+    await host.flush(Context.default());
+    const nextCollectionId = deriveCollectionIdFromSpaceId(spaceId, next.documentId);
+    const moved = host['_spaceStateManager'].spaceDocumentListUpdated.waitFor(
+      (event) => event.spaceId === spaceId && event.spaceRootId === next.documentId,
+    );
+    await host.updateSpaceRoot(Context.default(), spaceId, next.url);
+    await moved;
+
+    // The next announcement runs after the held one, so once it is written the held one has finished.
+    const nextAnnounced = written.waitFor((update) => update.collectionId === nextCollectionId);
+    release.wake();
+    await nextAnnounced;
+    expect(automergeHost.getLocalCollectionState(collectionId)).toBeUndefined();
   });
 });
