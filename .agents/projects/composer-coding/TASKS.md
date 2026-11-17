@@ -52,7 +52,24 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
       imported, attached to its task, task moved to `review`. The space's existing `ghu_` user token was
       enough once the installation existed (a user token's access is the user's AND the installation's).
 - [x] Run 5 correctly refused a task whose code exists only on an unmerged branch (no PR, task blocked).
-- [ ] The same on dxos/edge (DoD 2): the App is installed there too; needs an edge-side task.
+- [x] Run 7 (DoD 2): the user's sample task "Rework space selection for mcp auth" → draft PR dxos/edge#1540
+      (names, hides deleted spaces, "authorize future spaces"), attached, task in `review`.
+- [ ] edge#1540 adds `DataService.getDeletedSpaceIds` to db-service: db-service must deploy before
+      hub-service, or the list still shows deleted spaces (agent's note).
+- [ ] A CLI session from `delegateToCli` keeps a snapshot of the spaces and does not follow new ones, even
+      when the grant says "all future spaces" (agent's note on edge#1540).
+
+## Phase 4: Control surfaces
+
+- [x] `dx` built from source (overlaying dxos#14313's CLI files, not committed), logged in through the dev
+      MCP's `delegateToCli`, `dx mcp call whoami` works.
+- [x] Comparison of MCP operations, `runScript` and `dx` on one measured workload:
+      [DXOS agent control surfaces](https://claude.ai/artifact/WEsqt8gxWCMgXuavJJnk4C). Verdict: `runScript`
+      for multi-step jobs, `dx` for large or persistent output, direct operations for discovery.
+- [ ] Rework `dx mcp delegate` into a login (user direction); queued as a suggested task, PR #14313 is
+      another session's.
+- [x] Stacked: dxos#14557 on dxos#14555 (updated from main), edge#1537 on edge#1535. `gh stack` exists
+      as an extension but this session may use `gh` only for search.
 
 ## Phase 3: Gaps
 
