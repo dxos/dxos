@@ -469,7 +469,6 @@ export const PublishSpace = Operation.make({
   }),
 });
 
-/** Takes a space's publication down and forgets it. */
 export const UnpublishSpace = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.removePublication'),

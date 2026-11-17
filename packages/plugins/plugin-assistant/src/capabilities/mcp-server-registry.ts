@@ -13,7 +13,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 /**
  * Adds the MCP servers plugins ship to `client.graph.registry` as keyed connections, where chats and
- * the agent runtime find them; a server already added is not added again. A read-only host adds none.
+ * the agent runtime find them; a server already added is not added again.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

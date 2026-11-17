@@ -21,7 +21,6 @@ import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar/index.ts';
 
 export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
   const { t } = Hooks.useTranslation(DeckNamespace.key);
-  // A banner forced by the `banner` option is informational: it carries no command search.
   const informational = AppHooks.useCapability(DeckCapabilities.Banner);
 
   return (
@@ -35,7 +34,6 @@ export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?:
     >
       {variant === 'sidebar' ? <CloseSidebarButton /> : <ToggleSidebarButton />}
       {informational ? (
-        // The landing page's wordmark; its ink is all x-height, so it is lifted to centre on the toggle.
         <span
           className='self-center grow ms-1 text-2xl leading-none lowercase relative -top-[0.125em]'
           style={{ fontFamily: 'Poiret One' }}

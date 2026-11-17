@@ -63,7 +63,6 @@ export default Capability.makeModule(
         id: 'routineRuns',
         relation: AppNode.companion,
         type: Routine.Routine,
-        // Runs are this device's history, and a read-only host runs nothing.
         connector: (_, get) =>
           Effect.succeed(
             get(readOnly)

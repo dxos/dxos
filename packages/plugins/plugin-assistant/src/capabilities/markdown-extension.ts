@@ -18,7 +18,6 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
-      // A read-only host offers no Run: running a prompt starts a chat.
       ({ document: doc, viewMode }) => {
         if (viewMode === 'source' || ReadOnly.isActive(capabilities)) {
           return undefined;

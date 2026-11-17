@@ -73,13 +73,9 @@ const whenPromptHost = GraphNodeMatcher.whenAny(
   GraphNodeMatcher.whenNodeType(SpaceSchema.SPACE_HOME_NODE_TYPE),
 );
 
-/** Whether the host is read-only; a builder without a host reads as writable. */
 const WRITABLE: Atom.Atom<boolean> = Atom.make(false);
 
-/**
- * A prompt node under every node that hosts a chat prompt, where other plugins file prompt actions. A read-only host
- * has no prompt.
- */
+/** A prompt node under every node that hosts a chat prompt, where other plugins file prompt actions. */
 export const createPromptExtension = (readOnly = WRITABLE) =>
   AppGraphBuilder.createExtension({
     id: 'prompt',
@@ -87,7 +83,7 @@ export const createPromptExtension = (readOnly = WRITABLE) =>
     connector: () => Effect.succeed([AppNode.makePrompt()]),
   });
 
-/** The assistant panel in each space's settings section; a read-only host has none. */
+/** The assistant panel in each space's settings section. */
 export const createSpaceSettingsExtension = (readOnly = WRITABLE) =>
   AppGraphBuilder.createExtension({
     id: 'spaceSettingsAssistant',
@@ -106,10 +102,6 @@ export const createSpaceSettingsExtension = (readOnly = WRITABLE) =>
       ]),
   });
 
-/**
- * The AI group under each space, which other plugins hang their sections off, and the space's Chats section in it. A
- * read-only host lists the chats with no create action.
- */
 export const createChatSectionExtensions = (readOnly = WRITABLE) =>
   Effect.all([
     AppGraphBuilder.createExtension({
@@ -177,10 +169,6 @@ export const createChatSectionExtensions = (readOnly = WRITABLE) =>
     }),
   ]).pipe(Effect.map((extensions) => extensions.flat()));
 
-/**
- * The assistant's graph. A read-only host gets the AI group and its chats and nothing else: no companion, prompt,
- * trace, settings or chat actions.
- */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const readOnly = yield* ReadOnly.atom;

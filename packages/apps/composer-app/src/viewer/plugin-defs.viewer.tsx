@@ -43,11 +43,6 @@ export type ViewerPluginConfig = ViewerPluginOptions & {
   observability: Promise<Observability.Observability>;
 };
 
-/**
- * The read-only viewer's plugin set. {@link ViewerPlugin} contributes the app-wide read-only capability,
- * and each plugin decides from it how it reads; a plugin with nothing to show read-only (comments,
- * calls, history) is left out.
- */
 export const getPlugins = ({
   client,
   config,

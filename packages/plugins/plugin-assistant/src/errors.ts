@@ -13,5 +13,4 @@ export class CommentThreadNotPersistedError extends BaseError.extend(
   'The comment thread is not in a database.',
 ) {}
 
-/** An agent turn was asked of a read-only host, which runs none. */
 export class ReadOnlyHostError extends BaseError.extend('ReadOnlyHostError', 'A read-only host runs no agent turns.') {}

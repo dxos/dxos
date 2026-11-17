@@ -65,8 +65,6 @@ export default Capability.makeModule(
       Surface.create({
         id: 'card.remoteSession',
         position: Position.first,
-        // A session's card offers its resume command, which only its own harness can use, so a read-only host
-        // falls through to the generic card.
         filter: AppSurface.object(
           AppSurface.CardContent,
           RemoteSession.RemoteSession,

@@ -2,9 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// Worker-only: `build:functions` emits each `.wasm` beside `_worker.js`, where wrangler compiles it into
-// a module, and inlines each font as bytes.
-
 import inter400 from '@fontsource/inter/files/inter-latin-400-normal.woff';
 import inter600 from '@fontsource/inter/files/inter-latin-600-normal.woff';
 import inter400Ext from '@fontsource/inter/files/inter-latin-ext-400-normal.woff';

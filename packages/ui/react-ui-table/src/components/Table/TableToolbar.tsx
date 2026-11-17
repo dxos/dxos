@@ -119,7 +119,6 @@ export const TableToolbar = Util.composable<HTMLDivElement, TableToolbarProps>(
     const registry = useContext(RegistryContext);
     const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty, readonly }), []);
 
-    // Update the state when the props change.
     useEffect(() => {
       registry.set(stateAtom, { viewDirty, readonly });
     }, [registry, stateAtom, viewDirty, readonly]);

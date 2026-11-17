@@ -51,10 +51,6 @@ import {
 const isUnprovisionedAssistantCompanion = (data: { subject?: unknown; variant?: unknown }) =>
   data.subject == null && data.variant === ASSISTANT_COMPANION_VARIANT;
 
-/**
- * The assistant's surfaces. On a read-only host a chat reads as its transcript, and every surface that prompts, edits,
- * configures or runs an agent renders nothing.
- */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [

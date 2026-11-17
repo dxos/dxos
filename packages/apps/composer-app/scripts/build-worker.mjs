@@ -3,10 +3,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// Bundles the Cloudflare worker (`src/functions/_worker.ts`) to `out/composer/_worker.js`. Runs after `vite build`,
-// which empties `out/composer`. The config plugin gives the worker the same `dx.yml`, `dx-env.yml` and (outside
-// production) `dx-local.yml` the page is built with, so both reach the same EDGE.
-
 import { build } from 'esbuild';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

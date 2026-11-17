@@ -31,7 +31,6 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'quickEntry',
-        // Quick entry appends to today's journal entry, so a read-only host has no use for it.
         match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot),
         actions: () =>
           Effect.succeed([

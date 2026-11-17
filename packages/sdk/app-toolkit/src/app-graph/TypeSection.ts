@@ -273,7 +273,6 @@ const createExtensions = <T extends Type.AnyObj>(
             role: 'branch',
             draggable: false,
             droppable: false,
-            // A fixed sort or a read-only host takes no drops; otherwise objects of the type reorder by drag.
             canDrop: fixedOrder ? (): boolean => false : canDropSameType,
             ...(fixedOrder ? {} : { onRearrange: makeSectionRearrangeCallback(space, typename) }),
             space,

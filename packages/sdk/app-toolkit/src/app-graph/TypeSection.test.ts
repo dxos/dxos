@@ -89,7 +89,6 @@ describe('createTypeSectionExtension', () => {
   });
 
   describe('on a read-only host', () => {
-    /** A space holding one book under the graph's root, expanded down to its section and the section's actions. */
     const setup = async (readOnly: boolean) => {
       const client = await new Client({ types: [Book] }).initialize();
       onTestFinished(() => client.destroy());
@@ -99,7 +98,6 @@ describe('createTypeSectionExtension', () => {
       space.db.add(Obj.make(Book, { title: 'Published' }));
       await space.db.flush({ indexes: true });
 
-      // The plugin manager and the graph builder share one registry, as in the app.
       const registry = Registry.make();
       const manager = CapabilityManager.make({ registry });
       if (readOnly) {

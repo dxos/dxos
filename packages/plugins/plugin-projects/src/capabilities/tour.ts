@@ -20,7 +20,6 @@ export default Capability.makeModule(
     return Capability.contribute(AppCapabilities.Tour, {
       id: `${ProjectsNamespace.key}.tour.project`,
       label: ['project-tour.label', { ns: ProjectsNamespace.key }],
-      // Its steps point at the controls that edit and delegate, which a read-only host leaves out.
       matches: (data) => !ReadOnly.isActive(manager) && isProject(data),
       auto: true,
       steps,

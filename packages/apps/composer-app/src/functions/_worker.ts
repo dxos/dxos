@@ -374,7 +374,6 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
     );
   }
 
-  // The read-only viewer is a second page of the same build, served for every route on its own host.
   if (isViewerHost(url.hostname)) {
     // `/viewer`, not `/viewer.html`: the asset server answers the `.html` path with a redirect to it.
     const page = await env.ASSETS.fetch(new Request(new URL('/viewer', url), request));
@@ -384,7 +383,6 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
   return withLinkPreview(request, page, url);
 };
 
-/** Hosts that serve published spaces (`view.composer.space` and its per-environment twins). */
 export const isViewerHost = (hostname: string): boolean => hostname.startsWith('view.');
 
 /**
@@ -396,10 +394,6 @@ const withLinkPreview = async (request: Request, page: Response, url: URL): Prom
   return title && isPreviewable(request, page) ? rewritePreview(page, title) : page;
 };
 
-/**
- * Name a viewer page for crawlers after what it opens: an object the manifest titles (or the URL's
- * `title`), else the published space, described as its card is and with that card as the preview image.
- */
 const withPublicationPreview = async (request: Request, page: Response, url: URL, env: Env): Promise<Response> => {
   const publicId = publicIdOf(url);
   const edge = edgeUrl();
@@ -415,7 +409,6 @@ const withPublicationPreview = async (request: Request, page: Response, url: URL
   if (!title) {
     return page;
   }
-  // A link to an object the manifest does not describe draws the space, but must not borrow its description.
   const described = card && (card.kind === 'object' || !object) ? card.description : undefined;
   return rewritePreview(page, title, {
     description:
@@ -424,7 +417,6 @@ const withPublicationPreview = async (request: Request, page: Response, url: URL
   });
 };
 
-/** Draws preview cards with icons from the build's own Phosphor assets. */
 const previewRenderer =
   (request: Request, env: Env): RenderPreview =>
   (card) =>

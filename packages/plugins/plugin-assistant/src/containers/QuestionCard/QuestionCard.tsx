@@ -30,8 +30,7 @@ export type QuestionCardProps = {
  * The card body for a question in a task's history, answered through `AnswerQuestion` so the
  * conversation that asked is resumed.
  *
- * The body ONLY — the host draws `Card.Root` and the header. A read-only host shows the question and any answer, with
- * no way to answer.
+ * The body ONLY — the host draws `Card.Root` and the header.
  */
 export const QuestionCard = ({ task, questionId }: QuestionCardProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);

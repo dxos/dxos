@@ -86,7 +86,6 @@ export class TablePresentation<T extends TableRow = TableRow> {
           cell.readonly = 'text-select';
         });
       } else if (plane === 'frozenColsStart') {
-        // Pinned data columns sit beside the selection column, which keeps its own setting.
         Object.values<DxGridCellValue>(cells).forEach((cell) => {
           cell.readonly ||= 'text-select';
         });

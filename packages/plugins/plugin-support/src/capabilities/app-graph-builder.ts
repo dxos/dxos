@@ -58,7 +58,6 @@ export default Capability.makeModule(
       return !settingsAtom || !get(settingsAtom).hideHelpCompanions;
     };
 
-    // Read-only, the root offers only the Help companions: its actions and deck tabs write, or start a tour.
     const readOnly = yield* ReadOnly.atom;
     const whenWritableRoot = ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot);
 

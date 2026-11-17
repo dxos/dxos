@@ -281,7 +281,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
         const container = AppNode.getListOf(Option.getOrUndefined(get(appGraph.graph.node(parentId))));
 
-        // An object has a public link only while its space is published.
         const [client] = get(clientAtom);
         const db = Obj.getDatabase(object);
         const space = publication && db && client?.spaces.get(db.spaceId);
@@ -521,7 +520,6 @@ const constructObjectActions = ({
                   log.warn('object has no public link', { nodeId, published: !!receipt });
                   return;
                 }
-                // The link swaps the workspace for the public id; the object path is Composer's own.
                 const url = Publication.viewerUrl(
                   publication.viewerOrigin,
                   receipt.publicId,

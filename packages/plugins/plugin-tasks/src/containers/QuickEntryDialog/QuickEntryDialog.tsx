@@ -134,7 +134,6 @@ export const QuickEntryDialog = () => {
     }
   }, []);
 
-  // Quick entry writes to today's journal entry.
   if (readOnly) {
     return null;
   }

@@ -4,7 +4,6 @@
 
 import { BaseError } from '@dxos/errors';
 
-/** The host is read-only, so no ticket can be created. */
 export class ReadOnlyError extends BaseError.extend('ReadOnlyError', 'The app is read-only') {}
 
 /** No support service is configured, so nothing can file the report. */

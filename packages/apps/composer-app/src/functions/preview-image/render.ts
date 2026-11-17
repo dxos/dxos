@@ -12,23 +12,19 @@ import { type Card, HEIGHT, type Icons, WIDTH, iconKey, iconsOf, layout } from '
  * modules its bundler compiled; Node passes the bytes.
  */
 export type RenderAssets = {
-  /** Satori's layout engine, `satori/yoga.wasm`. */
   layout: WebAssembly.Module | BufferSource;
-  /** `@resvg/resvg-wasm/index_bg.wasm`. */
   resvg: WebAssembly.Module | BufferSource;
   fonts: Font[];
 };
 
 export type RenderOptions = {
   assets: RenderAssets;
-  /** An icon's SVG markup by Phosphor icon id, or `undefined` when it cannot be found. */
   loadIcon: (id: string) => Promise<string | undefined>;
 };
 
 /** Both engines keep their instance at module scope, and each may be initialised only once. */
 let ready: Promise<void> | undefined;
 
-/** Draws a card as a 1200×630 PNG, the size link previews expect. */
 export const renderCard = async (card: Card, { assets, loadIcon }: RenderOptions): Promise<Uint8Array<ArrayBuffer>> => {
   ready ??= Promise.all([initSatori(assets.layout), initWasm(assets.resvg)]).then(
     () => undefined,
@@ -53,7 +49,6 @@ export const renderCard = async (card: Card, { assets, loadIcon }: RenderOptions
   }
 };
 
-/** The card's icons, coloured; one that fails to load is drawn without. */
 export const loadIcons = async (card: Card, loadIcon: RenderOptions['loadIcon']): Promise<Icons> => {
   const entries = await Promise.all(
     iconsOf(card).map(async ({ id, color }) => {
@@ -68,7 +63,6 @@ export const loadIcons = async (card: Card, loadIcon: RenderOptions['loadIcon'])
 /** Phosphor draws in `currentColor`, which an image has no way to inherit. */
 const colorize = (svg: string, color: string): string => svg.replaceAll('currentColor', color);
 
-/** Where Composer's build serves a Phosphor icon (`ph--<name>--<weight>`), or `undefined` for another id. */
 export const phosphorPath = (id: string): string | undefined => {
   const match = /^ph--([a-z0-9-]+)--(regular|bold|duotone|fill|light|thin)$/.exec(id);
   if (!match) {

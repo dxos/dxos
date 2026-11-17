@@ -53,7 +53,6 @@ const config: Plugin.PluginConfig<NavTreeCapabilities.NavTreePluginOptions> =
       ),
       Capability.lazyModule(
         'RaillessLayout',
-        // Writes the layout's sizes on the document before the shell renders.
         { activatesOn: ActivationEvents.Startup, provides: [], environments: ['browser', 'tauri'] },
         () => import('./src/capabilities/railless-layout.ts', { with: { type: 'module-url' } }),
       ),

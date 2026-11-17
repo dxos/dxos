@@ -17,7 +17,6 @@ import { SlidePreviewArticle } from '../SlidePreviewArticle/SlidePreviewArticle.
 export type SlideObjectArticleProps = AppSurface.ObjectArticleProps<Presentation.Slide>;
 
 /**
- * A slide opened on its own: its markdown in the slide editor, or a linked object in that object's own article.
  * A read-only host shows the slide's preview instead.
  */
 export const SlideObjectArticle = ({ role, subject: slide, attendableId }: SlideObjectArticleProps) => {

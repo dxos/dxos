@@ -96,19 +96,15 @@ describe('project app graph builder', () => {
 
 const SUBJECT_ID = 'subject';
 
-/** An extension factory's output, built against the plugin manager the test hands it. */
 type Extensions = Effect.Effect<AppGraphBuilder.BuilderExtension[], never, Capability.Service>;
 
 type SubjectOptions = {
   type?: string;
-  /** Contributes `ReadOnly` to the plugin manager, as a read-only host does. */
   readOnly?: boolean;
 };
 
 /** Graph holding one node whose data is `subject`, so the extension's match runs against it. */
 const setupSubject = async (subject: unknown, extensions: Extensions, { type = 'test', readOnly }: SubjectOptions) => {
-  // One registry for both: in the app the plugin manager and the graph builder share it, and a capability atom read
-  // through a different registry never sees the contributions.
   const registry = Registry.make();
   const manager = CapabilityManager.make({ registry });
   if (readOnly) {

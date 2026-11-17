@@ -43,14 +43,12 @@ export type SpaceHomeSectionProps = {
   space: Space;
 };
 
-/** A read-only home's dashboard: what a space holds, without who worked on it or when, and nothing to dismiss. */
 const READ_ONLY_STATS = ['objects', 'types', 'collections'] as const;
 
 /** Home sections are individually dismissible per space, which is durable UI state. */
 export const SpaceHomeRecentSurface = ({ space }: SpaceHomeSectionProps) => {
   const readOnly = ToolkitHooks.useReadOnly();
   const { visible, hide } = ToolkitHooks.useHomeVisibility(space, 'spaceHomeRecent');
-  // Read-only, there is nothing to dismiss.
   if (readOnly) {
     return <SpaceHomeRecent space={space} />;
   }

@@ -39,7 +39,6 @@ export const TldrawArticle = ({
   const [settings, updateSettings] = Hooks.useAtomCapabilityState(TldrawCapabilities.Settings);
   const id = Obj.getURI(drawing as Obj.Any);
   const { hasAttention } = useAttention(attendableId);
-  // A read-only app shows the drawing in tldraw's read-only mode, with the camera still free.
   const readonly = ToolkitHooks.useReadOnly();
   const embedded = role === AppSurface.Section.role;
   const slide = role === AppSurface.Slide.role;

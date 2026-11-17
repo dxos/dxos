@@ -30,7 +30,7 @@ import { ASSISTANT_COMPANION_VARIANT } from '../constants.ts';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats
- * for active planks when the assistant companion is selected. A read-only host provisions none.
+ * for active planks when the assistant companion is selected.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

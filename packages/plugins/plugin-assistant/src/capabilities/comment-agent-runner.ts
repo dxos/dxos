@@ -22,7 +22,7 @@ import { CommentThreadNotPersistedError, ReadOnlyHostError } from '../errors.ts'
  * Runs a comment thread's agent turns as ordinary assistant turns: one chat per thread, parented to the thread and
  * running on the thread's own feed, with the commented object bound so its type's skills apply. A run returns once the
  * turn has settled, with the turn's final reply: the turn itself writes only trajectory events, which comment readers
- * do not show. A read-only host refuses the run.
+ * do not show.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

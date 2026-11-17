@@ -50,7 +50,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.PublishSpace> = Space
         preview,
       };
 
-      // The space id rides only the authed write, so EDGE can check the caller's role in it.
       const receipt = yield* upload(client, { spaceId: space.id, manifest, archive: text }, previous?.publicId);
       Obj.update(space.properties, (properties) => {
         Annotation.set(properties, Publication.ReceiptAnnotation, { ...receipt });

@@ -93,7 +93,6 @@ export const ExcalidrawArticle = ({
   onCameraChange,
 }: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
-  // A read-only app shows the drawing in Excalidraw's view mode and writes nothing back.
   const readonly = ToolkitHooks.useReadOnly();
   const containerRef = useRef<HTMLDivElement>(null);
   const themeMode = Hooks.useThemeMode();

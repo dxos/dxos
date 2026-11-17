@@ -19,8 +19,7 @@ export type EdgeAiClient = {
 
 /**
  * The EDGE client AI requests go through. Resolved lazily, on the first request: AI providers are set up
- * before the Client capability and the user's identity exist, so requiring them up front would throw. A read-only host
- * sends no AI request to EDGE.
+ * before the Client capability and the user's identity exist, so requiring them up front would throw.
  */
 export const makeEdgeAiClient = (manager: CapabilityManager.CapabilityManager): EdgeAiClient => {
   let edgeClient: EdgeHttpClient | undefined;

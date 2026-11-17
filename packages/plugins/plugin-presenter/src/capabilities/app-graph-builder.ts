@@ -69,10 +69,7 @@ export const createSectionsExtension = () =>
     },
   });
 
-/**
- * An owned slide's companion shows the rendered slide beside its editor. A read-only host has none: the slide itself
- * opens as its preview.
- */
+/** An owned slide's companion shows the rendered slide beside its editor. */
 export const createSlidePreviewExtension = (readOnly: Atom.Atom<boolean>) =>
   AppGraphBuilder.createExtension({
     id: 'slidePreview',
@@ -98,10 +95,7 @@ export const createSlidePreviewExtension = (readOnly: Atom.Atom<boolean>) =>
       ]),
   });
 
-/**
- * A slide can be hidden from (or shown in) the presentation, from the navtree and the context menu. A read-only host
- * has no such action, since hiding a slide writes to the deck.
- */
+/** A slide can be hidden from (or shown in) the presentation, from the navtree and the context menu. */
 export const createSlideActionsExtension = (readOnly: Atom.Atom<boolean>) =>
   AppGraphBuilder.createExtension({
     id: 'slideActions',

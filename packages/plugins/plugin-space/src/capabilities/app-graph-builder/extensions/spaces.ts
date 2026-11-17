@@ -385,7 +385,6 @@ export const createSpaceExtensions = Effect.fnUntraced(function* ({
 // Helpers
 //
 
-/** Root actions on the active space's publication; only offered where the host enables publishing. */
 const createPublicationActions = (
   capabilities: CapabilityManager.CapabilityManager,
   publication: SpaceSchema.PublicationOptions,

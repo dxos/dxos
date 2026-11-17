@@ -533,7 +533,7 @@ const MilestoneList = ({ refs, tasks, onOpen }: MilestoneListProps) => (
   </Layout.Container>
 );
 
-/** The Specs tab of a project without a spec: the offer to add one, when `onAdd` is given. */
+/** The Specs tab of a project without a spec: the offer to add one. */
 const AddSpec = ({ onAdd }: { onAdd?: () => void }) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   return (
@@ -553,13 +553,12 @@ type SpecPickerActionsProps = {
   /** The spec shown; no picker without one. */
   selected?: Spec.Spec;
   onSelect: (spec: Spec.Spec) => void;
-  /** Ends the dropdown in an action to add another spec. */
   onAdd?: () => void;
 };
 
 /**
  * A dropdown of the project's specs, each with the specs nested beneath it indented under it, named after the one shown
- * and checking it, ending in an action to add another when `onAdd` is given.
+ * and checking it, ending in an action to add another.
  */
 const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerActionsProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
@@ -766,7 +765,6 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
 
 export type ToolbarActionsProps = {
   project: Project.Project;
-  /** Leaves out the delegate action. */
   readonly: boolean;
   /** The tab shown, whose tools follow the tabs. */
   tab: ProjectView.Tab;

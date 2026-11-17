@@ -348,7 +348,6 @@ export const TaskSetArticle = ({
       checked={checked}
       collapsed={collapsed}
       selected={currentId}
-      // The list offers only the affordances whose callbacks are wired, so read-only wires none that write.
       getTaskActions={readonly ? undefined : getTaskActions}
       getDelegateActions={readonly ? undefined : getDelegateActions}
       onTaskCheck={onTaskCheck}
@@ -457,8 +456,8 @@ const useFilterQuery = (
  * otherwise share a selection. The set lives in view state rather than in the article because the
  * host's toolbar reads it too — neither the rows nor the toolbar owns it.
  *
- * Offered only when a plugin contributes a {@link TasksCapabilities.TaskAction} and the list is editable: the
- * checkbox marks which rows an action will act on, so with nothing to act on it is an affordance that does nothing.
+ * Offered only when a plugin contributes a {@link TasksCapabilities.TaskAction}: the checkbox marks
+ * which rows an action will act on, so with nothing to act on it is an affordance that does nothing.
  */
 const useCheckedTasks = (taskSet: TaskSet.TaskSet, readonly: boolean) => {
   const actions = Hooks.useCapabilities(TasksCapabilities.TaskAction);

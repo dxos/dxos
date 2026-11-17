@@ -2,10 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-/** A theme hue as the image paints it: a tile, a bar segment and a mark on white. */
 export type Swatch = { tint: string; fill: string; ink: string };
 
-/** Composer's hue names at Tailwind's 100, 500 and 700 stops; an image cannot read the theme's CSS. */
 const SWATCHES: Record<string, Swatch> = {
   amber: { tint: '#fef3c7', fill: '#f59e0b', ink: '#b45309' },
   blue: { tint: '#dbeafe', fill: '#3b82f6', ink: '#1d4ed8' },
@@ -27,9 +25,7 @@ const SWATCHES: Record<string, Swatch> = {
   yellow: { tint: '#fef9c3', fill: '#eab308', ink: '#a16207' },
 };
 
-/** Types with no hue of their own take these in turn, so neighbouring bar segments stay distinct. */
 const ROTATION = ['indigo', 'teal', 'amber', 'rose', 'sky', 'lime'];
 
-/** The hue's swatch; an unknown hue is neutral, or the `index`th of the rotation when one is given. */
 export const swatch = (hue: string | undefined, index?: number): Swatch =>
   (hue && SWATCHES[hue]) || (index === undefined ? SWATCHES.neutral : SWATCHES[ROTATION[index % ROTATION.length]]);

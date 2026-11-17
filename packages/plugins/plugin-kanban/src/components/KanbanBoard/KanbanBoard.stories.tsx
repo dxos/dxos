@@ -195,9 +195,6 @@ export const TestLayout: Story = {
   },
 };
 
-/**
- * A read-only board shows its cards with no drag handles and no way to add a card.
- */
 export const ReadOnly: Story = {
   args: { readonly: true },
   play: async ({ canvasElement }) => {

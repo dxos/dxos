@@ -121,7 +121,6 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
 
       return {
         frozenRowsStart: 1,
-        // The draft row is where rows are added, so a table that takes no data has none.
         frozenRowsEnd: model?.features.dataEditable === false ? draftRowCount : Math.max(1, draftRowCount),
         frozenColsStart: model?.frozenColsStart ?? 0,
         frozenColsEnd: noActionColumn ? 0 : 1,

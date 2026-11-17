@@ -41,7 +41,6 @@ export type ChatArticleProps = Merge<
   Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>
 >;
 
-/** A chat to talk in; on a read-only host, its transcript to read. */
 export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>((props, forwardedRef) =>
   ToolkitHooks.useReadOnly() ? (
     <ChatTranscript {...props} ref={forwardedRef} />
@@ -209,10 +208,6 @@ const ChatEditor = forwardRef<HTMLDivElement, ChatArticleProps>(
 
 ChatEditor.displayName = 'ChatEditor';
 
-/**
- * A chat as it was left: the transcript and its forks, with no toolbar, prompt or agent behind it, and nothing in the
- * thread that writes.
- */
 const ChatTranscript = forwardRef<HTMLDivElement, ChatArticleProps>(({ role, subject: chat, debug }, forwardedRef) => {
   const registry = useRegistry();
   const mobile = usePlatform() === 'mobile';
@@ -251,7 +246,6 @@ ChatTranscript.displayName = 'ChatTranscript';
 
 const isChatView = Schema.is(ChatView);
 
-/** The view the chat was left in, else the reader's default. */
 const useViewType = (chat: Chat.Chat | undefined, fallback: ChatView | undefined): ChatView | undefined => {
   const [viewType] = useObject(chat, 'viewType');
   return isChatView(viewType) ? viewType : fallback;
@@ -259,11 +253,9 @@ const useViewType = (chat: Chat.Chat | undefined, fallback: ChatView | undefined
 
 type ForkBarProps = {
   onBack: () => void;
-  /** Offers merging the fork into main; absent where the chat is only read. */
   onMerge?: () => void;
 };
 
-/** Heads a fork shown in place of main: back to main, and merge where allowed. */
 const ForkBar = ({ onBack, onMerge }: ForkBarProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   return (

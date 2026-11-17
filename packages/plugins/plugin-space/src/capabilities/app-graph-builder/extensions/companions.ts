@@ -63,7 +63,7 @@ export const createCompanionExtensions: () => Effect.Effect<Extensions, never, C
           ]),
       }),
 
-      // View selected objects companion; selection is off read-only, so there is nothing to show.
+      // View selected objects companion.
       AppGraphBuilder.createExtension({
         id: 'selectedObjects',
         relation: AppNode.companion,

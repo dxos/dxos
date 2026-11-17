@@ -85,8 +85,6 @@ export type DeckPluginOptions = {
 
 export const Platform = Capability.makeSingleton<Platform>()(`${DeckNamespace.key}.capability.platform`);
 
-/** The `banner` option: whether the top banner is forced on. */
 export const Banner = Capability.makeSingleton<boolean>()(`${DeckNamespace.key}.capability.banner`);
 
-/** The stored deck a workspace starts from on its first visit (see the `companionsClosed` option). */
 export const NewDeck = Capability.makeSingleton<DeckSchema.StoredDeck>()(`${DeckNamespace.key}.capability.newDeck`);

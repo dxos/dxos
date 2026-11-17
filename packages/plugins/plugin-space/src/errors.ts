@@ -36,16 +36,13 @@ export class TemplateApplyError extends BaseError.extend('TemplateApplyError', '
 /** A `?spaceKey=` deep link timed out or was rejected while joining, distinct from an invitation-code failure. */
 export class JoinByKeyError extends BaseError.extend('JoinByKeyError', 'Failed to join the space by key.') {}
 
-/** The host passed no `publication` option, so there is no viewer to publish to. */
 export class PublishingDisabledError extends BaseError.extend(
   'PublishingDisabledError',
   'Publishing is not enabled on this host.',
 ) {}
 
-/** The space has no publication to take down or link to. */
 export class NotPublishedError extends BaseError.extend('NotPublishedError', 'The space is not published.') {}
 
-/** The publication could not be read, usually because it was taken down. */
 export class PublicationNotFoundError extends BaseError.extend(
   'PublicationNotFoundError',
   'The publication could not be found.',

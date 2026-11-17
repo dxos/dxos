@@ -14,7 +14,6 @@ export type SpaceOperationConfig = {
   createJoinUrl: (spaceKey: PublicKey) => string;
   /** Absent on a host with no public origin to link to. */
   createObjectUrl?: (object: Obj.Unknown) => string | undefined;
-  /** Absent where publishing is off. */
   publication?: SpaceSchema.PublicationOptions;
 };
 

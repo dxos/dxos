@@ -10,7 +10,6 @@ import { Publication } from '#types';
 /** Link previews are read by crawlers that never send a locale, so they are drawn in English. */
 const LOCALE = 'en-US';
 
-/** Caps the manifest's growth on large spaces; an object past it previews as its space. */
 const MAX_OBJECTS = 1_000;
 
 const MAX_TITLE_LENGTH = 120;
@@ -22,10 +21,6 @@ export type PreviewSource = {
   resources: readonly Translations.Resource[];
 };
 
-/**
- * What the link-preview image draws of a space. Only types a plugin names (`typename.label`) count:
- * the rest, such as a document's text, are parts of another object rather than things people made.
- */
 export const buildPreview = ({ properties, objects, resources }: PreviewSource): Publication.Preview => {
   const types = new Map<string, Omit<Publication.PreviewType, 'label'>>();
   const previews: Record<string, Publication.PreviewObject> = {};
@@ -58,7 +53,6 @@ export const buildPreview = ({ properties, objects, resources }: PreviewSource):
   };
 };
 
-/** A type's name for `count` objects, from the plugin that defines it. */
 const typeLabel = (
   resources: readonly Translations.Resource[],
   typename: string,

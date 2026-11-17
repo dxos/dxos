@@ -31,7 +31,6 @@ import { SpaceNamespace } from '../../../namespace.ts';
  */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
   const readOnly = yield* ReadOnly.atom;
-  // Every settings panel, this plugin's and others', hangs off this section, so read-only there are none.
   const sectionExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsSection',
     match: ReadOnly.unless<Space>(readOnly, AppNodeMatcher.whenSpace),

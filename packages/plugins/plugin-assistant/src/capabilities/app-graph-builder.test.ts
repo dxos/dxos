@@ -55,7 +55,6 @@ describe('prompt extension', () => {
 });
 
 describe('chat section', () => {
-  /** A space holding one chat, under the graph's root as plugin-space puts it, expanded down to its Chats section. */
   const setup = async (readOnly: boolean) => {
     const client = await new Client({ types: [Chat.Chat, Feed.Feed] }).initialize();
     onTestFinished(() => client.destroy());

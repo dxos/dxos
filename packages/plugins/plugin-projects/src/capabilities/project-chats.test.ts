@@ -76,7 +76,6 @@ describe('project chats graph extension', () => {
         connector: () => Effect.succeed([{ id: project.id, type: 'test', data: project }]),
       }),
     );
-    // One registry for the plugin manager and the graph builder, as in the app.
     const registry = Registry.make();
     const manager = CapabilityManager.make({ registry });
     const withManager = <A>(effect: Effect.Effect<A, never, Capability.Service>) =>

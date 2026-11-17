@@ -29,7 +29,6 @@ export default Capability.makeModule(
       id: 'scores',
       relation: AppNode.companion,
       type: Drawing.Drawing,
-      // The scores serve an author improving a layout, so a read-only host has no use for them.
       connector: (_, get) =>
         Effect.succeed(
           get(readOnly)
@@ -49,7 +48,6 @@ export default Capability.makeModule(
       id: 'convertActions',
       type: Drawing.Drawing,
       actions: (drawing, get) => {
-        // A conversion writes a copy, which a read-only app has nowhere to put.
         if (get(readOnly)) {
           return Effect.succeed([]);
         }

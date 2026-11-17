@@ -65,7 +65,6 @@ export type TypeArticleProps = {
  */
 export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
-  // Read-only, it lists and opens objects only: no selection, deletion, filing, merging or cell edits.
   const readonly = ToolkitHooks.useReadOnly();
   const { invokePromise } = Hooks.useOperationInvoker();
   const [layout, setLayout] = useState<Layout>('masonry');
@@ -125,7 +124,6 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
   // Duplicates is offered only for types some plugin registered an identity rule for:
   // there is nothing to scan otherwise.
-  // A merge writes, so a read-only list never offers it.
   const layouts = useMemo(
     () => LAYOUTS.filter(({ value }) => value !== 'duplicates' || (duplicates.spec && !readonly)),
     [duplicates.spec, readonly],

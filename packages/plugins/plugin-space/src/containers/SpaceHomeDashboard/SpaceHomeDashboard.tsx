@@ -26,7 +26,6 @@ type SpaceHomeDashboardProps = {
   space?: Space;
   /** Stat cards to render, in order; defaults to all. */
   stats?: readonly SpaceStatId[];
-  /** Whether to show the year of activity under the stats. */
   activity?: boolean;
   onClose?: () => void;
 };

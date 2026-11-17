@@ -15,8 +15,7 @@ import { log } from '@dxos/log';
 //
 // Capability Module
 //
-// Rehydrates durable agent processes once `Capabilities.ProcessManagerRuntime` is contributed; a read-only host
-// rehydrates none.
+// Rehydrates durable agent processes once `Capabilities.ProcessManagerRuntime` is contributed.
 //
 
 export default Capability.makeModule(

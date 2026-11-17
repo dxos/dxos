@@ -47,7 +47,6 @@ export type ChartCompanionProps = {
   onSelectRange?: (range: string) => void;
   /** Every chart type, from `SheetCapabilities.ChartType`; a new chart starts as the first. */
   chartTypes: readonly SheetCapabilities.ChartTypeContribution[];
-  /** Shows the charts with no way to add, edit or remove one. */
   readonly?: boolean;
 };
 

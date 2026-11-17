@@ -38,7 +38,6 @@ export type UseChatModelProps = {
   sender?: AgentService.PromptSender;
   /** The fork the chat model shows and sends into; main when absent. */
   thread?: Trajectory.ThreadId;
-  /** Shows the feed only: follows no agent turn, since nothing runs one. */
   readonly?: boolean;
 };
 

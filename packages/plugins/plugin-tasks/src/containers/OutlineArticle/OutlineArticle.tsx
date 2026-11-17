@@ -50,7 +50,6 @@ export const OutlineArticle = ({
   const { t } = Hooks.useTranslation(TasksNamespace.key);
   const readonly = ToolkitHooks.useReadOnly();
   const db = Obj.getDatabase(outline);
-  // Promotion writes a task, so a read-only outline has nowhere to file one.
   const taskSet = readonly ? undefined : taskSetProp;
 
   // Link the user navigated into; the back button clears it to return to the outline.

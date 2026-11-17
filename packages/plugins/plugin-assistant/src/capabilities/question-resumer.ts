@@ -35,7 +35,7 @@ const isAnswer = <E extends { operation: Operation.Definition.Any }>(event: E): 
  * plugin-tasks' `AnswerQuestion` (the task pane's) only records the answer, since plugin-tasks cannot
  * reach an agent; without this, an agent that asked from a chat would stay blocked on an answer it
  * is never told about. The chat's own card answers through `AssistantOperation.AnswerQuestion`, which
- * resumes by itself and never reaches this listener. A read-only host resumes nothing.
+ * resumes by itself and never reaches this listener.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

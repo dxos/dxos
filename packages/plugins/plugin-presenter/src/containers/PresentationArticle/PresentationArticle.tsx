@@ -39,7 +39,6 @@ export type PresentationArticleProps = AppSurface.ObjectArticleProps<Presentatio
 
 /**
  * A presentation's slides as a grid, presented fullscreen in place; the current slide is per-viewer view state.
- * A read-only host plays the deck with no way to add, move or edit a slide; a tile plays from its slide.
  */
 export const PresentationArticle = ({ role, subject, attendableId }: PresentationArticleProps) => {
   const readonly = ToolkitHooks.useReadOnly();

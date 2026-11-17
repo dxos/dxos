@@ -88,7 +88,6 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
 //
 
 type ArticleMenuActionsOptions = {
-  /** A read-only host runs no routines, so it offers no Run. */
   readonly: boolean;
   canRun: boolean;
   runningAtom: Atom.Writable<boolean>;

@@ -12,12 +12,10 @@ import { Publication } from '#types';
  */
 const STORAGE_KEY = 'org.dxos.plugin.space.pending-fork';
 
-/** A fork older than this is stale: the visitor wandered off and came back for something else. */
 const MAX_AGE_MS = 60 * 60 * 1_000;
 
 export type PendingFork = { publicId: string; path?: string; at: number };
 
-/** Moves a `?fork=` intent out of the URL into storage, so a sign-in round trip cannot drop it. */
 export const stashForkIntent = (url: URL = new URL(window.location.href)): void => {
   const publicId = url.searchParams.get(Publication.FORK_PARAM);
   if (!publicId) {
@@ -34,7 +32,6 @@ export const stashForkIntent = (url: URL = new URL(window.location.href)): void 
   history.replaceState(null, '', url.pathname + url.search + url.hash);
 };
 
-/** Removes and returns the pending fork, if one is fresh. */
 export const takeForkIntent = (now = Date.now()): PendingFork | undefined => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

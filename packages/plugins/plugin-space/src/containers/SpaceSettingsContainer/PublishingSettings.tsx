@@ -25,7 +25,6 @@ import { SpaceOperationConfig } from '../../operations/helpers.ts';
 
 export type PublishingSettingsProps = { space: Space };
 
-/** Whether the space is published, with Publish or a menu to republish or unpublish it, and its public link. */
 export const PublishingSettings = ({ space }: PublishingSettingsProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -35,7 +34,6 @@ export const PublishingSettings = ({ space }: PublishingSettingsProps) => {
   const url = receipt && publication && Publication.viewerUrl(publication.viewerOrigin, receipt.publicId).toString();
   const [pending, setPending] = useState(false);
 
-  // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
   const run = useCallback(
     async (key: string, failed: string, invoke: () => Promise<unknown>) => {
       setPending(true);

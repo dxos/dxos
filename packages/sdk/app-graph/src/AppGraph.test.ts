@@ -40,7 +40,6 @@ describe('Graph', () => {
   test('a node hashes without walking the graph it belongs to', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
-    // A registry value whose getter throws, as `Client.shell` does without a shell.
     registry.mount(
       Atom.make({
         get shell(): never {

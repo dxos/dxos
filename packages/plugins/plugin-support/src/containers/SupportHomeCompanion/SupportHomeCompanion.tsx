@@ -25,7 +25,6 @@ const WELCOME_SLIDE = {
 };
 
 export const SupportHomeCompanion = () => {
-  // Read-only, the welcome tour is left out, as it walks through creating and editing.
   const readonly = ToolkitHooks.useReadOnly();
   const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();

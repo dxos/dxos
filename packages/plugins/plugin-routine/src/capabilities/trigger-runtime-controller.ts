@@ -35,7 +35,6 @@ import { type Space } from '@dxos/react-client/echo';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // A read-only host runs no triggers. `ReadOnly` is contributed at startup, before spaces are available.
     if (Option.isSome(yield* Capability.getOption(AppCapabilities.ReadOnly))) {
       return [];
     }

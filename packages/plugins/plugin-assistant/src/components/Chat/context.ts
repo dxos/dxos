@@ -40,7 +40,6 @@ export type ChatContextValue = {
   chat?: Chat.Chat;
   /** Undefined while the chat model is still opening; the chat renders from the feed meanwhile. */
   chatModel?: ChatModel;
-  /** The chat is only read: nothing sends, answers, rewinds, forks or withdraws. */
   readonly?: boolean;
   /** Whether the conversation has begun; a boolean, so it changes once rather than per message. */
   started: boolean;

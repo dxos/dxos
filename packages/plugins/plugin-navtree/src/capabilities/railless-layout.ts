@@ -8,11 +8,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { type NavTreeCapabilities } from '#types';
 
-/**
- * Drops the rail from the layout's sizes on the document, where the deck reads them: the sidebar
- * narrows to the L1 panel's width, and a collapsed sidebar leaves the screen. Set at startup, before
- * the shell renders, so the sidebar never paints at the railed width and animates to this one.
- */
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ rail = true }: NavTreeCapabilities.NavTreePluginOptions = {}) {
     if (rail) {

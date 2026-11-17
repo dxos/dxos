@@ -6,22 +6,15 @@ import { type Plugin } from 'vite';
 
 import { type EdgeConfig, resolveEdgeUrl } from '../util/edge-url.ts';
 
-/** A config `ConfigPlugin` defined for the page, as the JSON it put in `define`. */
 const definedConfig = (define: Record<string, any> | undefined, key: string): EdgeConfig | undefined => {
   const value = define?.[key];
   return typeof value === 'string' ? JSON.parse(value) : undefined;
 };
 
-/**
- * Dev twin of the Worker's viewer routing on a `view.` host (`view.localhost` locally): a page
- * navigation gets `viewer.html` instead of the Composer SPA, and `/publications/*` reads go to EDGE,
- * so the viewer and a fork read publications from the viewer origin as they do when deployed.
- */
 export const viewerRoutePlugin = (): Plugin => ({
   name: 'composer:viewer-route',
   apply: 'serve',
   configureServer: (server) => {
-    // The EDGE the page is served against, from the config `ConfigPlugin` resolved for it.
     const { define } = server.config;
     const edgeUrl = resolveEdgeUrl(
       definedConfig(define, '__CONFIG_ENVS__'),
@@ -37,7 +30,6 @@ export const viewerRoutePlugin = (): Plugin => ({
       }
 
       if (pathname.startsWith('/publications/') && edgeUrl) {
-        // EDGE serves publications from db-service, under `/db`.
         void proxyPublication(new URL(`/db${pathname}`, edgeUrl), req.method ?? 'GET').then(
           ({ status, headers, body }) => {
             res.writeHead(status, headers);
@@ -48,7 +40,6 @@ export const viewerRoutePlugin = (): Plugin => ({
         return;
       }
 
-      // Object paths carry dots (`db/<typename>+…`), so a navigation is a route whatever it names.
       const isNavigation =
         req.headers['sec-fetch-mode'] === 'navigate' ||
         (req.headers.accept?.includes('text/html') && !pathname.includes('.'));

@@ -9,7 +9,6 @@ import { DeckCapabilities } from '#types';
 import { layoutAppliesTopbar } from '../util/layoutAppliesTopbar.ts';
 import { useBreakpoints } from './useBreakpoints.ts';
 
-/** Whether the layout reserves a topbar for the current width and fullscreen state. */
 export const useTopbar = (fullscreen?: boolean): boolean => {
   const breakpoint = useBreakpoints();
   const banner = Hooks.useCapability(DeckCapabilities.Banner);

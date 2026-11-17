@@ -40,7 +40,6 @@ export default Capability.makeModule(
     const nextTourAtom = Atom.make((get) => {
       const subjectId = get(subjectIdAtom);
       const state = get(stateAtom);
-      // Tours walk the reader through creating objects, so a read-only host never starts one.
       if (!subjectId || state.running || get(readOnly)) {
         return undefined;
       }

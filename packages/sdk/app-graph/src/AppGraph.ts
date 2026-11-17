@@ -238,8 +238,6 @@ export class GraphImpl implements WritableGraph {
     return Pipeable.pipeArguments(this, arguments);
   }
 
-  // Every node carries the graph, and atom families key on nodes: a structural hash would walk the whole
-  // registry, and throw on any getter that does (`Client.shell`).
   [Hash.symbol](): number {
     return Hash.random(this);
   }

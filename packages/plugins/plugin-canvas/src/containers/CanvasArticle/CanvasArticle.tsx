@@ -101,7 +101,6 @@ const SceneEditorArticle = <C,>({
 }: SceneEditorArticleProps<C>) => {
   const [element, setElement] = useState<HTMLElement | null>(null);
   const { hasAttention } = useAttention(attendableId);
-  // A read-only app locks the canvas with no way to unlock it.
   const readOnly = ToolkitHooks.useReadOnly();
   const { stored, document } = host;
   if (!stored || !document) {

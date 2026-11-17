@@ -103,7 +103,6 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
 
     AppGraphBuilder.createExtension({
       id: 'peers',
-      // Peer sessions and actions hang off these nodes, so read-only there are none either.
       match: ReadOnly.unless<Space>(readOnly, AppNodeMatcher.whenSpace),
       connector: (space, get) => {
         const [ephemeralAtom] = get(ephemeralCapAtom);

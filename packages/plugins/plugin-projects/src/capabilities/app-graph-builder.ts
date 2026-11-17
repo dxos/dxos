@@ -143,7 +143,6 @@ export const createMailboxProjectExtension = Effect.fnUntraced(function* () {
   const readOnly = yield* ReadOnly.atom;
   return yield* AppGraphBuilder.createExtension({
     id: 'mailboxProjectActions',
-    // Setting up a project writes one, so a read-only host offers none.
     match: (node, get) =>
       !get(readOnly) && node.properties.systemTag === 'inbox' && Mailbox.instanceOf(node.data)
         ? Option.some(node.data)
@@ -262,7 +261,6 @@ export const createProjectChatsChildrenExtension = Effect.fnUntraced(function* (
             .select(Filter.not(Filter.annotation(ArchivedAnnotation, true))),
         ).atom,
       );
-      // A read-only host lists the chats without letting them be dragged.
       const fixed = get(readOnly);
       return Effect.succeed(
         children
@@ -317,7 +315,6 @@ export const createProjectActionExtension = Effect.fnUntraced(function* () {
   const readOnly = yield* ReadOnly.atom;
   return yield* AppGraphBuilder.createExtension({
     id: 'projectActions',
-    // A read-only host starts no chats.
     match: (node, get) =>
       !get(readOnly) && Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none(),
     actions: (project) =>
@@ -403,7 +400,6 @@ export const createProjectArtifactsExtension = Effect.fnUntraced(function* () {
             droppable: false,
             space,
             testId: 'projectsPlugin.artifactsSection',
-            // A read-only host's branch takes no drops and its children do not rearrange.
             ...(db && !get(readOnly) ? AppNode.getListPartials(artifacts(project), db) : {}),
           },
         }),
@@ -438,7 +434,6 @@ export const createProjectArtifactsActionExtension = Effect.fnUntraced(function*
       }
 
       const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
-      // A read-only host lists the artifacts without letting them be dragged.
       const fixed = get(readOnly);
       return Effect.succeed(
         objects
@@ -449,7 +444,6 @@ export const createProjectArtifactsActionExtension = Effect.fnUntraced(function*
       );
     },
     actions: ({ project, nodeId }, get) => {
-      // A read-only host links nothing into a project.
       if (get(readOnly)) {
         return Effect.succeed([]);
       }

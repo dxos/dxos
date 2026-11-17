@@ -32,7 +32,6 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  */
 export const FormCard = ({ subject, projection, readonly: readonlyProp = true, layout }: FormCardProps) => {
   const { t } = Hooks.useTranslation(PreviewNamespace.key);
-  // A read-only host overrides a caller that asked for an editable card.
   const readonly = ToolkitHooks.useReadOnly() || readonlyProp;
   const [snapshot] = useObject(subject);
   // Readonly cards default to the `static` presentation — plain DOM, undefined values

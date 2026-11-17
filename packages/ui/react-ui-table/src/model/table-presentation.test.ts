@@ -146,7 +146,6 @@ describe('TablePresentation', () => {
         { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
         'frozenColsStart',
       );
-      // Column 0 is the selection checkbox, column 1 the pinned title.
       expect(cells['0,0']?.readonly).toBe('no-text-select');
       expect(cells['1,0']?.readonly).toBe('text-select');
     });

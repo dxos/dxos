@@ -13,7 +13,6 @@ vi.mock('./preview-image/worker-assets.ts', async () => {
   return { assets: await loadRenderAssets() };
 });
 
-// What the worker's build injects from `dx.yml`.
 vi.stubGlobal('__CONFIG_DEFAULTS__', { runtime: { services: { edge: { url: 'https://edge.test' } } } });
 
 const INDEX_HTML = '<!doctype html><html><head><title>Composer</title></head><body></body></html>';
@@ -115,7 +114,6 @@ describe('publications on the viewer host', () => {
   };
   const SPACE_IMAGE = 'https://view.composer.test/publications/abc_123/preview.png';
 
-  /** EDGE's public reads, answering for one publication. */
   const edge = (publicId = 'abc_123') => {
     const requested: string[] = [];
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {

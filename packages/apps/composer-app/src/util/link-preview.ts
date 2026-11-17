@@ -35,9 +35,7 @@ export const readLinkTitle = (url: URL): string | undefined => {
     : collapsed;
 };
 
-/** What a link preview shows beside its title. */
 export type LinkPreviewDetails = {
-  /** Replaces the page's own description. */
   description?: string;
   /** Absolute URL of a 1200×630 image, which makes the preview a large card. */
   image?: string;

@@ -27,17 +27,12 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ForkPublication> = Sp
       const archive = yield* fetchArchive(resolvePublicationsUrl(publication), publicId);
       const { space } = yield* Operation.invoke(SpaceOperation.ImportSpace, { archive });
 
-      // The fork is a new space of the caller's; the source's publication record is not its own.
       Obj.update(space.properties, (properties) => {
         Annotation.set(properties, Publication.ReceiptAnnotation, null);
       });
-      // The archive carries the publisher's migration version, or none, so the fork is brought up to
-      // this app's version rather than left asking its new owner to migrate it.
       yield* Operation.invoke(SpaceOperation.Migrate, { space });
 
       yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
-      // The viewer's path reaches the object by any route (database or collection); JSON import keeps
-      // object ids, so the fork opens the object the path ends in at its own path.
       const objectId = path && (Publication.parseObjectPath(path)?.objectId ?? objectIdOf(space.id, path));
       const object = objectId ? yield* Effect.promise(() => space.db.query(Filter.id(objectId)).first()) : undefined;
       if (object) {

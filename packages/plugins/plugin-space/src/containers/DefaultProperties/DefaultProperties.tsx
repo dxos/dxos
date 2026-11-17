@@ -28,7 +28,6 @@ export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknow
  */
 export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesProps>(
   ({ role, subject: object }, forwardedRef) => {
-    // Read-only, it shows the properties without editing and leaves out plugins' extra rows, which edit.
     const readonly = ToolkitHooks.useReadOnly();
     const manager = PluginManagerProvider.usePluginManager();
     const operationInvoker = Hooks.useOperationInvoker();

@@ -73,7 +73,6 @@ export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
     [invokePromise, task, db],
   );
 
-  // A move writes to both task sets.
   if (readOnly) {
     return null;
   }

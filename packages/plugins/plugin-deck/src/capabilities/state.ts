@@ -19,7 +19,7 @@ import { getRenderedPlanks, isCompanionOpen } from '../util/companion-anchor.ts'
 
 const STATE_KEY = `${DeckNamespace.key}.state`;
 
-/** Default persisted state, its one deck started from `newDeck`. */
+/** Default persisted state. */
 const makeDefaultDeckState = (newDeck: DeckSchema.StoredDeck): DeckSchema.StoredDeckState => ({
   sidebarState: 'expanded',
   complementarySidebarState: 'collapsed',
@@ -56,7 +56,6 @@ export default Capability.makeModule(
     banner = false,
     companionsClosed = false,
   }: DeckCapabilities.DeckPluginOptions = {}) {
-    // An empty list is a deck whose companions were all closed; an absent one is the layout's default.
     const newDeck: DeckSchema.StoredDeck = companionsClosed
       ? { ...DeckSchema.defaultDeck, companionPlanks: [] }
       : DeckSchema.defaultDeck;

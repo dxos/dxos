@@ -41,7 +41,6 @@ export default Capability.makeModule(
           return Canvas.isCanvas(canvas) || (Drawing.isCanvas(canvas) && Canvas.isSceneSchema(canvas.schema));
         }),
       actions: (drawing, get) => {
-        // A read-only app keeps every canvas locked, so there is nothing to toggle.
         if (get(readOnly)) {
           return Effect.succeed([]);
         }

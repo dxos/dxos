@@ -15,10 +15,6 @@ import { SpaceOperation, type SpaceSchema } from '#types';
 import { SpaceNamespace } from '../namespace.ts';
 import { takeForkIntent } from '../publication/pending-fork.ts';
 
-/**
- * Runs a stashed fork once spaces are available, which is after onboarding has produced an identity:
- * the sign-in gate is the activation event itself.
- */
 export default Capability.makeModule(
   Effect.fnUntraced(function* (options: SpaceSchema.SpacePluginOptions = {}) {
     const pending = options.publication ? takeForkIntent() : undefined;
@@ -28,7 +24,6 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     const operationService = yield* Capabilities.OperationInvoker;
     log.info('forking publication', { publicId: pending.publicId });
-    // Its own fiber root: fetching and importing outlives this module's activation, which would interrupt a child.
     const fork = Operation.invoke(SpaceOperation.ForkPublication, {
       publicId: pending.publicId,
       path: pending.path,

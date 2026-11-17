@@ -23,10 +23,6 @@ import { composerOriginOf, parseRoute, replaceWithSpace } from './route.ts';
 
 const bootStatus = (text: string) => App.bootLoader?.status({ humanized: text });
 
-/**
- * Boots a published space read-only: an in-memory client with a throwaway identity imports the bake,
- * and nothing is written to this origin's storage or sent to EDGE.
- */
 const main = async () => {
   const route = parseRoute(window.location);
   const root = document.getElementById('root');
@@ -48,8 +44,6 @@ const main = async () => {
   await initEchoHostWasm();
 
   const base = await setupConfig();
-  // Reported as Composer's own, from the deployment's config; the client below gets no EDGE services.
-  // Replay starts once boot settles, as in Composer.
   const startupSettled = new Promise<void>((resolve) => {
     window.addEventListener(Hooks.STARTUP_ACTIVATED_EVENT, () => resolve(), { once: true });
     window.addEventListener(Hooks.STARTUP_FAILED_EVENT, () => resolve(), { once: true });
@@ -62,13 +56,11 @@ const main = async () => {
     undefined,
     Effect.promise(() => startupSettled),
   );
-  // The viewer's own host serves publications (the Worker reads them from EDGE).
   const publicationsUrl =
     getEnvString(base, 'DX_PUBLICATIONS_URL') ??
     new URL(Publication.PUBLICATIONS_PATH, window.location.origin).toString();
   const composerOrigin = composerOriginOf(window.location.origin);
 
-  // Only the app env carries over: no EDGE services, no persistent storage.
   const config = new Config({
     version: 1,
     runtime: {

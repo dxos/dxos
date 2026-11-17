@@ -41,9 +41,7 @@ const gridComponents: Record<Settings.GridType, FC<TLGridProps>> = {
 
 export type CanvasProps = {
   canvas: Drawing.Canvas;
-  /** tldraw's read-only mode: no drawing tools, menus or style panel. */
   readonly?: boolean;
-  /** Fixes the camera, refitting it as the content changes. */
   locked?: boolean;
   autoCenter?: boolean;
   hideUi?: boolean;
@@ -364,7 +362,6 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
         DebugPanel: null,
         Grid: gridComponents[settings?.gridType ?? 'mesh'],
         HelpMenu: null,
-        // Every quick action edits, so a read-only canvas has no menu.
         MenuPanel: readonly ? null : CustomMenu,
         NavigationPanel: null,
         StylePanel: CustomStylePanel,

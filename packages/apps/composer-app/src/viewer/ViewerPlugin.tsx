@@ -20,7 +20,6 @@ import { currentObjectPath } from './route.ts';
 
 export type ViewerPluginOptions = {
   publicId: string;
-  /** Composer's origin, where Sign up and Fork land. */
   composerOrigin: string;
 };
 
@@ -51,13 +50,9 @@ const ViewerActions = ({ publicId, composerOrigin }: Pick<ViewerPluginOptions, '
   </div>
 );
 
-/**
- * Makes the whole app read-only and adds the viewer's own chrome: the banner notice with Sign up and Fork.
- */
 export const ViewerPlugin = (options: ViewerPluginOptions): Plugin.Plugin =>
   Plugin.define(meta).pipe(
     Plugin.addModule(
-      // Startup, so it is in place before anything renders or expands the graph.
       Capability.inlineModule(
         'viewer-read-only',
         { provides: [AppCapabilities.ReadOnly], activatesOn: ActivationEvents.Startup },

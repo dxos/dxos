@@ -4,5 +4,4 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-/** The plugin's identity; a leaf, so `dx.config.ts` and the capability tags both derive from it. */
 export const AnimatorNamespace = Plugin.namespace('org.dxos.plugin.animator');

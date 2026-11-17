@@ -10,7 +10,6 @@ import { type RenderAssets } from './render.ts';
 const require = createRequire(import.meta.url);
 const read = (specifier: string) => readFile(require.resolve(specifier));
 
-/** The renderer's assets read from `node_modules`, for tests, which cannot import `.wasm` as the Worker does. */
 export const loadRenderAssets = async (): Promise<RenderAssets> => {
   const [layout, resvg, regular, semibold] = await Promise.all([
     read('satori/yoga.wasm'),

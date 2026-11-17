@@ -374,10 +374,9 @@ const useOperations = (db: Database.Database) =>
     ),
   );
 
-/** Subscribe to the routine and resolve its primary (first) trigger, re-rendering once it loads. */
+/** Subscribe to the routine and derive its primary (first) trigger. */
 const usePrimaryTrigger = (routine: Routine.Routine): Trigger.Trigger | undefined => {
   const [snapshot] = useObject(routine);
-  // MVP enforces at most one trigger.
   const target = useResolveRef(snapshot.triggers.at(0));
   return Obj.instanceOf(Trigger.Trigger, target) ? target : undefined;
 };

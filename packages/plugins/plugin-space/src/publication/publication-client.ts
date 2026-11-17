@@ -12,10 +12,8 @@ import { Publication, type SpaceSchema } from '#types';
 
 import { PublicationNotFoundError } from '../errors.ts';
 
-/** Fields the JSON export records about where it came from, which a public copy must not reveal. */
 const PRIVATE_ARCHIVE_FIELDS = ['originalSpaceId', 'exportedBy'] as const;
 
-/** The JSON archive with its provenance removed, as UTF-8 text. */
 export const scrubArchive = (contents: Uint8Array): { text: string; objects: string[] } => {
   const serialized = JSON.parse(new TextDecoder().decode(contents)) as Record<string, unknown> & {
     objects?: { id?: string }[];
@@ -27,11 +25,9 @@ export const scrubArchive = (contents: Uint8Array): { text: string; objects: str
   return { text: JSON.stringify(serialized), objects };
 };
 
-/** Where publications are read from: the host's override, else `/publications` on the viewer origin. */
 export const resolvePublicationsUrl = (options: SpaceSchema.PublicationOptions): string =>
   options.publicationsUrl ?? new URL(Publication.PUBLICATIONS_PATH, options.viewerOrigin).toString();
 
-/** Uploads a bake; a `publicId` replaces that publication in place. */
 export const upload = Effect.fnUntraced(function* (
   client: Client,
   body: { spaceId: string; manifest: Publication.Manifest; archive: string },
@@ -58,7 +54,6 @@ export const remove = Effect.fnUntraced(function* (client: Client, publicId: str
   );
 });
 
-/** Reads a publication's archive over the public route; no identity is needed. */
 export const fetchArchive = Effect.fnUntraced(function* (publicationsUrl: string, publicId: string) {
   const response = yield* Effect.tryPromise(() => fetch(Publication.archiveUrl(publicationsUrl, publicId)));
   if (!response.ok) {

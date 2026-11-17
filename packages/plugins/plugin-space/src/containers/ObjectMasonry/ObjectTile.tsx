@@ -31,7 +31,6 @@ export type TileData = {
   onSelect?: (id: string) => void;
   onOpen?: (object: Obj.Unknown) => void;
   onDelete?: (object: Obj.Unknown) => void;
-  /** Offers nothing that writes: no filing or archiving. */
   readonly?: boolean;
 };
 

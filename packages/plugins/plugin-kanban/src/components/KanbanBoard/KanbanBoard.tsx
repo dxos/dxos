@@ -45,7 +45,6 @@ type KanbanBoardRootProps = PropsWithChildren<
     items: Atom.Atom<Obj.Unknown[]>;
     onCardAdd?: (columnValue: string | undefined) => string | undefined;
     onCardRemove?: (card: Obj.Unknown) => void;
-    /** Ignores `onCardAdd` and `onCardRemove`, and accepts no drops. */
     readonly?: boolean;
   } & Pick<KanbanBoardContextValue, 'change' | 'itemTile'> &
     ComponentPropsWithoutRef<'div'>
@@ -146,7 +145,6 @@ export const KanbanBoardContent = Util.composable<HTMLDivElement, KanbanBoardCon
     <Board.Content
       {...Util.composableProps(props)}
       ref={forwardedRef}
-      // Without a handler the container accepts no drops.
       eventHandler={readonly ? undefined : columnEventHandler}
       Tile={KanbanColumn}
     />
