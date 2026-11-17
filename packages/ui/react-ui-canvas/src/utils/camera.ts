@@ -247,7 +247,8 @@ export type CameraAnimation = {
 
 /**
  * Animate between cameras, over `fixedDuration` ms or a time fitted to the distance. Given the `velocity` of a move
- * already under way it carries on at that speed into the new target, so rapid steps read as one motion.
+ * already under way it carries on at that speed into the new target, so rapid steps read as one motion. A duration of
+ * 0 lands on the target at the next frame.
  */
 export const animateCamera = (
   from: Camera,
@@ -260,15 +261,17 @@ export const animateCamera = (
 ): CameraAnimation => {
   const interpolate = interpolateCamera(from, to, viewport);
   const duration = fixedDuration ?? Math.min(MAX_ANIMATION_MS, Math.max(MIN_ANIMATION_MS, interpolate.duration));
-  const curve = velocity
-    ? retargetCamera(from, velocity, to, viewport, duration)
-    : (t: number) => interpolate(easeInOut(t));
+  const curve =
+    velocity && duration > 0
+      ? retargetCamera(from, velocity, to, viewport, duration)
+      : (t: number) => interpolate(easeInOut(t));
   const start = performance.now();
   let frame = 0;
   let last: { time: number; view: [number, number, number] } | undefined;
   let speed: CameraVelocity = STILL;
   const tick = (now: number) => {
-    const t = Math.min(1, (now - start) / duration);
+    // A frame's time can precede `start`; the clamp keeps the progress in [0, 1] and a zero duration out of it.
+    const t = duration > 0 ? Math.min(1, Math.max(0, (now - start) / duration)) : 1;
     const camera = curve(t);
     const view = toLogView(camera, viewport);
     if (last && now > last.time) {

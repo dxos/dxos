@@ -421,6 +421,68 @@ test.describe('Collaboration tests', () => {
   );
 
   test(
+    "a follower takes the leader's scroll in an article with no follow code of its own",
+    { tag: ['@space:QA-8'] },
+    async () => {
+      test.setTimeout(150_000);
+
+      await host.createSpace();
+      await host.createObject({ type: 'Document' });
+      await perfomInvitation(host, guest);
+      // Short enough that Home scrolls.
+      await Promise.all([host, guest].map((app) => app.page.setViewportSize({ width: 1280, height: 520 })));
+
+      const home = `root/${guest.workspaceId}/home`;
+      const homeScroller = (app: AppManager) =>
+        app.page
+          .locator(
+            `[data-testid="deck.plank"][data-attendable-id="${home}"] [data-scope="scroll-area"][data-orientation="vertical"] .dx-scroll-viewport`,
+          )
+          .first();
+      await guest.page.locator(`[data-object-id="${home}"]`).first().click();
+      await expect(homeScroller(guest)).toBeVisible({ timeout: 30_000 });
+
+      const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+      await host.openCompanion('members');
+      await sidebar
+        .getByTestId('spacePlugin.presence.row')
+        .getByTestId('spacePlugin.presence.follow')
+        .click({ timeout: 45_000 });
+      await expect(homeScroller(host)).toBeVisible({ timeout: 30_000 });
+
+      // The anchored section at the top of the view, and how far into it the view is, as a fraction of its height.
+      const topSection = (app: AppManager) =>
+        homeScroller(app).evaluate((viewport) => {
+          const top = viewport.getBoundingClientRect().top;
+          const section = [...viewport.querySelectorAll<HTMLElement>('[data-scroll-anchor]')].find(
+            (element) => element.getBoundingClientRect().bottom > top + 1,
+          );
+          const rect = section?.getBoundingClientRect();
+          return section && rect
+            ? { anchor: section.dataset.scrollAnchor, into: (top - rect.top) / rect.height }
+            : null;
+        });
+
+      await expect.poll(() => homeScroller(host).evaluate((element) => element.scrollTop)).toBe(0);
+      // Halfway, so neither view is clamped at an end.
+      await homeScroller(guest).evaluate((element) => {
+        element.scrollTop = (element.scrollHeight - element.clientHeight) / 2;
+      });
+      const leader = await topSection(guest);
+      expect(leader?.anchor).toBeDefined();
+      await expect
+        .poll(
+          async () => {
+            const follower = await topSection(host);
+            return follower?.anchor === leader?.anchor && Math.abs((follower?.into ?? 0) - (leader?.into ?? 0)) < 0.15;
+          },
+          { timeout: 30_000 },
+        )
+        .toBe(true);
+    },
+  );
+
+  test(
     "a follower whose deck lays planks side by side mirrors the leader's planks and scroll until it selects one in the navtree",
     { tag: ['@space:QA-6'] },
     async () => {

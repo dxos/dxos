@@ -203,6 +203,7 @@ component MembersContainer
   desc: Panel showing all members of a space with their presence status and role; allows managing invitations.
   props:
     space: Space
+    heading?: boolean
 ```
 
 ```mdl
@@ -232,6 +233,8 @@ component SpacePresence
   props:
     spaceId?: SpaceId
     presenceKey?: EID   # the object's EID, or the space's own EID for a space-level view
+    everyone?: boolean  # list everyone attending something in the space (F-8.26)
+    size?: AvatarSize   # the avatars' size; medium by default
 ```
 
 ```mdl
@@ -600,7 +603,7 @@ feat F-8: Presence and Sync Status
   req F-8.18: The viewers list and the Members companion are one presence list, of one object or of the whole space, with the same header, rows and follow. A row takes no hover; a person's row and their session rows take the keyboard highlight together, as one block, with the avatar inside it.
   req F-8.15: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
   req F-8.13: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on whichever of those sessions moved its anchor most recently, never on a session attending another object; with none attending the object, the row has no actions. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions while it attends the object; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
-  req F-8.14: The viewing message carries the sender's session id, its device, the location in each object its deck holds, the graph paths of its deck's planks in the space, and its values of each view-state aspect declared with `follow` for the space and each object its deck holds there, by aspect key and EID, which presence carries without reading; it is sent with the heartbeat and at most once per second when a location changes, or every 100 ms while followed ([F-8.20]).
+  req F-8.14: The viewing message carries the sender's session id, its device, the location in each object its deck holds, the graph paths of its deck's planks in the space, and, while it is followed, its values of each view-state aspect declared with `follow` for the space and each object its deck holds there, by aspect key and EID, which presence carries without reading; it is sent with the heartbeat, at once when a session the sender has not heard from in the space speaks, and at most once per second when a location changes, or every 100 ms while followed ([F-8.20]), when a followed value changes, and at once when a follower appears. A session runs one heartbeat at a time.
   req F-8.16: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
   req F-8.17: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
   req F-8.19: A peer's node carries Follow, which follows whichever of their sessions moved most recently, switching as that changes; a session's node carries Follow for that session alone. Neither shows while it is already the followed target.
@@ -609,6 +612,8 @@ feat F-8: Presence and Sync Status
   req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing. Input in the presence indicator or its viewers list, Escape included, ends nothing, since a follower opens that list to see the follow and stop it.
   req F-8.23: While following, the Members companion's rail tab shows a dot, and the presence list starts with the leader's row under a Following heading, carrying Stop (and Paused while paused) in place of their actions; the viewers list does so while the leader views its object. Stopping returns the row to its object's group and clears the dot. Below a follow section, the viewers list heads the rest of its viewers Viewing; the Members companion heads each group with its object's label.
   req F-8.24: A follow is marked in amber on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an amber dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows. Those rows wash in amber, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. While the session follows or is followed in the space its deck shows, every plank heading there, companions included and in a flat or sliding deck, takes a light amber wash over a one-pixel amber underline. The follow is also a state of the presence indicator: the avatars of those in the session's follow ring in amber.
+  req F-8.25: An article's scroll follows with no code of its plugin. The layout tracks the outermost scrolling area of each plank's article, and any other area named for it, as the object's `ScrollPosition` view state, keyed by its EID and declared `write`, so a follower restores the leader's scroll when its plank mounts and whenever the leader's value arrives. A position is the element at the top of the area marked with `data-scroll-anchor`, or with the `data-object-id` that object rows and tiles carry, with how far the area is scrolled past it, else the fraction of the area scrolled. An area opts out with `follow={false}`. A view-state aspect that mixes where the reader is with the reader's own preferences declares only the fields that follow, and the follower merges the leader's values of those fields into its own.
+  req F-8.26: SpacePresence can list everyone attending something in its space instead of one object's viewers. Each row carries the actions on what that person (or session) attends, and when the host names an object, the avatars of those on it are lit and the rest dimmed.
 ```
 
 ## Acceptance
@@ -899,6 +904,29 @@ test QA-7: See a follow on both sides
     - name: Stop
       do: On the host, click Stop on the guest's row.
       expect: the amber clears and the Members tab's dot clears on both sides
+```
+
+```mdl
+test QA-8: Follow a peer's scroll in an article with no follow code
+  desc: A follower's view of an article that scrolls in a `ScrollArea`, here the space's Home, scrolls with the leader's.
+  actors: human
+  covers: [F-8.25]
+  status: unverified
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follower takes the leader's scroll in an article with no follow code of its own
+  given:
+    - host: a booted app with a space containing a document, shared with a guest, in a window short enough that Home scrolls
+    - guest: a second browser profile with its own identity, a member of that space, in a window as short
+  steps:
+    - name: The guest opens Home
+      do: On the guest, open the space's Home.
+      expect: the guest's deck shows Home
+    - name: Follow the guest
+      do: On the host, open the Members companion and click Follow on the guest's row.
+      expect: the host's deck shows Home
+    - name: The guest scrolls Home
+      do: On the guest, scroll Home to its end.
+      expect: the host's Home scrolls down with it
 ```
 
 ---
@@ -1693,6 +1721,141 @@ decision D-88: A `Locator`'s reveal takes `focus`, true by default, in place of 
   date: 2026-11-16
   by: user:wittjosiah
   why: What the flag decides is whether the reveal takes the caret and focus; following is only one reason not to.
+```
+
+```mdl
+decision D-89: Following an article's scroll and view state needs as little plugin code as possible, ideally none: it is automatic, with a way for a view to opt out.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-8.25]
+```
+
+```mdl
+decision D-90: The scroll of each plank's article is a `write` view-state aspect, `ScrollPosition`, keyed by the object's EID. The layout puts a scroll scope around each plank's article; inside it, the outermost `ScrollArea` viewport reports its position and restores it, and a viewport given a name reports under that name. The scope restores a position when its area mounts and when the value arrives from a follow, never on a write of its own session, so two views of one object on one device do not drag each other. Fills in [D-89].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25]
+  why: Most articles scroll in a `ScrollArea`, so tracking it in the layout covers them with no plugin code. A `write` aspect needs nothing from the follow: it already writes the leader's values, and a plank that mounts late restores from its own view state rather than being revealed again until it mounts.
+  rejected:
+    - A generic reveal through the object's `ViewLocation` viewport; it breaks that anchors are in the type's own format, holds one viewport per object, and needs follow code and a registry of mounted views.
+    - The plank watching scroll events in its content and recording the scrolled element's place in the DOM; that place changes with conditional rendering and width, and it would act inside editors that have their own `Locator`.
+```
+
+```mdl
+decision D-91: A scroll position is the element marked `data-scroll-anchor` at the top of the area with how far the area is scrolled past it, plus the fraction of the area scrolled on each axis. Restoring prefers the anchor and falls back to the fraction, and applies again as the area's content resizes, for the follow's mount window or until the reader scrolls; positions the area passes through meanwhile are not reported. The `data-object-id` that object rows and tiles already carry counts as an anchor too. Fills in [D-90].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25]
+  why: A leader and follower of different widths wrap content differently, so an offset in pixels lands elsewhere; an item id lands on the same item, and a fraction is close enough for the rest. Content loads after an area mounts, and a virtual list renders the anchor only after the jump, so one restore is not enough.
+  rejected:
+    - Pixel offsets alone.
+    - The anchor alone; most articles mark none.
+```
+
+```mdl
+decision D-92: A view-state aspect can follow only some of its fields; the follower merges the leader's values of those fields into its own and keeps the rest. Fills in [D-89].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25]
+  why: Most aspects hold where the reader is beside how they like the view (a camera beside grid and panel settings), and following the whole value rewrites the follower's own settings. Naming the fields keeps opting in to one line.
+  rejected:
+    - Splitting each such aspect into a followed and an unfollowed one; every reader of it changes.
+    - Following every aspect keyed by an EID unless it opts out; most aspects are preferences such as filters, sorts and view modes.
+```
+
+```mdl
+decision D-93: A session sends its followed view state only while it is followed, when a followed value changes, and at once when a follower appears. Fills in [D-79].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.14]
+  why: With scroll followed, every scroll in any article changes a followed value, which would send a viewing message each second from every session that scrolls, followed or not; only a follower reads the values.
+  rejected:
+    - Sending followed view state with every viewing message, as before.
+```
+
+```mdl
+decision D-94: Approve [D-90], [D-91], [D-92] and [D-93].
+  date: 2026-11-16
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-95: QA-8 checks [F-8.25] on the space's Home, whose article scrolls in a `ScrollArea` and has no follow code. Fills in [D-90].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25, QA-8]
+  why: Home is in every space and scrolls in a short window, so the test needs no objects of a particular type.
+```
+
+```mdl
+decision D-96: Each Home section (Recent, Activity, Get started) is a scroll anchor named for the section, so a follower whose Home is a different width has the leader's section at the top. Fills in [D-91].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25]
+  why: Home's sections lay out differently by width (Activity's stats wrap to one column in a narrow plank), so the fraction scrolled put a narrower follower a section ahead of the leader. Recent's cards cannot anchor, since they scroll in a masonry area of their own.
+  rejected:
+    - Anchor each Recent card by its object; anchors inside a nested scrolling area move with that area, not with Home.
+decision D-97: `MembersContainer` takes an optional `heading`, on by default; a host that already names the panel, such as a dialog titled "Share", turns off the panel's own title and description.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [MembersContainer]
+  why: The diagram app shows the panel in a dialog whose title already says what it is, and the user asked for the repeated heading to go.
+```
+
+```mdl
+decision D-98: `SpacePresence` takes the avatars' size, so a host with a smaller header than a plank's, such as the diagram app's pill, shows the same list.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpacePresence]
+  why: The diagram app shows presence through `SpacePresence` so its rows carry Jump and Follow, and its pill fits small avatars.
+```
+
+```mdl
+decision D-99: The space surface module declares the Members companion's role, which it binds.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [MembersCompanion]
+  why: Every app with the space plugin logged a surface-role error at boot because the companion's role was missing from the module's declared roles.
+```
+
+```mdl
+decision D-100: `SpacePresence` takes `everyone`, which lists everyone attending something in the space. Fills in [D-98].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.26, SpacePresence]
+  why: The diagram app's pill is its only presence list and has no Members companion, so a list of one diagram's viewers left nobody to follow onto another diagram.
+```
+
+```mdl
+decision D-101: A session sends its viewing message as soon as it hears a session it had not heard from in the space, and keeps one heartbeat however its broadcast is set up again.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.14]
+  why: A peer who joined saw nobody until their next heartbeat, up to 30 seconds. And setting the broadcast up read the followables' atom, whose first build set the broadcast up again from inside; the outer setup then dropped the inner one's handle, so a second heartbeat ran forever with what the session showed at boot, and every 30 seconds peers saw it attend nothing until the live heartbeat corrected them.
+  rejected:
+    - Read the followables' atom before subscribing to it: it fixes this read only, and the next atom a send reads would bring the leak back.
+```
+
+```mdl
+decision D-102: `OpenDeleteSpace` opens the plugin's delete-space confirmation as a layout dialog, whose confirm runs `Delete`, so an app other than Composer asks before a space goes with no dialog of its own. `Delete` itself still deletes at once.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpaceOperation.Delete]
+  why: The diagram app's user asked for its own delete-space dialog to give way to one from the space plugin.
+  rejected:
+    - Ask inside `Delete`: an agent or MCP call would wait on a dialog nobody sees.
 ```
 
 ## Appendix: Extension Definitions

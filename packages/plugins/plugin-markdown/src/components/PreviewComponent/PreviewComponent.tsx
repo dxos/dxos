@@ -191,13 +191,33 @@ export const PreviewComponent = ({
     if (!hasAttention || !selector) {
       return;
     }
-    // A frame later: a surface may mount the element only once attended.
-    const frame = requestAnimationFrame(() => {
+    const root = containerRef.current ?? cardRef.current;
+    if (!root) {
+      return;
+    }
+    // A surface may mount the element only once attended, or once its module has loaded, so it is awaited; the claim
+    // lapses should focus leave the frame first. Taken a frame after a mount, so a field bound to a document holds
+    // its text before it is selected.
+    let frame = 0;
+    const take = () => {
+      frame = 0;
+      const element = root.querySelector<HTMLElement>(selector);
+      if (!element && root.contains(document.activeElement)) {
+        return;
+      }
+      observer.disconnect();
       claimed.current = undefined;
-      const element = (containerRef.current ?? cardRef.current)?.querySelector<HTMLElement>(selector);
       element && focusBlockField(element);
+    };
+    const observer = new MutationObserver(() => {
+      frame ||= requestAnimationFrame(take);
     });
-    return () => cancelAnimationFrame(frame);
+    observer.observe(root, { childList: true, subtree: true });
+    frame = requestAnimationFrame(take);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, [hasAttention]);
 
   // Report the target's state to the editor, which rebuilds this link's decoration: an unresolved

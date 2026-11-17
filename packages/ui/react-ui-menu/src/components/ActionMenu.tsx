@@ -202,12 +202,12 @@ type Segment = { kind: 'item'; item: MenuItem } | { kind: 'radio'; id: string; a
 
 /**
  * Runs of checkable items in a single-select group become one radio group (Ark's radio items need one), whose value is
- * the member marked `checked`.
+ * the member marked `checked`; a `toggle` is pressed on its own (a toolbar's, collapsed into ⋮), so it stays a checkbox.
  */
 const segment = (items: MenuItem[], multiple: boolean): Segment[] =>
   items.reduce<Segment[]>((segments, item) => {
     const last = segments.at(-1);
-    if (multiple || !isCheckable(item)) {
+    if (multiple || !isCheckable(item) || item.properties.variant === 'toggle') {
       segments.push({ kind: 'item', item });
     } else if (last?.kind === 'radio') {
       last.actions.push(item);

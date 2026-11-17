@@ -71,7 +71,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
   // The panel supplies the Header (and its Title), then each step's Body and Footer.
   return (
-    <Dialog.Content>
+    <Dialog.Content data-testid='join-dialog'>
       <JoinPanel
         {...props}
         exitActionParent={<Dialog.CloseTrigger asChild />}

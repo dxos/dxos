@@ -5,9 +5,9 @@
 import { useMemo } from 'react';
 
 import { useObject } from '@dxos/echo-react';
+import { extractNotes, getSpeakerLines } from '@dxos/react-ui-slides';
 
 import { type SlideSource } from '#deck';
-import { extractNotes, getSpeakerLines } from '#markdown';
 
 const slideOf = (source: SlideSource | undefined) => (source && 'slide' in source ? source.slide : undefined);
 
