@@ -58,25 +58,6 @@ describe('worker', () => {
     expect(response.status).toBe(503);
   });
 
-  test('ingestion goes to PostHog without cookies and with the client address', async () => {
-    const upstream = stubUpstream();
-    const request = new Request(`${ORIGIN}/ingest/e/?ip=1`, {
-      method: 'POST',
-      headers: { 'cookie': 'session=1', 'CF-Connecting-IP': '203.0.113.7' },
-      body: '{}',
-    });
-    await worker.fetch(request, env());
-    expect(upstream[0].url).toBe('https://eu.i.posthog.com/e/?ip=1');
-    expect(upstream[0].headers.get('cookie')).toBeNull();
-    expect(upstream[0].headers.get('X-Forwarded-For')).toBe('203.0.113.7');
-  });
-
-  test('PostHog scripts come from its asset host', async () => {
-    const upstream = stubUpstream();
-    await worker.fetch(new Request(`${ORIGIN}/ingest/static/array.js`), env());
-    expect(upstream[0].url).toBe('https://eu-assets.i.posthog.com/static/array.js');
-  });
-
   test('any other path is a static asset', async () => {
     const upstream = stubUpstream();
     const response = await worker.fetch(new Request(`${ORIGIN}/api/other`), env());

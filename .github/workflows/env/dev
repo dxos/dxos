@@ -4,9 +4,10 @@ CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
 COMPOSER_APP_POSTHOG_API_KEY=${COMPOSER_APP_TEST_POSTHOG_API_KEY}
 COMPOSER_APP_POSTHOG_FEEDBACK_SURVEY_ID=0199be95-be15-0000-56ca-1f0dfde8731f
 COMPOSER_APP_POSTHOG_PROJECT_ID=93152
-# The diagram app's own Worker proxies PostHog ingestion and OTLP, so both stay on whichever host serves it.
+# PostHog goes through the diagram app's managed proxy, as Composer's does through o.composer.space. OTLP goes
+# through the app's own Worker, which adds the project token, so it stays on whichever host serves the app.
 DIAGRAM_APP_OTEL_ENDPOINT=/api/otel
-DIAGRAM_APP_POSTHOG_API_HOST=/ingest
+DIAGRAM_APP_POSTHOG_API_HOST=https://o.drawing.sh
 DIAGRAM_APP_POSTHOG_API_KEY=${COMPOSER_APP_TEST_POSTHOG_API_KEY}
 DIAGRAM_APP_POSTHOG_PROJECT_ID=93152
 DOCS_POSTHOG_API_KEY=phc_5PMOqYy30CdIv0hIzqspq0Go8LKbNKG8bISJb5CViTQ

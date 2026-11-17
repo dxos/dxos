@@ -1,7 +1,7 @@
 {
   // Cloudflare Workers (Static Assets) config for the diagram app. `src/functions/worker.ts` (bundled by wrangler) serves
-  // the `run_worker_first` paths: `/api/otel` forwards OTLP to PostHog with the POSTHOG_PROJECT_TOKEN secret, and
-  // `/ingest` is PostHog's reverse proxy. Every other path is a static asset with the SPA fallback.
+  // the `run_worker_first` paths: `/api/otel` forwards OTLP to PostHog with the POSTHOG_PROJECT_TOKEN secret. Every
+  // other path is a static asset with the SPA fallback. PostHog's own traffic goes through its managed proxy, o.drawing.sh.
   // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
   // Local dev: `moon run diagram-app:bundle && wrangler dev`.
   "name": "diagram",
@@ -17,7 +17,7 @@
     "directory": "./out/diagram-app",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/ingest/*"],
+    "run_worker_first": ["/api/*"],
   },
   // `secrets.required` makes `wrangler deploy` refuse an env whose Worker lacks POSTHOG_PROJECT_TOKEN: the Diagram
   // project's token (op://eng-ops/com.posthog/diagram/PROJECT_TOKEN) on preview, Composer Test's

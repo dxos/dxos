@@ -14,7 +14,7 @@ import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvide
 
 const SERVICE_NAME = 'diagram';
 
-/** PostHog's own UI, for the replay and toolbar links that would otherwise point at the `/ingest` proxy. */
+/** PostHog's own UI, for the replay and toolbar links that would otherwise point at the ingestion proxy. */
 const POSTHOG_UI_HOST = 'https://eu.posthog.com';
 
 /**

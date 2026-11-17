@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// The diagram app's Cloudflare Worker. `wrangler.jsonc` routes only `/api/*` and `/ingest/*` here; every other
-// path is a static asset with the SPA fallback.
+// The diagram app's Cloudflare Worker. `wrangler.jsonc` routes only `/api/*` here; every other path is a static asset
+// with the SPA fallback.
 
 export type Env = {
   ASSETS: { fetch: (request: Request) => Promise<Response> };
@@ -14,10 +14,6 @@ export type Env = {
 export const OTEL_PREFIX = '/api/otel';
 const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
 const OTEL_MAX_BODY_SIZE = 64 * 1024 * 1024;
-
-export const INGEST_PREFIX = '/ingest';
-const POSTHOG_API_HOST = 'eu.i.posthog.com';
-const POSTHOG_ASSET_HOST = 'eu-assets.i.posthog.com';
 
 /** Same-origin only: the app posts to its own Worker, and a POST always carries `Origin`. */
 const isSameOrigin = (request: Request) => request.headers.get('Origin') === new URL(request.url).origin;
@@ -99,20 +95,6 @@ const handleOtel = async (request: Request, env: Env, signal: string): Promise<R
   });
 };
 
-/** PostHog's reverse proxy: its scripts from the asset host, everything else to ingestion, without cookies. */
-const handleIngest = async (request: Request, path: string): Promise<Response> => {
-  const url = new URL(request.url);
-  const host = path.startsWith('/static/') ? POSTHOG_ASSET_HOST : POSTHOG_API_HOST;
-  const forwarded = new Request(`https://${host}${path}${url.search}`, request);
-  forwarded.headers.delete('cookie');
-  const ip = request.headers.get('CF-Connecting-IP');
-  if (ip) {
-    // PostHog reads the client's address from here for GeoIP; without it every event resolves to the Worker.
-    forwarded.headers.set('X-Forwarded-For', ip);
-  }
-  return fetch(forwarded);
-};
-
 export default {
   fetch: async (request: Request, env: Env): Promise<Response> => {
     const { pathname } = new URL(request.url);
@@ -121,9 +103,6 @@ export default {
       if (OTEL_SIGNALS.has(signal)) {
         return handleOtel(request, env, signal);
       }
-    }
-    if (pathname.startsWith(`${INGEST_PREFIX}/`)) {
-      return handleIngest(request, pathname.slice(INGEST_PREFIX.length));
     }
     return env.ASSETS.fetch(request);
   },
