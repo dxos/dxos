@@ -12,7 +12,7 @@ import { unified } from 'unified';
 
 import { SlideTheme } from '#types';
 
-import { type LayoutName, LAYOUTS, type SlideFrontmatter, type SlideIssue, parseFrontmatter } from './frontmatter.ts';
+import { type LayoutName, type SlideFrontmatter, type SlideIssue, isLayout, parseFrontmatter } from './frontmatter.ts';
 import { type SlotName, SLOTS, remarkSlidev } from './remark-slidev.ts';
 import { isolateSlotMarkers } from './split.ts';
 
@@ -33,8 +33,6 @@ const hastProcessor = unified().use(remarkRehype);
 
 // `runSync` is typed with unist's base node, so the root is narrowed back to mdast here.
 const isMdastRoot = (node: { type: string }): node is MdastRoot => node.type === 'root';
-
-const isLayout = (value: string): value is LayoutName => LAYOUTS.some((layout) => layout === value);
 
 /**
  * Parses one slide's markdown (optionally starting with a `---` frontmatter block) into hast slots, notes and

@@ -17,7 +17,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Deck, LayoutPicker, SectionPicker } from '#components';
+import { AddSlideButton, Deck, SectionPicker, newSlideContent } from '#components';
 import { type SlideSource } from '#deck';
 import {
   useGridSize,
@@ -33,10 +33,6 @@ import { Presentation, PresenterSurface } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
 import PresentedOverlay from '../PresentedOverlay/index.ts';
-
-/** Content of a slide created from the toolbar, with its `layout:` unless that is the default. */
-const newSlideContent = (layout: LayoutName = 'default'): string =>
-  layout === 'default' ? '# New slide' : `---\nlayout: ${layout}\n---\n\n# New slide`;
 
 export type PresentationArticleProps = AppSurface.ObjectArticleProps<Presentation.Presentation>;
 
@@ -130,28 +126,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
           {!fullscreen && (
             <Panel.Header>
               <Toolbar.Root>
-                {/* A split button (the caret picks the layout the plus adds), unwrapped so the toolbar sees an icon button first. */}
-                <Button.Root
-                  data-testid='presenter.add-slide'
-                  icon='ph--plus--regular'
-                  iconOnly
-                  variant='ghost'
-                  label={t('add-slide.label')}
-                  onClick={handleAddSlide}
-                />
-                <LayoutPicker
-                  value={newSlideLayout}
-                  onChange={setNewSlideLayout}
-                  trigger={
-                    <Button.Root
-                      data-testid='presenter.add-slide.layout'
-                      icon='ph--caret-down--regular'
-                      iconOnly
-                      variant='ghost'
-                      label={t('add-slide-layout.label')}
-                    />
-                  }
-                />
+                <AddSlideButton layout={newSlideLayout} onLayoutChange={setNewSlideLayout} onAdd={handleAddSlide} />
 
                 <SectionPicker presentation={subject} />
                 <div className='grow' />

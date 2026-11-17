@@ -49,8 +49,8 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-export const KUBE = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
+export const EDGE = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
   <IconBase ref={ref} {...props} weights={weights} />
 ));
 
-KUBE.displayName = 'KUBE';
+EDGE.displayName = 'EDGE';
