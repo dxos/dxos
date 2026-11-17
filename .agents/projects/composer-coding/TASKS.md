@@ -91,6 +91,19 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
 - [ ] The first cold start after a bundle version is published still builds it (~25 s); building the entry at
       publish time (registry) would remove that too.
 
+## Phase 5: Composer does the coding (user direction 2026-11-17)
+
+- [x] Runs filed and finished: edge#1543 (trace nested bundle calls; deployed to dev), edge#1544 (worker-code
+      cache written at publish; stacked on #1537), dxos#14573 (tasks.update returns only what changed),
+      dxos#14574 (plugin-github loads an unloaded PR ref; published to dev), bundle-log forwarding (edge, branch
+      `claude/bundle-logs-posthog`, not pushed).
+- [x] Monitoring by `dx mcp call` in a background loop (scratchpad watch-runs.sh): one Bash call per run state.
+- [ ] BLOCKER: the space's GitHub user token (`ghu_`, 8 h expiry) expired; runs cannot push, and syncCloudRun's
+      GitHub calls fail silently (PRs not attached, `merged: false`). User must reconnect GitHub in the Coding
+      space. Task filed: refresh the token before lending it, and fail loudly when it cannot.
+- [x] edge#1537 merged main (via #1535 updated from main) and enables plugin-claude locally too (new
+      local-equals-dev routing test).
+
 ## Phase 4: Control surfaces
 
 - [x] `dx` built from source (overlaying dxos#14313's CLI files, not committed), logged in through the dev
