@@ -134,7 +134,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             .map((schema) => Type.getURI(schema)),
         );
 
-        const visibleSchemas = userSchemas.filter((schema) => {
+        const listed = (schema: Type.AnyEntity): boolean => {
           if (Type.getDatabase(schema) != null) {
             return true;
           }
@@ -143,7 +143,12 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             return viewIndex.typeUrisWithNonViewObjects.has(typeUri);
           }
           return withObjects.has(typeUri) || viewIndex.typeUrisWithViews.has(typeUri);
-        });
+        };
+        // An enabled plugin's type keeps a hidden node before the index counts its objects, so a link to one of
+        // them resolves as soon as the object loads.
+        const visibleSchemas = userSchemas.filter(
+          (schema) => listed(schema) || contributedTypeUris.has(Type.getURI(schema)),
+        );
 
         // Sort alphabetically by display name. Static types' labels are `typename.label` translation
         // keys resolved at render; resolve them here via the Translator capability so the order matches
@@ -168,9 +173,10 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
                 hasViews: viewIndex.typeUrisWithViews.has(Type.getURI(schema)),
                 // A view over the type lives under this node, so the node stays visible while it has one.
                 hidden:
-                  Type.getDatabase(schema) == null &&
-                  !contributedTypeUris.has(Type.getURI(schema)) &&
-                  !viewIndex.typeUrisWithViews.has(Type.getURI(schema)),
+                  !listed(schema) ||
+                  (Type.getDatabase(schema) == null &&
+                    !contributedTypeUris.has(Type.getURI(schema)) &&
+                    !viewIndex.typeUrisWithViews.has(Type.getURI(schema))),
               }),
             )
             .toSorted((nodeA, nodeB) => labelOf(nodeA).localeCompare(labelOf(nodeB))),

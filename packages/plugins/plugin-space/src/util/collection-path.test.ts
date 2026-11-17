@@ -2,16 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { EntityId } from '@dxos/keys';
 
-import { resolveCollectionObjectPath, walkCollectionChainToRoot } from './collection-path.ts';
+import { resolveCollectionObjectPath, resolveObjectPath, walkCollectionChainToRoot } from './collection-path.ts';
 
 describe('walkCollectionChainToRoot', () => {
   let builder: EchoTestBuilder;
@@ -182,5 +185,47 @@ describe('resolveCollectionObjectPath', () => {
     await db.flush({ indexes: true });
 
     expect(await resolve(orphan.id)).toBeUndefined();
+  });
+});
+
+describe('resolveObjectPath', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const setup = async () => {
+    const { db } = await builder.createDatabase({ types: [Collection.Collection, SpaceProperties] });
+    const resolve = (objectId: string, timeout?: Duration.Input) =>
+      EffectEx.runPromise(resolveObjectPath({ objectId, timeout }).pipe(Effect.provide(Database.layer(db))));
+    return { db, resolve };
+  };
+
+  test('an object no collection lists yet opens under its database path', async ({ expect }) => {
+    const { db, resolve } = await setup();
+    const orphan = db.add(Collection.make());
+    await db.flush({ indexes: true });
+
+    expect(await resolve(orphan.id)).toBe(GraphPath.getObjectPathFromObject(orphan));
+  });
+
+  test('an object that arrives after the link opens is awaited', async ({ expect }) => {
+    const { db, resolve } = await setup();
+    const arriving = Collection.make();
+    const resolved = resolve(arriving.id);
+    db.add(arriving);
+
+    expect(await resolved).toBe(GraphPath.getObjectPathFromObject(arriving));
+  });
+
+  test('an object that never arrives resolves to nothing once the wait ends', async ({ expect }) => {
+    const { resolve } = await setup();
+
+    expect(await resolve(EntityId.random(), '10 millis')).toBeUndefined();
   });
 });

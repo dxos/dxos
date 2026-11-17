@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -13,6 +14,52 @@ import { EID } from '@dxos/keys';
 
 /** Depth cap for the collection-ancestry walk; the composer nav tree is shallow, this only guards bad data. */
 const COLLECTION_WALK_MAX_DEPTH = 32;
+
+/** How long a link waits for its object to replicate before it resolves to nothing. */
+export const OBJECT_ARRIVAL_TIMEOUT: Duration.Input = '30 seconds';
+
+/**
+ * The path a link to `objectId` opens: its collection path, or its database path while no collection that lists it
+ * has replicated. An object not here yet is awaited, up to `timeout`, since resolution runs once, when the link opens.
+ */
+export const resolveObjectPath = ({
+  objectId,
+  timeout = OBJECT_ARRIVAL_TIMEOUT,
+}: {
+  objectId: string;
+  timeout?: Duration.Input;
+}): Effect.Effect<string | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const path = yield* resolveCollectionObjectPath({ objectId });
+    if (path) {
+      return path;
+    }
+    const object = yield* awaitObject(objectId, timeout);
+    if (!object) {
+      return undefined;
+    }
+    return (yield* resolveCollectionObjectPath({ objectId })) ?? GraphPath.getObjectPathFromObject(object);
+  });
+
+/** The object once this peer has it, or undefined after `timeout`. */
+const awaitObject = (
+  objectId: string,
+  timeout: Duration.Input,
+): Effect.Effect<Obj.Unknown | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const result = yield* Database.query(Filter.id(objectId));
+    return yield* Effect.callback<Obj.Unknown | undefined>((resume) => {
+      const unsubscribe = result.subscribe(
+        ({ results: [object] }) => {
+          if (Obj.isObject(object)) {
+            resume(Effect.succeed(object));
+          }
+        },
+        { fire: true },
+      );
+      return Effect.sync(unsubscribe);
+    }).pipe(Effect.timeoutOrElse({ duration: timeout, orElse: () => Effect.succeed(undefined) }));
+  });
 
 /**
  * The path under which the nav tree shows an object, when it lives in the space's collection tree:

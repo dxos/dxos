@@ -10,10 +10,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as HaloServices from '@dxos/plugin-client/HaloServices';
@@ -70,8 +71,29 @@ export default Capability.makeModule(
         ),
       );
 
+    // A failure costs only the ordering: the whole space replicates regardless.
+    const syncOpenedObjectFirst = (url: URL) => {
+      const opened = UrlPath.readReferences(url.pathname).at(-1);
+      if (!opened || !SpaceId.isValid(opened.workspace)) {
+        return Effect.void;
+      }
+      const spaceId = opened.workspace;
+      return Effect.tryPromise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT })).pipe(
+        Effect.andThen(Effect.tryPromise(() => client.spaces.syncFirst(spaceId, opened.entityId))),
+        Effect.catch((error) => Effect.sync(() => log.warn('opened object not replicated first', { error }))),
+      );
+    };
+    // Only the URL the app opens on: a later navigation lands in a space that is already replicating.
+    let opening = true;
+
     const handler: AppCapabilities.NavigationHandler = (url: URL) =>
       Effect.gen(function* () {
+        if (opening) {
+          opening = false;
+          // Detached because URL projection waits on every handler, and this waits on the client.
+          yield* Effect.forkDetach(syncOpenedObjectFirst(url));
+        }
+
         const joinSpaceKey = readJoinSpaceKey(url, joinSpaceKeyProp);
         if (joinSpaceKey) {
           // Detached because URL projection waits on every handler, and a join waits on a member coming online.
