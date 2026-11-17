@@ -12,7 +12,10 @@ import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
+import { ViewState } from '@dxos/react-ui-attention/types';
 import * as Position from '@dxos/util/Position';
+
+import { ProjectView } from '#types';
 
 import { artifacts } from '../artifacts.ts';
 import { getProjectArtifactPath, getProjectChatPath } from '../paths.ts';
@@ -20,7 +23,7 @@ import * as ProjectGraph from '../ProjectGraph.ts';
 
 /**
  * Places a project's chats on its Chats branch, the artifacts it is parent of on its Artifacts branch, and its specs on
- * the project itself, since a spec has no node of its own. Without this a project chat resolves only to the assistant's
+ * the project itself, since a spec has no node of its own; a spec's target opens the project on its Specs tab showing it. Without this a project chat resolves only to the assistant's
  * Chats section, whose connector queries unparented chats — so the path names a node that does not exist and opening it
  * leaves a blank pane.
  *
@@ -48,20 +51,23 @@ export const resolveNavigationTarget: AppCapabilities.NavigationTargetResolver =
       return [];
     }
 
-    const path = Obj.instanceOf(Chat.Chat, object)
-      ? getProjectChatPath(db.spaceId, project.id, object.id)
+    const target = Obj.instanceOf(Chat.Chat, object)
+      ? { path: getProjectChatPath(db.spaceId, project.id, object.id) }
       : Obj.instanceOf(Spec.Spec, object)
-        ? ProjectGraph.getProjectPath(db.spaceId, project.id)
+        ? {
+            path: ProjectGraph.getProjectPath(db.spaceId, project.id),
+            viewState: [ViewState.patch(ProjectView.aspect, Obj.getURI(project), { tab: 'spec', spec: object.id })],
+          }
         : ContainerModel.includes(artifacts(project), object)
-          ? getProjectArtifactPath(db.spaceId, project.id, object.id)
+          ? { path: getProjectArtifactPath(db.spaceId, project.id, object.id) }
           : undefined;
-    if (!path) {
+    if (!target) {
       return [];
     }
 
     return [
       {
-        path,
+        ...target,
         label: Entity.getLabel(object) ?? '',
         type: Obj.getTypename(object)!,
         position: Position.first,

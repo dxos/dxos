@@ -40,7 +40,8 @@ feat F-4: A project's specs
   req F-4.5: The project article's Specs tab shows one spec, picked from a dropdown in its toolbar that also offers Add
              spec. The dropdown lists the project's specs in order, each followed by the specs nested beneath it,
              indented, by name, to any depth; its trigger names the spec shown. It opens on the spec picked last, or
-             the project's first.
+             the project's first; a link to a spec, a comment's notification among them, opens its project on that
+             spec.
   req F-4.6: A spec nests beneath each spec whose block's `Ref<spec>` field cites it, by object id (`echo:///<id>`) or
              spec id. The dropdown lists it once, under the first spec that reaches it, and a cycle stops before a
              spec repeats. The nav tree lists no specs beneath a project: the Specs tab's dropdown is where a
@@ -688,6 +689,37 @@ test QA-12: Two people write a chess plugin's spec with the agent
     - name: Read the finished spec
       do: Both scroll through the spec's text from the top.
       expect: the summary and bullets, the features each with requirements, and the `type` and `op` blocks
+```
+
+```mdl
+test QA-13: A comment's notification opens the spec it is on
+  desc: |
+    A project holds two specs. Bob comments on the second and goes back to the first; Alice replies to him. Opening
+    the notification takes Bob to the spec the thread is on, with the thread beside it, not to the spec he last
+    picked. Walked by the autocue flow `packages/plugins/plugin-projects/autocue/spec-notification.mjs`, recorded
+    side by side.
+  actors: human
+  covers: [F-4.5]
+  status: unverified
+  given:
+    - alice: a booted app named "Alice"
+    - bob: a second browser profile named "Bob", joined to Alice's space by invitation
+    - the project "Chess" with the specs "Rules" and "Openings", each holding a line of text
+  steps:
+    - name: Bob comments on the second spec
+      do: Bob opens "Chess" on its Specs tab, picks "Openings" from the spec dropdown and comments "Which openings
+        ship first?" on its line.
+      expect: the thread shows in Bob's Comments
+    - name: Bob goes back to the first spec
+      do: Bob picks "Rules" from the spec dropdown.
+      expect: Bob's Specs tab shows "Rules"
+    - name: Alice replies
+      do: Alice opens "Chess" on "Openings" and replies "The Italian and the Sicilian." to Bob's thread.
+      expect: Bob's notifications tab shows a badge of one, and the panel holds a notification for "Openings"
+    - name: Bob opens the notification
+      do: Bob opens the "Openings" notification.
+      expect: the dropdown's trigger reads "Openings", the tab shows its text, and Comments beside it shows the thread
+        with Alice's reply
 ```
 
 ## Changelog
@@ -3142,4 +3174,16 @@ decision D-276: A spec's type names the feature-map skill, so the agent answerin
   why: A comment's agent gets only the skills its subject's type names, and a spec named none, so "@Kai add a requirement" could answer but not edit the `feat` block.
   rejected:
     - Binding the skill from plugin-projects' subject context; the type already carries a project's skill the same way.
+```
+
+```mdl
+decision D-277: A navigation target can carry view state, as patches the Open operation applies before its planks open, so a spec's target opens its project on that spec. QA-13 checks it with a notification for a project's second spec. Fills in [D-275].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.5, QA-13]
+  why: The project's path names no spec, so a notification opened the spec the reader picked last, which in a project of several specs can be another one.
+  rejected:
+    - A path segment for the spec under its project; [D-275] keeps a spec off the graph.
+    - Writing the view state while resolving the target; resolving also serves menus, search and agents that open nothing.
 ```

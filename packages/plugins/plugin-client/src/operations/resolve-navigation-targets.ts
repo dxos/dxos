@@ -64,7 +64,7 @@ const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigatio
               seen.add(path);
               return true;
             })
-            .map(({ path, label, type }) => ({ path, label, type })),
+            .map(({ path, label, type, viewState }) => ({ path, label, type, viewState })),
         };
       }),
     ),

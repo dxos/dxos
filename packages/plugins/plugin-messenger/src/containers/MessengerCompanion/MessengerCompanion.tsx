@@ -61,16 +61,17 @@ export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) =>
         loadLink(client, ref).pipe(
           Effect.flatMap((object) =>
             Effect.promise(async () => {
-              // The owning plugin knows where an object lives; a spec, say, opens as part of its project.
+              // The owning plugin knows where an object lives; a spec, say, opens as part of its project, showing that spec.
               const db = Obj.getDatabase(object);
               const { data } = db
                 ? await invokePromise(NavigationOperation.ResolveNavigationTargets, {
                     query: { uri: EID.make({ spaceId: db.spaceId, entityId: object.id }) },
                   })
                 : { data: undefined };
-              const path = data?.targets[0]?.path ?? GraphPath.getObjectPathFromObject(object);
+              const target = data?.targets[0];
               await invokePromise(LayoutOperation.Open, {
-                subject: [path],
+                subject: [target?.path ?? GraphPath.getObjectPathFromObject(object)],
+                viewState: target?.viewState,
                 variant: typeof companion === 'string' ? companion : undefined,
               });
             }),
