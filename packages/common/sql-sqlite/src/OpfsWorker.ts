@@ -31,6 +31,7 @@ import {
 import { recordSqliteQueryMetrics } from './internal/query-log.ts';
 import { readRow } from './internal/row-decode.ts';
 import { instantiateSqliteModule } from './internal/sqlite-module.ts';
+import { makeStatementCache } from './internal/statement-cache.ts';
 import { instrumentVfs, recordStatement, statementKind } from './internal/vfs-metrics.ts';
 
 /** @internal */
@@ -100,6 +101,10 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
         }),
     );
 
+    const statements = makeStatementCache(sqlite3, db);
+    // Finalizers run in reverse, so the cached statements are finalized before the connection closes.
+    yield* Effect.addFinalizer(() => Effect.sync(statements.clear));
+
     return yield* Effect.callback<void>((resume) => {
       const onMessage = (event: any) => {
         let messageId: number;
@@ -116,6 +121,8 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
               const [, id, data] = message;
               messageId = id;
               log('opfs import', { bytes: data.byteLength });
+              // The import replaces the schema the cached statements were prepared against.
+              statements.clear();
               sqlite3.deserialize(db, 'main', data, data.length, data.length, 1 | 2);
               for (const stmt of sqlite3.statements(db, 'VACUUM')) {
                 let result = sqlite3.step(stmt);
@@ -165,7 +172,7 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
               const columns: Array<Array<string>> = [];
               const kind = statementKind(sql);
               const writes = kind === 'insert' || kind === 'update' || kind === 'delete';
-              for (const stmt of sqlite3.statements(db, sql)) {
+              const execute = (stmt: number) => {
                 let statementColumns: Array<string> | undefined;
                 const rowsBefore = results.length;
                 sqlite3.bind_collection(stmt, params as any);
@@ -176,7 +183,8 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
                   columns.push(statementColumns);
                 }
                 recordStatement(kind, results.length - rowsBefore, writes ? sqlite3.changes(db) : 0);
-              }
+              };
+              statements.forEach(sql, execute);
               options.port.postMessage([id, undefined, [columns, results]]);
               recordSqliteQueryMetrics(sql, params, results.length, begin);
               return;

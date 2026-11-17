@@ -40,6 +40,8 @@ export class AutomergeFeedSource implements IndexDataSource {
   readonly #docs: DocStore;
   readonly #spaceId: SpaceId;
   readonly #sql: SqlClient.SqlClient;
+  /** Each document's heads when its changes were last recorded, so the next pass reads only the newer ones. */
+  readonly #recordedHeads = new Map<string, string[]>();
 
   constructor(options: { feedStore: FeedStore; docs: DocStore; spaceId: SpaceId; sql: SqlClient.SqlClient }) {
     this.#feedStore = options.feedStore;
@@ -99,7 +101,7 @@ export class AutomergeFeedSource implements IndexDataSource {
       const changes: ChangeRow[] = [];
       for (const [documentId, doc] of docs) {
         // Every change the document holds; ones recorded before are ignored.
-        for (const meta of A.getChangesMetaSince(doc, [])) {
+        for (const meta of this.#changesSinceRecorded(documentId, doc)) {
           if (meta.time > 0) {
             changes.push({
               spaceId,
@@ -152,5 +154,22 @@ export class AutomergeFeedSource implements IndexDataSource {
         (error) => Effect.die(error),
       ),
     );
+  }
+
+  /**
+   * The document's changes not recorded yet: the whole history the first time this session sees it (the
+   * insert ignores rows already stored), then only what came after.
+   */
+  #changesSinceRecorded(documentId: string, doc: A.Doc<unknown>): A.ChangeMetadata[] {
+    const since = this.#recordedHeads.get(documentId) ?? [];
+    let changes: A.ChangeMetadata[];
+    try {
+      changes = A.getChangesMetaSince(doc, since);
+    } catch {
+      // Heads this copy does not hold (it was reloaded from other blocks): read the whole history again.
+      changes = A.getChangesMetaSince(doc, []);
+    }
+    this.#recordedHeads.set(documentId, A.getHeads(doc));
+    return changes;
   }
 }
