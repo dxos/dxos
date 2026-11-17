@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Predicate } from './fast-query.ts';
 import { RowTable } from './rows.ts';
 import { Decoder, Encoder } from './wire.ts';
 
@@ -24,6 +25,8 @@ type Exports = {
   db_unpositioned(handle: number, len: number): number;
   db_set_positions(handle: number, len: number): number;
   db_statements(handle: number): number;
+  db_profile(handle: number): number;
+  db_log_changes(handle: number): number;
 };
 
 const isExports = (value: WebAssembly.Exports): value is WebAssembly.Exports & Exports =>
@@ -225,6 +228,23 @@ export class Native {
     this.#invoke((len) => this.#exports.file_drop(len), this.#encoder.reset().str(path));
   }
 
+  /** Logs the changes of documents written or pulled since the last call, for change queries. */
+  logChanges(handle: number): void {
+    this.#invoke(() => this.#exports.db_log_changes(handle), this.#encoder.reset());
+  }
+
+  /** Microseconds the engine spent per write phase since open. */
+  profile(handle: number): Record<string, number> {
+    const out = this.#invoke(() => this.#exports.db_profile(handle), this.#encoder.reset());
+    return Object.fromEntries(
+      new TextDecoder()
+        .decode(out)
+        .split('\n')
+        .map((line) => line.split('='))
+        .map(([name, value]) => [name, Number(value)]),
+    );
+  }
+
   statements(handle: number): number {
     return this.#exports.db_statements(handle);
   }
@@ -272,9 +292,14 @@ export class Native {
   }
 
   /** Runs one statement; the table is copied out of wasm memory once and decoded lazily from there. */
-  query(handle: number, sql: string, params: readonly unknown[] = []): RowTable {
+  query(handle: number, sql: string, params: readonly unknown[] = [], predicates: readonly Predicate[] = []): RowTable {
     const encoder = this.#encoder.reset().str(sql).u32(params.length);
     params.forEach((param) => encoder.value(param));
+    encoder.u32(predicates.length);
+    for (const { key, op, operands } of predicates) {
+      encoder.str(key).u8(op).u32(operands.length);
+      operands.forEach((operand) => encoder.value(operand));
+    }
     const out = this.#invoke((len) => this.#exports.db_query(handle, len), encoder);
     return new RowTable(out.slice());
   }

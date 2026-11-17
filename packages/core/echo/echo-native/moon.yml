@@ -16,9 +16,14 @@ tasks:
       - scripts/build-wasm.sh
     outputs:
       - dist/echo_native.wasm
+    options:
+      # CI has no Rust toolchain; the engine is built and tested where one is installed.
+      runInCI: false
   test:
     deps:
       - ~:build-wasm
+    options:
+      runInCI: false
   # Node benches against echo-sqlite's; never cached, since a cached measurement measured nothing.
   bench:
     command: pnpm exec vitest bench --run --project node
@@ -29,3 +34,4 @@ tasks:
       - ^:build
     options:
       cache: false
+      runInCI: false

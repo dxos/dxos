@@ -43,7 +43,7 @@ export class NativeSync {
   #closed = false;
   #lastError: unknown = undefined;
   /** Blocks pulled and pushed, for the benchmark report. */
-  readonly stats = { pulled: 0, pushed: 0, rounds: 0 };
+  readonly stats = { pulled: 0, pushed: 0, rounds: 0, engineMs: 0, waitMs: 0, applyMs: 0 };
 
   constructor(db: NativeDatabase, transport: SyncTransport, options: { peerId?: string } = {}) {
     this.#db = db;
@@ -154,6 +154,7 @@ export class NativeSync {
   async #pull(): Promise<boolean> {
     const { native, handle } = this.#db.store;
     const { lastPulledPosition, serverToken } = native.syncState(handle, NAMESPACE);
+    const waitStart = performance.now();
     const reply = await this.#rpc({
       _tag: 'QueryRequest',
       requestId: crypto.randomUUID(),
@@ -165,6 +166,7 @@ export class NativeSync {
       limit: BATCH,
       expectedServerToken: serverToken,
     });
+    this.stats.waitMs += performance.now() - waitStart;
     if (reply._tag !== 'QueryResponse') {
       throw new Error(`unexpected reply ${reply._tag}`);
     }
@@ -182,10 +184,14 @@ export class NativeSync {
       return true;
     }
     const cursor = response.blocks.reduce((max, block) => Math.max(max, block.position ?? max), base);
+    const engineStart = performance.now();
     const indexed = native.applyPulled(handle, NAMESPACE, response.serverToken ?? serverToken, cursor, response.blocks);
+    this.stats.engineMs += performance.now() - engineStart;
     this.stats.pulled += response.blocks.length;
     this.#db.store.notePulled(indexed);
+    const applyStart = performance.now();
     await this.#db.applyRemote();
+    this.stats.applyMs += performance.now() - applyStart;
     return false;
   }
 

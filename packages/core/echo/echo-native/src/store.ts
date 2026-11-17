@@ -221,7 +221,7 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
    */
   queryFast(fast: FastQuery): Store<StoredEntity[] | undefined> {
     return attempt(() => {
-      const table = this.#native.query(this.#handle, fast.sql, fast.params);
+      const table = this.#native.query(this.#handle, fast.sql, fast.params, fast.predicates);
       const dependencies = ['parentId', 'sourceId', 'targetId'].map((name) => table.column(name));
       for (let row = 0; row < table.rows; row++) {
         if (dependencies.some((column) => table.get(row, column) !== null)) {
@@ -234,6 +234,7 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
 
   queryChanges(compiled: CompiledChanges): Store<Record<string, unknown>[]> {
     return attempt(() => {
+      this.#native.logChanges(this.#handle);
       const table = this.#native.query(this.#handle, compiled.sql, compiled.params);
       return compiled.grouped
         ? table.objects().map((row) => JSON.parse(String(row.record)))

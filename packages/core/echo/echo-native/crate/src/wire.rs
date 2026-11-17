@@ -32,13 +32,6 @@ impl Value {
             _ => None,
         }
     }
-
-    pub fn as_str(&self) -> Option<&str> {
-        match self {
-            Value::Str(text) => Some(text),
-            _ => None,
-        }
-    }
 }
 
 pub struct Reader<'a> {

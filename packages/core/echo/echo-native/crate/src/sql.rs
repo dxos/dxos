@@ -178,9 +178,21 @@ impl Db {
         self.query(sql, params, |_| Ok(()))
     }
 
+    /// The index of a result column, by name, of a (cached) statement.
+    pub fn column_index(&mut self, sql: &str, name: &str) -> SqlResult<Option<usize>> {
+        let statement = self.prepared(sql)?;
+        Ok((0..statement.num_columns()).find(|index| statement.get_column_name(*index) == name))
+    }
+
     /// Writes a statement's result as a row table (see `src/rows.ts`): column names, then one
     /// fixed-size cell per column per row, with text and blob payloads after the cells.
-    pub fn query_table(&mut self, sql: &str, params: &[Param], out: &mut Writer) -> SqlResult<()> {
+    pub fn query_table(
+        &mut self,
+        sql: &str,
+        params: &[Param],
+        out: &mut Writer,
+        mut keep: impl FnMut(&[Cell<'_>]) -> bool,
+    ) -> SqlResult<()> {
         // Payloads are gathered apart from the fixed cells so the cells stay at computable offsets.
         let mut heap: Vec<u8> = Vec::new();
         let mut cells: Vec<u8> = Vec::new();
@@ -188,6 +200,9 @@ impl Db {
         let mut columns: u32 = 0;
         self.query(sql, params, |row| {
             columns = row.len() as u32;
+            if !keep(row) {
+                return Ok(());
+            }
             rows += 1;
             for value in row {
                 let (tag, len, payload): (u32, u32, u64) = match value {

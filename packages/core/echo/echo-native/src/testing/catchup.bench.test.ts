@@ -56,6 +56,7 @@ describe('sync catch-up', { tags: ['manual'], timeout: 600_000 }, () => {
 
     const results: Record<string, number[]> = { 'echo-sqlite': [], 'echo-native': [] };
     const statements: number[] = [];
+    const phases: string[] = [];
     for (let run = 0; run < RUNS; run++) {
       {
         const peer = sqlite.createPeer({ types: TYPES });
@@ -77,6 +78,11 @@ describe('sync catch-up', { tags: ['manual'], timeout: 600_000 }, () => {
         await sync.synced();
         results['echo-native'].push(performance.now() - start);
         statements.push(db.native.statements(db.store.handle) - before);
+        const { engineMs, waitMs, applyMs, pulled } = sync.stats;
+        console.log('echo-native engine phases (µs):', JSON.stringify(db.native.profile(db.store.handle)));
+        phases.push(
+          `pulled ${pulled} blocks; engine ${Math.round(engineMs)} ms, waiting on the authority ${Math.round(waitMs)} ms, live-object refresh ${Math.round(applyMs)} ms`,
+        );
         await sync.close();
       }
     }
@@ -87,6 +93,7 @@ describe('sync catch-up', { tags: ['manual'], timeout: 600_000 }, () => {
     }));
     console.table(rows);
     console.log(`echo-native SQL statements per catch-up: ${statements.join(', ')}`);
+    phases.forEach((line) => console.log(`echo-native ${line}`));
     expect(results['echo-native']).toHaveLength(RUNS);
   });
 });

@@ -118,6 +118,12 @@ pub extern "C" fn db_edit(handle: u32, len: u32) -> i32 {
     call(len, |input, out, _, engines| engine(engines, handle)?.edit(input, out))
 }
 
+/// Logs pending document changes for change queries.
+#[no_mangle]
+pub extern "C" fn db_log_changes(handle: u32) -> i32 {
+    call(0, |_, _, _, engines| engine(engines, handle)?.log_changes())
+}
+
 #[no_mangle]
 pub extern "C" fn db_query(handle: u32, len: u32) -> i32 {
     call(len, |input, out, _, engines| engine(engines, handle)?.query(input, out))
@@ -177,5 +183,26 @@ pub extern "C" fn db_set_positions(handle: u32, len: u32) -> i32 {
 pub extern "C" fn db_statements(handle: u32) -> f64 {
     STATE.with(|state| {
         state.borrow().engines.get(handle as usize).and_then(Option::as_ref).map(|e| e.statements() as f64).unwrap_or(0.0)
+    })
+}
+
+/// Microseconds spent per write phase since open, as `name=value` lines, for the benchmark report.
+#[no_mangle]
+pub extern "C" fn db_profile(handle: u32) -> i32 {
+    call(0, |_, out, _, engines| {
+        let profile = &engine(engines, handle)?.profile;
+        let text = format!(
+            "automerge_change={}\nautomerge_save={}\nautomerge_load={}\nblocks_sql={}\nindex_read={}\nindex_sql={}\nchanges={}\ntransaction={}",
+            profile.automerge_change,
+            profile.automerge_save,
+            profile.automerge_load,
+            profile.blocks_sql,
+            profile.index_read,
+            profile.index_sql,
+            profile.changes,
+            profile.transaction
+        );
+        out.buf.extend_from_slice(text.as_bytes());
+        Ok(())
     })
 }

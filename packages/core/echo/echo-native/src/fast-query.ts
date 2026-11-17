@@ -6,7 +6,11 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { DXN, type SpaceId } from '@dxos/keys';
 
 /** A statement for the engine and its parameters. */
-export type FastQuery = { readonly sql: string; readonly params: readonly unknown[] };
+export type FastQuery = {
+  readonly sql: string;
+  readonly params: readonly unknown[];
+  readonly predicates: readonly Predicate[];
+};
 
 /**
  * The columns the fast path reads: a row's dependencies come back with it, so the caller can tell
@@ -37,6 +41,7 @@ export const compileFast = (ast: QueryAST.Query, spaceId: SpaceId): FastQuery | 
   }
   const conditions: string[] = [];
   const params: unknown[] = [spaceId];
+  const predicates: Predicate[] = [];
   for (const filter of filters) {
     if (filter.foreignKeys !== undefined || filter.metaKey !== undefined || filter.metaVersion !== undefined) {
       return undefined;
@@ -44,6 +49,10 @@ export const compileFast = (ast: QueryAST.Query, spaceId: SpaceId): FastQuery | 
     if (filter.id !== undefined) {
       if (filter.id.length === 0) {
         conditions.push('0');
+      } else if (filter.id.length === 1) {
+        // Turso seeks an index on `=` but scans on `IN (?)`, even with one element.
+        conditions.push('m.objectId = ?');
+        params.push(filter.id[0]);
       } else {
         conditions.push(`m.objectId IN (${filter.id.map(() => '?').join(', ')})`);
         params.push(...filter.id);
@@ -61,11 +70,11 @@ export const compileFast = (ast: QueryAST.Query, spaceId: SpaceId): FastQuery | 
       }
     }
     for (const [key, inner] of Object.entries(filter.props)) {
-      const condition = propCondition(key, inner, params);
-      if (condition === undefined) {
+      const predicate = propPredicate(key, inner);
+      if (predicate === undefined) {
         return undefined;
       }
-      conditions.push(condition);
+      predicates.push(predicate);
     }
   }
   const where = conditions.length > 0 ? ` AND ${conditions.join(' AND ')}` : '';
@@ -74,6 +83,7 @@ export const compileFast = (ast: QueryAST.Query, spaceId: SpaceId): FastQuery | 
 WHERE m.spaceId = ? AND m.queueId = '' AND m.deleted = 0${where}
 ORDER BY m.objectId, m.recordId`,
     params,
+    predicates,
   };
 };
 
@@ -89,62 +99,51 @@ const flatten = (filter: QueryAST.Filter): QueryAST.FilterObject[] | undefined =
   return undefined;
 };
 
-/** The JSON path of a top-level property, quoted as the compiler quotes it. */
-const pathOf = (key: string): string => `$."${key.replaceAll('"', '""')}"`;
+/** Operators of a {@link Predicate}; `crate/src/engine.rs` reads the same codes. */
+export const PredicateOp = { eq: 0, gt: 1, gte: 2, lt: 3, lte: 4, between: 5 } as const;
 
 /**
- * A scalar comparison on one top-level property, with the compiler's strict typing (a number never
- * equals a string), or undefined for anything else.
+ * A comparison on one top-level property, evaluated by the engine on each row's snapshot rather than
+ * with SQL JSON functions, which re-parse the snapshot per call. Strictly typed: a number operand
+ * matches only numbers, a string only strings, a boolean only booleans.
  */
-const propCondition = (key: string, filter: QueryAST.Filter, params: unknown[]): string | undefined => {
-  const path = pathOf(key);
-  const type = `json_type(s.snapshot, '${path.replaceAll("'", "''")}')`;
-  const value = `json_extract(s.snapshot, '${path.replaceAll("'", "''")}')`;
-  const typed = (operator: string, operand: unknown): string | undefined => {
-    if (typeof operand === 'number') {
-      params.push(operand);
-      return `COALESCE(${type} IN ('integer', 'real') AND ${value} ${operator} ?, 0)`;
-    }
-    if (typeof operand === 'string') {
-      params.push(operand);
-      return `COALESCE(${type} = 'text' AND ${value} ${operator} ?, 0)`;
-    }
-    return undefined;
-  };
+export type Predicate = {
+  readonly key: string;
+  readonly op: (typeof PredicateOp)[keyof typeof PredicateOp];
+  readonly operands: readonly (number | string | boolean)[];
+};
+
+const isScalar = (value: unknown): value is number | string | boolean =>
+  typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean';
+
+/** The predicate for one property filter, or undefined for a filter the engine does not evaluate. */
+const propPredicate = (key: string, filter: QueryAST.Filter): Predicate | undefined => {
   switch (filter.type) {
     case 'compare': {
       const operand = filter.value;
-      if (filter.operator === 'eq') {
-        if (typeof operand === 'boolean') {
-          return `COALESCE(${type} = '${operand ? 'true' : 'false'}', 0)`;
-        }
-        return typed('=', operand);
+      if (!isScalar(operand) || (typeof operand === 'boolean' && filter.operator !== 'eq')) {
+        return undefined;
       }
       switch (filter.operator) {
+        case 'eq':
+          return { key, op: PredicateOp.eq, operands: [operand] };
         case 'gt':
-          return typed('>', operand);
+          return { key, op: PredicateOp.gt, operands: [operand] };
         case 'gte':
-          return typed('>=', operand);
+          return { key, op: PredicateOp.gte, operands: [operand] };
         case 'lt':
-          return typed('<', operand);
+          return { key, op: PredicateOp.lt, operands: [operand] };
         case 'lte':
-          return typed('<=', operand);
+          return { key, op: PredicateOp.lte, operands: [operand] };
         default:
           return undefined;
       }
     }
-    case 'range': {
-      // One type test and one extraction for both bounds: each JSON function re-parses the snapshot.
-      if (typeof filter.from === 'number' && typeof filter.to === 'number') {
-        params.push(filter.from, filter.to);
-        return `COALESCE(${type} IN ('integer', 'real') AND ${value} BETWEEN ? AND ?, 0)`;
-      }
-      if (typeof filter.from === 'string' && typeof filter.to === 'string') {
-        params.push(filter.from, filter.to);
-        return `COALESCE(${type} = 'text' AND ${value} BETWEEN ? AND ?, 0)`;
-      }
-      return undefined;
-    }
+    case 'range':
+      return (typeof filter.from === 'number' && typeof filter.to === 'number') ||
+        (typeof filter.from === 'string' && typeof filter.to === 'string')
+        ? { key, op: PredicateOp.between, operands: [filter.from, filter.to] }
+        : undefined;
     default:
       return undefined;
   }
