@@ -47,15 +47,7 @@ import {
 import { assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type ExportWorkingSetOptions,
-  RpcClosedError,
-  type WorkingSetChanges,
-  type WorkingSetRow,
-  runServiceCall,
-  runServiceEffect,
-  subscribeStream,
-} from '@dxos/protocols';
+import { RpcClosedError, type WorkingSetRow, runServiceCall, runServiceEffect, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, countWork, deepMapValues } from '@dxos/util';
@@ -88,6 +80,7 @@ import {
 } from './types.ts';
 import { UpdateDispatch } from './update-dispatch.ts';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
+import { type ExportWorkingSetOptions, type WorkingSetChanges } from './working-set-export.ts';
 
 const TRACE_LOADING = false;
 
@@ -264,7 +257,7 @@ export class EntityManager implements IDatabaseBinding {
   /** Objects written locally since the last flush that reached the index, with the sequence of their last write. */
   readonly #unindexedWrites = new Map<string, number>();
   /** Objects another client wrote that the index may not hold; see {@link noteUnindexedWrites}. */
-  readonly #notedUnindexedWrites = new Set<string>();
+  #notedUnindexedWrites: ReadonlySet<string> = new Set();
   #writeSequence = 0;
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
@@ -508,7 +501,7 @@ export class EntityManager implements IDatabaseBinding {
     this._objectsForNextDbUpdate.clear();
     this.#objectsForLocalCommit.clear();
     this.#unindexedWrites.clear();
-    this.#notedUnindexedWrites.clear();
+    this.#notedUnindexedWrites = new Set();
     this._objectsForNextUpdate.clear();
     await this._repoProxy.close(ctx);
   }
@@ -557,12 +550,12 @@ export class EntityManager implements IDatabaseBinding {
   /**
    * Counts objects another client wrote, which the index may not reflect yet, among this client's unindexed writes, so
    * local evaluation treats them as it treats its own: they enter a windowed query the index has not seen them in.
-   * A flush does not clear them: it waits for the index to take this client's writes, not another client's.
+   * A flush does not clear them: it waits for the index to take this client's writes, not another client's. Each call
+   * replaces the ids noted before, since the caller's list is the whole of what the other clients wrote and the index
+   * may not hold yet.
    */
   noteUnindexedWrites(ids: Iterable<string>): void {
-    for (const id of ids) {
-      this.#notedUnindexedWrites.add(id);
-    }
+    this.#notedUnindexedWrites = new Set(ids);
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
@@ -705,19 +698,28 @@ export class EntityManager implements IDatabaseBinding {
     const wanted = new Set(documentIds);
     const rows: WorkingSetRow[] = [];
     const written: string[] = [];
+    const pending = new Set<string>();
     let total = 0;
+    const rootHandle = this._spaceRootDocHandle;
     const rootRow = this.#rootRow();
     const root = rootRow && wanted.has(rootRow.documentId) && rootRow.bytes.length <= maxBytes ? rootRow : undefined;
     if (root) {
       rows.push(root);
       total += root.bytes.length;
+    } else if (rootHandle?.documentId && wanted.has(rootHandle.documentId) && !rootRow) {
+      pending.add(rootHandle.documentId);
     }
     // The root's document is never exported as an object's, even when it did not fit.
-    const exported = new Set<string>(rootRow ? [rootRow.documentId] : []);
+    const exported = new Set<string>(rootHandle?.documentId ? [rootHandle.documentId] : []);
     for (const core of this.allObjectCores()) {
       const handle = core.handle;
       const documentId = handle?.documentId;
       if (!handle || !documentId || !wanted.has(documentId) || this.getCurrentBranch(core.id) !== 'main') {
+        continue;
+      }
+      // Announced before the host acknowledged its latest change: exported by a later send, once it has.
+      if (handle._heldState() === undefined) {
+        pending.add(documentId);
         continue;
       }
       if (this.#unindexedWrites.has(core.id) && handle._isAcknowledged()) {
@@ -734,7 +736,7 @@ export class EntityManager implements IDatabaseBinding {
       total += row.bytes.length;
       rows.push(row);
     }
-    return { rows, ...(root ? { root: root.documentId } : {}), written };
+    return { rows, ...(root ? { root: root.documentId } : {}), written, pending: [...pending] };
   }
 
   /** The space root as a row, once the host holds its state. */

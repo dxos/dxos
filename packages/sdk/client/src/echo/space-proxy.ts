@@ -36,13 +36,18 @@ import {
   warnAfterTimeout,
 } from '@dxos/debug';
 import { Filter, Obj } from '@dxos/echo';
-import { type DatabaseImpl, type EchoClient, type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
+import {
+  type DatabaseImpl,
+  type EchoClient,
+  type EchoDatabase,
+  type ExportWorkingSetOptions,
+  type SpaceSyncState,
+} from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type ExportWorkingSetOptions,
   type ListenHandle,
   RpcClosedError,
   type WorkingSetRow,

@@ -17,6 +17,7 @@ export {
   type BindOptions,
   type BranchStore,
   type DecodedAutomergePrimaryValue,
+  type ExportWorkingSetOptions,
   type GetObjectCoreByIdOptions,
   type InitRootProxyFn,
   type ItemsUpdatedEvent,

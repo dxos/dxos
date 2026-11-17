@@ -13,15 +13,12 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
 import { Database, Filter, Hypergraph, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
-import { DatabaseImpl } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import {
   type EdgeFunctionEnv,
   type FunctionProtocol,
-  type WorkingSetReport,
   type WorkingSetRow,
   type WorkingSetService,
   makeInProcessClient,
@@ -499,16 +496,14 @@ describe('working set', () => {
   const makeWorkingSet = () => {
     const rows = new Map<string, WorkingSetRow>();
     const unindexed = new Set<string>();
-    const puts: WorkingSetReport[] = [];
     const service: WorkingSetService = {
       get: async () => ({ rows: [...rows.values()], unindexed: [...unindexed] }),
       put: async (report) => {
-        puts.push(report);
         report.rows.forEach((row) => rows.set(row.documentId, row));
         report.unindexed.forEach((id) => unindexed.add(id));
       },
     };
-    return { service, rows, unindexed, puts };
+    return { service, unindexed };
   };
 
   const setup = async () => {
@@ -547,40 +542,6 @@ describe('working set', () => {
     expect(unseeded).toEqual({ titles: [] });
   });
 
-  test('a write reaches the working set once the host stores it, before the handler returns', async ({ expect }) => {
-    const { context } = await setup();
-    const workingSet = makeWorkingSet();
-    const id = EntityId.random();
-    let heldDuringHandler: string[] = [];
-
-    const WritesAndWaits = Operation.make({
-      meta: { key: DXN.make('com.example.operation.writesAndWaits'), name: 'Writes And Waits' },
-      services: [Database.Service],
-      input: Schema.Struct({}),
-      output: Schema.Void,
-    }).pipe(
-      Operation.withHandler(() =>
-        Effect.gen(function* () {
-          yield* Database.add(Obj.make(Note, { id, title: 'early' }));
-          const { db } = yield* Database.Service;
-          // A flush returns once what it stored has reached the working set.
-          yield* Effect.promise(() => db.flush({ indexes: false }));
-          heldDuringHandler = [...workingSet.unindexed];
-        }),
-      ),
-    );
-
-    await wrapFunctionHandler(WritesAndWaits, { types: [Note] }).handler({
-      data: {},
-      context: context(workingSet.service),
-    });
-    expect(heldDuringHandler).toEqual([id]);
-    // Sent as the host stored it: the note's document and the root that links it, each carrying only what changed.
-    expect(workingSet.puts.length).toBeGreaterThan(0);
-    expect(workingSet.puts.flatMap((put) => put.rows).some((row) => row.objectId === id)).toBe(true);
-    expect(workingSet.puts.some((put) => put.root !== undefined)).toBe(true);
-  });
-
   test('what the host stored before a handler failed reaches the working set', async ({ expect }) => {
     const { context } = await setup();
     const workingSet = makeWorkingSet();
@@ -614,92 +575,6 @@ describe('working set', () => {
       context: context(workingSet.service),
     });
     expect(listed).toEqual({ titles: ['stored'] });
-  });
-
-  test("a nested invocation reads the caller's writes so far, and the caller reads the nested one's", async ({
-    expect,
-  }) => {
-    const { context } = await setup();
-    const workingSet = makeWorkingSet();
-    const outer = EntityId.random();
-    const inner = EntityId.random();
-    let listedByNested: unknown;
-
-    const CallsNested = Operation.make({
-      meta: { key: DXN.make('com.example.operation.callsNested'), name: 'Calls Nested' },
-      services: [Database.Service],
-      input: Schema.Struct({}),
-      output: Schema.Struct({ titles: Schema.Array(Schema.String) }),
-    }).pipe(
-      Operation.withHandler(() =>
-        Effect.gen(function* () {
-          yield* Database.add(Obj.make(Note, { id: outer, title: 'outer' }));
-          const { db } = yield* Database.Service;
-          invariant(db instanceof DatabaseImpl);
-          // As plugin-host's nested call does: flush, run the callee in its own invocation, refresh, then absorb.
-          yield* Effect.promise(async () => {
-            await db.flush({ indexes: false });
-            listedByNested = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
-              data: {},
-              context: context(workingSet.service),
-            });
-            await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
-              data: { id: inner, title: 'inner' },
-              context: context(workingSet.service),
-            });
-            // The test host pushes the space root's change; EDGE is pull-only, where plugin-host refreshes instead.
-            await expect.poll(() => db.getObjectById(inner)).toBeDefined();
-            await db.absorbWorkingSet();
-          });
-          return { titles: yield* listNotes };
-        }),
-      ),
-    );
-
-    const result = await wrapFunctionHandler(CallsNested, { types: [Note] }).handler({
-      data: {},
-      context: context(workingSet.service),
-    });
-    expect(listedByNested).toEqual({ titles: ['outer'] });
-    expect(result).toEqual({ titles: ['inner', 'outer'] });
-  });
-
-  test('an invocation that only reads what it was seeded with sends nothing back', async ({ expect }) => {
-    const { context } = await setup();
-    const workingSet = makeWorkingSet();
-    await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
-      data: { id: EntityId.random(), title: 'seeded' },
-      context: context(workingSet.service),
-    });
-    const sentBefore = workingSet.puts.length;
-
-    const listed = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
-      data: {},
-      context: context(workingSet.service),
-    });
-    expect(listed).toEqual({ titles: ['seeded'] });
-    expect(workingSet.puts.slice(sentBefore).flatMap((put) => put.rows)).toEqual([]);
-  });
-
-  test('a failing working set leaves the invocation as it is without one', async ({ expect }) => {
-    const { peer, services } = await openPeer();
-    const db = await peer.createDatabase();
-    const failing: WorkingSetService = {
-      get: () => Promise.reject(new Error('unavailable')),
-      put: () => Promise.reject(new Error('unavailable')),
-    };
-    const id = EntityId.random();
-    await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
-      data: { id, title: 'kept' },
-      context: {
-        services: { ...services, workingSetService: failing },
-        spaceId: db.spaceId,
-        spaceKey: db.spaceKey.toHex(),
-        spaceRootUrl: db.rootUrl,
-      },
-    });
-    const reopened = await peer.openDatabase(db.spaceKey, db.rootUrl, { client: await peer.createClient() });
-    expect((await reopened.query(Filter.id(id)).run()).map((note) => note.id)).toEqual([id]);
   });
 });
 

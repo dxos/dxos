@@ -7,14 +7,9 @@ import * as Effect from 'effect/Effect';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import {
-  type WorkingSet,
-  type WorkingSetChanges,
-  type WorkingSetReport,
-  type WorkingSetService,
-} from '@dxos/protocols';
+import { type WorkingSet, type WorkingSetReport, type WorkingSetRow, type WorkingSetService } from '@dxos/protocols';
 
-import { type EntityManager } from '../core-db/entity-manager.ts';
+import { type EntityManager, type WorkingSetChanges } from '../core-db/index.ts';
 
 /** How long a working-set call may take before the database goes on without it. */
 const CALL_TIMEOUT = Duration.seconds(2);
@@ -23,7 +18,7 @@ const CALL_TIMEOUT = Duration.seconds(2);
 const MAX_SEND_BYTES = 4 * 1024 * 1024;
 
 /** How long loading an object another database wrote may stall before the database goes on without it. */
-const UNINDEXED_LOAD_TIMEOUT_MS = 5_000;
+const UNINDEXED_LOAD_TIMEOUT = Duration.seconds(5);
 
 /** Runs a working-set call, bounded; a failure leaves the database as it would be without a working set. */
 const bestEffort = <T>(label: string, call: () => Promise<T>): Promise<T | undefined> =>
@@ -47,7 +42,7 @@ export class WorkingSetSync {
   readonly #entityManager: EntityManager;
   /** Per document id, the heads the working set was last given: what the next send of the document starts from. */
   readonly #base: Record<string, string[]> = {};
-  /** Documents whose held state moved since the last send; sent once the database is open. */
+  /** Documents whose held state moved and are not sent yet: announced before the open, or before the host held them. */
   readonly #changed = new Set<string>();
   #open = false;
   #stopTracking: (() => void) | undefined;
@@ -64,26 +59,24 @@ export class WorkingSetSync {
     // Tracked from before the open, so a document the open loads (the space root, when it was not seeded) is sent.
     this.#stopTracking = this.#entityManager.documentsHeld.on((documentIds) => {
       documentIds.forEach((documentId) => this.#changed.add(documentId));
-      if (this.#open) {
-        this.#send();
-      }
+      this.#send();
     });
-    const workingSet = await bestEffort('get', () => this.#service.get());
-    for (const row of workingSet?.rows ?? []) {
-      this.#base[row.documentId] = row.heads;
-    }
-    return workingSet;
+    return bestEffort('get', () => this.#service.get());
   }
 
-  /** Once the database is open: sends what the open loaded, and takes the objects the owner wrote. */
-  async opened(unindexed: readonly string[]): Promise<void> {
+  /** Once the database is open from `seeded`: sends what the open loaded, and takes the objects the owner wrote. */
+  async opened(seeded: readonly WorkingSetRow[], unindexed: readonly string[]): Promise<void> {
+    for (const row of seeded) {
+      this.#base[row.documentId] = row.heads;
+    }
     this.#open = true;
     this.#send();
     await this.#take(unindexed);
   }
 
-  /** Resolves once everything sent so far has reached the working set, or failed to. */
+  /** Resolves once every document the host holds a change of has reached the working set, or failed to. */
   async settle(): Promise<void> {
+    this.#send();
     await this.#sending;
   }
 
@@ -95,8 +88,9 @@ export class WorkingSetSync {
     }
   }
 
-  /** Stops sending and waits for what was sent. */
+  /** Sends what the host holds by now, stops tracking, and waits for the sends. */
   async close(): Promise<void> {
+    this.#send();
     this.#stopTracking?.();
     this.#stopTracking = undefined;
     this.#open = false;
@@ -104,23 +98,26 @@ export class WorkingSetSync {
   }
 
   /**
-   * Counts objects another database wrote among this one's unindexed writes, so local evaluation admits them where the
-   * index has not seen them, and loads those it does not hold through their documents, which are consistent where the
-   * index may not be yet.
+   * Counts the objects the owner's databases wrote among this one's unindexed writes, so local evaluation admits them
+   * where the index has not seen them, and loads those it does not hold through their documents, which are consistent
+   * where the index may not be yet.
    */
   async #take(ids: readonly string[]): Promise<void> {
+    this.#entityManager.noteUnindexedWrites(ids);
     if (ids.length === 0) {
       return;
     }
-    this.#entityManager.noteUnindexedWrites(ids);
     await this.#entityManager
-      .batchLoadObjectCores([...ids], { inactivityTimeout: UNINDEXED_LOAD_TIMEOUT_MS, returnDeleted: true })
+      .batchLoadObjectCores([...ids], {
+        inactivityTimeout: Duration.toMillis(UNINDEXED_LOAD_TIMEOUT),
+        returnDeleted: true,
+      })
       .catch((error) => log.warn('unindexed objects not loaded', { count: ids.length, error }));
   }
 
   /** Sends the documents whose held state moved, as the host holds them now, with the objects written in them. */
   #send(): void {
-    if (this.#changed.size === 0) {
+    if (!this.#open || this.#changed.size === 0) {
       return;
     }
     const documentIds = [...this.#changed];
@@ -133,6 +130,8 @@ export class WorkingSetSync {
       log.warn('working set changes not exported', { error });
       return;
     }
+    // A document announced before the host acknowledged its latest change goes with a later send.
+    changes.pending.forEach((documentId) => this.#changed.add(documentId));
     // A document at the heads last sent is unchanged: a load of what was seeded, or a refresh that brought nothing new.
     const rows = changes.rows.filter((row) => !sameHeads(this.#base[row.documentId], row.heads));
     if (rows.length === 0 && changes.written.length === 0) {

@@ -12,9 +12,9 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import { handOffWorkingSet } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj } from '@dxos/echo';
-import { DatabaseImpl } from '@dxos/echo-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { DXN, EntityId, type SpaceId, URI } from '@dxos/keys';
@@ -207,18 +207,12 @@ export const makeOperations = ({
       ...(idSeed === undefined ? {} : { idSeed: { time: idSeed.time, seed: childSeed(EntityId.random()) } }),
     };
     return Effect.promise(async () => {
-      const database = databaseOf();
       const encoded = await byReference(input);
-      // The callee starts from the caller's working set, which a flush brings up to the caller's writes so far.
-      await database?.flush({ indexes: false });
-      const result = await host.invoke(bareKey(String(op.meta.key)), encoded, nested);
       // Whether it succeeded or not, the callee may have written: its output's refs, and anything this invocation
-      // reads next, resolve against the space as it left it, and its new objects count as unindexed here.
-      await refreshWorkingSet?.();
-      if (database instanceof DatabaseImpl) {
-        await database.absorbWorkingSet();
-      }
-      return result;
+      // reads next, resolve against the space as it left it.
+      return handOffWorkingSet(databaseOf(), refreshWorkingSet, () =>
+        host.invoke(bareKey(String(op.meta.key)), encoded, nested),
+      );
     }).pipe(
       Effect.flatMap((result) =>
         result.ok

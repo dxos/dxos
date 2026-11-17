@@ -472,6 +472,17 @@ export class LocalQueryEngine implements QueryContext {
     }
     if (!plan.window) {
       const merged = plan.feed ? feedOrder(local, kept) : [...local, ...kept];
+      if (plan.unorderedLimit !== undefined && remoteAnswered && remote.length < plan.unorderedLimit) {
+        merged.push(
+          ...this.#unindexedMatches(
+            query,
+            plan,
+            memo,
+            new Set(merged.map((entry) => entry.id)),
+            plan.unorderedLimit - kept.length,
+          ),
+        );
+      }
       // Stable, so an in-process entry stays ahead of the remote duplicate that presentation drops.
       if (plan.order) {
         const orders = plan.order;
@@ -487,15 +498,11 @@ export class LocalQueryEngine implements QueryContext {
       return kept;
     }
     const { orders, limit } = plan.window;
-    // A short remote window is the whole result, so every local match belongs; a full one bounds admission.
-    const full = remote.length >= limit;
-    if (full && orders.length === 0) {
-      // A full window with no order of its own has no boundary to admit against, so local evidence only drops.
-      return kept;
-    }
     // Sort data is read once per candidate, since a comparison against the live document re-reads it on
     // every step of the sort, and only local matches that land inside the window are built into entries.
     const candidates: WindowCandidate[] = kept.map((entry) => ({ id: entry.id, data: windowData(entry), entry }));
+    // A short remote window is the whole result, so every local match belongs; a full one bounds admission.
+    const full = remote.length >= limit;
     const boundary = full ? windowData(remote[remote.length - 1]) : undefined;
     const admit = full ? (data: EntityStructure['data']) => compareWindowData(orders, data, boundary) <= 0 : undefined;
     const seen = new Set(kept.map((entry) => entry.id));
@@ -524,6 +531,32 @@ export class LocalQueryEngine implements QueryContext {
       }
     }
     return window;
+  }
+
+  /** Up to `count` loaded objects this client wrote that match the query and that the index has not returned. */
+  #unindexedMatches(
+    query: QueryAST.Query,
+    plan: MergePlan,
+    memo: DeletionMemo,
+    seen: ReadonlySet<string>,
+    count: number,
+  ): SourceEntry[] {
+    const matches: SourceEntry[] = [];
+    for (const view of this.#spaces.values()) {
+      if (!view.covers(query)) {
+        continue;
+      }
+      for (const { id } of view.matchLocal(plan, undefined, memo)) {
+        if (matches.length >= count) {
+          return matches;
+        }
+        const entry = seen.has(id) ? undefined : view.entryFor(id);
+        if (entry) {
+          matches.push(entry);
+        }
+      }
+    }
+    return matches;
   }
 
   #watchSpace(ctx: Context, view: WorkingSetView): void {

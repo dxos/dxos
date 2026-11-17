@@ -58,7 +58,6 @@ import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type ExportWorkingSetOptions,
   RpcClosedError,
   type WorkingSetRow,
   type WorkingSetService,
@@ -74,6 +73,7 @@ import {
   type BranchStore,
   type DocumentRetention,
   EntityManager,
+  type ExportWorkingSetOptions,
   type LoadObjectOptions,
   type SpaceDocumentHeads,
 } from '../core-db/index.ts';
@@ -507,7 +507,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this._entityManager.open(this._ctx);
 
     const workingSet = await this.#workingSet?.load();
-    const seed = this.#seed ?? workingSet?.rows;
+    // A seed given directly comes first; the working set then only takes what this database stores and loads.
+    const fromWorkingSet = this.#seed === undefined ? workingSet?.rows : undefined;
+    const seed = this.#seed ?? fromWorkingSet;
     this.#seed = undefined;
     if (seed) {
       this._entityManager.seedDocuments(seed);
@@ -535,7 +537,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       this._ctx.onDispose(unsubscribe);
     }
 
-    await this.#workingSet?.opened(workingSet?.unindexed ?? []);
+    await this.#workingSet?.opened(fromWorkingSet ?? [], workingSet?.unindexed ?? []);
   }
 
   @synchronized
@@ -1398,11 +1400,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** Objects written locally that the index may not reflect yet; see `EntityManager.unindexedWrites`. */
   unindexedWrites(): Iterable<string> {
     return this._entityManager.unindexedWrites();
-  }
-
-  /** Objects another client wrote that the index may not reflect yet; see `EntityManager.noteUnindexedWrites`. */
-  noteUnindexedWrites(ids: Iterable<string>): void {
-    this._entityManager.noteUnindexedWrites(ids);
   }
 
   areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {

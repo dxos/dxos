@@ -15,6 +15,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import {
+  type WorkingSet,
   type WorkingSetReport,
   type WorkingSetRow,
   type WorkingSetService,
@@ -54,10 +55,9 @@ describe('working set handoff', () => {
     expect(unindexed).toContain(created.id);
 
     const hidden = new Set([created.id]);
-    const { client, database: reader } = await openReader(scope, peer, writer, hidden);
-    reader.seedWorkingSet(rows);
+    const workingSet = makeWorkingSet({ rows, unindexed });
+    const { client, database: reader } = await openReader(scope, peer, writer, hidden, workingSet.service);
     await reader.open();
-    reader.noteUnindexedWrites(unindexed);
 
     const all = await reader.query(Filter.type(TestSchema.Task)).run();
     expect(all.map((task) => task.id).sort()).toEqual([indexed.id, created.id].sort());
@@ -76,6 +76,9 @@ describe('working set handoff', () => {
     expect(page.map((task) => task.id).sort()).toEqual([indexed.id, created.id].sort());
     const full = await reader.query(Query.select(Filter.type(TestSchema.Task)).limit(1)).run();
     expect(full.map((task) => task.id)).toEqual([indexed.id]);
+
+    // Only reading what it was seeded with, it sends no document back.
+    expect(workingSet.puts.flatMap((put) => put.rows)).toEqual([]);
     await client.close();
   });
 
@@ -88,12 +91,13 @@ describe('working set handoff', () => {
       task.title = 'changed';
     });
     await writer.flush({ disk: true, indexes: false });
-    const rows = writer.exportWorkingSet({ maxBytes: MAX_BYTES });
+    const workingSet = makeWorkingSet({
+      rows: writer.exportWorkingSet({ maxBytes: MAX_BYTES }),
+      unindexed: [...writer.unindexedWrites()],
+    });
 
-    const { client, database: reader } = await openReader(scope, peer, writer, new Set());
-    reader.seedWorkingSet(rows);
+    const { client, database: reader } = await openReader(scope, peer, writer, new Set(), workingSet.service);
     await reader.open();
-    reader.noteUnindexedWrites(writer.unindexedWrites());
 
     // Whether or not the index has caught up, the held copy decides both.
     expect(await reader.query(Filter.type(TestSchema.Task, { title: 'original' })).run()).toEqual([]);
@@ -120,32 +124,6 @@ describe('working set handoff', () => {
       workingSet.puts.some((put) => put.root !== undefined && rows.some((row) => row.documentId === put.root)),
     ).toBe(true);
     await client.close();
-  });
-
-  test("the next database opens from the working set and queries the first one's write", async ({ expect }) => {
-    const peer = await builder.createPeer({ types: [TestSchema.Task] });
-    const space = await peer.createDatabase();
-    const workingSet = makeWorkingSet();
-    const first = await openReader(scope, peer, space, new Set(), workingSet.service);
-    await first.database.open();
-    const task = first.database.add(Obj.make(TestSchema.Task, { title: 'z' }));
-    await first.database.flush({ indexes: false });
-    await first.client.close();
-
-    const next = await openReader(scope, peer, space, new Set([task.id]), workingSet.service);
-    await next.database.open();
-    const all = await next.database.query(Filter.type(TestSchema.Task)).run();
-    expect(all.map((entry) => entry.id)).toEqual([task.id]);
-    const newest = await next.database
-      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'desc')).limit(1))
-      .run();
-    expect(newest.map((entry) => entry.id)).toEqual([task.id]);
-
-    // Only reading what it was seeded with, it sends no document back.
-    const sentBefore = workingSet.puts.length;
-    await next.database.flush({ indexes: false });
-    expect(workingSet.puts.slice(sentBefore).flatMap((put) => put.rows)).toEqual([]);
-    await next.client.close();
   });
 
   test('a database takes the writes another one made after it opened', async ({ expect }) => {
@@ -190,9 +168,9 @@ describe('working set handoff', () => {
 });
 
 /** A working set kept in memory, as an EDGE owner keeps it in its storage: one row per document. */
-const makeWorkingSet = () => {
-  const rows = new Map<string, WorkingSetRow>();
-  const unindexed = new Set<string>();
+const makeWorkingSet = (initial: WorkingSet = { rows: [], unindexed: [] }) => {
+  const rows = new Map<string, WorkingSetRow>(initial.rows.map((row) => [row.documentId, row]));
+  const unindexed = new Set<string>(initial.unindexed);
   const puts: WorkingSetReport[] = [];
   const service: WorkingSetService = {
     get: async () => ({ rows: [...rows.values()], unindexed: [...unindexed] }),

@@ -24,20 +24,6 @@ export type WorkingSetRow = {
   directoryJson?: string;
 };
 
-export type ExportWorkingSetOptions = {
-  /** Upper bound on the summed {@link WorkingSetRow.bytes}; documents that do not fit are left out. */
-  maxBytes: number;
-};
-
-/** Rows of the documents whose held state moved, for a working set kept current as a client writes and loads. */
-export type WorkingSetChanges = {
-  rows: WorkingSetRow[];
-  /** The space root's document id, when the root is among {@link rows}. */
-  root?: string;
-  /** Objects the client wrote in these documents, once the host holds the write, that the index may not hold yet. */
-  written: string[];
-};
-
 /**
  * What an owner holds of a database's working set for one space: the documents it recently read or wrote, and the
  * objects it wrote that the index may not hold yet.

@@ -287,8 +287,8 @@ feat F-2: Local writes are synchronous
 
   req F-2.5:
     when: a database is told that another client wrote objects the index may not hold yet (`noteUnindexedWrites`)
-    then: they count among its unindexed writes until it closes; a flush, which waits for the index to take this
-          client's writes, does not clear them
+    then: they count among its unindexed writes until the next such list replaces them or it closes; a flush, which
+          waits for the index to take this client's writes, does not clear them
 ```
 
 ```mdl
@@ -428,9 +428,9 @@ feat F-9: Local ordering and windows
     then: local evidence can only drop entries from it, never re-page it
 
   req F-9.4:
-    when: a window with a limit, no skip and no order of its own gets a remote answer shorter than the limit
-    then: loaded local matches with an unindexed write are admitted and the result is cut to the limit; a full
-          answer admits none
+    when: a query with a limit, no skip and no order gets a remote answer shorter than the limit
+    then: loaded local matches with an unindexed write that the answer lacks are added, up to the limit; a full
+          answer, and the rest of the merge, are as without the rule
 ```
 
 ```mdl
@@ -764,4 +764,25 @@ decision D-19: A window with no order of its own admits local unindexed matches 
     A short answer is every match the index holds, so adding the matches it has not seen yet re-pages nothing. A
     full answer has no boundary to admit against without an order. plugin-space's `queryObjects` asks for one past
     its limit with no order, so without this a write made by the operation before it never entered its result.
+```
+
+```mdl
+decision D-20: A query with a limit and no order is not a window: it merges as before, and a short remote answer only gains the loaded local matches with an unindexed write that it lacks. Fills in [D-4].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-9.4]
+  supersedes: D-19
+  why: |
+    Taking the window path dropped the registry's entries from every such query and, on a full answer, every local
+    entry, which changed results for every client, not only EDGE's. A review of dxos/dxos#14530 found it.
+```
+
+```mdl
+decision D-21: Each list of another client's unindexed writes replaces the one before. Fills in [D-18].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.5]
+  why: The caller's list is the whole of what its other clients wrote and the index may not hold, bounded and aged; adding to a set instead grew without bound in a database that lives as long as an agent process.
 ```
