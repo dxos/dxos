@@ -15,7 +15,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { DXN } from '@dxos/keys';
 import * as DeckSurface from '@dxos/plugin-deck/DeckSurface';
-import * as Publication from '@dxos/plugin-space/Publication';
+import * as PublicationLink from '@dxos/plugin-space/PublicationLink';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { osTranslations } from '@dxos/ui-theme';
@@ -61,7 +61,7 @@ const ViewerActions = ({ publicId, composerOrigin }: Pick<ViewerPluginOptions, '
       label='Fork'
       data-testid='viewer.fork'
       onClick={() =>
-        window.location.assign(Publication.forkUrl(composerOrigin, publicId, currentObjectPath()).toString())
+        window.location.assign(PublicationLink.forkUrl(composerOrigin, publicId, currentObjectPath()).toString())
       }
     />
   </div>

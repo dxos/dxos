@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-// The part of `Publication` a Worker can import: it depends only on `effect`, never on ECHO.
+// The Composer Worker imports this module, so it depends only on `effect`, never on ECHO.
 
 export const MAX_TITLE_LENGTH = 120;
 

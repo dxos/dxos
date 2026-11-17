@@ -5,26 +5,27 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Obj } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { Publication, SpaceOperation } from '#types';
+import { SpaceOperation } from '#types';
 
-import { NotPublishedError } from '../errors.ts';
-import { remove } from '../publication/publication-client.ts';
+import { NotPublishedError } from '../../errors.ts';
+import { remove } from './publication-client.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.UnpublishSpace> = SpaceOperation.UnpublishSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space }) {
-      const receipt = Publication.getReceipt(space.properties);
-      if (!receipt) {
+      const published = AppAnnotation.getPublication(space.properties);
+      if (!published) {
         return yield* Effect.fail(new NotPublishedError());
       }
       const client = yield* Capability.get(ClientCapabilities.Client);
-      yield* remove(client, receipt.publicId);
+      yield* remove(client, published.publicId);
       Obj.update(space.properties, (properties) => {
-        Annotation.set(properties, Publication.ReceiptAnnotation, null);
+        Annotation.set(properties, AppAnnotation.PublicationAnnotation, null);
       });
     }),
   ),

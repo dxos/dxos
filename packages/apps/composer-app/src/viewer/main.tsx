@@ -13,7 +13,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import '@dxos/react-ui/theme.css';
 import { log } from '@dxos/log';
 import * as Observability from '@dxos/observability/Observability';
-import * as Publication from '@dxos/plugin-space/Publication';
+import * as PublicationLink from '@dxos/plugin-space/PublicationLink';
+import * as PublicationManifest from '@dxos/plugin-space/PublicationManifest';
 
 import { initAutomergeWasm, initEchoHostWasm } from '../util/automerge-wasm.ts';
 import { initializeObservability, setupConfig } from '../util/config.ts';
@@ -58,7 +59,7 @@ const main = async () => {
   );
   const publicationsUrl =
     getEnvString(base, 'DX_PUBLICATIONS_URL') ??
-    new URL(Publication.PUBLICATIONS_PATH, window.location.origin).toString();
+    new URL(PublicationManifest.PUBLICATIONS_PATH, window.location.origin).toString();
   const composerOrigin = composerOriginOf(window.location.origin);
 
   const config = new Config({
@@ -77,7 +78,7 @@ const main = async () => {
   await client.halo.createIdentity();
 
   bootStatus('Fetching the published space…');
-  const response = await fetch(Publication.archiveUrl(publicationsUrl, route.publicId));
+  const response = await fetch(PublicationLink.archiveUrl(publicationsUrl, route.publicId));
   if (!response.ok) {
     root.textContent = 'This space is no longer published.';
     App.bootLoader?.dismiss();

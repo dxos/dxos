@@ -32,7 +32,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ArchivedAnnotation, isArchivable } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { Publication, SpaceCapabilities, SpaceOperation, type SpaceSchema } from '#types';
+import { PublicationLink, SpaceCapabilities, SpaceOperation, type SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../../namespace.ts';
 import { resolveCollectionObjectPath } from '../../../util/index.ts';
@@ -284,7 +284,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const [client] = get(clientAtom);
         const db = Obj.getDatabase(object);
         const space = publication && db && client?.spaces.get(db.spaceId);
-        const published = space ? Publication.getReceipt(get(Obj.atom(space.properties))) !== undefined : false;
+        const published = space ? AppAnnotation.getPublication(get(Obj.atom(space.properties))) !== undefined : false;
 
         return Effect.succeed(
           constructObjectActions({
@@ -515,15 +515,15 @@ const constructObjectActions = ({
                 const path = UrlResolution.getShareableLinkPath(builder, nodeId);
                 const client = yield* Capability.get(ClientCapabilities.Client);
                 const space = client.spaces.get(db.spaceId);
-                const receipt = space && Publication.getReceipt(space.properties);
-                if (Option.isNone(path) || !receipt) {
-                  log.warn('object has no public link', { nodeId, published: !!receipt });
+                const published = space && AppAnnotation.getPublication(space.properties);
+                if (Option.isNone(path) || !published) {
+                  log.warn('object has no public link', { nodeId, published: !!published });
                   return;
                 }
-                const url = Publication.viewerUrl(
+                const url = PublicationLink.viewerUrl(
                   publication.viewerOrigin,
-                  receipt.publicId,
-                  Publication.objectPathOf(path.value),
+                  published.publicId,
+                  PublicationLink.objectPathOf(path.value),
                 );
                 yield* Effect.promise(() => navigator.clipboard.writeText(url.toString()));
               }),

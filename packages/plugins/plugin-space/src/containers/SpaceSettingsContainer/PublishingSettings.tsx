@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Annotation } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -18,7 +19,7 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { Publication, SpaceOperation } from '#types';
+import { PublicationLink, SpaceOperation } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
 import { SpaceOperationConfig } from '../../operations/helpers.ts';
@@ -29,9 +30,11 @@ export const PublishingSettings = ({ space }: PublishingSettingsProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const { publication } = Hooks.useCapability(SpaceOperationConfig);
-  const receipt =
-    Option.getOrUndefined(useAtomValue(Annotation.atom(space.properties, Publication.ReceiptAnnotation))) ?? undefined;
-  const url = receipt && publication && Publication.viewerUrl(publication.viewerOrigin, receipt.publicId).toString();
+  const published =
+    Option.getOrUndefined(useAtomValue(Annotation.atom(space.properties, AppAnnotation.PublicationAnnotation))) ??
+    undefined;
+  const url =
+    published && publication && PublicationLink.viewerUrl(publication.viewerOrigin, published.publicId).toString();
   const [pending, setPending] = useState(false);
 
   const run = useCallback(
@@ -70,14 +73,14 @@ export const PublishingSettings = ({ space }: PublishingSettingsProps) => {
         standalone
         label={t('publication-status.title')}
         description={
-          receipt ? t('publication-status.published.description') : t('publication-status.unpublished.description')
+          published ? t('publication-status.published.description') : t('publication-status.unpublished.description')
         }
       >
-        {receipt ? (
+        {published ? (
           <div className='flex items-center gap-3'>
             <span className='text-description whitespace-nowrap' data-testid='spaceSettings.publishedAt'>
               {t('publication-status.published.label')}{' '}
-              <Typography.Timestamp date={receipt.publishedAt} variant='relative' justNow={t('just-now.label')} />
+              <Typography.Timestamp date={published.publishedAt} variant='relative' justNow={t('just-now.label')} />
             </span>
             <Menu.Root>
               <Menu.Trigger asChild>

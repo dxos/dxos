@@ -11,6 +11,7 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -32,7 +33,7 @@ import { Expando } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types/translations';
 import * as Position from '@dxos/util/Position';
 
-import { Publication, SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
+import { PublicationLink, SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../../namespace.ts';
 import { getSpaceDisplayName } from '../../../util/index.ts';
@@ -428,7 +429,7 @@ const createPublicationActions = (
       id: SpaceOperation.UnpublishSpace.meta.key,
       data: Effect.fnUntraced(function* () {
         const space = yield* activeSpace;
-        if (space && Publication.getReceipt(space.properties)) {
+        if (space && AppAnnotation.getPublication(space.properties)) {
           yield* Operation.invoke(SpaceOperation.UnpublishSpace, { space });
         }
       }),
@@ -442,9 +443,9 @@ const createPublicationActions = (
       id: `${SpaceOperation.PublishSpace.meta.key}.copyLink`,
       data: Effect.fnUntraced(function* () {
         const space = yield* activeSpace;
-        const receipt = space && Publication.getReceipt(space.properties);
-        if (receipt) {
-          const url = Publication.viewerUrl(publication.viewerOrigin, receipt.publicId).toString();
+        const published = space && AppAnnotation.getPublication(space.properties);
+        if (published) {
+          const url = PublicationLink.viewerUrl(publication.viewerOrigin, published.publicId).toString();
           yield* Effect.promise(() => navigator.clipboard.writeText(url));
         }
       }),

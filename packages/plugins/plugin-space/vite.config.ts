@@ -31,7 +31,7 @@ export default defineConfig({
     'SpaceCapability': 'src/types/SpaceCapability.ts',
     'types/Settings': 'src/types/Settings.ts',
     'CollectionOperation': 'src/types/CollectionOperation.ts',
-    'Publication': 'src/types/Publication.ts',
+    'PublicationLink': 'src/types/PublicationLink.ts',
     'PublicationManifest': 'src/types/PublicationManifest.ts',
     'SpaceOperation': 'src/types/SpaceOperation.ts',
     'types': 'src/types/index.ts',

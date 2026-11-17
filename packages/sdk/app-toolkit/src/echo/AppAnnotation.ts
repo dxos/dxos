@@ -4,9 +4,10 @@
 
 // @import-as-namespace
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Collection, type Database, Obj, Ref } from '@dxos/echo';
+import { Annotation, Collection, type Database, type Entity, Obj, Ref } from '@dxos/echo';
 
 // The module, not the barrel: the barrel pulls in `AppNode`, which imports this file back, and the
 // annotation below reads the schema at module-init time.
@@ -84,3 +85,23 @@ export const HomeVisibilityAnnotation = Annotation.make({
   id: 'org.dxos.space.homeVisibility',
   schema: Schema.Record(Schema.String, Schema.Boolean),
 });
+
+/** Where a space is published as a read-only copy. */
+export const Publication = Schema.Struct({
+  publicId: Schema.String,
+  publishedAt: Schema.String,
+});
+export interface Publication extends Schema.Schema.Type<typeof Publication> {}
+
+/**
+ * A space's publication, stored on `space.properties`. `null` once unpublished, since an annotation
+ * cannot be removed.
+ */
+export const PublicationAnnotation = Annotation.make({
+  id: 'org.dxos.space.publication',
+  schema: Schema.NullOr(Publication),
+});
+
+/** The space's publication, if it is published. */
+export const getPublication = (properties: Entity.Unknown | Entity.Snapshot): Publication | undefined =>
+  Option.getOrUndefined(Annotation.get(properties, PublicationAnnotation)) ?? undefined;

@@ -3,7 +3,8 @@
 //
 
 export * as CollectionOperation from './CollectionOperation.ts';
-export * as Publication from './Publication.ts';
+export * as PublicationLink from './PublicationLink.ts';
+export * as PublicationManifest from './PublicationManifest.ts';
 export * as Settings from './Settings.ts';
 export * as SpaceCapabilities from './SpaceCapabilities.ts';
 export * as SpaceCapability from './SpaceCapability.ts';

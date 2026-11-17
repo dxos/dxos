@@ -99,20 +99,20 @@
       "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./package.json": "./package.json",
-    "./Settings": {
-      "source": "./src/types/Settings.ts",
-      "types": "./dist/types/src/types/Settings.d.ts",
-      "import": "./dist/lib/types/Settings.mjs"
-    },
-    "./Publication": {
-      "source": "./src/types/Publication.ts",
-      "types": "./dist/types/src/types/Publication.d.ts",
-      "import": "./dist/lib/Publication.mjs"
+    "./PublicationLink": {
+      "source": "./src/types/PublicationLink.ts",
+      "types": "./dist/types/src/types/PublicationLink.d.ts",
+      "import": "./dist/lib/PublicationLink.mjs"
     },
     "./PublicationManifest": {
       "source": "./src/types/PublicationManifest.ts",
       "types": "./dist/types/src/types/PublicationManifest.d.ts",
       "import": "./dist/lib/PublicationManifest.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/types/Settings.mjs"
     },
     "./SpaceCapabilities": {
       "source": "./src/types/SpaceCapabilities.ts",
@@ -175,8 +175,11 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Publication": [
-        "dist/types/src/types/Publication.d.ts"
+      "PublicationLink": [
+        "dist/types/src/types/PublicationLink.d.ts"
+      ],
+      "PublicationManifest": [
+        "dist/types/src/types/PublicationManifest.d.ts"
       ],
       "SpaceCapabilities": [
         "dist/types/src/types/SpaceCapabilities.d.ts"
