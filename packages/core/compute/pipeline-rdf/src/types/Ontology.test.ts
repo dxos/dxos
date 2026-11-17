@@ -29,19 +29,26 @@ describe('Ontology', () => {
     );
   });
 
+  test('seeds `uses`, matching what extractors minted for it before', ({ expect }) => {
+    expect(Ontology.DEFAULT.resolve('is using').iri).toBe(`${Vocab.DX}uses`);
+    expect(Ontology.DEFAULT.resolve('built with').iri).toBe(`${Vocab.DX}uses`);
+    expect(Ontology.DEFAULT.get(`${Vocab.LOCAL_BRAIN}uses`)?.name).toBe('uses');
+  });
+
   test('mints an unknown predicate in its namespace, labelled with its surface form', ({ expect }) => {
     const first = Ontology.DEFAULT.resolve('travels to');
     expect(first).toEqual({
-      iri: `${Vocab.LOCAL_BRAIN}travelTo`,
-      name: 'travel_to',
+      iri: `${Vocab.LOCAL_BRAIN}travelsTo`,
+      name: 'travels_to',
       label: 'travels to',
       definedBy: Vocab.LOCAL_BRAIN,
     });
-    expect(Ontology.DEFAULT.resolve('traveling to').iri).toBe(first.iri);
+    // Minted as said, matched by stem: once known, an inflected variant resolves to the same predicate.
+    expect(Ontology.DEFAULT.extend([first]).resolve('traveling to').iri).toBe(first.iri);
     expect(Ontology.DEFAULT.get(first.iri)).toBeUndefined();
 
     const brain = Ontology.DEFAULT.withNamespace(Vocab.brainNamespace('agent-1'));
-    expect(brain.resolve('travels to').iri).toBe('https://dxos.org/semantic/brain/agent-1/travelTo');
+    expect(brain.resolve('travels to').iri).toBe('https://dxos.org/semantic/brain/agent-1/travelsTo');
   });
 
   test('extends with a new predicate, and rejects a synonym claimed twice', ({ expect }) => {
@@ -55,7 +62,7 @@ describe('Ontology', () => {
       Ontology.DEFAULT.resolve('travels to'),
       { iri: `${Vocab.LOCAL_BRAIN}employedBy`, name: 'employ_by', label: 'employed by' },
     ]);
-    expect(learned.get(`${Vocab.LOCAL_BRAIN}travelTo`)?.label).toBe('travels to');
+    expect(learned.get(`${Vocab.LOCAL_BRAIN}travelsTo`)?.label).toBe('travels to');
     expect(learned.get(`${Vocab.LOCAL_BRAIN}employedBy`)).toBeUndefined();
   });
 

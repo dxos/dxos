@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
-import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import { AgentProvider, StoryRole } from '../modules/index.ts';
 import { EDGE_DEV_URL, EDGE_LOCAL_URL, makeEdgeConfig, surfacesPlugin } from '../testing/story-config.ts';
@@ -21,9 +22,9 @@ const EdgeProvider = ({ children }: PropsWithChildren) => <AgentProvider edge>{c
  * Background agents as processes: each prompt spawns a scripted agent, locally or on EDGE, whose card
  * shows a live, read-only transcript of its thoughts and tool calls.
  */
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-compute/AgentManager',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -40,11 +41,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: createStoryDecorators({ plugins: [surfacesPlugin()], Wrapper: LocalProvider }),
+  decorators: StoryHarness.decorators({ plugins: [surfacesPlugin()], Wrapper: LocalProvider }),
 };
 
 export const EdgeLocal: Story = {
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     plugins: [surfacesPlugin()],
     Wrapper: EdgeProvider,
     config: makeEdgeConfig(EDGE_LOCAL_URL),
@@ -52,7 +53,7 @@ export const EdgeLocal: Story = {
 };
 
 export const EdgeRemote: Story = {
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     plugins: [surfacesPlugin()],
     Wrapper: EdgeProvider,
     config: makeEdgeConfig(EDGE_DEV_URL),

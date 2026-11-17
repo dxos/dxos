@@ -9,7 +9,7 @@ import { ComputeValueType, TemplateOutput, VoidInput } from '@dxos/conductor';
 import { MAJOR_GRID } from '@dxos/scene';
 
 import { createFunctionPorts, defineComputeNode } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
+import { ComputeShape, type CreateShapeProps, computeData, createShape, withZ } from './defs.ts';
 import { TemplateComponent } from './Template.tsx';
 
 // Kept out of `Template.tsx`: react-refresh only fast-refreshes a module whose
@@ -22,7 +22,7 @@ import { TemplateComponent } from './Template.tsx';
 export const TemplateShape = ComputeShape.mapFields(
   Struct.assign({
     type: Schema.Literal('template'),
-    valueType: Schema.optional(ComputeValueType),
+    data: computeData({ valueType: Schema.optional(ComputeValueType) }),
   }),
 );
 

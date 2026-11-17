@@ -1,9 +1,23 @@
 #!/bin/bash
 
 packages=(
+    "core/compute/compute"
+    "core/echo/echo"
+    "core/echo/echo-react"
+    "core/echo/echo-solid"
+    "core/halo/halo"
+    "core/halo/halo-react"
     "sdk/app-framework"
+    "sdk/app-graph"
+    "sdk/app-toolkit"
     "sdk/client"
     "sdk/react-client"
+    "ui/react-ui"
+    "ui/react-ui-editor"
+    "ui/react-ui-form"
+    "ui/react-ui-list"
+    "ui/react-ui-menu"
+    "ui/ui-theme"
 )
 
 mkdir -p ./public/typedoc

@@ -10,7 +10,7 @@ import * as Combobox from '@dxos/react-ui/Combobox';
 import { type FormFieldRendererProps } from '#types';
 
 import { type OptionsLookup, type OptionsLookupEntry } from '../../annotations.ts';
-import { pickValues, useAsyncFieldEffect, useFormValues } from '../../hooks/index.ts';
+import { lookupKey, pickValues, useAsyncFieldEffect, useFormValues } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
 
@@ -48,13 +48,18 @@ export const ComboboxField = ({
     }
     return subset;
   }, [values, lookup.deps, jsonPath, query]);
-  const key = useMemo(() => JSON.stringify(lookupValues), [lookupValues]);
+  const key = useMemo(() => lookupKey(lookup, lookupValues), [lookup, lookupValues]);
   const { data } = useAsyncFieldEffect<readonly OptionsLookupEntry[]>(() => lookup.load(lookupValues), key);
 
   const value = getValue() ?? '';
   const trimmed = query.trim();
   const items = useMemo<Combobox.Option[]>(() => {
-    const loaded = (data ?? []).map((option) => ({ value: option.value, label: option.label ?? option.value }));
+    const loaded = (data ?? []).map((option) => ({
+      value: option.value,
+      label: option.label ?? option.value,
+      // A lookup that gives each entry a glyph (the icon catalogue) shows it in the row and in the trigger.
+      ...(option.icon ? { icon: option.icon } : {}),
+    }));
     const results =
       trimmed.length === 0
         ? lookup.eager
@@ -88,7 +93,7 @@ export const ComboboxField = ({
         onBlur();
       }}
     >
-      <Combobox.Control>
+      <Combobox.Control data-variant={presentation === 'plain' ? 'plain' : undefined}>
         <Combobox.Input placeholder={placeholder} />
         <Combobox.Trigger />
       </Combobox.Control>

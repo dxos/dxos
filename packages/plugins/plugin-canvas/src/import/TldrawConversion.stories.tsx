@@ -8,7 +8,9 @@ import { expect, waitFor, within } from 'storybook/test';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
-import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import * as CanvasPlugin from '#meta';
 import { makeCanvas } from '#model';
@@ -20,7 +22,7 @@ import { frameWithChildren, shapesAndArrow, textNoteAndFreeArrow } from './testi
 
 // The tldraw drawing as plugin-tldraw draws it, beside the `Canvas` it converts to, its shapes Element2Ds of its layout.
 const withConversion = (records: Record<string, unknown>, { snap }: { snap: boolean }) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas],
     plugins: [IllustratorPlugin.make(), TldrawPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
@@ -39,9 +41,9 @@ const withConversion = (records: Record<string, unknown>, { snap }: { snap: bool
     },
   });
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'plugins/plugin-canvas/import/TldrawConversion',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     translations,

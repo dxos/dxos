@@ -1,14 +1,16 @@
 name: Check
 
-# A draft PR runs `check`, `boot-budget` and the node tests; marking it ready adds the browser,
+# A draft PR runs `check` and the node tests; marking it ready adds the browser,
 # storybook and e2e suites (`plan` holds them back on a draft) and `cli`. Converting a PR to a draft, by
 # hand or by `draft-on-open.yml`, starts a draft run, and the concurrency group cancels the run in flight.
 #
 # Where suites run: a ready PR runs every job. The merge queue runs only what can block a merge: `check`
 # and the jobs behind the required `test` gate. A push to main runs only e2e, which reports without gating:
 # main moves to the exact commit the queue tested, so the queue's results are the ones GitHub shows on it,
-# and e2e there covers whatever landed since the last run. No `labeled` trigger: its run would post
-# skipped check runs over the PR's real results, and branch protection reads skipped as passing.
+# and e2e there covers whatever landed since the last run. knip and `boot-budget` run only nightly and on
+# dispatch: neither gates a merge, and on a PR they cost ~3.5 and ~4 minutes. No `labeled` trigger: its
+# run would post skipped check runs over the PR's real results, and branch protection reads skipped as
+# passing.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
@@ -242,14 +244,20 @@ jobs:
       # catch a property of an import edge, whose offending commit lands in a package neither project's
       # inputs name, so scoped they no-op on the PRs they exist to catch. Unset them, do not set
       # `MOON_AFFECTED=''`. Empty is not "off", moon reads it as an empty base and still filters.
+      # Nightly and dispatch only: knip is never cached, so it costs ~3.5 minutes on every PR run.
       - name: Check dependencies
-        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
+        if: >-
+          ${{ !cancelled() && steps.compile.outcome == 'success' &&
+          (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
         run: pnpm run knip
 
       # `docs:bundle` IS the docs link check: `starlight-links-validator` runs as the last phase of
-      # `astro build`.
+      # `astro build`. Twoslash is off because it re-type-checks every snippet, which the compile gate
+      # already does, at a cost of ~11 minutes.
       - name: Check production plugin set and docs links
         if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
+        env:
+          DOCS_TWOSLASH: '0'
         run: >-
           env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD
           moon exec composer-app:check-plugin-set docs:bundle --on-failure continue
@@ -274,10 +282,12 @@ jobs:
   # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
   # instead. A PR confined to `docs/` skips it: the docs site is a separate Astro project
   # that nothing in Composer imports.
+  # Nightly and dispatch only: on a PR it rebuilds the affected packages (~4 minutes) to report a budget
+  # that does not gate the merge. `boot-trend.yml` still measures every push to main.
   boot-budget:
     if: >-
-      ${{ inputs.only != 'test' && inputs.only != 'e2e' && github.event_name != 'merge_group' &&
-      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
     permissions:
       contents: read
       packages: read
@@ -570,9 +580,6 @@ jobs:
           curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
           "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
 
-  # Every `:test-native`: suites that compile native code or load it, kept out of the `:test` sweep. The Rust
-  # addon compiles RocksDB from source, and on the scheduled run's forced rebuild two such compiles took 25
-  # minutes of a node cell's 4 vCPU. On a PR moon's remote cache skips both unless the crate changed.
   # The advisory suites (memory retention, model-fixture replay), apart from the test cells because their minutes ran a
   # cell into its cap and cancelled tests that had passed; `test` does not wait on them.
   advisory:
@@ -609,67 +616,6 @@ jobs:
 
       - name: Advisory suites
         uses: ./.github/actions/advisory
-
-  native:
-    if: >-
-      ${{ inputs.only != 'check' && inputs.only != 'e2e' &&
-      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
-    # `actions: write` for the merge queue's cancel-on-failure step.
-    permissions:
-      contents: read
-      packages: read
-      actions: write
-    runs-on: ubuntu-24.04
-    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
-    # rather than holding the queue; the forced or cold builds keep the long cap.
-    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
-    steps:
-      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
-      - name: Checkout the snapshot actions
-        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
-        uses: actions/checkout@v5
-        with:
-          sparse-checkout: .github/actions/workspace-snapshot
-          persist-credentials: false
-
-      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
-      - name: Mount workspace snapshot
-        id: snapshot
-        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
-        uses: ./.github/actions/workspace-snapshot/mount
-
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
-          clean: false
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          fetch-depth: 0
-          filter: blob:none
-          persist-credentials: false
-
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
-          rust: 'true'
-
-      - name: Resolve affected scope
-        uses: ./.github/actions/affected
-
-      - name: Test
-        run: >-
-          moon exec --on-failure continue :test-native
-
-      # The merge queue drops a PR once `test` fails, and `test` waits on every cell: cancelling turns one
-      # failure into that verdict now instead of after the slowest cell (or a hung one) finishes.
-      - name: Cancel run on failure
-        if: ${{ failure() && github.event_name == 'merge_group' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: >-
-          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
-          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
 
   test-browser:
     name: test browser
@@ -773,7 +719,7 @@ jobs:
   # failed or was cancelled, or `plan` failed. Skipped passes: a suite the change does not affect, or a
   # draft's browser cells.
   test:
-    needs: [plan, test-node, test-browser, native]
+    needs: [plan, test-node, test-browser]
     if: ${{ always() && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

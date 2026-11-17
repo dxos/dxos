@@ -93,6 +93,35 @@ export type PluginBundleUpload = {
   channel?: string;
 };
 
+/** What loading a plugin bundle on EDGE cost when the registry described it. */
+export type PluginBundleLoad = {
+  /** Milliseconds from EDGE asking Worker Loader for the isolate to the catalog arriving: compilation and activation. */
+  describeMs: number;
+  /** UTF-8 bytes of the JavaScript modules EDGE loads, after pruning what the bundle's EDGE modules never import. */
+  jsBytes: number;
+  /** Bytes of the WebAssembly modules EDGE loads. */
+  wasmBytes: number;
+};
+
+/** The registry's answer to a plugin bundle upload. */
+export type PluginBundleUploadResult = {
+  moduleUrl: string;
+  /** What the EDGE index made of the bundle; absent for a bundle EDGE does not run, or a registry with no index. */
+  edge?: {
+    hash: string;
+    channels: string[];
+    operations: number;
+    /** Absent when the registry did not describe the bundle again: the same files were already uploaded. */
+    load?: PluginBundleLoad;
+  };
+};
+
+const MB = 1024 * 1024;
+
+/** One line for a CLI: `describe 3200 ms, js 11.5 MB, wasm 0.0 MB`. */
+export const formatPluginBundleLoad = ({ describeMs, jsBytes, wasmBytes }: PluginBundleLoad): string =>
+  `describe ${describeMs} ms, js ${(jsBytes / MB).toFixed(1)} MB, wasm ${(wasmBytes / MB).toFixed(1)} MB`;
+
 export type CreateApiTokenRequest = {
   label: string;
   /** Epoch milliseconds; the token never expires when omitted. */
@@ -1007,7 +1036,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     ctx: Context,
     { slug, version, channel, files }: PluginBundleUpload,
     args?: EdgeHttpCallArgs,
-  ): Promise<{ moduleUrl: string }> {
+  ): Promise<PluginBundleUploadResult> {
     const url = new URL('/registry/upload/multipart', this.baseUrl);
     url.searchParams.set('slug', slug);
     url.searchParams.set('version', version);

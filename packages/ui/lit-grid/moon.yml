@@ -12,6 +12,9 @@ tasks:
     deps:
       - target: storybook-react:e2e-deps
         cacheStrategy: hash
+      # The Storybook config (`tools/storybook-lit/.storybook/main.ts`) imports the theme plugin from its built
+      # output, so a server started before it exits at once.
+      - ui-theme:compile-node
     inputs:
       - .storybook/*
       - /tools/storybook-lit/.storybook/main.ts

@@ -299,6 +299,7 @@ feat F-1: OAuth Integration
 
 ```mdl
 feat F-2: Repository Discovery
+  uses: [GetGitHubRepositories]
 
   req F-2.1:
     when: user opens the integration target picker
@@ -426,6 +427,7 @@ feat F-8: Link Previews
 
 ```mdl
 feat F-9: Pull Request Review
+  uses: [ImportPullRequest, ImportPullRequestFromSnapshot]
 
   req F-9.1:
     when: the user runs the "Import pull request" command and names a pull request

@@ -9,14 +9,16 @@ import { Filter, Ref } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as DrawingSkill from '@dxos/plugin-illustrator/DrawingSkill';
 import { type Space } from '@dxos/react-client/echo';
-import { Cell, addToRootCollection } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
-const meta: Meta<typeof ModuleContainer> = {
+import { createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Sketch',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 
@@ -49,7 +51,7 @@ const decorators = createDecorators({
     const drawing = space.db.add(
       Drawing.make({ name: 'Drawing', canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }) }),
     );
-    addToRootCollection(space, [drawing]);
+    StoryHarness.addToRootCollection(space, [drawing]);
     return [[StoryRole.Chat], [Cell.article(drawing)], [AppSurface.deckCompanion('trace')]];
   },
   onChatCreated: async ({ db, binder }) => {

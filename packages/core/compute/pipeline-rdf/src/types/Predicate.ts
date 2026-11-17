@@ -59,7 +59,7 @@ const stem = (word: string): string => {
  * collapse (e.g. `Works at` / `is working at` / `worked at` → `work at`). True synonyms (`at` vs `for`,
  * `works` vs `employed by`) are NOT merged — that needs a controlled vocabulary (deferred). Idempotent.
  */
-export const normalize = (predicate: string): string => {
+export const normalize = (predicate: string, { stem: stemHead = true }: { stem?: boolean } = {}): string => {
   const tokens = predicate
     .toLowerCase()
     .trim()
@@ -68,7 +68,7 @@ export const normalize = (predicate: string): string => {
   while (tokens.length > 1 && LEADING_NOISE.has(tokens[0])) {
     tokens.shift();
   }
-  if (tokens.length > 0) {
+  if (stemHead && tokens.length > 0) {
     tokens[0] = stem(tokens[0]);
   }
   return tokens.join(' ');

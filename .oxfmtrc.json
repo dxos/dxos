@@ -51,7 +51,13 @@
   ],
   "overrides": [
     {
-      "files": ["docs/src/content/docs/**"],
+      "files": [
+        "docs/src/content/docs/**",
+        "docs/src/echo-tutorial/**",
+        "docs/src/echo/snippets/**",
+        "docs/src/halo-tutorial/**",
+        "docs/src/plex-tutorial/**"
+      ],
       "options": {
         "printWidth": 80
       }

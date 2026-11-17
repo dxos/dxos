@@ -45,6 +45,26 @@ describe('diagram', () => {
     expect(diagnosticElements(converted, overlap.refs).sort()).toEqual(['scene/a', 'scene_a']);
   });
 
+  test('a diagram connector is measured along its own route, not the one its type would draw', ({ expect }) => {
+    const scene = build([
+      rect('scene:test/a', box(0, 0), 'A'),
+      rect('scene:test/b', box(256, 0), 'B'),
+      ViewBuilder.link('ortho', 'scene:test/a', 'scene:test/b').id('scene:test/ab'),
+    ]);
+    // The ports line up, so an orthogonal link runs straight; the layout's route goes over the top.
+    const route = [
+      { x: 64, y: 0 },
+      { x: 64, y: -48 },
+      { x: 320, y: -48 },
+      { x: 320, y: 0 },
+    ];
+    const link = scene.links['scene:test/ab'];
+    const routed = { ...scene, links: { ...scene.links, [link.id]: { ...link, connector: { route } } } };
+    const { objects } = toDiagramObjects(routed, defaultNodeRegistry);
+    const drawn = objects.find((object) => object.id === encodeURIComponent(link.id));
+    expect(drawn?.elements).toEqual([{ kind: 'line', id: 'path', points: route }]);
+  });
+
   test('crossing links are counted', ({ expect }) => {
     const scene = build([
       rect('scene:test/a', box(0, 0), 'A'),

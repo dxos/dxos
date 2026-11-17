@@ -4,12 +4,14 @@
 
 import { describe, test } from 'vitest';
 
+import { type ShapeNode } from '@dxos/scene';
+
 import { type Drag } from '../../engine/index.ts';
 import { type RenderList2D } from '../../model/index.ts';
 import { latticeConstrain } from '../../modes/index.ts';
 import { type SceneEdit } from '../../utils/index.ts';
 import { constrainEdit, fromRenderLists2D } from '../../viewport2d/index.ts';
-import { movePreview } from './useGesturePreview.ts';
+import { movePreview, paramPreview } from './useGesturePreview.ts';
 
 const SPEC = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
@@ -70,4 +72,54 @@ describe('movePreview', () => {
       y: 199,
     });
   });
+
+  test('the landing box is drawn on every move, not only on one that would be refused', ({ expect }) => {
+    // A shape under the pointer hides its own extent, so the box is what says how much room the drop takes.
+    expect(movePreview(scene, move({ x: 13, y: 7 }), {}, DETENT).landing).toEqual([
+      { x: -115, y: 135, width: 256, height: 128 },
+    ]);
+  });
 });
+
+describe('paramPreview', () => {
+  test("a dragged handle previews its own parameter over the shape's latest, as the release will write it", ({
+    expect,
+  }) => {
+    // A peer set the shaft to 0.9 after the press: the preview keeps it, as the drop does.
+    expect(previewed(arrow({ head: 0.5, shaft: 0.9 }), true)).toEqual({ head: 0.8, shaft: 0.9 });
+  });
+
+  test('a press that has not moved, and a locked shape, preview nothing', ({ expect }) => {
+    expect(paramPreview(arrow({ head: 0.5, shaft: 0.9 }), drag())).toBeUndefined();
+    expect(paramPreview(arrow({ head: 0.5, shaft: 0.9 }, true), drag(true))).toBeUndefined();
+    expect(paramPreview({ id: 'root', nodes: {}, links: {} }, drag(true))).toBeUndefined();
+  });
+});
+
+const arrow = (params: Record<string, number>, locked?: boolean): RenderList2D => {
+  const node: ShapeNode = {
+    type: 'shape',
+    id: 'arrow',
+    z: 'a0',
+    center: { x: 0, y: 0 },
+    size: { width: 192, height: 96 },
+    recipe: 'arrow',
+    params,
+    ...(locked ? { locked } : {}),
+  };
+  return { id: 'root', nodes: { arrow: node }, links: {} };
+};
+
+const drag = (moved?: boolean): Extract<Drag, { kind: 'param' }> => ({
+  kind: 'param',
+  id: 'arrow',
+  param: 'head',
+  // Pressed with a shaft of 0.6.
+  params: { head: 0.8, shaft: 0.6 },
+  ...(moved ? { moved } : {}),
+});
+
+const previewed = (list: RenderList2D, moved?: boolean) => {
+  const node = paramPreview(list, drag(moved))?.(list).nodes.arrow;
+  return node && 'params' in node ? node.params : undefined;
+};

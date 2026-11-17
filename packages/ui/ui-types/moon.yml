@@ -3,3 +3,17 @@ language: typescript
 tags:
   - ts-vite-build
   - pack
+
+tasks:
+  build:
+    deps:
+      - ~:#prebuild
+  # The Phosphor catalogue the icon picker offers, from the package's own assets.
+  prebuild-phosphor:
+    command: node ./scripts/gen-phosphor.mjs
+    inputs:
+      - scripts/gen-phosphor.mjs
+    outputs:
+      - src/phosphor.ts
+    tags:
+      - prebuild

@@ -1,1 +1,5 @@
 composer-crx.zip
+
+# Built by `@dxos/vite-plugin-icons` on every bundle, and deleted by every dev server (which serves a
+# private copy from a temp dir). Tracking it only recorded whichever tree last happened to build.
+public/icons.svg

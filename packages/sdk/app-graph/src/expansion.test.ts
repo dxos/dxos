@@ -108,6 +108,25 @@ describe('expansion and removal through a materialized subtree', () => {
     expect(children()).to.deep.equal(['root/c', 'root/b', 'root/a']);
   });
 
+  test('a node that leaves and comes back is expanded again', async () => {
+    const { registry, builder, graph, tree, children } = setup();
+    registry.set(tree, { [GraphNode.RootId]: ['a'], a: ['b'] });
+
+    Graph.expandSync(graph, GraphNode.RootId, 'child');
+    await GraphBuilder.flush(builder);
+    Graph.expandSync(graph, 'root/a', 'child');
+    await GraphBuilder.flush(builder);
+    expect(children('root/a')).to.deep.equal(['root/a/b']);
+
+    registry.set(tree, { [GraphNode.RootId]: [] });
+    await GraphBuilder.flush(builder);
+    expect(Graph.getNode(graph, 'root/a').pipe(Option.isNone)).to.be.true;
+
+    registry.set(tree, { [GraphNode.RootId]: ['a'], a: ['b'] });
+    await GraphBuilder.flush(builder);
+    expect(children('root/a')).to.deep.equal(['root/a/b']);
+  });
+
   test('deleting a collection removes it and its descendants', async () => {
     const { registry, builder, graph, tree, children } = setup();
     registry.set(tree, { [GraphNode.RootId]: ['a'], a: ['b'], b: ['c'] });

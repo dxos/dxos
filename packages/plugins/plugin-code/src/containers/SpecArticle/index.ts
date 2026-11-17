@@ -3,3 +3,4 @@
 //
 
 export { SpecArticle as default } from './SpecArticle.tsx';
+export { SpecSourcesProvider, SpecSourceToolbar, SpecViewContent } from './SpecPanel.tsx';

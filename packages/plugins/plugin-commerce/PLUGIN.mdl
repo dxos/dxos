@@ -275,6 +275,7 @@ op RunSearch
 
 ```mdl
 feat F-1: Provider Templates
+  uses: [Provider, RunSearch]
   desc: Users configure Provider objects with typed search fields and HTTP mappings.
 
   req F-1.1: User can create a Provider object via the plugin's create menu.
@@ -287,6 +288,7 @@ feat F-1: Provider Templates
 
 ```mdl
 feat F-2: Skill-Derived Templates
+  uses: [AnalyzeProvider, Provider, ProviderArticle, RunProviderSearch, SetProviderTemplate]
   desc: LLM agent derives Provider template from the live site.
 
   req F-2.1: AnalyzeProvider fetches the vendor site and returns page source.
@@ -297,6 +299,7 @@ feat F-2: Skill-Derived Templates
 
 ```mdl
 feat F-3: Search Execution
+  uses: [Provider, RunProviderSearch, RunSearch, Search, SearchArticle]
   desc: RunSearch fans out to all enabled providers and links results.
 
   req F-3.1: SearchArticle toolbar includes a Run Search button.
@@ -310,6 +313,7 @@ feat F-3: Search Execution
 
 ```mdl
 feat F-4: Criteria Form
+  uses: [Search, SearchArticle]
   desc: Dynamic form built from the union of selected providers' search schemas.
 
   req F-4.1: SearchArticle computes the union of searchSchema fields from selected providers.
@@ -321,6 +325,7 @@ feat F-4: Criteria Form
 
 ```mdl
 feat F-5: Results Display
+  uses: [ResultCard, Search, SearchArticle]
   desc: Masonry grid of ResultCard tiles; detail pane for selected result.
 
   req F-5.1: SearchArticle renders Search.results as a Masonry grid of ResultCard tiles.

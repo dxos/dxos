@@ -21,8 +21,12 @@ export const VideoObject = memo(
 
     useEffect(() => {
       const video = internalRef.current;
-      if (video && videoStream) {
-        video.srcObject = videoStream;
+      if (!video) {
+        return;
+      }
+      // Cleared too: a camera turned off keeps its track live with no frames, so a kept stream freezes on its last one.
+      video.srcObject = videoStream ?? null;
+      if (videoStream) {
         // Call audio plays through `AudioStream`; an unmuted element is held back by the browser's autoplay policy.
         video.muted = true;
         video.setAttribute('autoplay', 'true');

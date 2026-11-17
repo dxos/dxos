@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type Bounds, type Endpoint, type Point, isPointEndpoint } from '@dxos/scene';
+import { type Bounds, type Endpoint, type Point, isPointEndpoint, isShapeNode } from '@dxos/scene';
 
 import { type Drag, type DrawScene } from '../../engine/index.ts';
 import { type RenderList2D } from '../../model/index.ts';
@@ -23,7 +23,7 @@ import {
   topZ,
   updateElement,
 } from '../../utils/index.ts';
-import { type PointerMachine, PREVIEW_NODE_ID, isLinkDrawn } from './usePointerMachine.ts';
+import { type PointerMachine, PREVIEW_NODE_ID, isLinkDrawn, paramDrop } from './usePointerMachine.ts';
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -81,13 +81,10 @@ export const movePreview = (
   const constrained = draw.constrain ? draw.constrain(edit) : edit;
   const landed = (constrained ?? edit)(scene);
   const moved = copy ? Object.keys(followed.nodes).filter((id) => !scene.nodes[id]) : ids;
+  /** Where each moved node lands: the bounding box the drag draws, whether or not the drop is allowed. */
+  const landing = moved.flatMap((id) => (landed.nodes[id] ? [nodeBounds(landed.nodes[id])] : []));
   if (constrained === undefined) {
-    return {
-      displayScene: followed,
-      blocked: true,
-      // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
-      landing: moved.flatMap((id) => (landed.nodes[id] ? [nodeBounds(landed.nodes[id])] : [])),
-    };
+    return { displayScene: followed, blocked: true, landing };
   }
   const nodes = { ...followed.nodes };
   for (const id of moved) {
@@ -101,7 +98,19 @@ export const movePreview = (
       nodes[id] = center.x === land.center.x && center.y === land.center.y ? land : { ...follow, center };
     }
   }
-  return { displayScene: { ...followed, nodes }, blocked: false };
+  // The box is drawn under the shape as well as away from it: a shape under the pointer hides its own extent, and the
+  // frame is what says how much room it will take once it lands.
+  return { displayScene: { ...followed, nodes }, blocked: false, landing };
+};
+
+/**
+ * The edit an adjust handle in flight previews: the one its release will make, so the shape drawn while dragging is
+ * the shape that lands. Nothing where the release writes nothing (a press that has not moved, a locked shape).
+ */
+export const paramPreview = (scene: RenderList2D, drag: Extract<Drag, { kind: 'param' }>): SceneEdit | undefined => {
+  const node = scene.nodes[drag.id];
+  const params = node && !node.locked && isShapeNode(node) ? paramDrop(drag, node.params) : undefined;
+  return params ? updateElement(drag.id, { params }) : undefined;
 };
 
 /** What the gesture in flight draws: the scene as it would be once the gesture lands. */
@@ -145,11 +154,16 @@ export const useGesturePreview = ({
         blocked: false,
       };
     }
+    if (drag?.kind === 'param') {
+      const edit = paramPreview(scene, drag);
+      return edit ? preview(edit) : { displayScene: scene, blocked: false };
+    }
     if (drag?.kind === 'vertex') {
       // Refitted as the release will land it, so the frame and its outline follow the vertex.
       const node = scene.nodes[drag.id];
       // A locked node previews as it is, since the release will not move it.
-      const values = node && !node.locked && hasVertices(node) ? refitPolyline(node, drag.points, minor) : undefined;
+      const values =
+        node && !node.locked && hasVertices(node) ? refitPolyline(node, drag.points, minor, drag.bends) : undefined;
       return {
         displayScene: values ? updateElement(drag.id, values)(scene) : scene,
         blocked: false,

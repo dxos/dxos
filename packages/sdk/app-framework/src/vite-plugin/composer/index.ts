@@ -87,10 +87,12 @@ const isExternal = (id: string) => id !== JSX_DEV_RUNTIME && isSharedPackage(id)
  * error without changing how externalization itself works.
  *
  * Keep the list aligned with the externals that CJS code actually reaches for;
- * adding entries here is safe (unused imports get tree-shaken), but the list is
- * deliberately small to keep the banner noise-free.
+ * the list is deliberately small to keep the banner noise-free.
+ *
+ * Only a chunk that holds rolldown's `require` fallback gets the banner (see {@link needsRequireShim}): its imports
+ * are side effects the minifier keeps, so on every chunk they would load React into each EDGE plugin bundle.
  */
-/** What {@link REQUIRE_SHIM_BANNER} imports into every chunk, outside the module graph. */
+/** What {@link REQUIRE_SHIM_BANNER} imports into a chunk, outside the module graph. */
 const REQUIRE_SHIM_SPECIFIERS = ['react', 'react-dom', 'react/jsx-runtime'];
 
 const REQUIRE_SHIM_BANNER = [
@@ -115,6 +117,13 @@ const REQUIRE_SHIM_BANNER = [
   '};',
   '// --- end CJS require shim ---',
 ].join('\n');
+
+/**
+ * Whether the chunk holds rolldown's runtime `require` fallback, which looks up `require` in the chunk's own scope; a
+ * bundled CJS module elsewhere calls that fallback rather than `require` itself.
+ */
+const needsRequireShim = (chunk: Pick<Rollup.RenderedChunk, 'modules'>): boolean =>
+  Object.values(chunk.modules).some(({ code }) => code?.includes('typeof require') ?? false);
 
 export { PLUGIN_HOST_ENTRY_ENV, PLUGIN_HOST_SPECIFIER };
 
@@ -275,6 +284,9 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
           },
           rolldownOptions: {
             external: (id: string) => isExternal(id),
+            // A shared chunk merged into a module's own chunk makes every other importer load that module: EDGE then
+            // keeps a browser-only body (and the packages it bundles) because a workerd module took a helper from it.
+            experimental: { chunkOptimization: { mergeCommonChunks: false } },
             output: {
               // Flat at the bundle root: on EDGE a bare import resolves against the importing file's directory, so the
               // loader rewrites each one to `vendor/`, which is simplest when every plugin file sits beside the manifest.
@@ -283,7 +295,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
               // Install the CJS require shim at the top of plugin.mjs so transitively
               // bundled CJS helpers (that call `require('react')` et al. at runtime) can
               // resolve against the host-provided externals instead of throwing.
-              banner: REQUIRE_SHIM_BANNER,
+              banner: (chunk) => (needsRequireShim(chunk) ? REQUIRE_SHIM_BANNER : ''),
             },
           },
         },
@@ -505,7 +517,8 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
           }
         }
         for (const output of edgeChunks(bundle, libraryModules)) {
-          for (const id of [...output.imports, ...output.dynamicImports, ...REQUIRE_SHIM_SPECIFIERS]) {
+          const shimmed = needsRequireShim(output) ? REQUIRE_SHIM_SPECIFIERS : [];
+          for (const id of [...output.imports, ...output.dynamicImports, ...shimmed]) {
             if (!emitted.has(id) && isExternal(id)) {
               const importers = externals.get(id) ?? new Set<string>();
               output.moduleIds

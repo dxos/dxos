@@ -18,5 +18,6 @@ export * as LegacySpec from './LegacySpec.ts';
 export * as Settings from './Settings.ts';
 export * as Showcase from './Showcase.ts';
 export * as SourceFile from './SourceFile.ts';
+export * as SpecItem from './SpecItem.ts';
 export * as SpecText from './SpecText.ts';
 export * as State from './State.ts';

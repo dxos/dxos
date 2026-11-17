@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="-480 90 2880 900" color="rgb(56,60,62)">
+  <rect id="background" x="-480" y="90" width="2880" height="900" style="fill: var(--dx-bg-fill, rgb(29,31,32))"/>
+  <g id="lines" fill="none" stroke-width="14" style="stroke: var(--dx-bg-lines, currentColor)">
+    <path d="M960.0,-4020.0 L960.0,5100.0"/>
+    <path d="M960.0,641.3 L3793.4,-3255.1"/>
+    <path d="M960.0,438.7 L5086.1,-2139.8"/>
+    <path d="M960.0,641.3 L5086.1,3219.8"/>
+    <path d="M960.0,641.2 L-1873.7,-3254.9"/>
+    <path d="M-3166.1,-2139.8 L960.0,438.7"/>
+    <path d="M960.0,438.7 L-1873.4,4335.1"/>
+    <path d="M-3166.1,3219.8 L960.0,641.3"/>
+    <path d="M3793.7,4334.9 L960.0,438.8"/>
+  </g>
+  <g id="icon" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--dx-bg-icon, rgb(230,233,235))">
+    <path d="M960.0,438.7 L690.0,810.0 L960.0,641.3 L1230.0,810.0 L960.0,438.7"/>
+    <path d="M960.0,641.3 L690.0,270.0 L960.0,438.7 L1230.0,270.0 L960.0,641.3"/>
+    <path d="M960.0,438.7 L960.0,641.3"/>
+  </g>
+</svg>

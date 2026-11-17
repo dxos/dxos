@@ -230,6 +230,10 @@ command as **Check spec changelogs**. It fails when:
   branch commit carries `Spec-Changelog-Skip`;
 - a new spec has no decision;
 - an existing entry was edited, removed or reordered;
+  the one exception repairs an id the base already holds twice (two branches each appended it):
+  move all but one copy, text unchanged, to the next free ids at the end, and point the references
+  that meant a moved copy at its new id. The moved copies are not new decisions; a repair that
+  changes nothing else carries `Spec-Changelog-Skip`;
 - an id is out of sequence, or `supersedes:` names an id that is not in the log;
 - a decision breaks the attribution rules below.
 

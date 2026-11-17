@@ -63,7 +63,8 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
       debug={debug}
     >
       <VideoObject
-        videoStream={videoStream}
+        // The local stream outlives its camera track, so only a tile whose video is on gets a stream.
+        videoStream={participantVideo ? videoStream : undefined}
         flip={isSelf && !isScreenshare}
         contain={!!isScreenshare}
         classNames='rounded-md'

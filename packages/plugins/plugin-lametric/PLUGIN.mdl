@@ -103,6 +103,7 @@ feat F-1: What the device shows
 
 ```mdl
 feat F-2: Transport
+  uses: [PushStatus]
 
   req F-2.1: A configured device address is preferred over the cloud — it avoids a round-trip through
     LaMetric's servers and works with no internet.

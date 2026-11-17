@@ -1,0 +1,95 @@
+---
+// Starlight's header as one row: the logo, Docs and the topics, then search, the social links and the theme picker.
+import config from 'virtual:starlight/user-config';
+
+import LanguageSelect from 'virtual:starlight/components/LanguageSelect';
+import Search from 'virtual:starlight/components/Search';
+import SocialIcons from 'virtual:starlight/components/SocialIcons';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+
+import TopicNav from './topic-nav/TopicNav.astro';
+
+const shouldRenderSearch =
+  config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
+---
+
+<div class="header">
+  <div class="title-wrapper sl-flex">
+    <TopicNav />
+  </div>
+  <div class="sl-flex print:hidden search-wrap">
+    {shouldRenderSearch && <Search />}
+  </div>
+  <div class="sl-hidden md:sl-flex print:hidden right-group">
+    <div class="sl-flex social-icons">
+      <SocialIcons />
+    </div>
+    <ThemeSelect />
+    <LanguageSelect />
+  </div>
+</div>
+
+<!-- Outside Starlight's layer so the page revert does not undo it. -->
+<style>
+  /* `--sl-nav-height` adds the safe area to the bar so everything Starlight offsets by it clears both. */
+  :global(:root) {
+    --dx-nav-bar: 3.5rem;
+    --sl-nav-height: calc(var(--dx-nav-bar) + env(safe-area-inset-top, 0px));
+  }
+
+  /* The marketing nav is 72px tall; the extra pixel is the header's border, so the logo and Docs line up across both. */
+  @media (min-width: 50rem) {
+    :global(:root) {
+      --dx-nav-bar: 73px;
+    }
+  }
+
+  .header {
+    align-items: center;
+    display: flex;
+    gap: var(--sl-nav-gap);
+    height: 100%;
+  }
+
+  .title-wrapper {
+    flex: none;
+    min-width: 0;
+  }
+
+  .search-wrap {
+    flex: none;
+    margin-inline-start: auto;
+  }
+
+  .right-group,
+  .social-icons {
+    align-items: center;
+    flex: none;
+    gap: 1rem;
+  }
+
+  .social-icons::after {
+    border-inline-end: 1px solid var(--sl-color-gray-5);
+    content: '';
+    height: 2rem;
+  }
+
+  /* Only the magnifier and the shortcut. */
+  .search-wrap :global(button[data-open-modal]) {
+    gap: 0.75rem;
+    width: auto;
+  }
+
+  .search-wrap :global(button[data-open-modal] > span) {
+    display: none;
+  }
+
+  /* The accent marks the current topic, so the social links take the text colour. */
+  .social-icons :global(a) {
+    color: var(--sl-color-white);
+  }
+
+  .social-icons :global(a:hover) {
+    opacity: 0.66;
+  }
+</style>
