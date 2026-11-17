@@ -87,5 +87,6 @@ test QA-1: Ingest, supersede and recall
 decision D-1: Model Agent Memory locally because the private-beta API refuses the DXOS account; the model mirrors the published types so the real binding can replace it.
   date: 2026-11-17
   by: agent:claude
+  for: user:dmaretskyi
   affects: [QA-1]
 ```
