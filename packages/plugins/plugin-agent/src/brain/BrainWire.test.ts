@@ -3,23 +3,20 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as TestClock from 'effect/testing/TestClock';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Obj, Ref } from '@dxos/echo';
-import { Fact, MemoryService } from '@dxos/echo-memory';
-import { MemorySqlite } from '@dxos/echo-memory-sqlite';
+import { Fact } from '@dxos/echo-memory';
 import { Person } from '@dxos/types';
 
 import { BrainService, Trigger } from '#types';
 
 import * as BrainMemory from './BrainMemory.ts';
 import * as BrainWire from './BrainWire.ts';
-import { TEST_MEMBERS, UNUSED_AGENTS } from './testing.ts';
+import { TEST_MEMBERS, UNUSED_AGENTS, freshMemory } from './testing.ts';
 
 const AGENT = 'kai';
 const NOW = Date.parse('2026-10-07T12:00:00.000Z');
@@ -87,9 +84,7 @@ const serve = (brain: BrainService.Service, calls: unknown[][]): Capabilities.Ho
 const setup = Effect.gen(function* () {
   yield* TestClock.setTime(NOW);
   const calls: unknown[][] = [];
-  const memory = yield* Layer.build(MemorySqlite.layerMemory).pipe(
-    Effect.map(Context.get(MemoryService.MemoryService)),
-  );
+  const memory = yield* freshMemory;
   const { service } = BrainMemory.make(UNUSED_AGENTS, memory);
   return { calls, brain: BrainWire.make(serve(service, calls)) };
 });

@@ -88,39 +88,40 @@ const replacedGraphsSparql = `SELECT DISTINCT ?graph WHERE {
  * combination of the keys they resolve to, merged by fact id in first-seen order, without any graph another graph in
  * the store supersedes or retracts.
  */
-export const queryResolvedFacts = (
+export const queryResolvedFacts: (
   query: Sparql.Pattern,
-): Effect.Effect<Fact.Fact[], MemoryError.MemoryError, MemoryService.MemoryService> =>
-  Effect.gen(function* () {
-    const memory = yield* MemoryService.MemoryService;
-    const { entity, subjectEntity, ...rest } = query;
-    const entities = entity === undefined ? [undefined] : yield* resolveEntityKeys(entity);
-    const subjects = subjectEntity === undefined ? [undefined] : yield* resolveEntityKeys(subjectEntity);
-    const byId = new Map<string, Fact.Fact>();
-    for (const entityKey of entities) {
-      for (const subjectKey of subjects) {
-        const facts = yield* memory.query(
-          MemoryQuery.facts(
-            decodePattern({
-              ...rest,
-              ...(entityKey !== undefined ? { entity: entityKey } : {}),
-              ...(subjectKey !== undefined ? { subjectEntity: subjectKey } : {}),
-            }),
-          ),
-        );
-        for (const fact of facts) {
-          if (!byId.has(fact.id)) {
-            byId.set(fact.id, fact);
-          }
+) => Effect.Effect<Fact.Fact[], MemoryError.MemoryError, MemoryService.MemoryService> = Effect.fnUntraced(function* (
+  query: Sparql.Pattern,
+) {
+  const memory = yield* MemoryService.MemoryService;
+  const { entity, subjectEntity, ...rest } = query;
+  const entities = entity === undefined ? [undefined] : yield* resolveEntityKeys(entity);
+  const subjects = subjectEntity === undefined ? [undefined] : yield* resolveEntityKeys(subjectEntity);
+  const byId = new Map<string, Fact.Fact>();
+  for (const entityKey of entities) {
+    for (const subjectKey of subjects) {
+      const facts = yield* memory.query(
+        MemoryQuery.facts(
+          decodePattern({
+            ...rest,
+            ...(entityKey !== undefined ? { entity: entityKey } : {}),
+            ...(subjectKey !== undefined ? { subjectEntity: subjectKey } : {}),
+          }),
+        ),
+      );
+      for (const fact of facts) {
+        if (!byId.has(fact.id)) {
+          byId.set(fact.id, fact);
         }
       }
     }
-    // The store keeps every version of a graph and only current ones answer. A replacement need not match the query
-    // (Alice moving from Acme to Contoso answers a query for Acme with the old graph alone), so look up store-wide.
-    const replaced = new Set(
-      (yield* memory.query(MemoryQuery.sparql(replacedGraphsSparql))).flatMap(({ graph }) =>
-        graph?.termType === 'NamedNode' ? [graph.value] : [],
-      ),
-    );
-    return [...byId.values()].filter((fact) => !replaced.has(Fact.graphOf(fact)));
-  });
+  }
+  // The store keeps every version of a graph and only current ones answer. A replacement need not match the query
+  // (Alice moving from Acme to Contoso answers a query for Acme with the old graph alone), so look up store-wide.
+  const replaced = new Set(
+    (yield* memory.query(MemoryQuery.sparql(replacedGraphsSparql))).flatMap(({ graph }) =>
+      graph?.termType === 'NamedNode' ? [graph.value] : [],
+    ),
+  );
+  return [...byId.values()].filter((fact) => !replaced.has(Fact.graphOf(fact)));
+});

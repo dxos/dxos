@@ -107,7 +107,7 @@ const encodeTrig = (quads: readonly Quad[], prefixes: Readonly<Record<string, st
   let text: string | undefined;
   writer.end((error, result: string) => {
     if (error) {
-      throw error;
+      throw new Error(`Serializing ${quads.length} quads as TriG failed: ${error.message}`, { cause: error });
     }
     text = result;
   });

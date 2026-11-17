@@ -50,8 +50,8 @@ export const SpaceMemoriesLayer: Layer.Layer<SpaceMemories, never, EchoHostServi
       const lock = yield* Semaphore.make(1);
       const spaces = new Map<SpaceId, Held>();
 
-      const held = (spaceId: SpaceId): Effect.Effect<Held, RdfStore.RdfStoreError> =>
-        Effect.gen(function* () {
+      const held: (spaceId: SpaceId) => Effect.Effect<Held, RdfStore.RdfStoreError> = Effect.fnUntraced(
+        function* (spaceId: SpaceId) {
           const found = spaces.get(spaceId);
           if (found) {
             return found;
@@ -67,7 +67,10 @@ export const SpaceMemoriesLayer: Layer.Layer<SpaceMemories, never, EchoHostServi
           const entry: Held = { store: LocalRdfStore.fromQuadStore(quads) };
           spaces.set(spaceId, entry);
           return entry;
-        }).pipe(Effect.provideService(SqlClient.SqlClient, sql), Scope.provide(scope));
+        },
+        Effect.provideService(SqlClient.SqlClient, sql),
+        Scope.provide(scope),
+      );
 
       return {
         store: (spaceId) => lock.withPermit(held(spaceId).pipe(Effect.map(({ store }) => store))),

@@ -3,11 +3,13 @@
 //
 
 import * as Clock from 'effect/Clock';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import * as Registry from 'effect/reactivity/AtomRegistry';
+import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -26,6 +28,11 @@ import { AgentOperation, BrainService } from '#types';
 
 import { TriggerRegistry } from '../triggers.ts';
 import * as BrainMemory from './BrainMemory.ts';
+
+/** A fresh in-memory space memory, closed with the test's scope, on the clock in context (a test's `TestClock`). */
+export const freshMemory: Effect.Effect<MemoryService.Service, never, Scope.Scope> = Layer.build(
+  MemorySqlite.layerMemory,
+).pipe(Effect.map(Context.get(MemoryService.MemoryService)));
 
 /** An `AgentService` for brain tests that never wake an agent, so a brain that tried fails loudly. */
 export const UNUSED_AGENTS: AgentService.Service = {

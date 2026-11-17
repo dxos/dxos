@@ -44,14 +44,10 @@ const sparqlError = (error: unknown): SparqlError | undefined =>
 
 /** Advances a program; what it throws becomes a failure when `toFailure` maps it, else a defect. */
 const step = <A, E>(program: Program<A>, toFailure: (error: unknown) => E | undefined, result?: Result) =>
-  Effect.suspend(() => {
-    try {
-      return Effect.succeed(result === undefined ? program.next() : program.next(result));
-    } catch (error) {
-      const failure = toFailure(error);
-      return failure === undefined ? Effect.die(error) : Effect.fail(failure);
-    }
-  });
+  Effect.try({
+    try: () => (result === undefined ? program.next() : program.next(result)),
+    catch: (error) => ({ error, failure: toFailure(error) }),
+  }).pipe(Effect.catch(({ error, failure }) => (failure === undefined ? Effect.die(error) : Effect.fail(failure))));
 
 /**
  * Runs a program through Effect's async `SqlClient`: each statement it yields is one round trip. Run it inside

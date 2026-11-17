@@ -17,7 +17,7 @@ const bound = (row: Readonly<Record<string, RdfStore.Quad['s'] | undefined>>) =>
   Object.fromEntries(Object.entries(row).flatMap(([name, term]) => (term ? [[name, term]] : [])));
 
 /** The serializers load only when an import or export runs, since the text format needs a parser no query does. */
-const exchange = Effect.promise(() => import('@dxos/sparql-sqlite/exchange'));
+const loadExchange = Effect.promise(() => import('@dxos/sparql-sqlite/exchange'));
 
 /**
  * The RdfStore port over an open `@dxos/sparql-sqlite` quad store, for a memory in the same process as the store: the
@@ -38,14 +38,14 @@ export const fromQuadStore = (store: QuadStore.QuadStore): RdfStore.Service => {
     export: (format, options) =>
       Effect.gen(function* () {
         const quads = yield* store.quads();
-        const { encode } = yield* exchange;
-        return yield* Effect.try(() => encode(quads, format, options));
+        const Exchange = yield* loadExchange;
+        return yield* Effect.try(() => Exchange.encode(quads, format, options));
       }).pipe(Effect.mapError(wrap('Export failed'))),
 
     import: (data, format) =>
       Effect.gen(function* () {
-        const { decode } = yield* exchange;
-        const quads = yield* Effect.try(() => decode(data, format));
+        const Exchange = yield* loadExchange;
+        const quads = yield* Effect.try(() => Exchange.decode(data, format));
         const batch = yield* store.write([{ _tag: 'insert', quads }]);
         return { batch, quads: quads.length };
       }).pipe(Effect.mapError(wrap('Import failed'))),

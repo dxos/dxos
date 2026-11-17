@@ -352,16 +352,15 @@ export const make = (rdf: RdfStore.Service): Effect.Effect<MemoryService.Service
       return queued;
     });
 
-    const push = (facts: readonly Fact.Fact[], quiet?: readonly string[]) =>
-      Effect.gen(function* () {
-        if (facts.length === 0) {
-          return 0;
-        }
-        const at = yield* currentTime;
-        const queued = yield* enqueue(evaluator.current.push(facts, { at, quiet }));
-        yield* saveEvaluatedAt(at);
-        return queued;
-      });
+    const push = Effect.fnUntraced(function* (facts: readonly Fact.Fact[], quiet?: readonly string[]) {
+      if (facts.length === 0) {
+        return 0;
+      }
+      const at = yield* currentTime;
+      const queued = yield* enqueue(evaluator.current.push(facts, { at, quiet }));
+      yield* saveEvaluatedAt(at);
+      return queued;
+    });
 
     /** Starts the rule state over with no facts; the subscriptions are added back so they keep waking. */
     const restart = Effect.gen(function* () {

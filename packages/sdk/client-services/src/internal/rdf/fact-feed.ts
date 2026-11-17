@@ -48,12 +48,8 @@ export type FactFeedOptions = {
  * the store appends each batch there before applying it, and rebuilds from it when empty. The cursor is the feed's own
  * query cursor.
  */
-export const factFeedLog = ({
-  feeds,
-  spaceId,
-  feedId,
-}: FactFeedOptions): Effect.Effect<QuadStore.QuadLog, never, SqlClient.SqlClient> =>
-  Effect.gen(function* () {
+export const factFeedLog: (options: FactFeedOptions) => Effect.Effect<QuadStore.QuadLog, never, SqlClient.SqlClient> =
+  Effect.fnUntraced(function* ({ feeds, spaceId, feedId }: FactFeedOptions) {
     const services = yield* Effect.context<SqlClient.SqlClient>();
     return {
       append: (batch) =>
