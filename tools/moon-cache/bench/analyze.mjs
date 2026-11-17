@@ -94,7 +94,9 @@ if (statSync(target).isFile()) {
   }
   if (run.slowest.length) {
     console.log('\nslowest hydrations:');
-    for (const task of run.slowest) console.log(`  ${(task.ms / 1000).toFixed(2)}s ${task.target}`);
+    for (const task of run.slowest) {
+      console.log(`  ${(task.ms / 1000).toFixed(2)}s ${task.target}`);
+    }
   }
   process.exit(0);
 }
@@ -120,7 +122,9 @@ for (const run of runs) {
 const arms = new Map();
 for (const run of runs) {
   const arm = run.label.replace(/\d+$/, '') || run.label;
-  if (!arms.has(arm)) arms.set(arm, []);
+  if (!arms.has(arm)) {
+    arms.set(arm, []);
+  }
   arms.get(arm).push(run);
 }
 
