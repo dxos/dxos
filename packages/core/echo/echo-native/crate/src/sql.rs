@@ -31,6 +31,17 @@ impl Param {
             Param::Blob(value) => SqlValue::from_slice(value).map_err(|err| err.to_string())?,
         })
     }
+
+    /// Moves the value into Turso's: owned text and blobs become its values without a copy.
+    fn into_sql(self) -> SqlValue {
+        match self {
+            Param::Null => SqlValue::Null,
+            Param::Int(value) => SqlValue::Numeric(Numeric::Integer(value)),
+            Param::Float(value) => SqlValue::from_f64(value),
+            Param::Text(value) => SqlValue::from_text(value),
+            Param::Blob(value) => SqlValue::from_blob(value),
+        }
+    }
 }
 
 impl From<&str> for Param {
@@ -115,18 +126,27 @@ pub struct Db {
 
 impl Db {
     pub fn new(conn: Arc<Connection>) -> Self {
-        Db { conn, cache: HashMap::new(), statements: 0 }
+        Db {
+            conn,
+            cache: HashMap::new(),
+            statements: 0,
+        }
     }
 
     /// Runs statements with no parameters and no rows, such as DDL.
     pub fn exec_batch(&mut self, sql: &str) -> SqlResult<()> {
         self.statements += 1;
-        self.conn.execute(sql).map_err(|err| format!("{err}: {sql}"))
+        self.conn
+            .execute(sql)
+            .map_err(|err| format!("{err}: {sql}"))
     }
 
     fn prepared(&mut self, sql: &str) -> SqlResult<&mut Statement> {
         if !self.cache.contains_key(sql) {
-            let statement = self.conn.prepare(sql).map_err(|err| format!("{err}: {sql}"))?;
+            let statement = self
+                .conn
+                .prepare(sql)
+                .map_err(|err| format!("{err}: {sql}"))?;
             self.cache.insert(sql.to_owned(), statement);
         }
         Ok(self.cache.get_mut(sql).expect("inserted above"))
@@ -137,15 +157,36 @@ impl Db {
         &mut self,
         sql: &str,
         params: &[Param],
+        row: impl FnMut(&[Cell<'_>]) -> SqlResult<()>,
+    ) -> SqlResult<()> {
+        let values = params
+            .iter()
+            .map(Param::to_sql)
+            .collect::<SqlResult<Vec<_>>>()?;
+        self.run(sql, values, row)
+    }
+
+    /// Runs a statement whose parameters are moved in, so a large text or blob is not copied to bind it.
+    pub fn execute_owned(&mut self, sql: &str, params: Vec<Param>) -> SqlResult<()> {
+        let values = params.into_iter().map(Param::into_sql).collect();
+        self.run(sql, values, |_| Ok(()))
+    }
+
+    fn run(
+        &mut self,
+        sql: &str,
+        values: Vec<SqlValue>,
         mut row: impl FnMut(&[Cell<'_>]) -> SqlResult<()>,
     ) -> SqlResult<()> {
         self.statements += 1;
         let statement = self.prepared(sql)?;
         statement.reset().map_err(|err| err.to_string())?;
         statement.clear_bindings();
-        for (index, param) in params.iter().enumerate() {
+        for (index, value) in values.into_iter().enumerate() {
             let position = NonZero::new(index + 1).expect("index + 1 is never zero");
-            statement.bind_at(position, param.to_sql()?).map_err(|err| err.to_string())?;
+            statement
+                .bind_at(position, value)
+                .map_err(|err| err.to_string())?;
         }
         let result = loop {
             match statement.step() {
@@ -193,13 +234,27 @@ impl Db {
         out: &mut Writer,
         mut keep: impl FnMut(&[Cell<'_>]) -> bool,
     ) -> SqlResult<()> {
-        // Payloads are gathered apart from the fixed cells so the cells stay at computable offsets.
-        let mut heap: Vec<u8> = Vec::new();
+        let names: Vec<String> = {
+            let statement = self.prepared(sql)?;
+            (0..statement.num_columns())
+                .map(|index| statement.get_column_name(index).into_owned())
+                .collect()
+        };
+        // Header: column count, row count, offset of the cells; then the names; then the heap, written
+        // straight from each row's values into the output; then the fixed-size cells.
+        let start = out.len();
+        out.u32(names.len() as u32);
+        let rows_at = out.len();
+        out.u32(0);
+        let cells_at = out.len();
+        out.u32(0);
+        for name in &names {
+            out.str(name);
+        }
+        let heap_start = out.len();
         let mut cells: Vec<u8> = Vec::new();
         let mut rows: u32 = 0;
-        let mut columns: u32 = 0;
         self.query(sql, params, |row| {
-            columns = row.len() as u32;
             if !keep(row) {
                 return Ok(());
             }
@@ -210,13 +265,13 @@ impl Db {
                     Cell::Int(value) => (1, 0, *value as u64),
                     Cell::Float(value) => (2, 0, value.to_bits()),
                     Cell::Text(text) => {
-                        let offset = heap.len() as u64;
-                        heap.extend_from_slice(text.as_bytes());
+                        let offset = (out.len() - heap_start) as u64;
+                        out.buf.extend_from_slice(text.as_bytes());
                         (3, text.len() as u32, offset)
                     }
                     Cell::Blob(blob) => {
-                        let offset = heap.len() as u64;
-                        heap.extend_from_slice(blob);
+                        let offset = (out.len() - heap_start) as u64;
+                        out.buf.extend_from_slice(blob);
                         (4, blob.len() as u32, offset)
                     }
                 };
@@ -226,23 +281,10 @@ impl Db {
             }
             Ok(())
         })?;
-        let statement = self.prepared(sql)?;
-        let count = statement.num_columns();
-        let names: Vec<String> = (0..count).map(|index| statement.get_column_name(index).into_owned()).collect();
-        // Header: column count, row count, heap offset; then names; then cells; then the heap.
-        let start = out.len();
-        out.u32(names.len() as u32);
-        out.u32(rows);
-        let heap_at = out.len();
-        out.u32(0);
-        for name in &names {
-            out.str(name);
-        }
-        debug_assert!(rows == 0 || columns as usize == names.len());
+        out.patch_u32(rows_at, rows);
+        let cells_offset = (out.len() - start) as u32;
+        out.patch_u32(cells_at, cells_offset);
         out.buf.extend_from_slice(&cells);
-        let heap_offset = (out.len() - start) as u32;
-        out.patch_u32(heap_at, heap_offset);
-        out.buf.extend_from_slice(&heap);
         Ok(())
     }
 }

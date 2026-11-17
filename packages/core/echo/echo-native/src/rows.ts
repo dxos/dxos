@@ -17,8 +17,8 @@ const TYPE_BLOB = 4;
 export type CellValue = null | number | string | Uint8Array;
 
 /**
- * A statement's result as Rust laid it out (`Db::query_table`): fixed-size cells addressed by row and
- * column, text and blobs in a heap after them. Nothing is decoded until a cell is read, so a caller that
+ * A statement's result as Rust laid it out (`Db::query_table`): column names, a heap of text and blob
+ * payloads copied straight from the rows, then fixed-size cells addressed by row and column. Nothing is decoded until a cell is read, so a caller that
  * reads two columns of a row pays for two.
  */
 export class RowTable {
@@ -36,7 +36,7 @@ export class RowTable {
     this.#view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     const columnCount = this.#view.getUint32(0, true);
     this.rows = this.#view.getUint32(4, true);
-    this.#heap = this.#view.getUint32(8, true);
+    this.#cells = this.#view.getUint32(8, true);
     let pos = 12;
     const columns: string[] = [];
     for (let index = 0; index < columnCount; index++) {
@@ -46,7 +46,7 @@ export class RowTable {
       pos += 4 + length;
     }
     this.columns = columns;
-    this.#cells = pos;
+    this.#heap = pos;
   }
 
   column(name: string): number {

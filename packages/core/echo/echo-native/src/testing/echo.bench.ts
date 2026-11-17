@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { rmSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { bench, describe } from 'vitest';
 
 import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
@@ -16,7 +18,8 @@ type EchoDatabase = Pick<Database.Database, 'add' | 'remove' | 'flush' | 'query'
 
 // echo-sqlite's `echo.bench.ts` run against both engines in one process, so the numbers compare:
 // the same operations through the ECHO API, over automerge objects only (echo-native stores no feed
-// items). echo-sqlite runs on a SQLite file in the OS temp dir; echo-native on its in-memory file.
+// items). echo-sqlite runs on a SQLite file in the OS temp dir; echo-native on an in-memory file and on a
+// real file reached through `node:wasi`.
 const parseBenchCount = (envVar: string, fallback: number): number => {
   const value = Number(process.env[envVar] ?? fallback);
   if (!Number.isSafeInteger(value) || value <= 0) {
@@ -158,11 +161,21 @@ const defineOperationBenches = (
 };
 
 const engines = [
-  { name: 'echo-sqlite', Builder: SqliteTestBuilder, tmpPath: sqliteTmpPath },
-  { name: 'echo-native', Builder: NativeTestBuilder, tmpPath: nativeTmpPath },
+  { name: 'echo-sqlite (file)', makeBuilder: () => new SqliteTestBuilder(), tmpPath: sqliteTmpPath },
+  { name: 'echo-native (memory)', makeBuilder: () => new NativeTestBuilder(), tmpPath: nativeTmpPath },
 ] as const;
 
-for (const { name, Builder, tmpPath } of engines) {
+/**
+ * The engine on a real file, through `node:wasi`: opt-in with `ECHO_NATIVE_FILE=1` and `--pool=threads`,
+ * since Node's experimental WASI crashes the worker under the default forks pool.
+ */
+const fileEngine = {
+  name: 'echo-native (file)',
+  makeBuilder: () => new NativeTestBuilder({ directory: mkdtempSync(join(tmpdir(), 'echo-native-bench-')) }),
+  tmpPath: nativeTmpPath,
+} as const;
+
+for (const { name, makeBuilder, tmpPath } of process.env.ECHO_NATIVE_FILE ? [...engines, fileEngine] : engines) {
   describe(`${name}: automerge object`, { tags: ['manual'], timeout: 300_000 }, () => {
     type EchoState = { db: EchoDatabase; feed: Feed.Feed };
     let echoPromise: Promise<EchoState> | undefined;
@@ -178,7 +191,7 @@ for (const { name, Builder, tmpPath } of engines) {
               // Best-effort: the builder's close is async and cannot run from a sync exit handler.
             }
           });
-          const builder = await new Builder().open();
+          const builder = await makeBuilder().open();
           const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Expando], storagePath });
           const db = await peer.createDatabase();
           // The benches never append to it; it keeps the setup identical to echo-sqlite's bench.

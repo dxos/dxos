@@ -19,6 +19,9 @@ use crate::wire::{Reader, Value, Writer};
 
 pub const AUTOMERGE_NAMESPACE: &str = "automerge";
 
+/// Documents kept in memory between calls; past it, about half are dropped.
+const MAX_CACHED: usize = 1024;
+
 /// Rows per multi-row statement; 22 columns × 40 rows stays well inside SQLite's variable limit.
 const ROWS_PER_STATEMENT: usize = 40;
 
@@ -97,16 +100,22 @@ pub type SharedFile = Rc<RefCell<FileState>>;
 
 impl FileState {
     pub fn open(database: Arc<Database>) -> SqlResult<SharedFile> {
-        let conn = database.connect(ConnectOpts::new()).map_err(|err| err.to_string())?;
+        let conn = database
+            .connect(ConnectOpts::new())
+            .map_err(|err| err.to_string())?;
         let mut db = Db::new(conn);
         db.exec_batch(SCHEMA)?;
         let mut max_record = 0;
         let mut max_version = 0;
-        db.query("SELECT MAX(recordId), MAX(version) FROM objectMeta", &[], |row| {
-            max_record = row[0].int().unwrap_or(0);
-            max_version = row[1].int().unwrap_or(0);
-            Ok(())
-        })?;
+        db.query(
+            "SELECT MAX(recordId), MAX(version) FROM objectMeta",
+            &[],
+            |row| {
+                max_record = row[0].int().unwrap_or(0);
+                max_version = row[1].int().unwrap_or(0);
+                Ok(())
+            },
+        )?;
         Ok(Rc::new(RefCell::new(FileState {
             database,
             next_record_id: max_record + 1,
@@ -192,17 +201,27 @@ fn placeholders(rows: usize, columns: usize) -> String {
 }
 
 fn parse_heads(heads: &[String]) -> Result<Vec<ChangeHash>, String> {
-    heads.iter().map(|head| ChangeHash::from_str(head).map_err(|err| err.to_string())).collect()
+    heads
+        .iter()
+        .map(|head| ChangeHash::from_str(head).map_err(|err| err.to_string()))
+        .collect()
 }
 
 fn heads_json(heads: &[ChangeHash]) -> String {
-    let list: Vec<Json> = heads.iter().map(|head| Json::String(head.to_string())).collect();
+    let list: Vec<Json> = heads
+        .iter()
+        .map(|head| Json::String(head.to_string()))
+        .collect();
     Json::Array(list).to_string()
 }
 
 impl Engine {
     pub fn open(file: SharedFile, space_id: String, actor_id: String) -> SqlResult<Engine> {
-        let conn = file.borrow().database.connect(ConnectOpts::new()).map_err(|err| err.to_string())?;
+        let conn = file
+            .borrow()
+            .database
+            .connect(ConnectOpts::new())
+            .map_err(|err| err.to_string())?;
         Ok(Engine {
             profile: Profile::default(),
             db: Db::new(conn),
@@ -221,7 +240,10 @@ impl Engine {
         self.db.statements
     }
 
-    fn in_transaction<T>(&mut self, body: impl FnOnce(&mut Engine) -> SqlResult<T>) -> SqlResult<T> {
+    fn in_transaction<T>(
+        &mut self,
+        body: impl FnOnce(&mut Engine) -> SqlResult<T>,
+    ) -> SqlResult<T> {
         let start = Instant::now();
         self.db.execute("BEGIN", &[])?;
         self.profile.transaction += micros(start);
@@ -246,7 +268,11 @@ impl Engine {
     /// Loads the documents of `ids` that are not cached, with one statement per chunk; an id with no
     /// blocks has no document. Also learns each loaded feed's newest block.
     fn load_docs(&mut self, ids: &[String]) -> SqlResult<()> {
-        let missing: Vec<String> = ids.iter().filter(|id| !self.docs.contains_key(*id)).cloned().collect();
+        let missing: Vec<String> = ids
+            .iter()
+            .filter(|id| !self.docs.contains_key(*id))
+            .cloned()
+            .collect();
         for chunk in missing.chunks(ROWS_PER_STATEMENT) {
             let sql = format!(
                 "SELECT feedId, actorId, sequence, data FROM blocks WHERE feedId IN ({}) ORDER BY insertionId",
@@ -259,8 +285,13 @@ impl Engine {
                 let feed = row[0].text().unwrap_or_default().to_owned();
                 let actor = row[1].text().unwrap_or_default();
                 let sequence = row[2].int().unwrap_or(0);
-                chunks.entry(feed.clone()).or_default().extend_from_slice(row[3].blob().unwrap_or_default());
-                let newer = heads.get(&feed).is_none_or(|(seq, act)| (sequence, actor) > (*seq, act.as_str()));
+                chunks
+                    .entry(feed.clone())
+                    .or_default()
+                    .extend_from_slice(row[3].blob().unwrap_or_default());
+                let newer = heads
+                    .get(&feed)
+                    .is_none_or(|(seq, act)| (sequence, actor) > (*seq, act.as_str()));
                 if newer {
                     heads.insert(feed, (sequence, actor.to_owned()));
                 }
@@ -272,7 +303,14 @@ impl Engine {
                 let mut loaded = AutoCommit::load(&bytes).map_err(|err| err.to_string())?;
                 let saved = loaded.get_heads();
                 self.profile.automerge_load += micros(start);
-                self.docs.insert(id.to_owned(), CachedDoc { doc: loaded, saved, unsaved: false });
+                self.docs.insert(
+                    id.to_owned(),
+                    CachedDoc {
+                        doc: loaded,
+                        saved,
+                        unsaved: false,
+                    },
+                );
             }
             self.heads.extend(heads);
         }
@@ -283,8 +321,14 @@ impl Engine {
         self.heads.get(feed).cloned()
     }
 
-    fn insert_blocks(&mut self, namespace: &str, blocks: &[BlockRow], adopt_positions: bool) -> SqlResult<()> {
-        for chunk in blocks.chunks(ROWS_PER_STATEMENT) {
+    /// Inserts blocks, moving their payloads into the bound parameters rather than copying them.
+    fn insert_blocks(
+        &mut self,
+        namespace: &str,
+        mut blocks: Vec<BlockRow>,
+        adopt_positions: bool,
+    ) -> SqlResult<()> {
+        for chunk in blocks.chunks_mut(ROWS_PER_STATEMENT) {
             let conflict = if adopt_positions {
                 "ON CONFLICT (feedId, actorId, sequence) DO UPDATE SET position = excluded.position"
             } else {
@@ -305,9 +349,9 @@ impl Engine {
                 params.push(Param::from(block.prev_sequence));
                 params.push(Param::from(block.position));
                 params.push(Param::Int(block.timestamp));
-                params.push(Param::Blob(block.data.clone()));
+                params.push(Param::Blob(std::mem::take(&mut block.data)));
             }
-            self.db.execute(&sql, &params)?;
+            self.db.execute_owned(&sql, params)?;
         }
         Ok(())
     }
@@ -348,8 +392,15 @@ impl Engine {
                     None => None,
                 };
                 let start = Instant::now();
-                let behind =
-                    doc::write_object(&mut cached.doc, is_new, &space_id, id, structure, heads.as_deref(), now)?;
+                let behind = doc::write_object(
+                    &mut cached.doc,
+                    is_new,
+                    &space_id,
+                    id,
+                    structure,
+                    heads.as_deref(),
+                    now,
+                )?;
                 let changed = micros(start);
                 let start = Instant::now();
                 let chunk = cached.doc.save_after(&cached.saved);
@@ -362,7 +413,9 @@ impl Engine {
                     let feed = feed_of(id);
                     let previous = engine.feed_head(&feed);
                     let sequence = previous.as_ref().map(|(seq, _)| seq + 1).unwrap_or(0);
-                    engine.heads.insert(feed.clone(), (sequence, engine.actor_id.clone()));
+                    engine
+                        .heads
+                        .insert(feed.clone(), (sequence, engine.actor_id.clone()));
                     blocks.push(BlockRow {
                         feed_id: feed,
                         actor_id: engine.actor_id.clone(),
@@ -383,12 +436,13 @@ impl Engine {
                 }
             }
             let start = Instant::now();
-            engine.insert_blocks(AUTOMERGE_NAMESPACE, &blocks, false)?;
+            engine.insert_blocks(AUTOMERGE_NAMESPACE, blocks, false)?;
             engine.profile.blocks_sql += micros(start);
             if !purged.is_empty() {
                 engine.purge(&purged)?;
             }
-            let updated: HashMap<String, i64> = ids.iter().map(|id| (id.clone(), now as i64)).collect();
+            let updated: HashMap<String, i64> =
+                ids.iter().map(|id| (id.clone(), now as i64)).collect();
             let indexed = engine.index(&updated)?;
             out.u32(results.len() as u32);
             for (id, heads, behind) in &results {
@@ -402,7 +456,9 @@ impl Engine {
                 out.str(id);
             }
             Ok(())
-        })
+        })?;
+        self.trim_cache();
+        Ok(())
     }
 
     /// Applies writes to cached documents without appending; the next write of each object appends
@@ -419,7 +475,9 @@ impl Engine {
         }
         let ids: Vec<String> = writes.iter().map(|(id, _, _)| id.clone()).collect();
         self.load_docs(&ids)?;
-        if writes.iter().any(|(id, heads, _)| !self.docs.contains_key(id) && heads.as_ref().is_some_and(|h| !h.is_empty())) {
+        if writes.iter().any(|(id, heads, _)| {
+            !self.docs.contains_key(id) && heads.as_ref().is_some_and(|h| !h.is_empty())
+        }) {
             out.u32(0);
             return Ok(());
         }
@@ -436,7 +494,15 @@ impl Engine {
                 Some(heads) => Some(parse_heads(heads)?),
                 None => None,
             };
-            let behind = doc::write_object(&mut cached.doc, is_new, &space_id, id, structure, heads.as_deref(), now)?;
+            let behind = doc::write_object(
+                &mut cached.doc,
+                is_new,
+                &space_id,
+                id,
+                structure,
+                heads.as_deref(),
+                now,
+            )?;
             cached.unsaved = true;
             results.push((id.clone(), cached.doc.get_heads(), behind));
         }
@@ -490,7 +556,10 @@ impl Engine {
                     self.db.execute(sql, &[Param::Int(record)])?;
                 }
             }
-            self.db.execute("DELETE FROM blocks WHERE feedId = ?", &[Param::Text(feed_of(id))])?;
+            self.db.execute(
+                "DELETE FROM blocks WHERE feedId = ?",
+                &[Param::Text(feed_of(id))],
+            )?;
             self.docs.remove(id);
             self.heads.remove(&feed_of(id));
             self.record_ids.remove(id);
@@ -531,7 +600,9 @@ impl Engine {
         let read_start = Instant::now();
         let mut entries: Vec<(String, String, Json, String, i64)> = Vec::new();
         for document_id in &documents {
-            let Some(cached) = self.docs.get_mut(document_id) else { continue };
+            let Some(cached) = self.docs.get_mut(document_id) else {
+                continue;
+            };
             let current = cached.doc.get_heads();
             // Logged when a change query asks, not on every write or pull: reading a document's change
             // metadata costs about as much as indexing it, and most writes are never queried that way.
@@ -540,15 +611,24 @@ impl Engine {
             for object_id in doc::object_ids(&cached.doc)? {
                 if let Some(structure) = doc::read_structure(&cached.doc, &object_id)? {
                     let updated_at = updated.get(document_id).copied().unwrap_or(0);
-                    entries.push((document_id.clone(), object_id, structure, heads.clone(), updated_at));
+                    entries.push((
+                        document_id.clone(),
+                        object_id,
+                        structure,
+                        heads.clone(),
+                        updated_at,
+                    ));
                 }
             }
         }
 
         self.profile.index_read += micros(read_start);
         let sql_start = Instant::now();
-        let unknown: Vec<String> =
-            entries.iter().map(|entry| entry.1.clone()).filter(|id| !self.record_ids.contains_key(id)).collect();
+        let unknown: Vec<String> = entries
+            .iter()
+            .map(|entry| entry.1.clone())
+            .filter(|id| !self.record_ids.contains_key(id))
+            .collect();
         for chunk in unknown.chunks(ROWS_PER_STATEMENT) {
             let sql = format!(
                 "SELECT objectId, recordId FROM objectMeta WHERE spaceId = ? AND queueId = '' AND objectId IN ({})",
@@ -558,7 +638,10 @@ impl Engine {
             params.extend(chunk.iter().map(|id| Param::Text(id.clone())));
             let mut found = Vec::new();
             self.db.query(&sql, &params, |row| {
-                found.push((row[0].text().unwrap_or_default().to_owned(), row[1].int().unwrap_or(0)));
+                found.push((
+                    row[0].text().unwrap_or_default().to_owned(),
+                    row[1].int().unwrap_or(0),
+                ));
                 Ok(())
             })?;
             self.record_ids.extend(found);
@@ -581,14 +664,28 @@ impl Engine {
                 };
                 let version = file.next_version;
                 file.next_version += 1;
-                let text = |key: &str| json.get(key).and_then(|value| value.as_str()).map(str::to_owned);
+                let text = |key: &str| {
+                    json.get(key)
+                        .and_then(|value| value.as_str())
+                        .map(str::to_owned)
+                };
                 let source = text("@relationSource");
-                let kind = if source.is_some() { "relation" } else { "object" };
-                let target = if kind == "relation" { text("@relationTarget") } else { None };
+                let kind = if source.is_some() {
+                    "relation"
+                } else {
+                    "object"
+                };
+                let target = if kind == "relation" {
+                    text("@relationTarget")
+                } else {
+                    None
+                };
                 let parent = text("@parent");
                 let meta = json.get("@meta");
-                let convergence_key =
-                    meta.and_then(|meta| meta.get("convergenceKey")).and_then(|key| key.as_str()).map(str::to_owned);
+                let convergence_key = meta
+                    .and_then(|meta| meta.get("convergenceKey"))
+                    .and_then(|key| key.as_str())
+                    .map(str::to_owned);
                 let annotations = meta
                     .and_then(|meta| meta.get("annotations"))
                     .filter(|value| value.as_object().is_some_and(|map| !map.is_empty()))
@@ -599,13 +696,18 @@ impl Engine {
                     .and_then(|value| value.as_f64())
                     .map(|value| value as i64)
                     .unwrap_or(updated_at);
-                let type_dxn = doc::normalize_type_uri(&text("@type").unwrap_or_else(|| "type".to_owned()));
+                let type_dxn =
+                    doc::normalize_type_uri(&text("@type").unwrap_or_else(|| "type".to_owned()));
                 rows.push(Row {
                     record_id,
                     parent_id: doc::local_entity_id(parent.as_deref(), &space_id),
                     source_id: doc::local_entity_id(source.as_deref(), &space_id),
                     target_id: doc::local_entity_id(target.as_deref(), &space_id),
-                    deleted: i64::from(json.get("@deleted").and_then(|value| value.as_bool()).unwrap_or(false)),
+                    deleted: i64::from(
+                        json.get("@deleted")
+                            .and_then(|value| value.as_bool())
+                            .unwrap_or(false),
+                    ),
                     refs: doc::extract_references(&json),
                     snapshot: json.to_string(),
                     object_id: object_id.clone(),
@@ -626,14 +728,14 @@ impl Engine {
             }
         }
 
-        for chunk in rows.chunks(ROWS_PER_STATEMENT) {
+        for chunk in rows.chunks_mut(ROWS_PER_STATEMENT) {
             let sql = format!(
                 "INSERT INTO objectMeta (recordId, objectId, queueId, queueNamespace, spaceId, documentId, entityKind, typeDXN, deleted, source, target, parent, parentId, sourceId, targetId, convergenceKey, annotations, version, createdAt, updatedAt) VALUES {} \
                  ON CONFLICT (recordId) DO UPDATE SET entityKind = excluded.entityKind, typeDXN = excluded.typeDXN, deleted = excluded.deleted, source = excluded.source, target = excluded.target, parent = excluded.parent, parentId = excluded.parentId, sourceId = excluded.sourceId, targetId = excluded.targetId, convergenceKey = excluded.convergenceKey, annotations = excluded.annotations, version = excluded.version, updatedAt = excluded.updatedAt",
                 placeholders(chunk.len(), 20)
             );
             let mut params = Vec::with_capacity(chunk.len() * 20);
-            for row in chunk {
+            for row in chunk.iter() {
                 params.extend([
                     Param::Int(row.record_id),
                     Param::Text(row.object_id.clone()),
@@ -664,22 +766,37 @@ impl Engine {
                 placeholders(chunk.len(), 3)
             );
             let mut params = Vec::with_capacity(chunk.len() * 3);
-            for row in chunk {
-                params.extend([Param::Int(row.record_id), Param::Text(row.snapshot.clone()), Param::Text(row.heads.clone())]);
+            for row in chunk.iter_mut() {
+                params.extend([
+                    Param::Int(row.record_id),
+                    Param::Text(std::mem::take(&mut row.snapshot)),
+                    Param::Text(std::mem::take(&mut row.heads)),
+                ]);
             }
-            self.db.execute(&sql, &params)?;
+            self.db.execute_owned(&sql, params)?;
 
             let sql = format!(
                 "DELETE FROM reverseRef WHERE recordId IN ({})",
                 vec!["?"; chunk.len()].join(", ")
             );
             let params: Vec<Param> = chunk.iter().map(|row| Param::Int(row.record_id)).collect();
-            self.db.execute(&sql, &params)?;
+            self.db.execute_owned(&sql, params)?;
 
-            let refs: Vec<(i64, &(String, String, String))> =
-                chunk.iter().flat_map(|row| row.refs.iter().map(move |reference| (row.record_id, reference))).collect();
+            let refs: Vec<(i64, &(String, String, String))> = chunk
+                .iter()
+                .flat_map(|row| {
+                    row.refs
+                        .iter()
+                        .map(move |reference| (row.record_id, reference))
+                })
+                .collect();
             let mut seen = HashSet::new();
-            let refs: Vec<_> = refs.into_iter().filter(|(record, (target, path, _))| seen.insert((*record, target.clone(), path.clone()))).collect();
+            let refs: Vec<_> = refs
+                .into_iter()
+                .filter(|(record, (target, path, _))| {
+                    seen.insert((*record, target.clone(), path.clone()))
+                })
+                .collect();
             for refs_chunk in refs.chunks(ROWS_PER_STATEMENT * 2) {
                 let sql = format!(
                     "INSERT INTO reverseRef (recordId, targetDXN, propPath, propPathNormalized) VALUES {}",
@@ -713,7 +830,9 @@ impl Engine {
         let space_id = self.space_id.clone();
         let mut changes: Vec<ChangeRow> = Vec::new();
         for document_id in &documents {
-            let Some(cached) = self.docs.get_mut(document_id) else { continue };
+            let Some(cached) = self.docs.get_mut(document_id) else {
+                continue;
+            };
             let since = self.logged.get(document_id).cloned().unwrap_or_default();
             for change in cached.doc.get_changes(&since) {
                 if change.timestamp() > 0 {
@@ -727,7 +846,8 @@ impl Engine {
                     });
                 }
             }
-            self.logged.insert(document_id.clone(), cached.doc.get_heads());
+            self.logged
+                .insert(document_id.clone(), cached.doc.get_heads());
         }
         self.in_transaction(|engine| {
             for chunk in changes.chunks(ROWS_PER_STATEMENT) {
@@ -779,7 +899,10 @@ impl Engine {
         }
         let body = self.db.column_index(&sql, "body")?;
         self.db.query_table(&sql, &params, out, |row| {
-            let Some(text) = body.and_then(|index| row.get(index)).and_then(|cell| cell.text()) else {
+            let Some(text) = body
+                .and_then(|index| row.get(index))
+                .and_then(|cell| cell.text())
+            else {
                 return false;
             };
             match serde_json::from_str::<Json>(text) {
@@ -813,12 +936,20 @@ impl Engine {
         let namespace = input.str()?.to_owned();
         let token = input.opt_str()?.map(str::to_owned);
         self.in_transaction(|engine| {
-            engine.db.execute("UPDATE blocks SET position = NULL WHERE namespace = ?", &[Param::Text(namespace.clone())])?;
+            engine.db.execute(
+                "UPDATE blocks SET position = NULL WHERE namespace = ?",
+                &[Param::Text(namespace.clone())],
+            )?;
             engine.set_sync_state(&namespace, -1, token)
         })
     }
 
-    fn set_sync_state(&mut self, namespace: &str, last_pulled: i64, token: Option<String>) -> SqlResult<()> {
+    fn set_sync_state(
+        &mut self,
+        namespace: &str,
+        last_pulled: i64,
+        token: Option<String>,
+    ) -> SqlResult<()> {
         self.db.execute(
             "INSERT INTO sync_state (namespace, lastPulled, serverToken) VALUES (?, ?, ?) ON CONFLICT (namespace) DO UPDATE SET lastPulled = excluded.lastPulled, serverToken = excluded.serverToken",
             &[Param::from(namespace), Param::Int(last_pulled), Param::from(token)],
@@ -854,24 +985,30 @@ impl Engine {
             });
         }
         self.in_transaction(|engine| {
-            let start = Instant::now();
-            engine.insert_blocks(&namespace, &blocks, true)?;
-            engine.profile.blocks_sql += micros(start);
-            engine.set_sync_state(&namespace, last_pulled, token)?;
             let mut updated: HashMap<String, i64> = HashMap::new();
             if namespace == AUTOMERGE_NAMESPACE {
                 for block in &blocks {
-                    let Some(id) = object_of(&block.feed_id) else { continue };
-                    let newer = engine
-                        .heads
-                        .get(&block.feed_id)
-                        .is_some_and(|(seq, actor)| (block.sequence, block.actor_id.as_str()) > (*seq, actor.as_str()));
-                    if newer {
-                        engine.heads.insert(block.feed_id.clone(), (block.sequence, block.actor_id.clone()));
+                    let Some(id) = object_of(&block.feed_id) else {
+                        continue;
+                    };
+                    let newer = engine.heads.get(&block.feed_id).is_none_or(|(seq, actor)| {
+                        (block.sequence, block.actor_id.as_str()) > (*seq, actor.as_str())
+                    });
+                    if !engine.docs.contains_key(id) {
+                        // Learned again with the document on its next load, from every stored block.
+                        engine.heads.remove(&block.feed_id);
+                    } else if newer {
+                        engine.heads.insert(
+                            block.feed_id.clone(),
+                            (block.sequence, block.actor_id.clone()),
+                        );
                     }
                     // A cached document takes the chunk now; one not cached reads every block on load.
                     if let Some(cached) = engine.docs.get_mut(id) {
-                        cached.doc.load_incremental(&block.data).map_err(|err| err.to_string())?;
+                        cached
+                            .doc
+                            .load_incremental(&block.data)
+                            .map_err(|err| err.to_string())?;
                         if !cached.unsaved {
                             cached.saved = cached.doc.get_heads();
                         }
@@ -880,13 +1017,38 @@ impl Engine {
                     *time = (*time).max(block.timestamp);
                 }
             }
+            let start = Instant::now();
+            engine.insert_blocks(&namespace, blocks, true)?;
+            engine.profile.blocks_sql += micros(start);
+            engine.set_sync_state(&namespace, last_pulled, token)?;
             let indexed = engine.index(&updated)?;
             out.u32(indexed.len() as u32);
             for id in &indexed {
                 out.str(id);
             }
             Ok(())
-        })
+        })?;
+        self.trim_cache();
+        Ok(())
+    }
+
+    /// Drops cached documents past [`MAX_CACHED`], so a catch-up over a large space does not keep every
+    /// document resident; a dropped document is loaded from its blocks when next written.
+    fn trim_cache(&mut self) {
+        if self.docs.len() <= MAX_CACHED {
+            return;
+        }
+        let evict: Vec<String> = self
+            .docs
+            .iter()
+            .filter(|(_, cached)| !cached.unsaved)
+            .map(|(id, _)| id.clone())
+            .take(self.docs.len() - MAX_CACHED / 2)
+            .collect();
+        for id in evict {
+            self.docs.remove(&id);
+            self.heads.remove(&feed_of(&id));
+        }
     }
 
     /// Up to `limit` local blocks the authority has not positioned, oldest first.
@@ -952,11 +1114,17 @@ struct Predicate {
 
 impl Predicate {
     fn matches(&self, json: &Json) -> bool {
-        let Some(value) = json.get(&self.key) else { return false };
+        let Some(value) = json.get(&self.key) else {
+            return false;
+        };
         let compare = |operand: &Json| -> Option<std::cmp::Ordering> {
             match (value, operand) {
-                (Json::Number(left), Json::Number(right)) => left.as_f64()?.partial_cmp(&right.as_f64()?),
-                (Json::String(left), Json::String(right)) => Some(left.as_str().cmp(right.as_str())),
+                (Json::Number(left), Json::Number(right)) => {
+                    left.as_f64()?.partial_cmp(&right.as_f64()?)
+                }
+                (Json::String(left), Json::String(right)) => {
+                    Some(left.as_str().cmp(right.as_str()))
+                }
                 (Json::Bool(left), Json::Bool(right)) => Some(left.cmp(right)),
                 _ => None,
             }
@@ -969,7 +1137,8 @@ impl Predicate {
             (PREDICATE_LT, [operand]) => compare(operand) == Some(Less),
             (PREDICATE_LTE, [operand]) => matches!(compare(operand), Some(Less | Equal)),
             (PREDICATE_BETWEEN, [from, to]) => {
-                matches!(compare(from), Some(Greater | Equal)) && matches!(compare(to), Some(Less | Equal))
+                matches!(compare(from), Some(Greater | Equal))
+                    && matches!(compare(to), Some(Less | Equal))
             }
             _ => false,
         }
@@ -998,7 +1167,9 @@ fn read_predicates(input: &mut Reader<'_>) -> SqlResult<Vec<Predicate>> {
             .map(|_| {
                 input.value().map(|value| match value {
                     Value::Int(number) => Json::from(number),
-                    Value::Float(number) => serde_json::Number::from_f64(number).map(Json::Number).unwrap_or(Json::Null),
+                    Value::Float(number) => serde_json::Number::from_f64(number)
+                        .map(Json::Number)
+                        .unwrap_or(Json::Null),
                     Value::Str(text) => Json::String(text),
                     Value::Bool(flag) => Json::Bool(flag),
                     _ => Json::Null,

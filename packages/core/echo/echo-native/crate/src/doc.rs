@@ -53,41 +53,53 @@ pub fn write_object(
     // `createdAt` is set once, by the first writer, and survives every later write.
     let existing_created = match doc.get(&objects, object_id).map_err(err)? {
         Some((AmValue::Object(_), object)) => match doc.get(&object, "system").map_err(err)? {
-            Some((AmValue::Object(_), system)) => match doc.get(&system, "createdAt").map_err(err)? {
-                Some((AmValue::Scalar(value), _)) => scalar_number(&value),
-                _ => None,
-            },
+            Some((AmValue::Object(_), system)) => {
+                match doc.get(&system, "createdAt").map_err(err)? {
+                    Some((AmValue::Scalar(value), _)) => scalar_number(&value),
+                    _ => None,
+                }
+            }
             _ => None,
         },
         _ => None,
     };
-    let structure_created = structure.get("system").and_then(|system| match system.get("createdAt") {
-        Some(Value::Int(value)) => Some(*value as f64),
-        Some(Value::Float(value)) => Some(*value),
-        _ => None,
-    });
+    let structure_created =
+        structure
+            .get("system")
+            .and_then(|system| match system.get("createdAt") {
+                Some(Value::Int(value)) => Some(*value as f64),
+                Some(Value::Float(value)) => Some(*value),
+                _ => None,
+            });
     let created = existing_created.or(structure_created).unwrap_or(now_ms);
     let next = with_created(structure, created);
     apply_value(doc, &objects, Prop::Map(object_id.into()), &next, false)?;
-    doc.commit_with(automerge::transaction::CommitOptions::default().with_time((now_ms / 1000.0) as i64));
+    doc.commit_with(
+        automerge::transaction::CommitOptions::default().with_time((now_ms / 1000.0) as i64),
+    );
     if behind {
         doc.integrate();
     }
     Ok(behind)
 }
 
-/// Marks an object deleted, as its structure with `system.deleted` would.
+/// The structure with `system.createdAt` set to `created`.
 fn with_created(structure: &Value, created: f64) -> Value {
     let created = Value::Int(created as i64);
     match structure {
         Value::Map(entries) => {
             let mut entries = entries.clone();
             match entries.iter_mut().find(|(key, _)| key == "system") {
-                Some((_, Value::Map(system))) => match system.iter_mut().find(|(key, _)| key == "createdAt") {
-                    Some((_, value)) => *value = created,
-                    None => system.push(("createdAt".into(), created)),
-                },
-                _ => entries.push(("system".into(), Value::Map(vec![("createdAt".into(), created)]))),
+                Some((_, Value::Map(system))) => {
+                    match system.iter_mut().find(|(key, _)| key == "createdAt") {
+                        Some((_, value)) => *value = created,
+                        None => system.push(("createdAt".into(), created)),
+                    }
+                }
+                _ => entries.push((
+                    "system".into(),
+                    Value::Map(vec![("createdAt".into(), created)]),
+                )),
             }
             Value::Map(entries)
         }
@@ -111,7 +123,9 @@ pub fn same_heads(left: &[ChangeHash], right: &[ChangeHash]) -> bool {
 fn put_text(doc: &mut AutoCommit, parent: &ObjId, prop: Prop, text: &str) -> DocResult<()> {
     let id = match prop {
         Prop::Map(key) => doc.put_object(parent, key, ObjType::Text).map_err(err)?,
-        Prop::Seq(index) => doc.insert_object(parent, index, ObjType::Text).map_err(err)?,
+        Prop::Seq(index) => doc
+            .insert_object(parent, index, ObjType::Text)
+            .map_err(err)?,
     };
     if !text.is_empty() {
         doc.splice_text(&id, 0, 0, text).map_err(err)?;
@@ -131,14 +145,25 @@ fn to_scalar(value: &Value) -> Option<ScalarValue> {
 }
 
 /// Inserts or replaces `parent[prop]` with a fresh copy of `value`.
-fn put_new(doc: &mut AutoCommit, parent: &ObjId, prop: Prop, value: &Value, insert: bool) -> DocResult<()> {
+fn put_new(
+    doc: &mut AutoCommit,
+    parent: &ObjId,
+    prop: Prop,
+    value: &Value,
+    insert: bool,
+) -> DocResult<()> {
     match value {
         Value::Str(text) => {
-            let prop = prop;
             let id = match (&prop, insert) {
-                (Prop::Seq(index), true) => doc.insert_object(parent, *index, ObjType::Text).map_err(err)?,
-                (Prop::Seq(index), false) => doc.put_object(parent, *index, ObjType::Text).map_err(err)?,
-                (Prop::Map(key), _) => doc.put_object(parent, key.as_str(), ObjType::Text).map_err(err)?,
+                (Prop::Seq(index), true) => doc
+                    .insert_object(parent, *index, ObjType::Text)
+                    .map_err(err)?,
+                (Prop::Seq(index), false) => {
+                    doc.put_object(parent, *index, ObjType::Text).map_err(err)?
+                }
+                (Prop::Map(key), _) => doc
+                    .put_object(parent, key.as_str(), ObjType::Text)
+                    .map_err(err)?,
             };
             if !text.is_empty() {
                 doc.splice_text(&id, 0, 0, text).map_err(err)?;
@@ -167,7 +192,13 @@ fn put_new(doc: &mut AutoCommit, parent: &ObjId, prop: Prop, value: &Value, inse
     Ok(())
 }
 
-fn make_object(doc: &mut AutoCommit, parent: &ObjId, prop: &Prop, kind: ObjType, insert: bool) -> DocResult<ObjId> {
+fn make_object(
+    doc: &mut AutoCommit,
+    parent: &ObjId,
+    prop: &Prop,
+    kind: ObjType,
+    insert: bool,
+) -> DocResult<ObjId> {
     match (prop, insert) {
         (Prop::Seq(index), true) => doc.insert_object(parent, *index, kind).map_err(err),
         (Prop::Seq(index), false) => doc.put_object(parent, *index, kind).map_err(err),
@@ -193,7 +224,13 @@ fn prop_has_slash(prop: &Prop) -> bool {
 
 /// Sets `parent[prop]` to `value` with the smallest edit: maps and arrays member by member, and a
 /// string as a text edit, unless the path holds a `/` key (a reference), where it is assigned whole.
-pub fn apply_value(doc: &mut AutoCommit, parent: &ObjId, prop: Prop, value: &Value, slashed: bool) -> DocResult<()> {
+pub fn apply_value(
+    doc: &mut AutoCommit,
+    parent: &ObjId,
+    prop: Prop,
+    value: &Value,
+    slashed: bool,
+) -> DocResult<()> {
     let slashed = slashed || prop_has_slash(&prop);
     let current = doc.get(parent, prop.clone()).map_err(err)?;
     match (current, value) {
@@ -287,7 +324,9 @@ fn float_json(value: f64) -> Json {
     if value.fract() == 0.0 && value.abs() < 9.007_199_254_740_992e15 {
         Json::from(value as i64)
     } else {
-        serde_json::Number::from_f64(value).map(Json::Number).unwrap_or(Json::Null)
+        serde_json::Number::from_f64(value)
+            .map(Json::Number)
+            .unwrap_or(Json::Null)
     }
 }
 
@@ -340,7 +379,9 @@ pub fn structure_to_json(object_id: &str, structure: &Json) -> Json {
         if non_empty("keys")
             || non_empty("tags")
             || non_empty("annotations")
-            || SCALAR_META_FIELDS.iter().any(|field| fields.get(*field).is_some_and(|value| !value.is_null()))
+            || SCALAR_META_FIELDS
+                .iter()
+                .any(|field| fields.get(*field).is_some_and(|value| !value.is_null()))
         {
             out.insert("@meta".into(), meta.clone());
         }
@@ -348,9 +389,16 @@ pub fn structure_to_json(object_id: &str, structure: &Json) -> Json {
     if let Some(uri) = reference("type") {
         out.insert("@type".into(), uri);
     }
-    let deleted = system.and_then(|system| system.get("deleted")).and_then(|value| value.as_bool()).unwrap_or(false);
+    let deleted = system
+        .and_then(|system| system.get("deleted"))
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false);
     out.insert("@deleted".into(), Json::Bool(deleted));
-    for (name, attr) in [("parent", "@parent"), ("source", "@relationSource"), ("target", "@relationTarget")] {
+    for (name, attr) in [
+        ("parent", "@parent"),
+        ("source", "@relationSource"),
+        ("target", "@relationTarget"),
+    ] {
         if let Some(Json::String(uri)) = reference(name) {
             if parse_eid(&uri).is_some() {
                 out.insert(attr.into(), Json::String(normalize_eid(&uri)));
@@ -371,7 +419,9 @@ pub fn parse_eid(uri: &str) -> Option<(Option<&str>, Option<&str>)> {
         let space = parts.next().filter(|space| !space.is_empty())?;
         return match parts.next() {
             None => Some((Some(space), None)),
-            Some(entity) if !entity.is_empty() && !entity.contains('/') => Some((Some(space), Some(entity))),
+            Some(entity) if !entity.is_empty() && !entity.contains('/') => {
+                Some((Some(space), Some(entity)))
+            }
             _ => None,
         };
     }
@@ -402,7 +452,10 @@ pub fn reference_index_key(uri: &str) -> Option<String> {
         return entity.map(|entity| format!("echo:///{entity}"));
     }
     if let Some(rest) = uri.strip_prefix("dxn:") {
-        let name: String = rest.chars().take_while(|char| *char != ':' && *char != '#').collect();
+        let name: String = rest
+            .chars()
+            .take_while(|char| *char != ':' && *char != '#')
+            .collect();
         return (!name.is_empty()).then(|| format!("dxn:{name}"));
     }
     Some(uri.to_owned())
@@ -417,8 +470,14 @@ pub fn extract_references(json: &Json) -> Vec<(String, String, String)> {
                 if map.len() == 1 {
                     if let Some(Json::String(uri)) = map.get("/") {
                         if let Some(target) = reference_index_key(uri) {
-                            let normalized: Vec<String> =
-                                path.iter().filter(|segment| !segment.bytes().all(|byte| byte.is_ascii_digit()) || segment.is_empty()).cloned().collect();
+                            let normalized: Vec<String> = path
+                                .iter()
+                                .filter(|segment| {
+                                    !segment.bytes().all(|byte| byte.is_ascii_digit())
+                                        || segment.is_empty()
+                                })
+                                .cloned()
+                                .collect();
                             out.push((target, escape_path(path), escape_path(&normalized)));
                         }
                         return;
@@ -454,7 +513,10 @@ pub fn extract_references(json: &Json) -> Vec<(String, String, String)> {
 }
 
 fn escape_path(path: &[String]) -> String {
-    path.iter().map(|segment| segment.replace('\\', "\\\\").replace('.', "\\.")).collect::<Vec<_>>().join(".")
+    path.iter()
+        .map(|segment| segment.replace('\\', "\\\\").replace('.', "\\."))
+        .collect::<Vec<_>>()
+        .join(".")
 }
 
 /// Normalizes a stored type URI as index-core does: an `echo:` type collapses to its local form.

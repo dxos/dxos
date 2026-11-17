@@ -7,6 +7,7 @@ import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 
 import { type NativeDatabase } from '../database.ts';
+import { type NativeOptions } from '../native.ts';
 import { NativeTestBuilder as TestBuilder, type NativeTestPeer as TestPeer } from './harness.ts';
 
 /**
@@ -27,7 +28,12 @@ export type EchoTestPeerOptions = {
  * parity suite copies those tests with only their imports changed.
  */
 export class EchoTestBuilder implements AsyncDisposable {
-  readonly #builder = new TestBuilder();
+  readonly #builder: TestBuilder;
+
+  /** `options` choose where peers' files live; see {@link NativeTestBuilder}. */
+  constructor(options: NativeOptions = {}) {
+    this.#builder = new TestBuilder(options);
+  }
 
   async open(): Promise<this> {
     return this;
@@ -45,8 +51,7 @@ export class EchoTestBuilder implements AsyncDisposable {
     return new EchoTestPeer(
       this.#builder.createPeer({
         types: options.types,
-        // A storage path names an engine file, kept in memory for the process's life.
-        path: options.storagePath === undefined ? undefined : `mem:${options.storagePath}`,
+        path: options.storagePath === undefined ? undefined : this.#builder.pathOf(options.storagePath),
       }),
     );
   }

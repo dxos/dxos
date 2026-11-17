@@ -3,6 +3,7 @@
 //
 
 import * as A from '@automerge/automerge';
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 
 import { type Feed, type Obj } from '@dxos/echo';
@@ -22,7 +23,10 @@ import { type RowTable } from './rows.ts';
 export type Doc = A.Doc<DatabaseDirectory>;
 
 /** Effects of the store never need a service: every call is a synchronous call into the engine. */
-type Store<A> = Effect.Effect<A, Error>;
+/** A failure inside the wasm engine or while decoding its output. */
+export class NativeStoreError extends Data.TaggedError('NativeStoreError')<{ readonly cause: unknown }> {}
+
+type Store<A> = Effect.Effect<A, NativeStoreError>;
 
 const DOCUMENT_ROWS = `m.queueId = ''`;
 
@@ -140,7 +144,7 @@ const rowsOf = (table: RowTable): StoredEntity[] => {
 };
 
 const attempt = <A>(body: () => A): Store<A> =>
-  Effect.try({ try: body, catch: (error) => (error instanceof Error ? error : new Error(String(error))) });
+  Effect.try({ try: body, catch: (cause) => new NativeStoreError({ cause }) });
 
 /** An entity's JSON body as `Entity.toJSON` writes it: an object carrying its id. */
 const isObjectJson = (body: Record<string, unknown>): body is Obj.JSON => typeof body.id === 'string';
@@ -322,7 +326,7 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
   }
 
   appendItems(_feedId: string, _namespace: string, _items: readonly Record<string, unknown>[]): Store<void> {
-    return Effect.fail(new UnsupportedOperationError('feed items'));
+    return Effect.die(new UnsupportedOperationError('feed items'));
   }
 
   itemCounts(_namespace: string): Store<{ blocksToPush: number; totalBlocks: number }> {

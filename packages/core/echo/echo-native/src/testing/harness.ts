@@ -10,7 +10,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { NativeDatabase } from '../database.ts';
-import { type Native, createNative } from '../native.ts';
+import { type Native, type NativeOptions, createNative } from '../native.ts';
 import { NativeSync } from '../sync.ts';
 
 export { TestAuthority };
@@ -21,14 +21,27 @@ export { TestAuthority };
  */
 export class NativeTestBuilder implements AsyncDisposable {
   /** An instance of its own, so a test that traps the engine does not take the next test with it. */
-  readonly #native = createNative();
+  readonly #native: Promise<Native>;
+  /** Whether peers' files live on disk, under the instance's `/data`. */
+  readonly #onDisk: boolean;
   readonly #peers: NativeTestPeer[] = [];
   readonly #authorities: TestAuthority[] = [];
+
+  /** With `directory`, peers' files are real files there (Node only); otherwise in wasm memory. */
+  constructor(options: NativeOptions = {}) {
+    this.#native = createNative(options);
+    this.#onDisk = options.directory !== undefined;
+  }
+
+  /** The engine path for a peer file named `name`. */
+  pathOf(name: string): string {
+    return this.#onDisk ? `/data/${name.replaceAll('/', '_')}` : `mem:${name}`;
+  }
 
   createPeer(options: { types?: readonly Type.AnyEntity[]; path?: string } = {}): NativeTestPeer {
     const peer = new NativeTestPeer(
       this.#native,
-      options.path ?? `mem:peer-${crypto.randomUUID()}`,
+      options.path ?? this.pathOf(`peer-${crypto.randomUUID()}`),
       options.types ?? [],
     );
     this.#peers.push(peer);

@@ -28,7 +28,10 @@ pub enum Value {
 impl Value {
     pub fn get(&self, key: &str) -> Option<&Value> {
         match self {
-            Value::Map(entries) => entries.iter().find(|(name, _)| name == key).map(|(_, value)| value),
+            Value::Map(entries) => entries
+                .iter()
+                .find(|(name, _)| name == key)
+                .map(|(_, value)| value),
             _ => None,
         }
     }
@@ -89,7 +92,9 @@ impl<'a> Reader<'a> {
             return Ok(None);
         }
         let bytes = self.take(len as usize)?;
-        std::str::from_utf8(bytes).map(Some).map_err(|err| err.to_string())
+        std::str::from_utf8(bytes)
+            .map(Some)
+            .map_err(|err| err.to_string())
     }
 
     pub fn value(&mut self) -> WireResult<Value> {

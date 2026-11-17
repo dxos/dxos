@@ -7028,9 +7028,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
@@ -7059,18 +7056,12 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
-      '@dxos/feed':
-        specifier: workspace:*
-        version: link:../feed
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/sql-sqlite-node':
-        specifier: 'catalog:'
-        version: 4.0.4(effect@4.0.4)
 
   packages/core/echo/echo-panproto:
     dependencies:

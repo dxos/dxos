@@ -13,6 +13,9 @@ const TAG_BYTES = 6;
 const TAG_ARRAY = 7;
 const TAG_MAP = 8;
 
+/** Encoder storage to start from; grown by doubling. */
+const INITIAL_SIZE = 64 * 1024;
+
 /** Length marker for an absent string or list. */
 export const ABSENT = 0xffffffff;
 
@@ -24,12 +27,29 @@ const textDecoder = new TextDecoder();
  * call needs more room than any before it.
  */
 export class Encoder {
-  #bytes = new Uint8Array(64 * 1024);
-  #view = new DataView(this.#bytes.buffer);
+  /** Supplies storage of at least `size` bytes that keeps what was written so far, when not a JS buffer. */
+  readonly #grow: ((size: number) => Uint8Array) | undefined;
+  #bytes: Uint8Array;
+  #view: DataView;
   #pos = 0;
+
+  /**
+   * With `grow`, the encoder writes straight into storage it supplies (the engine's input buffer in
+   * wasm memory), so a call's arguments are never copied from a JS buffer into the module.
+   */
+  constructor(grow?: (size: number) => Uint8Array) {
+    this.#grow = grow;
+    this.#bytes = grow ? grow(INITIAL_SIZE) : new Uint8Array(INITIAL_SIZE);
+    this.#view = new DataView(this.#bytes.buffer, this.#bytes.byteOffset, this.#bytes.byteLength);
+  }
 
   reset(): this {
     this.#pos = 0;
+    // A view of wasm memory detaches (length 0) when the memory grows during a call.
+    if (this.#grow && this.#bytes.byteLength === 0) {
+      this.#bytes = this.#grow(INITIAL_SIZE);
+      this.#view = new DataView(this.#bytes.buffer, this.#bytes.byteOffset, this.#bytes.byteLength);
+    }
     return this;
   }
 
@@ -45,14 +65,18 @@ export class Encoder {
     if (this.#pos + extra <= this.#bytes.length) {
       return;
     }
-    let size = this.#bytes.length * 2;
+    let size = Math.max(this.#bytes.length * 2, INITIAL_SIZE);
     while (size < this.#pos + extra) {
       size *= 2;
     }
-    const next = new Uint8Array(size);
-    next.set(this.#bytes.subarray(0, this.#pos));
-    this.#bytes = next;
-    this.#view = new DataView(next.buffer);
+    if (this.#grow) {
+      this.#bytes = this.#grow(size);
+    } else {
+      const next = new Uint8Array(size);
+      next.set(this.#bytes.subarray(0, this.#pos));
+      this.#bytes = next;
+    }
+    this.#view = new DataView(this.#bytes.buffer, this.#bytes.byteOffset, this.#bytes.byteLength);
   }
 
   u8(value: number): this {

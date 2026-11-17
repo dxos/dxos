@@ -114,13 +114,32 @@ const defaultSource = async (): Promise<BufferSource> => {
 let compiled: Promise<WebAssembly.Module> | undefined;
 let shared: Promise<Native> | undefined;
 
+/** Where an instance keeps files whose path does not start with `mem:`. */
+export type NativeOptions = {
+  /**
+   * A host directory the engine sees as `/data` (Node only, through `node:wasi`), so a database at
+   * `/data/<name>` is a real file with real syncs. Without it, only `mem:` files exist.
+   */
+  directory?: string;
+};
+
 /**
  * A new engine instance with its own memory, files and databases. The module is compiled once per
  * process; instantiating it again is cheap.
  */
-export const createNative = async (): Promise<Native> => {
+export const createNative = async (options: NativeOptions = {}): Promise<Native> => {
   compiled ??= (async () => WebAssembly.compile(await (wasmSource ?? defaultSource)()))();
   const module = await compiled;
+  if (options.directory !== undefined) {
+    const { WASI } = await import('node:wasi');
+    const wasi = new WASI({ version: 'preview1', preopens: { '/data': options.directory } });
+    const created = await WebAssembly.instantiate(module, { wasi_snapshot_preview1: wasi.wasiImport });
+    if (!isExports(created.exports)) {
+      throw new Error('echo-native module lacks its exports');
+    }
+    wasi.initialize(created);
+    return new Native(created.exports);
+  }
   let exports: Exports | undefined;
   const memory = () => {
     if (!exports) {
@@ -178,7 +197,7 @@ export type NativeWrite = { id: string; heads?: readonly string[]; structure: un
  */
 export class Native {
   readonly #exports: Exports;
-  readonly #encoder = new Encoder();
+  readonly #encoder: Encoder;
   /** Why the instance died, once a call trapped. */
   #trapped: string | undefined;
   /** Calls made, for the benchmark report. */
@@ -186,6 +205,12 @@ export class Native {
 
   constructor(exports: Exports) {
     this.#exports = exports;
+    // Arguments are encoded in place in the engine's input buffer; growing it keeps what was written.
+    this.#encoder = new Encoder((size) => {
+      // Reserved before the buffer is read: reserving can grow memory, which detaches the old buffer.
+      const ptr = exports.input_reserve(size);
+      return new Uint8Array(exports.memory.buffer, ptr, size);
+    });
   }
 
   #invoke(op: (len: number) => number, encoder: Encoder): Uint8Array {
@@ -194,8 +219,6 @@ export class Native {
     }
     this.calls++;
     const len = encoder.length;
-    const ptr = this.#exports.input_reserve(len);
-    new Uint8Array(this.#exports.memory.buffer, ptr, len).set(encoder.bytes);
     let result: number;
     try {
       result = op(len);

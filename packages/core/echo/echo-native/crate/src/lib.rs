@@ -46,10 +46,23 @@ pub extern "C" fn output_ptr() -> *const u8 {
 
 /// Runs `op` over the input's first `len` bytes and returns the output length, or `-(len + 1)` with the
 /// error message as output.
-fn call(len: u32, op: impl FnOnce(&mut Reader<'_>, &mut Writer, &mut HashMap<String, SharedFile>, &mut Vec<Option<Engine>>) -> Result<(), String>) -> i32 {
+fn call(
+    len: u32,
+    op: impl FnOnce(
+        &mut Reader<'_>,
+        &mut Writer,
+        &mut HashMap<String, SharedFile>,
+        &mut Vec<Option<Engine>>,
+    ) -> Result<(), String>,
+) -> i32 {
     STATE.with(|state| {
         let mut state = state.borrow_mut();
-        let State { input, output, files, engines } = &mut *state;
+        let State {
+            input,
+            output,
+            files,
+            engines,
+        } = &mut *state;
         output.clear();
         let mut reader = Reader::new(&input[..len as usize]);
         match op(&mut reader, output, files, engines) {
@@ -64,7 +77,10 @@ fn call(len: u32, op: impl FnOnce(&mut Reader<'_>, &mut Writer, &mut HashMap<Str
 }
 
 fn engine(engines: &mut [Option<Engine>], handle: u32) -> Result<&mut Engine, String> {
-    engines.get_mut(handle as usize).and_then(Option::as_mut).ok_or_else(|| format!("no database {handle}"))
+    engines
+        .get_mut(handle as usize)
+        .and_then(Option::as_mut)
+        .ok_or_else(|| format!("no database {handle}"))
 }
 
 /// Opens a space's database on a file. Input: path, space id, actor id. Output: the handle (u32).
@@ -110,12 +126,16 @@ pub extern "C" fn file_drop(len: u32) -> i32 {
 
 #[no_mangle]
 pub extern "C" fn db_write(handle: u32, len: u32) -> i32 {
-    call(len, |input, out, _, engines| engine(engines, handle)?.write(input, out))
+    call(len, |input, out, _, engines| {
+        engine(engines, handle)?.write(input, out)
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn db_edit(handle: u32, len: u32) -> i32 {
-    call(len, |input, out, _, engines| engine(engines, handle)?.edit(input, out))
+    call(len, |input, out, _, engines| {
+        engine(engines, handle)?.edit(input, out)
+    })
 }
 
 /// Logs pending document changes for change queries.
@@ -126,7 +146,9 @@ pub extern "C" fn db_log_changes(handle: u32) -> i32 {
 
 #[no_mangle]
 pub extern "C" fn db_query(handle: u32, len: u32) -> i32 {
-    call(len, |input, out, _, engines| engine(engines, handle)?.query(input, out))
+    call(len, |input, out, _, engines| {
+        engine(engines, handle)?.query(input, out)
+    })
 }
 
 #[no_mangle]
@@ -160,29 +182,43 @@ pub extern "C" fn db_sync_state(handle: u32, len: u32) -> i32 {
 
 #[no_mangle]
 pub extern "C" fn db_reset_sync(handle: u32, len: u32) -> i32 {
-    call(len, |input, _, _, engines| engine(engines, handle)?.reset_sync(input))
+    call(len, |input, _, _, engines| {
+        engine(engines, handle)?.reset_sync(input)
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn db_apply_pulled(handle: u32, len: u32) -> i32 {
-    call(len, |input, out, _, engines| engine(engines, handle)?.apply_pulled(input, out))
+    call(len, |input, out, _, engines| {
+        engine(engines, handle)?.apply_pulled(input, out)
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn db_unpositioned(handle: u32, len: u32) -> i32 {
-    call(len, |input, out, _, engines| engine(engines, handle)?.unpositioned(input, out))
+    call(len, |input, out, _, engines| {
+        engine(engines, handle)?.unpositioned(input, out)
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn db_set_positions(handle: u32, len: u32) -> i32 {
-    call(len, |input, _, _, engines| engine(engines, handle)?.set_positions(input))
+    call(len, |input, _, _, engines| {
+        engine(engines, handle)?.set_positions(input)
+    })
 }
 
 /// Statements the engine has run since open, for the benchmark report.
 #[no_mangle]
 pub extern "C" fn db_statements(handle: u32) -> f64 {
     STATE.with(|state| {
-        state.borrow().engines.get(handle as usize).and_then(Option::as_ref).map(|e| e.statements() as f64).unwrap_or(0.0)
+        state
+            .borrow()
+            .engines
+            .get(handle as usize)
+            .and_then(Option::as_ref)
+            .map(|e| e.statements() as f64)
+            .unwrap_or(0.0)
     })
 }
 
