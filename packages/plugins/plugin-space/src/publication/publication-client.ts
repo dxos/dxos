@@ -48,9 +48,13 @@ export const upload = Effect.fnUntraced(function* (
 
 export const remove = Effect.fnUntraced(function* (client: Client, publicId: string) {
   yield* Effect.tryPromise(() =>
-    client.edge.http.request(Context.default(), `${Publication.EDGE_PUBLICATIONS_PATH}/${encodeURIComponent(publicId)}`, {
-      method: 'DELETE',
-    }),
+    client.edge.http.request(
+      Context.default(),
+      `${Publication.EDGE_PUBLICATIONS_PATH}/${encodeURIComponent(publicId)}`,
+      {
+        method: 'DELETE',
+      },
+    ),
   );
 });
 
