@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import '@fontsource/poiret-one';
+
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
@@ -15,6 +17,8 @@ import { DXN } from '@dxos/keys';
 import * as DeckSurface from '@dxos/plugin-deck/DeckSurface';
 import * as Publication from '@dxos/plugin-space/Publication';
 import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { currentObjectPath } from './route.ts';
 
@@ -28,6 +32,19 @@ const meta = Plugin.makeMeta({
   name: 'Viewer',
   tags: ['system'],
 });
+
+// Poiret One's ink is all x-height, so the line is lifted to centre on the sidebar toggle.
+const ViewerWordmark = () => {
+  const { t } = Hooks.useTranslation();
+  return (
+    <span
+      className='self-center grow ms-1 text-2xl leading-none lowercase relative -top-[0.125em]'
+      style={{ fontFamily: 'Poiret One' }}
+    >
+      {t('current-app.name', { ns: osTranslations })}
+    </span>
+  );
+};
 
 const ViewerActions = ({ publicId, composerOrigin }: Pick<ViewerPluginOptions, 'publicId' | 'composerOrigin'>) => (
   <div className='flex items-center gap-2 pe-2' data-testid='viewer.actions'>
@@ -63,6 +80,11 @@ export const ViewerPlugin = (options: ViewerPluginOptions): Plugin.Plugin =>
       Capability.inlineModule('viewer-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
         Effect.succeed([
           Capability.contribute(Capabilities.ReactSurface, [
+            Surface.create({
+              id: 'viewer.wordmark',
+              filter: Surface.makeFilter(DeckSurface.BannerStart),
+              component: ViewerWordmark,
+            }),
             Surface.create({
               id: 'viewer.actions',
               filter: Surface.makeFilter(DeckSurface.BannerEnd),

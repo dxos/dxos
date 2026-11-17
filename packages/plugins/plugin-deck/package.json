@@ -176,7 +176,6 @@
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@fontsource/poiret-one": "catalog:",
     "@tauri-apps/plugin-deep-link": "catalog:",
     "immer": "catalog:"
   },

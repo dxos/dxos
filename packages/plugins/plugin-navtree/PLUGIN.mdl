@@ -181,6 +181,7 @@ feat F-1: Sidebar Navigation
     when: same active tab is clicked while sidebar is expanded
     then: sidebar collapses (state transitions to collapsed or closed on mobile)
   req F-1.5: With the `rail` option off, the workspace rail (L0) is not shown and the tree takes the sidebar's full width.
+  req F-1.6: On a read-only host, the command search in the top bar is not shown.
 ```
 
 ```mdl
@@ -406,6 +407,13 @@ decision D-2: A `rail` plugin option, on by default, controls the rail. Fills in
   for: user:wittjosiah
   affects: [F-1.5]
   why: Hosts that show one space have nothing to switch between.
+```
+
+```mdl
+decision D-3: On a read-only host, the top bar has no command search.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-1.6]
 ```
 
 ## Appendix: Extension Definitions

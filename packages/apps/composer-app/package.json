@@ -241,6 +241,7 @@
     "@dxos/worker-framework": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@fontsource/inter": "catalog:",
+    "@fontsource/poiret-one": "catalog:",
     "@resvg/resvg-wasm": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tauri-apps/cli": "catalog:",

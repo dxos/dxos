@@ -74,17 +74,6 @@ export type Platform = DeckSchema.Platform;
 export type DeckPluginOptions = {
   /** Which root layout the plugin renders; state and operations are shared. */
   platform?: Platform;
-  /**
-   * Shows an informational top banner at every platform and width (outside fullscreen): the app name
-   * and the `BannerEnd` slot, without command search.
-   */
-  banner?: boolean;
-  /** Starts each workspace's deck with every companion closed, so a plank shows one only once the reader opens it. */
-  companionsClosed?: boolean;
 };
 
 export const Platform = Capability.makeSingleton<Platform>()(`${DeckNamespace.key}.capability.platform`);
-
-export const Banner = Capability.makeSingleton<boolean>()(`${DeckNamespace.key}.capability.banner`);
-
-export const NewDeck = Capability.makeSingleton<DeckSchema.StoredDeck>()(`${DeckNamespace.key}.capability.newDeck`);

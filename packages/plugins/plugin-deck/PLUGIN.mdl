@@ -679,14 +679,14 @@ feat F-8: Flat Navigation (breadcrumbs)
 ```mdl
 feat F-9: Informational Banner
 
-  req F-9.1: With the `banner` option, the deck shows its top bar at every breakpoint except fullscreen, without command search.
-  req F-9.2: The top bar's end renders the `BannerEnd` surface, where a host puts its notice and actions.
+  req F-9.1: When a host contributes to `BannerStart` or `BannerEnd`, the deck shows its top bar at every breakpoint except fullscreen.
+  req F-9.2: The top bar's start renders the `BannerStart` surface in place of the app name, and its end renders the `BannerEnd` surface, where a host puts its notice and actions.
 ```
 
 ```mdl
 feat F-10: Companions Start Closed
 
-  req F-10.1: With the `companionsClosed` option, each workspace's deck starts with every companion closed, so a plank shows a companion only once the reader opens one.
+  req F-10.1: On a read-only host, each workspace's deck starts with every companion closed, so a plank shows a companion only once the reader opens one.
 ```
 
 ## Acceptance
@@ -1070,6 +1070,41 @@ decision D-12: A `companionsClosed` option seeds each new workspace deck with an
   for: user:wittjosiah
   affects: [F-10.1]
   why: An empty list already means every companion was closed, so no new deck state is needed; a deck opened from a link is created by URL navigation and starts the same way.
+```
+
+```mdl
+decision D-13: The top bar turns on when a host contributes to the banner's surfaces, with no deck option.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-10
+  affects: [F-9.1, F-9.2]
+```
+
+```mdl
+decision D-14: The deck starts a read-only host's workspace decks with their companions closed, read from `AppCapabilities.ReadOnly` when URL navigation creates a deck, with no deck option.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-12
+  affects: [F-10.1]
+```
+
+```mdl
+decision D-15: A `BannerStart` surface replaces the app name, so a host draws its own title, and a contribution to either banner surface turns the top bar on. Fills in [D-13].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+  why: The viewer's wordmark and its font then live in the viewer, and Composer, which contributes to neither surface, keeps its bar as before.
+  rejected: Turning the bar on only for `BannerEnd`: a host with only a title would get no bar.
+```
+
+```mdl
+decision D-16: `DeckSchema.closedCompanionsDeck` names the deck whose companion list is empty, as opposed to absent. Fills in [D-14].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10.1]
+  why: An empty list and an absent one mean different things to the companion layout, so the closed deck gets a name instead of an inline literal.
 ```
 
 ## Appendix: Extension Definitions

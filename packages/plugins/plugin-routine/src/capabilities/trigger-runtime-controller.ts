@@ -4,11 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
-import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Obj } from '@dxos/echo';
@@ -35,7 +34,7 @@ import { type Space } from '@dxos/react-client/echo';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    if (Option.isSome(yield* Capability.getOption(AppCapabilities.ReadOnly))) {
+    if (yield* ReadOnly.current) {
       return [];
     }
 

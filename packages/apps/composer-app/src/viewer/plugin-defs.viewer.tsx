@@ -52,7 +52,7 @@ export const getPlugins = ({
 }: ViewerPluginConfig): Plugin.Plugin[] => [
   AttentionPlugin.make(),
   ClientPlugin.make({ client, config, services, invitationUrlHandler: false, identityTestActions: false }),
-  DeckPlugin.make({ platform: 'desktop', banner: true, companionsClosed: true }),
+  DeckPlugin.make({ platform: 'desktop' }),
   GraphPlugin.make(),
   NavTreePlugin.make({ rail: false }),
   ObservabilityPlugin.make({ namespace: APP_KEY, observability: () => observability }),

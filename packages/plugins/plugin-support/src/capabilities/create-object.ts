@@ -3,10 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
@@ -22,7 +21,7 @@ export default Capability.makeModule(
       id: Type.getTypename(Support.Ticket),
       createObject: (props, options) =>
         Effect.gen(function* () {
-          if (Option.isSome(yield* Capability.getOption(AppCapabilities.ReadOnly))) {
+          if (yield* ReadOnly.current) {
             return yield* Effect.fail(new ReadOnlyError());
           }
 

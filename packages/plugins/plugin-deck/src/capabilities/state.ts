@@ -20,7 +20,7 @@ import { getRenderedPlanks, isCompanionOpen } from '../util/companion-anchor.ts'
 const STATE_KEY = `${DeckNamespace.key}.state`;
 
 /** Default persisted state. */
-const makeDefaultDeckState = (newDeck: DeckSchema.StoredDeck): DeckSchema.StoredDeckState => ({
+const defaultDeckState: DeckSchema.StoredDeckState = {
   sidebarState: 'expanded',
   complementarySidebarState: 'collapsed',
   complementarySidebarPanel: undefined,
@@ -29,9 +29,9 @@ const makeDefaultDeckState = (newDeck: DeckSchema.StoredDeck): DeckSchema.Stored
   activeDeck: DeckSchema.DEFAULT_DECK_ID,
   previousDeck: DeckSchema.DEFAULT_DECK_ID,
   decks: {
-    [DeckSchema.DEFAULT_DECK_ID]: { ...newDeck },
+    [DeckSchema.DEFAULT_DECK_ID]: { ...DeckSchema.defaultDeck },
   },
-});
+};
 
 /** Default ephemeral state. */
 const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
@@ -51,20 +51,12 @@ const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({
-    platform = 'desktop',
-    banner = false,
-    companionsClosed = false,
-  }: DeckCapabilities.DeckPluginOptions = {}) {
-    const newDeck: DeckSchema.StoredDeck = companionsClosed
-      ? { ...DeckSchema.defaultDeck, companionPlanks: [] }
-      : DeckSchema.defaultDeck;
-
+  Effect.fnUntraced(function* ({ platform = 'desktop' }: DeckCapabilities.DeckPluginOptions = {}) {
     // Persisted state using KVS store.
     const stateAtom = KvsStore.make({
       key: STATE_KEY,
       schema: DeckSchema.StoredDeckState,
-      defaultValue: () => makeDefaultDeckState(newDeck),
+      defaultValue: () => ({ ...defaultDeckState }),
     });
 
     // One projection at a time: `FiberHandle.run` interrupts whatever it is holding, and the handle
@@ -130,8 +122,6 @@ export default Capability.makeModule(
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
       Capability.contribute(DeckCapabilities.View, viewAtom),
       Capability.contribute(DeckCapabilities.Platform, platform),
-      Capability.contribute(DeckCapabilities.Banner, banner),
-      Capability.contribute(DeckCapabilities.NewDeck, newDeck),
     ];
   }),
 );

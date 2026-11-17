@@ -18,19 +18,23 @@ import * as ReadOnly from './ReadOnly.ts';
 const NODE: AppGraphNode.Node = { id: 'node', type: 'test', properties: {}, data: null };
 
 describe('ReadOnly', () => {
-  test('a matcher matches until the host contributes ReadOnly, then matches nothing', ({ expect }) => {
+  test('every reading flips once the host contributes ReadOnly, and a matcher then matches nothing', ({ expect }) => {
     const registry = Registry.make();
     const manager = CapabilityManager.make({ registry });
-    const readOnly = Effect.runSync(ReadOnly.atom.pipe(Effect.provideService(Capability.Service, manager)));
+    const run = <A>(effect: Effect.Effect<A, never, Capability.Service>) =>
+      Effect.runSync(effect.pipe(Effect.provideService(Capability.Service, manager)));
+    const readOnly = run(ReadOnly.atom);
     const match = ReadOnly.unless(readOnly, (node) => Option.some(node.id));
     const matched = Atom.make((get) => match(NODE, get));
 
     expect(registry.get(matched)).toEqual(Option.some('node'));
     expect(ReadOnly.isActive(manager)).toBe(false);
+    expect(run(ReadOnly.current)).toBe(false);
 
     manager.contribute({ module: 'test', interface: AppCapabilities.ReadOnly, implementation: true });
 
     expect(registry.get(matched)).toEqual(Option.none());
     expect(ReadOnly.isActive(manager)).toBe(true);
+    expect(run(ReadOnly.current)).toBe(true);
   });
 });

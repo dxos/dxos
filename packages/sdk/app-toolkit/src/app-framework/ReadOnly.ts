@@ -21,6 +21,12 @@ export const atom: Effect.Effect<Atom.Atom<boolean>, never, Capability.Service> 
   (contributions) => Atom.make((get) => get(contributions).length > 0),
 );
 
+/** Whether the host is read-only now, for an operation or a module that reads it in an Effect. */
+export const current: Effect.Effect<boolean, never, Capability.Service> = Effect.map(
+  Capability.getOption(AppCapabilities.ReadOnly),
+  Option.isSome,
+);
+
 /** Whether the host is read-only now; for work that runs later, outside the graph and React. */
 export const isActive = (manager: CapabilityManager.CapabilityManager): boolean =>
   manager.getAll(AppCapabilities.ReadOnly).length > 0;
