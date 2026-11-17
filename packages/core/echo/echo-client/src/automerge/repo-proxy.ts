@@ -921,9 +921,9 @@ export class RepoProxy extends Resource {
     try {
       while (this.#inboxHead < this.#inbox.length && !this._ctx.disposed) {
         const { update, bulk } = this.#inbox[this.#inboxHead++];
-        this.#integrate(update, bulk);
-        if (update.mutation) {
-          integrated.push(update.documentId as DocumentId);
+        const documentId = this.#integrate(update, bulk);
+        if (documentId) {
+          integrated.push(documentId);
         }
         if (this.#inboxHead < this.#inbox.length) {
           await yieldOrContinue('smooth');
@@ -939,10 +939,11 @@ export class RepoProxy extends Resource {
     }
   }
 
+  /** Applies one update from the host; returns the document whose bytes it moved, if it moved any. */
   #integrate(
     { documentId, mutation, requesting, unavailable, passive }: DataService.DocumentUpdate,
     bulk: boolean,
-  ): void {
+  ): DocumentId | undefined {
     const passiveHandle = this._passiveHandles.get(documentId as DocumentId);
     if (passiveHandle) {
       // A passive directory waiting on the host's first send fails its waiter rather than waiting forever.
@@ -952,6 +953,7 @@ export class RepoProxy extends Resource {
       }
       try {
         passiveHandle._integratePassiveUpdate(mutation, passive);
+        return mutation ? passiveHandle.documentId : undefined;
       } catch (err) {
         log.catch(err, { documentId });
       }
@@ -981,6 +983,7 @@ export class RepoProxy extends Resource {
     if (mutation) {
       try {
         handle._integrateHostUpdate(mutation, { bulk });
+        return handle.documentId;
       } catch (err) {
         // One bad document must not strand every update queued behind it.
         log.catch(err, { documentId });
@@ -1042,6 +1045,7 @@ export class RepoProxy extends Resource {
       }
 
       const updates: DataService.DocumentUpdate[] = [];
+      const sent: DocumentId[] = [];
       const addMutations = (documentIds: DocumentId[]) => {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
@@ -1055,6 +1059,7 @@ export class RepoProxy extends Resource {
           const mutation = handle._getPendingChanges();
           if (mutation) {
             updates.push({ documentId, mutation });
+            sent.push(documentId);
           }
         }
       };
@@ -1068,7 +1073,7 @@ export class RepoProxy extends Resource {
           { subscriptionId: this._subscriptionId, updates },
           { timeout: RPC_TIMEOUT },
         );
-        updates.forEach(({ documentId }) => this._unflushedIds.add(documentId as DocumentId));
+        sent.forEach((documentId) => this._unflushedIds.add(documentId));
         if (this._lifecycleState === LifecycleState.CLOSED) {
           return;
         }
@@ -1084,7 +1089,7 @@ export class RepoProxy extends Resource {
           // Handle may have been removed between RPC start and ack — skip silently.
           this._handles[documentId]?._confirmSync();
         }
-        this.documentsHeld.emit(updates.map(({ documentId }) => documentId as DocumentId));
+        this.documentsHeld.emit(sent);
       }
 
       this._sendRetryAttempts = 0;
