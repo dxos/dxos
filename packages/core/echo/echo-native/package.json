@@ -32,6 +32,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-sqlite": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

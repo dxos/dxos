@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS objectMeta (
 );
 CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta (spaceId, objectId);
 CREATE INDEX IF NOT EXISTS idx_object_index_typeDXN ON objectMeta (spaceId, typeDXN);
+CREATE INDEX IF NOT EXISTS echo_sqlite_object_type ON objectMeta (spaceId, typeDXN, objectId);
 CREATE INDEX IF NOT EXISTS idx_object_index_parentId ON objectMeta (spaceId, parentId);
 CREATE INDEX IF NOT EXISTS idx_object_index_sourceId ON objectMeta (spaceId, sourceId);
 CREATE INDEX IF NOT EXISTS idx_object_index_targetId ON objectMeta (spaceId, targetId);

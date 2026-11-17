@@ -39,6 +39,7 @@ import {
   setRefResolver,
   setRefResolverOnData,
 } from '@dxos/echo/internal';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -259,10 +260,10 @@ export class NativeDatabase implements Database.Database, EntitySource, AsyncDis
       options.actorId ?? crypto.randomUUID(),
     );
     const store = new NativeStore(native, handle, spaceId);
-    const db = new NativeDatabase(spaceId, store, Effect.runPromise, options.types ?? [], options.graph);
-    const types = await Effect.runPromise(store.loadTypes());
+    const db = new NativeDatabase(spaceId, store, EffectEx.runPromise, options.types ?? [], options.graph);
+    const types = await EffectEx.runPromise(store.loadTypes());
     await db.#registerTypes(types);
-    db.#redirects = await Effect.runPromise(store.redirects());
+    db.#redirects = await EffectEx.runPromise(store.redirects());
     db.#dataVersion = 0;
     db.#changeCursor = 0;
     return db;
