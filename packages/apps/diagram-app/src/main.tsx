@@ -94,8 +94,16 @@ const main = Effect.gen(function* () {
     Local(),
     Defaults(),
   );
+  // Replay starts once boot settles: the recorder's snapshot and compression cost main-thread time during startup.
+  const startupSettled = new Promise<void>((resolve) => {
+    window.addEventListener(Hooks.STARTUP_ACTIVATED_EVENT, () => resolve(), { once: true });
+    window.addEventListener(Hooks.STARTUP_FAILED_EVENT, () => resolve(), { once: true });
+  });
   // Not awaited: boot does not wait on telemetry.
-  const observability = initializeObservability(config);
+  const observability = initializeObservability(
+    config,
+    Effect.promise(() => startupSettled),
+  );
   const services = yield* Effect.promise(() =>
     createClientServices(config, { createDedicatedWorker, createCoordinatorWorker }),
   );

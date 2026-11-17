@@ -18,10 +18,13 @@ const SERVICE_NAME = 'diagram';
 const POSTHOG_UI_HOST = 'https://eu.posthog.com';
 
 /**
- * Starts telemetry, always on: OTel logs, metrics and traces, and PostHog analytics.
- * Each is a no-op when the build carries no endpoint or key for it.
+ * Starts telemetry, always on: OTel logs, metrics and traces, and PostHog analytics and session replay.
+ * Each is a no-op when the build carries no endpoint or key for it. Replay masking is set in the PostHog project.
  */
-export const initializeObservability = (config: Config): Promise<Observability.Observability> => {
+export const initializeObservability = (
+  config: Config,
+  sessionRecordingStart?: Effect.Effect<void>,
+): Promise<Observability.Observability> => {
   const environment = getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown';
   return Function.pipe(
     Observability.make(),
@@ -43,6 +46,7 @@ export const initializeObservability = (config: Config): Promise<Observability.O
         environment,
         serviceName: SERVICE_NAME,
         posthog: { ui_host: POSTHOG_UI_HOST },
+        sessionRecordingStart,
       }),
     ),
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),
