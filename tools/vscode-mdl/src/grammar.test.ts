@@ -104,6 +104,21 @@ describe('mdl grammar', () => {
     expect(scopesOf(grammar, source, 'D-1', 'Bounds are derived.')).toContain('entity.name.section.title.mdl');
   });
 
+  test("every block type deus's dialects declare is a known block type", ({ expect }) => {
+    const lang = join(PACKAGE_ROOT, '..', '..', 'packages', 'reflect', 'deus', 'lang');
+    const declared = new Set(
+      readdirSync(lang)
+        .filter((name) => name.endsWith('.mdl'))
+        .flatMap((name) => [...readFileSync(join(lang, name), 'utf8').matchAll(/^ext ([a-z][\w-]*)$/gm)])
+        .map(([, type]) => type),
+    );
+    expect(declared.size).toBeGreaterThan(20);
+    const unknown = [...declared].filter(
+      (type) => !scopesOf(grammar, fence(`${type} X-1`), 'X-1', type).includes(`keyword.control.block.${type}.mdl`),
+    );
+    expect(unknown).toEqual([]);
+  });
+
   test('a question is a known block type', ({ expect }) => {
     const source = fence('question Q-1: Does the canvas shrink?', '  by: agent:claude-code', '  for: user:alice');
     expect(scopesOf(grammar, source, 'Q-1', 'question')).toContain('keyword.control.block.question.mdl');
