@@ -3,6 +3,7 @@
 //
 
 import { defineConfig } from '@playwright/test';
+import { join } from 'node:path';
 
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
@@ -17,7 +18,8 @@ export default defineConfig({
   // Assertions wait on replication between the peers.
   expect: { timeout: 30_000 },
   webServer: {
-    command: `pnpm vite preview --port=${PORT}`,
+    // `--dir` so `preview` loads the app's `vite.config.ts` and serves its `outDir`, not `dist` beside this file.
+    command: `pnpm --dir ${join(import.meta.dirname, '../..')} exec vite preview --port=${PORT}`,
     port: PORT,
     reuseExistingServer: false,
   },

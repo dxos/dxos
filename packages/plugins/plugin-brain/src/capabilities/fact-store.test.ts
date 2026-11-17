@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -51,5 +52,40 @@ describe('FactStoreRegistry', () => {
     unsubscribe();
     await EffectEx.runPromise(store.putFacts([]));
     expect(notifications).toBe(3);
+  });
+
+  test('logs each SPARQL query as it starts and ends, with its row count or error', async ({ expect }) => {
+    const registry = makeFactStoreRegistry();
+    const store = registry.logged('a');
+    const seen: number[] = [];
+    registry.subscribeQueries('a', () => seen.push(registry.queries('a').length));
+
+    const sparql = 'SELECT ?p WHERE { GRAPH ?g { ?s ?p ?o } } LIMIT 1';
+    await EffectEx.runPromise(store.rows(sparql));
+    const [first] = registry.queries('a');
+    expect(first.sparql).toBe(sparql);
+    expect(first.result && 'count' in first.result ? first.result.count : undefined).toBe(1);
+    expect(first.result && 'preview' in first.result ? first.result.preview : []).toHaveLength(1);
+
+    await EffectEx.runPromise(store.rows('DELETE WHERE { ?s ?p ?o }').pipe(Effect.exit));
+    const [, second] = registry.queries('a');
+    expect(second.result && 'error' in second.result).toBe(true);
+    expect(seen).toEqual([1, 1, 2, 2]);
+    expect(registry.queries('b')).toEqual([]);
+
+    // A surface's own reads go through the unlogged store.
+    await EffectEx.runPromise(registry.forSpace('a').rows(sparql));
+    expect(registry.queries('a')).toHaveLength(2);
+  });
+
+  test('notifies subscribers after importTrig', async ({ expect }) => {
+    const registry = makeFactStoreRegistry();
+    let notifications = 0;
+    registry.subscribe('a', () => {
+      notifications += 1;
+    });
+    const read = await EffectEx.runPromise(registry.forSpace('a').importTrig('<urn:a> <urn:b> <urn:c> .'));
+    expect(read).toBe(1);
+    expect(notifications).toBe(1);
   });
 });
