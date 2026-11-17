@@ -3109,6 +3109,7 @@ decision D-273: In QA-12, Bob is the one who leaves, while the agent works: he f
   date: 2026-11-06
   by: user:wittjosiah
   affects: [QA-12]
+  supersedes: D-272
   why: An agent is something to leave running, so both people waiting on it misread it; asking for the full spec and then adding what it missed read as the agent falling short; and two notifications opened one after the other flapped the sidebar and companion.
 ```
 
