@@ -53,6 +53,32 @@ min), minus what the landed speed-ups remove: knip (~3.5 min) and the boot budge
 PR, ~1 s per moon task without `pnpm exec`, and edge's TypeScript 7 build step (~2 → ~0.75 min in
 `build` and `test-packages`).
 
+## Live time
+
+How long a PR waits on blocking CI for a **core change** (`@dxos/echo`, 260 dependent packages), the
+worst common case:
+
+|                                                      | Blocking wait                  |
+| :--------------------------------------------------- | :----------------------------- |
+| Baseline (dxos/dxos#14552 and dxos/edge#1533 landed) | ~23 min                        |
+| With this proposal and lint in its own job           | **~13 min** (target: under 15) |
+
+Bottlenecks once lint runs in its own job, slowest first:
+
+1. **`test-browser`, ~14 min.** Storybook runs one package at a time per cell across 8 cells, and
+   every cell sets up and builds its own dependency closure first. Adding cells (the e2e cells this
+   proposal frees) would take the run to ~10 min.
+2. **`check`, ~12–13 min.** The build has a 5.5-min floor: 52 packages must build in order
+   (`node-std` → … → `plugin-code` → `composer-app`). Module structure, edge release and plugin
+   set plus docs run after it.
+3. **`test-node`, ~12 min.** ~135 task-minutes, two thirds of it vitest loading modules; each of
+   the 4 cells also rebuilds its dependency closure.
+
+Lint in its own job: one repo-wide type-aware oxlint run takes ~3 min with no builds, after the 12
+code-generation tasks (`protocols:gen-buf`, the lezer parsers and others, ~17 s). Today lint is
+~33 task-minutes in 371 per-package tasks that wait on the build. Measured locally; not yet run in
+CI.
+
 ## Problem
 
 - PRs are gated on many tests that are slow, costly and flaky.
