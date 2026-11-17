@@ -6489,6 +6489,12 @@ importers:
       '@dxos/edge-compute':
         specifier: workspace:*
         version: link:../edge-compute
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -7031,6 +7037,49 @@ importers:
       get-port-please:
         specifier: 'catalog:'
         version: 3.1.1
+
+  packages/core/echo/echo-native:
+    dependencies:
+      '@automerge/automerge':
+        specifier: 3.5.0
+        version: 3.5.0
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
+      '@dxos/echo-sqlite':
+        specifier: workspace:*
+        version: link:../echo-sqlite
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
 
   packages/core/echo/echo-panproto:
     dependencies:
