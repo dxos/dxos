@@ -240,6 +240,34 @@ describe('studio deck slides on a canvas', () => {
     }
   });
 
+  test('the Agents taps are styled in kind mode and dropped in generator mode', ({ expect }) => {
+    // A tap ends INSIDE a component, and the Agents space graph is drawn as `space/ring` rather than a box. The frame
+    // lookup and the link lookup both have to accept that endpoint: whichever one still wants a box skips the edge,
+    // and the two modes fail differently — kind mode leaves the link with the DSL's own arrowhead, generator mode
+    // leaves it undeleted on top of the run the generator draws.
+    const { source, model } = slide('agents');
+    const taps = model.edges.flatMap((edge) => (edge.length === 4 && edge[3].tap ? [[edge[0], edge[1]] as const] : []));
+    expect(taps.length).toBe(4);
+
+    const kind: ContentMap = {};
+    seedStudioSlide(source, model, { components: 'kind' })(kind);
+    for (const [from, to] of taps) {
+      const edge = `${from}->${to}`;
+      const key = findLink(kind, from, to);
+      expect({ edge, found: key !== undefined }).toEqual({ edge, found: true });
+      const record = key === undefined ? undefined : kind[key];
+      const ends = record && isLinkRecord(record) ? (record.link.ends ?? {}) : undefined;
+      // Every one of them is `arrow: 'none'` in the sidecar, which is applied only once the link has been found.
+      expect({ edge, head: ends !== undefined && 'end' in ends }).toEqual({ edge, head: false });
+    }
+
+    const generated: ContentMap = {};
+    seedStudioSlide(source, model, { components: 'generator' })(generated);
+    const links = (content: ContentMap) => Object.values(content).filter(isLinkRecord).length;
+    // Generator mode drops the four tap links, since a `Generator` cannot be linked to at all.
+    expect({ kind: links(kind), generated: links(generated) }).toEqual({ kind: 11, generated: 7 });
+  });
+
   test('the routes the sidecar carries are the ones the DSL dropped', ({ expect }) => {
     const { source, model } = slide('agent');
     const content: ContentMap = {};

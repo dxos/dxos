@@ -174,8 +174,12 @@ export const Default: Story = {
   args: { borders: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByTestId('presenter.slide-grid.0', undefined, { timeout: 60_000 });
-    const tiles = await canvas.findAllByTestId(/^presenter\.slide-grid\.\d+$/, undefined, { timeout: 60_000 });
+    // Under the 60s test timeout, so a tile that never appears reports which query missed rather than timing the
+    // whole test out with no message — which is how the `slide-grid` tiles this waited for before `presenter.
+    // slide-gallery.*` replaced them went red for 60s saying nothing.
+    const timeout = 30_000;
+    await canvas.findByTestId('presenter.slide-gallery.0', undefined, { timeout });
+    const tiles = await canvas.findAllByTestId(/^presenter\.slide-gallery\.\d+$/, undefined, { timeout });
     await expect(tiles.length).toBe(STUDIO_SLIDES.length);
   },
 };

@@ -12,7 +12,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -104,16 +104,24 @@ export const Default: Story = {
     const views = await canvas.findAllByTestId('scene-view', undefined, { timeout: 60_000 });
     await expect(views.length).toBe(STUDIO_SLIDES.length);
     const count = (testid: string) => canvasElement.querySelectorAll(`[data-testid="${testid}"]`).length;
-    await expect(count('graph-node')).toBe(STUDIO_SLIDES.filter(({ spaceGraph }) => spaceGraph).length);
-    // The Hyperspace slide's three planks and its one field of spaces, and the Composer slide's window. A kind the
-    // loader left as its placeholder draws none of these. The Plugins slide draws its consumers as cards, not as the
-    // deck's pills, so the chip kind is registered and the deck uses none of it.
-    await expect(count('plank-node')).toBe(3);
-    await expect(count('substrate-node')).toBe(1);
-    await expect(count('app-frame-node')).toBe(1);
-    await expect(count('chip-node')).toBe(0);
-    // The chips inside a card: the ECHO layers slide's Types grid and the Architecture slide's two service rows.
-    await expect(count('studio-chips')).toBe(3);
+    // One `waitFor` around the whole picture: the first `scene-view` resolves before the views that mount their own
+    // content have, so a count read straight after it can be short — and a count that must stay 0 is only meaningful
+    // once the rest have arrived.
+    await waitFor(
+      async () => {
+        await expect(count('graph-node')).toBe(STUDIO_SLIDES.filter(({ spaceGraph }) => spaceGraph).length);
+        // The Hyperspace slide's three planks and its one field of spaces, and the Composer slide's window. A kind
+        // the loader left as its placeholder draws none of these. The Plugins slide draws its consumers as cards,
+        // not as the deck's pills, so the chip kind is registered and the deck uses none of it.
+        await expect(count('plank-node')).toBe(3);
+        await expect(count('substrate-node')).toBe(1);
+        await expect(count('app-frame-node')).toBe(1);
+        await expect(count('chip-node')).toBe(0);
+        // The chips inside a card: the ECHO layers slide's Types grid and the Architecture slide's two service rows.
+        await expect(count('studio-chips')).toBe(3);
+      },
+      { timeout: 30_000 },
+    );
   },
 };
 

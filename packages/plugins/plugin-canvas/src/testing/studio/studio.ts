@@ -567,13 +567,23 @@ const styleFrames = (content: ContentMap, model: StudioModel): void => {
  * The content key of the link between two cards. An arrow's node id is its enclosing object's and its own
  * (`links/task-spec`), so the edge is found by the ends it binds rather than by a key spelled out here.
  */
+/**
+ * How a card or a component is placed: a card is drawn as a `box`, a component as whichever its own DSL drew — the
+ * Agents space graph is a `ring`. An endpoint, a frame and a link all have to accept both, or an edge that touches a
+ * ring is silently skipped by whichever of them looks for a box.
+ */
+const ENDPOINT_PARTS = ['box', 'ring'] as const;
+
+const isEndpoint = (node: string | undefined, key: string): boolean =>
+  ENDPOINT_PARTS.some((part) => node === elementId(key, part));
+
 export const findLink = (content: ContentMap, from: string, to: string): string | undefined =>
   Object.keys(content).find((key) => {
     const record = content[key];
     return (
       isLinkRecord(record) &&
-      endpointNode(record.link.source) === boxOf(from) &&
-      endpointNode(record.link.target) === boxOf(to)
+      isEndpoint(endpointNode(record.link.source), from) &&
+      isEndpoint(endpointNode(record.link.target), to)
     );
   });
 
@@ -591,9 +601,7 @@ type Frame = { center: Vec; size: { width: number; height: number } };
 
 /** The frame of a card's node, once the bridge has placed it. */
 const frameOf = (content: ContentMap, key: string): Frame | undefined => {
-  // `box` or `ring`: a component is placed as whichever its own DSL drew, and the Agents slide's space graph is a
-  // ring. Requiring a box skipped every edge that taps it, so none of those four links was routed or dropped.
-  const record = ['box', 'ring'].map((part) => content[nodeKey(elementId(key, part))]).find(isNodeRecord);
+  const record = ENDPOINT_PARTS.map((part) => content[nodeKey(elementId(key, part))]).find(isNodeRecord);
   return record ? { center: record.node.center, size: record.node.size } : undefined;
 };
 
