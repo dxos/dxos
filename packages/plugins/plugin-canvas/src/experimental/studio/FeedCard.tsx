@@ -37,6 +37,9 @@ export type Styled = CSSProperties & Record<`--${string}`, string>;
  */
 export const TONES = ['accent', 'ink', 'event', 'message', 'file', 'trip', 'sheet'] as const;
 
+/** The most blocks a feed strip draws. The field is a form input, so an unbounded count would be rendered. */
+export const FEED_BLOCKS_MAX = 50;
+
 export type Tone = (typeof TONES)[number];
 
 const TONE_TOKENS: Record<Tone, string> = {
@@ -58,7 +61,12 @@ export const FeedCardData = Schema.Struct({
   /** An accent drawn as the card's outline and its icon; `ink` is the agents' dark edge. */
   tone: Schema.optional(Schema.Literals(TONES).annotate({ title: 'Tone' })),
   /** How many blocks the feed strip has. */
-  feed: Schema.optional(Schema.Number.annotate({ title: 'Feed blocks' })),
+  feed: Schema.optional(
+    Schema.Number.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isBetween({ minimum: 0, maximum: FEED_BLOCKS_MAX })),
+    ).annotate({ title: 'Feed blocks' }),
+  ),
   /** A mono caption to the left of the strip (`feed`, `task`). */
   feedLabel: Schema.optional(Schema.String.annotate({ title: 'Feed label' })),
   /** Which blocks of the strip are filled, by 0-based index; a filled block takes the deck's accent. */
@@ -101,7 +109,7 @@ const FeedStrip = ({ n, label, marks, editing }: FeedStripProps) => {
           {label}
         </TextPart>
       )}
-      {Array.from({ length: n }, (_, index) => {
+      {Array.from({ length: Math.max(0, Math.min(Math.trunc(n), FEED_BLOCKS_MAX)) }, (_, index) => {
         return (
           <i
             key={index}
@@ -139,6 +147,9 @@ export const FeedCardNodeView = ({ node, editing }: NodeViewProps) => {
 };
 
 export const feedCardSpec: ElementKindSpec = {
+  // Five ports a side: a true middle to tie a trunk to, and room either side of it for a fan of edges
+  // that converge on one card.
+  portsPerSide: 5,
   // The card prototype supplies the sizing and the three text parts; this kind adds its own icon, strip and tone.
   extends: 'card',
   name: 'Feed card',
@@ -153,11 +164,16 @@ export const feedCardSpec: ElementKindSpec = {
     center,
     size,
     label: 'Feed',
-    icon: { name: 'queue' },
+    icon: { type: 'queue' },
     data: { feed: 9, marks: [] },
   }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 300 x 138 card, give or take.
   defaultSize: { width: 6, height: 3 },
+  // The card paints its own panel, radius and shadows, so the frame must paint none: otherwise the node's own box
+  // sits behind it at the look's radius and its `overflow-hidden` clips the card's corners. `unclipped` lets the
+  // raised shadow, drawn outside the frame, survive too.
+  bare: true,
+  unclipped: true,
   // Composite: every text of the card is edited in place, in reading order. The first is the node's main text, so
   // Enter on a selected card edits its title; Tab moves on through the strip's caption, the body and the footer.
   parts: [{ field: 'label' }, { field: 'data.feedLabel' }, { field: 'body', multiline: true }, { field: 'footer' }],
