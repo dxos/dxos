@@ -51,11 +51,10 @@ describe('working set handoff', () => {
     const created = writer.add(Obj.make(TestSchema.Task, { title: 'z' }));
     await writer.flush({ disk: true, indexes: false });
     const rows = writer.exportWorkingSet({ maxBytes: MAX_BYTES });
-    const unindexed = [...writer.unindexedWrites()];
-    expect(unindexed).toContain(created.id);
+    expect(rows.some((row) => row.objectId === created.id)).toBe(true);
 
     const hidden = new Set([created.id]);
-    const workingSet = makeWorkingSet({ rows, unindexed });
+    const workingSet = makeWorkingSet({ rows });
     const { client, database: reader } = await openReader(scope, peer, writer, hidden, workingSet.service);
     await reader.open();
 
@@ -65,13 +64,13 @@ describe('working set handoff', () => {
     // A flush waits for the index to take this client's writes, which says nothing about the writer's.
     await reader.flush();
 
-    // A window is the index's to cut; only a write counted as unindexed enters it.
+    // A window is the index's to cut; an object the working set holds enters it where its order puts it.
     const newest = await reader
       .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'desc')).limit(1))
       .run();
     expect(newest.map((task) => task.id)).toEqual([created.id]);
 
-    // With no order, a write counted as unindexed enters a window only when the index answer is short of the limit.
+    // With no order, an object the working set holds enters a window only when the index answer is short of the limit.
     const page = await reader.query(Query.select(Filter.type(TestSchema.Task)).limit(10)).run();
     expect(page.map((task) => task.id).sort()).toEqual([indexed.id, created.id].sort());
     const full = await reader.query(Query.select(Filter.type(TestSchema.Task)).limit(1)).run();
@@ -91,10 +90,7 @@ describe('working set handoff', () => {
       task.title = 'changed';
     });
     await writer.flush({ disk: true, indexes: false });
-    const workingSet = makeWorkingSet({
-      rows: writer.exportWorkingSet({ maxBytes: MAX_BYTES }),
-      unindexed: [...writer.unindexedWrites()],
-    });
+    const workingSet = makeWorkingSet({ rows: writer.exportWorkingSet({ maxBytes: MAX_BYTES }) });
 
     const { client, database: reader } = await openReader(scope, peer, writer, new Set(), workingSet.service);
     await reader.open();
@@ -118,7 +114,6 @@ describe('working set handoff', () => {
     await database.flush({ indexes: false });
     const rows = workingSet.puts.flatMap((put) => put.rows);
     expect(rows.some((row) => row.objectId === task.id)).toBe(true);
-    expect([...workingSet.unindexed]).toEqual([task.id]);
     // The space root links the new document, so its write is sent too, named as the root.
     expect(
       workingSet.puts.some((put) => put.root !== undefined && rows.some((row) => row.documentId === put.root)),
@@ -168,19 +163,17 @@ describe('working set handoff', () => {
 });
 
 /** A working set kept in memory, as an EDGE owner keeps it in its storage: one row per document. */
-const makeWorkingSet = (initial: WorkingSet = { rows: [], unindexed: [] }) => {
+const makeWorkingSet = (initial: WorkingSet = { rows: [] }) => {
   const rows = new Map<string, WorkingSetRow>(initial.rows.map((row) => [row.documentId, row]));
-  const unindexed = new Set<string>(initial.unindexed);
   const puts: WorkingSetReport[] = [];
   const service: WorkingSetService = {
-    get: async () => ({ rows: [...rows.values()], unindexed: [...unindexed] }),
+    get: async () => ({ rows: [...rows.values()] }),
     put: async (report) => {
       puts.push(report);
       report.rows.forEach((row) => rows.set(row.documentId, row));
-      report.unindexed.forEach((id) => unindexed.add(id));
     },
   };
-  return { service, unindexed, puts };
+  return { service, puts };
 };
 
 /** A second client of the peer's host, whose index answers leave out the `hidden` objects, over `workingSet` if given. */

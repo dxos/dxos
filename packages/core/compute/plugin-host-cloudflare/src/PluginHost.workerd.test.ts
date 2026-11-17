@@ -380,21 +380,21 @@ describe('PluginHost', () => {
       expect,
     }) => {
       const spaceId = SpaceId.random();
-      const unindexed = new Set<string>();
+      const held = new Set<string>();
       let gets = 0;
       const workingSet: WorkingSetService = {
         get: async () => {
           gets++;
-          return { rows: [], unindexed: [...unindexed] };
+          return { rows: [] };
         },
         put: async (report) => {
-          report.unindexed.forEach((id) => unindexed.add(id));
+          report.rows.forEach((row) => row.objectId !== undefined && held.add(row.objectId));
         },
       };
       let heldAtCall: string[] = [];
       const operations: PluginProtocol.OperationHost = {
         invoke: async () => {
-          heldAtCall = [...unindexed];
+          heldAtCall = [...held];
           return { ok: true, output: { result: '1' } };
         },
       };

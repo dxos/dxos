@@ -256,8 +256,8 @@ export class EntityManager implements IDatabaseBinding {
   readonly #objectsForLocalCommit = new Set<string>();
   /** Objects written locally since the last flush that reached the index, with the sequence of their last write. */
   readonly #unindexedWrites = new Map<string, number>();
-  /** Objects another client wrote that the index may not hold; see {@link noteUnindexedWrites}. */
-  #notedUnindexedWrites: ReadonlySet<string> = new Set();
+  /** Objects of the working set the database opened from; see {@link noteWorkingSetObjects}. */
+  #workingSetObjects: ReadonlySet<string> = new Set();
   #writeSequence = 0;
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
@@ -501,7 +501,7 @@ export class EntityManager implements IDatabaseBinding {
     this._objectsForNextDbUpdate.clear();
     this.#objectsForLocalCommit.clear();
     this.#unindexedWrites.clear();
-    this.#notedUnindexedWrites = new Set();
+    this.#workingSetObjects = new Set();
     this._objectsForNextUpdate.clear();
     await this._repoProxy.close(ctx);
   }
@@ -541,21 +541,21 @@ export class EntityManager implements IDatabaseBinding {
    * for indexing. Only these can disagree with an index answer, since the index holds everything else this client has.
    */
   unindexedWrites(): Iterable<string> {
-    if (this.#notedUnindexedWrites.size === 0) {
+    if (this.#workingSetObjects.size === 0) {
       return this.#unindexedWrites.keys();
     }
-    return new Set([...this.#unindexedWrites.keys(), ...this.#notedUnindexedWrites]);
+    return new Set([...this.#unindexedWrites.keys(), ...this.#workingSetObjects]);
   }
 
   /**
-   * Counts objects another client wrote, which the index may not reflect yet, among this client's unindexed writes, so
-   * local evaluation treats them as it treats its own: they enter a windowed query the index has not seen them in.
-   * A flush does not clear them: it waits for the index to take this client's writes, not another client's. Each call
-   * replaces the ids noted before, since the caller's list is the whole of what the other clients wrote and the index
-   * may not hold yet.
+   * Counts the objects of the working set the database opened from among this client's unindexed writes, so local
+   * evaluation treats them as it treats its own: they enter a windowed query the index has not seen them in, since the
+   * index lags the writes the working set holds. A flush does not clear them: it waits for the index to take this
+   * client's writes, not another client's. Each call replaces the ids noted before, since the caller's list is the
+   * whole working set.
    */
-  noteUnindexedWrites(ids: Iterable<string>): void {
-    this.#notedUnindexedWrites = new Set(ids);
+  noteWorkingSetObjects(ids: Iterable<string>): void {
+    this.#workingSetObjects = new Set(ids);
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
@@ -692,12 +692,11 @@ export class EntityManager implements IDatabaseBinding {
 
   /**
    * The rows of `documentIds`, for a working set kept current as they change: the documents whose state the host holds,
-   * leaving out what does not fit `maxBytes`, and the objects this client wrote in them that the host holds.
+   * leaving out what does not fit `maxBytes`.
    */
   exportWorkingSetChanges(documentIds: Iterable<string>, { maxBytes }: ExportWorkingSetOptions): WorkingSetChanges {
     const wanted = new Set(documentIds);
     const rows: WorkingSetRow[] = [];
-    const written: string[] = [];
     const pending = new Set<string>();
     let total = 0;
     const rootHandle = this._spaceRootDocHandle;
@@ -724,9 +723,6 @@ export class EntityManager implements IDatabaseBinding {
         pending.add(documentId);
         continue;
       }
-      if (this.#unindexedWrites.has(core.id) && handle._isAcknowledged()) {
-        written.push(core.id);
-      }
       if (exported.has(documentId)) {
         continue;
       }
@@ -738,7 +734,7 @@ export class EntityManager implements IDatabaseBinding {
       total += row.bytes.length;
       rows.push(row);
     }
-    return { rows, ...(root ? { root: root.documentId } : {}), written, pending: [...pending] };
+    return { rows, ...(root ? { root: root.documentId } : {}), pending: [...pending] };
   }
 
   /** The space root as a row, once the host holds its state. */

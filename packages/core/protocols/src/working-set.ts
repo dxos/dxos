@@ -25,13 +25,11 @@ export type WorkingSetRow = {
 };
 
 /**
- * What an owner holds of a database's working set for one space: the documents it recently read or wrote, and the
- * objects it wrote that the index may not hold yet.
+ * What an owner holds of a database's working set for one space: a local copy of the documents its databases read or
+ * wrote, as a client's boot cache holds them.
  */
 export type WorkingSet = {
   rows: WorkingSetRow[];
-  /** Ids of objects the owner wrote; a database counts them among its local writes the index has not seen. */
-  unindexed: string[];
 };
 
 /** What a database sends its working set as the host stores its writes and it loads documents. */

@@ -14,8 +14,6 @@ export type WorkingSetChanges = {
   rows: WorkingSetRow[];
   /** The space root's document id, when the root is among {@link rows}. */
   root?: string;
-  /** Objects the client wrote in these documents, once the host holds the write, that the index may not hold yet. */
-  written: string[];
   /** Documents asked for whose latest change the host has not acknowledged yet: to be exported once it has. */
   pending: string[];
 };

@@ -537,7 +537,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       this._ctx.onDispose(unsubscribe);
     }
 
-    await this.#workingSet?.opened(fromWorkingSet ?? [], workingSet?.unindexed ?? []);
+    await this.#workingSet?.opened(fromWorkingSet ?? []);
   }
 
   @synchronized

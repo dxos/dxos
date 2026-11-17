@@ -496,15 +496,15 @@ describe('working set', () => {
   /** A caller's working set kept in memory, as an EDGE owner keeps it in its storage: one row per document. */
   const makeWorkingSet = () => {
     const rows = new Map<string, WorkingSetRow>();
-    const unindexed = new Set<string>();
     const service: WorkingSetService = {
-      get: async () => ({ rows: [...rows.values()], unindexed: [...unindexed] }),
+      get: async () => ({ rows: [...rows.values()] }),
       put: async (report) => {
         report.rows.forEach((row) => rows.set(row.documentId, row));
-        report.unindexed.forEach((id) => unindexed.add(id));
       },
     };
-    return { service, unindexed };
+    /** The objects the working set holds, one per row that holds one. */
+    const objects = () => [...rows.values()].flatMap((row) => (row.objectId === undefined ? [] : [row.objectId]));
+    return { service, rows, objects };
   };
 
   const setup = async () => {
@@ -530,7 +530,7 @@ describe('working set', () => {
       data: { id, title: 'fresh' },
       context: context(workingSet.service),
     });
-    expect([...workingSet.unindexed]).toContain(id);
+    expect(workingSet.objects()).toContain(id);
 
     const listed = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
       data: {},
@@ -579,11 +579,12 @@ describe('working set', () => {
     const functionsService: EdgeFunctionEnv.FunctionsService = {
       query: async () => Object.assign([], disposable),
       invoke: async () => {
-        heldAtCall = [...workingSet.unindexed];
-        // The callee writes through a database of its own and reports to the same working set.
-        db.add(Obj.make(Note, { id: calleeId, title: 'callee' }));
+        heldAtCall = workingSet.objects();
+        // The callee writes through a database of its own and sends its document to the same working set.
+        const note = db.add(Obj.make(Note, { id: calleeId, title: 'callee' }));
         await db.flush();
-        workingSet.unindexed.add(calleeId);
+        const [row] = db.exportWorkingSet({ maxBytes: 1024 * 1024 }).filter((row) => row.objectId === note.id);
+        workingSet.rows.set(row.documentId, row);
         return { _kind: 'success' as const, data: undefined, ...disposable };
       },
     };
@@ -623,7 +624,7 @@ describe('working set', () => {
         context: context(workingSet.service),
       }),
     ).rejects.toThrow('failed after the write');
-    expect([...workingSet.unindexed]).toEqual([id]);
+    expect(workingSet.objects()).toEqual([id]);
 
     const listed = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
       data: {},
