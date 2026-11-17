@@ -537,8 +537,8 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Objects written locally that the index may not reflect yet: everything written since the last flush that waited
-   * for indexing. Only these can disagree with an index answer, since the index holds everything else this client has.
+   * Objects whose index rows may lag: this client's writes since the last flush that waited for indexing, and the
+   * working set's objects (see {@link noteWorkingSetObjects}).
    */
   unindexedWrites(): Iterable<string> {
     if (this.#workingSetObjects.size === 0) {

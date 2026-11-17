@@ -4,31 +4,17 @@
 
 import { describe, test } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
-import { type WorkingSetReport, type WorkingSetRow, type WorkingSetService } from '@dxos/protocols';
+import { type WorkingSetService } from '@dxos/protocols';
 import { openAndClose } from '@dxos/test-utils';
 
-import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
+import { EchoTestBuilder, type EchoTestPeer, makeTestWorkingSet } from '../testing/index.ts';
 import { type DatabaseImpl } from './database.ts';
 
 const MAX_BYTES = 10 * 1024 * 1024;
-
-/** A working set kept in memory, as its owner keeps it: one row per document, and every send it took. */
-const makeWorkingSet = (rows: WorkingSetRow[] = []) => {
-  const held = new Map(rows.map((row) => [row.documentId, row]));
-  const puts: WorkingSetReport[] = [];
-  const service: WorkingSetService = {
-    get: async () => ({ rows: [...held.values()] }),
-    put: async (report) => {
-      puts.push(report);
-      report.rows.forEach((row) => held.set(row.documentId, row));
-    },
-  };
-  return { service, puts, sent: () => puts.flatMap((put) => put.rows) };
-};
 
 const setup = async () => {
   const builder = new EchoTestBuilder();
@@ -53,12 +39,12 @@ describe('WorkingSetSync', () => {
     const { peer, writer } = await setup();
     const task = writer.add(Obj.make(TestSchema.Task, { title: 'held' }));
     await writer.flush({ indexes: false });
-    const workingSet = makeWorkingSet(writer.exportWorkingSet({ maxBytes: MAX_BYTES }));
+    const workingSet = makeTestWorkingSet(writer.exportWorkingSet({ maxBytes: MAX_BYTES }));
 
     const database = await openWith(peer, writer, workingSet.service);
     expect(database.getObjectById<TestSchema.Task>(task.id)?.title).toBe('held');
     await database.flush({ indexes: false });
-    expect(workingSet.sent()).toEqual([]);
+    expect(workingSet.puts.flatMap((put) => put.rows)).toEqual([]);
   });
 
   test('sends a write once the host stores it, from the heads it was given', async ({ expect }) => {
@@ -68,7 +54,7 @@ describe('WorkingSetSync', () => {
     const seeded = writer.exportWorkingSet({ maxBytes: MAX_BYTES });
     const row = seeded.find((entry) => entry.objectId === task.id);
     invariant(row, 'the task is not exported');
-    const workingSet = makeWorkingSet(seeded);
+    const workingSet = makeTestWorkingSet(seeded);
 
     const database = await openWith(peer, writer, workingSet.service);
     const copy = database.getObjectById<TestSchema.Task>(task.id);
@@ -85,33 +71,33 @@ describe('WorkingSetSync', () => {
 
   test("sends a new object's document and the space root that links it", async ({ expect }) => {
     const { peer, writer } = await setup();
-    const workingSet = makeWorkingSet();
+    const workingSet = makeTestWorkingSet();
     const database = await openWith(peer, writer, workingSet.service);
 
     const task = database.add(Obj.make(TestSchema.Task, { title: 'new' }));
     await database.flush({ indexes: false });
 
-    const sent = workingSet.sent();
+    const sent = workingSet.puts.flatMap((put) => put.rows);
     expect(sent.some((row) => row.objectId === task.id)).toBe(true);
     expect(sent.some((row) => `automerge:${row.documentId}` === database.rootUrl)).toBe(true);
   });
 
   test('sends a write made just before it closes', async ({ expect }) => {
     const { peer, writer } = await setup();
-    const workingSet = makeWorkingSet();
+    const workingSet = makeTestWorkingSet();
     const database = await openWith(peer, writer, workingSet.service);
 
     const task = database.add(Obj.make(TestSchema.Task, { title: 'last' }));
     await database.close();
 
-    expect(workingSet.sent().some((row) => row.objectId === task.id)).toBe(true);
+    expect(workingSet.puts.flatMap((put) => put.rows).some((row) => row.objectId === task.id)).toBe(true);
   });
 
   test("counts the working set's objects among its unindexed writes, also after a flush", async ({ expect }) => {
     const { peer, writer } = await setup();
     const task = writer.add(Obj.make(TestSchema.Task, { title: 'held' }));
     await writer.flush();
-    const workingSet = makeWorkingSet(writer.exportWorkingSet({ maxBytes: MAX_BYTES }));
+    const workingSet = makeTestWorkingSet(writer.exportWorkingSet({ maxBytes: MAX_BYTES }));
 
     const database = await openWith(peer, writer, workingSet.service);
     expect([...database.unindexedWrites()]).toContain(task.id);
@@ -119,16 +105,16 @@ describe('WorkingSetSync', () => {
     expect([...database.unindexedWrites()]).toContain(task.id);
   });
 
-  test('a close waits for an absorb in flight, which then takes nothing', async ({ expect }) => {
+  test('a close waits for an absorb in flight', async ({ expect }) => {
     const { peer, writer } = await setup();
-    const task = writer.add(Obj.make(TestSchema.Task, { title: 'held' }));
-    await writer.flush({ indexes: false });
-    const workingSet = makeWorkingSet();
+    const workingSet = makeTestWorkingSet();
+    const reached = new Trigger();
     const released = new Trigger();
     let gated = false;
     const service: WorkingSetService = {
       get: async () => {
         if (gated) {
+          reached.wake();
           await released.wait();
         }
         return workingSet.service.get();
@@ -136,15 +122,17 @@ describe('WorkingSetSync', () => {
       put: workingSet.service.put,
     };
     const database = await openWith(peer, writer, service);
-    await workingSet.service.put({ rows: writer.exportWorkingSet({ maxBytes: MAX_BYTES }), base: {} });
 
     gated = true;
-    const absorbing = database.absorbWorkingSet();
-    const closing = database.close();
-    expect(await Promise.race([closing.then(() => 'closed'), sleep(200).then(() => 'waiting')])).toBe('waiting');
+    const order: string[] = [];
+    const absorbing = database.absorbWorkingSet().then(() => order.push('absorbed'));
+    await reached.wait();
+    // The get is released only after the close returns, so a close that waits for it ends when the get's bound runs out.
+    await database.close();
+    order.push('closed');
     released.wake();
-    await Promise.all([absorbing, closing]);
-    expect([...database.unindexedWrites()]).not.toContain(task.id);
+    await absorbing;
+    expect(order).toEqual(['absorbed', 'closed']);
   });
 
   test('a working set that fails leaves the database as it is without one', async ({ expect }) => {

@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
-import * as Stream from 'effect/Stream';
 import { describe, onTestFinished, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
@@ -14,13 +13,12 @@ import * as Process from '@dxos/compute/Process';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
 import { Database, Filter, Hypergraph, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
 import { DatabaseImpl } from '@dxos/echo-client';
-import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
+import { EchoTestBuilder, hidingQueryService, makeTestWorkingSet } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import {
   type EdgeFunctionEnv,
   type FunctionProtocol,
-  type WorkingSetRow,
   type WorkingSetService,
   makeInProcessClient,
 } from '@dxos/protocols';
@@ -528,20 +526,6 @@ describe('working set', () => {
     ),
   );
 
-  /** A caller's working set kept in memory, as an EDGE owner keeps it in its storage: one row per document. */
-  const makeWorkingSet = () => {
-    const rows = new Map<string, WorkingSetRow>();
-    const service: WorkingSetService = {
-      get: async () => ({ rows: [...rows.values()] }),
-      put: async (report) => {
-        report.rows.forEach((row) => rows.set(row.documentId, row));
-      },
-    };
-    /** The objects the working set holds, one per row that holds one. */
-    const objects = () => [...rows.values()].flatMap((row) => (row.objectId === undefined ? [] : [row.objectId]));
-    return { service, rows, objects };
-  };
-
   const setup = async () => {
     const { peer, services } = await openPeer({ hideFromIndex: (id) => id !== undefined });
     const db = await peer.createDatabase();
@@ -558,7 +542,7 @@ describe('working set', () => {
     expect,
   }) => {
     const { context } = await setup();
-    const workingSet = makeWorkingSet();
+    const workingSet = makeTestWorkingSet();
     const id = EntityId.random();
 
     await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
@@ -585,7 +569,7 @@ describe('working set', () => {
   }) => {
     const { db, context } = await setup();
     db.graph.registry.add([Note]);
-    const workingSet = makeWorkingSet();
+    const workingSet = makeTestWorkingSet();
     const callerId = EntityId.random();
     const calleeId = EntityId.random();
 
@@ -637,7 +621,7 @@ describe('working set', () => {
     expect,
   }) => {
     const { context } = await setup();
-    const workingSet = makeWorkingSet();
+    const workingSet = makeTestWorkingSet();
     const id = EntityId.random();
     const run = (operation: typeof CreatesNote | typeof RenamesNote, data: { id: string; title: string }) =>
       wrapFunctionHandler(operation, { types: [Note] }).handler({ data, context: context(workingSet.service) });
@@ -655,7 +639,7 @@ describe('working set', () => {
     expect,
   }) => {
     const { context } = await setup();
-    const workingSet = makeWorkingSet();
+    const workingSet = makeTestWorkingSet();
 
     await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
       data: { id: EntityId.random(), title: 'first' },
@@ -670,7 +654,7 @@ describe('working set', () => {
 
   test('what the host stored before a handler failed reaches the working set', async ({ expect }) => {
     const { context } = await setup();
-    const workingSet = makeWorkingSet();
+    const workingSet = makeTestWorkingSet();
     const id = EntityId.random();
 
     const WritesThenFails = Operation.make({
@@ -726,15 +710,3 @@ const openPeer = async ({ hideFromIndex }: { hideFromIndex?: (id: string | undef
   );
   return { peer, services };
 };
-
-const hidingQueryService = (
-  host: EchoTestPeer['host']['queryService'],
-  hide: (id: string | undefined) => boolean,
-): QueryService.Handlers => ({
-  'QueryService.setConfig': (request) => host['QueryService.setConfig'](request),
-  'QueryService.reindex': () => host['QueryService.reindex'](),
-  'QueryService.execQuery': (request) =>
-    host['QueryService.execQuery'](request).pipe(
-      Stream.map((response) => ({ ...response, results: response.results?.filter((result) => !hide(result.id)) })),
-    ),
-});

@@ -474,7 +474,7 @@ export class LocalQueryEngine implements QueryContext {
       const merged = plan.feed ? feedOrder(local, kept) : [...local, ...kept];
       if (plan.unorderedLimit !== undefined && remoteAnswered && remote.length < plan.unorderedLimit) {
         const seen = new Set(merged.map((entry) => entry.id));
-        merged.push(...this.#unindexedMatches(query, plan, memo, seen, plan.unorderedLimit - seen.size));
+        merged.push(...unindexedMatches(views, plan, memo, seen, plan.unorderedLimit - seen.size));
       }
       // Stable, so an in-process entry stays ahead of the remote duplicate that presentation drops.
       if (plan.order) {
@@ -524,32 +524,6 @@ export class LocalQueryEngine implements QueryContext {
       }
     }
     return window;
-  }
-
-  /** Up to `count` loaded objects this client wrote that match the query and that the index has not returned. */
-  #unindexedMatches(
-    query: QueryAST.Query,
-    plan: MergePlan,
-    memo: DeletionMemo,
-    seen: ReadonlySet<string>,
-    count: number,
-  ): SourceEntry[] {
-    const matches: SourceEntry[] = [];
-    for (const view of this.#spaces.values()) {
-      if (!view.covers(query)) {
-        continue;
-      }
-      for (const { id } of view.matchLocal(plan, undefined, memo)) {
-        if (matches.length >= count) {
-          return matches;
-        }
-        const entry = seen.has(id) ? undefined : view.entryFor(id);
-        if (entry) {
-          matches.push(entry);
-        }
-      }
-    }
-    return matches;
   }
 
   #watchSpace(ctx: Context, view: WorkingSetView): void {
@@ -662,6 +636,20 @@ const whileLive =
  * A feed's order is its blocks' order, which only the remote knows: writes made here that it has not answered yet
  * are the newest, so they follow its entries rather than lead them, and the remote's entry stands for one it has.
  */
+/** Up to `count` loaded objects whose index rows may lag that match the query and that the merge does not hold yet. */
+const unindexedMatches = (
+  views: readonly WorkingSetView[],
+  plan: MergePlan,
+  memo: DeletionMemo,
+  seen: ReadonlySet<string>,
+  count: number,
+): SourceEntry[] =>
+  views
+    .flatMap((view) =>
+      view.matchLocal(plan, undefined, memo).flatMap(({ id }) => (seen.has(id) ? [] : (view.entryFor(id) ?? []))),
+    )
+    .slice(0, Math.max(count, 0));
+
 const feedOrder = (local: readonly SourceEntry[], kept: readonly SourceEntry[]): SourceEntry[] => {
   const answered = new Set(kept.map((entry) => entry.id));
   const tail = local.filter((entry) => !isEchoObject(entry.result));
