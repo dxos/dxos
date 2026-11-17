@@ -13,6 +13,7 @@ export * from './Illocution.ts';
 export * as Graph from './Graph.ts';
 export * as Mapping from './Mapping.ts';
 export * as Ontology from './Ontology.ts';
+export * as Pipeline from './Pipeline.ts';
 export * as Predicate from './Predicate.ts';
 export * as Vocab from './Vocab.ts';
 export * as Vocabularies from './Vocabularies.ts';

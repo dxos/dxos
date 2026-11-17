@@ -16,6 +16,8 @@ export const make = (): Skill.Skill =>
   Skill.make({
     key,
     name: 'Brain',
+    description:
+      "The space's memory: facts about people, organizations and topics extracted from its content or imported as RDF, queried by entity or with SPARQL.",
     agentCanEnable: true,
     tools: Skill.toolDefinitions({
       operations: [BrainOperation.QueryFacts, BrainOperation.QuerySparql, BrainOperation.SummarizeSubject],

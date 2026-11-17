@@ -98,11 +98,11 @@ Not yet implemented — relevant once `edge` integration or the repo split start
 
 A downstream repo (`edge` today; the future `composer` repo) consumes **unreleased** `dxos` core through three tiers:
 
-| Tier                 | Mechanism                                        | Use                                                        | Committed?                                  |
-| -------------------- | ------------------------------------------------ | ---------------------------------------------------------- | ------------------------------------------- |
-| **1 — Stable floor** | npm `@latest` (or deliberate `@next`)            | Default deps; what ships to users                          | yes (pinned range)                          |
-| **2 — Continuous**   | pkg.pr.new SHA-pinned URL                        | Land on `main` against an upstream change not yet released | yes (re-pin to a release later; perishable) |
-| **3 — Local dev**    | `link-packages.mjs` (tarball + `pnpm.overrides`) | Editing both repos at once on one machine                  | never (CI guard rejects `file:`)            |
+| Tier                 | Mechanism                                   | Use                                                        | Committed?                                  |
+| -------------------- | ------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------- |
+| **1 — Stable floor** | npm `@latest` (or deliberate `@next`)       | Default deps; what ships to users                          | yes (pinned range)                          |
+| **2 — Continuous**   | pkg.pr.new SHA-pinned URL                   | Land on `main` against an upstream change not yet released | yes (re-pin to a release later; perishable) |
+| **3 — Local dev**    | `link-packages.mjs` (tarball + `overrides`) | Editing both repos at once on one machine                  | never (CI guard rejects `file:`)            |
 
 Decision: editing two repos locally → Tier 3, unlink before committing; need `main` to build against an unreleased upstream change → Tier 2, re-pin to a real release when upstream releases (pkg.pr.new artifacts expire ~1–6 months); cutting/preparing a release → Tier 1. Enablement: generalize `link-packages.mjs` from `edge/scripts/` into `dxos` and forbid its `--commit` path in CI; add a Tier-2 bot that bumps SHA-pinned pkg.pr.new URLs; validate on `edge` (`edge-tests.yml`).
 

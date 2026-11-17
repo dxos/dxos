@@ -20,7 +20,7 @@ Language support for `.mdl` specification files: highlighting of the file and it
 Download the `.vsix` and install it (Cursor and other VS Code forks take the same file):
 
 ```bash
-code --install-extension vscode-mdl-0.2.0.vsix
+code --install-extension vscode-mdl-0.4.0.vsix
 ```
 
 Or build it from this checkout:
@@ -77,7 +77,7 @@ The token set mirrors the CodeMirror extension in
 
 | Scope | What |
 | --- | --- |
-| `keyword.control.block.<type>.mdl` | a known block type (`ext`, `type`, `op`, `feat`, `scenario`, `test`, `component`, `service`, `db`, `module`, `suite`, `decision`) |
+| `keyword.control.block.<type>.mdl` | a block type a dialect in `packages/reflect/deus/lang/` declares with an `ext` block (`feat`, `op`, `decision`, `verdict`, `table`, `scene`, …); `grammar.test.ts` fails when a dialect adds one the grammar lacks |
 | `entity.name.type.block.mdl` | any other block type (`rule`, `diagram-rule`, …) |
 | `entity.name.function.id.mdl` | a block id (`QA-1`) or a nested one (`req F-1.1:`) |
 | `entity.name.section.title.mdl` | the title after the colon |

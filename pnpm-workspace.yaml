@@ -21,7 +21,7 @@ catalog:
   '@anthropic-ai/claude-agent-sdk': ^0.3.233
   '@anthropic-ai/sdk': ^0.117.1
   '@ark-ui/react': ^5.39.1
-  '@ark-ui/solid': ^5.30.0
+  '@ark-ui/solid': ^5.39.1
   '@assistant-ui/react': ^0.12.24
   '@astrojs/react': 7.1.1
   '@astrojs/rss': ^4.0.19
@@ -112,6 +112,7 @@ catalog:
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
   '@excalidraw/excalidraw': ^0.18.0
+  '@expressive-code/core': 0.44.2
   '@expressive-code/plugin-collapsible-sections': 0.44.2
   '@expressive-code/plugin-line-numbers': 0.44.2
   '@fontsource-variable/fira-code': 5.3.0
@@ -434,6 +435,7 @@ catalog:
   execa: ^5.1.1
   expect: ^27.0.2
   express: ^4.21.0
+  expressive-code: 0.44.2
   expressive-code-twoslash: ^0.6.1
   extendable-media-recorder: ^9.2.19
   extendable-media-recorder-wav-encoder: ^7.0.123
@@ -538,6 +540,7 @@ catalog:
   next-tick: ^1.0.0
   node-datachannel: ^0.32.3
   node-fetch: ^2.6.0
+  node-gyp: ^13.1.0
   node-html-parser: ^7.0.1
   node-notifier: ^10.0.1
   noise-protocol: 3.0.1
@@ -731,30 +734,37 @@ catalog:
   zone.js: ^0.15.0
   zx: ^8.8.5
 
-onlyBuiltDependencies:
-  - '@bufbuild/buf'
-  - '@moonrepo/cli'
-  - '@parcel/watcher'
-  - '@swc/core'
-  - better-sqlite3
-  - canvas
-  - cbor-extract
-  - core-js
-  - edgedriver
-  - esbuild
-  - fs-ext
-  - fsctl
-  - geckodriver
-  - msgpackr-extract
-  - node-datachannel
-  - onnxruntime-node
-  - oxc-resolver
-  - sharp
-  - sodium-native
-  - styled-components
-  - unrs-resolver
-  - workerd
-  - yarn
+allowBuilds:
+  '@bufbuild/buf': true
+  '@moonrepo/cli': true
+  '@parcel/watcher': true
+  '@swc/core': true
+  better-sqlite3: true
+  canvas: true
+  cbor-extract: true
+  core-js: true
+  edgedriver: true
+  esbuild: true
+  fs-ext: true
+  fsctl: true
+  geckodriver: true
+  msgpackr-extract: true
+  node-datachannel: true
+  onnxruntime-node: true
+  oxc-resolver: true
+  sharp: true
+  sodium-native: true
+  styled-components: true
+  unrs-resolver: true
+  workerd: true
+  yarn: true
+  # Never built before pnpm 11 either; pnpm now fails the install unless each is denied explicitly.
+  '@vscode/vsce-sign': false
+  core-js-pure: false
+  keytar: false
+  koffi: false
+  protobufjs: false
+  usearch: false
 
 overrides:
   '@astrojs/react>@vitejs/plugin-react': 'catalog:'
@@ -850,6 +860,19 @@ peerDependencyRules:
     - workerize-loader
 
 strictPeerDependencies: true
+
+# Keeps pnpm from prepending its own version pin to `pnpm-lock.yaml` as a second YAML document, which moon's javascript
+# toolchain cannot parse; proto (`.prototools`) and CI already install the exact pnpm version.
+pmOnFail: ignore
+
+autoInstallPeers: false
+
+publicHoistPattern:
+  # https://github.com/storybookjs/storybook/issues/13428
+  # https://github.com/storybookjs/builder-vite/issues/55
+  - '*storybook*'
+  # Fix for build errors on Cloudflare deployments.
+  - '@rolldown/binding-*'
 
 trustPolicy: no-downgrade
 

@@ -6,7 +6,6 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Entity, Obj, Ref, Type } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
-import { foreignKey } from '@dxos/echo-sqlite-sync';
 import { Form, type RefFieldDataProps, omitId } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -104,7 +103,6 @@ export const DetailForm = ({
         const employer = organization(next.employer);
         db.add(
           Obj.make(Person, {
-            [Obj.Meta]: { keys: [foreignKey(crypto.randomUUID())] },
             name: String(next.name ?? ''),
             email: Array.isArray(next.email) ? next.email.map((address) => String(address)) : [],
             ...(employer ? { employer: Ref.make(employer) } : {}),
@@ -113,7 +111,6 @@ export const DetailForm = ({
       } else if (type === Event) {
         db.add(
           Obj.make(Event, {
-            [Obj.Meta]: { keys: [foreignKey(crypto.randomUUID())] },
             title: String(next.title ?? ''),
             ...(next.description ? { description: String(next.description) } : {}),
             attendees: people(next.attendees).map((person) => Ref.make(person)),
@@ -122,7 +119,6 @@ export const DetailForm = ({
       } else {
         db.add(
           Obj.make(Organization, {
-            [Obj.Meta]: { keys: [foreignKey(crypto.randomUUID())] },
             name: String(next.name ?? ''),
             ...(next.website ? { website: String(next.website) } : {}),
           }),

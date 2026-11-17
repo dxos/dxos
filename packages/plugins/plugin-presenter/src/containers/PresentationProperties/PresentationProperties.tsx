@@ -13,9 +13,10 @@ import {
   type FormFieldOverride,
   type FormFieldRendererProps,
 } from '@dxos/react-ui-form';
+import { SlideTheme } from '@dxos/react-ui-slides';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { Presentation, SlideTheme } from '#types';
+import { Presentation } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
 

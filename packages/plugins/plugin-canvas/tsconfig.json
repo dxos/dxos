@@ -103,6 +103,9 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-slides"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {
