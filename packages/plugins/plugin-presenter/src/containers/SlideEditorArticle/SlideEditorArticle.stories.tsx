@@ -250,6 +250,45 @@ export const AtomicMarker: Story = {
 };
 
 /**
+ * The editor's toolbar carries the deck's own actions: the gallery the slide came from, and the split button that
+ * adds one — the same component the gallery article's toolbar uses, the caret at half the plus's width and joined
+ * to it with no gap, so the two read as one control.
+ */
+export const DeckActions: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
+    const plus = canvas.getByTestId('presenter.add-slide');
+    const caret = canvas.getByTestId('presenter.add-slide.layout');
+    await expect(canvas.getByTestId('presenter.slide-toolbar.gallery')).toBeVisible();
+    await expect(caret.getBoundingClientRect().width).toBeCloseTo(plus.getBoundingClientRect().width / 2, 0);
+    await expect(caret.getBoundingClientRect().left).toBeCloseTo(plus.getBoundingClientRect().right, 0);
+  },
+};
+
+/**
+ * The preview panel is part of Composer, so its scrim is the app's own rather than the black a projected slide is
+ * letterboxed in; the slide keeps its deck's background within it.
+ */
+export const PreviewScrim: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
+    const panel = canvas.getByTestId('presenter.slide-editor.preview');
+    const surround = await waitFor(() => {
+      const element = panel.querySelector('[data-scrim-surface]');
+      if (!element) {
+        throw new Error('Missing scrim surface');
+      }
+      return element;
+    }, LOAD_TIMEOUT);
+    // Translucent, so the panel behind shows through: the app's scrim, not a color of the deck's.
+    await expect(getComputedStyle(surround).backgroundColor).toContain('/');
+    await expect(getComputedStyle(surround).backgroundColor).not.toBe('rgb(0, 0, 0)');
+  },
+};
+
+/**
  * A tag is ordinary text: the caret goes inside it and its attributes are typed there. Were a tag atomic, the step
  * left from the line's end would clear the whole tag and the attribute would land in front of it.
  */

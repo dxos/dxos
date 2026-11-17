@@ -310,15 +310,17 @@ export const Scrim: Story = {
 };
 
 /**
- * Without one, the scrim is the theme's slide background — the same color the letterbox bands take when presenting,
- * so a slide is framed by its own ground rather than by a surface of its own.
+ * Without one, the scrim is the theme's own — black, as a projected slide is letterboxed in a dark room rather than
+ * on the deck's ground. It is the same color inset and letterboxed, so the editor and the projector agree.
  */
 export const ScrimDefault: Story = {
   args: { content: slide({ layout: 'center' }, '# Unframed') },
   play: async ({ canvasElement }) => {
     const surround = await query(canvasElement, '[data-scrim-surface]');
+    await expect(getComputedStyle(surround).backgroundColor).toBe('rgb(0, 0, 0)');
+    // The slide keeps the deck's background; only what is around it is the scrim.
     const slideElement = await query(canvasElement, '[data-slide]');
-    await expect(getComputedStyle(surround).backgroundColor).toBe(getComputedStyle(slideElement).backgroundColor);
+    await expect(getComputedStyle(slideElement).backgroundColor).not.toBe('rgb(0, 0, 0)');
   },
 };
 

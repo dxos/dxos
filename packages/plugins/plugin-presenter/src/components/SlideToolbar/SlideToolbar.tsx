@@ -20,6 +20,7 @@ import { type LayoutName, type SlideFrontmatter } from '#markdown';
 import { type SlideEditorViewState } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
+import { AddSlideButton } from '../AddSlideButton/AddSlideButton.tsx';
 import { LayoutPicker } from './LayoutPicker.tsx';
 
 /** Snippets the toolbars insert at the cursor. */
@@ -41,6 +42,13 @@ export type SlideToolbarProps = ThemedClassName<{
   onPrevious?: () => void;
   onNext?: () => void;
   onPresent?: () => void;
+  /** The layout a slide added from here takes; the split button's caret picks it. */
+  newSlideLayout?: LayoutName;
+  onNewSlideLayoutChange?: (layout: LayoutName) => void;
+  /** Absent for a slide with no presentation to add to. */
+  onAddSlide?: () => void;
+  /** Absent for a slide with no presentation to go back to. */
+  onOpenGallery?: () => void;
 }>;
 
 /**
@@ -59,10 +67,27 @@ export const SlideToolbar = ({
   onPrevious,
   onNext,
   onPresent,
+  newSlideLayout,
+  onNewSlideLayoutChange,
+  onAddSlide,
+  onOpenGallery,
 }: SlideToolbarProps) => {
   const menu = useMenuBuilder(
     () =>
       MenuBuilder.make()
+        .action(
+          'add-slide',
+          {
+            label: label('add-slide.label'),
+            variant: 'custom',
+            disabled: !onAddSlide || !onNewSlideLayoutChange,
+            render: () =>
+              onAddSlide && onNewSlideLayoutChange ? (
+                <AddSlideButton layout={newSlideLayout} onLayoutChange={onNewSlideLayoutChange} onAdd={onAddSlide} />
+              ) : null,
+          },
+          () => {},
+        )
         .group('slide', { label: label('slide-layout.label') }, (group) =>
           group
             .action(
@@ -111,6 +136,16 @@ export const SlideToolbar = ({
           (group) =>
             group
               .action(
+                'gallery',
+                {
+                  label: label('slide-gallery.label'),
+                  icon: 'ph--squares-four--regular',
+                  disabled: !onOpenGallery,
+                  testId: 'presenter.slide-toolbar.gallery',
+                },
+                () => onOpenGallery?.(),
+              )
+              .action(
                 'previous',
                 {
                   label: label('previous-slide.label'),
@@ -153,6 +188,10 @@ export const SlideToolbar = ({
       onPrevious,
       onNext,
       onPresent,
+      newSlideLayout,
+      onNewSlideLayoutChange,
+      onAddSlide,
+      onOpenGallery,
     ],
   );
 

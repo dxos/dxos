@@ -35,10 +35,17 @@ import {
   scrollbarAutohide,
 } from '@dxos/ui-editor';
 
-import { type BackgroundSettings, type SlideInsert, SlideToolbar, useSlideInsertActions } from '#components';
+import {
+  type BackgroundSettings,
+  type SlideInsert,
+  SlideToolbar,
+  newSlideContent,
+  useSlideInsertActions,
+} from '#components';
 import { type SlideSource, slideSourcesAtom } from '#deck';
 import { slideEditorSyncAtom, useObjectOptions } from '#hooks';
 import {
+  type LayoutName,
   LAYOUTS,
   type SlideEdit,
   SNIPPETS,
@@ -233,6 +240,7 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
   );
 
   const [objectsOpen, setObjectsOpen] = useState(false);
+  const [newSlideLayout, setNewSlideLayout] = useState<LayoutName>();
   const include = useCallback((object: Obj.Unknown) => object.id !== subject.id, [subject]);
   const objects = useObjectOptions(objectsOpen ? Obj.getDatabase(subject) : undefined, include);
 
@@ -254,22 +262,41 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
     [view],
   );
 
-  const open = useCallback(
-    (index: number) => {
-      const id = slides[index]?.id;
+  /** Opens a path in this slide's space; the deck's own article, or one of its slides. */
+  const openPath = useCallback(
+    (path: string | undefined) => {
       const db = Obj.getDatabase(subject);
-      if (!presentation || !db || !id) {
+      if (!db || !path) {
         return;
       }
       void invokePromise(LayoutOperation.Open, {
-        subject: [GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(presentation), id)],
+        subject: [path],
         workspace: GraphPath.getSpacePath(db.spaceId),
       });
     },
-    [invokePromise, presentation, slides, subject],
+    [invokePromise, subject],
   );
 
+  const openSlide = useCallback(
+    (id: string | undefined) =>
+      openPath(
+        presentation && id
+          ? GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(presentation), id)
+          : undefined,
+      ),
+    [openPath, presentation],
+  );
+
+  const open = useCallback((index: number) => openSlide(slides[index]?.id), [openSlide, slides]);
+
   return {
+    newSlideLayout,
+    onNewSlideLayoutChange: setNewSlideLayout,
+    // A new slide is added last and opened for editing, as it is from the gallery.
+    onAddSlide: presentation
+      ? () => openSlide(Presentation.addSlide(presentation, newSlideContent(newSlideLayout)).id)
+      : undefined,
+    onOpenGallery: presentation ? () => openPath(GraphPath.getObjectPathFromObject(presentation)) : undefined,
     onLayoutChange: (layout: (typeof LAYOUTS)[number]) =>
       apply((content) => setFrontmatter(content, { layout: layout === 'default' ? undefined : layout }), false),
     onInsert: (insert: SlideInsert) =>

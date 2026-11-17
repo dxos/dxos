@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './AddSlideButton/index.ts';
 export * from './Deck/index.ts';
 export * from './MarkdownSlide/index.ts';
 export * from './Pager/index.ts';

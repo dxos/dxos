@@ -7,7 +7,12 @@ import React, { type PropsWithChildren, type RefObject, useLayoutEffect, useRef,
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { slideThemeClasses, useSlideScrimSetting, useSlideThemeStyle } from '../SlideTheme/SlideTheme.tsx';
+import {
+  slideThemeClasses,
+  useSlideScrimSetting,
+  useSlideThemeScrim,
+  useSlideThemeStyle,
+} from '../SlideTheme/SlideTheme.tsx';
 import { ScrimContext } from './scrim.ts';
 
 export type SlideCanvasProps = Util.ThemedClassName<
@@ -18,21 +23,27 @@ export type SlideCanvasProps = Util.ThemedClassName<
      * surface of its own; a slide that paints its own background still reads as distinct within it.
      */
     inset?: boolean;
+    /**
+     * The scrim this host wants when neither the slide nor the deck names one: the editor's preview takes the app's
+     * own scrim, so the panel reads as part of Composer rather than as a projection.
+     */
+    scrim?: string;
   }>
 >;
 
 /**
  * The 2560 × 1440 slide canvas scaled to fit its container (16:9); `Slide.Frame` and embedded text slides share it.
  */
-export const SlideCanvas = ({ children, classNames, inset }: SlideCanvasProps) => {
+export const SlideCanvas = ({ children, classNames, inset, scrim: hostScrim }: SlideCanvasProps) => {
   const themeStyle = useSlideThemeStyle();
   const deckScrim = useSlideScrimSetting();
+  const themeScrim = useSlideThemeScrim();
   const containerRef = useRef<HTMLDivElement>(null);
   const size = useContainerSize(containerRef);
-  // The slide's own scrim, published from inside; it outranks the deck's, and neither is set by default.
+  // The slide's own scrim, published from inside. Nearest wins: the slide, then a deck that asked for a color, then
+  // the host's, then the theme's own.
   const [slideScrim, setSlideScrim] = useState<string>();
-  const scrim = slideScrim ?? deckScrim;
-  const scrimStyle = scrim === undefined ? undefined : { backgroundColor: scrim };
+  const scrimStyle = { backgroundColor: slideScrim ?? deckScrim ?? hostScrim ?? themeScrim };
 
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   const frame = (
@@ -53,15 +64,9 @@ export const SlideCanvas = ({ children, classNames, inset }: SlideCanvasProps) =
     </div>
   );
 
-  // The scrim is one color wherever a slide is letterboxed: the theme's slide background, so the bands read as the
-  // slide running on rather than as a surface of their own. `slideThemeClasses` paints it from the theme variables
-  // `themeStyle` carries, and a `scrim:` names a different one.
+  // One color wherever a slide is letterboxed, inset or not, so the inset void and the bands never disagree.
   return inset ? (
-    <div
-      data-scrim-surface
-      className={mx('flex grow relative p-4 overflow-hidden', slideThemeClasses)}
-      style={{ ...themeStyle, ...scrimStyle }}
-    >
+    <div data-scrim-surface className='flex grow relative p-4 overflow-hidden' style={scrimStyle}>
       {frame}
     </div>
   ) : (
