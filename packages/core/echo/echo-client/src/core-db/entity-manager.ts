@@ -694,44 +694,30 @@ export class EntityManager implements IDatabaseBinding {
   exportWorkingSetChanges(documentIds: Iterable<string>, { maxBytes }: ExportWorkingSetOptions): WorkingSetChanges {
     const wanted = new Set(documentIds);
     const rows: WorkingSetRow[] = [];
-    const pending = new Set<string>();
+    const pending: string[] = [];
     let total = 0;
-    const rootHandle = this._spaceRootDocHandle;
-    const rootDocumentId = rootHandle?.documentId;
+    // A document with no row yet has a change the host has not acknowledged: exported by a later send, once it has.
+    const take = (documentId: string, row: WorkingSetRow | undefined) => {
+      if (!row) {
+        pending.push(documentId);
+      } else if (total + row.bytes.length <= maxBytes) {
+        total += row.bytes.length;
+        rows.push(row);
+      }
+    };
     // Saving the root serializes the whole directory, so only a send that names it pays for that.
-    const rootRow = rootDocumentId !== undefined && wanted.has(rootDocumentId) ? this.#rootRow() : undefined;
-    const root = rootRow && rootRow.bytes.length <= maxBytes ? rootRow : undefined;
-    if (root) {
-      rows.push(root);
-      total += root.bytes.length;
-    } else if (rootDocumentId !== undefined && wanted.has(rootDocumentId) && !rootRow) {
-      pending.add(rootDocumentId);
+    const rootDocumentId = this._spaceRootDocHandle?.documentId;
+    if (rootDocumentId !== undefined && wanted.delete(rootDocumentId)) {
+      take(rootDocumentId, this.#rootRow());
     }
-    // The root's document is never exported as an object's, even when it did not fit.
-    const exported = new Set<string>(rootHandle?.documentId ? [rootHandle.documentId] : []);
     for (const core of this.allObjectCores()) {
       const handle = core.handle;
       const documentId = handle?.documentId;
-      if (!handle || !documentId || !wanted.has(documentId) || this.getCurrentBranch(core.id) !== 'main') {
-        continue;
+      if (handle && documentId && this.getCurrentBranch(core.id) === 'main' && wanted.delete(documentId)) {
+        take(documentId, this.#workingSetRow(core, handle, documentId));
       }
-      // Announced before the host acknowledged its latest change: exported by a later send, once it has.
-      if (handle._heldState() === undefined) {
-        pending.add(documentId);
-        continue;
-      }
-      if (exported.has(documentId)) {
-        continue;
-      }
-      exported.add(documentId);
-      const row = this.#workingSetRow(core, handle, documentId);
-      if (!row || total + row.bytes.length > maxBytes) {
-        continue;
-      }
-      total += row.bytes.length;
-      rows.push(row);
     }
-    return { rows, pending: [...pending] };
+    return { rows, pending };
   }
 
   /** The space root as a row, once the host holds its state. */

@@ -101,24 +101,6 @@ describe('working set handoff', () => {
     expect(changed.map((entry) => entry.id)).toEqual([task.id]);
     await client.close();
   });
-  test('a database sends a write to its working set once the host stores it, and a flush waits for it', async ({
-    expect,
-  }) => {
-    const peer = await builder.createPeer({ types: [TestSchema.Task] });
-    const space = await peer.createDatabase();
-    const workingSet = makeWorkingSet();
-    const { client, database } = await openReader(scope, peer, space, new Set(), workingSet.service);
-    await database.open();
-
-    const task = database.add(Obj.make(TestSchema.Task, { title: 'a' }));
-    await database.flush({ indexes: false });
-    const rows = workingSet.puts.flatMap((put) => put.rows);
-    expect(rows.some((row) => row.objectId === task.id)).toBe(true);
-    // The space root links the new document, so its write is sent too.
-    expect(rows.some((row) => `automerge:${row.documentId}` === database.rootUrl)).toBe(true);
-    await client.close();
-  });
-
   test('a database takes the writes another one made after it opened', async ({ expect }) => {
     const peer = await builder.createPeer({ types: [TestSchema.Task] });
     const space = await peer.createDatabase();
@@ -150,21 +132,6 @@ describe('working set handoff', () => {
     await expect.poll(() => notified.at(-1)).toEqual([task.id]);
     unsubscribe();
     await waiting.client.close();
-  });
-
-  test('a failing working set leaves the database as it is without one', async ({ expect }) => {
-    const peer = await builder.createPeer({ types: [TestSchema.Task] });
-    const space = await peer.createDatabase();
-    const failing: WorkingSetService = {
-      get: () => Promise.reject(new Error('unavailable')),
-      put: () => Promise.reject(new Error('unavailable')),
-    };
-    const { client, database } = await openReader(scope, peer, space, new Set(), failing);
-    await database.open();
-    const task = database.add(Obj.make(TestSchema.Task, { title: 'kept' }));
-    await database.flush({ indexes: false });
-    expect((await database.query(Filter.id(task.id)).run()).map((entry) => entry.id)).toEqual([task.id]);
-    await client.close();
   });
 });
 

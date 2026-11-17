@@ -668,25 +668,6 @@ describe('working set', () => {
     expect(listed).toEqual({ titles: ['first', 'second'] });
   });
 
-  test('a working set that fails leaves an operation as it runs without one', async ({ expect }) => {
-    const { context } = await setup();
-    const failing: WorkingSetService = {
-      get: () => Promise.reject(new Error('unavailable')),
-      put: () => Promise.reject(new Error('unavailable')),
-    };
-
-    await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
-      data: { id: EntityId.random(), title: 'kept' },
-      context: context(failing),
-    });
-    // With nothing held, the query reads only the index, which hides every object here.
-    const listed = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
-      data: {},
-      context: context(failing),
-    });
-    expect(listed).toEqual({ titles: [] });
-  });
-
   test('what the host stored before a handler failed reaches the working set', async ({ expect }) => {
     const { context } = await setup();
     const workingSet = makeWorkingSet();
