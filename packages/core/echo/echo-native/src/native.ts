@@ -107,29 +107,35 @@ const defaultSource = async (): Promise<BufferSource> => {
   return readFile(new URL('../dist/echo_native.wasm', import.meta.url));
 };
 
-let instance: Promise<Native> | undefined;
+let compiled: Promise<WebAssembly.Module> | undefined;
+let shared: Promise<Native> | undefined;
 
-/** The process's one engine instance; every database and file lives in it. */
-export const loadNative = (): Promise<Native> => {
-  instance ??= (async () => {
-    const bytes = await (wasmSource ?? defaultSource)();
-    let exports: Exports | undefined;
-    const memory = () => {
-      if (!exports) {
-        throw new Error('echo-native memory used before instantiation');
-      }
-      return exports.memory;
-    };
-    const { instance: created } = await WebAssembly.instantiate(bytes, {
-      wasi_snapshot_preview1: wasiImports(memory),
-    });
-    if (!isExports(created.exports)) {
-      throw new Error('echo-native module lacks its exports');
+/**
+ * A new engine instance with its own memory, files and databases. The module is compiled once per
+ * process; instantiating it again is cheap.
+ */
+export const createNative = async (): Promise<Native> => {
+  compiled ??= (async () => WebAssembly.compile(await (wasmSource ?? defaultSource)()))();
+  const module = await compiled;
+  let exports: Exports | undefined;
+  const memory = () => {
+    if (!exports) {
+      throw new Error('echo-native memory used before instantiation');
     }
-    exports = created.exports;
-    return new Native(exports);
-  })();
-  return instance;
+    return exports.memory;
+  };
+  const created = await WebAssembly.instantiate(module, { wasi_snapshot_preview1: wasiImports(memory) });
+  if (!isExports(created.exports)) {
+    throw new Error('echo-native module lacks its exports');
+  }
+  exports = created.exports;
+  return new Native(exports);
+};
+
+/** The process's shared engine instance. */
+export const loadNative = (): Promise<Native> => {
+  shared ??= createNative();
+  return shared;
 };
 
 /** The result of one write: each object's new heads, and whether it merged changes it had not read. */

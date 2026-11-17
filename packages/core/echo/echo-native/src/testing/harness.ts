@@ -4,13 +4,14 @@
 
 import { Type } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { SqliteGraph } from '../../../echo-sqlite/src/graph.ts';
 import { SimpleRegistry } from '../../../echo-sqlite/src/registry.ts';
 import { type SyncTransport } from '../../../echo-sqlite/src/sync/protocol.ts';
 import { TestAuthority } from '../../../echo-sqlite/src/testing/harness.ts';
 import { NativeDatabase } from '../database.ts';
-import { type Native, loadNative } from '../native.ts';
+import { type Native, createNative } from '../native.ts';
 import { NativeSync } from '../sync.ts';
 
 export { TestAuthority };
@@ -20,11 +21,17 @@ export { TestAuthority };
  * the same `SpaceAuthority` the sync worker runs) they sync through. Dispose it to close everything.
  */
 export class NativeTestBuilder implements AsyncDisposable {
+  /** An instance of its own, so a test that traps the engine does not take the next test with it. */
+  readonly #native = createNative();
   readonly #peers: NativeTestPeer[] = [];
   readonly #authorities: TestAuthority[] = [];
 
   createPeer(options: { types?: readonly Type.AnyEntity[]; path?: string } = {}): NativeTestPeer {
-    const peer = new NativeTestPeer(options.path ?? `mem:peer-${crypto.randomUUID()}`, options.types ?? []);
+    const peer = new NativeTestPeer(
+      this.#native,
+      options.path ?? `mem:peer-${crypto.randomUUID()}`,
+      options.types ?? [],
+    );
     this.#peers.push(peer);
     return peer;
   }
@@ -51,6 +58,7 @@ export class NativeTestBuilder implements AsyncDisposable {
  * a restart over a persistent file would.
  */
 export class NativeTestPeer {
+  readonly #native: Promise<Native>;
   readonly #path: string;
   readonly #types: readonly Type.AnyEntity[];
   readonly #actorId = crypto.randomUUID();
@@ -59,7 +67,8 @@ export class NativeTestPeer {
   #graph: SqliteGraph | undefined;
   #lastSpaceId: SpaceId | undefined;
 
-  constructor(path: string, types: readonly Type.AnyEntity[]) {
+  constructor(native: Promise<Native>, path: string, types: readonly Type.AnyEntity[]) {
+    this.#native = native;
     this.#path = path;
     this.#types = types;
   }
@@ -79,6 +88,7 @@ export class NativeTestPeer {
   ): Promise<NativeDatabase> {
     this.#lastSpaceId = spaceId;
     const db = await NativeDatabase.open({
+      native: await this.#native,
       spaceId,
       path: this.#path,
       actorId: this.#actorId,
@@ -114,8 +124,13 @@ export class NativeTestPeer {
   async close(): Promise<void> {
     await Promise.all(this.#syncs.splice(0).map((sync) => sync.close()));
     for (const db of this.#databases.splice(0)) {
-      await db.close();
-      db.native.close(db.store.handle);
+      try {
+        await db.close();
+        db.native.close(db.store.handle);
+      } catch (err) {
+        // A trapped instance cannot flush; the test that trapped it has already failed.
+        log.warn('could not close a native database', { error: err });
+      }
     }
     this.#graph = undefined;
   }
@@ -126,7 +141,11 @@ export class NativeTestPeer {
 
   /** Drops the peer's file from the engine. */
   async destroy(): Promise<void> {
-    const native: Native = await loadNative();
-    native.dropFile(this.#path);
+    const native = await this.#native;
+    try {
+      native.dropFile(this.#path);
+    } catch {
+      // An instance that trapped holds nothing to drop.
+    }
   }
 }
