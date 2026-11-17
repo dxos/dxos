@@ -92,6 +92,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   // `Capability.get`, establishing a dependency that heals once the capability lands.
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
   const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+  const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
 
   return yield* Effect.all([
     // Content section group — created alongside collections so the group always
@@ -279,6 +280,12 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
         const container = AppNode.getListOf(Option.getOrUndefined(get(appGraph.graph.node(parentId))));
 
+        // An object has a public link only while its space is published.
+        const [client] = get(clientAtom);
+        const db = Obj.getDatabase(object);
+        const space = publication && db && client?.spaces.get(db.spaceId);
+        const published = space ? Publication.getReceipt(get(Obj.atom(space.properties))) !== undefined : false;
+
         return Effect.succeed(
           constructObjectActions({
             object,
@@ -286,7 +293,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             deletable,
             navigable: ephemeralState.navigableCollections,
             shareableLinkOrigin,
-            publication,
+            publication: published ? publication : undefined,
             container,
             parent: container ? get(Obj.parentAtom(object)) : undefined,
             archived: isArchivable(object)
