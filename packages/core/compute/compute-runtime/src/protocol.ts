@@ -20,7 +20,7 @@ import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, type Entity, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
-import { type DatabaseImpl, EchoClient, type TypeSource, makeRegistry } from '@dxos/echo-client';
+import { DatabaseImpl, EchoClient, type TypeSource, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
@@ -37,7 +37,6 @@ import {
   createS3Host,
   credentialsLayerFromDatabase,
 } from './services/index.ts';
-import { handOffWorkingSet } from './working-set-handoff.ts';
 
 /** Ceiling on opening a space in a function context; a worker holds a request that long only when the root never arrives. */
 const SPACE_OPEN_TIMEOUT = Duration.seconds(15);
@@ -458,6 +457,30 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
   );
   const resolver = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
   return AiModelResolver.buildAiService.pipe(Layer.provide(resolver));
+};
+
+/**
+ * Runs `call`, a nested invocation in the caller's space, so each reads the other's writes: the caller snapshots its
+ * working set first, and afterwards re-reads its documents through `refresh` and takes the working set again.
+ */
+export const handOffWorkingSet = async <T>(
+  db: Database.Database | undefined,
+  refresh: (() => Promise<void>) | undefined,
+  call: () => Promise<T>,
+): Promise<T> => {
+  if (db instanceof DatabaseImpl) {
+    await db.saveWorkingSet();
+  } else {
+    await db?.flush({ indexes: false }).catch((error) => log.warn('caller writes not stored before a call', { error }));
+  }
+  try {
+    return await call();
+  } finally {
+    await refresh?.().catch((error) => log.warn('caller documents not re-read after a call', { error }));
+    if (db instanceof DatabaseImpl) {
+      await db.absorbWorkingSet();
+    }
+  }
 };
 
 /**
