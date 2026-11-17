@@ -1,7 +1,6 @@
 {
   "name": "@dxos/echo-memory-sqlite",
   "version": "0.16.0",
-  "private": true,
   "description": "Local MemoryService implementations: an RDF quad store and goal-rule subscriptions over SQLite.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,5 +43,8 @@
   },
   "peerDependencies": {
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
