@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseRoute } from './route.ts';
+import { composerOriginOf, parseRoute } from './route.ts';
 
 const OBJECT_PATH = 'db/org.dxos.type.document+01ABC';
 
@@ -26,5 +26,13 @@ describe('parseRoute', () => {
 
   test('the bare viewer origin names no publication', ({ expect }) => {
     expect(parseRoute({ pathname: '/', search: '' })).toBeUndefined();
+  });
+});
+
+describe('composerOriginOf', () => {
+  test('forks go to the app host the viewer sits behind', ({ expect }) => {
+    expect(composerOriginOf('https://view.dev.composer.space')).toBe('https://dev.composer.space');
+    expect(composerOriginOf('https://view.composer.space')).toBe('https://composer.space');
+    expect(composerOriginOf('http://view.localhost:5173')).toBe('http://localhost:5173');
   });
 });

@@ -16,9 +16,7 @@ import * as Publication from '@dxos/plugin-space/Publication';
 import { initAutomergeWasm, initEchoHostWasm } from '../util/automerge-wasm.ts';
 import { setupConfig } from '../util/config.ts';
 import { getPlugins } from './plugin-defs.viewer.tsx';
-import { parseRoute, replaceWithSpace } from './route.ts';
-
-const DEFAULT_COMPOSER_ORIGIN = 'https://composer.space';
+import { composerOriginOf, parseRoute, replaceWithSpace } from './route.ts';
 
 const bootStatus = (text: string) => App.bootLoader?.status({ humanized: text });
 
@@ -51,7 +49,7 @@ const main = async () => {
   const publicationsUrl =
     getEnvString(base, 'DX_PUBLICATIONS_URL') ??
     new URL(Publication.PUBLICATIONS_PATH, window.location.origin).toString();
-  const composerOrigin = getEnvString(base, 'DX_COMPOSER_URL') ?? DEFAULT_COMPOSER_ORIGIN;
+  const composerOrigin = composerOriginOf(window.location.origin);
 
   // Only the app env carries over: no EDGE services, no persistent storage.
   const config = new Config({

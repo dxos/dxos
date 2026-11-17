@@ -32,5 +32,12 @@ export const replaceWithSpace = (spaceId: string, { publicId, objectPath }: View
   history.replaceState(null, '', url.pathname + url.search);
 };
 
+/** The Composer app this viewer belongs to: its own host without the `view.` label. */
+export const composerOriginOf = (viewerOrigin: string): string => {
+  const url = new URL(viewerOrigin);
+  url.hostname = url.hostname.replace(/^view\./, '');
+  return url.origin;
+};
+
 /** The current object path, read from the address bar as the deck keeps it. */
 export const currentObjectPath = (): string | undefined => Publication.objectPathOf(window.location.pathname);
