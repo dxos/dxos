@@ -62,9 +62,11 @@ const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservab
 
 export type MembersContainerProps = AppSurface.SpaceArticleProps<{
   createInvitationUrl: (invitationCode: string) => string;
+  /** The panel's own title and description; a host that names the panel itself (a dialog title) turns it off. */
+  heading?: boolean;
 }>;
 
-export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
+export const MembersContainer = ({ space, createInvitationUrl, heading = true }: MembersContainerProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const config = useConfig();
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -208,7 +210,10 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
+          <Form.FieldSet
+            label={heading ? t('members-verbose.label') : undefined}
+            description={heading ? t('members.description') : undefined}
+          >
             <Form.FieldSet label={t('members.label')}>
               <SpaceMemberList spaceKey={space.key} includeSelf />
             </Form.FieldSet>

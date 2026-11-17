@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Key, Obj } from '@dxos/echo';
-import { type EID } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { type Progress } from '@dxos/progress';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { type Activity } from '@dxos/react-ui-attention/types';
@@ -22,10 +22,18 @@ import { toLocalizedString } from '@dxos/ui-types/translations';
 import { SpaceCapabilities } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
-import { MEMBERS_COMPANION_ID, type ObjectViewers, countViewers, getPeerNodeIds } from '../../util/index.ts';
+import {
+  MEMBERS_COMPANION_ID,
+  type ObjectViewers,
+  type ViewersByObject,
+  countViewers,
+  getFreshSessions,
+  getPeerNodeIds,
+} from '../../util/index.ts';
 import { useExpandPeerNodes } from './PeerActions.tsx';
 import {
   type AvatarSize,
+  type Member,
   PresenceAvatar,
   PresenceList,
   type PresenceListAction,
@@ -42,17 +50,38 @@ const useActiveViewerCount = (viewers?: ObjectViewers) => {
   return countViewers(viewers, now);
 };
 
-export type SpacePresenceProps = {
-  spaceId?: Key.SpaceId;
-  presenceKey?: EID.EID;
+/** Every session attending something in the space, keyed as one object's viewers. */
+const getSpaceViewers = (viewersByObject: ViewersByObject, spaceId: string): ObjectViewers => {
+  const viewers: ObjectViewers = {};
+  for (const [key, objectViewers] of Object.entries(viewersByObject)) {
+    const objectKey = EID.tryParse(key);
+    if (objectKey && EID.getSpaceId(objectKey) === spaceId) {
+      for (const [identityKey, sessions] of Object.entries(objectViewers)) {
+        viewers[identityKey] = { ...viewers[identityKey], ...sessions };
+      }
+    }
+  }
+  return viewers;
 };
 
-export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
+export type SpacePresenceProps = {
+  spaceId?: Key.SpaceId;
+  /** The object the list is of; with `everyone`, the object whose viewers' avatars are lit. */
+  presenceKey?: EID.EID;
+  /** Lists everyone attending something in the space, under each object they attend. */
+  everyone?: boolean;
+  size?: AvatarSize;
+};
+
+export const SpacePresence = ({ spaceId, presenceKey, everyone, size }: SpacePresenceProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   const now = useNow();
-  const list = usePresenceList(spaceId, presenceKey);
-  const viewers = (presenceKey && ephemeral?.viewersByObject[presenceKey]) || {};
+  const list = usePresenceList(spaceId, everyone ? undefined : presenceKey);
+  const viewers =
+    (everyone && spaceId && ephemeral
+      ? getSpaceViewers(ephemeral.viewersByObject, spaceId)
+      : presenceKey && ephemeral?.viewersByObject[presenceKey]) || {};
   // Ready before the list opens, so its rows' actions do not appear after it.
   useExpandPeerNodes(spaceId ? getPeerNodeIds(spaceId, viewers, now) : []);
   const seeEveryone = useMemo(
@@ -67,10 +96,33 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
     [invokePromise],
   );
 
-  return presenceKey ? <FullPresence {...list} action={seeEveryone} /> : null;
+  // Listing the space, only those on the object are lit.
+  const isLit =
+    everyone && presenceKey
+      ? (member: Member) =>
+          getFreshSessions(ephemeral?.viewersByObject[presenceKey]?.[member.identityKey ?? ''], now).some(
+            (session) => session.currentlyAttended,
+          )
+      : undefined;
+
+  return presenceKey || everyone ? <FullPresence {...list} size={size} isLit={isLit} action={seeEveryone} /> : null;
 };
 
 const OVERFLOW_TRIGGER = 'overflow';
+
+const uniqueMembers = (members: Member[]): Member[] => {
+  const seen = new Set<string>();
+  return members.filter(({ identityKey }) => {
+    if (!identityKey) {
+      return true;
+    }
+    if (seen.has(identityKey)) {
+      return false;
+    }
+    seen.add(identityKey);
+    return true;
+  });
+};
 
 type AvatarTriggerProps = ComponentPropsWithoutRef<'button'> & { tooltip: string };
 
@@ -92,14 +144,17 @@ export type FullPresenceProps = PresenceListProps & {
   size?: AvatarSize;
   /** At the end of the list's header; taking it closes the list. */
   action?: PresenceListAction;
+  /** Whether a member's avatar is lit; by default, whether they attend the object. */
+  isLit?: (member: Member) => boolean;
 };
 
 /** Avatars of the members on an object; clicking any opens the presence list of the object. */
-export const FullPresence = ({ size = 'md', action, ...props }: FullPresenceProps) => {
+export const FullPresence = ({ size = 'md', action, isLit = isAttending, ...props }: FullPresenceProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const [open, setOpen] = useState(false);
   const groupRef = useRef<HTMLDivElement>(null);
-  const members = getPresenceMembers(props);
+  // Listing the space, a person attending several objects has a row under each, but one avatar.
+  const members = uniqueMembers(getPresenceMembers(props));
   const title = t('presence-in-object.heading', { count: members.length });
   const closingAction = useMemo(
     () =>
@@ -149,7 +204,7 @@ export const FullPresence = ({ size = 'md', action, ...props }: FullPresenceProp
               <AvatarTrigger tooltip={getName(member)}>
                 <PresenceAvatar
                   member={member}
-                  match={isAttending(member)}
+                  match={isLit(member)}
                   index={members.length - i}
                   size={size}
                   followHue={

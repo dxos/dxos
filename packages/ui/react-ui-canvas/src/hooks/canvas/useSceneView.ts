@@ -25,8 +25,8 @@ import { type SceneCamera } from './useSceneCamera.ts';
 /** Quiet time after the view's last resize before fit mode refits, so a drag-resize refits once, where it ends. */
 const FIT_DEBOUNCE_MS = 150;
 
-/** Quiet time after the camera's last move before `onCameraChange` reports it. */
-const CAMERA_SETTLE_MS = 300;
+/** Least time between two `onCameraChange` reports while the camera moves; a follower sees the move at this rate. */
+const CAMERA_REPORT_MS = 100;
 
 /**
  * The view's display toggles a host may persist: snapping (which draws the grid), the lattice guides, and fit mode
@@ -270,13 +270,23 @@ export const useSceneView = ({
       exitFit();
     }
   }, [drag?.kind, exitFit]);
-  // Reported after a quiet beat, so a wheel gesture or an animation is persisted once, where it ends.
+  // Reported as it moves, at most once a beat, and again where it ends.
   const atRoot = path.length === 1;
+  const reportedAt = useRef(-Infinity);
   useEffect(() => {
     if (!onCameraChange || !atRoot || !interactedRef.current) {
       return;
     }
-    const timeout = setTimeout(() => onCameraChange(camera), CAMERA_SETTLE_MS);
+    const report = () => {
+      reportedAt.current = Date.now();
+      onCameraChange(camera);
+    };
+    const wait = reportedAt.current + CAMERA_REPORT_MS - Date.now();
+    if (wait <= 0) {
+      report();
+      return;
+    }
+    const timeout = setTimeout(report, wait);
     return () => clearTimeout(timeout);
   }, [onCameraChange, atRoot, camera]);
 

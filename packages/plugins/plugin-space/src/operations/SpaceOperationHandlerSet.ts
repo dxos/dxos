@@ -45,6 +45,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.Open.pipe(Operation.lazyHandler(() => import('./open.ts'))),
   SpaceOperation.OpenObjectForm.pipe(Operation.lazyHandler(() => import('./open-object-form.ts'))),
   SpaceOperation.OpenCreateSpace.pipe(Operation.lazyHandler(() => import('./open-create-space.ts'))),
+  SpaceOperation.OpenDeleteSpace.pipe(Operation.lazyHandler(() => import('./open-delete-space.ts'))),
   SpaceOperation.OpenImportSpace.pipe(Operation.lazyHandler(() => import('./open-import-space.ts'))),
   SpaceOperation.OpenMembers.pipe(Operation.lazyHandler(() => import('./open-members.ts'))),
   SpaceOperation.OpenSettings.pipe(Operation.lazyHandler(() => import('./open-settings.ts'))),

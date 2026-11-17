@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
+import { Invitation_State } from '@dxos/react-client/invitations';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Viewport } from '../../components/index.ts';
@@ -157,6 +158,13 @@ export const JoinPanelImpl = ({
   );
 };
 
+const FINISHED = new Set([
+  Invitation_State.CANCELLED,
+  Invitation_State.EXPIRED,
+  Invitation_State.SUCCESS,
+  Invitation_State.TIMEOUT,
+]);
+
 export const JoinPanel = ({
   titleId: propsTitleId,
   mode = 'default',
@@ -183,6 +191,30 @@ export const JoinPanel = ({
       }),
     },
   });
+
+  // A panel closed before its join finishes cancels the join, or the space would still be joined after the user left.
+  // `ERROR` is not finished: EDGE refusing the invitation reports it while a peer can still admit the guest.
+  // React's development double mount runs the cleanup at once, so only an unmount not followed by a mount cancels.
+  const contextRef = useRef(joinState.context);
+  contextRef.current = joinState.context;
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      setTimeout(() => {
+        if (mountedRef.current) {
+          return;
+        }
+        const { halo, space } = contextRef.current;
+        for (const observable of [halo.invitationObservable, space.invitationObservable]) {
+          if (observable && !FINISHED.has(observable.get().state)) {
+            void observable.cancel();
+          }
+        }
+      });
+    };
+  }, []);
 
   useEffect(() => {
     const subscription = joinService.subscribe((state) => {
