@@ -114,10 +114,8 @@ describe('working set handoff', () => {
     await database.flush({ indexes: false });
     const rows = workingSet.puts.flatMap((put) => put.rows);
     expect(rows.some((row) => row.objectId === task.id)).toBe(true);
-    // The space root links the new document, so its write is sent too, named as the root.
-    expect(
-      workingSet.puts.some((put) => put.root !== undefined && rows.some((row) => row.documentId === put.root)),
-    ).toBe(true);
+    // The space root links the new document, so its write is sent too.
+    expect(rows.some((row) => `automerge:${row.documentId}` === database.rootUrl)).toBe(true);
     await client.close();
   });
 

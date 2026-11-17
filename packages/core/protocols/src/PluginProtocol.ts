@@ -102,10 +102,7 @@ export type InvocationScope = {
   readonly services?: HostServices;
   /** Runs an operation the bundle does not handle, re-entering EDGE's router. Version 2. */
   readonly operations?: OperationHost;
-  /**
-   * The caller's working set, which the host seeds the invocation's database from. Version 2; a host built before it
-   * ignores the field.
-   */
+  /** The caller's working set, which the invocation's database opens from; a host built before it ignores it. */
   readonly workingSet?: WorkingSetService;
 };
 

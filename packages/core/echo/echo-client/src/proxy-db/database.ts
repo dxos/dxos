@@ -215,10 +215,7 @@ export type EchoDatabaseProps = {
   /** Which loaded object documents the database keeps in memory. */
   documentRetention?: DocumentRetention;
 
-  /**
-   * A working set its owner keeps across the databases it starts: the database opens from it and sends what the host
-   * stores and what it loads, so the owner's next database reads those writes before the index holds them.
-   */
+  /** A working set the database opens from and keeps current, so the owner's next database reads its writes. */
   workingSet?: WorkingSetService;
 
   /**
@@ -571,10 +568,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._lifecycleState === LifecycleState.OPEN ? this._entityManager.exportWorkingSet(options) : [];
   }
 
-  /**
-   * Takes the objects the owner's other databases wrote to the working set since this one opened, for a database that
-   * outlives them: a hosted process's, or one whose operation called another.
-   */
+  /** Takes the working set again, after the owner's other databases changed it. */
   async absorbWorkingSet(): Promise<void> {
     await this.#workingSet?.absorb();
   }

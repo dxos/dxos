@@ -37,10 +37,7 @@ export type MergePlan = {
     orders: readonly QueryAST.Order[];
     limit: number;
   };
-  /**
-   * Present for a limit with no order and no skip: the remote alone cuts it, so only a short answer, which is every
-   * match the remote holds, takes this client's matches the index has not seen.
-   */
+  /** A limit with no order and no skip, which a short remote answer leaves room in for unindexed local matches. */
   unorderedLimit?: number;
   /**
    * Present when the merged entries are sorted locally: a property order with no limit or skip, which the working

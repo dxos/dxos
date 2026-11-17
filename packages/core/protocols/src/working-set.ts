@@ -36,8 +36,6 @@ export type WorkingSet = {
 export type WorkingSetReport = WorkingSet & {
   /** Per document id, the heads the working set last had from this database; absent for a document it had none of. */
   base: Record<string, string[]>;
-  /** The space root's document id, when the root is among the rows. */
-  root?: string;
 };
 
 /**

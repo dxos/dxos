@@ -7,10 +7,8 @@ import { DatabaseImpl } from '@dxos/echo-client';
 import { log } from '@dxos/log';
 
 /**
- * Runs `call`, which starts another invocation in the caller's space, so that each reads the other's writes (edge
- * `docs/WORKING-SET.mdl`): the caller's writes are stored, which puts them in its working set, before the call; after
- * it, also when it failed, the caller re-reads its documents through `refresh` (a pull-only data plane's) and takes
- * the objects the callee wrote. Each step is best effort, as the working set is.
+ * Runs `call`, a nested invocation in the caller's space, so each reads the other's writes: the caller's writes reach
+ * its working set first, and afterwards the caller re-reads its documents through `refresh` and takes the working set.
  */
 export const handOffWorkingSet = async <T>(
   db: Database.Database | undefined,

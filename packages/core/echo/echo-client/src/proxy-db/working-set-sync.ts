@@ -36,10 +36,8 @@ const objectIds = (rows: readonly WorkingSetRow[]): string[] =>
   rows.flatMap((row) => (row.objectId === undefined ? [] : [row.objectId]));
 
 /**
- * A database's use of a working set its owner keeps for the databases it starts (EDGE's agent process, edge
- * `docs/WORKING-SET.mdl`): a local copy of the documents they read and wrote. The database opens from it, merges its
- * objects into queries, and sends each document as the host stores a write to it or the database loads it. Every call
- * is best effort and bounded.
+ * A database's use of its owner's working set (edge `docs/WORKING-SET.mdl`): it opens from it, merges its objects into
+ * queries, and sends each document the host stores a write to or the database loads; every call is best effort.
  */
 export class WorkingSetSync {
   readonly #service: WorkingSetService;
@@ -106,10 +104,7 @@ export class WorkingSetSync {
     await this.#sending;
   }
 
-  /**
-   * Counts the working set's objects among this database's unindexed writes, so queries merge them where the index
-   * lags, and loads them through their documents, which hold the owner's writes where the index may not yet.
-   */
+  /** Notes the working set's objects for the query merge, and loads them. */
   async #take(ids: readonly string[]): Promise<void> {
     this.#entityManager.noteWorkingSetObjects(ids);
     if (ids.length === 0) {
@@ -153,13 +148,7 @@ export class WorkingSetSync {
       }
       this.#base[row.documentId] = row.heads;
     }
-    const report: WorkingSetReport = {
-      rows,
-      base,
-      ...(changes.root !== undefined && rows.some((row) => row.documentId === changes.root)
-        ? { root: changes.root }
-        : {}),
-    };
+    const report: WorkingSetReport = { rows, base };
     const service = this.#service;
     this.#sending = this.#sending.then(async () => {
       await bestEffort('put', () => service.put(report));

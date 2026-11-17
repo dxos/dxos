@@ -548,11 +548,8 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Counts the objects of the working set the database opened from among this client's unindexed writes, so local
-   * evaluation treats them as it treats its own: they enter a windowed query the index has not seen them in, since the
-   * index lags the writes the working set holds. A flush does not clear them: it waits for the index to take this
-   * client's writes, not another client's. Each call replaces the ids noted before, since the caller's list is the
-   * whole working set.
+   * Counts the working set's objects among this client's unindexed writes, so queries merge them where the index lags;
+   * a flush keeps them, and each call replaces the last.
    */
   noteWorkingSetObjects(ids: Iterable<string>): void {
     this.#workingSetObjects = new Set(ids);
@@ -734,7 +731,7 @@ export class EntityManager implements IDatabaseBinding {
       total += row.bytes.length;
       rows.push(row);
     }
-    return { rows, ...(root ? { root: root.documentId } : {}), pending: [...pending] };
+    return { rows, pending: [...pending] };
   }
 
   /** The space root as a row, once the host holds its state. */

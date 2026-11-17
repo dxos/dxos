@@ -12,8 +12,6 @@ export type ExportWorkingSetOptions = {
 /** The rows of documents whose held state moved, for a working set kept current as a client writes and loads. */
 export type WorkingSetChanges = {
   rows: WorkingSetRow[];
-  /** The space root's document id, when the root is among {@link rows}. */
-  root?: string;
   /** Documents asked for whose latest change the host has not acknowledged yet: to be exported once it has. */
   pending: string[];
 };
