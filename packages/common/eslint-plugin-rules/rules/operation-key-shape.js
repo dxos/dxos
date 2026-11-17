@@ -61,6 +61,7 @@ const VERBS = new Set([
   'download',
   'draft',
   'draw',
+  'drive',
   'drop',
   'duplicate',
   'edit',

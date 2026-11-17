@@ -16,7 +16,7 @@ import { PullRequest, Task } from '@dxos/types';
 import { CloudRunOperation } from '#types';
 
 import { CLAUDE_CODE_EDGE_AGENT } from '../constants.ts';
-import { driveRuns, type Runner } from './drive-cloud-runs.ts';
+import { type Runner, driveRuns } from './drive-cloud-runs.ts';
 import { type PullRequestStatusLike } from './drive-decision.ts';
 import { ensureDriveTrigger } from './drive-trigger.ts';
 
