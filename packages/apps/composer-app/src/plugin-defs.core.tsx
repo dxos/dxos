@@ -42,8 +42,12 @@ import { downloadLogs } from './util/index.ts';
 
 const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 
-/** Where published spaces are viewed; `DX_VIEWER_URL` points a local or preview build elsewhere. */
-const DEFAULT_VIEWER_ORIGIN = 'https://view.composer.space';
+/** Published spaces open on the app's own host behind `view.`, which the same Worker serves. */
+const viewerOriginOf = (origin: string): string => {
+  const url = new URL(origin);
+  url.hostname = `view.${url.hostname}`;
+  return url.origin;
+};
 
 export type State = {
   appKey: string;
@@ -161,7 +165,8 @@ export const getCorePlugins = ({
       // plugin-onboarding owns invitation URL params in Composer.
       invitationUrlHandler: false,
       publication: {
-        viewerOrigin: getEnvString(config, 'DX_VIEWER_URL') ?? DEFAULT_VIEWER_ORIGIN,
+        // A workers.dev PR preview cannot take a `view.` host, so its build names one.
+        viewerOrigin: getEnvString(config, 'DX_VIEWER_URL') ?? viewerOriginOf(origin),
         publicationsUrl: getEnvString(config, 'DX_PUBLICATIONS_URL'),
       },
     }),
