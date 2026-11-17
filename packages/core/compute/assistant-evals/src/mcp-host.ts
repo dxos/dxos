@@ -62,8 +62,6 @@ export type StartMcpHostOptions = {
    * upload tool at all — which is what the deployed worker's own tool, not this one, is for.
    */
   readonly uploads?: LocalUpload.Stage;
-  /** Secret the skill tokens derive from; omitted, a random one for this host's lifetime. */
-  readonly skillSecret?: string;
   /** Serves `runScript` too, evaluated in process, as `dx mcp serve --code-mode` does. */
   readonly codeMode?: boolean;
 };
@@ -91,13 +89,12 @@ export const startMcpHost = ({
   context,
   registry,
   uploads,
-  skillSecret = crypto.randomUUID(),
   codeMode = false,
 }: StartMcpHostOptions): Effect.Effect<McpHost, never, Scope.Scope> =>
   Effect.gen(function* () {
     // Host-wide rather than per `connect`, which runs per request: a token one request hands out must
-    // unlock the next.
-    const gate = McpServer.skillGate(skillSecret);
+    // unlock the next. The derivation takes only the skill's key, so every gate agrees anyway.
+    const gate = McpServer.skillGate();
     const connect = async () => {
       const server = new Server({ name: McpServer.identity.name, version: VERSION }, { capabilities: { tools: {} } });
       server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -294,19 +291,18 @@ const dispatch = async (
           return yield* Effect.fail(McpServer.failure('invalid_request', `${name} takes a code string.`));
         }
         const host = yield* McpServer.host({ skills, spaceIds });
-        const answer = yield* McpServer.runScript(
-          registry,
-          host,
-          gate,
-          {
-            code: args.code,
-            spaceId: SpaceId.isValid(args.spaceId) ? args.spaceId : undefined,
+        // Through the script API, as `dx mcp serve --code-mode` runs it: the eval grades the same
+        // path a real client takes, request shape included.
+        const runner = McpServer.scriptRunner(registry, host, gate, { sandbox: McpServer.inProcessScriptSandbox });
+        const answer = yield* runner
+          .run({
+            source: Operation.inlineScript(args.code, { dialect: Operation.ScriptDialects.Effect }),
+            ...(SpaceId.isValid(args.spaceId) ? { spaceId: args.spaceId } : {}),
             skillTokens: Array.isArray(args.skillTokens)
               ? args.skillTokens.filter((token): token is string => typeof token === 'string')
               : [],
-          },
-          { sandbox: McpServer.inProcessScriptSandbox },
-        );
+          })
+          .pipe(Effect.mapError((error) => McpServer.failure('operation_failed', error.message)));
         return new ScriptAnswer(answer);
       }
       default:
