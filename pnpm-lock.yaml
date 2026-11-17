@@ -4950,6 +4950,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../compute-runtime
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -6163,6 +6166,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../compute-runtime
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo

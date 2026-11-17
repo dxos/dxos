@@ -156,7 +156,7 @@ export const make = <const Op extends Operation.Definition.Any>(
  * An operation that declares none is never checked, which is what keeps permissions opt-in; a
  * process with no guard holds no permissions, so it is refused rather than let through.
  */
-const admitOperation = (op: Operation.Definition.Any, input: unknown): Effect.Effect<void> =>
+export const admitOperation = (op: Operation.Definition.Any, input: unknown): Effect.Effect<void> =>
   Effect.gen(function* () {
     if (Operation.getRequirements(op).length === 0) {
       return;
