@@ -1,6 +1,7 @@
 # Diagram object model: DSL as the source of truth
 
-Status: design. No code written against it yet.
+Status: design, with stage 1 implemented — a box carries the contributed kind it is (`kind=card`) and that
+kind's own scalar fields, so the nine slides below survive records → text → records with every kind intact.
 
 The studio deck (`plugin-canvas/src/experimental/studio`) is the use case this came out of: nine slides
 rebuilt as canvas drawings, which exercised every seam below and broke at each one. The slides are not the
@@ -38,15 +39,34 @@ Three findings, each measured on the Hyperspace slide:
 
 Measured loss, Hyperspace:
 
-|             | drawn | in the DSL |
-| ----------- | ----- | ---------- |
-| `card`      | 10    | 0          |
-| `plank`     | 3     | 0          |
-| `substrate` | 1     | 0          |
-| `rect`      | —     | 15         |
+|             | drawn | in the DSL, before | after stage 1 |
+| ----------- | ----- | ------------------ | ------------- |
+| `card`      | 10    | 0                  | 10            |
+| `plank`     | 3     | 0                  | 3             |
+| `substrate` | 1     | 0                  | 1             |
+| `rect`      | —     | 15                 | 6             |
 
-Every kind prints as `rect`; `tone`, `icon`, `footer`, `variant` and all `data` are absent. `Rebuild` therefore
-reports "20 drawn, 21 removed" and replaces the drawing with plain boxes.
+Before stage 1 every kind printed as `rect` and `Rebuild` reported "20 drawn, 21 removed", replacing the drawing
+with plain boxes. Stage 1 puts `type` and a `data` bag on `Shape.Box`, spells them `kind=card tone=event` in the
+DSL, and maps them both ways in `SceneHandler`; a corpus test over all nine slides asserts that every contributed
+kind keeps its exact count through records → text → records, and fails on nine slides without the mapping.
+
+Three gaps remain, each asserted in `handler.test.ts` so they stay measured:
+
+1. a kind field holding a **list or nested object** (`marks`, `chips`, `icon`) has no spelling in either DSL layer
+   — `scene-model.ts` declines one too, rather than printing a list as a string the reader hands back as a string;
+2. a kind field whose **name an element attribute already claims** (`substrate`'s numeric `fill`) is left out,
+   since the reader resolves that name against the schema's literals;
+3. a kind's remaining **top-level fields** (a card's `icon`, `body`, `footer`) are not carried at all: placing a
+   name back on the right side of the `data` split needs the kind's own schema, which only the registry holding
+   the kind has. Those three are the card's composite-template parts, which is where the design puts them.
+
+Measured in the running story, which is where it counts. Seeded, Hyperspace draws 10 cards, 3 planks, 1 substrate
+and 10 card icons. After `Rebuild` — the full records → text → records cycle — it draws 10 cards, 3 planks, 1
+substrate and **0** icons: the structure and every kind survive, and the icon is the one visible loss. Before
+stage 1 the same `Rebuild` left no cards, no planks and no substrate at all. Closing the icon gap is the
+composite-template work, where a card's glyph is a part with a bound field rather than a node field whose place
+only the registry knows.
 
 ## Terms
 
@@ -228,6 +248,11 @@ result). For both to write one model:
    emitting one would produce text an older parser rejects with no way to negotiate.
 
 ## Changelog
+
+- 2026-11-17 — agent: stage 1 implemented. `Shape.Box` gained optional `type` and `data`; the DSL spells them
+  `kind=<name>` plus the kind's own scalar attributes, with the element table's names reserved; `SceneHandler`
+  maps both ways. Conformance is a test, not an inspection: one unit test for a card and one over all nine
+  slides, which fails on every slide with the mapping removed.
 
 - 2026-11-17 — agent: wrote up the model after the studio deck exercised every seam. Decisions taken:
   containers are a group property; the layout rule is authoritative with geometry cached; a managed child

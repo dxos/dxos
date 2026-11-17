@@ -56,13 +56,19 @@ export const RESERVED: ReadonlySet<string> = new Set<string>([
   '_',
 ]);
 
-/** Attribute value shapes; `enum` carries the literals the schema allows, `size` is `WxH`, `ratio` is `W:H`. */
+/**
+ * Attribute value shapes; `enum` carries the literals the schema allows, `size` is `WxH`, `ratio` is `W:H`.
+ * `name` is a bare word from an open set a plugin extends, and `scalar` is a value of whichever of those three
+ * shapes it reads as — the shape a contributed kind's own field takes, which no table here can know.
+ */
 export type AttrType =
   | { type: 'number' }
   | { type: 'string' }
   | { type: 'boolean' }
   | { type: 'size' }
   | { type: 'ratio' }
+  | { type: 'name' }
+  | { type: 'scalar' }
   | { type: 'enum'; values: readonly string[] };
 
 export type AttrSpec = AttrType & { name: string };
@@ -75,6 +81,12 @@ const STYLE: readonly AttrSpec[] = [
 ];
 
 const BOX_ATTRS: readonly AttrSpec[] = [
+  /**
+   * The contributed element kind the box really is (`kind=card`). An open set: a plugin contributes kinds, so
+   * unlike every other attribute here the values cannot be read off a schema. A box naming one also accepts that
+   * kind's own attributes, which ride on `data` (see `KIND_ATTR`).
+   */
+  { name: 'kind', type: 'name' },
   { name: 'rotation', type: 'number' },
   { name: 'corners', type: 'enum', values: Shape.Corners.literals },
   ...STYLE,
@@ -103,6 +115,12 @@ export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
   ],
   portal: [{ name: 'ref', type: 'string' }, ...STYLE],
 };
+
+/**
+ * The attribute that names a contributed kind. A box carrying it takes that kind's own attributes too: no table
+ * can list them, since the plugin that defines the kind is what decides them.
+ */
+export const KIND_ATTR = 'kind';
 
 /** Object attributes other than `@ <origin>`, in the order they print. */
 export const OBJECT_ATTRS: readonly AttrSpec[] = [

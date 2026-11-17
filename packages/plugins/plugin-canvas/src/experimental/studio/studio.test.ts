@@ -7,8 +7,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
-import { type ContentMap, Dsl } from '@dxos/diagram';
-import { ROOT_VIEW_ID, iconOf, isLinkRecord, isNodeRecord, readViews } from '@dxos/react-ui-canvas';
+import { type ContentMap, Dsl, applyCommands } from '@dxos/diagram';
+import { ROOT_VIEW_ID, SceneHandler, iconOf, isLinkRecord, isNodeRecord, readViews } from '@dxos/react-ui-canvas';
+import { NODE_TYPES } from '@dxos/scene';
 
 import { seedSlide, studioSlide } from './slides.ts';
 import {
@@ -294,6 +295,33 @@ describe('studio deck slides on a canvas', () => {
       );
       expect({ slide: slide.id, inCardData: withChipData.length }).toEqual({ slide: slide.id, inCardData: 0 });
     }
+  });
+
+  test.for(SLIDES)('%s keeps every contributed kind through records, text and records', (name, { expect }) => {
+    // The losslessness the design asks for is a property, so it is tested rather than inspected. Before the box
+    // carried a kind, every card, plank and chip of a slide printed as a plain `rect` and `Rebuild` replaced the
+    // drawing with boxes: 24 kinds on the Ontology slide became 27 rects.
+    const { source, model } = slide(name);
+    const content: ContentMap = {};
+    seedStudioSlide(source, model)(content);
+    const kindsOf = (map: ContentMap): Record<string, number> => {
+      const histogram: Record<string, number> = {};
+      for (const node of Object.values(readViews(map)[ROOT_VIEW_ID].nodes)) {
+        if (!NODE_TYPES.includes(node.type as (typeof NODE_TYPES)[number])) {
+          histogram[node.type] = (histogram[node.type] ?? 0) + 1;
+        }
+      }
+      return histogram;
+    };
+
+    const before = kindsOf(content);
+    expect(Object.keys(before).length).toBeGreaterThan(0);
+    const text = Dsl.print(SceneHandler.read(content).scene);
+    const { commands, problems } = Dsl.read(text);
+    expect(problems).toEqual([]);
+    const rebuilt: ContentMap = {};
+    applyCommands(rebuilt, commands, SceneHandler);
+    expect(kindsOf(rebuilt)).toEqual(before);
   });
 
   test('the routes the sidecar carries are the ones the DSL dropped', ({ expect }) => {

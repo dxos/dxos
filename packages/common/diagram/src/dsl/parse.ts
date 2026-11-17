@@ -26,6 +26,7 @@ import {
   ELEMENT_KINDS,
   type ElementKind,
   GROUP_ATTRS,
+  KIND_ATTR,
   NODE_ATTRS,
   NOTE_ATTRS,
   OBJECT_ATTRS,
@@ -251,6 +252,37 @@ export const read = (text: string): Reading => {
     return match;
   };
 
+  /** A bare word from an open set a plugin extends, so there are no literals to check it against. */
+  const nameAttr = (attrs: Map<string, Attr>, name: string): string | undefined => {
+    const attr = attrs.get(name);
+    if (!attr) {
+      return undefined;
+    }
+    const raw = slice(attr.valueNode);
+    return raw.startsWith('"') ? unquote(raw) : raw;
+  };
+
+  /**
+   * A contributed kind's own field, whose type the plugin decides: read as the number or boolean it spells, and a
+   * string otherwise. Lists and nested objects have no spelling in the DSL at all, so a kind's field holding one
+   * cannot be written down; `read` drops it and this never sees it.
+   */
+  const scalarAttr = (attrs: Map<string, Attr>, name: string): string | number | boolean | undefined => {
+    const attr = attrs.get(name);
+    if (!attr) {
+      return undefined;
+    }
+    const raw = slice(attr.valueNode);
+    if (raw.startsWith('"')) {
+      return unquote(raw);
+    }
+    if (raw === 'true' || raw === 'false') {
+      return raw === 'true';
+    }
+    const value = Number(raw);
+    return raw !== '' && Number.isFinite(value) ? value : raw;
+  };
+
   /** The four style fields every element shares. */
   const readStyle = (attrs: Map<string, Attr>) => ({
     ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
@@ -310,10 +342,31 @@ export const read = (text: string): Reading => {
       return undefined;
     }
 
-    const attrs = readAttrs(
-      parts.filter((part) => part.name === 'Attribute'),
-      ELEMENT_ATTRS[kind],
-      `${kind} "${id}"`,
+    const attributeNodes = parts.filter((part) => part.name === 'Attribute');
+    const nameOf = (node: SyntaxNode) => {
+      const attrName = node.getChild('AttrName');
+      return attrName ? slice(attrName) : undefined;
+    };
+    // A box naming a contributed kind takes that kind's own attributes as well. No table can list them — the
+    // plugin that defines the kind decides them — so they are admitted here and ride on `data`, which is what
+    // lets a drawing that uses a kind be written down instead of flattening to a plain box.
+    const declared = ELEMENT_ATTRS[kind].some((spec) => spec.name === KIND_ATTR)
+      ? attributeNodes.some((node) => nameOf(node) === KIND_ATTR)
+      : false;
+    const extra: AttrSpec[] = declared
+      ? attributeNodes.flatMap((node) => {
+          const attrName = nameOf(node);
+          return attrName !== undefined && !ELEMENT_ATTRS[kind].some((spec) => spec.name === attrName)
+            ? [{ name: attrName, type: 'scalar' as const }]
+            : [];
+        })
+      : [];
+    const attrs = readAttrs(attributeNodes, [...ELEMENT_ATTRS[kind], ...extra], `${kind} "${id}"`);
+    const data = Object.fromEntries(
+      extra.flatMap((spec) => {
+        const value = scalarAttr(attrs, spec.name);
+        return value === undefined ? [] : [[spec.name, value] as const];
+      }),
     );
     const style = readStyle(attrs);
 
@@ -337,6 +390,8 @@ export const read = (text: string): Reading => {
           ...optional('rotation', numberAttr(attrs, 'rotation')),
           ...optional('text', text),
           ...optional('corners', enumAttr(attrs, 'corners', Shape.Corners.literals)),
+          ...optional('type', nameAttr(attrs, KIND_ATTR)),
+          ...(Object.keys(data).length ? { data } : {}),
           ...style,
         };
       }

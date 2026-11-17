@@ -35,6 +35,7 @@ export {
   ELEMENT_KINDS,
   type ElementKind,
   GROUP_ATTRS,
+  KIND_ATTR,
   NODE_ATTRS,
   OBJECT_ATTRS,
   RELATION_WORDS,

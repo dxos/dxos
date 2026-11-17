@@ -74,6 +74,16 @@ export const Box = Schema.Struct({
   corners: Schema.optional(Corners).annotate({
     description: 'Rects only: round just these corners (default all); backends without corner control ignore it.',
   }),
+  /**
+   * The contributed element kind this box really is (`card`, `plank`, a composite's type). The geometry stays on the
+   * box, so a host that does not know the kind still draws a box; a host that does draws the kind. Without it a
+   * drawing that uses a kind cannot be written down: every one flattens to a rect on the way through the DSL.
+   */
+  type: Schema.optional(Schema.String).annotate({ description: "A contributed element kind's name." }),
+  /** The kind's own fields, as its schema declares them. */
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)).annotate({
+    description: "A contributed kind's own fields.",
+  }),
   ...styleFields,
 });
 export type Box = Schema.Schema.Type<typeof Box>;

@@ -20,6 +20,7 @@ import {
   type Layer,
   type Link,
   type Node,
+  NODE_TYPES,
   type NodeStyle,
   type NoteNode,
   type RectNode,
@@ -371,8 +372,24 @@ export const SceneHandler: ContentHandler = {
           const size = { width: element.w * placement.scale, height: element.h * placement.scale };
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
           const title = titles.get(element.id)?.text;
-          const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text ?? title };
           const style = styleOf(element);
+          if (element.type) {
+            // A contributed kind draws its own frame, label and parts, so the box restores the kind and its fields;
+            // the engine's own fields win over anything `data` carries.
+            const label = element.text ?? title;
+            const kind: Node = {
+              ...(element.data ? { data: element.data } : {}),
+              type: element.type,
+              id,
+              z: nextZ(),
+              center,
+              size,
+              ...(label ? { label } : {}),
+            };
+            put(element.id, withStyle(kind, style));
+            break;
+          }
+          const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text ?? title };
           // A title reads from the box's top-left corner, small, as the layout set it; a label stays centred.
           put(
             element.id,
@@ -601,6 +618,16 @@ export const SceneHandler: ContentHandler = {
             elements.push({ kind: 'text', id: element, x: local.x, y: local.y, w: local.w, text });
           } else if (record.dsl?.portal !== undefined) {
             elements.push({ kind: 'portal', id: element, ...local, ref: record.dsl.portal, ...(text ? { text } : {}) });
+          } else if (!isBuiltinType(node.type)) {
+            const data = dataOf(node);
+            elements.push({
+              kind: 'rect',
+              id: element,
+              ...local,
+              type: node.type,
+              ...(data ? { data } : {}),
+              ...(text ? { text } : {}),
+            });
           } else if (text && !isEllipseNode(node) && isTitled(node)) {
             // A box's text is always centred, so a title is its own small text, which `upsert` folds back into the box.
             elements.push(
@@ -708,6 +735,29 @@ const zOf = (record: ElementRecord) => (isNodeRecord(record) ? record.node.z : r
 // The DSL bridge has no plugin context, so it reads a node's text by the built-in types' parts; a
 // contributed type's text reads back empty.
 const textOf = (node: Node): string => nodeTitle(defaultNodeRegistry, node) ?? '';
+
+/** Whether the type is one the engine draws itself, as against a kind a plugin contributed. */
+const isBuiltinType = (type: string): boolean => NODE_TYPES.includes(type as (typeof NODE_TYPES)[number]);
+
+/**
+ * A contributed kind's own fields: the `data` bag the kind keeps them in, flat, scalars only. The DSL has no
+ * spelling for a list or a nested object, so those are left out rather than printed as a string the parser would
+ * hand back as that string.
+ *
+ * A kind's remaining top-level fields (a card's `icon`, `body` and `footer`) are NOT carried. Placing a name back
+ * on the right side of that split needs the kind's own schema, which only the registry that holds the kind has and
+ * the handler has no general access to; the card's are its composite template's parts, which is where they belong.
+ */
+const dataOf = (node: Node): Record<string, unknown> | undefined => {
+  const bag = Reflect.get(node, 'data');
+  if (typeof bag !== 'object' || bag === null || Array.isArray(bag)) {
+    return undefined;
+  }
+  const scalars = Object.entries(bag).filter(
+    ([, value]) => typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean',
+  );
+  return scalars.length ? Object.fromEntries(scalars) : undefined;
+};
 
 /** The DSL ref of the node a link end names, relative to `object`. */
 const refTo = (content: ContentMap, nodeId: string, object: string): string => {

@@ -6,11 +6,18 @@ import { describe, test } from 'vitest';
 
 import { type ContentMap, Dsl, SvgFile, applyCommands } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type Shape, isDiagramNode, isEllipseNode, isRectNode } from '@dxos/scene';
+import { type Node, type Shape, isDiagramNode, isEllipseNode, isRectNode } from '@dxos/scene';
 
 import { defaultNodeRegistry } from '../components/index.ts';
 import { type RenderList2D } from '../model/index.ts';
-import { DEFAULT_LAYER, diagramLinkMarkup, diagramNodeMarkup, linkGeometry, sortByZ } from '../utils/index.ts';
+import {
+  DEFAULT_LAYER,
+  diagramLinkMarkup,
+  diagramNodeMarkup,
+  linkGeometry,
+  nodeTitle,
+  sortByZ,
+} from '../utils/index.ts';
 import { ROOT_VIEW_ID, readViews, rootOf, seedContent, updateCanvasRecord, writeViews } from './content.ts';
 import { BACKDROP_LAYER, SceneHandler, elementId } from './handler.ts';
 
@@ -64,6 +71,52 @@ describe('SceneHandler', () => {
     const [rect, , , arrow] = object.elements;
     expect(rect.kind === 'rect' && [rect.x, rect.y, rect.w, rect.h, rect.text]).toEqual([0, 0, 256, 128, 'Head']);
     expect(arrow.kind === 'arrow' && [arrow.from, arrow.to]).toEqual(['head', 'eye']);
+  });
+
+  test('a contributed kind survives records to text and back, with its own fields', ({ expect }) => {
+    // A kind is what a plugin contributes (decision 1), so the handler cannot know its fields; it carries whatever
+    // the node holds. Without this every card in a drawing printed as a plain `rect` and `Rebuild` replaced the
+    // drawing with boxes.
+    const content: ContentMap = {};
+    seedContent(content);
+    const scene = rootOf(content);
+    // A kind's node holds fields the engine does not declare, which is the whole point of a kind.
+    const node: Node & Record<string, unknown> = {
+      type: 'card',
+      id: elementId('deck', 'card-1'),
+      z: 'a1',
+      center: { x: 100, y: 64 },
+      size: { width: 200, height: 128 },
+      label: 'Calendar',
+      icon: { type: 'ph--calendar--regular' },
+      // `fill` is also a style attribute, and `marks` holds a list: neither can be written flat.
+      data: { tone: 'event', variant: 'simple', fill: 0.55, marks: [1, 2] },
+    };
+    content['node:deck/card-1'] = { kind: 'node', scene, node, dsl: { object: 'deck', element: 'card-1' } };
+
+    const text = Dsl.print(SceneHandler.read(content).scene);
+    expect(text).toContain('kind=card');
+    expect(text).toContain('tone=event');
+    expect(text).toContain('variant=simple');
+
+    const { commands, problems } = Dsl.read(text);
+    expect(problems).toEqual([]);
+    const rebuilt: ContentMap = {};
+    applyCommands(rebuilt, commands, SceneHandler);
+    const rebuiltNode = readViews(rebuilt)[ROOT_VIEW_ID].nodes[elementId('deck', 'card-1')];
+    expect([rebuiltNode.type, nodeTitle(defaultNodeRegistry, rebuiltNode), Reflect.get(rebuiltNode, 'data')]).toEqual([
+      'card',
+      'Calendar',
+      { tone: 'event', variant: 'simple' },
+    ]);
+    // Three gaps, asserted so they stay measured rather than assumed away. A field whose name an element
+    // attribute already claims is left out, since the reader resolves that name against the schema's literals; so
+    // is one holding a list, which the DSL cannot spell. And the kind's remaining top-level fields do not survive
+    // at all: putting a name back on the right side of the `data` split needs the kind's own schema, which only
+    // the registry holding the kind has.
+    expect(text).not.toContain('fill=');
+    expect(text).not.toContain('marks=');
+    expect(Reflect.get(rebuiltNode, 'icon')).toBeUndefined();
   });
 
   test('moves and removes objects; edits by the canvas keep the identity', ({ expect }) => {

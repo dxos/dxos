@@ -54,6 +54,14 @@ const formatEndpoint = (ref: string | undefined, point: Shape.Point | undefined)
 
 type AttrValue = string | number | boolean;
 
+/** A scalar in the form the parser reads back as the same value; `true`/`false` quoted so a string stays one. */
+const formatScalar = (value: AttrValue): string =>
+  typeof value === 'string'
+    ? BARE_ID.test(value) && value !== 'true' && value !== 'false' && !RESERVED.has(value)
+      ? value
+      : formatString(value)
+    : String(value);
+
 /** Prints `name=value` for the attributes of `kind` that are set, in the table's order. */
 const formatAttrs = (kind: keyof typeof ELEMENT_ATTRS, values: Partial<Record<string, AttrValue>>): string[] =>
   ELEMENT_ATTRS[kind].flatMap(({ name, type }) => {
@@ -61,8 +69,36 @@ const formatAttrs = (kind: keyof typeof ELEMENT_ATTRS, values: Partial<Record<st
     if (value === undefined) {
       return [];
     }
-    return [`${name}=${type === 'string' && typeof value === 'string' ? formatString(value) : String(value)}`];
+    if (type === 'string' && typeof value === 'string') {
+      return [`${name}=${formatString(value)}`];
+    }
+    return [`${name}=${type === 'name' || type === 'scalar' ? formatScalar(value) : String(value)}`];
   });
+
+/**
+ * A contributed kind's own fields, flat and by key so the text is stable. Two are left out, because writing them
+ * would say something false rather than nothing:
+ *
+ * - a field holding a list or a nested object, which has no spelling in the DSL at all — printed as a string it
+ *   would read back as that string;
+ * - a field whose name the element's own table already claims (`substrate`'s numeric `fill` against the style
+ *   attribute), since the reader resolves that name against the schema's literals and would reject the value.
+ *
+ * Both are measured by the handler's conformance test rather than assumed away.
+ */
+const formatData = (
+  kind: keyof typeof ELEMENT_ATTRS,
+  data: Readonly<Record<string, unknown>> | undefined,
+): string[] => {
+  const claimed = new Set(ELEMENT_ATTRS[kind].map(({ name }) => name));
+  return Object.entries(data ?? {})
+    .sort(([left], [right]) => (left < right ? -1 : 1))
+    .flatMap(([name, value]) =>
+      !claimed.has(name) && (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+        ? [`${name}=${formatScalar(value)}`]
+        : [],
+    );
+};
 
 const style = ({ color, fill, stroke, weight }: Shape.Element): Partial<Record<string, AttrValue>> => ({
   color,
@@ -83,7 +119,13 @@ export const formatElement = (element: Shape.Element): string => {
         formatPoint(element),
         formatSize(element.w, element.h),
         ...(element.text === undefined ? [] : [formatString(element.text)]),
-        ...formatAttrs(element.kind, { rotation: element.rotation, corners: element.corners, ...style(element) }),
+        ...formatAttrs(element.kind, {
+          kind: element.type,
+          rotation: element.rotation,
+          corners: element.corners,
+          ...style(element),
+        }),
+        ...formatData(element.kind, element.data),
       ].join(' ');
 
     case 'circle':
