@@ -169,6 +169,8 @@ export type NativeWrite = { id: string; heads?: readonly string[]; structure: un
 export class Native {
   readonly #exports: Exports;
   readonly #encoder = new Encoder();
+  /** Why the instance died, once a call trapped. */
+  #trapped: string | undefined;
   /** Calls made, for the benchmark report. */
   calls = 0;
 
@@ -177,11 +179,21 @@ export class Native {
   }
 
   #invoke(op: (len: number) => number, encoder: Encoder): Uint8Array {
+    if (this.#trapped) {
+      throw new Error(`echo-native is unusable after a trap: ${this.#trapped}`);
+    }
     this.calls++;
     const len = encoder.length;
     const ptr = this.#exports.input_reserve(len);
     new Uint8Array(this.#exports.memory.buffer, ptr, len).set(encoder.bytes);
-    const result = op(len);
+    let result: number;
+    try {
+      result = op(len);
+    } catch (err) {
+      // A Rust panic aborts the instance (wasm32-wasip1 cannot unwind), so its state is gone for good.
+      this.#trapped = `${String(err)} in a call whose input began ${JSON.stringify(new TextDecoder().decode(encoder.bytes.subarray(4, 400)))}`;
+      throw new Error(`echo-native trapped: ${this.#trapped}`);
+    }
     const out = this.#exports.output_ptr();
     if (result < 0) {
       const message = new TextDecoder().decode(new Uint8Array(this.#exports.memory.buffer, out, -result - 1));
