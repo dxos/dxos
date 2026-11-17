@@ -56,13 +56,19 @@ PR, ~1 s per moon task without `pnpm exec`, and edge's TypeScript 7 build step (
 
 ## Live time
 
-How long a PR waits on blocking CI for a **core change** (`@dxos/echo`, 260 dependent packages), the
-worst common case:
+How long a PR waits on the **required** checks for a **core change** (`@dxos/echo`, 260 dependent
+packages), the worst common case. Branch protection requires `check` and `test`; `test` gates `lint`,
+`test-node` and `test-browser`. The e2e cells run on ready PRs but report without gating, so they cost
+runner time, not wait.
 
-|                                                  | Blocking wait                  |
-| :----------------------------------------------- | :----------------------------- |
-| Baseline (the speed-ups above landed)            | ~23 min, set by the e2e cells  |
-| With this proposal (lint already in its own job) | **~13 min** (target: under 15) |
+|                                                                | Blocking wait                                  |
+| :------------------------------------------------------------- | :--------------------------------------------- |
+| Before dxos/dxos#14569 (lint inside `check`, behind the build) | ~23 min, set by `check`                        |
+| Baseline now (lint in its own job)                             | ~14 min, set by `test-browser`                 |
+| With this proposal                                             | **~13 min**, set by `check` (target: under 15) |
+
+The proposal's gain is runner time (see Savings), not wait: wait is now set by the blocking jobs it
+keeps. Its one wait gain is the e2e cells' runners going to `test-browser`.
 
 Bottlenecks once lint runs in its own job, slowest first:
 
