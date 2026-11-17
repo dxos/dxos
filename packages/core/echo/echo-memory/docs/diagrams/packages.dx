@@ -1,26 +1,26 @@
 diagram flow=down
-group page "Page" {
-  node Plugin "Composer plugin"
-  node RdfMemory "RdfMemory" ref="packages/core/echo/echo-memory-sqlite/src/RdfMemory.ts"
-  node Client "client.rdf()" ref="packages/sdk/client/src/client/rpc-rdf.ts"
+group page "Page and operations" {
+  node Ops "operations"
+  node Client "client.memory()" ref="packages/sdk/client/src/client/rpc-memory.ts"
 }
-group host "client-services host" {
-  node Host "RdfHostLayer" ref="packages/sdk/client-services/src/internal/rdf/rdf-host.ts"
+group host "client-services worker" {
+  node Host "MemoryHostLayer" ref="packages/sdk/client-services/src/internal/rdf/memory-host.ts"
+  node Spaces "SpaceMemories" ref="packages/sdk/client-services/src/internal/rdf/space-memories.ts"
+  node Memory "RdfMemory" ref="packages/core/echo/echo-memory-sqlite/src/RdfMemory.ts"
   node QuadStore "QuadStore" ref="packages/core/compute/sparql-sqlite/src/QuadStore.ts"
-  node FeedLog "factFeedLog" ref="packages/sdk/client-services/src/internal/rdf/fact-feed.ts"
+  node Feed "facts feed" ref="packages/sdk/client-services/src/internal/rdf/fact-feed.ts"
   node Sqlite "host SQLite"
-  node Feed "facts feed"
 }
 group iface "@dxos/echo-memory" {
-  node Port "RdfStore port" ref="packages/core/echo/echo-memory/src/RdfStore.ts"
   node Mem "MemoryService" ref="packages/core/echo/echo-memory/src/MemoryService.ts"
+  node Port "RdfStore" ref="packages/core/echo/echo-memory/src/RdfStore.ts"
 }
-edge Plugin -> RdfMemory "MemoryService"
-edge RdfMemory -> Client "SPARQL + batches"
-edge Client -> Host "RdfStoreService RPC"
-edge Host -> QuadStore
-edge QuadStore -> FeedLog "append first"
-edge FeedLog -> Feed
+edge Ops -> Client "MemoryService"
+edge Client -> Host "MemoryService RPC"
+edge Host -> Spaces
+edge Spaces -> Memory "one per space"
+edge Memory -> QuadStore "SPARQL + batches"
+edge QuadStore -> Feed "append first"
 edge QuadStore -> Sqlite "apply"
-edge RdfMemory implements Mem
-edge Client implements Port
+edge Memory implements Mem
+edge QuadStore implements Port
