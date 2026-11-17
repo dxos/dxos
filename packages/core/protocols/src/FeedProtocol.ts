@@ -494,6 +494,8 @@ export type ProtocolMessage = Schema.Schema.Type<typeof ProtocolMessage>;
 export const WellKnownNamespaces = {
   data: 'data',
   trace: 'trace',
+  /** One feed per object, each block an Automerge chunk of the object's document. */
+  automerge: 'automerge',
 } as const;
 
 export const isWellKnownNamespace = (namespace: string) =>

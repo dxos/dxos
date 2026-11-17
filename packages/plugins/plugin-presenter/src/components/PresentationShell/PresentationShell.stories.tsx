@@ -5,12 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { MarkdownSlide } from '@dxos/react-ui-slides';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createSlide } from '#testing';
 
-import { MarkdownSlide } from '../MarkdownSlide/index.ts';
 import { Slide } from '../Slide/index.ts';
 import { PresentationShell, type PresentationShellProps } from './PresentationShell.tsx';
 

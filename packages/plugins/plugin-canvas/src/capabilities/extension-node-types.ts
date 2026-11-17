@@ -13,7 +13,9 @@ import * as CanvasCapabilities from '../types/CanvasCapabilities.ts';
  * The plugin's own extension tools: kinds beyond the canvas's built-in shapes, contributed through the same
  * capability another plugin uses, so the canvas learns of them exactly as it learns of anyone's.
  */
-const EXTENSION_KINDS: readonly CanvasCapabilities.NodeTypeContribution[] = [{ type: 'space-graph', spec: graphSpec }];
+export const EXTENSION_KINDS: readonly CanvasCapabilities.NodeTypeContribution[] = [
+  { type: 'space-graph', spec: graphSpec },
+];
 
 export default Capability.makeModule(() =>
   Effect.succeed(EXTENSION_KINDS.map((kind) => Capability.contribute(CanvasCapabilities.NodeType, kind))),

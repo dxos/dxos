@@ -1,0 +1,77 @@
+{
+  "name": "@dxos/plugin-finance",
+  "version": "0.16.0",
+  "private": true,
+  "description": "Finance research: ingests public market news, filings and market data into ECHO feeds and extracts a unified RDF fact store.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "imports": {
+    "#meta": {
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "node": "./dist/lib/FinancePlugin.node.mjs",
+      "default": "./dist/lib/FinancePlugin.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./Finance": {
+      "source": "./src/types/Finance.ts",
+      "types": "./dist/types/src/types/Finance.d.ts",
+      "import": "./dist/lib/Finance.mjs"
+    },
+    "./FinancePlugin": {
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "node": "./dist/lib/FinancePlugin.node.mjs",
+      "import": "./dist/lib/FinancePlugin.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
+  ],
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/plugin-magazine": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "fast-xml-parser": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/compute": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  }
+}

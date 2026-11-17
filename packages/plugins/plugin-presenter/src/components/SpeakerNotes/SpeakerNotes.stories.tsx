@@ -6,11 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, within } from 'storybook/test';
 
+import { getSpeakerLines } from '@dxos/react-ui-slides';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { getSpeakerLines } from '../../markdown/notes.ts';
 import { SpeakerNotes } from './SpeakerNotes.tsx';
 
 const NOTES = `

@@ -141,20 +141,15 @@ export const pageInfo = async (page) => {
   }
 };
 
-/** The `recording` block of `timeline.json`. */
-export const recordingInfo = async ({ page, flowFile, appUrl, target }) => {
-  const app = await pageInfo(page);
+/**
+ * Where a flow came from: its checkout, commit and doc tags. Read when the flow is imported, so a file edited or
+ * committed while the take runs does not stand in for the version that ran.
+ */
+export const flowSource = (flowFile) => {
   // A flow still being written lives in /tmp, outside any checkout; the driver runs from the one it records.
   const fromFlow = flowFile ? gitInfo(path.dirname(flowFile)) : {};
   const repo = fromFlow.root ? fromFlow : gitInfo(process.cwd());
-  const doc = flowDoc(flowFile);
-  // `about:` and `file:` pages have the origin `null`; the URL the driver was given is the better record then.
-  const origin = app.url ? new URL(app.url).origin : undefined;
-  const composerUrl = origin && origin !== 'null' ? origin : appUrl;
-  const edgeUrl = app.edge ?? process.env.DX_EDGE_BASE_URL;
   return {
-    recordedAt: new Date().toISOString(),
-    target,
     git: { branch: repo.branch, commit: repo.commit, dirty: repo.dirty, remote: repo.remote },
     // Repo-relative only when the flow is inside the checkout; `/tmp/demo/flow.mjs` stays absolute, and `pack.mjs`
     // refuses it, since no one else can check it out.
@@ -162,6 +157,23 @@ export const recordingInfo = async ({ page, flowFile, appUrl, target }) => {
       flowFile && repo.root && !path.relative(repo.root, flowFile).startsWith('..')
         ? path.relative(repo.root, flowFile)
         : flowFile,
+    ...flowDoc(flowFile),
+  };
+};
+
+/** The `recording` block of `timeline.json`. */
+export const recordingInfo = async ({ page, flowFile, source = flowSource(flowFile), appUrl, target }) => {
+  const app = await pageInfo(page);
+  // `about:` and `file:` pages have the origin `null`; the URL the driver was given is the better record then.
+  const origin = app.url ? new URL(app.url).origin : undefined;
+  const composerUrl = origin && origin !== 'null' ? origin : appUrl;
+  const edgeUrl = app.edge ?? process.env.DX_EDGE_BASE_URL;
+  const { git, flow, ...doc } = source;
+  return {
+    recordedAt: new Date().toISOString(),
+    target,
+    git,
+    flow,
     composer: {
       url: composerUrl,
       environment: app.environment ?? environmentOf(composerUrl),

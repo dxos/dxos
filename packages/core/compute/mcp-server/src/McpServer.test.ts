@@ -131,7 +131,7 @@ const OPEN_GATE: McpServer.SkillGate = {
   verify: () => Effect.succeed(true),
 };
 
-const GATE = McpServer.skillGate('test-secret');
+const GATE = McpServer.skillGate();
 
 /** The token `loadSkill` returns for `skill` under {@link GATE}. */
 const tokenFor = async (registry: Registry.Registry, skill: string): Promise<string | undefined> =>
@@ -281,7 +281,7 @@ describe('McpServer', () => {
       const [codeProjectToken] = await Promise.all([tokenFor(registry, 'codeProject'), tokenFor(registry, 'database')]);
       const { result } = runInvoke(
         { input: { title: 'x' }, spaceId: SPACE_A, skillToken: codeProjectToken?.toUpperCase() },
-        { registry, gate: McpServer.skillGate('test-secret') },
+        { registry, gate: McpServer.skillGate() },
       );
       successOf(await result);
     });

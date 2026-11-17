@@ -19,6 +19,12 @@ import {
 } from '../internal/stages/extract.ts';
 import { hashText } from '../internal/stages/reconcile.ts';
 import {
+  DEFAULT_DECISION_MODEL,
+  DEFAULT_EXTRACTION_MODEL,
+  type Report as SystemOneReport,
+  extractSystemOne,
+} from '../internal/stages/system-one.ts';
+import {
   type EntityTerm,
   type ExtractDocument,
   type ExtractOptions,
@@ -26,6 +32,7 @@ import {
   Graph,
   type KnownEntity,
   Ontology,
+  Vocabularies,
 } from '../types/index.ts';
 
 const EMAIL = /^(?:mailto:)?([^\s@]+@[^\s@]+\.[^\s@]+)$/i;
@@ -99,6 +106,7 @@ const entityTerm = (surface: string, type: EntityTerm['type'], known: ReadonlyMa
 type FactContext = {
   readonly recordedAt: string;
   readonly ontology: Ontology.Ontology;
+  readonly closed: boolean;
   readonly known: ReadonlyMap<string, KnownEntity>;
 };
 
@@ -109,13 +117,21 @@ const factContext = (options: ExtractOptions | undefined) =>
     const recordedAt = new Date(yield* Clock.currentTimeMillis).toISOString();
     return {
       recordedAt,
-      ontology: options?.ontology ?? Ontology.DEFAULT,
+      ontology: options?.ontology ?? Vocabularies.DEFAULT,
+      closed: options?.closed ?? false,
       known: indexEntities(options?.entities ?? []),
     } satisfies FactContext;
   });
 
+const LLM_EXTRACTOR: Fact['extractor'] = { id: 'default', model: DEFAULT_MODEL, version: '1' };
+
 /** A candidate the model emitted, as a {@link Fact} attributed to `doc`; `undefined` when it is ungrounded. */
-const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactContext): Fact | undefined => {
+const toFact = (
+  candidate: ExtractedFact,
+  doc: ExtractDocument,
+  context: FactContext,
+  extractor: Fact['extractor'] = LLM_EXTRACTOR,
+): Fact | undefined => {
   // Drop ungrounded propositions before they become facts.
   if (!isGrounded(candidate.subject) || !isGrounded(candidate.object)) {
     return undefined;
@@ -133,6 +149,10 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
   // A listed predicate is stored under its IRI and label; any other is minted in the ontology's namespace and
   // keeps the definition the extractor gave it.
   const listed = context.ontology.find(candidate.predicate);
+  // A closed ontology conforms the graph to its vocabularies, so a model that mints anyway loses the proposition.
+  if (!listed && context.closed) {
+    return undefined;
+  }
   const predicate = listed ?? context.ontology.resolve(candidate.predicate);
   return {
     // Replaced by the statement's id once the facts are placed in their graphs.
@@ -161,7 +181,7 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
       generatedAtTime: doc.date ?? context.recordedAt,
     },
     recordedAt: context.recordedAt,
-    extractor: { id: 'default', model: DEFAULT_MODEL, version: '1' },
+    extractor,
     sourceHash: hashText(doc.text),
   };
 };
@@ -189,6 +209,14 @@ export const extractDocFacts = (
   doc: ExtractDocument,
   options?: ExtractOptions,
 ): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
+  options?.extractor === 'system-one'
+    ? extractSystemOneDocFacts(doc, options).pipe(Effect.map(({ facts }) => facts))
+    : extractLlmDocFacts(doc, options);
+
+const extractLlmDocFacts = (
+  doc: ExtractDocument,
+  options?: ExtractOptions,
+): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
     const context = yield* factContext(options);
     // The graph label the model gave each statement.
@@ -203,6 +231,39 @@ export const extractDocFacts = (
       }
     }
     return placeFacts(doc, labelled, context.ontology);
+  });
+
+/** What System One extraction of one document produced, with how each claim was routed. */
+export type SystemOneDocFacts = { readonly facts: Fact[]; readonly report: SystemOneReport };
+
+export type { SystemOneReport };
+
+/**
+ * {@link extractDocFacts} through System One: its facts record `extractor.id` `system-one`, and those of the claims it
+ * handed to the LLM `system-one-fallback`, so the two paths can be compared in one store.
+ */
+export const extractSystemOneDocFacts = (
+  doc: ExtractDocument,
+  options?: ExtractOptions,
+): Effect.Effect<SystemOneDocFacts, SemanticIndexError, AiService.AiService> =>
+  Effect.gen(function* () {
+    const context = yield* factContext(options);
+    const { candidates, report } = yield* extractSystemOne(doc, options);
+    const systemOne: Fact['extractor'] = {
+      id: 'system-one',
+      model: `${options?.systemOne?.extractionModel ?? DEFAULT_EXTRACTION_MODEL}+${options?.systemOne?.decisionModel ?? DEFAULT_DECISION_MODEL}`,
+      version: '1',
+    };
+    const fallback: Fact['extractor'] = {
+      id: 'system-one-fallback',
+      model: options?.model ?? DEFAULT_MODEL,
+      version: '1',
+    };
+    const labelled = candidates.flatMap(({ fact: candidate, via }) => {
+      const fact = toFact(candidate, doc, context, via === 'system-one' ? systemOne : fallback);
+      return fact ? [[fact, `${via}:${candidate.graph ?? ''}`] as const] : [];
+    });
+    return { facts: placeFacts(doc, labelled, context.ontology), report };
   });
 
 /**
@@ -294,6 +355,31 @@ export const extractTranscriptFacts = (
   docs: readonly ExtractDocument[],
   options?: ExtractOptions & { readonly maxTranscriptChars?: number },
 ): Effect.Effect<DocumentFacts[], SemanticIndexError, AiService.AiService> =>
+  options?.extractor === 'system-one'
+    ? // System One reads one message at a time; the messages before it in the batch resolve its references.
+      Effect.forEach(docs, (doc, index) =>
+        extractDocFacts(withContext(doc, docs.slice(Math.max(0, index - CONTEXT_MESSAGES), index)), options).pipe(
+          Effect.map((facts) => ({ doc, facts })),
+        ),
+      )
+    : extractLlmTranscriptFacts(docs, options);
+
+/** How many earlier messages of a batch System One reads alongside each message. */
+const CONTEXT_MESSAGES = 5;
+
+/** Appends the batch window to any context the caller supplied, which predates the window. */
+const withContext = (doc: ExtractDocument, earlier: readonly ExtractDocument[]): ExtractDocument => {
+  if (earlier.length === 0) {
+    return doc;
+  }
+  const window = earlier.map((message) => `${message.author ?? 'unknown'}: ${message.text}`).join('\n');
+  return { ...doc, context: doc.context ? `${doc.context}\n${window}` : window };
+};
+
+const extractLlmTranscriptFacts = (
+  docs: readonly ExtractDocument[],
+  options?: ExtractOptions & { readonly maxTranscriptChars?: number },
+): Effect.Effect<DocumentFacts[], SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
     const context = yield* factContext(options);
     const tagged = docs.map((doc, index): TaggedDoc => ({ tag: `m${index + 1}`, doc }));
@@ -351,7 +437,7 @@ export const extractFactsStage = (
  * The ontology a stage extracts with, grown by the predicates each document mints, so the next document is shown
  * them and reuses them instead of minting a variant. It lives as long as the stage.
  */
-export const growingOntology = (initial: Ontology.Ontology = Ontology.DEFAULT) => {
+export const growingOntology = (initial: Ontology.Ontology = Vocabularies.DEFAULT) => {
   let ontology = initial;
   return {
     current: () => ontology,

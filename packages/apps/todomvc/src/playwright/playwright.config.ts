@@ -18,6 +18,8 @@ export default defineConfig({
   // TODO(wittjosiah): Avoid hard-coding ports.
   webServer: {
     command: 'pnpm vite preview --port=9006',
+    // Playwright starts the server beside this config; vite needs the package root for its config and HTML.
+    cwd: '../..',
     port: 9006,
     reuseExistingServer: false,
   },

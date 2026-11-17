@@ -40,11 +40,8 @@ const handler: Operation.WithHandler<typeof CommentOperation.RespondToThread> = 
       // A pending reply in the agent's name shows the turn has started; the real reply replaces it.
       const [identity] = yield* Capability.getAll(AgentIdentity.AgentIdentity);
       const feed = yield* Effect.promise(() => thread.feed.load());
-      const pending = {
-        id: Obj.ID.random(),
-        created: new Date().toISOString(),
-        sender: { role: 'assistant' as const, name: identity?.name, identityDid: identity?.identityDid },
-      };
+      const sender = { role: 'assistant' as const, name: identity?.name, identityDid: identity?.identityDid };
+      const pending = { id: Obj.ID.random(), created: new Date().toISOString(), sender };
       const writePending = (text: string) =>
         Effect.promise(() =>
           db.appendToFeed(feed, [Obj.make(Message.Message, { ...pending, blocks: [{ _tag: 'text', text }] })]),
@@ -54,8 +51,18 @@ const handler: Operation.WithHandler<typeof CommentOperation.RespondToThread> = 
       const snapshot = yield* Effect.promise(() => snapshotAnchor(thread, subject));
       yield* runner.run({ thread, subject, message }).pipe(
         Effect.timeout(TURN_TIMEOUT),
-        Effect.andThen(() =>
+        Effect.andThen((reply) =>
           Effect.promise(async () => {
+            // The reply lands before the pending message goes, so the thread never shows neither.
+            if (reply) {
+              await db.appendToFeed(feed, [
+                Obj.make(Message.Message, {
+                  created: new Date().toISOString(),
+                  sender,
+                  blocks: [{ _tag: 'text', text: reply }],
+                }),
+              ]);
+            }
             await db.removeFeedItemsByIds(feed, [pending.id]);
             if (snapshot) {
               restoreAnchor(snapshot);

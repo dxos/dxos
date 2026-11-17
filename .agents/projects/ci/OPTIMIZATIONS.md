@@ -15,7 +15,7 @@ Measurements come from the GitHub Actions data collected for `TESTING.md` (dxos 
 | 2   | Lean config for library builds                            | ~1.5 s per package loading `vite.base.config.ts`                          | ~1 s per package, ~6 min of build                                                            | Medium     | Proposed     |
 | 3   | Native vite config loading                                | Config bundled with esbuild before every build                            | None measured                                                                                | Small      | **Rejected** |
 | 4   | One `tsc -b` for all declarations                         | One `tsc` process per package                                             | Unmeasured; most of the per-package declaration start-up                                     | Medium     | Proposed     |
-| 5   | One repo-wide lint run, lint decoupled from builds        | 368 lint tasks, median 5.5 s, 36 min                                      | Most of 36 min; lets lint run in its own job                                                 | Medium     | Proposed     |
+| 5   | One repo-wide lint run, lint decoupled from builds        | 368 lint tasks, median 5.5 s, 36 min                                      | Most of 36 min; lets lint run in its own job                                                 | Medium     | **Done**     |
 | 6   | Force the nightly rebuild once, not per stage             | ~80 min of repeated builds per nightly `check`                            | ~80 min per nightly; ends the 75-min timeouts                                                | Small      | Proposed     |
 | 7   | Cut per-file module loading in node tests                 | Import 85 min vs tests 75 min per full run                                | Plausibly ~40% of `test-node`                                                                | Medium     | Proposed     |
 | 8   | Fix the heaviest importers                                | e.g. `react-ui-canvas`: 199 s import for 6 s of tests                     | Several minutes per full run                                                                 | Small each | Proposed     |
@@ -75,6 +75,13 @@ in one process, reading each dependency's types once. TypeScript 7 (native) is a
 the remaining cost is mostly per-process start-up; this is unmeasured.
 
 ## 5. Lint: one run, and no dependency on builds
+
+**Done:** CI now runs lint as its own `lint` job, gated through `test`: the 10 code-generation tasks,
+then one repo-wide `oxlint` run. Measured locally with no builds: ~3 min (168–214 s on 4 cores).
+Without the generated sources, 900 imports were unresolved; with them, 134, of which 81 are in
+`vite.config.ts` files, scripts, demos and test fixtures, and 53 in source and test files whose
+package lacks a project reference to the imported package. In those 53 files type-aware rules see
+`any` for the unresolved import.
 
 The 368 lint tasks have a median of 5.5 s and add up to 36 min per cold run, about as much as the
 builds. Lint is type-aware (`typeAware: true` in `.oxlintrc.json`) and reads each dependency's

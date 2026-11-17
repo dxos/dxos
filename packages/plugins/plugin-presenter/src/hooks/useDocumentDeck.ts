@@ -7,9 +7,9 @@ import { useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { splitSlides } from '@dxos/react-ui-slides';
 
 import { type SlideSource } from '#deck';
-import { splitSlides } from '#markdown';
 
 /**
  * A markdown document's live content as deck slides; ids are positional since slides have no identity of their own.

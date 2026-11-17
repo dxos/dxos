@@ -558,6 +558,46 @@ describe('Obj', () => {
     });
   });
 
+  describe('setParent', () => {
+    test("notifies the child when set inside another object's update", ({ expect }) => {
+      const child = Obj.make(TestSchema.Task, { title: 'Child' });
+      const person = Obj.make(TestSchema.Person, {
+        name: 'Alice',
+        email: 'alice@example.com',
+        username: 'alice',
+        tasks: [Ref.make(child)],
+      });
+      let notified = 0;
+      const unsubscribe = Obj.subscribe(child, () => notified++);
+      Obj.update(person, (person) => {
+        person.name = 'Alice B';
+        Obj.setParent(child, person);
+      });
+      unsubscribe();
+      expect(Obj.getParent(child)?.id).toBe(person.id);
+      expect(notified).toBe(1);
+    });
+
+    test('notifies the child once when set inside its own update', ({ expect }) => {
+      const child = Obj.make(TestSchema.Task, { title: 'Child' });
+      const person = Obj.make(TestSchema.Person, {
+        name: 'Alice',
+        email: 'alice@example.com',
+        username: 'alice',
+        tasks: [Ref.make(child)],
+      });
+      let notified = 0;
+      const unsubscribe = Obj.subscribe(child, () => notified++);
+      Obj.update(child, (child) => {
+        child.title = 'Renamed';
+        Obj.setParent(child, person);
+      });
+      unsubscribe();
+      expect(Obj.getParent(child)?.id).toBe(person.id);
+      expect(notified).toBe(1);
+    });
+  });
+
   describe('type-level tests', () => {
     test('Obj.Unknown does not allow arbitrary property access', () => {
       // Obj.Unknown only exposes `id` - no arbitrary properties.

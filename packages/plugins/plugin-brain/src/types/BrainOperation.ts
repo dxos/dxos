@@ -105,12 +105,48 @@ export const QueryFacts = Operation.make({
     ),
     limit: Schema.optional(
       Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
-        description: 'Maximum facts returned (default 50).',
+        description: 'Maximum facts returned (default 50, at most 50 per call).',
+      }),
+    ),
+    offset: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Number of matching facts to skip, for reading the results in windows (default 0).',
       }),
     ),
   }),
   output: Schema.Struct({
     facts: Schema.Array(CompactFact),
+    /** Number of facts the query matched, of which `facts` is one window. */
+    total: Schema.Number,
+    /** Present when the output was cut; tells the model how to read the rest. */
+    note: Schema.optional(Schema.String),
+  }),
+}).pipe(Operation.visible);
+
+/** One SPARQL solution as the model reads it: each bound variable to its term (`<iri>`, `_:blank`, or literal text). */
+export const SparqlRow = Schema.Record(Schema.String, Schema.String);
+export type SparqlRow = Schema.Schema.Type<typeof SparqlRow>;
+
+export const QuerySparql = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.brain.querySparql'),
+    name: 'Query SPARQL',
+    description:
+      'Runs a raw SPARQL SELECT against the space fact store (an RDF quad store of facts in named graphs) and returns its solutions. Anything but a SELECT is refused.',
+    icon: 'ph--brain--regular',
+  },
+  services: [FactStore],
+  input: Schema.Struct({
+    sparql: Schema.String.annotate({
+      description: 'A SPARQL SELECT query. Always include LIMIT (at most 50) and page with OFFSET.',
+    }),
+  }),
+  output: Schema.Struct({
+    rows: Schema.Array(SparqlRow),
+    /** Number of solutions the query produced, of which `rows` is the part returned. */
+    total: Schema.Number,
+    /** Present when the output was cut; tells the model how to read the rest. */
+    note: Schema.optional(Schema.String),
   }),
 }).pipe(Operation.visible);
 

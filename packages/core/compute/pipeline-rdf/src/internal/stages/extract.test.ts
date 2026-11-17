@@ -2,10 +2,59 @@
 // Copyright 2026 DXOS.org
 //
 
+import { it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { ExtractPayload, parseExtractPayload } from './extract.ts';
+import { type RequestCapture, queuedAiService } from '../../testing/index.ts';
+import { Ontology, Vocabularies } from '../../types/index.ts';
+import { ExtractPayload, buildExtractionInstructions, extractChunk, parseExtractPayload } from './extract.ts';
+
+describe('extractChunk request', () => {
+  it.effect('sends the instructions as a cached system message and the message as the user turn, with thinking', () =>
+    Effect.gen(function* () {
+      const capture: RequestCapture = { requests: [], resolved: [] };
+      yield* extractChunk({ text: 'Alice uses Effect.', source: 'doc', author: 'alice' }).pipe(
+        Effect.provide(queuedAiService([{ facts: [] }], [], capture)),
+      );
+      expect(capture.resolved[0]?.thinking).toBe(true);
+      expect(capture.requests[0]).toEqual([
+        {
+          role: 'system',
+          content: expect.stringContaining('You extract atomic propositions'),
+          options: { anthropic: { cacheControl: { type: 'ephemeral' } } },
+        },
+        { role: 'user', content: expect.stringContaining('Message:\nAlice uses Effect.') },
+      ]);
+    }),
+  );
+
+  it.effect('turns thinking off when the caller asks', () =>
+    Effect.gen(function* () {
+      const capture: RequestCapture = { requests: [], resolved: [] };
+      yield* extractChunk({ text: 'Alice uses Effect.', source: 'doc' }, { thinking: false }).pipe(
+        Effect.provide(queuedAiService([{ facts: [] }], [], capture)),
+      );
+      expect(capture.resolved[0]?.thinking).toBe(false);
+    }),
+  );
+});
+
+describe('buildExtractionInstructions', () => {
+  test('keeps learned predicates and entities out of the cached part', ({ expect }) => {
+    const minted = { ...Ontology.DEFAULT.resolve('forked'), creator: 'default/haiku' };
+    const { stable, varying } = buildExtractionInstructions({
+      ontology: Vocabularies.DEFAULT.include([minted]),
+      entities: [{ iri: 'https://example.com/effect', label: 'Effect' }],
+    });
+    expect(stable).toContain('- uses: "uses"');
+    expect(stable).not.toContain('- forked:');
+    expect(varying).toContain('- forked:');
+    expect(varying).toContain('- Effect');
+    expect(buildExtractionInstructions().varying).toBeUndefined();
+  });
+});
 
 describe('parseExtractPayload', () => {
   test('salvages the JSON object from reasoning-wrapped model output', ({ expect }) => {
