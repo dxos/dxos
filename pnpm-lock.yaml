@@ -7040,6 +7040,9 @@ importers:
       '@dxos/echo-sqlite':
         specifier: workspace:*
         version: link:../echo-sqlite
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
