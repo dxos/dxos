@@ -37,6 +37,7 @@ import {
   createS3Host,
   credentialsLayerFromDatabase,
 } from './services/index.ts';
+import { handOffWorkingSet } from './working-set-handoff.ts';
 
 /** Ceiling on opening a space in a function context; a worker holds a request that long only when the root never arrives. */
 const SPACE_OPEN_TIMEOUT = Duration.seconds(15);
@@ -383,7 +384,7 @@ export class FunctionContext extends Resource {
       : AiService.notAvailable;
 
     const operationServiceLayer = this.context.services.functionsService
-      ? makeOperationServiceLayer(this.context.services.functionsService)
+      ? makeOperationServiceLayer(this.context.services.functionsService, this.db)
       : unavailableOperationServiceLayer;
 
     const traceWriterLayer = this.context.services.traceService
@@ -468,6 +469,8 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
  */
 export const makeOperationServiceLayer = (
   functionsService: EdgeFunctionEnv.FunctionsService,
+  /** The invoking operation's database, whose working set the callee starts from (`handOffWorkingSet`). */
+  database?: Database.Database,
 ): Layer.Layer<Operation.Service> => {
   const invokeRemote = async (
     op: Operation.Definition.Any,
@@ -475,12 +478,15 @@ export const makeOperationServiceLayer = (
     options?: Operation.InvokeOptions,
   ): Promise<{ data?: unknown; error?: Error }> => {
     invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot invoke remotely.`);
-    const result = await functionsService.invoke(op.meta.deployedId, input, {
-      spaceId: options?.spaceId,
-      // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
-      // services (e.g. `HarnessService`) needed by operations like `GetContext`.
-      conversation: options?.conversation,
-    });
+    const deployedId = op.meta.deployedId;
+    const result = await handOffWorkingSet(database, undefined, () =>
+      functionsService.invoke(deployedId, input, {
+        spaceId: options?.spaceId,
+        // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
+        // services (e.g. `HarnessService`) needed by operations like `GetContext`.
+        conversation: options?.conversation,
+      }),
+    );
     if (result._kind === 'success') {
       return { data: result.data };
     }

@@ -13,6 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
 import { Database, Filter, Hypergraph, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
+import { DatabaseImpl } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
@@ -540,6 +541,60 @@ describe('working set', () => {
     // Without the working set the same query reads only the index, which hides every object here.
     const unseeded = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({ data: {}, context: context() });
     expect(unseeded).toEqual({ titles: [] });
+  });
+
+  // Loading the callee's objects also needs the caller's copy of the space root to be current, which a host's refresh
+  // ensures on EDGE; this runtime has none, so the test stops at the ids the caller takes.
+  test("a nested call starts once the caller's write is in the working set, and the caller then takes the callee's", async ({
+    expect,
+  }) => {
+    const { db, context } = await setup();
+    db.graph.registry.add([Note]);
+    const workingSet = makeWorkingSet();
+    const callerId = EntityId.random();
+    const calleeId = EntityId.random();
+
+    const Callee = Operation.make({
+      meta: { key: DXN.make('com.example.operation.callee'), name: 'Callee', deployedId: 'fn-callee' },
+      input: Schema.Struct({}),
+      output: Schema.Void,
+    });
+    const WritesThenCalls = Operation.make({
+      meta: { key: DXN.make('com.example.operation.writesThenCalls'), name: 'Writes Then Calls' },
+      services: [Database.Service, Operation.Service],
+      input: Schema.Struct({}),
+      output: Schema.Struct({ unindexed: Schema.Array(Schema.String) }),
+    }).pipe(
+      Operation.withHandler(() =>
+        Effect.gen(function* () {
+          yield* Database.add(Obj.make(Note, { id: callerId, title: 'caller' }));
+          yield* Operation.invoke(Callee, {});
+          const { db: database } = yield* Database.Service;
+          return { unindexed: database instanceof DatabaseImpl ? [...database.unindexedWrites()] : [] };
+        }),
+      ),
+    );
+
+    let heldAtCall: string[] = [];
+    const functionsService: EdgeFunctionEnv.FunctionsService = {
+      query: async () => Object.assign([], disposable),
+      invoke: async () => {
+        heldAtCall = [...workingSet.unindexed];
+        // The callee writes through a database of its own and reports to the same working set.
+        db.add(Obj.make(Note, { id: calleeId, title: 'callee' }));
+        await db.flush();
+        workingSet.unindexed.add(calleeId);
+        return { _kind: 'success' as const, data: undefined, ...disposable };
+      },
+    };
+    const { services, ...rest } = context(workingSet.service);
+
+    const result = await wrapFunctionHandler(WritesThenCalls, { types: [Note] }).handler({
+      data: {},
+      context: { ...rest, services: { ...services, functionsService } },
+    });
+    expect(heldAtCall).toContain(callerId);
+    expect(result).toEqual({ unindexed: expect.arrayContaining([callerId, calleeId]) });
   });
 
   test('what the host stored before a handler failed reaches the working set', async ({ expect }) => {

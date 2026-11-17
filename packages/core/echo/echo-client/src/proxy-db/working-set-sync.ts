@@ -48,6 +48,8 @@ export class WorkingSetSync {
   #stopTracking: (() => void) | undefined;
   /** Sends in flight, chained so the working set takes them in the order the host stored the writes. */
   #sending: Promise<void> = Promise.resolve();
+  /** Absorbs in flight, chained so an older list of written objects never replaces a newer one. */
+  #absorbing: Promise<void> = Promise.resolve();
 
   constructor(service: WorkingSetService, entityManager: EntityManager) {
     this.#service = service;
@@ -82,10 +84,13 @@ export class WorkingSetSync {
 
   /** Takes the objects the owner's other databases wrote since this one opened. */
   async absorb(): Promise<void> {
-    const workingSet = await bestEffort('get', () => this.#service.get());
-    if (workingSet) {
-      await this.#take(workingSet.unindexed);
-    }
+    this.#absorbing = this.#absorbing.then(async () => {
+      const workingSet = await bestEffort('get', () => this.#service.get());
+      if (workingSet) {
+        await this.#take(workingSet.unindexed);
+      }
+    });
+    await this.#absorbing;
   }
 
   /** Sends what the host holds by now, stops tracking, and waits for the sends. */

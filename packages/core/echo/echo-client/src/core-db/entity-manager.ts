@@ -701,13 +701,15 @@ export class EntityManager implements IDatabaseBinding {
     const pending = new Set<string>();
     let total = 0;
     const rootHandle = this._spaceRootDocHandle;
-    const rootRow = this.#rootRow();
-    const root = rootRow && wanted.has(rootRow.documentId) && rootRow.bytes.length <= maxBytes ? rootRow : undefined;
+    const rootDocumentId = rootHandle?.documentId;
+    // Saving the root serializes the whole directory, so only a send that names it pays for that.
+    const rootRow = rootDocumentId !== undefined && wanted.has(rootDocumentId) ? this.#rootRow() : undefined;
+    const root = rootRow && rootRow.bytes.length <= maxBytes ? rootRow : undefined;
     if (root) {
       rows.push(root);
       total += root.bytes.length;
-    } else if (rootHandle?.documentId && wanted.has(rootHandle.documentId) && !rootRow) {
-      pending.add(rootHandle.documentId);
+    } else if (rootDocumentId !== undefined && wanted.has(rootDocumentId) && !rootRow) {
+      pending.add(rootDocumentId);
     }
     // The root's document is never exported as an object's, even when it did not fit.
     const exported = new Set<string>(rootHandle?.documentId ? [rootHandle.documentId] : []);
