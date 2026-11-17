@@ -20,6 +20,7 @@ describe('renderDelegationBrief', () => {
     expect(brief).toContain('Never push to the default branch');
     expect(brief).toContain('never merge unless the person tells you to');
     expect(brief).toContain('merge only once every check is green');
+    expect(brief).toContain('EnterWorktree');
     expect(brief).toContain('attach it to the task it implements');
     expect(brief).not.toContain('do not push or merge');
   });

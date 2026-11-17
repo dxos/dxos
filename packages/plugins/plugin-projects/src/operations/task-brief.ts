@@ -95,7 +95,8 @@ export const renderDelegationBrief = ({ tasks, project, context }: BriefInput): 
     '',
     concat`
       The result of code work is a draft pull request, which the person who assigned the tasks reviews.
-      Commit on a new branch, push that branch, and open the pull request as a draft with
+      Commit on a new branch (where the repository's hooks refuse \`git checkout -b\`, make it with your
+      EnterWorktree tool), push that branch, and open the pull request as a draft with
       \`gh pr create --draft\`, one per repository you changed. Never push to the default branch,
       never force-push a branch you did not create, and never merge unless the person tells you to. When
       you finish, say what you did, link each pull request, and say what is left. If the person later
