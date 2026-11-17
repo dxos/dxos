@@ -1,0 +1,31 @@
+layer: library
+language: typescript
+tags:
+  - ts-test
+  - pack
+
+tasks:
+  # The engine: Rust (Turso + Automerge) compiled to wasm32-wasip1, copied to `dist/echo_native.wasm`,
+  # which `src/native.ts` loads. Needs the `wasm32-wasip1` Rust target.
+  build-wasm:
+    command: bash scripts/build-wasm.sh
+    inputs:
+      - crate/src/**/*
+      - crate/Cargo.toml
+      - crate/Cargo.lock
+      - scripts/build-wasm.sh
+    outputs:
+      - dist/echo_native.wasm
+  test:
+    deps:
+      - ~:build-wasm
+  # Node benches against echo-sqlite's; never cached, since a cached measurement measured nothing.
+  bench:
+    command: pnpm exec vitest bench --run --project node
+    env:
+      DX_RUN_MANUAL_TESTS: '1'
+    deps:
+      - ~:build-wasm
+      - ^:build
+    options:
+      cache: false

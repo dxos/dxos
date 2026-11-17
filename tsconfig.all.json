@@ -193,6 +193,9 @@
       "path": "packages/core/echo/echo-host/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-native/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-panproto/tsconfig.json"
     },
     {
