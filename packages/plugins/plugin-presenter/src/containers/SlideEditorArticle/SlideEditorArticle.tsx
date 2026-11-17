@@ -19,6 +19,23 @@ import { EID } from '@dxos/keys';
 import { Button } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Editor, type EditorToolbarState, useEditorContext } from '@dxos/react-ui-editor';
+import {
+  type LayoutName,
+  LAYOUTS,
+  type SlideEdit,
+  SNIPPETS,
+  columnSnippet,
+  hasSlots,
+  insertSnippet,
+  nextSlot,
+  notesEdit,
+  parseSlide,
+  setFrontmatter,
+  slotBefore,
+  surfaceSnippet,
+} from '@dxos/react-ui-slides';
+import { slideCompletion } from '@dxos/react-ui-slides/editor';
+import { slideHighlight } from '@dxos/react-ui-slides/editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Splitter from '@dxos/react-ui/Splitter';
@@ -44,27 +61,10 @@ import {
 } from '#components';
 import { type SlideSource, slideSourcesAtom } from '#deck';
 import { slideEditorSyncAtom, useObjectOptions } from '#hooks';
-import {
-  type LayoutName,
-  LAYOUTS,
-  type SlideEdit,
-  SNIPPETS,
-  columnSnippet,
-  hasSlots,
-  insertSnippet,
-  nextSlot,
-  notesEdit,
-  parseSlide,
-  setFrontmatter,
-  slotBefore,
-  surfaceSnippet,
-} from '#markdown';
 import { Presentation, PresenterOperation, SlideEditorViewState, SlideViewState } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
 import { SlidePreview } from '../SlidePreviewArticle/SlidePreview.tsx';
-import { slideCompletion } from './slide-completion.ts';
-import { slideHighlight } from './slide-highlight.ts';
 
 export type SlideEditorArticleProps = AppSurface.ObjectArticleProps<Text.Text>;
 

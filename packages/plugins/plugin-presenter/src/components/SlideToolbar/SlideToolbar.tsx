@@ -8,6 +8,7 @@ import React, { type KeyboardEvent, useLayoutEffect, useMemo, useRef, useState }
 import { EDITOR_TOOLBAR_INSERT_GROUP } from '@dxos/react-ui-editor';
 import { ObjectPicker } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type LayoutName, type SlideFrontmatter } from '@dxos/react-ui-slides';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
@@ -16,7 +17,6 @@ import type * as Theme from '@dxos/react-ui/Theme';
 import { type ThemedClassName } from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type LayoutName, type SlideFrontmatter } from '#markdown';
 import { type SlideEditorViewState } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
