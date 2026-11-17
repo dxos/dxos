@@ -56,6 +56,7 @@ export const TIMELINE_VARIANTS: readonly TimelineVariant[] = TimelineVariant.lit
 export const TimelineSpine = Schema.Literals(['left', 'center', 'right']);
 export type TimelineSpine = Schema.Schema.Type<typeof TimelineSpine>;
 
+/** Every spine position, in the order a control lists them. */
 export const TIMELINE_SPINES: readonly TimelineSpine[] = TimelineSpine.literals;
 
 /** A log scale gives recent events more room than distant ones; a compact scale spaces events equally, whatever their dates. */

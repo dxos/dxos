@@ -41,6 +41,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -48,9 +51,6 @@
     },
     {
       "path": "../../core/echo/echo-sqlite"
-    },
-    {
-      "path": "../../core/echo/echo-sqlite-sync"
     },
     {
       "path": "../../core/echo/echo-sync-worker"

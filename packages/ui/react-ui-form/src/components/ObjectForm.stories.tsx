@@ -11,6 +11,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Popover from '@dxos/react-ui/Popover';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
@@ -18,7 +19,7 @@ import { Person } from '@dxos/types';
 import { NextJsonLayout, type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { ObjectForm, ObjectProperties } from './ObjectForm.tsx';
 
-type StoryArgs = PaneArgs & { component?: 'form' | 'properties' | 'transient' };
+type StoryArgs = PaneArgs & { component?: 'form' | 'properties' | 'transient' | 'popover' };
 
 const DefaultStory = ({ component = 'form' }: StoryArgs) => {
   const { space } = useClientStory();
@@ -56,6 +57,18 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Panel.Body>
+        ) : component === 'popover' ? (
+          // The rename popover's shape: the properties form in a popup, where its Save and Cancel sit in the
+          // panel's footer. A footer is a bar, which lifts a step off a plank; there is no plank here, so the
+          // footer takes the popup's own surface instead of reading as a strip across the bottom.
+          <Popover.Root defaultOpen>
+            <Popover.Trigger data-testid='popover-trigger'>Rename</Popover.Trigger>
+            {/* The popover's own width and the form's own height: what the story shows is the surfaces, and
+                `src/next` carries no class names of its own. */}
+            <Popover.Content>
+              <ObjectProperties object={person} showTags={false} onClose={handleClose} />
+            </Popover.Content>
+          </Popover.Root>
         ) : (
           <ObjectProperties object={person} onClose={component === 'transient' ? handleClose : undefined} />
         )}
@@ -103,12 +116,40 @@ export const Properties: Story = { args: { component: 'properties' } };
 
 export const Transient: Story = { args: { component: 'transient' } };
 
+export const InPopover: Story = { args: { component: 'popover' } };
+
 const readValues = (canvasElement: HTMLElement) =>
   JSON.parse(within(canvasElement).getByTestId('values-source').textContent ?? '{}');
 
 const readObject = (canvasElement: HTMLElement) => readValues(canvasElement).object;
 
 /** 1. Test: the object's fields and meta tags edit the live object; a tag is picked and created inline. */
+/** In a popup the panel and its footer are one surface, so the actions do not read as a strip of their own. */
+export const TestInPopover: Story = {
+  args: { component: 'popover' },
+  // The popover mounts through a portal, so everything here is read from the popup rather than the story's canvas.
+  play: async () => {
+    // The same bound the neighbouring stories allow: nothing renders until the client has created the person.
+    const popup = await waitFor(
+      () => {
+        const element = document.querySelector<HTMLElement>('.dx-popup');
+        if (!element) {
+          throw new Error('Missing popup');
+        }
+        return element;
+      },
+      { timeout: 15_000 },
+    );
+    const panel = popup.querySelector('.dx-panel');
+    const footer = popup.querySelector('.dx-panel-footer');
+    await expect(panel).not.toBeNull();
+    await expect(footer).not.toBeNull();
+    await expect(getComputedStyle(footer!).backgroundColor).toBe(getComputedStyle(panel!).backgroundColor);
+    // The actions are there to be framed: without them the footer would not render at all.
+    await expect(within(popup).getAllByTestId('save-button').length).toBeGreaterThan(0);
+  },
+};
+
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

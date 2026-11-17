@@ -36,11 +36,21 @@ export const RemoteCursorLayer = ({ cursors, projection, onPointerChange }: Remo
   const [layer, setLayer] = useState<HTMLDivElement | null>(null);
   const latest = useRef({ projection, onPointerChange });
   latest.current = { projection, onPointerChange };
+  // Where the local pointer rests in the layer, while it is over the surface.
+  const pointer = useRef<CursorPoint | undefined>(undefined);
   // A resize moves the surface under the layer without a new projection.
   const [, setLayout] = useState(0);
 
   // A new projection renders before its surface reaches the DOM, so place the cursors again once it has.
   useLayoutEffect(() => setLayout((layout) => layout + 1), [projection]);
+
+  // A pan or zoom moves the surface under a pointer that stays still, so report the point it now rests on.
+  useEffect(() => {
+    const point = layer && pointer.current && projection.fromLayer(pointer.current, layer);
+    if (point) {
+      latest.current.onPointerChange?.(point);
+    }
+  }, [layer, projection]);
 
   useEffect(() => {
     const root = layer?.parentElement;
@@ -50,15 +60,16 @@ export const RemoteCursorLayer = ({ cursors, projection, onPointerChange }: Remo
 
     const handleMove = (event: PointerEvent) => {
       const rect = layer.getBoundingClientRect();
-      const point = latest.current.projection.fromLayer(
-        { x: event.clientX - rect.left, y: event.clientY - rect.top },
-        layer,
-      );
+      pointer.current = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      const point = latest.current.projection.fromLayer(pointer.current, layer);
       if (point) {
         latest.current.onPointerChange?.(point);
       }
     };
-    const handleLeave = () => latest.current.onPointerChange?.(undefined);
+    const handleLeave = () => {
+      pointer.current = undefined;
+      latest.current.onPointerChange?.(undefined);
+    };
     const observer = new ResizeObserver(() => setLayout((layout) => layout + 1));
 
     root.addEventListener('pointermove', handleMove, { passive: true });

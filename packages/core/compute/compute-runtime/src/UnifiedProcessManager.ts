@@ -11,7 +11,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import type * as Rpc from 'effect/rpc/Rpc';
 import * as Stream from 'effect/Stream';
 
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import type * as Trace from '@dxos/compute/Trace';
 
@@ -70,14 +70,23 @@ export const layer: Layer.Layer<
       subscribeToTraceMessages: (filter: Trace.Filter): Stream.Stream<Trace.Message> =>
         Stream.merge(local.subscribeToTraceMessages(filter), remoteTrace.subscribeToTraceMessages(filter)),
       spawn: <I, O, Rpcs extends Rpc.Any = never>(
-        definition: Operation.Durable<I, O, any, Rpcs>,
+        definition: Operation.Durable<I, O, any, Rpcs> | Operation.ScriptDefinition<I, O>,
         { location, ...options }: Process.SpawnOptions & Process.LocationOptions = {},
       ): Effect.Effect<Process.Process<I, O, Rpcs>> =>
-        location?.kind === 'edge'
-          ? Effect.suspend(() =>
-              remoteControl('spawn')({ ...options, spaceId: location.space, key: definition.key, definition }),
-            )
-          : local.spawn(definition, options),
+        location?.kind !== 'edge'
+          ? local.spawn(definition, options)
+          : Operation.isScript(definition)
+            ? // EDGE runs the script operations it hosts, reached by key as an operation
+              // (`Operation.invoke(script, input, { on: 'edge' })`); a remote spawn would hand back a
+              // handle with no codecs to read the result through.
+              Effect.die(
+                new Error(
+                  `Script operation '${definition.meta.key}' runs on EDGE through Operation.invoke, not spawn.`,
+                ),
+              )
+            : Effect.suspend(() =>
+                remoteControl('spawn')({ ...options, spaceId: location.space, key: definition.key, definition }),
+              ),
       handles: ({ location, ...options }: Process.ListOptions & Process.LocationOptions = {}) =>
         location?.kind === 'edge'
           ? Effect.suspend(() => remoteControl('list')({ ...options, spaceId: location.space }))
