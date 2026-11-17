@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Fact, Graph, MemoryError, MemoryQuery, MemoryService, RdfStore } from '@dxos/echo-memory';
@@ -111,10 +112,11 @@ export const toMemory = (store: FactStoreApi): MemoryService.Service => {
   };
 };
 
-/** A FactStore over the MemoryService and RdfStore in context. */
-export const layer: Layer.Layer<FactStore, never, MemoryService.MemoryService | RdfStore.RdfStore> = Layer.effect(
+/** A FactStore over the MemoryService in context; TriG export and import need an RdfStore there too. */
+export const layer: Layer.Layer<FactStore, never, MemoryService.MemoryService> = Layer.effect(
   FactStore,
   Effect.gen(function* () {
-    return make(yield* MemoryService.MemoryService, yield* RdfStore.RdfStore);
+    const rdf = yield* Effect.serviceOption(RdfStore.RdfStore);
+    return make(yield* MemoryService.MemoryService, Option.getOrUndefined(rdf));
   }),
 );

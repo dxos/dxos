@@ -123,6 +123,8 @@ export const makeTestBrain = ({ wake = 'session', now }: TestBrainOptions = {}) 
         rows: (sparql) => store.pipe(Effect.flatMap((through) => through.rows(sparql))),
         cursor: (source) => store.pipe(Effect.flatMap((through) => through.cursor(source))),
         setCursor: (source, hash) => store.pipe(Effect.flatMap((through) => through.setCursor(source, hash))),
+        exportTrig: () => store.pipe(Effect.flatMap((through) => through.exportTrig())),
+        importTrig: (trig) => store.pipe(Effect.flatMap((through) => through.importTrig(trig))),
         clear: () => store.pipe(Effect.flatMap((through) => through.clear())),
       };
     },
