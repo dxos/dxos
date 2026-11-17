@@ -322,6 +322,15 @@ describe('studio deck slides on a canvas', () => {
     const rebuilt: ContentMap = {};
     applyCommands(rebuilt, commands, SceneHandler);
     expect(kindsOf(rebuilt)).toEqual(before);
+
+    // A link keeps its markers and its line style too. These live on the link itself on a plain canvas and on a
+    // connector on a routed one, and `read` used to look only at the connector: 51 of the deck's 64 connectors
+    // came back as a default arrow instead of the triangle they were drawn with.
+    const marksOfLinks = (map: ContentMap) =>
+      Object.values(readViews(map)[ROOT_VIEW_ID].links)
+        .map((link) => [link.ends?.start, link.ends?.end, link.style?.lineStyle, link.style?.hue].join('/'))
+        .sort();
+    expect(marksOfLinks(rebuilt)).toEqual(marksOfLinks(content));
   });
 
   test('the routes the sidecar carries are the ones the DSL dropped', ({ expect }) => {

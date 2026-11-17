@@ -172,6 +172,30 @@ const endsOf = (arrow: Shape.Arrow): Link['ends'] => {
   return start || end ? { ...(start ? { start } : {}), ...(end ? { end } : {}) } : undefined;
 };
 
+/**
+ * The arrow markers of a link's own ends, the inverse of {@link endsOf}. A link on a plain canvas keeps its markers
+ * here rather than on a connector, which only a routed link has, so without this every such link printed with no
+ * `head` and came back as the default arrow: 51 of the studio deck's 64 connectors lost their triangle.
+ *
+ * Only the markers an arrow can spell are given back. A `diamond` end has no `ArrowHead`, and a marker reached
+ * through a `relation` cannot be read back as that relation, since several relations draw the same marker.
+ */
+const arrowEnds = (ends: Link['ends']): { head?: Shape.ArrowHead; tail?: Shape.ArrowTail } => {
+  // A link that carries ends but no end marker draws no arrowhead, and an arrow's default head IS an arrow, so the
+  // absence has to be written down: the deck's two dashed connectors grew arrowheads without this.
+  const head: Shape.ArrowHead | undefined =
+    ends?.end === 'triangle'
+      ? 'triangle'
+      : ends?.end === 'many'
+        ? 'crowsfoot'
+        : ends && ends.end === undefined
+          ? 'none'
+          : undefined;
+  const tail: Shape.ArrowTail | undefined =
+    ends?.start === 'circle' || ends?.start === 'arrow' ? ends.start : undefined;
+  return { ...(head ? { head } : {}), ...(tail ? { tail } : {}) };
+};
+
 const withStyle = (node: Node, style: NodeStyle | undefined): Node => (style ? { ...node, style } : node);
 
 const managed = (content: ContentMap): ElementRecord[] => Object.values(content).filter(isElementRecord);
@@ -516,6 +540,11 @@ export const SceneHandler: ContentHandler = {
           }
           const ends = endsOf(element);
           const dashed = Shape.markersOf(element).dashed;
+          // A link's own line style, which is where a plain canvas keeps what a routed link keeps on its connector.
+          const lineStyle: Link['style'] = {
+            ...(dashed ? { lineStyle: 'dashed' as const } : {}),
+            ...(element.color && HUES[element.color] ? { hue: HUES[element.color] } : {}),
+          };
           // Routed by the canvas (on a lattice, along its gutters) rather than through the layout's bends: the canvas
           // attaches at its own ports, so a route through the layout's points would kink at each end.
           const link: Link = {
@@ -528,7 +557,7 @@ export const SceneHandler: ContentHandler = {
             }),
             ...(ends ? { ends } : {}),
             ...(text ? { text } : {}),
-            ...(dashed ? { style: { lineStyle: 'dashed' } } : {}),
+            ...(Object.keys(lineStyle).length ? { style: lineStyle } : {}),
           };
           records[linkKey(id)] = { kind: 'link', scene, link, dsl: identity(element.id) } satisfies LinkRecord;
           break;
@@ -663,7 +692,13 @@ export const SceneHandler: ContentHandler = {
               from,
               to,
               ...(record.link.text ? { text: record.link.text } : {}),
+              // The connector first, then the link's own style and markers, which win where it has them: on a
+              // plain canvas the link's style is what is drawn, and the two disagree on a drawing whose links were
+              // built record by record (the Agents slide stores `blue` on the link and `light-blue` on the
+              // connector). The connector still fills in what the link does not say, such as a `relation`.
               ...(record.link.connector ? connectorStyle(record.link.connector) : {}),
+              ...fieldsOf(record.link.style),
+              ...arrowEnds(record.link.ends),
             });
           }
         }
