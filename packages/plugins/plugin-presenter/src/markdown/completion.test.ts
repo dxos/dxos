@@ -52,6 +52,17 @@ describe('frontmatterCompletion', () => {
     ]);
   });
 
+  test('a completion replaces the rest of the word, and a key off the prototype offers nothing', () => {
+    // Accepting `cover` at `co|ntain` must replace `contain`, not leave `coverntain` behind.
+    const content = '---\nbackgroundFit: co|ntain\n---\n';
+    const result = complete(content);
+    expect(result?.options).toEqual(['cover', 'contain']);
+    const stripped = content.replace('|', '');
+    expect(stripped.slice(result!.from, result!.to)).toBe('contain');
+    // `constructor` names a function on the prototype, which would pass a plain truthiness guard and then throw.
+    expect(complete('---\nconstructor: |\n---\n')).toBeNull();
+  });
+
   test('nothing outside the frontmatter, on a free-text value, or inside a key already written', () => {
     expect(complete('# Title\n\nlayout: |')).toBeNull();
     // `image` takes a URL, which no list can offer.

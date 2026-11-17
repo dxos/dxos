@@ -127,9 +127,10 @@ const readObject = (canvasElement: HTMLElement) => readValues(canvasElement).obj
 /** In a popup the panel and its footer are one surface, so the actions do not read as a strip of their own. */
 export const TestInPopover: Story = {
   args: { component: 'popover' },
-  play: async ({ canvasElement }) => {
+  // The popover mounts through a portal, so everything here is read from the popup rather than the story's canvas.
+  play: async () => {
     const popup = await waitFor(() => {
-      const element = document.querySelector('.dx-popup');
+      const element = document.querySelector<HTMLElement>('.dx-popup');
       if (!element) {
         throw new Error('Missing popup');
       }
@@ -141,7 +142,7 @@ export const TestInPopover: Story = {
     await expect(footer).not.toBeNull();
     await expect(getComputedStyle(footer!).backgroundColor).toBe(getComputedStyle(panel!).backgroundColor);
     // The actions are there to be framed: without them the footer would not render at all.
-    await expect(within(canvasElement).getAllByTestId('save-button').length).toBeGreaterThan(0);
+    await expect(within(popup).getAllByTestId('save-button').length).toBeGreaterThan(0);
   },
 };
 

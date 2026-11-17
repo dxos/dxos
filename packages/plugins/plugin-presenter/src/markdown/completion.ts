@@ -11,12 +11,21 @@ export type FrontmatterCompletionKind = 'key' | 'value';
 export type FrontmatterCompletion = {
   /** Start of the text the completion replaces. */
   from: number;
+  /** End of it: the rest of the word after the caret, so accepting one mid-word replaces it rather than doubling it. */
+  to: number;
   /** The text typed so far, which the options are filtered by. */
   prefix: string;
   kind: FrontmatterCompletionKind;
   /** The key whose value is being completed; absent while completing a key. */
   key?: FrontmatterKey;
   options: readonly string[];
+};
+
+/** The end of the word the caret sits in: what a completion replaces along with the text before it. */
+const wordEnd = (content: string, pos: number): number => {
+  const lineEnd = content.indexOf('\n', pos);
+  const rest = content.slice(pos, lineEnd < 0 ? content.length : lineEnd);
+  return pos + (/^[\w-]*/.exec(rest)?.[0].length ?? 0);
 };
 
 /** A key on its own line, with nothing typed after it yet. */
@@ -57,12 +66,15 @@ export const frontmatterCompletion = (content: string, pos: number): Frontmatter
   const value = VALUE.exec(typed);
   if (value) {
     const [, key, , prefix] = value;
-    const options = FRONTMATTER_VALUES[key as FrontmatterKey];
+    // `hasOwn`, since a key naming something on the prototype (`constructor:`) would otherwise read a function
+    // off it, pass the guard, and throw where the options are filtered.
+    const options = Object.hasOwn(FRONTMATTER_VALUES, key) ? FRONTMATTER_VALUES[key as FrontmatterKey] : undefined;
     if (!options) {
       return null;
     }
     return {
       from: pos - prefix.length,
+      to: wordEnd(content, pos),
       prefix,
       kind: 'value',
       key: key as FrontmatterKey,
@@ -84,6 +96,7 @@ export const frontmatterCompletion = (content: string, pos: number): Frontmatter
   const used = usedKeys(content.slice(frontmatter.from, frontmatter.to), lineStart, frontmatter.from);
   return {
     from: pos - prefix.length,
+    to: wordEnd(content, pos),
     prefix,
     kind: 'key',
     options: FRONTMATTER_KEYS.filter((option) => option.startsWith(prefix) && !used.has(option)),

@@ -64,20 +64,20 @@ export const slideCompletion = ({ describeLayout }: SlideCompletionOptions): Ext
     if (!result || (result.prefix === '' && !context.explicit && !context.matchBefore(/:[ \t]*$/))) {
       return null;
     }
-    const validFor = /^[\w-]*$/;
+    // No `validFor`: the source is synchronous and cheap, and a cached list filtered for a longer prefix cannot
+    // bring back what a shorter one matches -- deleting the `n` of `con` would leave `contain` without `cover`.
+    const range = { from: result.from, to: result.to };
     // A layout is the one option worth a second column; a key or a plain enum value says what it is.
     const layouts = layoutOptions(result);
     if (layouts) {
       return {
-        from: result.from,
+        ...range,
         options: layouts.map((layout) => ({ label: layout, detail: describeLayout(layout), type: 'enum' })),
-        validFor,
       };
     }
     return {
-      from: result.from,
+      ...range,
       options: result.options.map((option) => ({ label: option, type: result.kind === 'key' ? 'property' : 'enum' })),
-      validFor,
     };
   };
 

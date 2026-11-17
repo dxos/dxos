@@ -293,17 +293,23 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
     newSlideLayout,
     onNewSlideLayoutChange: setNewSlideLayout,
     // Added after the slide being edited rather than last, which is where the gallery's own button puts one: here
-    // the deck has a current slide, and the new one belongs next to it. A slide whose content was deleted is at no
-    // position, so that one appends.
+    // the deck has a current slide, and the new one belongs next to it. The index is read from `slides` on the
+    // presentation, not from the deck's sources: those drop an entry whose slide no longer resolves, so a dangling
+    // one before this slide would shift the insert in front of it. A slide not in the array at all appends.
     onAddSlide: presentation
-      ? () =>
-          openSlide(
-            Presentation.addSlide(
-              presentation,
-              newSlideContent(newSlideLayout),
-              position >= 0 ? position + 1 : undefined,
-            ).id,
-          )
+      ? () => {
+          // By the ref's own entity id, which is there whether or not the slide has loaded.
+          const slideId = Presentation.getSlide(subject)?.id;
+          const index = slideId
+            ? presentation.slides.findIndex((ref) => {
+                const uri = EID.tryParse(ref.uri);
+                return uri !== undefined && EID.getEntityId(uri) === slideId;
+              })
+            : -1;
+          return openSlide(
+            Presentation.addSlide(presentation, newSlideContent(newSlideLayout), index >= 0 ? index + 1 : undefined).id,
+          );
+        }
       : undefined,
     onOpenGallery: presentation ? () => openPath(GraphPath.getObjectPathFromObject(presentation)) : undefined,
     onLayoutChange: (layout: (typeof LAYOUTS)[number]) =>
