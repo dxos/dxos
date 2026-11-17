@@ -1618,6 +1618,10 @@ export class EchoHost extends Resource {
       }
     }
 
+    // A new root meanwhile cleared this collection and scheduled the announcement of its own.
+    if (this._spaceStateManager.getSpaceRootDocumentId(spaceId) !== spaceRootId) {
+      return;
+    }
     await this._automergeHost.updateLocalCollectionState(
       deriveCollectionIdFromSpaceId(spaceId, spaceRootId),
       announced,

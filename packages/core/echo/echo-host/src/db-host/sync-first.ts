@@ -51,8 +51,8 @@ export const selectSyncFirstDocuments = (
 };
 
 /**
- * The objects of `spaceId` an object points at directly — its parent and every reference in its data — which it
- * renders with; a reference into another space is not followed.
+ * The objects of `spaceId` an object points at directly — its schema, its parent and every reference in its data —
+ * which it loads and renders with; a reference into another space, or to a type outside the space, is not followed.
  */
 export const findReferencedObjectIds = (structure: EntityStructure, spaceId: SpaceId): string[] => {
   const referenced = new Set<string>();
@@ -77,6 +77,9 @@ export const findReferencedObjectIds = (structure: EntityStructure, spaceId: Spa
     }
   };
 
+  if (structure.system?.type) {
+    add(structure.system.type);
+  }
   if (structure.system?.parent) {
     add(structure.system.parent);
   }
