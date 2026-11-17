@@ -509,7 +509,8 @@ describe('EdgeAgent', () => {
         github.token = 'ghu-stale';
       });
       expect(yield* credential).toEqual({ GITHUB_TOKEN: 'ghs-live', GH_TOKEN: 'ghs-live' });
-      expect(yield* unresolved).toEqual({ GITHUB_TOKEN: 'ghu-stale', GH_TOKEN: 'ghu-stale' });
+      expect(yield* unresolved).toMatchObject({ GITHUB_TOKEN: 'ghu-stale', GH_TOKEN: 'ghu-stale' });
+      expect((yield* unresolved)[EdgeAgent.GITHUB_TOKEN_ERROR_ENV]).toMatch(/No access token resolver configured/);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 

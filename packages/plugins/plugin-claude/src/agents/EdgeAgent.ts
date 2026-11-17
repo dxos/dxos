@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import type * as acp from '@agentclientprotocol/sdk';
+import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -541,6 +542,9 @@ export const composerMcpCredentials = (
   );
 };
 
+/** Set beside a stored GitHub token EDGE could not refresh, to the reason it gave. */
+export const GITHUB_TOKEN_ERROR_ENV = 'DX_GITHUB_TOKEN_ERROR';
+
 /**
  * The space's GitHub connection as the environment the agent's `git` and `gh` read. Every token is resolved through
  * EDGE first, since the stored value of an App user token goes stale once EDGE stops refreshing it (its refresh cron
@@ -562,11 +566,21 @@ export const githubCredentials: Effect.Effect<
     spaceId: yield* Database.spaceId,
     accessTokenId: accessToken.id,
   });
-  const token = isManagedAccessToken(accessToken.token)
-    ? yield* resolved
-    : yield* resolved.pipe(Effect.catchCause(() => Effect.succeed(accessToken.token)));
-  const env: Record<string, string> = { GITHUB_TOKEN: token, GH_TOKEN: token };
-  return env;
+  if (isManagedAccessToken(accessToken.token)) {
+    const token = yield* resolved;
+    return { GITHUB_TOKEN: token, GH_TOKEN: token };
+  }
+  // The reason EDGE could not refresh the stored token travels with it, so an agent that gets a 401 can say why.
+  return yield* resolved.pipe(
+    Effect.map((token): Record<string, string> => ({ GITHUB_TOKEN: token, GH_TOKEN: token })),
+    Effect.catchCause((cause) =>
+      Effect.succeed({
+        GITHUB_TOKEN: accessToken.token,
+        GH_TOKEN: accessToken.token,
+        [GITHUB_TOKEN_ERROR_ENV]: Cause.pretty(cause).split('\n')[0],
+      }),
+    ),
+  );
 }).pipe(
   Effect.catchCause((cause) =>
     Effect.sync(() => {
