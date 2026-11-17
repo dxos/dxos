@@ -700,7 +700,7 @@ test QA-13: A comment's notification opens the spec it is on
     side by side.
   actors: human
   covers: [F-4.5]
-  status: unverified
+  status: passing            # 2026-11-17, recorded by autocue/spec-notification.mjs
   given:
     - alice: a booted app named "Alice"
     - bob: a second browser profile named "Bob", joined to Alice's space by invitation
