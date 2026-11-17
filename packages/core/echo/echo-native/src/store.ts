@@ -17,6 +17,7 @@ import { type StoredEntity } from '../../echo-sqlite/src/object-store.ts';
 import { type EntityRecord } from '../../echo-sqlite/src/record.ts';
 import { type CompiledChanges } from '../../echo-sqlite/src/sql/changes.ts';
 import { type CompiledQuery } from '../../echo-sqlite/src/sql/compile.ts';
+import { type FastQuery } from './fast-query.ts';
 import { type Native, type NativeWrite, type WriteResult } from './native.ts';
 import { type RowTable } from './rows.ts';
 
@@ -212,6 +213,23 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
 
   query(compiled: CompiledQuery): Store<StoredEntity[]> {
     return attempt(() => this.#rows(compiled.sql, compiled.params));
+  }
+
+  /**
+   * Runs a {@link FastQuery}; undefined when any row has a dependency the deletion cascade could hide
+   * it through, so the caller runs the compiled statement instead.
+   */
+  queryFast(fast: FastQuery): Store<StoredEntity[] | undefined> {
+    return attempt(() => {
+      const table = this.#native.query(this.#handle, fast.sql, fast.params);
+      const dependencies = ['parentId', 'sourceId', 'targetId'].map((name) => table.column(name));
+      for (let row = 0; row < table.rows; row++) {
+        if (dependencies.some((column) => table.get(row, column) !== null)) {
+          return undefined;
+        }
+      }
+      return rowsOf(table);
+    });
   }
 
   queryChanges(compiled: CompiledChanges): Store<Record<string, unknown>[]> {

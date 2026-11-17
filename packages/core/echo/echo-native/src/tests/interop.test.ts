@@ -59,8 +59,8 @@ describe('echo-native syncs with echo-sqlite through one authority', () => {
     expect(people.map((person) => person.name)).toEqual(['Alice']);
 
     // An edit on each side to different fields, then a text edit merged as text.
-    Obj.update(orgOnNative, (org) => {
-      org.properties = { website: 'https://dxos.org' };
+    Obj.update(orgOnNative, (orgOnNative) => {
+      orgOnNative.properties = { website: 'https://dxos.org' };
     });
     await settle(...pairs);
     Obj.update(org, (org) => {

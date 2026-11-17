@@ -62,6 +62,7 @@ import {
   versionRangeKey,
   versionRanges,
 } from '../../echo-sqlite/src/sql/compile.ts';
+import { type FastQuery, compileFast } from './fast-query.ts';
 import { type Native, loadNative } from './native.ts';
 import { type Doc, NativeStore } from './store.ts';
 
@@ -487,6 +488,11 @@ export class NativeDatabase implements Database.Database, EntitySource, AsyncDis
       affectedBy: (written) =>
         typenames === undefined || written.has(ANY_TYPE) || [...written].some((dxn) => typenames.has(typenameOf(dxn))),
       execute: async () => {
+        const fast = fromSpace && ast.type === 'select' ? compileFast(ast, this.#spaceId) : undefined;
+        const fastItems = fast ? await this.#executeFast(fast) : undefined;
+        if (fastItems) {
+          return fastItems;
+        }
         const statement = fromSpace
           ? compileQuery(ast, {
               spaceId: this.#spaceId,
@@ -1043,6 +1049,26 @@ export class NativeDatabase implements Database.Database, EntitySource, AsyncDis
         if (entity && owner === this && row.queueId) {
           this.#catchUpItem(entity, row);
         }
+        return entity ? asItem(entity, row.rank) : undefined;
+      }),
+    );
+    return items.filter((item): item is ResultItem => item !== undefined);
+  }
+
+  /**
+   * Runs a flat statement from {@link compileFast}; undefined when a row has a parent or relation
+   * endpoints, whose deletion only the compiled statement's cascade applies.
+   */
+  async #executeFast(fast: FastQuery): Promise<ResultItem[] | undefined> {
+    await this.flush();
+    this.#counters.queries++;
+    const rows = await this.#run(this.#store.queryFast(fast));
+    if (rows === undefined) {
+      return undefined;
+    }
+    const items = await Promise.all(
+      rows.map(async (row) => {
+        const entity = await this.#hydrate(row);
         return entity ? asItem(entity, row.rank) : undefined;
       }),
     );
