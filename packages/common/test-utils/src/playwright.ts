@@ -307,6 +307,8 @@ export const storybookUrl = (storyId: string, port = 9009) =>
  */
 export const storybookWebServer = (port: number) => ({
   command: `pnpm storybook dev --ci --quiet --port=${port} --config-dir=.storybook`,
+  // Playwright starts the server beside the config (`<package>/src/playwright`); `.storybook` is at the package root.
+  cwd: '../..',
   url: `http://localhost:${port}`,
   reuseExistingServer: false,
 });
