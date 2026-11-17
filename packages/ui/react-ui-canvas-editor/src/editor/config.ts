@@ -117,8 +117,17 @@ export type ClipboardCodec = {
 export type DimensionContext<C> = {
   registry: Registry.AtomRegistry;
   document: EditorDocument;
-  /** This viewer's camera as the host stores it, the scene's authored one, and where a settled camera is reported. */
-  camera: { host: Atom.Atom<C | undefined>; authored: Atom.Atom<C | undefined>; report: (camera: C) => void };
+  /**
+   * This viewer's camera as the host stores it, the scene's authored one, and where a moved camera is reported; and the
+   * view a peer follows (`sharedCamera`), with where this view's is shared.
+   */
+  camera: {
+    host: Atom.Atom<C | undefined>;
+    authored: Atom.Atom<C | undefined>;
+    report: (camera: C) => void;
+    shared: Atom.Atom<C | undefined>;
+    share: (camera: C) => void;
+  };
   /** Shows a gesture's edit without writing it; undefined drops it. */
   preview: (layout: string | undefined, intent?: LayoutIntent) => void;
   setMenu: (menu: MenuAnchor | undefined) => void;

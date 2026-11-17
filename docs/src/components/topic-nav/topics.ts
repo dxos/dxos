@@ -20,6 +20,8 @@ export type Topic = {
   /** Unset for a topic with no pages yet. */
   href?: string;
   description: string;
+  /** A further sentence for where there is room for one: the docs home's card, not the section picker. */
+  detail?: string;
   logotype?: string;
 };
 
@@ -29,49 +31,50 @@ export const TOPICS: Topic[] = [
     id: 'echo',
     label: 'ECHO',
     href: '/docs/echo/overview/',
-    description: 'Local-first database: objects, queries, sync.',
+    description: 'Realtime graph database: the context memory for teams and agents.',
+    detail: 'Plugins add CRDTs, blobs, hierarchical feeds and RDF.',
     logotype: inherit(echo),
   },
   {
     id: 'halo',
     label: 'HALO',
     href: '/docs/halo/overview/',
-    description: 'Identity, devices and access control.',
+    description: 'Decentralized identity, with keys on your devices.',
     logotype: inherit(halo),
   },
   {
     id: 'mesh',
     label: 'MESH',
     href: '/docs/mesh/overview/',
-    description: 'Peer-to-peer networking and replication.',
+    description: 'Peer-to-peer networking that links devices directly.',
     logotype: inherit(mesh),
   },
   {
     id: 'edge',
     label: 'EDGE',
     href: '/docs/edge/overview/',
-    description: 'Always-online backup, indexing and compute.',
+    description: 'Always-on cloud peer for sync, backup and compute.',
     logotype: inherit(edge),
   },
   {
     id: 'sage',
     label: 'SAGE',
     href: '/docs/sage/overview/',
-    description: 'Durable agents, tools, skills and models.',
+    description: 'AI agents with their own identity, tools and skills.',
     logotype: inherit(sage),
   },
   {
     id: 'plex',
     label: 'PLEX',
     href: '/docs/plex/overview/',
-    description: 'An app framework where everything is a plugin.',
+    description: 'Extensible app framework where everything is a plugin.',
     logotype: inherit(plex),
   },
   {
     id: 'tile',
     label: 'TILE',
     href: '/docs/tile/overview/',
-    description: 'Design system and UI components.',
+    description: 'Design system of accessible, reactive components.',
     logotype: inherit(tile),
   },
 ];

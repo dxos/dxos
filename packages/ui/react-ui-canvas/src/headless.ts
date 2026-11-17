@@ -3,6 +3,8 @@
 //
 
 // React-free entry: plugin operations run in node and workerd, where the scene barrel's components cannot load.
+export * from './content/canvas-settings.ts';
+export * from './content/content.ts';
 export * from './engine/draw.ts';
 export * from './generator/check.ts';
 export * from './generator/compile.ts';

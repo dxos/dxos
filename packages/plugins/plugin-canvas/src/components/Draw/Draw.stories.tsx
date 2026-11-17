@@ -107,10 +107,6 @@ const SOLIDS: RenderList2D = {
   links: {},
   nodes: Object.fromEntries(
     [
-      {
-        ...HINT,
-        text: 'Select the box and the disc, then Join.\n\nSelect the plate, then the hole and the notch with Shift, then Subtract: every other shape is cut from the first selected.\n\nDelete either to get its shapes back.',
-      },
       shape('box', 'rect', 'b0', [-264, 36], [192, 144]),
       shape('disc', 'ellipse', 'b1', [-168, 108], [144, 144]),
       shape('plate', 'rect', 'b2', [192, 72], [240, 192]),
@@ -482,6 +478,19 @@ export const SplineTest: Story = {
   },
 };
 
+/** An enabled command of the bottom bar, from its ⋮ menu where the frame is too narrow to show it in the row. */
+const sceneAction = async (root: HTMLElement, id: string) => {
+  const testId = `scene-action-${id}`;
+  const bar = await within(root).findByTestId('scene-bar');
+  if (!within(bar).queryByTestId(testId)) {
+    await userEvent.click(within(bar).getByTestId('toolbar.overflow'));
+  }
+  const command = await within(root.ownerDocument.body).findByTestId(testId);
+  await waitFor(() => expect(command).toBeEnabled());
+  await waitFor(() => expect(command).not.toHaveAttribute('data-disabled'));
+  return command;
+};
+
 /** A node of the canvas by its id, as drawn. */
 const nodeOf = (root: HTMLElement, id: string) =>
   root.querySelector<HTMLElement>(`[data-testid="scene-view"] [data-node-id="${id}"]`);
@@ -516,9 +525,7 @@ export const SolidsTest: Story = {
 
     await pick(canvasElement, 'box');
     await pick(canvasElement, 'disc', true);
-    const join = await canvas.findByTestId('scene-action-join');
-    await waitFor(() => expect(join).toBeEnabled());
-    await userEvent.click(join);
+    await userEvent.click(await sceneAction(canvasElement, 'join'));
     await waitFor(() => expect(drawn(canvasElement, 'union')).toHaveLength(1));
     await expect(nodeOf(canvasElement, 'box')).toBeNull();
     await expect(nodeOf(canvasElement, 'disc')).toBeNull();
@@ -530,9 +537,7 @@ export const SolidsTest: Story = {
     await pick(canvasElement, 'plate');
     await pick(canvasElement, 'hole', true);
     await pick(canvasElement, 'notch', true);
-    const subtract = await canvas.findByTestId('scene-action-subtract');
-    await waitFor(() => expect(subtract).toBeEnabled());
-    await userEvent.click(subtract);
+    await userEvent.click(await sceneAction(canvasElement, 'subtract'));
     await waitFor(() => expect(drawn(canvasElement, 'difference')).toHaveLength(1));
     // Two outlines: the hole's, and the plate's edge, which the notch bites eight corners into where it had four.
     await expect(pathOf(drawn(canvasElement, 'difference')[0]).match(/M /g)).toHaveLength(2);
@@ -541,7 +546,7 @@ export const SolidsTest: Story = {
     await expect(nodeOf(canvasElement, 'hole')).toBeNull();
     await expect(nodeOf(canvasElement, 'notch')).toBeNull();
 
-    await userEvent.click(await canvas.findByTestId('scene-action-delete'));
+    await userEvent.click(await sceneAction(canvasElement, 'delete'));
     await waitFor(() => expect(drawn(canvasElement, 'difference')).toHaveLength(0));
     await expect(nodeOf(canvasElement, 'plate')).not.toBeNull();
     await expect(nodeOf(canvasElement, 'hole')).not.toBeNull();

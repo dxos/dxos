@@ -168,6 +168,8 @@ export type NavigationCommands = {
   zoomBy: (factor: number) => void;
   /** Back to true size about the view's centre, from where the camera is now. */
   resetZoom: () => void;
+  /** Glides to `camera` over `duration` ms, leaving fit mode, as a followed peer's view moves this one. */
+  moveTo: (camera: Camera, duration: number) => void;
   /** A child scene's frame inside its portal, as drilling in maps it. */
   childFrame: (portal: Node, child: RenderList2D) => Bounds;
   /** The frame of the scene at the head of `path`: once entered through a portal, the one it arrived with. */
@@ -728,6 +730,10 @@ export const createCanvasController = ({
     resetZoom: () => {
       fitMode().exitFit();
       camera().animateTo(zoomAt(registry.get(atoms.camera), centre(), NOMINAL_ZOOM));
+    },
+    moveTo: (target, duration) => {
+      fitMode().exitFit();
+      camera().animateTo(target, undefined, duration);
     },
     childFrame: frameIn,
     frame: (path, scene) => {

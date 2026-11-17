@@ -462,7 +462,8 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       (`MARKER_ITEMS`), with Phosphor's `minus` for None. They all point right, for a Start end too.
 - [x] **Bar rules run edge to edge** (user, 2026-11-13): the separators of the horizontal floating bars (camera,
       actions, display) are the bar's full height with the palette's 4 px either side (`FLOATING_BAR_RULE`), where
-      a toolbar's own rule is half a control tall. The primitive is unchanged.
+      a toolbar's own rule is half a control tall. The primitive is unchanged. Reversed (user, 2026-11-16): the shared
+      bottom bar keeps react-ui's standard line separators and spaces its parts apart with gap separators.
 - [x] **A `many` end, a crow's foot** (user, 2026-11-13): `Marker` gains `many`; drawn as two toes beside the line,
       which runs on to the connection point (`markerFrame`, `markerTrim` 0, `MANY_SPREAD`), and as a chevron
       opening onto the end in a groove. Icon `px--line-many--regular`; listed in the end's menu and Properties.
@@ -489,11 +490,21 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       `padding.y` (`LABEL_LINES`), and its default is 12 across and 6 down (a minor cell and half of one), a hull's
       name included; a text node keeps a whole cell down. Properties places Padding after Label and shows the
       drawn default.
+- [x] **Shapes: review fixes** (CodeRabbit on dxos/dxos#14534, 2026-11-14): a handle drag previews through the
+      host's `constrain` and its release writes only its own parameter over the node's latest (`paramDrop`); a
+      prism is cut from the outline without repeated or in-line vertices and is refused where its cap is
+      incomplete (`ring`); a parallelogram's slant stops at half the width; an element placing a shape object is
+      lifted with a solid of its own (`liftLayout(layout, objects)`); Properties reads the default padding from
+      the drawing's grid.
 - [ ] **Convert a shape to a polyline**: a parametric shape has no vertices to drag; a command that swaps it for
       the closed polyline of its outline would free it.
 - [ ] **Shape recipes, later**: a cog's hub hole needs an outline of more than one ring; the Shape field in
       Properties lists recipe ids, not names; adjust handles are 2D only (3D edits parameters in Properties);
       `SPEC-2D.mdl` does not yet record the `shape` type.
+- [ ] **The tool rail on react-ui-menu** (user, 2026-11-16): `ToolRail` should be a vertical `ActionToolbar` with
+      react-ui's own separators, as the bottom bar is. react-ui-menu first needs collapse by height, draggable
+      actions (drag-to-create) and a flyout fold: one click picks the shown tool, a hover opens the set, the last-used
+      tool shows, and the grid layout.
 - [ ] **Pan and Orthogonal both claim H**: `TOOLS` gives Pan `H` and `defaultLinkRegistry` gives Orthogonal `H`;
       Pan wins, so the key the Orthogonal button names does nothing. Pick a key for one of them.
 - [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the

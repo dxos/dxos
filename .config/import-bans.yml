@@ -60,11 +60,13 @@ workerd:
     - '@dxos/ui-editor/types'
 
     # UI-free subpaths that headless modules share with their components: canvas's shape model, the
-    # focus store keyboard bindings read, the debug log buffer and list's tree helpers.
+    # focus store keyboard bindings read, the debug log buffer, list's tree helpers, and the slide
+    # markdown dialect an operation reads and writes without drawing a slide.
     - '@dxos/react-focus/store'
     - '@dxos/react-ui-canvas/headless'
     - '@dxos/react-ui-debug/log-buffer'
     - '@dxos/react-ui-list/util'
+    - '@dxos/react-ui-slides/dialect'
 
     # The editor's word-level text diff, which accept/reject-change handlers apply on the server.
     - '@dxos/ui-editor/hunks'

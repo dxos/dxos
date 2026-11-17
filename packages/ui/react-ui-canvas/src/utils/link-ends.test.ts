@@ -161,8 +161,8 @@ describe('groove heads', () => {
   });
 
   test('a degenerate route draws no heads', ({ expect }) => {
-    expect(grooveHeads('M 5 5', { end: 'arrow' }, 8, 16)).toEqual({ outline: '', hollow: '' });
-    expect(grooveHeads('M 5 5 L 5 5', { end: 'arrow' }, 8, 16)).toEqual({ outline: '', hollow: '' });
+    expect(grooveHeads('M 5 5', { end: 'arrow' }, 8, 16)).toEqual({ outline: '', hollow: '', solid: '' });
+    expect(grooveHeads('M 5 5 L 5 5', { end: 'arrow' }, 8, 16)).toEqual({ outline: '', hollow: '', solid: '' });
   });
 
   test("a hollow head's inside is its own outline, so the track stops at its base and the hollow shows the ground", ({
@@ -177,6 +177,15 @@ describe('groove heads', () => {
     expect(lower.x).toBeCloseTo(upper.x);
     const ring = grooveHeads('M 0 0 L 100 0', { end: 'circle' }, 8, 16);
     expect(ring.hollow).toBe(ring.outline);
+  });
+
+  test("a filled diamond's inside is solid, and a hollow one's shows the ground", ({ expect }) => {
+    const filled = grooveHeads('M 0 0 L 100 0', { end: 'diamond-filled' }, 8, 16);
+    expect(filled.solid).toBe(filled.outline);
+    expect(filled.hollow).toBe('');
+    const hollow = grooveHeads('M 0 0 L 100 0', { end: 'diamond' }, 8, 16);
+    expect(hollow.hollow).toBe(hollow.outline);
+    expect(hollow.solid).toBe('');
   });
 
   test('an open arrow has no hollow, and only hollow ends are cut from the track', ({ expect }) => {

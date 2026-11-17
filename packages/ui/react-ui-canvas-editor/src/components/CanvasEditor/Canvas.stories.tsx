@@ -176,19 +176,19 @@ export const Readonly: Story = {
   args: { depth: 1, liveDepth: 1, readonly: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // 1. Read-only, the palette offers only select and pan, and there is no action bar.
+    // 1. Read-only, the palette offers only select and pan, and the bottom bar has no actions.
     const toggle = await canvas.findByTestId('palette-readonly');
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
-    await expect(canvas.queryByTestId('scene-actions')).toBeNull();
+    await expect(canvas.queryByTestId('scene-action-undo')).toBeNull();
 
-    // 2. The toggle turns editing on: the action bar appears.
+    // 2. The toggle turns editing on: the actions appear.
     await userEvent.click(toggle);
     await expect(toggle).toHaveAttribute('aria-pressed', 'false');
-    await expect(await canvas.findByTestId('scene-actions')).toBeVisible();
+    await expect(await canvas.findByTestId('scene-action-undo')).toBeVisible();
 
     // 3. And back to read-only.
     await userEvent.click(toggle);
-    await waitFor(() => expect(canvas.queryByTestId('scene-actions')).toBeNull());
+    await waitFor(() => expect(canvas.queryByTestId('scene-action-undo')).toBeNull());
   },
 };
 
@@ -222,7 +222,8 @@ const DocsStory = () => {
   }, []);
   const { document, onIntent, onModelIntent } = useDocumentHost(initial);
   return (
-    <CanvasEditor.Root document={document} onIntent={onIntent} onModelIntent={onModelIntent}>
+    // A fit stops at half size, so a wide card shows the model with room round it and not a few large boxes.
+    <CanvasEditor.Root document={document} onIntent={onIntent} onModelIntent={onModelIntent} fitZoom={0.5}>
       <CanvasEditor.Viewport liveDepth={1} />
       <CanvasEditor.Navigation />
       <CanvasEditor.Tools />

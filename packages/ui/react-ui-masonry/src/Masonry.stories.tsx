@@ -3,11 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
 import { random } from '@dxos/random';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
 import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -85,33 +88,72 @@ const createPeople = (count: number): PersonData[] =>
     };
   });
 
-// Seed the largest preset once so switching counts is a cheap slice.
-const PEOPLE = createPeople(ITEM_COUNTS[ITEM_COUNTS.length - 1]);
+/** Removes a person from the story that shows the card; a tile is given only its data, so the story passes this down. */
+const DeleteContext = createContext<(id: string) => void>(() => {});
 
-const StoryItem = ({ data: person }: { data: PersonData }) => {
-  const { fullName, jobTitle, department, image, emails, notes } = person;
-  const role = [jobTitle, department].filter(Boolean).join(' · ');
+/** One line of a card under its title: an icon in the start rail and text beside it. */
+type GalleryRow = {
+  icon: string;
+  text: string;
+  /** How many lines the text may run to before it is cut; one by default. */
+  lines?: number;
+};
+
+/** What a gallery card shows, whatever it is a card of: a person, an organization. */
+export type GalleryItem = {
+  id: string;
+  title: string;
+  /** The icon beside the title, which says what kind of thing the card is. */
+  icon: string;
+  image?: string;
+  rows: GalleryRow[];
+};
+
+const personItem = ({ id, fullName, jobTitle, department, image, emails, notes }: PersonData): GalleryItem => ({
+  id,
+  title: fullName,
+  icon: 'ph--user--regular',
+  image,
+  rows: [
+    ...(jobTitle || department
+      ? [{ icon: 'ph--briefcase--regular', text: [jobTitle, department].filter(Boolean).join(' · ') }]
+      : []),
+    ...(emails ?? []).map((email) => ({ icon: 'ph--envelope-simple--regular', text: email.value })),
+    ...(notes ? [{ icon: 'ph--note--regular', text: notes, lines: 4 }] : []),
+  ],
+});
+
+// Seed the largest preset once so switching counts is a cheap slice.
+const PEOPLE = createPeople(ITEM_COUNTS[ITEM_COUNTS.length - 1]).map(personItem);
+
+/**
+ * A `grid` card: the picture, then a header and rows that share the card's rails, so the title starts at the same
+ * edge as the text of the rows under it, with an icon in the start rail of each and the menu in the end rail.
+ */
+const StoryItem = ({ data: { id, title, icon, image, rows } }: { data: GalleryItem }) => {
+  const onDelete = useContext(DeleteContext);
   return (
-    <Card.Root>
+    <Card.Root grid size='sm'>
+      {image && <Card.Poster alt={title} src={image} />}
       <Card.Header>
-        <Card.Title>{fullName}</Card.Title>
+        <Layout.Block>
+          <Icon.Icon icon={icon} />
+        </Layout.Block>
+        <Card.Title>{title}</Card.Title>
+        <Card.Menu label={`Actions for ${title}`}>
+          <Menu.Item
+            item={{ value: 'delete', label: 'Delete', icon: 'ph--trash--regular' }}
+            onClick={() => onDelete(id)}
+          />
+        </Card.Menu>
       </Card.Header>
-      {image && <Card.Poster alt={fullName ?? ''} src={image} />}
-      {role && (
-        <Card.Row classNames='px-2'>
-          <Card.Text variant='muted'>{role}</Card.Text>
+      {rows.map(({ icon, text, lines }) => (
+        <Card.Row key={`${icon}:${text}`} icon={icon} align={lines ? 'start' : undefined}>
+          <Card.Text variant='muted' lines={lines}>
+            {text}
+          </Card.Text>
         </Card.Row>
-      )}
-      {emails && emails.length > 0 && (
-        <Card.Row classNames='px-2'>
-          <Card.Text variant='muted'>{emails.map((email) => email.value).join(', ')}</Card.Text>
-        </Card.Row>
-      )}
-      {notes && (
-        <Card.Row classNames='px-2 pb-2'>
-          <Card.Text variant='muted'>{notes}</Card.Text>
-        </Card.Row>
-      )}
+      ))}
     </Card.Root>
   );
 };
@@ -120,7 +162,7 @@ const StoryItem = ({ data: person }: { data: PersonData }) => {
 // (bulk render under load, re-shuffled each time) and add/remove single tiles (the small-edit
 // reflow animation).
 const DefaultStory = (props: MasonryRootProps) => {
-  const [visible, setVisible] = useState<PersonData[]>(() => shuffle(PEOPLE).slice(0, ITEM_COUNTS[0]));
+  const [visible, setVisible] = useState<GalleryItem[]>(() => shuffle(PEOPLE).slice(0, ITEM_COUNTS[0]));
 
   const addOne = () =>
     setVisible((current) => {
@@ -135,6 +177,8 @@ const DefaultStory = (props: MasonryRootProps) => {
       return next;
     });
 
+  const remove = useCallback((id: string) => setVisible((current) => current.filter((person) => person.id !== id)), []);
+
   const removeOne = () =>
     setVisible((current) => {
       if (current.length === 0) {
@@ -145,27 +189,29 @@ const DefaultStory = (props: MasonryRootProps) => {
     });
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          {ITEM_COUNTS.map((count) => (
-            <Button.Root key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
-              {count}
-            </Button.Root>
-          ))}
-          <Button.Root onClick={addOne}>Add one</Button.Root>
-          <Button.Root onClick={removeOne}>Remove one</Button.Root>
-          <Button.Root onClick={() => setVisible([])}>Clear</Button.Root>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
-        <Masonry.Root {...props} Tile={StoryItem}>
-          <Masonry.Content>
-            <Masonry.Viewport items={visible} getId={(person) => person.id} />
-          </Masonry.Content>
-        </Masonry.Root>
-      </Panel.Body>
-    </Panel.Root>
+    <DeleteContext.Provider value={remove}>
+      <Panel.Root>
+        <Panel.Header>
+          <Toolbar.Root>
+            {ITEM_COUNTS.map((count) => (
+              <Button.Root key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
+                {count}
+              </Button.Root>
+            ))}
+            <Button.Root onClick={addOne}>Add one</Button.Root>
+            <Button.Root onClick={removeOne}>Remove one</Button.Root>
+            <Button.Root onClick={() => setVisible([])}>Clear</Button.Root>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body>
+          <Masonry.Root {...props} Tile={StoryItem}>
+            <Masonry.Content>
+              <Masonry.Viewport items={visible} getId={(person) => person.id} />
+            </Masonry.Content>
+          </Masonry.Root>
+        </Panel.Body>
+      </Panel.Root>
+    </DeleteContext.Provider>
   );
 };
 
@@ -194,68 +240,31 @@ export const Default: Story = {};
 // Docs
 //
 
-type Photo = { id: string; title: string; color: string; height: number; caption?: string };
+type DocsStoryProps = {
+  /** The cards to show; without them, some of the generated people. */
+  items?: GalleryItem[];
+};
 
-const PHOTOS: Photo[] = [
-  { id: '1', title: 'Harbor', color: '#0891b2', height: 80, caption: 'Boats at first light.' },
-  { id: '2', title: 'Dunes', color: '#ca8a04', height: 48 },
-  { id: '3', title: 'Forest', color: '#059669', height: 104, caption: 'A path through the pines, after rain.' },
-  { id: '4', title: 'Peaks', color: '#4f46e5', height: 64 },
-  { id: '5', title: 'Market', color: '#e11d48', height: 88, caption: 'Saturday stalls.' },
-  { id: '6', title: 'Canyon', color: '#ea580c', height: 56 },
-  { id: '7', title: 'Lagoon', color: '#2563eb', height: 72, caption: 'Still water, no wind.' },
-  { id: '8', title: 'Meadow', color: '#65a30d', height: 60 },
-  { id: '9', title: 'Glacier', color: '#0ea5e9', height: 120, caption: 'Blue ice under a grey sky.' },
-  { id: '10', title: 'Orchard', color: '#16a34a', height: 52 },
-  { id: '11', title: 'Lighthouse', color: '#dc2626', height: 96, caption: 'The lamp turns at dusk.' },
-  { id: '12', title: 'Desert', color: '#d97706', height: 68 },
-  { id: '13', title: 'Bridge', color: '#7c3aed', height: 84, caption: 'Fog over the river.' },
-  { id: '14', title: 'Reef', color: '#0d9488', height: 44 },
-  { id: '15', title: 'Vineyard', color: '#9333ea', height: 112, caption: 'Rows down to the lake.' },
-  { id: '16', title: 'Tundra', color: '#64748b', height: 58 },
-  { id: '17', title: 'Waterfall', color: '#0284c7', height: 100, caption: 'Spray on the ferns.' },
-  { id: '18', title: 'Prairie', color: '#a16207', height: 50 },
-  { id: '19', title: 'Island', color: '#0f766e', height: 76, caption: 'One palm, one hut.' },
-  { id: '20', title: 'Volcano', color: '#b91c1c', height: 92 },
-  { id: '21', title: 'Marsh', color: '#4d7c0f', height: 54, caption: 'Herons at low tide.' },
-  { id: '22', title: 'Summit', color: '#4338ca', height: 108 },
-  { id: '23', title: 'Harvest', color: '#c2410c', height: 62, caption: 'Bales in the field.' },
-  { id: '24', title: 'Cove', color: '#0369a1', height: 46 },
-  { id: '25', title: 'Aurora', color: '#7e22ce', height: 116, caption: 'Green light over the bay.' },
-  { id: '26', title: 'Garden', color: '#15803d', height: 66 },
-  { id: '27', title: 'Quarry', color: '#78716c', height: 82, caption: 'Swimmers on the ledge.' },
-  { id: '28', title: 'Lake', color: '#1d4ed8', height: 56 },
-  { id: '29', title: 'Mesa', color: '#b45309', height: 98, caption: 'Red rock at noon.' },
-  { id: '30', title: 'Fjord', color: '#155e75', height: 70 },
-  { id: '31', title: 'Pier', color: '#be123c', height: 86, caption: 'Gulls on every post.' },
-  { id: '32', title: 'Steppe', color: '#57534e', height: 48 },
-];
+/** How many of the generated people the gallery shows when it is given none. */
+const DOCS_PEOPLE = 24;
 
-const PhotoTile = ({ data: photo }: { data: Photo }) => (
-  <Card.Root>
-    <div style={{ height: photo.height, background: photo.color }} />
-    <Card.Header>
-      <Card.Title>{photo.title}</Card.Title>
-    </Card.Header>
-    {photo.caption && (
-      <Card.Row classNames='pb-2'>
-        <Card.Text variant='muted' lines={2}>
-          {photo.caption}
-        </Card.Text>
-      </Card.Row>
-    )}
-  </Card.Root>
-);
+const DocsStory = ({ items: initial = PEOPLE.slice(0, DOCS_PEOPLE) }: DocsStoryProps) => {
+  const [items, setItems] = useState(initial);
+  const remove = useCallback((id: string) => setItems((current) => current.filter((item) => item.id !== id)), []);
+  return (
+    <DeleteContext.Provider value={remove}>
+      <div className='fixed inset-0 flex dx-base-surface'>
+        <Masonry.Root Tile={StoryItem} minColumnWidth={10}>
+          <Masonry.Content>
+            <Masonry.Viewport items={items} getId={(item) => item.id} />
+          </Masonry.Content>
+        </Masonry.Root>
+      </div>
+    </DeleteContext.Provider>
+  );
+};
 
-/** The docs' gallery: photos of different heights in columns at least 9rem wide. */
-export const Docs: Story = {
-  render: () => (
-    <div className='fixed inset-0 flex dx-base-surface'>
-      <Masonry.Root Tile={PhotoTile} minColumnWidth={9}>
-        <Masonry.Content>
-          <Masonry.Viewport items={PHOTOS} getId={(photo) => photo.id} />
-        </Masonry.Content>
-      </Masonry.Root>
-    </div>
-  ),
+/** The docs' gallery: cards of different heights in columns at least 10rem wide; a card's menu deletes it. */
+export const Docs: StoryObj<DocsStoryProps> = {
+  render: (args) => <DocsStory {...args} />,
 };

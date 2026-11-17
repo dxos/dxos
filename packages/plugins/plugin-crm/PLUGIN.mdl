@@ -271,6 +271,7 @@ feat F-1: Polymorphic Subject Resolution
 
 ```mdl
 feat F-2: Deterministic Contact Extraction
+  uses: [processMailbox]
   desc: >
     Contact-extraction semantics are owned by @dxos/extractor-lib (shared
     with mail sync and plugin-inbox's extractor operations), not by
@@ -313,6 +314,7 @@ feat F-3: Person & Organization Upsert
 
 ```mdl
 feat F-4: Research & Profile Composition
+  uses: [ProfileOf, researchOrganization, researchPerson]
   desc: >
     Profile structure is deterministic; profile content is agentic. The
     researchPerson / researchOrganization operations scaffold the document
@@ -328,6 +330,7 @@ feat F-4: Research & Profile Composition
 
 ```mdl
 feat F-5: ProfileOf Relation
+  uses: [ProfileOf]
   desc: >
     A typed relation links the Profile Document to its subject. This is
     the primary mechanism for discovering profiles from a Person or
@@ -344,6 +347,7 @@ feat F-5: ProfileOf Relation
 
 ```mdl
 feat F-6: Image Attachment
+  uses: [attachImage]
   desc: >
     Best-effort avatar / logo retrieval. The agent finds candidate URLs via
     the existing fetch_url / web search tools; plugin-crm uploads them to
@@ -362,6 +366,7 @@ feat F-6: Image Attachment
 
 ```mdl
 feat F-7: Pluggable Research Sources
+  uses: [ResearchSource]
   desc: >
     Future sources (notably LinkedIn via browser extension) will register
     additional tools into the CRM skill. v1 defines the contract but
@@ -374,6 +379,7 @@ feat F-7: Pluggable Research Sources
 
 ```mdl
 feat F-8: Configuration Surface (deferred)
+  uses: [attachImage]
   desc: >
     Per-space CrmSettings ECHO type is planned but not implemented in v1.
     v1 relies on @dxos/config for imageServiceUrl and uses only no-auth

@@ -117,6 +117,47 @@ describe('prismMesh', () => {
     }
   });
 
+  test('an outline with a repeated or in-line vertex stands as the same closed solid', ({ expect }) => {
+    // The square given closed, its first vertex again at the end.
+    const again = prismMesh([...SQUARE, SQUARE[0]]);
+    expect(again && closed(again.indices)).toBe(true);
+    expect(again && volume(again.positions, again.indices)).toBeCloseTo(1);
+    expect(again?.positions).toHaveLength(8 * 3);
+    // A vertex half way along an edge, and one given twice.
+    const extra = prismMesh([SQUARE[0], { x: 0.5, y: 0 }, SQUARE[1], SQUARE[1], SQUARE[2], SQUARE[3]]);
+    expect(extra && closed(extra.indices)).toBe(true);
+    expect(extra?.positions).toHaveLength(8 * 3);
+  });
+
+  test('every recipe stands closed in a frame too small for its parts, where its outline folds onto itself', ({
+    expect,
+  }) => {
+    for (const size of [
+      { width: 48, height: 192 },
+      { width: 192, height: 12 },
+    ]) {
+      for (const recipe of SHAPE_RECIPES) {
+        const outline = shapeOutline(recipe, size, undefined).map(({ x, y }) => ({
+          x: x / size.width,
+          y: y / size.height,
+        }));
+        const mesh = prismMesh(outline);
+        expect(mesh && closed(mesh.indices), recipe.id).toBe(true);
+        expect(mesh && volume(mesh.positions, mesh.indices), recipe.id).toBeCloseTo(area(outline));
+      }
+    }
+  });
+
+  test('an outline with no area makes no solid, rather than an open one', ({ expect }) => {
+    expect(
+      prismMesh([
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 0.5, y: 0 },
+      ]),
+    ).toBeUndefined();
+  });
+
   test('one outline has one key, and fewer than three points make no solid', ({ expect }) => {
     expect(prismMesh(SQUARE)?.key).toBe(prismMesh([...SQUARE])?.key);
     expect(prismMesh(SQUARE)?.key).not.toBe(prismMesh(ELL)?.key);

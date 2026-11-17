@@ -100,8 +100,11 @@ export type Drag =
       bend?: number;
       handle?: BendHandle;
     }
-  /** Dragging an adjust handle of a parametric shape; `params` are its parameters as the drag has them. */
-  | { kind: 'param'; id: NodeId; param: string; params: Readonly<Record<string, number>> }
+  /**
+   * Dragging an adjust handle of a parametric shape; `params` are its parameters as the drag has them, and `moved` is
+   * set once the pointer moves, so a press released where it began sets nothing.
+   */
+  | { kind: 'param'; id: NodeId; param: string; params: Readonly<Record<string, number>>; moved?: boolean }
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */

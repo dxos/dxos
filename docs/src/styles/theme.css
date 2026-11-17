@@ -28,6 +28,13 @@ body {
   background: var(--c-bg);
 }
 
+/* Keyboard focus takes the accent, where the browser's own ring is blue whatever the palette; a demo keeps its components' rings. */
+:where(.page, .sl-skip-link) :focus-visible:where(:not(.dx-island, .dx-island *)),
+.sl-skip-link:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
 .label-mono {
   font-family: var(--sl-font-mono);
   font-size: 0.6875rem;

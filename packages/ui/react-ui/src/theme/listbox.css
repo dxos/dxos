@@ -213,6 +213,21 @@
     grid-row: auto;
     align-self: center;
   }
+  /* `align='start'` on the content tops every part of a row on its first line, for cells that wrap. */
+  :is(
+      .dx-listbox-content[data-columns][data-align='start'],
+      .dx-listbox-content[data-columns][data-align='start'] > .dx-collapsible
+    )
+    > .dx-listbox-item.dx-container
+    > * {
+    align-self: start;
+  }
+  /* A spanning cell (Container `span`) takes as many of the shared tracks as it asks for. */
+  :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)
+    > .dx-listbox-item.dx-container
+    > [data-span] {
+    grid-column-end: span var(--dx-span, 1);
+  }
   /*
    * Custom end cells keep a gap from the row's edges, as the text part does, so its highlight ring frames them. A cell
    * that is a template root (a form's array item) is exempt: its fields carry their own inset and line up with the form's.

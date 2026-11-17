@@ -39,9 +39,11 @@
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/scene": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@effect/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:",
+    "react-resize-detector": "catalog:"
   },
   "devDependencies": {
     "@babylonjs/core": "catalog:",

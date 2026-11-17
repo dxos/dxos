@@ -259,7 +259,8 @@ const parallelogram: ShapeRecipe = {
   icon: 'ph--parallelogram--regular',
   defaultSize: { width: 4, height: 2 },
   params: [{ id: 'slant', title: 'Slant', unit: 'height', default: 0.5, min: 0, max: 4 }],
-  fit: ({ width }, values) => ({ ...values, slant: Math.min(values.slant, width) }),
+  // Half the width at most, so a tall frame keeps a body between the two slants.
+  fit: ({ width }, values) => ({ ...values, slant: Math.min(values.slant, width / 2) }),
   outline: ({ width, height }, { slant }) => [
     { x: slant, y: 0 },
     { x: width, y: 0 },

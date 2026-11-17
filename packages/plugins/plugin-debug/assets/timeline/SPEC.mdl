@@ -52,6 +52,7 @@ type TimelineSettings
 
 ```mdl
 feat F-1: Chart objects
+  uses: [Chart]
   desc: Each chart is its own object, so a document can embed it.
 
   req F-1.1: A sheet holds its charts as refs; each `type:Chart` refs its sheet back and is deleted with it.

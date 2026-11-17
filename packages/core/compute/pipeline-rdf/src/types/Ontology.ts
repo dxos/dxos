@@ -545,6 +545,12 @@ export const DEFAULT_ENTRIES: ReadonlyArray<Entry> = [
     synonyms: ['working on', 'will work on'],
     description: 'A project or task the subject is working on.',
   }),
+  entry('uses', {
+    synonyms: ['is using', 'built with', 'adopted', 'switched to', 'relies on'],
+    description: 'A library, tool, language or service the subject uses (a person, a project or a codebase).',
+    // Extractors minted it in the local brain before it was seeded; the equivalence keeps those statements matching.
+    equivalents: [iriFor('uses', Vocab.LOCAL_BRAIN)],
+  }),
   entry('completed', { synonyms: ['finished', 'done'], description: 'A task the subject finished.' }),
   entry('shipped', { synonyms: ['ships', 'released'], description: 'Something the subject released.' }),
   entry('proposes', { synonyms: ['suggests'], description: 'An idea or change the subject put forward.' }),

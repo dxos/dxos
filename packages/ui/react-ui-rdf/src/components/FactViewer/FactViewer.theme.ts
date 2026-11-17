@@ -15,7 +15,8 @@ const factViewerStyles = tv({
     toolbarSpacer: 'grow',
 
     // List view.
-    listViewport: 'flex flex-col gap-2 py-1',
+    // The list virtualizes its groups, which space and pad themselves.
+    listViewport: 'flex flex-col',
 
     // Graph view.
     graphContent: 'overflow-hidden',

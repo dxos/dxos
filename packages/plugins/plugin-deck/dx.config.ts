@@ -75,9 +75,23 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
             AppCapabilities.Layout,
             DeckCapabilities.Platform,
             DeckCapabilities.Projection,
+            DeckCapabilities.View,
           ],
         },
         () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
+      ),
+      Capability.lazyModule(
+        'LayoutViewState',
+        {
+          requires: [
+            Capabilities.AtomRegistry,
+            AppCapabilities.Layout,
+            DeckCapabilities.View,
+            AttentionCapabilities.ViewState,
+          ],
+          provides: [],
+        },
+        () => import('./src/capabilities/layout-view-state.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'GraphRetention',

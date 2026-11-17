@@ -7,7 +7,7 @@ import { FENCE_REGEX } from './blocks.ts';
 // Standard fields for each block type.
 // In future this will be derived from resolved `ext` definitions.
 export const BLOCK_FIELDS: Record<string, string[]> = {
-  ext: ['uri', 'desc', 'extends', 'fields', 'adds-fields', 'nesting', 'inline-prose', 'example'],
+  ext: ['uri', 'desc', 'extends', 'fields', 'adds-fields', 'nesting', 'inline-prose', 'role', 'links', 'example'],
   type: ['desc', 'fields', 'literals', 'extends'],
   op: ['desc', 'input', 'output', 'errors', 'effects', 'requires', 'invariants', 'note'],
   feat: ['desc', 'req'],
