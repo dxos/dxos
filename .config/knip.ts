@@ -426,6 +426,15 @@ const TESTING_ENTRY_ONLY: Record<string, string[]> = {
   'packages/ui/react-ui': ['@dxos/effect', '@effect/atom-react'],
 };
 
+/**
+ * Dependencies a package imports only from a worker file (`*-worker.ts`), which knip reaches as a
+ * non-production entry, so the production pass reads them as unused although the bundled worker ships.
+ */
+const WORKER_ONLY: Record<string, string[]> = {
+  // `src/client/opfs-worker.ts` runs the OPFS SQLite worker the app opens its database through.
+  'packages/apps/echo-sqlite-demo': ['@dxos/sql-sqlite'],
+};
+
 const BUNDLER_RESOLVED: Record<string, string[]> = {
   // The app's import map is built from its direct dependencies, and plugins loaded by URL import
   // these bare; nothing in the app imports them, but without the declaration they have no entry.
@@ -587,6 +596,7 @@ for (const manifest of globSync(
       ...bundledDependencies(dir),
       ...(DECLARED_IN_TYPES[dir] ?? []),
       ...(TESTING_ENTRY_ONLY[dir] ?? []),
+      ...(WORKER_ONLY[dir] ?? []),
       ...(BUNDLER_RESOLVED[dir] ?? []),
       ...(TRAVERSAL_MISSED[dir] ?? []),
       ...(SCRIPT_STORE_RESOLVED[dir] ?? []),
