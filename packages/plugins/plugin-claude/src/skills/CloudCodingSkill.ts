@@ -17,6 +17,7 @@ export const key = 'org.dxos.skill.claude.cloudCoding';
 export const operations: readonly Operation.Definition.Any[] = [
   CloudRunOperation.StartCloudRun,
   CloudRunOperation.SyncCloudRun,
+  CloudRunOperation.DriveCloudRuns,
 ];
 
 /** Hands project tasks to Claude Code on EDGE; offered over MCP, so a coding session elsewhere can delegate. */
@@ -47,6 +48,14 @@ export const make = (): Skill.Skill =>
            Run with the chat and \`prompt\` set to the message, then keep syncing as in step 2. The agent continues in
            the same session. When every pull request has merged, \`merged\` is true and the tasks are done; syncing a
            finished run again re-checks its pull requests, so a merge made later also moves its tasks to done.
+
+        Runs drive themselves. Starting a run gives the space a timer (every five minutes, on EDGE) that runs Drive
+        Cloud Coding Runs: it folds the agent's turn, marks tasks done once every pull request has merged, asks the
+        agent to fix a failed check (naming it and its URL), and, once landing is approved, asks it to land the pull
+        request (up to date, checks green, \`gh pr merge --auto --squash\`). The Agentic Review check is advisory and
+        never blocks. The pull request is authored with the person's own GitHub token, so they cannot approve it on
+        GitHub: an approving review from anyone, or a \`land\` label on the pull request, is how they approve
+        landing. Each follow-up goes out once per pull request and commit. Syncing by hand is optional.
 
         A run takes minutes to hours. Do not start a second run for the same tasks: tasks an agent holds are skipped.
       `,

@@ -27,4 +27,7 @@ export const CloudRunOperationHandlerSet = OperationHandlerSet.lazy([
   CloudRunOperation.SyncCloudRun.pipe(
     Operation.lazyHandler(() => import('./cloud-run.ts').then(({ syncRun }) => ({ default: syncRun }))),
   ),
+  CloudRunOperation.DriveCloudRuns.pipe(
+    Operation.lazyHandler(() => import('./drive-cloud-runs.ts').then(({ drive }) => ({ default: drive }))),
+  ),
 ]);
