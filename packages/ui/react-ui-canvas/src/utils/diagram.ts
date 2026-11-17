@@ -12,7 +12,7 @@ import { type ElementId, type Link, type Point, isEllipseNode } from '@dxos/scen
 
 import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { nodeTitle } from './parts.ts';
-import { curvePoint, linkGeometry, smartPoints } from './route.ts';
+import { curvePoint, linkGeometry, orthoPoints, smartPoints } from './route.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** Samples per curve: enough for crossings and routes-through-node to see the arc, not just its chord. */
@@ -36,6 +36,10 @@ const linkPoints = (scene: RenderList2D, registry: NodeRegistry, link: Link): Po
   if (!geometry) {
     return undefined;
   }
+  // A diagram connector is drawn along its own route, whatever its type.
+  if (geometry.diagram) {
+    return geometry.diagram.points;
+  }
   const { source, target } = geometry;
   switch (link.type) {
     case 'line':
@@ -44,6 +48,8 @@ const linkPoints = (scene: RenderList2D, registry: NodeRegistry, link: Link): Po
       return [source.point, ...link.points, target.point];
     case 'smart':
       return smartPoints(source, target);
+    case 'ortho':
+      return orthoPoints(source, target);
     case 'curve':
       return Array.from({ length: CURVE_SAMPLES + 1 }, (_, index) => curvePoint(source, target, index / CURVE_SAMPLES));
   }

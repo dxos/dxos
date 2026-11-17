@@ -57,6 +57,8 @@ const program = Effect.gen(function* () {
     rows: (sparql) => Effect.suspend(() => current.store.rows(sparql)),
     cursor: (source) => Effect.suspend(() => current.store.cursor(source)),
     setCursor: (source, hash) => Effect.suspend(() => current.store.setCursor(source, hash)),
+    exportTrig: () => Effect.suspend(() => current.store.exportTrig()),
+    importTrig: (trig) => Effect.suspend(() => current.store.importTrig(trig)),
     clear: () => Effect.suspend(() => current.store.clear()),
   };
 

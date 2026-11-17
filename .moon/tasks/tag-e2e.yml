@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   e2e:
-    command: pnpm exec playwright test
+    command: playwright test
     args:
       - --config=src/playwright/playwright.config.ts
     # Declared here, never in a workflow `env`: moon hashes the AMBIENT value of env-var `inputs`, so

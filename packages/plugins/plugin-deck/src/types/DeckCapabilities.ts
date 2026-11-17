@@ -30,6 +30,21 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<EphemeralDe
   `${DeckNamespace.key}.capability.ephemeralState`,
 );
 
+/** Where the deck is: whether it shows only its current plank, the plank it is scrolled to, and its open companions. */
+export type View = Readonly<{
+  /** Whether the deck shows only its current plank (flattened, or mobile) rather than planks side by side. */
+  flat: boolean;
+  /**
+   * The first plank not folded with at least half its width in view; the current plank when {@link flat}, and the first
+   * plank when the deck is not sliding. Unset while a sliding deck has not yet measured the planks it now shows.
+   */
+  front?: string;
+  /** The planks whose companion is open, and the companion tab the deck shows them in. */
+  companions: Readonly<{ items: readonly string[]; variant?: string }>;
+}>;
+
+export const View = Capability.makeSingleton<Atom.Atom<View>>()(`${DeckNamespace.key}.capability.view`);
+
 /**
  * Holds the URL projection in flight, so starting a newer one interrupts it. A projection can wait
  * out its deadlines, so without this an older one could resume and apply a URL the address bar has

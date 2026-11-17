@@ -3,15 +3,13 @@
 //
 
 export * as Cell from './Cell.ts';
-
-export * from './decorators.tsx';
-export * from './layout.ts';
-export * from './ModuleContainer.tsx';
-export * from './objects.ts';
-export * from './plugins.ts';
-export * from './snapshot.ts';
-export * from './story-space.ts';
-
-// NOTE: `./modules` (Logging/Invocations/ExecutionGraph) is a separate `@dxos/storybook-testing/modules`
-// entrypoint so importing the core (Cell/ModuleContainer) never eagerly pulls their heavy deps
-// (@dxos/devtools, @dxos/compute-runtime, …) into every consumer.
+export * as ModuleContainer from './ModuleContainer.ts';
+export * as ModuleSurfacesPlugin from './ModuleSurfacesPlugin.ts';
+export * as StoryAiPlugin from './StoryAiPlugin.ts';
+export * as StoryEmbed from './StoryEmbed.tsx';
+export * as StoryHarness from './StoryHarness.ts';
+export * as StoryLayout from './StoryLayout.ts';
+export * as StoryModules from './StoryModules.ts';
+export * as StoryPeers from './StoryPeers.ts';
+export * as StorySnapshot from './StorySnapshot.ts';
+export * as StoryStagePlugin from './StoryStagePlugin.ts';

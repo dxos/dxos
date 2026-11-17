@@ -105,6 +105,7 @@ op ConnectChannel
 
 ```mdl
 feat F-1: Channel chat
+  uses: [AppendChannelMessage, Channel]
   req F-1.1: A Channel article MUST render its feed messages newest-last with a
     pinned composer; sending invokes AppendChannelMessage.
   req F-1.2: Externally-synced channels (those carrying foreign-key Obj.Meta) MUST

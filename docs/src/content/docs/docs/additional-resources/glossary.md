@@ -38,9 +38,9 @@ An append log of ECHO objects, such as the messages of a chat, stored apart from
 
 Every [space](#space) a device holds, as one graph. It queries across spaces, finds a space's database by id, and holds the [registry](#registry).
 
-### MESH
+### [MESH](/docs/mesh/overview/)
 
-The set of peer networking technologies behind ECHO and HALO. MESH doesn't connect every pair of devices directly. It maintains a network so that all devices can reach each other, perhaps through intermediaries.
+The set of peer networking technologies behind ECHO and HALO. MESH doesn't connect every pair of devices directly. It maintains a network so that all devices can reach each other, perhaps through intermediaries. Its own terms are in the [MESH glossary](/docs/mesh/resources/glossary/).
 
 ### [Migration](/docs/echo/concepts/types/#versions-and-migrations)
 
@@ -72,7 +72,8 @@ A source a query reads from: a [space](#space), the [registry](#registry), or a 
 
 ### Signaling service
 
-A service provided by DXOS KUBEs which helps peers locate each other on the network and establish peer-to-peer connections.
+The service that introduces peers to each other so they can open direct connections. EDGE runs it. See
+[Signaling and discovery](/docs/mesh/concepts/signaling/).
 
 ### Snapshot
 

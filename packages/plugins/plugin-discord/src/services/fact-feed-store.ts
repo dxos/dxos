@@ -55,6 +55,8 @@ export const factFeedStoreLayer = ({
           Effect.sync(() => {
             Obj.update(state, (state) => CrawlState.setSourceHash(state, source, hash));
           }),
+        exportTrig: () => unsupported('exportTrig'),
+        importTrig: () => unsupported('importTrig'),
         clear: () => unsupported('clear'),
       };
       return store;

@@ -92,6 +92,7 @@ const CursorArgs = Schema.Struct({ source: Schema.String });
 const SetCursorArgs = Schema.Struct({ source: Schema.String, hash: Schema.String });
 const AggregateArgs = Schema.Struct({ aggregate: FactAggregate });
 const EntityLabelsArgs = Schema.Struct({ keys: Schema.Array(Schema.String) });
+const ImportTrigArgs = Schema.Struct({ trig: Schema.String });
 
 const METHODS = [
   'putFacts',
@@ -105,6 +106,8 @@ const METHODS = [
   'rows',
   'cursor',
   'setCursor',
+  'exportTrig',
+  'importTrig',
   'clear',
 ] as const;
 
@@ -171,6 +174,8 @@ export const make = (baseUrl: string): FactStoreApi => {
     rows: (sparql) => call('rows', { sparql }, Rows).pipe(Effect.map((rows) => [...rows])),
     cursor: (source) => call('cursor', { source }, Hash).pipe(Effect.map((hash) => hash ?? undefined)),
     setCursor: (source, hash) => call('setCursor', { source, hash }, Done).pipe(Effect.asVoid),
+    exportTrig: () => call('exportTrig', {}, Schema.String),
+    importTrig: (trig) => call('importTrig', { trig }, Schema.Number),
     clear: () => call('clear', {}, Done).pipe(Effect.asVoid),
   };
 };
@@ -248,6 +253,12 @@ const dispatch = (
       return Schema.decodeUnknownEffect(SetCursorArgs)(body).pipe(
         Effect.flatMap(({ source, hash }) => store.setCursor(source, hash)),
         Effect.as(null),
+      );
+    case 'exportTrig':
+      return store.exportTrig();
+    case 'importTrig':
+      return Schema.decodeUnknownEffect(ImportTrigArgs)(body).pipe(
+        Effect.flatMap(({ trig }) => store.importTrig(trig)),
       );
     case 'clear':
       return store.clear().pipe(Effect.as(null));

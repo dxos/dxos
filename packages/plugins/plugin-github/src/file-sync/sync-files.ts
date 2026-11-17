@@ -509,11 +509,15 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
           return true;
         });
 
+      // A path whose pull failed is not exported, which would overwrite the changes it did not take; the token
+      // stays behind it, so every pass retries it until it pulls.
+      const unpulled = new Set<string>();
       for (const change of changes) {
         const outcome = yield* pullChange(change).pipe(
           Effect.catchCause((cause) => {
             log.warn('github file sync: pull failed', { path: change.path, cause });
             skipped.push({ path: change.path, reason: 'import failed' });
+            unpulled.add(change.path);
             return Effect.succeed(false);
           }),
         );
@@ -527,7 +531,7 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
       for (const marker of markers.values()) {
         const mapping = mappingById.get(marker.mapping);
         // A mapping that no longer claims the path (F-3.5, its import still to succeed) does not export it.
-        if (!mapping?.export || mappingFor(marker.path)?.id !== mapping.id) {
+        if (!mapping?.export || mappingFor(marker.path)?.id !== mapping.id || unpulled.has(marker.path)) {
           continue;
         }
         const exported = mapping.export;
@@ -555,7 +559,8 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
 
       let pushed = 0;
       let pullRequest = state.pullRequest;
-      let nextState: WriteState = { ...state, headEtag };
+      // Without the ETag the next head read is not a 304, so a token kept behind a failed pull is compared again.
+      let nextState: WriteState = { ...state, headEtag: unpulled.size > 0 ? undefined : headEtag };
       // F-4.6 is not implemented: a commit on the write branch this space did not write holds the push back.
       const foreignTip = state.lastWritten !== undefined && writeTip !== undefined && writeTip !== state.lastWritten;
       if (exports.length > 0 && foreignTip) {
@@ -635,7 +640,7 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
       }
       return {
         result: { requests, pulled, pushed, skipped, ...(pullRequest ? { pullRequest } : {}) },
-        token: head,
+        token: unpulled.size > 0 ? token : head,
         writes,
         history,
       };

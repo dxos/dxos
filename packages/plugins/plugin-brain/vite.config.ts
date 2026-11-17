@@ -18,6 +18,7 @@ export default defineConfig({
     BrainOperation: 'src/types/BrainOperation.ts',
     BrainSettings: 'src/types/BrainSettings.ts',
     BrainSurface: 'src/types/BrainSurface.ts',
+    RemoteFactStorePlugin: 'src/RemoteFactStorePlugin.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

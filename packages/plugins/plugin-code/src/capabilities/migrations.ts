@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
+import { fileDialects } from '@dxos/deus/dialect';
 import { type Database, Filter, Migration, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -110,7 +111,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
   if (parent) {
     let spec = await findNested(db, state, parent);
     if (!spec) {
-      spec = db.add(Spec.make({ name: parent.name, dialects: [...FeatureMap.SOFTWARE_DIALECTS] }));
+      spec = db.add(Spec.make({ name: parent.name, dialects: [FeatureMap.SOFTWARE_DIALECT] }));
       Obj.setParent(spec, parent);
       state.byParent.set(parent.id, spec);
     }
@@ -131,7 +132,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
       if (Spec.instanceOf(existing)) {
         spec = existing;
       } else {
-        const made = db.add(Spec.make({ name: project.name ?? '', dialects: [...FeatureMap.SOFTWARE_DIALECTS] }));
+        const made = db.add(Spec.make({ name: project.name ?? '', dialects: [FeatureMap.SOFTWARE_DIALECT] }));
         Obj.update(project, (project) => {
           project.specs.push(Ref.make(made));
         });
@@ -149,7 +150,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
   const [existing] = await db
     .query(Filter.and(Filter.type(Spec.Spec, { name: UNPLACED_NAME }), Filter.hasParent(false)))
     .run();
-  const unplaced = existing ?? db.add(Spec.make({ name: UNPLACED_NAME, dialects: [...FeatureMap.SOFTWARE_DIALECTS] }));
+  const unplaced = existing ?? db.add(Spec.make({ name: UNPLACED_NAME, dialects: [FeatureMap.SOFTWARE_DIALECT] }));
   state.unplaced = unplaced;
   return unplaced;
 };
@@ -334,11 +335,11 @@ const repoint = async (db: Database.Database, from: Obj.Unknown, to: Obj.Unknown
 };
 
 /**
- * `Spec` 0.2.0 → 0.3.0: the spec owns its `Text` (`content`) where it held a document that owned it, and its features
+ * `Spec` 0.2.0 → 0.4.0: the spec owns its `Text` (`content`) where it held a document that owned it, and its features
  * and canvas layout move from fields to annotations. The document's `Text` moves onto the spec rather than being
  * copied, so it keeps its id, its history and the cursors anchored in it; the document's meta keys (its file links)
- * move too, and the emptied document is deleted. Runs before {@link specDocuments}, so that one finds only the
- * documents no spec held.
+ * move too, and the emptied document is deleted; its text's front matter moves into the spec's fields. Runs before
+ * {@link specDocuments}, so that one finds only the documents no spec held.
  */
 export const makeSpecContent = (): Migration.ObjectMigration => {
   // The document and the features each spec held, read in the transform while their refs are still live.
@@ -354,17 +355,21 @@ export const makeSpecContent = (): Migration.ObjectMigration => {
         documents.set(id, held);
       }
       members.set(id, (await Ref.loadAll(features)).filter(Feature.instanceOf));
+      const heldText = await held?.content.tryLoad();
       const content = held?.content ?? Ref.make(db.add(Text.make({ content: '' })));
       const keys = [...Obj.getMeta(from).keys, ...(held ? Obj.getMeta(held).keys : [])]
         .filter(
           (key, index, all) => all.findIndex(({ source, id }) => source === key.source && id === key.id) === index,
         )
         .map(({ source, id }) => ({ source, id }));
-      // Every 0.2.0 spec was a feature map.
+      // Every 0.2.0 spec was a feature map; its text's front matter may name more dialects.
       return {
         name,
         description,
-        dialects: [...FeatureMap.SOFTWARE_DIALECTS],
+        dialects: LegacyProject.softwareDialects([
+          FeatureMap.SOFTWARE_DIALECT,
+          ...fileDialects(heldText?.content ?? ''),
+        ]),
         content: Ref.fromURI(content.uri),
         [Obj.Meta]: { keys },
       };
@@ -388,18 +393,20 @@ export const makeSpecContent = (): Migration.ObjectMigration => {
         await repoint(db, held, object);
         db.remove(held);
       }
+      await LegacyProject.takeFrontMatter(object);
     },
   });
 };
 
 /**
- * A `SpecDocument` no spec held → `Spec` 0.3.0: it becomes a spec of its own with no features, keeping its id, its
- * `Text` (already its child) and its meta keys.
+ * A `SpecDocument` no spec held → `Spec`: it becomes a spec of its own with no features, keeping its id, its
+ * `Text` (already its child) and its meta keys, and takes its text's front matter into its fields.
  */
 export const specDocuments = Migration.define({
   from: LegacySpec.Document,
   to: Spec.Spec,
   transform: async ({ name, content }) => ({ name: name ?? '', dialects: [], content: Ref.fromURI(content.uri) }),
+  onMigration: ({ object }) => LegacyProject.takeFrontMatter(object),
 });
 
 export default Capability.makeModule(

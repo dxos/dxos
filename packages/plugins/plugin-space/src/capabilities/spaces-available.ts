@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -16,8 +17,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
+import { DeviceType, getDeviceLabel } from '@dxos/client/halo';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
-import { PublicKey } from '@dxos/keys';
+import { EID, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -26,16 +28,41 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { unpackJson } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { ViewLocation } from '@dxos/react-ui-attention/types';
+import { type JsonValue, isNonNullable } from '@dxos/util';
 
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, type SpaceSchema } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
 import {
+  FOLLOW_BROADCAST_INTERVAL,
+  LOCATION_BROADCAST_INTERVAL,
   PRESENCE_BROADCAST_INTERVAL,
+  PRESENCE_EXPIRY,
+  applyPeerDeck,
+  applyPeerFollowing,
+  applyViewingMessage,
+  getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
   groupPresenceKeysBySpace,
+  isFollowTargetOf,
+  isSameFollowTarget,
+  makeLocationScheduler,
+  makeSendScheduler,
+  parseViewingMessage,
+  prunePeerSessions,
 } from '../util/presence.ts';
+import { makeRestartable } from '../util/restartable.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
+
+const DEVICE_KINDS: Record<DeviceType, SpaceSchema.SessionDevice['kind']> = {
+  [DeviceType.UNKNOWN]: 'unknown',
+  [DeviceType.BROWSER]: 'browser',
+  [DeviceType.NATIVE]: 'native',
+  [DeviceType.MOBILE]: 'mobile',
+  [DeviceType.AGENT]: 'agent',
+  [DeviceType.AGENT_MANAGED]: 'agent',
+};
 
 /**
  * Resolve the designated default space, migrating a legacy profile into the settings space until
@@ -89,6 +116,13 @@ const awaitChange = (client: Client, settingsSpace: Space | undefined): Effect.E
     });
   });
 
+const toJsonValue = (json: Schema.Json): JsonValue =>
+  json === null || typeof json !== 'object'
+    ? json
+    : Array.isArray(json)
+      ? json.map(toJsonValue)
+      : Object.fromEntries(Object.entries(json).map(([key, value]) => [key, toJsonValue(value)]));
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const subscriptions = new SubscriptionList();
@@ -98,6 +132,7 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
     const attention = yield* AttentionCapabilities.Attention;
+    const viewState = yield* AttentionCapabilities.ViewState;
     const stateAtom = yield* SpaceCapabilities.State;
     const ephemeralAtom = yield* SpaceCapabilities.EphemeralState;
     const client = yield* ClientCapabilities.Client;
@@ -198,34 +233,136 @@ export default Capability.makeModule(
     });
     subscriptions.add(() => spaceNamesSub.unsubscribe());
 
+    // Only the defined fields: the payload is packed as a protobuf Struct, which has no undefined.
+    const getLocation = (key: string): SpaceSchema.PeerLocation | undefined => {
+      const { selection, viewport } = viewState.get(ViewLocation.aspect, key);
+      return selection || viewport ? { ...(selection && { selection }), ...(viewport && { viewport }) } : undefined;
+    };
+    const getLocations = (keys: readonly string[]) =>
+      Object.fromEntries(
+        keys.flatMap((key) => {
+          const location = getLocation(key);
+          return location ? [[key, location]] : [];
+        }),
+      );
+
+    const { sessionId } = registry.get(ephemeralAtom);
+    const getDevice = (): SpaceSchema.SessionDevice | undefined => {
+      const profile = client.halo.device?.profile;
+      if (!profile) {
+        return undefined;
+      }
+      const label = getDeviceLabel(profile);
+      const kind = profile.type !== undefined ? DEVICE_KINDS[profile.type] : undefined;
+      return {
+        ...(label && { label }),
+        ...(profile.platform && { platform: profile.platform }),
+        ...(profile.os && { os: profile.os }),
+        ...(kind && { kind }),
+      };
+    };
+
+    // Sessions that follow this one, by space, identity and session, with when they last said so.
+    const followers = new Map<string, number>();
+    const isFollowed = (now: number) => [...followers.values()].some((lastSeen) => now - lastSeen < PRESENCE_EXPIRY);
+    // The follow pointer posts in the spaces where this session is followed; a lapsed follower drops out here.
+    const syncFollowedSpaces = (now: number) => {
+      for (const [follower, lastSeen] of followers) {
+        if (now - lastSeen >= PRESENCE_EXPIRY) {
+          followers.delete(follower);
+        }
+      }
+      const followedSpaces = [...new Set([...followers.keys()].map((follower) => follower.split('/')[0]))].sort();
+      registry.update(ephemeralAtom, (state) =>
+        state.followedSpaces.join() === followedSpaces.join() ? state : { ...state, followedSpaces },
+      );
+    };
+
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
-    let broadcastCleanup: (() => void) | undefined;
     let previousActive: readonly string[] = [];
     const setupBroadcast = () => {
-      broadcastCleanup?.();
-
       const layout = registry.get(layoutAtom);
       const current = attention.getCurrent();
       const active = layout.active;
       const departed = previousActive.filter((id) => !active.includes(id));
       const inactive = [...layout.inactive, ...departed];
       previousActive = active;
+      // The space's own location is the deck's front plank there.
+      const locationKeys = [
+        ...new Set(
+          [...current, ...active].flatMap((path) => {
+            const spaceId = GraphPath.getSpaceIdFromPath(path);
+            return [getPresenceKeyFromPath(path), spaceId && EID.make({ spaceId })].filter(isNonNullable);
+          }),
+        ),
+      ];
 
-      const send = () => {
-        const spaces = client.spaces.get();
+      // Followed view state is read for each space and each object open in it, by their EIDs.
+      const viewStateContexts = new Map<string, EID.EID[]>(
+        client.spaces
+          .get()
+          .map((space) => [
+            space.id,
+            [
+              ...new Set([
+                EID.make({ spaceId: space.id }),
+                ...locationKeys.filter((key) => EID.getSpaceId(key) === space.id),
+              ]),
+            ],
+          ]),
+      );
+      // Only a follower reads them, so they go out only while this session is followed.
+      const getViewState = (spaceId: string): { viewState?: Record<string, Record<string, JsonValue>> } => {
+        if (!isFollowed(Date.now())) {
+          return {};
+        }
+        const followed = Object.entries(viewState.followed(viewStateContexts.get(spaceId) ?? []));
+        return followed.length > 0
+          ? {
+              viewState: Object.fromEntries(
+                followed.map(([key, values]) => [
+                  key,
+                  Object.fromEntries(
+                    Object.entries(values).map(([contextId, value]) => [contextId, toJsonValue(value)]),
+                  ),
+                ]),
+              ),
+            }
+          : {};
+      };
+
+      const send = (spaceIds?: ReadonlySet<string>) => {
+        const spaces = client.spaces.get().filter((space) => !spaceIds || spaceIds.has(space.id));
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
+          const device = getDevice();
+          const following = registry.get(ephemeralAtom).following;
           const attendedBySpace = groupPresenceKeysBySpace([...current]);
           const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 
           for (const space of spaces) {
             const { added, removed } = changesBySpace.get(space.id) ?? { added: [], removed: [] };
+            const attended = attendedBySpace.get(space.id) ?? [];
             void space
               .postMessage('viewing', {
                 identityKey: identity.identityKey ?? '',
-                attended: attendedBySpace.get(space.id) ?? [],
+                sessionId,
+                ...(device && { device }),
+                attended,
                 added,
                 removed,
+                // Every plank's, so a follower mirroring this deck scrolls each of them, not only the attended one.
+                locations: getLocations([...new Set([...attended, ...added, EID.make({ spaceId: space.id })])]),
+                ...(following?.spaceId === space.id && {
+                  following: {
+                    identityKey: following.identityKey,
+                    ...(following.sessionId && { sessionId: following.sessionId }),
+                  },
+                }),
+                deck: {
+                  planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id),
+                  ...getViewState(space.id),
+                },
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
               .catch((err) => {
@@ -239,18 +376,61 @@ export default Capability.makeModule(
 
       send();
       // Send at interval to allow peers to expire entries if they become disconnected.
-      const interval = setInterval(() => send(), PRESENCE_BROADCAST_INTERVAL);
-      broadcastCleanup = () => clearInterval(interval);
+      const interval = setInterval(() => {
+        syncFollowedSpaces(Date.now());
+        send();
+      }, PRESENCE_BROADCAST_INTERVAL);
+
+      // Moving or scrolling in an open object re-sends to its space, at most once per interval, which is shorter while
+      // followed; every plank's location goes out, so a follower mirroring this deck scrolls each of them.
+      const sendInterval = () => (isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL);
+      // Locations and followed view state (the deck's front, say) share one send, so together they keep to its rate.
+      const sends = makeSendScheduler(send, sendInterval);
+      const locationScheduler = makeLocationScheduler(locationKeys, getLocation, sends);
+      const locationSubscriptions = locationKeys.map((key) =>
+        viewState.subscribe(ViewLocation.aspect, key, () => locationScheduler.schedule(key)),
+      );
+      const unsubscribeViewState = viewState.subscribeFollowed((_, contextId) => {
+        if (!EID.isEID(contextId) || !isFollowed(Date.now())) {
+          return;
+        }
+        const spaceId = EID.getSpaceId(contextId);
+        if (spaceId && viewStateContexts.get(spaceId)?.includes(contextId)) {
+          sends.schedule([spaceId]);
+        }
+      });
+
+      return () => {
+        clearInterval(interval);
+        sends.dispose();
+        locationSubscriptions.forEach((unsubscribe) => unsubscribe());
+        unsubscribeViewState();
+      };
     };
+    // A send reads atoms whose first build notifies the subscriptions below, which set the broadcast up again.
+    const broadcast = makeRestartable(setupBroadcast);
 
     // Subscribe to layout changes for broadcast.
-    subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
+    subscriptions.add(registry.subscribe(layoutAtom, broadcast.restart));
     // Subscribe to attention.current changes.
-    subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
+    subscriptions.add(attention.subscribeCurrent(broadcast.restart));
+    // Starting, retargeting or stopping a follow tells the space at once, so the leader's rate changes with it.
+    let previousFollowing = registry.get(ephemeralAtom).following;
+    subscriptions.add(
+      registry.subscribe(ephemeralAtom, ({ following }) => {
+        if (!isSameFollowTarget(following, previousFollowing)) {
+          previousFollowing = following;
+          broadcast.restart();
+        }
+      }),
+    );
     // Initial setup.
-    setupBroadcast();
+    broadcast.restart();
     // Cleanup.
-    subscriptions.add(() => broadcastCleanup?.());
+    subscriptions.add(broadcast.dispose);
+
+    // Sessions heard from in each space; a new one hears this session's view at once, not at the next heartbeat.
+    const heard = new Set<string>();
 
     // Listen for active nodes from other peers in the space.
     const viewingSub = client.spaces.subscribe((spaces) => {
@@ -260,39 +440,41 @@ export default Capability.makeModule(
           space.listen('viewing', (message) => {
             // The gossip payload travels as a `google.protobuf.Struct` packed in an `Any`, so it
             // arrives as opaque JSON that has to be narrowed rather than destructured as typed.
-            const payload = unpackJson(message.payload) ?? {};
-            const { added, removed } = payload;
-            const attended = new Set(Array.isArray(payload.attended) ? payload.attended : []);
-
-            const identityKey =
-              typeof payload.identityKey === 'string' ? PublicKey.safeFrom(payload.identityKey) : undefined;
+            const viewing = parseViewingMessage(unpackJson(message.payload) ?? {});
+            const identityKey = viewing && PublicKey.safeFrom(viewing.identityKey);
             const currentIdentity = Option.getOrUndefined(haloIdentity.getSnapshot());
-            if (
-              identityKey &&
-              currentIdentity?.identityKey !== identityKey.toHex() &&
-              Array.isArray(added) &&
-              Array.isArray(removed)
-            ) {
+            if (viewing && identityKey && currentIdentity?.identityKey !== identityKey.toHex()) {
               const peer = identityKey.toHex();
               const lastSeen = Date.now();
+              const follower = `${space.id}/${peer}/${viewing.sessionId ?? peer}`;
+              const isNewSession = !heard.has(follower);
+              heard.add(follower);
+              // A new follower needs the location now, not at the next move or heartbeat.
+              let isNewFollower = false;
+              if (isFollowTargetOf(viewing.following, currentIdentity?.identityKey ?? '', sessionId)) {
+                isNewFollower = !followers.has(follower);
+                followers.set(follower, lastSeen);
+              } else {
+                followers.delete(follower);
+              }
+              if (isNewSession || isNewFollower) {
+                broadcast.restart();
+              }
+              syncFollowedSpaces(lastSeen);
               registry.update(ephemeralAtom, (ephemeral) => {
-                const viewersByObject = { ...ephemeral.viewersByObject };
-                for (const key of added) {
-                  if (typeof key === 'string') {
-                    viewersByObject[key] = {
-                      ...viewersByObject[key],
-                      [peer]: { lastSeen, currentlyAttended: attended.has(key) },
-                    };
-                  }
-                }
-                for (const key of removed) {
-                  if (typeof key === 'string' && viewersByObject[key]?.[peer]) {
-                    const { [peer]: _, ...rest } = viewersByObject[key];
-                    viewersByObject[key] = rest;
-                  }
-                }
-
-                return { ...ephemeral, viewersByObject };
+                const viewersByObject = applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen);
+                return {
+                  ...ephemeral,
+                  viewersByObject,
+                  peerDecks: prunePeerSessions(
+                    applyPeerDeck(ephemeral.peerDecks, space.id, peer, viewing),
+                    viewersByObject,
+                  ),
+                  peerFollowing: prunePeerSessions(
+                    applyPeerFollowing(ephemeral.peerFollowing, space.id, peer, viewing),
+                    viewersByObject,
+                  ),
+                };
               });
             }
           }),

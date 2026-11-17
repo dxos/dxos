@@ -23,8 +23,6 @@ import * as McpLatency from './McpLatency.ts';
 
 const SPACE = SpaceId.random();
 
-const SKILL_SECRET = 'test-secret';
-
 const KEY = 'com.example.operation.tasks.createTask';
 
 const CreateTask = Operation.make({
@@ -90,7 +88,6 @@ describe('startMcpHost', () => {
           spaceIds: [SPACE],
           context: () => context,
           registry: () => registry,
-          skillSecret: SKILL_SECRET,
         });
         const toolkit = yield* McpToolkit.make({ url, protocol: 'http' });
 
@@ -107,7 +104,7 @@ describe('startMcpHost', () => {
         yield* Stream.runDrain(
           yield* handlers.handle('loadSkill', { skill: 'tasks' }).pipe(Effect.provide(toolkit.layer)),
         );
-        const skillToken = yield* McpServer.skillGate(SKILL_SECRET).issue(definition.key);
+        const skillToken = yield* McpServer.skillGate().issue(definition.key);
         const results = yield* handlers
           .handle('invokeOperation', { key: KEY, input: { title: 'Ship' }, spaceId: SPACE, skillToken })
           .pipe(Effect.provide(toolkit.layer));

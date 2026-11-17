@@ -32,6 +32,8 @@ export const TldrawArticle = ({
   selection,
   onSelectionChange,
   onActivate,
+  camera,
+  onCameraChange,
 }: TldrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const [settings, updateSettings] = Hooks.useAtomCapabilityState(TldrawCapabilities.Settings);
@@ -66,6 +68,8 @@ export const TldrawArticle = ({
       selection={selection}
       onSelectionChange={onSelectionChange}
       onActivate={onActivate}
+      camera={camera}
+      onCameraChange={onCameraChange}
       cursors
       {...props}
     />

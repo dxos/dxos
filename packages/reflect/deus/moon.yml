@@ -5,9 +5,18 @@ tags:
   - ts-test
   - pack
 tasks:
+  # The dialects are inlined from lang/ (`?raw`), so a dialect edit rebuilds and retests this package and its dependents.
   build:
     deps:
       - ~:#prebuild
+    inputs:
+      - lang/**/*.mdl
+  test:
+    inputs:
+      - lang/**/*.mdl
+  source-hash:
+    inputs:
+      - lang/**/*.mdl
   prebuild-lezer:
     command: pnpm exec lezer-generator --typeScript ./src/extension/mdl.grammar -o ./src/extension/gen/mdl.ts
     inputs:

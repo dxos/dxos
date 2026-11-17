@@ -215,6 +215,7 @@ feat F-1: Agent Creation and Configuration
 
 ```mdl
 feat F-2: Person Profile Management
+  uses: [Profile]
   desc: Maintain a markdown Profile document for each Person in the space.
 
   req F-2.1:
@@ -236,6 +237,7 @@ feat F-2: Person Profile Management
 
 ```mdl
 feat F-3: User Profile
+  uses: [Profile]
   desc: Maintain a frank profile document about the user.
 
   req F-3.1: Agent creates "Profile: {userName}" document on initialization.
@@ -263,6 +265,7 @@ feat F-4: Daily Journal
 
 ```mdl
 feat F-5: Dashboard
+  uses: [Permissions, Profile]
   desc: Article surface providing overview of sidekick state.
 
   req F-5.1: Dashboard displayed for Agent objects with sidekick skill.

@@ -20,7 +20,9 @@ import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
-import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
@@ -48,7 +50,7 @@ type StoryArgs = {
 const definition = ArchitectureSpace.make();
 
 // The space is seeded by the template's own definition, as `SpaceOperation.ApplyTemplate` applies it.
-const withTemplate = createStoryDecorators<StoryArgs>(({ args }) => ({
+const withTemplate = StoryHarness.decorators<StoryArgs>(({ args }) => ({
   types: [...definition.schemas],
   plugins: [
     IllustratorPlugin.make(),
@@ -91,7 +93,7 @@ const ReadonlyView = ({ canvas, readonly, children }: ReadonlyViewProps) => {
 
 // One drawing per diagram of the set; the overview opens as the article and its drill-down boxes open the others.
 const withDiagrams = (set: DiagramSet) =>
-  createStoryDecorators<StoryArgs>(({ args }) => {
+  StoryHarness.decorators<StoryArgs>(({ args }) => {
     const canvas = Promise.withResolvers<URI.URI>();
     return {
       types: [Drawing.Drawing, Drawing.Canvas],
@@ -113,7 +115,7 @@ const withDiagrams = (set: DiagramSet) =>
 
 const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-canvas/samples/Template',
-  render: () => <ModuleContainer />,
+  render: () => <ModuleContainer.Root />,
   parameters: { layout: 'fullscreen', translations },
 };
 

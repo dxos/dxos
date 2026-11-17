@@ -9,11 +9,10 @@ import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 import * as Variant from '@dxos/plugin-studio/Variant';
+import { SlideTheme, splitSlides } from '@dxos/react-ui-slides/dialect';
 import { Text } from '@dxos/schema';
 
-import { splitSlides } from '../markdown/split.ts';
 import { PresenterNamespace } from '../namespace.ts';
-import * as SlideTheme from './SlideTheme.ts';
 
 /** Key of the presenter skill, attached to the Presentation type. */
 export const SKILL_KEY = 'org.dxos.skill.presenter';

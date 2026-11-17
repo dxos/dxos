@@ -1,7 +1,7 @@
 {
   "name": "@dxos/react-ui-rdf",
   "version": "0.16.0",
-  "description": "Presentational viewer for extracted semantic facts.",
+  "description": "Presentational components for extracted semantic facts: an entity browser, a fact viewer with type filters, and a Turtle snippet.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -44,7 +44,8 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@dxos/ui-types": "workspace:*"
+    "@dxos/ui-types": "workspace:*",
+    "@tanstack/react-virtual": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -14,14 +14,15 @@ import * as Goal from '@dxos/plugin-agent/Goal';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Interview',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     ...storyParameters,
     translations: [...storyParameters.translations, ...agentTranslations],

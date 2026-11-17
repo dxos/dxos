@@ -1,0 +1,60 @@
+---
+title: Operations
+description: A typed action with an input and output schema, invoked by key.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+An operation is the unit of compute in DXOS. It is a typed action, defined once and run by whoever needs it: a person
+through the UI, an agent as a tool, or a trigger.
+
+## Model
+
+**Definition.** `Operation.make` builds a definition from a key, metadata and two schemas:
+
+- The **key** is a DXN, such as `org.example.stash.markRead`, and it names the operation everywhere it runs.
+- The **metadata** gives a name, a description and an icon. The description is what an agent reads when it decides
+  whether to call the operation.
+- The **input and output schemas** are Effect schemas. Their field descriptions tell people and agents what to pass.
+- A definition can also list the ECHO **types** it uses, so the types are known where it runs remotely, and the
+  **services** its handler needs.
+
+**Handler.** A handler is an Effect that takes the input and returns the output. `Operation.withHandler` attaches one to
+a definition. The definition and the handler are separate values, so a package can publish the definition for others
+to call without shipping how it runs. `Operation.lazyHandler` names the module that holds the handler, so the code
+loads only on the first call.
+
+<Snippet file="plex-tutorial/src/types/StashedLinkOperation" region="operation" />
+
+**Registry and invoker.** A handler set is a group of handlers that a runtime loads together; a PLEX plugin contributes
+one through a capability (see PLEX's [Operations](/docs/plex/concepts/operations/)). The invoker finds the handler by
+the definition's key, checks the input against the input schema, runs the handler with the services it declared, and
+checks the output. The registry holds every definition as an ECHO object, so agents and the MCP server can search the
+operations a space offers.
+
+**Annotations.** A definition carries hints for its callers:
+
+| Annotation | Says |
+| ---------- | ---- |
+| Mutation   | Whether the operation changes nothing, writes, or destroys data         |
+| Idempotent | Whether running it twice with the same input has the same effect as once |
+| Visible    | Whether people can pick it, as in the command palette; unmarked operations are hidden |
+
+## Behavior
+
+- One definition serves every caller. A button, the command palette, an agent and a trigger invoke the same key with
+  the same input.
+- Errors are typed. A handler fails with tagged errors that the caller catches by tag. Invoking a key that no handler
+  set serves fails with `NoHandlerError`.
+- An operation can invoke other operations. The call is linked to the caller's [process](/docs/edge/concepts/processes/),
+  so the trace shows which call started it.
+- When an operation is deployed to EDGE, EDGE assigns it a deployment id, and a client can invoke it there by that id
+  or by its key.
+- Every call writes its start and end to the [trace](/docs/edge/concepts/traces/).
+
+## Limits
+
+- Input and output must be serializable, since a call may cross to another worker or to EDGE. Pass ECHO objects by
+  reference.
+- A handler gets only the services its definition declares and the ones every process has. It does not get the UI.
+- An operation marked as UI-only is left out of the registry, so agents and the MCP server cannot find it.

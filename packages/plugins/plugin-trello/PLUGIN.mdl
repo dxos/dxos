@@ -150,6 +150,7 @@ op SyncTrelloBoard
 
 ```mdl
 feat F-1: Discover Boards
+  uses: [GetTrelloBoards]
 
   req F-1.1:
     when: user opens the integration target picker
@@ -158,6 +159,7 @@ feat F-1: Discover Boards
 
 ```mdl
 feat F-2: Materialize Board
+  uses: [SyncTrelloBoard]
 
   req F-2.1:
     when: SyncTrelloBoard runs for the first time against a selected target

@@ -26,4 +26,7 @@ export const handlers = OperationHandlerSet.lazy([
   ProjectOperation.GetProject.pipe(Operation.lazyHandler(() => import('./get-project.ts'))),
   ProjectOperation.ArtifactAdd.pipe(Operation.lazyHandler(() => import('./artifact-add.ts'))),
   ProjectOperation.ArtifactList.pipe(Operation.lazyHandler(() => import('./artifact-list.ts'))),
+  ProjectOperation.DeleteSpecBlock.pipe(Operation.lazyHandler(() => import('./delete-spec-block.ts'))),
+  ProjectOperation.GetSpecBlocks.pipe(Operation.lazyHandler(() => import('./get-spec-blocks.ts'))),
+  ProjectOperation.SetSpecBlock.pipe(Operation.lazyHandler(() => import('./set-spec-block.ts'))),
 ]);

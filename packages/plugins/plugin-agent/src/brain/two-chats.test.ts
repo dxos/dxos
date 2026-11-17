@@ -180,7 +180,7 @@ const makeScript =
         ],
       };
     }
-    if (request.text.includes(EXTRACTION_PROMPT)) {
+    if (request.system.includes(EXTRACTION_PROMPT)) {
       const facts = Object.entries(FACTS)
         .filter(([quote]) => request.text.includes(quote))
         .map(([quote, fact]) => ({ ...fact, quote, factuality: 'CT+', polarity: '+' }));

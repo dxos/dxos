@@ -21,7 +21,7 @@ If every device is lost, the identity is lost with them, unless it has a recover
 device. A recovery code is one such key, written as twelve words. Making it adds the key to the identity's group as a
 member, the same way a device is added, so the key can admit a new device later.
 
-Recovery goes through EDGE. The new device asks EDGE for a challenge, signs it with the key derived from the words, and
+Recovery goes through [EDGE](/docs/edge/concepts/identity-services/). The new device asks EDGE for a challenge, signs it with the key derived from the words, and
 EDGE checks the signature against the identity's recovery credentials before it admits the device. The new device is a
 new member of the same identity, with the same DID, and syncs its spaces from EDGE and from anyone online.
 

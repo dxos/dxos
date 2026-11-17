@@ -15,25 +15,26 @@ import { RDF } from '@dxos/pipeline-rdf';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
+import * as RemoteFactStorePlugin from '@dxos/plugin-brain/RemoteFactStorePlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { Config } from '@dxos/react-client';
 import { translations as rdfTranslations } from '@dxos/react-ui-rdf/translations';
-import { ModuleContainer, type ModuleLayout, createStoryDecorators } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import { FactsStoryContext, type PredicateFilter, type QueryScope, StoryRole } from '../modules/index.ts';
 import { BrainChatPlugin } from '../testing/brain-chat.ts';
 import { StoryModulesPlugin } from '../testing/modules.tsx';
-import { DEFAULT_FACT_SERVER_URL, RemoteFactStorePlugin } from '../testing/remote-fact-store.ts';
 
 /**
  * Explores a fact store served over HTTP — by default the persisted Discord crawl that
  * `moon run plugin-discord:fact-server` exposes. Override the server with `VITE_FACT_SERVER_URL`. The left column is an
  * agent chat with the Brain skill over a SPARQL editor, and what either one reads scopes the facts and entities columns.
  */
-const FACT_SERVER_URL = String(import.meta.env.VITE_FACT_SERVER_URL ?? DEFAULT_FACT_SERVER_URL);
+const FACT_SERVER_URL = String(import.meta.env.VITE_FACT_SERVER_URL ?? RemoteFactStorePlugin.DEFAULT_URL);
 
-const LAYOUT: ModuleLayout = [[StoryRole.Chat, StoryRole.Query], [StoryRole.Facts], [StoryRole.Entities]];
+const LAYOUT: ModuleContainer.Layout = [[StoryRole.Chat, StoryRole.Query], [StoryRole.Facts], [StoryRole.Entities]];
 
 /** Reads an agent's tool makes within this long of each other belong to one lookup, so their facts are shown together. */
 const LOOKUP_WINDOW_MS = 3_000;
@@ -86,7 +87,7 @@ const ExplorerRoot = () => {
           {error} — start it with <code>moon run plugin-discord:fact-server</code>.
         </div>
       )}
-      <ModuleContainer layout={LAYOUT} />
+      <ModuleContainer.Root layout={LAYOUT} />
     </FactsStoryContext.Provider>
   );
 };
@@ -94,7 +95,7 @@ const ExplorerRoot = () => {
 const meta = {
   title: 'stories/stories-brain/FactExplorer',
   render: ExplorerRoot,
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
     types: [Chat.Chat, Skill.Skill],
     // Skill definitions ride the assistant's start event.
@@ -104,7 +105,7 @@ const meta = {
       AssistantPlugin.make(),
       // Copies the skill definitions into the client registry, which resolves a chat's bound skills.
       RoutinePlugin.make(),
-      RemoteFactStorePlugin(FACT_SERVER_URL, {
+      RemoteFactStorePlugin.make(FACT_SERVER_URL, {
         onOperationFacts: (facts) => operationFactListeners.forEach((listener) => listener(facts)),
       }),
       BrainChatPlugin(),

@@ -9,6 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
+import { PublicKey } from '@dxos/keys';
 
 import { SpaceCapabilities } from '#types';
 
@@ -32,13 +33,7 @@ export default Capability.makeModule(
     });
 
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
-    const ephemeralAtom = Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-      sdkMigrationRunning: {},
-      navigableCollections: false,
-      viewersByObject: {},
-      mergePreview: undefined,
-      lastMergeAt: undefined,
-    }).pipe(Atom.keepAlive);
+    const ephemeralAtom = SpaceCapabilities.makeEphemeralState(PublicKey.random().toHex());
 
     const manager = yield* Capabilities.PluginManager;
     // Layout is optional and lands after this module: no plugin contributes it in standalone
