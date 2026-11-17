@@ -29,6 +29,9 @@
 const SPACE = 'Games';
 const PROJECT = 'Chess';
 const SPEC = 'Chess plugin';
+/** The spec Bob starts before he leaves, which his project opens on when he returns. */
+const SECOND_SPEC = 'Openings';
+const SECOND_TEXT = 'A later plugin that teaches the classic openings.';
 const TIMEOUT = 60_000;
 // How long a result stays on screen once it shows, so a viewer can find it.
 const HOLD = 2_000;
@@ -143,6 +146,7 @@ const specDocument = (page) => plank(page).getByTestId('projectsPlugin.spec.docu
 const specText = (page) => specDocument(page).locator('.cm-content').first();
 const specLine = (page, text) => specDocument(page).locator('.cm-line', { hasText: text }).first();
 const specToolbar = (page) => plank(page).locator('[role="toolbar"]:has([data-testid="projectsPlugin.tab.spec"])');
+const specPicker = (page) => plank(page).getByTestId('projectsPlugin.specPicker').first();
 const companion = (page) => page.getByTestId('deck.companion').filter({ visible: true }).first();
 const editable = (field) => field.locator('[contenteditable="true"]');
 /** The form of the feature titled `name` in the spec's text. */
@@ -220,6 +224,37 @@ const openBoard = async (peer) => {
   await companion(page)
     .locator('[data-testid="spec-companion.structure"][data-view="kanban"]')
     .waitFor({ timeout: TIMEOUT });
+};
+
+/** Waits for the Specs tab's dropdown to name the spec `name`. */
+const expectSpec = (page, name) =>
+  waitFor(
+    async () =>
+      (
+        await specPicker(page)
+          .innerText()
+          .catch(() => '')
+      ).trim() === name,
+    {
+      what: `the spec dropdown to read "${name}"`,
+    },
+  );
+
+/** Adds the spec `name` from the Specs tab's dropdown and types `text` into it. */
+const addSpec = async (peer, name, text) => {
+  const { page } = peer;
+  await closeCompanion(peer);
+  await peer.click(specPicker(page));
+  await peer.click(page.locator('[role="menu"] [data-testid="projectsPlugin.addSpec"]').first());
+  await peer.click(dialog(page).getByPlaceholder('Name'));
+  await peer.type(name);
+  await peer.click(dialog(page).getByTestId('save-button'));
+  await dialog(page).waitFor({ state: 'detached', timeout: TIMEOUT });
+  await closeCompanion(peer);
+  await expectSpec(page, name);
+  await peer.click(specText(page));
+  await peer.type(text, { delay: 25 });
+  await specLine(page, text).waitFor({ timeout: TIMEOUT });
 };
 
 const openComments = (peer) => openCompanionTab(peer, 'deck.companion.tab.comments', 'Comments');
@@ -661,11 +696,13 @@ export const steps = [
     },
   },
   {
-    name: `Bob comments on "Make Move"'s description, "${MOVE_QUESTION}", then closes his tab.`,
+    name: `Bob comments on "Make Move"'s description, "${MOVE_QUESTION}", adds the spec "${SECOND_SPEC}" from the spec dropdown, then closes his tab.`,
     subtitle: 'QA-12 step 6',
     run: async ({ peers: { bob } }) => {
       await openComments(bob);
       await commentOnFeature(bob, 'Make Move', MOVE_QUESTION);
+      await hold(bob);
+      await addSpec(bob, SECOND_SPEC, SECOND_TEXT);
       await hold(bob);
       await bob.page.goto('about:blank');
     },
@@ -715,7 +752,7 @@ export const steps = [
     },
   },
   {
-    name: 'Bob opens Composer again.',
+    name: `Bob opens Composer again, on "${SECOND_SPEC}".`,
     subtitle: 'QA-12 step 9',
     run: async ({ peers: { bob }, speed }) => {
       await speed(4);
@@ -723,6 +760,8 @@ export const steps = [
       await plank(bob.page).waitFor({ timeout: 120_000 });
       await speed(1);
       await clearChrome(bob);
+      // The project opens on the spec Bob picked last.
+      await expectSpec(bob.page, SECOND_SPEC);
       await bob.page.locator('[role="tab"][aria-label="Notifications"][data-badge="1"]').waitFor({ timeout: TIMEOUT });
       await bob.click(notificationsTab(bob.page));
       await bob.page.getByTestId('messenger.notification').filter({ hasText: SPEC }).first().waitFor();
@@ -740,6 +779,7 @@ export const steps = [
       });
       const before = await requirementsOf(bob.page, 'Make Move');
       await openNotification(bob, SPEC);
+      await expectSpec(bob.page, SPEC);
       const scope = thread(bob.page, MOVE_ANSWER);
       await scope.waitFor({ timeout: TIMEOUT });
       await bob.click(scope.getByTestId('thread.reply').last());
@@ -759,15 +799,17 @@ export const steps = [
         timeout: 5 * 60_000,
         what: 'Make Move to gain a requirement',
       });
-      // Kai's "Working on it…" stands in the thread until its reply takes its place.
-      const last = scope.getByTestId('thread.message').last();
+      // Kai's "Working on it…" stands in the thread until its reply takes its place. The reply box is a message too,
+      // so every message is checked, not the last.
       await waitFor(
         async () => {
+          const texts = await scope.getByTestId('thread.message').allInnerTexts();
           // The sender's name is a line of its own; Bob's "@Kai" is not.
-          const text = await last.innerText();
-          return text.split('\n').some((line) => line.trim() === AGENT) && !text.includes('Working on it');
+          return texts.some(
+            (text) => text.split('\n').some((line) => line.trim() === AGENT) && !text.includes('Working on it'),
+          );
         },
-        { timeout: 2 * 60_000, what: "Kai's reply in the thread" },
+        { timeout: 4 * 60_000, what: "Kai's reply in the thread" },
       );
       await speed(1);
       await hold(bob);
