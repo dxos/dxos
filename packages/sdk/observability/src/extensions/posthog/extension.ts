@@ -13,7 +13,7 @@ import { gzip, isNode } from '@dxos/util';
 import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
 import { DXOS_VERSION } from '../../version.ts';
 import { stubExtension } from '../stub.ts';
-import { dropBenignExceptions } from './before-send.ts';
+import { dropBenignExceptions, redactInvitationCodes } from './before-send.ts';
 import {
   AI_GENERATION_EVENT,
   AI_SPAN_EVENT,
@@ -174,7 +174,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
               blockSelector: `:not(body):has(> iframe:not(.${REPLAY_IFRAME_CLASS}))`,
               ...posthogConfig?.session_recording,
             },
-            before_send: [dropBenignExceptions, ...[posthogConfig?.before_send ?? []].flat()],
+            before_send: [dropBenignExceptions, redactInvitationCodes, ...[posthogConfig?.before_send ?? []].flat()],
             ...(recordingStart ? { disable_session_recording: true } : {}),
           });
           if (recordingStart) {
