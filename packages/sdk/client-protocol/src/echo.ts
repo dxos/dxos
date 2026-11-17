@@ -60,4 +60,10 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   join(invitation: Invitation | string): AuthenticatingInvitation;
 
   joinBySpaceKey(spaceKey: PublicKey): Promise<Space>;
+
+  /**
+   * Replicates an object, and the objects it references directly, before the rest of its space; for the object the
+   * app opens on, so it shows before the whole space has arrived.
+   */
+  syncFirst(spaceId: SpaceId, objectId: string): Promise<void>;
 }
