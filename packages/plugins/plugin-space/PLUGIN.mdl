@@ -2126,6 +2126,24 @@ decision D-132: The published-space viewer sends no telemetry: events other plug
   why: The viewer is anonymous and leaves out the observability plugin, so without a handler every navigation logged a failed event.
 ```
 
+```mdl
+decision D-133: The published-space viewer keeps observability; it is as valuable there as in Composer.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-132
+  affects: [F-9.5]
+```
+
+```mdl
+decision D-134: The viewer reports under Composer's namespace and deployment config, with space events on, and honors the same opt-out; it keeps no log store, so it offers no log download or feedback logs. Fills in [D-133].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  why: One namespace puts viewer sessions beside Composer's in PostHog, and the viewer's in-memory client has nothing durable for a log store to keep.
+  rejected: A separate `viewer` service name, which would split one product's dashboards in two.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

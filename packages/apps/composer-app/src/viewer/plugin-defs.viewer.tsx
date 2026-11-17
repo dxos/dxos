@@ -5,6 +5,7 @@
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
+import type * as Observability from '@dxos/observability/Observability';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
 import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
@@ -18,6 +19,7 @@ import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
+import * as ObservabilityPlugin from '@dxos/plugin-observability/ObservabilityPlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
@@ -31,12 +33,14 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 
+import { APP_KEY } from '../util/constants.ts';
 import { ViewerPlugin, type ViewerPluginOptions } from './ViewerPlugin.tsx';
 
 export type ViewerPluginConfig = ViewerPluginOptions & {
   client: Client;
   config: Config;
   services: ClientServicesProvider;
+  observability: Promise<Observability.Observability>;
 };
 
 /**
@@ -44,16 +48,23 @@ export type ViewerPluginConfig = ViewerPluginOptions & {
  * and each plugin decides from it how it reads; a plugin with nothing to show read-only (comments,
  * calls, history) is left out.
  */
-export const getPlugins = ({ client, config, services, ...viewer }: ViewerPluginConfig): Plugin.Plugin[] => [
+export const getPlugins = ({
+  client,
+  config,
+  services,
+  observability,
+  ...viewer
+}: ViewerPluginConfig): Plugin.Plugin[] => [
   AttentionPlugin.make(),
   ClientPlugin.make({ client, config, services, invitationUrlHandler: false, identityTestActions: false }),
   DeckPlugin.make({ platform: 'desktop', banner: true, companionsClosed: true }),
   GraphPlugin.make(),
   NavTreePlugin.make({ rail: false }),
+  ObservabilityPlugin.make({ namespace: APP_KEY, observability: () => observability }),
   PreviewPlugin.make(),
   ProcessManagerPlugin.make(),
   SettingsPlugin.make(),
-  SpacePlugin.make({ invitationUrlHandler: false }),
+  SpacePlugin.make({ invitationUrlHandler: false, observability: true }),
   SupportPlugin.make(),
   ThemePlugin.make({ appName: 'Composer', platform: 'desktop' }),
   ViewerPlugin(viewer),

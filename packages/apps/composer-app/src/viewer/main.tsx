@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -11,10 +12,12 @@ import * as App from '@dxos/app-framework/App';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import '@dxos/react-ui/theme.css';
 import { log } from '@dxos/log';
+import * as Observability from '@dxos/observability/Observability';
 import * as Publication from '@dxos/plugin-space/Publication';
 
 import { initAutomergeWasm, initEchoHostWasm } from '../util/automerge-wasm.ts';
-import { setupConfig } from '../util/config.ts';
+import { initializeObservability, setupConfig } from '../util/config.ts';
+import { APP_KEY } from '../util/constants.ts';
 import { getPlugins } from './plugin-defs.viewer.tsx';
 import { composerOriginOf, parseRoute, replaceWithSpace } from './route.ts';
 
@@ -45,6 +48,20 @@ const main = async () => {
   await initEchoHostWasm();
 
   const base = await setupConfig();
+  // Reported as Composer's own, from the deployment's config; the client below gets no EDGE services.
+  // Replay starts once boot settles, as in Composer.
+  const startupSettled = new Promise<void>((resolve) => {
+    window.addEventListener(Hooks.STARTUP_ACTIVATED_EVENT, () => resolve(), { once: true });
+    window.addEventListener(Hooks.STARTUP_FAILED_EVENT, () => resolve(), { once: true });
+  });
+  const observability = initializeObservability(
+    base,
+    false,
+    undefined,
+    await Observability.isObservabilityDisabled(APP_KEY),
+    undefined,
+    Effect.promise(() => startupSettled),
+  );
   // The viewer's own host serves publications (the Worker reads them from EDGE).
   const publicationsUrl =
     getEnvString(base, 'DX_PUBLICATIONS_URL') ??
@@ -83,6 +100,7 @@ const main = async () => {
     client,
     config,
     services,
+    observability,
     publicId: route.publicId,
     composerOrigin,
   });
