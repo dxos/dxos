@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/diagram"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -32,6 +35,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/scene"
     },
     {
       "path": "../../common/util"
@@ -74,6 +80,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-canvas"
     },
     {
       "path": "../../ui/react-ui-rdf"

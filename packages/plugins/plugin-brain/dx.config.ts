@@ -14,7 +14,7 @@ import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities'
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import { trim } from '@dxos/util';
 
-import { MEMORY_COMPANION_ID } from './src/constants.ts';
+import { MEMORY_COMPANION_ID, PIPELINE_COMPANION_ID } from './src/constants.ts';
 import { BrainNamespace } from './src/namespace.ts';
 import * as BrainCapabilities from './src/types/BrainCapabilities.ts';
 import * as BrainSurface from './src/types/BrainSurface.ts';
@@ -80,7 +80,12 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/project-templates.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [BrainSurface.Facts, AppSurface.Article, AppSurface.deckCompanion(MEMORY_COMPANION_ID)],
+      roles: [
+        BrainSurface.Facts,
+        AppSurface.Article,
+        AppSurface.deckCompanion(MEMORY_COMPANION_ID),
+        AppSurface.deckCompanion(PIPELINE_COMPANION_ID),
+      ],
     }),
     Capability.lazyModule(
       'ReplyGenerator',

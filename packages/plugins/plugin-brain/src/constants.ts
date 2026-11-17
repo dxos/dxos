@@ -10,3 +10,6 @@ export const MEMORY_SECTION_TYPE = 'org.dxos.plugin.brain.memory';
 
 /** Id of the workspace-wide Memory panel in the deck's context sidebar. */
 export const MEMORY_COMPANION_ID = 'memory';
+
+/** Id of the workspace-wide Pipeline panel in the deck's context sidebar. */
+export const PIPELINE_COMPANION_ID = 'pipeline';

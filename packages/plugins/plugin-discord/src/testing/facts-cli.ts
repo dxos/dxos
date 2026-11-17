@@ -23,7 +23,9 @@ import { DatabaseSync } from 'node:sqlite';
 import { parseArgs } from 'node:util';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive, type SparqlRow } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, RDF, type SparqlRow } from '@dxos/pipeline-rdf';
+
+import { pipelineState } from './pipeline-state.ts';
 
 const DEFAULT_DIR = join(homedir(), '.local/share/dxos/discord-pipeline/cloudflare');
 
@@ -166,12 +168,21 @@ const runSparql = Effect.fn(
   (effect, path) => effect.pipe(Effect.provide(FactStoreLive.layerFile(path))),
 );
 
+/** Each fact is a graph the default graph types as `sx:Graph`. */
+const FACT_GRAPHS_SPARQL = `SELECT (COUNT(?g) AS ?n) WHERE { ?g a <${RDF.Vocab.SX_GRAPH}> }`;
+
 const writeTrig = Effect.fn(
-  function* (out: string, _path: string) {
+  function* (out: string, path: string) {
     const store = yield* FactStore;
     const trig = yield* store.exportTrig();
-    writeFileSync(out, trig);
-    console.log(`Wrote ${(trig.length / 1e6).toFixed(1)} MB of TriG to ${out}`);
+    // The crawl's own state goes beside its facts, so the memory says which run filled it and at what cost.
+    const [graphs] = yield* store.rows(FACT_GRAPHS_SPARQL);
+    const state = pipelineState(path, Number(graphs?.n?.value ?? 0));
+    const pipeline = state ? yield* RDF.Pipeline.toTrig(state) : '';
+    writeFileSync(out, `${trig}\n${pipeline}`);
+    console.log(
+      `Wrote ${(trig.length / 1e6).toFixed(1)} MB of TriG to ${out}${state ? `, with the state of ${state.name}` : ''}`,
+    );
   },
   (effect, _out, path) => effect.pipe(Effect.provide(FactStoreLive.layerFile(path))),
 );

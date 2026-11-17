@@ -13,12 +13,13 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
-import { MEMORY_COMPANION_ID, MEMORY_SECTION_ID, MEMORY_SECTION_TYPE } from '../constants.ts';
+import { MEMORY_COMPANION_ID, MEMORY_SECTION_ID, MEMORY_SECTION_TYPE, PIPELINE_COMPANION_ID } from '../constants.ts';
 import { BrainNamespace } from '../namespace.ts';
 
 /**
  * The memory view in two places: a "Memory" section under each space's settings, and a panel in the deck's context
- * sidebar, where it sits beside a chat so the agent's queries can be watched as it runs them.
+ * sidebar, where it sits beside a chat so the agent's queries can be watched as it runs them; and beside it the
+ * Pipeline panel, the run that filled the memory.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -55,6 +56,12 @@ export default Capability.makeModule(
               id: MEMORY_COMPANION_ID,
               label: ['memory-section.label', { ns: BrainNamespace.key }],
               icon: 'ph--brain--regular',
+              data: null,
+            }),
+            AppNode.makeDeckCompanion({
+              id: PIPELINE_COMPANION_ID,
+              label: ['pipeline-companion.label', { ns: BrainNamespace.key }],
+              icon: 'ph--flow-arrow--regular',
               data: null,
             }),
           ]),

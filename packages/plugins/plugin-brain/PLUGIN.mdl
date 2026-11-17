@@ -209,6 +209,18 @@ component MemoryArticle
      uses      1204 ...                            ]
 ```
 
+```mdl
+component PipelineCompanion
+  desc: |
+    The run that filled the space's memory, as the memory records it (a JSON state in the `pipeline` graph,
+    written beside the facts by `facts-cli trig`): a diagram of its sources with their first and last message,
+    its stages in order, the facts written and the model each stage called with its calls and cost, drawn on a
+    read-only canvas (`Scene2DView`); then the run's time, counters and cost, and its busiest channels with
+    their cursor.
+  state:
+    pipelines: Pipeline.State[]   # Every run the store records, newest first; refreshed on store writes
+```
+
 ## Features
 
 ```mdl
@@ -313,6 +325,21 @@ feat F-5: Memory view, TriG transfer and live queries
     when: an agent runs QuerySparql (or a SELECT is run from the view)
     then: the query appears in the view as it starts, marked running, and its row count and first
           rows replace the marker when it ends
+```
+
+```mdl
+feat F-6: Pipeline state beside the memory
+  uses: [PipelineCompanion]
+
+  req F-6.1:
+    when: a crawl's facts are exported as TriG where its crawl.db and trace.jsonl lie
+    then: the export carries the run's state: each channel's cursor, item count and first and last message,
+          each stage's model calls, tokens and catalog cost, the run's start and end, and the facts written
+
+  req F-6.2:
+    when: the Pipeline panel is opened over a memory holding a run's state
+    then: it draws the run as a diagram of channels, stages, model and facts, and lists its time, counters,
+          cost and busiest channels in human-readable form
 ```
 
 ## Acceptance
@@ -473,6 +500,14 @@ decision D-4: A space's memory moves in and out of Composer as TriG, from a Memo
   by: user:dmaretskyi
   affects: [MemoryArticle, F-5]
   why: TriG is Turtle with named graphs, which a fact needs since each fact is a graph; plain Turtle would drop the graph and with it the fact's provenance.
+```
+
+```mdl
+decision D-5: A memory imported as TriG carries the state of the run that produced it, and a Pipeline panel draws it as a canvas diagram with the run's counters, cost, time, models and cursors. Fills in [D-4].
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [PipelineCompanion, F-6]
+  why: Keeping the state in the store means the panel reads one source, the memory, whether the run was a local crawl or Composer's own.
 ```
 
 Extension block types used in this document are defined below using

@@ -9,10 +9,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
-import { FactsCompanion, MemoryArticle } from '#containers';
+import { FactsCompanion, MemoryArticle, PipelineCompanion } from '#containers';
 import { BrainSurface } from '#types';
 
-import { MEMORY_COMPANION_ID, MEMORY_SECTION_TYPE } from '../constants.ts';
+import { MEMORY_COMPANION_ID, MEMORY_SECTION_TYPE, PIPELINE_COMPANION_ID } from '../constants.ts';
 
 /** React surfaces contributed by plugin-brain: the per-space facts panel and the memory view under space settings. */
 export default Capability.makeModule(() =>
@@ -32,6 +32,11 @@ export default Capability.makeModule(() =>
         id: 'brain.memory.companion',
         filter: Surface.makeFilter(AppSurface.deckCompanion(MEMORY_COMPANION_ID)),
         component: MemoryArticle,
+      }),
+      Surface.create({
+        id: 'brain.pipeline.companion',
+        filter: Surface.makeFilter(AppSurface.deckCompanion(PIPELINE_COMPANION_ID)),
+        component: PipelineCompanion,
       }),
     ]),
   ),
