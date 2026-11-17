@@ -545,50 +545,72 @@ export const composerMcpCredentials = (
 /** Set beside a stored GitHub token EDGE could not refresh, to the reason it gave. */
 export const GITHUB_TOKEN_ERROR_ENV = 'DX_GITHUB_TOKEN_ERROR';
 
+/** Whether GitHub refuses a token outright; any other answer, or none, counts as accepted. */
+export type GitHubTokenCheck = (token: string) => Effect.Effect<boolean>;
+
+/** Asks GitHub who the token belongs to; only a 401 is a refusal. */
+export const githubRefuses: GitHubTokenCheck = (token) =>
+  Effect.tryPromise(() =>
+    fetch('https://api.github.com/user', {
+      headers: { 'authorization': `Bearer ${token}`, 'user-agent': 'dxos-coding-agent' },
+    }),
+  ).pipe(
+    Effect.map((response) => response.status === 401),
+    Effect.orElseSucceed(() => false),
+  );
+
+const firstLine = (cause: Cause.Cause<unknown>): string => Cause.pretty(cause).split('\n')[0];
+
 /**
  * The space's GitHub connection as the environment the agent's `git` and `gh` read. Every token is resolved through
- * EDGE first, since the stored value of an App user token goes stale once EDGE stops refreshing it (its refresh cron
- * sleeps after hours without a read) and resolving refreshes it; the stored value is the fallback for a token EDGE
- * does not hold, such as a personal access token. None, or a placeholder that cannot be resolved, leaves the
- * checkout to public repositories.
+ * EDGE, since resolving refreshes a stale App user token; the stored value is the fallback for a token EDGE does not
+ * hold, such as a personal access token. A token GitHub refuses (one revoked before its expiry) is exchanged again
+ * by EDGE; when that does not yield a working one, {@link GITHUB_TOKEN_ERROR_ENV} says why. None, or a placeholder
+ * that cannot be resolved, leaves the checkout to public repositories.
  */
-export const githubCredentials: Effect.Effect<
-  Record<string, string>,
-  never,
-  Database.Service | Credential.AccessTokenResolver
-> = Effect.gen(function* () {
-  const tokens = yield* Database.query(Query.type(AccessToken.AccessToken)).run;
-  const accessToken = tokens.find((token) => token.source === GITHUB_HOST);
-  if (!accessToken) {
-    return NO_CREDENTIALS;
-  }
-  const resolved = Credential.AccessTokenResolver.resolve({
-    spaceId: yield* Database.spaceId,
-    accessTokenId: accessToken.id,
-  });
-  if (isManagedAccessToken(accessToken.token)) {
-    const token = yield* resolved;
-    return { GITHUB_TOKEN: token, GH_TOKEN: token };
-  }
-  // The reason EDGE could not refresh the stored token travels with it, so an agent that gets a 401 can say why.
-  return yield* resolved.pipe(
-    Effect.map((token): Record<string, string> => ({ GITHUB_TOKEN: token, GH_TOKEN: token })),
+export const githubCredentialsWith = (
+  refuses: GitHubTokenCheck,
+): Effect.Effect<Record<string, string>, never, Database.Service | Credential.AccessTokenResolver> =>
+  Effect.gen(function* () {
+    const tokens = yield* Database.query(Query.type(AccessToken.AccessToken)).run;
+    const accessToken = tokens.find((token) => token.source === GITHUB_HOST);
+    if (!accessToken) {
+      return NO_CREDENTIALS;
+    }
+    const spaceId = yield* Database.spaceId;
+    const resolve = (refresh: boolean) =>
+      Credential.AccessTokenResolver.resolve({ spaceId, accessTokenId: accessToken.id, refresh }).pipe(Effect.exit);
+
+    const first = yield* resolve(false);
+    if (Exit.isFailure(first) && isManagedAccessToken(accessToken.token)) {
+      return yield* Effect.failCause(first.cause);
+    }
+    let token = Exit.isSuccess(first) ? first.value : accessToken.token;
+    let error = Exit.isFailure(first) ? firstLine(first.cause) : undefined;
+    if (yield* refuses(token)) {
+      const again = yield* resolve(true);
+      if (Exit.isSuccess(again) && !(yield* refuses(again.value))) {
+        token = again.value;
+        error = undefined;
+      } else {
+        error = Exit.isFailure(again)
+          ? firstLine(again.cause)
+          : 'GitHub refused the token, and the one EDGE exchanged it for too; reconnect GitHub in the space.';
+      }
+    }
+    return {
+      GITHUB_TOKEN: token,
+      GH_TOKEN: token,
+      ...(error === undefined ? {} : { [GITHUB_TOKEN_ERROR_ENV]: error }),
+    };
+  }).pipe(
     Effect.catchCause((cause) =>
-      Effect.succeed({
-        GITHUB_TOKEN: accessToken.token,
-        GH_TOKEN: accessToken.token,
-        [GITHUB_TOKEN_ERROR_ENV]: Cause.pretty(cause).split('\n')[0],
+      Effect.sync(() => {
+        log.warn('no GitHub credential', { cause });
+        return NO_CREDENTIALS;
       }),
     ),
   );
-}).pipe(
-  Effect.catchCause((cause) =>
-    Effect.sync(() => {
-      log.warn('no GitHub credential', { cause });
-      return NO_CREDENTIALS;
-    }),
-  ),
-);
 
 /**
  * A repository's HTTPS clone URL: its own URL when it is hosted elsewhere, GitHub's otherwise; none for

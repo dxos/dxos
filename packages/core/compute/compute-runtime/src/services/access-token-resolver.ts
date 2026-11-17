@@ -42,7 +42,7 @@ export const accessTokenResolverFromService = (service: EdgeFunctionEnv.AccessTo
           return cached.accessToken;
         }
 
-        const result = await service.getAccessToken({}, { accessTokenId });
+        const result = await service.getAccessToken({}, refresh ? { accessTokenId, refresh } : { accessTokenId });
         if (!result.success) {
           throw new Error(`Could not resolve managed access token ${accessTokenId}: ${result.reason}`);
         }

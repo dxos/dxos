@@ -68,6 +68,9 @@ export const serviceCredentials = Effect.gen(function* () {
  * Everything a turn lends the agent: its Claude credential, the space's GitHub token for its repositories, and the
  * service tokens its repositories' checks need.
  */
-export const credentials = Effect.all([claudeCredentials, EdgeAgent.githubCredentials, serviceCredentials]).pipe(
-  Effect.map(([claude, github, services]): Record<string, string> => ({ ...services, ...github, ...claude })),
-);
+export const credentialsWith = (refuses: EdgeAgent.GitHubTokenCheck) =>
+  Effect.all([claudeCredentials, EdgeAgent.githubCredentialsWith(refuses), serviceCredentials]).pipe(
+    Effect.map(([claude, github, services]): Record<string, string> => ({ ...services, ...github, ...claude })),
+  );
+
+export const credentials = credentialsWith(EdgeAgent.githubRefuses);

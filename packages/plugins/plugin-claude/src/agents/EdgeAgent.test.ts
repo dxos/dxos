@@ -490,7 +490,7 @@ describe('EdgeAgent', () => {
           return 'ghs-live';
         },
       });
-      const credential = EdgeAgent.githubCredentials.pipe(Effect.provide(resolver));
+      const credential = EdgeAgent.githubCredentialsWith(() => Effect.succeed(false)).pipe(Effect.provide(resolver));
       expect(yield* credential).toEqual({});
 
       yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'anthropic.com', token: 'sk-ant' }));
@@ -501,7 +501,9 @@ describe('EdgeAgent', () => {
       expect(resolved).toEqual([github.id]);
 
       // One EDGE cannot resolve leaves the checkout to public repositories rather than failing the turn.
-      const unresolved = EdgeAgent.githubCredentials.pipe(Effect.provide(Credential.AccessTokenResolver.notAvailable));
+      const unresolved = EdgeAgent.githubCredentialsWith(() => Effect.succeed(false)).pipe(
+        Effect.provide(Credential.AccessTokenResolver.notAvailable),
+      );
       expect(yield* unresolved).toEqual({});
 
       // A stored token is resolved too, so EDGE refreshes a stale one; one EDGE does not hold is lent as stored.
@@ -511,6 +513,29 @@ describe('EdgeAgent', () => {
       expect(yield* credential).toEqual({ GITHUB_TOKEN: 'ghs-live', GH_TOKEN: 'ghs-live' });
       expect(yield* unresolved).toMatchObject({ GITHUB_TOKEN: 'ghu-stale', GH_TOKEN: 'ghu-stale' });
       expect((yield* unresolved)[EdgeAgent.GITHUB_TOKEN_ERROR_ENV]).toMatch(/No access token resolver configured/);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('asks EDGE to exchange a token GitHub refuses, and says why when that fails too', () =>
+    Effect.gen(function* () {
+      const requests: (boolean | undefined)[] = [];
+      const resolver = (exchanged: string) =>
+        Layer.succeed(Credential.AccessTokenResolver, {
+          resolve: async ({ refresh }) => {
+            requests.push(refresh);
+            return refresh ? exchanged : 'ghu-revoked';
+          },
+        });
+      yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'github.com', token: 'ghu-revoked' }));
+      const refuses = (token: string) => Effect.succeed(token === 'ghu-revoked');
+
+      const healed = yield* EdgeAgent.githubCredentialsWith(refuses).pipe(Effect.provide(resolver('ghu-fresh')));
+      expect(healed).toEqual({ GITHUB_TOKEN: 'ghu-fresh', GH_TOKEN: 'ghu-fresh' });
+      expect(requests).toEqual([false, true]);
+
+      const broken = yield* EdgeAgent.githubCredentialsWith(refuses).pipe(Effect.provide(resolver('ghu-revoked')));
+      expect(broken).toMatchObject({ GH_TOKEN: 'ghu-revoked' });
+      expect(broken[EdgeAgent.GITHUB_TOKEN_ERROR_ENV]).toMatch(/reconnect GitHub/);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
