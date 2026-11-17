@@ -98,9 +98,19 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
       dxos#14574 (plugin-github loads an unloaded PR ref; published to dev), bundle-log forwarding (edge, branch
       `claude/bundle-logs-posthog`, not pushed).
 - [x] Monitoring by `dx mcp call` in a background loop (scratchpad watch-runs.sh): one Bash call per run state.
-- [ ] BLOCKER: the space's GitHub user token (`ghu_`, 8 h expiry) expired; runs cannot push, and syncCloudRun's
-      GitHub calls fail silently (PRs not attached, `merged: false`). User must reconnect GitHub in the Coding
-      space. Task filed: refresh the token before lending it, and fail loudly when it cannot.
+- [x] GitHub token expiry, root-caused and fixed (no reconnect needed):
+      1. KMS refreshes a grant only from its cron, which sleeps after `SPACE_SECRETS_INACTIVITY_TIMEOUT`
+         (3 h on dev) without a `getAccessToken` call; plugin-claude lent the stored `ghu_` and never called it.
+      2. compute-service gave a plugin operation invoked over MCP no `accessTokenService`, so the resolver was the
+         not-configured stub (edge, `invocation/operation.ts`; deployed to dev).
+      3. plugin-claude now resolves every GitHub token through EDGE, checks it with GitHub, asks KMS for a forced
+         exchange on a 401 (new `refresh` flag through compute-service and kms-service), and lends the reason as
+         `GITHUB_TOKEN_ERROR` (`DX_` names are reserved and values may not hold whitespace).
+- [ ] Gotcha: `check-release.mjs` alone bundles operations from the package's stale `dist/lib`; run the package
+      `build` first (moon's `check-edge-release` does).
+- [ ] Driver task (01M7NFT4E35WC6DMXZPQS84HXW): Composer wrote driveCloudRuns + a 5-minute space timer + `land`
+      label approval; push pending.
+- [ ] Land task (01M7NHZTYR96PP1RK0Q0R6K7R7): Composer is landing dxos#14563 (approved by the user).
 - [x] edge#1537 merged main (via #1535 updated from main) and enables plugin-claude locally too (new
       local-equals-dev routing test).
 
