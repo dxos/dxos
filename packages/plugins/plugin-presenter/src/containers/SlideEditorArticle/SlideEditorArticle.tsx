@@ -292,9 +292,18 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
   return {
     newSlideLayout,
     onNewSlideLayoutChange: setNewSlideLayout,
-    // A new slide is added last and opened for editing, as it is from the gallery.
+    // Added after the slide being edited rather than last, which is where the gallery's own button puts one: here
+    // the deck has a current slide, and the new one belongs next to it. A slide whose content was deleted is at no
+    // position, so that one appends.
     onAddSlide: presentation
-      ? () => openSlide(Presentation.addSlide(presentation, newSlideContent(newSlideLayout)).id)
+      ? () =>
+          openSlide(
+            Presentation.addSlide(
+              presentation,
+              newSlideContent(newSlideLayout),
+              position >= 0 ? position + 1 : undefined,
+            ).id,
+          )
       : undefined,
     onOpenGallery: presentation ? () => openPath(GraphPath.getObjectPathFromObject(presentation)) : undefined,
     onLayoutChange: (layout: (typeof LAYOUTS)[number]) =>

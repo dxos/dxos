@@ -10,7 +10,7 @@ A slide names its scrim: `scrim:` paints what is outside the slide — the inset
 
 The slide editor completes frontmatter keys, not just `layout:` values. Typing on a blank line in the block offers every key the slide takes, leaving out the ones already written, and a key whose values are a fixed set (`layout`, `theme`, `bleed`, `hide`, `backgroundFit`, `backgroundBlend`) offers those after the colon.
 
-The slide editor's toolbar carries the deck's own actions: the gallery the slide came from, and a button that adds a slide after it. Adding a slide was the gallery article's alone, as an inlined plus beside a layout caret; it is now one `AddSlideButton` both toolbars use, a joined run (`Button.Group compact`) whose caret is half a control wide so the pair reads as one control rather than two buttons.
+The slide editor's toolbar carries the deck's own actions: the gallery the slide came from, and a button that adds a slide after the one being edited — the gallery's own button still adds one last, since there is no current slide there. Adding a slide was the gallery article's alone, as an inlined plus beside a layout caret; it is now one `AddSlideButton` both toolbars use, a joined run (`Button.Group compact`) whose caret is half a control wide so the pair reads as one control rather than two buttons.
 
 The completion list stops at its ends rather than wrapping. The list is short and ordered, so coming round again reads as the selection jumping rather than as having run out. The keymap has to sit before `autocompletion`, which registers its own at the same (highest) precedence: at equal precedence the handler registered first is asked first.
 
