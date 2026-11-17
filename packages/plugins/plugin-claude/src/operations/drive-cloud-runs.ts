@@ -39,6 +39,9 @@ const SENT_SOURCE = 'org.dxos.claude.drive-sent';
 
 type Step = 'running' | 'idle' | 'merged' | 'fix' | 'land';
 
+/** Pins a returned literal to {@link Step}, which a generator would otherwise widen to `string`. */
+const step = (value: Step): Step => value;
+
 /** What a drive step needs from the run, apart from GitHub: the agent's turn and the run's record in the space. */
 export type Runner<R> = {
   /** Whether the chat's turn is still open. */
@@ -78,7 +81,7 @@ const driveChat = Effect.fnUntraced(function* <R>(chat: Chat.Chat, runner: Runne
   if (runner.isRunning(chat)) {
     const progress = yield* runner.fold(chat, '', DRIVE_WINDOW_MS);
     if (!progress.done) {
-      return 'running' as Step;
+      return step('running');
     }
   }
 
@@ -96,10 +99,10 @@ const driveChat = Effect.fnUntraced(function* <R>(chat: Chat.Chat, runner: Runne
   const sent = new Set(Obj.getKeys(chat, SENT_SOURCE).map(({ id }) => id));
   const action = decide({ running: false, pullRequests: snapshots, sent });
   if (action._tag === 'none') {
-    return 'idle' as Step;
+    return step('idle');
   }
   if (action._tag === 'merged') {
-    return 'merged' as Step;
+    return step('merged');
   }
 
   // Recorded before sending: a lost follow-up is better than a repeated one, and the person can re-prompt.
@@ -111,7 +114,7 @@ const driveChat = Effect.fnUntraced(function* <R>(chat: Chat.Chat, runner: Runne
   yield* Database.flush();
   const prompt = action._tag === 'fix' ? fixPrompt(action.pullRequests) : landPrompt(action.pullRequests);
   yield* runner.followUp(chat, prompt, DRIVE_WINDOW_MS);
-  return action._tag as Step;
+  return step(action._tag);
 });
 
 /** Advances every in-flight cloud run in the space; one run's failure leaves the others to proceed. */
