@@ -100,16 +100,17 @@ describe('viewer host', () => {
 
 describe('publications on the viewer host', () => {
   const VIEWER = 'view.composer.test';
+  const ROADMAP_ID = '01M7NGN322DR48YA6R9Q4648KR';
   const MANIFEST = {
     version: 1,
     name: 'Field notes',
     publishedAt: '2026-11-16T00:00:00Z',
     plugins: [],
-    objects: ['01ROADMAP'],
+    objects: [ROADMAP_ID],
     preview: {
       description: 'Release notes and the roadmap.',
       types: [{ label: 'Document', count: 1 }],
-      objects: { '01ROADMAP': { title: 'Q4 roadmap', type: 'Document', description: 'We ship publishing first.' } },
+      objects: { [ROADMAP_ID]: { title: 'Q4 roadmap', type: 'Document', description: 'We ship publishing first.' } },
     },
   };
   const SPACE_IMAGE = 'https://view.composer.test/publications/abc_123/preview.png';
@@ -162,16 +163,35 @@ describe('publications on the viewer host', () => {
 
   test('a crawler reading an object link sees the object the manifest describes', async () => {
     edge();
-    const html = await (await get('/w/SPACE/db/org.dxos.type.document+01ROADMAP?p=abc_123', 'navigate', VIEWER)).text();
+    const html = await (
+      await get(`/w/SPACE/db/org.dxos.type.document+${ROADMAP_ID}?p=abc_123`, 'navigate', VIEWER)
+    ).text();
     expect(html).toContain('<meta property="og:title" content="Q4 roadmap" />');
     expect(html).toContain('<meta property="og:description" content="We ship publishing first." />');
-    expect(html).toContain(`<meta property="og:image" content="${SPACE_IMAGE}?object=01ROADMAP" />`);
+    expect(html).toContain(`<meta property="og:image" content="${SPACE_IMAGE}?object=${ROADMAP_ID}" />`);
+  });
+
+  test('a crawler reading an object link sees the object, whichever key the link names it by', async () => {
+    edge();
+    for (const path of [
+      `/abc_123/object/${ROADMAP_ID}`,
+      `/w/SPACE/object/${ROADMAP_ID}/companion/comments?p=abc_123`,
+      `/abc_123/sketch/${ROADMAP_ID}`,
+    ]) {
+      const html = await (await get(path, undefined, VIEWER)).text();
+      expect(html).toContain('<meta property="og:title" content="Q4 roadmap" />');
+      expect(html).toContain(`<meta property="og:image" content="${SPACE_IMAGE}?object=${ROADMAP_ID}" />`);
+    }
   });
 
   test('an object the manifest does not describe is named by its link, from the space', async () => {
     edge();
     const html = await (
-      await get('/w/SPACE/db/org.dxos.type.document+01A?p=abc_123&title=Plan', 'navigate', VIEWER)
+      await get(
+        '/w/SPACE/db/org.dxos.type.document+01M7NGN322DR48YA6R9Q4648KS?p=abc_123&title=Plan',
+        'navigate',
+        VIEWER,
+      )
     ).text();
     expect(html).toContain('<meta property="og:title" content="Plan" />');
     expect(html).toContain('<meta property="og:description" content="From Field notes, published from Composer." />');
@@ -181,7 +201,7 @@ describe('publications on the viewer host', () => {
   test('the preview image is a PNG card, of the object when one is named', async () => {
     edge();
     const space = await get('/publications/abc_123/preview.png', 'no-cors', VIEWER);
-    const object = await get('/publications/abc_123/preview.png?object=01ROADMAP', 'no-cors', VIEWER);
+    const object = await get(`/publications/abc_123/preview.png?object=${ROADMAP_ID}`, 'no-cors', VIEWER);
     for (const response of [space, object]) {
       expect(response.status).toBe(200);
       expect(response.headers.get('Content-Type')).toBe('image/png');

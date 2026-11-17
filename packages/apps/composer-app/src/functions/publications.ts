@@ -128,11 +128,24 @@ export const publicIdOf = (url: URL): string | undefined => {
   return isPublicId(publicId) && publicId !== 'w' ? publicId : undefined;
 };
 
-/** The object a viewer URL opens (`…/db/<typeSlug>+<objectId>`), or `undefined` for a space link. */
-export const objectIdOf = (url: URL): string | undefined => {
-  const match = /\/db\/[^/+]+\+([\w-]+)$/.exec(url.pathname);
-  return match?.[1];
-};
+/**
+ * Mirrors `EntityId`'s shape. The URL grammar reserves it, so a segment of this shape is always an id,
+ * never a key (`UrlPath.isReservedKey`).
+ */
+const ENTITY_ID = /^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i;
+
+/** Mirrors `UrlPath.TAIL_SEPARATOR`, which joins the parts of one id segment (`<typeSlug>+<objectId>`). */
+const TAIL_SEPARATOR = '+';
+
+/**
+ * The object a viewer URL opens: the first path segment that ends in an entity id, whichever key it
+ * follows. `undefined` for a space link.
+ */
+export const objectIdOf = (url: URL): string | undefined =>
+  url.pathname
+    .split('/')
+    .map((segment) => segment.split(TAIL_SEPARATOR).at(-1) ?? '')
+    .find((id) => ENTITY_ID.test(id));
 
 /** What the Worker reads of a manifest; plugin-space's `Publication.Manifest` is the full shape. */
 export type Manifest = { name?: string; preview?: ManifestPreview };
