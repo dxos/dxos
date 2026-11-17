@@ -11,16 +11,30 @@ import {
   specReferenceFilter,
   unknownSpecMessage,
 } from '@dxos/deus/parse';
-import { type SourceKey, findSourceKeys, findSymbolLine, isSpecKey, reviewItemId } from '@dxos/deus/review';
+import {
+  type SourceKey,
+  findSourceKeys,
+  findSymbolLine,
+  isSpecKey,
+  parseVerdictHeader,
+  reviewItemId,
+} from '@dxos/deus/review';
 import { frontmatter } from '@dxos/deus/spec-index';
 
 import { type Workspace, uriOfPath } from './workspace.ts';
 
-/**
- * A block or `req` declaration inside an `mdl` fence: `feat F-1: …`, `  req F-1.2: …`, `type Scene`, and in a review
- * a qualified verdict id, `verdict table:feeds: …`.
- */
-export const DECLARATION = /^\s*([a-z][\w-]*)\s+((?:[a-z]+:)?[A-Za-z][\w.-]*)\s*(?::|$)/;
+/** A block or `req` declaration inside an `mdl` fence: `feat F-1: …`, `  req F-1.2: …`, `type Scene`. */
+export const DECLARATION = /^\s*([a-z][\w-]*)\s+([A-Za-z][\w.-]*)\s*(?::|$)/;
+
+/** A line's declaration; only a verdict's id may be qualified (`verdict table:feeds: …`), as deus reads it. */
+const parseDeclaration = (content: string): { kind: string; id: string } | undefined => {
+  const verdict = parseVerdictHeader(content);
+  if (verdict) {
+    return { kind: 'verdict', id: verdict.id };
+  }
+  const [, kind, id] = DECLARATION.exec(content) ?? [];
+  return kind && id ? { kind, id } : undefined;
+};
 
 /**
  * One declared spec item: its kind, id, 0-based line, and the id a review judges it by — `<kind>:<id>` for a worker
@@ -41,19 +55,27 @@ export const declarations = (text: string): Declaration[] => {
     if (kind !== 'body' || !mdl) {
       return;
     }
-    const [, declared, id] = DECLARATION.exec(content) ?? [];
-    const reviewId = id && reviewItemId(declared, id);
-    if (reviewId && !seen.has(reviewId)) {
+    const declaration = parseDeclaration(content);
+    if (!declaration) {
+      return;
+    }
+    const reviewId = reviewItemId(declaration.kind, declaration.id);
+    if (!seen.has(reviewId)) {
       seen.add(reviewId);
-      found.push({ kind: declared, id, reviewId, line });
+      found.push({ ...declaration, reviewId, line });
     }
   });
   return found;
 };
 
-/** The 0-based line that declares `item` in a spec text; `item` may be a qualified review id (`table:feeds`). */
-export const itemLine = (text: string, item: string): number | undefined =>
-  declarations(text).find(({ id, reviewId }) => id === item || reviewId === item)?.line;
+/**
+ * The 0-based line that declares `item` in a spec text: the item a review judges by that id (`table:feeds`, or `feeds`
+ * for a type) before any other declaration whose own id it is.
+ */
+export const itemLine = (text: string, item: string): number | undefined => {
+  const found = declarations(text);
+  return (found.find(({ reviewId }) => reviewId === item) ?? found.find(({ id }) => id === item))?.line;
+};
 
 /** Where a reference leads: a file of this checkout at a line, or a URL when the checkout does not have it. */
 export type Target =
