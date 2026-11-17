@@ -11,6 +11,8 @@ export default defineConfig({
   // TODO(wittjosiah): Avoid hard-coding ports.
   webServer: {
     command: 'pnpm vite preview --port=9007',
+    // Playwright starts the server beside this config; vite needs the package root for its config and HTML.
+    cwd: '../..',
     // `url`, not `port`: a `port` probe is a bare TCP check, satisfied as soon as the server binds
     // the socket, so tests starting before it can serve get ERR_CONNECTION_REFUSED.
     url: 'http://localhost:9007',

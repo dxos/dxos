@@ -8,7 +8,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { filterMatchEntity } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
-import { LiveQueryResult } from './query-result.ts';
+import { LiveQueryResult, asItem } from './query-result.ts';
 
 let nextRegistryId = 0;
 
@@ -80,7 +80,7 @@ export class SimpleRegistry implements Registry.Registry {
   query: Database.QueryFn = ((queryOrFilter: Query.Any | Filter.Any) => {
     const ast = (Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter)).ast;
     return new LiveQueryResult({
-      execute: async () => matchRegistry(ast, this.list()),
+      execute: async () => matchRegistry(ast, this.list()).map((entity) => asItem(entity)),
       invalidated: this.#invalidated,
       source: 'registry',
     });

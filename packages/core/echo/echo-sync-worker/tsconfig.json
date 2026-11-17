@@ -2,11 +2,25 @@
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "types": [
-      "@cloudflare/workers-types"
+      "@cloudflare/workers-types",
+      "node"
     ]
   },
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../echo"
+    },
+    {
+      "path": "../echo-sqlite"
+    }
+  ]
 }
