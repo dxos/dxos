@@ -33,6 +33,9 @@ import { readRow } from './internal/row-decode.ts';
 import { instantiateSqliteModule } from './internal/sqlite-module.ts';
 import { instrumentVfs, recordStatement, statementKind } from './internal/vfs-metrics.ts';
 
+/** Prepared statements the worker keeps; a client's working set is a few dozen. */
+const STATEMENT_CACHE_SIZE = 256;
+
 /** @internal */
 type OpfsWorkerMessage =
   | [id: number, sql: string, params: ReadonlyArray<unknown>]
@@ -100,6 +103,30 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
         }),
     );
 
+    // Prepared statements by SQL text, since a client sends the same few statements thousands of times.
+    const statementCache = new Map<string, number>();
+    const finalizeCached = () => {
+      for (const stmt of statementCache.values()) {
+        sqlite3.finalize(stmt);
+      }
+      statementCache.clear();
+    };
+    yield* Effect.addFinalizer(() => Effect.sync(finalizeCached));
+    // Runs a cached statement and readies it for the next use; one whose reset fails is dropped.
+    const runCached = (sql: string, stmt: number, execute: (stmt: number) => void) => {
+      try {
+        execute(stmt);
+      } finally {
+        try {
+          sqlite3.reset(stmt);
+          sqlite3.clear_bindings(stmt);
+        } catch {
+          statementCache.delete(sql);
+          sqlite3.finalize(stmt);
+        }
+      }
+    };
+
     return yield* Effect.callback<void>((resume) => {
       const onMessage = (event: any) => {
         let messageId: number;
@@ -116,6 +143,8 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
               const [, id, data] = message;
               messageId = id;
               log('opfs import', { bytes: data.byteLength });
+              // The import replaces the schema the cached statements were prepared against.
+              finalizeCached();
               sqlite3.deserialize(db, 'main', data, data.length, data.length, 1 | 2);
               for (const stmt of sqlite3.statements(db, 'VACUUM')) {
                 let result = sqlite3.step(stmt);
@@ -165,7 +194,7 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
               const columns: Array<Array<string>> = [];
               const kind = statementKind(sql);
               const writes = kind === 'insert' || kind === 'update' || kind === 'delete';
-              for (const stmt of sqlite3.statements(db, sql)) {
+              const execute = (stmt: number) => {
                 let statementColumns: Array<string> | undefined;
                 const rowsBefore = results.length;
                 sqlite3.bind_collection(stmt, params as any);
@@ -176,6 +205,54 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
                   columns.push(statementColumns);
                 }
                 recordStatement(kind, results.length - rowsBefore, writes ? sqlite3.changes(db) : 0);
+              };
+              const cached = statementCache.get(sql);
+              if (cached !== undefined) {
+                // Most recently used last, so eviction takes the oldest.
+                statementCache.delete(sql);
+                statementCache.set(sql, cached);
+                runCached(sql, cached, execute);
+              } else {
+                // Prepared one at a time, as before: a later statement of a script can depend on an
+                // earlier one's schema change. Only a single-statement string is kept.
+                let first: number | undefined;
+                let count = 0;
+                try {
+                  for (const stmt of sqlite3.statements(db, sql, { unscoped: true })) {
+                    count++;
+                    if (count === 1) {
+                      first = stmt;
+                      execute(stmt);
+                      continue;
+                    }
+                    if (first !== undefined) {
+                      sqlite3.finalize(first);
+                      first = undefined;
+                    }
+                    try {
+                      execute(stmt);
+                    } finally {
+                      sqlite3.finalize(stmt);
+                    }
+                  }
+                } catch (err) {
+                  if (first !== undefined) {
+                    sqlite3.finalize(first);
+                  }
+                  throw err;
+                }
+                if (first !== undefined) {
+                  sqlite3.reset(first);
+                  sqlite3.clear_bindings(first);
+                  statementCache.set(sql, first);
+                  if (statementCache.size > STATEMENT_CACHE_SIZE) {
+                    for (const [oldestSql, oldest] of statementCache) {
+                      statementCache.delete(oldestSql);
+                      sqlite3.finalize(oldest);
+                      break;
+                    }
+                  }
+                }
               }
               options.port.postMessage([id, undefined, [columns, results]]);
               recordSqliteQueryMetrics(sql, params, results.length, begin);

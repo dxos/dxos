@@ -638,10 +638,16 @@ export class EntityMetaIndex implements Index {
       }),
   );
 
-  // TODO(dmaretskyi): Update recordId on objects so that we don't need to look it up separately.
+  /**
+   * Writes each object's row and sets its `recordId`, so {@link lookupRecordIds} has nothing left to read.
+   */
   update = Effect.fn('EntityMetaIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
     Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
+      // Read once and counted up here: each row takes the next version, as one read per row gave, without
+      // a statement per object.
+      const [{ v: maxVersion }] = yield* sql<{ v: number | null }>`SELECT MAX(version) as v FROM objectMeta`;
+      let nextVersion = (maxVersion ?? 0) + 1;
 
       yield* Effect.forEach(
         objects,
@@ -680,10 +686,7 @@ export class EntityMetaIndex implements Index {
               existing = [];
             }
 
-            // Get max version + 1.
-            const result = yield* sql<{ v: number | null }>`SELECT MAX(version) as v FROM objectMeta`;
-            const [{ v }] = result;
-            const version = (v ?? 0) + 1;
+            const version = nextVersion++;
 
             // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
             // tombstone appended by `Feed.remove`. Preserve the prior row's body-derived columns
@@ -781,8 +784,9 @@ export class EntityMetaIndex implements Index {
                     queueBranch = ${queueBranch}
                   WHERE recordId = ${existing[0].recordId}
                 `;
+              object.recordId = existing[0].recordId;
             } else {
-              yield* sql`
+              const [inserted] = yield* sql<{ recordId: number }>`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
                     entityKind, typeDXN, deleted, source, target, parent, parentId, sourceId, targetId,
@@ -794,7 +798,9 @@ export class EntityMetaIndex implements Index {
                     ${convergenceKey}, ${annotations}, ${version},
                     ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}, ${queueInsertionId ?? null}, ${queueBranch}
                   )
+                  RETURNING recordId
                 `;
+              object.recordId = inserted.recordId;
             }
           }),
         { discard: true },
@@ -812,6 +818,10 @@ export class EntityMetaIndex implements Index {
         const sql = this.#sql;
 
         for (const object of objects) {
+          // Set by `update`, which wrote the row.
+          if (object.recordId !== null) {
+            continue;
+          }
           const { spaceId, queueId, documentId, data } = object;
           const objectId = data.id;
 

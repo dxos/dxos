@@ -1787,8 +1787,11 @@ export class FeedStore {
       const sql = yield* SqlClient.SqlClient;
       const result = yield* sql.withTransaction(
         Effect.gen({ self: this }, function* () {
+          // Without a host cap only a feed's own options can limit it, so feeds without any are skipped in SQL:
+          // a space with a feed per document would otherwise decode every one of them on each pass.
           const rows = yield* sql<FeedRowColumns>`
             SELECT spaceId, feedPrivateId, feedNamespace, options FROM feeds WHERE spaceId = ${spaceId}
+            ${this.#options.maxLengthCap === undefined ? sql`AND options IS NOT NULL` : sql``}
             ORDER BY feedPrivateId ASC
           `;
           return yield* this.#trimRows(rows.map(toFeedRow), now);
