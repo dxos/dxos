@@ -4,10 +4,9 @@
 
 import React from 'react';
 
+import { type LayoutName } from '@dxos/react-ui-slides';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-
-import { type LayoutName } from '#markdown';
 
 import { PresenterNamespace } from '../../namespace.ts';
 import { LayoutPicker } from '../SlideToolbar/LayoutPicker.tsx';

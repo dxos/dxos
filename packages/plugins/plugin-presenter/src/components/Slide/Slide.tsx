@@ -9,9 +9,11 @@ import React, { type PropsWithChildren, useMemo } from 'react';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { createContext } from '@dxos/react-hooks';
+import { MarkdownSlide, type MarkdownSlideProps } from '@dxos/react-ui-slides';
+import { SlideThemeScope } from '@dxos/react-ui-slides';
+import { SlideFrame, type SlideFrameProps } from '@dxos/react-ui-slides';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Util from '@dxos/react-ui/Util';
 import { type Text } from '@dxos/schema';
 
 import { type SlideSource } from '#deck';
@@ -19,9 +21,6 @@ import { useSlideImage } from '#hooks';
 import { type Presentation } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
-import { MarkdownSlide, type MarkdownSlideProps } from '../MarkdownSlide/index.ts';
-import { SlideThemeScope } from '../SlideTheme/index.ts';
-import { SlideCanvas } from './canvas.tsx';
 import { EmbedAncestor, EmbeddedSurface } from './EmbeddedSurface.tsx';
 import { ObjectSurface } from './ObjectSurface.tsx';
 
@@ -52,35 +51,6 @@ type SlideRootProps = PropsWithChildren<SlideContextValue>;
 const SlideRoot = ({ children, ...context }: SlideRootProps) => <SlideProvider {...context}>{children}</SlideProvider>;
 
 SlideRoot.displayName = 'Slide.Root';
-
-//
-// Frame
-//
-
-type SlideFrameProps = Util.ThemedClassName<
-  PropsWithChildren<{
-    /** Inset the slide in a solid void with rounded corners, so its own background reads as distinct. */
-    inset?: boolean;
-    /** Scale the canvas to fit (default); print lays it out at its nominal size instead. */
-    scaled?: boolean;
-    /** The scrim to paint around the slide when neither the slide nor the deck names one. */
-    scrim?: string;
-  }>
->;
-
-/**
- * The 16:9 slide canvas, scaled to fit its container.
- */
-const SlideFrame = ({ children, classNames, inset, scaled = true, scrim }: SlideFrameProps) =>
-  scaled ? (
-    <SlideCanvas inset={inset} classNames={classNames} scrim={scrim}>
-      {children}
-    </SlideCanvas>
-  ) : (
-    <div className='flex relative size-full'>{children}</div>
-  );
-
-SlideFrame.displayName = 'Slide.Frame';
 
 //
 // Content
