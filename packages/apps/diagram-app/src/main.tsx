@@ -22,6 +22,7 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { clearIndexedDB, clearOPFS } from '@dxos/util';
 
 import { showBootShell } from './boot-shell/index.ts';
+import { initializeObservability } from './observability.ts';
 import { getPlugins } from './plugins.ts';
 import { dismissShell } from './shared/index.ts';
 
@@ -91,6 +92,8 @@ const main = Effect.gen(function* () {
     Local(),
     Defaults(),
   );
+  // Not awaited: boot does not wait on telemetry.
+  const observability = initializeObservability(config);
   const services = yield* Effect.promise(() =>
     createClientServices(config, { createDedicatedWorker, createCoordinatorWorker }),
   );
@@ -98,7 +101,13 @@ const main = Effect.gen(function* () {
   bootClient = client;
   // Until `Main` mounts, a fatal error has nowhere to show but the log.
   let raiseFatalError = (error: Error) => log.error('fatal error before render', { error });
-  const plugins = getPlugins({ client, config, services, onFatalError: (error) => raiseFatalError(error) });
+  const plugins = getPlugins({
+    client,
+    config,
+    services,
+    observability,
+    onFatalError: (error) => raiseFatalError(error),
+  });
   const defaults = plugins.map(({ meta }) => meta.profile.key);
 
   const Main = () => {

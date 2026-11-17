@@ -52,7 +52,7 @@ feat F-1: App shell
   req F-1.5: The app draws its pill at once, before the client is up: the space name and hue, diagram name and Share as the last visit left them. The diagram's frame, the canvas editor's own toolbars and panels over an empty scene, follows as soon as the editor's code loads, the same on a first run as on a return. The live app replaces them once its own frame is on screen, and until then they take no input. The diagram's content fades in over 100 ms; the frame and the theme's background do not, since they are already on screen. A first run draws "My diagrams / Untitled", and a space the last visit did not show draws the pill without names. An invitation link draws the same, with the join dialog over it (F-6.2). The app shows no loading text.
   req F-1.6: The app prepares in the background, all at once: plugins, identity and the open space. Opening a diagram loads every object it reached on its last open in one batch, not one reference at a time.
   req F-1.7: The pill is a toolbar between the canvas's breadcrumbs and its inspector and never overlaps either; below 800 px, where the canvas folds the inspector to one icon, it leaves room for that icon alone. It centres in the page while both sides have room, then moves aside. As the page narrows, Share, then the space menu, then the diagram menu show only their icon or avatar (with the menus' caret), never a name cut short; the viewers' avatars never collapse. Where even that does not fit, Share moves into the pill's overflow menu (⋮), and past that the pill scrolls sideways. As the page widens again, each takes its full form back in the reverse order. The menus are divided by the toolbar's own line separator.
-  req F-1.8: When the app fails, during boot or after, a reset dialog takes the place of the app and its boot shell: the error, its stack on request, a copy of both, Reload, and Reset, which wipes the device's data after a confirmation. Composer shows the same dialog, which app-toolkit provides.
+  req F-1.8: When the app fails, during boot or after, a reset dialog takes the place of the app and its boot shell: the error, its stack on request in a box that scrolls, a copy of both, Reload, and Reset, which wipes the device's data after a confirmation. Composer shows the same dialog, which app-toolkit provides.
 ```
 
 ```mdl
@@ -123,6 +123,13 @@ feat F-9: Presence
   req F-9.4: While this session follows someone or is followed in the open space, the pill takes the follow's hue as Composer's plank headings do: a wash and a one-pixel underline.
   req F-9.5: Presence, Jump and follow work between this app and Composer: the layout names the open space and diagram by the graph paths Composer uses.
   req F-9.6: "See everyone" in the presence list opens the Share dialog, which lists the space's members.
+```
+
+```mdl
+feat F-10: Telemetry
+  req F-10.1: The app reports to PostHog: product analytics, and OTel logs, metrics and traces. Preview and production report to the Diagram project; dev, staging and local builds report to Composer Test.
+  req F-10.2: Telemetry is always on; the app offers no opt-out and shows no privacy notice.
+  req F-10.3: The app's own Worker forwards PostHog ingestion from `/ingest` and OTLP from `/api/otel`, so the browser posts only to the origin that serves the app. The OTLP route adds the project token on the server and accepts only same-origin posts.
 ```
 
 ## Running against EDGE without an account
@@ -1672,4 +1679,58 @@ decision D-132: Reset is offered whether or not the client's services are up. Wi
   for: user:wittjosiah
   affects: [F-1.8]
   why: The client's own reset needs its services. Without them, the page that failed may still hold a database open, which blocks its deletion, so the wipe runs on a fresh load.
+```
+
+```mdl
+decision D-133: The app reports to its own PostHog project, Diagram, in preview and production, and to Composer Test in every other environment. It sends a PostHog API host and an OTel endpoint of its own.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-10.1]
+```
+
+```mdl
+decision D-134: The app's Worker proxies PostHog ingestion and OTLP on the app's own origin. Telemetry is on by default with no toggle, as in Composer.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-10.2, F-10.3]
+```
+
+```mdl
+decision D-135: Each environment's Worker serves `/ingest` and `/api/otel` ahead of the assets and requires the POSTHOG_PROJECT_TOKEN secret, which holds the token of that environment's project. The build points both at relative paths, so one bundle reports through whichever host serves it. This replaces the assets-only Worker of [D-126]. Fills in [D-133] and [D-134].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10.1, F-10.3]
+  why: Preview is served from both its custom domain and its `workers.dev` host, and a relative path is right on either.
+  rejected:
+    - PostHog's managed proxy host that Composer uses: it is a CNAME on Composer's domain, so the app would post cross-origin.
+```
+
+```mdl
+decision D-136: The app starts telemetry with the observability SDK directly and does not load the observability plugin. It adds the client's identity and metrics once the client initializes, as the plugin does in Composer. Fills in [D-134].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10.2]
+  why: The plugin's privacy toast names Composer and opens a settings page this app does not have, and its settings are the toggle the app leaves out.
+  rejected:
+    - Loading the plugin: its toast and settings would contradict F-10.2.
+```
+
+```mdl
+decision D-137: The reset dialog's stack trace stays inside the dialog.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-1.8]
+```
+
+```mdl
+decision D-138: The stack trace's box scrolls both ways, so each frame keeps its own line. Composer's dialog is the same component and changes with it. Fills in [D-137].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.8]
+  why: A frame is a long URL, and wrapping turns each into three lines on a phone.
+  rejected:
+    - Wrapping long lines.
 ```

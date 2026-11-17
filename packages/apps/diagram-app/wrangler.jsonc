@@ -1,20 +1,43 @@
 {
-  // Cloudflare Workers (Static Assets) config for the diagram app — assets-only (no Worker script).
+  // Cloudflare Workers (Static Assets) config for the diagram app. `src/functions/worker.ts` (bundled by wrangler) serves
+  // the `run_worker_first` paths: `/api/otel` forwards OTLP to PostHog with the POSTHOG_PROJECT_TOKEN secret, and
+  // `/ingest` is PostHog's reverse proxy. Every other path is a static asset with the SPA fallback.
   // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
   // Local dev: `moon run diagram-app:bundle && wrangler dev`.
   "name": "diagram",
+  "main": "./src/functions/worker.ts",
   "compatibility_date": "2024-11-01",
-  // No custom domain yet, so each env serves from `<worker>.dxos.workers.dev`.
+  // No custom domain in config, so each env also serves from `<worker>.dxos.workers.dev`.
   "workers_dev": true,
+  // Default / local-dev bindings (wrangler dev); vars and secrets are not inherited, so each env repeats them.
+  "vars": {
+    "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
+  },
   "assets": {
     "directory": "./out/diagram-app",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/ingest/*"],
   },
+  // `secrets.required` makes `wrangler deploy` refuse an env whose Worker lacks POSTHOG_PROJECT_TOKEN: the Diagram
+  // project's token on preview, Composer Test's on dev and staging.
   "env": {
     // On demand, against EDGE preview, as Composer's `dev`.
-    "dev": { "name": "diagram-dev" },
+    "dev": {
+      "name": "diagram-dev",
+      "vars": { "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i" },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
+    },
     // Daily from `main`, against EDGE production, as Composer's `preview`.
-    "preview": { "name": "diagram-preview" },
-    "staging": { "name": "diagram-staging" },
+    "preview": {
+      "name": "diagram-preview",
+      "vars": { "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i" },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
+    },
+    "staging": {
+      "name": "diagram-staging",
+      "vars": { "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i" },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
+    },
   },
 }
