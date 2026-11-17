@@ -129,13 +129,17 @@ export const TestInPopover: Story = {
   args: { component: 'popover' },
   // The popover mounts through a portal, so everything here is read from the popup rather than the story's canvas.
   play: async () => {
-    const popup = await waitFor(() => {
-      const element = document.querySelector<HTMLElement>('.dx-popup');
-      if (!element) {
-        throw new Error('Missing popup');
-      }
-      return element;
-    });
+    // The same bound the neighbouring stories allow: nothing renders until the client has created the person.
+    const popup = await waitFor(
+      () => {
+        const element = document.querySelector<HTMLElement>('.dx-popup');
+        if (!element) {
+          throw new Error('Missing popup');
+        }
+        return element;
+      },
+      { timeout: 15_000 },
+    );
     const panel = popup.querySelector('.dx-panel');
     const footer = popup.querySelector('.dx-panel-footer');
     await expect(panel).not.toBeNull();
