@@ -101,14 +101,16 @@ export const Default: Story = {
   decorators: decorators(),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const views = await canvas.findAllByTestId('scene-view', undefined, { timeout: 60_000 });
-    await expect(views.length).toBe(STUDIO_SLIDES.length);
+    // The first view appearing is the space having seeded and the deck having mounted; every count below waits for
+    // the rest. `findAllByTestId` resolves on ONE match, so counting what IT returns asserts against however much of
+    // the deck happened to be mounted — which is why the view count is inside the wait with the others, and why a
+    // count that must stay 0 (`chip-node`) is only meaningful once the rest have arrived. Plural, too: `findByTestId`
+    // rejects on multiple matches, so against nine views it never resolves and the story dies at the test timeout.
+    await canvas.findAllByTestId('scene-view', undefined, { timeout: 30_000 });
     const count = (testid: string) => canvasElement.querySelectorAll(`[data-testid="${testid}"]`).length;
-    // One `waitFor` around the whole picture: the first `scene-view` resolves before the views that mount their own
-    // content have, so a count read straight after it can be short — and a count that must stay 0 is only meaningful
-    // once the rest have arrived.
     await waitFor(
       async () => {
+        await expect(count('scene-view')).toBe(STUDIO_SLIDES.length);
         await expect(count('graph-node')).toBe(STUDIO_SLIDES.filter(({ spaceGraph }) => spaceGraph).length);
         // The Hyperspace slide's three planks and its one field of spaces, and the Composer slide's window. A kind
         // the loader left as its placeholder draws none of these. The Plugins slide draws its consumers as cards,
