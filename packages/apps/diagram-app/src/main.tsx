@@ -5,7 +5,9 @@
 import '@dxos-theme';
 
 import * as Cause from 'effect/Cause';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { type Root, createRoot } from 'react-dom/client';
 
@@ -21,12 +23,14 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { clearIndexedDB, clearOPFS } from '@dxos/util';
 
+import { initAutomergeWasm } from './automerge-wasm.ts';
 import { showBootShell } from './boot-shell/index.ts';
+import { initializeObservability } from './observability.ts';
 import { getPlugins } from './plugins.ts';
 import { dismissShell } from './shared/index.ts';
 
 const createDedicatedWorker = () =>
-  new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), { type: 'module', name: 'dxos-client-worker' });
+  new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), { type: 'module', name: 'dxos-client-worker' });
 
 // A SharedWorker elects one tab's dedicated worker as the OPFS owner, so a second tab proxies instead of locking out.
 const createCoordinatorWorker = () =>
@@ -71,6 +75,11 @@ const Fallback = ({ error, client }: { error: Error; client?: Client }) => {
 let bootClient: Client | undefined;
 let reactRoot: Root | undefined;
 
+const startupSettled = Deferred.makeUnsafe<void>();
+const settleStartup = () => Deferred.doneUnsafe(startupSettled, Exit.void);
+window.addEventListener(Hooks.STARTUP_ACTIVATED_EVENT, settleStartup, { once: true });
+window.addEventListener(Hooks.STARTUP_FAILED_EVENT, settleStartup, { once: true });
+
 const main = Effect.gen(function* () {
   performance.mark('diagram-app:main');
   if (sessionStorage.getItem(WIPE_ON_LOAD)) {
@@ -78,6 +87,7 @@ const main = Effect.gen(function* () {
     yield* Effect.promise(wipeStorage);
   }
   showBootShell();
+  yield* Effect.promise(initAutomergeWasm);
   const config = new Config(
     {
       runtime: {
@@ -91,6 +101,10 @@ const main = Effect.gen(function* () {
     Local(),
     Defaults(),
   );
+  const observability = yield* initializeObservability(config, Deferred.await(startupSettled)).pipe(
+    Effect.tapCause((cause) => Effect.sync(() => log.warn('telemetry not started', { cause }))),
+    Effect.forkDetach,
+  );
   const services = yield* Effect.promise(() =>
     createClientServices(config, { createDedicatedWorker, createCoordinatorWorker }),
   );
@@ -98,7 +112,13 @@ const main = Effect.gen(function* () {
   bootClient = client;
   // Until `Main` mounts, a fatal error has nowhere to show but the log.
   let raiseFatalError = (error: Error) => log.error('fatal error before render', { error });
-  const plugins = getPlugins({ client, config, services, onFatalError: (error) => raiseFatalError(error) });
+  const plugins = getPlugins({
+    client,
+    config,
+    services,
+    observability,
+    onFatalError: (error) => raiseFatalError(error),
+  });
   const defaults = plugins.map(({ meta }) => meta.profile.key);
 
   const Main = () => {
@@ -126,6 +146,7 @@ const main = Effect.gen(function* () {
 /** A boot that fails before the app renders shows the reset dialog in its place. */
 const showBootFailure = (cause: Cause.Cause<unknown>) => {
   log.error('boot failed', { cause });
+  settleStartup();
   const failure = Cause.squash(cause);
   const error = failure instanceof Error ? failure : new Error(String(failure));
   if (!reactRoot) {
