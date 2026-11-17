@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { SlideTheme } from '#types';
+import * as SlideTheme from '../../types/SlideTheme.ts';
 
 /** Inline style carrying a theme's `--slide-*` variables. */
 export type SlideThemeStyle = CSSProperties & { [key: `--slide-${string}`]: string };

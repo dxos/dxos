@@ -9,7 +9,7 @@ import { expect } from 'storybook/test';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { query, slide } from '../../testing/slideStory.tsx';
-import { Slide } from '../Slide/index.ts';
+import { SlideFrame } from '../Slide/canvas.tsx';
 import { MarkdownSlide, type MarkdownSlideProps } from './MarkdownSlide.tsx';
 
 // A one-second 32×18 WebM, inlined so the story needs no network.
@@ -17,9 +17,9 @@ const VIDEO =
   'data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAJVEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHWTbuMU6uEElTDZ1OsggEyTbuMU6uEHFO7a1OsggI/7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsCrXsYMPQkBNgIxMYXZmNjMuMS4xMDJXQYxMYXZmNjMuMS4xMDJEiYhAj0AAAAAAABZUrmvXrgEAAAAAAABO14EBc8WIgtz4bGKvzVCcgQAitZyDdW5kiIEAhoVWX1ZQOIOBASPjg4QO5rKA4JCwgSC6gRKagQJVsIRVuYEBVe6BAOwBAAAAAAAAAgAAElTDZ/pzc59jwIBnyJlFo4dFTkNPREVSRIeMTGF2ZjYzLjEuMTAyc3PVY8CLY8WIgtz4bGKvzVBnyKBFo4dFTkNPREVSRIeTTGF2YzYzLjEuMTAyIGxpYnZweGfIoUWjiERVUkFUSU9ORIeTMDA6MDA6MDEuMDAwMDAwMDAwAB9DtnVAiOeBAKO+gQAAgNACAJ0BKiAAEgAARwiFhYiFhIgCAgJ1qgP4AgghCD0A/vp5X/+p0/qdP6nT/6nT/9yAeyAeyAfv3ACjlYEA+gCxAQABEBAAGAAYWC/0AAhwAKOVgQH0ALEBAAEQEAAYABhYL/QACHAAo5WBAu4AsQEAARAQABgAGFgv9AAIcAAcU7trkbuPs4EAt4r3gQHxggGx8IED';
 
 const DefaultStory = (props: MarkdownSlideProps) => (
-  <Slide.Frame inset>
+  <SlideFrame inset>
     <MarkdownSlide {...props} />
-  </Slide.Frame>
+  </SlideFrame>
 );
 
 /**

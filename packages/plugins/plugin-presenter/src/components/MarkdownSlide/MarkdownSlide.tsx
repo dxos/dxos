@@ -29,8 +29,8 @@ import {
   parseSlide,
   parseSourceRange,
 } from '#markdown';
-import { SlideTheme } from '#types';
 
+import * as SlideTheme from '../../types/SlideTheme.ts';
 import { useSlideScrim } from '../Slide/scrim.ts';
 import {
   type SlideThemeStyle,

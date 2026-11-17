@@ -8,10 +8,9 @@ import { expect, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SlideTheme } from '#types';
-
+import * as SlideTheme from '../../types/SlideTheme.ts';
 import { MarkdownSlide } from '../MarkdownSlide/index.ts';
-import { Slide } from '../Slide/index.ts';
+import { SlideFrame } from '../Slide/canvas.tsx';
 import { SlideThemeProvider, useSlideThemeStyle } from './SlideTheme.tsx';
 
 const CONTENT = [
@@ -44,9 +43,9 @@ const DefaultStory = ({ themes }: StoryProps) => (
           <figcaption className='text-sm text-description font-mono'>{caption(settings)}</figcaption>
           <div className='flex aspect-video'>
             <SlideThemeProvider settings={settings}>
-              <Slide.Frame inset>
+              <SlideFrame inset>
                 <MarkdownSlide content={CONTENT} />
-              </Slide.Frame>
+              </SlideFrame>
             </SlideThemeProvider>
           </div>
         </figure>

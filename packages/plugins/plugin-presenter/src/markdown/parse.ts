@@ -10,8 +10,7 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
 
-import { SlideTheme } from '#types';
-
+import * as SlideTheme from '../types/SlideTheme.ts';
 import { type LayoutName, type SlideFrontmatter, type SlideIssue, isLayout, parseFrontmatter } from './frontmatter.ts';
 import { type SlotName, SLOTS, remarkSlidev } from './remark-slidev.ts';
 import { isolateSlotMarkers } from './split.ts';

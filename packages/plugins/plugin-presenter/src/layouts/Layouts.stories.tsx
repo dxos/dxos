@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type LayoutName, LAYOUTS } from '#markdown';
 
 import { MarkdownSlide, type MarkdownSlideProps } from '../components/MarkdownSlide/index.ts';
-import { Slide } from '../components/Slide/index.ts';
+import { SlideFrame } from '../components/Slide/canvas.tsx';
 import { query, slide } from '../testing/slideStory.tsx';
 
 const IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
@@ -24,9 +24,9 @@ const TALL = `data:image/svg+xml;utf8,${encodeURIComponent(
 )}`;
 
 const DefaultStory = (props: MarkdownSlideProps) => (
-  <Slide.Frame inset>
+  <SlideFrame inset>
     <MarkdownSlide {...props} />
-  </Slide.Frame>
+  </SlideFrame>
 );
 
 /**
@@ -336,9 +336,9 @@ export const All: Story = {
           {/* The canvas scales to its container and draws nothing until it has measured one, so the tile carries
               the slide's own 16:9 rather than leaving its height to the grid row. */}
           <div className='flex aspect-video'>
-            <Slide.Frame inset>
+            <SlideFrame inset>
               <MarkdownSlide content={CATALOGUE[layout].content} />
-            </Slide.Frame>
+            </SlideFrame>
           </div>
           <figcaption className='text-center text-sm text-fg-subtle font-mono'>{layout}</figcaption>
         </figure>

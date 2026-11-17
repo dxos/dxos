@@ -6,8 +6,7 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { SlideTheme } from '#types';
-
+import * as SlideTheme from '../../types/SlideTheme.ts';
 import { slideThemeStyle } from './SlideTheme.tsx';
 
 describe('slideThemeStyle', () => {

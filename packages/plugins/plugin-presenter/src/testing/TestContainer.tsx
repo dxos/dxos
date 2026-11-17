@@ -22,7 +22,7 @@ import {
 import { parseSlide } from '#markdown';
 
 import { MarkdownSlide, type MarkdownSlideProps } from '../components/MarkdownSlide/index.ts';
-import { Slide } from '../components/Slide/index.ts';
+import { SlideFrame } from '../components/Slide/canvas.tsx';
 import { slideCompletion } from '../containers/SlideEditorArticle/slide-completion.ts';
 import { slideHighlight } from '../containers/SlideEditorArticle/slide-highlight.ts';
 
@@ -83,10 +83,10 @@ export const TestContainer = ({
       {/* `asChild`, so the pane itself takes the click and the keys rather than a box inside it. */}
       <Splitter.Panel position='start' asChild>
         <div tabIndex={0} onClick={() => clicks > 0 && advance(1)} onKeyDown={handleKeyDown}>
-          <Slide.Frame inset classNames='min-w-0 min-h-0'>
+          <SlideFrame inset classNames='min-w-0 min-h-0'>
             {/* A slide with no clicks of its own renders whole, as it does outside a build. */}
             <MarkdownSlide content={value} step={clicks > 0 ? step : undefined} {...props} />
-          </Slide.Frame>
+          </SlideFrame>
         </div>
       </Splitter.Panel>
       <Splitter.ResizeTrigger aria-label='Resize' />

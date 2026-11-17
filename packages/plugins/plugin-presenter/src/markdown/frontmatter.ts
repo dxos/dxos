@@ -6,7 +6,7 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Yaml from 'yaml';
 
-import { SlideTheme } from '#types';
+import * as SlideTheme from '../types/SlideTheme.ts';
 
 /** Layout names supported by the Slidev subset. */
 export const LAYOUTS = [

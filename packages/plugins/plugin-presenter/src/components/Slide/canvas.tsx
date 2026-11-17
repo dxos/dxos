@@ -74,6 +74,32 @@ export const SlideCanvas = ({ children, classNames, inset, scrim: hostScrim }: S
   );
 };
 
+/**
+ * The 16:9 slide canvas, scaled to fit its container. Beside the canvas rather than in `Slide`, because it needs
+ * none of what a slide resolves: given children it draws them, which is all a renderer wants.
+ */
+export const SlideFrame = ({ children, classNames, inset, scaled = true, scrim }: SlideFrameProps) =>
+  scaled ? (
+    <SlideCanvas inset={inset} classNames={classNames} scrim={scrim}>
+      {children}
+    </SlideCanvas>
+  ) : (
+    <div className='flex relative size-full'>{children}</div>
+  );
+
+SlideFrame.displayName = 'Slide.Frame';
+
+export type SlideFrameProps = Util.ThemedClassName<
+  PropsWithChildren<{
+    /** Inset the slide in the scrim, with rounded corners, so its own background reads as distinct. */
+    inset?: boolean;
+    /** Scale the canvas to fit (default); print lays it out at its nominal size instead. */
+    scaled?: boolean;
+    /** The scrim to paint around the slide when neither the slide nor the deck names one. */
+    scrim?: string;
+  }>
+>;
+
 type Size = { width: number; height: number };
 
 /**

@@ -7,8 +7,7 @@ import type { Data, Html, Paragraph, Parent, Root, RootContent, Text } from 'mda
 
 import { EID } from '@dxos/keys';
 
-import { SlideTheme } from '#types';
-
+import * as SlideTheme from '../types/SlideTheme.ts';
 import { type SlideIssue } from './frontmatter.ts';
 
 /** Content regions of a slide, selected by `::name::` markers. */
