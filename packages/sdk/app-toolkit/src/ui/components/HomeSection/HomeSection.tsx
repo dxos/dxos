@@ -7,6 +7,7 @@
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -15,18 +16,29 @@ import { mx } from '@dxos/ui-theme';
 // Root
 //
 
-type HomeSectionRootProps = Util.ThemedClassName<PropsWithChildren>;
+type HomeSectionRootProps = Util.ThemedClassName<
+  PropsWithChildren<{
+    /** Names the section in every session, so a follower's Home lands on the section the leader is reading. */
+    anchor?: string;
+  }>
+>;
 
 /**
  * Shared container for a Home content section: a centered, max-width column. Home surface
  * contributors (welcome, recent, dashboard, suggestions) render inside one so they share a
  * consistent width and rhythm regardless of which plugin owns them.
  */
-const HomeSectionRoot = forwardRef<HTMLDivElement, HomeSectionRootProps>(({ classNames, children }, forwardedRef) => (
-  <div ref={forwardedRef} className={mx('flex flex-col w-full mx-auto max-w-[40rem]', classNames)}>
-    {children}
-  </div>
-));
+const HomeSectionRoot = forwardRef<HTMLDivElement, HomeSectionRootProps>(
+  ({ classNames, anchor, children }, forwardedRef) => (
+    <div
+      ref={forwardedRef}
+      className={mx('flex flex-col w-full mx-auto max-w-[40rem]', classNames)}
+      {...{ [ScrollArea.SCROLL_ANCHOR_ATTRIBUTE]: anchor }}
+    >
+      {children}
+    </div>
+  ),
+);
 
 HomeSectionRoot.displayName = 'HomeSection.Root';
 

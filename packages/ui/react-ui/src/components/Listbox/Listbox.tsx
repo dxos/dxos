@@ -296,7 +296,7 @@ const useAutoColumns = (
  * host's rails (`inherit`). A windowed (`virtual`) list measures its scroller, so it needs a `Viewport`.
  */
 const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'>>(
-  ({ gutter, gap, padBlock, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
+  ({ gutter, gap, align, padBlock, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
     const api = useListboxContext();
     const { columns, tiled, tileWidth, setColumnCount, virtual, scrollToIndexRef } = useRootContext('Content');
     const inViewport = useContext(ViewportContext);
@@ -311,6 +311,7 @@ const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<Componen
     const { style, ...attributes } = containerAttributes({
       gutter: gutter ?? (inViewport ? 'inset' : 'inherit'),
       gap,
+      align,
       columns,
       padBlock,
     });

@@ -37,7 +37,10 @@ export const CanvasArticle = ({ canvas, ...props }: CanvasArticleProps) =>
 
 CanvasArticle.displayName = 'CanvasArticle';
 
-type DimensionArticleProps = Pick<CanvasArticleProps, 'role' | 'attendableId' | 'extrinsic'> & {
+type DimensionArticleProps = Pick<
+  CanvasArticleProps,
+  'role' | 'attendableId' | 'extrinsic' | 'camera' | 'onCameraChange'
+> & {
   canvas: Canvas.Canvas;
 };
 
@@ -49,7 +52,8 @@ const DimensionArticle = (props: DimensionArticleProps) => {
 
 const CanvasArticle2D = (props: DimensionArticleProps) => {
   const host = useCanvasEditor(props.canvas, '2d');
-  const dimension = useDimension2D(props.canvas);
+  // The 3D camera is an orbit, which the drawing's camera does not carry.
+  const dimension = useDimension2D(props.canvas, props.camera, props.onCameraChange);
   return <SceneEditorArticle {...props} host={host} dimension={dimension} />;
 };
 

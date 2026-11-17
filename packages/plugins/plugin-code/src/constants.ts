@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DXN } from '@dxos/keys';
-
 import { CodeNamespace } from './namespace.ts';
 
 export const CODE_PROJECTS_SECTION_TYPE = `${CodeNamespace.key}.code-projects-section`;
@@ -18,14 +16,8 @@ export const CODE_PROJECT_BUILD_TYPE = `${CodeNamespace.key}.code-project-build`
  */
 export const PLUGIN_SPEC_TYPE = 'org.dxos.plugin.spec';
 
-/** Picks an existing feature to add to a spec's map. */
-export const ADD_FEATURE_DIALOG = DXN.make(`${CodeNamespace.key}.addFeatureDialog`);
-
 /** The spec plank's companion that shows the feature selected on its feature map. */
 export const FEATURE_COMPANION = 'feature';
-
-/** Companion variant of a spec's panel of views: its definitions, review, decisions and the rest. */
-export const SPEC_COMPANION = 'spec';
 
 /** Registry key of the built-in introspect-mcp server behind the Coder skill. */
 export const INTROSPECT_MCP_KEY = 'org.dxos.mcp.introspect';

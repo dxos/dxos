@@ -180,6 +180,7 @@ op restoreCardField
 
 ```mdl
 feat F-1: Board Layout
+  uses: [Arrangement]
 
   req F-1.1: Columns are ordered by Arrangement.order; each column contains its cards in Arrangement.columns[value].ids order.
   req F-1.2: Cards within a column are rendered in the stored id order.
@@ -190,6 +191,7 @@ feat F-1: Board Layout
 
 ```mdl
 feat F-2: Drag and Drop
+  uses: [Arrangement]
 
   req F-2.1:
     when: user drags a card to a different column
@@ -206,6 +208,7 @@ feat F-2: Drag and Drop
 
 ```mdl
 feat F-3: Card Management
+  uses: [deleteCard, restoreCard]
 
   req F-3.1:
     when: user clicks Add Card in a column
@@ -222,6 +225,7 @@ feat F-3: Card Management
 
 ```mdl
 feat F-4: Column Configuration
+  uses: [deleteCardField, KanbanSettings, restoreCardField]
 
   req F-4.1:
     when: user opens KanbanSettings for a view-variant board
@@ -238,6 +242,7 @@ feat F-4: Column Configuration
 
 ```mdl
 feat F-5: Item Source Variants
+  uses: [Arrangement]
 
   req F-5.1:
     when: spec.kind === "view"
@@ -252,6 +257,7 @@ feat F-5: Item Source Variants
 
 ```mdl
 feat F-6: ECHO Persistence and Collaboration
+  uses: [Arrangement, Kanban, KanbanArticle]
 
   req F-6.1: All Kanban, Arrangement, and card mutations are written to ECHO and replicated to peers.
   req F-6.2:
@@ -263,6 +269,7 @@ feat F-6: ECHO Persistence and Collaboration
 
 ```mdl
 feat F-7: AI Skill
+  uses: [Kanban]
 
   req F-7.1: Plugin contributes a Kanban skill that lets an AI agent create and update kanban boards.
   req F-7.2:

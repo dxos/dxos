@@ -7,6 +7,7 @@ import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo,
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { findFirstFocusable } from '@dxos/react-focus';
@@ -14,7 +15,7 @@ import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { Plank } from '#components';
-import { planksBefore, useAncestorBreadcrumbs, useDeckSettings } from '#hooks';
+import { planksBefore, useAncestorBreadcrumbs, useDeckSettings, useLayoutAccent } from '#hooks';
 import { DeckSchema } from '#types';
 
 import { focusPane } from '../../util/index.ts';
@@ -71,6 +72,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   } = useDeckPlank({ id, part, active });
 
   const { flatten } = useDeckSettings();
+  const accent = useLayoutAccent();
   const history = useMemo(() => planksBefore(active, id), [active, id]);
   const breadcrumbs = useAncestorBreadcrumbs(flatten && part === 'main' ? id : undefined, history);
   const onSelectBreadcrumb = useCallback(
@@ -155,6 +157,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       <Plank
         ref={rootRef}
         node={loadingNode}
+        accent={accent}
         attendableId={id}
         related={part === 'complementary'}
         pending
@@ -179,6 +182,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     <Plank
       ref={rootRef}
       node={shellNode}
+      accent={accent}
       attendableId={id}
       related={part === 'complementary'}
       actions={sigilActions}
@@ -187,6 +191,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       onSelectBreadcrumb={onSelectBreadcrumb}
       popoverAnchorId={popoverAnchorId}
       articleData={articleData}
+      scrollContextId={part === 'main' ? GraphPath.getEidFromPath(id) : undefined}
       controls={controls}
       navbarEnd={navbarEnd}
       sigilFooter={sigilFooter}

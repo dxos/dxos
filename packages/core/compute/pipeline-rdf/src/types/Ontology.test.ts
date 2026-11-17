@@ -29,6 +29,12 @@ describe('Ontology', () => {
     );
   });
 
+  test('seeds `uses`, matching what extractors minted for it before', ({ expect }) => {
+    expect(Ontology.DEFAULT.resolve('is using').iri).toBe(`${Vocab.DX}uses`);
+    expect(Ontology.DEFAULT.resolve('built with').iri).toBe(`${Vocab.DX}uses`);
+    expect(Ontology.DEFAULT.get(`${Vocab.LOCAL_BRAIN}uses`)?.name).toBe('uses');
+  });
+
   test('mints an unknown predicate in its namespace, labelled with its surface form', ({ expect }) => {
     const first = Ontology.DEFAULT.resolve('travels to');
     expect(first).toEqual({

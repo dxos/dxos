@@ -177,3 +177,19 @@ export const statements = (card: EntityCardModel, selection: BrowseSelection): s
   ].find(({ key }) => key === selection.property)?.property;
   return property?.values.flatMap((value) => (value.kind === 'literal' ? [value.label] : [])) ?? [];
 };
+
+/** How many cards state one class. */
+export type EntityTypeCount = { type: string; count: number };
+
+/** The classes the cards state, most common first (ties by name); untyped cards are not counted. */
+export const entityTypeCounts = (cards: readonly EntityCardModel[]): EntityTypeCount[] => {
+  const counts = new Map<string, number>();
+  for (const card of cards) {
+    if (card.type) {
+      counts.set(card.type, (counts.get(card.type) ?? 0) + 1);
+    }
+  }
+  return [...counts]
+    .map(([type, count]) => ({ type, count }))
+    .sort((left, right) => right.count - left.count || left.type.localeCompare(right.type));
+};

@@ -18,7 +18,23 @@ import { Database, Filter, Migration, Obj, Query, Ref, Relation } from '@dxos/ec
 import { log } from '@dxos/log';
 import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { fromRenderList2D, namedStyles } from '@dxos/react-ui-canvas/headless';
+import {
+  LEGACY_ROOT_VIEW_ID,
+  ROOT_VIEW_ID,
+  canvasRecordOf,
+  clone,
+  fromRenderList2D,
+  isLinkRecord,
+  isNodeRecord,
+  migrateContent,
+  migrateLayers,
+  namedStyles,
+  pruneOrphanedViews,
+  readStyles,
+  readViews,
+  rootOf,
+  sceneKey,
+} from '@dxos/react-ui-canvas/headless';
 import { type RenderList2D } from '@dxos/react-ui-canvas/headless';
 import { Scene, type StyleMap, bounds2D, toEcho } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
@@ -26,21 +42,6 @@ import { CreatedFrom } from '@dxos/types';
 import { Canvas } from '#types';
 
 import { canvasDocument, loadCanvas, removeCanvas } from './canvas-document.ts';
-import {
-  LEGACY_ROOT_VIEW_ID,
-  ROOT_VIEW_ID,
-  canvasRecordOf,
-  clone,
-  isLinkRecord,
-  isNodeRecord,
-  migrateContent,
-  migrateLayers,
-  pruneOrphanedViews,
-  readStyles,
-  readViews,
-  rootOf,
-  sceneKey,
-} from './content.ts';
 import { adoptLayoutMode, withoutMode, withSettingsMode } from './layout-mode.ts';
 import { SceneMigrations } from './migrations.ts';
 import { plain } from './records.ts';

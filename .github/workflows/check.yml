@@ -1,14 +1,16 @@
 name: Check
 
-# A draft PR runs `check`, `boot-budget` and the node tests; marking it ready adds the browser,
+# A draft PR runs `check` and the node tests; marking it ready adds the browser,
 # storybook and e2e suites (`plan` holds them back on a draft) and `cli`. Converting a PR to a draft, by
 # hand or by `draft-on-open.yml`, starts a draft run, and the concurrency group cancels the run in flight.
 #
 # Where suites run: a ready PR runs every job. The merge queue runs only what can block a merge: `check`
 # and the jobs behind the required `test` gate. A push to main runs only e2e, which reports without gating:
 # main moves to the exact commit the queue tested, so the queue's results are the ones GitHub shows on it,
-# and e2e there covers whatever landed since the last run. No `labeled` trigger: its run would post
-# skipped check runs over the PR's real results, and branch protection reads skipped as passing.
+# and e2e there covers whatever landed since the last run. knip and `boot-budget` run only nightly and on
+# dispatch: neither gates a merge, and on a PR they cost ~3.5 and ~4 minutes. No `labeled` trigger: its
+# run would post skipped check runs over the PR's real results, and branch protection reads skipped as
+# passing.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
@@ -242,8 +244,11 @@ jobs:
       # catch a property of an import edge, whose offending commit lands in a package neither project's
       # inputs name, so scoped they no-op on the PRs they exist to catch. Unset them, do not set
       # `MOON_AFFECTED=''`. Empty is not "off", moon reads it as an empty base and still filters.
+      # Nightly and dispatch only: knip is never cached, so it costs ~3.5 minutes on every PR run.
       - name: Check dependencies
-        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
+        if: >-
+          ${{ !cancelled() && steps.compile.outcome == 'success' &&
+          (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
         run: pnpm run knip
 
       # `docs:bundle` IS the docs link check: `starlight-links-validator` runs as the last phase of
@@ -277,10 +282,12 @@ jobs:
   # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
   # instead. A PR confined to `docs/` skips it: the docs site is a separate Astro project
   # that nothing in Composer imports.
+  # Nightly and dispatch only: on a PR it rebuilds the affected packages (~4 minutes) to report a budget
+  # that does not gate the merge. `boot-trend.yml` still measures every push to main.
   boot-budget:
     if: >-
-      ${{ inputs.only != 'test' && inputs.only != 'e2e' && github.event_name != 'merge_group' &&
-      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
     permissions:
       contents: read
       packages: read

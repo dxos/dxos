@@ -3,4 +3,3 @@
 //
 
 export * from './decision-gutter.ts';
-export * from './SpecChangelog.tsx';

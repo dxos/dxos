@@ -67,7 +67,7 @@ const FACTS = [
 const extractions = { count: 0 };
 
 const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
-  if (!request.text.includes(EXTRACTION_PROMPT)) {
+  if (!request.system.includes(EXTRACTION_PROMPT)) {
     return { parts: [text('Unexpected request.')] };
   }
   extractions.count++;

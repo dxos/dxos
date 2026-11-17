@@ -169,6 +169,7 @@ op SyncLinearTeams
 
 ```mdl
 feat F-1: Discover Teams
+  uses: [GetLinearTeams, SyncTarget]
 
   req F-1.1:
     when: user opens the integration target picker
@@ -177,6 +178,7 @@ feat F-1: Discover Teams
 
 ```mdl
 feat F-2: Pull Projects
+  uses: [Project, SyncLinearTeams]
 
   req F-2.1:
     when: SyncLinearTeams runs and a remote project has no matching local Project
@@ -192,6 +194,7 @@ feat F-2: Pull Projects
 
 ```mdl
 feat F-3: Pull Issues
+  uses: [Project, SyncLinearTeams, SyncOptions]
 
   req F-3.1:
     when: SyncLinearTeams runs and a remote issue has no matching local Task
@@ -215,6 +218,7 @@ feat F-3: Pull Issues
 
 ```mdl
 feat F-4: Push Projects
+  uses: [Project]
 
   req F-4.1:
     when: a local Project has name or description diverged from its snapshot
@@ -227,6 +231,7 @@ feat F-4: Push Projects
 
 ```mdl
 feat F-5: Push Issues
+  uses: [StateType]
 
   req F-5.1:
     when: a local Task has title or description diverged from its snapshot
@@ -260,6 +265,7 @@ feat F-6: Priority Mapping
 
 ```mdl
 feat F-7: Status Mapping
+  uses: [StateType]
 
   req F-7.1: StateType started maps to Task.status 'in-progress'.
   req F-7.2: StateType completed or canceled maps to Task.status 'done'.
