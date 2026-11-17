@@ -961,7 +961,21 @@ export const setParent = (entity: Unknown, parent: Any | undefined) => {
   }
   assumeType<internal.InternalObjectProps>(entity);
   assumeType<internal.InternalObjectProps | undefined>(parent);
-  entity[internal.ParentId] = parent;
+  // The parent is part of the object's state, so setting it notifies subscribers like any edit, in a change
+  // of its own; inside any `Obj.update` it is set directly, since a nested change would end the caller's.
+  if (internal.isAnyChangeContextActive()) {
+    entity[internal.ParentId] = parent;
+    // The context's exit notifies only its own object, so another object's update must queue this one.
+    const changeKey: object | undefined = Reflect.get(entity, internal.ChangeKeyId);
+    if (changeKey === undefined || !internal.isInChangeContext(changeKey)) {
+      internal.queueOwnerNotification(entity);
+    }
+  } else {
+    internal.change(entity, (mutable) => {
+      assumeType<internal.InternalObjectProps>(mutable);
+      mutable[internal.ParentId] = parent;
+    });
+  }
   return entity;
 };
 
