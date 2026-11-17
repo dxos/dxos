@@ -4,6 +4,7 @@
 
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import { ResolverFactory } from 'oxc-resolver';
 import { type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
@@ -25,14 +26,43 @@ const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
 
 const WORKER_ENTRIES: Record<string, string> = {
-  '@dxos/client/dedicated-worker': 'packages/sdk/client/src/services/dedicated/dedicated-worker-entrypoint.ts',
   '@dxos/client/coordinator-worker': 'packages/sdk/client/src/services/dedicated/coordinator-worker-entrypoint.ts',
   '@dxos/react-ui-canvas/generator-worker': 'packages/ui/react-ui-canvas/src/generator/worker.ts',
+};
+
+// These packages' `browser` entrypoints initialize their wasm with top-level await, and Safari before 27 then
+// evaluates a module before its dependencies when plugins load concurrently (https://bugs.webkit.org/show_bug.cgi?id=242740).
+const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
+
+/** Resolves {@link SLIM_WASM_PACKAGES} to `slim`, and their subpaths without the `browser` condition, so one wasm instance serves every importer. */
+const slimWasm = (): PluginOption => {
+  const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
+  let isBuild = false;
+  return {
+    name: 'dxos-slim-wasm',
+    enforce: 'pre',
+    configResolved: (config) => {
+      isBuild = config.command === 'build';
+    },
+    resolveId: {
+      order: 'pre',
+      handler: (source, importer) => {
+        const pkg = SLIM_WASM_PACKAGES.find((name) => source === name || source.startsWith(`${name}/`));
+        // The dev server serves automerge-repo from its optimizer chunk, whose CJS interop a raw path would bypass.
+        if (!importer || !pkg || (pkg === '@automerge/automerge-repo' && !isBuild)) {
+          return null;
+        }
+        const resolved = resolver.sync(path.dirname(importer), source === pkg ? `${pkg}/slim` : source);
+        return resolved.error || !resolved.path ? null : resolved.path;
+      },
+    },
+  };
 };
 
 /** Shared by the page and the client workers, which resolve the same `@dxos/*` sources. */
 const sharedPlugins = (): PluginOption[] => [
   importSource({ include: ['@dxos/**', '#*'] }),
+  slimWasm(),
   DxosLogPlugin(),
   ModuleUrlPlugin(),
   wasm(),
@@ -51,6 +81,7 @@ export default defineConfig({
     outDir: 'out/diagram-app',
     sourcemap: true,
     target: [...browserTargets],
+    rolldownOptions: { experimental: { chunkOptimization: false } },
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'],
@@ -68,6 +99,9 @@ export default defineConfig({
   worker: {
     format: 'es',
     plugins: () => sharedPlugins(),
+    // Chunk optimization moves modules a worker shares with its lazy chunks into its entry chunk, and WebKit
+    // evaluates a module worker's entry again when a chunk imports it (https://bugs.webkit.org/show_bug.cgi?id=324459).
+    rolldownOptions: { experimental: { chunkOptimization: false } },
   },
   plugins: [
     // Replaces each plugin's `dx.config.ts` with its manifest, so the app loads only data plus the bodies it activates.

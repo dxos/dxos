@@ -13,6 +13,8 @@
   "sideEffects": true,
   "type": "module",
   "dependencies": {
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-subduction": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -26,6 +28,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-canvas": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -57,6 +60,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "oxc-resolver": "catalog:",
     "vite": "catalog:",
     "vite-plugin-wasm": "catalog:",
     "vitest": "catalog:"
