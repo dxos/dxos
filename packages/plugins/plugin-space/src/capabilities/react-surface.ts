@@ -55,9 +55,9 @@ import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
   NavbarPresenceSurface,
   NavtreePresenceSurface,
-  SelectedObjectsSurface,
   ReadOnlySpaceHomeDashboardSurface,
   ReadOnlySpaceHomeRecentSurface,
+  SelectedObjectsSurface,
   SpaceHomeDashboardSurface,
   SpaceHomeRecentSurface,
   SpaceMembersSurface,
