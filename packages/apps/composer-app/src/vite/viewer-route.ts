@@ -4,7 +4,7 @@
 
 import { type Plugin } from 'vite';
 
-import { type EdgeConfig, resolveEdgeUrl } from '../functions/edge-url.ts';
+import { type EdgeConfig, resolveEdgeUrl } from '../util/edge-url.ts';
 
 /** A config `ConfigPlugin` defined for the page, as the JSON it put in `define`. */
 const definedConfig = (define: Record<string, any> | undefined, key: string): EdgeConfig | undefined => {

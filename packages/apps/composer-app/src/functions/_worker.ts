@@ -10,8 +10,8 @@ import * as OtelProxy from '@dxos/observability/OtelProxy';
 import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
+import { edgeUrl } from '../util/edge-url.ts';
 import { type LinkPreviewDetails, injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
-import { edgeUrl } from './edge-url.ts';
 import { phosphorPath, renderCard } from './preview-image/index.ts';
 import { assets as previewAssets } from './preview-image/worker-assets.ts';
 import {
