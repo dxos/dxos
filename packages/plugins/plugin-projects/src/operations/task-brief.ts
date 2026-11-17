@@ -99,8 +99,9 @@ export const renderDelegationBrief = ({ tasks, project, context }: BriefInput): 
       \`gh pr create --draft\`, one per repository you changed. Never push to the default branch,
       never force-push a branch you did not create, and never merge unless the person tells you to. When
       you finish, say what you did, link each pull request, and say what is left. If the person later
-      approves landing, mark each pull request ready, get its checks green, and merge it as the
-      repository lands changes (a merge queue or auto-merge where it has one).
+      approves landing, mark each pull request ready, wait for its checks to finish
+      (\`gh pr checks --watch\`), fix what fails, and merge only once every check is green; auto-merge
+      merges at once where no check is required, so it is no substitute for waiting.
     `,
     '',
     concat`

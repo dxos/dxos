@@ -59,6 +59,23 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
 - [ ] A CLI session from `delegateToCli` keeps a snapshot of the spaces and does not follow new ones, even
       when the grant says "all future spaces" (agent's note on edge#1540).
 
+## Phase 3b: Agents land their own PRs
+
+- [x] `syncCloudRun` takes a follow-up `prompt` (an answer, or approval to land) for a run whose turn ended;
+      the brief merges only on the person's say-so.
+- [x] A follow-up hours later found the sandbox expired (3 h idle → every call 410, re-init included) and
+      gave up after 4 attempts. Fixed: sandbox re-init renews a lapsed sandbox, and the driver's recovery
+      sets the sandbox up again (edge#1537; deployed to dev, sandbox-service with `--containers-rollout none`).
+- [x] edge#1540 landed by its own agent — but merged before CI finished: on dxos/edge `gh pr merge --auto`
+      merges at once (no required checks), and my prompt asked for auto-merge. The brief now says to wait
+      for `gh pr checks --watch` and merge only when every check is green.
+- [ ] A run cannot run the agentic review: `TYPESAFE_API_KEY` is lent only from a `typesafe.ai` access token
+      in the space (allowlist added, dxos#14557); the user has to add that token.
+- [ ] After a turn ends with its PRs merged, the space still shows them `draft` and the tasks stay in
+      `review`: `GitHubOperation.SyncPullRequest` invoked from the plugin-claude bundle fails silently.
+      Needs EDGE logs (edge-dev sends none to SigNoz) or an exposed sync op to diagnose.
+- [ ] dxos#14563 (agent landing in progress): `review-present` fails for the same missing key.
+
 ## Phase 4: Control surfaces
 
 - [x] `dx` built from source (overlaying dxos#14313's CLI files, not committed), logged in through the dev
