@@ -39,7 +39,17 @@ export const steps = [
     name: 'Load the story',
     setup: true,
     run: async ({ demo, page }) => {
-      await demo.goto({});
+      // A cold dev server can outlast the driver's 5 s navigation timeout on the first load.
+      for (let attempt = 1; ; attempt++) {
+        try {
+          await demo.goto({});
+          break;
+        } catch (error) {
+          if (attempt === 5) {
+            throw error;
+          }
+        }
+      }
       await page.locator(testId('agent-memory.ingest.1')).waitFor({ timeout: 60_000 });
       await demo.cut();
     },
