@@ -103,6 +103,27 @@ describe('dsl round trip', () => {
     expect(roundTrip(source)).toEqual(source);
   });
 
+  test('an arrow states its own bends, so a routed connector can be written down', ({ expect }) => {
+    // A connector routed by hand or by a layout kept its bends on the record alone. Printing the drawing lost them
+    // and the connector snapped back to a straight run between its ends.
+    const source = 'object A @ 0,0 {\n  arrow link a -> b via 10,20 30,20 head=triangle\n}\n';
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [element] = toScene(commands).objects[0].elements;
+    expect(element.kind === 'arrow' && element.route).toEqual([
+      { x: 10, y: 20 },
+      { x: 30, y: 20 },
+    ]);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('an arrow routes through points, not grid cells or half a coordinate', ({ expect }) => {
+    // A semantic edge's waypoint may pin one coordinate or name a cell, because an engine routes it; an arrow says
+    // where its route actually runs, so neither has a meaning and both are reported rather than half-read.
+    expect(parse('object A @ 0,0 {\n  arrow link a -> b via cell(1,2)\n}\n').problems).toHaveLength(1);
+    expect(parse('object A @ 0,0 {\n  arrow link a -> b via 10,_\n}\n').problems).toHaveLength(1);
+  });
+
   test('whitespace is insignificant', ({ expect }) => {
     const dense = 'object A @ 0,0 {rect box 0,0 10x10 "hi" color=red}';
     const loose = 'object   A\n  @ 0 , 0\n{\n  rect\n    box\n    0,0\n    10x10\n    "hi"\n    color=red\n}\n';

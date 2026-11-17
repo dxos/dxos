@@ -181,6 +181,9 @@ export const formatElement = (element: Shape.Element): string => {
         '->',
         formatEndpoint(element.to, element.end),
         ...(element.text === undefined ? [] : [formatString(element.text)]),
+        // The bends come before the attributes, as they do on a semantic edge: the route is part of what the
+        // connector IS, and an attribute after it still reads as the arrow's.
+        ...(element.route?.length ? ['via', ...element.route.map(formatPoint)] : []),
         ...formatAttrs('arrow', {
           head: element.head,
           tail: element.tail,

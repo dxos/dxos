@@ -451,6 +451,7 @@ export const read = (text: string): Reading => {
         const connection = parts.find((part) => part.name === 'Connection');
         const ends = connection ? childrenOf(connection).filter((child) => child.name === 'Endpoint') : [];
         const [from, to] = ends.map(readEndpoint);
+        const route = parts.filter((part) => part.name === 'Via').flatMap(readRoute);
         return {
           kind,
           id,
@@ -459,6 +460,7 @@ export const read = (text: string): Reading => {
           ...optional('start', from?.point),
           ...optional('end', to?.point),
           ...optional('text', text),
+          ...(route.length ? { route } : {}),
           ...optional('head', enumAttr(attrs, 'head', Shape.ArrowHead.literals)),
           ...optional('tail', enumAttr(attrs, 'tail', Shape.ArrowTail.literals)),
           ...optional('relation', enumAttr(attrs, 'relation', Shape.Relation.literals)),
@@ -651,6 +653,27 @@ export const read = (text: string): Reading => {
       ...optional('soft', soft),
     };
   };
+
+  /**
+   * An arrow's own bends: plain points, both coordinates given. A semantic edge's waypoints may pin one coordinate
+   * or name a grid cell, because an engine routes them; an arrow states where its route actually runs, so neither
+   * has a meaning here.
+   */
+  const readRoute = (via: SyntaxNode): Shape.Point[] =>
+    childrenOf(via)
+      .filter((child) => child.name === 'Waypoint')
+      .flatMap((waypoint): Shape.Point[] => {
+        if (waypoint.getChild('CellRef')) {
+          report(waypoint, 'An arrow routes through points, not grid cells.');
+          return [];
+        }
+        const [x, y] = readCoords(waypoint);
+        if (x === undefined || y === undefined) {
+          report(waypoint, 'A bend of an arrow needs both coordinates.');
+          return [];
+        }
+        return [{ x, y }];
+      });
 
   const readWaypoints = (via: SyntaxNode): Semantic.Waypoint[] =>
     childrenOf(via)

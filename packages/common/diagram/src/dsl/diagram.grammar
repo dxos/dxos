@@ -163,7 +163,10 @@ CircleElement { kw<"circle"> Id Point Number Label? Attribute* }
 PathElement   { PathKind Id Point Point+ Attribute* }
 ArcElement    { kw<"arc"> Id Point Number Range Attribute* }
 TextElement   { kw<"text"> Id Point Label Attribute* }
-ArrowElement  { kw<"arrow"> Id Connection Label? Attribute* }
+// `via` gives the arrow its own bends, in scene units, the way a semantic edge states waypoints. A connector a
+// person or a layout routed by hand had no spelling at all before: the route lived on the record and was lost
+// the moment the drawing was written down.
+ArrowElement  { kw<"arrow"> Id Connection Label? (Via | Attribute)* }
 PortalElement { kw<"portal"> Id Point Size Label? Attribute* }
 
 BoxKind  { kw<"rect"> | kw<"ellipse"> | kw<"diamond"> | kw<"triangle"> }

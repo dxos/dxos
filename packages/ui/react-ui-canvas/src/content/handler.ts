@@ -558,6 +558,11 @@ export const SceneHandler: ContentHandler = {
             ...(ends ? { ends } : {}),
             ...(text ? { text } : {}),
             ...(Object.keys(lineStyle).length ? { style: lineStyle } : {}),
+            // A stated route overrides the canvas's own: the author said where the connector runs, and a link with
+            // no route is still left to the canvas, which attaches at its own ports.
+            ...(element.route?.length
+              ? { connector: { ...connectorStyle(element), route: element.route.map(({ x, y }) => place(x, y)) } }
+              : {}),
           };
           records[linkKey(id)] = { kind: 'link', scene, link, dsl: identity(element.id) } satisfies LinkRecord;
           break;
@@ -692,6 +697,9 @@ export const SceneHandler: ContentHandler = {
               from,
               to,
               ...(record.link.text ? { text: record.link.text } : {}),
+              ...(record.link.connector?.route?.length
+                ? { route: record.link.connector.route.map(({ x, y }) => ({ x: x - origin.x, y: y - origin.y })) }
+                : {}),
               // The connector first, then the link's own style and markers, which win where it has them: on a
               // plain canvas the link's style is what is drawn, and the two disagree on a drawing whose links were
               // built record by record (the Agents slide stores `blue` on the link and `light-blue` on the

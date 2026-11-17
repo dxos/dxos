@@ -226,6 +226,14 @@ export const Arrow = Schema.Struct({
   tail: Schema.optional(ArrowTail).annotate({
     description: 'Marker at the source end (default none): circle for containment, arrow for a two-way connector.',
   }),
+  /**
+   * The whole route the connector runs, in scene units: where it leaves its source, every bend, and where it meets
+   * its target. The ends are written down too, rather than left to be re-derived, because they are attachment
+   * points on each shape's outline — re-deriving them is the canvas routing the connector itself, which is what a
+   * stored route exists to override. Without this a connector routed by hand or by a layout lost its bends the
+   * moment the drawing was written down and snapped back to a straight run.
+   */
+  route: Schema.optional(Schema.Array(Point)).annotate({ description: "The connector's route, ends included." }),
   relation: Schema.optional(Relation).annotate({
     description:
       'What the connector means; sets its markers: inheritance and implementation (hollow triangle at the target), composition and aggregation (filled or hollow diamond at the source, the whole), one-to-many (bar at the source, crow’s foot at the target), many-to-many, dependency (dashed, open arrow), association.',

@@ -331,6 +331,14 @@ describe('studio deck slides on a canvas', () => {
         .map((link) => [link.ends?.start, link.ends?.end, link.style?.lineStyle, link.style?.hue].join('/'))
         .sort();
     expect(marksOfLinks(rebuilt)).toEqual(marksOfLinks(content));
+
+    // And its route, point for point. A connector routed by hand or by the layout had no spelling at all, so the
+    // deck's 14 routed connectors lost all 66 of their bends and snapped back to straight runs.
+    const routesOfLinks = (map: ContentMap) =>
+      Object.values(readViews(map)[ROOT_VIEW_ID].links)
+        .map((link) => JSON.stringify(link.connector?.route ?? []))
+        .sort();
+    expect(routesOfLinks(rebuilt)).toEqual(routesOfLinks(content));
   });
 
   test('the routes the sidecar carries are the ones the DSL dropped', ({ expect }) => {
