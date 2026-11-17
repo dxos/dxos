@@ -180,7 +180,7 @@ feat F-1: Sidebar Navigation
   req F-1.4:
     when: same active tab is clicked while sidebar is expanded
     then: sidebar collapses (state transitions to collapsed or closed on mobile)
-  req F-1.5: With the `rail` option off, the workspace rail (L0) is not shown and the tree takes the sidebar's full width.
+  req F-1.5: On a read-only host, the workspace rail (L0) is not shown and the tree takes the sidebar's full width.
   req F-1.6: On a read-only host, the command search in the top bar is not shown.
 ```
 
@@ -414,6 +414,23 @@ decision D-3: On a read-only host, the top bar has no command search.
   date: 2026-11-17
   by: user:wittjosiah
   affects: [F-1.6]
+```
+
+```mdl
+decision D-4: The rail follows `AppCapabilities.ReadOnly`, with no navtree option: a read-only host has no rail.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-2
+  affects: [F-1.5]
+```
+
+```mdl
+decision D-5: The layout watches the ReadOnly atom to drop the rail's width, instead of requiring the capability. Fills in [D-4].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5]
+  why: A module that requires a capability no plugin provides is a startup error, and Composer never provides ReadOnly.
 ```
 
 ## Appendix: Extension Definitions

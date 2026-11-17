@@ -4,15 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import * as Capability from '@dxos/app-framework/Capability';
-import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
-import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import { makeGraphBuilderHost } from '@dxos/app-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
@@ -76,27 +73,21 @@ describe('project chats graph extension', () => {
         connector: () => Effect.succeed([{ id: project.id, type: 'test', data: project }]),
       }),
     );
-    const registry = Registry.make();
-    const manager = CapabilityManager.make({ registry });
-    const withManager = <A>(effect: Effect.Effect<A, never, Capability.Service>) =>
-      EffectEx.runPromise(effect.pipe(Effect.provideService(Capability.Service, manager)));
+    const host = makeGraphBuilderHost();
     const chatExtensions = await EffectEx.runPromise(createProjectChatsExtension());
-    const chatChildrenExtensions = await withManager(createProjectChatsChildrenExtension());
-    const artifactExtensions = await withManager(createProjectArtifactsExtension());
-    const artifactChildrenExtensions = await withManager(createProjectArtifactsActionExtension());
-    const context = setupGraphBuilder({
-      registry,
-      extensions: [
-        ...rootExtensions,
-        ...spaceExtensions,
-        ...groupExtensions,
-        ...sectionExtensions,
-        ...chatExtensions,
-        ...chatChildrenExtensions,
-        ...artifactExtensions,
-        ...artifactChildrenExtensions,
-      ],
-    });
+    const chatChildrenExtensions = await host.build(createProjectChatsChildrenExtension());
+    const artifactExtensions = await host.build(createProjectArtifactsExtension());
+    const artifactChildrenExtensions = await host.build(createProjectArtifactsActionExtension());
+    const context = host.setup([
+      ...rootExtensions,
+      ...spaceExtensions,
+      ...groupExtensions,
+      ...sectionExtensions,
+      ...chatExtensions,
+      ...chatChildrenExtensions,
+      ...artifactExtensions,
+      ...artifactChildrenExtensions,
+    ]);
 
     const projectNodeId = GraphPath.getSpacePath(db.spaceId, ...sectionPath, project.id);
     const chatsNodeId = GraphNode.qualifyId(projectNodeId, SESSIONS_SEGMENT);

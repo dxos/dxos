@@ -4,22 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import * as Capability from '@dxos/app-framework/Capability';
-import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import { Client } from '@dxos/client';
 import { DXN, Obj, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import * as AppCapabilities from '../app-framework/AppCapabilities.ts';
 import * as GraphPath from '../app/GraphPath.ts';
+import { makeGraphBuilderHost } from '../testing/graph-builder-host.ts';
 import * as TypeSection from './TypeSection.ts';
 
 class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.testbook', '0.1.0'))(
@@ -98,11 +94,7 @@ describe('createTypeSectionExtension', () => {
       space.db.add(Obj.make(Book, { title: 'Published' }));
       await space.db.flush({ indexes: true });
 
-      const registry = Registry.make();
-      const manager = CapabilityManager.make({ registry });
-      if (readOnly) {
-        manager.contribute({ module: 'test', interface: AppCapabilities.ReadOnly, implementation: true });
-      }
+      const host = makeGraphBuilderHost({ readOnly });
 
       const root = await EffectEx.runPromise(
         AppGraphBuilder.createExtension({
@@ -111,12 +103,10 @@ describe('createTypeSectionExtension', () => {
           connector: () => Effect.succeed([{ id: space.id, type: 'org.dxos.type.space', data: space, properties: {} }]),
         }),
       );
-      const section = await EffectEx.runPromise(
-        TypeSection.createTypeSectionExtension(Book, { urlKey: 'book', createObject: () => Effect.void }).pipe(
-          Effect.provideService(Capability.Service, manager),
-        ),
+      const section = await host.build(
+        TypeSection.createTypeSectionExtension(Book, { urlKey: 'book', createObject: () => Effect.void }),
       );
-      const graph = setupGraphBuilder({ registry, extensions: [...root, ...section] });
+      const graph = host.setup([...root, ...section]);
       const spaceId = GraphNode.qualifyId(GraphNode.RootId, space.id);
       const sectionId = GraphNode.qualifyId(spaceId, TYPENAME);
       await graph.expand(GraphNode.RootId);

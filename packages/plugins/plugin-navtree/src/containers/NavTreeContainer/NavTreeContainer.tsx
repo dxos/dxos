@@ -92,11 +92,11 @@ const resolveDrop = (
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   tab: string;
-  rail?: boolean;
 };
 
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
-  ({ tab, popoverAnchorId, rail }, forwardedRef) => {
+  ({ tab, popoverAnchorId }, forwardedRef) => {
+    const rail = !ToolkitHooks.useReadOnly();
     const [isLg] = UiHooks.useMediaQuery('lg');
     const { invokePromise } = Hooks.useOperationInvoker();
     const runAction = GraphHooks.useActionRunner();

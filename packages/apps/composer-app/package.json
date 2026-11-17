@@ -191,6 +191,7 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "catalog:",

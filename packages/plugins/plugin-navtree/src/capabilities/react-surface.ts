@@ -16,9 +16,8 @@ import * as Position from '@dxos/util/Position';
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '#containers';
 
 import { COMMANDS_DIALOG } from '../constants.ts';
-import type * as NavTreeCapabilities from '../types/NavTreeCapabilities.ts';
 
-export default Capability.makeModule(({ rail = true }: NavTreeCapabilities.NavTreePluginOptions = {}) =>
+export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -31,7 +30,7 @@ export default Capability.makeModule(({ rail = true }: NavTreeCapabilities.NavTr
         id: 'navigation',
         filter: Surface.makeFilter(AppSurface.Navigation),
         component: NavTreeContainer,
-        props: ({ data: { current, popoverAnchorId }, ref }) => ({ tab: current, popoverAnchorId, rail, ref }),
+        props: ({ data: { current, popoverAnchorId }, ref }) => ({ tab: current, popoverAnchorId, ref }),
       }),
       Surface.create({
         id: 'documentTitle',

@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
 import { SpaceOperation, type SpaceSchema } from '#types';
@@ -21,27 +20,20 @@ export default Capability.makeModule(
     if (!pending) {
       return [];
     }
-    const capabilities = yield* Capability.Service;
-    const operationService = yield* Capabilities.OperationInvoker;
+    const invoker = yield* Capabilities.OperationInvoker;
     log.info('forking publication', { publicId: pending.publicId });
-    const fork = Operation.invoke(SpaceOperation.ForkPublication, {
-      publicId: pending.publicId,
-      path: pending.path,
-    }).pipe(
-      Effect.catch((error) =>
-        Effect.gen(function* () {
+    void invoker
+      .invokePromise(SpaceOperation.ForkPublication, { publicId: pending.publicId, path: pending.path })
+      .then(({ error }) => {
+        if (error) {
           log.warn('fork failed', { error, publicId: pending.publicId });
-          yield* Operation.invoke(LayoutOperation.AddToast, {
+          void invoker.invokePromise(LayoutOperation.AddToast, {
             id: `${SpaceNamespace.key}/fork-failed`,
             title: ['fork-failed-toast.title', { ns: SpaceNamespace.key }],
             icon: 'ph--warning--regular',
-          }).pipe(Effect.ignore);
-        }),
-      ),
-      Effect.provideService(Capability.Service, capabilities),
-      Effect.provideService(Operation.Service, operationService),
-    );
-    Effect.runFork(fork);
+          });
+        }
+      });
     return [];
   }),
 );

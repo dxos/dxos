@@ -35,19 +35,17 @@ export const PublishingSettings = ({ space }: PublishingSettingsProps) => {
   const [pending, setPending] = useState(false);
 
   const run = useCallback(
-    async (key: string, failed: string, invoke: () => Promise<unknown>) => {
+    async (key: string, failed: string, invoke: () => Promise<{ error?: Error }>) => {
       setPending(true);
-      try {
-        await invoke();
-      } catch (err) {
-        log.catch(err, { stage: key, spaceId: space.id });
+      const { error } = await invoke();
+      setPending(false);
+      if (error) {
+        log.catch(error, { stage: key, spaceId: space.id });
         void invokePromise(LayoutOperation.AddToast, {
           id: `${space.id}-${key}-failed`,
           title: t(failed),
           icon: 'ph--warning--regular',
         });
-      } finally {
-        setPending(false);
       }
     },
     [space, invokePromise, t],

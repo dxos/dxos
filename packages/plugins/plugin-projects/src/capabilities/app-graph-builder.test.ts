@@ -3,14 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { makeGraphBuilderHost } from '@dxos/app-toolkit/testing';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
@@ -105,11 +102,7 @@ type SubjectOptions = {
 
 /** Graph holding one node whose data is `subject`, so the extension's match runs against it. */
 const setupSubject = async (subject: unknown, extensions: Extensions, { type = 'test', readOnly }: SubjectOptions) => {
-  const registry = Registry.make();
-  const manager = CapabilityManager.make({ registry });
-  if (readOnly) {
-    manager.contribute({ module: 'test', interface: AppCapabilities.ReadOnly, implementation: true });
-  }
+  const host = makeGraphBuilderHost({ readOnly });
 
   const space = { id: 'SPACE' };
   const rootExtensions = await EffectEx.runPromise(
@@ -120,10 +113,8 @@ const setupSubject = async (subject: unknown, extensions: Extensions, { type = '
       connector: () => Effect.succeed([{ id: SUBJECT_ID, type, data: subject, properties: { space } }]),
     }),
   );
-  const subjectExtensions = await EffectEx.runPromise(
-    extensions.pipe(Effect.provideService(Capability.Service, manager)),
-  );
-  const context = setupGraphBuilder({ registry, extensions: [...rootExtensions, ...subjectExtensions] });
+  const subjectExtensions = await host.build(extensions);
+  const context = host.setup([...rootExtensions, ...subjectExtensions]);
   await context.expand(GraphNode.RootId);
   return context;
 };

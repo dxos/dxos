@@ -54,7 +54,7 @@ export const getPlugins = ({
   ClientPlugin.make({ client, config, services, invitationUrlHandler: false, identityTestActions: false }),
   DeckPlugin.make({ platform: 'desktop' }),
   GraphPlugin.make(),
-  NavTreePlugin.make({ rail: false }),
+  NavTreePlugin.make(),
   ObservabilityPlugin.make({ namespace: APP_KEY, observability: () => observability }),
   PreviewPlugin.make(),
   ProcessManagerPlugin.make(),

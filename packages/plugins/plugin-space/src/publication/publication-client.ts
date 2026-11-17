@@ -16,10 +16,14 @@ const PRIVATE_ARCHIVE_FIELDS = ['originalSpaceId', 'exportedBy'] as const;
 
 export const scrubArchive = (contents: Uint8Array): { text: string; objects: string[] } => {
   const serialized = JSON.parse(new TextDecoder().decode(contents)) as Record<string, unknown> & {
-    objects?: { id?: string }[];
+    objects?: { 'id'?: string; '@meta'?: { annotations?: Record<string, unknown> } }[];
   };
   for (const field of PRIVATE_ARCHIVE_FIELDS) {
     delete serialized[field];
+  }
+  // The publisher's receipt is not the copy's: a fork that kept it would show as published.
+  for (const object of serialized.objects ?? []) {
+    delete object['@meta']?.annotations?.[Publication.ReceiptAnnotation.key];
   }
   const objects = (serialized.objects ?? []).flatMap((object) => (typeof object.id === 'string' ? [object.id] : []));
   return { text: JSON.stringify(serialized), objects };

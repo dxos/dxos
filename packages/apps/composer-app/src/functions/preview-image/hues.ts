@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type ChromaticPalette, type NeutralPalette } from '@dxos/ui-types';
+
 export type Swatch = { tint: string; fill: string; ink: string };
 
-const SWATCHES: Record<string, Swatch> = {
+const SWATCHES: Record<ChromaticPalette | NeutralPalette, Swatch> = {
   amber: { tint: '#fef3c7', fill: '#f59e0b', ink: '#b45309' },
   blue: { tint: '#dbeafe', fill: '#3b82f6', ink: '#1d4ed8' },
   cyan: { tint: '#cffafe', fill: '#06b6d4', ink: '#0e7490' },
@@ -25,7 +27,10 @@ const SWATCHES: Record<string, Swatch> = {
   yellow: { tint: '#fef9c3', fill: '#eab308', ink: '#a16207' },
 };
 
-const ROTATION = ['indigo', 'teal', 'amber', 'rose', 'sky', 'lime'];
+const ROTATION: ChromaticPalette[] = ['indigo', 'teal', 'amber', 'rose', 'sky', 'lime'];
+
+const hasSwatch = (hue: string | undefined): hue is keyof typeof SWATCHES =>
+  hue !== undefined && Object.hasOwn(SWATCHES, hue);
 
 export const swatch = (hue: string | undefined, index?: number): Swatch =>
-  (hue && SWATCHES[hue]) || (index === undefined ? SWATCHES.neutral : SWATCHES[ROTATION[index % ROTATION.length]]);
+  hasSwatch(hue) ? SWATCHES[hue] : index === undefined ? SWATCHES.neutral : SWATCHES[ROTATION[index % ROTATION.length]];

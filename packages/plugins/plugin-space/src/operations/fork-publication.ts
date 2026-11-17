@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Filter, Obj } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 
 import { Publication, SpaceOperation } from '#types';
 
@@ -25,10 +25,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ForkPublication> = Sp
       }
       const archive = yield* fetchArchive(resolvePublicationsUrl(publication), publicId);
       const { space } = yield* Operation.invoke(SpaceOperation.ImportSpace, { archive });
-
-      Obj.update(space.properties, (properties) => {
-        Annotation.set(properties, Publication.ReceiptAnnotation, null);
-      });
       yield* Operation.invoke(SpaceOperation.Migrate, { space });
 
       yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
