@@ -1,11 +1,11 @@
 name: Check
 
-# A draft PR runs `check` and the node tests; marking it ready adds the browser,
+# A draft PR runs `check`, `lint` and the node tests; marking it ready adds the browser,
 # storybook and e2e suites (`plan` holds them back on a draft) and `cli`. Converting a PR to a draft, by
 # hand or by `draft-on-open.yml`, starts a draft run, and the concurrency group cancels the run in flight.
 #
 # Where suites run: a ready PR runs every job. The merge queue runs only what can block a merge: `check`
-# and the jobs behind the required `test` gate. A push to main runs only e2e, which reports without gating:
+# and the jobs behind the required `test` gate (`lint` and the test cells). A push to main runs only e2e, which reports without gating:
 # main moves to the exact commit the queue tested, so the queue's results are the ones GitHub shows on it,
 # and e2e there covers whatever landed since the last run. knip and `boot-budget` run only nightly and on
 # dispatch: neither gates a merge, and on a PR they cost ~3.5 and ~4 minutes. No `labeled` trigger: its
@@ -221,10 +221,11 @@ jobs:
           git diff --exit-code -- '**/package.json'
 
       # ─── Stage 2: the compile gate ──────────────────────────────────────────────────────────────
-      # ~15 s warm, minutes cold, and the floor under everything below it.
+      # ~15 s warm, minutes cold, and the floor under everything below it. Lint runs in its own `lint`
+      # job: it needs only generated code, not builds, so here it would only wait behind them.
       - name: Check
         id: compile
-        run: moon run :lint :build :test-types
+        run: moon run :build :test-types
 
       # `check-module-structure` traces the built artifacts (`deps: [build]`), so it cannot move ahead
       # of the gate however cheap it looks — its 5 s is a post-build number.
@@ -271,6 +272,57 @@ jobs:
         run: >-
           curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
           "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
+
+  # Type-aware lint as one repo-wide oxlint run, in parallel with `check`. It needs the generated
+  # sources (protobuf, lezer parsers, icons), not the builds: oxlint resolves workspace packages through
+  # their project references. One run takes ~3 minutes, where the per-package `:lint` tasks added up to
+  # ~33 task-minutes behind the build. Gated through `test`, which branch protection requires.
+  lint:
+    if: >-
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    permissions:
+      contents: read
+      packages: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      # The code generators lint reads through imports; none of them depends on a build. Not `:#prebuild`,
+      # which also pulls in `docs:prebuild` and `composer-app:prebuild` and with them their builds.
+      - name: Generate sources
+        run: >-
+          moon run protocols:gen-buf diagram:prebuild-lezer echo-query:prebuild-lezer deus:prebuild-lezer
+          ui-types:prebuild-phosphor plugin-code:prebuild-spec-index plugin-tldraw:prebuild
+          observability:prebuild react-ui-experimental:prebuild react-ui-gameboard:prebuild
+
+      - name: Lint
+        run: node_modules/.bin/oxlint --config .oxlintrc.json packages tools
 
   # Static boot-graph budget over the production bundle, on its own runner. The class it catches is a
   # property of an IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a
@@ -719,7 +771,7 @@ jobs:
   # failed or was cancelled, or `plan` failed. Skipped passes: a suite the change does not affect, or a
   # draft's browser cells.
   test:
-    needs: [plan, test-node, test-browser]
+    needs: [plan, lint, test-node, test-browser]
     if: ${{ always() && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
