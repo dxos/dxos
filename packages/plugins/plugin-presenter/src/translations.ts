@@ -4,6 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
+import { Text } from '@dxos/schema';
 
 import { Presentation } from '#types';
 
@@ -22,6 +23,24 @@ export const translations = [
         'rename-object.label': 'Rename presentation',
         'delete-object.label': 'Delete presentation',
         'object-deleted.label': 'Presentation deleted',
+      },
+      // `Text` is an SDK type with no plugin of its own, so nothing names it and the UI falls back to its typename.
+      // Named here because a slide's own content is one; move it if a plugin ever takes ownership of the type.
+      [Type.getTypename(Text.Text)]: {
+        'typename.label': 'Text',
+        'typename.label_zero': 'Text',
+        'typename.label_one': 'Text',
+        'typename.label_other': 'Text',
+      },
+      [Type.getTypename(Presentation.Slide)]: {
+        'typename.label': 'Slide',
+        'typename.label_zero': 'Slides',
+        'typename.label_one': 'Slide',
+        'typename.label_other': 'Slides',
+        'object-name.placeholder': 'New slide',
+        'rename-object.label': 'Rename slide',
+        'delete-object.label': 'Delete slide',
+        'object-deleted.label': 'Slide deleted',
       },
       [PresenterNamespace.key]: {
         'plugin.name': 'Presenter',

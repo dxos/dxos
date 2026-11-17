@@ -16,4 +16,6 @@ The completion list stops at its ends rather than wrapping. The list is short an
 
 The editor's preview no longer jumps as it moves between slides. The canvas scales itself to whatever it measures, and the preview is remounted inside a splitter on every slide, so its first measurement caught a height the container did not keep — one frame at the wrong scale, which read as the title jumping. Measured in the app: the slide painted 356px tall, then 316px a frame later. The first measurement now waits for the frame after layout; every one after it stays immediate, so resizing the grid or entering fullscreen is unchanged.
 
+A slide and its text carry their type's name. A type is named by a translation block keyed by its typename, which `Presentation` had and `Slide` did not, so a slide with no title showed as `org.dxos.type.slide` wherever the label fell back to the type — the navtree and the debug tree among them. `Text` is named here too: it is an SDK type with no plugin of its own, so nothing named it at all.
+
 `SlideGrid` is `SlideGallery`, since it is the panel of slide thumbnails rather than anything to do with the `<Grid>` tag or the `slide-grid` element that tag renders, both of which keep their names.
