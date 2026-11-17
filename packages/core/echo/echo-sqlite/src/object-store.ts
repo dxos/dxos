@@ -566,11 +566,15 @@ SELECT ?1, value, ?2, ?3 FROM json_each(?4)`,
         const [row] = yield* sql<{ lastId: number | null }>`SELECT MAX(id) AS lastId FROM echo_sqlite_change_log`;
         return { lastId: row?.lastId ?? 0, ids: new Set<string>() };
       }
-      const rows = yield* sql<{ id: number; objectId: string; writer: string }>`
-        SELECT id, objectId, writer FROM echo_sqlite_change_log WHERE spaceId = ${spaceId} AND id > ${afterId} ORDER BY id`;
+      // The cursor is read first and bounds the rows, so a commit landing between the two reads is
+      // picked up by the next poll instead of being skipped.
       const [newest] = yield* sql<{ lastId: number | null }>`SELECT MAX(id) AS lastId FROM echo_sqlite_change_log`;
+      const lastId = newest?.lastId ?? afterId;
+      const rows = yield* sql<{ id: number; objectId: string; writer: string }>`
+        SELECT id, objectId, writer FROM echo_sqlite_change_log
+        WHERE spaceId = ${spaceId} AND id > ${afterId} AND id <= ${lastId} ORDER BY id`;
       return {
-        lastId: newest?.lastId ?? afterId,
+        lastId,
         ids: new Set(rows.filter((row) => row.writer !== writer).map((row) => row.objectId)),
       };
     });
