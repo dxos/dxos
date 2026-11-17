@@ -503,6 +503,13 @@ describe('EdgeAgent', () => {
       // One EDGE cannot resolve leaves the checkout to public repositories rather than failing the turn.
       const unresolved = EdgeAgent.githubCredentials.pipe(Effect.provide(Credential.AccessTokenResolver.notAvailable));
       expect(yield* unresolved).toEqual({});
+
+      // A stored token is resolved too, so EDGE refreshes a stale one; one EDGE does not hold is lent as stored.
+      Obj.update(github, (github) => {
+        github.token = 'ghu-stale';
+      });
+      expect(yield* credential).toEqual({ GITHUB_TOKEN: 'ghs-live', GH_TOKEN: 'ghs-live' });
+      expect(yield* unresolved).toEqual({ GITHUB_TOKEN: 'ghu-stale', GH_TOKEN: 'ghu-stale' });
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 

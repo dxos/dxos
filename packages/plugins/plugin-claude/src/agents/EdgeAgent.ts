@@ -542,9 +542,11 @@ export const composerMcpCredentials = (
 };
 
 /**
- * The space's GitHub connection as the environment the agent's `git` and `gh` read: a token EDGE custodies
- * (the GitHub App's) is resolved through it. None, or one that cannot be resolved, leaves the checkout to
- * public repositories.
+ * The space's GitHub connection as the environment the agent's `git` and `gh` read. Every token is resolved through
+ * EDGE first, since the stored value of an App user token goes stale once EDGE stops refreshing it (its refresh cron
+ * sleeps after hours without a read) and resolving refreshes it; the stored value is the fallback for a token EDGE
+ * does not hold, such as a personal access token. None, or a placeholder that cannot be resolved, leaves the
+ * checkout to public repositories.
  */
 export const githubCredentials: Effect.Effect<
   Record<string, string>,
@@ -556,9 +558,13 @@ export const githubCredentials: Effect.Effect<
   if (!accessToken) {
     return NO_CREDENTIALS;
   }
+  const resolved = Credential.AccessTokenResolver.resolve({
+    spaceId: yield* Database.spaceId,
+    accessTokenId: accessToken.id,
+  });
   const token = isManagedAccessToken(accessToken.token)
-    ? yield* Credential.AccessTokenResolver.resolve({ spaceId: yield* Database.spaceId, accessTokenId: accessToken.id })
-    : accessToken.token;
+    ? yield* resolved
+    : yield* resolved.pipe(Effect.catchCause(() => Effect.succeed(accessToken.token)));
   const env: Record<string, string> = { GITHUB_TOKEN: token, GH_TOKEN: token };
   return env;
 }).pipe(
