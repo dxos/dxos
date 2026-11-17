@@ -13,7 +13,7 @@ import { ATTR_META } from '@dxos/echo/internal';
 import { type EntityId, type SpaceId, URI } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref/index.ts';
-import { type EntityPropPath, chunkArray, normalizePropPath } from '../utils.ts';
+import { type EntityPropPath, chunkArray, chunkRows, normalizePropPath } from '../utils.ts';
 import type { Index, IndexerObject } from './interface.ts';
 
 /**
@@ -165,39 +165,44 @@ export class ReverseRefIndex implements Index {
     Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
 
-      yield* Effect.forEach(
-        objects,
-        (object) =>
-          Effect.gen({ self: this }, function* () {
-            const { recordId, data } = object;
-            if (recordId === null) {
-              return yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
-            }
+      type Row = { recordId: number; targetDXN: string; propPath: string; propPathNormalized: string };
+      // By record, so a record written twice in one batch keeps only its last references, as before.
+      const rowsByRecord = new Map<number, Row[]>();
+      for (const object of objects) {
+        const { recordId, data } = object;
+        if (recordId === null) {
+          return yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
+        }
+        const rows: Row[] = [];
+        rowsByRecord.set(recordId, rows);
 
-            // Delete existing references for this record.
-            yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
+        // Document objects carry `@meta` only so the entity-meta index can extract the
+        // convergence key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
+        // return everything merely tagged with it. Queue blocks always carried meta, so
+        // their extraction is unchanged.
+        const extractable = object.documentId
+          ? Object.fromEntries(
+              Object.entries(data as unknown as Record<string, unknown>).filter(([key]) => key !== ATTR_META),
+            )
+          : (data as unknown as Record<string, unknown>);
+        for (const ref of extractReferences(extractable)) {
+          rows.push({
+            recordId,
+            targetDXN: ref.targetDXN,
+            propPath: EscapedPropPath.escape(ref.path),
+            propPathNormalized: EscapedPropPath.escape(normalizePropPath(ref.path)),
+          });
+        }
+      }
 
-            // Document objects carry `@meta` only so the entity-meta index can extract the
-            // convergence key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
-            // return everything merely tagged with it. Queue blocks always carried meta, so
-            // their extraction is unchanged.
-            const extractable = object.documentId
-              ? Object.fromEntries(
-                  Object.entries(data as unknown as Record<string, unknown>).filter(([key]) => key !== ATTR_META),
-                )
-              : (data as unknown as Record<string, unknown>);
-            const refs = extractReferences(extractable);
-
-            // Insert new references.
-            yield* Effect.forEach(
-              refs,
-              (ref) =>
-                sql`INSERT INTO reverseRef (recordId, targetDXN, propPath, propPathNormalized) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)}, ${EscapedPropPath.escape(normalizePropPath(ref.path))})`,
-              { discard: true },
-            );
-          }),
-        { discard: true },
-      );
+      // Replaced in chunks rather than a statement per object and per reference: a client whose SQLite
+      // runs in a worker pays a message for each statement.
+      for (const chunk of chunkArray([...rowsByRecord.keys()])) {
+        yield* sql`DELETE FROM reverseRef WHERE ${sql.in('recordId', chunk)}`;
+      }
+      for (const chunk of chunkRows([...rowsByRecord.values()].flat())) {
+        yield* sql`INSERT INTO reverseRef ${sql.insert(chunk)}`;
+      }
     }),
   );
 }

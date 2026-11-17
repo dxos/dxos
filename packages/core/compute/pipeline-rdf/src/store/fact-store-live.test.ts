@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import { Parser, Writer } from 'n3';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -45,6 +46,15 @@ const stored = (written: Fact): Fact => ({
   assertion: { ...written.assertion, predicateIri: Mapping.predicateOf(written) },
 });
 
+/** A TriG document's quads as sorted N-Quads lines, since the export's statement order is the engine's. */
+const quadSet = (trig: string): string[] =>
+  new Parser({ format: 'application/trig' })
+    .parse(trig)
+    .map((quad) =>
+      new Writer({ format: 'N-Quads' }).quadToString(quad.subject, quad.predicate, quad.object, quad.graph),
+    )
+    .sort();
+
 const termOf = (found: Fact) =>
   found.assertion.subject.kind === 'entity' ? found.assertion.subject.entity : found.assertion.subject.literal;
 
@@ -84,6 +94,39 @@ describe('FactStoreLive', () => {
           expect(cursor).toBe('hashA');
         }),
       );
+    }),
+  );
+
+  it.effect(
+    'a TriG export imports into an empty store as the same facts and ontology',
+    Effect.fnUntraced(function* () {
+      const source = FactStoreLive.makeMemory();
+      yield* source.putFacts([fact('f1'), fact('f2', { sourceHash: 'h2' })]);
+      const trig = yield* source.exportTrig();
+      expect(trig).toContain('@prefix sx:');
+      expect(trig).not.toContain('semantic#seed');
+
+      const target = FactStoreLive.makeMemory();
+      const read = yield* target.importTrig(trig);
+      expect(read).toBeGreaterThan(0);
+      expect((yield* target.query({})).map((found) => found.id).sort()).toEqual(['f1', 'f2']);
+      expect(yield* target.query({})).toEqual(yield* source.query({}));
+      expect(yield* target.predicates()).toEqual(yield* source.predicates());
+      // A second import adds nothing, since quads are a set.
+      yield* target.importTrig(trig);
+      expect(quadSet(yield* target.exportTrig())).toEqual(quadSet(trig));
+    }),
+  );
+
+  it.effect(
+    'importTrig fails on a malformed document and leaves the store as it was',
+    Effect.fnUntraced(function* () {
+      const store = FactStoreLive.makeMemory();
+      yield* store.putFacts([fact('f1')]);
+      const before = yield* store.exportTrig();
+      const exit = yield* store.importTrig('<urn:a> <urn:b> .').pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+      expect(quadSet(yield* store.exportTrig())).toEqual(quadSet(before));
     }),
   );
 
