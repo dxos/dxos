@@ -63,13 +63,10 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
           // footer takes the popup's own surface instead of reading as a strip across the bottom.
           <Popover.Root defaultOpen>
             <Popover.Trigger data-testid='popover-trigger'>Rename</Popover.Trigger>
-            <Popover.Content classNames='w-[22rem] p-0'>
-              <ObjectProperties
-                object={person}
-                showTags={false}
-                onClose={handleClose}
-                classNames='max-h-[min(var(--available-height),32rem)]'
-              />
+            {/* The popover's own width and the form's own height: what the story shows is the surfaces, and
+                `src/next` carries no class names of its own. */}
+            <Popover.Content>
+              <ObjectProperties object={person} showTags={false} onClose={handleClose} />
             </Popover.Content>
           </Popover.Root>
         ) : (

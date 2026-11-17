@@ -138,9 +138,9 @@ if (files.length === 0) {
 }
 
 for (const file of files) {
-  const [, name, placement] = file.match(/^(bg-[a-z]+)-(left|center|right)\.svg$/) ?? [];
+  const [, name, placement] = file.match(/^([a-z]+)-(left|center|right)\.svg$/) ?? [];
   if (!name) {
-    throw new Error(`${file}: expected a file named bg-<name>-left.svg, bg-<name>-center.svg or bg-<name>-right.svg.`);
+    throw new Error(`${file}: expected a file named <mark>-left.svg, <mark>-center.svg or <mark>-right.svg.`);
   }
 
   const svg = readFileSync(join(DIR, file), 'utf8');

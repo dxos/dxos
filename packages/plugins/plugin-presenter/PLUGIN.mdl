@@ -1364,7 +1364,7 @@ decision D-62: Add two layouts beyond Slidev's built-ins: three-cols (slots `def
 decision D-63: In the presentation grid, double-clicking a slide or adding one opens it in the slide editor; the toolbar's add button is a split button whose caret sets the layout later adds use; a ghost tile after the last slide adds one; a tile's context menu hides or shows a slide and deletes it; the toolbar presents with the editor's present icon and has no fullscreen button; a slide can be hidden from the presentation.
   date: 2026-10-24
   by: user:richburdon
-  affects: [PresentationArticle, Deck, SlideGallery]
+  affects: [PresentationArticle, Deck, SlideGrid]
   why: The grid is where a deck is assembled, so opening, adding, hiding and removing slides belong there; presenting is the one way to go fullscreen.
 ```
 
@@ -1373,7 +1373,7 @@ decision D-64: A slide is hidden by Slidev's own frontmatter key, `hide: true`; 
   date: 2026-10-24
   by: agent:claude-code
   for: user:richburdon
-  affects: [F-6.1, PresentationArticle, SlideGallery]
+  affects: [F-6.1, PresentationArticle, SlideGrid]
   why: Keeping to Slidev's key keeps a deck portable; the stored index stays the grid's, so hiding a slide never moves the viewer's place.
   rejected: A `hidden` flag on the section ref, which a linked object could carry but plain markdown could not.
 ```
@@ -1382,7 +1382,7 @@ decision D-64: A slide is hidden by Slidev's own frontmatter key, `hide: true`; 
 decision D-65: A grid tile's right-click menu is the app's context menu for the slide's graph node, not a menu of the grid's own: it lists the node's navtree actions (delete, remove from presentation), and hiding or showing a slide is a graph action on owned slides. Supersedes the grid-local menu of [D-63].
   date: 2026-10-24
   by: user:richburdon
-  affects: [PresentationArticle, SlideGallery]
+  affects: [PresentationArticle, SlideGrid]
   why: One context menu for the whole app, whose items plugins contribute by context, rather than a menu per component.
 ```
 
@@ -1614,6 +1614,15 @@ decision D-92: The slide view state is followed with `write`, so a follower show
   rejected:
     - Following the index alone; the grid size travels with it in one aspect and costs a follower nothing it would not want.
 ```
+```mdl
+decision D-93: `SlideGrid` is `SlideGallery`: the panel of slide thumbnails, named apart from the `<Grid>` tag and the `slide-grid` element that tag renders, both of which keep their names. Renames the component of [D-63], [D-64] and [D-65].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [PresentationArticle, Deck, SlideGallery]
+  why: One word meant two unrelated things -- a thumbnail panel and a layout tag -- and the tag is the one authors type.
+```
+
 
 ---
 
