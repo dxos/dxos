@@ -20,6 +20,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -153,6 +154,21 @@ op quickJournalEntry
   input:
     text: string                 # raw markdown text for the bullet
   output: void
+  effects: [echo:write, echo:read]
+```
+
+```mdl
+op updateTask
+  key: org.dxos.operation.tasks.update
+  desc: |
+    Patches a task's fields. Returns the task ref, the fields that changed at their new value
+    (a cleared field is null) and the history entry the edit appended, not the whole task.
+  input:
+    task: Ref<Task>
+  output:
+    task: Ref<Task>
+    changed: object              # only the fields this call changed
+    historyEntry?: object        # the entry this edit appended, if it recorded one
   effects: [echo:write, echo:read]
 ```
 
@@ -388,6 +404,18 @@ test QA-3: Showcase clip
     - name: Write a plan
       do: Type a heading item and three indented items.
       expect: the items nest under the heading
+```
+
+## Changelog
+
+```mdl
+decision D-1: Updating a task returns the task ref, the fields that changed and the history entry it appended, not the whole task.
+  date: 2026-11-17
+  by: agent:claude-code
+  affects: [op:updateTask]
+  why: Over MCP the full task with its history was 2.6 KB for one status change, the largest result in a typical workflow, and it filled an agent's context.
+  rejected:
+    - Returning the whole task and trimming the history: the caller still pays for fields it just sent.
 ```
 
 ## Appendix: Extension Definitions
