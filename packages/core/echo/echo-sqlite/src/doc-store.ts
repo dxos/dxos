@@ -125,7 +125,8 @@ export class DocStore {
       for (const object of objects) {
         const { id } = object;
         const { after, behind } = editDocument(written.get(id) ?? docs.get(id), object, this.#spaceId);
-        const chunk = A.saveIncremental(after);
+        // A document whose last append failed has changes `saveIncremental` counts as saved already.
+        const chunk = this.#resave.has(id) ? A.save(after) : A.saveIncremental(after);
         if (chunk.byteLength > 0) {
           messages.push({
             spaceId: this.#spaceId,
@@ -152,6 +153,7 @@ export class DocStore {
       // computes the same change again instead of finding nothing new to write.
       for (const [id, doc] of written) {
         this.#unsaved.delete(id);
+        this.#resave.delete(id);
         this.#remember(id, doc);
       }
       return results;
