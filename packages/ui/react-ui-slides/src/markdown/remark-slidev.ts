@@ -174,6 +174,44 @@ type Token =
 
 const isContainerTag = (name: string): name is ContainerTag => Object.hasOwn(CONTAINER_TAGS, name);
 
+/** Tags the renderer draws with nothing inside them: a line break, and an embedded object. */
+const BR_TAG = 'br';
+const SURFACE_TAG = 'surface';
+
+/** How a tag is written, which decides whether the renderer draws it at all. */
+export type SlideTagForm = {
+  /** A closing tag, `</Box>`. */
+  closing: boolean;
+  /** A tag that closes itself, `<Box />`. */
+  selfClosing: boolean;
+};
+
+/** What the renderer makes of a tag it draws. */
+export type SlideTag = { kind: 'container'; tag: ContainerTag } | { kind: 'br' } | { kind: 'surface' };
+
+/**
+ * What the renderer draws for a tag, or `undefined` for one it leaves as literal text — the single rule for which
+ * tags the slide dialect allows, shared with the editor's highlighting so the two cannot disagree. A container tag
+ * may open or close but never close itself, since it styles what it wraps; `<br>` and `<Surface>` only ever open.
+ * The name is matched case-insensitively, as a browser matches an HTML tag.
+ */
+export const slideTag = (name: string, { closing, selfClosing }: SlideTagForm): SlideTag | undefined => {
+  const lower = name.toLowerCase();
+  if (isContainerTag(lower)) {
+    return selfClosing ? undefined : { kind: 'container', tag: lower };
+  }
+  if (closing) {
+    return undefined;
+  }
+  if (lower === BR_TAG) {
+    return { kind: 'br' };
+  }
+  if (lower === SURFACE_TAG) {
+    return { kind: 'surface' };
+  }
+  return undefined;
+};
+
 export const isSlotName = (name: string): name is SlotName => SLOTS.some((slot) => slot === name);
 
 const isSurfaceRole = (role: string): role is SurfaceRole => SURFACE_ROLES.some((value) => value === role);
@@ -388,24 +426,34 @@ const tokenize = (
       continue;
     }
 
-    const name = rawName.toLowerCase();
-    const selfClosing = attributes?.trimEnd().endsWith('/') ?? false;
-    if (isContainerTag(name) && !selfClosing) {
-      flush();
-      tokens.push(
-        closing
-          ? { kind: 'close', tag: name, raw }
-          : { kind: 'open', tag: name, attributes: parseAttributes(attributes ?? ''), raw },
-      );
-    } else if (name === 'br' && !closing) {
-      flush();
-      tokens.push({ kind: 'node', node: slideElement('br', {}) });
-    } else if (name === 'surface' && !closing) {
-      flush();
-      tokens.push({ kind: 'node', node: surfaceElement(parseAttributes(attributes ?? ''), issues) });
-    } else {
+    const tag = slideTag(rawName, {
+      closing: Boolean(closing),
+      selfClosing: attributes?.trimEnd().endsWith('/') ?? false,
+    });
+    if (tag === undefined) {
       disallowed = true;
       pending += raw;
+      continue;
+    }
+
+    flush();
+    switch (tag.kind) {
+      case 'container': {
+        tokens.push(
+          closing
+            ? { kind: 'close', tag: tag.tag, raw }
+            : { kind: 'open', tag: tag.tag, attributes: parseAttributes(attributes ?? ''), raw },
+        );
+        break;
+      }
+      case 'br': {
+        tokens.push({ kind: 'node', node: slideElement('br', {}) });
+        break;
+      }
+      case 'surface': {
+        tokens.push({ kind: 'node', node: surfaceElement(parseAttributes(attributes ?? ''), issues) });
+        break;
+      }
     }
   }
   pending += node.value.slice(index);

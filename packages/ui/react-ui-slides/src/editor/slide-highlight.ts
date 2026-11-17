@@ -80,7 +80,8 @@ const slideHighlightTheme = EditorView.baseTheme({
 
 /**
  * Highlights what the slide DSL adds to markdown: the frontmatter (its delimiters and keys), `::slot::` markers,
- * click and `Surface` tags (and their attribute names), object embeds, and the speaker notes. Only slot markers are
+ * every tag the renderer draws (and their attribute names), object embeds, and the speaker notes. A tag the renderer
+ * would leave as literal text is left unhighlighted, so what is coloured is what will draw. Only slot markers are
  * atomic; a tag is ordinary text, so its attributes can be typed.
  */
 export const slideHighlight = (): Extension => [

@@ -42,6 +42,23 @@ describe('slideTokens', () => {
     expect(spans(content, 'tag-attribute')).toEqual(['tag-attribute:every', 'tag-attribute:ref', 'tag-attribute:role']);
   });
 
+  test('every tag the renderer draws, whatever its case, `<br>` included', () => {
+    const content = ['<grid cols="2">', '<BOX variant="hero">', 'One<br>two', '</Box>', '</GRID>'].join('\n');
+    expect(spans(content, 'tag')).toEqual([
+      'tag:<grid cols="2">',
+      'tag:<BOX variant="hero">',
+      'tag:<br>',
+      'tag:</Box>',
+      'tag:</GRID>',
+    ]);
+  });
+
+  test('a tag the renderer leaves as literal text is not highlighted', () => {
+    // Each is rejected for its own reason: an unknown name, a container closing itself, and a void tag closing.
+    const content = ['<div class="x">', '<span>', '<Grid />', '</br>', '</Surface>', '<Box>'].join('\n');
+    expect(spans(content, 'tag')).toEqual(['tag:<Box>']);
+  });
+
   test('trailing notes, and nothing inside fenced code or the notes', () => {
     const content = ['```html', '<v-click>', '```', '', 'Text', '', '<!--', '<v-click> in notes', '-->'].join('\n');
     expect(spans(content)).toEqual(['notes:<!--\n<v-click> in notes\n-->']);

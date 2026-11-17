@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { slideTag } from './remark-slidev.ts';
 import { SLOT_LINE, fencedLines } from './split.ts';
 
 /** What a span of slide markdown is, for highlighting the parts the slide DSL adds to markdown. */
@@ -19,7 +20,8 @@ export type SlideToken = { from: number; to: number; kind: SlideTokenKind };
 
 const FRONTMATTER = /^(---)[ \t]*\r?\n([\s\S]*?)\r?\n?(---)[ \t]*(?:\r?\n|$)/;
 const YAML_KEY = /^([A-Za-z_][\w-]*)\s*:/;
-const TAG = /<\/?(?:v-clicks?|v-after|Surface|List|Table|Box|Grid|Cell|Card)\b[^<>]*>/g;
+// Every tag, so `slideTag` alone decides which the dialect allows; a quoted attribute value may hold `>`.
+const TAG = /<(\/?)([A-Za-z][A-Za-z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
 const ATTRIBUTE = /\s([A-Za-z_][\w-]*)(?==)/g;
 const EMBED = /!\[[^\]]*\]\((?:echo|eid):[^)\s]+\)/g;
 // The body may not contain `-->`, so an earlier comment cannot extend the match into the trailing notes.
@@ -27,8 +29,8 @@ const NOTES = /<!--(?:(?!-->)[\s\S])*-->\s*$/;
 
 /**
  * The slide DSL's spans in one slide's markdown, in document order: the frontmatter block (with its delimiters and
- * keys), `::slot::` markers, click and `Surface` tags (with their attribute names), object embeds and the trailing
- * speaker notes. Fenced code is skipped, since everything in it is literal.
+ * keys), `::slot::` markers, every tag the renderer draws (with their attribute names), object embeds and the
+ * trailing speaker notes. Fenced code is skipped, since everything in it is literal.
  */
 export const slideTokens = (content: string): SlideToken[] => {
   const tokens: SlideToken[] = [];
@@ -68,9 +70,16 @@ export const slideTokens = (content: string): SlideToken[] => {
       return;
     }
     for (const tag of line.matchAll(TAG)) {
+      const [raw, closing, name, attributes] = tag;
+      // A tag the renderer leaves as literal text is literal text here too, so highlighting shows what will draw.
+      if (
+        slideTag(name, { closing: Boolean(closing), selfClosing: attributes.trimEnd().endsWith('/') }) === undefined
+      ) {
+        continue;
+      }
       const tagFrom = from + tag.index;
-      tokens.push({ from: tagFrom, to: tagFrom + tag[0].length, kind: 'tag' });
-      for (const attribute of tag[0].matchAll(ATTRIBUTE)) {
+      tokens.push({ from: tagFrom, to: tagFrom + raw.length, kind: 'tag' });
+      for (const attribute of raw.matchAll(ATTRIBUTE)) {
         const attributeFrom = tagFrom + attribute.index + 1;
         tokens.push({ from: attributeFrom, to: attributeFrom + attribute[1].length, kind: 'tag-attribute' });
       }
