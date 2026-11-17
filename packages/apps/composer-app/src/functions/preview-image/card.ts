@@ -96,9 +96,7 @@ const spaceLayout = (card: SpaceCard, icons: Icons): Node => {
         ...(rest > 0 ? [text(`${rest} more`, { fontSize: 28, color: MUTED })] : []),
       ]),
     ],
-    card.types.length > 0
-      ? card.types.map((type, index) => ({ weight: type.count, color: swatch(type.hue, index).fill }))
-      : [{ weight: 1, color: swatch(card.hue).fill }],
+    card.types.length > 0 ? typeBands(card.types) : [{ weight: 1, color: swatch(card.hue).fill }],
   );
 };
 
@@ -130,8 +128,20 @@ const objectLayout = (card: ObjectCard, icons: Icons): Node => {
   );
 };
 
+type Band = { weight: number; color: string };
+
+/** One band per colour, largest first, so types that share a hue read as one block. */
+export const typeBands = (types: SpaceCard['types']): Band[] => {
+  const bands = new Map<string, number>();
+  types.forEach((type, index) => {
+    const color = swatch(type.hue, index).fill;
+    bands.set(color, (bands.get(color) ?? 0) + type.count);
+  });
+  return [...bands].map(([color, weight]) => ({ weight, color })).sort((a, b) => b.weight - a.weight);
+};
+
 /** The white page every card sits on, with its coloured bar along the bottom edge. */
-const frame = (children: Node[], bar: { weight: number; color: string }[]): Node =>
+const frame = (children: Node[], bar: Band[]): Node =>
   div(
     {
       display: 'flex',

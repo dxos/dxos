@@ -4,7 +4,7 @@
 
 import { beforeAll, describe, test } from 'vitest';
 
-import { type Card, type Node, layout } from './card.ts';
+import { type Card, type Node, layout, typeBands } from './card.ts';
 import { type RenderAssets, loadIcons, phosphorPath, renderCard } from './render.ts';
 import { PNG_SIGNATURE, loadRenderAssets, pngSize } from './testing.ts';
 
@@ -114,5 +114,19 @@ describe('phosphorPath', () => {
     expect(phosphorPath('ph--text-aa--bold')).toBe('/phosphor/bold/text-aa-bold.svg');
     expect(phosphorPath('../../etc/passwd')).toBeUndefined();
     expect(phosphorPath('ph--../x--regular')).toBeUndefined();
+  });
+});
+
+describe('typeBands', () => {
+  test('types that share a hue merge into one band, largest first', ({ expect }) => {
+    const bands = typeBands([
+      { label: 'Tasks', hue: 'neutral', count: 5 },
+      { label: 'Text', hue: 'green', count: 4 },
+      { label: 'People', hue: 'neutral', count: 3 },
+      { label: 'Documents', hue: 'green', count: 2 },
+      { label: 'Boards', hue: 'indigo', count: 1 },
+    ]);
+    expect(bands.map(({ weight }) => weight)).toEqual([8, 6, 1]);
+    expect(new Set(bands.map(({ color }) => color)).size).toBe(3);
   });
 });
