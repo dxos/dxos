@@ -315,8 +315,10 @@ jobs:
 
       # The code generators lint reads through imports; none of them depends on a build. Not `:#prebuild`,
       # which also pulls in `docs:prebuild` and `composer-app:prebuild` and with them their builds.
+      # Unscoped, because lint reads every package's generated sources whatever the PR changed.
       - name: Generate sources
         run: >-
+          env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD
           moon run protocols:gen-buf diagram:prebuild-lezer echo-query:prebuild-lezer deus:prebuild-lezer
           ui-types:prebuild-phosphor plugin-code:prebuild-spec-index plugin-tldraw:prebuild
           observability:prebuild react-ui-experimental:prebuild react-ui-gameboard:prebuild
