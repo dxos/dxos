@@ -156,10 +156,7 @@ const DatabaseLayerSpec = LayerSpec.make(
     ),
 );
 
-/**
- * The space's RDF store, kept by the client services host in its own database and replicated through the space's
- * fact feed; the memory below runs over it in this process.
- */
+/** The space's RDF store, kept by the client services host in its own database and replicated through its fact feed. */
 const RdfStoreLayerSpec = LayerSpec.make(
   {
     affinity: 'space',
@@ -177,18 +174,22 @@ const RdfStoreLayerSpec = LayerSpec.make(
 );
 
 /**
- * The space's {@link MemoryService.MemoryService}: one memory per space slice over its {@link RdfStore.RdfStore}, closed
- * with the slice. The core (rule evaluator, RDF mapping) loads on first use, so it stays out of the boot bundle.
+ * The space's {@link MemoryService.MemoryService}, run by the client services host beside the space's store, so every
+ * page and operation shares one rule evaluator per space.
  */
 const MemoryLayerSpec = LayerSpec.make(
   {
     affinity: 'space',
-    requires: [RdfStore.RdfStore],
+    requires: [ClientService],
     provides: [MemoryService.MemoryService],
   },
-  () =>
+  (context) =>
     Layer.unwrap(
-      Effect.promise(() => import('@dxos/echo-memory-sqlite/RdfMemory')).pipe(Effect.map(({ layer }) => layer)),
+      Effect.gen(function* () {
+        invariant(context.space, 'space context required for MemoryService layer');
+        const client = yield* ClientService.client;
+        return Layer.succeed(MemoryService.MemoryService, client.memory(context.space));
+      }),
     ),
 );
 

@@ -46,6 +46,7 @@
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-host": "workspace:*",
     "@dxos/echo-memory": "workspace:*",
+    "@dxos/echo-memory-sqlite": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",

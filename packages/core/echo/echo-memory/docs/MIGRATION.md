@@ -62,8 +62,8 @@ two together over native SQLite for the CLI and tests. The package depends on no
 - [x] `RdfStoreService` RPCs (`@dxos/protocols/rpc`), served by client-services' `RdfHostLayer`: one
       `QuadStore` per space, opened on first call, over the host database and `factFeedLog` on the host's
       `FeedStore`; export and import are formed in the host [F-9.1, F-10].
-- [x] `client.rdf(spaceId)`: the page's `RdfStore` over the bridge (`createRpcRdfStore`); the page runs
-      `RdfMemory` over it [F-9.9].
+- [x] `client.rdf(spaceId)` (`createRpcRdfStore`) and `client.memory(spaceId)` (`createRpcMemory`) over the bridge;
+      the memory itself runs in the host, one per space (`SpaceMemories`) [F-9.1, F-9.9, D-50].
 - [x] The fact feed id is `EntityId.deterministic('org.dxos.memory.facts', spaceId)`, the same on every device.
 - [x] The feed syncer replicates `facts` when the stack option `replicateFacts` is set; a test shows a fact
       feed replicating and a store over it applying what arrives [F-9.5].

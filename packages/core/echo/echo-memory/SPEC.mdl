@@ -29,13 +29,12 @@ Beside it is a local `RdfStore` over `@dxos/sparql-sqlite`'s quad store, which t
 servers open in one process [F-7]. EDGE serves the same interface from a Durable Object over that same core
 [F-7.4].
 
-In the app the memory runs in the page and the store in the client-services backend. The backend is thin:
-it runs `@dxos/sparql-sqlite` over the SQLite database it already holds and applies batches of writes, and
-nothing else. The page's memory turns every call into SPARQL and batches, which cross the client-services
-bridge. Every shared write goes first to the space's feed in the `facts` namespace, which is durable and
-replicates like any feed, and only then to the store, which remembers how far it has read the feed and can
-be rebuilt from it. Subscriptions and outboxes are quads in the store's local part, which is never logged
-or replicated [F-9]. A store's quads move in and out in bulk as TriG or a compact binary form, serialized
+In the app the memory and the store both run in the client-services backend, one memory per space, so every
+page and operation shares its rule evaluation, its outboxes and its clock. The backend runs `@dxos/sparql-sqlite`
+over the SQLite database it already holds, and the memory core (`RdfMemory`) over that store. Every shared write
+goes first to the space's feed in the `facts` namespace, which is durable and replicates like any feed, and only
+then to the store, which remembers how far it has read the feed and can be rebuilt from it. Subscriptions and
+outboxes are quads in the store's local part, which is never logged or replicated [F-9]. A store's quads move in and out in bulk as TriG or a compact binary form, serialized
 where the store is [F-10].
 
 `BrainService` and `FactStore` are deprecated in favour of `MemoryService`; `docs/MIGRATION.md` lists the
@@ -743,13 +742,13 @@ feat F-8: Deprecation of BrainService and FactStore
 ```
 
 ```mdl
-feat F-9: The app's memory: a page memory over a thin backend store
+feat F-9: The app's memory: the store and the memory in the backend, logged to a fact feed
 
   req F-9.1:
-    when: a page in the app uses MemoryService
-    then: the memory (`RdfMemory`) runs in the page over `client.rdf(spaceId)`; its calls become SPARQL queries
-          and batches of writes that cross the client-services bridge, and the backend only runs them over its
-          existing SQLite database with `@dxos/sparql-sqlite`; the backend imports no memory package
+    when: a page or an operation in the app uses MemoryService
+    then: its calls cross the client-services bridge as `MemoryService` RPCs to the memory the backend runs for the
+          space, beside the space's store: one rule evaluator, one outbox per subscription and one clock per space,
+          however many pages and operations call it; `client.memory(spaceId)` returns it
 
   req F-9.2:
     when: a write to the shared part is made (`put` or `reset` of a memory)
@@ -1428,6 +1427,26 @@ decision D-49: Every noun module is also a subpath export, `hashText` becomes `H
   for: user:dmaretskyi
   affects: [F-1.4]
   why: With the RDF mapping in the main entry, importing the barrel would put n3 on those packages' static graph, which broke the workerd bundle before.
+```
+
+```mdl
+decision D-50: Rule evaluation, outboxes and the clock of a space's memory run in the client-services worker, not in the page.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9.1]
+  supersedes: D-35
+```
+
+```mdl
+decision D-51: The worker holds one store and one memory per space (`SpaceMemories`) and serves both `RdfStoreService` and `MemoryService` RPCs from them; `client.memory(spaceId)` is the page's MemoryService, and operations get it through the same space layer. client-services imports `@dxos/echo-memory-sqlite`'s `RdfMemory` and `LocalRdfStore` modules, by dynamic import. Fills in [D-50].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1, F-1.5]
+  supersedes: D-34
+  why: Running the memory in the worker needs its core there; the concern behind D-34 was a second SPARQL store, which `RdfMemory` no longer brings, and the dynamic import keeps the core out of the worker's boot.
+  rejected:
+    - Moving the memory core to a package of its own, which adds a package for two modules.
 ```
 
 ## Appendix: Extension Definitions

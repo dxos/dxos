@@ -19,6 +19,7 @@ export * as IdentityService from './IdentityService.ts';
 export * as InboxService from './InboxService.ts';
 export * as InvitationsService from './InvitationsService.ts';
 export * as LoggingService from './LoggingService.ts';
+export * as MemoryService from './MemoryService.ts';
 export * as NetworkService from './NetworkService.ts';
 export * as QueryService from './QueryService.ts';
 export * as RdfStoreService from './RdfStoreService.ts';

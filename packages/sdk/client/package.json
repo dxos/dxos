@@ -152,7 +152,6 @@
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
-    "@dxos/echo-memory-sqlite": "workspace:*",
     "@types/lodash.isequalwith": "catalog:",
     "typedoc": "catalog:"
   },

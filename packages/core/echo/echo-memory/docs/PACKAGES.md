@@ -22,12 +22,13 @@ Where `MemoryService` lives once Composer uses it in the browser. It sits beside
                                LocalRdfStore and MemorySqlite layers               node, bun (CLI)
 @dxos/sparql-sqlite            QuadStore: log-first quad store, shared and local    every platform
                                parts; /exchange: TriG and binary
-client-services (existing)     RdfHostLayer: one QuadStore per space over the       browser worker, node
+client-services (existing)     SpaceMemories: per space, one QuadStore over the     browser worker, node
                                host's own SQLite database, logged to the space's
-                               `facts` feed; served over the bridge
-@dxos/client                   client.rdf(spaceId): RdfStore over the bridge        page
-plugin-client (existing)       space layers: RdfStore and MemoryService for         Composer
-                               operations, the memory loaded on first use
+                               `facts` feed, and one RdfMemory over it; served as
+                               MemoryService and RdfStoreService RPCs
+@dxos/client                   client.memory(spaceId), client.rdf(spaceId)          page
+plugin-client (existing)       space layers: MemoryService and RdfStore for         Composer
+                               operations
 ```
 
 1. **`@dxos/echo-memory`** stays interface-only: the `MemoryService` a caller uses and the `RdfStore` a memory
@@ -36,13 +37,13 @@ plugin-client (existing)       space layers: RdfStore and MemoryService for     
 2. **`@dxos/echo-memory-sqlite`** has one core, `RdfMemory.make(rdf)`, with no platform code: queries become
    SPARQL, writes become batches, and its own records are quads in the store's local part.
    `LocalRdfStore` and `MemorySqlite` run it in one process over native SQLite.
-3. **The backend is thin [F-9.1].** client-services runs `@dxos/sparql-sqlite`'s quad store over the database it
-   already has, and nothing that knows about facts or rules. Every shared batch is appended to the space's
+3. **The backend runs the store and the memory [F-9.1].** client-services runs `@dxos/sparql-sqlite`'s quad store
+   over the database it already has, and `RdfMemory` over it, one per space, so every page and operation shares
+   one rule evaluator, outbox set and clock (D-50). Every shared batch is appended to the space's
    `facts` feed first and applied by reading it back, so the feed replicates the store and rebuilds it.
    Export and import are serialized and parsed there, beside the store [F-10].
-4. **The memory runs in the page.** plugin-client's space-affinity layers give an operation that asks for
-   `MemoryService` the space's `RdfMemory.make(client.rdf(spaceId))`;
-   rule evaluation and outboxes live in the page, their records in the store's local part. Agent memory on
+4. **Pages and operations call it.** `client.memory(spaceId)` is a space's MemoryService over the bridge, and
+   plugin-client's space-affinity layer gives it to an operation that asks for `MemoryService`. Agent memory on
    EDGE comes through the host-service proxy, which replaces `BrainWire`.
 
 ## Questions
@@ -50,5 +51,3 @@ plugin-client (existing)       space layers: RdfStore and MemoryService for     
 1. EDGE must accept the `facts` namespace before the feed replicates: edge pins `@dxos/protocols`, whose
    `isWellKnownNamespace` gates the queue replicator. Does EDGE also run a memory over the replicated
    feed (one Durable Object per space, [F-7.4]), or only store the feed?
-2. Two tabs on one space each run a memory over the same store, so each evaluates the rules and both write
-   the same outbox records. Should one tab (the leader) own the event base?

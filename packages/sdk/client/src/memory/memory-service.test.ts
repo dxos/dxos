@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import { describe, onTestFinished, test } from 'vitest';
 
 import { Fact, MemoryQuery, Subscription } from '@dxos/echo-memory';
-import * as RdfMemory from '@dxos/echo-memory-sqlite/RdfMemory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 
@@ -38,15 +37,17 @@ const openClient = async () => {
   return client;
 };
 
-describe('RdfMemory over client.rdf', () => {
-  test("a memory in this process runs on the space's store across the client services boundary", async ({ expect }) => {
+describe('MemoryService over client.memory', () => {
+  test("a space's memory runs in the client services host, and every handle to it is the same memory", async ({
+    expect,
+  }) => {
     const client = await openClient();
     const space = await client.spaces.create();
     await space.waitUntilReady();
 
     await EffectEx.runPromise(
       Effect.gen(function* () {
-        const memory = yield* RdfMemory.make(client.rdf(space.id));
+        const memory = client.memory(space.id);
         const watch = Subscription.SubscriptionId.make('watch');
         expect(
           yield* memory.subscribe({
@@ -62,17 +63,18 @@ describe('RdfMemory over client.rdf', () => {
         expect(facts).toHaveLength(1);
         expect(yield* memory.query(MemoryQuery.cursor(chat))).toBe('f1');
         expect(yield* memory.query(MemoryQuery.sparql('SELECT ?g WHERE { GRAPH ?g { ?s ?p ?o } }'))).not.toEqual([]);
-        expect(yield* memory.take(watch)).toHaveLength(1);
+        // A second handle (another page, an operation) reads the same outbox the host's one evaluator fills.
+        expect(yield* client.memory(space.id).take(watch)).toHaveLength(1);
 
         // Another space's store is its own, and takes a copy of this one through export and import.
         const other = yield* Effect.promise(() => client.spaces.create());
         yield* Effect.promise(() => other.waitUntilReady());
-        const copy = yield* RdfMemory.make(client.rdf(other.id));
+        const copy = client.memory(other.id);
         expect(yield* copy.query(MemoryQuery.facts())).toEqual([]);
         const data = yield* client.rdf(space.id).export('binary');
         yield* client.rdf(other.id).import(data, 'binary');
         expect((yield* copy.query(MemoryQuery.facts())).map(({ id }) => id)).toEqual(facts.map(({ id }) => id));
-      }).pipe(Effect.scoped),
+      }),
     );
   });
 
