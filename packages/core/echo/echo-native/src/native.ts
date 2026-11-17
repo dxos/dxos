@@ -128,7 +128,11 @@ export type NativeOptions = {
  * process; instantiating it again is cheap.
  */
 export const createNative = async (options: NativeOptions = {}): Promise<Native> => {
-  compiled ??= (async () => WebAssembly.compile(await (wasmSource ?? defaultSource)()))();
+  // A failed compile is not kept, so a later call can retry with a recovered source.
+  compiled ??= (async () => WebAssembly.compile(await (wasmSource ?? defaultSource)()))().catch((err) => {
+    compiled = undefined;
+    throw err;
+  });
   const module = await compiled;
   if (options.directory !== undefined) {
     const { WASI } = await import('node:wasi');
@@ -157,7 +161,10 @@ export const createNative = async (options: NativeOptions = {}): Promise<Native>
 
 /** The process's shared engine instance. */
 export const loadNative = (): Promise<Native> => {
-  shared ??= createNative();
+  shared ??= createNative().catch((err) => {
+    shared = undefined;
+    throw err;
+  });
   return shared;
 };
 

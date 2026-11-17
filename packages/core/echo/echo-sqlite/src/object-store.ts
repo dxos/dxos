@@ -110,9 +110,6 @@ export class ObjectStore {
   static open(spaceId: SpaceId, options: { assignPositions?: boolean } = {}): Store<ObjectStore> {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      // In WAL mode a commit then syncs only at checkpoints: a power loss can drop the last commits but
-      // never corrupts the file, and every commit stops paying a disk sync. Best effort: some hosts refuse it.
-      yield* sql`PRAGMA synchronous = NORMAL`.pipe(Effect.ignore);
       // The feed store and the indexer share the file; their migrations come first, ours build on them.
       yield* new FeedStore({ localActorId: 'migrate', assignPositions: false }).migrate();
       yield* new IndexEngine(sql).migrate();
@@ -247,9 +244,13 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
   transaction<A, E>(
     effect: Effect.Effect<A, E, SqlClient.SqlClient>,
   ): Effect.Effect<A, E | SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(function* () {
+    return Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
-      return yield* sql.withTransaction(effect);
+      return yield* sql.withTransaction(effect).pipe(
+        // A rollback leaves every in-memory checkpoint the body advanced ahead of the file, including
+        // documents outside the caller's batch (a convergence merge's winner).
+        Effect.onError(() => Effect.sync(() => this.#rolledBack())),
+      );
     });
   }
 
@@ -480,6 +481,12 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
   invalidate(ids: Iterable<string>): void {
     this.#docs.invalidate(ids);
     // The feed store caches feed heads and rows, which another writer's appends leave behind.
+    this.#feedStore.resetCaches();
+  }
+
+  #rolledBack(): void {
+    this.#docs.invalidateSaved();
+    this.#source.forgetRecorded();
     this.#feedStore.resetCaches();
   }
 

@@ -1284,14 +1284,18 @@ export class FeedStore {
         }
       }
       // A feed this append created holds no blocks yet, so only blocks of existing feeds can be stored already.
-      const existing = positioned.filter((block) => !created.has(block.feedId!));
+      const existing = positioned.flatMap((block) => {
+        const feedPrivateId =
+          block.feedId === undefined || created.has(block.feedId) ? undefined : feedPrivateIds.get(block.feedId);
+        return feedPrivateId === undefined ? [] : [{ block, feedPrivateId }];
+      });
       for (const chunk of chunked(existing, BLOCK_KEY_CHUNK)) {
         const stored = yield* sql<{ one: number }>`
           SELECT 1 AS one FROM blocks
           WHERE position IS NOT NULL AND (${sql.or(
             chunk.map(
-              (block) =>
-                sql`(feedPrivateId = ${feedPrivateIds.get(block.feedId!)} AND actorId = ${block.actorId} AND sequence = ${block.sequence})`,
+              ({ block, feedPrivateId }) =>
+                sql`(feedPrivateId = ${feedPrivateId} AND actorId = ${block.actorId} AND sequence = ${block.sequence})`,
             ),
           )})
           LIMIT 1

@@ -156,6 +156,11 @@ export class AutomergeFeedSource implements IndexDataSource {
     );
   }
 
+  /** Forgets which changes were recorded, after a rollback discarded their rows; the next pass rewrites them. */
+  forgetRecorded(): void {
+    this.#recordedHeads.clear();
+  }
+
   /**
    * The document's changes not recorded yet: the whole history the first time this session sees it (the
    * insert ignores rows already stored), then only what came after.

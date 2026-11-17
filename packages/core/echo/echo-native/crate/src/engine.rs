@@ -271,24 +271,23 @@ impl Engine {
         let start = Instant::now();
         self.db.execute("BEGIN", &[])?;
         self.profile.transaction += micros(start);
-        match body(self) {
-            Ok(value) => {
-                let start = Instant::now();
-                self.db.execute("COMMIT", &[])?;
-                self.profile.transaction += micros(start);
-                Ok(value)
-            }
-            Err(error) => {
-                let _ = self.db.execute("ROLLBACK", &[]);
-                // Cached documents and heads may be ahead of the rolled-back file.
-                self.docs.clear();
-                self.heads.clear();
-                self.record_ids.clear();
-                self.feed_options.clear();
-                self.file.borrow_mut().next_position.clear();
-                Err(error)
-            }
+        // A failed COMMIT rolls back like a failed body, so neither leaves caches ahead of the file.
+        let outcome = body(self).and_then(|value| {
+            let start = Instant::now();
+            self.db.execute("COMMIT", &[])?;
+            self.profile.transaction += micros(start);
+            Ok(value)
+        });
+        if outcome.is_err() {
+            let _ = self.db.execute("ROLLBACK", &[]);
+            // Cached documents and heads may be ahead of the rolled-back file.
+            self.docs.clear();
+            self.heads.clear();
+            self.record_ids.clear();
+            self.feed_options.clear();
+            self.file.borrow_mut().next_position.clear();
         }
+        outcome
     }
 
     /// Loads the documents of `ids` that are not cached, with one statement per chunk; an id with no

@@ -553,18 +553,19 @@ impl Engine {
             .into_iter()
             .filter(|(target, path, _)| seen.insert((target.clone(), path.clone())))
             .collect();
-        if !refs.is_empty() {
+        // Chunked, so an item with many references stays under the bound-parameter cap.
+        for chunk in refs.chunks(super::ROWS_PER_STATEMENT) {
             let sql = format!(
                 "INSERT INTO reverseRef (recordId, targetDXN, propPath, propPathNormalized) VALUES {}",
-                placeholders(refs.len(), 4)
+                placeholders(chunk.len(), 4)
             );
-            let mut params = Vec::with_capacity(refs.len() * 4);
-            for (target, path, normalized) in refs {
+            let mut params = Vec::with_capacity(chunk.len() * 4);
+            for (target, path, normalized) in chunk {
                 params.extend([
                     Param::Int(record_id),
-                    Param::Text(target),
-                    Param::Text(path),
-                    Param::Text(normalized),
+                    Param::Text(target.clone()),
+                    Param::Text(path.clone()),
+                    Param::Text(normalized.clone()),
                 ]);
             }
             self.db.execute_owned(&sql, params)?;
