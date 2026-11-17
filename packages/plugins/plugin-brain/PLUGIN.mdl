@@ -185,6 +185,42 @@ component FactsCompanion
   emits: {}
 ```
 
+```mdl
+component MemoryArticle
+  desc: |
+    The space's memory, opened from Memory under the space's settings: its fact store imported from or
+    exported to TriG, a SPARQL editor, and every SPARQL query run against the store, an agent's included,
+    shown live with its results as it runs.
+  state:
+    statements: number          # Statements across the store's named graphs; refreshed on store writes
+    log: SparqlQueryRecord[]    # The registry's query log for the space, newest last
+    pinned?: number             # The query the viewer picked; unset follows the newest
+  actions:
+    import: File -> void        # Reads a .trig/.ttl file into the store
+    export: () -> void          # Downloads the store as memory-<space>.trig
+    run: string -> void         # Runs a SELECT; its result arrives through the log
+  layout: |
+    [n statements | Import TriG | Export TriG | status]
+    [SPARQL editor ............................ Run]
+    [#7 #6 #5 …  (query history, newest first)     ]
+    [Live query #7 · 12 rows
+     SELECT …
+     ?p        ?n
+     uses      1204 ...                            ]
+```
+
+```mdl
+component PipelineCompanion
+  desc: |
+    The run that filled the space's memory, as the memory records it (a JSON state in the `pipeline` graph,
+    written beside the facts by `facts-cli trig`): a diagram of its sources with their first and last message,
+    its stages in order, the facts written and the model each stage called with its calls and cost, drawn on a
+    read-only canvas (`Scene2DView`); then the run's time, counters and cost, and its busiest channels with
+    their cursor.
+  state:
+    pipelines: Pipeline.State[]   # Every run the store records, newest first; refreshed on store writes
+```
+
 ## Features
 
 ```mdl
@@ -265,6 +301,45 @@ feat F-4: Consumers resolve FactStore through the seam
     when: plugin-inbox's GenerateReply drafts a reply
     then: it queries the same per-space store for facts about the message's
           participants
+```
+
+```mdl
+feat F-5: Memory view, TriG transfer and live queries
+  uses: [MemoryArticle, FactStoreRegistry]
+
+  req F-5.1:
+    when: a space's settings are opened
+    then: they list Memory, which opens the MemoryArticle over that space's store
+
+  req F-5.2:
+    when: a TriG (or Turtle) file is imported
+    then: its quads are added to the space's store, the statement count updates, and the facts
+          it holds answer QueryFacts and QuerySparql like facts the store extracted itself
+
+  req F-5.3:
+    when: Export TriG is clicked
+    then: the store's statements, their graph metadata and its ontology download as one TriG
+          document that imports into an empty store as the same facts
+
+  req F-5.4:
+    when: an agent runs QuerySparql (or a SELECT is run from the view)
+    then: the query appears in the view as it starts, marked running, and its row count and first
+          rows replace the marker when it ends
+```
+
+```mdl
+feat F-6: Pipeline state beside the memory
+  uses: [PipelineCompanion]
+
+  req F-6.1:
+    when: a crawl's facts are exported as TriG where its crawl.db and trace.jsonl lie
+    then: the export carries the run's state: each channel's cursor, item count and first and last message,
+          each stage's model calls, tokens and catalog cost, the run's start and end, and the facts written
+
+  req F-6.2:
+    when: the Pipeline panel is opened over a memory holding a run's state
+    then: it draws the run as a diagram of channels, stages, model and facts, and lists its time, counters,
+          cost and busiest channels in human-readable form
 ```
 
 ## Acceptance
@@ -368,6 +443,28 @@ test QA-1: Query and summarize facts already in the store
       note: NO `invoke` — FactsCompanion is a read-only React surface, not backed by an operation.
 ```
 
+```mdl
+test QA-2: An agent turns a community's memory into sheets with charts, a deck and a summary
+  desc: Import the Cloudflare Developers Discord's facts as TriG, then ask the Composer assistant what its memory says, without telling it which skills to use; the Memory view shows each query as the agent runs it.
+  actors: human
+  covers: [F-5.1, F-5.2, F-5.4, F-2.4]
+  status: unverified
+  given:
+    - an identity exists, with a model the assistant can reach
+    - a TriG export of a crawl's fact store (`moon run plugin-discord:facts -- trig <out.trig> --facts <facts.db>`)
+  steps:
+    - name: Import the community's memory
+      do: Open the space's settings, open Memory, click Import TriG and pick the export.
+      expect: the toolbar reports the quads imported and the statement count matches the export
+    - name: Ask the agent what its memory says
+      do: Open a chat beside Memory and ask for the five most interesting things about the community, each as a sheet with a chart, then a presentation and a summary.
+      expect: Memory shows the agent's SPARQL queries one after another, each with its rows, as the agent explores
+    - name: Read what it made
+      do: Open the sheets, the presentation and the document the agent created.
+      expect: each sheet holds the rows a query returned and a chart of them; the deck and the summary describe the same five findings
+      note: The findings are the model's; nothing in the flow names them.
+```
+
 ## Changelog
 
 ```mdl
@@ -395,6 +492,22 @@ decision D-3: Every fact tool returns at most 50 rows and 500 characters per val
   why: 50 rows matches QueryFacts' default limit and keeps one tool result within a few thousand tokens.
   rejected:
     - A total character budget alone: it cuts rows unpredictably and gives the model no window to resume from.
+```
+
+```mdl
+decision D-4: A space's memory moves in and out of Composer as TriG, from a Memory view under the space's settings that also shows every SPARQL query run against the store, live.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [MemoryArticle, F-5]
+  why: TriG is Turtle with named graphs, which a fact needs since each fact is a graph; plain Turtle would drop the graph and with it the fact's provenance.
+```
+
+```mdl
+decision D-5: A memory imported as TriG carries the state of the run that produced it, and a Pipeline panel draws it as a canvas diagram with the run's counters, cost, time, models and cursors. Fills in [D-4].
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [PipelineCompanion, F-6]
+  why: Keeping the state in the store means the panel reads one source, the memory, whether the run was a local crawl or Composer's own.
 ```
 
 Extension block types used in this document are defined below using

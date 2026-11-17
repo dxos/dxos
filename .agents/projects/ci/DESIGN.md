@@ -43,7 +43,8 @@ Stage boundaries are the dependency edges. Within a stage, independent steps run
    is **excluded** and stays sequential: `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`, an
    input to `check-module-structure`, and the `trap` that restores it does not survive a hard
    cancellation — a cancelled sibling would leave stage 2 missing the cache.
-2. **The compile gate** — `moon run :lint :build :test-types`, ~15 s warm and the job's floor cold.
+2. **The compile gate** — `moon run :build :test-types`, ~15 s warm and the job's floor cold. Lint
+   runs in its own `lint` job (one repo-wide oxlint run after code generation), gated through `test`.
    `check-module-structure` belongs here and not in stage 1 despite costing 5 s: it declares
    `deps: [build]`, so ahead of the gate it would pull the builds along with it.
 3. **The slow checks** — `knip` (2m36s–3m21s, and the bulk of the job's real work) in one lane

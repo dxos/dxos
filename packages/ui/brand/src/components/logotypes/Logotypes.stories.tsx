@@ -8,7 +8,7 @@ import React, { Fragment, type PropsWithChildren } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import dxosBlack from '../../../assets/logotypes/dxos-horizontal-block.svg?raw';
+import dxosBlack from '../../../assets/logotypes/dxos-horizontal-black.svg?raw';
 import dxosWhite from '../../../assets/logotypes/dxos-horizontal-white.svg?raw';
 import echoBlack from '../../../assets/logotypes/echo-horizontal-black.svg?raw';
 import echoWhite from '../../../assets/logotypes/echo-horizontal-white.svg?raw';
