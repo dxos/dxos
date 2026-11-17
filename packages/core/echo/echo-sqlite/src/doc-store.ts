@@ -293,6 +293,11 @@ export class DocStore {
     }
   }
 
+  /** Drops every cached document that holds no unsaved edits, after a rollback discarded what they saved. */
+  invalidateSaved(): void {
+    this.invalidate([...this.#cache.keys()]);
+  }
+
   #touch(id: string): Doc | undefined {
     const doc = this.#cache.get(id);
     if (doc) {

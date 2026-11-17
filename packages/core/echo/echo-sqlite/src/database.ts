@@ -229,8 +229,9 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       if (version === this.#dataVersion) {
         return;
       }
-      this.#dataVersion = version;
       const { lastId, ids } = await this.#run(this.#store.readChanges(this.#changeCursor));
+      // Advanced only once the changes are read, so a failed read is retried on the next poll.
+      this.#dataVersion = version;
       this.#changeCursor = lastId;
       if (ids.size > 0) {
         this.applyCommitted(ids);

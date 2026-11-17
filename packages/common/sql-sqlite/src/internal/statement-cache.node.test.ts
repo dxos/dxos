@@ -58,6 +58,28 @@ describe('makeStatementCache', () => {
     sqlite3.close(db);
   });
 
+  test('compiles a pragma again on every call', async ({ expect }) => {
+    const { sqlite3, db } = await open();
+    const statements = makeStatementCache(sqlite3, db);
+    const run = (sql: string): unknown[][] => {
+      const rows: unknown[][] = [];
+      statements.forEach(sql, (stmt) => {
+        while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
+          rows.push(sqlite3.row(stmt));
+        }
+      });
+      return rows;
+    };
+    run('PRAGMA synchronous = FULL');
+    run('PRAGMA synchronous = NORMAL');
+    run('PRAGMA synchronous = FULL');
+    expect(run('PRAGMA synchronous')).toEqual([[2]]);
+    run('PRAGMA synchronous = NORMAL');
+    expect(run('PRAGMA synchronous')).toEqual([[1]]);
+    statements.clear();
+    sqlite3.close(db);
+  });
+
   test('evicts the least recently used statement past its size', async ({ expect }) => {
     const { sqlite3, db } = await open();
     const statements = makeStatementCache(sqlite3, db, 2);

@@ -9,6 +9,9 @@ type Sqlite3 = ReturnType<typeof WaSqlite.Factory>;
 /** Prepared statements kept per connection; a client's working set is a few dozen. */
 const STATEMENT_CACHE_SIZE = 256;
 
+/** Some pragmas act when compiled, not when stepped, so a cached program would not apply them again. */
+const PRAGMA = /^\s*PRAGMA\b/i;
+
 export type StatementCache = {
   /**
    * Runs `execute` on each statement of `sql` in order, reusing the prepared statement of a
@@ -87,7 +90,9 @@ export const makeStatementCache = (sqlite3: Sqlite3, db: number, size = STATEMEN
       throw err;
     }
 
-    if (first !== undefined) {
+    if (first !== undefined && PRAGMA.test(sql)) {
+      sqlite3.finalize(first);
+    } else if (first !== undefined) {
       sqlite3.reset(first);
       sqlite3.clear_bindings(first);
       cache.set(sql, first);

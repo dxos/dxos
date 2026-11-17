@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -19,6 +18,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { SqliteDatabase } from '../database.ts';
+import { nodeFileLayer } from './harness.ts';
 
 // Run with: DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run (from this package).
 const OBJECTS = Number(process.env.ECHO_SQLITE_BENCH_OBJECTS ?? 10_000);
@@ -47,7 +47,7 @@ const ensureState = (): Promise<State> => {
   statePromise ??= (async () => {
     const dir = mkdtempSync(join(tmpdir(), 'echo-sqlite-bench-'));
     process.once('exit', () => rmSync(dir, { recursive: true, force: true }));
-    const runtime = ManagedRuntime.make(SqliteClient.layer({ filename: join(dir, 'bench.db') }).pipe(Layer.orDie));
+    const runtime = ManagedRuntime.make(nodeFileLayer(join(dir, 'bench.db')).pipe(Layer.orDie));
     const spaceId = SpaceId.random();
     const scope = await runtime.runPromise(Scope.make());
     process.once('exit', () => void runtime.runPromise(Scope.close(scope, Exit.void)));
