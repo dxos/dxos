@@ -32,7 +32,7 @@ export type WorkingSet = {
   rows: WorkingSetRow[];
 };
 
-/** What a database sends its working set as the host stores its writes and it loads documents. */
+/** A database's snapshot of the documents it holds, sent to its working set as it closes or before a call. */
 export type WorkingSetReport = WorkingSet & {
   /** Per document id, the heads the working set last had from this database; absent for a document it had none of. */
   base: Record<string, string[]>;

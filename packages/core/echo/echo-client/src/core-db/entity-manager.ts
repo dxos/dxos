@@ -80,7 +80,7 @@ import {
 } from './types.ts';
 import { UpdateDispatch } from './update-dispatch.ts';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
-import { type ExportWorkingSetOptions, type WorkingSetChanges } from './working-set-export.ts';
+import { type ExportWorkingSetOptions } from './working-set-export.ts';
 
 const TRACE_LOADING = false;
 
@@ -203,8 +203,6 @@ export class EntityManager implements IDatabaseBinding {
   /** Routes {@link _updateEvent} to the live queries it can change; they stay registered across a close and reopen. */
   readonly updateDispatch = new UpdateDispatch(this._updateEvent, (id) => this.getObjectCoreById(id, { load: false }));
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
-  /** Documents whose state the host holds moved; see {@link exportWorkingSetChanges}. */
-  readonly documentsHeld: ReadOnlyEvent<DocumentId[]>;
 
   /** Fires when the database has finished loading its initial space root document. */
   readonly opened = new Trigger();
@@ -314,7 +312,6 @@ export class EntityManager implements IDatabaseBinding {
     this._documentRetention = { ...DOCUMENT_RETENTION, ...options.documentRetention };
     this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
-    this.documentsHeld = this._repoProxy.documentsHeld;
   }
 
   get spaceId(): SpaceId {
@@ -660,13 +657,20 @@ export class EntityManager implements IDatabaseBinding {
    * document with a change the host has not taken.
    */
   exportWorkingSet({ maxBytes }: ExportWorkingSetOptions): WorkingSetRow[] {
-    const rootRow = this.#rootRow();
-    if (!rootRow || rootRow.bytes.length > maxBytes) {
+    const root = this._spaceRootDocHandle;
+    const rootState = root?._heldState();
+    if (!root?.documentId || !rootState || rootState.bytes.length > maxBytes) {
       return [];
     }
+    const rootRow: WorkingSetRow = { documentId: root.documentId, heads: [...rootState.heads], bytes: rootState.bytes };
+    // A passive root's text is what the host sent at these heads; a loaded one is acknowledged, so its doc is at them.
+    const rootJson = this.#directory?.text ?? directoryJson(root.doc());
+    if (rootJson !== undefined) {
+      rootRow.directoryJson = rootJson;
+    }
     const rows: WorkingSetRow[] = [rootRow];
-    let total = rootRow.bytes.length;
-    const exported = new Set<string>([rootRow.documentId]);
+    let total = rootState.bytes.length;
+    const exported = new Set<string>([root.documentId]);
     const cores = this.allObjectCores()
       .filter((core) => this.getCurrentBranch(core.id) === 'main')
       .sort((a, b) => b.activeAt - a.activeAt);
@@ -685,55 +689,6 @@ export class EntityManager implements IDatabaseBinding {
       rows.push(row);
     }
     return rows;
-  }
-
-  /**
-   * The rows of `documentIds`, for a working set kept current as they change: the documents whose state the host holds,
-   * leaving out what does not fit `maxBytes`.
-   */
-  exportWorkingSetChanges(documentIds: Iterable<string>, { maxBytes }: ExportWorkingSetOptions): WorkingSetChanges {
-    const wanted = new Set(documentIds);
-    const rows: WorkingSetRow[] = [];
-    const pending: string[] = [];
-    let total = 0;
-    // A document with no row yet has a change the host has not acknowledged: exported by a later send, once it has.
-    const take = (documentId: string, row: WorkingSetRow | undefined) => {
-      if (!row) {
-        pending.push(documentId);
-      } else if (total + row.bytes.length <= maxBytes) {
-        total += row.bytes.length;
-        rows.push(row);
-      }
-    };
-    // Saving the root serializes the whole directory, so only a send that names it pays for that.
-    const rootDocumentId = this._spaceRootDocHandle?.documentId;
-    if (rootDocumentId !== undefined && wanted.delete(rootDocumentId)) {
-      take(rootDocumentId, this.#rootRow());
-    }
-    for (const core of this.allObjectCores()) {
-      const handle = core.handle;
-      const documentId = handle?.documentId;
-      if (handle && documentId && this.getCurrentBranch(core.id) === 'main' && wanted.delete(documentId)) {
-        take(documentId, this.#workingSetRow(core, handle, documentId));
-      }
-    }
-    return { rows, pending };
-  }
-
-  /** The space root as a row, once the host holds its state. */
-  #rootRow(): WorkingSetRow | undefined {
-    const root = this._spaceRootDocHandle;
-    const rootState = root?._heldState();
-    if (!root?.documentId || !rootState) {
-      return undefined;
-    }
-    const rootRow: WorkingSetRow = { documentId: root.documentId, heads: [...rootState.heads], bytes: rootState.bytes };
-    // A passive root's text is what the host sent at these heads; a loaded one is acknowledged, so its doc is at them.
-    const rootJson = this.#directory?.text ?? directoryJson(root.doc());
-    if (rootJson !== undefined) {
-      rootRow.directoryJson = rootJson;
-    }
-    return rootRow;
   }
 
   #workingSetRow(

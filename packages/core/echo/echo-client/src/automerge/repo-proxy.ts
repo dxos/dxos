@@ -164,9 +164,6 @@ export class RepoProxy extends Resource {
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
   private _lastSaveStateKey = '';
 
-  /** Documents whose state the host holds moved: it acknowledged a write, or sent bytes this client integrated. */
-  readonly documentsHeld = new Event<DocumentId[]>();
-
   constructor(
     private _dataService: DataService.Client,
     private readonly _runtime: Context.Context<never>,
@@ -917,20 +914,13 @@ export class RepoProxy extends Resource {
       return;
     }
     this.#draining = true;
-    const integrated: DocumentId[] = [];
     try {
       while (this.#inboxHead < this.#inbox.length && !this._ctx.disposed) {
         const { update, bulk } = this.#inbox[this.#inboxHead++];
-        const documentId = this.#integrate(update, bulk);
-        if (documentId) {
-          integrated.push(documentId);
-        }
+        this.#integrate(update, bulk);
         if (this.#inboxHead < this.#inbox.length) {
           await yieldOrContinue('smooth');
         }
-      }
-      if (integrated.length > 0 && !this._ctx.disposed) {
-        this.documentsHeld.emit(integrated);
       }
     } finally {
       this.#inbox = [];
@@ -939,11 +929,10 @@ export class RepoProxy extends Resource {
     }
   }
 
-  /** Applies one update from the host; returns the document whose bytes it moved, if it moved any. */
   #integrate(
     { documentId, mutation, requesting, unavailable, passive }: DataService.DocumentUpdate,
     bulk: boolean,
-  ): DocumentId | undefined {
+  ): void {
     const passiveHandle = this._passiveHandles.get(documentId as DocumentId);
     if (passiveHandle) {
       // A passive directory waiting on the host's first send fails its waiter rather than waiting forever.
@@ -953,7 +942,6 @@ export class RepoProxy extends Resource {
       }
       try {
         passiveHandle._integratePassiveUpdate(mutation, passive);
-        return mutation ? passiveHandle.documentId : undefined;
       } catch (err) {
         log.catch(err, { documentId });
       }
@@ -983,7 +971,6 @@ export class RepoProxy extends Resource {
     if (mutation) {
       try {
         handle._integrateHostUpdate(mutation, { bulk });
-        return handle.documentId;
       } catch (err) {
         // One bad document must not strand every update queued behind it.
         log.catch(err, { documentId });
@@ -1045,7 +1032,6 @@ export class RepoProxy extends Resource {
       }
 
       const updates: DataService.DocumentUpdate[] = [];
-      const sent: DocumentId[] = [];
       const addMutations = (documentIds: DocumentId[]) => {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
@@ -1059,7 +1045,6 @@ export class RepoProxy extends Resource {
           const mutation = handle._getPendingChanges();
           if (mutation) {
             updates.push({ documentId, mutation });
-            sent.push(documentId);
           }
         }
       };
@@ -1073,7 +1058,7 @@ export class RepoProxy extends Resource {
           { subscriptionId: this._subscriptionId, updates },
           { timeout: RPC_TIMEOUT },
         );
-        sent.forEach((documentId) => this._unflushedIds.add(documentId));
+        updates.forEach(({ documentId }) => this._unflushedIds.add(documentId as DocumentId));
         if (this._lifecycleState === LifecycleState.CLOSED) {
           return;
         }
@@ -1089,7 +1074,6 @@ export class RepoProxy extends Resource {
           // Handle may have been removed between RPC start and ack — skip silently.
           this._handles[documentId]?._confirmSync();
         }
-        this.documentsHeld.emit(sent);
       }
 
       this._sendRetryAttempts = 0;

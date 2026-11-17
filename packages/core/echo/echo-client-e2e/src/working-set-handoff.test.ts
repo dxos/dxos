@@ -88,7 +88,7 @@ describe('working set handoff', () => {
 
     const writer = await openReader(space, new Set(), workingSet.service);
     const task = writer.add(Obj.make(TestSchema.Task, { title: 'later' }));
-    await writer.flush({ indexes: false });
+    await writer.saveWorkingSet();
     hidden.add(task.id);
 
     // The test host pushes the space root's change, which routes the task's id; EDGE re-reads it instead.
