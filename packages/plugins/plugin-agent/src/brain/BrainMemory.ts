@@ -23,9 +23,24 @@ export type BrainMemory = {
 };
 
 export type MakeOptions = {
+  /** Starts a turn in the chat a trigger names; {@link wakeVia} in the app, the host's own queue on EDGE. */
+  wake: BrainService.Service['wake'];
   /** The registry the brain mirrors its triggers into, for the UI; a fresh one by default. */
   triggers?: TriggerRegistry;
 };
+
+/** Wakes a chat by submitting the prompt to its session through `agents`, which runs the turn locally or on EDGE. */
+export const wakeVia =
+  (agents: AgentService.Service): BrainService.Service['wake'] =>
+  ({ chat, prompt, sender }) =>
+    agents
+      // The chat's own location, else an agent chat on EDGE would wake a second, local session.
+      .getSession(chat, { location: Agent.chatLocation(chat) })
+      .pipe(
+        Effect.flatMap((session) =>
+          session.submitPrompt(BrainService.wakeBlocks(prompt), sender ? { sender } : undefined),
+        ),
+      );
 
 /**
  * How soon a host asks again while the agent has watches: the memory queues time-driven wakes on its own clock, and
@@ -41,13 +56,12 @@ const decodePattern = Schema.decodeUnknownEffect(MemoryQuery.FactQuery);
 /**
  * A brain over the space's {@link MemoryService.Service}, which the client services host runs: facts, read cursors,
  * the rule evaluator, its clock and every outbox live there, shared by every page and operation. A trigger is a memory
- * subscription owned by its agent, with the trigger itself as the subscription's payload. Waking a chat submits the
- * prompt to its session through `agents`, which runs the turn locally or on EDGE as the session was opened.
+ * subscription owned by its agent, with the trigger itself as the subscription's payload. How a chat is woken is the
+ * host's: the app submits the prompt to its session ({@link wakeVia}), EDGE queues it on the agent's brain.
  */
 export const make = (
-  agents: AgentService.Service,
   memory: MemoryService.Service,
-  { triggers = new TriggerRegistry() }: MakeOptions = {},
+  { wake, triggers = new TriggerRegistry() }: MakeOptions,
 ): BrainMemory => {
   /** The agent's triggers as the memory holds them; also refreshes the registry the UI lists. */
   const listTriggers = (agent: string) =>
@@ -138,15 +152,7 @@ export const make = (
         )
         .pipe(Effect.mapError(toError)),
 
-    wake: ({ chat, prompt, sender }) =>
-      agents
-        // The chat's own location, else an agent chat on EDGE would wake a second, local session.
-        .getSession(chat, { location: Agent.chatLocation(chat) })
-        .pipe(
-          Effect.flatMap((session) =>
-            session.submitPrompt(BrainService.wakeBlocks(prompt), sender ? { sender } : undefined),
-          ),
-        ),
+    wake,
   };
 
   return { service, triggers };
@@ -154,13 +160,13 @@ export const make = (
 
 /** {@link make} as a layer over the host's `AgentService` and the space's `MemoryService`. */
 export const layer = (
-  options?: MakeOptions,
+  options?: Omit<MakeOptions, 'wake'>,
 ): Layer.Layer<BrainService.BrainService, never, AgentService.AgentService | MemoryService.MemoryService> =>
   Layer.effect(
     BrainService.BrainService,
     Effect.gen(function* () {
       const agents = yield* AgentService.AgentService;
       const memory = yield* MemoryService.MemoryService;
-      return make(agents, memory, options).service;
+      return make(memory, { ...options, wake: wakeVia(agents) }).service;
     }),
   );

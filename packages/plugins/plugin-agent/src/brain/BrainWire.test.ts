@@ -16,7 +16,7 @@ import { BrainService, Trigger } from '#types';
 
 import * as BrainMemory from './BrainMemory.ts';
 import * as BrainWire from './BrainWire.ts';
-import { TEST_MEMBERS, UNUSED_AGENTS, freshMemory } from './testing.ts';
+import { TEST_MEMBERS, UNUSED_WAKE, freshMemory } from './testing.ts';
 
 const AGENT = 'kai';
 const NOW = Date.parse('2026-10-07T12:00:00.000Z');
@@ -85,7 +85,7 @@ const setup = Effect.gen(function* () {
   yield* TestClock.setTime(NOW);
   const calls: unknown[][] = [];
   const memory = yield* freshMemory;
-  const { service } = BrainMemory.make(UNUSED_AGENTS, memory);
+  const { service } = BrainMemory.make(memory, { wake: UNUSED_WAKE });
   return { calls, brain: BrainWire.make(serve(service, calls)) };
 });
 

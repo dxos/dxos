@@ -34,11 +34,8 @@ export const freshMemory: Effect.Effect<MemoryService.Service, never, Scope.Scop
   MemorySqlite.layerMemory,
 ).pipe(Effect.map(Context.get(MemoryService.MemoryService)));
 
-/** An `AgentService` for brain tests that never wake an agent, so a brain that tried fails loudly. */
-export const UNUSED_AGENTS: AgentService.Service = {
-  getSession: () => Effect.die('getSession is not used by these tests'),
-  hydrate: () => Effect.void,
-};
+/** A wake for brain tests that never wake an agent, so a brain that tried fails loudly. */
+export const UNUSED_WAKE: BrainService.Service['wake'] = () => Effect.die('wake is not used by these tests');
 
 export type TestBrainOptions = {
   /**
@@ -109,7 +106,7 @@ export const makeTestBrain = ({ wake = 'session', now }: TestBrainOptions = {}) 
     Effect.gen(function* () {
       const agents = yield* AgentService.AgentService;
       // Built once per layer, each with its own host's agents, over the same memory.
-      const { service } = BrainMemory.make(agents, yield* memory, { triggers });
+      const { service } = BrainMemory.make(yield* memory, { triggers, wake: BrainMemory.wakeVia(agents) });
       return wake === 'session'
         ? service
         : { ...service, wake: (request: BrainService.WakeRequest) => Effect.sync(() => void wakes.push(request)) };

@@ -134,6 +134,11 @@
       "types": "./dist/types/src/types/BrainService.d.ts",
       "import": "./dist/lib/BrainService.mjs"
     },
+    "./BrainMemory": {
+      "source": "./src/brain/BrainMemory.ts",
+      "types": "./dist/types/src/brain/BrainMemory.d.ts",
+      "import": "./dist/lib/BrainMemory.mjs"
+    },
     "./BrainWire": {
       "source": "./src/brain/BrainWire.ts",
       "types": "./dist/types/src/brain/BrainWire.d.ts",

@@ -14,7 +14,7 @@ import { Person } from '@dxos/types';
 import { BrainService, Trigger } from '#types';
 
 import * as BrainMemory from './BrainMemory.ts';
-import { TEST_MEMBERS, UNUSED_AGENTS, freshMemory } from './testing.ts';
+import { TEST_MEMBERS, UNUSED_WAKE, freshMemory } from './testing.ts';
 
 const AGENT = 'kai';
 const STARTED = '2026-10-07T10:00:00.000Z';
@@ -24,7 +24,7 @@ const NOW = Date.parse('2026-10-07T12:00:00.000Z');
 const makeBrain = Effect.gen(function* () {
   yield* TestClock.setTime(NOW);
   const memory = yield* freshMemory;
-  return BrainMemory.make(UNUSED_AGENTS, memory).service;
+  return BrainMemory.make(memory, { wake: UNUSED_WAKE }).service;
 });
 
 const fact = (

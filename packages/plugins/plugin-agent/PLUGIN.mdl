@@ -1302,6 +1302,15 @@ decision D-12: In the app, an agent's brain is the space's memory: `BrainService
   source: https://github.com/dxos/dxos/pull/14548
 ```
 
+```mdl
+decision D-13: On EDGE too, an agent's brain is the space's memory: `BrainMemory` takes its wake from the host, so EDGE serves the brain calls over the space's `MemoryObject` and keeps queuing wakes on the agent's `BrainObject`. Fills in [D-12].
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-1.1]
+  why: One memory per space for every host, with each host owning how a woken chat's turn runs.
+  source: https://github.com/dxos/dxos/pull/14548
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using the core `ext` primitive. `op`,
