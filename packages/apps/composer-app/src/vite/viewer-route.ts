@@ -26,7 +26,8 @@ export const viewerRoutePlugin = (): Plugin => ({
       }
 
       if (pathname.startsWith('/publications/')) {
-        void proxyPublication(new URL(pathname, edgeUrl), req.method ?? 'GET').then(
+        // EDGE serves publications from db-service, under `/db`.
+        void proxyPublication(new URL(`/db${pathname}`, edgeUrl), req.method ?? 'GET').then(
           ({ status, headers, body }) => {
             res.writeHead(status, headers);
             res.end(body);

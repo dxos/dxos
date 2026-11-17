@@ -38,8 +38,8 @@ export const upload = Effect.fnUntraced(function* (
   publicId?: string,
 ) {
   const path = publicId
-    ? `${Publication.PUBLICATIONS_PATH}/${encodeURIComponent(publicId)}`
-    : Publication.PUBLICATIONS_PATH;
+    ? `${Publication.EDGE_PUBLICATIONS_PATH}/${encodeURIComponent(publicId)}`
+    : Publication.EDGE_PUBLICATIONS_PATH;
   const data = yield* Effect.tryPromise(() =>
     client.edge.http.request(Context.default(), path, { method: publicId ? 'PUT' : 'POST', body }),
   );
@@ -48,7 +48,7 @@ export const upload = Effect.fnUntraced(function* (
 
 export const remove = Effect.fnUntraced(function* (client: Client, publicId: string) {
   yield* Effect.tryPromise(() =>
-    client.edge.http.request(Context.default(), `${Publication.PUBLICATIONS_PATH}/${encodeURIComponent(publicId)}`, {
+    client.edge.http.request(Context.default(), `${Publication.EDGE_PUBLICATIONS_PATH}/${encodeURIComponent(publicId)}`, {
       method: 'DELETE',
     }),
   );

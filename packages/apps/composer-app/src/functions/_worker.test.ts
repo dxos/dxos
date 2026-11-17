@@ -111,10 +111,10 @@ describe('publications on the viewer host', () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const url = new URL(input instanceof Request ? input.url : String(input));
       requested.push(url.toString());
-      if (url.pathname === `/publications/${publicId}/manifest.json`) {
+      if (url.pathname === `/db/publications/${publicId}/manifest.json`) {
         return Response.json(MANIFEST);
       }
-      if (url.pathname === `/publications/${publicId}/archive.json`) {
+      if (url.pathname === `/db/publications/${publicId}/archive.json`) {
         return Response.json({ objects: [] });
       }
       return new Response('Not found', { status: 404 });
@@ -132,7 +132,7 @@ describe('publications on the viewer host', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
     expect(await response.json()).toEqual({ objects: [] });
-    expect(requested).toEqual(['https://edge.test/publications/abc_123/archive.json']);
+    expect(requested).toEqual(['https://edge.test/db/publications/abc_123/archive.json']);
   });
 
   test('anything but the archive or manifest of a well-formed id never reaches EDGE', async () => {

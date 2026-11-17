@@ -86,8 +86,11 @@ export const PATH_PARAM = 'path';
 /** Query param the viewer keeps the public id in once the workspace segment holds the local space id. */
 export const VIEWER_PARAM = 'p';
 
-/** Publication endpoints: authed writes on EDGE, public reads on the viewer origin. */
+/** Public reads of a publication, on the viewer origin. */
 export const PUBLICATIONS_PATH = '/publications';
+
+/** EDGE's publication endpoints, which db-service serves: authed writes, and the public reads the viewer proxies. */
+export const EDGE_PUBLICATIONS_PATH = '/db/publications';
 
 export const archiveUrl = (publicationsUrl: string, publicId: string): URL =>
   new URL(`${encodeURIComponent(publicId)}/archive.json`, withTrailingSlash(publicationsUrl));

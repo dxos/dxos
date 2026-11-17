@@ -6,8 +6,11 @@
 
 import { type Card } from './preview-image/index.ts';
 
-/** Mirrors `Publication.PUBLICATIONS_PATH`: EDGE serves the public files of a publication under it. */
+/** Mirrors `Publication.PUBLICATIONS_PATH`: the viewer host serves the public files of a publication under it. */
 export const PUBLICATIONS_PATH = '/publications';
+
+/** Mirrors `Publication.EDGE_PUBLICATIONS_PATH`: where EDGE serves those files. */
+const EDGE_PUBLICATIONS_PATH = '/db/publications';
 
 /** Mirrors `Publication.VIEWER_PARAM`: where the viewer keeps the public id once the URL names the local space. */
 const VIEWER_PARAM = 'p';
@@ -217,7 +220,7 @@ const text = (value: unknown): string | undefined =>
   typeof value === 'string' && value.trim() ? value.trim().slice(0, MAX_TEXT_LENGTH) : undefined;
 
 const publicationFileUrl = (edgeUrl: string, publicId: string, file: string): URL =>
-  new URL(`${PUBLICATIONS_PATH}/${publicId}/${file}`, edgeUrl);
+  new URL(`${EDGE_PUBLICATIONS_PATH}/${publicId}/${file}`, edgeUrl);
 
 const notFound = () =>
   new Response('Not found', { status: 404, headers: { ...CORS_HEADERS, 'Content-Type': 'text/plain' } });
