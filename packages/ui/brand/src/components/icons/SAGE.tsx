@@ -40,8 +40,8 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-export const DXNS = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
+export const SAGE = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
   <IconBase ref={ref} {...props} weights={weights} />
 ));
 
-DXNS.displayName = 'DXNS';
+SAGE.displayName = 'SAGE';

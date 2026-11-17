@@ -268,6 +268,8 @@ export const Settings = Schema.Struct({
   base: Schema.optional(Schema.Literals(NAMES)).annotate({ title: 'Base' }),
   accent: Schema.optional(Color).annotate({ title: 'Accent color' }),
   background: Schema.optional(Color).annotate({ title: 'Background color' }),
+  /** Outside the slide: the inset void in the editor, and the letterbox bands when presenting. */
+  scrim: Schema.optional(Color).annotate({ title: 'Scrim color' }),
   foreground: Schema.optional(Color).annotate({ title: 'Text color' }),
   /** The fill behind code and the filled list and table variants. */
   code: Schema.optional(Color).annotate({ title: 'Code background' }),

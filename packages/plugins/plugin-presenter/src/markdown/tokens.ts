@@ -89,13 +89,11 @@ export const slideTokens = (content: string): SlideToken[] => {
 };
 
 /**
- * The markers the editor treats as one unit, so the caret steps over and deletes them whole: `::slot::` markers and
- * click tags without attributes. A tag with attributes (`<Surface ref="…">`, `<v-click at="2">`) stays editable.
+ * The markers the editor treats as one unit, so the caret steps over and deletes them whole: `::slot::` markers
+ * only. A marker is a position and has nothing inside it to edit.
+ *
+ * Tags are not atomic, whatever they carry. A tag's attributes are the slide's own properties — a `<Box>` is given
+ * a `variant`, a `<Card>` a `colSpan` — and a caret that steps over the tag can never be put where one is typed.
  */
 export const atomicTokens = (tokens: readonly SlideToken[]): SlideToken[] =>
-  tokens.filter(
-    (token) =>
-      token.kind === 'slot' ||
-      (token.kind === 'tag' &&
-        !tokens.some((part) => part.kind === 'tag-attribute' && part.from >= token.from && part.to <= token.to)),
-  );
+  tokens.filter((token) => token.kind === 'slot');

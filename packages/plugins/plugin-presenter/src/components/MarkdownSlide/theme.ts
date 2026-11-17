@@ -101,7 +101,7 @@ export const theme = {
         p: '[&:has(>img)]:contents',
       },
       // A picture drawn to the column's height and left to run past its sides, which the slide crops rather than the
-      // column: art cut at a column's edge ends in mid-air, and `bg-dxos.svg` stops short of its own frame (its
+      // column: art cut at a column's edge ends in mid-air, and `dxos-center.svg` stops short of its own frame (its
       // drawing reaches x 226..1694 of 1920), so cropping it to the column shows exactly where its rays stop.
       // It leaves no gap in the flow, so the words beside it are laid out as though it were not there.
       fill: {

@@ -32,10 +32,30 @@ export const LAYOUTS = [
 
 export type LayoutName = (typeof LAYOUTS)[number];
 
+/** True for a layout name. */
+export const isLayout = (value: unknown): value is LayoutName => LAYOUTS.some((layout) => layout === value);
+
 /** Sides a column layout's outer column can extend to the slide's edge on (`bleed:`). */
 export const BLEED_SIDES = ['left', 'right'] as const;
 
 export type BleedSide = (typeof BLEED_SIDES)[number];
+
+/**
+ * How a background image meets the slide (`backgroundFit:`): `cover` fills the slide and crops whatever does not
+ * fit, `contain` draws the whole picture and leaves the rest to `backgroundColor:`.
+ */
+export const BACKGROUND_FITS = ['cover', 'contain'] as const;
+
+export type BackgroundFit = (typeof BACKGROUND_FITS)[number];
+
+/**
+ * How a background picture is composited with the ground under it (`backgroundBlend:`). `screen` is the useful one
+ * for art that carries its own dark backdrop: black composites away, so the glow lands on `backgroundColor:` instead
+ * and the picture stops dictating the slide's color. A picture drawn on black is unchanged by it.
+ */
+export const BACKGROUND_BLENDS = ['normal', 'screen', 'multiply', 'overlay', 'lighten', 'darken'] as const;
+
+export type BackgroundBlend = (typeof BACKGROUND_BLENDS)[number];
 
 /** Theme colors a slide may override for itself, on top of the deck's theme. */
 export const SLIDE_COLORS = ['accent', 'foreground', 'code', 'separator'] as const;
@@ -59,6 +79,10 @@ const fields = {
   backgroundVideo: Schema.String,
   backgroundOpacity: Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 })),
   backgroundPosition: Schema.String,
+  backgroundFit: Schema.Literals(BACKGROUND_FITS),
+  backgroundColor: Color,
+  backgroundBlend: Schema.Literals(BACKGROUND_BLENDS),
+  scrim: Color,
   bleed: Schema.Literals(BLEED_SIDES),
   hide: Schema.Boolean,
   theme: Schema.String,
@@ -66,6 +90,21 @@ const fields = {
   foreground: Color,
   code: Color,
   separator: Color,
+};
+
+/** Every key a slide's frontmatter takes, in the order an author meets them rather than alphabetically. */
+export const FRONTMATTER_KEYS = Object.keys(fields) as readonly FrontmatterKey[];
+
+export type FrontmatterKey = keyof typeof fields;
+
+/** The values a key takes, for the keys whose values are a fixed set; the rest are free text. */
+export const FRONTMATTER_VALUES: Partial<Record<FrontmatterKey, readonly string[]>> = {
+  layout: LAYOUTS,
+  backgroundFit: BACKGROUND_FITS,
+  backgroundBlend: BACKGROUND_BLENDS,
+  bleed: BLEED_SIDES,
+  theme: SlideTheme.NAMES,
+  hide: ['true', 'false'],
 };
 
 /** Per-slide frontmatter; unknown keys are dropped. */
@@ -78,6 +117,14 @@ export const SlideFrontmatter = Schema.Struct({
   backgroundVideo: Schema.optionalKey(fields.backgroundVideo),
   backgroundOpacity: Schema.optionalKey(fields.backgroundOpacity),
   backgroundPosition: Schema.optionalKey(fields.backgroundPosition),
+  /** DXOS: `contain` draws the whole background picture rather than cropping it to the slide. */
+  backgroundFit: Schema.optionalKey(fields.backgroundFit),
+  /** DXOS: painted under the background picture, so `contain` leaves no gap and a transparent picture has a ground. */
+  backgroundColor: Schema.optionalKey(fields.backgroundColor),
+  /** DXOS: how the picture meets that ground; `screen` composites away a picture's own black so the color shows. */
+  backgroundBlend: Schema.optionalKey(fields.backgroundBlend),
+  /** DXOS: outside the slide — the inset void in the editor and the letterbox bands when presenting. */
+  scrim: Schema.optionalKey(fields.scrim),
   /** DXOS: the outer column on this side reaches the slide's edges, with no padding (`two-cols`, `three-cols`). */
   bleed: Schema.optionalKey(fields.bleed),
   /** The slide is left out when the deck is presented; it still shows in the grid. */

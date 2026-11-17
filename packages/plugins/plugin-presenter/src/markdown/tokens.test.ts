@@ -64,7 +64,7 @@ describe('slideTokens', () => {
 });
 
 describe('atomicTokens', () => {
-  test('slot markers and plain click tags are atomic; tags with attributes are not', () => {
+  test('slot markers are atomic; no tag is, with attributes or without', () => {
     const content = [
       '<v-click>',
       'One',
@@ -74,8 +74,10 @@ describe('atomicTokens', () => {
       '',
       '<v-click at="2">',
       '<Surface ref="echo:///A" />',
+      '<Box>',
     ].join('\n');
     const atomic = atomicTokens(slideTokens(content)).map((token) => content.slice(token.from, token.to));
-    expect(atomic).toEqual(['<v-click>', '</v-click>', '::right::']);
+    // A bare `<Box>` is where a `variant` is typed; an atomic tag has no position to type it at.
+    expect(atomic).toEqual(['::right::']);
   });
 });

@@ -80,12 +80,13 @@ const slideHighlightTheme = EditorView.baseTheme({
 
 /**
  * Highlights what the slide DSL adds to markdown: the frontmatter (its delimiters and keys), `::slot::` markers,
- * click and `Surface` tags (and their attribute names), object embeds, and the speaker notes; slot markers and plain
- * click tags are atomic.
+ * click and `Surface` tags (and their attribute names), object embeds, and the speaker notes. Only slot markers are
+ * atomic; a tag is ordinary text, so its attributes can be typed.
  */
 export const slideHighlight = (): Extension => [
   plugin,
-  // Markers such as `::right::` are syntax, not text: the caret steps over them and a delete removes them whole.
+  // Markers such as `::right::` are a position, not text: the caret steps over them and a delete removes
+  // them whole. Tags are left editable, since a tag is where its attributes are typed.
   EditorView.atomicRanges.of((view) => view.plugin(plugin)?.decorations.atomic ?? Decoration.none),
   slideHighlightTheme,
 ];
