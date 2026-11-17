@@ -202,18 +202,19 @@ runner-minutes, the cost; wall is how long the author waits for the blocking che
 
 | PR                                                       | Baseline                        | With tags (this proposal) | With tags and overhead cuts |
 | :------------------------------------------------------- | :------------------------------ | :------------------------ | :-------------------------- |
-| **Core change** (`@dxos/echo`, 260 dependent packages)   | ~355 min; wall ~23 min          | ~185 min; wall ~23 min    | ~140 min; wall ~22 min      |
+| **Core change** (`@dxos/echo`, 260 dependent packages)   | ~355 min; wall ~14 min          | ~185 min; wall ~13 min    | ~140 min; wall ~12 min      |
 | **One Composer plugin** (`plugin-kanban`, 12 dependents) | ~146 min; wall ~5 min (e2e ~12) | ~35 min; wall ~5 min      | ~25 min; wall ~5 min        |
 | **Edge `db-service`** (edge has no affected scoping)     | ~104 min; wall ~22 min          | ~34 min; wall ~23 min     | ~19 min; wall ~8 min        |
 
 Where the savings come from:
 
-- **Core change.** Baseline: `check` ~23 min (the compile gate rebuilds every dependent), `test-node`
+- **Core change.** Baseline: `check` ~12–13 min (the compile gate rebuilds every dependent), `test-node`
   4 cells (~215 task-minutes of tests), `test-browser` 8 cells (~85 task-minutes, mostly storybook),
   all 14 e2e cells (~140 min), plus advisory and CLI. With tags: e2e, advisory and CLI leave the
   PR, and ~80 of the 215 node task-minutes (`client-e2e`, AI and
   agent packages, heavy plugin files) go nightly. Storybook (~110 runner-min) is now the largest
-  blocking cost; `check` is the critical path for wall time.
+  blocking cost. Wall time is set by `test-browser` (~14 min) today and by `check` once the freed e2e
+  runners go to `test-browser`; e2e never gated it.
 - **One plugin.** In the baseline the PR pays ~90 min of Composer e2e, because every plugin is bundled into
   `composer-app`, which re-triggers all 8 Composer e2e cells, plus ~15 min of kanban e2e. Its own
   tests are ~14 task-minutes of node tests and ~8 of stories. With tags, the PR runs `check`, 4 node
