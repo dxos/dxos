@@ -7,6 +7,7 @@ import { type ComponentType, lazy } from 'react';
 import { type ObjectMasonryArticleProps } from './ObjectMasonry/index.ts';
 
 export type { AddToCollectionDialogProps } from './AddToCollectionDialog/index.ts';
+export type { DeleteSpaceDialogProps } from './DeleteSpaceDialog/index.ts';
 export type { ObjectFormDialogProps } from './ObjectFormDialog/index.ts';
 export type { ObjectMasonryArticleProps };
 export type { RenameSubject } from './RenamePopover/index.ts';
@@ -19,6 +20,7 @@ export const CollectionArticle: ComponentType<any> = lazy(() => import('./Collec
 export const CollectionSection: ComponentType<any> = lazy(() => import('./CollectionSection/index.ts'));
 export const CreateSpaceDialog: ComponentType<any> = lazy(() => import('./CreateSpaceDialog/index.ts'));
 export const DefaultProperties: ComponentType<any> = lazy(() => import('./DefaultProperties/index.ts'));
+export const DeleteSpaceDialog: ComponentType<any> = lazy(() => import('./DeleteSpaceDialog/index.ts'));
 export const ImportSpaceDialog: ComponentType<any> = lazy(() => import('./ImportSpaceDialog/index.ts'));
 export const JoinDialog: ComponentType<any> = lazy(() => import('./JoinDialog/index.ts'));
 export const MembersContainer: ComponentType<any> = lazy(() => import('./MembersContainer/index.ts'));

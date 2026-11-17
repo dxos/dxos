@@ -161,6 +161,8 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
         SpaceSurface.SpaceHomeContent,
         AppSurface.Article,
         AppSurface.CardMasonry,
+        // Not MEMBERS_COMPANION_ID: importing it would pull ECHO into the config.
+        AppSurface.deckCompanion('members'),
         AppSurface.Dialog,
         AppSurface.FormInput,
         AppSurface.NavbarEnd,

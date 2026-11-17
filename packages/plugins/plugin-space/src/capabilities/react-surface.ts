@@ -23,6 +23,8 @@ import {
   CollectionSection,
   CreateSpaceDialog,
   DefaultProperties,
+  DeleteSpaceDialog,
+  type DeleteSpaceDialogProps,
   ImportSpaceDialog,
   JoinDialog,
   MembersCompanion,
@@ -40,6 +42,7 @@ import { type SpaceSchema } from '#types';
 import {
   ADD_TO_COLLECTION_DIALOG,
   CREATE_SPACE_DIALOG,
+  DELETE_SPACE_DIALOG,
   IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
   OBJECT_FORM_DIALOG,
@@ -191,6 +194,12 @@ export default Capability.makeModule(
         id: CREATE_SPACE_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, CREATE_SPACE_DIALOG),
         component: CreateSpaceDialog,
+      }),
+      Surface.create({
+        id: DELETE_SPACE_DIALOG,
+        filter: AppSurface.component<DeleteSpaceDialogProps>(AppSurface.Dialog, DELETE_SPACE_DIALOG),
+        component: DeleteSpaceDialog,
+        props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({
         id: IMPORT_SPACE_DIALOG,

@@ -1691,7 +1691,26 @@ decision D-66: The editor's floating bars (crumbs, the bottom bar and the Timeli
   why: Each bar floated as wide as its controls, so below about 1100 px the camera bar, actions bar and display panel overlapped at the bottom edge.
 ```
 
+```mdl
+decision D-67: The navigation commands gain `centreOn(point, zoom)`, which leaves fit mode and moves the camera so `point` is at the view's centre at `zoom`.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.9]
+  why: Following a collaborator in the diagram app and Composer shows the scene where they look; a view's centre and zoom mean the same at any size, where the camera's offset does not, and only the controller knows the view's size.
+```
+
 ---
+
+```mdl
+decision D-68: `centreOn` is removed from the navigation commands; no host uses it.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-67
+  affects: [F-1]
+  why: Its one caller, the canvas plugin's drawing `Locator`, is gone; a follower now sets the camera through the host's `camera` prop.
+```
 
 ## Appendix: Extension Definitions
 
