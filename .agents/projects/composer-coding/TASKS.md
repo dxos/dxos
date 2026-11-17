@@ -48,7 +48,11 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
       unflushed turn key, MCP-timeout-length calls, and interruptions cancelling the agent.
 - [x] Run 3 (sample task): the agent worked end to end and stopped on dxos/edge access (403).
 - [x] Run 4 (test task): the agent finished the work (9 tests passing) and stopped on push/PR access.
-- [ ] Run with an app connection, once the App is installed: expect a draft PR attached to the task.
+- [x] Run 6 (after the App was installed on dxos): draft PR dxos/dxos#14563 opened by a server-started run,
+      imported, attached to its task, task moved to `review`. The space's existing `ghu_` user token was
+      enough once the installation existed (a user token's access is the user's AND the installation's).
+- [x] Run 5 correctly refused a task whose code exists only on an unmerged branch (no PR, task blocked).
+- [ ] The same on dxos/edge (DoD 2): the App is installed there too; needs an edge-side task.
 
 ## Phase 3: Gaps
 

@@ -177,6 +177,24 @@ describe('Follow', () => {
     expect(registry.get(ephemeral).following?.paused).toBe(true);
   });
 
+  test('once the follow ends, the leader’s next values of a followed aspect are not taken', async ({ expect }) => {
+    const { ephemeral, registry, space, object, viewState } = await setup();
+    const key = EID.make({ spaceId: space.id, entityId: object.id });
+    const path = GraphPath.getObjectPathFromObject(object);
+    const deck = (tab: string): SpaceSchema.PeerDeck => ({
+      planks: [path],
+      viewState: { [TabAspect.key]: { [key]: { tab } } },
+    });
+    lead(registry, ephemeral, space.id, key, path, deck('spec'));
+    await expect.poll(() => viewState.get(TabAspect, key)).toEqual({ tab: 'spec' });
+
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(registry.get(ephemeral).following).toBeUndefined();
+    lead(registry, ephemeral, space.id, key, path, deck('history'), { follow: false });
+    await vi.advanceTimersByTimeAsync(600);
+    expect(viewState.get(TabAspect, key)).toEqual({ tab: 'spec' });
+  });
+
   test('attending another object while paused ends the follow', async ({ expect }) => {
     const { ephemeral, registry, space, object, attention } = await setup();
     const missing = EntityId.random();
@@ -269,6 +287,7 @@ const lead = (
   key: EID.EID,
   path: string,
   deck: SpaceSchema.PeerDeck = { planks: [path] },
+  { follow = true }: { follow?: boolean } = {},
 ) =>
   registry.update(ephemeral, (state) => ({
     ...state,
@@ -286,7 +305,7 @@ const lead = (
       Date.now(),
     ),
     peerDecks: { [spaceId]: { [LEADER]: { [LEADER]: deck } } },
-    following: { spaceId, identityKey: LEADER },
+    following: follow ? { spaceId, identityKey: LEADER } : state.following,
   }));
 
 type Setup = Awaited<ReturnType<typeof setupFollowing>>;

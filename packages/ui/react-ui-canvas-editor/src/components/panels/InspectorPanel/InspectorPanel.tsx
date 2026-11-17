@@ -22,6 +22,7 @@ import React, {
   useSyncExternalStore,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { FLOATING_PANEL } from '@dxos/react-ui-canvas';
 import * as Accordion from '@dxos/react-ui/Accordion';
@@ -47,7 +48,12 @@ export type InspectorSectionDef = {
 };
 
 type InspectorPanelContextValue = {
+  /** Docked beside the view: as asked, unless the frame is too narrow (`compact`). */
   docked: boolean;
+  /** The frame is too narrow to dock beside, so the panel floats, folded to one button until it is expanded. */
+  compact: boolean;
+  expanded: boolean;
+  setExpanded: (expanded: boolean) => void;
   readonly: boolean;
   sections: readonly InspectorSectionDef[];
   /** Each section's content slot, by section id. */
@@ -70,6 +76,7 @@ type InspectorPanelHandle = {
   get: () => InspectorPanelContextValue;
   subscribe: (listener: () => void) => () => void;
   register: InspectorPanelContextValue['register'];
+  setCompact: (compact: boolean) => void;
 };
 
 const InspectorPanelContext = createContext<InspectorPanelHandle | undefined>(undefined);
@@ -108,10 +115,13 @@ const InspectorPanelRoot = ({
   const [sections, setSections] = useState<InspectorSectionDef[]>([]);
   const [slots, setSlots] = useState<Record<string, HTMLElement | null>>({});
   const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
+  const [compact, setCompact] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const placed = docked && !compact;
   // Sections seen before, so one starts closed (unless `defaultOpen`) only the first time it registers.
   const seen = useRef(new Set<string>());
   // Docked or floating, the same sections show: where the panel sits is not what it holds.
-  const shows = useCallback(() => docked || !readonly, [docked, readonly]);
+  const shows = useCallback(() => placed || !readonly, [placed, readonly]);
   const register = useCallback((section: InspectorSectionDef) => {
     if (!seen.current.has(section.id)) {
       seen.current.add(section.id);
@@ -131,7 +141,10 @@ const InspectorPanelRoot = ({
   );
   const value = useMemo(
     () => ({
-      docked,
+      docked: placed,
+      compact,
+      expanded,
+      setExpanded,
       readonly,
       sections,
       slots,
@@ -144,7 +157,21 @@ const InspectorPanelRoot = ({
       useActions,
       onDockedChange,
     }),
-    [docked, readonly, sections, slots, closed, shows, register, setSlot, actions, useActions, onDockedChange],
+    [
+      placed,
+      compact,
+      expanded,
+      readonly,
+      sections,
+      slots,
+      closed,
+      shows,
+      register,
+      setSlot,
+      actions,
+      useActions,
+      onDockedChange,
+    ],
   );
   // Read during render by the subscribers, which are then told of the change once it commits.
   const valueRef = useRef(value);
@@ -158,6 +185,7 @@ const InspectorPanelRoot = ({
         return () => listeners.current.delete(listener);
       },
       register,
+      setCompact,
     }),
     [register],
   );
@@ -218,7 +246,21 @@ const InspectorPanelContent = () => {
   if (!context || visible.length === 0) {
     return null;
   }
-  const { docked, closed, setSlot, setClosed, onDockedChange } = context;
+  const { docked, compact, expanded, setExpanded, closed, setSlot, setClosed, onDockedChange } = context;
+  if (compact && !expanded) {
+    return (
+      <div role='none' className={mx('absolute top-2 right-2 z-10 p-1', FLOATING_PANEL)}>
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--sliders-horizontal--regular'
+          label='Show the inspectors'
+          data-testid='dock-expand'
+          onClick={() => setExpanded(true)}
+        />
+      </div>
+    );
+  }
   const actions = hooked ?? context.actions;
   const upper = visible.filter((section) => section.pane === 'upper');
   const lower = visible.filter((section) => section.pane !== 'upper');
@@ -277,7 +319,7 @@ const InspectorPanelContent = () => {
             // hidden: a hidden box still scrolls, so focusing a control (a switch's input) would scroll the whole panel.
             mx(
               // As tall as its sections, and never past the bottom toolbars, so they stay reachable.
-              'absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-4.25rem)] overflow-clip',
+              'absolute top-2 right-2 z-10 w-80 max-w-[calc(100%-1rem)] h-auto max-h-[calc(100%-4.25rem)] overflow-clip',
               FLOATING_PANEL,
               'bg-base-surface',
             )
@@ -285,12 +327,21 @@ const InspectorPanelContent = () => {
       data-testid='scene-view-dock'
       data-floating={!docked || undefined}
     >
-      {(actions || onDockedChange) && (
+      {(actions || onDockedChange || compact) && (
         <Panel.Header asChild>
           <Toolbar.Root data-testid='dock-toolbar'>
             {actions}
             <Toolbar.Separator variant='gap' />
-            {!onDockedChange ? null : docked ? (
+            {compact ? (
+              <Button.Root
+                variant='ghost'
+                iconOnly
+                icon='ph--x--regular'
+                label='Hide the inspectors'
+                data-testid='dock-collapse'
+                onClick={() => setExpanded(false)}
+              />
+            ) : !onDockedChange ? null : docked ? (
               <Button.Root
                 variant='ghost'
                 iconOnly
@@ -345,18 +396,28 @@ export type InspectorPanelFrameProps = Util.ThemedClassName<
   }>
 >;
 
+/** The narrowest view, in px, that keeps its bottom bars beside a docked panel (`w-80`); narrower, the panel folds to a button. */
+const COMPACT_WIDTH = 320 + 480;
+
 /**
  * Where a view and its inspector panel sit: the view first, then the panel, docked beside it (taking its own width) or
- * floating over it; any view, 2D or 3D, uses it, so the panel sits and docks the same in each.
+ * floating over it; any view, 2D or 3D, uses it, so the panel sits and docks the same in each. A narrow frame folds the
+ * panel to one button that opens it over the view.
  */
-const InspectorPanelFrame = ({ classNames, transparent, children }: InspectorPanelFrameProps) => (
-  // Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in the view (an editor's caret)
-  // would scroll the whole frame to reveal it.
-  <div className={mx('relative flex dx-fill overflow-clip', !transparent && 'bg-base-surface', classNames)}>
-    {children}
-    <InspectorPanelContent />
-  </div>
-);
+const InspectorPanelFrame = ({ classNames, transparent, children }: InspectorPanelFrameProps) => {
+  const handle = useContext(InspectorPanelContext);
+  const { ref, width } = useResizeDetector<HTMLDivElement>({ handleHeight: false });
+  // A frame not laid out yet has no width to judge.
+  useLayoutEffect(() => void (width && handle?.setCompact(width < COMPACT_WIDTH)), [handle, width]);
+  return (
+    // Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in the view (an editor's
+    // caret) would scroll the whole frame to reveal it.
+    <div ref={ref} className={mx('relative flex dx-fill overflow-clip', !transparent && 'bg-base-surface', classNames)}>
+      {children}
+      <InspectorPanelContent />
+    </div>
+  );
+};
 
 InspectorPanelFrame.displayName = 'InspectorPanel.Frame';
 
