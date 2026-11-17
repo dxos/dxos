@@ -2,8 +2,8 @@
 //!
 //! The ABI is a handful of `extern "C"` functions over two buffers in linear memory: JS writes a
 //! call's arguments into the input buffer (`input_reserve`), calls an op, and reads the result from the
-//! output buffer (`output_ptr`, length returned by the op) through a `DataView`. A negative return is
-//! an error whose UTF-8 message is in the output buffer. No per-value bindings, no JSON across the
+//! output buffer (`output_ptr`, length returned by the op) through a `DataView`. A negative return
+//! `-(len + 1)` is an error whose UTF-8 message is the output. No per-value bindings, no JSON across the
 //! boundary.
 
 mod doc;
@@ -44,8 +44,8 @@ pub extern "C" fn output_ptr() -> *const u8 {
     STATE.with(|state| state.borrow().output.buf.as_ptr())
 }
 
-/// Runs `op` over the input's first `len` bytes and returns the output length, or `-1` with the error
-/// message as output.
+/// Runs `op` over the input's first `len` bytes and returns the output length, or `-(len + 1)` with the
+/// error message as output.
 fn call(len: u32, op: impl FnOnce(&mut Reader<'_>, &mut Writer, &mut HashMap<String, SharedFile>, &mut Vec<Option<Engine>>) -> Result<(), String>) -> i32 {
     STATE.with(|state| {
         let mut state = state.borrow_mut();
@@ -57,7 +57,7 @@ fn call(len: u32, op: impl FnOnce(&mut Reader<'_>, &mut Writer, &mut HashMap<Str
             Err(message) => {
                 output.clear();
                 output.buf.extend_from_slice(message.as_bytes());
-                -1
+                -(output.len() as i32) - 1
             }
         }
     })
