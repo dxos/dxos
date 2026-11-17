@@ -10,12 +10,15 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Connection } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
+import { isReadOnly } from '../util/read-only.ts';
+
 /**
  * Adds the MCP servers plugins ship to `client.graph.registry` as keyed connections, where chats and
- * the agent runtime find them; a server already added is not added again.
+ * the agent runtime find them; a server already added is not added again. A read-only host adds none.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const manager = yield* Capability.Service;
     const client = yield* ClientCapabilities.Client;
     const atomRegistry = yield* Capabilities.AtomRegistry;
     const serversAtom = yield* Capability.atom(AppCapabilities.McpServer);
@@ -23,6 +26,10 @@ export default Capability.makeModule(
     atomRegistry.subscribe(
       serversAtom,
       (servers) => {
+        if (isReadOnly(manager)) {
+          return;
+        }
+
         const fresh = servers.filter(({ key }) => !added.has(key));
         if (fresh.length > 0) {
           fresh.forEach(({ key }) => added.add(key));

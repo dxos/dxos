@@ -43,28 +43,30 @@ export type SpaceHomeSectionProps = {
   space: Space;
 };
 
+/** A read-only home's dashboard: what a space holds, without who worked on it or when, and nothing to dismiss. */
+const READ_ONLY_STATS = ['objects', 'types', 'collections'] as const;
+
 /** Home sections are individually dismissible per space, which is durable UI state. */
 export const SpaceHomeRecentSurface = ({ space }: SpaceHomeSectionProps) => {
+  const readOnly = ToolkitHooks.useReadOnly();
   const { visible, hide } = ToolkitHooks.useHomeVisibility(space, 'spaceHomeRecent');
+  // Read-only, there is nothing to dismiss.
+  if (readOnly) {
+    return <SpaceHomeRecent space={space} />;
+  }
 
   return visible ? <SpaceHomeRecent space={space} onClose={hide} /> : null;
 };
 
 export const SpaceHomeDashboardSurface = ({ space }: SpaceHomeSectionProps) => {
+  const readOnly = ToolkitHooks.useReadOnly();
   const { visible, hide } = ToolkitHooks.useHomeVisibility(space, 'spaceHomeDashboard');
+  if (readOnly) {
+    return <SpaceHomeDashboard space={space} stats={READ_ONLY_STATS} activity={false} />;
+  }
 
   return visible ? <SpaceHomeDashboard space={space} onClose={hide} /> : null;
 };
-
-/** Read-only homes have nothing to dismiss. */
-export const ReadOnlySpaceHomeRecentSurface = ({ space }: SpaceHomeSectionProps) => <SpaceHomeRecent space={space} />;
-
-/** What a space holds, without who worked on it or when, and nothing to dismiss. */
-const READ_ONLY_STATS = ['objects', 'types', 'collections'] as const;
-
-export const ReadOnlySpaceHomeDashboardSurface = ({ space }: SpaceHomeSectionProps) => (
-  <SpaceHomeDashboard space={space} stats={READ_ONLY_STATS} activity={false} />
-);
 
 export type TypeArticleSurfaceProps = {
   role: string;
@@ -72,16 +74,15 @@ export type TypeArticleSurfaceProps = {
   type: Type.AnyEntity;
   /** The navtree node's properties bag, which carries the space for a type collection. */
   properties?: Record<string, unknown>;
-  readonly?: boolean;
 };
 
-export const TypeArticleSurface = ({ role, attendableId, type, properties, readonly }: TypeArticleSurfaceProps) => {
+export const TypeArticleSurface = ({ role, attendableId, type, properties }: TypeArticleSurfaceProps) => {
   const space = isSpace(properties?.space) ? properties.space : undefined;
   if (!space) {
     return null;
   }
 
-  return <TypeArticle role={role} space={space} type={type} attendableId={attendableId} readonly={readonly} />;
+  return <TypeArticle role={role} space={space} type={type} attendableId={attendableId} />;
 };
 
 export type SpaceSettingsSurfaceProps = {

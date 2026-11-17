@@ -16,7 +16,7 @@ import * as MapEvents from './src/types/MapEvents.ts';
 import * as MapSurface from './src/types/MapSurface.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
-const config: Plugin.PluginConfig<MapCapabilities.MapPluginOptions> = Plugin.config<MapCapabilities.MapPluginOptions>({
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
     key: MapNamespace.key,
     name: 'Maps',

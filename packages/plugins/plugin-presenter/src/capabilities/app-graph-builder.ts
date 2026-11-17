@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -20,7 +21,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { firstHeading, slideSourcesAtom } from '#deck';
 import { meta } from '#meta';
-import { Presentation, type PresenterCapabilities, PresenterOperation, SlideEditorViewState } from '#types';
+import { Presentation, PresenterOperation, SlideEditorViewState } from '#types';
 
 import { isPresenting } from '../paths.ts';
 
@@ -67,13 +68,19 @@ export const createSectionsExtension = () =>
     },
   });
 
-/** An owned slide's companion shows the rendered slide beside its editor. */
-export const createSlidePreviewExtension = () =>
+/**
+ * An owned slide's companion shows the rendered slide beside its editor. A read-only host has none: the slide itself
+ * opens as its preview.
+ */
+export const createSlidePreviewExtension = (readOnlyAtom: Atom.Atom<true[]>) =>
   AppGraphBuilder.createExtension({
     id: 'slidePreview',
     relation: AppNode.companion,
     // Only a markdown slide has an editor to preview beside.
-    match: (node) => {
+    match: (node, get) => {
+      if (get(readOnlyAtom).length > 0) {
+        return Option.none();
+      }
       const content = Obj.instanceOf(Presentation.Slide, node.data) ? node.data.content.target : undefined;
       return Obj.instanceOf(Presentation.Slide, node.data) && content && Presentation.isOwnedContent(node.data, content)
         ? Option.some(node.data)
@@ -90,11 +97,17 @@ export const createSlidePreviewExtension = () =>
       ]),
   });
 
-/** A slide can be hidden from (or shown in) the presentation, from the navtree and the context menu. */
-export const createSlideActionsExtension = () =>
+/**
+ * A slide can be hidden from (or shown in) the presentation, from the navtree and the context menu. A read-only host
+ * has no such action, since hiding a slide writes to the deck.
+ */
+export const createSlideActionsExtension = (readOnlyAtom: Atom.Atom<true[]>) =>
   AppGraphBuilder.createExtension({
     id: 'slideActions',
-    match: (node) => (Obj.instanceOf(Presentation.Slide, node.data) ? Option.some(node.data) : Option.none()),
+    match: (node, get) =>
+      get(readOnlyAtom).length === 0 && Obj.instanceOf(Presentation.Slide, node.data)
+        ? Option.some(node.data)
+        : Option.none(),
     actions: (slide, get) => {
       const hidden = get(Obj.atomProperty(slide, 'hidden')) === true;
       return Effect.succeed([
@@ -118,7 +131,8 @@ export const createSlideActionsExtension = () =>
   });
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ readOnly = false }: PresenterCapabilities.PresenterPluginOptions = {}) {
+  Effect.fnUntraced(function* () {
+    const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
     const companionExtensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
       relation: AppNode.companion,
@@ -165,14 +179,14 @@ export default Capability.makeModule(
     });
 
     const sectionsExtensions = yield* createSectionsExtension();
-    const slidePreviewExtensions = yield* createSlidePreviewExtension();
-    const slideActionsExtensions = yield* createSlideActionsExtension();
+    const slidePreviewExtensions = yield* createSlidePreviewExtension(readOnlyAtom);
+    const slideActionsExtensions = yield* createSlideActionsExtension(readOnlyAtom);
 
-    // Read-only, a slide already opens as its preview, and hiding one writes to the deck.
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...companionExtensions,
       ...sectionsExtensions,
-      ...(readOnly ? [] : [...slidePreviewExtensions, ...slideActionsExtensions]),
+      ...slidePreviewExtensions,
+      ...slideActionsExtensions,
     ]);
   }),
 );

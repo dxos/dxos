@@ -16,14 +16,9 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { HelpCapabilities, HelpOperation } from '#types';
 
-import { type SupportPluginOptions } from '../types/SupportPluginOptions.ts';
-
 /** Runs a matching `auto` tour the first time the reader attends something it applies to. */
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ readOnly = false }: SupportPluginOptions = {}) {
-    if (readOnly) {
-      return [];
-    }
+  Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     if (!Account.isAuthEnabled(client.config)) {
       return [];
@@ -36,6 +31,7 @@ export default Capability.makeModule(
     const seenToursAtom = yield* HelpCapabilities.SeenTours;
     const stateAtom = yield* HelpCapabilities.State;
     const toursAtom = yield* Capability.atom(AppCapabilities.Tour);
+    const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
 
     const subjectIdAtom = Atom.make<string | undefined>(attention.getCurrent()[0]);
     const unsubscribeAttention = attention.subscribeCurrent((current) => registry.set(subjectIdAtom, current[0]));
@@ -43,7 +39,8 @@ export default Capability.makeModule(
     const nextTourAtom = Atom.make((get) => {
       const subjectId = get(subjectIdAtom);
       const state = get(stateAtom);
-      if (!subjectId || state.running) {
+      // Tours walk the reader through creating objects, so a read-only host never starts one.
+      if (!subjectId || state.running || get(readOnlyAtom).length > 0) {
         return undefined;
       }
 

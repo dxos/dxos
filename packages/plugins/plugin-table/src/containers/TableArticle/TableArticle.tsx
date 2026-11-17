@@ -43,13 +43,14 @@ import { TableOperation } from '#types';
 
 import { TableNamespace } from '../../namespace.ts';
 
-export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table, { readonly?: boolean }>;
+export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
-  ({ role, subject: object, attendableId, readonly }, forwardedRef) => {
+  ({ role, subject: object, attendableId }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const { invokePromise } = Hooks.useOperationInvoker();
+    const readonly = ToolkitHooks.useReadOnly();
     const tableRef = useRef<TableController>(null);
 
     const db = Obj.getDatabase(object);

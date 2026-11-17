@@ -83,16 +83,15 @@ const getMembers = (get: Atom.AtomContext, refs: readonly Ref.Ref<Obj.Unknown>[]
 export const createCollectionExtensions = Effect.fnUntraced(function* ({
   shareableLinkOrigin,
   publication,
-  readOnly = false,
 }: {
   shareableLinkOrigin: string;
   publication?: SpaceSchema.PublicationOptions;
-  readOnly?: boolean;
 }) {
   const capabilities = yield* Capability.Service;
   // Hoisted so connector/action bodies read reactively via `get(...)` instead of a sync
   // `Capability.get`, establishing a dependency that heals once the capability lands.
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
+  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
 
   return yield* Effect.all([
     // Content section group — created alongside collections so the group always
@@ -254,88 +253,86 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       },
     }),
 
-    ...(readOnly
-      ? []
-      : [
-          // Object actions.
-          AppGraphBuilder.createExtension({
-            id: 'objectActions',
-            match: (node) => {
-              return node.data != null &&
-                Obj.getDatabase(node.data) &&
-                Obj.isObject(node.data) &&
-                Obj.getTypename(node.data) === node.type
-                ? Option.some({ object: node.data, nodeId: node.id })
-                : Option.none();
-            },
-            actions: ({ object, nodeId }, get) => {
-              const deletable = !Type.isType(object);
+    // Object actions.
+    AppGraphBuilder.createExtension({
+      id: 'objectActions',
+      match: (node, get) => {
+        return get(readOnlyAtom).length === 0 &&
+          node.data != null &&
+          Obj.getDatabase(node.data) &&
+          Obj.isObject(node.data) &&
+          Obj.getTypename(node.data) === node.type
+          ? Option.some({ object: node.data, nodeId: node.id })
+          : Option.none();
+      },
+      actions: ({ object, nodeId }, get) => {
+        const deletable = !Type.isType(object);
 
-              const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
-              const [ephemeralAtom] = get(ephemeralCapAtom);
+        const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
+        const [ephemeralAtom] = get(ephemeralCapAtom);
 
-              if (!appGraph || !ephemeralAtom) {
-                return Effect.succeed([]);
-              }
-              const ephemeralState = get(ephemeralAtom);
+        if (!appGraph || !ephemeralAtom) {
+          return Effect.succeed([]);
+        }
+        const ephemeralState = get(ephemeralAtom);
 
-              const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
-              const container = AppNode.getListOf(Option.getOrUndefined(get(appGraph.graph.node(parentId))));
+        const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
+        const container = AppNode.getListOf(Option.getOrUndefined(get(appGraph.graph.node(parentId))));
 
-              return Effect.succeed(
-                constructObjectActions({
-                  object,
-                  nodeId,
-                  deletable,
-                  navigable: ephemeralState.navigableCollections,
-                  shareableLinkOrigin,
-                  publication,
-                  container,
-                  parent: container ? get(Obj.parentAtom(object)) : undefined,
-                  archived: isArchivable(object)
-                    ? Option.getOrElse(get(Annotation.atom(object, ArchivedAnnotation)), () => false)
-                    : undefined,
-                }),
-              );
-            },
+        return Effect.succeed(
+          constructObjectActions({
+            object,
+            nodeId,
+            deletable,
+            navigable: ephemeralState.navigableCollections,
+            shareableLinkOrigin,
+            publication,
+            container,
+            parent: container ? get(Obj.parentAtom(object)) : undefined,
+            archived: isArchivable(object)
+              ? Option.getOrElse(get(Annotation.atom(object, ArchivedAnnotation)), () => false)
+              : undefined,
           }),
+        );
+      },
+    }),
 
-          // Action on the collections section header to add an object to the space's root collection.
-          AppGraphBuilder.createExtension({
-            id: 'collectionsSectionActions',
-            match: (node) => {
-              const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-              return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+    // Action on the collections section header to add an object to the space's root collection.
+    AppGraphBuilder.createExtension({
+      id: 'collectionsSectionActions',
+      match: (node, get) => {
+        const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+        return get(readOnlyAtom).length === 0 && node.type === COLLECTIONS_SECTION_TYPE && space
+          ? Option.some(space)
+          : Option.none();
+      },
+      actions: (space) =>
+        Effect.succeed([
+          AppGraphNode.makeAction({
+            id: SpaceOperation.OpenObjectForm.meta.key,
+            data: () =>
+              Effect.gen(function* () {
+                // Target the root collection so the create dialog offers collection-eligible types, like
+                // any other collection; fall back to the space db if it hasn't been created yet.
+                const rootCollection = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+                  Option.getOrUndefined,
+                )?.target;
+                yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
+                  // Qualified id of the collections section node (root/<spaceId>/collections), so the new
+                  // object's navigation path resolves under the section — the bare segment would not.
+                  target: rootCollection ?? space.db,
+                  targetNodeId: GraphPath.getCollectionsPath(space.id),
+                });
+              }),
+            properties: {
+              label: CREATE_OBJECT_IN_COLLECTION_LABEL,
+              icon: 'ph--plus--regular',
+              disposition: 'list-item-primary',
+              testId: 'spacePlugin.createObject',
             },
-            actions: (space) =>
-              Effect.succeed([
-                AppGraphNode.makeAction({
-                  id: SpaceOperation.OpenObjectForm.meta.key,
-                  data: () =>
-                    Effect.gen(function* () {
-                      // Target the root collection so the create dialog offers collection-eligible types, like
-                      // any other collection; fall back to the space db if it hasn't been created yet.
-                      const rootCollection = Annotation.get(
-                        space.properties,
-                        AppAnnotation.RootCollectionAnnotation,
-                      ).pipe(Option.getOrUndefined)?.target;
-                      yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
-                        // Qualified id of the collections section node (root/<spaceId>/collections), so the new
-                        // object's navigation path resolves under the section — the bare segment would not.
-                        target: rootCollection ?? space.db,
-                        targetNodeId: GraphPath.getCollectionsPath(space.id),
-                      });
-                    }),
-                  properties: {
-                    label: CREATE_OBJECT_IN_COLLECTION_LABEL,
-                    icon: 'ph--plus--regular',
-                    disposition: 'list-item-primary',
-                    testId: 'spacePlugin.createObject',
-                  },
-                }),
-              ]),
           }),
         ]),
+    }),
   ]);
 });
 

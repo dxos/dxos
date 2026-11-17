@@ -6,6 +6,7 @@ import React from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useIdentity } from '@dxos/halo-react';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { useGridAwareness } from '@dxos/react-ui-grid';
@@ -18,7 +19,6 @@ export type SheetArticleProps = AppSurface.ObjectArticleProps<
   Sheet.Sheet,
   {
     ignoreAttention?: boolean;
-    readonly?: boolean;
   }
 >;
 
@@ -46,9 +46,9 @@ const SheetArticleInner = ({
   attendableId,
   space,
   ignoreAttention,
-  readonly,
 }: SheetArticleProps & { space: Space }) => {
   const graph = useComputeGraph(space);
+  const readonly = ToolkitHooks.useReadOnly();
   // A slide shows the sheet as a picture: the used range fitted to the slide, with no status bar and no one's selection.
   const slide = role === AppSurface.Slide.role;
   const identity = useIdentity();

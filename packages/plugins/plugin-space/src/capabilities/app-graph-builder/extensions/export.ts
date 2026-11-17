@@ -18,12 +18,16 @@ import { PRINT_OBJECT_LABEL, SAVE_OBJECT_LABEL } from './shared.ts';
 /** Print and Save on the article menu of any object whose type contributes an `AppCapabilities.Exporter`. */
 export const createExportExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
+  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
 
   return yield* Effect.all([
     AppGraphBuilder.createExtension({
       id: 'exportActions',
-      match: (node) =>
-        node.data != null && Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type
+      match: (node, get) =>
+        get(readOnlyAtom).length === 0 &&
+        node.data != null &&
+        Obj.isObject(node.data) &&
+        Obj.getTypename(node.data) === node.type
           ? Option.some(node.data)
           : Option.none(),
       actions: (object, get) => {

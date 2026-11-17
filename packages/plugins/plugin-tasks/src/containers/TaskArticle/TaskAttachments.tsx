@@ -17,6 +17,7 @@ import React, {
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -232,8 +233,6 @@ export type TaskAttachmentsProps = {
   canAttach?: boolean;
   pending?: readonly PendingAttachment[];
   detailOf?: string;
-  /** Cards carry no remove action. */
-  readonly?: boolean;
 };
 
 /**
@@ -244,8 +243,9 @@ export type TaskAttachmentsProps = {
  * over the pane, which takes the drop itself. Renders nothing only when there is nothing attached
  * and nothing could be.
  */
-export const TaskAttachments = ({ task, canAttach, pending = [], detailOf, readonly }: TaskAttachmentsProps) => {
+export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: TaskAttachmentsProps) => {
   const { t } = UiHooks.useTranslation(TasksNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const [refs] = useObject(task, 'attachments');
   const dragging = useContext(FileDragContext);
 

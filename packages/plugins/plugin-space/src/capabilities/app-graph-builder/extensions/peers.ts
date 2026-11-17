@@ -76,12 +76,13 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
   const layoutCapAtom = yield* Capability.atom(AppCapabilities.Layout);
+  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
 
   return yield* Effect.all([
     AppGraphBuilder.createExtension({
       id: 'membersCompanion',
       relation: AppNode.companion,
-      match: GraphNodeMatcher.whenRoot,
+      match: (node, get) => (get(readOnlyAtom).length > 0 ? Option.none() : GraphNodeMatcher.whenRoot(node)),
       connector: (_, get) => {
         const [ephemeralAtom] = get(ephemeralCapAtom);
         return Effect.succeed([
@@ -100,7 +101,8 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
 
     AppGraphBuilder.createExtension({
       id: 'peers',
-      match: AppNodeMatcher.whenSpace,
+      // Peer sessions and actions hang off these nodes, so read-only there are none either.
+      match: (node, get) => (get(readOnlyAtom).length > 0 ? Option.none() : AppNodeMatcher.whenSpace(node)),
       connector: (space, get) => {
         const [ephemeralAtom] = get(ephemeralCapAtom);
         if (!ephemeralAtom) {

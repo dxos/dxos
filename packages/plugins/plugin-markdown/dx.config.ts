@@ -16,13 +16,12 @@ import * as MarkdownCapabilities from './src/types/MarkdownCapabilities.ts';
 import * as MarkdownEvents from './src/types/MarkdownEvents.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
-const config: Plugin.PluginConfig<MarkdownCapabilities.MarkdownPluginOptions> =
-  Plugin.config<MarkdownCapabilities.MarkdownPluginOptions>({
-    plugin: {
-      key: MarkdownNamespace.key,
-      name: 'Markdown',
-      author: 'DXOS',
-      description: trim`
+const config: Plugin.PluginConfig = Plugin.config({
+  plugin: {
+    key: MarkdownNamespace.key,
+    name: 'Markdown',
+    author: 'DXOS',
+    description: trim`
       A full-featured markdown editor for authoring documents in your space. Edits flow through a collaborative CodeMirror surface backed by ECHO Text, so every keystroke replicates to other peers in real time without merge conflicts or lost work.
 
       Documents can be opened in source, preview, or read-only mode and rendered as a full-surface article or as embeddable cards. An optional formatting toolbar exposes headings, lists, links, and other common markdown actions, and dispositional toolbar actions contributed by other plugins are surfaced inline alongside it.
@@ -31,101 +30,101 @@ const config: Plugin.PluginConfig<MarkdownCapabilities.MarkdownPluginOptions> =
 
       A built-in skill exposes create, open, and update operations as tools for AI agents. Updates are applied as compact find-and-replace diffs against the document, making it safe for agents to edit large documents incrementally while you continue collaborating.
     `,
-      source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-markdown',
-      icon: { key: 'ph--text-aa--regular', hue: 'indigo' },
-      screenshots: [
-        {
-          dark: 'https://media.dxos.network/plugin-details-markdown-dark.png',
-        },
-        {
-          dark: 'https://assets.composer.space/demos/2026-10-09-plugin-markdown.mp4?v=797e74c3',
-        },
-        {
-          dark: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/cdf2656365bb1fd327c1fc2105d75e5a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Fcdf2656365bb1fd327c1fc2105d75e5a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
-        },
-      ],
-      tags: ['beta'],
-    },
-    modules: [
-      // Ordering-only: registers the anchor resolver and sort comparator once the app graph exists.
-      Capability.lazyModule(
-        'AnchorResolver',
-        {
-          requires: [AppCapabilities.AppGraph],
-          activatesOn: MarkdownEvents.Start,
-          provides: [AppCapabilities.AnchorResolver],
-          environments: ['browser', 'tauri'],
-        },
-        () => import('./src/capabilities/anchor-resolver.ts', { with: { type: 'module-url' } }),
-      ),
-      AppCapability.anchorSort(() => import('./src/capabilities/anchor-sort.ts', { with: { type: 'module-url' } }), {
+    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-markdown',
+    icon: { key: 'ph--text-aa--regular', hue: 'indigo' },
+    screenshots: [
+      {
+        dark: 'https://media.dxos.network/plugin-details-markdown-dark.png',
+      },
+      {
+        dark: 'https://assets.composer.space/demos/2026-10-09-plugin-markdown.mp4?v=797e74c3',
+      },
+      {
+        dark: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/cdf2656365bb1fd327c1fc2105d75e5a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Fcdf2656365bb1fd327c1fc2105d75e5a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
+      },
+    ],
+    tags: ['beta'],
+  },
+  modules: [
+    // Ordering-only: registers the anchor resolver and sort comparator once the app graph exists.
+    Capability.lazyModule(
+      'AnchorResolver',
+      {
         requires: [AppCapabilities.AppGraph],
         activatesOn: MarkdownEvents.Start,
-      }),
-      AppCapability.exporter(() => import('./src/capabilities/exporter.ts', { with: { type: 'module-url' } }), {
+        provides: [AppCapabilities.AnchorResolver],
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/anchor-resolver.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.anchorSort(() => import('./src/capabilities/anchor-sort.ts', { with: { type: 'module-url' } }), {
+      requires: [AppCapabilities.AppGraph],
+      activatesOn: MarkdownEvents.Start,
+    }),
+    AppCapability.exporter(() => import('./src/capabilities/exporter.ts', { with: { type: 'module-url' } }), {
+      activatesOn: MarkdownEvents.Start,
+    }),
+    AppCapability.locator(() => import('./src/capabilities/locator.ts', { with: { type: 'module-url' } }), {
+      activatesOn: MarkdownEvents.Start,
+    }),
+    AppCapability.commentConfig(
+      () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
+      {
         activatesOn: MarkdownEvents.Start,
-      }),
-      AppCapability.locator(() => import('./src/capabilities/locator.ts', { with: { type: 'module-url' } }), {
-        activatesOn: MarkdownEvents.Start,
-      }),
-      AppCapability.commentConfig(
-        () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
-        {
-          activatesOn: MarkdownEvents.Start,
-        },
-      ),
-      SpaceCapability.createObject(
-        () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
-        {
-          environments: ['browser', 'node', 'tauri'],
-        },
-      ),
-      AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
-        provides: [MarkdownCapabilities.Settings],
-      }),
-      // Browser-only: requires attention's view state, which only the app shell provides.
-      Capability.lazyModule(
-        'MarkdownState',
-        {
-          requires: [AttentionCapabilities.ViewState],
-          provides: [MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
-          environments: ['browser', 'tauri'],
-        },
-        () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
-      ),
-      Capability.lazyModule(
-        'ObjectEmbeds',
-        { provides: [MarkdownCapabilities.ObjectEmbeds], environments: ['browser', 'tauri'] },
-        () => import('./src/capabilities/object-embeds.ts', { with: { type: 'module-url' } }),
-      ),
-      AppCapability.operationHandler(
-        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      ),
-      AppCapability.operationHandler(
-        () => import('./src/capabilities/editor-operation-handler.ts', { with: { type: 'module-url' } }),
-        { name: 'EditorOperationHandler', environments: ['browser', 'tauri'] },
-      ),
-      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-        roles: [AppSurface.Article, AppSurface.CardContent, AppSurface.Section, AppSurface.Tabpanel],
-      }),
-      AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
-      AppCapability.skillDefinition(
-        () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-      ),
-      Capability.lazyModule(
-        'Tour',
-        // The tour auto-starts on an attended markdown document, which needs markdown started anyway.
-        { provides: [AppCapabilities.Tour], activatesOn: MarkdownEvents.Start, environments: ['browser', 'tauri'] },
-        () => import('./src/capabilities/tour.ts', { with: { type: 'module-url' } }),
-      ),
-      Capability.lazyModule(
-        'translations',
-        { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
-        () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
-      ),
-      AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } })),
-    ],
-  });
+      },
+    ),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+      provides: [MarkdownCapabilities.Settings],
+    }),
+    // Browser-only: requires attention's view state, which only the app shell provides.
+    Capability.lazyModule(
+      'MarkdownState',
+      {
+        requires: [AttentionCapabilities.ViewState],
+        provides: [MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'ObjectEmbeds',
+      { provides: [MarkdownCapabilities.ObjectEmbeds], environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/object-embeds.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/editor-operation-handler.ts', { with: { type: 'module-url' } }),
+      { name: 'EditorOperationHandler', environments: ['browser', 'tauri'] },
+    ),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: [AppSurface.Article, AppSurface.CardContent, AppSurface.Section, AppSurface.Tabpanel],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'Tour',
+      // The tour auto-starts on an attended markdown document, which needs markdown started anyway.
+      { provides: [AppCapabilities.Tour], activatesOn: MarkdownEvents.Start, environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/tour.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'translations',
+      { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
+      () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } })),
+  ],
+});
 
 export const { meta, make } = config;
 

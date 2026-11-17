@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export { ExcalidrawArticle as default, ReadonlyExcalidrawArticle } from './ExcalidrawArticle.tsx';
+export { ExcalidrawArticle as default } from './ExcalidrawArticle.tsx';

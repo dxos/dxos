@@ -17,6 +17,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { MarkdownView } from '@dxos/react-ui-markdown';
@@ -38,20 +39,16 @@ import { SupportNamespace } from '../../namespace.ts';
 // `data: 'help'`, parent article is an ECHO object) but this component only
 // consumes `companionTo`, so we pick it off the article shape rather than
 // requiring callers to thread the rest.
-export type SupportCompanionProps = Pick<
-  AppSurface.ArticleProps<'help', {}, Obj.Any>,
-  'companionTo' | 'attendableId'
-> & {
-  /** Leaves out the object's tours, which drive edits. */
-  readonly?: boolean;
-};
+export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj.Any>, 'companionTo' | 'attendableId'>;
 
 /**
  * Plank companion panel showing help for any open ECHO article. Resolves the
  * article's typename to the plugin that registered its schema and renders that
  * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
-export const SupportCompanion = ({ companionTo, attendableId, readonly }: SupportCompanionProps) => {
+export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanionProps) => {
+  // Read-only, the object's tours are left out, as they drive edits.
+  const readonly = ToolkitHooks.useReadOnly();
   const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   const { invokePromise } = Hooks.useOperationInvoker();

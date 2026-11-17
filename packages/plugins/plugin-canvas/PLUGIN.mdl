@@ -563,3 +563,21 @@ decision D-36: A `readOnly` option locks every canvas and withholds the unlock a
   affects: [CanvasPlugin, CanvasArticle]
   why: The canvas already has a locked mode, so the option only has to pin it.
 ```
+
+```mdl
+decision D-37: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [CanvasPlugin, CanvasArticle]
+  supersedes: D-35
+```
+
+```mdl
+decision D-38: When the host contributes `ReadOnly`, every canvas is locked and the unlock action is withheld. The article reads it with `useReadOnly`, and the graph builder checks it when it builds a drawing's actions. Fills in [D-37].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [CanvasPlugin, CanvasArticle]
+  supersedes: D-36
+  why: The capability lands at startup with no order against module activation, so it is read when the article renders and when the graph expands, never while a module activates.
+```

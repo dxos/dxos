@@ -623,7 +623,7 @@ feat F-9: Publishing
   req F-9.2: The space properties' `org.dxos.space.publication` annotation keeps the receipt (public id, time), so Publish again replaces the same publication. Nothing republishes automatically. Unpublish removes the publication and clears the annotation to `null`.
   req F-9.3: Copy public link copies the viewer link of a published space's object, `<viewer>/<publicId>/db/<typeSlug>+<objectId>`; Copy public link on the space copies `<viewer>/<publicId>`.
   req F-9.4: Composer opened with `?fork=<publicId>&path=<objectPath>` imports the publication as a new space of the user's once spaces are available, which is after sign-in, and opens the object at `path`. The fork clears the publication annotation and is migrated to the host's version, so it never asks to be migrated. Plugins the manifest names are not enabled.
-  req F-9.5: With `readOnly`, the plugin's graph is navigation only: no space, object or section actions, no Settings, export or peer nodes, and no Selected objects companion. The Database section shows, and its type pages list and open objects with no selection, deletion, filing, merging or cell edits. The object properties companion shows the properties as static rows.
+  req F-9.5: When the host contributes `ReadOnly`, the plugin's graph is navigation only: no space, object or section actions, no Settings, export or peer nodes, and no Selected objects companion. The Database section shows, and its type pages list and open objects with no selection, deletion, filing, merging or cell edits. The object properties companion shows the properties as static rows.
   req F-9.6: Space settings has a Description field after Name, kept in the space properties. Space settings has a Publishing section after the space properties and before the space controls. Its Status row says whether the space is published, with Publish space while it is not; while it is, the row shows when it was published, beside a Manage menu (Republish space, Unpublish space). A published space also shows its public link in a copyable field.
   req F-9.7: Publications are read from the viewer origin: `<viewer>/publications/<publicId>/archive.json` and `manifest.json`, open to any origin. The viewer and a fork read there; `publicationsUrl` overrides it. The viewer host answers a crawler with link-preview tags: a space link is named and described after the manifest's space, and an object link after the manifest's object, else after the object title its URL carries. Each preview names an image, `<viewer>/publications/<publicId>/preview.png`, with `?object=<objectId>` for an object the manifest describes: a 1200×630 PNG card the Composer worker draws from the manifest. The space card shows the space's name, description and icon, its three most numerous types with a count of the rest, and a bar weighted by type; the object card shows the object's type, title and description, with the space's name beside its icon.
 ```
@@ -2088,6 +2088,42 @@ decision D-128: The publish time is the app's relative `Timestamp` ("Published 1
   affects: [F-9.6]
   why: `Timestamp` is the app's one form for when something happened, and it keeps the exact time a hover away.
   rejected: A short absolute date and time, which reads the same for every publish that day.
+```
+
+```mdl
+decision D-129: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-9.5]
+  supersedes: D-104
+```
+
+```mdl
+decision D-130: When the host contributes `ReadOnly`, the graph is navigation only and keeps the Database section, System group included; its type pages list and open objects only. Fills in [D-129].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  supersedes: D-109
+  why: The host contributes `ReadOnly` at startup with no ordering against other modules, so every extension, surface and container reads it when it expands or renders, and an extension that wrote matches no node rather than going uncontributed.
+```
+
+```mdl
+decision D-131: When the host contributes `ReadOnly`, every type section, whichever plugin builds it, offers no create, drop or rearrange, and an object card shows its fields as static rows even where its host asked for an editable card. Fills in [D-129].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  why: Type sections and fallback object cards are shared builders, so gating them where they are built covers every plugin that uses them; a plugin re-gating its own section had to copy the section's internals.
+```
+
+```mdl
+decision D-132: The published-space viewer sends no telemetry: events other plugins schedule are dropped there. Fills in [D-129].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  why: The viewer is anonymous and leaves out the observability plugin, so without a handler every navigation logged a failed event.
 ```
 
 ## Appendix: Extension Definitions

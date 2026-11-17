@@ -3,10 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
@@ -49,7 +53,7 @@ describe('project app graph builder', () => {
 
   test('contributes a virtual Artifacts branch to a project node', async ({ expect }) => {
     const project = Project.make({ name: 'Test' });
-    const nodes = await getSubjectChildren(project, await EffectEx.runPromise(createProjectArtifactsExtension()));
+    const nodes = await getSubjectChildren(project, createProjectArtifactsExtension());
 
     const artifacts = nodes.find((node) => node.type === ARTIFACTS_SECTION_TYPE);
     invariant(artifacts);
@@ -67,7 +71,7 @@ describe('project app graph builder', () => {
     const project = Project.make({ name: 'Test' });
     const actions = await getSubjectActions(
       { branch: 'artifacts', project },
-      await EffectEx.runPromise(createProjectArtifactsActionExtension()),
+      createProjectArtifactsActionExtension(),
       ARTIFACTS_SECTION_TYPE,
     );
 
@@ -76,17 +80,42 @@ describe('project app graph builder', () => {
     ]);
     expect(actions[0].properties.disposition).toEqual('list-item-primary');
   });
+
+  test('read-only, the Artifacts branch offers no add-artifact action', async ({ expect }) => {
+    const project = Project.make({ name: 'Test' });
+    const actions = await getSubjectActions(
+      { branch: 'artifacts', project },
+      createProjectArtifactsActionExtension(),
+      ARTIFACTS_SECTION_TYPE,
+      { readOnly: true },
+    );
+
+    expect(actions).toEqual([]);
+  });
 });
 
 const SUBJECT_ID = 'subject';
 
+/** An extension factory's output, built against the plugin manager the test hands it. */
+type Extensions = Effect.Effect<AppGraphBuilder.BuilderExtension[], never, Capability.Service>;
+
+type SubjectOptions = {
+  type?: string;
+  /** Contributes `ReadOnly` to the plugin manager, as a read-only host does. */
+  readOnly?: boolean;
+};
+
 /** Graph holding one node whose data is `subject`, so the extension's match runs against it. */
-const setupSubject = async (
-  subject: unknown,
-  extensions: AppGraphBuilder.BuilderExtension[],
-  type = 'test',
-  space: unknown = { id: 'SPACE' },
-) => {
+const setupSubject = async (subject: unknown, extensions: Extensions, { type = 'test', readOnly }: SubjectOptions) => {
+  // One registry for both: in the app the plugin manager and the graph builder share it, and a capability atom read
+  // through a different registry never sees the contributions.
+  const registry = Registry.make();
+  const manager = CapabilityManager.make({ registry });
+  if (readOnly) {
+    manager.contribute({ module: 'test', interface: AppCapabilities.ReadOnly, implementation: true });
+  }
+
+  const space = { id: 'SPACE' };
   const rootExtensions = await EffectEx.runPromise(
     AppGraphBuilder.createExtension({
       id: 'testRoot',
@@ -95,17 +124,21 @@ const setupSubject = async (
       connector: () => Effect.succeed([{ id: SUBJECT_ID, type, data: subject, properties: { space } }]),
     }),
   );
-  const context = setupGraphBuilder({ extensions: [...rootExtensions, ...extensions] });
+  const subjectExtensions = await EffectEx.runPromise(
+    extensions.pipe(Effect.provideService(Capability.Service, manager)),
+  );
+  const context = setupGraphBuilder({ registry, extensions: [...rootExtensions, ...subjectExtensions] });
   await context.expand(GraphNode.RootId);
   return context;
 };
 
-const getSubjectActions = async (subject: unknown, extensions?: AppGraphBuilder.BuilderExtension[], type?: string) => {
-  const context = await setupSubject(
-    subject,
-    extensions ?? (await EffectEx.runPromise(createProjectActionExtension())),
-    type,
-  );
+const getSubjectActions = async (
+  subject: unknown,
+  extensions: Extensions = createProjectActionExtension(),
+  type?: string,
+  options?: Omit<SubjectOptions, 'type'>,
+) => {
+  const context = await setupSubject(subject, extensions, { ...options, type });
 
   // Actions are their own relation, materialized lazily like connections.
   await context.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'action');
@@ -114,8 +147,8 @@ const getSubjectActions = async (subject: unknown, extensions?: AppGraphBuilder.
   return context.registry.get(context.graph.actions(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID)));
 };
 
-const getSubjectChildren = async (subject: unknown, extensions: AppGraphBuilder.BuilderExtension[]) => {
-  const context = await setupSubject(subject, extensions);
+const getSubjectChildren = async (subject: unknown, extensions: Extensions) => {
+  const context = await setupSubject(subject, extensions, {});
   await context.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID));
   return context.registry.get(context.graph.connections(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'child'));
 };

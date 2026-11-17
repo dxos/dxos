@@ -74,8 +74,6 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
   scope?: readonly string[];
   /** Runs on each task the footer creates, before it is shown; a scoped host uses it to bring the task into scope. */
   onTaskCreated?: (task: Task.Task) => Promise<void>;
-  /** Lists the tasks with no way to add, edit, check, move or delete one; filtering, collapsing and opening stay. */
-  readonly?: boolean;
 };
 
 /**
@@ -92,9 +90,9 @@ export const TaskSetArticle = ({
   showDescription = false,
   scope,
   onTaskCreated,
-  readonly = false,
 }: TaskSetArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;

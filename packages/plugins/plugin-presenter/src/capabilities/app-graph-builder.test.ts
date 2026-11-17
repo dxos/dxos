@@ -63,7 +63,7 @@ describe('presentation sections', () => {
       }),
     );
     AppGraphBuilder.addExtension(graphBuilder, Effect.runSync(createSectionsExtension()));
-    AppGraphBuilder.addExtension(graphBuilder, Effect.runSync(createSlideActionsExtension()));
+    AppGraphBuilder.addExtension(graphBuilder, Effect.runSync(createSlideActionsExtension(Atom.make<true[]>([]))));
 
     const graph = graphBuilder.graph;
     const presentationId = `${ROOT_ID}/${presentation.id}`;

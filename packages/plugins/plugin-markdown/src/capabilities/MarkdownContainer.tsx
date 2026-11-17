@@ -6,6 +6,7 @@ import React, { forwardRef, useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
@@ -16,17 +17,15 @@ import { Markdown, MarkdownCapabilities } from '#types';
 
 import { editorViewModeAspect } from './editor-view-state.ts';
 
-export type MarkdownContainerProps = AppSurface.ObjectArticleProps<
-  Markdown.Document | Text.Text,
-  { id: string; readOnly?: boolean }
->;
+export type MarkdownContainerProps = AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>;
 
 /**
  * Resolves the editor's ambient state (attention, settings, per-document view mode) for both the
  * document and plain-text surfaces, so neither surface's `props` mapper has to.
  */
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
-  ({ id, attendableId, subject, role, readOnly }, forwardedRef) => {
+  ({ id, attendableId, subject, role }, forwardedRef) => {
+    const readOnly = ToolkitHooks.useReadOnly();
     const viewState = Hooks.useCapability(AttentionCapabilities.ViewState);
     const settings = Hooks.useAtomCapability(MarkdownCapabilities.Settings);
     const editorState = Hooks.useCapability(MarkdownCapabilities.EditorState);

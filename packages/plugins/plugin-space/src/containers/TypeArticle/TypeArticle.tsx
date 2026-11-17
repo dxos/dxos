@@ -7,6 +7,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Filter, Obj, Type } from '@dxos/echo';
@@ -53,8 +54,6 @@ export type TypeArticleProps = {
   space: Space;
   type: Type.AnyEntity;
   attendableId: string;
-  /** Lists and opens objects only: no selection, deletion, filing, merging or cell edits. */
-  readonly?: boolean;
 };
 
 /**
@@ -64,8 +63,10 @@ export type TypeArticleProps = {
  * Objects are not enumerated in the nav tree; each navigated object becomes a hidden child of the
  * type node resolved on demand.
  */
-export const TypeArticle = ({ role, space, type, attendableId, readonly = false }: TypeArticleProps) => {
+export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
+  // Read-only, it lists and opens objects only: no selection, deletion, filing, merging or cell edits.
+  const readonly = ToolkitHooks.useReadOnly();
   const { invokePromise } = Hooks.useOperationInvoker();
   const [layout, setLayout] = useState<Layout>('masonry');
   const typeUri = Type.getURI(type);

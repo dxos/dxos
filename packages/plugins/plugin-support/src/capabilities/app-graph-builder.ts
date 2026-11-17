@@ -24,7 +24,6 @@ import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants.ts';
-import { type SupportPluginOptions } from '../types/SupportPluginOptions.ts';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
@@ -47,7 +46,7 @@ const makeHelpCompanion = () =>
   });
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ readOnly = false }: SupportPluginOptions = {}) {
+  Effect.fnUntraced(function* () {
     // Read the settings through their atom so the "discord" extension establishes a reactive
     // dependency and re-evaluates when the setting changes or the capability lands (dependency
     // modules contribute individually, not batched per wave).
@@ -58,11 +57,16 @@ export default Capability.makeModule(
       return !settingsAtom || !get(settingsAtom).hideHelpCompanions;
     };
 
+    // Read-only, the root offers only the Help companions: its actions and deck tabs write, or start a tour.
+    const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+    const whenWritableRoot = (node: AppGraphNode.Node, get: Atom.AtomContext): Option.Option<AppGraphNode.Node> =>
+      get(readOnlyAtom).length > 0 ? Option.none() : GraphNodeMatcher.whenRoot(node);
+
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
       AppGraphBuilder.createExtension({
         id: 'root',
-        match: GraphNodeMatcher.whenRoot,
+        match: whenWritableRoot,
         actions: () =>
           Effect.succeed([
             AppGraphNode.makeAction({
@@ -124,7 +128,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'help',
         relation: AppNode.companion,
-        match: GraphNodeMatcher.whenRoot,
+        match: whenWritableRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
@@ -144,7 +148,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'discord',
         relation: AppNode.companion,
-        match: GraphNodeMatcher.whenRoot,
+        match: whenWritableRoot,
         connector: (_root, get) => {
           const [settingsAtom] = get(settingsCapabilityAtom);
           if (!settingsAtom) {
@@ -167,13 +171,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    // A read-only host keeps only the Help companions: the rest write, or start a tour through the app.
-    const [rootActions, helpCompanion, homeHelpCompanion, feedback, discord] = extensions;
-    return Capability.contribute(
-      AppCapabilities.AppGraphBuilder,
-      readOnly
-        ? [helpCompanion, homeHelpCompanion]
-        : [rootActions, helpCompanion, homeHelpCompanion, feedback, discord],
-    );
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

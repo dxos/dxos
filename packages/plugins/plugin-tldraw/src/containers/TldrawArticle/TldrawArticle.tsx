@@ -21,10 +21,7 @@ import { isTauri } from '@dxos/util';
 import { CanvasComponent } from '#components';
 import { TldrawCapabilities } from '#types';
 
-export type TldrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps & {
-  /** Shows the drawing in tldraw's read-only mode, with the camera still free. */
-  readonly?: boolean;
-};
+export type TldrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
 export const TldrawArticle = ({
   role,
@@ -37,12 +34,13 @@ export const TldrawArticle = ({
   onActivate,
   camera,
   onCameraChange,
-  readonly = false,
 }: TldrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const [settings, updateSettings] = Hooks.useAtomCapabilityState(TldrawCapabilities.Settings);
   const id = Obj.getURI(drawing as Obj.Any);
   const { hasAttention } = useAttention(attendableId);
+  // A read-only app shows the drawing in tldraw's read-only mode, with the camera still free.
+  const readonly = ToolkitHooks.useReadOnly();
   const embedded = role === AppSurface.Section.role;
   const slide = role === AppSurface.Slide.role;
 
@@ -104,7 +102,3 @@ const Container = Util.composable<HTMLDivElement, PropsWithChildren<{ fill?: boo
 );
 
 TldrawArticle.displayName = 'TldrawArticle';
-
-export const ReadonlyTldrawArticle = (props: TldrawArticleProps) => <TldrawArticle {...props} readonly />;
-
-ReadonlyTldrawArticle.displayName = 'ReadonlyTldrawArticle';

@@ -13,13 +13,13 @@ import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as Position from '@dxos/util/Position';
 
 import { MapSurface, MapViewEditor, WorldMapSurface } from '#containers';
-import { Map, type MapCapabilities } from '#types';
+import { Map } from '#types';
 
 import { LocationAnnotationId } from '../types/MapCapabilities.ts';
 import { MapInline, World } from '../types/MapSurface.ts';
 import { LocationField } from './LocationField.tsx';
 
-export default Capability.makeModule(({ readOnly = false }: MapCapabilities.MapPluginOptions = {}) =>
+export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -56,18 +56,13 @@ export default Capability.makeModule(({ readOnly = false }: MapCapabilities.MapP
         component: MapSurface,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, subject: companionTo, attendableId }),
       }),
-      // The view editor writes the map's source view, so a read-only host has no properties row.
-      ...(readOnly
-        ? []
-        : [
-            Surface.create({
-              id: 'surface.objectProperties',
-              position: Position.first,
-              filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
-              component: MapViewEditor,
-              props: ({ data: { subject } }) => ({ object: subject }),
-            }),
-          ]),
+      Surface.create({
+        id: 'surface.objectProperties',
+        position: Position.first,
+        filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
+        component: MapViewEditor,
+        props: ({ data: { subject } }) => ({ object: subject }),
+      }),
       Surface.create({
         // TODO(burdon): Why this title?
         id: 'surface.createInitialSchemaForm',

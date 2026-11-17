@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
-import { ExcalidrawArticle, ReadonlyExcalidrawArticle } from '#containers';
+import { ExcalidrawArticle } from '#containers';
 import { ExcalidrawBuilder } from '#model';
-import { Excalidraw, type ExcalidrawCapabilities } from '#types';
+import { Excalidraw } from '#types';
 
 // No `canvasType`/`createCanvas`: excalidraw stores its elements in the base `Drawing.Canvas`,
 // discriminated by `schema`.
@@ -21,11 +21,6 @@ const variant: IllustratorCapabilities.DrawingVariant = {
   article: ExcalidrawArticle,
 };
 
-export default Capability.makeModule(({ readOnly = false }: ExcalidrawCapabilities.ExcalidrawPluginOptions = {}) =>
-  Effect.succeed(
-    Capability.contribute(IllustratorCapabilities.VariantProvider, {
-      ...variant,
-      article: readOnly ? ReadonlyExcalidrawArticle : ExcalidrawArticle,
-    }),
-  ),
+export default Capability.makeModule(() =>
+  Effect.succeed(Capability.contribute(IllustratorCapabilities.VariantProvider, variant)),
 );

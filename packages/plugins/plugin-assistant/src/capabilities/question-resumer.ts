@@ -18,6 +18,7 @@ import { Task } from '@dxos/types';
 import { AssistantOperation } from '#types';
 
 import { resumePrompt } from '../operations/resume-prompt.ts';
+import { isReadOnly } from '../util/read-only.ts';
 
 type AnswerInvocation = {
   input: Operation.Definition.Input<typeof TaskOperation.AnswerQuestion>;
@@ -34,16 +35,17 @@ const isAnswer = <E extends { operation: Operation.Definition.Any }>(event: E): 
  * plugin-tasks' `AnswerQuestion` (the task pane's) only records the answer, since plugin-tasks cannot
  * reach an agent; without this, an agent that asked from a chat would stay blocked on an answer it
  * is never told about. The chat's own card answers through `AssistantOperation.AnswerQuestion`, which
- * resumes by itself and never reaches this listener.
+ * resumes by itself and never reaches this listener. A read-only host resumes nothing.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const invoker = yield* Capabilities.OperationInvoker;
+    const manager = yield* Capability.Service;
 
     yield* Effect.forkScoped(
       Stream.fromPubSub(invoker.invocations).pipe(
         Stream.filter(isAnswer),
-        Stream.filter((event) => event.output.accepted),
+        Stream.filter((event) => event.output.accepted && !isReadOnly(manager)),
         Stream.runForEach((event) =>
           Effect.gen(function* () {
             const { task: taskRef, question: questionId } = event.input;

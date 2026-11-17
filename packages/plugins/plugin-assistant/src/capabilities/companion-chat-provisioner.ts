@@ -26,13 +26,15 @@ import * as Position from '@dxos/util/Position';
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
 import { ASSISTANT_COMPANION_VARIANT } from '../constants.ts';
+import { isReadOnly } from '../util/read-only.ts';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats
- * for active planks when the assistant companion is selected.
+ * for active planks when the assistant companion is selected. A read-only host provisions none.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const manager = yield* Capability.Service;
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
     const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
@@ -93,6 +95,10 @@ export default Capability.makeModule(
      * so the caller can tear down the connection subscription.
      */
     const provisionForPlank = (plankId: string, companionVariant: string | undefined): boolean => {
+      if (isReadOnly(manager)) {
+        return false;
+      }
+
       const node: AppGraphNode.Node | null = AppGraph.getNode(graph, plankId).pipe(Option.getOrNull);
       if (!node || !Obj.isObject(node.data) || Obj.instanceOf(Chat.Chat, node.data)) {
         return false;

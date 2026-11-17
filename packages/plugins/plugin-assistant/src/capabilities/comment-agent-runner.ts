@@ -15,21 +15,27 @@ import { trim } from '@dxos/util';
 
 import { AssistantOperation } from '#types';
 
-import { CommentThreadNotPersistedError } from '../errors.ts';
+import { CommentThreadNotPersistedError, ReadOnlyHostError } from '../errors.ts';
+import { isReadOnly } from '../util/read-only.ts';
 
 /**
  * Runs a comment thread's agent turns as ordinary assistant turns: one chat per thread, parented to the thread and
  * running on the thread's own feed, with the commented object bound so its type's skills apply. A run returns once the
  * turn has settled, with the turn's final reply: the turn itself writes only trajectory events, which comment readers
- * do not show.
+ * do not show. A read-only host refuses the run.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const invoker = yield* Capabilities.OperationInvoker;
+    const manager = yield* Capability.Service;
 
     const runner: AppCapabilities.CommentAgentRunner = {
       run: ({ thread, subject, message }) =>
         Effect.gen(function* () {
+          if (isReadOnly(manager)) {
+            return yield* Effect.fail(new ReadOnlyHostError());
+          }
+
           const db = Obj.getDatabase(thread);
           if (!db) {
             return yield* Effect.fail(new CommentThreadNotPersistedError());

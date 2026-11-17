@@ -64,11 +64,6 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
-    "./TableCapabilities": {
-      "source": "./src/types/TableCapabilities.ts",
-      "types": "./dist/types/src/types/TableCapabilities.d.ts",
-      "import": "./dist/lib/TableCapabilities.mjs"
-    },
     "./TableEvents": {
       "source": "./src/types/TableEvents.ts",
       "types": "./dist/types/src/types/TableEvents.d.ts",
@@ -100,9 +95,6 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "TableCapabilities": [
-        "dist/types/src/types/TableCapabilities.d.ts"
-      ],
       "TableEvents": [
         "dist/types/src/types/TableEvents.d.ts"
       ],

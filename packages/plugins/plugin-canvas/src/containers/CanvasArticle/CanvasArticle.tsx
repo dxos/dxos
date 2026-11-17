@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
@@ -26,10 +27,7 @@ import { type CanvasEditorHost, useCanvasEditor } from './use-canvas-editor.ts';
 import { useDimension2D } from './use-dimension2d.ts';
 import { useDimension3D } from './use-dimension3d.ts';
 
-export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps<Obj.Unknown> & {
-  /** Locks the canvas with no way to unlock it. */
-  readonly?: boolean;
-};
+export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps<Obj.Unknown>;
 
 /**
  * The canvas variant's article, for either kind of scene: the shared scene editor over the open scene, with the
@@ -42,13 +40,9 @@ export const CanvasArticle = ({ canvas, ...props }: CanvasArticleProps) =>
 
 CanvasArticle.displayName = 'CanvasArticle';
 
-export const ReadonlyCanvasArticle = (props: CanvasArticleProps) => <CanvasArticle {...props} readonly />;
-
-ReadonlyCanvasArticle.displayName = 'ReadonlyCanvasArticle';
-
 type DimensionArticleProps = Pick<
   CanvasArticleProps,
-  'role' | 'attendableId' | 'extrinsic' | 'camera' | 'onCameraChange' | 'readonly'
+  'role' | 'attendableId' | 'extrinsic' | 'camera' | 'onCameraChange'
 > & {
   canvas: Canvas.Canvas;
 };
@@ -99,7 +93,6 @@ const SceneEditorArticle = <C,>({
   role,
   attendableId,
   extrinsic,
-  readonly,
   host,
   dimension,
   sharedCamera,
@@ -108,6 +101,8 @@ const SceneEditorArticle = <C,>({
 }: SceneEditorArticleProps<C>) => {
   const [element, setElement] = useState<HTMLElement | null>(null);
   const { hasAttention } = useAttention(attendableId);
+  // A read-only app locks the canvas with no way to unlock it.
+  const readOnly = ToolkitHooks.useReadOnly();
   const { stored, document } = host;
   if (!stored || !document) {
     return null;
@@ -132,8 +127,8 @@ const SceneEditorArticle = <C,>({
             scene={stored.key}
             role={role}
             navigable={section && hasAttention}
-            readonly={readonly || host.readonly}
-            onReadonlyChange={readonly ? undefined : host.onReadonlyChange}
+            readonly={readOnly || host.readonly}
+            onReadonlyChange={readOnly ? undefined : host.onReadonlyChange}
             onIntent={host.onIntent}
             history={host.history}
             onModelIntent={host.onModelIntent}

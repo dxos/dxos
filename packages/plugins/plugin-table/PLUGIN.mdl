@@ -216,7 +216,7 @@ feat F-7: Collaboration
 ```mdl
 feat F-8: Read-only Host
 
-  req F-8.1: With the plugin's `readOnly` option, no cell can be edited, there is no draft row or row selection, and the toolbar shows with Add row disabled while Export still works.
+  req F-8.1: When the host contributes `ReadOnly`, no cell can be edited, there is no draft row or row selection, and the toolbar shows with Add row disabled while Export still works.
 ```
 
 ## Acceptance
@@ -434,6 +434,24 @@ decision D-4: A `readOnly` option turns off data editing and row selection and d
   affects: [F-8.1]
   why: Export writes nothing to the table, so a reader can still take the data away; a disabled toolbar keeps the layout the same as in Composer.
   rejected: Hiding the toolbar; it also hides Export.
+```
+
+```mdl
+decision D-5: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-3
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-6: When the host contributes `ReadOnly`, data editing and row selection are off and there is no draft row; the toolbar stays, with only adding rows disabled. Fills in [D-5].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-4
+  affects: [F-8.1]
+  why: The table article reads the capability when it renders, so the behaviour [D-4] chose stays the same with no plugin option.
 ```
 
 ## Appendix: Extension Definitions

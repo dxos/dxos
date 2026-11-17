@@ -58,8 +58,6 @@ import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
   NavbarPresenceSurface,
   NavtreePresenceSurface,
-  ReadOnlySpaceHomeDashboardSurface,
-  ReadOnlySpaceHomeRecentSurface,
   SelectedObjectsSurface,
   SpaceHomeDashboardSurface,
   SpaceHomeRecentSurface,
@@ -89,13 +87,13 @@ export default Capability.makeModule(
       Surface.create({
         id: 'spaceHomeRecent',
         filter: Surface.makeFilter(SpaceHomeContent),
-        component: options.readOnly ? ReadOnlySpaceHomeRecentSurface : SpaceHomeRecentSurface,
+        component: SpaceHomeRecentSurface,
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
         id: 'spaceHomeDashboard',
         filter: Surface.makeFilter(SpaceHomeContent),
-        component: options.readOnly ? ReadOnlySpaceHomeDashboardSurface : SpaceHomeDashboardSurface,
+        component: SpaceHomeDashboardSurface,
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
@@ -123,7 +121,6 @@ export default Capability.makeModule(
           type: subject,
           attendableId,
           properties,
-          readonly: options.readOnly,
         }),
       }),
       Surface.create({
@@ -139,12 +136,7 @@ export default Capability.makeModule(
           AppSurface.companion(AppSurface.Article),
         ),
         component: DefaultProperties,
-        props: ({ role, ref, data: { companionTo } }) => ({
-          role,
-          subject: companionTo,
-          ref,
-          readonly: options.readOnly,
-        }),
+        props: ({ role, ref, data: { companionTo } }) => ({ role, subject: companionTo, ref }),
       }),
       Surface.create({
         id: 'companion.related',

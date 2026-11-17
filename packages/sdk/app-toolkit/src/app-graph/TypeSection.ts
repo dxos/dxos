@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space, isSpace } from '@dxos/client/echo';
@@ -19,6 +20,7 @@ import { ArchivedAnnotation } from '@dxos/schema';
 import { inferObjectOrder } from '@dxos/util';
 import * as Position from '@dxos/util/Position';
 
+import * as AppCapabilities from '../app-framework/AppCapabilities.ts';
 import { AppNodeMatcher } from '../app-graph/index.ts';
 import { AppNode } from '../app-graph/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
@@ -69,7 +71,8 @@ export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
  * is automatic — no path resolver to register — since the extension's `urlKey` declaration is all
  * `@dxos/app-graph`'s `path-resolution.ts` needs.
  *
- * Pass `createObject` to add a "+" action on the section header automatically.
+ * Pass `createObject` to add a "+" action on the section header automatically. While the host contributes
+ * {@link AppCapabilities.ReadOnly} the section offers no "+" and takes no drops or reorders.
  */
 /** The id a type section gives the extension producing its objects. */
 const sectionObjectsId = (typename: string): string => `${typename}.sectionObjects`;
@@ -84,61 +87,77 @@ export const isSectionObjectsExtension = (extensionId: string, typename: string)
   return id === objectsId || id.endsWith(`.${objectsId}`);
 };
 
+export type TypeSectionOptions<T extends Type.AnyObj> = {
+  /** Position hint for the section in the sidebar. */
+  position?: Position.Position;
+  /**
+   * Override the default {@link AppNodeMatcher.whenSpace} match function.
+   * Use when the section should live under a group node rather than directly under a space.
+   * The match must still return `Option<Space>` so the connector can query the space db.
+   */
+  match?: (node: AppGraphNode.Node) => Option.Option<Space>;
+  /**
+   * Group segment the section nests under (e.g. `GraphPath.GroupSegments.ai`), when `match` places it
+   * beneath a navtree group rather than directly under the space. Included in the forward-resolution
+   * `urlPath` so section objects at `root/<space>/<groupSegment>/<typename>/<id>` resolve
+   * deterministically. Omit for a space-direct section (`root/<space>/<typename>/<id>`).
+   */
+  groupSegment?: string;
+  /**
+   * If provided, a "+" action is added to the section header that runs this effect when clicked.
+   * The action label is resolved from `add-object.label` in the type's i18n namespace.
+   */
+  createObject?: (space: Space) => Effect.Effect<any, any, any>;
+  /**
+   * Registered URL prefix key for this section's connector (e.g. `doc`, `mail`). Keys are global, so
+   * it is declared here rather than derived — see `@dxos/app-graph`'s `path-resolution.ts` for how
+   * registered keys resolve and serialize URLs.
+   */
+  urlKey: string;
+  /**
+   * Registered URL key making the section node itself addressable (e.g. `library` → `/w/<space>/library`),
+   * for a section that is worth linking to in its own right; it also names the section node. Omit and the
+   * section stays a bare container named by its typename: only its objects are addressable.
+   *
+   * Opting in splits the section into two extensions — one owning the section node, one owning its
+   * objects — since each extension carries one binding and the two need different ones. The objects are
+   * then materialized on expand rather than inline.
+   */
+  sectionUrlKey?: string;
+  /**
+   * The container an object dropped onto a section object's row joins. Without it a section object
+   * only accepts objects of its own type, as reorders.
+   */
+  dropInto?: (object: Type.InstanceType<T>) => ContainerModel.Container;
+  /**
+   * A fixed order for the section's objects (e.g. newest first, for sessions). The section then keeps that order
+   * rather than one the person drags into place, so its objects cannot be rearranged.
+   */
+  sort?: (a: Type.InstanceType<T>, b: Type.InstanceType<T>) => number;
+  /**
+   * Keep the section in the sidebar while the space has none of the type, so its "+" can start the first one (a
+   * section that is where its objects are made, like sessions). By default an empty section is suppressed.
+   */
+  showEmpty?: boolean;
+};
+
 export const createTypeSectionExtension = <T extends Type.AnyObj>(
   type: T,
-  options: {
-    /** Position hint for the section in the sidebar. */
-    position?: Position.Position;
-    /**
-     * Override the default {@link AppNodeMatcher.whenSpace} match function.
-     * Use when the section should live under a group node rather than directly under a space.
-     * The match must still return `Option<Space>` so the connector can query the space db.
-     */
-    match?: (node: AppGraphNode.Node) => Option.Option<Space>;
-    /**
-     * Group segment the section nests under (e.g. `GraphPath.GroupSegments.ai`), when `match` places it
-     * beneath a navtree group rather than directly under the space. Included in the forward-resolution
-     * `urlPath` so section objects at `root/<space>/<groupSegment>/<typename>/<id>` resolve
-     * deterministically. Omit for a space-direct section (`root/<space>/<typename>/<id>`).
-     */
-    groupSegment?: string;
-    /**
-     * If provided, a "+" action is added to the section header that runs this effect when clicked.
-     * The action label is resolved from `add-object.label` in the type's i18n namespace.
-     */
-    createObject?: (space: Space) => Effect.Effect<any, any, any>;
-    /**
-     * Registered URL prefix key for this section's connector (e.g. `doc`, `mail`). Keys are global, so
-     * it is declared here rather than derived — see `@dxos/app-graph`'s `path-resolution.ts` for how
-     * registered keys resolve and serialize URLs.
-     */
-    urlKey: string;
-    /**
-     * Registered URL key making the section node itself addressable (e.g. `library` → `/w/<space>/library`),
-     * for a section that is worth linking to in its own right; it also names the section node. Omit and the
-     * section stays a bare container named by its typename: only its objects are addressable.
-     *
-     * Opting in splits the section into two extensions — one owning the section node, one owning its
-     * objects — since each extension carries one binding and the two need different ones. The objects are
-     * then materialized on expand rather than inline.
-     */
-    sectionUrlKey?: string;
-    /**
-     * The container an object dropped onto a section object's row joins. Without it a section object
-     * only accepts objects of its own type, as reorders.
-     */
-    dropInto?: (object: Type.InstanceType<T>) => ContainerModel.Container;
-    /**
-     * A fixed order for the section's objects (e.g. newest first, for sessions). The section then keeps that order
-     * rather than one the person drags into place, so its objects cannot be rearranged.
-     */
-    sort?: (a: Type.InstanceType<T>, b: Type.InstanceType<T>) => number;
-    /**
-     * Keep the section in the sidebar while the space has none of the type, so its "+" can start the first one (a
-     * section that is where its objects are made, like sessions). By default an empty section is suppressed.
-     */
-    showEmpty?: boolean;
-  },
+  options: TypeSectionOptions<T>,
+): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> =>
+  Effect.gen(function* () {
+    // Optional, so a section built without a capability manager (tests) is writable.
+    const manager = yield* Effect.serviceOption(Capability.Service);
+    const readOnlyAtom = Option.map(manager, (manager) => manager.atom(AppCapabilities.ReadOnly));
+    const isReadOnly = (get: Atom.AtomContext): boolean =>
+      Option.match(readOnlyAtom, { onNone: () => false, onSome: (atom) => get(atom).length > 0 });
+    return yield* createExtensions(type, options, isReadOnly);
+  });
+
+const createExtensions = <T extends Type.AnyObj>(
+  type: T,
+  options: TypeSectionOptions<T>,
+  isReadOnly: (get: Atom.AtomContext) => boolean,
 ): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
   invariant(typename, 'Schema must have a typename to create a type section extension.');
@@ -198,7 +217,11 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
           get,
           db: space.db,
           object,
-          ...(dropInto ? { dropInto: dropInto(object), blockInstruction } : {}),
+          ...(isReadOnly(get)
+            ? { draggable: false, droppable: false }
+            : dropInto
+              ? { dropInto: dropInto(object), blockInstruction }
+              : {}),
         }),
       )
       .filter((node): node is NonNullable<typeof node> => node !== null);
@@ -236,6 +259,7 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
       })();
       const icon = annotation?.icon ?? 'ph--circle-dashed--regular';
       const iconHue = annotation?.hue;
+      const fixedOrder = !!options.sort || isReadOnly(get);
 
       return Effect.succeed([
         AppGraphNode.make({
@@ -249,9 +273,9 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
             role: 'branch',
             draggable: false,
             droppable: false,
-            // A fixed sort takes no drops; otherwise objects of the type reorder by drag.
-            canDrop: options.sort ? (): boolean => false : canDropSameType,
-            ...(options.sort ? {} : { onRearrange: makeSectionRearrangeCallback(space, typename) }),
+            // A fixed sort or a read-only host takes no drops; otherwise objects of the type reorder by drag.
+            canDrop: fixedOrder ? (): boolean => false : canDropSameType,
+            ...(fixedOrder ? {} : { onRearrange: makeSectionRearrangeCallback(space, typename) }),
             space,
             testId,
             ...(options.position ? { position: options.position } : {}),
@@ -284,18 +308,22 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
   const actionsExtension = AppGraphBuilder.createExtension({
     id: `${typename}.sectionCreate`,
     match: whenSection,
-    actions: (space) =>
-      Effect.succeed([
-        AppGraphNode.makeAction({
-          id: 'create',
-          data: () => createObject(space),
-          properties: {
-            label: ['add-object.label', { ns: typename }],
-            icon: 'ph--plus--regular',
-            disposition: 'list-item-primary',
-          },
-        }),
-      ]),
+    actions: (space, get) =>
+      Effect.succeed(
+        isReadOnly(get)
+          ? []
+          : [
+              AppGraphNode.makeAction({
+                id: 'create',
+                data: () => createObject(space),
+                properties: {
+                  label: ['add-object.label', { ns: typename }],
+                  icon: 'ph--plus--regular',
+                  disposition: 'list-item-primary',
+                },
+              }),
+            ],
+      ),
   });
 
   return Effect.map(Effect.all([extensions, actionsExtension]), ([base, actions]) => [...base, ...actions]);

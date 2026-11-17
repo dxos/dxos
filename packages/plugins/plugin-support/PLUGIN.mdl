@@ -298,7 +298,7 @@ feat F-5: GitHub Issue Submission
 ```mdl
 feat F-6: Read-only Host
 
-  req F-6.1: With the plugin's `readOnly` option, it contributes only the per-object and home Help companions, without tours: no feedback companion, Discord, tickets or welcome tour.
+  req F-6.1: When the host contributes `ReadOnly`, the plugin offers only the per-object and home Help companions, without tours: no feedback companion, Discord, tickets or welcome tour.
 ```
 
 ## Acceptance
@@ -432,4 +432,22 @@ decision D-2: A `readOnly` option keeps the Help companions, without their tour 
   for: user:wittjosiah
   affects: [F-6.1]
   why: Feedback, tickets and Discord act for a signed-in user, and a tour walks the reader through creating objects.
+```
+
+```mdl
+decision D-3: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-6.1]
+  supersedes: D-2
+```
+
+```mdl
+decision D-4: When the host contributes `ReadOnly`, the plugin keeps the Help companions, without their tour buttons, and offers no feedback, Discord, tickets or welcome tour. Fills in [D-3].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.1]
+  supersedes: D-2
+  why: Feedback, tickets and Discord act for a signed-in user, and a tour walks the reader through creating objects. The host contributes `ReadOnly` at startup with no ordering against other modules, so the graph, surfaces, ticket entry and tour auto-start read it when used rather than skipping their contribution.
 ```

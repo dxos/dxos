@@ -223,6 +223,12 @@ feat F-8: Review
              full.
 ```
 
+```mdl
+feat F-9: Read-only Host
+  req F-9.1: When the host contributes `ReadOnly`, a project reads without editing: its header, configuration and spec text are read-only, the spec views take no answers or approvals, and nothing adds or removes an artifact or spec, changes a spec's extensions, delegates a task or starts a chat. The tabs, the spec picker, the pipeline chart and opening artifacts and tasks still work.
+  req F-9.2: When the host contributes `ReadOnly`, the nav tree lists each project with its Chats and Artifacts branches, which open their chats and artifacts, and offers no create, create-chat, add-artifact, drop, rearrange or Set up project action. The move-task dialog renders nothing and the project tour does not start.
+```
+
 ## QA
 
 Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an invocable
@@ -3006,4 +3012,60 @@ decision D-270: The project reveal (`ProjectOperation.ScrollToAnchor`) takes `fo
   date: 2026-11-16
   by: user:wittjosiah
   why: A follow moved the follower's selection in a project's text fields with every move of the leader's.
+```
+
+```mdl
+decision D-271: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+```
+
+```mdl
+decision D-272: A `readOnly` option draws the project article, the spec text and the spec views without editing, and leaves out what creates, links, moves or delegates, or needs the assistant: the Chats branch, the task actions, the move-task dialog, the templates, the create entries and the tour. Fills in [D-271].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+  why: A reader still wants a project's configuration and spec, so they show read-only rather than hidden. Chats open in the assistant, and every task action hands the task to an agent or moves it.
+  rejected:
+    - Hiding the Config section; it holds the instructions and context that explain the project.
+    - Keeping Copy prompt; the prompt tells an agent to claim the task in a space the reader cannot write to.
+```
+
+```mdl
+decision D-273: In read-only mode a project's chats can be opened and read.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-9.2]
+```
+
+```mdl
+decision D-274: A `readOnly` option draws the project article, the spec text and the spec views without editing, and leaves out what creates, links, moves or delegates: the create-chat action, the task actions, the move-task dialog, the templates, the create entries and the tour. The Chats branch and its chats stay, without drag or rearrange, and a pipeline lane still opens its chat. Fills in [D-273].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-272
+  affects: [F-9.1, F-9.2]
+  why: A lane only navigates to a chat that exists, and the assistant's own read-only mode keeps the chat from resuming its session.
+```
+
+```mdl
+decision D-275: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-271
+  affects: [F-9.1, F-9.2]
+```
+
+```mdl
+decision D-276: When the host contributes `ReadOnly`, the project article, the spec text and the spec views draw without editing, and nothing creates, links, moves or delegates: the nav tree has no create, create-chat, add-artifact, drop, rearrange or Set up project action, the move-task dialog renders nothing, and the project tour does not start. The Chats branch and its chats stay, without drag or rearrange. Fills in [D-275].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-274
+  affects: [F-9.1, F-9.2]
+  why: The host contributes `ReadOnly` at startup with no ordering against the plugin's modules, so the plugin contributes everything and reads it where each piece is used: the containers through `useReadOnly`, each graph action and draggable flag inside its extension, the tour in its match. The Projects section's `+`, drops and rearranges come from the type section, which leaves them out itself while `ReadOnly` is contributed. Templates, create entries and task actions are always contributed, since every place that offers them leaves them out when read-only.
+  rejected:
+    - Withholding the plugin's modules on a read-only host: a module cannot see a capability contributed in the same startup wave.
 ```

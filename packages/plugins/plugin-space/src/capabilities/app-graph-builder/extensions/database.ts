@@ -29,7 +29,7 @@ import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 
 import { SPACE_STATS_QUERY, typeUrisWithObjects } from '#dashboard';
-import { SpaceCapabilities, SpaceEvents, SpaceOperation, type SpaceSchema } from '#types';
+import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
 import { SpaceNamespace } from '../../../namespace.ts';
 import { SpaceOperationError } from '../../../operations/errors.ts';
@@ -48,10 +48,9 @@ import {
 //
 
 /** Creates database extensions: types section, schema nodes, schema children, and schema actions. */
-export const createDatabaseExtensions = Effect.fnUntraced(function* ({
-  readOnly = false,
-}: Pick<SpaceSchema.SpacePluginOptions, 'readOnly'> = {}) {
+export const createDatabaseExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
+  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
   const pluginManager = yield* Plugin.Service;
   // Fired from the schema-actions evaluation below, which re-runs reactively; the scheduler
   // short-circuits a dispatch with nothing left to activate, so repeats cost a lookup.
@@ -276,38 +275,33 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* ({
       },
     }),
 
-    ...(readOnly
-      ? []
-      : [
-          // Actions for schema nodes.
-          AppGraphBuilder.createExtension({
-            id: 'schemaActions',
-            match: (node) => {
-              const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-              return space && Type.isType(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
-            },
-            actions: ({ space, schema }, get) => {
-              const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-              const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
+    // Actions for schema nodes.
+    AppGraphBuilder.createExtension({
+      id: 'schemaActions',
+      match: (node, get) => {
+        const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+        return get(readOnlyAtom).length === 0 && space && Type.isType(node.data)
+          ? Option.some({ space, schema: node.data })
+          : Option.none();
+      },
+      actions: ({ space, schema }, get) => {
+        const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
+        const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
-              const targetUri = Type.getURI(schema);
-              const viewIndex = buildViewIndex(get, space, schemas);
-              const deletable =
-                Type.getDatabase(schema) != null && viewIndex.getViewsForTypeUri(targetUri).length === 0;
+        const targetUri = Type.getURI(schema);
+        const viewIndex = buildViewIndex(get, space, schemas);
+        const deletable = Type.getDatabase(schema) != null && viewIndex.getViewsForTypeUri(targetUri).length === 0;
 
-              // Tracked read (not a one-shot `getAll`): entry providers may be policy-parked, and the
-              // computed actions must refresh when their contributions arrive. Evaluating a schema
-              // node's actions is itself a create-flow demand signal, so fire it (outside the reactive
-              // computation) to pull the parked providers.
-              const createEntries = get(capabilities.atom(SpaceCapabilities.CreateObjectEntry));
-              queueMicrotask(() => requestCreateObjectEntries());
+        // Tracked read (not a one-shot `getAll`): entry providers may be policy-parked, and the
+        // computed actions must refresh when their contributions arrive. Evaluating a schema
+        // node's actions is itself a create-flow demand signal, so fire it (outside the reactive
+        // computation) to pull the parked providers.
+        const createEntries = get(capabilities.atom(SpaceCapabilities.CreateObjectEntry));
+        queueMicrotask(() => requestCreateObjectEntries());
 
-              return Effect.succeed(
-                createSchemaActions({ type: schema, space, deletable, capabilities, createEntries }),
-              );
-            },
-          }),
-        ]),
+        return Effect.succeed(createSchemaActions({ type: schema, space, deletable, capabilities, createEntries }));
+      },
+    }),
   ]);
 });
 

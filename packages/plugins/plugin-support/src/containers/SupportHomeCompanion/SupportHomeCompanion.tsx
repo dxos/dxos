@@ -6,6 +6,7 @@ import React, { memo, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Button from '@dxos/react-ui/Button';
 import * as Carousel from '@dxos/react-ui/Carousel';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -23,8 +24,9 @@ const WELCOME_SLIDE = {
   description: 'Welcome to DXOS',
 };
 
-/** `readonly` leaves out the welcome tour, which walks through creating and editing. */
-export const SupportHomeCompanion = ({ readonly }: { readonly?: boolean }) => {
+export const SupportHomeCompanion = () => {
+  // Read-only, the welcome tour is left out, as it walks through creating and editing.
+  const readonly = ToolkitHooks.useReadOnly();
   const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 

@@ -91,6 +91,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   // The selected tab and the chart toggle are view state under the project's EID, so they outlive
   // the plank and the reload, and a follower takes them.
   const viewKey = Obj.getURI(subject);
@@ -211,7 +212,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     specs: specTree,
     selected: spec,
     onSelect: selectSpec,
-    onAdd: () => void handleAddSpec(),
+    onAdd: readonly ? undefined : () => void handleAddSpec(),
   });
   // The spec section's editor tools, which it puts here rather than in a second toolbar of its own.
   const { slot: specToolbarSlot, actions: editorActions } = useSpecToolbarSlot();
@@ -221,14 +222,17 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       pickerActions(group);
       if (spec) {
         group.subgraph(editorActions);
-        dialectActions(group);
+        if (!readonly) {
+          dialectActions(group);
+        }
       }
     },
-    [spec, pickerActions, editorActions, dialectActions],
+    [spec, readonly, pickerActions, editorActions, dialectActions],
   );
 
   const menuActions = useToolbarActions({
     project: subject,
+    readonly,
     tab,
     tabs,
     specActions: spec ? specActions : undefined,
@@ -366,6 +370,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               values={project}
               extensions={extensions}
               fieldOverrides={fieldOverrides}
+              readonly={readonly}
               onValuesChanged={handleValuesChanged}
               onCreate={handleCreate}
             >
@@ -409,19 +414,25 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                               : t('show-all-artifacts.label', { count: artifacts.length })}
                           </Button.Root>
                         )}
-                        <Button.Root
-                          iconOnly
-                          variant='ghost'
-                          icon='ph--plus--regular'
-                          label={t('create-artifact.label')}
-                          data-testid='projectsPlugin.addArtifact'
-                          onClick={() => void handleAddArtifact()}
-                        />
+                        {!readonly && (
+                          <Button.Root
+                            iconOnly
+                            variant='ghost'
+                            icon='ph--plus--regular'
+                            label={t('create-artifact.label')}
+                            data-testid='projectsPlugin.addArtifact'
+                            onClick={() => void handleAddArtifact()}
+                          />
+                        )}
                       </>
                     }
                   >
                     {artifacts.length > 0 ? (
-                      <ObjectGallery objects={shownArtifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                      <ObjectGallery
+                        objects={shownArtifacts}
+                        onOpen={handleOpen}
+                        onDelete={readonly ? undefined : handleDeleteArtifact}
+                      />
                     ) : (
                       <Typography.Text tone='muted' data-testid='projectsPlugin.artifacts.empty'>
                         {t('artifacts-empty.message')}
@@ -452,7 +463,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 </SpecToolbarProvider>
               </div>
             )}
-          {tab === 'spec' && !spec && <AddSpec onAdd={() => void handleAddSpec()} />}
+          {tab === 'spec' && !spec && <AddSpec onAdd={readonly ? undefined : () => void handleAddSpec()} />}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
           {tab === 'tasks' && !taskSet && <Status.Empty>{t('no-task-set.message')}</Status.Empty>}
@@ -522,15 +533,17 @@ const MilestoneList = ({ refs, tasks, onOpen }: MilestoneListProps) => (
   </Layout.Container>
 );
 
-/** The Specs tab of a project without a spec: the offer to add one. */
-const AddSpec = ({ onAdd }: { onAdd: () => void }) => {
+/** The Specs tab of a project without a spec: the offer to add one, when `onAdd` is given. */
+const AddSpec = ({ onAdd }: { onAdd?: () => void }) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   return (
     <Layout.Flex column center gap='sm' classNames='h-full' data-testid='projectsPlugin.spec.empty'>
       <Status.Empty icon='ph--blueprint--regular'>{t('spec.empty.message')}</Status.Empty>
-      <Button.Root icon='ph--plus--regular' data-testid='projectsPlugin.addSpec' onClick={onAdd}>
-        {t('add-spec.label')}
-      </Button.Root>
+      {onAdd && (
+        <Button.Root icon='ph--plus--regular' data-testid='projectsPlugin.addSpec' onClick={onAdd}>
+          {t('add-spec.label')}
+        </Button.Root>
+      )}
     </Layout.Flex>
   );
 };
@@ -540,12 +553,13 @@ type SpecPickerActionsProps = {
   /** The spec shown; no picker without one. */
   selected?: Spec.Spec;
   onSelect: (spec: Spec.Spec) => void;
-  onAdd: () => void;
+  /** Ends the dropdown in an action to add another spec. */
+  onAdd?: () => void;
 };
 
 /**
  * A dropdown of the project's specs, each with the specs nested beneath it indented under it, named after the one shown
- * and checking it, ending in an action to add another.
+ * and checking it, ending in an action to add another when `onAdd` is given.
  */
 const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerActionsProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
@@ -580,15 +594,17 @@ const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerAc
               () => onSelect(spec),
             ),
           );
-          group.separator('line').action(
-            'add-spec',
-            {
-              label: ['add-spec.label', { ns: ProjectsNamespace.key }],
-              icon: 'ph--plus--regular',
-              testId: 'projectsPlugin.addSpec',
-            },
-            onAdd,
-          );
+          if (onAdd) {
+            group.separator('line').action(
+              'add-spec',
+              {
+                label: ['add-spec.label', { ns: ProjectsNamespace.key }],
+                icon: 'ph--plus--regular',
+                testId: 'projectsPlugin.addSpec',
+              },
+              onAdd,
+            );
+          }
         },
       );
       group.separator('line');
@@ -750,6 +766,8 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
 
 export type ToolbarActionsProps = {
   project: Project.Project;
+  /** Leaves out the delegate action. */
+  readonly: boolean;
   /** The tab shown, whose tools follow the tabs. */
   tab: ProjectView.Tab;
   /** The view tabs, rendered as the bar's leading item. */
@@ -771,6 +789,7 @@ export type ToolbarActionsProps = {
  */
 const useToolbarActions = ({
   project,
+  readonly,
   tab,
   tabs,
   specActions,
@@ -832,17 +851,21 @@ const useToolbarActions = ({
           tab === 'tasks'
             ? (group) =>
                 group
-                  // Dead until rows are checked, so a reader who checks some sees it come alive.
-                  .action(
-                    'delegate-tasks',
-                    {
-                      label: ['delegate-tasks.label', { ns: ProjectsNamespace.key }],
-                      icon: 'ph--paper-plane-tilt--regular',
-                      disposition: 'toolbar',
-                      disabled: checkedTasks.length === 0 || delegating,
-                      testId: 'projectsPlugin.delegateTasks',
-                    },
-                    () => void delegateTasks(),
+                  .subgraph(
+                    !readonly &&
+                      ((group) =>
+                        // Dead until rows are checked, so a reader who checks some sees it come alive.
+                        group.action(
+                          'delegate-tasks',
+                          {
+                            label: ['delegate-tasks.label', { ns: ProjectsNamespace.key }],
+                            icon: 'ph--paper-plane-tilt--regular',
+                            disposition: 'toolbar',
+                            disabled: checkedTasks.length === 0 || delegating,
+                            testId: 'projectsPlugin.delegateTasks',
+                          },
+                          () => void delegateTasks(),
+                        )),
                   )
                   // A toggle rather than a tab: the chart accompanies the ledger rather than replacing it.
                   .group(
@@ -870,6 +893,6 @@ const useToolbarActions = ({
             : undefined,
         )
         .build(),
-    [tab, tabs, delegateTasks, specActions, checkedTasks.length, delegating, showPipeline, onTogglePipeline],
+    [readonly, tab, tabs, delegateTasks, specActions, checkedTasks.length, delegating, showPipeline, onTogglePipeline],
   );
 };

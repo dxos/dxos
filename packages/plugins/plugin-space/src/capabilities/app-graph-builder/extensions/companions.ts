@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { Obj, Type } from '@dxos/echo';
@@ -19,87 +21,89 @@ import { SpaceNamespace } from '../../../namespace.ts';
 // Extension Factory
 //
 
+type Extensions = AppGraphBuilder.BuilderExtension[][];
+
 /** Creates companion panel extensions: object settings, related, and selected-objects. */
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/plugin-graph types (TS2883).
-export const createCompanionExtensions: (options?: {
-  readOnly?: boolean;
-}) => Effect.Effect<AppGraphBuilder.BuilderExtension[][]> = Effect.fnUntraced(function* ({ readOnly = false } = {}) {
-  return yield* Effect.all([
-    // Object settings plank companion; a read-only host shows the properties without editing.
-    AppGraphBuilder.createExtension({
-      id: 'settings',
-      relation: AppNode.companion,
-      match: AppNodeMatcher.whenEchoObjectMatches,
-      connector: (node) =>
-        Effect.succeed([
-          AppNode.makeCompanion({
-            variant: 'settings',
-            label: ['object-properties.label', { ns: SpaceNamespace.key }],
-            icon: 'ph--sliders--regular',
-            data: 'settings', // TODO(burdon): Change to 'object-properties'.
-            position: Position.last,
-          }),
-        ]),
-    }),
+export const createCompanionExtensions: () => Effect.Effect<Extensions, never, Capability.Service> = Effect.fnUntraced(
+  function* () {
+    const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+    return yield* Effect.all([
+      // Object settings plank companion.
+      AppGraphBuilder.createExtension({
+        id: 'settings',
+        relation: AppNode.companion,
+        match: AppNodeMatcher.whenEchoObjectMatches,
+        connector: (node) =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              variant: 'settings',
+              label: ['object-properties.label', { ns: SpaceNamespace.key }],
+              icon: 'ph--sliders--regular',
+              data: 'settings', // TODO(burdon): Change to 'object-properties'.
+              position: Position.last,
+            }),
+          ]),
+      }),
 
-    // Related objects plank companion.
-    AppGraphBuilder.createExtension({
-      id: 'related',
-      relation: AppNode.companion,
-      match: AppNodeMatcher.whenEchoObjectMatches,
-      connector: (node) =>
-        Effect.succeed([
-          AppNode.makeCompanion({
-            variant: 'related',
-            label: ['companion-related.label', { ns: SpaceNamespace.key }],
-            icon: 'ph--graph--regular',
-            data: 'related',
-            position: Position.last,
-          }),
-        ]),
-    }),
+      // Related objects plank companion.
+      AppGraphBuilder.createExtension({
+        id: 'related',
+        relation: AppNode.companion,
+        match: AppNodeMatcher.whenEchoObjectMatches,
+        connector: (node) =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              variant: 'related',
+              label: ['companion-related.label', { ns: SpaceNamespace.key }],
+              icon: 'ph--graph--regular',
+              data: 'related',
+              position: Position.last,
+            }),
+          ]),
+      }),
 
-    // Selection is off in a read-only space, so there is nothing to show.
-    ...(readOnly
-      ? []
-      : [
-          AppGraphBuilder.createExtension({
-            id: 'selectedObjects',
-            relation: AppNode.companion,
-            match: (node) => {
-              // Type/schema node (e.g. a TypeArticle plank): the table's own row selection feeds this
-              // companion directly, no view lookup needed.
-              if (Type.isType(node.data)) {
-                return Option.some(node);
-              }
+      // View selected objects companion; selection is off read-only, so there is nothing to show.
+      AppGraphBuilder.createExtension({
+        id: 'selectedObjects',
+        relation: AppNode.companion,
+        match: (node, get) => {
+          if (get(readOnlyAtom).length > 0) {
+            return Option.none();
+          }
 
-              if (!Obj.isObject(node.data)) {
-                return Option.none();
-              }
+          // Type/schema node (e.g. a TypeArticle plank): the table's own row selection feeds this
+          // companion directly, no view lookup needed.
+          if (Type.isType(node.data)) {
+            return Option.some(node);
+          }
 
-              const type = Obj.getType(node.data);
-              const path = type
-                ? ViewAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
-                : [];
-              const isEchoViewBacked =
-                type && path.length > 0 ? ViewAnnotation.hasRefAlongPath(node.data, path) : false;
+          if (!Obj.isObject(node.data)) {
+            return Option.none();
+          }
 
-              if (!isEchoViewBacked) {
-                return Option.none();
-              }
+          const type = Obj.getType(node.data);
+          const path = type
+            ? ViewAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
+            : [];
+          const isEchoViewBacked = type && path.length > 0 ? ViewAnnotation.hasRefAlongPath(node.data, path) : false;
 
-              return Option.some(node);
-            },
-            connector: (node) =>
-              Effect.succeed([
-                AppNode.makeCompanion({
-                  variant: 'selected-objects',
-                  label: ['companion-selected-objects.label', { ns: SpaceNamespace.key }],
-                  icon: 'ph--tree-view--regular',
-                  data: 'selected-objects',
-                }),
-              ]),
-          }),
-        ]),
-  ]);
-});
+          if (!isEchoViewBacked) {
+            return Option.none();
+          }
+
+          return Option.some(node);
+        },
+        connector: (node) =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              variant: 'selected-objects',
+              label: ['companion-selected-objects.label', { ns: SpaceNamespace.key }],
+              icon: 'ph--tree-view--regular',
+              data: 'selected-objects',
+            }),
+          ]),
+      }),
+    ]);
+  },
+);

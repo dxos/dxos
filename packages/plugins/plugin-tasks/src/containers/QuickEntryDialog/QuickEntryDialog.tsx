@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Format } from '@dxos/echo';
 import { Form, useFormContext } from '@dxos/react-ui-form';
@@ -87,6 +88,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
 
 export const QuickEntryDialog = () => {
   const { t } = UiHooks.useTranslation(TasksNamespace.key);
+  const readOnly = ToolkitHooks.useReadOnly();
   const { invokePromise } = Hooks.useOperationInvoker();
   const [formKey, setFormKey] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -131,6 +133,11 @@ export const QuickEntryDialog = () => {
       formSaveRef.current?.();
     }
   }, []);
+
+  // Quick entry writes to today's journal entry.
+  if (readOnly) {
+    return null;
+  }
 
   return (
     <Dialog.Content ref={contentRef} onKeyDownCapture={handleKeyDownCapture}>

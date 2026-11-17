@@ -7,6 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
@@ -37,8 +38,6 @@ export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outl
    * toolbar, and a second one inside its section reads as a nested editor.
    */
   toolbar?: boolean;
-  /** Shows the outline, and any task it links to, with no way to edit or promote an item. */
-  readonly?: boolean;
 };
 
 export const OutlineArticle = ({
@@ -47,9 +46,9 @@ export const OutlineArticle = ({
   subject: outline,
   taskSet: taskSetProp,
   toolbar = true,
-  readonly = false,
 }: OutlineArticleProps) => {
   const { t } = Hooks.useTranslation(TasksNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const db = Obj.getDatabase(outline);
   // Promotion writes a task, so a read-only outline has nowhere to file one.
   const taskSet = readonly ? undefined : taskSetProp;

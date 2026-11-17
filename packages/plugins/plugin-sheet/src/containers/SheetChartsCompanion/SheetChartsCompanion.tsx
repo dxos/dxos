@@ -5,6 +5,7 @@
 import React from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider, SheetCharts, useComputeGraph } from '#components';
@@ -15,11 +16,10 @@ import { useSheetModel } from '../../model/index.ts';
 export type SheetChartsCompanionProps = {
   role?: string;
   subject: Sheet.Sheet;
-  readonly?: boolean;
 };
 
 /** Charts of the sheet's ranges, kept on the sheet; shares the sheet's selection through the `Selection` view state. */
-export const SheetChartsCompanion = ({ subject, readonly }: SheetChartsCompanionProps) => {
+export const SheetChartsCompanion = ({ subject }: SheetChartsCompanionProps) => {
   const registry = Hooks.useCapability(SheetCapabilities.ComputeGraphRegistry);
   const space = getSpace(subject);
   if (!space) {
@@ -28,23 +28,16 @@ export const SheetChartsCompanion = ({ subject, readonly }: SheetChartsCompanion
 
   return (
     <ComputeGraphContextProvider registry={registry}>
-      <SheetChartsCompanionInner sheet={subject} space={space} readonly={readonly} />
+      <SheetChartsCompanionInner sheet={subject} space={space} />
     </ComputeGraphContextProvider>
   );
 };
 
 SheetChartsCompanion.displayName = 'SheetChartsCompanion';
 
-const SheetChartsCompanionInner = ({
-  sheet,
-  space,
-  readonly,
-}: {
-  sheet: Sheet.Sheet;
-  space: Space;
-  readonly?: boolean;
-}) => {
+const SheetChartsCompanionInner = ({ sheet, space }: { sheet: Sheet.Sheet; space: Space }) => {
   const graph = useComputeGraph(space);
+  const readonly = ToolkitHooks.useReadOnly();
   const model = useSheetModel(graph, sheet, { readonly });
   const chartTypes = Hooks.useCapabilities(SheetCapabilities.ChartType);
   return model ? <SheetCharts sheet={sheet} model={model} chartTypes={chartTypes} readonly={readonly} /> : null;

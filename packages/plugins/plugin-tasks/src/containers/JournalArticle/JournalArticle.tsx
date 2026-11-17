@@ -5,6 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -18,21 +19,11 @@ import { Journal } from '#types';
 
 import { TasksNamespace } from '../../namespace.ts';
 
-export type JournalArticleProps = AppSurface.ObjectArticleProps<
-  Journal.Journal,
-  {
-    /** Shows the entries with no way to edit one or start today's. */
-    readonly?: boolean;
-  }
->;
+export type JournalArticleProps = AppSurface.ObjectArticleProps<Journal.Journal>;
 
-export const JournalArticle = ({
-  role,
-  attendableId: _attendableId,
-  subject: journal,
-  readonly,
-}: JournalArticleProps) => {
+export const JournalArticle = ({ role, attendableId: _attendableId, subject: journal }: JournalArticleProps) => {
   const { t } = Hooks.useTranslation(TasksNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const [showCalendar, setShowCalendar] = useState(false);
   const controllerRef = useRef<CalendarController>(null);
 

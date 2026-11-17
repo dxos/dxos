@@ -88,7 +88,6 @@ component SketchArticle
     settings: Settings
     attendableId: string
     role: article | section | slide
-    readonly?: boolean           # tldraw's read-only mode; set by the plugin's readOnly option
   state:
     editor?: Editor              # tldraw Editor instance
     hasAttention: boolean
@@ -292,7 +291,7 @@ feat F-8: Scene DSL and Agent Skill
 ```mdl
 feat F-9: Read-only Host
 
-  req F-9.1: With the plugin's `readOnly` option, every drawing opens in tldraw's read-only mode: the toolbar offers only select, hand and laser, there is no style panel, quick-action menu or comment tool, and the reader can still pan, zoom and select.
+  req F-9.1: When the host contributes `ReadOnly`, every drawing opens in tldraw's read-only mode: the toolbar offers only select, hand and laser, there is no style panel, quick-action menu or comment tool, and the reader can still pan, zoom and select.
 ```
 
 ## Acceptance
@@ -518,6 +517,24 @@ decision D-2: A `readOnly` option opens every drawing in tldraw's read-only mode
   why: tldraw's own read-only mode already hides every editing tool and shortcut; a reader still needs to pan and zoom around a drawing larger than the view.
   rejected:
     - Reusing the slide role's read-only canvas: it also fixes the camera, so a reader could not move around the drawing.
+```
+
+```mdl
+decision D-3: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [SketchArticle, F-9.1]
+  supersedes: D-1
+```
+
+```mdl
+decision D-4: When the host contributes `ReadOnly`, every drawing opens in tldraw's read-only mode without the quick-action menu or comment tool, and the camera stays free. The article reads it with `useReadOnly`. Fills in [D-3].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SketchArticle, F-9.1]
+  supersedes: D-2
+  why: The capability lands at startup with no order against module activation, so the article reads it as it renders; tldraw's own read-only mode still hides every editing tool, and a reader still needs to pan and zoom.
 ```
 
 ## Appendix: Extension Definitions

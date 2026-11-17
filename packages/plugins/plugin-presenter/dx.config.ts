@@ -17,13 +17,12 @@ import { PresenterNamespace } from './src/namespace.ts';
 import * as PresenterCapabilities from './src/types/PresenterCapabilities.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
-const config: Plugin.PluginConfig<PresenterCapabilities.PresenterPluginOptions> =
-  Plugin.config<PresenterCapabilities.PresenterPluginOptions>({
-    plugin: {
-      key: PresenterNamespace.key,
-      name: 'Presenter',
-      author: 'DXOS',
-      description: trim`
+const config: Plugin.PluginConfig = Plugin.config({
+  plugin: {
+    key: PresenterNamespace.key,
+    name: 'Presenter',
+    author: 'DXOS',
+    description: trim`
       Build slide decks from the objects in your workspace without duplicating content. A
       Presentation is an ordered list of sections, each a markdown slide written in place or a
       link to any other object, and appears in the navtree as a folder of slides that can be
@@ -42,64 +41,64 @@ const config: Plugin.PluginConfig<PresenterCapabilities.PresenterPluginOptions> 
       by any peer in the workspace are immediately reflected in an open presentation without
       any manual refresh.
     `,
-      source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-presenter',
-      icon: { key: 'ph--presentation--regular', hue: 'indigo' },
-      spec: 'PLUGIN.mdl',
-      tags: ['beta'],
-    },
-    modules: [
-      AppCapability.appGraphBuilder(
-        () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
-        {
-          environments: ['browser', 'node', 'tauri'],
-        },
-      ),
-      SpaceCapability.createObject(
-        () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
-        {
-          environments: ['browser', 'node', 'tauri'],
-        },
-      ),
-      Capability.lazyModule(
-        'MarkdownExtension',
-        {
-          environments: ['browser', 'tauri'],
-          provides: [MarkdownCapabilities.ExtensionProvider],
-          activatesOn: MarkdownEvents.Start,
-        },
-        () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
-      ),
-      // Migration providers stay eager: a migration missing when a space opens is a data hazard.
-      Capability.lazyModule(
-        'PresenterMigrations',
-        { provides: [ClientCapabilities.Migration] },
-        () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
-      ),
-      AppCapability.operationHandler(
-        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-        {
-          activatesOn: ActivationEvents.Idle,
-        },
-      ),
-      AppCapability.pluginAsset({
-        pluginId: PresenterNamespace.key,
-        path: 'PLUGIN.mdl',
-        content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
-        mimeType: 'application/x-mdl',
-      }),
-      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-        roles: [AppSurface.Article, AppSurface.ObjectProperties, AppSurface.Slide],
-      }),
-      AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
-      AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
-        provides: [PresenterCapabilities.Settings],
-      }),
-      AppCapability.skillDefinition(
-        () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-      ),
-      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
-    ],
-  });
+    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-presenter',
+    icon: { key: 'ph--presentation--regular', hue: 'indigo' },
+    spec: 'PLUGIN.mdl',
+    tags: ['beta'],
+  },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    Capability.lazyModule(
+      'MarkdownExtension',
+      {
+        environments: ['browser', 'tauri'],
+        provides: [MarkdownCapabilities.ExtensionProvider],
+        activatesOn: MarkdownEvents.Start,
+      },
+      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
+    ),
+    // Migration providers stay eager: a migration missing when a space opens is a data hazard.
+    Capability.lazyModule(
+      'PresenterMigrations',
+      { provides: [ClientCapabilities.Migration] },
+      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: PresenterNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: [AppSurface.Article, AppSurface.ObjectProperties, AppSurface.Slide],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+      provides: [PresenterCapabilities.Settings],
+    }),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
+});
 
 export const { meta, make } = config;
 

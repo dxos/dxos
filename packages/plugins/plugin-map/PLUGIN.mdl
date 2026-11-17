@@ -293,7 +293,7 @@ feat F-7: Tile providers via API keys
 feat F-8: Read-only Host
   uses: [MapArticle, MapViewEditor]
 
-  req F-8.1: With the plugin's `readOnly` option, a map shows its markers and can be panned, zoomed and toggled between map and globe, and selecting a marker still selects its object, but the object properties have no MapViewEditor.
+  req F-8.1: When the host contributes `ReadOnly`, a map shows its markers and can be panned, zoomed and toggled between map and globe, and selecting a marker still selects its object, but the object properties have no MapViewEditor.
 ```
 
 ## Acceptance
@@ -448,6 +448,24 @@ decision D-2: A `readOnly` option drops the MapViewEditor properties row and kee
   affects: [F-4.1, F-8.1, MapViewEditor]
   why: The view editor is the only part of the plugin that writes to the space; the viewport and the map/globe toggle live in device-local MapState, and selection writes layout state.
   rejected: Showing MapViewEditor as a disabled form; the source view and location field already show in the map itself, and the generic properties are shown read-only by the space plugin.
+```
+
+```mdl
+decision D-3: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-1
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-4: When the host contributes `ReadOnly`, MapViewEditor renders nothing and the rest of the map stays: pan, zoom, the map/globe toggle and marker selection. Fills in [D-3].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-2
+  affects: [F-4.1, F-8.1, MapViewEditor]
+  why: The view editor is the only part of the plugin that writes to the space; the viewport and the map/globe toggle live in device-local MapState, and selection writes layout state.
 ```
 
 ---

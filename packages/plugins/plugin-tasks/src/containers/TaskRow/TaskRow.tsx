@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { TaskList } from '@dxos/react-ui-task';
 import { type Task } from '@dxos/types';
@@ -12,15 +13,14 @@ import { useDelegateActions, useTaskActions, useTaskMembers, useTaskUpdate } fro
 
 export type TaskRowProps = {
   subject: Task.Task;
-  /** Shows the row with no edit controls or actions. */
-  readonly?: boolean;
 };
 
 /**
  * One task as a list row — status, title, assignee and the contributed actions menu — for a task shown
  * beside the object it relates to (e.g. under the email it was extracted from).
  */
-export const TaskRow = ({ subject: task, readonly = false }: TaskRowProps) => {
+export const TaskRow = ({ subject: task }: TaskRowProps) => {
+  const readonly = ToolkitHooks.useReadOnly();
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const getTaskActions = useTaskActions();
   const getDelegateActions = useDelegateActions();

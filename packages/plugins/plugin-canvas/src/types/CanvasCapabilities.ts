@@ -27,9 +27,3 @@ export type LibraryItemContribution = EditorLibraryItem & { dim: Scene.Dimension
 
 /** Objects contributed to the canvas's library tool; a pick defines one in the canvas's model, then places it. */
 export const LibraryItem = CanvasNamespace.make<LibraryItemContribution>()('libraryItem');
-
-/** Options for {@link CanvasPlugin}. */
-export type CanvasPluginOptions = {
-  /** Locks every canvas, with no unlock action. */
-  readOnly?: boolean;
-};

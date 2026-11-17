@@ -17,6 +17,7 @@ import {
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -28,10 +29,7 @@ import * as Util from '@dxos/react-ui/Util';
 
 import { useStoreAdapter } from '#hooks';
 
-export type ExcalidrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps & {
-  /** Shows the drawing in Excalidraw's view mode and writes nothing back. */
-  readonly?: boolean;
-};
+export type ExcalidrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
 const CAMERA_REPORT_MS = 100;
 
@@ -93,9 +91,10 @@ export const ExcalidrawArticle = ({
   onSelectionChange,
   camera,
   onCameraChange,
-  readonly = false,
 }: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
+  // A read-only app shows the drawing in Excalidraw's view mode and writes nothing back.
+  const readonly = ToolkitHooks.useReadOnly();
   const containerRef = useRef<HTMLDivElement>(null);
   const themeMode = Hooks.useThemeMode();
   const [down, setDown] = useState<boolean>(false);
@@ -288,10 +287,6 @@ export const ExcalidrawArticle = ({
     </Comp>
   );
 };
-
-export const ReadonlyExcalidrawArticle = (props: ExcalidrawArticleProps) => <ExcalidrawArticle {...props} readonly />;
-
-ReadonlyExcalidrawArticle.displayName = 'ReadonlyExcalidrawArticle';
 
 const Article = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
   <Panel.Root

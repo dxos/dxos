@@ -9,6 +9,8 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
+import { isReadOnly } from './read-only.ts';
+
 export type EdgeAiClient = {
   /** The authenticated EDGE client, created on the first AI request. */
   readonly get: () => EdgeHttpClient;
@@ -18,13 +20,15 @@ export type EdgeAiClient = {
 
 /**
  * The EDGE client AI requests go through. Resolved lazily, on the first request: AI providers are set up
- * before the Client capability and the user's identity exist, so requiring them up front would throw.
+ * before the Client capability and the user's identity exist, so requiring them up front would throw. A read-only host
+ * sends no AI request to EDGE.
  */
 export const makeEdgeAiClient = (manager: CapabilityManager.CapabilityManager): EdgeAiClient => {
   let edgeClient: EdgeHttpClient | undefined;
   let unsubscribe: (() => void) | undefined;
   const get = (): EdgeHttpClient => {
     if (!edgeClient) {
+      invariant(!isReadOnly(manager), 'A read-only host makes no AI requests.');
       const [client] = manager.getAll(ClientCapabilities.Client);
       invariant(client, 'Client capability is required for edge AI requests.');
       const [haloIdentity] = manager.getAll(ClientCapabilities.IdentityService);

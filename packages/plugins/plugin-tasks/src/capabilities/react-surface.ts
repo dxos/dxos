@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Outline, RemoteSession, Task, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
@@ -22,7 +23,7 @@ import {
   TaskRow,
   TaskSetArticle,
 } from '#containers';
-import { Journal, type TasksCapabilities } from '#types';
+import { Journal } from '#types';
 
 import { QUICK_ENTRY_DIALOG } from '../constants.ts';
 
@@ -47,9 +48,10 @@ const TaskSetSection: Role.Role<
  */
 const TaskRelated: Role.Role<{ subject: Task.Task }> = Role.make('org.dxos.role.related');
 
-export default Capability.makeModule(({ readOnly = false }: TasksCapabilities.TasksPluginOptions = {}) =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactSurface, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const manager = yield* Capability.Service;
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'article.journal',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
@@ -58,25 +60,26 @@ export default Capability.makeModule(({ readOnly = false }: TasksCapabilities.Ta
           AppSurface.object(AppSurface.Section, Journal.Journal),
         ),
         component: JournalArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId, readonly: readOnly }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      // A session's card offers its resume command, which only its own harness can use.
-      ...(readOnly
-        ? []
-        : [
-            Surface.create({
-              id: 'card.remoteSession',
-              position: Position.first,
-              filter: AppSurface.object(AppSurface.CardContent, RemoteSession.RemoteSession),
-              component: RemoteSessionCard,
-              props: ({ role, data: { subject } }) => ({ role, subject }),
-            }),
-          ]),
+      Surface.create({
+        id: 'card.remoteSession',
+        position: Position.first,
+        // A session's card offers its resume command, which only its own harness can use, so a read-only host
+        // falls through to the generic card.
+        filter: AppSurface.object(
+          AppSurface.CardContent,
+          RemoteSession.RemoteSession,
+          () => manager.getAll(AppCapabilities.ReadOnly).length === 0,
+        ),
+        component: RemoteSessionCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
       Surface.create({
         id: 'article.outline',
         filter: AppSurface.object(AppSurface.Article, Outline.Outline),
         component: OutlineArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId, readonly: readOnly }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         // Its own surface rather than a second filter on the article: only the embedded (section) case
@@ -92,7 +95,6 @@ export default Capability.makeModule(({ readOnly = false }: TasksCapabilities.Ta
           attendableId,
           taskSet,
           toolbar: false,
-          readonly: readOnly,
         }),
       }),
       Surface.create({
@@ -100,19 +102,13 @@ export default Capability.makeModule(({ readOnly = false }: TasksCapabilities.Ta
         id: 'article.task',
         filter: AppSurface.object(AppSurface.Article, Task.Task),
         component: TaskArticle,
-        props: ({ role, data: { subject, attendableId, nodeId } }) => ({
-          role,
-          subject,
-          attendableId,
-          nodeId,
-          readonly: readOnly,
-        }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
         id: 'article.taskSet',
         filter: AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
         component: TaskSetArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId, readonly: readOnly }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'section.taskSet',
@@ -125,14 +121,13 @@ export default Capability.makeModule(({ readOnly = false }: TasksCapabilities.Ta
           showDescription,
           scope,
           onTaskCreated,
-          readonly: readOnly,
         }),
       }),
       Surface.create({
         id: 'related.task',
         filter: AppSurface.object(TaskRelated, Task.Task),
         component: TaskRow,
-        props: ({ data: { subject } }) => ({ subject, readonly: readOnly }),
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'card.outline',
@@ -140,16 +135,11 @@ export default Capability.makeModule(({ readOnly = false }: TasksCapabilities.Ta
         component: OutlineCard,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      // Quick entry writes to today's journal entry.
-      ...(readOnly
-        ? []
-        : [
-            Surface.create({
-              id: QUICK_ENTRY_DIALOG,
-              filter: AppSurface.component(AppSurface.Dialog, QUICK_ENTRY_DIALOG),
-              component: QuickEntryDialog,
-            }),
-          ]),
-    ]),
-  ),
+      Surface.create({
+        id: QUICK_ENTRY_DIALOG,
+        filter: AppSurface.component(AppSurface.Dialog, QUICK_ENTRY_DIALOG),
+        component: QuickEntryDialog,
+      }),
+    ]);
+  }),
 );

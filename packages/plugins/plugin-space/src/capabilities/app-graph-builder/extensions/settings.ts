@@ -3,9 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -28,9 +31,11 @@ import { SpaceNamespace } from '../../../namespace.ts';
  * plugin (general, members) and by other plugins (automation, functions).
  */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
+  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+  // Every settings panel, this plugin's and others', hangs off this section, so read-only there are none.
   const sectionExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsSection',
-    match: AppNodeMatcher.whenSpace,
+    match: (node, get) => (get(readOnlyAtom).length > 0 ? Option.none() : AppNodeMatcher.whenSpace(node)),
     connector: (space) =>
       Effect.succeed([
         AppNode.makeSection({

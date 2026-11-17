@@ -16,7 +16,7 @@ import { Filter, Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Task, TaskSet } from '@dxos/types';
 
-import { OutlineOperation, type TasksCapabilities } from '#types';
+import { OutlineOperation } from '#types';
 
 import { QUICK_ENTRY_DIALOG } from '../constants.ts';
 import { TasksNamespace } from '../namespace.ts';
@@ -25,11 +25,13 @@ const matchTaskSet = (node: AppGraphNode.Node) =>
   Obj.instanceOf(TaskSet.TaskSet, node.data) ? Option.some(node.data) : Option.none();
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ readOnly = false }: TasksCapabilities.TasksPluginOptions = {}) {
-    const [quickEntry, taskSetTasks] = yield* Effect.all([
+  Effect.fnUntraced(function* () {
+    const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+    const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'quickEntry',
-        match: GraphNodeMatcher.whenRoot,
+        // Quick entry appends to today's journal entry, so a read-only host has no use for it.
+        match: (node, get) => (get(readOnlyAtom).length > 0 ? Option.none() : GraphNodeMatcher.whenRoot(node)),
         actions: () =>
           Effect.succeed([
             AppGraphNode.makeAction({
@@ -67,7 +69,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    // Quick entry appends to today's journal entry, so a read-only host has no use for it.
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, [...(readOnly ? [] : quickEntry), ...taskSetTasks]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

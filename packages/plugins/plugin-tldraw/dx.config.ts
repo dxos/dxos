@@ -15,13 +15,12 @@ import { TldrawNamespace } from './src/namespace.ts';
 import * as TldrawCapabilities from './src/types/TldrawCapabilities.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
-const config: Plugin.PluginConfig<TldrawCapabilities.TldrawPluginOptions> =
-  Plugin.config<TldrawCapabilities.TldrawPluginOptions>({
-    plugin: {
-      key: TldrawNamespace.key,
-      name: 'tldraw',
-      author: 'DXOS',
-      description: trim`
+const config: Plugin.PluginConfig = Plugin.config({
+  plugin: {
+    key: TldrawNamespace.key,
+    name: 'tldraw',
+    author: 'DXOS',
+    description: trim`
       tldraw is the canvas renderer that powers collaborative whiteboards in DXOS Composer,
       giving every workspace a full-featured infinite canvas. Draw freehand strokes, place
       geometric shapes, add text and arrows, and organise ideas visually — all within the same
@@ -37,44 +36,44 @@ const config: Plugin.PluginConfig<TldrawCapabilities.TldrawPluginOptions> =
       Collaborators see each other's strokes as they draw, and changes made offline merge
       automatically when connectivity is restored using ECHO's CRDT semantics.
     `,
-      source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-tldraw',
-      dependsOn: ['org.dxos.plugin.illustrator'],
-      icon: { key: 'ph--compass-tool--regular', hue: 'indigo' },
-      spec: 'PLUGIN.mdl',
-      tags: ['alpha'],
-      screenshots: [{ dark: 'https://media.dxos.network/plugin-details-sketch-dark.png' }],
-    },
-    modules: [
-      // Browser-only: the variant supplies the React article/card components that render a drawing.
-      Capability.lazyModule(
-        'drawing-variant',
-        {
-          provides: [IllustratorCapabilities.VariantProvider],
-          activatesOn: IllustratorEvents.Start,
-          environments: ['browser', 'tauri'],
-        },
-        () => import('./src/capabilities/drawing-variant.ts', { with: { type: 'module-url' } }),
-      ),
-      Capability.lazyModule(
-        'plugin-asset',
-        {
-          activatesOn: ActivationEvents.PluginAssetsRequested,
-          provides: [AppCapabilities.PluginAsset],
-          environments: ['browser', 'tauri'],
-        },
-        () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
-      ),
-      AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
-        activatesOn: ActivationEvents.Idle,
-        provides: [TldrawCapabilities.Settings],
-      }),
-      Capability.lazyModule(
-        'translations',
-        { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
-        () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
-      ),
-    ],
-  });
+    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-tldraw',
+    dependsOn: ['org.dxos.plugin.illustrator'],
+    icon: { key: 'ph--compass-tool--regular', hue: 'indigo' },
+    spec: 'PLUGIN.mdl',
+    tags: ['alpha'],
+    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-sketch-dark.png' }],
+  },
+  modules: [
+    // Browser-only: the variant supplies the React article/card components that render a drawing.
+    Capability.lazyModule(
+      'drawing-variant',
+      {
+        provides: [IllustratorCapabilities.VariantProvider],
+        activatesOn: IllustratorEvents.Start,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/drawing-variant.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'plugin-asset',
+      {
+        activatesOn: ActivationEvents.PluginAssetsRequested,
+        provides: [AppCapabilities.PluginAsset],
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+      activatesOn: ActivationEvents.Idle,
+      provides: [TldrawCapabilities.Settings],
+    }),
+    Capability.lazyModule(
+      'translations',
+      { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
+      () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
+    ),
+  ],
+});
 
 export const { meta, make } = config;
 

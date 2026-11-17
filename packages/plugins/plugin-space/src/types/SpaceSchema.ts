@@ -94,13 +94,6 @@ export type SpacePluginOptions = {
 
   /** Enables publishing spaces to the read-only viewer, and forking publications back in. */
   publication?: PublicationOptions;
-
-  /**
-   * Builds a navigation-only graph: no space or object actions, no settings, database, export or
-   * peer nodes, and no object properties companion. For hosts whose spaces nobody should edit.
-   * @default false
-   */
-  readOnly?: boolean;
 };
 
 export type PublicationOptions = {

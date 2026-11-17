@@ -10,6 +10,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';
 import { type CreateEntryOverride, ObjectProperties } from '@dxos/react-ui-form';
@@ -18,10 +19,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
 
-export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown> & {
-  /** Shows the properties without editing; plugins' extra property rows are left out, as they edit. */
-  readonly?: boolean;
-};
+export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
 
 /**
  * Generic object-properties companion rendered for any object: a schema-driven {@link ObjectProperties}
@@ -29,7 +27,9 @@ export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknow
  * not register a bespoke surface (mirrors `DefaultSettings` for plugin settings).
  */
 export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesProps>(
-  ({ role, subject: object, readonly }, forwardedRef) => {
+  ({ role, subject: object }, forwardedRef) => {
+    // Read-only, it shows the properties without editing and leaves out plugins' extra rows, which edit.
+    const readonly = ToolkitHooks.useReadOnly();
     const manager = PluginManagerProvider.usePluginManager();
     const operationInvoker = Hooks.useOperationInvoker();
     // Demand signal: this companion can create related objects, so pull parked entry providers.

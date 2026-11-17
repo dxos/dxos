@@ -4,8 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
@@ -73,11 +76,17 @@ describe('project chats graph extension', () => {
         connector: () => Effect.succeed([{ id: project.id, type: 'test', data: project }]),
       }),
     );
+    // One registry for the plugin manager and the graph builder, as in the app.
+    const registry = Registry.make();
+    const manager = CapabilityManager.make({ registry });
+    const withManager = <A>(effect: Effect.Effect<A, never, Capability.Service>) =>
+      EffectEx.runPromise(effect.pipe(Effect.provideService(Capability.Service, manager)));
     const chatExtensions = await EffectEx.runPromise(createProjectChatsExtension());
-    const chatChildrenExtensions = await EffectEx.runPromise(createProjectChatsChildrenExtension());
-    const artifactExtensions = await EffectEx.runPromise(createProjectArtifactsExtension());
-    const artifactChildrenExtensions = await EffectEx.runPromise(createProjectArtifactsActionExtension());
+    const chatChildrenExtensions = await withManager(createProjectChatsChildrenExtension());
+    const artifactExtensions = await withManager(createProjectArtifactsExtension());
+    const artifactChildrenExtensions = await withManager(createProjectArtifactsActionExtension());
     const context = setupGraphBuilder({
+      registry,
       extensions: [
         ...rootExtensions,
         ...spaceExtensions,

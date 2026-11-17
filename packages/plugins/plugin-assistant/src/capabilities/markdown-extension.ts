@@ -11,14 +11,16 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
 import { promptRunExtension } from '../extensions/index.ts';
+import { isReadOnly } from '../util/read-only.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
     return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
+      // A read-only host offers no Run: running a prompt starts a chat.
       ({ document: doc, viewMode }) => {
-        if (viewMode === 'source') {
+        if (viewMode === 'source' || isReadOnly(capabilities)) {
           return undefined;
         }
 

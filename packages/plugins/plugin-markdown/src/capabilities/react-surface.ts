@@ -13,12 +13,12 @@ import { Text } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
 import { EditableMarkdownCard, MarkdownCard, MarkdownSettings } from '#containers';
-import { Markdown, MarkdownCapabilities } from '#types';
+import { Markdown } from '#types';
 
 import { MarkdownNamespace } from '../namespace.ts';
 import { MarkdownContainer } from './MarkdownContainer.tsx';
 
-export default Capability.makeModule(({ readOnly = false }: MarkdownCapabilities.MarkdownPluginOptions = {}) =>
+export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -35,7 +35,6 @@ export default Capability.makeModule(({ readOnly = false }: MarkdownCapabilities
           attendableId,
           subject,
           role,
-          readOnly,
           ref,
         }),
       }),
@@ -54,7 +53,6 @@ export default Capability.makeModule(({ readOnly = false }: MarkdownCapabilities
           attendableId,
           subject,
           role,
-          readOnly,
           ref,
         }),
       }),

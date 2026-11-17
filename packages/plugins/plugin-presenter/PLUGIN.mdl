@@ -577,7 +577,7 @@ feat F-12: Speaker Notes
 ```mdl
 feat F-13: Read-only Host
 
-  req F-13.1: With the plugin's `readOnly` option, a Presentation's grid plays the deck: no slide can be added, moved, hidden or edited, a tile plays from its slide, and a markdown document's Presenter companion previews it without editing.
+  req F-13.1: When the host contributes `ReadOnly`, a Presentation's grid plays the deck: no slide can be added, moved, hidden or edited, a tile plays from its slide, and a markdown document's Presenter companion previews it without editing.
 ```
 
 ## Acceptance
@@ -1660,6 +1660,24 @@ decision D-97: A `readOnly` option drops the slide preview and slide actions fro
   for: user:wittjosiah
   affects: [F-13.1]
   why: A read-only slide already opens as its preview, and hiding a slide writes to the deck.
+```
+
+```mdl
+decision D-98: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-13.1]
+  supersedes: D-96
+```
+
+```mdl
+decision D-99: When the host contributes `ReadOnly`, the graph has no slide preview companion and no slide actions, a Slide opens as its preview, and the Presentation grid plays rather than edits. The graph builder checks it when it matches a slide, and the articles read it with `useReadOnly`. Fills in [D-98].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.1]
+  supersedes: D-97
+  why: A read-only slide already opens as its preview, and hiding a slide writes to the deck; the capability lands at startup with no order against module activation, so it is read when the graph expands and when an article renders.
 ```
 
 ## Appendix: Extension Definitions

@@ -12,14 +12,17 @@ import * as Project from '@dxos/compute/Project';
 import { ProjectsNamespace } from '../namespace.ts';
 import { steps } from '../tours/index.ts';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(AppCapabilities.Tour, {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const manager = yield* Capability.Service;
+    const isProject = Tour.whenType(Project.Project);
+    return Capability.contribute(AppCapabilities.Tour, {
       id: `${ProjectsNamespace.key}.tour.project`,
       label: ['project-tour.label', { ns: ProjectsNamespace.key }],
-      matches: Tour.whenType(Project.Project),
+      // Its steps point at the controls that edit and delegate, which a read-only host leaves out.
+      matches: (data) => manager.getAll(AppCapabilities.ReadOnly).length === 0 && isProject(data),
       auto: true,
       steps,
-    }),
-  ),
+    });
+  }),
 );

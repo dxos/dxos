@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -15,13 +16,13 @@ import { Sheet, SheetCapabilities } from '#types';
 
 import { type SheetModel, useSheetModel } from '../../model/index.ts';
 
-export type ChartArticleProps = AppSurface.ObjectArticleProps<Sheet.Chart, { readonly?: boolean }>;
+export type ChartArticleProps = AppSurface.ObjectArticleProps<Sheet.Chart>;
 
 /**
  * A chart on its own, as an article or embedded in a document as a section or slide. It evaluates its sheet's range
  * in the sheet's compute graph.
  */
-export const ChartArticle = ({ role, subject, readonly }: ChartArticleProps) => {
+export const ChartArticle = ({ role, subject }: ChartArticleProps) => {
   const registry = Hooks.useCapability(SheetCapabilities.ComputeGraphRegistry);
   const space = getSpace(subject);
   if (!space) {
@@ -30,27 +31,27 @@ export const ChartArticle = ({ role, subject, readonly }: ChartArticleProps) => 
 
   return (
     <ComputeGraphContextProvider registry={registry}>
-      <ChartArticleInner role={role} chart={subject} space={space} readonly={readonly} />
+      <ChartArticleInner role={role} chart={subject} space={space} />
     </ComputeGraphContextProvider>
   );
 };
 
 ChartArticle.displayName = 'ChartArticle';
 
-type ChartInnerProps = { role?: string; chart: Sheet.Chart; readonly?: boolean };
-
-const ChartArticleInner = ({ role, chart, space, readonly }: ChartInnerProps & { space: Space }) => {
+const ChartArticleInner = ({ role, chart, space }: { role?: string; chart: Sheet.Chart; space: Space }) => {
   const [sheetRef] = useObject(chart, 'sheet');
   const sheet = useResolveRef(sheetRef);
   const graph = useComputeGraph(space);
+  const readonly = ToolkitHooks.useReadOnly();
   const model = useSheetModel(graph, sheet, { readonly });
-  return model ? <ChartContent role={role} chart={chart} model={model} readonly={readonly} /> : null;
+  return model ? <ChartContent role={role} chart={chart} model={model} /> : null;
 };
 
-const ChartContent = ({ role, chart: chartProp, model, readonly }: ChartInnerProps & { model: SheetModel }) => {
+const ChartContent = ({ role, chart: chartProp, model }: { role?: string; chart: Sheet.Chart; model: SheetModel }) => {
   const [chart] = useObject(chartProp);
   const getValues = useRangeValues(model);
   const chartTypes = Hooks.useCapabilities(SheetCapabilities.ChartType);
+  const readonly = ToolkitHooks.useReadOnly();
   const handleUpdate = useCallback(
     (props: Partial<Sheet.ChartProperties>) => Sheet.updateChart(chartProp, props),
     [chartProp],

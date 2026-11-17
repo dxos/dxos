@@ -73,9 +73,3 @@ export namespace SheetAction {
 
   export type RestoreAxis = Schema.Schema.Type<typeof RestoreAxis>;
 }
-
-/** Options for {@link SheetPlugin}. */
-export type SheetPluginOptions = {
-  /** Shows every sheet and chart with no way to edit it. */
-  readOnly?: boolean;
-};

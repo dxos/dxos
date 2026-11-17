@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
@@ -33,13 +34,7 @@ import { TasksNamespace } from '../../namespace.ts';
 import { TaskArtifacts } from './TaskArtifacts.tsx';
 import { TaskAttachmentDropZone, TaskAttachments, useAttachFiles } from './TaskAttachments.tsx';
 
-export type TaskArticleProps = AppSurface.ObjectArticleProps<
-  Task.Task,
-  {
-    /** Shows the task with no way to edit, answer, attach to or act on it. */
-    readonly?: boolean;
-  }
->;
+export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
 
 /**
  * Article surface for a single {@link Task}.
@@ -56,14 +51,9 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<
  * A file dropped or pasted anywhere over the pane is stored and attached (`Task.attachments`), when
  * a plugin that can store files is present.
  */
-export const TaskArticle = ({
-  role,
-  subject: task,
-  attendableId,
-  nodeId = attendableId,
-  readonly = false,
-}: TaskArticleProps) => {
+export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attendableId }: TaskArticleProps) => {
   const { t } = UiHooks.useTranslation(TasksNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
@@ -186,7 +176,6 @@ export const TaskArticle = ({
                 <TaskAttachments
                   task={task}
                   canAttach={!!handleAttach}
-                  readonly={readonly}
                   pending={pendingAttachments}
                   detailOf={nodeId}
                 />

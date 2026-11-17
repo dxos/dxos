@@ -48,9 +48,3 @@ export type PresentationEventHandler = {
 export const PresentationEventHandler = Capability.make<PresentationEventHandler>()(
   `${PresenterNamespace.key}.capability.presentationEventHandler`,
 );
-
-/** Options for {@link PresenterPlugin}. */
-export type PresenterPluginOptions = {
-  /** Plays decks and previews slides with no way to edit either. */
-  readOnly?: boolean;
-};

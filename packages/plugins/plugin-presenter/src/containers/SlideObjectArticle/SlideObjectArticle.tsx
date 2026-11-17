@@ -6,22 +6,29 @@ import React from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 
 import { Presentation } from '#types';
 
 import { SlideEditorArticle } from '../SlideEditorArticle/SlideEditorArticle.tsx';
+import { SlidePreviewArticle } from '../SlidePreviewArticle/SlidePreviewArticle.tsx';
 
 export type SlideObjectArticleProps = AppSurface.ObjectArticleProps<Presentation.Slide>;
 
 /**
  * A slide opened on its own: its markdown in the slide editor, or a linked object in that object's own article.
+ * A read-only host shows the slide's preview instead.
  */
 export const SlideObjectArticle = ({ role, subject: slide, attendableId }: SlideObjectArticleProps) => {
+  const readOnly = ToolkitHooks.useReadOnly();
   const [content] = useObject(slide, 'content');
   // Subscribe to the content's load through its snapshot, but hand on the live object, which editors need.
   const [loaded] = useObject(content);
   const target = loaded ? content.target : undefined;
+  if (readOnly) {
+    return <SlidePreviewArticle role={role} subject={slide} />;
+  }
   if (!target) {
     return null;
   }

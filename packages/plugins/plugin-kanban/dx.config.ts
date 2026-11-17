@@ -10,17 +10,15 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
 import { KanbanNamespace } from './src/namespace.ts';
-import * as KanbanCapabilities from './src/types/KanbanCapabilities.ts';
 import * as KanbanEvents from './src/types/KanbanEvents.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
-const config: Plugin.PluginConfig<KanbanCapabilities.KanbanPluginOptions> =
-  Plugin.config<KanbanCapabilities.KanbanPluginOptions>({
-    plugin: {
-      key: KanbanNamespace.key,
-      name: 'Kanban',
-      author: 'DXOS',
-      description: trim`
+const config: Plugin.PluginConfig = Plugin.config({
+  plugin: {
+    key: KanbanNamespace.key,
+    name: 'Kanban',
+    author: 'DXOS',
+    description: trim`
       Visual project management using customizable kanban boards to track workflow progress.
       Organize any ECHO type into drag-and-drop columns defined by a single-select field, move cards
       between stages, and reorder both columns and cards — all changes are persisted to ECHO and
@@ -38,57 +36,54 @@ const config: Plugin.PluginConfig<KanbanCapabilities.KanbanPluginOptions> =
       The plugin contributes a Kanban skill that exposes board creation and card management
       to AI agents, enabling automated project tracking workflows.
     `,
-      source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-kanban',
-      icon: { key: 'ph--kanban--regular', hue: 'green' },
-      spec: 'PLUGIN.mdl',
-      screenshots: [{ dark: 'https://media.dxos.network/plugin-details-kanban-dark.png' }],
-      tags: ['beta'],
-    },
-    modules: [
-      SpaceCapability.createObject(
-        () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
-        {
-          environments: ['browser', 'node', 'tauri'],
-        },
-      ),
-      AppCapability.operationHandler(
-        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-        {
-          activatesOn: ActivationEvents.Idle,
-        },
-      ),
-      AppCapability.pluginAsset({
-        pluginId: KanbanNamespace.key,
-        path: 'PLUGIN.mdl',
-        content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
-        mimeType: 'application/x-mdl',
-      }),
-      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-        roles: [
-          AppSurface.Article,
-          AppSurface.CardContent,
-          AppSurface.FormInput,
-          AppSurface.ObjectProperties,
-          AppSurface.Section,
-        ],
-      }),
-      AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
-      AppCapability.skillDefinition(
-        () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-        {
-          environments: ['browser', 'node', 'tauri'],
-        },
-      ),
-      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
-      AppCapability.undoMappings(
-        () => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } }),
-        {
-          activatesOn: KanbanEvents.Start,
-          environments: ['browser', 'node', 'tauri'],
-        },
-      ),
-    ],
-  });
+    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-kanban',
+    icon: { key: 'ph--kanban--regular', hue: 'green' },
+    spec: 'PLUGIN.mdl',
+    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-kanban-dark.png' }],
+    tags: ['beta'],
+  },
+  modules: [
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: KanbanNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: [
+        AppSurface.Article,
+        AppSurface.CardContent,
+        AppSurface.FormInput,
+        AppSurface.ObjectProperties,
+        AppSurface.Section,
+      ],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } }), {
+      activatesOn: KanbanEvents.Start,
+      environments: ['browser', 'node', 'tauri'],
+    }),
+  ],
+});
 
 export const { meta, make } = config;
 

@@ -5,12 +5,17 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Surface from '@dxos/app-framework/Surface';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN } from '@dxos/keys';
 import * as DeckSurface from '@dxos/plugin-deck/DeckSurface';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import * as Publication from '@dxos/plugin-space/Publication';
 import * as Button from '@dxos/react-ui/Button';
 
@@ -49,9 +54,34 @@ const ViewerActions = ({ publicId, composerOrigin }: Pick<ViewerPluginOptions, '
   </div>
 );
 
-/** The viewer's own chrome: the banner notice with Sign up and Fork. */
+/**
+ * Makes the whole app read-only, drops telemetry, and adds the viewer's own chrome: the banner notice with Sign up and
+ * Fork.
+ */
 export const ViewerPlugin = (options: ViewerPluginOptions): Plugin.Plugin =>
   Plugin.define(meta).pipe(
+    Plugin.addModule(
+      // Startup, so it is in place before anything renders or expands the graph.
+      Capability.inlineModule(
+        'viewer-read-only',
+        { provides: [AppCapabilities.ReadOnly], activatesOn: ActivationEvents.Startup },
+        () => Effect.succeed([Capability.contribute(AppCapabilities.ReadOnly, true)]),
+      ),
+    ),
+    Plugin.addModule(
+      // An anonymous viewer sends no telemetry, so the events other plugins schedule are dropped here.
+      Capability.inlineModule(
+        'viewer-telemetry',
+        { provides: [Capabilities.OperationHandler], activatesOn: ActivationEvents.Startup },
+        () =>
+          Effect.succeed([
+            Capability.contribute(
+              Capabilities.OperationHandler,
+              OperationHandlerSet.make(Operation.withHandler(ObservabilityOperation.SendEvent, () => Effect.void)),
+            ),
+          ]),
+      ),
+    ),
     Plugin.addModule(
       Capability.inlineModule('viewer-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
         Effect.succeed([

@@ -8,6 +8,7 @@ import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -34,18 +35,14 @@ import { Presentation, PresenterSurface } from '#types';
 import { PresenterNamespace } from '../../namespace.ts';
 import PresentedOverlay from '../PresentedOverlay/index.ts';
 
-export type PresentationArticleProps = AppSurface.ObjectArticleProps<
-  Presentation.Presentation,
-  {
-    /** Plays the deck with no way to add, move or edit a slide; a tile plays from its slide. */
-    readonly?: boolean;
-  }
->;
+export type PresentationArticleProps = AppSurface.ObjectArticleProps<Presentation.Presentation>;
 
 /**
  * A presentation's slides as a grid, presented fullscreen in place; the current slide is per-viewer view state.
+ * A read-only host plays the deck with no way to add, move or edit a slide; a tile plays from its slide.
  */
-export const PresentationArticle = ({ role, subject, attendableId, readonly }: PresentationArticleProps) => {
+export const PresentationArticle = ({ role, subject, attendableId }: PresentationArticleProps) => {
+  const readonly = ToolkitHooks.useReadOnly();
   const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const slides = usePresentationDeck(subject);
   const [theme] = useObject(subject, 'theme');

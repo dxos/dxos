@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -29,8 +30,10 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  * from `Obj.getSchema` or, for runtime/mutable schemas, the reactive
  * schema looked up via `useType`.
  */
-export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
+export const FormCard = ({ subject, projection, readonly: readonlyProp = true, layout }: FormCardProps) => {
   const { t } = Hooks.useTranslation(PreviewNamespace.key);
+  // A read-only host overrides a caller that asked for an editable card.
+  const readonly = ToolkitHooks.useReadOnly() || readonlyProp;
   const [snapshot] = useObject(subject);
   // Readonly cards default to the `static` presentation — plain DOM, undefined values
   // omitted — which reads as a preview rather than a form. Editable cards keep the
@@ -114,8 +117,8 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
         values={snapshot}
         readonly={readonly}
         layout={resolvedLayout}
-        autoSave
-        onSave={handleSave}
+        autoSave={!readonly}
+        onSave={readonly ? undefined : handleSave}
       >
         {/* Joins the card's rails, so the fields start at the header's text edge rather than a gutter further in. */}
         <Form.Viewport gutter='inherit' width='full'>

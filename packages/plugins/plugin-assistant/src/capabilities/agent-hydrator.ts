@@ -11,18 +11,26 @@ import * as AgentService from '@dxos/compute/AgentService';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { log } from '@dxos/log';
 
+import { isReadOnly } from '../util/read-only.ts';
+
 //
 // Capability Module
 //
-// Rehydrates durable agent processes once `Capabilities.ProcessManagerRuntime` is contributed.
+// Rehydrates durable agent processes once `Capabilities.ProcessManagerRuntime` is contributed; a read-only host
+// rehydrates none.
 //
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const manager = yield* Capability.Service;
     const runtime = yield* Capabilities.ProcessManagerRuntime;
 
     runtime.runFork(
       Effect.gen(function* () {
+        if (isReadOnly(manager)) {
+          return;
+        }
+
         const service = yield* AgentService.AgentService;
         yield* service.hydrate();
       }).pipe(

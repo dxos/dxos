@@ -14,7 +14,6 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     testing: 'src/testing.ts',
     translations: 'src/translations.ts',
-    TableCapabilities: 'src/types/TableCapabilities.ts',
     TableEvents: 'src/types/TableEvents.ts',
     TableOperation: 'src/types/TableOperation.ts',
     types: 'src/types/index.ts',

@@ -45,11 +45,16 @@ import {
   SpaceHomeSuggestionsSurface,
   TracePanelSurface,
   TriggerStatusSurface,
+  unlessReadOnly,
 } from './AssistantSurfaces.tsx';
 
 const isUnprovisionedAssistantCompanion = (data: { subject?: unknown; variant?: unknown }) =>
   data.subject == null && data.variant === ASSISTANT_COMPANION_VARIANT;
 
+/**
+ * The assistant's surfaces. On a read-only host a chat reads as its transcript, and every surface that prompts, edits,
+ * configures or runs an agent renders nothing.
+ */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
@@ -62,26 +67,26 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'spaceSettings',
         filter: AppSurface.literal(AppSurface.Article, SPACE_SETTINGS_TYPE),
-        component: SpaceAssistantSettings,
+        component: unlessReadOnly(SpaceAssistantSettings),
       }),
       Surface.create({
         id: 'chatContext',
         filter: Surface.makeFilter(AssistantSurface.ChatDetails),
-        component: ChatContextPanel,
+        component: unlessReadOnly(ChatContextPanel),
         props: ({ data: { chat, db, context } }) => ({ chat, db, context }),
         position: Position.first,
       }),
       Surface.create({
         id: 'spaceHomePrompt',
         filter: Surface.makeFilter(SpaceSurface.SpaceHomePinBottom),
-        component: SpaceHomePrompt,
+        component: unlessReadOnly(SpaceHomePrompt),
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
         id: 'spaceHomeSuggestions',
         filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
         position: Position.last,
-        component: SpaceHomeSuggestionsSurface,
+        component: unlessReadOnly(SpaceHomeSuggestionsSurface),
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
@@ -103,13 +108,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'agent',
         filter: AppSurface.object(AppSurface.Article, Agent.Agent),
-        component: AgentArticle,
+        component: unlessReadOnly(AgentArticle),
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
-        component: AgentProperties,
+        component: unlessReadOnly(AgentProperties),
         props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
@@ -120,7 +125,7 @@ export default Capability.makeModule(() =>
             Obj.isObject(data.companionTo) &&
             (Obj.instanceOf(Chat.Chat, data.subject) || isUnprovisionedAssistantCompanion(data)),
         ),
-        component: ChatCompanion,
+        component: unlessReadOnly(ChatCompanion),
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({
           role,
           // An unprovisioned companion's node carries `null`; the chat tree reads a missing chat as `undefined`.
@@ -140,24 +145,24 @@ export default Capability.makeModule(() =>
             AppSurface.companion(AppSurface.Article, Instructions.Instructions),
           ),
         ),
-        component: InvocationsSurface,
+        component: unlessReadOnly(InvocationsSurface),
         props: ({ role, data: { companionTo } }) => ({ role, companionTo }),
       }),
       Surface.create({
         id: ASSISTANT_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof ChatDialog>>(AppSurface.Dialog, ASSISTANT_DIALOG),
-        component: ChatDialog,
+        component: unlessReadOnly(ChatDialog),
         props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({
         id: 'trace',
         filter: Surface.makeFilter(AppSurface.deckCompanion('trace')),
-        component: TracePanelSurface,
+        component: unlessReadOnly(TracePanelSurface),
       }),
       Surface.create({
         id: 'integrationPrompt',
         filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
-        component: IntegrationPrompt,
+        component: unlessReadOnly(IntegrationPrompt),
         // `data.data` is model-supplied JSON, so every field is narrowed and blanks dropped.
         props: ({ data }) => ({
           service: nonBlank(data.data?.service),
@@ -170,14 +175,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'pluginPrompt',
         filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
-        component: PluginPrompt,
+        component: unlessReadOnly(PluginPrompt),
         // `data.data` is model-supplied JSON (untyped); narrow `plugin` before use.
         props: ({ data }) => ({ plugin: typeof data.data?.plugin === 'string' ? data.data.plugin : undefined }),
       }),
       Surface.create({
         id: 'pluginUrlPrompt',
         filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'plugin-url-prompt'),
-        component: PluginUrlPrompt,
+        component: unlessReadOnly(PluginUrlPrompt),
         // `data.data` is model-supplied JSON (untyped); narrow before use.
         props: ({ data }) => ({ url: nonBlank(data.data?.url), name: nonBlank(data.data?.name) }),
       }),
@@ -213,7 +218,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'triggerStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        component: TriggerStatusSurface,
+        component: unlessReadOnly(TriggerStatusSurface),
       }),
     ]),
   ),
