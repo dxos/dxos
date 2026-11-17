@@ -1,7 +1,7 @@
 id = "deus-mdl"
 name = "DEUS MDL"
 description = "DEUS `.mdl` specs: highlighting, lint, completion, go-to-definition, hovers and review verdicts."
-version = "0.2.0"
+version = "0.3.0"
 schema_version = 1
 authors = ["DXOS <info@dxos.org>"]
 repository = "https://github.com/dxos/dxos"

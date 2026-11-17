@@ -48,6 +48,27 @@ describe('diagnostics', () => {
     expect(found.some(([source]) => source === 'mdl/ref' || source === 'mdl/uses')).toBe(false);
   });
 
+  test("a block type the spec's dialect declares is not unknown", ({ expect }) => {
+    const { workspace } = setup();
+    const spec = (extended: string) =>
+      [
+        '---',
+        'id: org.dxos.example.trailer',
+        'extends:',
+        `  - ${extended}`,
+        '---',
+        '',
+        '```mdl',
+        'scene S-1: The opening shot.',
+        '```',
+        '',
+      ].join('\n');
+    const blockTypes = (text: string) =>
+      diagnostics(workspace, toDocument('x.mdl', text)).filter(({ source }) => source === 'mdl/block-type');
+    expect(blockTypes(spec('org.dxos.spec.video'))).toEqual([]);
+    expect(blockTypes(spec('org.dxos.spec.software'))).toHaveLength(1);
+  });
+
   test('a block type the Extensions table declares is not unknown', ({ expect }) => {
     const { workspace } = setup();
     const text = [
@@ -223,6 +244,12 @@ describe('review verdicts', () => {
 
 describe('completion', () => {
   const labels = (items: { label: string }[]) => items.map(({ label }) => label);
+
+  test("block types on a header line include the spec's dialects", ({ expect }) => {
+    const { workspace } = setup();
+    const text = '---\nid: org.dxos.example.trailer\nextends:\n  - org.dxos.spec.video\n---\n\n```mdl\nsc\n```\n';
+    expect(labels(completions(workspace, toDocument('x.mdl', text), { line: 7, character: 2 }))).toContain('scene');
+  });
 
   test('block types on a header line, fields in a body', ({ expect }) => {
     const { workspace } = setup();

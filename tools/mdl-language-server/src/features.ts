@@ -20,6 +20,7 @@ import {
   SymbolKind,
 } from 'vscode-languageserver';
 
+import { dialectBlockTypes, fileDialects } from '@dxos/deus/dialect';
 import {
   BLOCK_TYPES,
   extensionTerms,
@@ -54,6 +55,9 @@ export const toDocument = (path: string, text: string): Document => ({ path, tex
 
 const isReview = (path: string): boolean => path.endsWith('.review.mdl');
 
+/** The block types the dialects a document is read with declare (its frontmatter's, else the software dialect), as `deus lint` reads them. */
+const dialectTypes = (text: string): readonly string[] => dialectBlockTypes(fileDialects(text));
+
 const SEVERITY = {
   error: DiagnosticSeverity.Error,
   warning: DiagnosticSeverity.Warning,
@@ -72,21 +76,16 @@ const SEVERITY = {
  */
 export const diagnostics = (workspace: Workspace, { path, text, lines }: Document): Diagnostic[] => {
   const review = isReview(path);
-  // The lint knows only the core types; a document's `## Extensions` table and `ext` blocks declare the rest.
-  const declaredTypes = new Set([
-    ...extensionTerms(text),
-    ...parseMdlBlocks(text).flatMap(({ type, id }) => (type === 'ext' && id ? [id] : [])),
-  ]);
-  const headerTypes = new Map(parseBlockHeaders(text).map(({ from, type }) => [from, type]));
+  const types = dialectTypes(text);
   // A review's frontmatter names its spec by key, which the reference rules would reject; it is no spec itself.
-  const found: Diagnostic[] = lintMdl(text, review ? {} : { index: workspace.index })
-    .filter(({ source, from }) => source !== 'mdl/block-type' || !declaredTypes.has(headerTypes.get(from) ?? ''))
-    .map(({ from, to, severity, source, message }) => ({
+  const found: Diagnostic[] = lintMdl(text, review ? { types } : { index: workspace.index, types }).map(
+    ({ from, to, severity, source, message }) => ({
       range: lines.range(from, to),
       severity: SEVERITY[severity],
       source: source ?? 'mdl',
       message,
-    }));
+    }),
+  );
 
   const warn = (from: number, to: number, source: string, message: string) =>
     found.push({ range: lines.range(from, to), severity: DiagnosticSeverity.Warning, source, message });
@@ -411,10 +410,13 @@ export const completions = (workspace: Workspace, document: Document, position: 
       }));
     }
     if (/^\s*[\w-]*$/.test(before)) {
-      return [...new Set([...BLOCK_TYPES, ...extensionTerms(text)])].map((type) => ({
-        label: type,
-        kind: CompletionItemKind.Keyword,
-      }));
+      const declared = parseMdlBlocks(text).flatMap(({ type, id }) => (type === 'ext' && id ? [id] : []));
+      return [...new Set([...BLOCK_TYPES, ...dialectTypes(text), ...extensionTerms(text), ...declared])].map(
+        (type) => ({
+          label: type,
+          kind: CompletionItemKind.Keyword,
+        }),
+      );
     }
     return [];
   }
