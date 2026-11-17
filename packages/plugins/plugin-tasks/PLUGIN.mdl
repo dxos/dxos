@@ -412,6 +412,7 @@ test QA-3: Showcase clip
 decision D-1: Updating a task returns the task ref, the fields that changed and the history entry it appended, not the whole task.
   date: 2026-11-17
   by: agent:claude-code
+  for: user:dmaretskyi
   affects: [op:updateTask]
   why: Over MCP the full task with its history was 2.6 KB for one status change, the largest result in a typical workflow, and it filled an agent's context.
   rejected:
