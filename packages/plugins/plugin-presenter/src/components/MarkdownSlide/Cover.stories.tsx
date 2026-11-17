@@ -35,7 +35,7 @@ const LOCKUP = `${BRAND}/logotypes/dxos-hero-white.svg`;
 /** The wordmark alone, for a slide whose mark is drawn by the art behind it. */
 const WORDMARK = `${BRAND}/logotypes/dxos-text-white.svg`;
 /** The deck's own art: the mark drawn as a lit volume, exported from the Figma title slide. */
-const GLOW = `${BRAND}/backgrounds/bg-dxos-glow.svg`;
+const GLOW = `${BRAND}/backgrounds/dxos-glow.svg`;
 
 const hero = (source: string) => ['<Box variant="hero">', '', `![DXOS](${source})`, '', '</Box>'];
 
@@ -85,7 +85,7 @@ export const Art: Story = {
     content: slide(
       {
         layout: 'center',
-        background: `${BRAND}/backgrounds/bg-dxos.svg`,
+        background: `${BRAND}/backgrounds/dxos-center.svg`,
         // The art's mark is centred, so it is held down to where it reads as texture between the words rather than
         // as a second mark competing with the wordmark.
         backgroundOpacity: 0.22,
@@ -185,7 +185,7 @@ export const Column: Story = {
       { layout: 'two-cols', bleed: 'left', background: 'rgb(29,31,32)' },
       '<Box variant="fill">',
       '',
-      `![](${BRAND}/backgrounds/bg-dxos.svg)`,
+      `![](${BRAND}/backgrounds/dxos-center.svg)`,
       '',
       '</Box>',
       '',
