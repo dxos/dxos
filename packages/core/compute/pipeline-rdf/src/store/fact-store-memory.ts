@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Fact, MemoryError, MemoryQuery, MemoryService } from '@dxos/echo-memory';
+import { Fact, Graph, MemoryError, MemoryQuery, MemoryService, RdfStore } from '@dxos/echo-memory';
 
 import { SemanticIndexError } from '../errors.ts';
 import { FactStore, type FactStoreApi } from './fact-store.ts';
@@ -17,7 +17,10 @@ const decodePattern = Schema.decodeUnknownEffect(MemoryQuery.FactQuery);
  * A {@link FactStoreApi} over a space's {@link MemoryService.Service}, so the pipelines that still take a FactStore
  * write into and read from the space's memory while they move onto MemoryService.
  */
-export const make = (memory: MemoryService.Service): FactStoreApi => {
+export const make = (memory: MemoryService.Service, rdf?: RdfStore.Service): FactStoreApi => {
+  /** TriG crosses as bytes, serialized and parsed beside the store. */
+  const store = (op: string) =>
+    rdf ? Effect.succeed(rdf) : Effect.fail(new SemanticIndexError({ message: `${op} needs the space's RDF store` }));
   const wrap = (message: string) => (cause: unknown) => new SemanticIndexError({ message, cause });
   return {
     putFacts: (facts) => memory.put(facts).pipe(Effect.asVoid, Effect.mapError(wrap('Failed to persist facts'))),
@@ -50,6 +53,18 @@ export const make = (memory: MemoryService.Service): FactStoreApi => {
       memory
         .put([], { read: { source: Fact.SourceUri.make(source), through: hash } })
         .pipe(Effect.asVoid, Effect.mapError(wrap('Failed to write cursor'))),
+    exportTrig: () =>
+      store('Export').pipe(
+        Effect.flatMap((through) => through.export('trig', { prefixes: Graph.EXPORT_PREFIXES })),
+        Effect.map((data) => new TextDecoder().decode(data)),
+        Effect.mapError(wrap('Failed to read the store for export')),
+      ),
+    importTrig: (trig) =>
+      store('Import').pipe(
+        Effect.flatMap((through) => through.import(new TextEncoder().encode(trig), 'trig')),
+        Effect.map(({ quads }) => quads),
+        Effect.mapError(wrap('Failed to import TriG')),
+      ),
     clear: () => memory.reset().pipe(Effect.mapError(wrap('Failed to clear store'))),
   };
 };
@@ -96,8 +111,10 @@ export const toMemory = (store: FactStoreApi): MemoryService.Service => {
   };
 };
 
-/** A FactStore over the MemoryService in context. */
-export const layer: Layer.Layer<FactStore, never, MemoryService.MemoryService> = Layer.effect(
+/** A FactStore over the MemoryService and RdfStore in context. */
+export const layer: Layer.Layer<FactStore, never, MemoryService.MemoryService | RdfStore.RdfStore> = Layer.effect(
   FactStore,
-  MemoryService.MemoryService.pipe(Effect.map(make)),
+  Effect.gen(function* () {
+    return make(yield* MemoryService.MemoryService, yield* RdfStore.RdfStore);
+  }),
 );

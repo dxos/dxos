@@ -496,6 +496,8 @@ export const WellKnownNamespaces = {
   trace: 'trace',
   /** A space's memory: the log of knowledge-base writes its fact store is rebuilt from (`@dxos/echo-memory`). */
   facts: 'facts',
+  /** One feed per object, each block an Automerge chunk of the object's document. */
+  automerge: 'automerge',
 } as const;
 
 export const isWellKnownNamespace = (namespace: string) =>

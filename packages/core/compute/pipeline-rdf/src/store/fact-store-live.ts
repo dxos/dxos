@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Semaphore from 'effect/Semaphore';
 import * as SqlClient from 'effect/sql/SqlClient';
-import { DataFactory, type Quad as RdfQuad } from 'n3';
+import { DataFactory, type Quad as RdfQuad, Parser as TrigParser, Writer as TrigWriter } from 'n3';
 import { Parser } from 'sparqljs';
 
 import { Fact, Graph, Hash, Mapping, Ontology, Sparql, Vocab } from '@dxos/echo-memory';
@@ -93,6 +93,25 @@ function* dropLegacyTables(): Program<void> {
     }
   }
 }
+
+/** Every quad: each statement in its named graph, then the default graph's statements about graphs. */
+const ALL_QUADS_SPARQL = 'SELECT ?g ?s ?p ?o WHERE { { GRAPH ?g { ?s ?p ?o } } UNION { ?g ?p ?o } }';
+
+/** The seed marker names this store's seed version, so it is neither exported nor taken from another store. */
+const isSeedMarker = (quad: RdfQuad): boolean => quad.predicate.value === Vocab.SX_SEED;
+
+const writeTrig = (quads: readonly RdfQuad[]): Effect.Effect<string, SemanticIndexError> =>
+  Effect.callback<string, SemanticIndexError>((resume) => {
+    const writer = new TrigWriter({ format: 'application/trig', prefixes: { ...Graph.EXPORT_PREFIXES } });
+    writer.addQuads([...quads]);
+    writer.end((error, result) =>
+      resume(
+        error
+          ? Effect.fail(new SemanticIndexError({ message: 'Failed to write TriG', cause: error }))
+          : Effect.succeed(result),
+      ),
+    );
+  });
 
 /** Fails unless `sparql` is a `SELECT`, since the engine would run an update as readily as a query. */
 const assertSelect = (sparql: string): void => {
@@ -214,6 +233,17 @@ const programs = (engine: EngineCore, prefix = '') => {
       );
     },
 
+    // The seed marker names this store's seed version, so it is neither exported nor taken from another store.
+    *exportQuads(): Program<RdfQuad[]> {
+      return Sparql.rowsToQuads(yield* engine.query(ALL_QUADS_SPARQL)).filter((quad) => !isSeedMarker(quad));
+    },
+
+    *importQuads(quads: readonly RdfQuad[]): Program<number> {
+      const kept = quads.filter((quad) => !isSeedMarker(quad));
+      yield* insert(kept);
+      return kept.length;
+    },
+
     // One transaction, so a store is never left without its seed vocabulary.
     *clear(): Program<void> {
       yield* engine.reset();
@@ -237,6 +267,12 @@ const fromPrograms = (
   rows: (sparql) => run(() => ops.rows(sparql), 'SPARQL query failed'),
   cursor: (source) => run(() => ops.cursor(source), 'Failed to read cursor'),
   setCursor: (source, hash) => run(() => ops.setCursor(source, hash), 'Failed to write cursor', true),
+  exportTrig: () => run(() => ops.exportQuads(), 'Failed to read the store for export').pipe(Effect.flatMap(writeTrig)),
+  importTrig: (trig) =>
+    Effect.try({
+      try: () => new TrigParser({ format: 'application/trig' }).parse(trig),
+      catch: (cause) => new SemanticIndexError({ message: 'Failed to parse TriG', cause }),
+    }).pipe(Effect.flatMap((quads) => run(() => ops.importQuads(quads), 'Failed to import TriG', true))),
   clear: () => run(() => ops.clear(), 'Failed to clear store', true),
 });
 
@@ -351,6 +387,8 @@ export const makeMemory = (): FactStoreApi => {
     rows: (sparql) => get.pipe(Effect.flatMap((opened) => opened.rows(sparql))),
     cursor: (source) => get.pipe(Effect.flatMap((opened) => opened.cursor(source))),
     setCursor: (source, hash) => get.pipe(Effect.flatMap((opened) => opened.setCursor(source, hash))),
+    exportTrig: () => get.pipe(Effect.flatMap((opened) => opened.exportTrig())),
+    importTrig: (trig) => get.pipe(Effect.flatMap((opened) => opened.importTrig(trig))),
     clear: () => get.pipe(Effect.flatMap((opened) => opened.clear())),
   };
 };

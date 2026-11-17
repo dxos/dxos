@@ -35,16 +35,15 @@ export const RdfHostLayer: Layer.Layer<RdfStoreService.Tag, never, SpaceMemories
           Effect.map((id) => ({ id })),
           Effect.mapError(wrap('Write failed')),
         ),
-      'RdfStoreService.export': ({ spaceId, format }) =>
+      'RdfStoreService.export': ({ spaceId, format, prefixes }) =>
         spaces.store(spaceId).pipe(
-          Effect.flatMap((store) => store.export(format)),
+          Effect.flatMap((store) => store.export(format, { prefixes })),
           Effect.map((data) => ({ data })),
           Effect.mapError(wrap('Export failed')),
         ),
       'RdfStoreService.import': ({ spaceId, data, format }) =>
         spaces.store(spaceId).pipe(
           Effect.flatMap((store) => store.import(data, format)),
-          Effect.map((id) => ({ id })),
           Effect.mapError(wrap('Import failed')),
         ),
       'RdfStoreService.changes': ({ spaceId }) =>

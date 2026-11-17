@@ -87,6 +87,9 @@ export const PREFIXES: Readonly<Record<string, string>> = {
   graph: Vocab.GRAPH,
 };
 
+/** Prefixes a whole store's TriG export abbreviates: {@link PREFIXES}, the brain namespaces and SIOC. */
+export const EXPORT_PREFIXES: Readonly<Record<string, string>> = { ...PREFIXES, brain: Vocab.BRAIN, sioc: Vocab.SIOC };
+
 const write = (quads: Iterable<Quad>, prefixes: Record<string, string>): string => {
   const writer = new Writer({ format: 'application/trig', prefixes });
   const seen = new Set<string>();

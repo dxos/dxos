@@ -58,6 +58,15 @@ export type Format = Schema.Schema.Type<typeof Format>;
 /** The store refused, could not be reached, or the input does not parse; the message says which. */
 export class RdfStoreError extends BaseError.extend('RdfStoreError', 'RDF store operation failed.') {}
 
+export type ExportOptions = {
+  /** Namespace prefixes a TriG export abbreviates IRIs with, by prefix. */
+  readonly prefixes?: Readonly<Record<string, string>>;
+};
+
+/** What an import added: the batch it wrote, and how many quads it read. */
+export const ImportResult = Schema.Struct({ batch: Schema.String, quads: Schema.Number });
+export interface ImportResult extends Schema.Schema.Type<typeof ImportResult> {}
+
 export type QueryOptions = {
   /** Reads the store's local part instead of its shared part. */
   readonly local?: boolean;
@@ -86,10 +95,10 @@ export interface Service {
   readonly write: (writes: readonly Write[], options?: WriteOptions) => Effect.Effect<string, RdfStoreError>;
 
   /** Every quad of the shared part, serialized where the store is, so a large store crosses a boundary once. */
-  readonly export: (format: Format) => Effect.Effect<Uint8Array, RdfStoreError>;
+  readonly export: (format: Format, options?: ExportOptions) => Effect.Effect<Uint8Array, RdfStoreError>;
 
-  /** Parses the data where the store is and inserts its quads into the shared part as one batch; returns its id. */
-  readonly import: (data: Uint8Array, format: Format) => Effect.Effect<string, RdfStoreError>;
+  /** Parses the data where the store is and inserts its quads into the shared part as one batch. */
+  readonly import: (data: Uint8Array, format: Format) => Effect.Effect<ImportResult, RdfStoreError>;
 
   /**
    * Calls `onApplied` with each batch of the shared part once it is applied, this replica's and other replicas' alike,

@@ -33,7 +33,11 @@ export interface WriteRequest extends Schema.Schema.Type<typeof WriteRequest> {}
 /** The id of the batch the call wrote. */
 export const BatchResponse = Schema.Struct({ id: Schema.String });
 
-export const ExportRequest = Schema.Struct({ spaceId: SpaceId, format: RdfStore.Format });
+export const ExportRequest = Schema.Struct({
+  spaceId: SpaceId,
+  format: RdfStore.Format,
+  prefixes: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+});
 export const ExportResponse = Schema.Struct({ data: Schema.Uint8Array });
 
 export const ImportRequest = Schema.Struct({ spaceId: SpaceId, data: Schema.Uint8Array, format: RdfStore.Format });
@@ -49,7 +53,7 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('query', { payload: QueryRequest, success: QueryResponse, error: serviceError }),
   Rpc.make('write', { payload: WriteRequest, success: BatchResponse, error: serviceError }),
   Rpc.make('export', { payload: ExportRequest, success: ExportResponse, error: serviceError }),
-  Rpc.make('import', { payload: ImportRequest, success: BatchResponse, error: serviceError }),
+  Rpc.make('import', { payload: ImportRequest, success: RdfStore.ImportResult, error: serviceError }),
   /** Each batch of the shared part once applied, from when the call starts. */
   Rpc.make('changes', { payload: ChangesRequest, success: RdfStore.Batch, error: serviceError, stream: true }),
 ).prefix('RdfStoreService.') {}

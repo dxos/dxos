@@ -15,6 +15,7 @@ export default defineConfig({
     MemoryQuery: 'src/MemoryQuery.ts',
     MemoryService: 'src/MemoryService.ts',
     Ontology: 'src/Ontology.ts',
+    Pipeline: 'src/Pipeline.ts',
     Predicate: 'src/Predicate.ts',
     RdfStore: 'src/RdfStore.ts',
     Sparql: 'src/Sparql.ts',

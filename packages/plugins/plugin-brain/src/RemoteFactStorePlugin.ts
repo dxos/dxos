@@ -21,6 +21,8 @@ import { BrainOperationHandlerSet } from '#operations';
 import { BrainSkill } from '#skills';
 import { BrainCapabilities } from '#types';
 
+import type * as QueryLog from './query-log.ts';
+
 /** Where `moon run plugin-discord:fact-server` listens by default. */
 export const DEFAULT_URL = 'http://127.0.0.1:7700';
 
@@ -35,6 +37,8 @@ const reporting = (store: FactStoreApi, report: (facts: readonly Fact.Fact[]) =>
   query: (query) => store.query(query).pipe(Effect.tap((facts) => Effect.sync(() => report(facts)))),
   select: (sparql) => store.select(sparql).pipe(Effect.tap((facts) => Effect.sync(() => report(facts)))),
 });
+
+const NO_QUERIES: readonly QueryLog.Entry[] = [];
 
 /**
  * Stands in for `BrainPlugin`'s fact store with one {@link FactStoreHttp} client, so every space's store is the remote
@@ -56,9 +60,13 @@ export const make = (url: string, { onOperationFacts }: Options = {}) =>
           return [
             Capability.contribute(BrainCapabilities.FactStoreRegistry, {
               forSpace: () => store,
+              logged: () => store,
               layerFor: () => Layer.succeed(FactStore, store),
               // The server has no change feed; the explorer re-queries on demand.
               subscribe: () => () => {},
+              // Queries are not logged here, so the memory view shows none.
+              queries: () => NO_QUERIES,
+              subscribeQueries: () => () => {},
             }),
             // The remote store ignores the space, so every space's operations share it.
             Capability.contribute(

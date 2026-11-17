@@ -58,6 +58,11 @@
       "types": "./dist/types/src/Ontology.d.ts",
       "import": "./dist/lib/Ontology.mjs"
     },
+    "./Pipeline": {
+      "source": "./src/Pipeline.ts",
+      "types": "./dist/types/src/Pipeline.d.ts",
+      "import": "./dist/lib/Pipeline.mjs"
+    },
     "./Predicate": {
       "source": "./src/Predicate.ts",
       "types": "./dist/types/src/Predicate.d.ts",

@@ -221,9 +221,12 @@ export const definition = (workspace: Workspace, document: Document, position: P
     return 'error' in reference.target ? undefined : location(reference.target);
   }
   if (isReview(document.path)) {
-    const verdict = parseVerdictHeader(document.lines.line(position.line));
+    const header = document.lines.line(position.line);
+    const verdict = parseVerdictHeader(header);
+    const idStart = verdict ? header.indexOf(verdict.id, header.indexOf('verdict') + 'verdict'.length) : -1;
+    const onId = verdict && position.character >= idStart && position.character <= idStart + verdict.id.length;
     const specPath = reviewedSpecPath(workspace, document.path, document.text);
-    const line = verdict && itemLine(workspace.read(specPath) ?? '', verdict.id);
+    const line = onId ? itemLine(workspace.read(specPath) ?? '', verdict.id) : undefined;
     if (line !== undefined) {
       return { uri: uriOfPath(workspace, specPath), range: lineRange(line) };
     }

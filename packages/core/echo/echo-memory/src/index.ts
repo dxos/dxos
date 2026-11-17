@@ -10,6 +10,7 @@ export * as MemoryError from './MemoryError.ts';
 export * as MemoryQuery from './MemoryQuery.ts';
 export * as MemoryService from './MemoryService.ts';
 export * as Ontology from './Ontology.ts';
+export * as Pipeline from './Pipeline.ts';
 export * as Predicate from './Predicate.ts';
 export * as RdfStore from './RdfStore.ts';
 export * as Sparql from './Sparql.ts';

@@ -35,18 +35,19 @@ export const fromQuadStore = (store: QuadStore.QuadStore): RdfStore.Service => {
 
     write: (writes, writeOptions) => store.write(writes, writeOptions).pipe(Effect.mapError(wrap('Write failed'))),
 
-    export: (format) =>
+    export: (format, options) =>
       Effect.gen(function* () {
         const quads = yield* store.quads();
         const { encode } = yield* exchange;
-        return yield* Effect.try(() => encode(quads, format));
+        return yield* Effect.try(() => encode(quads, format, options));
       }).pipe(Effect.mapError(wrap('Export failed'))),
 
     import: (data, format) =>
       Effect.gen(function* () {
         const { decode } = yield* exchange;
         const quads = yield* Effect.try(() => decode(data, format));
-        return yield* store.write([{ _tag: 'insert', quads }]);
+        const batch = yield* store.write([{ _tag: 'insert', quads }]);
+        return { batch, quads: quads.length };
       }).pipe(Effect.mapError(wrap('Import failed'))),
 
     listen: (onApplied) => store.listen(onApplied),

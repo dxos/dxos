@@ -122,6 +122,7 @@ export class Client {
   private readonly _fatalError = MulticastObservable.from(this._fatalErrorUpdate, null);
 
   private readonly _echoClient = new EchoClient();
+  readonly #memories = new Map<SpaceId, MemoryService.Service>();
 
   private readonly _options: ClientOptions;
 
@@ -359,7 +360,13 @@ export class Client {
    * page and operation shares one rule evaluator, one outbox per subscription and one clock.
    */
   memory(spaceId: SpaceId): MemoryService.Service {
-    return createRpcMemory(() => this.services.rpc, spaceId);
+    // One instance per space, so a caller can key per-space state (a query log) by the memory it was handed.
+    let memory = this.#memories.get(spaceId);
+    if (!memory) {
+      memory = createRpcMemory(() => this.services.rpc, spaceId);
+      this.#memories.set(spaceId, memory);
+    }
+    return memory;
   }
 
   /**

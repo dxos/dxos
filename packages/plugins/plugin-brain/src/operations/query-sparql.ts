@@ -10,6 +10,7 @@ import { type MemoryError, MemoryQuery, MemoryService } from '@dxos/echo-memory'
 
 import { BrainOperation } from '#types';
 
+import * as QueryLog from '../query-log.ts';
 import { AGENT_MAX_ROWS, trimForAgent } from './trim.ts';
 
 export default BrainOperation.QuerySparql.pipe(Operation.withHandler(Effect.fn((input) => querySparql(input))));
@@ -46,7 +47,8 @@ export const querySparql = ({
 > =>
   Effect.gen(function* () {
     const memory = yield* MemoryService.MemoryService;
-    const solutions = yield* memory.query(MemoryQuery.sparql(sparql));
+    // Logged, so the space's memory view follows the agent's queries as they run.
+    const solutions = yield* QueryLog.track(memory, sparql, memory.query(MemoryQuery.sparql(sparql)), (rows) => rows);
     const limited = HAS_LIMIT.test(sparql);
     const { rows, note } = trimForAgent(solutions.map(Record.map(formatSparqlTerm)), {
       clipRow: (row, clip) => Record.map(row, clip),

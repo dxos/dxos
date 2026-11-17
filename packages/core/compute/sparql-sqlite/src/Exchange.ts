@@ -24,8 +24,13 @@ const MAGIC = [0x44, 0x58, 0x51, 0x01]; // "DXQ" and format version 1.
 const Kind = { IRI: 0, BLANK: 1, LITERAL: 2 } as const;
 
 /** Serializes quads; the default graph's quads have no `g`. */
-export const encode = (quads: readonly Quad[], format: Format): Uint8Array =>
-  format === 'binary' ? encodeBinary(quads) : new TextEncoder().encode(encodeTrig(quads));
+export type EncodeOptions = {
+  /** Namespace prefixes TriG abbreviates IRIs with, by prefix. */
+  readonly prefixes?: Readonly<Record<string, string>>;
+};
+
+export const encode = (quads: readonly Quad[], format: Format, options: EncodeOptions = {}): Uint8Array =>
+  format === 'binary' ? encodeBinary(quads) : new TextEncoder().encode(encodeTrig(quads, options.prefixes));
 
 /** The inverse of {@link encode}; throws on malformed input. */
 export const decode = (data: Uint8Array, format: Format): Quad[] =>
@@ -86,9 +91,9 @@ const fromRdf = (term: RdfTerm): Term => {
   }
 };
 
-const encodeTrig = (quads: readonly Quad[]): string => {
+const encodeTrig = (quads: readonly Quad[], prefixes: Readonly<Record<string, string>> = {}): string => {
   // `quadsToString` writes N-Quads lines; TriG's graph blocks come only from the writer's own buffering.
-  const writer = new Writer({ format: 'application/trig' });
+  const writer = new Writer({ format: 'application/trig', prefixes: { ...prefixes } });
   writer.addQuads(
     quads.map((quad) =>
       DataFactory.quad(

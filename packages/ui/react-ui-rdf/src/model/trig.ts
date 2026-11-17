@@ -89,7 +89,7 @@ const PREFIXES: readonly (readonly [prefix: string, iri: string])[] = [
 export type NamedGraphOptions = {
   /** Real IRIs for the entities the extractor could resolve (an ECHO object, `mailto:`, a URL), by entity id. */
   entities?: Readonly<Record<string, string>>;
-  /** Ontology local names (`hasRole`) for predicates, keyed by the normalized predicate (`RDF.Predicate.normalize`). */
+  /** Ontology local names (`hasRole`) for predicates, keyed by the normalized predicate (`Predicate.normalize`). */
   predicates?: Readonly<Record<string, string>>;
 };
 

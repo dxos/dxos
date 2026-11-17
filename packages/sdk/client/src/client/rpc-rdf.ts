@@ -33,19 +33,21 @@ export const createRpcRdfStore = (getRpc: () => ClientServicesRpc, spaceId: Spac
           Effect.map(({ id }) => id),
         ),
       ),
-    export: (format) =>
+    export: (format, options) =>
       call(
         'Export failed',
-        Effect.suspend(() => getRpc()['RdfStoreService.export']({ spaceId, format })).pipe(
-          Effect.map(({ data }) => data),
-        ),
+        Effect.suspend(() =>
+          getRpc()['RdfStoreService.export']({
+            spaceId,
+            format,
+            ...(options?.prefixes ? { prefixes: { ...options.prefixes } } : {}),
+          }),
+        ).pipe(Effect.map(({ data }) => data)),
       ),
     import: (data, format) =>
       call(
         'Import failed',
-        Effect.suspend(() => getRpc()['RdfStoreService.import']({ spaceId, data, format })).pipe(
-          Effect.map(({ id }) => id),
-        ),
+        Effect.suspend(() => getRpc()['RdfStoreService.import']({ spaceId, data, format })),
       ),
     // Across RPC the subscription starts once the host answers, so a batch the host applies before then is not seen.
     listen: (onApplied) =>
