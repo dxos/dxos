@@ -6,12 +6,9 @@ import { rmSync } from 'node:fs';
 import { bench, describe } from 'vitest';
 
 import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { EchoTestBuilder as SqliteTestBuilder, createTmpPath as sqliteTmpPath } from '@dxos/echo-sqlite/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import {
-  EchoTestBuilder as SqliteTestBuilder,
-  createTmpPath as sqliteTmpPath,
-} from '../../../echo-sqlite/src/testing/echo-test-builder.ts';
 import { EchoTestBuilder as NativeTestBuilder, createTmpPath as nativeTmpPath } from './echo-test-builder.ts';
 
 /** The database surface the benches use, which both engines provide. */

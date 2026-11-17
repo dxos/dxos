@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { AUTHORITY_PEER_ID, type SyncTransport } from '@dxos/echo-sqlite/sync';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import { AUTHORITY_PEER_ID, type SyncTransport } from '../../echo-sqlite/src/sync/protocol.ts';
 import { type NativeDatabase } from './database.ts';
 
 /** Blocks per pull or push request, as echo-sqlite's `SpaceSync` uses. */

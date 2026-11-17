@@ -24,6 +24,24 @@ import {
   Type,
 } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
+// The live-object layer, query compiler, registry and graph are echo-sqlite's, unchanged: only the
+// store underneath differs.
+import {
+  type CompiledQuery,
+  type FeedRules,
+  type GroupedShape,
+  LiveQueryResult,
+  type ResultItem,
+  SimpleRegistry,
+  SqliteGraph,
+  type StoredEntity,
+  UnsupportedOperationError,
+  asItem,
+  compileQuery,
+  matchRegistry,
+  versionRangeKey,
+  versionRanges,
+} from '@dxos/echo-sqlite';
 import {
   ATTR_DELETED,
   ObjectDatabaseId,
@@ -45,24 +63,10 @@ import { DXN, EID, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 
-// The live-object layer, query compiler, registry and graph are echo-sqlite's, unchanged: only the
-// store underneath differs.
-import { UnsupportedOperationError } from '../../echo-sqlite/src/errors.ts';
-import { DatabaseRefResolver, type EntitySource, SqliteGraph } from '../../echo-sqlite/src/graph.ts';
-import { type StoredEntity } from '../../echo-sqlite/src/object-store.ts';
-import { LiveQueryResult, type ResultItem, asItem } from '../../echo-sqlite/src/query-result.ts';
-import { type EntityRecord, localEntityId, toRecord } from '../../echo-sqlite/src/record.ts';
-import { SimpleRegistry, matchRegistry } from '../../echo-sqlite/src/registry.ts';
-import { compileChanges, isChangesQuery } from '../../echo-sqlite/src/sql/changes.ts';
-import {
-  type CompiledQuery,
-  type FeedRules,
-  type GroupedShape,
-  compileQuery,
-  versionRangeKey,
-  versionRanges,
-} from '../../echo-sqlite/src/sql/compile.ts';
 import { type FastQuery, compileFast } from './fast-query.ts';
+import { compileChanges, isChangesQuery } from './internal/changes.ts';
+import { type EntityRecord, localEntityId, toRecord } from './internal/record.ts';
+import { DatabaseRefResolver, type EntitySource } from './internal/ref-resolver.ts';
 import { type Native, loadNative } from './native.ts';
 import { type Doc, NativeStore } from './store.ts';
 

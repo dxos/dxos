@@ -3,13 +3,12 @@
 //
 
 import { Type } from '@dxos/echo';
+import { SimpleRegistry, SqliteGraph } from '@dxos/echo-sqlite';
+import { type SyncTransport } from '@dxos/echo-sqlite/sync';
+import { TestAuthority } from '@dxos/echo-sqlite/testing';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SqliteGraph } from '../../../echo-sqlite/src/graph.ts';
-import { SimpleRegistry } from '../../../echo-sqlite/src/registry.ts';
-import { type SyncTransport } from '../../../echo-sqlite/src/sync/protocol.ts';
-import { TestAuthority } from '../../../echo-sqlite/src/testing/harness.ts';
 import { NativeDatabase } from '../database.ts';
 import { type Native, createNative } from '../native.ts';
 import { NativeSync } from '../sync.ts';

@@ -5,11 +5,11 @@
 import { describe, expect, test } from 'vitest';
 
 import { Filter, Obj } from '@dxos/echo';
+import { type SqliteDatabase } from '@dxos/echo-sqlite';
+import { type SpaceSync } from '@dxos/echo-sqlite/sync';
+import { TestBuilder } from '@dxos/echo-sqlite/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { type SqliteDatabase } from '../../../echo-sqlite/src/database.ts';
-import { type SpaceSync } from '../../../echo-sqlite/src/sync/space-sync.ts';
-import { TestBuilder } from '../../../echo-sqlite/src/testing/harness.ts';
 import { type NativeDatabase } from '../database.ts';
 import { type NativeSync } from '../sync.ts';
 import { NativeTestBuilder } from '../testing/harness.ts';

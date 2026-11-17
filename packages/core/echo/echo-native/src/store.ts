@@ -7,17 +7,15 @@ import * as Effect from 'effect/Effect';
 
 import { type Obj } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
+// echo-sqlite's query compiler and row types are reused as they are: the engine indexes into the same
+// tables, so the same SQL answers queries here.
+import { type CompiledQuery, type StoredEntity, UnsupportedOperationError } from '@dxos/echo-sqlite';
 import { TypeMetaSchemaDXN, objectStructureFromJson } from '@dxos/echo/internal';
 import { type SpaceId } from '@dxos/keys';
 
-// echo-sqlite's query compiler and row types are reused as they are: the engine indexes into the same
-// tables, so the same SQL answers queries here.
-import { UnsupportedOperationError } from '../../echo-sqlite/src/errors.ts';
-import { type StoredEntity } from '../../echo-sqlite/src/object-store.ts';
-import { type EntityRecord } from '../../echo-sqlite/src/record.ts';
-import { type CompiledChanges } from '../../echo-sqlite/src/sql/changes.ts';
-import { type CompiledQuery } from '../../echo-sqlite/src/sql/compile.ts';
 import { type FastQuery } from './fast-query.ts';
+import { type CompiledChanges } from './internal/changes.ts';
+import { type EntityRecord } from './internal/record.ts';
 import { type Native, type NativeWrite, type WriteResult } from './native.ts';
 import { type RowTable } from './rows.ts';
 
