@@ -61,6 +61,9 @@ export const StudioCard = Schema.Struct({
   /** A CSS custom property of the deck (`var(--t-trip)`), or a tone name (`ink`), resolved through {@link TONES}.
    * Nullish: a sidecar writes JSON `null` for a card the slide gives no tone, which is not `undefined`. */
   tone: Schema.optional(Schema.NullOr(Schema.String)),
+  /** The glyph's own colour, with no outline on the card, resolved through {@link TONES} as `tone` is: what the
+   * Composer slide gives its plugin cards, which name an icon tone and no card tone. */
+  iconTone: Schema.optional(Schema.NullOr(Schema.String)),
   /** The element kind the card wants; absent is the plain `card` of round 1. */
   kind: Schema.optional(Schema.String),
   /** The deck's own card variant (`.d-card.simple` and friends); absent is `full`. */
@@ -338,6 +341,7 @@ const promoteCards = (content: ContentMap, model: StudioModel, remap: Readonly<R
     const { style: _style, ...node } = record.node;
     const icon = { type: card.icon };
     const tone = card.tone ? { tone: TONES[card.tone] ?? card.tone } : {};
+    const iconTone = card.iconTone ? { iconTone: TONES[card.iconTone] ?? card.iconTone } : {};
     content[nodeKey(boxOf(key))] = {
       ...record,
       node: {
@@ -348,6 +352,7 @@ const promoteCards = (content: ContentMap, model: StudioModel, remap: Readonly<R
         icon,
         data: {
           ...tone,
+          ...iconTone,
           ...(card.variant ? { variant: card.variant } : {}),
           ...(card.feed ? { feed: card.feed.n, marks: marksOf(card.feed) } : {}),
           ...(card.feed?.label ? { feedLabel: card.feed.label } : {}),
@@ -398,7 +403,10 @@ export type StudioConnection = readonly [string, string, string];
 
 /** Draws the links the slide names beyond the deck's own, in the style the slide's own links are drawn in. */
 const connectCards = (content: ContentMap, connect: readonly StudioConnection[]): number => {
-  const scene = Object.values(content).find(isLinkRecord)?.scene;
+  // A slide whose deck drew no links at all still has a scene, on its nodes; resolving it from a link alone would
+  // discard every connection and the first one could never be added.
+  const records = Object.values(content);
+  const scene = records.find(isLinkRecord)?.scene ?? records.find(isNodeRecord)?.scene;
   if (connect.length === 0 || scene === undefined) {
     return 0;
   }
@@ -1090,6 +1098,23 @@ const snapToGrid = (content: ContentMap, grid: number): number => {
 };
 
 /**
+ * What a run may hold: the slide's cards and its components' placeholders. A frame's own rect, its title and a text
+ * label are node records too, so counting every record whose centre falls inside the run's box would disagree with
+ * the run's `n` and skip it — leaving its members at the sizes {@link snapToGrid} gave them one at a time.
+ */
+const runMembersOf = (content: ContentMap, model: StudioModel): { key: string; node: Node }[] => {
+  const members = cardsOf(content, model);
+  for (const component of model.components ?? []) {
+    const key = placeholderOf(content, component);
+    const record = key === undefined ? undefined : content[key];
+    if (key !== undefined && isNodeRecord(record)) {
+      members.push({ key, node: record.node });
+    }
+  }
+  return members;
+};
+
+/**
  * Lays each of the sidecar's layout runs out on the grid: every element of the run takes one size, and they sit on one
  * pitch, both rounded once for the whole run. {@link snapToGrid} rounds an element's edges independently, so two
  * elements the deck drew the same size land on different sizes whenever their fractional offsets differ — which is
@@ -1105,16 +1130,10 @@ const layoutRuns = (content: ContentMap, model: StudioModel, grid: number): numb
       continue;
     }
     const down = run.kind === 'down';
-    const members: { key: string; node: Node }[] = [];
-    for (const [key, record] of Object.entries(content)) {
-      if (!isNodeRecord(record)) {
-        continue;
-      }
-      const { x, y } = record.node.center;
-      if (x > run.x && x < run.x + run.w && y > run.y && y < run.y + run.h) {
-        members.push({ key, node: record.node });
-      }
-    }
+    const members = runMembersOf(content, model).filter(({ node }) => {
+      const { x, y } = node.center;
+      return x > run.x && x < run.x + run.w && y > run.y && y < run.y + run.h;
+    });
     if (members.length !== count) {
       continue;
     }
@@ -1124,7 +1143,9 @@ const layoutRuns = (content: ContentMap, model: StudioModel, grid: number): numb
     // The run's own box divided by what it holds: one element's extent, then the step that spreads them across it.
     const span = down ? run.h : run.w;
     const extent = Math.max(grid, onGrid((span - (run.gap ?? 0) * (count - 1)) / count, grid));
-    const pitch = Math.max(extent, onGrid((span - extent) / (count - 1), grid));
+    // Rounded DOWN against the extent already rounded, so the last member ends inside the run: rounding both to the
+    // nearest line overruns it — span 144, count 4, gap 8, grid 8 gives extent 32 and pitch 40, ending at 152.
+    const pitch = Math.max(extent, Math.floor((span - extent) / (count - 1) / grid) * grid);
     const start = onGrid(down ? run.y : run.x, grid);
     const across = onGrid(down ? run.x : run.y, grid);
     const breadth = Math.max(grid, onGrid(down ? run.w : run.h, grid));

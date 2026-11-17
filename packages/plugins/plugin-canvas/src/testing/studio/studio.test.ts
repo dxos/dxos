@@ -120,6 +120,44 @@ describe('studio deck slides on a canvas', () => {
     }
   });
 
+  test.for(SLIDES)('%s keeps every laid-out run inside its own box', (name, { expect }) => {
+    // The run's extent and its pitch are each rounded to the grid, so they have to be chosen together: rounded
+    // independently they overrun the box the sidecar gave the run, and a member's BOX leaves it while its centre
+    // stays inside — so this checks edges, against the run's OWN span rather than a grid-rounded one, which would
+    // round the bound up by as much as the overrun and accept it.
+    const { source, model } = slide(name);
+    const content: ContentMap = {};
+    seedStudioSlide(source, model)(content);
+    const onGrid = (value: number) => Math.round(value / STUDIO_GRID) * STUDIO_GRID;
+    for (const run of model.layout ?? []) {
+      if (run.kind === 'stack' || (run.n ?? 0) < 2) {
+        continue;
+      }
+      // Only the axis the run lays out along: across it the breadth is rounded up on purpose, so a card may sit
+      // wider than the sidecar's own box and that is not this bug.
+      const down = run.kind === 'down';
+      const origin = onGrid(down ? run.y : run.x);
+      const limit = origin + (down ? run.h : run.w);
+      // Cards AND components: the Hyperspace planks a run lays out are components, so walking `nodes` alone would
+      // check none of that run's members and pass whatever the run did.
+      const ids = [...Object.keys(model.nodes), ...(model.components ?? []).map(({ id }) => id)];
+      for (const id of ids) {
+        const record = ['box', 'ring'].map((part) => content[`node:${id}/${part}`]).find(isNodeRecord);
+        if (!record) {
+          continue;
+        }
+        const { center, size } = record.node;
+        if (!(center.x > run.x && center.x < run.x + run.w && center.y > run.y && center.y < run.y + run.h)) {
+          continue;
+        }
+        const along = down ? center.y : center.x;
+        const extent = down ? size.height : size.width;
+        const edges = { from: along - extent / 2 >= origin, to: along + extent / 2 <= limit };
+        expect({ id, ...edges }).toEqual({ id, from: true, to: true });
+      }
+    }
+  });
+
   test.for(SLIDES)('%s builds every card, frame and connector', (name, { expect }) => {
     const { source, model } = slide(name);
     const content: ContentMap = {};

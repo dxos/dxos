@@ -28,7 +28,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 
 import { ChipList, Chips } from './Chip.tsx';
-import { type Styled, toneValue } from './FeedCard.tsx';
+import { type Styled, TONES, toneValue } from './FeedCard.tsx';
 
 //
 // The card kind: the deck's `.d-card.simple` — a Phosphor icon, a title, a soft raised shadow, and an optional
@@ -37,10 +37,10 @@ import { type Styled, toneValue } from './FeedCard.tsx';
 
 /** What this kind adds to the core card, kept under `data`. */
 export const CardData = Schema.Struct({
-  /** An accent, drawn as the card's outline (`#2d6fff`). */
-  tone: Schema.optional(Schema.String.annotate({ title: 'Tone' })),
+  /** An accent, drawn as the card's outline. A name, not a colour: {@link toneValue} resolves only these. */
+  tone: Schema.optional(Schema.Literals(TONES).annotate({ title: 'Tone' })),
   /** The glyph's own colour, with no outline on the card: what the Composer slide gives its plugin cards. */
-  iconTone: Schema.optional(Schema.String.annotate({ title: 'Icon tone' })),
+  iconTone: Schema.optional(Schema.Literals(TONES).annotate({ title: 'Icon tone' })),
   /**
    * The deck's card variants: `full` (the default) and `compact` draw through the shared card frame, `simple` is the
    * one-line row of an EDGE service — icon, title, and the footer under the title with no rule over it.
