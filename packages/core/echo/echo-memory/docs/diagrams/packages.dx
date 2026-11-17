@@ -6,7 +6,7 @@ group page "Page" {
 }
 group host "client-services host" {
   node Host "RdfHostLayer" ref="packages/sdk/client-services/src/internal/rdf/rdf-host.ts"
-  node QuadStore "QuadStore" ref="packages/core/compute/sparql-sqlite/src/quad-store.ts"
+  node QuadStore "QuadStore" ref="packages/core/compute/sparql-sqlite/src/QuadStore.ts"
   node FeedLog "factFeedLog" ref="packages/sdk/client-services/src/internal/rdf/fact-feed.ts"
   node Sqlite "host SQLite"
   node Feed "facts feed"
