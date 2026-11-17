@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SlideThemeProvider } from '../components/SlideTheme/index.ts';
 import { query, slide } from '../testing/slideStory.tsx';
-import { SlideWorkbench, type SlideWorkbenchProps } from '../testing/SlideWorkbench.tsx';
+import { TestContainer, type TestContainerProps } from '../testing/TestContainer.tsx';
 
 /**
  * Title slides, as a set to choose between. Each draws the brand's own lockup — the mark with `DXOS` under it in the
@@ -18,16 +18,16 @@ import { SlideWorkbench, type SlideWorkbenchProps } from '../testing/SlideWorkbe
  */
 const meta = {
   title: 'plugins/plugin-presenter/layouts/Cover',
-  component: SlideWorkbench,
+  component: TestContainer,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof SlideWorkbench>;
+} satisfies Meta<typeof TestContainer>;
 
 export default meta;
 
-type Story = StoryObj<SlideWorkbenchProps>;
+type Story = StoryObj<TestContainerProps>;
 
 const BRAND = 'https://assets.dxos.org/brand';
 /** The vertical lockup: the mark over the wordmark, both centred, so the mark sits on the slide's axis. */

@@ -26,7 +26,7 @@ import { Slide } from '../components/Slide/index.ts';
 import { slideCompletion } from '../containers/SlideEditorArticle/slide-completion.ts';
 import { slideHighlight } from '../containers/SlideEditorArticle/slide-highlight.ts';
 
-export type SlideWorkbenchProps = Util.ThemedClassName<
+export type TestContainerProps = Util.ThemedClassName<
   Omit<MarkdownSlideProps, 'content'> & {
     /** The slide's markdown; the editor starts from it and the slide follows every edit. */
     content: string;
@@ -40,13 +40,13 @@ export type SlideWorkbenchProps = Util.ThemedClassName<
  * A slide over the markdown that renders it, in a live editor: typing in the lower pane re-renders the slide above
  * it. Shared by the stories, where it is both the illustration of a feature and the way to try it.
  */
-export const SlideWorkbench = ({
+export const TestContainer = ({
   classNames,
   content,
   onContentChange,
   step: initial,
   ...props
-}: SlideWorkbenchProps) => {
+}: TestContainerProps) => {
   const split = useSplit();
   const [value, setValue] = useState(content);
   const clicks = useMemo(() => parseSlide(value).clicks, [value]);

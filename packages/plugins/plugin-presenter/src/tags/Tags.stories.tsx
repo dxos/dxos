@@ -11,8 +11,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownSlide, type MarkdownSlideProps } from '../components/MarkdownSlide/index.ts';
 import { SlideThemeProvider } from '../components/SlideTheme/index.ts';
 import { query, slide } from '../testing/slideStory.tsx';
-import { SlideWorkbench } from '../testing/SlideWorkbench.tsx';
 import { SUITE } from '../testing/suiteArt.ts';
+import { TestContainer } from '../testing/TestContainer.tsx';
 
 /**
  * The tags the slide DSL adds to markdown, and what each one is for: `<Grid>`, `<Cell>` and `<Card>` lay a slide out
@@ -23,7 +23,7 @@ import { SUITE } from '../testing/suiteArt.ts';
 const meta = {
   title: 'plugins/plugin-presenter/tags/Tags',
   component: MarkdownSlide,
-  render: SlideWorkbench,
+  render: TestContainer,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
@@ -347,7 +347,7 @@ export const BoxVariants: Story = {
 export const ThemeOverrides: Story = {
   render: (props: MarkdownSlideProps) => (
     <SlideThemeProvider settings={{ code: '#15202b', separator: '#2b3a4a' }}>
-      <SlideWorkbench {...props} />
+      <TestContainer {...props} />
     </SlideThemeProvider>
   ),
   args: {
