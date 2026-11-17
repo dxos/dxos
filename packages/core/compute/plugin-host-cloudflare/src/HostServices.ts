@@ -254,7 +254,8 @@ export const makeOperations = ({
       for (const entity of unsaved) {
         database.add(entity);
       }
-      await database.flush();
+      // Stored, not indexed: the callee loads a reference by id.
+      await database.flush({ indexes: false });
     }
     return Output.encode(input, { entities: 'reference' });
   };
