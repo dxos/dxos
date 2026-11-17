@@ -87,9 +87,19 @@ const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: r
       continue;
     }
     const { pullRequest } = imported.value;
-    // An import of a pull request the space already holds returns it unchanged, so a merge since needs a refresh.
-    yield* Operation.invoke(GitHubOperation.SyncPullRequest, { pullRequest }).pipe(Effect.exit);
-    states.push((yield* Database.load(pullRequest)).state);
+    // Read from GitHub, not from the stored object: the sync below writes in another bundle's copy of the space, which
+    // reaches this one later, so a merge just made would still read as open here.
+    const status = yield* Operation.invoke(GitHubOperation.GetPullRequestStatus, { pullRequest }).pipe(Effect.exit);
+    if (Exit.isSuccess(status)) {
+      states.push(status.value.state);
+    } else {
+      log.warn('pull request status not read', { url, cause: Cause.pretty(status.cause) });
+    }
+    // An import of a pull request the space already holds returns it unchanged, so the stored object needs a refresh.
+    const synced = yield* Operation.invoke(GitHubOperation.SyncPullRequest, { pullRequest }).pipe(Effect.exit);
+    if (Exit.isFailure(synced)) {
+      log.warn('pull request not refreshed', { url, cause: Cause.pretty(synced.cause) });
+    }
     for (const task of tasks) {
       const attached = yield* Operation.invoke(TaskOperation.AddArtifact, {
         task: Ref.make(task),
@@ -105,7 +115,8 @@ const recordPullRequests = Effect.fnUntraced(function* (chat: Chat.Chat, urls: r
   // its chat explains, so the tasks wait on their person rather than look ready for review.
   const status = merged ? 'done' : urls.length > 0 ? 'review' : 'blocked';
   for (const task of tasks) {
-    if (task.status === 'started') {
+    // A task already in review moves only to done: a later sync of a finished run is how a merge reaches it.
+    if (task.status === 'started' || (task.status === 'review' && merged)) {
       yield* Operation.invoke(TaskOperation.UpdateTask, { task: Ref.make(task), status }).pipe(Effect.exit);
     }
   }
@@ -182,11 +193,15 @@ export const syncRun: Operation.WithHandler<typeof CloudRunOperation.SyncCloudRu
           yield* reopenTasks(chat);
           return yield* fold(chat, prompt, START_WINDOW_MS);
         }
-        // A fold with no open turn would start a new one from an empty prompt, so it only reports what the run left.
+        // A fold with no open turn would start a new one from an empty prompt, so it reports what the run left and
+        // re-checks its pull requests, which may have merged since.
         if (!open) {
           const feed = yield* Database.load(chat.feed);
           const messages = yield* TrajectoryStore.messages(feed);
-          return { chat: chatRef, done: true, latest: latestText(messages), pullRequests: pullRequestsIn(messages) };
+          const pullRequests = pullRequestsIn(messages);
+          const merged = pullRequests.length > 0 ? yield* recordPullRequests(chat, pullRequests) : undefined;
+          yield* Database.flush();
+          return { chat: chatRef, done: true, latest: latestText(messages), pullRequests, merged };
         }
         // The open turn is picked up where it is; the prompt goes again under the turn's key, which EDGE drops.
         return yield* fold(chat, '', FOLD_WINDOW_MS);

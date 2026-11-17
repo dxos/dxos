@@ -45,7 +45,8 @@ export const make = (): Skill.Skill =>
            blocked and \`latest\` says why (a refused push, a missing repository, a question): report that.
         4. To answer the agent, or to pass on the person's approval to land its pull requests, call Sync Cloud Coding
            Run with the chat and \`prompt\` set to the message, then keep syncing as in step 2. The agent continues in
-           the same session. When every pull request has merged, \`merged\` is true and the tasks are done.
+           the same session. When every pull request has merged, \`merged\` is true and the tasks are done; syncing a
+           finished run again re-checks its pull requests, so a merge made later also moves its tasks to done.
 
         A run takes minutes to hours. Do not start a second run for the same tasks: tasks an agent holds are skipped.
       `,
