@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, onTestFinished, test } from 'vitest';
 
-import { Fact, MemoryQuery, Subscription } from '@dxos/echo-memory';
+import { Fact, Graph, MemoryQuery, Subscription } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 
@@ -74,6 +74,26 @@ describe('MemoryService over client.memory', () => {
         const data = yield* client.rdf(space.id).export('binary');
         yield* client.rdf(other.id).import(data, 'binary');
         expect((yield* copy.query(MemoryQuery.facts())).map(({ id }) => id)).toEqual(facts.map(({ id }) => id));
+      }),
+    );
+  });
+
+  test('a space memory moves out and back in as TriG, abbreviated with the given prefixes', async ({ expect }) => {
+    const client = await openClient();
+    const [source, target] = [await client.spaces.create(), await client.spaces.create()];
+    await Promise.all([source.waitUntilReady(), target.waitUntilReady()]);
+
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        yield* client.memory(source.id).put([said('f1', 'dima', 'indexer')]);
+        const trig = yield* client.rdf(source.id).export('trig', { prefixes: Graph.EXPORT_PREFIXES });
+        const text = new TextDecoder().decode(trig);
+        expect(text).toMatch(/@prefix sx: /);
+
+        const { quads } = yield* client.rdf(target.id).import(trig, 'trig');
+        expect(quads).toBeGreaterThan(0);
+        const facts = yield* client.memory(target.id).query(MemoryQuery.facts());
+        expect(facts.map(({ id }) => id)).toEqual(['f1']);
       }),
     );
   });
