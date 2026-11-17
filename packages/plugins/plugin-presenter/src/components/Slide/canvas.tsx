@@ -7,11 +7,16 @@ import React, { type PropsWithChildren, type RefObject, useLayoutEffect, useRef,
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { slideThemeClasses, useSlideThemeStyle } from '../SlideTheme/SlideTheme.tsx';
+import { slideThemeClasses, useSlideScrimSetting, useSlideThemeStyle } from '../SlideTheme/SlideTheme.tsx';
+import { ScrimContext } from './scrim.ts';
 
 export type SlideCanvasProps = Util.ThemedClassName<
   PropsWithChildren<{
-    /** Inset the slide, with rounded corners, in a solid void that shows on every side, so the slide's own background reads as distinct from what surrounds it. */
+    /**
+     * Inset the slide, with rounded corners, in the scrim that shows on every side. The scrim takes the theme's
+     * slide background, as the letterbox bands do, so the inset reads as the slide's own margin rather than as a
+     * surface of its own; a slide that paints its own background still reads as distinct within it.
+     */
     inset?: boolean;
   }>
 >;
@@ -21,29 +26,47 @@ export type SlideCanvasProps = Util.ThemedClassName<
  */
 export const SlideCanvas = ({ children, classNames, inset }: SlideCanvasProps) => {
   const themeStyle = useSlideThemeStyle();
+  const deckScrim = useSlideScrimSetting();
   const containerRef = useRef<HTMLDivElement>(null);
   const size = useContainerSize(containerRef);
+  // The slide's own scrim, published from inside; it outranks the deck's, and neither is set by default.
+  const [slideScrim, setSlideScrim] = useState<string>();
+  const scrim = slideScrim ?? deckScrim;
+  const scrimStyle = scrim === undefined ? undefined : { backgroundColor: scrim };
 
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   const frame = (
     <div
       ref={containerRef}
+      {...(inset ? {} : { 'data-scrim-surface': '' })}
       className={mx(
         'flex grow relative overflow-hidden',
         // The radius is in canvas pixels, scaled with the slide, and applies only to this slide, not to slides embedded in it.
-        // Outside the inset view the space around a letterboxed slide takes the slide's own background, so it shows no bands.
         inset ? 'bg-transparent [&>div>[data-slide]]:rounded-[32px]' : slideThemeClasses,
         classNames,
       )}
-      style={inset ? undefined : themeStyle}
+      style={inset ? undefined : { ...themeStyle, ...scrimStyle }}
     >
       <div className={mx('dx-expand absolute')} style={size ? createLayoutProps(size) : undefined}>
-        {size && children}
+        <ScrimContext.Provider value={setSlideScrim}>{size && children}</ScrimContext.Provider>
       </div>
     </div>
   );
 
-  return inset ? <div className='flex grow relative p-4 overflow-hidden bg-deck-surface'>{frame}</div> : frame;
+  // The scrim is one color wherever a slide is letterboxed: the theme's slide background, so the bands read as the
+  // slide running on rather than as a surface of their own. `slideThemeClasses` paints it from the theme variables
+  // `themeStyle` carries, and a `scrim:` names a different one.
+  return inset ? (
+    <div
+      data-scrim-surface
+      className={mx('flex grow relative p-4 overflow-hidden', slideThemeClasses)}
+      style={{ ...themeStyle, ...scrimStyle }}
+    >
+      {frame}
+    </div>
+  ) : (
+    frame
+  );
 };
 
 type Size = { width: number; height: number };

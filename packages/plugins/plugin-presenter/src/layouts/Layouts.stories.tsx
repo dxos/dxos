@@ -294,6 +294,34 @@ export const BackgroundColor: Story = {
   },
 };
 
+/**
+ * `scrim:` paints what is outside the slide: the inset void here, and the letterbox bands when presenting. It is the
+ * canvas that paints it, not the slide, so a slide names the color and the canvas around it takes it.
+ */
+export const Scrim: Story = {
+  args: { content: slide({ layout: 'center', scrim: '#3b0a1f' }, '# Framed') },
+  play: async ({ canvasElement }) => {
+    const surround = await query(canvasElement, '[data-scrim-surface]');
+    await expect(getComputedStyle(surround).backgroundColor).toBe('rgb(59, 10, 31)');
+    // The slide itself keeps the deck's background; only what is around it changed.
+    const slideElement = await query(canvasElement, '[data-slide]');
+    await expect(getComputedStyle(slideElement).backgroundColor).not.toBe('rgb(59, 10, 31)');
+  },
+};
+
+/**
+ * Without one, the scrim is the theme's slide background — the same color the letterbox bands take when presenting,
+ * so a slide is framed by its own ground rather than by a surface of its own.
+ */
+export const ScrimDefault: Story = {
+  args: { content: slide({ layout: 'center' }, '# Unframed') },
+  play: async ({ canvasElement }) => {
+    const surround = await query(canvasElement, '[data-scrim-surface]');
+    const slideElement = await query(canvasElement, '[data-slide]');
+    await expect(getComputedStyle(surround).backgroundColor).toBe(getComputedStyle(slideElement).backgroundColor);
+  },
+};
+
 /** Every layout at once, each at thumbnail size under its name — the whole set to choose from on one screen. */
 export const All: Story = {
   // The story draws the whole catalogue rather than one slide, so the component's own `content` goes unused.

@@ -31,6 +31,7 @@ import {
 } from '#markdown';
 import { SlideTheme } from '#types';
 
+import { useSlideScrim } from '../Slide/scrim.ts';
 import {
   type SlideThemeStyle,
   slideThemeClasses,
@@ -113,6 +114,9 @@ export const MarkdownSlide = ({
     },
     [onSourceClick],
   );
+
+  // The scrim is painted by the canvas around this slide, which the slide's own variables never reach.
+  useSlideScrim(parsed.frontmatter.scrim);
 
   return (
     <div

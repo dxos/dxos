@@ -184,6 +184,15 @@ export const useSlideThemeStyle = (): SlideThemeStyle => {
 };
 
 /**
+ * The deck's scrim color, or undefined when it sets none. Not a `--slide-*` variable: the scrim is painted outside
+ * the slide, by the canvas, which the slide's own variables never reach.
+ */
+export const useSlideScrimSetting = (): string | undefined => {
+  const { scrim } = useContext(SlideThemeContext);
+  return SlideTheme.isColor(scrim) ? scrim : undefined;
+};
+
+/**
  * The color scheme the current theme forces, for components that pick colors in script rather than CSS.
  */
 export const useSlideColorScheme = (): 'light' | 'dark' | undefined => {
