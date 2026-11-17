@@ -107,7 +107,8 @@ export const setWasmSource = (source: () => Promise<BufferSource>): void => {
 
 const defaultSource = async (): Promise<BufferSource> => {
   const { readFile } = await import('node:fs/promises');
-  return readFile(new URL('../dist/echo_native.wasm', import.meta.url));
+  // Copied once into an `ArrayBuffer`-backed array: compiling takes no pooled `Buffer`.
+  return new Uint8Array(await readFile(new URL('../dist/echo_native.wasm', import.meta.url)));
 };
 
 let compiled: Promise<WebAssembly.Module> | undefined;

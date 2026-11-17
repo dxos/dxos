@@ -5,7 +5,7 @@
 import * as A from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
-import { type Obj } from '@dxos/echo';
+import { type Feed, type Obj } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 // echo-sqlite's query compiler and row types are reused as they are: the engine indexes into the same
 // tables, so the same SQL answers queries here.
@@ -142,11 +142,19 @@ const rowsOf = (table: RowTable): StoredEntity[] => {
 const attempt = <A>(body: () => A): Store<A> =>
   Effect.try({ try: body, catch: (error) => (error instanceof Error ? error : new Error(String(error))) });
 
-const toWrite = (record: EntityRecord & { readonly heads?: readonly string[] }): NativeWrite => ({
-  id: record.id,
-  structure: objectStructureFromJson(record.body as Obj.JSON, { createdAt: record.createdAt }),
-  heads: record.heads,
-});
+/** An entity's JSON body as `Entity.toJSON` writes it: an object carrying its id. */
+const isObjectJson = (body: Record<string, unknown>): body is Obj.JSON => typeof body.id === 'string';
+
+const toWrite = (record: EntityRecord & { readonly heads?: readonly string[] }): NativeWrite => {
+  if (!isObjectJson(record.body)) {
+    throw new TypeError(`Entity ${record.id} has no JSON body to write.`);
+  }
+  return {
+    id: record.id,
+    structure: objectStructureFromJson(record.body, { createdAt: record.createdAt }),
+    heads: record.heads,
+  };
+};
 
 /**
  * The store {@link NativeDatabase} reads and writes through: the shape of echo-sqlite's `ObjectStore`,
@@ -309,8 +317,8 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
     return Effect.succeed({ mergedFrom: [] });
   }
 
-  feedOptions(): Store<Map<string, never>> {
-    return Effect.succeed(new Map());
+  feedOptions(): Store<Map<string, Feed.FeedOptions>> {
+    return Effect.succeed(new Map<string, Feed.FeedOptions>());
   }
 
   appendItems(_feedId: string, _namespace: string, _items: readonly Record<string, unknown>[]): Store<void> {
