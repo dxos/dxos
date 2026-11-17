@@ -6,10 +6,10 @@ contributes one. Nothing in `plugin-canvas` itself changed.
 
 | Where                                                  | What                                                                         |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| `src/testing/studio/*.diagram`                         | The three slides in the scene DSL, as studio exported them (one fix, below). |
-| `src/testing/studio/*.json`                            | The sidecar: everything the DSL has no word for.                             |
-| `src/testing/studio/studio.ts`                         | The loader — parse, apply, then repair from the sidecar.                     |
-| `src/testing/studio/studio.test.ts`                    | What the loader had to repair, as assertions.                                |
+| `src/experimental/studio/*.diagram`                    | The three slides in the scene DSL, as studio exported them (one fix, below). |
+| `src/experimental/studio/*.json`                       | The sidecar: everything the DSL has no word for.                             |
+| `src/experimental/studio/studio.ts`                    | The loader — parse, apply, then repair from the sidecar.                     |
+| `src/experimental/studio/studio.test.ts`               | What the loader had to repair, as assertions.                                |
 | `src/containers/CanvasArticle/StudioCards.stories.tsx` | The `card` kind and a story per slide.                                       |
 
 Stories: [Ontology](http://localhost:9009/?path=/story/plugins-plugin-canvas-containers-studiocards--ontology),
@@ -345,7 +345,7 @@ gets the Neu look _and_ the app's mode, and it needs no addition to the registry
 ### The card kinds
 
 A style set draws the canvas's own shapes; a contributed kind draws its own DOM, so the deck's card had to carry
-the same tokens. [`theme.css`](../src/testing/studio/theme.css) is `deck.css`'s token block, with every value a
+the same tokens. [`theme.css`](../src/experimental/studio/theme.css) is `deck.css`'s token block, with every value a
 `light-dark()` pair:
 
 ```css
