@@ -59,6 +59,9 @@
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
+  "devDependencies": {
+    "@effect/atom-react": "catalog:"
+  },
   "publishConfig": {
     "access": "public"
   }
