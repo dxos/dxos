@@ -71,9 +71,14 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
       for `gh pr checks --watch` and merge only when every check is green.
 - [ ] A run cannot run the agentic review: `TYPESAFE_API_KEY` is lent only from a `typesafe.ai` access token
       in the space (allowlist added, dxos#14557); the user has to add that token.
-- [ ] After a turn ends with its PRs merged, the space still shows them `draft` and the tasks stay in
-      `review`: `GitHubOperation.SyncPullRequest` invoked from the plugin-claude bundle fails silently.
-      Needs EDGE logs (edge-dev sends none to SigNoz) or an exposed sync op to diagnose.
+- [x] The run now reads PR state live (`GetPullRequestStatus`, not the stored object, which another bundle's
+      copy of the space updates later), logs read/refresh failures, and a sync of a finished run re-checks its
+      PRs so a later merge moves tasks to done (dxos#14557, published to dev).
+- [ ] Still failing on dev: for edge#1540 (merged) the sync returns `merged: false` and the PR stays `draft`, so
+      both `GetPullRequestStatus` and `SyncPullRequest` fail when plugin-claude's bundle invokes them. Their
+      warnings are logged inside the plugin bundle, which does not reach PostHog logs or spans (no
+      `dx.operation.key` span for nested calls). Next: trace nested bundle→bundle invocations in compute-service
+      (`invokePlatformOperation`) so the failure is visible.
 - [ ] dxos#14563 (agent landing in progress): `review-present` fails for the same missing key.
 
 ## Phase 3c: Cold MCP calls
