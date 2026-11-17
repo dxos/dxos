@@ -1,0 +1,37 @@
+@font-face {
+  font-family: 'DM Sans';
+  font-weight: 400;
+  font-display: swap;
+  src: url('../../node_modules/@dxos/brand/assets/fonts/dm-sans/DMSans-Regular.ttf');
+}
+@font-face {
+  font-family: 'DM Sans';
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  src: url('../../node_modules/@dxos/brand/assets/fonts/dm-sans/DMSans-Italic.ttf');
+}
+@font-face {
+  font-family: 'DM Sans';
+  font-weight: 500;
+  font-display: swap;
+  src: url('../../node_modules/@dxos/brand/assets/fonts/dm-sans/DMSans-Medium.ttf');
+}
+@font-face {
+  font-family: 'DM Sans';
+  font-weight: 700;
+  font-display: swap;
+  src: url('../../node_modules/@dxos/brand/assets/fonts/dm-sans/DMSans-Bold.ttf');
+}
+@font-face {
+  font-family: 'DM Mono';
+  font-weight: 400;
+  font-display: swap;
+  src: url('../../node_modules/@dxos/brand/assets/fonts/dm-mono/DMMono-Regular.ttf');
+}
+@font-face {
+  font-family: 'DM Mono';
+  font-weight: 500;
+  font-display: swap;
+  src: url('../../node_modules/@dxos/brand/assets/fonts/dm-mono/DMMono-Medium.ttf');
+}

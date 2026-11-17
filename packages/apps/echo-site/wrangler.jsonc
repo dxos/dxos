@@ -1,0 +1,9 @@
+{
+  // Workers static assets only, no Worker script, matching the dxos.org docs build.
+  "name": "echo-site",
+  "compatibility_date": "2024-11-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+  },
+}

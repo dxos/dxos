@@ -1,0 +1,1144 @@
+---
+id: org.dxos.echo-site
+name: ECHO developer site
+version: 0.1.0
+---
+
+The ECHO developer site is the technical reference for building on ECHO, the typed, local-first
+object graph. It is for an engineer deciding whether to adopt ECHO, then learning it, then looking
+something up. dxos.org stays the home of the company and of Composer; this site goes deep on one
+product, and each site links to the other.
+
+The site is a static Astro build with Starlight as the documentation shell. Its look is flat and comes
+from the DXOS brand assets: logos, background art, fonts and palette. Its structure follows the Effect documentation: a short
+argument for the idea, then a learning path, core concepts, guides and a reference.
+
+The site opens with why ECHO exists: it is the data model that plugins code against, the place agents keep
+their memory, a schema an agent can inspect, and the graph where data from external systems meets [F-14].
+
+Three properties outrank everything else:
+
+- **Every code sample compiles against this commit.** The ECHO docs on dxos.org teach APIs that no
+  longer exist, so a sample that is not checked is assumed to be wrong [F-3].
+- **Every claim about behavior cites a spec item.** A page says what ECHO guarantees only when
+  `org.dxos.echo` or `org.dxos.echo.query` states it [F-4].
+- **The spec owns the site map.** The sidebar and the planned pages are generated from the `page`
+  blocks in this document [F-5].
+
+## Dependencies
+
+```mdl
+uses org.dxos.echo: The public API that the learning path and the reference document.
+```
+
+```mdl
+uses org.dxos.echo.query: The query guarantees that the argument for ECHO rests on.
+```
+
+## Extensions
+
+| Term       | URI                                 |
+| ---------- | ----------------------------------- |
+| `uses`     | `dxos.spec.core/uses`               |
+| `feat`     | `org.dxos.mdl.feat@1.0`             |
+| `scenario` | `org.dxos.mdl.scenario@1.0`         |
+| `decision` | `org.dxos.mdl.decision@1.0`         |
+| `question` | `org.dxos.mdl.question@1.0`         |
+| `template` | `org.dxos.echo-site.template@1.0`   |
+| `page`     | `org.dxos.echo-site.page@1.0`       |
+
+## Templates
+
+Each page uses exactly one template. The template fixes the order of the page's parts, so a reader
+always knows where to look.
+
+```mdl
+template landing: The front door
+  purpose: Answer what ECHO is and why it differs, in one screen, then route the reader.
+  parts:
+    - Hero: eyebrow, one-line claim, one-paragraph mechanism, install chip, two actions, ECHO background art
+    - Sample: the smallest complete example
+    - Guarantees: four cards, each a behavior with its spec citation
+    - Architecture: one diagram of the packages
+    - Routes: cards into the learning path, concepts and reference
+```
+
+```mdl
+template narrative: An argument
+  purpose: Explain why, in the order of the Effect page "Why Effect?".
+  parts:
+    - Title and one-paragraph answer
+    - The pattern: the smallest complete example and an anatomy strip of its key signature
+    - Comparison: the same task written without and with ECHO, side by side
+    - Practical problems: one H3 per problem, each with its mechanism and spec citation
+    - Closing: where to go next
+```
+
+```mdl
+template tutorial: A learning path step
+  purpose: Teach one skill. The reader ends with code that runs.
+  parts:
+    - Title and a one-sentence outcome
+    - Steps: numbered, each one action, one snippet and one observable result
+    - Recap: what the reader can now do
+    - Next: the following step, from the sidebar order
+```
+
+```mdl
+template concept: A core concept
+  purpose: Describe one idea completely, for a reader who has finished the learning path.
+  parts:
+    - Title and a definition in one sentence
+    - Model: the idea, with a diagram where the shape matters
+    - Behavior: what is guaranteed, with spec citations
+    - Limits: what is not guaranteed, and known divergences
+```
+
+```mdl
+template reference: One module
+  purpose: Answer a lookup in one glance. No narrative.
+  parts:
+    - Title, import line and a one-sentence summary
+    - Members table: strict columns of member, signature, summary
+    - One H3 per member family: signature, parameters, a compiled example
+```
+
+```mdl
+template stub: A planned page
+  purpose: Show the planned scope of a page that is not written yet.
+  parts:
+    - Title, a planned badge and the page's summary
+    - The planned sections or template parts
+```
+
+## Site map
+
+The order of these blocks is the order of the sidebar. Routes are relative to the site's base path,
+`/echo`.
+
+### Start here
+
+```mdl
+page welcome: Welcome
+  What ECHO is and how these docs are organized.
+  route: /welcome/
+  group: Start here
+  template: concept
+  status: planned
+```
+
+```mdl
+page why-echo: Why ECHO?
+  Why apps and agents share one data model: agent memory, introspection, external data, then the argument for a typed, local-first object graph.
+  route: /why-echo/
+  group: Start here
+  template: narrative
+  status: spike
+```
+
+### Learning path
+
+```mdl
+page the-echo-object: The ECHO object
+  What a live object is: identity, type, reactive fields.
+  route: /learn/the-echo-object/
+  group: Learning path
+  template: tutorial
+  status: planned
+```
+
+```mdl
+page installation: Installation
+  Add the packages and open a database in Node or the browser.
+  route: /learn/installation/
+  group: Learning path
+  template: tutorial
+  status: planned
+```
+
+```mdl
+page defining-types: Defining types
+  Declare an object type and a relation type, then create instances of both.
+  route: /learn/defining-types/
+  group: Learning path
+  template: tutorial
+  status: spike
+```
+
+```mdl
+page mutating-objects: Mutating objects
+  Change objects with Obj.update and observe the change.
+  route: /learn/mutating-objects/
+  group: Learning path
+  template: tutorial
+  status: planned
+```
+
+```mdl
+page querying: Querying
+  Select objects with Filter and Query, one-shot and live.
+  route: /learn/querying/
+  group: Learning path
+  template: tutorial
+  status: planned
+```
+
+```mdl
+page sharing: Sharing a space
+  Replicate a database between two peers and watch a conflict merge.
+  route: /learn/sharing/
+  group: Learning path
+  template: tutorial
+  status: planned
+```
+
+### Core concepts
+
+```mdl
+page spaces: Spaces and databases
+  The unit of sharing, access and replication.
+  route: /concepts/spaces/
+  group: Core concepts
+  template: concept
+  status: planned
+```
+
+```mdl
+page objects-relations: Objects and relations
+  Entities, the reserved fields, and parent and child ownership.
+  route: /concepts/objects-relations/
+  group: Core concepts
+  template: concept
+  status: planned
+```
+
+```mdl
+page references: References and DXNs
+  How objects point at each other, and how a reference resolves.
+  route: /concepts/references/
+  group: Core concepts
+  template: concept
+  status: planned
+```
+
+```mdl
+page query-model: The query model
+  Traversal, ordering, aggregates, completeness and revalidation.
+  route: /concepts/query-model/
+  group: Core concepts
+  template: concept
+  status: planned
+```
+
+```mdl
+page conflicts: Concurrency and conflicts
+  What merges automatically and what the application must decide.
+  route: /concepts/conflicts/
+  group: Core concepts
+  template: concept
+  status: planned
+```
+
+```mdl
+page text-blobs: Text and blobs
+  Collaborative text edits and binary attachments.
+  route: /concepts/text-blobs/
+  group: Core concepts
+  template: concept
+  status: planned
+```
+
+```mdl
+page feeds: Feeds
+  Append-only logs, cursors, indexing and retention.
+  route: /concepts/feeds/
+  group: Core concepts
+  template: concept
+  status: planned
+```
+
+```mdl
+page schema-evolution: Schema evolution
+  Versioned types and object migrations.
+  route: /concepts/schema-evolution/
+  group: Core concepts
+  template: concept
+  status: planned
+```
+
+### Guides
+
+```mdl
+page guide-react: React
+  useQuery, useObject and useSchema, and the reactivity rules behind them.
+  route: /guides/react/
+  group: Guides
+  template: tutorial
+  status: planned
+```
+
+```mdl
+page guide-solid: Solid
+  The Solid.js bindings.
+  route: /guides/solid/
+  group: Guides
+  template: tutorial
+  status: planned
+```
+
+```mdl
+page guide-effect: Effect
+  The Database service, layers and typed errors.
+  route: /guides/effect/
+  group: Guides
+  template: tutorial
+  status: planned
+```
+
+```mdl
+page guide-testing: Testing
+  Build isolated peers with EchoTestBuilder.
+  route: /guides/testing/
+  group: Guides
+  template: tutorial
+  status: planned
+```
+
+```mdl
+page guide-foreign-records: Foreign records
+  Map records from another system onto ECHO types with panproto lenses.
+  route: /guides/foreign-records/
+  group: Guides
+  template: tutorial
+  status: planned
+```
+
+### Internals
+
+```mdl
+page architecture: Architecture
+  The packages, the processes they run in and the path of a write.
+  route: /internals/architecture/
+  group: Internals
+  template: concept
+  status: planned
+```
+
+```mdl
+page query-engine: The query engine
+  LocalQueryEngine, working sets and remote sources.
+  route: /internals/query-engine/
+  group: Internals
+  template: concept
+  status: planned
+```
+
+```mdl
+page indexing: Indexing
+  The host index and the SQL query plan.
+  route: /internals/indexing/
+  group: Internals
+  template: concept
+  status: planned
+```
+
+```mdl
+page versioning: Versioning
+  Heads, object versions and what a remote entry carries.
+  route: /internals/versioning/
+  group: Internals
+  template: concept
+  status: planned
+```
+
+### Reference
+
+```mdl
+page ref-type: Type
+  Declare and inspect object and relation types.
+  route: /reference/type/
+  group: Reference
+  template: reference
+  status: planned
+```
+
+```mdl
+page ref-obj: Obj
+  The runtime API for objects.
+  route: /reference/obj/
+  group: Reference
+  template: reference
+  status: planned
+```
+
+```mdl
+page ref-relation: Relation
+  The runtime API for relations.
+  route: /reference/relation/
+  group: Reference
+  template: reference
+  status: planned
+```
+
+```mdl
+page ref-ref: Ref
+  Typed references between entities.
+  route: /reference/ref/
+  group: Reference
+  template: reference
+  status: planned
+```
+
+```mdl
+page ref-filter: Filter
+  Predicate builders that compile to a query AST.
+  route: /reference/filter/
+  group: Reference
+  template: reference
+  status: spike
+```
+
+```mdl
+page ref-query: Query
+  Graph-shaped selections and traversal.
+  route: /reference/query/
+  group: Reference
+  template: reference
+  status: planned
+```
+
+```mdl
+page ref-database: Database
+  The imperative interface and the Effect service.
+  route: /reference/database/
+  group: Reference
+  template: reference
+  status: planned
+```
+
+```mdl
+page ref-feed: Feed
+  The append-only feed object.
+  route: /reference/feed/
+  group: Reference
+  template: reference
+  status: planned
+```
+
+```mdl
+page glossary: Glossary
+  Every ECHO term, defined once.
+  route: /reference/glossary/
+  group: Reference
+  template: reference
+  status: planned
+```
+
+## Features
+
+```mdl
+feat F-1: Build and delivery
+
+  req F-1.1:
+    when: the site is built
+    then: the output is static files, built by Astro with Starlight, with no server code
+
+  req F-1.2:
+    when: a reader searches
+    then: Pagefind answers from an index built with the site, with no third-party service
+
+  req F-1.3:
+    when: a reader moves between pages in a browser that supports it
+    then: a cross-document view transition keeps the header and sidebar in place, with no client router
+
+  req F-1.4:
+    when: the site is deployed
+    then: it is served at `docs.dxos.org/echo`; every page, asset and agent route sits under that path, and
+          Wrangler deploys `dist` as Workers static assets, as the dxos.org build does
+```
+
+```mdl
+feat F-2: Brand and visual style
+
+  req F-2.1:
+    when: the site needs a color
+    then: it reads a CSS variable generated from the brand palette, never a literal
+
+  req F-2.2:
+    when: text renders
+    then: headings and body use DM Sans, labels and code use DM Mono, and Sharp Sans appears only
+          in a logotype
+
+  req F-2.3:
+    when: the site shows a logo, icon, font or background
+    then: the file comes from `@dxos/brand`, and is not copied into this package
+
+  req F-2.4:
+    when: a surface renders
+    then: it is flat, with a ground, one tinted surface and hairlines; no surface has a shadow,
+          a raised edge or an inset edge
+
+  req F-2.5:
+    when: a code sample renders
+    then: it sits on the tinted surface inside a hairline frame, with numbered lines and a rule beside
+          the numbers except in a side-by-side comparison, and a titled sample shows its title as a tab; a syntax theme colors it with a
+          contrast of at least 4.5:1 for every token, and long lines wrap
+
+  req F-2.13:
+    when: a reader is not pointing at a token in a code sample
+    then: the token carries no underline; its compiler hover card shows on hover
+
+  req F-2.6:
+    when: a table renders
+    then: every row shares fixed column tracks, and content wraps inside its track rather than
+          widening a column
+
+  req F-2.7:
+    when: single-line interface text would overflow (nav item, breadcrumb, chip)
+    then: it does not wrap; it truncates with an ellipsis
+
+  req F-2.8:
+    when: the reader's system or theme picker selects dark
+    then: the Graphite ground applies, with cyan replacing blue as the accent
+
+  req F-2.9:
+    when: the ECHO mark renders on a light ground
+    then: it uses the ECHO product hue; on a dark ground it uses the foreground color, since the
+          product hue falls below 3:1 there
+
+  req F-2.10:
+    when: the reader prefers reduced motion
+    then: hover and view transitions do not animate
+
+  req F-2.11:
+    when: the landing page renders
+    then: its hero shows the ECHO background art from `@dxos/brand`
+
+  req F-2.12:
+    when: a list renders
+    then: its text and markers set `tabular-nums` and stay in DM Sans; the brand's DM Sans has no
+          tabular figures, so digits remain proportional until the font gains them
+
+```
+
+```mdl
+feat F-3: Checked code samples
+
+  req F-3.1:
+    when: a page shows code longer than one line
+    then: the code comes from a file in the snippets directory, included by region
+
+  req F-3.2:
+    when: the site is built or typechecked
+    then: every snippet compiles against the workspace packages of this commit, so an API change
+          that breaks a sample fails the build
+
+  req F-3.3:
+    when: a snippet prints a result in a comment
+    then: a test runs that snippet against an in-memory database and asserts the result
+
+  req F-3.4:
+    when: a reader hovers an identifier in a sample
+    then: its compiler-inferred type appears
+```
+
+```mdl
+feat F-4: Accuracy
+
+  req F-4.1:
+    when: a page states a guarantee about ECHO's behavior
+    then: it links the spec item that states it, as `org.dxos.echo.query#F-2`
+
+  req F-4.2:
+    when: a reference page lists a member
+    then: the member is an export of the module in this commit; the reference is generated from
+          the TypeScript declarations, not from the spec's `module` blocks, which have drifted
+          from the code
+
+  req F-4.3:
+    when: the spec's own review marks a cited item as diverged or partial
+    then: the page's Limits section says so
+```
+
+```mdl
+feat F-5: The spec drives the site map
+
+  req F-5.1:
+    when: the site is built
+    then: the sidebar order, groups and labels come from the `page` blocks in this document
+
+  req F-5.2:
+    when: a `page` block has status `planned`
+    then: the page exists as a stub that shows its summary and its template's parts, with a
+          planned badge in the sidebar
+
+  req F-5.3:
+    when: a `page` block has status `spike` or `done`
+    then: a content file exists at its route, and the build fails if it does not
+```
+
+```mdl
+feat F-6: Reading by agents
+
+  req F-6.1:
+    when: an agent fetches `/echo/llms.txt`
+    then: it receives the site map, each page with its summary and link, in the llms.txt format
+
+  req F-6.2:
+    when: an agent fetches a page's route with `.md` appended
+    then: it receives the page as Markdown, with snippet includes replaced by their code
+```
+
+```mdl
+feat F-7: Relationship to dxos.org
+
+  req F-7.1:
+    when: a reader is on this site
+    then: the header names DXOS and the footer links dxos.org, Composer, GitHub and Discord
+
+  req F-7.2:
+    when: this site covers a topic
+    then: dxos.org's ECHO pages stop teaching it and link here instead
+```
+
+```mdl
+feat F-8: Live playground
+
+  desc: |
+    A browser playground runs a real ECHO database in the page, with two peers side by side, so a
+    reader can make a conflicting edit and watch the merge. Planned; the spike does not build it.
+
+  req F-8.1:
+    when: a reader edits a sample in the playground
+    then: the code runs against an in-memory database in the page, with no server
+
+feat F-9: Diagrams as canvas applications
+
+  desc: |
+    Each diagram is a stand-alone `plugin-canvas` application. Planned; the spike renders its one
+    diagram as a static image.
+
+  req F-9.1:
+    when: a page shows a diagram
+    then: the diagram is a stand-alone `plugin-canvas` application
+
+feat F-10: Live schema forms
+
+  desc: |
+    A section on Schema shows a live `react-ui-form` form. Planned; the spike does not build it.
+
+  req F-10.1:
+    when: a reader opens the section on Schema
+    then: it shows a live form rendered with `react-ui-form`
+
+feat F-11: Graph visualizations
+
+  desc: |
+    A section on the graph shows visualizations from `react-ui-graph` and `plugin-explorer`.
+    Planned; the spike does not build it.
+
+  req F-11.1:
+    when: a reader opens the section on the graph
+    then: it shows visualizations from `react-ui-graph` and `plugin-explorer`
+
+feat F-12: Real-time editor demo
+
+  desc: |
+    A section on real time shows a `react-ui-editor` demo. Planned; the spike does not build it.
+
+  req F-12.1:
+    when: a reader opens the section on real time
+    then: it shows a demo built with `react-ui-editor`
+
+feat F-13: Chat and hierarchical feeds demo
+
+  desc: |
+    A demo shows chat and hierarchical feeds with `plugin-assistant`. Planned; the spike does not
+    build it.
+
+  req F-13.1:
+    when: a reader opens the demo
+    then: it shows chat and hierarchical feeds with `plugin-assistant`
+
+feat F-14: Upfront motivation
+
+  desc: |
+    The site says why ECHO exists before it says how ECHO works.
+
+  req F-14.1:
+    when: a reader opens the landing page or Why ECHO?
+    then: before any other argument, it gives the motivation for agents and agent memory, the rationale
+          for being introspectable, and the role of tying together data from external sources, and it
+          says that ECHO is the data model that apps (plugins) code against
+
+  req F-14.2:
+    when: the motivation shows code
+    then: the sample is checked like every other sample [F-3], and each claim about an agent names the
+          skill or operation that does it
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: A sample that stops compiling fails the build.
+  given: a snippet that calls `Obj.make`
+  when: the signature of `Obj.make` changes incompatibly
+  then: the site's build and typecheck fail, and the typecheck names the snippet
+```
+
+```mdl
+scenario T-2: A planned page is visible, and marked.
+  given: a `page` block with status `planned`
+  when: the site is built
+  then: the sidebar shows the page with a planned badge, and its route renders the stub template
+```
+
+```mdl
+scenario T-3: Both themes meet the contrast floor.
+  given: the brand palette and syntax themes
+  when: the theme script runs
+  then: body text on the ground is at least 7:1, muted text and code tokens are at least 4.5:1, and
+        the script fails otherwise
+```
+
+```mdl
+scenario T-4: A phone can read the site.
+  given: a 375 pixel wide viewport
+  when: any spike page renders
+  then: the page does not scroll sideways, and every line of a code sample is visible without scrolling
+```
+
+```mdl
+scenario T-5: An agent gets the code, not the include.
+  given: a page that includes a snippet
+  when: an agent fetches the page's `.md` route
+  then: the body contains the snippet's code and no `<Snippet` tag
+```
+
+## Changelog
+
+```mdl
+decision D-1: ECHO has a detailed technical developer website.
+  date: 2026-11-04
+  by: user:richburdon
+```
+
+```mdl
+decision D-2: The site complements the dxos.org website, which is coded in the dxos repository.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-7]
+```
+
+```mdl
+decision D-3: The site uses the design system from the `dxos/studio` repository.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-2]
+```
+
+```mdl
+decision D-4: The site uses the state of the art.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-1, F-3, F-6]
+```
+
+```mdl
+decision D-5: The site's content sections are similar to the Effect page "Why Effect?".
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [why-echo]
+  source: https://effect.website/docs/v4/getting-started/why-effect
+```
+
+```mdl
+decision D-6: The site is a new private package built with Astro and Starlight, apart from the dxos.org build. Fills in [D-1] and [D-2].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1]
+  why: |
+    The dxos.org build already runs Astro and Starlight, so the repo's catalog, moon tasks and
+    deploy path apply unchanged. A separate package lets the theme replace Starlight's look without
+    touching the Webflow pages on dxos.org.
+  rejected:
+    - New pages inside the dxos.org build: its theme and sidebar serve Composer and HALO too.
+    - A custom Astro docs shell: it would rebuild search, sidebar, table of contents and pagination.
+```
+
+```mdl
+decision D-7: Depth marks what can be pressed; reading material stays flat. Fills in [D-3].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.3, F-2.4]
+  why: The kit is tuned for slides and social media. Soft shadows behind long text and tables lower contrast and add noise.
+  rejected:
+    - Neumorphism on every surface: paragraphs in raised cards read as slides.
+    - The brand kit's flat hairline grid alone: it drops the kit's most distinct feature.
+```
+
+```mdl
+decision D-8: Accent stays the kit's blue in light and cyan in dark; the ECHO product hue marks only the logo. Fills in [D-3].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.8, F-2.9]
+  why: The product hue `#96254f` has too little contrast on the dark ground to carry links.
+```
+
+```mdl
+decision D-9: Samples compile against the workspace, and hover types are a separate requirement. Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3]
+  why: The ECHO pages on dxos.org still describe `@dxos/client` flows that have moved, so correctness has to be mechanical.
+```
+
+```mdl
+decision D-10: The reference is generated from TypeScript declarations, not from the `module` blocks of `org.dxos.echo`. Fills in [D-1].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-4.2]
+  why: The review of `org.dxos.echo` records members its `module` blocks list that the code lacks, such as `Obj.getDXN`.
+```
+
+```mdl
+decision D-11: The `page` blocks of this spec generate the sidebar and the planned stubs. Fills in [D-1].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5]
+  why: The plan is then visible in the running site, and the spec cannot drift from the navigation.
+```
+
+```mdl
+decision D-12: The site map follows Effect's split of start here, learning path and core concepts, and adds guides, internals and reference. Fills in [D-5].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [why-echo]
+  why: ECHO readers need the sync and query internals that Effect's docs have no counterpart for.
+```
+
+```mdl
+decision D-13: Agents read the site through `/llms.txt` and a Markdown route per page. Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6]
+  why: Coding agents are a main reader of developer docs, and rendered HTML costs them more to read.
+```
+
+```mdl
+question Q-1: Where does the site live?
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.4]
+  options:
+    - echo.dxos.org: its own subdomain, as this spec assumes.
+    - dxos.org/echo: a path under the main site, which needs a route in the dxos.org Worker.
+```
+
+```mdl
+question Q-2: What happens to the ECHO pages on dxos.org?
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.2]
+  options:
+    - Redirect: each page redirects to its replacement once that page ships.
+    - Remove now: the pages are stale, so remove them and link the new site.
+    - Keep: both stay, and dxos.org's pages get a notice.
+```
+
+```mdl
+question Q-3: How do the studio tokens stay in sync?
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.1]
+  options:
+    - Pinned copy: this package keeps a copy with its source commit, updated by hand, as the spike does.
+    - Move to `@dxos/brand`: the tokens move into this repo, and studio mirrors them as it mirrors the brand assets.
+```
+
+```mdl
+question Q-4: Is the live playground in the first release?
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8]
+  options:
+    - After launch: ship the written docs first.
+    - First release: build it before launch, since a merge is easier to show than to describe.
+```
+
+```mdl
+decision D-14: The site does not use the neumorphic design system. It uses only the logos and other brand assets.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-3
+  affects: [F-2]
+```
+
+```mdl
+decision D-15: Surfaces are flat, with a ground, one tinted surface and hairlines. Fills in [D-14].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-7
+  affects: [F-2.4, F-2.5]
+  why: With depth gone, the brand book's hairline grid is the remaining structure in the DXOS assets.
+```
+
+```mdl
+decision D-16: "Other brand assets" means the `@dxos/brand` logos, icons, fonts and background art, and the brand book's palette. Fills in [D-14].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-8
+  affects: [F-2.1, F-2.3, F-2.8, F-2.9, F-2.11]
+  why: A page still needs colors. Blue on Paper and cyan on Graphite are the brand book's values; the ECHO product hue has too little contrast on Graphite to carry links, so it marks only the logo and the art.
+```
+
+```mdl
+decision D-17: Code samples wrap long lines instead of scrolling. Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.5, T-4]
+  why: A signature cut off at the right edge hides the part of a sample the reader came for, in side-by-side comparisons above all.
+```
+
+```mdl
+decision D-18: No token copy exists to sync, since the palette is a small file in this package.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  answers: Q-3
+  why: [D-14] removes the studio token module, which is what the question was about.
+```
+
+```mdl
+decision D-19: Expressive Code's Twoslash plugin compiles each sample at build time and renders its hover types. Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.2, F-3.4]
+  why: One step then gives both the type check and the hover cards, and each sample keeps its context through a cut marker, so a page shows only its region.
+  rejected:
+    - Hand-written hover text: it goes stale the way the current ECHO docs have.
+```
+
+```mdl
+decision D-20: Lists use tabular numerals.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-2.12]
+```
+
+```mdl
+decision D-21: List numbers stay in DM Sans, without a switch to DM Mono to align them.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-2.12]
+```
+
+```mdl
+decision D-22: The site lives at dxos.org/echo.
+  date: 2026-11-04
+  by: user:richburdon
+  answers: Q-1
+  affects: [F-1.4]
+```
+
+```mdl
+decision D-23: Routes sit directly under `/echo`, with no `docs` segment, and the landing page is `/echo/`. Fills in [D-22].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.4, welcome]
+  why: `/echo/docs/why-echo` repeats what the path already says.
+```
+
+```mdl
+decision D-24: The site lives at docs.dxos.org/echo.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-22
+  affects: [F-1.4]
+```
+
+```mdl
+decision D-25: Diagrams are stand-alone `plugin-canvas` applications.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-9]
+```
+
+```mdl
+decision D-26: Code blocks use a style similar to the blocks on effect.website.
+  date: 2026-11-04
+  by: user:richburdon
+  source: https://effect.website/blog/module-of-the-week/rcmap
+  affects: [F-2.5]
+```
+
+```mdl
+decision D-27: Take the frame, file tab, numbered gutter, spacing and token color roles; keep DM Mono and no shadow. Fills in [D-26].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.5, F-2.2, F-2.4]
+  why: [F-2.2] and [F-2.4] set the type and the flat surfaces, and [D-26] asks for a similar style, not the same one.
+  rejected:
+    - JetBrains Mono: it would add a second code face beside DM Mono.
+    - The frame's drop shadow: [F-2.4] rules out shadows, and on effect.website it is barely visible.
+```
+
+```mdl
+decision D-28: Compiler hover tokens show no underline until a reader points at them. Fills in [D-26].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.13]
+  why: Nearly every token has a hover card, so resting underlines mark most of the sample.
+```
+
+```mdl
+decision D-29: A section on Schema shows a live `react-ui-form` form.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-10]
+```
+
+```mdl
+decision D-30: A section on the graph shows `react-ui-graph` and `plugin-explorer` visualizations.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-11]
+```
+
+```mdl
+decision D-31: A section on real time shows a `react-ui-editor` demo.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-12]
+```
+
+```mdl
+decision D-32: Samples in a side-by-side comparison have no line numbers. Fills in [D-26].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.5]
+  why: The gutter takes about a fifth of a comparison column, and the extra wrapping costs more than the numbers give.
+```
+
+```mdl
+decision D-33: A demo shows chat and hierarchical feeds with `plugin-assistant`.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-13]
+```
+
+```mdl
+decision D-34: ECHO needs an upfront motivation for agents and agent memory, the rationale for being introspectable, and for being the glue that ties together data from external sources. It is the data model that apps (plugins) code against.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-14.1]
+```
+
+```mdl
+decision D-35: The motivation opens Why ECHO?, as four sections ahead of the local-first argument, and the landing page shows it as a "Why it exists" row above the guarantees. Fills in [D-34].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.1, why-echo, welcome]
+  why: The local-first argument explains how ECHO works, and it reads as the reason for ECHO when it comes first.
+```
+
+```mdl
+decision D-36: The landing headline becomes "The data model for apps and agents." Fills in [D-34].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.1]
+  why: The earlier headline said where the data lives, which is not why a reader would choose ECHO.
+```
+
+```mdl
+decision D-37: Each claim about an agent names the skill or operation that does it, such as `org.dxos.skill.memory` or `QueryTypes`. Fills in [D-34].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.2]
+  why: Agent behavior is not in the specs this site cites, so the name is the evidence a reader can check.
+```
+
+## Appendix: Extension Definitions
+
+```mdl
+ext template
+  uri: org.dxos.echo-site.template@1.0
+  desc: A page format, as the ordered parts every page of that template has.
+  fields:
+    purpose: Prose
+    parts: ProseList
+```
+
+```mdl
+ext page
+  uri: org.dxos.echo-site.page@1.0
+  desc: One page of the site. The inline prose is its summary; the block's position sets its sidebar order.
+  inline-prose: true
+  fields:
+    route: URI
+    group: Prose
+    template: ExtRef
+    status: planned | spike | done
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true, not as the edit that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    affects?: RefList           # block ids the decision constrains, e.g. [Scene, F-2.1]
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
+```

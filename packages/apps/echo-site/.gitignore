@@ -1,0 +1,4 @@
+.astro
+dist
+src/styles/tokens.generated.css
+public/favicon.svg

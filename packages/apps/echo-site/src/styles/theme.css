@@ -1,0 +1,535 @@
+/* Flat brand styling: one ground, one tinted surface, hairlines. */
+
+@view-transition {
+  navigation: auto;
+}
+
+:root {
+  --sl-text-h1: 2.5rem;
+  --sl-text-h2: 1.625rem;
+  --sl-text-h3: 1.25rem;
+  --sl-content-width: 46rem;
+  --sl-line-height: 1.65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+  * {
+    transition: none !important;
+  }
+}
+
+body {
+  background: var(--c-bg);
+}
+
+.label-mono {
+  font-family: var(--sl-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  white-space: nowrap;
+}
+
+/* Prose. */
+.sl-markdown-content :is(h1, h2, h3, h4),
+h1#_top {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--c-fg);
+}
+
+.sl-markdown-content h2 {
+  margin-top: 3rem;
+}
+
+.sl-markdown-content {
+  color: var(--c-fg);
+}
+
+.sl-markdown-content a:not(.card) {
+  color: var(--c-accent);
+  text-underline-offset: 0.2em;
+}
+
+.sl-markdown-content :not(pre) > code {
+  border: 0;
+  border-radius: 4px;
+  background: var(--c-surface);
+  font-size: 0.875em;
+  padding: 0.1em 0.35em;
+}
+
+/* Header. */
+header.header {
+  border-bottom: 1px solid var(--c-hairline);
+}
+
+.site-title-lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--c-fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-title-lockup .mark {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--c-mark);
+}
+
+.site-title-lockup .name {
+  font-weight: 500;
+  font-size: 1.125rem;
+  letter-spacing: 0.04em;
+}
+
+.site-title-lockup .by {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding-inline-start: 0.625rem;
+  border-inline-start: 1px solid var(--c-hairline-strong);
+  font-family: var(--sl-font-mono);
+  font-size: 0.6875rem;
+  color: var(--c-muted);
+}
+
+site-search button[data-open-modal] {
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--c-radius);
+  background: var(--c-surface);
+  color: var(--c-muted);
+}
+
+/* Sidebar. */
+.sidebar-pane {
+  border-inline-end: 1px solid var(--c-hairline);
+}
+
+.sidebar-content .large {
+  font-family: var(--sl-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+.sidebar-content a {
+  border-radius: 6px;
+  color: var(--c-fg);
+  transition: background var(--c-dur);
+}
+
+.sidebar-content a > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-content a:hover {
+  background: var(--c-surface);
+  color: var(--c-fg);
+}
+
+.sidebar-content a[aria-current='page'],
+.sidebar-content a[aria-current='page']:hover {
+  background: var(--c-surface-strong);
+  color: var(--c-fg);
+  font-weight: 500;
+}
+
+.sidebar-content .sl-badge {
+  border: 0;
+  background: transparent;
+  color: var(--c-muted);
+  font-family: var(--sl-font-mono);
+  font-size: 0.625rem;
+}
+
+/* Table of contents. */
+starlight-toc a[aria-current='true'] {
+  color: var(--c-accent);
+}
+
+starlight-toc h2 {
+  font-family: var(--sl-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+/* Tables: strict tracks, hairlines only. */
+.sl-markdown-content table {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.sl-markdown-content :is(th, td) {
+  border: 0;
+  border-bottom: 1px solid var(--c-hairline);
+  background: transparent;
+  padding: 0.625rem 0.75rem 0.625rem 0;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.sl-markdown-content th {
+  font-family: var(--sl-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+/* Steps. */
+.sl-steps > li::before {
+  border: 1px solid var(--c-hairline-strong);
+  background: var(--c-bg);
+  color: var(--c-fg);
+  font-family: var(--sl-font-mono);
+}
+
+.sl-steps > li::after {
+  background: var(--c-hairline);
+}
+
+/* Pagination. */
+.pagination-links a {
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--c-radius);
+  background: transparent;
+  box-shadow: none;
+  color: var(--c-fg);
+  transition: border-color var(--c-dur);
+}
+
+.pagination-links a:hover {
+  border-color: var(--c-accent);
+}
+
+/* Primitives. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  height: 2.75rem;
+  padding: 0 1.25rem;
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: var(--c-radius);
+  color: var(--c-fg);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color var(--c-dur);
+}
+
+.button:hover {
+  border-color: var(--c-accent);
+  color: var(--c-fg);
+}
+
+.button.primary {
+  border-color: var(--c-accent);
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+
+.card {
+  display: block;
+  padding: 1.5rem;
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--c-radius);
+  color: var(--c-fg);
+  text-decoration: none;
+  transition: border-color var(--c-dur);
+}
+
+a.card:hover {
+  border-color: var(--c-accent);
+  color: var(--c-fg);
+}
+
+.card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.card p {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.card .cite {
+  display: block;
+  margin-top: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
+  margin-block: 1.5rem;
+}
+
+.install-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 2.75rem;
+  padding: 0 1.125rem;
+  border-radius: var(--c-radius);
+  background: var(--c-surface);
+  font-family: var(--sl-font-mono);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+/* Anatomy strip: a signature with each part labeled. */
+.anatomy {
+  margin-block: 1.5rem;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--c-radius);
+  background: var(--c-surface);
+  overflow-x: auto;
+}
+
+.anatomy-row {
+  display: flex;
+  width: max-content;
+  font-family: var(--sl-font-mono);
+  font-size: 0.875rem;
+}
+
+.anatomy-part {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.anatomy-part code {
+  background: transparent !important;
+  padding: 0 !important;
+  font-size: 1em !important;
+  white-space: pre;
+}
+
+.anatomy-part.labeled code {
+  color: var(--c-accent);
+}
+
+.anatomy-part .label {
+  margin-inline-end: 0.5rem;
+  padding-top: 0.375rem;
+  border-top: 1px solid var(--c-accent);
+  font-size: 0.6875rem;
+  color: var(--c-muted);
+  white-space: nowrap;
+}
+
+/* Hero: copy beside the ECHO background art, separated by hairlines. */
+.echo-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-top: 1.5rem;
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--c-radius);
+  overflow: hidden;
+}
+
+.echo-hero .copy {
+  padding: 3rem;
+}
+
+.echo-hero .art {
+  min-height: 20rem;
+  border-inline-start: 1px solid var(--c-hairline);
+  --dx-bg-fill: #1d1f20;
+}
+
+.echo-hero .art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.echo-hero h1 {
+  margin: 0.75rem 0 1rem;
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--c-fg);
+}
+
+.echo-hero .lede {
+  margin: 0 0 1.75rem;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--c-muted);
+}
+
+.echo-hero .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.echo-hero .label-mono {
+  white-space: normal;
+}
+
+.echo-hero-code {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 60rem) {
+  .echo-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .echo-hero .copy {
+    padding: 1.5rem;
+  }
+  .echo-hero .art {
+    order: -1;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+    border-inline-start: 0;
+    border-bottom: 1px solid var(--c-hairline);
+  }
+}
+
+/* Footer. */
+.echo-footer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1.5rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--c-hairline);
+  font-size: 0.875rem;
+}
+
+.echo-footer h4 {
+  margin: 0 0 0.5rem;
+}
+
+.echo-footer ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.echo-footer a {
+  color: var(--c-fg);
+  line-height: 1.9;
+  text-decoration: none;
+}
+
+.echo-footer a:hover {
+  color: var(--c-accent);
+}
+
+.echo-footer .logo {
+  display: block;
+  height: 2rem;
+  width: auto;
+}
+
+:root[data-theme='light'] .echo-footer .logo.on-dark,
+:root:not([data-theme='light']) .echo-footer .logo.on-light {
+  display: none;
+}
+
+.echo-footer .legal {
+  grid-column: 1 / -1;
+  font-family: var(--sl-font-mono);
+  font-size: 0.6875rem;
+  color: var(--c-muted);
+}
+
+/* Spec citations. */
+.spec-cite {
+  font-family: var(--sl-font-mono);
+  font-size: 0.75em;
+  color: var(--c-muted) !important;
+  white-space: nowrap;
+}
+
+/* Comparison: two samples side by side. */
+.compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  align-items: start;
+  gap: 1rem;
+  margin-block: 1.5rem;
+}
+
+.compare > * {
+  margin: 0 !important;
+  min-width: 0;
+}
+
+/* The renderer draws diagrams for a white ground, so they stay on one in both themes. */
+.diagram {
+  display: block;
+  width: 100%;
+  margin-block: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--c-radius);
+  background: #ffffff;
+}
+
+/* Compiler hover cards. */
+.expressive-code .twoslash-popup-container {
+  border: 1px solid var(--c-hairline-strong) !important;
+  border-radius: var(--c-radius) !important;
+  background: var(--c-bg) !important;
+  box-shadow: none !important;
+  color: var(--c-fg) !important;
+  font-family: var(--sl-font-mono);
+}
+
+/* Every token has a hover card, so a resting underline would mark the whole sample. */
+.expressive-code .twoslash-hover {
+  border-bottom-color: transparent !important;
+}
+
+.expressive-code .twoslash-hover:hover {
+  border-bottom-color: var(--c-hairline-strong) !important;
+}
+
+/* The code frame's hanging indent would otherwise clip the first line of a hover card. */
+.expressive-code .twoslash-popup-container,
+.expressive-code .twoslash-popup-container * {
+  text-indent: 0 !important;
+}
+
+/* Numbers in a list align down the column. */
+:is(ol, ul),
+:is(ol, ul) > li::marker,
+.sl-steps > li::before {
+  font-variant-numeric: tabular-nums;
+}

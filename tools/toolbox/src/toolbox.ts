@@ -252,6 +252,7 @@ export class Toolbox {
       '@dxos/composer-app',
       '@dxos/composer-crx',
       '@dxos/docs',
+      '@dxos/echo-site',
       '@dxos/todomvc',
       'tasks',
       '@dxos/testbench-app',
@@ -478,6 +479,8 @@ export class Toolbox {
         (project) =>
           !project.name.includes('blade-runner') &&
           !project.name.includes('docs') &&
+          // Astro's preset sets noEmit, which a referenced project cannot have.
+          !project.name.includes('echo-site') &&
           !project.name.includes('kube-publishing'),
       )
       .filter((project) => existsSync(join(project.path, 'tsconfig.json')))
