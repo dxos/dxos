@@ -1,5 +1,5 @@
 ---
-# multiple-changesets: the brand asset sets and the slide authoring changes are separate stories for separate packages
+# multiple-changesets: the brand asset sets, the slide authoring changes and the panel surface fix are separate stories for separate packages
 '@dxos/brand': minor
 '@dxos/plugin-presenter': patch
 ---

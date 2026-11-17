@@ -12,6 +12,17 @@
   .dx-dialog .dx-panel[data-surface='base'] {
     --surface-bg: var(--dx-surface-raised);
   }
+  /*
+   * A header or footer is a bar, lifted a step off the plank it belongs to. Inside a popup or a dialog there is no
+   * plank to lift off: the surface is already raised, and a lifted band reads as a strip of its own rather than as
+   * part of the panel. `inherit` takes the panel's own surface, whichever of the two rules above gave it.
+   */
+  .dx-popup .dx-panel > .dx-panel-header,
+  .dx-popup .dx-panel > .dx-panel-footer,
+  .dx-dialog .dx-panel > .dx-panel-header,
+  .dx-dialog .dx-panel > .dx-panel-footer {
+    --surface-bg: inherit;
+  }
 
   /* Header and footer rows size to their content, so a missing or empty one takes no space. */
   .dx-panel {
