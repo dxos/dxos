@@ -58,6 +58,7 @@ export const make = (url: string, { onOperationFacts }: Options = {}) =>
           return [
             Capability.contribute(BrainCapabilities.FactStoreRegistry, {
               forSpace: () => store,
+              logged: () => store,
               layerFor: () => Layer.succeed(FactStore, store),
               // The server has no change feed; the explorer re-queries on demand.
               subscribe: () => () => {},

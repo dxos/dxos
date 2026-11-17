@@ -22,7 +22,12 @@ import { BrainCapabilities } from '#types';
 export type FactStoreRegistry = {
   /** The singleton in-memory FactStore for a space (created on first use). */
   forSpace: (spaceId: string) => FactStoreApi;
-  /** A Layer providing `FactStore` for a space, wrapping the same instance `forSpace` returns. */
+  /**
+   * The same store, with every raw SPARQL read recorded in the space's query log: the store operations are given,
+   * so an agent's queries are logged while a surface's own reads through {@link forSpace} are not.
+   */
+  logged: (spaceId: string) => FactStoreApi;
+  /** A Layer providing the {@link logged} store for a space, for operations. */
   layerFor: (spaceId: string) => Layer.Layer<FactStore>;
   /**
    * Subscribe to fact mutations for a space; the listener fires after any `putFacts`/`clear` on that
@@ -52,6 +57,9 @@ export type SparqlQueryResult =
 
 /** How many solutions of each logged query are kept for a view to show. */
 export const QUERY_PREVIEW_ROWS = 50;
+
+/** A space's log before its first query; one instance, since a view compares log snapshots by identity. */
+const NO_QUERIES: readonly SparqlQueryRecord[] = [];
 
 /** How many queries a space's log keeps. */
 export const QUERY_LOG_SIZE = 100;
@@ -119,8 +127,6 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
     putFacts: (facts) => store.putFacts(facts).pipe(Effect.tap(() => Effect.sync(() => notify(spaceId)))),
     importTrig: (trig) => store.importTrig(trig).pipe(Effect.tap(() => Effect.sync(() => notify(spaceId)))),
     clear: () => store.clear().pipe(Effect.tap(() => Effect.sync(() => notify(spaceId)))),
-    rows: (sparql) => logged(spaceId, sparql, store.rows(sparql), (rows) => rows),
-    select: (sparql) => logged(spaceId, sparql, store.select(sparql), () => []),
   });
 
   const forSpace = (spaceId: string): FactStoreApi => {
@@ -137,10 +143,26 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
     addListener(listenersBySpace, spaceId, listener);
   const subscribeQueries: FactStoreRegistry['subscribeQueries'] = (spaceId, listener) =>
     addListener(queryListenersBySpace, spaceId, listener);
-  const queries: FactStoreRegistry['queries'] = (spaceId) => logsBySpace.get(spaceId) ?? [];
+  const queries: FactStoreRegistry['queries'] = (spaceId) => logsBySpace.get(spaceId) ?? NO_QUERIES;
 
-  const layerFor = (spaceId: string): Layer.Layer<FactStore> => Layer.succeed(FactStore, forSpace(spaceId));
-  return { forSpace, layerFor, subscribe, queries, subscribeQueries };
+  const loggedStores = new Map<string, FactStoreApi>();
+  const loggedFor: FactStoreRegistry['logged'] = (spaceId) => {
+    let store = loggedStores.get(spaceId);
+    if (!store) {
+      const inner = forSpace(spaceId);
+      store = {
+        ...inner,
+        rows: (sparql) => logged(spaceId, sparql, inner.rows(sparql), (rows) => rows),
+        select: (sparql) => logged(spaceId, sparql, inner.select(sparql), () => []),
+      };
+      loggedStores.set(spaceId, store);
+    }
+
+    return store;
+  };
+
+  const layerFor = (spaceId: string): Layer.Layer<FactStore> => Layer.succeed(FactStore, loggedFor(spaceId));
+  return { forSpace, logged: loggedFor, layerFor, subscribe, queries, subscribeQueries };
 };
 
 /**

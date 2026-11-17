@@ -56,7 +56,7 @@ describe('FactStoreRegistry', () => {
 
   test('logs each SPARQL query as it starts and ends, with its row count or error', async ({ expect }) => {
     const registry = makeFactStoreRegistry();
-    const store = registry.forSpace('a');
+    const store = registry.logged('a');
     const seen: number[] = [];
     registry.subscribeQueries('a', () => seen.push(registry.queries('a').length));
 
@@ -72,6 +72,10 @@ describe('FactStoreRegistry', () => {
     expect(second.result && 'error' in second.result).toBe(true);
     expect(seen).toEqual([1, 1, 2, 2]);
     expect(registry.queries('b')).toEqual([]);
+
+    // A surface's own reads go through the unlogged store.
+    await EffectEx.runPromise(registry.forSpace('a').rows(sparql));
+    expect(registry.queries('a')).toHaveLength(2);
   });
 
   test('notifies subscribers after importTrig', async ({ expect }) => {

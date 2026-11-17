@@ -80,11 +80,26 @@ const MemoryPanel = ({ registry, spaceId }: { registry: FactStoreRegistry; space
 
   const handleRun = useCallback(() => {
     setPinned(undefined);
-    void runQuery(registry.forSpace(spaceId), draft).catch((error) => log.catch(error));
+    void runQuery(registry.logged(spaceId), draft).catch((error) => log.catch(error));
   }, [registry, spaceId, draft]);
 
   return (
     <Panel.Root>
+      {/* Outside the toolbar, which treats its children as controls. */}
+      <input
+        ref={fileInput}
+        type='file'
+        accept='.trig,.ttl,application/trig,text/turtle'
+        className='hidden'
+        data-testid='brain.memory.import-file'
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (file) {
+            void handleImport(file);
+          }
+        }}
+      />
       <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text data-testid='brain.memory.statements'>
@@ -105,40 +120,24 @@ const MemoryPanel = ({ registry, spaceId }: { registry: FactStoreRegistry; space
             onClick={() => void handleExport()}
             data-testid='brain.memory.export'
           />
-          <input
-            ref={fileInput}
-            type='file'
-            accept='.trig,.ttl,application/trig,text/turtle'
-            className='hidden'
-            data-testid='brain.memory.import-file'
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = '';
-              if (file) {
-                void handleImport(file);
-              }
-            }}
-          />
           {status && <Toolbar.Text classNames='text-description truncate'>{status}</Toolbar.Text>}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='grid grid-rows-[min-content_min-content_1fr] min-h-0'>
         <div className='flex flex-col gap-1 p-2 border-b border-separator'>
-          <Input.Root>
-            <Input.Textarea
-              rows={3}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                  event.preventDefault();
-                  handleRun();
-                }
-              }}
-              classNames='font-mono text-sm resize-y'
-              data-testid='brain.memory.editor'
-            />
-          </Input.Root>
+          <Input.Textarea
+            rows={3}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                event.preventDefault();
+                handleRun();
+              }
+            }}
+            classNames='font-mono text-sm resize-y'
+            data-testid='brain.memory.editor'
+          />
           <div className='flex justify-end'>
             <Button.Root icon='ph--play--regular' label={t('memory-run.button')} onClick={handleRun} />
           </div>
