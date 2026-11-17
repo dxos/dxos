@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { parseSlide } from '#markdown';
+import { parseSlide } from '@dxos/react-ui-slides';
 
 /**
  * Problems in slides written by the assistant, one line each, so it can fix and retry; `first` numbers the slides as

@@ -7,12 +7,12 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
 import { useObject } from '@dxos/echo-react';
+import { hasSlots, parseSlide, slotAtOffset, stepAtOffset } from '@dxos/react-ui-slides';
 import { type Text } from '@dxos/schema';
 
 import { Slide, SlideThemeProvider } from '#components';
 import { type SlideSource, slideSourcesAtom } from '#deck';
 import { slideEditorSyncAtom, useDeckTheme } from '#hooks';
-import { hasSlots, parseSlide, slotAtOffset, stepAtOffset } from '#markdown';
 import { Presentation } from '#types';
 
 /** Stands in for the deck of a slide with no presentation. */

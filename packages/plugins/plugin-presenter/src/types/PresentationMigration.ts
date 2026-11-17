@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { applyEdit, isHiddenSlide, setFrontmatter } from '@dxos/react-ui-slides';
 import { Text } from '@dxos/schema';
 
-import { applyEdit, isHiddenSlide, setFrontmatter } from '../markdown/edit.ts';
 import { Presentation, Slide } from './Presentation.ts';
 
 /** `org.dxos.type.presentation@0.1.0`: sections held directly, an owned `Text` parented to the presentation. */

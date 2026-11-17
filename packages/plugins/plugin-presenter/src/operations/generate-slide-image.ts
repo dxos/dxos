@@ -11,8 +11,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 import * as StudioOperation from '@dxos/plugin-studio/StudioOperation';
+import { applyEdit, parseSlide, setFrontmatter } from '@dxos/react-ui-slides';
 
-import { applyEdit, parseSlide, setFrontmatter } from '#markdown';
 import { Presentation, PresenterOperation } from '#types';
 
 import { toFileSource } from './file-source.ts';

@@ -1,0 +1,85 @@
+{
+  "name": "@dxos/react-ui-slides",
+  "version": "0.16.0",
+  "private": true,
+  "description": "The slide markdown dialect, and how it draws.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./editor": {
+      "source": "./src/editor/index.ts",
+      "types": "./dist/types/src/editor/index.d.ts",
+      "import": "./dist/lib/editor.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@fontsource-variable/fira-code": "catalog:",
+    "@fontsource-variable/geist": "catalog:",
+    "@fontsource-variable/inter": "catalog:",
+    "@fontsource-variable/nunito": "catalog:",
+    "@fontsource-variable/orbitron": "catalog:",
+    "@fontsource-variable/source-serif-4": "catalog:",
+    "@fontsource-variable/space-grotesk": "catalog:",
+    "@fontsource-variable/unbounded": "catalog:",
+    "@fontsource/ibm-plex-mono": "catalog:",
+    "@fontsource/lxgw-wenkai": "catalog:",
+    "@fontsource/mali": "catalog:",
+    "@fontsource/opendyslexic": "catalog:",
+    "@fontsource/poiret-one": "catalog:",
+    "hast-util-to-jsx-runtime": "catalog:",
+    "remark-frontmatter": "catalog:",
+    "remark-gfm": "catalog:",
+    "remark-parse": "catalog:",
+    "remark-rehype": "catalog:",
+    "unified": "catalog:",
+    "yaml": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@types/hast": "catalog:",
+    "@types/mdast": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

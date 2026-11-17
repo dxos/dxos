@@ -4,13 +4,13 @@
 
 export * from './AddSlideButton/index.ts';
 export * from './Deck/index.ts';
-export * from './MarkdownSlide/index.ts';
+export * from '@dxos/react-ui-slides';
 export * from './Pager/index.ts';
 export * from './PopupWindow/index.ts';
 export * from './PresentationShell/index.ts';
 export * from './SectionPicker/index.ts';
 export * from './SlideGallery/index.ts';
 export * from './Slide/index.ts';
-export * from './SlideTheme/index.ts';
+export * from '@dxos/react-ui-slides';
 export * from './SlideToolbar/index.ts';
 export * from './SpeakerNotes/index.ts';

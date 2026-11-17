@@ -928,6 +928,9 @@
       "path": "packages/ui/react-ui-search/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-slides/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-syntax-highlighter/tsconfig.json"
     },
     {

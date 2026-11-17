@@ -12,6 +12,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useAttention } from '@dxos/react-ui-attention';
+import { type LayoutName } from '@dxos/react-ui-slides';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -28,7 +29,6 @@ import {
   useSetPresenting,
   useSlideIndex,
 } from '#hooks';
-import { type LayoutName } from '#markdown';
 import { Presentation, PresenterSurface } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
