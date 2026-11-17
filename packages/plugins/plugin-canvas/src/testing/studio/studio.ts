@@ -497,18 +497,24 @@ const styleText = (content: ContentMap, model: StudioModel, lift = 0): void => {
  * the frame instead, which is a placement the scene language has no way to state.
  */
 /** How much empty room a frame has above the first card inside it. */
-const clearance = (model: StudioModel, frame: StudioFrame): number => {
-  const tops = Object.values(model.nodes)
-    .filter((card) => {
-      const [w, h] = [card.w ?? 0, card.h ?? 0];
-      return (
-        card.cx - w / 2 >= frame.x &&
-        card.cx + w / 2 <= frame.x + frame.w &&
-        card.cy - h / 2 >= frame.y &&
-        card.cy + h / 2 <= frame.y + frame.h
-      );
-    })
-    .map((card) => card.cy - (card.h ?? 0) / 2);
+const clearance = (content: ContentMap, model: StudioModel, frame: StudioFrame): number => {
+  // The size the DSL placed the box at, not the sidecar's: the Agent sidecar gives no `h` for any of its sixteen
+  // cards, and treating each as a point put every clearance a half-card too high — enough to draw a frame's label
+  // inside it, over the card below.
+  const placed = (key: string, card: StudioCard) => {
+    const record = content[nodeKey(boxOf(key))];
+    const size = isNodeRecord(record) ? record.node.size : undefined;
+    return { w: card.w ?? size?.width ?? 0, h: card.h ?? size?.height ?? 0 };
+  };
+  const tops = Object.entries(model.nodes).flatMap(([key, card]) => {
+    const { w, h } = placed(key, card);
+    const inside =
+      card.cx - w / 2 >= frame.x &&
+      card.cx + w / 2 <= frame.x + frame.w &&
+      card.cy - h / 2 >= frame.y &&
+      card.cy + h / 2 <= frame.y + frame.h;
+    return inside ? [card.cy - h / 2] : [];
+  });
   return tops.length === 0 ? frame.h : Math.min(...tops) - frame.y;
 };
 
@@ -531,7 +537,7 @@ const styleFrames = (content: ContentMap, model: StudioModel): void => {
     const height = fontSize * 1.9;
     // Where the label goes is the thing neither the DSL nor the sidecar says. The deck puts it inside the frame
     // when the frame has a margin at its top, and beside it when the content starts at the frame's own edge.
-    const inside = clearance(model, frame) >= height + 8;
+    const inside = clearance(content, model, frame) >= height + 8;
     const center = inside
       ? { x: frame.x + 24 + width / 2, y: frame.y + 10 + height / 2 }
       : { x: frame.x - 24 - width / 2, y: frame.y + frame.h / 2 };
@@ -585,8 +591,10 @@ type Frame = { center: Vec; size: { width: number; height: number } };
 
 /** The frame of a card's node, once the bridge has placed it. */
 const frameOf = (content: ContentMap, key: string): Frame | undefined => {
-  const record = content[nodeKey(boxOf(key))];
-  return isNodeRecord(record) ? { center: record.node.center, size: record.node.size } : undefined;
+  // `box` or `ring`: a component is placed as whichever its own DSL drew, and the Agents slide's space graph is a
+  // ring. Requiring a box skipped every edge that taps it, so none of those four links was routed or dropped.
+  const record = ['box', 'ring'].map((part) => content[nodeKey(elementId(key, part))]).find(isNodeRecord);
+  return record ? { center: record.node.center, size: record.node.size } : undefined;
 };
 
 /**

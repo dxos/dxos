@@ -33,15 +33,14 @@ import generatorSource from '../../components/Graph/generator/space-graph.genera
 import { addTestCanvas } from '../../testing/canvas.ts';
 import agentsSource from '../../testing/studio/agents.diagram?raw';
 import agentsModel from '../../testing/studio/agents.json?raw';
-import { cardSpec } from '../../testing/studio/Card.tsx';
 import chatSource from '../../testing/studio/chat.diagram?raw';
 import chatModel from '../../testing/studio/chat.json?raw';
-import { feedCardSpec } from '../../testing/studio/FeedCard.tsx';
+import { STUDIO_KINDS } from '../../testing/studio/kinds.ts';
 import ontologySource from '../../testing/studio/ontology.diagram?raw';
 import ontologyModel from '../../testing/studio/ontology.json?raw';
 import { type Generators, STUDIO_CANVAS, parseStudioModel, seedStudioSlide } from '../../testing/studio/studio.ts';
 
-/** Both card kinds, so one plugin serves every slide. */
+/** Every kind the slides draw, from the one table: the Agents slide's space graph is a kind here too. */
 const StudioKindsPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.canvasStudioKinds'), name: 'Studio Kinds' }),
 ).pipe(
@@ -50,10 +49,11 @@ const StudioKindsPlugin = Plugin.define(
     activatesOn: IllustratorEvents.Start,
     provides: [CanvasCapabilities.NodeType],
     activate: () =>
-      Effect.succeed([
-        Capability.contribute(CanvasCapabilities.NodeType, { type: 'card', spec: cardSpec }),
-        Capability.contribute(CanvasCapabilities.NodeType, { type: 'feed-card', spec: feedCardSpec }),
-      ]),
+      Effect.succeed(
+        Object.entries(STUDIO_KINDS).map(([type, spec]) =>
+          Capability.contribute(CanvasCapabilities.NodeType, { type, spec }),
+        ),
+      ),
   }),
   Plugin.make,
 );
