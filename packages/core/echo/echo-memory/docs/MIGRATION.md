@@ -25,66 +25,55 @@ block only the tasks that name them.
       `Subscription`, `MemoryEvent`, `MAX_SUBSCRIPTIONS` [F-4.1].
 - [x] Tests: JSON round trip of `Fact`, every query kind, `Subscription` and `MemoryEvent` (T-6); a fact in
       today's stored shape decodes unchanged [F-2.1]; `currentFacts`; query answer types.
-- [ ] `MemoryWire`: the JSON-in / JSON-out codec every transport shares (`docs/PACKAGES.md`).
-- [ ] Add the `## Rules` check (`no-implementation-deps`) to CI's agentic review scope.
+- [x] `RdfStore` port: `Quad`, `Write`, `Batch`, `Format`, `RdfStoreError` and the `RdfStore` tag [D-39].
+- [x] The `rdf` subpath: `Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab` and `hashText`, moved
+      from `@dxos/pipeline-rdf` with every call site [D-38, D-40]; `Fact.make` and `Fact.makeMany` [D-41].
+- [ ] Add the `## Rules` checks (`no-implementation-deps`, `rdf-subpath-deps`) to CI's agentic review scope.
 
-## 2. `@dxos/echo-memory-sqlite` (local implementations) — first cut
+## 2. `@dxos/echo-memory-sqlite` (local implementations) — done
 
-`MemorySqlite.make(storage)` serves `MemoryService` over one SQLite database. The knowledge base is
-`FactStoreLive` from `@dxos/pipeline-rdf`, used as a library. The event base is new tables beside it,
-evaluated by `@dxos/brain`'s `Evaluator`. The code assumes the first option of each open question:
-Q-1 (keep the compute dependencies), Q-2 (keep SPARQL), Q-3 (no change stream), Q-4 (shared facts),
-Q-5 (event-base reads stay ops).
+`RdfMemory.make(rdf)` serves `MemoryService` over any `RdfStore` [D-42]. Facts are quads in the store's
+shared part; subscriptions, outboxes and the last evaluation time are quads (JSON literals) in its local
+part [F-9.6]. Rules are evaluated by `@dxos/brain`'s `Evaluator`. `LocalRdfStore` is the port over
+`@dxos/sparql-sqlite`'s quad store in the same process, and `MemorySqlite.layerMemory` / `layerFile` put the
+two together over native SQLite for the CLI and tests. The package depends on no other SPARQL store [D-34].
 
-- [x] Package `packages/core/echo/echo-memory-sqlite` (`"private": true`).
-- [x] Event base, persisted: `memory_subscriptions`, `memory_events` (acknowledged rows kept as the dedup
-      record, at most `MAX_EVENTS` each), `memory_state` (last evaluation time) [F-4, F-7.2]. Ported from
-      EDGE's `BrainObject`.
-- [x] Time-driven rules: a fiber in the layer's scope sleeps until `nextDueAt`, is woken early by
-      `put`, `subscribe` and `reset`, and a reopened memory catches up on open [F-4.5, F-7.5].
-- [x] `layer(storage)`, `layerFile(path)`, `layerMemory` [F-7.1].
-- [x] Tests T-1 to T-5, owner filter, unsubscribe-once, rules that do not compile, a clock-driven wake,
-      and SPARQL answers.
-- [ ] Move the store itself (`fact-store-live.ts`, `internal/sparql/*`, `Mapping`, `Vocab`, `Ontology`
-      resolution, TriG) out of `pipeline-rdf` into this package, so it stops depending on `pipeline-rdf`.
-- [ ] `put` stores facts and moves the cursor in two transactions (facts first, so a failure re-reads
-      the source and never skips it); make it one, as F-3.1 says.
-- [ ] HTTP client layer and fetch-style handler, from `FactStoreHttp`, extended to the event-base ops
-      [F-7.3]. Move `pipeline-rdf/src/testing/fact-server.ts` here.
+- [x] Package `packages/core/echo/echo-memory-sqlite`.
+- [x] `RdfMemory`: the core over the `RdfStore` port, exported on its own subpath so the page loads no SQLite.
+- [x] Event base as local quads, at most `MAX_EVENTS` acknowledged events kept per subscription [F-4, F-7.2].
+- [x] Time-driven rules: a fiber in the scope sleeps until `nextDueAt`, is woken early by `put`, `subscribe`,
+      `reset` and other replicas' batches, and a reopened memory catches up on open [F-4.5, F-7.5].
+- [x] `put` writes the facts and moves the read cursor in one batch, so one transaction [F-3.1].
+- [x] `LocalRdfStore` and `MemorySqlite.layer(options)`, `layerMemory`, `layerFile(path)` [F-7.1].
+- [x] Tests T-1 to T-5, T-8 (rebuild and follow over a shared log), T-9 (export and import), owner filter,
+      unsubscribe-once, rules that do not compile, a clock-driven wake, SPARQL answers.
+- [ ] HTTP client layer and fetch-style handler for `RdfStore`, from `FactStoreHttp` [F-7.3]. Move
+      `pipeline-rdf/src/testing/fact-server.ts` here.
 - [ ] Port the remaining cases of `fact-store.test.ts`, `fact-store-live.test.ts` and `BrainMemory.test.ts`.
 
-## 2b. The fact feed [F-9] — first cut
+## 2b. The fact feed and the thin backend [F-9] — done
 
 - [x] `facts` is a `FeedProtocol.WellKnownNamespaces` entry.
-- [x] `FactLog`: `put` and `reset` entries; `FactLog.memory()` and `FactLog.feed({ feeds, spaceId, feedId })`
-      over `@dxos/feed`'s `FeedStore`.
-- [x] `MemorySqlite.make(storage, { log })`: writes go to the log first and are applied by reading it back;
-      the store keeps its log cursor (`memory_state.log_cursor`), catches up on open, and follows entries
-      other replicas add.
-- [x] Tests (T-8): an empty store rebuilds from the log; resets replay; a replica follows another's
-      writes and wakes its own subscriptions; rebuild from a real feed in the `facts` namespace.
-- [ ] Apply an entry and move the log cursor in one transaction (today a crash between them replays the
-      entry, which is harmless since `put` is idempotent and `reset` replays to the same state).
-- [x] `@dxos/sparql-sqlite/async`: `SqlSparqlEngineAsync` over `SqlClient`, one engine shared with the sync
-      variant; every benchmark query answers the same on both [F-9.7].
-- [x] Async variants of pipeline-rdf's store (`FactStoreLive.makeAsync`) and of `MemorySqlite`
-      (`makeAsync`), over the engine's programs and `SqlClient`; one implementation each, run by a sync or an async
-      driver.
-- [x] Table prefixes in `@dxos/sparql-sqlite`, the fact store and `MemorySqlite`, so a memory per space shares
-      the host database [F-9.8].
-- [x] `MemoryService` RPCs (`@dxos/protocols/rpc`), served by client-services' `MemoryHostLayer`: one async
-      memory per space, opened on first call, over the host database and a `FactLog.feed` on the host's
-      `FeedStore` [F-9.1, F-9.9].
-- [x] `client.memory(spaceId)`: the page's `MemoryService` over the bridge (`createRpcMemory`).
+- [x] `@dxos/sparql-sqlite`'s `QuadStore`: a log-first quad store with a shared and a local part. Each logged
+      batch is applied in one transaction with the log cursor; the store follows batches other replicas add and
+      rebuilds itself from the log when empty [F-9.2–F-9.4].
+- [x] `@dxos/sparql-sqlite/exchange`: TriG and binary serializations [F-10].
+- [x] `@dxos/sparql-sqlite/async`: one engine over a sync or an async driver [F-9.7]; table prefixes [F-9.8].
+- [x] `RdfStoreService` RPCs (`@dxos/protocols/rpc`), served by client-services' `RdfHostLayer`: one
+      `QuadStore` per space, opened on first call, over the host database and `factFeedLog` on the host's
+      `FeedStore`; export and import are formed in the host [F-9.1, F-10].
+- [x] `client.rdf(spaceId)`: the page's `RdfStore` over the bridge (`createRpcRdfStore`); the page runs
+      `RdfMemory` over it [F-9.9].
 - [x] The fact feed id is `EntityId.deterministic('org.dxos.memory.facts', spaceId)`, the same on every device.
 - [x] The feed syncer replicates `facts` when the stack option `replicateFacts` is set; a test shows a fact
-      feed replicating and a memory over it applying what arrives [F-9.5].
+      feed replicating and a store over it applying what arrives [F-9.5].
 - [ ] EDGE: bump the pinned `@dxos/feed` / `@dxos/protocols` so `FeedSpace` accepts `facts`, then add `facts` to
       its space deletion (`FEED_SPACE_NAMESPACES`), backups (`FEED_NAMESPACES`) and `QueueSubspaceTag`; then turn
       `replicateFacts` on by default.
 - [ ] Space archives: export and import map every non-trace namespace to `data`; keep `facts` as `facts`.
-- [ ] Composer: a capability giving each space its `MemoryService` from `client.memory(spaceId)`
-      (`docs/PACKAGES.md` question 2), replacing `FactStoreRegistry` and `BrainMemory`.
+- [ ] Composer: a capability giving each space its `MemoryService`, `RdfMemory.make(client.rdf(spaceId))`
+      (`docs/PACKAGES.md` question 1), replacing `FactStoreRegistry` and `BrainMemory`.
+- [ ] Carry `quiet` across replicas, if it turns out to matter [D-44].
 
 ## 3. EDGE implementation (`dxos/edge`) — missing
 
@@ -144,13 +133,13 @@ Q-5 (event-base reads stay ops).
 ## 7. Move compute pipelines, stories and UI
 
 - [ ] `@dxos/pipeline-rdf`: stages `extract-facts`, `index-facts`, `normalize-predicates`, `pipeline.ts`
-      require `MemoryService`; re-point type imports to echo-memory; remove `src/store` once empty.
+      require `MemoryService`; remove `src/store` once empty. (Type imports already point at echo-memory.)
       `fact-graph.ts` (graph view over facts) moves to echo-memory if it stays pure, else to react-ui-rdf.
-- [ ] `@dxos/brain`: `Encoding` and the evaluator take `Fact` from echo-memory.
+- [x] `@dxos/brain`: `Encoding` and the evaluator take `Fact` from echo-memory.
 - [ ] `@dxos/pipeline-email` (`fact-pipeline.ts`, `corpus/ledger.ts`, `stages/extract-facts.ts`),
       `@dxos/pipeline-discord` (`pipeline.ts`, `stages/*`, `testing`), `@dxos/crawler`
       (`stages/extract-facts.ts`, `stages/topics.ts`, `testing`).
-- [ ] `@dxos/react-ui-rdf`: fact and `SparqlRow` type imports.
+- [x] `@dxos/react-ui-rdf`: fact type imports. (`SparqlRow` still from pipeline-rdf.)
 - [ ] `stories-brain`: `modules/context.ts`, `pipeline-context.ts`, `testing/remote-fact-store.ts`,
       `testing/crawler-stores.ts`, `testing/harness/*`, tests; update `ROADMAP.md`, `docs/TASKS.md`.
 - [ ] `app-framework/docs/EDGE-PLUGINS.mdl`: the `BrainService` host-service row becomes `MemoryService`

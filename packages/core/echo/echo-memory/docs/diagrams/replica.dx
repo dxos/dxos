@@ -1,0 +1,12 @@
+diagram kind=sequence
+node Feed "facts feed"
+node Store "QuadStore (B)"
+node Host "RdfHostLayer (B)"
+node Page "RdfMemory (B)"
+edge Feed sends Store "new blocks (sync)"
+edge Store -> Store "apply + cursor"
+edge Store sends Host "listen(batch)"
+edge Host sends Page "changes stream"
+edge Page calls Host "query graphs"
+edge Host returns Page "quads"
+note Page "push to rules; outbox in local part"

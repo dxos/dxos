@@ -13,20 +13,27 @@ that grew separately and overlap:
 - `FactStore` (`@dxos/pipeline-rdf`): an RDF fact store with structured and SPARQL queries, an ontology
   of predicates and ingest cursors.
 
-The package holds **interface definitions only**: the `MemoryService` tag and its API, the fact data
-model and the small pure functions over it. It contains no storage, no SPARQL engine and no rule
-evaluator, so any package can import it — an operation definition, a UI component, an EDGE worker —
-without pulling an implementation into its bundle [F-1].
+The package holds **interface definitions only**: the `MemoryService` tag and its API, the `RdfStore`
+port a memory runs on, the fact data model and the small pure functions over it. It contains no storage,
+no SPARQL engine and no rule evaluator, so any package can import it — an operation definition, a UI
+component, an EDGE worker — without pulling an implementation into its bundle [F-1]. Its `rdf` subpath
+holds how facts map to RDF and to SPARQL (`Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab`),
+which needs an RDF library and so stays off the main entry [F-1.4].
 
-Implementations live elsewhere. `@dxos/echo-memory-sqlite` holds the SQLite one — an RDF quad store
-(`@dxos/sparql-sqlite`) with goal-rule subscriptions beside it — used directly by the CLI, tests and node
-servers [F-7]. EDGE serves the same interface from a Durable Object over that same core [F-7.4].
+Implementations live elsewhere. `@dxos/echo-memory-sqlite` holds the memory core, `RdfMemory`: a
+MemoryService over any `RdfStore`, with the goal-rule evaluator and every record it keeps stored as quads.
+Beside it is a local `RdfStore` over `@dxos/sparql-sqlite`'s quad store, which the CLI, tests and node
+servers open in one process [F-7]. EDGE serves the same interface from a Durable Object over that same core
+[F-7.4].
 
-In the app the memory runs in the client-services backend, not in the page. The page sends memory calls,
-SPARQL included, over the client-services bridge; the backend runs `@dxos/sparql-sqlite` over the SQLite
-database it already holds. Every write goes first to the space's feed in the `facts` namespace, which is
-durable and replicates like any feed, and only then to the store, which remembers how far it has read
-the feed and can be rebuilt from it [F-9].
+In the app the memory runs in the page and the store in the client-services backend. The backend is thin:
+it runs `@dxos/sparql-sqlite` over the SQLite database it already holds and applies batches of writes, and
+nothing else. The page's memory turns every call into SPARQL and batches, which cross the client-services
+bridge. Every shared write goes first to the space's feed in the `facts` namespace, which is durable and
+replicates like any feed, and only then to the store, which remembers how far it has read the feed and can
+be rebuilt from it. Subscriptions and outboxes are quads in the store's local part, which is never logged
+or replicated [F-9]. A store's quads move in and out in bulk as TriG or a compact binary form, serialized
+where the store is [F-10].
 
 `BrainService` and `FactStore` are deprecated in favour of `MemoryService`; `docs/MIGRATION.md` lists the
 work to get there, both the implementations still missing and the call sites to move [F-8].
@@ -114,6 +121,68 @@ A subscription is a standing question: "tell me when these rules hold". Its life
 - **`ack(id, events) → void`** removes the named events from the outbox, once their consumer has handled
   them. Ids it does not hold are ignored, so acknowledging twice is safe. An acknowledged event is not
   queued again even if the same wake is derived later [F-4.4].
+
+### RdfStore
+
+```mdl
+service RdfStore
+  desc: |
+    A space's quads in two parts: a shared part, replicated, every write to which is recorded durably before it
+    is applied; and a local part, the device's own. A memory runs over this port wherever the store is: in the
+    same process, or across the client-services bridge. Every op fails only with RdfStoreError. Context tag
+    `@dxos/echo-memory/RdfStore`.
+  ops:
+    query(sparql: string, options?: { local?: boolean }) → Effect<SparqlRow[], RdfStoreError>
+    write(writes: Write[], options?: { local?: boolean }) → Effect<string, RdfStoreError>
+    export(format: RdfFormat) → Effect<Uint8Array, RdfStoreError>
+    import(data: Uint8Array, format: RdfFormat) → Effect<string, RdfStoreError>
+    listen(onApplied: (batch: Batch) → void) → Effect<void, never, Scope>
+```
+
+- **query**: runs a SPARQL read (SELECT, ASK or CONSTRUCT) over the shared part, or the local part with
+  `local`. An update fails: changes go through `write`.
+- **write**: applies the writes as one batch, in order, and returns the batch id once it is durable (shared)
+  or written (local). A `clear` empties only the part it is written to.
+- **export**: every quad of the shared part, serialized where the store is, so a large store crosses a
+  boundary once [F-10.1].
+- **import**: parses the data where the store is and inserts its quads into the shared part as one batch
+  [F-10.2].
+- **listen**: calls back with each shared batch once applied, this replica's and other replicas', in order;
+  in process the listener is registered before the op returns.
+
+```mdl
+type Quad
+  desc: A triple in the default graph, or a quad in the named graph `g`.
+  fields:
+    s: SparqlTerm
+    p: SparqlTerm
+    o: SparqlTerm
+    g?: SparqlTerm
+```
+
+```mdl
+type Write
+  desc: |
+    One change to a store: `insert` adds quads (one stored already is kept once), `delete` removes them (one not
+    stored is ignored), `clear` removes every quad of the part written to. Tagged by `_tag`.
+  literals: insert | delete | clear
+```
+
+```mdl
+type Batch
+  desc: Writes recorded together and applied together; the unit the fact feed carries and `listen` reports.
+  fields:
+    id: string
+    writes: Write[]
+```
+
+```mdl
+type RdfFormat
+  desc: |
+    `trig`: the Turtle family's text syntax with named graphs, which every fact is stored in and plain Turtle
+    cannot express. `binary`: a term dictionary followed by the quads as indexes into it, several times smaller.
+  literals: trig | binary
+```
 
 ## Data model
 
@@ -483,6 +552,12 @@ feat F-1: Interface package
   req F-1.3:
     when: an operation definition names MemoryService in its `services`
     then: importing that definition loads no implementation chunk
+
+  req F-1.4:
+    when: a package imports `@dxos/echo-memory/rdf`
+    then: it gets the mapping between facts and RDF (`Graph`, `Mapping`, `Ontology`, `Predicate`, `Vocab`) and
+          between fact queries and SPARQL (`Sparql`); that subpath depends on the RDF library `n3` and on no
+          SPARQL engine, SQL or Datalog library, and the main entry imports nothing from it
 ```
 
 ```mdl
@@ -658,36 +733,38 @@ feat F-8: Deprecation of BrainService and FactStore
 ```
 
 ```mdl
-feat F-9: The app's memory: a fact feed and a backend store
+feat F-9: The app's memory: a page memory over a thin backend store
 
   req F-9.1:
     when: a page in the app uses MemoryService
-    then: its calls, SPARQL queries included, cross the client-services bridge to a backend that runs
-          `@dxos/sparql-sqlite` over the backend's existing SQLite database; the page holds no store
+    then: the memory (`RdfMemory`) runs in the page over `client.rdf(spaceId)`; its calls become SPARQL queries
+          and batches of writes that cross the client-services bridge, and the backend only runs them over its
+          existing SQLite database with `@dxos/sparql-sqlite`; the backend imports no memory package
 
   req F-9.2:
-    when: a knowledge-base write (`put` or `reset`) is made
-    then: it is appended to the space's fact feed, in the `facts` feed namespace, before the store
+    when: a write to the shared part is made (`put` or `reset` of a memory)
+    then: its batch is appended to the space's fact feed, in the `facts` feed namespace, before the store
           changes; the store applies it by reading the feed back
 
   req F-9.3:
-    when: the store applies feed entries
-    then: it records the feed cursor it has read through in the same database, and on open applies only
-          the entries after that cursor
+    when: the store applies feed batches
+    then: it records the feed cursor it has read through in the same transaction as each batch, and on open
+          applies only the batches after that cursor
 
   req F-9.4:
     when: the store is empty or lost and the feed is not
-    then: opening the memory replays the whole feed and the store answers every query as before; resets
-          in the feed are replayed in order
+    then: opening the store replays the whole feed and a memory over it answers every query as before;
+          clears in the feed are replayed in order
 
   req F-9.5:
     when: another replica appends to the fact feed
-    then: the store applies the new entries as they arrive, and they wake its subscriptions as a local
-          `put` would, `quiet` included
+    then: the store applies the new batches as they arrive, and a memory over it pushes the facts they add to
+          its rules, so they wake its subscriptions as a local `put` would
 
   req F-9.6:
-    when: subscriptions, outboxes and acknowledgements change
-    then: they stay in the local database and are not written to the fact feed
+    when: subscriptions, outboxes, acknowledgements or the time of the last evaluation change
+    then: they are written to the store's local part as quads, which is never written to the fact feed and is
+          untouched by a `clear` of the shared part
 
   req F-9.7:
     when: the backend reaches its database only through an async connection (Effect's `SqlClient`)
@@ -695,14 +772,33 @@ feat F-9: The app's memory: a fact feed and a backend store
           with synchronous SQLite (Durable Objects, node, the CLI), and both give the same answers
 
   req F-9.8:
-    when: the backend holds memories for several spaces in its one database
-    then: each space's tables (the quad store's, the fact store's and the memory's own) carry a prefix of its
-          own, so spaces share no rows and no name meets one of the host's tables
+    when: the backend holds stores for several spaces in its one database
+    then: each space's tables carry a prefix of its own, so spaces share no rows and no name meets one of the
+          host's tables
 
   req F-9.9:
-    when: a page calls a space's memory
-    then: `client.memory(spaceId)` returns a MemoryService whose calls cross the bridge as the `MemoryService`
-          RPCs; the backend opens that space's memory on its first call and closes it with the host
+    when: a page calls a space's store
+    then: `client.rdf(spaceId)` returns an RdfStore whose calls cross the bridge as the `RdfStoreService`
+          RPCs; the backend opens that space's store on its first call and closes it with the host
+```
+
+```mdl
+feat F-10: Moving a store in bulk
+
+  req F-10.1:
+    when: a store is exported
+    then: every quad of its shared part is serialized beside the store, as TriG or as the binary form, and
+          only the result crosses to the caller
+
+  req F-10.2:
+    when: data is imported into a store
+    then: it is parsed beside the store and its quads are inserted into the shared part as one batch, so the
+          import is logged and replicated like any write
+
+  req F-10.3:
+    when: a store's export is imported into an empty store, in either format
+    then: the second store holds the same quads, blank nodes included, and a memory over it answers the
+          same facts
 ```
 
 ## Acceptance
@@ -772,24 +868,46 @@ scenario T-7: One query op, typed per kind
 
 ```mdl
 scenario T-8: The store is rebuilt from the fact feed
-  given: a memory over an empty database and a feed store, with facts put and a read cursor moved
-  when: a second memory opens over a new, empty database and the same fact feed
+  given: a memory over an empty database and a fact log, with facts put, a reset, and a read cursor moved
+  when: a second memory opens over a new, empty database and the same log
   then:
     - a FactsQuery returns the same facts and a CursorQuery the same cursor
-    - a fact put through the first memory afterwards appears in the second without a write to it
+    - a fact put through the first memory afterwards appears in the second without a write to it, and wakes
+      the second memory's own subscription
+    - the first memory has none of the second's subscriptions
+```
+
+```mdl
+scenario T-9: A store moves in bulk
+  given: a memory holding facts, over a store
+  when: the store is exported as TriG and as binary, and each export is imported into a new, empty store
+  then:
+    - a memory over each new store answers the same facts
+    - the binary export is smaller than the TriG one
 ```
 
 ## Rules
 
 ```mdl
-rule no-implementation-deps: echo-memory imports no implementation library
-  files: src/**/*.ts
+rule no-implementation-deps: echo-memory's main entry imports no implementation library
+  files: src/*.ts
   severity: error
-  grep: from '(n3|sparqljs|@dxos/sparql-sqlite|@dxos/sql-sqlite|@dxos/brain|@effect/sql[^']*|node:[^']*)'
-  question: Does this file import an RDF, SPARQL, SQL, Datalog or node-only module?
+  grep: from '(n3|sparqljs|\./rdf/[^']*|@dxos/sparql-sqlite|@dxos/sql-sqlite|@dxos/brain|@effect/sql[^']*|node:[^']*)'
+  question: Does this file import an RDF, SPARQL, SQL, Datalog or node-only module, or the rdf subpath?
 
   `@dxos/echo-memory` is the interface every layer imports; an implementation import here puts that
   machinery in every bundle that names MemoryService [F-1.2].
+```
+
+```mdl
+rule rdf-subpath-deps: the rdf subpath imports only an RDF library
+  files: src/rdf/**/*.ts
+  severity: error
+  grep: from '(sparqljs|@dxos/sparql-sqlite|@dxos/sql-sqlite|@dxos/brain|@effect/sql[^']*|node:[^']*)'
+  question: Does this file import a SPARQL engine or parser, SQL, Datalog or a node-only module?
+
+  The rdf subpath maps facts to RDF and fact queries to SPARQL text; it runs in the page, so it needs `n3`
+  for terms and quads and nothing that stores or evaluates [F-1.4].
 ```
 
 ## Changelog
@@ -1158,6 +1276,115 @@ decision D-33: Replicating fact feeds is behind a client-services stack option, 
   for: user:dmaretskyi
   affects: [F-9.5]
   why: EDGE's pinned feed store rejects appends to an unknown namespace, and the syncer pulls every listed namespace for every space on every poll, so turning it on first would fail pushes and add an EDGE round trip per space for spaces that never use memory.
+```
+
+```mdl
+decision D-34: client-services does not depend on `@dxos/echo-memory-sqlite`, and `@dxos/echo-memory-sqlite` is a standalone implementation over native SQLite that pulls in no other SPARQL store.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9.1, F-7]
+```
+
+```mdl
+decision D-35: The backend is thin and the memory runs in the page: client-services only runs `@dxos/sparql-sqlite` over its database and appends to the facts feed; the page's MemoryService turns calls into SPARQL over the bridge, and rule evaluation and outboxes live page-side.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9.1, F-9.9]
+  supersedes: D-32
+```
+
+```mdl
+decision D-36: The store API has import and export verbs, with TriG as one format and a binary form as the other, and the backend forms the export and parses the import, for efficiency.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [RdfStore, F-10]
+```
+
+```mdl
+decision D-37: Subscriptions and outboxes live in the RDF store, outside the log, and are never replicated.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9.6]
+  supersedes: D-26
+  answers: Q-6
+```
+
+```mdl
+decision D-38: The RDF type definitions move from `@dxos/pipeline-rdf` to `@dxos/echo-memory`.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-1.4]
+  supersedes: D-8
+```
+
+```mdl
+decision D-39: The port between a memory and its store is `RdfStore`: SPARQL reads, batches of insert, delete and clear writes, bulk import and export, and a listener for applied shared batches; each op reads or writes a shared part or, with `local`, a local part. Fills in [D-35].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [RdfStore, F-9.1, F-9.6]
+  why: A memory in the page needs exactly what the backend can give without knowing about memory, and the local part is where subscriptions and outboxes go without reaching the log.
+  rejected:
+    - Keeping MemoryService as the RPC, which puts the memory (and the rule evaluator) in the backend.
+    - SPARQL UPDATE as the write path, which the log could not record as data without parsing it.
+```
+
+```mdl
+decision D-40: The mapping between facts and RDF, and between fact queries and SPARQL text, is the subpath `@dxos/echo-memory/rdf`; the main entry stays free of `n3`, and the fact schemas are the branded ones in `Fact` with no second copy. Fills in [D-38].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4]
+  why: Protocols and the client import the main entry, and n3 on their static graph breaks the workerd bundle; one fact schema means one place for the brands.
+  rejected:
+    - Moving the RDF modules into the main entry, which would put n3 into every bundle that names MemoryService.
+```
+
+```mdl
+decision D-41: Hand-built facts are made through `Fact.make` (and `Fact.makeMany`) from their plain form, and `Graph.assign` takes facts in their plain form, since the ids they end up with are known only there. Fills in [D-22].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2]
+  why: The brands make a string literal no longer a FactId, so fixtures and extractors need one way to brand a whole fact.
+```
+
+```mdl
+decision D-42: The memory core is `RdfMemory` in `@dxos/echo-memory-sqlite`, importable on its own subpath so the page loads no SQLite; the CLI opens it over `LocalRdfStore`, the same port over `@dxos/sparql-sqlite` in process. Fills in [D-35].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7, F-9.1]
+  why: The core needs the rule evaluator, which `@dxos/echo-memory` must not import; one core keeps the CLI, the page and EDGE alike.
+```
+
+```mdl
+decision D-43: The fact feed carries the store's batches (insert, delete and clear of quads), not memory entries; a memory's `put` is one batch holding the facts' quads and its read cursor, and `reset` is a clear plus the seed vocabulary. Fills in [D-35].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.2, F-9.4]
+  why: The backend no longer knows about facts, only quads, and a batch replays to the same store on every replica.
+```
+
+```mdl
+decision D-44: A memory pushes the facts in another replica's batch to its rules without `quiet`, which is not recorded in the batch. Fills in [D-43].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.5]
+  why: `quiet` names speakers whose facts wake nothing on the device that wrote them; a batch is quads only, and reading speakers back would need memory knowledge in the log.
+  rejected:
+    - Adding a memory-specific field to every batch, which the backend would carry without understanding.
+```
+
+```mdl
+decision D-45: In process, `RdfStore.listen` registers its listener before it returns; across the bridge the change stream starts once the host answers. Fills in [D-39].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [RdfStore]
+  why: A forked stream gives no sign that it is subscribed, so a write right after a replica opened went unseen; a registered listener closes that gap where the store is in process.
 ```
 
 ## Appendix: Extension Definitions

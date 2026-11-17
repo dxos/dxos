@@ -1,0 +1,26 @@
+diagram flow=down
+group page "Page" {
+  node Plugin "Composer plugin"
+  node RdfMemory "RdfMemory" ref="packages/core/echo/echo-memory-sqlite/src/RdfMemory.ts"
+  node Client "client.rdf()" ref="packages/sdk/client/src/client/rpc-rdf.ts"
+}
+group host "client-services host" {
+  node Host "RdfHostLayer" ref="packages/sdk/client-services/src/internal/rdf/rdf-host.ts"
+  node QuadStore "QuadStore" ref="packages/core/compute/sparql-sqlite/src/quad-store.ts"
+  node FeedLog "factFeedLog" ref="packages/sdk/client-services/src/internal/rdf/fact-feed.ts"
+  node Sqlite "host SQLite"
+  node Feed "facts feed"
+}
+group iface "@dxos/echo-memory" {
+  node Port "RdfStore port" ref="packages/core/echo/echo-memory/src/RdfStore.ts"
+  node Mem "MemoryService" ref="packages/core/echo/echo-memory/src/MemoryService.ts"
+}
+edge Plugin -> RdfMemory "MemoryService"
+edge RdfMemory -> Client "SPARQL + batches"
+edge Client -> Host "RdfStoreService RPC"
+edge Host -> QuadStore
+edge QuadStore -> FeedLog "append first"
+edge FeedLog -> Feed
+edge QuadStore -> Sqlite "apply"
+edge RdfMemory implements Mem
+edge Client implements Port
