@@ -16,6 +16,7 @@ export default defineConfig({
     'ObjectCard': 'src/ui/components/ObjectCard/ObjectCard.tsx',
     'ObjectCombobox': 'src/ui/components/ObjectCombobox/ObjectCombobox.tsx',
     'PluginRegistryButton': 'src/ui/components/PluginRegistryButton/PluginRegistryButton.tsx',
+    'ResetDialog': 'src/ui/components/ResetDialog/ResetDialog.tsx',
     'SettingsScope': 'src/ui/components/SettingsScope/SettingsScope.tsx',
     'index': 'src/index.ts',
     'account/Account': 'src/account/Account.ts',

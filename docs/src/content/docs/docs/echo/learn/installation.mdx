@@ -62,7 +62,7 @@ A client acts for an identity. The identity owns the spaces it creates, and othe
 
    The tutorial app's [vite.config.ts](/echo/project/vite.config.ts) has these settings, plus React, the theme's `ThemePlugin` and an `IconsPlugin` for the icons of the `@dxos/react-ui` components. Node needs no bundler setup.
 
-3. **Point the client at the network.** A client keeps its data on the device and reaches other devices through DXOS's EDGE network, which relays invitations and replicates spaces. The app's config, at the top of `App.tsx`, says where EDGE is and keeps the data across reloads. The learning path writes its config in code; the [Configuration guide](/docs/echo/guides/configuration/) covers loading it from files instead.
+3. **Point the client at the network.** A client keeps its data on the device and reaches other devices through DXOS's [EDGE](/docs/edge/concepts/connecting/) network, which relays invitations and replicates spaces. The app's config, at the top of `App.tsx`, says where EDGE is and keeps the data across reloads. The learning path writes its config in code; the [Configuration guide](/docs/echo/guides/configuration/) covers loading it from files instead.
 
    <Snippet file="echo-tutorial/app/App" region="config" lang="tsx" />
 

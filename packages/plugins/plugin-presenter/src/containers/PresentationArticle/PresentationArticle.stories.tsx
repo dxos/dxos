@@ -61,17 +61,17 @@ type Story = StoryObj<typeof meta>;
 const LOAD_TIMEOUT = { timeout: 10_000 };
 
 const tile = (canvas: ReturnType<typeof within>, index: number) =>
-  canvas.findByTestId(`presenter.slide-grid.${index}`, undefined, LOAD_TIMEOUT);
+  canvas.findByTestId(`presenter.slide-gallery.${index}`, undefined, LOAD_TIMEOUT);
 
 /** Every slide is a thumbnail; the toolbar's add button and the ghost tile after the last slide each add a tile. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await tile(canvas, 3);
-    await expect(canvas.queryByTestId('presenter.slide-grid.4')).toBeNull();
+    await expect(canvas.queryByTestId('presenter.slide-gallery.4')).toBeNull();
     await userEvent.click(canvas.getByTestId('presenter.add-slide'));
     await tile(canvas, 4);
-    await userEvent.click(canvas.getByTestId('presenter.slide-grid.add'));
+    await userEvent.click(canvas.getByTestId('presenter.slide-gallery.add'));
     await tile(canvas, 5);
   },
 };
@@ -83,7 +83,7 @@ export const SlideMenu: Story = {
     const first = await tile(canvas, 0);
     await waitFor(() => expect(first.getAttribute('data-dx-context')).toMatch(/\/[^/]+$/));
     const ids = [0, 1, 2, 3].map((index) =>
-      canvas.getByTestId(`presenter.slide-grid.${index}`).getAttribute('data-dx-context'),
+      canvas.getByTestId(`presenter.slide-gallery.${index}`).getAttribute('data-dx-context'),
     );
     await expect(new Set(ids).size).toBe(4);
   },

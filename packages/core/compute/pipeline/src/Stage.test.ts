@@ -3,6 +3,7 @@
 //
 
 import * as Context from 'effect/Context';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
@@ -73,6 +74,18 @@ describe('Stage.batch', () => {
     const out = await collect(stage(Stream.fromIterable([1, 2, 3, 4, 5, 6, 7])));
     expect(batches).toEqual([[1, 2, 3], [4, 5, 6], [7]]);
     expect(out).toEqual([10, 20, 30, 40, 50, 60, 70]);
+  });
+
+  test('runs `concurrency` batches at once and still emits them in order', async ({ expect }) => {
+    // The first batch can only finish once the second has started, so a serial stage would never complete.
+    const secondStarted = await EffectEx.runPromise(Deferred.make<void>());
+    const stage = Stage.batch('overlap', { size: 1, concurrency: 2 }, (items: readonly number[]) =>
+      items[0] === 1
+        ? Deferred.await(secondStarted).pipe(Effect.as(items))
+        : Deferred.succeed(secondStarted, undefined).pipe(Effect.as(items)),
+    );
+    const out = await collect(stage(Stream.fromIterable([1, 2])));
+    expect(out).toEqual([1, 2]);
   });
 
   test('zero-weight items ride along with the next weighted batch, in order', async ({ expect }) => {

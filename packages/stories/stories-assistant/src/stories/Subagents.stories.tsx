@@ -9,11 +9,12 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
 import { ThreadColumns } from '../components/index.ts';
 import { StoryRole } from '../modules/index.ts';
 import { LAUNCH_REQUEST, LAUNCH_TASKS, PLANS, SAVINGS_PROMPTS, Scripts, SIDE_QUESTION } from '../scripts/index.ts';
-import { CalculatorSkill, ModuleContainer, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
 
 /**
  * Subagents on light threads: the agent delegates self-contained tasks with `thread_delegate`; each runs in a
@@ -21,9 +22,9 @@ import { CalculatorSkill, ModuleContainer, createDecorators, storyParameters, su
  * the conversation. The agent waits for the subagents with `thread_wait` while the reader keeps chatting. See
  * `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` (F-8).
  */
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Subagents',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 

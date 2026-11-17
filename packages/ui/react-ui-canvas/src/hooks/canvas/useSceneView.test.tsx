@@ -12,13 +12,16 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 import { type Size } from '@dxos/scene';
 
 import { createCanvasAtoms } from '../../engine/index.ts';
+import { type Camera } from '../../model/index.ts';
 import { fitBounds } from '../../utils/index.ts';
 import { useSceneView } from './useSceneView.ts';
 
 const TARGET = { x: -128, y: -64, width: 768, height: 320 };
 const INSET = 32;
 
-const setup = () => {
+type ViewProps = { viewport: Size; camera?: Camera };
+
+const setup = ({ onCameraChange }: { onCameraChange?: (camera: Camera) => void } = {}) => {
   const registry = Registry.make();
   const atoms = createCanvasAtoms('root');
   const setCamera = vi.fn();
@@ -26,16 +29,18 @@ const setup = () => {
   const wrapper = ({ children }: PropsWithChildren) => (
     <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>
   );
+  const initialProps: ViewProps = { viewport: { width: 1024, height: 768 } };
   const hook = renderHook(
-    ({ viewport }: { viewport: Size }) =>
+    ({ viewport, camera = { x: 0, y: 0, zoom: 1 } }: ViewProps) =>
       useSceneView({
         registry,
         atoms,
         rootRef: useRef(null),
         viewport,
-        interactedRef: useRef(false),
+        interactedRef: useRef(onCameraChange !== undefined),
         path: ['root'],
-        camera: { x: 0, y: 0, zoom: 1 },
+        camera,
+        onCameraChange,
         drag: undefined,
         fitTarget: TARGET,
         inset: INSET,
@@ -43,7 +48,7 @@ const setup = () => {
         animateTo,
         isAnimating: () => false,
       }),
-    { wrapper, initialProps: { viewport: { width: 1024, height: 768 } } },
+    { wrapper, initialProps },
   );
   return { ...hook, setCamera, animateTo };
 };
@@ -80,5 +85,20 @@ describe('useSceneView', () => {
       undefined,
       undefined,
     );
+  });
+
+  test('a camera the viewer moves is reported while it moves, at most once a beat, and where it ends', ({ expect }) => {
+    const onCameraChange = vi.fn();
+    const viewport = { width: 1024, height: 768 };
+    const { rerender } = setup({ onCameraChange });
+    onCameraChange.mockClear();
+    for (let step = 1; step <= 10; step++) {
+      vi.advanceTimersByTime(25);
+      rerender({ viewport, camera: { x: step, y: 0, zoom: 1 } });
+    }
+    expect(onCameraChange.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(onCameraChange.mock.calls.length).toBeLessThanOrEqual(3);
+    vi.advanceTimersByTime(1000);
+    expect(onCameraChange).toHaveBeenLastCalledWith({ x: 10, y: 0, zoom: 1 });
   });
 });

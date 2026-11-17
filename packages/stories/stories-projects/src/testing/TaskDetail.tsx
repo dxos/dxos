@@ -10,10 +10,10 @@ import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useSelection } from '@dxos/react-ui-attention';
-import { type ResolvedCellProps } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { Task } from '@dxos/types';
 
-export const TaskDetail = ({ object, attendableId }: ResolvedCellProps) => {
+export const TaskDetail = ({ object, attendableId }: ModuleContainer.ResolvedCellProps) => {
   const project = Obj.instanceOf(Project.Project, object) ? object : undefined;
   const taskSet = useResolveRef(project?.taskSet);
   const tasks = useQuery(

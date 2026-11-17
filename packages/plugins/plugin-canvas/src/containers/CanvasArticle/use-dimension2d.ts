@@ -26,10 +26,11 @@ import { createGeneratorWorker, useCanvasGenerators, useCanvasKinds, useCanvasNo
 import { canvasViewAspect } from './view-state.ts';
 
 /** The camera a 2D viewer's camera bar resets to: the scene's origin at 1:1. */
-const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
+export const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
 
 /** The theme a canvas draws when neither it nor the app names one: Glass in dark mode, else Flat. */
-const fallbackTheme = (mode: ThemeContextValue['themeMode']): string => (mode === 'dark' ? 'glass-night' : 'flat');
+export const fallbackTheme = (mode: ThemeContextValue['themeMode']): string =>
+  mode === 'dark' ? 'glass-night' : 'flat';
 
 /** The grid a drawing shows when the panel turns one on without naming a kind. */
 const DEFAULT_GRID_KIND = 'lines';

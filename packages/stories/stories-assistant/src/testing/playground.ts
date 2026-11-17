@@ -394,7 +394,7 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
       }
       return { parts: [text(SCRIPTED_REPLIES.composed)] };
     }
-    if (request.text.includes(EXTRACTION_PROMPT)) {
+    if (request.system.includes(EXTRACTION_PROMPT)) {
       // Extraction runs per chunk, so each chunk reports only the facts it quotes.
       const facts = [
         ...TRANSCRIPT_FACTS.filter(({ quote }) => request.text.includes(quote)).map((fact) => ({

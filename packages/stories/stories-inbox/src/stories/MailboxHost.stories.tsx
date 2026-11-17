@@ -29,8 +29,8 @@ import { useClient } from '@dxos/react-client';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/storybook-testing';
-import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 import { Message, Organization, Person } from '@dxos/types';
 
 const HOST_STORY_TYPES = [
@@ -69,7 +69,7 @@ const HOST_STORY_CLIENT_SERVICES = persistentClientServices(
   }),
 );
 
-/** Role token for the story-local module, referenced by the `ModuleContainer` layout. */
+/** Role token for the story-local module, referenced by the `ModuleContainer.Root` layout. */
 const HostRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.mailboxHost');
 
 const HostModule = () => {
@@ -205,7 +205,7 @@ const HostModule = () => {
   );
 };
 
-/** Registers the story-local module surface for the `ModuleContainer` layout. */
+/** Registers the story-local module surface for the `ModuleContainer.Root` layout. */
 const StoryHostPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('story.inbox.mailboxHostModule'), name: 'Mailbox Host Story Module' }),
 ).pipe(
@@ -220,14 +220,14 @@ const StoryHostPlugin = Plugin.define(
             filter: Surface.makeFilter(HostRole),
             component: HostModule,
           }),
-          ...moduleSurfaces,
+          ...StoryModules.surfaces,
         ]),
       ]),
   }),
   Plugin.make,
 );
 
-const DefaultStory = () => <ModuleContainer layout={[[HostRole], [ModuleRole.Logging]]} />;
+const DefaultStory = () => <ModuleContainer.Root layout={[[HostRole], [StoryModules.Role.Logging]]} />;
 
 const meta = {
   title: 'stories/stories-inbox/MailboxHost',

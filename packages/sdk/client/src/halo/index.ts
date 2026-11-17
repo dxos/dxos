@@ -6,5 +6,6 @@ export { type Halo } from '@dxos/client-protocol';
 export { Device_PresenceState, DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
 export { type Contact, type Device, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 export { DeviceType } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+export { getDeviceLabel } from './device-profile.ts';
 export { type Credential, type Presentation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 export { SpacesService } from '@dxos/protocols/rpc';

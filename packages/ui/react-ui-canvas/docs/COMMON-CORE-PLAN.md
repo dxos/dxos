@@ -1247,6 +1247,8 @@ the user 2026-10-31: in this PR. One commit per task, each with its failing test
   debug is the standalone 2D editor's alone, as its overlay is a sample and e2e aid, not something Composer shows. The
   e2e ids change to the shared bar's (`scene-action-delete`, `scene-action-layout`, `scene-actions`); `ActionToolbar`
   went with `CanvasActions`. Test: `CanvasEditor.test.tsx` (RED: no shared bar in `CanvasEditor`).
+- Ruling (user, 2026-11-13): the create menu goes from the shared bar, and `EditorTools.commands.create` with it. A
+  shape is made with its tool, or dragged from the tools panel; the bar holds what acts on a selection.
 
 ### Task I.2: The display panel
 

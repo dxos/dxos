@@ -1,0 +1,5 @@
+# Environment variables the config plugin reads into `dx.yml`'s runtime config at build time.
+
+DX_EDGE_BASE_URL:
+  path: runtime.services.edge.url
+  type: string

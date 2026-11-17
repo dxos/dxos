@@ -5,11 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { type ComponentProps } from 'react';
 
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+
 import { StoryRole } from '../modules/index.ts';
 import { type ScriptName, Scripts } from '../scripts/index.ts';
-import { CalculatorSkill, ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
+import { CalculatorSkill, createDecorators, storyParameters } from '../testing/index.ts';
 
-type StoryArgs = ComponentProps<typeof ModuleContainer> & { script: ScriptName };
+type StoryArgs = ComponentProps<typeof ModuleContainer.Root> & { script: ScriptName };
 
 /**
  * A chat on a scripted model: every script in `src/scripts` that needs no seeded project is served as a model of its
@@ -17,7 +19,7 @@ type StoryArgs = ComponentProps<typeof ModuleContainer> & { script: ScriptName }
  */
 const meta: Meta<StoryArgs> = {
   title: 'stories/stories-assistant/ScriptedModel',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
   decorators: createDecorators<StoryArgs>(({ args }) => ({
     // Every script but `buildPlugin`, which needs the project PluginBuild seeds, is offered in the model picker; the

@@ -19,6 +19,8 @@ import { AnchoredTo, Message, Task, Thread } from '@dxos/types';
 
 import * as ReviewPlugin from '#meta';
 
+import { type ReviewPluginOptions } from '../types/ReviewPluginOptions.ts';
+
 const TYPES = [AnchoredTo.AnchoredTo, Feed.Feed, Message.Message, Task.Task, Thread.Thread];
 
 export type SentNotification = { recipientDid: string; message: Message.Message };
@@ -40,7 +42,7 @@ const makeHostPlugin = (client: Client, sender: AppCapabilities.InboxSender) =>
 
 export const preloadSubscriptionHarness = () => Harness.preload({ plugins: [ReviewPlugin.make()] });
 
-export const createSubscriptionHarness = async () => {
+export const createSubscriptionHarness = async (options: ReviewPluginOptions = {}) => {
   const testBuilder = new TestBuilder();
   onTestFinished(() => testBuilder.destroy());
   const [alice, bob] = await Promise.all(
@@ -65,7 +67,7 @@ export const createSubscriptionHarness = async () => {
     send: (recipientDid, message) => Effect.sync(() => void sent.push({ recipientDid, message })),
   };
   const harness = await Harness.createComposerTestApp({
-    plugins: [makeHostPlugin(alice, sender)(), ReviewPlugin.make()],
+    plugins: [makeHostPlugin(alice, sender)(), ReviewPlugin.make(options)],
   });
   onTestFinished(() => harness[Symbol.asyncDispose]());
 

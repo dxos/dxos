@@ -32,7 +32,10 @@ import { type ViewModeItem, addViewMode } from './view-mode.ts';
 
 // TODO(burdon): Enable toolbar variants (e.g., markdown, code).
 
-/** Named group, after the editor's own blocks, that consumers extend with `MenuBuilder.extend` to insert content. */
+/**
+ * The Insert group (lists, blocks, image), which consumers extend with `MenuBuilder.extend` to insert content. It and the
+ * Format group show their buttons while the toolbar has room and fold into menus when it does not.
+ */
 export const EDITOR_TOOLBAR_INSERT_GROUP = 'insert';
 
 // Local copy of AppSurface.Section.role — react-ui-editor cannot depend on app-toolkit without a circular dep.
@@ -90,16 +93,16 @@ export const EditorToolbarMenu = memo(({ onAction, children, ...props }: EditorT
   );
 });
 
-type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> &
+export type EditorToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> &
   EditorToolbarFeatureFlags;
 
 // TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
 // TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
 //   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
 //   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
-const useMarkdownMenuActions = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
+const useMarkdownMenuActions = ({ state, getView, customActions, ...features }: EditorToolbarActionsProps) => {
   const menuCreator = useMemo(
-    () => createMarkdownActions({ state, getView, customActions, ...features }),
+    () => createEditorToolbarActions({ state, getView, customActions, ...features }),
     [
       state,
       getView,
@@ -118,28 +121,49 @@ const useMarkdownMenuActions = ({ state, getView, customActions, ...features }: 
   return useMenuActions(menuCreator);
 };
 
-const createMarkdownActions = ({
+/** The toolbar's action graph, for a host that renders the editor's tools in its own toolbar. */
+export const createEditorToolbarActions = ({
   state,
   getView,
   customActions,
   ...features
-}: ToolbarActionsProps): Atom.Atom<ActionGraphProps> => {
+}: EditorToolbarActionsProps): Atom.Atom<ActionGraphProps> => {
   return Atom.make((get) => {
     // Subscribe to state changes.
     const stateSnapshot = get(state);
-    // Lists, blocks and image carry collapse ranks, so a narrow plank folds them before contributed actions (comments,
-    // recording) that a tour or a user reaches for.
-    return MenuBuilder.make()
-      .subgraph(features?.showHeadings !== false && addHeadings(stateSnapshot, getView))
-      .subgraph(features?.showFormatting !== false && addFormatting(stateSnapshot, getView))
-      .subgraph(features?.showLists !== false && addLists(stateSnapshot, getView))
-      .subgraph(features?.showBlocks !== false && addBlocks(stateSnapshot, getView))
-      .subgraph(features?.onImageUpload && addImageUpload(features.onImageUpload))
+    // Insert folds and leaves the row before Format, whose marks the document tour points at.
+    const builder = MenuBuilder.make()
+      .group(
+        'format',
+        {
+          label: ['format.label', { ns: translationKey }],
+          icon: 'ph--text-aa--regular',
+          iconOnly: false,
+          placement: { fold: true },
+          testId: 'editor.toolbar.format',
+        },
+        (group) =>
+          group
+            .subgraph(features?.showHeadings !== false && addHeadings(stateSnapshot, getView))
+            .subgraph(features?.showFormatting !== false && addFormatting(stateSnapshot, getView)),
+      )
       .group(
         EDITOR_TOOLBAR_INSERT_GROUP,
-        { label: ['insert.label', { ns: translationKey }], icon: 'ph--plus--regular' },
-        () => {},
-      )
+        {
+          label: ['insert.label', { ns: translationKey }],
+          icon: 'ph--plus--regular',
+          iconOnly: false,
+          placement: { fold: true, collapse: 0 },
+          testId: 'editor.toolbar.insert',
+        },
+        (group) =>
+          group
+            .subgraph(features?.showLists !== false && addLists(stateSnapshot, getView))
+            .subgraph(features?.showBlocks !== false && addBlocks(stateSnapshot, getView))
+            .subgraph(features?.onImageUpload && addImageUpload(features.onImageUpload)),
+      );
+
+    return builder
       .separator('gap')
       .subgraph(customActions && get(customActions))
       .subgraph(features?.showSearch !== false && addSearch(getView))

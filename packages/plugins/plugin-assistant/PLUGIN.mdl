@@ -225,6 +225,7 @@ op ToggleTracePanelDebug
 
 ```mdl
 feat F-1: AI Chat
+  uses: [Chat]
 
   req F-1.1: User can create a new Chat object in any space.
   req F-1.2: User can type a message and receive a streamed AI response.
@@ -236,6 +237,7 @@ feat F-1: AI Chat
 
 ```mdl
 feat F-2: Companion Chat
+  uses: [Chat, EnsureCompanionChat]
 
   req F-2.1:
     when: user opens an object that supports companions
@@ -252,6 +254,7 @@ feat F-2: Companion Chat
 
 ```mdl
 feat F-3: Skill System
+  uses: [RunPromptInNewChat]
 
   req F-3.1: Skills define named AI configurations (instructions, tools, model).
   req F-3.2: Built-in skills include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, SkillManager.
@@ -263,6 +266,7 @@ feat F-3: Skill System
 
 ```mdl
 feat F-4: Multi-Provider LLM
+  uses: [Settings]
 
   req F-4.1: Supported providers: DXOS Edge (remote), Ollama (local), LM Studio (local).
   req F-4.2: User can configure the active provider and per-provider default model in Settings.
@@ -273,6 +277,7 @@ feat F-4: Multi-Provider LLM
 
 ```mdl
 feat F-5: Tool Execution
+  uses: [Settings]
 
   req F-5.1: The assistant skill exposes LayoutOperation.Open and NavigationOperation.ResolveNavigationTargets
              as tools. Both are owned elsewhere — the assistant contributes no navigation operation of its
@@ -291,6 +296,7 @@ feat F-5: Tool Execution
 
 ```mdl
 feat F-6: ECHO Integration
+  uses: [Chat, Message, OnCreateSpace]
 
   req F-6.1: Chat, Skill, Feed, Message, Memory, Plan, Routine, Agent, and Sequence schemas are registered with ECHO. A chat's subject is recorded by Chat.CompanionChatAnnotation on that subject, not by a type.
   req F-6.2:
@@ -301,6 +307,7 @@ feat F-6: ECHO Integration
 
 ```mdl
 feat F-7: Execution Trace
+  uses: [ToggleTracePanelDebug, TracePanel]
 
   req F-7.1: Every AI operation produces a structured span tree captured in the TracePanel.
   req F-7.2: User can toggle between commit-graph and raw JSON views via op:ToggleTracePanelDebug.
@@ -308,6 +315,7 @@ feat F-7: Execution Trace
 
 ```mdl
 feat F-8: Agent Struggle Reports
+  uses: [AnalyzeTurn, Settings]
 
   req F-8.1: Reporting is opt-in via `Settings.reportStruggles`, off by default, and also requires telemetry to be enabled.
   req F-8.2:
@@ -323,6 +331,7 @@ feat F-8: Agent Struggle Reports
 
 ```mdl
 feat F-9: Token Labels
+  uses: [Settings]
 
   req F-9.1: Labels are opt-in via `Settings.showTokens`, off by default.
   req F-9.2:
