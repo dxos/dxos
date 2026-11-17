@@ -63,4 +63,17 @@ describe('redactInvitationCodes', () => {
     });
     expect(result?.$set_once).toEqual({ $initial_current_url: 'https://drawing.sh/?a=1' });
   });
+
+  test('removes every occurrence of a repeated parameter', () => {
+    const result = redactInvitationCodes(
+      capture({
+        $current_url: 'https://drawing.sh/?spaceInvitationCode=FIRST&spaceInvitationCode=SECOND',
+        $referrer: 'https://drawing.sh/?spaceInvitationCode=FIRST&a=1&spaceInvitationCode=SECOND#top',
+      }),
+    );
+    expect(result?.properties).toEqual({
+      $current_url: 'https://drawing.sh/',
+      $referrer: 'https://drawing.sh/?a=1#top',
+    });
+  });
 });

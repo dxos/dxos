@@ -28,12 +28,15 @@ export const dropBenignExceptions: BeforeSendFn = (capture) => {
 /** A space invitation link's query parameter; the code in it lets anyone join the space. */
 const INVITATION_PARAM = 'spaceInvitationCode';
 
-/** The parameter with its value, and the `&` after it, if any; the leading `?` or `&` is kept. */
-const INVITATION_PATTERN = new RegExp(`([?&])${INVITATION_PARAM}=[^&#]*&?`, 'g');
+/**
+ * Each occurrence of the parameter with its value and the `&` after it. The lookbehind reads the input, not what an
+ * earlier match consumed, so adjacent repeats all match.
+ */
+const INVITATION_PATTERN = new RegExp(`(?<=[?&])${INVITATION_PARAM}=[^&#]*&?`, 'g');
 
 const redactUrl = (value: unknown): unknown =>
   typeof value === 'string' && value.includes(`${INVITATION_PARAM}=`)
-    ? value.replace(INVITATION_PATTERN, '$1').replace(/[?&](?=#|$)/, '')
+    ? value.replace(INVITATION_PATTERN, '').replace(/[?&](?=#|$)/, '')
     : value;
 
 const redactProperties = (properties?: Properties): Properties | undefined =>
