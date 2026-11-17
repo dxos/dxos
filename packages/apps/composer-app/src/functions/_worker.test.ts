@@ -4,6 +4,8 @@
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
+import type * as PublicationManifest from '@dxos/plugin-space/PublicationManifest';
+
 import handler from './_worker.ts';
 import { PNG_SIGNATURE, pngSize } from './preview-image/testing.ts';
 
@@ -108,10 +110,10 @@ describe('publications on the viewer host', () => {
     objects: [ROADMAP_ID],
     preview: {
       description: 'Release notes and the roadmap.',
-      types: [{ label: 'Document', count: 1 }],
+      types: [{ typename: 'org.dxos.type.document', label: 'Document', count: 1 }],
       objects: { [ROADMAP_ID]: { title: 'Q4 roadmap', type: 'Document', description: 'We ship publishing first.' } },
     },
-  };
+  } satisfies PublicationManifest.Manifest;
   const SPACE_IMAGE = 'https://view.composer.test/publications/abc_123/preview.png';
 
   const edge = (publicId = 'abc_123') => {

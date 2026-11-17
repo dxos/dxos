@@ -10,50 +10,9 @@ import * as Schema from 'effect/Schema';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { Annotation, type Entity, Key } from '@dxos/echo';
 
-export const PreviewType = Schema.Struct({
-  typename: Schema.String,
-  /** The type's name for `count` objects, as Composer shows it (`3 Documents`). */
-  label: Schema.String,
-  /** Phosphor icon id (`ph--file-text--regular`). */
-  icon: Schema.optional(Schema.String),
-  hue: Schema.optional(Schema.String),
-  count: Schema.Number,
-});
-export interface PreviewType extends Schema.Schema.Type<typeof PreviewType> {}
+import { FORK_PARAM, PATH_PARAM } from './PublicationManifest.ts';
 
-export const PreviewObject = Schema.Struct({
-  title: Schema.String,
-  /** The type's singular name (`Document`). */
-  type: Schema.String,
-  icon: Schema.optional(Schema.String),
-  hue: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-});
-export interface PreviewObject extends Schema.Schema.Type<typeof PreviewObject> {}
-
-export const Preview = Schema.Struct({
-  description: Schema.optional(Schema.String),
-  /** Phosphor icon id of the space. */
-  icon: Schema.optional(Schema.String),
-  hue: Schema.optional(Schema.String),
-  /** Most numerous first. */
-  types: Schema.Array(PreviewType),
-  /** Titled objects, by object id. */
-  objects: Schema.Record(Schema.String, PreviewObject),
-});
-export interface Preview extends Schema.Schema.Type<typeof Preview> {}
-
-export const Manifest = Schema.Struct({
-  version: Schema.Literal(1),
-  name: Schema.optional(Schema.String),
-  publishedAt: Schema.String,
-  /** NSIDs the space enables (`space.properties.plugins`); recorded, never enabled automatically. */
-  plugins: Schema.Array(Schema.String),
-  /** Ids of every object in the bake. */
-  objects: Schema.Array(Schema.String),
-  preview: Schema.optional(Preview),
-});
-export interface Manifest extends Schema.Schema.Type<typeof Manifest> {}
+export * from './PublicationManifest.ts';
 
 export const Receipt = Schema.Struct({
   publicId: Schema.String,
@@ -65,17 +24,6 @@ export const ReceiptAnnotation = Annotation.make({
   id: 'org.dxos.space.publication',
   schema: Schema.NullOr(Receipt),
 });
-
-export const FORK_PARAM = 'fork';
-
-/** Query param carrying the object path (`db/<typeSlug>+<objectId>`) to open after a fork. */
-export const PATH_PARAM = 'path';
-
-export const VIEWER_PARAM = 'p';
-
-export const PUBLICATIONS_PATH = '/publications';
-
-export const EDGE_PUBLICATIONS_PATH = '/db/publications';
 
 export const archiveUrl = (publicationsUrl: string, publicId: string): URL =>
   new URL(`${encodeURIComponent(publicId)}/archive.json`, withTrailingSlash(publicationsUrl));

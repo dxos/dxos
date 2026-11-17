@@ -2,11 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-/** Where the viewer host serves a publication's public files. */
-export const PUBLICATIONS_PATH = '/publications';
+import { EDGE_PUBLICATIONS_PATH, PUBLICATIONS_PATH } from '@dxos/plugin-space/PublicationManifest';
 
-/** Where EDGE serves the same files. */
-export const EDGE_PUBLICATIONS_PATH = '/db/publications';
+export { PUBLICATIONS_PATH };
 
 /** EDGE's URL for a path the viewer host serves under {@link PUBLICATIONS_PATH}. */
 export const edgePublicationUrl = (pathname: string, edgeUrl: string): URL =>

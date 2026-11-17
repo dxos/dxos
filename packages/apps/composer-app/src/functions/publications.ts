@@ -2,10 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+
+import * as PublicationManifest from '@dxos/plugin-space/PublicationManifest';
+
 import { PUBLICATIONS_PATH, edgePublicationUrl } from '../util/publication-paths.ts';
 import { type Card } from './preview-image/index.ts';
-
-const VIEWER_PARAM = 'p';
 
 const PUBLIC_FILES = new Set(['archive.json', 'manifest.json']);
 
@@ -101,7 +104,7 @@ export const previewImageUrl = (origin: string, publicId: string, objectId?: str
 };
 
 export const publicIdOf = (url: URL): string | undefined => {
-  const kept = url.searchParams.get(VIEWER_PARAM) ?? undefined;
+  const kept = url.searchParams.get(PublicationManifest.VIEWER_PARAM) ?? undefined;
   const [first] = url.pathname.split('/').filter(Boolean);
   const publicId = kept ?? first;
   return isPublicId(publicId) && publicId !== 'w' ? publicId : undefined;
@@ -117,15 +120,9 @@ export const objectIdOf = (url: URL): string | undefined =>
     .map((segment) => segment.split(TAIL_SEPARATOR).at(-1) ?? '')
     .find((id) => ENTITY_ID.test(id));
 
-export type Manifest = { name?: string; preview?: ManifestPreview };
+export type Manifest = PublicationManifest.Manifest;
 
-type ManifestPreview = {
-  description?: string;
-  icon?: string;
-  hue?: string;
-  types: { label: string; icon?: string; hue?: string; count: number }[];
-  objects: Record<string, { title: string; type?: string; icon?: string; hue?: string; description?: string }>;
-};
+const decodeManifest = Schema.decodeUnknownOption(PublicationManifest.Manifest);
 
 export const readManifest = async (edgeUrl: string, publicId: string): Promise<Manifest | undefined> => {
   try {
@@ -133,7 +130,7 @@ export const readManifest = async (edgeUrl: string, publicId: string): Promise<M
       signal: AbortSignal.timeout(MANIFEST_TIMEOUT_MS),
       cf: { cacheEverything: true, cacheTtl: MAX_AGE_SECONDS },
     });
-    return response.ok ? parseManifest(await response.json()) : undefined;
+    return response.ok ? Option.getOrUndefined(decodeManifest(await response.json())) : undefined;
   } catch {
     return undefined;
   }
@@ -146,55 +143,6 @@ export const cardOf = ({ name, preview }: Manifest, objectId?: string): Card => 
     ? { kind: 'object', ...object, space }
     : { kind: 'space', ...space, description: preview?.description, types: preview?.types ?? [] };
 };
-
-const MAX_TYPES = 24;
-
-const parseManifest = (value: unknown): Manifest => {
-  const manifest = record(value);
-  const preview = manifest.preview === undefined ? undefined : record(manifest.preview);
-  return {
-    name: text(manifest.name),
-    preview: preview && {
-      description: text(preview.description),
-      icon: text(preview.icon),
-      hue: text(preview.hue),
-      types: (Array.isArray(preview.types) ? preview.types.slice(0, MAX_TYPES) : []).flatMap((value) => {
-        const type = record(value);
-        const label = text(type.label);
-        const count = typeof type.count === 'number' && Number.isFinite(type.count) ? type.count : undefined;
-        return label && count && count > 0 ? [{ label, icon: text(type.icon), hue: text(type.hue), count }] : [];
-      }),
-      objects: Object.fromEntries(
-        Object.entries(record(preview.objects)).flatMap(([id, value]) => {
-          const object = record(value);
-          const title = text(object.title);
-          return title
-            ? [
-                [
-                  id,
-                  {
-                    title,
-                    type: text(object.type),
-                    icon: text(object.icon),
-                    hue: text(object.hue),
-                    description: text(object.description),
-                  },
-                ],
-              ]
-            : [];
-        }),
-      ),
-    },
-  };
-};
-
-const record = (value: unknown): Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : {};
-
-const MAX_TEXT_LENGTH = 400;
-
-const text = (value: unknown): string | undefined =>
-  typeof value === 'string' && value.trim() ? value.trim().slice(0, MAX_TEXT_LENGTH) : undefined;
 
 const publicationFileUrl = (edgeUrl: string, publicId: string, file: string): URL =>
   edgePublicationUrl(`${PUBLICATIONS_PATH}/${publicId}/${file}`, edgeUrl);

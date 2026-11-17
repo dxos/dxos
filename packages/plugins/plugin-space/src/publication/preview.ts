@@ -12,8 +12,7 @@ const LOCALE = 'en-US';
 
 const MAX_OBJECTS = 1_000;
 
-const MAX_TITLE_LENGTH = 120;
-const MAX_DESCRIPTION_LENGTH = 280;
+const { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH, MAX_TITLE_LENGTH, MAX_TYPES } = Publication;
 
 export type PreviewSource = {
   properties: { description?: string; icon?: string; iconHue?: string; hue?: string };
@@ -38,7 +37,7 @@ export const buildPreview = ({ properties, objects, resources }: PreviewSource):
     const title = clip(Obj.getLabel(object), MAX_TITLE_LENGTH);
     if (title && Object.keys(previews).length < MAX_OBJECTS) {
       const description = clip(Obj.getDescription(object), MAX_DESCRIPTION_LENGTH);
-      previews[object.id] = { title, type, icon, hue, ...(description ? { description } : {}) };
+      previews[object.id] = { title, type: clip(type, MAX_NAME_LENGTH) ?? type, icon, hue, ...(description ? { description } : {}) };
     }
   }
 
@@ -48,7 +47,11 @@ export const buildPreview = ({ properties, objects, resources }: PreviewSource):
     hue: properties.iconHue ?? properties.hue,
     types: [...types.values()]
       .sort((a, b) => b.count - a.count)
-      .map((type) => ({ ...type, label: typeLabel(resources, type.typename, type.count) ?? type.typename })),
+      .slice(0, MAX_TYPES)
+      .map((type) => ({
+        ...type,
+        label: clip(typeLabel(resources, type.typename, type.count), MAX_NAME_LENGTH) ?? type.typename,
+      })),
     objects: previews,
   };
 };

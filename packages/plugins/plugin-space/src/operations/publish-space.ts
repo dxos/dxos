@@ -43,7 +43,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.PublishSpace> = Space
       });
       const manifest: Publication.Manifest = {
         version: 1,
-        name: space.properties.name,
+        name: space.properties.name?.slice(0, Publication.MAX_NAME_LENGTH),
         publishedAt: new Date().toISOString(),
         plugins: Object.keys((space.properties as { plugins?: Record<string, string> }).plugins ?? {}),
         objects,
