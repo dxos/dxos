@@ -146,9 +146,9 @@ export const DriveCloudRuns = Operation.make({
     runs: Schema.Array(
       Schema.Struct({
         chat: Ref.Ref(Chat.Chat),
-        step: Schema.Literals(['running', 'idle', 'merged', 'fix', 'land', 'failed']).annotate({
+        step: Schema.Literals(['running', 'idle', 'merged', 'fix', 'land', 'failed', 'deferred']).annotate({
           description:
-            'running: the turn is still going; idle: nothing to do yet; merged: every pull request merged; fix or land: the follow-up sent; failed: the step threw, see the log.',
+            'running: the turn is still going; idle: nothing to do yet; merged: every pull request merged; fix or land: the follow-up sent; failed: the step threw, see the log; deferred: the time budget ran out first, so the run goes first next time.',
         }),
       }),
     ),
