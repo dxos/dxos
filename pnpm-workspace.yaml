@@ -564,6 +564,7 @@ catalog:
   picomatch: ^2.3.0
   pify: ~5.0.0
   pitchy: ^4.1.0
+  pkg-pr-new: 0.0.93
   pkg-up: ^3.1.0
   platform: ^1.3.6
   playwright: 1.63.0
@@ -825,6 +826,7 @@ patchedDependencies:
   dfx@1.0.15: patches/dfx@1.0.15.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   memory-pager@1.5.0: patches/memory-pager@1.5.0.patch
+  pkg-pr-new@0.0.93: patches/pkg-pr-new@0.0.93.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
   vitest@4.1.10: patches/vitest@4.1.10.patch

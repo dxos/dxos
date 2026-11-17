@@ -620,6 +620,81 @@ export const Folding: Story = {
   },
 };
 
+const SeparatorsStory = () => {
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action('snap', { label: 'Snap', icon: 'ph--magnet--regular', placement: { collapse: 1 } }, () => {})
+        .separator('line')
+        .action('axes', { label: 'Axes', icon: 'ph--vector-two--regular', placement: { collapse: 1 } }, () => {})
+        .separator('line')
+        .custom('zoom', { label: 'Zoom' }, () => <Toolbar.Text classNames='flex-none'>Zoom</Toolbar.Text>)
+        .separator('line')
+        .action('grid', { label: 'Grid', icon: 'ph--grid-four--regular', placement: { collapse: 1 } }, () => {})
+        .separator('gap')
+        .action('guides', { label: 'Guides', icon: 'ph--squares-four--regular', placement: { collapse: 1 } }, () => {})
+        .separator('line')
+        .custom('theme', { label: 'Theme' }, () => <Toolbar.Text classNames='flex-none'>Theme</Toolbar.Text>)
+        .build(),
+    [],
+  );
+  return (
+    <div className='p-8 w-[8rem]'>
+      <ActionToolbar {...menu} alwaysActive data-testid='separators' />
+    </div>
+  );
+};
+
+/**
+ * Collapsing the items between rules leaves none of them: a rule stays only between two items, and of the rules left
+ * between two, the gap. The ⋮ menu lists them in the row's order, ruled where the row is.
+ */
+export const Separators: Story = {
+  render: () => <SeparatorsStory />,
+  play: async ({ canvasElement }) => {
+    const row = within(canvasElement).getByTestId('separators');
+    await waitFor(() => expect(labels(canvasElement)).toEqual(['More']));
+    await expect(row.querySelector('[data-scope=separator]')).toBeNull();
+    await expect(row.querySelectorAll('[data-part=gap]')).toHaveLength(1);
+    await userEvent.click(within(row).getByTestId('toolbar.overflow'));
+    const menu = await within(document.body).findByRole('menu');
+    const entries = Array.from(menu.querySelectorAll('[role=menuitem], [role=separator]')).map((entry) =>
+      entry.getAttribute('role') === 'separator' ? '|' : entry.textContent?.trim(),
+    );
+    await expect(entries).toEqual(['Snap', '|', 'Axes', '|', 'Grid', '|', 'Guides']);
+  },
+};
+
+const OverflowOrderStory = () => {
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .custom('zoom', { label: 'Zoom' }, () => <Toolbar.Text classNames='flex-none'>Zoom</Toolbar.Text>)
+        .action('a', { label: 'A', icon: 'ph--circle--regular', placement: { collapse: 1 } }, () => {})
+        .action('b', { label: 'B', icon: 'ph--square--regular', placement: { collapse: 1, order: 0.5 } }, () => {})
+        .build(),
+    [],
+  );
+  return (
+    <div className='p-8 w-[8rem]'>
+      <ActionToolbar {...menu} alwaysActive data-testid='overflow-order' />
+    </div>
+  );
+};
+
+/** The ⋮ menu keeps the row's order when an item that stays in the row sets the others' fallback order. */
+export const OverflowOrder: Story = {
+  render: () => <OverflowOrderStory />,
+  play: async ({ canvasElement }) => {
+    const row = within(canvasElement).getByTestId('overflow-order');
+    await waitFor(() => expect(labels(canvasElement)).toEqual(['More']));
+    await userEvent.click(within(row).getByTestId('toolbar.overflow'));
+    const menu = await within(document.body).findByRole('menu');
+    const entries = Array.from(menu.querySelectorAll('[role=menuitem]')).map((entry) => entry.textContent?.trim());
+    await expect(entries).toEqual(['B', 'A']);
+  },
+};
+
 /** The same graph rendered as a menu: named groups are submenus. */
 export const AsMenu: Story = {
   render: () => <LayoutStory contributors={['review']} asMenu />,

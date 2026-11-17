@@ -511,6 +511,9 @@
       "path": "packages/plugins/plugin-file-system/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-finance/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-freeq/tsconfig.json"
     },
     {

@@ -73,6 +73,9 @@ comment, and anchors on every chat.
      so the Chats section (which skips parented chats) never lists it, binds the subject with
      `BindChatContext`, and runs `RunPromptInChat` with a synthetic prompt naming the object and the
      anchored text (`AppCapabilities.AnchorResolver`).
+   - The turn writes trajectory events on its own branch of the feed, which comment readers skip, so
+     the runner returns the turn's final reply text and `RespondToThread` posts it as a `Message` in
+     the agent's name.
    - plugin-review's own runner, its Markdown prompt and its two text-edit tools are deleted.
 
 ## Stage 2 — one root feed per subject

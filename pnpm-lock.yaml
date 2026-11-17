@@ -1320,6 +1320,9 @@ catalogs:
     pitchy:
       specifier: ^4.1.0
       version: 4.1.0
+    pkg-pr-new:
+      specifier: 0.0.93
+      version: 0.0.93
     pkg-up:
       specifier: ^3.1.0
       version: 3.1.0
@@ -1823,6 +1826,9 @@ patchedDependencies:
   memory-pager@1.5.0:
     hash: 21c9214e21930a792429b9613bd1e4ee15578beeb2e326e626477e01da37f248
     path: patches/memory-pager@1.5.0.patch
+  pkg-pr-new@0.0.93:
+    hash: f97eec76c99b175c3eaf6c71bd0f952d134b2ea2729c1a2724f4bdf4f15eedf1
+    path: patches/pkg-pr-new@0.0.93.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -2123,6 +2129,9 @@ importers:
       oxlint-tsgolint:
         specifier: 'catalog:'
         version: 7.0.2001
+      pkg-pr-new:
+        specifier: 'catalog:'
+        version: 0.0.93(patch_hash=f97eec76c99b175c3eaf6c71bd0f952d134b2ea2729c1a2724f4bdf4f15eedf1)
       pkg-up:
         specifier: 'catalog:'
         version: 3.1.0
@@ -10030,6 +10039,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
@@ -12518,6 +12530,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.3.0
         version: 19.3.0(@types/react@19.3.0)
+      fast-xml-parser:
+        specifier: '>=5.3.6'
+        version: 5.7.1
       react:
         specifier: ~19.3.1
         version: 19.3.1
@@ -13070,6 +13085,55 @@ importers:
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+
+  packages/plugins/plugin-finance:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-rdf
+      '@dxos/plugin-magazine':
+        specifier: workspace:*
+        version: link:../plugin-magazine
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      fast-xml-parser:
+        specifier: '>=5.3.6'
+        version: 5.7.1
+    devDependencies:
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
 
   packages/plugins/plugin-freeq:
     dependencies:
@@ -23102,12 +23166,21 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
+      '@dxos/plugin-brain':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-brain
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-presenter':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-presenter
+      '@dxos/plugin-sheet':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-sheet
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
@@ -24540,6 +24613,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -24987,6 +25063,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../react-ui-menu
       '@dxos/scene':
         specifier: workspace:*
         version: link:../../common/scene
@@ -24996,6 +25075,9 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
+      react-resize-detector:
+        specifier: 'catalog:'
+        version: 11.0.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
     devDependencies:
       '@babylonjs/core':
         specifier: 'catalog:'
@@ -26779,6 +26861,9 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
+      '@tanstack/react-virtual':
+        specifier: 'catalog:'
+        version: 3.14.9(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -41124,8 +41209,8 @@ packages:
   fflate@0.6.10:
     resolution: {integrity: sha512-IQrh3lEPM93wVCEczc9SaAOvkmcoQn/G8Bo1e8ZPlY3X3bnAxWaBdvTdvM1hP62iZp0BXWDy4vTAy4fF0+Dlpg==}
 
-  fflate@0.7.3:
-    resolution: {integrity: sha512-0Zz1jOzJWERhyhsimS54VTqOteCNwRtIlh8isdL0AXLo0g7xNTfTL7oWrkmCnPhZGocKIkWHBistBrrpoNH3aw==}
+  fflate@0.7.5:
+    resolution: {integrity: sha512-QieYf//cis6ywHNi5qW1+PXPQ4bC+XVJAtS4AXIML8P76GroEiOxm/oQtn1f02UkJY1+KsXMJcC+R2v/Eg4G3g==}
 
   fflate@0.8.2:
     resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
@@ -44823,6 +44908,10 @@ packages:
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
+
+  pkg-pr-new@0.0.93:
+    resolution: {integrity: sha512-JH3HEO+m8sNFpalNAeGrNKjdwxNcXT3yuEuGMU/65dvLojPo+Ofnmc8la2v2ceisjXTOKQw/738Pj4KNFY7F+w==}
+    hasBin: true
 
   pkg-types@1.3.1:
     resolution: {integrity: sha512-/Jm5M4RvtBFVkKWRu2BLUTNP8/M2a+UwuAX+ae4770q1qVGtfjG+WTCupoZixokjmHiry8uI+dlY8KXYV5HVVQ==}
@@ -58446,7 +58535,7 @@ snapshots:
 
   '@shuding/opentype.js@1.4.0-beta.0':
     dependencies:
-      fflate: 0.7.3
+      fflate: 0.7.5
       string.prototype.codepointat: 0.2.1
 
   '@sideway/address@4.1.5':
@@ -64686,7 +64775,7 @@ snapshots:
 
   fflate@0.6.10: {}
 
-  fflate@0.7.3: {}
+  fflate@0.7.5: {}
 
   fflate@0.8.2: {}
 
@@ -69261,6 +69350,8 @@ snapshots:
   pkg-dir@4.2.0:
     dependencies:
       find-up: 4.1.0
+
+  pkg-pr-new@0.0.93(patch_hash=f97eec76c99b175c3eaf6c71bd0f952d134b2ea2729c1a2724f4bdf4f15eedf1): {}
 
   pkg-types@1.3.1:
     dependencies:
