@@ -4950,6 +4950,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../compute-runtime
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -6163,6 +6166,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../compute-runtime
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -23311,9 +23317,6 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
-      '@dxos/plugin-brain':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-brain
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer
@@ -23341,6 +23344,9 @@ importers:
       '@dxos/react-ui-chat':
         specifier: workspace:*
         version: link:../../ui/react-ui-chat
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -23380,6 +23386,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -23417,6 +23426,9 @@ importers:
       '@dxos/plugin-board':
         specifier: workspace:*
         version: link:../../plugins/plugin-board
+      '@dxos/plugin-brain':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-brain
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
@@ -23435,6 +23447,9 @@ importers:
       '@dxos/plugin-debug':
         specifier: workspace:*
         version: link:../../plugins/plugin-debug
+      '@dxos/plugin-dev-shell':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-dev-shell
       '@dxos/plugin-game':
         specifier: workspace:*
         version: link:../../plugins/plugin-game
@@ -28563,6 +28578,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../packages/common/log
+      '@dxos/plugin-dev-shell':
+        specifier: workspace:*
+        version: link:../../packages/plugins/plugin-dev-shell
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui
