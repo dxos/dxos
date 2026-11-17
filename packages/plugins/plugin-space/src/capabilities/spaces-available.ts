@@ -52,6 +52,7 @@ import {
   parseViewingMessage,
   prunePeerSessions,
 } from '../util/presence.ts';
+import { makeRestartable } from '../util/restartable.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
 const DEVICE_KINDS: Record<DeviceType, SpaceSchema.SessionDevice['kind']> = {
@@ -278,11 +279,8 @@ export default Capability.makeModule(
     };
 
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
-    let broadcastCleanup: (() => void) | undefined;
     let previousActive: readonly string[] = [];
     const setupBroadcast = () => {
-      broadcastCleanup?.();
-
       const layout = registry.get(layoutAtom);
       const current = attention.getCurrent();
       const active = layout.active;
@@ -402,32 +400,37 @@ export default Capability.makeModule(
         }
       });
 
-      broadcastCleanup = () => {
+      return () => {
         clearInterval(interval);
         sends.dispose();
         locationSubscriptions.forEach((unsubscribe) => unsubscribe());
         unsubscribeViewState();
       };
     };
+    // A send reads atoms whose first build notifies the subscriptions below, which set the broadcast up again.
+    const broadcast = makeRestartable(setupBroadcast);
 
     // Subscribe to layout changes for broadcast.
-    subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
+    subscriptions.add(registry.subscribe(layoutAtom, broadcast.restart));
     // Subscribe to attention.current changes.
-    subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
+    subscriptions.add(attention.subscribeCurrent(broadcast.restart));
     // Starting, retargeting or stopping a follow tells the space at once, so the leader's rate changes with it.
     let previousFollowing = registry.get(ephemeralAtom).following;
     subscriptions.add(
       registry.subscribe(ephemeralAtom, ({ following }) => {
         if (!isSameFollowTarget(following, previousFollowing)) {
           previousFollowing = following;
-          setupBroadcast();
+          broadcast.restart();
         }
       }),
     );
     // Initial setup.
-    setupBroadcast();
+    broadcast.restart();
     // Cleanup.
-    subscriptions.add(() => broadcastCleanup?.());
+    subscriptions.add(broadcast.dispose);
+
+    // Sessions heard from in each space; a new one hears this session's view at once, not at the next heartbeat.
+    const heard = new Set<string>();
 
     // Listen for active nodes from other peers in the space.
     const viewingSub = client.spaces.subscribe((spaces) => {
@@ -444,15 +447,18 @@ export default Capability.makeModule(
               const peer = identityKey.toHex();
               const lastSeen = Date.now();
               const follower = `${space.id}/${peer}/${viewing.sessionId ?? peer}`;
+              const isNewSession = !heard.has(follower);
+              heard.add(follower);
+              // A new follower needs the location now, not at the next move or heartbeat.
+              let isNewFollower = false;
               if (isFollowTargetOf(viewing.following, currentIdentity?.identityKey ?? '', sessionId)) {
-                // A new follower needs the location now, not at the next move or heartbeat.
-                const isNew = !followers.has(follower);
+                isNewFollower = !followers.has(follower);
                 followers.set(follower, lastSeen);
-                if (isNew) {
-                  setupBroadcast();
-                }
               } else {
                 followers.delete(follower);
+              }
+              if (isNewSession || isNewFollower) {
+                broadcast.restart();
               }
               syncFollowedSpaces(lastSeen);
               registry.update(ephemeralAtom, (ephemeral) => {

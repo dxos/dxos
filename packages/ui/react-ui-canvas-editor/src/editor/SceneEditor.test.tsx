@@ -5,7 +5,7 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React, { useEffect } from 'react';
+import React, { type ReactNode, useEffect } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { type ConstrainContext, type ViewportProps } from '@dxos/react-ui-canvas';
@@ -71,6 +71,7 @@ const Editor = ({
   onDisplayChange,
   onCameraChange = () => {},
   refitKey,
+  overlay,
   commands,
 }: {
   commands?: DimensionConfig<TestCamera>['commands'];
@@ -80,6 +81,7 @@ const Editor = ({
   onDisplayChange?: (display: Partial<EditorDisplay>) => void;
   onCameraChange?: (camera: { zoom: number }) => void;
   refitKey?: string | number;
+  overlay?: ReactNode;
 }) => (
   <SceneEditor.Root
     config={{ ...config(dim), commands }}
@@ -95,6 +97,7 @@ const Editor = ({
     onCameraChange={onCameraChange}
     refitKey={refitKey}
     onReadonlyChange={() => {}}
+    overlay={overlay}
   >
     <SceneEditor.Viewport>
       <SceneEditor.Navigation />
@@ -129,6 +132,14 @@ describe('SceneEditor', () => {
     expect(screen.getByTestId('viewport').dataset.grid).toBe('false');
     for (const id of ['canvas-toolbar', 'palette', 'scene-action-undo', 'canvas-debug', 'theme-trigger', 'scene-bar']) {
       expect(screen.queryByTestId(id)).toBeNull();
+    }
+  });
+
+  test('the overlay is drawn in the viewport in every role', () => {
+    for (const role of ['article', 'card', 'section', 'slide']) {
+      render(<Editor dim='2d' role={role} overlay={<div data-testid='overlay' />} />);
+      expect(screen.getByTestId('viewport').contains(screen.getByTestId('overlay'))).toBe(true);
+      cleanup();
     }
   });
 

@@ -1040,6 +1040,7 @@
     container-type: normal;
   }
   .dx-toolbar > .dx-control:not([data-square]),
+  .dx-toolbar > .dx-combobox > .dx-control:not([data-square]),
   .dx-toolbar > .dx-select > .dx-control,
   .dx-toolbar > .dx-tabs-list {
     margin-inline: var(--dx-control-inset);
