@@ -21,13 +21,14 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { clearIndexedDB, clearOPFS } from '@dxos/util';
 
+import { initAutomergeWasm } from './automerge-wasm.ts';
 import { showBootShell } from './boot-shell/index.ts';
 import { initializeObservability } from './observability.ts';
 import { getPlugins } from './plugins.ts';
 import { dismissShell } from './shared/index.ts';
 
 const createDedicatedWorker = () =>
-  new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), { type: 'module', name: 'dxos-client-worker' });
+  new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), { type: 'module', name: 'dxos-client-worker' });
 
 // A SharedWorker elects one tab's dedicated worker as the OPFS owner, so a second tab proxies instead of locking out.
 const createCoordinatorWorker = () =>
@@ -79,6 +80,7 @@ const main = Effect.gen(function* () {
     yield* Effect.promise(wipeStorage);
   }
   showBootShell();
+  yield* Effect.promise(initAutomergeWasm);
   const config = new Config(
     {
       runtime: {
