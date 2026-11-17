@@ -2,9 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type CompletionContext, type CompletionResult, autocompletion } from '@codemirror/autocomplete';
-import { EditorState, type Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import {
+  type CompletionContext,
+  type CompletionResult,
+  autocompletion,
+  completionStatus,
+  currentCompletions,
+  moveCompletionSelection,
+  selectedCompletionIndex,
+} from '@codemirror/autocomplete';
+import { EditorState, type Extension, Prec } from '@codemirror/state';
+import { EditorView, keymap } from '@codemirror/view';
 
 import { type LayoutName, frontmatterCompletion, layoutOptions } from '#markdown';
 
@@ -22,6 +30,28 @@ const slideCompletionTheme = EditorView.baseTheme({
     color: 'var(--color-fg-subtle)',
   },
 });
+
+/**
+ * Arrowing past an end of the list stays there rather than wrapping to the other end, as the default keymap does:
+ * the list is short and ordered, so wrapping reads as the selection jumping rather than as having run out. Taking
+ * the key (returning true) rather than declining it keeps the caret out of it, which an unhandled arrow would move.
+ */
+const stopAtEnds = Prec.highest(
+  keymap.of(
+    (['ArrowDown', 'ArrowUp'] as const).map((key) => ({
+      key,
+      run: (view: EditorView) => {
+        if (completionStatus(view.state) !== 'active') {
+          return false;
+        }
+        const index = selectedCompletionIndex(view.state);
+        const forward = key === 'ArrowDown';
+        const atEnd = index === null || (forward ? index >= currentCompletions(view.state).length - 1 : index <= 0);
+        return atEnd ? index !== null : moveCompletionSelection(forward)(view);
+      },
+    })),
+  ),
+);
 
 /**
  * Completes a slide's frontmatter: the keys it takes while one is being typed, and the values of a key whose
@@ -55,6 +85,9 @@ export const slideCompletion = ({ describeLayout }: SlideCompletionOptions): Ext
     // A language-data source composes with any other completion source rather than replacing it. The completion plugin
     // matches results to sources by identity, so the provider must return the same function every time.
     EditorState.languageData.of(() => [{ autocomplete: source }]),
+    // Before `autocompletion`, which registers its own keymap at the same (highest) precedence: at equal precedence
+    // the handler registered first is asked first, so this one has to come before it to see the arrow at all.
+    stopAtEnds,
     autocompletion({ icons: false }),
     // Two columns: the value at a fixed width (the longest layout name), then its display name.
     slideCompletionTheme,

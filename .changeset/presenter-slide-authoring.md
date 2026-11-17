@@ -12,4 +12,6 @@ The slide editor completes frontmatter keys, not just `layout:` values. Typing o
 
 The slide editor's toolbar carries the deck's own actions: the gallery the slide came from, and a button that adds a slide after it. Adding a slide was the gallery article's alone, as an inlined plus beside a layout caret; it is now one `AddSlideButton` both toolbars use, a joined run (`Button.Group compact`) whose caret is half a control wide so the pair reads as one control rather than two buttons.
 
+The completion list stops at its ends rather than wrapping. The list is short and ordered, so coming round again reads as the selection jumping rather than as having run out. The keymap has to sit before `autocompletion`, which registers its own at the same (highest) precedence: at equal precedence the handler registered first is asked first.
+
 `SlideGrid` is `SlideGallery`, since it is the panel of slide thumbnails rather than anything to do with the `<Grid>` tag or the `slide-grid` element that tag renders, both of which keep their names.
