@@ -28,6 +28,7 @@ const ROWS_PER_STATEMENT: usize = 40;
 const SCHEMA: &str = r#"
 CREATE TABLE IF NOT EXISTS blocks (
   insertionId INTEGER PRIMARY KEY,
+  spaceId TEXT NOT NULL,
   namespace TEXT NOT NULL,
   feedId TEXT NOT NULL,
   actorId TEXT NOT NULL,
@@ -40,8 +41,10 @@ CREATE TABLE IF NOT EXISTS blocks (
   UNIQUE (feedId, actorId, sequence)
 );
 CREATE INDEX IF NOT EXISTS blocks_feed ON blocks (feedId, sequence);
-CREATE INDEX IF NOT EXISTS blocks_position ON blocks (namespace, position);
-CREATE TABLE IF NOT EXISTS sync_state (namespace TEXT PRIMARY KEY, lastPulled INTEGER NOT NULL, serverToken TEXT);
+CREATE INDEX IF NOT EXISTS blocks_feed_insertion ON blocks (feedId, insertionId);
+CREATE INDEX IF NOT EXISTS blocks_position ON blocks (spaceId, namespace, position);
+CREATE TABLE IF NOT EXISTS sync_state (spaceId TEXT NOT NULL, namespace TEXT NOT NULL, lastPulled INTEGER NOT NULL, serverToken TEXT, PRIMARY KEY (spaceId, namespace));
+CREATE TABLE IF NOT EXISTS feeds (spaceId TEXT NOT NULL, feedId TEXT NOT NULL, namespace TEXT NOT NULL, options TEXT, PRIMARY KEY (spaceId, feedId));
 CREATE TABLE IF NOT EXISTS objectMeta (
   recordId INTEGER PRIMARY KEY,
   objectId TEXT NOT NULL,
@@ -87,6 +90,7 @@ CREATE INDEX IF NOT EXISTS idx_reverse_ref_record ON reverseRef (recordId);
 CREATE TABLE IF NOT EXISTS echo_sqlite_redirects (spaceId TEXT NOT NULL, fromId TEXT NOT NULL, toId TEXT NOT NULL, PRIMARY KEY (spaceId, fromId));
 CREATE TABLE IF NOT EXISTS echo_sqlite_changes (spaceId TEXT NOT NULL, objectId TEXT NOT NULL, hash TEXT NOT NULL, actor TEXT NOT NULL, seq INTEGER NOT NULL, time INTEGER NOT NULL, ops INTEGER NOT NULL, PRIMARY KEY (spaceId, objectId, hash));
 CREATE INDEX IF NOT EXISTS echo_sqlite_changes_time ON echo_sqlite_changes (spaceId, time);
+CREATE INDEX IF NOT EXISTS idx_object_index_queueInsertionId ON objectMeta (spaceId, queueId, queueInsertionId);
 "#;
 
 /// What every connection to one file shares: the database, and the counters rows are numbered by.
@@ -94,6 +98,8 @@ pub struct FileState {
     pub database: Arc<Database>,
     next_record_id: i64,
     next_version: i64,
+    /// The next position to assign per `(space, namespace)`, for a file that positions its own blocks.
+    next_position: HashMap<(String, String), i64>,
 }
 
 pub type SharedFile = Rc<RefCell<FileState>>;
@@ -120,6 +126,7 @@ impl FileState {
             database,
             next_record_id: max_record + 1,
             next_version: max_version + 1,
+            next_position: HashMap::new(),
         })))
     }
 }
@@ -175,6 +182,12 @@ pub struct Engine {
     logged: HashMap<String, Vec<ChangeHash>>,
     /// Documents written or pulled whose changes are not logged yet.
     unlogged: HashSet<String>,
+    /// Whether this file positions its own blocks, as the authority of a space no server syncs.
+    assign_positions: bool,
+    /// The typename of Feed objects, whose options the index pass applies to their feeds.
+    feed_typename: String,
+    /// Each feed's stored options (`None` when it has none), as last read or written.
+    feed_options: HashMap<String, Option<feeds::FeedOptions>>,
 }
 
 /// One change of a document, as `echo_sqlite_changes` logs it for change queries.
@@ -215,8 +228,16 @@ fn heads_json(heads: &[ChangeHash]) -> String {
     Json::Array(list).to_string()
 }
 
+mod feeds;
+
 impl Engine {
-    pub fn open(file: SharedFile, space_id: String, actor_id: String) -> SqlResult<Engine> {
+    pub fn open(
+        file: SharedFile,
+        space_id: String,
+        actor_id: String,
+        assign_positions: bool,
+        feed_typename: String,
+    ) -> SqlResult<Engine> {
         let conn = file
             .borrow()
             .database
@@ -233,6 +254,9 @@ impl Engine {
             record_ids: HashMap::new(),
             logged: HashMap::new(),
             unlogged: HashSet::new(),
+            assign_positions,
+            feed_typename,
+            feed_options: HashMap::new(),
         })
     }
 
@@ -260,6 +284,8 @@ impl Engine {
                 self.docs.clear();
                 self.heads.clear();
                 self.record_ids.clear();
+                self.feed_options.clear();
+                self.file.borrow_mut().next_position.clear();
                 Err(error)
             }
         }
@@ -275,10 +301,11 @@ impl Engine {
             .collect();
         for chunk in missing.chunks(ROWS_PER_STATEMENT) {
             let sql = format!(
-                "SELECT feedId, actorId, sequence, data FROM blocks WHERE feedId IN ({}) ORDER BY insertionId",
+                "SELECT feedId, actorId, sequence, data FROM blocks WHERE spaceId = ? AND feedId IN ({}) ORDER BY insertionId",
                 vec!["?"; chunk.len()].join(", ")
             );
-            let params: Vec<Param> = chunk.iter().map(|id| Param::Text(feed_of(id))).collect();
+            let mut params = vec![Param::Text(self.space_id.clone())];
+            params.extend(chunk.iter().map(|id| Param::Text(feed_of(id))));
             let mut chunks: HashMap<String, Vec<u8>> = HashMap::new();
             let mut heads: HashMap<String, (i64, String)> = HashMap::new();
             self.db.query(&sql, &params, |row| {
@@ -322,12 +349,15 @@ impl Engine {
     }
 
     /// Inserts blocks, moving their payloads into the bound parameters rather than copying them.
+    /// Returns the insertion id of each block inserted or (with `adopt_positions`) updated, by its
+    /// `(feedId, actorId, sequence)`.
     fn insert_blocks(
         &mut self,
         namespace: &str,
         mut blocks: Vec<BlockRow>,
         adopt_positions: bool,
-    ) -> SqlResult<()> {
+    ) -> SqlResult<HashMap<(String, String, i64), i64>> {
+        let mut inserted = HashMap::new();
         for chunk in blocks.chunks_mut(ROWS_PER_STATEMENT) {
             let conflict = if adopt_positions {
                 "ON CONFLICT (feedId, actorId, sequence) DO UPDATE SET position = excluded.position"
@@ -335,12 +365,13 @@ impl Engine {
                 "ON CONFLICT (feedId, actorId, sequence) DO NOTHING"
             };
             let sql = format!(
-                "INSERT INTO blocks (namespace, feedId, actorId, sequence, prevActorId, prevSequence, position, timestamp, data) VALUES {} {}",
-                placeholders(chunk.len(), 9),
+                "INSERT INTO blocks (spaceId, namespace, feedId, actorId, sequence, prevActorId, prevSequence, position, timestamp, data) VALUES {} {} RETURNING insertionId, feedId, actorId, sequence",
+                placeholders(chunk.len(), 10),
                 conflict
             );
-            let mut params = Vec::with_capacity(chunk.len() * 9);
+            let mut params = Vec::with_capacity(chunk.len() * 10);
             for block in chunk {
+                params.push(Param::Text(self.space_id.clone()));
                 params.push(Param::from(namespace));
                 params.push(Param::Text(block.feed_id.clone()));
                 params.push(Param::Text(block.actor_id.clone()));
@@ -351,9 +382,45 @@ impl Engine {
                 params.push(Param::Int(block.timestamp));
                 params.push(Param::Blob(std::mem::take(&mut block.data)));
             }
-            self.db.execute_owned(&sql, params)?;
+            self.db.query_owned(&sql, params, |row| {
+                inserted.insert(
+                    (
+                        row[1].text().unwrap_or_default().to_owned(),
+                        row[2].text().unwrap_or_default().to_owned(),
+                        row[3].int().unwrap_or(0),
+                    ),
+                    row[0].int().unwrap_or(0),
+                );
+                Ok(())
+            })?;
         }
-        Ok(())
+        Ok(inserted)
+    }
+
+    /// The position to give a new local block when this file positions its own blocks.
+    fn next_position(&mut self, namespace: &str) -> SqlResult<Option<i64>> {
+        if !self.assign_positions {
+            return Ok(None);
+        }
+        let key = (self.space_id.clone(), namespace.to_owned());
+        let cached = self.file.borrow().next_position.get(&key).copied();
+        let next = match cached {
+            Some(next) => next,
+            None => {
+                let mut max = -1;
+                self.db.query(
+                    "SELECT MAX(position) FROM blocks WHERE spaceId = ? AND namespace = ?",
+                    &[Param::Text(key.0.clone()), Param::Text(key.1.clone())],
+                    |row| {
+                        max = row[0].int().unwrap_or(-1);
+                        Ok(())
+                    },
+                )?;
+                max + 1
+            }
+        };
+        self.file.borrow_mut().next_position.insert(key, next + 1);
+        Ok(Some(next))
     }
 
     /// Writes each object's structure into its document, appends one block per changed document, and
@@ -374,7 +441,17 @@ impl Engine {
         for _ in 0..purged_count {
             purged.push(input.str()?.to_owned());
         }
+        let item_count = input.u32()? as usize;
+        let mut items = Vec::with_capacity(item_count);
+        for _ in 0..item_count {
+            let feed_id = input.str()?.to_owned();
+            let namespace = input.str()?.to_owned();
+            items.push((feed_id, namespace, input.bytes()?.to_vec()));
+        }
         self.in_transaction(|engine| {
+            if !items.is_empty() {
+                engine.append_items(items, now as i64)?;
+            }
             let ids: Vec<String> = writes.iter().map(|(id, _, _)| id.clone()).collect();
             engine.load_docs(&ids)?;
             let mut blocks = Vec::new();
@@ -416,13 +493,14 @@ impl Engine {
                     engine
                         .heads
                         .insert(feed.clone(), (sequence, engine.actor_id.clone()));
+                    let position = engine.next_position(AUTOMERGE_NAMESPACE)?;
                     blocks.push(BlockRow {
                         feed_id: feed,
                         actor_id: engine.actor_id.clone(),
                         sequence,
                         prev_actor_id: previous.as_ref().map(|(_, actor)| actor.clone()),
                         prev_sequence: previous.map(|(seq, _)| seq),
-                        position: None,
+                        position,
                         timestamp: now as i64,
                         data: chunk,
                     });
@@ -557,8 +635,8 @@ impl Engine {
                 }
             }
             self.db.execute(
-                "DELETE FROM blocks WHERE feedId = ?",
-                &[Param::Text(feed_of(id))],
+                "DELETE FROM blocks WHERE spaceId = ? AND feedId = ?",
+                &[Param::Text(self.space_id.clone()), Param::Text(feed_of(id))],
             )?;
             self.docs.remove(id);
             self.heads.remove(&feed_of(id));
@@ -649,6 +727,7 @@ impl Engine {
 
         let mut rows: Vec<Row> = Vec::with_capacity(entries.len());
         let mut indexed = Vec::new();
+        let mut feed_objects: Vec<(String, (String, feeds::FeedOptions))> = Vec::new();
         {
             let mut file = self.file.borrow_mut();
             for (document_id, object_id, structure, heads, updated_at) in entries {
@@ -698,6 +777,11 @@ impl Engine {
                     .unwrap_or(updated_at);
                 let type_dxn =
                     doc::normalize_type_uri(&text("@type").unwrap_or_else(|| "type".to_owned()));
+                if feeds::is_type(&type_dxn, &self.feed_typename)
+                    && json.get("@deleted").and_then(|value| value.as_bool()) != Some(true)
+                {
+                    feed_objects.push((object_id.clone(), feeds::FeedOptions::of(&json)));
+                }
                 rows.push(Row {
                     record_id,
                     parent_id: doc::local_entity_id(parent.as_deref(), &space_id),
@@ -708,7 +792,7 @@ impl Engine {
                             .and_then(|value| value.as_bool())
                             .unwrap_or(false),
                     ),
-                    refs: doc::extract_references(&json),
+                    refs: doc::extract_references(&json, false),
                     snapshot: json.to_string(),
                     object_id: object_id.clone(),
                     document_id,
@@ -815,6 +899,9 @@ impl Engine {
             }
         }
         self.profile.index_sql += micros(sql_start);
+        for (feed_id, (namespace, options)) in feed_objects {
+            self.apply_feed_options(&feed_id, &namespace, options)?;
+        }
         Ok(indexed)
     }
 
@@ -919,8 +1006,8 @@ impl Engine {
     pub fn sync_state(&mut self, namespace: &str, out: &mut Writer) -> SqlResult<()> {
         let mut state: (i64, Option<String>) = (-1, None);
         self.db.query(
-            "SELECT lastPulled, serverToken FROM sync_state WHERE namespace = ?",
-            &[Param::from(namespace)],
+            "SELECT lastPulled, serverToken FROM sync_state WHERE spaceId = ? AND namespace = ?",
+            &[Param::Text(self.space_id.clone()), Param::from(namespace)],
             |row| {
                 state = (row[0].int().unwrap_or(-1), row[1].text().map(str::to_owned));
                 Ok(())
@@ -937,8 +1024,11 @@ impl Engine {
         let token = input.opt_str()?.map(str::to_owned);
         self.in_transaction(|engine| {
             engine.db.execute(
-                "UPDATE blocks SET position = NULL WHERE namespace = ?",
-                &[Param::Text(namespace.clone())],
+                "UPDATE blocks SET position = NULL WHERE spaceId = ? AND namespace = ?",
+                &[
+                    Param::Text(engine.space_id.clone()),
+                    Param::Text(namespace.clone()),
+                ],
             )?;
             engine.set_sync_state(&namespace, -1, token)
         })
@@ -951,8 +1041,8 @@ impl Engine {
         token: Option<String>,
     ) -> SqlResult<()> {
         self.db.execute(
-            "INSERT INTO sync_state (namespace, lastPulled, serverToken) VALUES (?, ?, ?) ON CONFLICT (namespace) DO UPDATE SET lastPulled = excluded.lastPulled, serverToken = excluded.serverToken",
-            &[Param::from(namespace), Param::Int(last_pulled), Param::from(token)],
+            "INSERT INTO sync_state (spaceId, namespace, lastPulled, serverToken) VALUES (?, ?, ?, ?) ON CONFLICT (spaceId, namespace) DO UPDATE SET lastPulled = excluded.lastPulled, serverToken = excluded.serverToken",
+            &[Param::Text(self.space_id.clone()), Param::from(namespace), Param::Int(last_pulled), Param::from(token)],
         )
     }
 
@@ -1018,10 +1108,21 @@ impl Engine {
                 }
             }
             let start = Instant::now();
-            engine.insert_blocks(&namespace, blocks, true)?;
+            let items: Vec<feeds::ItemBlock> = if namespace == AUTOMERGE_NAMESPACE {
+                Vec::new()
+            } else {
+                blocks
+                    .iter()
+                    .map(|block| feeds::ItemBlock::of(block, &namespace))
+                    .collect()
+            };
+            let inserted = engine.insert_blocks(&namespace, blocks, true)?;
             engine.profile.blocks_sql += micros(start);
             engine.set_sync_state(&namespace, last_pulled, token)?;
-            let indexed = engine.index(&updated)?;
+            let mut indexed = engine.index(&updated)?;
+            if !items.is_empty() {
+                indexed.extend(engine.index_pulled_items(items, &inserted)?);
+            }
             out.u32(indexed.len() as u32);
             for id in &indexed {
                 out.str(id);
@@ -1059,8 +1160,8 @@ impl Engine {
         out.u32(0);
         let mut count = 0u32;
         self.db.query(
-            "SELECT insertionId, feedId, actorId, sequence, prevActorId, prevSequence, timestamp, data FROM blocks WHERE namespace = ? AND position IS NULL ORDER BY insertionId LIMIT ?",
-            &[Param::Text(namespace), Param::Int(limit)],
+            "SELECT insertionId, feedId, actorId, sequence, prevActorId, prevSequence, timestamp, data FROM blocks WHERE spaceId = ? AND namespace = ? AND position IS NULL ORDER BY insertionId LIMIT ?",
+            &[Param::Text(self.space_id.clone()), Param::Text(namespace), Param::Int(limit)],
             |row| {
                 count += 1;
                 out.f64(row[0].int().unwrap_or(0) as f64);
@@ -1097,6 +1198,19 @@ impl Engine {
                     params.push(Param::Int(*insertion));
                     params.push(Param::Int(*position));
                 }
+                params.extend(chunk.iter().map(|(insertion, _)| Param::Int(*insertion)));
+                engine.db.execute(&sql, &params)?;
+                // An item row follows its block's position, which cursor reads and ordering use.
+                let sql = format!(
+                    "UPDATE objectMeta SET queuePosition = CASE queueInsertionId {cases} END WHERE spaceId = ? AND queueId != '' AND queueInsertionId IN ({})",
+                    vec!["?"; chunk.len()].join(", ")
+                );
+                let mut params = Vec::with_capacity(chunk.len() * 3 + 1);
+                for (insertion, position) in chunk {
+                    params.push(Param::Int(*insertion));
+                    params.push(Param::Int(*position));
+                }
+                params.push(Param::Text(engine.space_id.clone()));
                 params.extend(chunk.iter().map(|(insertion, _)| Param::Int(*insertion)));
                 engine.db.execute(&sql, &params)?;
             }

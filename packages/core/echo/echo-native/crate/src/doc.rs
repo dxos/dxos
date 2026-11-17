@@ -461,9 +461,10 @@ pub fn reference_index_key(uri: &str) -> Option<String> {
     Some(uri.to_owned())
 }
 
-/// Outgoing references of an object's JSON (excluding `@meta`), each with its escaped property path and
-/// the same path without array indexes.
-pub fn extract_references(json: &Json) -> Vec<(String, String, String)> {
+/// Outgoing references of an object's JSON, each with its escaped property path and the same path
+/// without array indexes. A document object's `@meta` is skipped (its tags are not data references);
+/// a feed item's is not, as index-core reads item blocks whole.
+pub fn extract_references(json: &Json, include_meta: bool) -> Vec<(String, String, String)> {
     fn visit(path: &mut Vec<String>, value: &Json, out: &mut Vec<(String, String, String)>) {
         match value {
             Json::Object(map) => {
@@ -502,7 +503,7 @@ pub fn extract_references(json: &Json) -> Vec<(String, String, String)> {
     let mut out = Vec::new();
     if let Json::Object(map) = json {
         for (key, inner) in map {
-            if key == "@meta" {
+            if key == "@meta" && !include_meta {
                 continue;
             }
             let mut path = vec![key.clone()];

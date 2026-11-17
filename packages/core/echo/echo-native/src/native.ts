@@ -188,6 +188,9 @@ export type PulledBlock = {
   data: Uint8Array;
 };
 
+/** One feed item to append: its feed, the feed's namespace, and the item's encoded JSON. */
+export type NativeItem = { feedId: string; namespace: string; data: Uint8Array };
+
 /** One object to write: its id, the heads it was read at, and its `EntityStructure`. */
 export type NativeWrite = { id: string; heads?: readonly string[]; structure: unknown };
 
@@ -236,10 +239,26 @@ export class Native {
     return new Uint8Array(this.#exports.memory.buffer, out, result);
   }
 
-  open(path: string, spaceId: string, actorId: string): number {
+  /**
+   * Opens a space's database on a file. `assignPositions` makes the file position its own blocks, as
+   * the authority of a space no server syncs; `feedTypename` names the type whose objects carry feed
+   * options.
+   */
+  open(
+    path: string,
+    spaceId: string,
+    actorId: string,
+    options: { assignPositions?: boolean; feedTypename: string },
+  ): number {
     const out = this.#invoke(
       (len) => this.#exports.db_open(len),
-      this.#encoder.reset().str(path).str(spaceId).str(actorId),
+      this.#encoder
+        .reset()
+        .str(path)
+        .str(spaceId)
+        .str(actorId)
+        .u8(options.assignPositions ? 1 : 0)
+        .str(options.feedTypename),
     );
     return new Decoder(out).u32();
   }
@@ -294,14 +313,22 @@ export class Native {
     return results;
   }
 
+  /**
+   * Writes objects into their documents, purges `purged`, and appends feed items, in one transaction.
+   */
   write(
     handle: number,
     writes: readonly NativeWrite[],
     purged: readonly string[],
+    items: readonly NativeItem[] = [],
   ): { results: Map<string, WriteResult>; indexed: Set<string> } {
     const encoder = this.#encodeWrites(Date.now(), writes);
     encoder.u32(purged.length);
     purged.forEach((id) => encoder.str(id));
+    encoder.u32(items.length);
+    for (const item of items) {
+      encoder.str(item.feedId).str(item.namespace).bytesField(item.data);
+    }
     const decoder = new Decoder(this.#invoke((len) => this.#exports.db_write(handle, len), encoder));
     const results = this.#decodeResults(decoder);
     return { results, indexed: new Set(decoder.strings()) };

@@ -5,19 +5,21 @@
 import * as A from '@automerge/automerge';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
-import { type Feed, type Obj } from '@dxos/echo';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { Feed, type Obj } from '@dxos/echo';
+import { type DatabaseDirectory, EchoFeedCodec } from '@dxos/echo-protocol';
 // echo-sqlite's query compiler and row types are reused as they are: the engine indexes into the same
 // tables, so the same SQL answers queries here.
-import { type CompiledQuery, type StoredEntity, UnsupportedOperationError } from '@dxos/echo-sqlite';
+import { type CompiledQuery, type StoredEntity } from '@dxos/echo-sqlite';
 import { TypeMetaSchemaDXN, objectStructureFromJson } from '@dxos/echo/internal';
 import { type SpaceId } from '@dxos/keys';
 
 import { type FastQuery } from './fast-query.ts';
 import { type CompiledChanges } from './internal/changes.ts';
 import { type EntityRecord } from './internal/record.ts';
-import { type Native, type NativeWrite, type WriteResult } from './native.ts';
+import { type Native, type NativeItem, type NativeWrite, type WriteResult } from './native.ts';
 import { type RowTable } from './rows.ts';
 
 export type Doc = A.Doc<DatabaseDirectory>;
@@ -143,6 +145,10 @@ const rowsOf = (table: RowTable): StoredEntity[] => {
   return rows;
 };
 
+/** Options as `feeds.options` holds them, or undefined when they do not decode. */
+const decodeFeedOptions = (json: string): Feed.FeedOptions | undefined =>
+  Option.getOrUndefined(Schema.decodeUnknownOption(Schema.fromJsonString(Feed.FeedOptions))(json));
+
 const attempt = <A>(body: () => A): Store<A> =>
   Effect.try({ try: body, catch: (cause) => new NativeStoreError({ cause }) });
 
@@ -170,6 +176,8 @@ export class NativeStore {
   readonly #spaceId: SpaceId;
   /** Objects pulled blocks re-indexed since the last {@link index}. */
   #pulled = new Set<string>();
+  /** Items queued by {@link appendItems} for the next {@link write}. */
+  #items: NativeItem[] = [];
 
   constructor(native: Native, handle: number, spaceId: SpaceId) {
     this.#native = native;
@@ -206,8 +214,17 @@ WHERE m.spaceId = ? AND m.typeDXN = ? AND m.deleted = 0 AND ${DOCUMENT_ROWS}`,
     );
   }
 
-  loadItem(_feedId: string, _id: string): Store<StoredEntity | undefined> {
-    return Effect.succeed(undefined);
+  /** Reads one feed item by its feed and id. */
+  loadItem(feedId: string, id: string): Store<StoredEntity | undefined> {
+    return attempt(
+      () =>
+        this.#rows(
+          `SELECT ${ROW_COLUMNS}, m.queueId AS queueId, m.queueNamespace AS queueNamespace
+FROM objectMeta m CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
+WHERE m.spaceId = ? AND m.queueId = ? AND m.objectId = ?`,
+          [this.#spaceId, feedId, id],
+        )[0],
+    );
   }
 
   load(id: string): Store<StoredEntity | undefined> {
@@ -231,10 +248,34 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
    */
   queryFast(fast: FastQuery): Store<StoredEntity[] | undefined> {
     return attempt(() => {
+      if (fast.feedId !== undefined) {
+        // Items hang off their feed, which the cascade would hide them through: check it once.
+        const [feed] = this.#native
+          .query(
+            this.#handle,
+            `SELECT deleted, parentId, sourceId, targetId FROM objectMeta WHERE spaceId = ? AND objectId = ? AND queueId = ''`,
+            [this.#spaceId, fast.feedId],
+          )
+          .objects();
+        if (feed && (feed.parentId !== null || feed.sourceId !== null || feed.targetId !== null)) {
+          return undefined;
+        }
+        if (feed?.deleted === 1) {
+          return [];
+        }
+      }
       const table = this.#native.query(this.#handle, fast.sql, fast.params, fast.predicates);
-      const dependencies = ['parentId', 'sourceId', 'targetId'].map((name) => table.column(name));
+      const dependencies = [
+        { column: table.column('parentId'), allowed: fast.feedId ?? null },
+        { column: table.column('sourceId'), allowed: null },
+        { column: table.column('targetId'), allowed: null },
+      ];
       for (let row = 0; row < table.rows; row++) {
-        if (dependencies.some((column) => table.get(row, column) !== null)) {
+        const hidden = dependencies.some(({ column, allowed }) => {
+          const value = table.get(row, column);
+          return value !== null && value !== allowed;
+        });
+        if (hidden) {
           return undefined;
         }
       }
@@ -268,11 +309,19 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
     );
   }
 
+  /**
+   * Writes objects, purges ids, and appends the items {@link appendItems} queued, in one engine call
+   * and so one transaction.
+   */
   write(
     records: readonly (EntityRecord & { readonly heads?: readonly string[] })[],
     purged: readonly string[] = [],
   ): Store<{ results: Map<string, WriteResult>; indexed: Set<string> }> {
-    return attempt(() => this.#native.write(this.#handle, records.map(toWrite), purged));
+    return attempt(() => {
+      const items = this.#items;
+      this.#items = [];
+      return this.#native.write(this.#handle, records.map(toWrite), purged, items);
+    });
   }
 
   /** Each engine call is its own transaction, so a batch needs no outer one. */
@@ -321,16 +370,50 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
     return Effect.succeed({ mergedFrom: [] });
   }
 
+  /** Each feed's stored options, by feed id, which queries read to hide expired items. */
   feedOptions(): Store<Map<string, Feed.FeedOptions>> {
-    return Effect.succeed(new Map<string, Feed.FeedOptions>());
+    return attempt(() => {
+      const options = new Map<string, Feed.FeedOptions>();
+      const table = this.#native.query(this.#handle, 'SELECT feedId, options FROM feeds WHERE spaceId = ?', [
+        this.#spaceId,
+      ]);
+      for (let row = 0; row < table.rows; row++) {
+        const feedId = table.get(row, 0);
+        const json = table.get(row, 1);
+        const decoded = typeof json === 'string' ? decodeFeedOptions(json) : undefined;
+        if (typeof feedId === 'string' && decoded) {
+          options.set(feedId, decoded);
+        }
+      }
+      return options;
+    });
   }
 
-  appendItems(_feedId: string, _namespace: string, _items: readonly Record<string, unknown>[]): Store<void> {
-    return Effect.die(new UnsupportedOperationError('feed items'));
+  /**
+   * Queues items for the feed, one whole-item block each (an item's JSON, or a tombstone for a removed
+   * id); the next {@link write} appends them in its transaction.
+   */
+  appendItems(feedId: string, namespace: string, items: readonly Record<string, unknown>[]): Store<void> {
+    return Effect.sync(() => {
+      for (const item of items) {
+        this.#items.push({ feedId, namespace, data: EchoFeedCodec.encode(item) });
+      }
+    });
   }
 
-  itemCounts(_namespace: string): Store<{ blocksToPush: number; totalBlocks: number }> {
-    return Effect.succeed({ blocksToPush: 0, totalBlocks: 0 });
+  /** Blocks of a namespace still to push, and in total, for a feed's sync state. */
+  itemCounts(namespace: string): Store<{ blocksToPush: number; totalBlocks: number }> {
+    return attempt(() => {
+      const [row] = this.#native
+        .query(
+          this.#handle,
+          `SELECT COALESCE(SUM(position IS NULL), 0) AS blocksToPush, COUNT(*) AS totalBlocks FROM blocks
+WHERE spaceId = ? AND namespace = ?`,
+          [this.#spaceId, namespace],
+        )
+        .objects();
+      return { blocksToPush: Number(row?.blocksToPush ?? 0), totalBlocks: Number(row?.totalBlocks ?? 0) };
+    });
   }
 
   invalidate(ids: Iterable<string>): void {

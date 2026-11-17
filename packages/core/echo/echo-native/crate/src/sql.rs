@@ -168,8 +168,18 @@ impl Db {
 
     /// Runs a statement whose parameters are moved in, so a large text or blob is not copied to bind it.
     pub fn execute_owned(&mut self, sql: &str, params: Vec<Param>) -> SqlResult<()> {
+        self.query_owned(sql, params, |_| Ok(()))
+    }
+
+    /// [`Self::query`] with parameters moved in.
+    pub fn query_owned(
+        &mut self,
+        sql: &str,
+        params: Vec<Param>,
+        row: impl FnMut(&[Cell<'_>]) -> SqlResult<()>,
+    ) -> SqlResult<()> {
         let values = params.into_iter().map(Param::into_sql).collect();
-        self.run(sql, values, |_| Ok(()))
+        self.run(sql, values, row)
     }
 
     fn run(

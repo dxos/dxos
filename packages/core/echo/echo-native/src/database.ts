@@ -12,7 +12,7 @@ import {
   Database,
   Error as EchoError,
   Entity,
-  type Feed,
+  Feed,
   type Filter,
   type Hypergraph,
   JsonSchema,
@@ -99,6 +99,12 @@ export type OpenOptions = {
 
   /** The engine instance; the process's shared one by default. */
   native?: Native;
+
+  /**
+   * Whether this file positions feed blocks itself, as the authority of a space no server syncs; by
+   * default the space's authority positions them.
+   */
+  assignPositions?: boolean;
 };
 
 /**
@@ -263,6 +269,7 @@ export class NativeDatabase implements Database.Database, EntitySource, AsyncDis
       options.path ?? `mem:${crypto.randomUUID()}`,
       spaceId,
       options.actorId ?? crypto.randomUUID(),
+      { assignPositions: options.assignPositions, feedTypename: Type.getTypename(Feed.Feed) },
     );
     const store = new NativeStore(native, handle, spaceId);
     const db = new NativeDatabase(spaceId, store, EffectEx.runPromise, options.types ?? [], options.graph);
@@ -492,7 +499,10 @@ export class NativeDatabase implements Database.Database, EntitySource, AsyncDis
       affectedBy: (written) =>
         typenames === undefined || written.has(ANY_TYPE) || [...written].some((dxn) => typenames.has(typenameOf(dxn))),
       execute: async () => {
-        const fast = fromSpace && ast.type === 'select' ? compileFast(ast, this.#spaceId) : undefined;
+        const fast =
+          ast.type === 'select' || ast.type === 'from'
+            ? compileFast(ast, this.#spaceId, (await this.#feedRules()).cutoffs)
+            : undefined;
         const fastItems = fast ? await this.#executeFast(fast) : undefined;
         if (fastItems) {
           return fastItems;
@@ -1073,6 +1083,9 @@ export class NativeDatabase implements Database.Database, EntitySource, AsyncDis
     const items = await Promise.all(
       rows.map(async (row) => {
         const entity = await this.#hydrate(row);
+        if (entity && row.queueId) {
+          this.#catchUpItem(entity, row);
+        }
         return entity ? asItem(entity, row.rank) : undefined;
       }),
     );

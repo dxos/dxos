@@ -83,13 +83,16 @@ fn engine(engines: &mut [Option<Engine>], handle: u32) -> Result<&mut Engine, St
         .ok_or_else(|| format!("no database {handle}"))
 }
 
-/// Opens a space's database on a file. Input: path, space id, actor id. Output: the handle (u32).
+/// Opens a space's database on a file. Input: path, space id, actor id, whether the file positions its
+/// own blocks (u8), and the Feed typename. Output: the handle (u32).
 #[no_mangle]
 pub extern "C" fn db_open(len: u32) -> i32 {
     call(len, |input, out, files, engines| {
         let path = input.str()?.to_owned();
         let space_id = input.str()?.to_owned();
         let actor_id = input.str()?.to_owned();
+        let assign_positions = input.u8()? == 1;
+        let feed_typename = input.str()?.to_owned();
         let file = match files.get(&path) {
             Some(file) => file.clone(),
             None => {
@@ -98,7 +101,7 @@ pub extern "C" fn db_open(len: u32) -> i32 {
                 file
             }
         };
-        let opened = Engine::open(file, space_id, actor_id)?;
+        let opened = Engine::open(file, space_id, actor_id, assign_positions, feed_typename)?;
         engines.push(Some(opened));
         out.u32((engines.len() - 1) as u32);
         Ok(())

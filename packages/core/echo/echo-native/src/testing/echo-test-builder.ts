@@ -11,9 +11,9 @@ import { type NativeOptions } from '../native.ts';
 import { NativeTestBuilder as TestBuilder, type NativeTestPeer as TestPeer } from './harness.ts';
 
 /**
- * Options of echo-client's `EchoTestBuilder` peers. Those that select an echo-host implementation
- * (`queryExecutor`, `assignQueuePositions`) have no counterpart here and are accepted unchanged, so
- * a copied test keeps its setup line.
+ * Options of echo-client's `EchoTestBuilder` peers. `queryExecutor` selects an echo-host implementation,
+ * which has no counterpart here, and is accepted unchanged so a copied test keeps its setup line;
+ * `assignQueuePositions` makes the peer's file position its own feed blocks.
  */
 export type EchoTestPeerOptions = {
   types?: readonly Type.AnyEntity[];
@@ -52,6 +52,7 @@ export class EchoTestBuilder implements AsyncDisposable {
       this.#builder.createPeer({
         types: options.types,
         path: options.storagePath === undefined ? undefined : this.#builder.pathOf(options.storagePath),
+        assignPositions: options.assignQueuePositions,
       }),
     );
   }

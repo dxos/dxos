@@ -3,13 +3,18 @@
 //
 
 import { type QueryAST } from '@dxos/echo-protocol';
-import { DXN, type SpaceId } from '@dxos/keys';
+import { DXN, EID, type SpaceId } from '@dxos/keys';
 
 /** A statement for the engine and its parameters. */
 export type FastQuery = {
   readonly sql: string;
   readonly params: readonly unknown[];
   readonly predicates: readonly Predicate[];
+  /**
+   * The feed a feed-scoped query reads. Its items' parent is the feed, so the caller checks the feed's
+   * own visibility once instead of the cascade per row.
+   */
+  readonly feedId?: string;
 };
 
 /**
@@ -17,6 +22,7 @@ export type FastQuery = {
  * whether the deletion cascade could hide the row.
  */
 const COLUMNS = `m.objectId AS id, s.snapshot AS body, s.version AS version, m.createdAt AS createdAt, m.updatedAt AS updatedAt,
+NULLIF(m.queueId, '') AS queueId, NULLIF(m.queueNamespace, '') AS queueNamespace,
 m.parentId AS parentId, m.sourceId AS sourceId, m.targetId AS targetId`;
 
 /**
@@ -31,16 +37,32 @@ m.parentId AS parentId, m.sourceId AS sourceId, m.targetId AS targetId`;
  * must fall back to the compiled one when any returned row has a parent or relation endpoints, whose
  * deletion the cascade would apply.
  */
-export const compileFast = (ast: QueryAST.Query, spaceId: SpaceId): FastQuery | undefined => {
-  if (ast.type !== 'select') {
+export const compileFast = (
+  ast: QueryAST.Query,
+  spaceId: SpaceId,
+  cutoffs: Readonly<Record<string, number>> = {},
+): FastQuery | undefined => {
+  const scoped = feedScoped(ast, spaceId);
+  const select = scoped?.select ?? (ast.type === 'select' ? ast : undefined);
+  if (!select) {
     return undefined;
   }
-  const filters = flatten(ast.filter);
+  const filters = flatten(select.filter);
   if (!filters) {
     return undefined;
   }
+  const feedId = scoped?.feedId;
   const conditions: string[] = [];
   const params: unknown[] = [spaceId];
+  if (feedId !== undefined) {
+    conditions.push('m.queueBranch IS NULL');
+    // Items past the feed's `maxAge` are hidden before retention deletes them, as the compiler hides them.
+    const cutoff = cutoffs[feedId];
+    if (cutoff !== undefined) {
+      conditions.push('(m.updatedAt IS NULL OR m.updatedAt >= ?)');
+      params.push(cutoff);
+    }
+  }
   const predicates: Predicate[] = [];
   for (const filter of filters) {
     if (filter.foreignKeys !== undefined || filter.metaKey !== undefined || filter.metaVersion !== undefined) {
@@ -80,11 +102,35 @@ export const compileFast = (ast: QueryAST.Query, spaceId: SpaceId): FastQuery | 
   const where = conditions.length > 0 ? ` AND ${conditions.join(' AND ')}` : '';
   return {
     sql: `SELECT ${COLUMNS} FROM objectMeta m CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
-WHERE m.spaceId = ? AND m.queueId = '' AND m.deleted = 0${where}
+WHERE m.spaceId = ? AND m.queueId = ? AND m.deleted = 0${where}
 ORDER BY m.objectId, m.recordId`,
-    params,
+    params: [params[0], feedId ?? '', ...params.slice(1)],
     predicates,
+    feedId,
   };
+};
+
+/**
+ * The inner select and the feed of a query reading one feed's main branch (`select(...).from(feed)`),
+ * or undefined for any other scope.
+ */
+const feedScoped = (
+  ast: QueryAST.Query,
+  spaceId: SpaceId,
+): { select: QueryAST.QuerySelectClause; feedId: string } | undefined => {
+  if (ast.type !== 'from' || ast.from._tag !== 'scope' || ast.query.type !== 'select') {
+    return undefined;
+  }
+  const [scope, ...rest] = ast.from.scopes;
+  if (rest.length > 0 || scope?._tag !== 'feed' || scope.branches !== undefined || scope.walk !== undefined) {
+    return undefined;
+  }
+  const eid = EID.tryParse(scope.feedUri);
+  const feedSpace = eid ? EID.getSpaceId(eid) : undefined;
+  const feedId = eid ? EID.getEntityId(eid) : undefined;
+  return feedId !== undefined && (feedSpace === undefined || feedSpace === spaceId)
+    ? { select: ast.query, feedId }
+    : undefined;
 };
 
 /** The object filters an `and` of object filters (or one) combines, else undefined. */

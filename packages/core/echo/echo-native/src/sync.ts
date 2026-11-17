@@ -14,8 +14,8 @@ const BATCH = 100;
 /** How long a request waits for its response. */
 const RPC_TIMEOUT_MS = 30_000;
 
-/** The namespace documents live in; feed items are not stored by this engine. */
-const NAMESPACE = 'automerge';
+/** The namespaces a space syncs: objects' Automerge documents, then feed items of both kinds. */
+const NAMESPACES = ['automerge', 'data', 'trace'] as const;
 
 type QueryResponse = Extract<FeedProtocol.ProtocolMessage, { _tag: 'QueryResponse' }>;
 type AppendResponse = Extract<FeedProtocol.ProtocolMessage, { _tag: 'AppendResponse' }>;
@@ -146,14 +146,18 @@ export class NativeSync {
 
   async #round(): Promise<void> {
     this.stats.rounds++;
-    while (!(await this.#pull())) {}
-    while (!(await this.#push())) {}
+    for (const namespace of NAMESPACES) {
+      while (!(await this.#pull(namespace))) {}
+    }
+    for (const namespace of NAMESPACES) {
+      while (!(await this.#push(namespace))) {}
+    }
   }
 
   /** Pulls one batch; true once the authority has nothing past the cursor. */
-  async #pull(): Promise<boolean> {
+  async #pull(namespace: string): Promise<boolean> {
     const { native, handle } = this.#db.store;
-    const { lastPulledPosition, serverToken } = native.syncState(handle, NAMESPACE);
+    const { lastPulledPosition, serverToken } = native.syncState(handle, namespace);
     const waitStart = performance.now();
     const reply = await this.#rpc({
       _tag: 'QueryRequest',
@@ -161,7 +165,7 @@ export class NativeSync {
       senderPeerId: this.#peerId,
       recipientPeerId: AUTHORITY_PEER_ID,
       spaceId: this.#db.spaceId,
-      feedNamespace: NAMESPACE,
+      feedNamespace: namespace,
       position: lastPulledPosition,
       limit: BATCH,
       expectedServerToken: serverToken,
@@ -174,18 +178,18 @@ export class NativeSync {
     let base = lastPulledPosition;
     if (response.serverToken !== undefined && serverToken !== undefined && response.serverToken !== serverToken) {
       // Another store's positions: forget them and pull the namespace again from the start.
-      native.resetSync(handle, NAMESPACE, response.serverToken);
+      native.resetSync(handle, namespace, response.serverToken);
       base = -1;
     }
     if (response.blocks.length === 0) {
       if (response.serverToken !== serverToken) {
-        native.applyPulled(handle, NAMESPACE, response.serverToken, base, []);
+        native.applyPulled(handle, namespace, response.serverToken, base, []);
       }
       return true;
     }
     const cursor = response.blocks.reduce((max, block) => Math.max(max, block.position ?? max), base);
     const engineStart = performance.now();
-    const indexed = native.applyPulled(handle, NAMESPACE, response.serverToken ?? serverToken, cursor, response.blocks);
+    const indexed = native.applyPulled(handle, namespace, response.serverToken ?? serverToken, cursor, response.blocks);
     this.stats.engineMs += performance.now() - engineStart;
     this.stats.pulled += response.blocks.length;
     this.#db.store.notePulled(indexed);
@@ -196,9 +200,9 @@ export class NativeSync {
   }
 
   /** Pushes one batch of unpositioned blocks; true when none remain. */
-  async #push(): Promise<boolean> {
+  async #push(namespace: string): Promise<boolean> {
     const { native, handle } = this.#db.store;
-    const blocks = native.unpositioned(handle, NAMESPACE, BATCH);
+    const blocks = native.unpositioned(handle, namespace, BATCH);
     if (blocks.length === 0) {
       return true;
     }
@@ -208,7 +212,7 @@ export class NativeSync {
       senderPeerId: this.#peerId,
       recipientPeerId: AUTHORITY_PEER_ID,
       spaceId: this.#db.spaceId,
-      feedNamespace: NAMESPACE,
+      feedNamespace: namespace,
       blocks: blocks.map((block) => ({
         feedId: block.feedId,
         actorId: block.actorId,

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { type SqliteDatabase } from '@dxos/echo-sqlite';
 import { type SpaceSync } from '@dxos/echo-sqlite/sync';
 import { TestBuilder } from '@dxos/echo-sqlite/testing';
@@ -83,6 +83,49 @@ describe('echo-native syncs with echo-sqlite through one authority', () => {
     dbB.remove(alice);
     await settle(...pairs);
     expect(await dbA.query(Filter.type(TestSchema.Person)).run()).toHaveLength(0);
+  });
+
+  test('feed items and their removal flow both ways', async () => {
+    const types = [Feed.Feed, TestSchema.Task];
+    await using sqlite = new TestBuilder();
+    await using native = new NativeTestBuilder();
+    const authority = sqlite.createAuthority();
+
+    const sqlitePeer = sqlite.createPeer({ types });
+    const dbA = await sqlitePeer.createDatabase();
+    const nativePeer = native.createPeer({ types });
+    const dbB = await nativePeer.openDatabase(dbA.spaceId);
+    const pairs: Pair[] = [
+      [dbA, sqlitePeer.sync(dbA, authority)],
+      [dbB, nativePeer.sync(dbB, authority)],
+    ];
+    const titles = async (db: SqliteDatabase | NativeDatabase, feed: Feed.Feed) =>
+      (await db.query(Query.select(Filter.type(TestSchema.Task)).from(feed)).run()).map((task) => task.title).sort();
+
+    // The feed object is a document; it reaches the native peer like any other object.
+    const feedA = dbA.add(Feed.make({ name: 'log' }));
+    await settle(...pairs);
+    const [feedB] = await dbB.query(Filter.type(Feed.Feed)).run();
+    expect(feedB?.id).toBe(feedA.id);
+
+    // echo-sqlite → echo-native.
+    const first = dbA.add(Obj.make(TestSchema.Task, { title: 'from sqlite' }), { to: feedA });
+    await settle(...pairs);
+    expect(await titles(dbB, feedB)).toEqual(['from sqlite']);
+
+    // echo-native → echo-sqlite.
+    dbB.add(Obj.make(TestSchema.Task, { title: 'from native' }), { to: feedB });
+    await settle(...pairs);
+    expect(await titles(dbA, feedA)).toEqual(['from native', 'from sqlite']);
+
+    // A removal on either side travels as a tombstone.
+    await dbA.removeFeedItemsByIds(feedA, [first.id]);
+    await settle(...pairs);
+    expect(await titles(dbB, feedB)).toEqual(['from native']);
+    const [nativeItem] = await dbB.query(Query.select(Filter.type(TestSchema.Task)).from(feedB)).run();
+    await dbB.removeFeedItemsByIds(feedB, [nativeItem.id]);
+    await settle(...pairs);
+    expect(await titles(dbA, feedA)).toEqual([]);
   });
 
   test('two echo-native peers converge concurrent text edits', async () => {

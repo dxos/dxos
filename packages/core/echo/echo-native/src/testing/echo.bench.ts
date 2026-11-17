@@ -17,8 +17,7 @@ import { EchoTestBuilder as NativeTestBuilder, createTmpPath as nativeTmpPath } 
 type EchoDatabase = Pick<Database.Database, 'add' | 'remove' | 'flush' | 'query' | 'removeFeedItemsByIds'>;
 
 // echo-sqlite's `echo.bench.ts` run against both engines in one process, so the numbers compare:
-// the same operations through the ECHO API, over automerge objects only (echo-native stores no feed
-// items). echo-sqlite runs on a SQLite file in the OS temp dir; echo-native on an in-memory file and on a
+// the same operations through the ECHO API, over automerge objects and feed objects. echo-sqlite runs on a SQLite file in the OS temp dir; echo-native on an in-memory file and on a
 // real file reached through `node:wasi`.
 const parseBenchCount = (envVar: string, fallback: number): number => {
   const value = Number(process.env[envVar] ?? fallback);
@@ -176,10 +175,11 @@ const fileEngine = {
 } as const;
 
 for (const { name, makeBuilder, tmpPath } of process.env.ECHO_NATIVE_FILE ? [...engines, fileEngine] : engines) {
-  describe(`${name}: automerge object`, { tags: ['manual'], timeout: 300_000 }, () => {
+  describe(name, { tags: ['manual'], timeout: 300_000 }, () => {
     type EchoState = { db: EchoDatabase; feed: Feed.Feed };
     let echoPromise: Promise<EchoState> | undefined;
 
+    // One database per engine, shared by both object kinds, as in echo-sqlite's bench.
     const ensureEcho = (): Promise<EchoState> => {
       if (!echoPromise) {
         echoPromise = (async () => {
@@ -194,8 +194,7 @@ for (const { name, makeBuilder, tmpPath } of process.env.ECHO_NATIVE_FILE ? [...
           const builder = await makeBuilder().open();
           const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Expando], storagePath });
           const db = await peer.createDatabase();
-          // The benches never append to it; it keeps the setup identical to echo-sqlite's bench.
-          const feed = Feed.make({ name: 'bench' });
+          const feed = db.add(Feed.make({ name: 'bench' }));
           await db.flush();
           return { db, feed };
         })();
@@ -203,25 +202,54 @@ for (const { name, makeBuilder, tmpPath } of process.env.ECHO_NATIVE_FILE ? [...
       return echoPromise;
     };
 
-    defineOperationBenches(
-      (db) => ({
-        insert: async (value) => {
-          const obj = db.add(Obj.make(TestSchema.Expando, { value, label: `label-${value}` }));
-          await db.flush();
-          return obj;
-        },
-        insertBatch: async (values) => {
-          const objs = values.map((value) => db.add(Obj.make(TestSchema.Expando, { value, label: `label-${value}` })));
-          await db.flush();
-          return objs;
-        },
-        scope: (filter) => Query.select(filter),
-        remove: async (obj) => {
-          db.remove(obj);
-          await db.flush();
-        },
-      }),
-      ensureEcho,
-    );
+    describe('automerge object', () => {
+      defineOperationBenches(
+        (db) => ({
+          insert: async (value) => {
+            const obj = db.add(Obj.make(TestSchema.Expando, { value, label: `label-${value}` }));
+            await db.flush();
+            return obj;
+          },
+          insertBatch: async (values) => {
+            const objs = values.map((value) =>
+              db.add(Obj.make(TestSchema.Expando, { value, label: `label-${value}` })),
+            );
+            await db.flush();
+            return objs;
+          },
+          scope: (filter) => Query.select(filter),
+          remove: async (obj) => {
+            db.remove(obj);
+            await db.flush();
+          },
+        }),
+        ensureEcho,
+      );
+    });
+
+    describe('feed object', () => {
+      defineOperationBenches(
+        (db, feed) => ({
+          insert: async (value) => {
+            const obj = db.add(Obj.make(TestSchema.Expando, { value, label: `label-${value}` }), { to: feed });
+            await db.flush();
+            return obj;
+          },
+          insertBatch: async (values) => {
+            const objs = values.map((value) =>
+              db.add(Obj.make(TestSchema.Expando, { value, label: `label-${value}` }), { to: feed }),
+            );
+            await db.flush();
+            return objs;
+          },
+          scope: (filter) => Query.select(filter).from(feed),
+          remove: async (obj) => {
+            await db.removeFeedItemsByIds(feed, [obj.id]);
+            await db.flush();
+          },
+        }),
+        ensureEcho,
+      );
+    });
   });
 }

@@ -38,11 +38,18 @@ export class NativeTestBuilder implements AsyncDisposable {
     return this.#onDisk ? `/data/${name.replaceAll('/', '_')}` : `mem:${name}`;
   }
 
-  createPeer(options: { types?: readonly Type.AnyEntity[]; path?: string } = {}): NativeTestPeer {
+  /**
+   * A peer with its own file; `types` are registered on every database it opens, and
+   * `assignPositions` makes its file position its own blocks, as with no authority to sync with.
+   */
+  createPeer(
+    options: { types?: readonly Type.AnyEntity[]; path?: string; assignPositions?: boolean } = {},
+  ): NativeTestPeer {
     const peer = new NativeTestPeer(
       this.#native,
       options.path ?? this.pathOf(`peer-${crypto.randomUUID()}`),
       options.types ?? [],
+      options.assignPositions ?? false,
     );
     this.#peers.push(peer);
     return peer;
@@ -73,16 +80,18 @@ export class NativeTestPeer {
   readonly #native: Promise<Native>;
   readonly #path: string;
   readonly #types: readonly Type.AnyEntity[];
+  readonly #assignPositions: boolean;
   readonly #actorId = crypto.randomUUID();
   readonly #databases: NativeDatabase[] = [];
   readonly #syncs: NativeSync[] = [];
   #graph: SqliteGraph | undefined;
   #lastSpaceId: SpaceId | undefined;
 
-  constructor(native: Promise<Native>, path: string, types: readonly Type.AnyEntity[]) {
+  constructor(native: Promise<Native>, path: string, types: readonly Type.AnyEntity[], assignPositions: boolean) {
     this.#native = native;
     this.#path = path;
     this.#types = types;
+    this.#assignPositions = assignPositions;
   }
 
   get path(): string {
@@ -104,6 +113,7 @@ export class NativeTestPeer {
       spaceId,
       path: this.#path,
       actorId: this.#actorId,
+      assignPositions: this.#assignPositions,
       types: [...this.#types, ...(options.types ?? [])],
       graph: this.graph,
     });
