@@ -1,0 +1,498 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as A from '@automerge/automerge';
+import * as Data from 'effect/Data';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+
+import { Feed, type Obj } from '@dxos/echo';
+import { type DatabaseDirectory, EchoFeedCodec } from '@dxos/echo-protocol';
+// echo-sqlite's query compiler and row types are reused as they are: the engine indexes into the same
+// tables, so the same SQL answers queries here.
+import { type CompiledQuery, type StoredEntity } from '@dxos/echo-sqlite';
+import { TypeMetaSchemaDXN, objectStructureFromJson } from '@dxos/echo/internal';
+import { type SpaceId } from '@dxos/keys';
+
+import { type FastQuery } from './fast-query.ts';
+import { type CompiledChanges } from './internal/changes.ts';
+import { type EntityRecord } from './internal/record.ts';
+import { type Native, type NativeItem, type NativeWrite, type WriteResult } from './native.ts';
+import { type RowTable } from './rows.ts';
+
+export type Doc = A.Doc<DatabaseDirectory>;
+
+/** Effects of the store never need a service: every call is a synchronous call into the engine. */
+/** A failure inside the wasm engine or while decoding its output. */
+export class NativeStoreError extends Data.TaggedError('NativeStoreError')<{ readonly cause: unknown }> {}
+
+type Store<A> = Effect.Effect<A, NativeStoreError>;
+
+const DOCUMENT_ROWS = `m.queueId = ''`;
+
+const ROW_COLUMNS = `m.objectId AS id, s.snapshot AS body, s.version AS version, m.createdAt, m.updatedAt`;
+
+/**
+ * A stored entity read from a row table: fields are decoded on first access, and the body is parsed
+ * only when something reads it.
+ */
+class NativeRow implements StoredEntity {
+  readonly #table: RowTable;
+  readonly #row: number;
+  readonly #columns: ColumnIndex;
+  #body: Record<string, unknown> | undefined;
+
+  constructor(table: RowTable, row: number, columns: ColumnIndex) {
+    this.#table = table;
+    this.#row = row;
+    this.#columns = columns;
+  }
+
+  #text(column: number): string | undefined {
+    const value = this.#table.get(this.#row, column);
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  #number(column: number): number | undefined {
+    const value = this.#table.get(this.#row, column);
+    return typeof value === 'number' ? value : undefined;
+  }
+
+  get id(): string {
+    return this.#text(this.#columns.id) ?? '';
+  }
+
+  get spaceId(): string | undefined {
+    return this.#text(this.#columns.spaceId);
+  }
+
+  get body(): Record<string, unknown> {
+    this.#body ??= JSON.parse(this.#text(this.#columns.body) ?? '{}');
+    return this.#body ?? {};
+  }
+
+  get heads(): readonly string[] | undefined {
+    const version = this.#text(this.#columns.version);
+    return version ? JSON.parse(version) : undefined;
+  }
+
+  get queueId(): string | undefined {
+    return this.#text(this.#columns.queueId) || undefined;
+  }
+
+  get queueNamespace(): string | undefined {
+    return this.#text(this.#columns.queueNamespace) || undefined;
+  }
+
+  get createdAt(): number | undefined {
+    return this.#number(this.#columns.createdAt);
+  }
+
+  get updatedAt(): number | undefined {
+    return this.#number(this.#columns.updatedAt);
+  }
+
+  get rank(): number | undefined {
+    return this.#number(this.#columns.rank);
+  }
+
+  get group(): StoredEntity['group'] {
+    const key = this.#text(this.#columns.groupKey);
+    const ord = this.#number(this.#columns.groupOrd);
+    return key !== undefined && ord !== undefined
+      ? { key, ord, aggregates: JSON.parse(this.#text(this.#columns.aggregates) ?? '{}') }
+      : undefined;
+  }
+}
+
+type ColumnIndex = Record<
+  | 'id'
+  | 'spaceId'
+  | 'body'
+  | 'version'
+  | 'queueId'
+  | 'queueNamespace'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'rank'
+  | 'groupKey'
+  | 'groupOrd'
+  | 'aggregates',
+  number
+>;
+
+const rowsOf = (table: RowTable): StoredEntity[] => {
+  const columns: ColumnIndex = {
+    id: table.column('id'),
+    spaceId: table.column('spaceId'),
+    body: table.column('body'),
+    version: table.column('version'),
+    queueId: table.column('queueId'),
+    queueNamespace: table.column('queueNamespace'),
+    createdAt: table.column('createdAt'),
+    updatedAt: table.column('updatedAt'),
+    rank: table.column('rank'),
+    groupKey: table.column('groupKey'),
+    groupOrd: table.column('groupOrd'),
+    aggregates: table.column('aggregates'),
+  };
+  const rows: StoredEntity[] = [];
+  for (let row = 0; row < table.rows; row++) {
+    rows.push(new NativeRow(table, row, columns));
+  }
+  return rows;
+};
+
+/** Options as `feeds.options` holds them, or undefined when they do not decode. */
+const decodeFeedOptions = (json: string): Feed.FeedOptions | undefined =>
+  Option.getOrUndefined(Schema.decodeUnknownOption(Schema.fromJsonString(Feed.FeedOptions))(json));
+
+const attempt = <A>(body: () => A): Store<A> =>
+  Effect.try({ try: body, catch: (cause) => new NativeStoreError({ cause }) });
+
+/** An entity's JSON body as `Entity.toJSON` writes it: an object carrying its id. */
+const isObjectJson = (body: Record<string, unknown>): body is Obj.JSON => typeof body.id === 'string';
+
+const toWrite = (record: EntityRecord & { readonly heads?: readonly string[] }): NativeWrite => {
+  if (!isObjectJson(record.body)) {
+    throw new TypeError(`Entity ${record.id} has no JSON body to write.`);
+  }
+  return {
+    id: record.id,
+    structure: objectStructureFromJson(record.body, { createdAt: record.createdAt }),
+    heads: record.heads,
+  };
+};
+
+/**
+ * The store {@link NativeDatabase} reads and writes through: the shape of echo-sqlite's `ObjectStore`,
+ * with every operation one call into the engine.
+ */
+export class NativeStore {
+  readonly #native: Native;
+  readonly #handle: number;
+  readonly #spaceId: SpaceId;
+  /** Objects pulled blocks re-indexed since the last {@link index}. */
+  #pulled = new Set<string>();
+  /** Items queued by {@link appendItems} for the next {@link write}. */
+  #items: NativeItem[] = [];
+
+  constructor(native: Native, handle: number, spaceId: SpaceId) {
+    this.#native = native;
+    this.#handle = handle;
+    this.#spaceId = spaceId;
+  }
+
+  get native(): Native {
+    return this.#native;
+  }
+
+  get handle(): number {
+    return this.#handle;
+  }
+
+  /** Records objects a pulled batch re-indexed, for the database's next {@link index}. */
+  notePulled(ids: Iterable<string>): void {
+    for (const id of ids) {
+      this.#pulled.add(id);
+    }
+  }
+
+  #rows(sql: string, params: readonly unknown[]): StoredEntity[] {
+    return rowsOf(this.#native.query(this.#handle, sql, params));
+  }
+
+  loadTypes(): Store<StoredEntity[]> {
+    return attempt(() =>
+      this.#rows(
+        `SELECT ${ROW_COLUMNS} FROM objectMeta m CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
+WHERE m.spaceId = ? AND m.typeDXN = ? AND m.deleted = 0 AND ${DOCUMENT_ROWS}`,
+        [this.#spaceId, TypeMetaSchemaDXN.toString()],
+      ),
+    );
+  }
+
+  /** Reads one feed item by its feed and id. */
+  loadItem(feedId: string, id: string): Store<StoredEntity | undefined> {
+    return attempt(
+      () =>
+        this.#rows(
+          `SELECT ${ROW_COLUMNS}, m.queueId AS queueId, m.queueNamespace AS queueNamespace
+FROM objectMeta m CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
+WHERE m.spaceId = ? AND m.queueId = ? AND m.objectId = ?`,
+          [this.#spaceId, feedId, id],
+        )[0],
+    );
+  }
+
+  load(id: string): Store<StoredEntity | undefined> {
+    return attempt(
+      () =>
+        this.#rows(
+          `SELECT ${ROW_COLUMNS} FROM objectMeta m CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
+WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
+          [this.#spaceId, id],
+        )[0],
+    );
+  }
+
+  query(compiled: CompiledQuery): Store<StoredEntity[]> {
+    return attempt(() => this.#rows(compiled.sql, compiled.params));
+  }
+
+  /**
+   * Runs a {@link FastQuery}; undefined when any row has a dependency the deletion cascade could hide
+   * it through, so the caller runs the compiled statement instead.
+   */
+  queryFast(fast: FastQuery): Store<StoredEntity[] | undefined> {
+    return attempt(() => {
+      if (fast.feedId !== undefined) {
+        // Items hang off their feed, which the cascade would hide them through: check it once.
+        const [feed] = this.#native
+          .query(
+            this.#handle,
+            `SELECT deleted, parentId, sourceId, targetId FROM objectMeta WHERE spaceId = ? AND objectId = ? AND queueId = ''`,
+            [this.#spaceId, fast.feedId],
+          )
+          .objects();
+        if (feed && (feed.parentId !== null || feed.sourceId !== null || feed.targetId !== null)) {
+          return undefined;
+        }
+        if (feed?.deleted === 1) {
+          return [];
+        }
+      }
+      const table = this.#native.query(this.#handle, fast.sql, fast.params, fast.predicates);
+      const dependencies = [
+        { column: table.column('parentId'), allowed: fast.feedId ?? null },
+        { column: table.column('sourceId'), allowed: null },
+        { column: table.column('targetId'), allowed: null },
+      ];
+      for (let row = 0; row < table.rows; row++) {
+        const hidden = dependencies.some(({ column, allowed }) => {
+          const value = table.get(row, column);
+          return value !== null && value !== allowed;
+        });
+        if (hidden) {
+          return undefined;
+        }
+      }
+      return rowsOf(table);
+    });
+  }
+
+  queryChanges(compiled: CompiledChanges): Store<Record<string, unknown>[]> {
+    return attempt(() => {
+      this.#native.logChanges(this.#handle);
+      const table = this.#native.query(this.#handle, compiled.sql, compiled.params);
+      return compiled.grouped
+        ? table.objects().map((row) => JSON.parse(String(row.record)))
+        : table.objects().map((row) => ({
+            key: row.hash,
+            source: 'document',
+            time: row.time,
+            actor: row.actor,
+            seq: row.seq,
+            ops: row.ops,
+          }));
+    });
+  }
+
+  explain(compiled: CompiledQuery): Store<string[]> {
+    return attempt(() =>
+      this.#native
+        .query(this.#handle, `EXPLAIN QUERY PLAN ${compiled.sql}`, compiled.params)
+        .objects()
+        .map((row) => String(row.detail)),
+    );
+  }
+
+  /**
+   * Writes objects, purges ids, and appends the items {@link appendItems} queued, in one engine call
+   * and so one transaction.
+   */
+  write(
+    records: readonly (EntityRecord & { readonly heads?: readonly string[] })[],
+    purged: readonly string[] = [],
+  ): Store<{ results: Map<string, WriteResult>; indexed: Set<string> }> {
+    return attempt(() => {
+      const items = this.#items;
+      this.#items = [];
+      return this.#native.write(this.#handle, records.map(toWrite), purged, items);
+    });
+  }
+
+  /** Each engine call is its own transaction, so a batch needs no outer one. */
+  transaction<A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, E> {
+    return effect;
+  }
+
+  edit(
+    records: readonly (EntityRecord & { readonly heads?: readonly string[] })[],
+  ): Map<string, WriteResult> | undefined {
+    return this.#native.edit(this.#handle, records.map(toWrite));
+  }
+
+  /** A copy of an object's document for history reads: the engine holds the live one. */
+  peekDocument(id: string): Doc | undefined {
+    const bytes = this.#native.document(this.#handle, id);
+    return bytes ? A.load<DatabaseDirectory>(bytes) : undefined;
+  }
+
+  /** What pulled blocks indexed since the last call; local writes index as they are written. */
+  index(): Store<Set<string>> {
+    return Effect.sync(() => {
+      const indexed = this.#pulled;
+      this.#pulled = new Set();
+      return indexed;
+    });
+  }
+
+  takeMerged(): Set<string> {
+    return new Set();
+  }
+
+  redirects(): Store<Map<string, string>> {
+    return attempt(
+      () =>
+        new Map(
+          this.#native
+            .query(this.#handle, 'SELECT fromId, toId FROM echo_sqlite_redirects WHERE spaceId = ?', [this.#spaceId])
+            .objects()
+            .map((row) => [String(row.fromId), String(row.toId)]),
+        ),
+    );
+  }
+
+  mergeRecord(_id: string): Store<{ mergedInto?: string; mergedFrom: string[] }> {
+    return Effect.succeed({ mergedFrom: [] });
+  }
+
+  /** Each feed's stored options, by feed id, which queries read to hide expired items. */
+  feedOptions(): Store<Map<string, Feed.FeedOptions>> {
+    return attempt(() => {
+      const options = new Map<string, Feed.FeedOptions>();
+      const table = this.#native.query(this.#handle, 'SELECT feedId, options FROM feeds WHERE spaceId = ?', [
+        this.#spaceId,
+      ]);
+      for (let row = 0; row < table.rows; row++) {
+        const feedId = table.get(row, 0);
+        const json = table.get(row, 1);
+        const decoded = typeof json === 'string' ? decodeFeedOptions(json) : undefined;
+        if (typeof feedId === 'string' && decoded) {
+          options.set(feedId, decoded);
+        }
+      }
+      return options;
+    });
+  }
+
+  /**
+   * Queues items for the feed, one whole-item block each (an item's JSON, or a tombstone for a removed
+   * id); the next {@link write} appends them in its transaction.
+   */
+  appendItems(feedId: string, namespace: string, items: readonly Record<string, unknown>[]): Store<void> {
+    return Effect.sync(() => {
+      for (const item of items) {
+        this.#items.push({ feedId, namespace, data: EchoFeedCodec.encode(item) });
+      }
+    });
+  }
+
+  /** Blocks of a namespace still to push, and in total, for a feed's sync state. */
+  itemCounts(namespace: string): Store<{ blocksToPush: number; totalBlocks: number }> {
+    return attempt(() => {
+      const [row] = this.#native
+        .query(
+          this.#handle,
+          `SELECT COALESCE(SUM(position IS NULL), 0) AS blocksToPush, COUNT(*) AS totalBlocks FROM blocks
+WHERE spaceId = ? AND namespace = ?`,
+          [this.#spaceId, namespace],
+        )
+        .objects();
+      return { blocksToPush: Number(row?.blocksToPush ?? 0), totalBlocks: Number(row?.totalBlocks ?? 0) };
+    });
+  }
+
+  invalidate(ids: Iterable<string>): void {
+    this.#native.invalidate(this.#handle, [...ids]);
+  }
+
+  versionsOf(key: string): Store<string[]> {
+    return attempt(() =>
+      this.#native
+        .query(
+          this.#handle,
+          `SELECT DISTINCT json_extract(s.snapshot, '$."@meta".version') AS version FROM objectMeta m
+CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
+WHERE m.spaceId = ? AND json_extract(s.snapshot, '$."@meta".key') = ?`,
+          [this.#spaceId, key],
+        )
+        .objects()
+        .flatMap((row) => (typeof row.version === 'string' ? [row.version] : [])),
+    );
+  }
+
+  /** One connection per process writes a file here, so there is no other writer's log to follow. */
+  logChanges(_ids: Iterable<string>): Store<void> {
+    return Effect.void;
+  }
+
+  readChanges(_afterId?: number): Store<{ lastId: number; ids: Set<string> }> {
+    return Effect.succeed({ lastId: 0, ids: new Set() });
+  }
+
+  dataVersion(): Store<number> {
+    return Effect.succeed(0);
+  }
+
+  holdSyncLease(_holder: string, _ttl: number): Store<boolean> {
+    return Effect.succeed(true);
+  }
+
+  releaseSyncLease(_holder: string): Store<void> {
+    return Effect.void;
+  }
+
+  compactDocuments(): Store<number> {
+    return Effect.succeed(0);
+  }
+
+  deletedIds(): Store<string[]> {
+    return attempt(() =>
+      this.#native
+        .query(
+          this.#handle,
+          `WITH RECURSIVE gone(id) AS (
+  SELECT m.objectId FROM objectMeta m WHERE m.spaceId = ?1 AND m.deleted = 1 AND ${DOCUMENT_ROWS}
+  UNION
+  SELECT m.objectId FROM gone g CROSS JOIN objectMeta m ON m.spaceId = ?1 AND m.parentId = g.id WHERE ${DOCUMENT_ROWS}
+  UNION
+  SELECT m.objectId FROM gone g CROSS JOIN objectMeta m ON m.spaceId = ?1 AND m.sourceId = g.id WHERE ${DOCUMENT_ROWS}
+  UNION
+  SELECT m.objectId FROM gone g CROSS JOIN objectMeta m ON m.spaceId = ?1 AND m.targetId = g.id WHERE ${DOCUMENT_ROWS}
+)
+SELECT id FROM gone`,
+          [this.#spaceId],
+        )
+        .objects()
+        .map((row) => String(row.id)),
+    );
+  }
+
+  counts(): Store<{ alive: number; deleted: number }> {
+    return attempt(() => {
+      const [row] = this.#native
+        .query(
+          this.#handle,
+          `SELECT COALESCE(SUM(m.deleted = 0), 0) AS alive, COALESCE(SUM(m.deleted = 1), 0) AS deleted
+FROM objectMeta m WHERE m.spaceId = ? AND ${DOCUMENT_ROWS}`,
+          [this.#spaceId],
+        )
+        .objects();
+      return { alive: Number(row?.alive ?? 0), deleted: Number(row?.deleted ?? 0) };
+    });
+  }
+}
