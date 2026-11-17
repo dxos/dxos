@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import type * as SqlClient from 'effect/sql/SqlClient';
 
-import { RdfStore } from '@dxos/echo-memory';
+import * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { type FeedStore } from '@dxos/feed';
 import { EntityId, type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';

@@ -5,7 +5,7 @@
 import { DataFactory } from 'n3';
 import { describe, test } from 'vitest';
 
-import * as Fact from '../Fact.ts';
+import * as Fact from './Fact.ts';
 import * as Graph from './Graph.ts';
 import * as Mapping from './Mapping.ts';
 import * as Vocab from './Vocab.ts';

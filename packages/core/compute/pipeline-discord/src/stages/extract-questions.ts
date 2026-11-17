@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { AgentRegistry, type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
-import { Fact } from '@dxos/echo-memory';
-import { Graph, hashText } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Hash } from '@dxos/echo-memory';
 import { log } from '@dxos/log';
 import { type Stage } from '@dxos/pipeline';
 import { FactStore } from '@dxos/pipeline-rdf';
@@ -93,7 +92,7 @@ export const questionFacts = (asked: AskedQuestion): Fact.Fact[] => {
         assertion: { subject: node, predicate: 'has text', object: { kind: 'literal', literal: asked.question } },
       },
     ],
-    { name: () => `${asked.source}#question#${hashText(asked.question)}` },
+    { name: () => `${asked.source}#question#${Hash.text(asked.question)}` },
   );
 };
 
@@ -208,7 +207,7 @@ export const extractQuestionsStage = (
                 ...(agent.label ? { agentLabel: agent.label } : {}),
                 ...(event.message.createdAt ? { askedAt: event.message.createdAt } : {}),
                 ...(start >= 0 ? { span: { start, end: start + question.length } } : {}),
-                sourceHash: hashText(text),
+                sourceHash: Hash.text(text),
               });
             }),
           );

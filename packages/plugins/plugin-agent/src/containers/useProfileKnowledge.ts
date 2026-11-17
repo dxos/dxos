@@ -10,8 +10,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { Fact } from '@dxos/echo-memory';
-import { Mapping, Ontology } from '@dxos/echo-memory/rdf';
+import { Fact, Mapping, Ontology } from '@dxos/echo-memory';
 import { useQuery } from '@dxos/echo-react';
 import { type Organization, type Person } from '@dxos/types';
 

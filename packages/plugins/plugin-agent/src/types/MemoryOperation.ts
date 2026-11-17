@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
-import { Ontology } from '@dxos/echo-memory/rdf';
+import { Ontology } from '@dxos/echo-memory';
 import { predicateSection } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';

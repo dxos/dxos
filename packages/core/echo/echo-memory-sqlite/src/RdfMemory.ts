@@ -14,8 +14,20 @@ import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 
 import * as Evaluator from '@dxos/brain/Evaluator';
-import { Fact, MemoryError, MemoryQuery, MemoryService, RdfStore, Subscription } from '@dxos/echo-memory';
-import { Graph, Mapping, Ontology, Sparql, Vocab, hashText } from '@dxos/echo-memory/rdf';
+import {
+  Fact,
+  Graph,
+  Hash,
+  Mapping,
+  MemoryError,
+  MemoryQuery,
+  MemoryService,
+  Ontology,
+  RdfStore,
+  Sparql,
+  Subscription,
+  Vocab,
+} from '@dxos/echo-memory';
 
 //
 // A memory over any RdfStore: facts are quads in the store's shared part, and the memory's own records
@@ -58,7 +70,7 @@ const iriRef = (value: string): string =>
 
 const SEED_QUADS = Ontology.ontologyQuads(Ontology.DEFAULT).map(Sparql.toQuad);
 const SEED_IRIS = new Set(SEED_QUADS.map((quad) => quad.s.value));
-const SEED_VERSION = hashText(SEED_QUADS.map((quad) => `${quad.s.value} ${quad.p.value} ${quad.o.value}`).join('\n'));
+const SEED_VERSION = Hash.text(SEED_QUADS.map((quad) => `${quad.s.value} ${quad.p.value} ${quad.o.value}`).join('\n'));
 const seedMarker = (version: string): RdfStore.Quad => ({
   s: iri(Vocab.ONTOLOGY_GRAPH),
   p: iri(Vocab.SX_SEED),

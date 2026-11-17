@@ -5,8 +5,7 @@
 // @import-as-namespace
 
 import { Obj, type Ref } from '@dxos/echo';
-import { Fact } from '@dxos/echo-memory';
-import { Mapping, Ontology } from '@dxos/echo-memory/rdf';
+import { Fact, Mapping, Ontology } from '@dxos/echo-memory';
 import { EID } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 

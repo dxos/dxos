@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Fact } from '@dxos/echo-memory';
-import { Vocab } from '@dxos/echo-memory/rdf';
+import { Fact, Vocab } from '@dxos/echo-memory';
 import { FactStore, type SemanticIndexError, type SemanticQuery, normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import { BrainOperation } from '#types';

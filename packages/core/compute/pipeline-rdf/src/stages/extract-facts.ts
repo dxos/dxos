@@ -6,8 +6,7 @@ import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
-import { Fact } from '@dxos/echo-memory';
-import { Graph, Ontology, hashText } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Hash, Ontology } from '@dxos/echo-memory';
 import { Stage } from '@dxos/pipeline';
 
 import { type SemanticIndexError } from '../errors.ts';
@@ -42,7 +41,7 @@ export const normalizeEntityId = (label: string) => {
   }
   const normalized = trimmed.toLowerCase();
   const value = normalized.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  return value || `entity-${hashText(normalized)}`;
+  return value || `entity-${Hash.text(normalized)}`;
 };
 
 /**
@@ -163,7 +162,7 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
     },
     recordedAt: context.recordedAt,
     extractor: { id: 'default', model: DEFAULT_MODEL, version: '1' },
-    sourceHash: hashText(doc.text),
+    sourceHash: Hash.text(doc.text),
   };
 };
 
@@ -174,7 +173,7 @@ const placeFacts = (
   ontology: Ontology.Ontology,
 ): Fact.Fact[] => {
   const labels = new Map(labelled);
-  const hash = hashText(doc.text);
+  const hash = Hash.text(doc.text);
   return Graph.assign(
     labelled.map(([fact]) => fact),
     { name: (fact) => `${doc.source}#${hash}#${labels.get(fact) ?? ''}`, ontology },

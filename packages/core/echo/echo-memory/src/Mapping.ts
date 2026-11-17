@@ -7,8 +7,8 @@
 import * as Schema from 'effect/Schema';
 import { DataFactory, type Literal, type NamedNode, type Quad, type Term as RdfTerm } from 'n3';
 
-import * as Fact from '../Fact.ts';
-import { hashText } from './hash.ts';
+import * as Fact from './Fact.ts';
+import * as Hash from './Hash.ts';
 import * as Ontology from './Ontology.ts';
 import * as Vocab from './Vocab.ts';
 
@@ -80,7 +80,7 @@ const nodeKey = (term: RdfTerm): string => (term.termType === 'Literal' ? JSON.s
 
 /** A statement's id within a named graph, from the triple itself, so writing and reading agree. */
 const statementId = (graph: string, subject: RdfTerm, predicate: string, object: RdfTerm): string =>
-  `${graph}#${hashText(`${nodeKey(subject)} ${predicate} ${nodeKey(object)}`)}`;
+  `${graph}#${Hash.text(`${nodeKey(subject)} ${predicate} ${nodeKey(object)}`)}`;
 
 /** The id a fact has once stored in `graph` ({@link triplesToFacts} reads it back). */
 export const idInGraph = (

@@ -15,8 +15,9 @@ Where `MemoryService` lives once Composer uses it in the browser. It sits beside
 ## Packages
 
 ```
-@dxos/echo-memory              MemoryService and RdfStore ports, data model         every platform
-@dxos/echo-memory/rdf          facts <-> RDF and fact queries -> SPARQL (n3)        every platform
+@dxos/echo-memory              flat noun modules: MemoryService, RdfStore, Fact,    every platform
+                               MemoryQuery, … and the RDF mapping (n3), each a
+                               subpath of its own
 @dxos/echo-memory-sqlite       RdfMemory: the memory core over any RdfStore;        every platform
                                LocalRdfStore and MemorySqlite layers               node, bun (CLI)
 @dxos/sparql-sqlite            QuadStore: log-first quad store, shared and local    every platform
@@ -25,12 +26,13 @@ client-services (existing)     RdfHostLayer: one QuadStore per space over the   
                                host's own SQLite database, logged to the space's
                                `facts` feed; served over the bridge
 @dxos/client                   client.rdf(spaceId): RdfStore over the bridge        page
-plugin-memory (new) or         RdfMemory.make(client.rdf(spaceId)) per space        Composer
-plugin-brain (existing)
+plugin-client (existing)       space layers: RdfStore and MemoryService for         Composer
+                               operations, the memory loaded on first use
 ```
 
 1. **`@dxos/echo-memory`** stays interface-only: the `MemoryService` a caller uses and the `RdfStore` a memory
-   runs on. Its `rdf` subpath holds the RDF mapping, which needs `n3` and so stays off the main entry.
+   runs on. Like `@dxos/echo` it is a flat set of noun modules, each a subpath; the RDF mapping modules
+   need `n3`, so workerd-reachable packages import the port modules by subpath.
 2. **`@dxos/echo-memory-sqlite`** has one core, `RdfMemory.make(rdf)`, with no platform code: queries become
    SPARQL, writes become batches, and its own records are quads in the store's local part.
    `LocalRdfStore` and `MemorySqlite` run it in one process over native SQLite.
@@ -38,17 +40,15 @@ plugin-brain (existing)
    already has, and nothing that knows about facts or rules. Every shared batch is appended to the space's
    `facts` feed first and applied by reading it back, so the feed replicates the store and rebuilds it.
    Export and import are serialized and parsed there, beside the store [F-10].
-4. **The memory runs in the page.** A Composer capability gives each space `RdfMemory.make(client.rdf(spaceId))`;
+4. **The memory runs in the page.** plugin-client's space-affinity layers give an operation that asks for
+   `MemoryService` the space's `RdfMemory.make(client.rdf(spaceId))`;
    rule evaluation and outboxes live in the page, their records in the store's local part. Agent memory on
    EDGE comes through the host-service proxy, which replaces `BrainWire`.
 
 ## Questions
 
-1. Where does the Composer capability live?
-   1. A new `plugin-memory` that plugin-agent and plugin-brain both depend on (preferred).
-   2. In `plugin-brain`, with plugin-agent depending on plugin-brain.
-2. EDGE must accept the `facts` namespace before the feed replicates: edge pins `@dxos/protocols`, whose
+1. EDGE must accept the `facts` namespace before the feed replicates: edge pins `@dxos/protocols`, whose
    `isWellKnownNamespace` gates the queue replicator. Does EDGE also run a memory over the replicated
    feed (one Durable Object per space, [F-7.4]), or only store the feed?
-3. Two tabs on one space each run a memory over the same store, so each evaluates the rules and both write
+2. Two tabs on one space each run a memory over the same store, so each evaluates the rules and both write
    the same outbox records. Should one tab (the leader) own the event base?

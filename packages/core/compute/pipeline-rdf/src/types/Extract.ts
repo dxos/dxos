@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Fact } from '@dxos/echo-memory';
-import { type Ontology } from '@dxos/echo-memory/rdf';
+import { type Fact, type Ontology } from '@dxos/echo-memory';
 
 /** An entity the extractor may name: a mention of it is stored under its stable IRI rather than a graph-local one. */
 export type KnownEntity = {

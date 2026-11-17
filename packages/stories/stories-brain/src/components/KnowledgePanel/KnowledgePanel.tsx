@@ -4,8 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type Fact } from '@dxos/echo-memory';
-import { Ontology } from '@dxos/echo-memory/rdf';
+import { type Fact, Ontology } from '@dxos/echo-memory';
 import { ENTITY_HUES, EntityBrowser, toEntityCards } from '@dxos/react-ui-rdf';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';

@@ -9,8 +9,7 @@ import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { Fact } from '@dxos/echo-memory';
-import { Graph } from '@dxos/echo-memory/rdf';
+import { Fact, Graph } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 

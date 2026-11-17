@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Fact } from '@dxos/echo-memory';
-import { Graph, Ontology, Predicate } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Ontology, Predicate } from '@dxos/echo-memory';
 import { Stage } from '@dxos/pipeline';
 
 import { type DocumentFacts } from './extract-facts.ts';

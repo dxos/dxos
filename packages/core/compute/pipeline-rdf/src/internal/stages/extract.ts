@@ -11,8 +11,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { type AiModelNotAvailableError, AiService } from '@dxos/ai';
-import { Fact } from '@dxos/echo-memory';
-import { Ontology } from '@dxos/echo-memory/rdf';
+import { Fact, Ontology } from '@dxos/echo-memory';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Graph, Vocab } from '@dxos/echo-memory/rdf';
+import { Graph, Vocab } from '@dxos/echo-memory';
 import { type SparqlRow, type SparqlTerm } from '@dxos/pipeline-rdf';
 
 /** A prefixed name's local part, as SPARQL's PN_LOCAL allows it without escapes (kept conservative). */

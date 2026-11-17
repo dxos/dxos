@@ -8,8 +8,7 @@ import { useMemo } from 'react';
 
 import type * as Agent from '@dxos/assistant/Agent';
 import { type Database, Filter, Obj, type Ref } from '@dxos/echo';
-import { Fact } from '@dxos/echo-memory';
-import { Graph, Mapping, Ontology, Vocab } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Mapping, Ontology, Vocab } from '@dxos/echo-memory';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { type EntityCardModel, curie, toEntityCards } from '@dxos/react-ui-rdf';

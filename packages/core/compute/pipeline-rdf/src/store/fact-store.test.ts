@@ -6,8 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Fact } from '@dxos/echo-memory';
-import { Ontology, Vocab } from '@dxos/echo-memory/rdf';
+import { Fact, Ontology, Vocab } from '@dxos/echo-memory';
 import { SqlSparqlEngine } from '@dxos/sparql-sqlite';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 

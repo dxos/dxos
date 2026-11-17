@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { type ClientServicesRpc } from '@dxos/client-protocol';
-import { RdfStore } from '@dxos/echo-memory';
+import * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { type SpaceId } from '@dxos/keys';
 
 /**

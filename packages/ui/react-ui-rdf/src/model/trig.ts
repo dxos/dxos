@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Fact } from '@dxos/echo-memory';
-import { Graph, Predicate, Vocab } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Predicate, Vocab } from '@dxos/echo-memory';
 
 /** The vocabularies stored facts use, as TriG prefixes. */
 export const TRIG_PREFIXES = Object.entries(Graph.PREFIXES)

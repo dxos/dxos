@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Fact } from '@dxos/echo-memory';
-import { Predicate } from '@dxos/echo-memory/rdf';
+import { Fact, Predicate } from '@dxos/echo-memory';
 
 /** One value of a property: an entity is a chip that links to its own card, a literal is text. */
 export type EntityCardValue =

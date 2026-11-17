@@ -4,7 +4,7 @@
 
 import { type Expression, type IriTerm, type LiteralTerm, Parser, type Pattern, type Triple } from 'sparqljs';
 
-import { Vocab } from '@dxos/echo-memory/rdf';
+import { Vocab } from '@dxos/echo-memory';
 
 import { SemanticIndexError } from '../../errors.ts';
 import { type SemanticQuery } from './query-builder.ts';

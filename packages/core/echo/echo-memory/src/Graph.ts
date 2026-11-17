@@ -6,8 +6,8 @@
 
 import { type Quad, Writer } from 'n3';
 
-import * as Fact from '../Fact.ts';
-import { hashText } from './hash.ts';
+import * as Fact from './Fact.ts';
+import * as Hash from './Hash.ts';
 import * as Mapping from './Mapping.ts';
 import * as Ontology from './Ontology.ts';
 import * as Vocab from './Vocab.ts';
@@ -59,7 +59,7 @@ export const assign = (
     // Two independent 32-bit hashes: every memory an agent records shares one label, so 32 bits would collide.
     const graph =
       fact.graph ??
-      Fact.GraphIri.make(Vocab.graphIri(`${hashText(label)}-${hashText(key)}${hashText(`\u0000${key}`)}`).value);
+      Fact.GraphIri.make(Vocab.graphIri(`${Hash.text(label)}-${Hash.text(key)}${Hash.text(`\u0000${key}`)}`).value);
     const placed: Fact.Fact = {
       ...fact,
       graph,

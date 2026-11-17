@@ -6,7 +6,7 @@
 
 import { DataFactory } from 'n3';
 
-import * as Fact from '../Fact.ts';
+import * as Fact from './Fact.ts';
 
 const { namedNode, literal } = DataFactory;
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Ontology, Vocab } from '@dxos/echo-memory/rdf';
+import { Ontology, Vocab } from '@dxos/echo-memory';
 
 export type SemanticQuery = {
   /** Entity key (slug or IRI) constrained to the subject position. */

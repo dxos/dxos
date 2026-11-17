@@ -4,8 +4,7 @@
 
 import React, { type ReactNode, useMemo, useState } from 'react';
 
-import { Fact } from '@dxos/echo-memory';
-import { Graph, Ontology } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Ontology } from '@dxos/echo-memory';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';

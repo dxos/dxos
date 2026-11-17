@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { Ontology, Vocab } from '@dxos/echo-memory/rdf';
+import { Ontology, Vocab } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';

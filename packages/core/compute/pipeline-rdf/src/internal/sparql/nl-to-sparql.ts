@@ -9,8 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Parser } from 'sparqljs';
 
 import { AiService } from '@dxos/ai';
-import { Fact } from '@dxos/echo-memory';
-import { Graph, Mapping, Ontology, Vocab } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Mapping, Ontology, Vocab } from '@dxos/echo-memory';
 import { trim } from '@dxos/util';
 
 import { SemanticIndexError } from '../../errors.ts';

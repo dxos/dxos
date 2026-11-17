@@ -5,8 +5,7 @@
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
-import { Fact } from '@dxos/echo-memory';
-import { Ontology } from '@dxos/echo-memory/rdf';
+import { Fact, Ontology } from '@dxos/echo-memory';
 
 import { type SemanticIndexError } from '../errors.ts';
 import { type SemanticQuery } from '../internal/sparql/query-builder.ts';

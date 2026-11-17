@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Fact } from '@dxos/echo-memory';
-import { Ontology, Vocab } from '@dxos/echo-memory/rdf';
+import { Fact, Ontology, Vocab } from '@dxos/echo-memory';
 import { formatTerm } from '@dxos/react-ui-rdf';
 
 export type EntityItem = {

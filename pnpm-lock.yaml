@@ -10793,6 +10793,12 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-memory':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-memory
+      '@dxos/echo-memory-sqlite':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-memory-sqlite
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client

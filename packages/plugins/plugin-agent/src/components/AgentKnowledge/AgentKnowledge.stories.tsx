@@ -5,8 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Fact } from '@dxos/echo-memory';
-import { Graph, Ontology, Vocab } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Ontology, Vocab } from '@dxos/echo-memory';
 import { Editor } from '@dxos/react-ui-editor';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {

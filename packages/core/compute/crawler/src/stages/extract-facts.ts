@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
-import { Fact } from '@dxos/echo-memory';
-import { Graph, hashText } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Hash } from '@dxos/echo-memory';
 import { Stage } from '@dxos/pipeline';
 import { DEFAULT_INDEX_BATCH_SIZE, FactStore, indexFactsBatch } from '@dxos/pipeline-rdf';
 import { type ExtractDocument, type KnownEntity } from '@dxos/pipeline-rdf';
@@ -78,7 +77,7 @@ const profileFacts = (profile: AgentRegistry.Profile, supersedes: readonly strin
   const iri = AgentRegistry.iriForUser(user);
   const usernames = AgentRegistry.usernamesOf(profile);
   const label = profile.label ?? usernames[0] ?? user.id;
-  const hash = hashText(`${label}\n${usernames.join('\n')}`);
+  const hash = Hash.text(`${label}\n${usernames.join('\n')}`);
   const subject = { kind: 'entity', entity: iri, label, type: 'person' } as const;
   const statement = (predicate: string, object: Fact.Encoded['assertion']['object']): Fact.Encoded => ({
     id: '',

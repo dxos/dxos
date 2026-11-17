@@ -8,8 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import { readFileSync } from 'node:fs';
 
-import { Fact } from '@dxos/echo-memory';
-import { Ontology, Vocab } from '@dxos/echo-memory/rdf';
+import { Fact, Ontology, Vocab } from '@dxos/echo-memory';
 import { Pipeline } from '@dxos/pipeline';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 

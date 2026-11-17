@@ -5,8 +5,7 @@
 import React, { type PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Fact } from '@dxos/echo-memory';
-import { Predicate } from '@dxos/echo-memory/rdf';
+import { Fact, Predicate } from '@dxos/echo-memory';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import {

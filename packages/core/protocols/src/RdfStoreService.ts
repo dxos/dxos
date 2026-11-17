@@ -8,7 +8,8 @@ import type * as RpcClient from 'effect/rpc/RpcClient';
 import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 
-import { MemoryQuery, RdfStore } from '@dxos/echo-memory';
+import * as MemoryQuery from '@dxos/echo-memory/MemoryQuery';
+import * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { SpaceId } from '@dxos/keys';
 
 import { serviceError } from './service-rpc.ts';

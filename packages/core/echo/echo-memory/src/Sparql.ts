@@ -7,11 +7,11 @@
 import type * as Schema from 'effect/Schema';
 import { DataFactory, type Quad as RdfQuad, type Term as RdfTerm } from 'n3';
 
-import * as Fact from '../Fact.ts';
-import type * as MemoryQuery from '../MemoryQuery.ts';
-import type * as RdfStore from '../RdfStore.ts';
+import * as Fact from './Fact.ts';
 import * as Mapping from './Mapping.ts';
+import type * as MemoryQuery from './MemoryQuery.ts';
 import * as Ontology from './Ontology.ts';
+import type * as RdfStore from './RdfStore.ts';
 import * as Vocab from './Vocab.ts';
 
 //

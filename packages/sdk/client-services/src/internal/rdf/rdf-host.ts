@@ -11,7 +11,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import * as Stream from 'effect/Stream';
 
 import { EchoHostService } from '@dxos/echo-host';
-import { RdfStore } from '@dxos/echo-memory';
+import * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { type SpaceId } from '@dxos/keys';
 import { RdfStoreService } from '@dxos/protocols/rpc';
 import type { QuadStore } from '@dxos/sparql-sqlite/async';

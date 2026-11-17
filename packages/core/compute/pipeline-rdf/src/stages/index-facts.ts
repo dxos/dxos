@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
-import { Ontology, hashText } from '@dxos/echo-memory/rdf';
+import { Hash, Ontology } from '@dxos/echo-memory';
 import { Stage } from '@dxos/pipeline';
 
 import { type SemanticIndexError } from '../errors.ts';
@@ -26,7 +26,7 @@ export const indexFactsStage = (
   Stage.map('index-facts', (doc: ExtractDocument) =>
     Effect.gen(function* () {
       const store = yield* FactStore;
-      const hash = hashText(doc.text);
+      const hash = Hash.text(doc.text);
       const prev = yield* store.cursor(doc.source);
       if (prev === hash) {
         // Source is unchanged — skip extraction to avoid LLM work and duplicate facts.
@@ -66,7 +66,7 @@ export const indexFactsBatch = (
     const store = yield* FactStore;
     const pending: ExtractDocument[] = [];
     for (const doc of docs) {
-      if ((yield* store.cursor(doc.source)) !== hashText(doc.text)) {
+      if ((yield* store.cursor(doc.source)) !== Hash.text(doc.text)) {
         pending.push(doc);
       }
     }
@@ -81,7 +81,7 @@ export const indexFactsBatch = (
         : yield* extractTranscriptFacts(pending, { ...options, ontology });
     yield* store.putFacts(results.flatMap(({ facts }) => facts));
     for (const { doc } of results) {
-      yield* store.setCursor(doc.source, hashText(doc.text));
+      yield* store.setCursor(doc.source, Hash.text(doc.text));
     }
     return results;
   });

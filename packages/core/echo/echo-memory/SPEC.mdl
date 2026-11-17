@@ -16,9 +16,12 @@ that grew separately and overlap:
 The package holds **interface definitions only**: the `MemoryService` tag and its API, the `RdfStore`
 port a memory runs on, the fact data model and the small pure functions over it. It contains no storage,
 no SPARQL engine and no rule evaluator, so any package can import it — an operation definition, a UI
-component, an EDGE worker — without pulling an implementation into its bundle [F-1]. Its `rdf` subpath
-holds how facts map to RDF and to SPARQL (`Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab`),
-which needs an RDF library and so stays off the main entry [F-1.4].
+component, an EDGE worker — without pulling an implementation into its bundle [F-1]. Like `@dxos/echo`,
+it is a flat set of noun modules (`Fact`, `MemoryQuery`, `MemoryService`, `RdfStore`, `Subscription`,
+`MemoryError`, and the RDF mapping `Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab`, `Hash`),
+each one also a subpath of its own, so a consumer that must not load the RDF library imports only the
+modules it names [F-1.4]. Operations ask for `MemoryService` (or `RdfStore`) in their `services` like
+any other space service [F-1.5].
 
 Implementations live elsewhere. `@dxos/echo-memory-sqlite` holds the memory core, `RdfMemory`: a
 MemoryService over any `RdfStore`, with the goal-rule evaluator and every record it keeps stored as quads.
@@ -554,10 +557,17 @@ feat F-1: Interface package
     then: importing that definition loads no implementation chunk
 
   req F-1.4:
-    when: a package imports `@dxos/echo-memory/rdf`
-    then: it gets the mapping between facts and RDF (`Graph`, `Mapping`, `Ontology`, `Predicate`, `Vocab`) and
-          between fact queries and SPARQL (`Sparql`); that subpath depends on the RDF library `n3` and on no
-          SPARQL engine, SQL or Datalog library, and the main entry imports nothing from it
+    when: a package imports `@dxos/echo-memory/<Module>` for one of its noun modules
+    then: it loads that module and the modules it imports, and nothing else; only the RDF mapping modules
+          (`Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab`) import the RDF library `n3`, so the
+          protocol and client packages, which the workerd bundle reaches, import `RdfStore` and `MemoryQuery`
+          by subpath
+
+  req F-1.5:
+    when: an operation lists `MemoryService.MemoryService` or `RdfStore.RdfStore` in its `services` and runs
+          for a space in the app
+    then: the runtime provides the space's memory (over `client.rdf(space)`) or store, as it provides
+          `Database.Service`; the memory core loads on the first such request
 ```
 
 ```mdl
@@ -889,25 +899,25 @@ scenario T-9: A store moves in bulk
 ## Rules
 
 ```mdl
-rule no-implementation-deps: echo-memory's main entry imports no implementation library
+rule no-implementation-deps: echo-memory imports no storage, SPARQL engine or rule evaluator
   files: src/*.ts
   severity: error
-  grep: from '(n3|sparqljs|\./rdf/[^']*|@dxos/sparql-sqlite|@dxos/sql-sqlite|@dxos/brain|@effect/sql[^']*|node:[^']*)'
-  question: Does this file import an RDF, SPARQL, SQL, Datalog or node-only module, or the rdf subpath?
+  grep: from '(sparqljs|@dxos/sparql-sqlite|@dxos/sql-sqlite|@dxos/brain|@effect/sql[^']*|node:[^']*)'
+  question: Does this file import a SPARQL engine or parser, SQL, Datalog or a node-only module?
 
   `@dxos/echo-memory` is the interface every layer imports; an implementation import here puts that
   machinery in every bundle that names MemoryService [F-1.2].
 ```
 
 ```mdl
-rule rdf-subpath-deps: the rdf subpath imports only an RDF library
-  files: src/rdf/**/*.ts
+rule port-modules-no-n3: the port and data-model modules do not import the RDF library
+  files: src/{Fact,MemoryError,MemoryQuery,MemoryService,RdfStore,Subscription}.ts
   severity: error
-  grep: from '(sparqljs|@dxos/sparql-sqlite|@dxos/sql-sqlite|@dxos/brain|@effect/sql[^']*|node:[^']*)'
-  question: Does this file import a SPARQL engine or parser, SQL, Datalog or a node-only module?
+  grep: from '(n3|\./(Graph|Mapping|Ontology|Predicate|Sparql|Vocab)\.ts)'
+  question: Does this port or data-model module import n3 or one of the RDF mapping modules?
 
-  The rdf subpath maps facts to RDF and fact queries to SPARQL text; it runs in the page, so it needs `n3`
-  for terms and quads and nothing that stores or evaluates [F-1.4].
+  Protocols and the client import these modules by subpath, and n3 on their static graph breaks the workerd
+  bundle; only the RDF mapping modules may load it [F-1.4].
 ```
 
 ## Changelog
@@ -1385,6 +1395,39 @@ decision D-45: In process, `RdfStore.listen` registers its listener before it re
   for: user:dmaretskyi
   affects: [RdfStore]
   why: A forked stream gives no sign that it is subscribed, so a write right after a replica opened went unseen; a registered listener closes that gap where the store is in process.
+```
+
+```mdl
+decision D-46: Operations can request MemoryService the way they request the other services.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-1.5]
+```
+
+```mdl
+decision D-47: In the app, a space-affinity layer gives operations the space's RdfStore from `client.rdf(space)` and a MemoryService over it, contributed beside `Database.Service`; the memory core is imported on the first request. Fills in [D-46].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.5]
+  why: A space-affinity layer is how every space service reaches an operation, and the layer's scope is the memory's lifetime; the dynamic import keeps the rule evaluator and n3 out of the boot bundle.
+```
+
+```mdl
+decision D-48: `@dxos/echo-memory` has the structure of `@dxos/echo`: a flat set of noun modules, the RDF mapping included, with no `rdf` subpath.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-1.4]
+  supersedes: D-40
+```
+
+```mdl
+decision D-49: Every noun module is also a subpath export, `hashText` becomes `Hash.text`, and the packages the workerd bundle reaches (protocols, client, client-services, plugin-client) import `RdfStore`, `MemoryQuery` and `MemoryService` by subpath, so n3 stays off their static graph. Fills in [D-48].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4]
+  why: With the RDF mapping in the main entry, importing the barrel would put n3 on those packages' static graph, which broke the workerd bundle before.
 ```
 
 ## Appendix: Extension Definitions

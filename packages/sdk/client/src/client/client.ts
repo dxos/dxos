@@ -31,7 +31,7 @@ import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
-import { type RdfStore } from '@dxos/echo-memory';
+import type * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';

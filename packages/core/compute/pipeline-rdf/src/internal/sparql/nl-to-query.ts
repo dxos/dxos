@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Ontology } from '@dxos/echo-memory/rdf';
+import { Ontology } from '@dxos/echo-memory';
 import { trim } from '@dxos/util';
 
 import { SemanticIndexError } from '../../errors.ts';

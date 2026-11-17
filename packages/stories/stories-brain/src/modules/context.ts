@@ -4,8 +4,7 @@
 
 import { createContext, useContext } from 'react';
 
-import { Fact } from '@dxos/echo-memory';
-import { Mapping, Vocab } from '@dxos/echo-memory/rdf';
+import { Fact, Mapping, Vocab } from '@dxos/echo-memory';
 
 /**
  * The only state genuinely shared across the Facts-story modules: the currently-displayed facts (a

@@ -8,8 +8,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { Fact } from '@dxos/echo-memory';
-import { Mapping } from '@dxos/echo-memory/rdf';
+import { Fact, Mapping } from '@dxos/echo-memory';
 import { SqlSparqlEngine } from '@dxos/sparql-sqlite';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 

@@ -1,14 +1,14 @@
 diagram flow=down
-group main "@dxos/echo-memory" {
+group main "port and data model" {
   node Fact "Fact" ref="packages/core/echo/echo-memory/src/Fact.ts"
   node Query "MemoryQuery" ref="packages/core/echo/echo-memory/src/MemoryQuery.ts"
   node Port "RdfStore" ref="packages/core/echo/echo-memory/src/RdfStore.ts"
 }
-group rdf "@dxos/echo-memory/rdf (n3)" {
-  node Mapping "Mapping" ref="packages/core/echo/echo-memory/src/rdf/Mapping.ts"
-  node Graph "Graph" ref="packages/core/echo/echo-memory/src/rdf/Graph.ts"
-  node Sparql "Sparql" ref="packages/core/echo/echo-memory/src/rdf/Sparql.ts"
-  node Ontology "Ontology" ref="packages/core/echo/echo-memory/src/rdf/Ontology.ts"
+group rdf "RDF mapping (n3)" {
+  node Mapping "Mapping" ref="packages/core/echo/echo-memory/src/Mapping.ts"
+  node Graph "Graph" ref="packages/core/echo/echo-memory/src/Graph.ts"
+  node Sparql "Sparql" ref="packages/core/echo/echo-memory/src/Sparql.ts"
+  node Ontology "Ontology" ref="packages/core/echo/echo-memory/src/Ontology.ts"
 }
 group users "consumers" {
   node Pipeline "pipeline-rdf"

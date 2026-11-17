@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
-import { Fact } from '@dxos/echo-memory';
-import { Graph, Ontology, Vocab } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Ontology, Vocab } from '@dxos/echo-memory';
 import { EntityId } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 

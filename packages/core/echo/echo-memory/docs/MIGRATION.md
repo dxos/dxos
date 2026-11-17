@@ -26,9 +26,9 @@ block only the tasks that name them.
 - [x] Tests: JSON round trip of `Fact`, every query kind, `Subscription` and `MemoryEvent` (T-6); a fact in
       today's stored shape decodes unchanged [F-2.1]; `currentFacts`; query answer types.
 - [x] `RdfStore` port: `Quad`, `Write`, `Batch`, `Format`, `RdfStoreError` and the `RdfStore` tag [D-39].
-- [x] The `rdf` subpath: `Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab` and `hashText`, moved
-      from `@dxos/pipeline-rdf` with every call site [D-38, D-40]; `Fact.make` and `Fact.makeMany` [D-41].
-- [ ] Add the `## Rules` checks (`no-implementation-deps`, `rdf-subpath-deps`) to CI's agentic review scope.
+- [x] The RDF mapping modules `Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab` and `Hash`, moved
+      from `@dxos/pipeline-rdf` with every call site [D-38, D-48]; `Fact.make` and `Fact.makeMany` [D-41].
+- [ ] Add the `## Rules` checks (`no-implementation-deps`, `port-modules-no-n3`) to CI's agentic review scope.
 
 ## 2. `@dxos/echo-memory-sqlite` (local implementations) — done
 
@@ -71,8 +71,9 @@ two together over native SQLite for the CLI and tests. The package depends on no
       its space deletion (`FEED_SPACE_NAMESPACES`), backups (`FEED_NAMESPACES`) and `QueueSubspaceTag`; then turn
       `replicateFacts` on by default.
 - [ ] Space archives: export and import map every non-trace namespace to `data`; keep `facts` as `facts`.
-- [ ] Composer: a capability giving each space its `MemoryService`, `RdfMemory.make(client.rdf(spaceId))`
-      (`docs/PACKAGES.md` question 1), replacing `FactStoreRegistry` and `BrainMemory`.
+- [x] Operations get `MemoryService` and `RdfStore` for their space from plugin-client's space-affinity layers,
+      like `Database.Service` [F-1.5].
+- [ ] Move plugin-brain's `FactStoreRegistry` and plugin-agent's `BrainMemory` callers onto `MemoryService`.
 - [ ] Carry `quiet` across replicas, if it turns out to matter [D-44].
 
 ## 3. EDGE implementation (`dxos/edge`) — missing

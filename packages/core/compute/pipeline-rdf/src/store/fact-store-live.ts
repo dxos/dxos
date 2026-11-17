@@ -9,8 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { DataFactory, type Quad as RdfQuad } from 'n3';
 import { Parser } from 'sparqljs';
 
-import { Fact } from '@dxos/echo-memory';
-import { Graph, Mapping, Ontology, Sparql, Vocab, hashText } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Hash, Mapping, Ontology, Sparql, Vocab } from '@dxos/echo-memory';
 import {
   EngineCore,
   type Program,
@@ -59,7 +58,7 @@ const LOAD_BATCH = 200;
  */
 const SEED_QUADS = Ontology.ontologyQuads(Ontology.DEFAULT);
 const SEED_IRIS = [...new Set(SEED_QUADS.map((quad) => quad.subject.value))];
-const SEED_VERSION = hashText(
+const SEED_VERSION = Hash.text(
   SEED_QUADS.map((quad) => `${quad.subject.value} ${quad.predicate.value} ${quad.object.value}`).join('\n'),
 );
 const SEED_MARKER = DataFactory.quad(

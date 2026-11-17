@@ -4,8 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Fact } from '@dxos/echo-memory';
-import { Graph, Mapping, Ontology } from '@dxos/echo-memory/rdf';
+import { Fact, Graph, Mapping, Ontology } from '@dxos/echo-memory';
 import { KnowledgeCard, type KnowledgeCardRow, TurtleSnippet, curie } from '@dxos/react-ui-rdf';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';

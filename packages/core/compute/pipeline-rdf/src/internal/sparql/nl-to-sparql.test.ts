@@ -5,7 +5,7 @@
 import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Ontology } from '@dxos/echo-memory/rdf';
+import { Ontology } from '@dxos/echo-memory';
 
 import { SemanticIndexError } from '../../errors.ts';
 import { queuedAiService } from '../../testing/index.ts';
