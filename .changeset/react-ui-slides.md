@@ -9,3 +9,5 @@ The slide dialect and its renderer are a package of their own, `@dxos/react-ui-s
 What stays in `@dxos/plugin-presenter` is the presentation: `Slide.Root` and `Slide.Content` resolving refs, the deck, the gallery, the toolbars, and the plugin's own capabilities and operations. The line is what a second consumer would need rather than what happens to compile, so the deck chrome stays even though it carries no ECHO either.
 
 Consumers of `@dxos/plugin-presenter/SlideTheme` take `@dxos/react-ui-slides` instead; the plugin's `#markdown` subpath is gone.
+
+The package publishes publicly, bootstrapped on npm with `publish-all.yml` as its trusted publisher, so a consumer outside this repo can depend on it.
