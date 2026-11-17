@@ -2,7 +2,8 @@
 
 Draft for discussion; the proposal itself is not implemented yet. The baseline below already includes
 the CI speed-ups that have landed: dxos/dxos#14552 (no `pnpm exec` in moon tasks; knip and the boot
-budget nightly only) and dxos/edge#1533 (edge on TypeScript 7).
+budget nightly only), dxos/dxos#14569 (lint in its own job, without builds) and dxos/edge#1533 (edge on
+TypeScript 7).
 
 ## Savings
 
@@ -58,10 +59,10 @@ PR, ~1 s per moon task without `pnpm exec`, and edge's TypeScript 7 build step (
 How long a PR waits on blocking CI for a **core change** (`@dxos/echo`, 260 dependent packages), the
 worst common case:
 
-|                                                      | Blocking wait                  |
-| :--------------------------------------------------- | :----------------------------- |
-| Baseline (dxos/dxos#14552 and dxos/edge#1533 landed) | ~23 min                        |
-| With this proposal and lint in its own job           | **~13 min** (target: under 15) |
+|                                                  | Blocking wait                  |
+| :----------------------------------------------- | :----------------------------- |
+| Baseline (the speed-ups above landed)            | ~23 min, set by the e2e cells  |
+| With this proposal (lint already in its own job) | **~13 min** (target: under 15) |
 
 Bottlenecks once lint runs in its own job, slowest first:
 
@@ -74,10 +75,10 @@ Bottlenecks once lint runs in its own job, slowest first:
 3. **`test-node`, ~12 min.** ~135 task-minutes, two thirds of it vitest loading modules; each of
    the 4 cells also rebuilds its dependency closure.
 
-Lint in its own job: one repo-wide type-aware oxlint run takes ~3 min with no builds, after the 12
-code-generation tasks (`protocols:gen-buf`, the lezer parsers and others, ~17 s). Today lint is
-~33 task-minutes in 371 per-package tasks that wait on the build. Measured locally; not yet run in
-CI.
+Lint runs in its own job since dxos/dxos#14569: code generation (10 tasks), then one repo-wide
+type-aware oxlint run with no builds. In CI the oxlint run takes 2 min 21 s and the whole job ~3 min,
+in parallel with `check`. Before, lint was ~33 task-minutes in 371 per-package tasks that waited on
+the build inside `check`.
 
 ## Problem
 
