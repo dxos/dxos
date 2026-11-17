@@ -1,6 +1,57 @@
 # CI testing — gating, test ontology and result tracking
 
-Draft for discussion. Nothing here is implemented yet; the knip and boot-budget change and other CI speed-ups are in dxos/dxos#14552.
+Draft for discussion; the proposal itself is not implemented yet. The baseline below already includes
+the CI speed-ups that have landed: dxos/dxos#14552 (no `pnpm exec` in moon tasks; knip and the boot
+budget nightly only) and dxos/edge#1533 (edge on TypeScript 7).
+
+## Savings
+
+Estimated effect of this proposal per month, against a baseline that already includes
+dxos/dxos#14552 and dxos/edge#1533. The overhead cuts in `OPTIMIZATIONS.md` are not included.
+
+| Repo                            | Baseline    | With this proposal | Saving                                    |
+| :------------------------------ | :---------- | :----------------- | :---------------------------------------- |
+| **dxos** (runner-hours)         | ~7,800 h    | ~3,900 h           | **~50%**; ~95 → ~45 runner-min per PR run |
+| **edge** Check (runner-minutes) | ~80,400 min | ~23,500 min        | **~70%**, **~$910 a month**               |
+
+dxos is public and runs on free standard runners, so its saving is capacity and wait time, not
+money. edge is private and its test and build jobs run on billed 4-core runners.
+
+**dxos**, runner-hours per month:
+
+| Job                        | Baseline   | With this proposal | Why                                 |
+| :------------------------- | :--------- | :----------------- | :---------------------------------- |
+| e2e composer + e2e rest    | 3,170      | ~50                | Nightly only                        |
+| test browser (storybook)   | ~1,640     | ~1,640             | Stays blocking                      |
+| test node                  | ~1,500     | ~1,040             | ~30% of node task time goes nightly |
+| check                      | ~350       | ~350               | Unchanged (knip already left PRs)   |
+| advisory, cli, cli-foreign | ~320       | ~5                 | Nightly only                        |
+| plan, native, other        | ~840       | ~840               | Unchanged                           |
+| **Total**                  | **~7,800** | **~3,900**         | **~50% less**                       |
+
+The merge-queue run (~76 runner-min per merged PR) changes little: it already runs only the
+blocking jobs.
+
+**edge** Check, runner-minutes per month:
+
+| Job                  | Baseline               | With this proposal   | Why                                                                    |
+| :------------------- | :--------------------- | :------------------- | :--------------------------------------------------------------------- |
+| test-edge (4 shards) | ~47,800                | ~1,400               | Edge harness nightly (22 runs × 64 min)                                |
+| test-discord-agent   | ~10,800                | ~270                 | Nightly; required since this week, so ~880 runs × 12 min going forward |
+| test-packages        | ~13,900                | ~13,900              | Stays blocking                                                         |
+| build                | ~4,100                 | ~4,100               | Stays blocking                                                         |
+| lint                 | ~3,800                 | ~3,800               | Unchanged                                                              |
+| **Total**            | **~80,400 (~1,340 h)** | **~23,500 (~390 h)** | **~70% less**                                                          |
+
+At GitHub's list price for Linux runners (~$0.016 per minute on 4-core, ~$0.008 on 2-core; check
+the current rates and the org's included minutes), edge Check goes from ~$1,255 to ~$345 a month.
+Running `test-packages` tasks in parallel (`OPTIMIZATIONS.md` #9) would save another ~8,000 4-core
+minutes, ~$130 a month.
+
+How the baseline was derived: the measured two weeks to 2026-11-14 (dxos ~8,600 h, edge ~82,500
+min), minus what the landed speed-ups remove: knip (~3.5 min) and the boot budget (~4 min) on every
+PR, ~1 s per moon task without `pnpm exec`, and edge's TypeScript 7 build step (~2 → ~0.75 min in
+`build` and `test-packages`).
 
 ## Problem
 
@@ -26,7 +77,7 @@ Basin on R2 is the fallback if we want one event per test.
   runs, real browsers end to end).
 - `nightly` tests run only in the nightly full run and on demand (a dispatched full run on a PR).
 - The nightly run executes everything, uncached and unscoped.
-- knip and the boot budget move to nightly in dxos/dxos#14552.
+- knip and the boot budget already moved to nightly (dxos/dxos#14552).
 
 ### Stable, flaky, advisory
 
@@ -112,27 +163,28 @@ Nightly total   ~275 min per full run   (plus ~80 min of forced rebuilds to remo
 
 ### Typical PR runs, before and after
 
-Three PR shapes, one Check run each (a ready PR; the merge-queue run comes on top). Minutes are
+Three PR shapes, one Check run each (a ready PR; the merge-queue run comes on top). The baseline
+includes dxos/dxos#14552 and dxos/edge#1533. Minutes are
 runner-minutes, the cost; wall is how long the author waits for the blocking checks.
 
-| PR                                                       | Today                           | With tags (this proposal) | With tags and overhead cuts |
+| PR                                                       | Baseline                        | With tags (this proposal) | With tags and overhead cuts |
 | :------------------------------------------------------- | :------------------------------ | :------------------------ | :-------------------------- |
-| **Core change** (`@dxos/echo`, 260 dependent packages)   | ~370 min; wall ~26 min          | ~185 min; wall ~23 min    | ~140 min; wall ~22 min      |
-| **One Composer plugin** (`plugin-kanban`, 12 dependents) | ~155 min; wall ~8 min (e2e ~12) | ~35 min; wall ~5 min      | ~25 min; wall ~5 min        |
-| **Edge `db-service`** (edge has no affected scoping)     | ~110 min; wall ~23 min          | ~34 min; wall ~23 min     | ~19 min; wall ~8 min        |
+| **Core change** (`@dxos/echo`, 260 dependent packages)   | ~355 min; wall ~23 min          | ~185 min; wall ~23 min    | ~140 min; wall ~22 min      |
+| **One Composer plugin** (`plugin-kanban`, 12 dependents) | ~146 min; wall ~5 min (e2e ~12) | ~35 min; wall ~5 min      | ~25 min; wall ~5 min        |
+| **Edge `db-service`** (edge has no affected scoping)     | ~104 min; wall ~22 min          | ~34 min; wall ~23 min     | ~19 min; wall ~8 min        |
 
 Where the savings come from:
 
-- **Core change.** Today: `check` ~26 min (the compile gate rebuilds every dependent), `test-node`
+- **Core change.** Baseline: `check` ~23 min (the compile gate rebuilds every dependent), `test-node`
   4 cells (~215 task-minutes of tests), `test-browser` 8 cells (~85 task-minutes, mostly storybook),
-  all 14 e2e cells (~140 min), plus boot budget, advisory and CLI. With tags: e2e, boot budget,
-  advisory, CLI and knip leave the PR, and ~80 of the 215 node task-minutes (`client-e2e`, AI and
+  all 14 e2e cells (~140 min), plus advisory and CLI. With tags: e2e, advisory and CLI leave the
+  PR, and ~80 of the 215 node task-minutes (`client-e2e`, AI and
   agent packages, heavy plugin files) go nightly. Storybook (~110 runner-min) is now the largest
   blocking cost; `check` is the critical path for wall time.
-- **One plugin.** Today the PR pays ~90 min of Composer e2e, because every plugin is bundled into
+- **One plugin.** In the baseline the PR pays ~90 min of Composer e2e, because every plugin is bundled into
   `composer-app`, which re-triggers all 8 Composer e2e cells, plus ~15 min of kanban e2e. Its own
-  tests are ~14 task-minutes of node tests and ~8 of stories. With tags, the PR runs `check` without
-  knip, 4 node cells and the storybook cells for the affected packages.
+  tests are ~14 task-minutes of node tests and ~8 of stories. With tags, the PR runs `check`, 4 node
+  cells and the storybook cells for the affected packages.
 - **Edge `db-service`.** Edge Check runs every package on every PR: lint, build, `test-packages`
   (23 min), 4 `test-edge` shards (64 min) and the Discord agent job (12 min). With tags, the edge
   harness and Discord agent go nightly, leaving lint, build and `test-packages`, whose 23 min are
@@ -141,54 +193,48 @@ Where the savings come from:
   is where `db-service` is exercised together with the rest of the worker, so a blocking subset of
   harness files that cover `db-service` (one shard) may be worth keeping.
 
+#### Where a core change's ~185 runner-minutes go
+
+Even with tags, a change to `@dxos/echo` rebuilds and retests its 260 dependents. From the nightly's
+per-task times for those packages (task-minutes; runner-minutes after dividing by the parallelism
+each job uses):
+
+| Job                                         | Part                                                                | Task-min | Runner-min |
+| :------------------------------------------ | :------------------------------------------------------------------ | :------- | :--------- |
+| `check` (4 tasks at a time)                 | build (`vite build` + `tsc` per package)                            | 34       | ~8         |
+|                                             | lint (type-aware oxlint per package)                                | 30       | ~8         |
+|                                             | module structure, edge release, plugin set, docs, repo scripts      | ~15      | ~4         |
+|                                             | job setup, waiting on the dependency graph                          |          | ~3         |
+| `test-node` (4 cells × 4 tasks at a time)   | test bodies                                                         | 41       | ~10        |
+|                                             | vitest loading each file's modules, setup files, teardown           | 74       | ~19        |
+|                                             | workerd tests (mostly bundling)                                     | 9        | ~2         |
+|                                             | process start outside vitest                                        | 9        | ~2         |
+|                                             | per cell: setup, sandbox tools, building its own dependency closure |          | ~20        |
+| `test-browser` (8 cells × 1 task at a time) | story test bodies                                                   | 27       | ~27        |
+|                                             | vitest module loading and setup                                     | 30       | ~30        |
+|                                             | other inside vitest (browser start, environment)                    | 21       | ~21        |
+|                                             | process start, vitest browser tests                                 | 7        | ~7         |
+|                                             | per cell: setup, Playwright, building its own dependency closure    |          | ~24        |
+| **Total**                                   |                                                                     |          | **~185**   |
+
+- **Test bodies are ~20% of it** (~38 of ~185 runner-minutes). The rest is per-package start-up,
+  module loading, and every job and cell building or fetching the same dependency closure.
+- **Storybook is the largest single cost (~109).** Each `test-browser` cell runs one package at a
+  time, so its start-up is never overlapped, and 8 cells each pay setup and a closure build.
+- **Builds are paid several times.** `check` builds the 260 dependents, and every test cell builds
+  the part of that graph its targets need, because the cells start in parallel with `check` rather
+  than after it.
+- The levers are in `OPTIMIZATIONS.md` (dxos/dxos#14552): per-file module loading (#7), a lean
+  library-build config (#2), one lint run (#5) and fewer, larger cells (#10).
+
 Model and assumptions: test work is the nightly per-task moon time of the packages that depend on the
 changed one (from `package.json` workspace dependencies); job counts and per-job overhead (~2–3 min of
 setup, snapshot mount and tool installs per cell) come from the PR runs of 2026-11-07 to 11-14.
-`check` uses the measured PR median (8 min) for a leaf change and the p90 (26 min) for a core change.
+`check` uses the measured PR median (8 min) for a leaf change and the p90 (26 min) for a core change,
+each minus knip's ~3.5 min.
 "Overhead cuts" assumes node test task time drops ~40% (no per-file isolation, fewer vitest
 processes), storybook ~25%, sandbox tools baked into the snapshot, and edge `test-packages` run in
 parallel. These are estimates, ±30%.
-
-### Monthly savings
-
-Baseline is the last two weeks of CI. "After" assumes this proposal plus the CI speed-ups in
-dxos/dxos#14552 (no `pnpm exec`, knip and boot budget nightly) and edge's move to TypeScript 7
-(dxos/edge#1533: a clean edge build drops from ~1.5 min to ~32 s). The overhead cuts in
-`OPTIMIZATIONS.md` (dxos/dxos#14552) are not included.
-
-**dxos** — public repository on free standard runners, so the saving is runner capacity (queueing)
-and wait time, not money.
-
-| Job                        | Today (runner-h/month) | After      | Why                                                       |
-| :------------------------- | :--------------------- | :--------- | :-------------------------------------------------------- |
-| e2e composer + e2e rest    | 3,170                  | ~50        | Nightly only                                              |
-| test browser (storybook)   | 1,690                  | ~1,640     | Stays blocking; ~1 s less per task                        |
-| test node                  | 1,550                  | ~1,040     | ~30% of node task time goes nightly; ~1 s less per task   |
-| check                      | 670                    | ~350       | knip off PRs (~3.5 min × ~4,300 runs); ~1 s less per task |
-| boot-budget, advisory, cli | 680                    | ~5         | Nightly only                                              |
-| plan, native, other        | ~840                   | ~840       | Unchanged                                                 |
-| **Total**                  | **~8,600**             | **~3,900** | **~55% less**                                             |
-
-Per PR run that is ~100 runner-minutes today and ~45 after; the merge-queue run (~76) changes
-little, because it already runs only the blocking jobs.
-
-**edge** — private repository; `test-edge`, `test-packages`, `test-discord-agent` and `build` run on
-billed 4-core runners, `lint` on 2-core.
-
-| Job                  | Today (runner-min/month) | After                | Why                                                                        |
-| :------------------- | :----------------------- | :------------------- | :------------------------------------------------------------------------- |
-| test-edge (4 shards) | 47,800                   | ~1,400               | Edge harness nightly (22 runs × 64 min)                                    |
-| test-discord-agent   | ~10,800                  | ~270                 | Nightly; it became required this week, so ~880 runs × 12 min going forward |
-| test-packages        | 15,000                   | ~13,900              | Stays blocking; TS 7 cuts its build step from ~2 to ~0.75 min              |
-| build                | 5,100                    | ~4,100               | TS 7 build step                                                            |
-| lint                 | 3,800                    | 3,800                | Unchanged                                                                  |
-| **Total**            | **~82,500 (~1,375 h)**   | **~23,500 (~390 h)** | **~70% less**                                                              |
-
-At GitHub's list price for Linux runners (~$0.016 per minute on 4-core, ~$0.008 on 2-core; check
-the current rates and the org's included minutes), edge Check goes from ~$1,290 to ~$345 a month,
-~$950 saved. Running `test-packages` tasks in parallel (`OPTIMIZATIONS.md` #9) would take another
-~8,000 4-core minutes, ~$130 a month. The plugins-mode workflow cost another ~57,000 runner-minutes
-a month until it became dispatch-only on 2026-11-13; that saving has already happened.
 
 The rest of this document is the evidence behind these decisions.
 
@@ -444,7 +490,7 @@ These cost as much as the tests, and no tag fixes them:
   compile gate's own ~38 min. That is ~80 min of duplicate work per nightly, and why 3 of the last 5
   nightly `check` jobs hit the 75-min timeout. PRs and the merge queue are not affected: the later
   stages hit the cache there.
-- **knip is never cached:** ~3.5 min on every run, the longest step on a warm PR. Moves to nightly in dxos/dxos#14552.
+- **knip is never cached:** ~3.5 min on every run, the longest step on a warm PR. Moved to nightly in dxos/dxos#14552.
 - **Cancelled runs are spent minutes.** A new push cancels the running Check: 49% of PR
   `e2e-composer` runs and 33% of `test-browser` runs, and 12% of edge `test-edge` minutes.
 - **Setup is paid per job:** 87 s in each edge job (~10 runner-minutes per Check run); dxos PR jobs
