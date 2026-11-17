@@ -536,10 +536,29 @@ describe('EdgeAgent', () => {
       const healed = yield* EdgeAgent.githubCredentialsWith(refuses).pipe(Effect.provide(resolver('ghu-fresh')));
       expect(healed).toEqual({ GITHUB_TOKEN: 'ghu-fresh', GH_TOKEN: 'ghu-fresh' });
       expect(requests).toEqual([false, true]);
+      requests.length = 0;
 
       const broken = yield* EdgeAgent.githubCredentialsWith(refuses).pipe(Effect.provide(resolver('ghu-revoked')));
       expect(broken).toMatchObject({ GH_TOKEN: 'ghu-revoked' });
       expect(broken[EdgeAgent.GITHUB_TOKEN_ERROR_ENV]).toMatch(/reconnect_GitHub/);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('exchanges once more when the stored token differs from the one EDGE holds, so the copy is rewritten', () =>
+    Effect.gen(function* () {
+      const requests: (boolean | undefined)[] = [];
+      const resolver = Layer.succeed(Credential.AccessTokenResolver, {
+        resolve: async ({ refresh }) => {
+          requests.push(refresh);
+          return refresh ? 'ghu-rewritten' : 'ghu-current';
+        },
+      });
+      yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'github.com', token: 'ghu-stale' }));
+      const lent = yield* EdgeAgent.githubCredentialsWith(() => Effect.succeed({ refused: false })).pipe(
+        Effect.provide(resolver),
+      );
+      expect(lent).toEqual({ GITHUB_TOKEN: 'ghu-rewritten', GH_TOKEN: 'ghu-rewritten' });
+      expect(requests).toEqual([false, true]);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 

@@ -592,6 +592,12 @@ export const githubCredentialsWith = (
     }
     let token = Exit.isSuccess(first) ? first.value : accessToken.token;
     let error = Exit.isFailure(first) ? firstLine(first.cause) : undefined;
+    // EDGE refreshed the grant without writing the new token back, so the stored copy other plugins lend is revoked;
+    // one more exchange writes it back.
+    if (Exit.isSuccess(first) && !isManagedAccessToken(accessToken.token) && first.value !== accessToken.token) {
+      const exchanged = yield* resolve(true);
+      token = Exit.isSuccess(exchanged) ? exchanged.value : token;
+    }
     const verdict = yield* refuses(token);
     if (verdict.unchecked !== undefined) {
       error ??= `could not check the token with GitHub: ${verdict.unchecked}`;
