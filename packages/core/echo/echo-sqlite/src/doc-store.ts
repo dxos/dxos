@@ -4,7 +4,7 @@
 
 import * as A from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
-import type * as SqlClient from 'effect/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
 import { type DatabaseDirectory, type EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -183,15 +183,34 @@ export class DocStore {
    */
   compact(ids: readonly string[]): Store<number> {
     return Effect.gen({ self: this }, function* () {
-      const docs = yield* this.load(ids.filter((id) => !this.#unsaved.has(id)));
+      const sql = yield* SqlClient.SqlClient;
       let deleted = 0;
-      for (const [id, doc] of docs) {
+      for (const id of ids) {
+        if (this.#unsaved.has(id)) {
+          continue;
+        }
         const key = { spaceId: this.#spaceId, feedNamespace: AUTOMERGE_NAMESPACE, feedId: documentFeedId(id) };
         if ((yield* this.#feedStore.countBlocks(key)) <= 1) {
           continue;
         }
-        const result = yield* this.#feedStore.appendReplacing({ ...key, data: A.save(doc) });
-        deleted += result.deleted;
+        // The snapshot is read from the stored blocks, not the cache, in the transaction that replaces them:
+        // a cached copy lacks pulled chunks not yet indexed, and the replacement deletes every earlier block.
+        deleted += yield* sql.withTransaction(
+          Effect.gen({ self: this }, function* () {
+            const { blocks } = yield* this.#feedStore.query({
+              spaceId: this.#spaceId,
+              feedNamespace: AUTOMERGE_NAMESPACE,
+              query: { feedIds: [key.feedId] },
+            });
+            if (blocks.length <= 1) {
+              return 0;
+            }
+            const doc = A.load<DatabaseDirectory>(concat(blocks.map((block) => block.data)));
+            const result = yield* this.#feedStore.appendReplacing({ ...key, data: A.save(doc) });
+            this.#remember(id, doc);
+            return result.deleted;
+          }),
+        );
       }
       return deleted;
     });
