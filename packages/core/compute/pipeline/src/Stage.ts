@@ -135,6 +135,8 @@ export type BatchOptions<In> = BufferOptions & {
    * along, in order, with the next weighted items, or is flushed when the stream ends.
    */
   readonly weight?: (item: In) => number;
+  /** Batches in flight at once (default 1); outputs are still emitted in batch order. */
+  readonly concurrency?: number;
 };
 
 /**
@@ -151,7 +153,7 @@ export const batch = <In, Out, E, R>(
   options: BatchOptions<In>,
   fn: (items: readonly In[]) => Effect.Effect<readonly Out[], E, R>,
 ): Stage<In, Out, E, R> => {
-  const { size, weight = () => 1 } = options;
+  const { size, weight = () => 1, concurrency = 1 } = options;
   if (!Number.isInteger(size) || size < 1) {
     throw new RangeError(`Stage.batch size must be a positive integer: ${size}`);
   }
@@ -168,7 +170,7 @@ export const batch = <In, Out, E, R>(
         },
         { onHalt: (pending) => (pending.items.length > 0 ? [pending.items] : []) },
       ),
-      Stream.mapEffect((items) => fn(items).pipe(Effect.withSpan(id)), { concurrency: 1 }),
+      Stream.mapEffect((items) => fn(items).pipe(Effect.withSpan(id)), { concurrency }),
       Stream.flattenIterable,
       withBuffer(options),
     );

@@ -1,0 +1,198 @@
+---
+id: org.dxos.plugin.finance
+name: FinancePlugin
+version: 0.1.0
+---
+
+Finance research over public sources that need no API key. Every source follows one shape:
+**external source → ECHO feed → extract**. An ingest reads a source and appends its items to an
+ECHO `Feed` of their own, each carrying a foreign key to its origin (`Obj.Meta.keys`, e.g.
+`{ source: 'sec.gov', id: <accession> }`, `{ source: 'news.google.com', id: <guid> }`), deduped on
+that key so reruns are idempotent. Extraction reads the feeds, never the network, and writes one
+RDF fact store, recording each item's foreign key as the provenance of its facts.
+
+Text items — news headlines, press releases, central-bank and statistics releases, Reddit posts,
+crypto news — are magazine `Subscription.Post` objects (the plugin reuses plugin-magazine's feed
+parsing and post type) and go through LLM extraction with a finance vocabulary pack, a ticker
+mention index, sentiment and event classification. Structured rows — daily prices, FINRA short
+volume, SEC Form 4 insider trades, 13F holdings, company filings, House disclosure filings — are
+`Observation` objects and become facts deterministically, with no model calls, on the same
+predicates and the same company entities, so one query joins a company's news sentiment with its
+prices and insider trades.
+
+The plugin itself is headless and contributes the types; the pipeline runs as the opt-in
+`plugin-finance:run` moon task against a local, persistent client.
+
+## Dependencies
+
+```mdl
+uses org.dxos.spec.changelog: The dialect of this spec's `## Changelog` and its attribution rules.
+uses org.dxos.plugin.magazine: Feed parsing (`FeedParser`) and the `Subscription.Post` text item type.
+```
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+### Types registered by this plugin
+
+| Type                  | Source                               |
+| --------------------- | ------------------------------------ |
+| `Feed.Feed`           | `@dxos/echo`                         |
+| `Finance.Observation` | this plugin                          |
+| `Subscription.Post`   | `@dxos/plugin-magazine/Subscription` |
+
+### Sources
+
+| Feed                 | Source                                                                  | Item          | Extraction    |
+| -------------------- | ----------------------------------------------------------------------- | ------------- | ------------- |
+| `news`               | Google News search (weekly windows, per ticker), Yahoo per ticker, CNBC, MarketWatch, Nasdaq, Seeking Alpha | `Post`        | LLM           |
+| `press-releases`     | PR Newswire                                                             | `Post`        | LLM           |
+| `central-banks`      | Federal Reserve press and speeches, ECB, Bank of England, BEA           | `Post`        | LLM           |
+| `reddit`             | r/investing, r/stocks, r/SecurityAnalysis, r/wallstreetbets             | `Post`        | LLM           |
+| `crypto`             | CoinDesk, The Block                                                     | `Post`        | LLM           |
+| `sec-filings`        | EDGAR company feeds: 8-K, 10-Q, 10-K, S-1                               | `Observation` | deterministic |
+| `sec-insider-trades` | EDGAR Form 4 XML                                                        | `Observation` | deterministic |
+| `sec-13f`            | EDGAR 13F information tables of a few well-known filers                 | `Observation` | deterministic |
+| `prices`             | Yahoo Finance chart endpoint, daily bars                                | `Observation` | deterministic |
+| `finra-short-volume` | FINRA daily short-sale volume files                                     | `Observation` | deterministic |
+| `house-disclosures`  | House Clerk financial-disclosure index (periodic transaction reports)   | `Observation` | deterministic |
+
+## Features
+
+```mdl
+feat F-1: Ingest into ECHO feeds
+
+  req F-1.1: Each source writes its items to an ECHO feed of its own, of kind
+    `org.dxos.plugin.finance.feed/<feed>`.
+
+  req F-1.2: Every item carries one foreign key to its origin, and an ingest appends only items
+    whose key the feed does not hold, so a rerun adds only what is new. A text item is also a
+    duplicate of a stored item with the same outlet and normalized headline.
+
+  req F-1.3: A source that fails is reported and skipped; the others still run. Sources that need
+    an API key are not used.
+
+  req F-1.4: Requests are polite: SEC EDGAR under its 10 requests a second with a user agent that
+    names the tool and the DXOS project contact, Reddit with a descriptive user agent and a pause
+    between requests.
+```
+
+```mdl
+feat F-2: One fact store
+
+  req F-2.1: Extraction reads the ECHO feeds, never the network, and writes one RDF fact store.
+
+  req F-2.2: Every fact's `attribution.source` is its item's foreign key, `<source>:<id>`.
+
+  req F-2.3: Text items go through `indexFactsBatch` with the seed ontology, schema.org and the
+    finance packs, and the listed companies as known entities; then the ticker mention index
+    (regex, then model linking for names), sentiment per article and per ticker, and event types.
+    Each model stage is attributed to its own `AiUsage` stage.
+
+  req F-2.4: Structured rows become facts without a model, on predicates of the finance
+    namespace, about the same company IRIs the text facts use.
+
+  req F-2.5: Extraction resumes: an item whose content hash matches its cursor is skipped.
+```
+
+```mdl
+feat F-3: The plugin
+
+  req F-3.1: The plugin is headless and contributes a schema module registering the types in the
+    table above.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: A rerun adds nothing new
+  given: A source has been ingested.
+  when: It is ingested again with the same upstream items.
+  then: No item is appended, and the feed holds each foreign key once.
+```
+
+```mdl
+scenario T-2: One ticker across sources
+  given: The pipeline has run over news, prices and Form 4.
+  when: `plugin-finance:query` runs for a ticker.
+  then: Each day shows the ticker's news sentiment, close, daily return, short-volume ratio and
+    insider trades, all read from the one fact store.
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `org.dxos.spec.changelog` for the attribution rules.
+
+```mdl
+decision D-1: Finance extraction lives in a new plugin, plugin-finance, which imports feed parsing and the post type from plugin-magazine instead of duplicating them.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-1.1, F-3.1]
+```
+
+```mdl
+decision D-2: Every source runs external source → ECHO feed → extract, each item keyed by its origin, and extraction records that key as the facts' provenance.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-1.1, F-1.2, F-2.1, F-2.2]
+```
+
+```mdl
+decision D-3: One fact store holds text and structured facts; structured rows become facts without a model on the same predicates and company entities.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-2.3, F-2.4]
+```
+
+```mdl
+decision D-4: Text items are magazine `Subscription.Post` objects and structured rows are one `Finance.Observation` type with a `kind`, numeric `values` and text `labels`. Fills in [D-2].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1, F-3.1]
+  why: A post already models a feed item and the magazine UI can show it; one observation type keeps the six structured sources to one schema the deterministic extractor switches on.
+  rejected: A type per structured source, which multiplies schemas for rows that differ only in their fields.
+```
+
+```mdl
+decision D-5: Daily prices come from Yahoo Finance's keyless chart endpoint; Stooq is dropped. Fills in [D-3].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  why: Stooq's CSV now answers with a JavaScript proof-of-work challenge, which a tool must not bypass.
+```
+
+```mdl
+decision D-6: Dropped sources that refused keyless access when checked: StockTwits (403 behind Cloudflare), GlobeNewswire (403), Business Wire (empty feed), BLS (403), Yahoo's rssindex (404), Investing.com (timeout), Senate eFD (needs a session and an agreement form). House disclosures are read as filing records only, since their trades are in PDFs. Fills in [D-2].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+```
+
+```mdl
+decision D-7: SEC EDGAR is read with the user agent `dxos-finance-research contact@dxos.org`, the DXOS project's public contact that plugin-ibkr's EDGAR client already sends. Fills in [D-2].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4]
+  why: EDGAR answers 403 to a user agent without a contact address, and no person's address may be used.
+```
+
+```mdl
+decision D-8: Text extraction runs without thinking. Fills in [D-3].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.3]
+  why: On a 150-headline sample it found 0.97 facts per item against 0.71 with thinking, 93% on finance terms, at half the cost.
+```

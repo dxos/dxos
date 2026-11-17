@@ -1,0 +1,144 @@
+---
+id: org.dxos.spec.video
+name: DSL.Video
+version: 0.1
+extends:
+  - org.dxos.spec.core
+  - org.dxos.spec.changelog
+---
+
+The video dialect: a script for a short video. It is a sample, so a second dialect beside the
+software one shows what is shared between them. Plugin-projects' testing Video package offers it,
+with a slash command for `scene`, `shot`, `voiceover` and `caption`.
+
+Roles and links map onto it as they do onto code. A `scene` states what one part of the video must
+achieve, so it is the anchor. Its shots are its parts, and voiceover and captions run over them.
+Characters appear across scenes, as types are shared across features, so scenes gather around the
+characters they share. Assets come from outside the script, and a `screening` checks the scenes
+with an audience.
+
+## Extensions
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `asset`     | `org.dxos.mdl.asset@0.1`     |
+| `caption`   | `org.dxos.mdl.caption@0.1`   |
+| `character` | `org.dxos.mdl.character@0.1` |
+| `scene`     | `org.dxos.mdl.scene@0.1`     |
+| `screening` | `org.dxos.mdl.screening@0.1` |
+| `shot`      | `org.dxos.mdl.shot@0.1`      |
+| `voiceover` | `org.dxos.mdl.voiceover@0.1` |
+
+## Definitions
+
+```mdl
+ext scene
+  uri: org.dxos.mdl.scene@0.1
+  desc: One part of the video and what it must leave the viewer with. The inline prose is its name.
+  inline-prose: true
+  role: anchor
+  icon: ph--film-slate--regular
+  hue: emerald
+  fields:
+    duration: Duration           # seconds, e.g. `12s`
+    goal: Prose                  # what the viewer knows or feels when it ends
+    follows?: SceneRef           # the scene it cuts from
+    cast?: CharacterRef[]        # who appears or speaks in it
+  links:
+    cast: aggregates
+    follows: depends-on
+```
+
+```mdl
+ext shot
+  uri: org.dxos.mdl.shot@0.1
+  desc: One continuous take of a scene.
+  inline-prose: true
+  role: structure
+  icon: ph--video-camera--regular
+  hue: blue
+  fields:
+    scene: SceneRef
+    camera: Prose                # framing and movement
+    action: Prose                # what happens in frame
+    assets?: AssetRef[]          # footage, graphics or music it uses
+  links:
+    assets: aggregates
+    scene: part-of
+```
+
+```mdl
+ext voiceover
+  uri: org.dxos.mdl.voiceover@0.1
+  desc: A line spoken over a scene. The inline prose is the line.
+  inline-prose: true
+  role: structure
+  icon: ph--microphone--regular
+  hue: orange
+  fields:
+    scene: SceneRef
+    at: Timecode                 # from the start of the scene
+    by?: CharacterRef            # who speaks it
+    over?: ShotRef[]             # the shots it plays over
+  links:
+    by: references
+    over: references
+    scene: part-of
+```
+
+```mdl
+ext caption
+  uri: org.dxos.mdl.caption@0.1
+  desc: Text on screen. The inline prose is the text.
+  inline-prose: true
+  role: structure
+  icon: ph--closed-captioning--regular
+  hue: cyan
+  fields:
+    scene: SceneRef
+    at: Timecode
+    transcribes?: VoiceoverRef   # the line it captions, if any
+  links:
+    scene: part-of
+    transcribes: references
+```
+
+```mdl
+ext character
+  uri: org.dxos.mdl.character@0.1
+  desc: Someone who appears or speaks in the video. The inline prose is who they are.
+  inline-prose: true
+  role: structure
+  icon: ph--user--regular
+  hue: pink
+  fields:
+    voice?: Prose                # how they sound, for casting
+```
+
+```mdl
+ext asset
+  uri: org.dxos.mdl.asset@0.1
+  desc: Material the script uses but does not make: footage, a logo, a track.
+  inline-prose: true
+  role: context
+  icon: ph--image--regular
+  hue: amber
+  fields:
+    source: Prose                # where it comes from, and its licence
+```
+
+```mdl
+ext screening
+  uri: org.dxos.mdl.screening@0.1
+  desc: A showing of a cut to an audience, and what it must show.
+  inline-prose: true
+  role: verification
+  icon: ph--projector-screen--regular
+  hue: teal
+  fields:
+    covers: SceneRef[]
+    audience: Prose
+    expect: Prose                # what the audience must take away
+  links:
+    covers: verifies
+```

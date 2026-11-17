@@ -1,0 +1,50 @@
+---
+// A topic's brand logotype at a given mark height, or its label where the brand has no logotype.
+import { type Topic } from './topics.ts';
+
+interface Props {
+  topic: Topic;
+  /** Height of the mark itself; the logotype's view box adds padding around it. */
+  size?: number;
+}
+
+const { topic, size = 28 } = Astro.props;
+// The mark fills 962 × 0.64 of the logotype's 1024-unit height.
+const height = (size * 1024) / (962 * 0.64);
+const margin = -((height - size) / 2);
+---
+
+{
+  topic.logotype ? (
+    <span class="mark" style={`--h:${height}px;--m:${margin}px`} aria-label={topic.label} role="img">
+      <Fragment set:html={topic.logotype} />
+    </span>
+  ) : (
+    <span class="text" style={`--s:${size}px`}>
+      {topic.label}
+    </span>
+  )
+}
+
+<style>
+  .mark {
+    align-items: center;
+    display: inline-flex;
+  }
+  .mark :global(svg) {
+    fill: currentColor;
+    height: var(--h);
+    width: auto;
+    margin-block: var(--m);
+  }
+  .text {
+    display: inline-flex;
+    align-items: center;
+    height: var(--s);
+    font-family: 'Sharp Sans', var(--sl-font);
+    font-size: calc(var(--s) * 0.72);
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    line-height: 1;
+  }
+</style>

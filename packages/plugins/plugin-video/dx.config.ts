@@ -3,9 +3,11 @@
 //
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
@@ -51,6 +53,16 @@ const config: Plugin.PluginConfig = Plugin.config({
       content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
+    // Off the boot path: an editor that opened before they arrive is rebuilt with the commands.
+    Capability.lazyModule(
+      'SpecExtensions',
+      {
+        provides: [ProjectCapabilities.SpecExtensions, ProjectCapabilities.SpecPackage],
+        activatesOn: ActivationEvents.Idle,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/spec-extensions.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [AppSurface.Article, AppSurface.Section, AppSurface.Tabpanel],
     }),

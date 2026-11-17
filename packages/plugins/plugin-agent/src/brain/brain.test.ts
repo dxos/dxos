@@ -75,7 +75,7 @@ const makeScript =
     if (request.text.startsWith(COMPOSE_PROMPT)) {
       return { parts: [text(SCENARIO.composed)] };
     }
-    if (request.text.includes(EXTRACTION_PROMPT)) {
+    if (request.system.includes(EXTRACTION_PROMPT)) {
       const facts = SCENARIO.facts
         .filter(({ quote }) => request.text.includes(quote))
         .map((fact) => ({ ...fact, factuality: 'CT+', polarity: '+' }));

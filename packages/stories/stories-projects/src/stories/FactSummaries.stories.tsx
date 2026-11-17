@@ -6,9 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
+import { createDecorators, storyParameters } from '../testing/index.ts';
 
 const MAILBOX_NAME = 'Work';
 const TEMPLATE_ID = 'org.dxos.project.mailboxFacts';
@@ -16,9 +17,9 @@ const TEMPLATE_ID = 'org.dxos.project.mailboxFacts';
 /** Owns `org.dxos.skill.brain`, the per-space FactStore, and the mailbox toolbar's `Analyze` action. */
 const plugins = [BrainPlugin.make()];
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-projects/FactSummaries',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
   // Scaffold-only set: no seeded mail, no AI service. Seeding either pushes client init past the
   // play-test budget, so the runnable configuration lives on `Live` below.

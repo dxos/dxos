@@ -1,7 +1,7 @@
 /*
  * Tag: a small pill one control inset shorter than a control, coloured by ui-theme's per-hue role tokens. The hue
  * rules also colour a Button with `hue` (`--dx-hue-bg`/`-fg`, read in `control.css`), an Icon with `hue` (its
- * foreground only, e.g. a Select option's icon), an Avatar (`--dx-hue-fill` for its solid fill) and a Card Tile (its
+ * foreground only, e.g. a Select option's icon), Typography with `hue` (likewise), an Avatar (`--dx-hue-fill` for its solid fill) and a Card Tile (its
  * surface and icon).
  */
 
@@ -145,13 +145,13 @@
   .dx-tag-delete-trigger:hover {
     background: color-mix(in srgb, currentColor 15%, transparent);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='primary'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='primary'],
   .dx-tag.dx-tag-primary {
     --dx-hue-bg: var(--color-primary-surface);
     --dx-hue-fg: var(--color-primary-fg);
     --dx-hue-fill: var(--color-primary-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='red'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='red'],
   .dx-tag.dx-tag-red {
     --dx-hue-bg: var(--color-red-surface);
     --dx-hue-fg: var(--color-red-fg);
@@ -159,7 +159,7 @@
     --dx-hue-text: var(--color-red-text);
     --dx-hue-fill: var(--color-red-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='orange'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='orange'],
   .dx-tag.dx-tag-orange {
     --dx-hue-bg: var(--color-orange-surface);
     --dx-hue-fg: var(--color-orange-fg);
@@ -167,7 +167,7 @@
     --dx-hue-text: var(--color-orange-text);
     --dx-hue-fill: var(--color-orange-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='amber'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='amber'],
   .dx-tag.dx-tag-amber {
     --dx-hue-bg: var(--color-amber-surface);
     --dx-hue-fg: var(--color-amber-fg);
@@ -175,7 +175,7 @@
     --dx-hue-text: var(--color-amber-text);
     --dx-hue-fill: var(--color-amber-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='yellow'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='yellow'],
   .dx-tag.dx-tag-yellow {
     --dx-hue-bg: var(--color-yellow-surface);
     --dx-hue-fg: var(--color-yellow-fg);
@@ -183,7 +183,7 @@
     --dx-hue-text: var(--color-yellow-text);
     --dx-hue-fill: var(--color-yellow-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='lime'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='lime'],
   .dx-tag.dx-tag-lime {
     --dx-hue-bg: var(--color-lime-surface);
     --dx-hue-fg: var(--color-lime-fg);
@@ -191,7 +191,7 @@
     --dx-hue-text: var(--color-lime-text);
     --dx-hue-fill: var(--color-lime-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='green'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='green'],
   .dx-tag.dx-tag-green {
     --dx-hue-bg: var(--color-green-surface);
     --dx-hue-fg: var(--color-green-fg);
@@ -199,7 +199,7 @@
     --dx-hue-text: var(--color-green-text);
     --dx-hue-fill: var(--color-green-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='emerald'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='emerald'],
   .dx-tag.dx-tag-emerald {
     --dx-hue-bg: var(--color-emerald-surface);
     --dx-hue-fg: var(--color-emerald-fg);
@@ -207,7 +207,7 @@
     --dx-hue-text: var(--color-emerald-text);
     --dx-hue-fill: var(--color-emerald-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='teal'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='teal'],
   .dx-tag.dx-tag-teal {
     --dx-hue-bg: var(--color-teal-surface);
     --dx-hue-fg: var(--color-teal-fg);
@@ -215,7 +215,7 @@
     --dx-hue-text: var(--color-teal-text);
     --dx-hue-fill: var(--color-teal-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='cyan'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='cyan'],
   .dx-tag.dx-tag-cyan {
     --dx-hue-bg: var(--color-cyan-surface);
     --dx-hue-fg: var(--color-cyan-fg);
@@ -223,7 +223,7 @@
     --dx-hue-text: var(--color-cyan-text);
     --dx-hue-fill: var(--color-cyan-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='sky'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='sky'],
   .dx-tag.dx-tag-sky {
     --dx-hue-bg: var(--color-sky-surface);
     --dx-hue-fg: var(--color-sky-fg);
@@ -231,7 +231,7 @@
     --dx-hue-text: var(--color-sky-text);
     --dx-hue-fill: var(--color-sky-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='blue'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='blue'],
   .dx-tag.dx-tag-blue {
     --dx-hue-bg: var(--color-blue-surface);
     --dx-hue-fg: var(--color-blue-fg);
@@ -239,7 +239,7 @@
     --dx-hue-text: var(--color-blue-text);
     --dx-hue-fill: var(--color-blue-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='indigo'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='indigo'],
   .dx-tag.dx-tag-indigo {
     --dx-hue-bg: var(--color-indigo-surface);
     --dx-hue-fg: var(--color-indigo-fg);
@@ -247,7 +247,7 @@
     --dx-hue-text: var(--color-indigo-text);
     --dx-hue-fill: var(--color-indigo-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='violet'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='violet'],
   .dx-tag.dx-tag-violet {
     --dx-hue-bg: var(--color-violet-surface);
     --dx-hue-fg: var(--color-violet-fg);
@@ -255,7 +255,7 @@
     --dx-hue-text: var(--color-violet-text);
     --dx-hue-fill: var(--color-violet-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='purple'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='purple'],
   .dx-tag.dx-tag-purple {
     --dx-hue-bg: var(--color-purple-surface);
     --dx-hue-fg: var(--color-purple-fg);
@@ -263,7 +263,7 @@
     --dx-hue-text: var(--color-purple-text);
     --dx-hue-fill: var(--color-purple-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='fuchsia'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='fuchsia'],
   .dx-tag.dx-tag-fuchsia {
     --dx-hue-bg: var(--color-fuchsia-surface);
     --dx-hue-fg: var(--color-fuchsia-fg);
@@ -271,7 +271,7 @@
     --dx-hue-text: var(--color-fuchsia-text);
     --dx-hue-fill: var(--color-fuchsia-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='pink'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='pink'],
   .dx-tag.dx-tag-pink {
     --dx-hue-bg: var(--color-pink-surface);
     --dx-hue-fg: var(--color-pink-fg);
@@ -279,7 +279,7 @@
     --dx-hue-text: var(--color-pink-text);
     --dx-hue-fill: var(--color-pink-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='rose'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='rose'],
   .dx-tag.dx-tag-rose {
     --dx-hue-bg: var(--color-rose-surface);
     --dx-hue-fg: var(--color-rose-fg);
@@ -288,7 +288,7 @@
     --dx-hue-fill: var(--color-rose-bg);
   }
   /* Valences reuse the hues the current `Tag` maps them to. */
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='info'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='info'],
   .dx-tag.dx-tag-info {
     --dx-hue-bg: var(--color-cyan-surface);
     --dx-hue-fg: var(--color-cyan-fg);
@@ -296,7 +296,7 @@
     --dx-hue-text: var(--color-cyan-text);
     --dx-hue-fill: var(--color-cyan-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='success'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='success'],
   .dx-tag.dx-tag-success {
     --dx-hue-bg: var(--color-emerald-surface);
     --dx-hue-fg: var(--color-emerald-fg);
@@ -304,7 +304,7 @@
     --dx-hue-text: var(--color-emerald-text);
     --dx-hue-fill: var(--color-emerald-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='warning'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='warning'],
   .dx-tag.dx-tag-warning {
     --dx-hue-bg: var(--color-amber-surface);
     --dx-hue-fg: var(--color-amber-fg);
@@ -312,7 +312,7 @@
     --dx-hue-text: var(--color-amber-text);
     --dx-hue-fill: var(--color-amber-bg);
   }
-  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='error'],
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile, .dx-typography)[data-hue='error'],
   .dx-tag.dx-tag-error {
     --dx-hue-bg: var(--color-rose-surface);
     --dx-hue-fg: var(--color-rose-fg);
@@ -322,76 +322,77 @@
   }
 
   /*
-   * A bare glyph takes its hue's text colour (light on dark, dark on light), as the current icons' `text-<hue>-text`;
-   * the Tag foreground (`--dx-hue-fg`) is tuned for text on the hue's fill and reads muted on a plain surface.
+   * A bare glyph or text takes its hue's text colour (light on dark, dark on light), as the current icons'
+   * `text-<hue>-text`; the Tag foreground (`--dx-hue-fg`) is tuned for text on the hue's fill and reads muted on a
+   * plain surface.
    */
-  .dx-icon[data-hue] {
+  :is(.dx-icon, .dx-typography)[data-hue] {
     color: var(--dx-hue-fg);
   }
-  .dx-icon[data-hue='primary'] {
+  :is(.dx-icon, .dx-typography)[data-hue='primary'] {
     color: var(--color-primary-text);
   }
-  .dx-icon[data-hue='red'] {
+  :is(.dx-icon, .dx-typography)[data-hue='red'] {
     color: var(--color-red-text);
   }
-  .dx-icon[data-hue='orange'] {
+  :is(.dx-icon, .dx-typography)[data-hue='orange'] {
     color: var(--color-orange-text);
   }
-  .dx-icon[data-hue='amber'] {
+  :is(.dx-icon, .dx-typography)[data-hue='amber'] {
     color: var(--color-amber-text);
   }
-  .dx-icon[data-hue='yellow'] {
+  :is(.dx-icon, .dx-typography)[data-hue='yellow'] {
     color: var(--color-yellow-text);
   }
-  .dx-icon[data-hue='lime'] {
+  :is(.dx-icon, .dx-typography)[data-hue='lime'] {
     color: var(--color-lime-text);
   }
-  .dx-icon[data-hue='green'] {
+  :is(.dx-icon, .dx-typography)[data-hue='green'] {
     color: var(--color-green-text);
   }
-  .dx-icon[data-hue='emerald'] {
+  :is(.dx-icon, .dx-typography)[data-hue='emerald'] {
     color: var(--color-emerald-text);
   }
-  .dx-icon[data-hue='teal'] {
+  :is(.dx-icon, .dx-typography)[data-hue='teal'] {
     color: var(--color-teal-text);
   }
-  .dx-icon[data-hue='cyan'] {
+  :is(.dx-icon, .dx-typography)[data-hue='cyan'] {
     color: var(--color-cyan-text);
   }
-  .dx-icon[data-hue='sky'] {
+  :is(.dx-icon, .dx-typography)[data-hue='sky'] {
     color: var(--color-sky-text);
   }
-  .dx-icon[data-hue='blue'] {
+  :is(.dx-icon, .dx-typography)[data-hue='blue'] {
     color: var(--color-blue-text);
   }
-  .dx-icon[data-hue='indigo'] {
+  :is(.dx-icon, .dx-typography)[data-hue='indigo'] {
     color: var(--color-indigo-text);
   }
-  .dx-icon[data-hue='violet'] {
+  :is(.dx-icon, .dx-typography)[data-hue='violet'] {
     color: var(--color-violet-text);
   }
-  .dx-icon[data-hue='purple'] {
+  :is(.dx-icon, .dx-typography)[data-hue='purple'] {
     color: var(--color-purple-text);
   }
-  .dx-icon[data-hue='fuchsia'] {
+  :is(.dx-icon, .dx-typography)[data-hue='fuchsia'] {
     color: var(--color-fuchsia-text);
   }
-  .dx-icon[data-hue='pink'] {
+  :is(.dx-icon, .dx-typography)[data-hue='pink'] {
     color: var(--color-pink-text);
   }
-  .dx-icon[data-hue='rose'] {
+  :is(.dx-icon, .dx-typography)[data-hue='rose'] {
     color: var(--color-rose-text);
   }
-  .dx-icon[data-hue='info'] {
+  :is(.dx-icon, .dx-typography)[data-hue='info'] {
     color: var(--color-cyan-text);
   }
-  .dx-icon[data-hue='success'] {
+  :is(.dx-icon, .dx-typography)[data-hue='success'] {
     color: var(--color-emerald-text);
   }
-  .dx-icon[data-hue='warning'] {
+  :is(.dx-icon, .dx-typography)[data-hue='warning'] {
     color: var(--color-amber-text);
   }
-  .dx-icon[data-hue='error'] {
+  :is(.dx-icon, .dx-typography)[data-hue='error'] {
     color: var(--color-rose-text);
   }
 

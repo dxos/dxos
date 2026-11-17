@@ -148,6 +148,9 @@
       "path": "packages/common/diagram/tsconfig.json"
     },
     {
+      "path": "packages/apps/diagram-app/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
@@ -506,6 +509,9 @@
     },
     {
       "path": "packages/plugins/plugin-file-system/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-finance/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-freeq/tsconfig.json"
@@ -919,6 +925,9 @@
       "path": "packages/ui/react-ui-search/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-slides/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-syntax-highlighter/tsconfig.json"
     },
     {
@@ -983,6 +992,9 @@
     },
     {
       "path": "packages/stories/stories-compute/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-echo/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-inbox/tsconfig.json"

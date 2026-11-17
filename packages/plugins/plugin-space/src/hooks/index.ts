@@ -4,6 +4,7 @@
 
 export * from './useArchiveMenuItem.ts';
 export * from './useEdgeStatus.ts';
+export * from './useFollowGroup.ts';
 export * from './useInputSurfaceLookup.tsx';
 export * from './usePath.ts';
 export * from './useRelatedObjects.ts';

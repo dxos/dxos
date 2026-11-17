@@ -4,25 +4,28 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Markdown, MarkdownOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.Create> = MarkdownOperation.Create.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, content }) {
-      const object = yield* Database.add(Markdown.make({ name, content }));
-      yield* DefaultParent.add({ object });
+      const { db } = yield* Database.Service;
+      // plugin-space files it: on EDGE this plugin's bundle has no default-parent rule.
+      const { id } = yield* Operation.invoke(
+        SpaceOperation.AddObject,
+        { object: Markdown.make({ name, content }) },
+        { spaceId: db.spaceId },
+      );
 
       // Persist before returning the id so other tools/processes (e.g. an agent's add-artifact, run
       // as a separate invocation) can resolve the freshly-created document.
       yield* Database.flush();
 
-      return {
-        id: Obj.getURI(object),
-      };
+      return { id };
     }),
   ),
 );

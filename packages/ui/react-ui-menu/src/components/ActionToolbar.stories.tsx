@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
@@ -402,11 +402,11 @@ type Log = (id: string) => void;
 const record: Log = (id) => log.info('action', { id });
 
 /** The owner declares named groups and the overflow menu; it knows nothing of its contributors. */
-const ownerGraph = (log: Log): ActionGraphProps =>
+const ownerGraph = (log: Log, fold = false): ActionGraphProps =>
   MenuBuilder.make()
     .group(
       'formatting',
-      { label: 'Formatting', icon: 'ph--text-aa--regular', placement: { zone: 'start', collapse: 2 } },
+      { label: 'Formatting', icon: 'ph--text-aa--regular', placement: { zone: 'start', collapse: 2, fold } },
       (group) =>
         group
           .action('heading', { label: 'Heading', icon: 'ph--text-h--regular', placement: { order: 10 } }, () =>
@@ -420,7 +420,7 @@ const ownerGraph = (log: Log): ActionGraphProps =>
     )
     .group(
       'blocks',
-      { label: 'Blocks', icon: 'ph--list-bullets--regular', placement: { zone: 'start', collapse: 3 } },
+      { label: 'Blocks', icon: 'ph--list-bullets--regular', placement: { zone: 'start', collapse: 3, fold } },
       (group) =>
         group
           .action('list', { label: 'List', icon: 'ph--list-bullets--regular', placement: { order: 10 } }, () =>
@@ -513,16 +513,16 @@ const contributions: Record<Contributor, (log: Log) => ActionGraphProps[]> = {
   ],
 };
 
-type StoryProps = { contributors?: Contributor[]; narrow?: boolean; asMenu?: boolean };
+type StoryProps = { contributors?: Contributor[]; narrow?: boolean; fold?: boolean; asMenu?: boolean };
 
-const LayoutStory = ({ contributors = [], narrow, asMenu }: StoryProps) => {
+const LayoutStory = ({ contributors = [], narrow, fold, asMenu }: StoryProps) => {
   const menu = useMenuBuilder(
     () =>
       contributors
         .flatMap((contributor) => contributions[contributor](record))
-        .reduce((builder, graph) => builder.subgraph(graph), MenuBuilder.make().subgraph(ownerGraph(record)))
+        .reduce((builder, graph) => builder.subgraph(graph), MenuBuilder.make().subgraph(ownerGraph(record, fold)))
         .build(),
-    [contributors],
+    [contributors, fold],
   );
 
   return (
@@ -609,6 +609,92 @@ export const Narrow: Story = {
   },
 };
 
+/** Groups that fold do so in place, into a dropdown in the row, before any item moves into ⋮. */
+export const Folding: Story = {
+  render: () => <LayoutStory contributors={['review', 'transcription', 'presenter']} narrow fold />,
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(labels(canvasElement)).not.toContain('List'));
+    await expect(labels(canvasElement)).toEqual(expect.arrayContaining(['Formatting', 'Blocks', 'Preview']));
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Blocks' }));
+    await expect(await within(document.body).findByRole('menuitem', { name: 'Insert object' })).toBeVisible();
+  },
+};
+
+const SeparatorsStory = () => {
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action('snap', { label: 'Snap', icon: 'ph--magnet--regular', placement: { collapse: 1 } }, () => {})
+        .separator('line')
+        .action('axes', { label: 'Axes', icon: 'ph--vector-two--regular', placement: { collapse: 1 } }, () => {})
+        .separator('line')
+        .custom('zoom', { label: 'Zoom' }, () => <Toolbar.Text classNames='flex-none'>Zoom</Toolbar.Text>)
+        .separator('line')
+        .action('grid', { label: 'Grid', icon: 'ph--grid-four--regular', placement: { collapse: 1 } }, () => {})
+        .separator('gap')
+        .action('guides', { label: 'Guides', icon: 'ph--squares-four--regular', placement: { collapse: 1 } }, () => {})
+        .separator('line')
+        .custom('theme', { label: 'Theme' }, () => <Toolbar.Text classNames='flex-none'>Theme</Toolbar.Text>)
+        .build(),
+    [],
+  );
+  return (
+    <div className='p-8 w-[8rem]'>
+      <ActionToolbar {...menu} alwaysActive data-testid='separators' />
+    </div>
+  );
+};
+
+/**
+ * Collapsing the items between rules leaves none of them: a rule stays only between two items, and of the rules left
+ * between two, the gap. The ⋮ menu lists them in the row's order, ruled where the row is.
+ */
+export const Separators: Story = {
+  render: () => <SeparatorsStory />,
+  play: async ({ canvasElement }) => {
+    const row = within(canvasElement).getByTestId('separators');
+    await waitFor(() => expect(labels(canvasElement)).toEqual(['More']));
+    await expect(row.querySelector('[data-scope=separator]')).toBeNull();
+    await expect(row.querySelectorAll('[data-part=gap]')).toHaveLength(1);
+    await userEvent.click(within(row).getByTestId('toolbar.overflow'));
+    const menu = await within(document.body).findByRole('menu');
+    const entries = Array.from(menu.querySelectorAll('[role=menuitem], [role=separator]')).map((entry) =>
+      entry.getAttribute('role') === 'separator' ? '|' : entry.textContent?.trim(),
+    );
+    await expect(entries).toEqual(['Snap', '|', 'Axes', '|', 'Grid', '|', 'Guides']);
+  },
+};
+
+const OverflowOrderStory = () => {
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .custom('zoom', { label: 'Zoom' }, () => <Toolbar.Text classNames='flex-none'>Zoom</Toolbar.Text>)
+        .action('a', { label: 'A', icon: 'ph--circle--regular', placement: { collapse: 1 } }, () => {})
+        .action('b', { label: 'B', icon: 'ph--square--regular', placement: { collapse: 1, order: 0.5 } }, () => {})
+        .build(),
+    [],
+  );
+  return (
+    <div className='p-8 w-[8rem]'>
+      <ActionToolbar {...menu} alwaysActive data-testid='overflow-order' />
+    </div>
+  );
+};
+
+/** The ⋮ menu keeps the row's order when an item that stays in the row sets the others' fallback order. */
+export const OverflowOrder: Story = {
+  render: () => <OverflowOrderStory />,
+  play: async ({ canvasElement }) => {
+    const row = within(canvasElement).getByTestId('overflow-order');
+    await waitFor(() => expect(labels(canvasElement)).toEqual(['More']));
+    await userEvent.click(within(row).getByTestId('toolbar.overflow'));
+    const menu = await within(document.body).findByRole('menu');
+    const entries = Array.from(menu.querySelectorAll('[role=menuitem]')).map((entry) => entry.textContent?.trim());
+    await expect(entries).toEqual(['B', 'A']);
+  },
+};
+
 /** The same graph rendered as a menu: named groups are submenus. */
 export const AsMenu: Story = {
   render: () => <LayoutStory contributors={['review']} asMenu />,
@@ -617,5 +703,155 @@ export const AsMenu: Story = {
     const body = within(document.body);
     await userEvent.click(await body.findByRole('menuitem', { name: 'Formatting' }));
     await expect(await body.findByRole('menuitem', { name: 'Comment' })).toBeVisible();
+  },
+};
+
+const useCompactMenu = () =>
+  useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .root({ label: 'Document' })
+        .custom('title', { label: 'Title', placement: { collapse: 1 } }, ({ collapsed }) => (
+          <Button.Root variant='ghost' icon='ph--file-text--regular' data-testid='story.title'>
+            {!collapsed && 'A rather long document title'}
+          </Button.Root>
+        ))
+        .action(
+          'share',
+          {
+            label: 'Share',
+            icon: 'ph--user-plus--regular',
+            iconOnly: false,
+            testId: 'story.share',
+            placement: { collapse: 2 },
+          },
+          () => log('share'),
+        )
+        .action('search', { label: 'Search', icon: 'ph--magnifying-glass--regular', testId: 'story.search' }, () =>
+          log('search'),
+        )
+        .build(),
+    [],
+  );
+
+const CompactStory = () => {
+  const menu = useCompactMenu();
+  return (
+    <div className='p-8'>
+      <ActionToolbar {...menu} alwaysActive classNames='_border border-separator max-w-[12rem]' />
+    </div>
+  );
+};
+
+/** Too narrow for the labels, ranked items take their compact form in place, in rank order, before anything moves. */
+export const Compact: Story = {
+  render: () => <CompactStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() =>
+      expect(canvas.getByTestId('story.title')).not.toHaveTextContent('A rather long document title'),
+    );
+    await expect(canvas.getByTestId('story.share')).toHaveAttribute('aria-label', 'Share');
+    await expect(canvas.getByTestId('story.search')).toBeVisible();
+    await expect(canvas.queryByTestId('toolbar.overflow')).toBeNull();
+  },
+};
+
+const GrowBackStory = () => {
+  const menu = useCompactMenu();
+  const [box, setBox] = useState<HTMLDivElement | null>(null);
+  return (
+    <div ref={setBox} className='flex p-8 w-[16rem]' data-testid='story.box'>
+      {/* As wide as its content, so its own width says nothing of the room it has. */}
+      <div role='none' className='flex min-w-0'>
+        <ActionToolbar {...menu} alwaysActive bounds={box} classNames='border border-separator' />
+      </div>
+    </div>
+  );
+};
+
+/** A toolbar as wide as its content takes its full form again once the box it measures has room. */
+export const GrowBack: Story = {
+  render: () => <GrowBackStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const title = canvas.getByTestId('story.title');
+    await waitFor(() => expect(title).not.toHaveTextContent('A rather long document title'));
+    canvas.getByTestId('story.box').style.width = '48rem';
+    await waitFor(() => expect(title).toHaveTextContent('A rather long document title'));
+    await expect(canvas.getByTestId('story.share')).toHaveTextContent('Share');
+  },
+};
+
+// Read by the item itself, so a change reaches its content without rebuilding the menu.
+const NamesContext = createContext<string[]>([]);
+
+// Like a list of viewers: it never collapses, so the items beside it make room for it.
+const People = () => {
+  const names = useContext(NamesContext);
+  return (
+    <Button.Root variant='ghost' icon='ph--users--regular' data-testid='story.people'>
+      {names.join(', ')}
+    </Button.Root>
+  );
+};
+
+const ChangingContentStory = () => {
+  const [names, setNames] = useState(['Ada']);
+  const [box, setBox] = useState<HTMLDivElement | null>(null);
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .root({ label: 'Document' })
+        .custom('people', { label: 'People' }, () => <People />)
+        .action(
+          'share',
+          {
+            label: 'Share',
+            icon: 'ph--user-plus--regular',
+            iconOnly: false,
+            testId: 'story.share',
+            placement: { collapse: 1 },
+          },
+          () => log('share'),
+        )
+        .build(),
+    [],
+  );
+  return (
+    <div className='flex flex-col gap-4 p-8'>
+      <div className='flex gap-2'>
+        <Button.Root data-testid='story.join' onClick={() => setNames((names) => [...names, 'Ben', 'Charlotte'])}>
+          Join
+        </Button.Root>
+        <Button.Root data-testid='story.leave' onClick={() => setNames((names) => names.slice(0, 1))}>
+          Leave
+        </Button.Root>
+      </div>
+      <div ref={setBox} className='flex w-[16rem]'>
+        <div role='none' className='flex min-w-0'>
+          <NamesContext.Provider value={names}>
+            <ActionToolbar {...menu} alwaysActive bounds={box} classNames='border border-separator' />
+          </NamesContext.Provider>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * An item whose content grows past the box it measures makes the items beside it collapse, though menu and box are
+ * unchanged; once its content shrinks back, they take their full form again.
+ */
+export const ChangingContent: Story = {
+  render: () => <ChangingContentStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('story.share')).toHaveTextContent('Share');
+    await userEvent.click(canvas.getByTestId('story.join'));
+    await waitFor(() => expect(canvas.getByTestId('story.share')).not.toHaveTextContent('Share'));
+    await expect(canvas.getByTestId('story.people')).toHaveTextContent('Charlotte');
+    await userEvent.click(canvas.getByTestId('story.leave'));
+    await waitFor(() => expect(canvas.getByTestId('story.share')).toHaveTextContent('Share'));
   },
 };

@@ -293,6 +293,7 @@ op createScript
 
 ```mdl
 feat F-1: Script ECHO Object
+  uses: [Script]
 
   req F-1.1: Script objects are registered via `addSchemaModule` and visible in space object lists.
   req F-1.2: Script objects can be created from the navtree "+" menu.
@@ -306,6 +307,7 @@ feat F-1: Script ECHO Object
 
 ```mdl
 feat F-2: Script Editor
+  uses: [Script, ScriptArticle]
 
   req F-2.1: ScriptArticle renders a TypeScript-aware CodeMirror editor for the Article role.
   req F-2.2: Editor keybinding mode (default/vim/emacs) is configurable via plugin settings.
@@ -317,6 +319,7 @@ feat F-2: Script Editor
 
 ```mdl
 feat F-3: Deploy to EDGE
+  uses: [deploy, DeploymentDialog]
 
   req F-3.1: A Deploy button in the ScriptToolbar opens the DeploymentDialog.
   req F-3.2:
@@ -332,6 +335,7 @@ feat F-3: Deploy to EDGE
 
 ```mdl
 feat F-4: Execute Companion
+  uses: [invoke, Script, TestContainer]
 
   req F-4.1: An "Execute" companion node is added to every Script in the app graph.
   req F-4.2: TestContainer renders a form derived from the script's Operation input schema.
@@ -343,6 +347,17 @@ feat F-4: Execute Companion
 
 ```mdl
 feat F-5: Script Skill
+  uses:
+    - create
+    - delete
+    - deploy
+    - inspectInvocations
+    - installFunction
+    - invoke
+    - queryDeployedFunctions
+    - read
+    - Script
+    - update
 
   req F-5.1: A skill with key `org.dxos.skill.script` is contributed via `addSkillDefinitionModule`.
   req F-5.2: Skill tool set includes: create, read, update, delete, deploy, invoke,
@@ -354,6 +369,7 @@ feat F-5: Script Skill
 
 ```mdl
 feat F-6: Notebook
+  uses: [Notebook, NotebookArticle, Script]
 
   req F-6.1: Notebook objects are registered and can be created from the navtree.
   req F-6.2: NotebookArticle renders each linked Script as a sequential cell.
@@ -362,6 +378,7 @@ feat F-6: Notebook
 
 ```mdl
 feat F-7: Plugin Settings
+  uses: [ScriptPluginSettings, Settings]
 
   req F-7.1: ScriptPluginSettings is rendered via the app settings surface.
   req F-7.2: Editor input mode is persisted in the Settings atom.

@@ -47,7 +47,7 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
   }
 
   return (
-    <HomeSection.Root>
+    <HomeSection.Root anchor='suggestions'>
       <HomeSection.Header title={t('space-home.suggestions.heading')} onClose={onClose} />
       <Layout.Container gap='lg' gutter='none'>
         {suggestions.map((prompt, index) => (
