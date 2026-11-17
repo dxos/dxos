@@ -98,19 +98,14 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
       dxos#14574 (plugin-github loads an unloaded PR ref; published to dev), bundle-log forwarding (edge, branch
       `claude/bundle-logs-posthog`, not pushed).
 - [x] Monitoring by `dx mcp call` in a background loop (scratchpad watch-runs.sh): one Bash call per run state.
-- [x] GitHub token expiry, root-caused and fixed (no reconnect needed):
-      1. KMS refreshes a grant only from its cron, which sleeps after `SPACE_SECRETS_INACTIVITY_TIMEOUT`
-         (3 h on dev) without a `getAccessToken` call; plugin-claude lent the stored `ghu_` and never called it.
-      2. compute-service gave a plugin operation invoked over MCP no `accessTokenService`, so the resolver was the
-         not-configured stub (edge, `invocation/operation.ts`; deployed to dev).
-      3. plugin-claude now resolves every GitHub token through EDGE, checks it with GitHub, asks KMS for a forced
-         exchange on a 401 (new `refresh` flag through compute-service and kms-service), and lends the reason as
-         `GITHUB_TOKEN_ERROR` (`DX_` names are reserved and values may not hold whitespace).
-      4. Why KMS stopped: the router marks a space active only on client websocket traffic, and KMS's refresh cron
-         and the trigger scheduler both sleep after the inactivity timeout. compute-service now counts an
-         operation called in a space as activity there (deployed to dev).
-      5. KMS writes a token it refreshes on demand back to the AccessToken object (deployed); plugin-claude forces
-         one exchange when the stored copy differs from EDGE's, which healed the Coding space.
+- [x] GitHub token expiry, root-caused and fixed (no reconnect needed): 1. KMS refreshes a grant only from its cron, which sleeps after `SPACE_SECRETS_INACTIVITY_TIMEOUT`
+      (3 h on dev) without a `getAccessToken` call; plugin-claude lent the stored `ghu_` and never called it. 2. compute-service gave a plugin operation invoked over MCP no `accessTokenService`, so the resolver was the
+      not-configured stub (edge, `invocation/operation.ts`; deployed to dev). 3. plugin-claude now resolves every GitHub token through EDGE, checks it with GitHub, asks KMS for a forced
+      exchange on a 401 (new `refresh` flag through compute-service and kms-service), and lends the reason as
+      `GITHUB_TOKEN_ERROR` (`DX_` names are reserved and values may not hold whitespace). 4. Why KMS stopped: the router marks a space active only on client websocket traffic, and KMS's refresh cron
+      and the trigger scheduler both sleep after the inactivity timeout. compute-service now counts an
+      operation called in a space as activity there (deployed to dev). 5. KMS writes a token it refreshes on demand back to the AccessToken object (deployed); plugin-claude forces
+      one exchange when the stored copy differs from EDGE's, which healed the Coding space.
 - [x] dxos#14563 merged 20:49 by the Composer agent unattended (checks waited, merge queue).
 - [x] The space's drive timer fires every 5 minutes on EDGE (`Scheduler:cronRun` → driveCloudRuns).
 - [ ] The drive step acts on every chat in one invocation; over MCP it outlives the gateway (502). Time-box it
