@@ -539,7 +539,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   @synchronized
   protected override async _close(ctx: Context): Promise<void> {
-    await this.#workingSet?.close();
+    if (this.#workingSet) {
+      // A write not yet stored would otherwise reach the host only after the working set stopped listening.
+      await this._entityManager
+        .flush({ indexes: false })
+        .catch((error) => log.warn('writes not stored before the working set closed', { error }));
+      await this.#workingSet.close();
+    }
     const disposals = await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
     for (const disposal of disposals) {
       if (disposal.status === 'rejected') {

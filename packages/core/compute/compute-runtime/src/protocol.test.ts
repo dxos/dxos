@@ -493,6 +493,41 @@ describe('working set', () => {
     output: Schema.Struct({ titles: Schema.Array(Schema.String) }),
   }).pipe(Operation.withHandler(() => listNotes.pipe(Effect.map((titles) => ({ titles })))));
 
+  const RenamesNote = Operation.make({
+    meta: { key: DXN.make('com.example.operation.renamesNote'), name: 'Renames Note' },
+    services: [Database.Service],
+    input: Schema.Struct({ id: Schema.String, title: Schema.String }),
+    output: Schema.Void,
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ id, title }) {
+        const note = (yield* Database.query(Filter.type(Note)).run).find((note) => note.id === id);
+        if (!note) {
+          return yield* Effect.die(new Error('note not found'));
+        }
+        Obj.update(note, (note) => {
+          note.title = title;
+        });
+      }),
+    ),
+  );
+
+  const CreatesThenLists = Operation.make({
+    meta: { key: DXN.make('com.example.operation.createsThenLists'), name: 'Creates Then Lists' },
+    services: [Database.Service],
+    input: Schema.Struct({ title: Schema.String }),
+    output: Schema.Struct({ titles: Schema.Array(Schema.String) }),
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ title }) {
+        yield* Database.add(Obj.make(Note, { title }));
+        // No flush first: one that waits for the index stops counting this write as unindexed, which this index hides.
+        const notes = yield* Database.query(Filter.type(Note)).run;
+        return { titles: notes.map((note) => note.title).sort() };
+      }),
+    ),
+  );
+
   /** A caller's working set kept in memory, as an EDGE owner keeps it in its storage: one row per document. */
   const makeWorkingSet = () => {
     const rows = new Map<string, WorkingSetRow>();
@@ -596,6 +631,60 @@ describe('working set', () => {
     });
     expect(heldAtCall).toContain(callerId);
     expect(result).toEqual({ unindexed: expect.arrayContaining([callerId, calleeId]) });
+  });
+
+  test('an operation changes what the one before it created, and the next reads the change, while the index hides them', async ({
+    expect,
+  }) => {
+    const { context } = await setup();
+    const workingSet = makeWorkingSet();
+    const id = EntityId.random();
+    const run = (operation: typeof CreatesNote | typeof RenamesNote, data: { id: string; title: string }) =>
+      wrapFunctionHandler(operation, { types: [Note] }).handler({ data, context: context(workingSet.service) });
+
+    await run(CreatesNote, { id, title: 'draft' });
+    await run(RenamesNote, { id, title: 'final' });
+    const listed = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
+      data: {},
+      context: context(workingSet.service),
+    });
+    expect(listed).toEqual({ titles: ['final'] });
+  });
+
+  test("an operation queries its own write together with the previous operation's, while the index hides both", async ({
+    expect,
+  }) => {
+    const { context } = await setup();
+    const workingSet = makeWorkingSet();
+
+    await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
+      data: { id: EntityId.random(), title: 'first' },
+      context: context(workingSet.service),
+    });
+    const listed = await wrapFunctionHandler(CreatesThenLists, { types: [Note] }).handler({
+      data: { title: 'second' },
+      context: context(workingSet.service),
+    });
+    expect(listed).toEqual({ titles: ['first', 'second'] });
+  });
+
+  test('a working set that fails leaves an operation as it runs without one', async ({ expect }) => {
+    const { context } = await setup();
+    const failing: WorkingSetService = {
+      get: () => Promise.reject(new Error('unavailable')),
+      put: () => Promise.reject(new Error('unavailable')),
+    };
+
+    await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
+      data: { id: EntityId.random(), title: 'kept' },
+      context: context(failing),
+    });
+    // With nothing held, the query reads only the index, which hides every object here.
+    const listed = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
+      data: {},
+      context: context(failing),
+    });
+    expect(listed).toEqual({ titles: [] });
   });
 
   test('what the host stored before a handler failed reaches the working set', async ({ expect }) => {
