@@ -3087,7 +3087,7 @@ decision D-270: The project reveal (`ProjectOperation.ScrollToAnchor`) takes `fo
 ```
 
 ```mdl
-decision D-271: QA-12 checks that two people can write a plugin's spec together in one project: both edit its text at once, one adds features in the text while the other adds them on the feature map, the agent adds features, requirements and `type` and `op` blocks that both see as they appear, dependencies are drawn on the map, and comments made while one person is offline wait as notifications. The spec it ends with is enough to build the plugin from. Its agent steps run on a live model, not recorded responses.
+decision D-271: QA-12 checks that two people can write a plugin's spec together in one project: both edit its text at once, both make features in that text, the agent adds features, requirements and `type` and `op` blocks that both see as they appear, dependencies are picked in a feature's form and show on the Board, and comments made while one person is offline wait as notifications. The spec it ends with is enough to build the plugin from. Its agent steps run on a live model, not recorded responses.
   date: 2026-11-05
   by: user:wittjosiah
   affects: [QA-12]
@@ -3105,7 +3105,7 @@ decision D-272: In QA-12, Alice follows the two features by commenting on them, 
 ```
 
 ```mdl
-decision D-273: In QA-12, Bob is the one who leaves, while the agent works: he follows "Make Move" by asking about it, Alice watches the agent and answers him, and he comes back to that one notification, has Kai add the requirement in the thread and resolves it. Bob draws the dependencies after he returns, with Alice watching his arrows land on her canvas. Alice asks the agent for the spec, not the full spec. Replaces [D-272].
+decision D-273: In QA-12, Bob is the one who leaves, while the agent works: he follows "Make Move" by asking about it, Alice watches the agent and answers him, and he comes back to that one notification, has Kai add the requirement in the thread and resolves it. Bob picks the dependencies after he returns, with Alice watching them show on her Board. Alice asks the agent for the spec, not the full spec. Replaces [D-272].
   date: 2026-11-06
   by: user:wittjosiah
   affects: [QA-12]
@@ -3113,12 +3113,12 @@ decision D-273: In QA-12, Bob is the one who leaves, while the agent works: he f
 ```
 
 ```mdl
-decision D-274: QA-12 walks the spec's `feat` blocks: features are made with `/feat` over a bullet and described in their forms, Bob watches them arrive on the Board in the Structure companion, and Make Move's dependencies are picked in its form and shown when Alice selects it on her Board. Bob's question is on Make Move's description in the spec, so its notification names the spec. Amends [D-271] and [D-273].
+decision D-274: QA-12 edits the spec only in its document: features are made with `/feat` over a bullet and described in their forms, and Make Move's dependencies are picked in its form. The Board in the Structure companion is drawn from the spec's `feat` blocks, so Bob watches features arrive there and Alice sees Make Move's dependencies when she selects it. Bob's question is on Make Move's description in the spec, so its notification names the spec. Fills in [D-271] and [D-273].
   date: 2026-11-16
   by: agent:claude-code
   for: user:wittjosiah
   affects: [QA-12]
-  why: Main replaced feature objects with a spec's `feat` blocks and removed the feature canvas, so there is no map to add features or draw arrows on.
+  why: A spec's features are `feat` blocks in its text, and the views beside it only show them, so the text is the one place a person edits them.
 ```
 
 ```mdl
