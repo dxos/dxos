@@ -9,7 +9,8 @@ use std::sync::Arc;
 
 use automerge::{AutoCommit, ChangeHash};
 use serde_json::Value as Json;
-use turso_core::{Database, SqliteDialect};
+use turso_core::{ConnectOpts, Database};
+use turso_sqlite::SqliteDialect;
 
 use crate::doc;
 use crate::sql::{Cell, Db, Param, SqlResult};
@@ -95,7 +96,7 @@ pub type SharedFile = Rc<RefCell<FileState>>;
 
 impl FileState {
     pub fn open(database: Arc<Database>) -> SqlResult<SharedFile> {
-        let conn = database.connect().map_err(|err| err.to_string())?;
+        let conn = database.connect(ConnectOpts::new()).map_err(|err| err.to_string())?;
         let mut db = Db::new(conn);
         db.exec_batch(SCHEMA)?;
         let mut max_record = 0;
@@ -180,7 +181,7 @@ fn heads_json(heads: &[ChangeHash]) -> String {
 
 impl Engine {
     pub fn open(file: SharedFile, space_id: String, actor_id: String) -> SqlResult<Engine> {
-        let conn = file.borrow().database.connect().map_err(|err| err.to_string())?;
+        let conn = file.borrow().database.connect(ConnectOpts::new()).map_err(|err| err.to_string())?;
         Ok(Engine {
             db: Db::new(conn),
             file,

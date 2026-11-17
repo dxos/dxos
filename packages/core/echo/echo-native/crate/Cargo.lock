@@ -454,6 +454,7 @@ dependencies = [
  "base64",
  "serde_json",
  "turso_core",
+ "turso_sqlite",
 ]
 
 [[package]]
@@ -1784,9 +1785,9 @@ dependencies = [
 
 [[package]]
 name = "turso_core"
-version = "0.8.3"
+version = "0.9.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "810ee7b139fd6aa9304cb2fa278c1be0bb964c92457e2a24c1d384196ce5e217"
+checksum = "5ebf594e16cd6f555d7514c234b6bb8a9e149225aed3d2e54df0fc07c2383c1b"
 dependencies = [
  "aegis",
  "aes",
@@ -1855,9 +1856,9 @@ dependencies = [
 
 [[package]]
 name = "turso_ext"
-version = "0.8.3"
+version = "0.9.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5003ed7e98f082fe4114627c8d7c7ab569c27766e9bd350a0c09af06ad3fd46"
+checksum = "29e5a6321da2420c23204a77f6b730f03d0b6c011074a0019578dd374ff42655"
 dependencies = [
  "chrono",
  "getrandom 0.4.3",
@@ -1866,9 +1867,9 @@ dependencies = [
 
 [[package]]
 name = "turso_macros"
-version = "0.8.3"
+version = "0.9.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74770c0d0c8b272b479b5343f19dbd2f8f2677d85a4d6222fc214dcac2882beb"
+checksum = "3597357d0d0d16a2c68725b2966a7f012771de73e08cb124176dd143cab63da0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1877,9 +1878,9 @@ dependencies = [
 
 [[package]]
 name = "turso_parser"
-version = "0.8.3"
+version = "0.9.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a69bb856ec8306ad7ed1c13fc61de6a79452bf646ca53d99bb4cc646d5bfc4ff"
+checksum = "2ab9985aa5c1f24b617ca43d3694b4338d56c6a841bdcb1b9fe61db6b68bcdb8"
 dependencies = [
  "bitflags",
  "memchr",
@@ -1888,6 +1889,16 @@ dependencies = [
  "strum_macros",
  "thiserror",
  "turso_macros",
+]
+
+[[package]]
+name = "turso_sqlite"
+version = "0.9.0-pre.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0abc3f05e2c856fc75a83f5b3f8b39c71366fd522b92361ebc8f8f1b530fc2b"
+dependencies = [
+ "turso_core",
+ "turso_parser",
 ]
 
 [[package]]
