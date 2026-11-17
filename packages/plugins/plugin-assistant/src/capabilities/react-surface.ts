@@ -9,6 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -45,7 +46,6 @@ import {
   SpaceHomeSuggestionsSurface,
   TracePanelSurface,
   TriggerStatusSurface,
-  unlessReadOnly,
 } from './AssistantSurfaces.tsx';
 
 const isUnprovisionedAssistantCompanion = (data: { subject?: unknown; variant?: unknown }) =>
@@ -67,26 +67,26 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'spaceSettings',
         filter: AppSurface.literal(AppSurface.Article, SPACE_SETTINGS_TYPE),
-        component: unlessReadOnly(SpaceAssistantSettings),
+        component: ToolkitHooks.unlessReadOnly(SpaceAssistantSettings),
       }),
       Surface.create({
         id: 'chatContext',
         filter: Surface.makeFilter(AssistantSurface.ChatDetails),
-        component: unlessReadOnly(ChatContextPanel),
+        component: ToolkitHooks.unlessReadOnly(ChatContextPanel),
         props: ({ data: { chat, db, context } }) => ({ chat, db, context }),
         position: Position.first,
       }),
       Surface.create({
         id: 'spaceHomePrompt',
         filter: Surface.makeFilter(SpaceSurface.SpaceHomePinBottom),
-        component: unlessReadOnly(SpaceHomePrompt),
+        component: ToolkitHooks.unlessReadOnly(SpaceHomePrompt),
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
         id: 'spaceHomeSuggestions',
         filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
         position: Position.last,
-        component: unlessReadOnly(SpaceHomeSuggestionsSurface),
+        component: ToolkitHooks.unlessReadOnly(SpaceHomeSuggestionsSurface),
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
@@ -108,13 +108,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'agent',
         filter: AppSurface.object(AppSurface.Article, Agent.Agent),
-        component: unlessReadOnly(AgentArticle),
+        component: ToolkitHooks.unlessReadOnly(AgentArticle),
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
-        component: unlessReadOnly(AgentProperties),
+        component: ToolkitHooks.unlessReadOnly(AgentProperties),
         props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
@@ -125,7 +125,7 @@ export default Capability.makeModule(() =>
             Obj.isObject(data.companionTo) &&
             (Obj.instanceOf(Chat.Chat, data.subject) || isUnprovisionedAssistantCompanion(data)),
         ),
-        component: unlessReadOnly(ChatCompanion),
+        component: ToolkitHooks.unlessReadOnly(ChatCompanion),
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({
           role,
           // An unprovisioned companion's node carries `null`; the chat tree reads a missing chat as `undefined`.
@@ -145,24 +145,24 @@ export default Capability.makeModule(() =>
             AppSurface.companion(AppSurface.Article, Instructions.Instructions),
           ),
         ),
-        component: unlessReadOnly(InvocationsSurface),
+        component: ToolkitHooks.unlessReadOnly(InvocationsSurface),
         props: ({ role, data: { companionTo } }) => ({ role, companionTo }),
       }),
       Surface.create({
         id: ASSISTANT_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof ChatDialog>>(AppSurface.Dialog, ASSISTANT_DIALOG),
-        component: unlessReadOnly(ChatDialog),
+        component: ToolkitHooks.unlessReadOnly(ChatDialog),
         props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({
         id: 'trace',
         filter: Surface.makeFilter(AppSurface.deckCompanion('trace')),
-        component: unlessReadOnly(TracePanelSurface),
+        component: ToolkitHooks.unlessReadOnly(TracePanelSurface),
       }),
       Surface.create({
         id: 'integrationPrompt',
         filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
-        component: unlessReadOnly(IntegrationPrompt),
+        component: ToolkitHooks.unlessReadOnly(IntegrationPrompt),
         // `data.data` is model-supplied JSON, so every field is narrowed and blanks dropped.
         props: ({ data }) => ({
           service: nonBlank(data.data?.service),
@@ -175,14 +175,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'pluginPrompt',
         filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
-        component: unlessReadOnly(PluginPrompt),
+        component: ToolkitHooks.unlessReadOnly(PluginPrompt),
         // `data.data` is model-supplied JSON (untyped); narrow `plugin` before use.
         props: ({ data }) => ({ plugin: typeof data.data?.plugin === 'string' ? data.data.plugin : undefined }),
       }),
       Surface.create({
         id: 'pluginUrlPrompt',
         filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'plugin-url-prompt'),
-        component: unlessReadOnly(PluginUrlPrompt),
+        component: ToolkitHooks.unlessReadOnly(PluginUrlPrompt),
         // `data.data` is model-supplied JSON (untyped); narrow before use.
         props: ({ data }) => ({ url: nonBlank(data.data?.url), name: nonBlank(data.data?.name) }),
       }),
@@ -218,7 +218,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'triggerStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        component: unlessReadOnly(TriggerStatusSurface),
+        component: ToolkitHooks.unlessReadOnly(TriggerStatusSurface),
       }),
     ]),
   ),

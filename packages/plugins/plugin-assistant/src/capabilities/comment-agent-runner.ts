@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
@@ -16,7 +17,6 @@ import { trim } from '@dxos/util';
 import { AssistantOperation } from '#types';
 
 import { CommentThreadNotPersistedError, ReadOnlyHostError } from '../errors.ts';
-import { isReadOnly } from '../util/read-only.ts';
 
 /**
  * Runs a comment thread's agent turns as ordinary assistant turns: one chat per thread, parented to the thread and
@@ -32,7 +32,7 @@ export default Capability.makeModule(
     const runner: AppCapabilities.CommentAgentRunner = {
       run: ({ thread, subject, message }) =>
         Effect.gen(function* () {
-          if (isReadOnly(manager)) {
+          if (ReadOnly.isActive(manager)) {
             return yield* Effect.fail(new ReadOnlyHostError());
           }
 

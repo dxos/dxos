@@ -18,6 +18,7 @@ import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
@@ -91,7 +92,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   // Hoisted so connector/action bodies read reactively via `get(...)` instead of a sync
   // `Capability.get`, establishing a dependency that heals once the capability lands.
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
-  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+  const readOnly = yield* ReadOnly.atom;
   const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
 
   return yield* Effect.all([
@@ -258,7 +259,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     AppGraphBuilder.createExtension({
       id: 'objectActions',
       match: (node, get) => {
-        return get(readOnlyAtom).length === 0 &&
+        return !get(readOnly) &&
           node.data != null &&
           Obj.getDatabase(node.data) &&
           Obj.isObject(node.data) &&
@@ -309,9 +310,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       id: 'collectionsSectionActions',
       match: (node, get) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return get(readOnlyAtom).length === 0 && node.type === COLLECTIONS_SECTION_TYPE && space
-          ? Option.some(space)
-          : Option.none();
+        return !get(readOnly) && node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       actions: (space) =>
         Effect.succeed([

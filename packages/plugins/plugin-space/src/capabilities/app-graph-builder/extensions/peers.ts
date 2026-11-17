@@ -18,6 +18,8 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
+import { type Space } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { type Key, Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
@@ -76,13 +78,13 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
   const layoutCapAtom = yield* Capability.atom(AppCapabilities.Layout);
-  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+  const readOnly = yield* ReadOnly.atom;
 
   return yield* Effect.all([
     AppGraphBuilder.createExtension({
       id: 'membersCompanion',
       relation: AppNode.companion,
-      match: (node, get) => (get(readOnlyAtom).length > 0 ? Option.none() : GraphNodeMatcher.whenRoot(node)),
+      match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot),
       connector: (_, get) => {
         const [ephemeralAtom] = get(ephemeralCapAtom);
         return Effect.succeed([
@@ -102,7 +104,7 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
     AppGraphBuilder.createExtension({
       id: 'peers',
       // Peer sessions and actions hang off these nodes, so read-only there are none either.
-      match: (node, get) => (get(readOnlyAtom).length > 0 ? Option.none() : AppNodeMatcher.whenSpace(node)),
+      match: ReadOnly.unless<Space>(readOnly, AppNodeMatcher.whenSpace),
       connector: (space, get) => {
         const [ephemeralAtom] = get(ephemeralCapAtom);
         if (!ephemeralAtom) {

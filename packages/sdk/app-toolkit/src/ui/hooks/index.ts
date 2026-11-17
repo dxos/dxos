@@ -13,7 +13,7 @@ export * from './useNavigationPresence.ts';
 export * from './useObjectMenuItems.ts';
 export * from './usePluginRegistryAvailable.ts';
 export * from './useProgressMonitor.ts';
-export * from './useReadOnly.ts';
+export * from './useReadOnly.tsx';
 export * from './useSchemaFilter.ts';
 export * from './useSettingsScope.ts';
 export * from './useSettingsSpace.ts';

@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { Connection } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-
-import { isReadOnly } from '../util/read-only.ts';
 
 /**
  * Adds the MCP servers plugins ship to `client.graph.registry` as keyed connections, where chats and
@@ -26,7 +25,7 @@ export default Capability.makeModule(
     atomRegistry.subscribe(
       serversAtom,
       (servers) => {
-        if (isReadOnly(manager)) {
+        if (ReadOnly.isActive(manager)) {
           return;
         }
 

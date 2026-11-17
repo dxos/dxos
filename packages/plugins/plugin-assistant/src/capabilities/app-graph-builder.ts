@@ -18,6 +18,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Agent from '@dxos/assistant/Agent';
@@ -75,12 +76,6 @@ const whenPromptHost = GraphNodeMatcher.whenAny(
 /** Whether the host is read-only; a builder without a host reads as writable. */
 const WRITABLE: Atom.Atom<boolean> = Atom.make(false);
 
-/** Narrows a matcher to match nothing while the host is read-only. */
-const unlessReadOnly =
-  <T>(readOnly: Atom.Atom<boolean>, match: (node: AppGraphNode.Node, get: Atom.AtomContext) => Option.Option<T>) =>
-  (node: AppGraphNode.Node, get: Atom.AtomContext): Option.Option<T> =>
-    get(readOnly) ? Option.none() : match(node, get);
-
 /**
  * A prompt node under every node that hosts a chat prompt, where other plugins file prompt actions. A read-only host
  * has no prompt.
@@ -88,7 +83,7 @@ const unlessReadOnly =
 export const createPromptExtension = (readOnly = WRITABLE) =>
   AppGraphBuilder.createExtension({
     id: 'prompt',
-    match: unlessReadOnly(readOnly, whenPromptHost),
+    match: ReadOnly.unless(readOnly, whenPromptHost),
     connector: () => Effect.succeed([AppNode.makePrompt()]),
   });
 
@@ -97,7 +92,7 @@ export const createSpaceSettingsExtension = (readOnly = WRITABLE) =>
   AppGraphBuilder.createExtension({
     id: 'spaceSettingsAssistant',
     url: { key: SPACE_SETTINGS_ID, kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
-    match: unlessReadOnly(readOnly, GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE)),
+    match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE)),
     connector: () =>
       Effect.succeed([
         AppNode.makeSettingsPanel({
@@ -142,7 +137,7 @@ export const createChatSectionExtensions = (readOnly = WRITABLE) =>
     // Create-chat action on the Chats section header.
     AppGraphBuilder.createExtension({
       id: 'chatsSectionActions',
-      match: unlessReadOnly<Space>(readOnly, (node) => {
+      match: ReadOnly.unless<Space>(readOnly, (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === Type.getTypename(Chat.Chat) && space ? Option.some(space) : Option.none();
       }),
@@ -188,8 +183,7 @@ export const createChatSectionExtensions = (readOnly = WRITABLE) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const readOnlyCapabilityAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
-    const readOnly = Atom.make((get) => get(readOnlyCapabilityAtom).length > 0);
+    const readOnly = yield* ReadOnly.atom;
     const chatSection = yield* createChatSectionExtensions(readOnly);
 
     // Read through their atoms so the "companionChat" extension establishes a reactive dependency
@@ -229,7 +223,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createExtension({
         id: 'assistant',
-        match: unlessReadOnly(readOnly, GraphNodeMatcher.whenRoot),
+        match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot),
         actions: () =>
           Effect.succeed([
             AppGraphNode.makeAction({
@@ -282,7 +276,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'companionChat',
         relation: AppNode.companion,
-        match: unlessReadOnly<Obj.Unknown>(readOnly, whenNonChatObject),
+        match: ReadOnly.unless<Obj.Unknown>(readOnly, whenNonChatObject),
         connector: (object, get) =>
           Effect.gen(function* () {
             const [stateAtom] = get(stateCapabilityAtom);
@@ -326,7 +320,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'invocations',
         relation: AppNode.companion,
-        match: unlessReadOnly(
+        match: ReadOnly.unless(
           readOnly,
           GraphNodeMatcher.whenAny(
             AppNodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
@@ -347,7 +341,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'trace',
         relation: AppNode.companion,
-        match: unlessReadOnly(readOnly, GraphNodeMatcher.whenRoot),
+        match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot),
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({

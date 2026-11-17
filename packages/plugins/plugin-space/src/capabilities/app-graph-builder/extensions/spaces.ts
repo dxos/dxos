@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -18,6 +17,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
@@ -85,7 +85,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* ({
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
   const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
-  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+  const readOnly = yield* ReadOnly.atom;
   const openDeadlineFamily = Atom.family((_spaceId: string) => makeStallDeadlineAtom(clientAtom));
   const orderSettledAtom = Atom.make(false).pipe(Atom.keepAlive);
 
@@ -118,7 +118,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* ({
     AppGraphBuilder.createExtension({
       id: 'primaryActions',
       position: Position.first,
-      match: (node, get) => (get(readOnlyAtom).length > 0 ? Option.none() : GraphNodeMatcher.whenRoot(node)),
+      match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot),
       actions: () =>
         Effect.succeed([
           AppGraphNode.makeAction({
@@ -354,7 +354,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* ({
 
     AppGraphBuilder.createExtension({
       id: 'actions',
-      match: (node, get) => (get(readOnlyAtom).length > 0 ? Option.none() : AppNodeMatcher.whenSpace(node)),
+      match: ReadOnly.unless<Space>(readOnly, AppNodeMatcher.whenSpace),
       actions: (space, get) => {
         const [client] = get(clientAtom);
         const [ephemeralAtom] = get(ephemeralCapAtom);

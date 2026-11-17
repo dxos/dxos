@@ -13,6 +13,7 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -26,7 +27,6 @@ import * as Position from '@dxos/util/Position';
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
 import { ASSISTANT_COMPANION_VARIANT } from '../constants.ts';
-import { isReadOnly } from '../util/read-only.ts';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats
@@ -95,7 +95,7 @@ export default Capability.makeModule(
      * so the caller can tear down the connection subscription.
      */
     const provisionForPlank = (plankId: string, companionVariant: string | undefined): boolean => {
-      if (isReadOnly(manager)) {
+      if (ReadOnly.isActive(manager)) {
         return false;
       }
 

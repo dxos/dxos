@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as DeckSurface from '@dxos/plugin-deck/DeckSurface';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import * as Position from '@dxos/util/Position';
@@ -28,7 +29,6 @@ import { Support } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants.ts';
 import { SupportNamespace } from '../namespace.ts';
-import { unlessReadOnly } from './unless-read-only.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -39,24 +39,24 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Support.Ticket),
           AppSurface.object(AppSurface.Section, Support.Ticket),
         ),
-        component: unlessReadOnly(SupportArticle),
+        component: ToolkitHooks.unlessReadOnly(SupportArticle),
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'feedback',
         filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
-        component: unlessReadOnly(FeedbackPanel),
+        component: ToolkitHooks.unlessReadOnly(FeedbackPanel),
       }),
       Surface.create({
         id: 'discord',
         filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
-        component: unlessReadOnly(DiscordPanel),
+        component: ToolkitHooks.unlessReadOnly(DiscordPanel),
       }),
       Surface.create({
         id: 'helpMenu',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
         position: Position.last,
-        component: unlessReadOnly(HelpMenu),
+        component: ToolkitHooks.unlessReadOnly(HelpMenu),
       }),
       // Generic plank companion: shows the description from the plugin that
       // owns the open article's typename. Matches any article via
@@ -82,22 +82,22 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'hints',
         filter: Surface.makeFilter(DeckSurface.Hints),
-        component: unlessReadOnly(ShortcutsHints),
+        component: ToolkitHooks.unlessReadOnly(ShortcutsHints),
       }),
       Surface.create({
         id: 'keyshortcuts',
         filter: Surface.makeFilter(DeckSurface.Keyshortcuts),
-        component: unlessReadOnly(ShortcutsList),
+        component: ToolkitHooks.unlessReadOnly(ShortcutsList),
       }),
       Surface.create({
         id: SHORTCUTS_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, SHORTCUTS_DIALOG),
-        component: unlessReadOnly(ShortcutsDialogContent),
+        component: ToolkitHooks.unlessReadOnly(ShortcutsDialogContent),
       }),
       Surface.create({
         id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, SupportNamespace.key),
-        component: unlessReadOnly(SupportSettings),
+        component: ToolkitHooks.unlessReadOnly(SupportSettings),
         props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),

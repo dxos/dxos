@@ -4,7 +4,7 @@
 
 // Surface components that cannot be expressed as a `props` mapper, because they call hooks or compose.
 
-import React, { type ComponentType, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -21,13 +21,6 @@ import * as Panel from '@dxos/react-ui/Panel';
 
 import { AssistantSettings, SpaceHomeSuggestions, TracePanel, TriggerStatus } from '#containers';
 import { Assistant } from '#types';
-
-/** The component, except on a read-only host, where it renders nothing: everything it offers writes or runs an agent. */
-export const unlessReadOnly = <P extends object>(Component: ComponentType<P>): ComponentType<P> => {
-  const Gated = (props: P) => (ToolkitHooks.useReadOnly() ? null : <Component {...props} />);
-  Gated.displayName = `UnlessReadOnly(${Component.displayName ?? Component.name})`;
-  return Gated;
-};
 
 export type AssistantSettingsSurfaceProps = {
   subject: AppCapabilities.Settings;

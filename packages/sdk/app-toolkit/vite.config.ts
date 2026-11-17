@@ -22,6 +22,7 @@ export default defineConfig({
     'account/Account': 'src/account/Account.ts',
     'app-framework/AppCapabilities': 'src/app-framework/AppCapabilities.ts',
     'app-framework/Progress': 'src/app-framework/Progress.ts',
+    'app-framework/ReadOnly': 'src/app-framework/ReadOnly.ts',
     'app-framework/ObservabilityMapping': 'src/app-framework/ObservabilityMapping.ts',
     'app-framework/AppCapability': 'src/app-framework/AppCapability.ts',
     'app-framework/SchemaAdapter': 'src/app-framework/SchemaAdapter.ts',

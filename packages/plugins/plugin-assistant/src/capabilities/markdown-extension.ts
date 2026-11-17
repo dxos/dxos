@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { Obj } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
 import { promptRunExtension } from '../extensions/index.ts';
-import { isReadOnly } from '../util/read-only.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -20,7 +20,7 @@ export default Capability.makeModule(
     return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       // A read-only host offers no Run: running a prompt starts a chat.
       ({ document: doc, viewMode }) => {
-        if (viewMode === 'source' || isReadOnly(capabilities)) {
+        if (viewMode === 'source' || ReadOnly.isActive(capabilities)) {
           return undefined;
         }
 

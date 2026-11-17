@@ -8,8 +8,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { Outline, RemoteSession, Task, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
@@ -70,7 +70,7 @@ export default Capability.makeModule(
         filter: AppSurface.object(
           AppSurface.CardContent,
           RemoteSession.RemoteSession,
-          () => manager.getAll(AppCapabilities.ReadOnly).length === 0,
+          () => !ReadOnly.isActive(manager),
         ),
         component: RemoteSessionCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),

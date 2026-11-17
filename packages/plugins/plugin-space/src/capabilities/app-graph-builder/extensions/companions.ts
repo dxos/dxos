@@ -7,9 +7,9 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { Obj, Type } from '@dxos/echo';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
@@ -27,7 +27,7 @@ type Extensions = AppGraphBuilder.BuilderExtension[][];
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/plugin-graph types (TS2883).
 export const createCompanionExtensions: () => Effect.Effect<Extensions, never, Capability.Service> = Effect.fnUntraced(
   function* () {
-    const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+    const readOnly = yield* ReadOnly.atom;
     return yield* Effect.all([
       // Object settings plank companion.
       AppGraphBuilder.createExtension({
@@ -68,7 +68,7 @@ export const createCompanionExtensions: () => Effect.Effect<Extensions, never, C
         id: 'selectedObjects',
         relation: AppNode.companion,
         match: (node, get) => {
-          if (get(readOnlyAtom).length > 0) {
+          if (get(readOnly)) {
             return Option.none();
           }
 

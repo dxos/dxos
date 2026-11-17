@@ -14,4 +14,5 @@ export * as TranslationsAdapter from './TranslationsAdapter.ts';
 export * as SpaceTemplatesAdapter from './SpaceTemplatesAdapter.ts';
 export * as ObservabilityMapping from './ObservabilityMapping.ts';
 export * as Progress from './Progress.ts';
+export * as ReadOnly from './ReadOnly.ts';
 export * as Tour from './Tour.ts';

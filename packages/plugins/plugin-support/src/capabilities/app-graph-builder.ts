@@ -14,6 +14,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
@@ -58,9 +59,8 @@ export default Capability.makeModule(
     };
 
     // Read-only, the root offers only the Help companions: its actions and deck tabs write, or start a tour.
-    const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
-    const whenWritableRoot = (node: AppGraphNode.Node, get: Atom.AtomContext): Option.Option<AppGraphNode.Node> =>
-      get(readOnlyAtom).length > 0 ? Option.none() : GraphNodeMatcher.whenRoot(node);
+    const readOnly = yield* ReadOnly.atom;
+    const whenWritableRoot = ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot);
 
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.

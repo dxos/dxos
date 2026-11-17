@@ -10,6 +10,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
@@ -44,7 +45,7 @@ export const createRoutinesSettingsExtension = () =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+    const readOnly = yield* ReadOnly.atom;
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Routine.Routine, {
         urlKey: 'routine',
@@ -65,7 +66,7 @@ export default Capability.makeModule(
         // Runs are this device's history, and a read-only host runs nothing.
         connector: (_, get) =>
           Effect.succeed(
-            get(readOnlyAtom).length > 0
+            get(readOnly)
               ? []
               : [
                   AppNode.makeCompanion({

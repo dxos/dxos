@@ -13,6 +13,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
@@ -139,12 +140,12 @@ const createSpecCompanionExtension = Effect.fnUntraced(function* () {
  * (e.g. plugin-brain's mailbox Analyze action).
  */
 export const createMailboxProjectExtension = Effect.fnUntraced(function* () {
-  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+  const readOnly = yield* ReadOnly.atom;
   return yield* AppGraphBuilder.createExtension({
     id: 'mailboxProjectActions',
     // Setting up a project writes one, so a read-only host offers none.
     match: (node, get) =>
-      get(readOnlyAtom).length === 0 && node.properties.systemTag === 'inbox' && Mailbox.instanceOf(node.data)
+      !get(readOnly) && node.properties.systemTag === 'inbox' && Mailbox.instanceOf(node.data)
         ? Option.some(node.data)
         : Option.none(),
     actions: (mailbox) => {
@@ -242,7 +243,7 @@ export const createProjectChatsExtension = () =>
  * which reaches a parentless chat by a different path.
  */
 export const createProjectChatsChildrenExtension = Effect.fnUntraced(function* () {
-  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+  const readOnly = yield* ReadOnly.atom;
   return yield* AppGraphBuilder.createExtension({
     id: 'projectChatsChildren',
     url: ProjectGraph.PROJECT_URL,
@@ -262,7 +263,7 @@ export const createProjectChatsChildrenExtension = Effect.fnUntraced(function* (
         ).atom,
       );
       // A read-only host lists the chats without letting them be dragged.
-      const fixed = get(readOnlyAtom).length > 0;
+      const fixed = get(readOnly);
       return Effect.succeed(
         children
           .filter(Obj.instanceOf(Chat.Chat))
@@ -313,14 +314,12 @@ export const createProjectTasksExtension = () =>
  * the toolbar grows, and a shared `toolbar` disposition here would double up with it.
  */
 export const createProjectActionExtension = Effect.fnUntraced(function* () {
-  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+  const readOnly = yield* ReadOnly.atom;
   return yield* AppGraphBuilder.createExtension({
     id: 'projectActions',
     // A read-only host starts no chats.
     match: (node, get) =>
-      get(readOnlyAtom).length === 0 && Obj.instanceOf(Project.Project, node.data)
-        ? Option.some(node.data)
-        : Option.none(),
+      !get(readOnly) && Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none(),
     actions: (project) =>
       Effect.succeed([
         AppGraphNode.makeAction({
@@ -372,7 +371,7 @@ export const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
  * graph merges them, but chats are ECHO children while artifacts hang off the ref array.
  */
 export const createProjectArtifactsExtension = Effect.fnUntraced(function* () {
-  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+  const readOnly = yield* ReadOnly.atom;
   return yield* AppGraphBuilder.createExtension({
     id: 'projectArtifacts',
     // Selectable, so addressable: the row opens its artifacts as cards.
@@ -405,7 +404,7 @@ export const createProjectArtifactsExtension = Effect.fnUntraced(function* () {
             space,
             testId: 'projectsPlugin.artifactsSection',
             // A read-only host's branch takes no drops and its children do not rearrange.
-            ...(db && get(readOnlyAtom).length === 0 ? AppNode.getListPartials(artifacts(project), db) : {}),
+            ...(db && !get(readOnly) ? AppNode.getListPartials(artifacts(project), db) : {}),
           },
         }),
       ]);
@@ -424,7 +423,7 @@ export const createProjectArtifactsExtension = Effect.fnUntraced(function* () {
  * under its own type section, so an artifact opened from a project comes back to the project.
  */
 export const createProjectArtifactsActionExtension = Effect.fnUntraced(function* () {
-  const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+  const readOnly = yield* ReadOnly.atom;
   return yield* AppGraphBuilder.createExtension({
     id: 'projectArtifactsActions',
     url: ProjectGraph.PROJECT_URL,
@@ -440,7 +439,7 @@ export const createProjectArtifactsActionExtension = Effect.fnUntraced(function*
 
       const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
       // A read-only host lists the artifacts without letting them be dragged.
-      const fixed = get(readOnlyAtom).length > 0;
+      const fixed = get(readOnly);
       return Effect.succeed(
         objects
           .map((object) =>
@@ -451,7 +450,7 @@ export const createProjectArtifactsActionExtension = Effect.fnUntraced(function*
     },
     actions: ({ project, nodeId }, get) => {
       // A read-only host links nothing into a project.
-      if (get(readOnlyAtom).length > 0) {
+      if (get(readOnly)) {
         return Effect.succeed([]);
       }
 

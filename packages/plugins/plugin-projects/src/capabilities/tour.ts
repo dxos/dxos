@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Tour from '@dxos/app-toolkit/Tour';
 import * as Project from '@dxos/compute/Project';
 
@@ -20,7 +21,7 @@ export default Capability.makeModule(
       id: `${ProjectsNamespace.key}.tour.project`,
       label: ['project-tour.label', { ns: ProjectsNamespace.key }],
       // Its steps point at the controls that edit and delegate, which a read-only host leaves out.
-      matches: (data) => manager.getAll(AppCapabilities.ReadOnly).length === 0 && isProject(data),
+      matches: (data) => !ReadOnly.isActive(manager) && isProject(data),
       auto: true,
       steps,
     });

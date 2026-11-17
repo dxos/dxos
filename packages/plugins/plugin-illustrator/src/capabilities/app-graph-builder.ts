@@ -11,6 +11,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 
@@ -20,7 +21,7 @@ import { IllustratorNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const readOnlyAtom = yield* Capability.atom(AppCapabilities.ReadOnly);
+    const readOnly = yield* ReadOnly.atom;
     // Read reactively so the actions appear once renderer plugins contribute their variants.
     const variantsAtom = yield* Capability.atom(IllustratorCapabilities.VariantProvider);
 
@@ -31,7 +32,7 @@ export default Capability.makeModule(
       // The scores serve an author improving a layout, so a read-only host has no use for them.
       connector: (_, get) =>
         Effect.succeed(
-          get(readOnlyAtom).length > 0
+          get(readOnly)
             ? []
             : [
                 AppNode.makeCompanion({
@@ -49,7 +50,7 @@ export default Capability.makeModule(
       type: Drawing.Drawing,
       actions: (drawing, get) => {
         // A conversion writes a copy, which a read-only app has nowhere to put.
-        if (get(readOnlyAtom).length > 0) {
+        if (get(readOnly)) {
           return Effect.succeed([]);
         }
 

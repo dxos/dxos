@@ -8,6 +8,7 @@ import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
@@ -18,7 +19,6 @@ import { Task } from '@dxos/types';
 import { AssistantOperation } from '#types';
 
 import { resumePrompt } from '../operations/resume-prompt.ts';
-import { isReadOnly } from '../util/read-only.ts';
 
 type AnswerInvocation = {
   input: Operation.Definition.Input<typeof TaskOperation.AnswerQuestion>;
@@ -45,7 +45,7 @@ export default Capability.makeModule(
     yield* Effect.forkScoped(
       Stream.fromPubSub(invoker.invocations).pipe(
         Stream.filter(isAnswer),
-        Stream.filter((event) => event.output.accepted && !isReadOnly(manager)),
+        Stream.filter((event) => event.output.accepted && !ReadOnly.isActive(manager)),
         Stream.runForEach((event) =>
           Effect.gen(function* () {
             const { task: taskRef, question: questionId } = event.input;
