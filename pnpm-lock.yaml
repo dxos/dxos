@@ -3366,6 +3366,12 @@ importers:
 
   packages/apps/diagram-app:
     dependencies:
+      '@automerge/automerge':
+        specifier: 3.5.0
+        version: 3.5.0
+      '@automerge/automerge-subduction':
+        specifier: 0.21.0
+        version: 0.21.0(patch_hash=2faca23c0b6c3b7cd22bfbfeb8a85419307be0d8daab8e0230d542ae8057af48)
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -3405,6 +3411,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../../plugins/plugin-attention
@@ -3493,6 +3502,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 'catalog:'
         version: 6.1.1(oxc-transform-react@0.145.0)(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      oxc-resolver:
+        specifier: 'catalog:'
+        version: 11.21.2
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)

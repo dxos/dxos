@@ -16,6 +16,7 @@ export default defineConfig({
     'providers/ObservabilityProvider': 'src/providers/ObservabilityProvider.ts',
     'extensions/otel/OtelLogSink': 'src/extensions/otel/OtelLogSink.ts',
     'extensions/otel/OtelMetricsSink': 'src/extensions/otel/OtelMetricsSink.ts',
+    'extensions/otel/OtelProxy': 'src/extensions/otel/OtelProxy.ts',
     'extensions/otel/OtelSpanSink': 'src/extensions/otel/OtelSpanSink.ts',
   },
   test: { node: true },

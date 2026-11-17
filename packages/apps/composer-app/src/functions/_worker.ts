@@ -5,6 +5,8 @@
 // Import from the focused leaf modules rather than the `../util` barrel: the barrel re-exports
 // modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
 // esbuild cannot load.
+import * as OtelProxy from '@dxos/observability/OtelProxy';
+
 import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
@@ -445,101 +447,6 @@ const rewritePreview = async (page: Response, title: string, details?: LinkPrevi
   return new Response(injectLinkPreview(await page.text(), title, details), { status: page.status, headers });
 };
 
-const OTEL_PREFIX = '/api/otel';
-const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
-
-/** Reverse-proxy OTel ingestion to PostHog, so every client posts same-origin to one endpoint. */
-const handleOtelProxy = async (request: Request, env: Env, signal: string): Promise<Response> => {
-  const origin = request.headers.get('Origin');
-  // Native builds export here cross-origin; their own asset server has no `/api` routes.
-  const allowed = nativeOrigins(env.ENVIRONMENT);
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  // Reject requests from disallowed origins server-side, not just via CORS headers.
-  if (!isAllowedOrigin(request.url, origin, allowed)) {
-    return new Response('Forbidden', { status: 403, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  if (!env.POSTHOG_OTLP_URL || !env.POSTHOG_PROJECT_TOKEN) {
-    return new Response('OTel proxy not configured', {
-      status: 503,
-      headers: corsHeaders(request.url, origin, allowed),
-    });
-  }
-
-  if (!request.body) {
-    return new Response('Empty body', { status: 400, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  const upstreamHeaders: Record<string, string> = {
-    'Content-Type': request.headers.get('Content-Type') ?? 'application/json',
-    'Authorization': `Bearer ${env.POSTHOG_PROJECT_TOKEN}`,
-  };
-  const contentEncoding = request.headers.get('Content-Encoding');
-  if (contentEncoding) {
-    upstreamHeaders['Content-Encoding'] = contentEncoding;
-  }
-  const contentLengthHeader = request.headers.get('Content-Length');
-  if (contentLengthHeader) {
-    upstreamHeaders['Content-Length'] = contentLengthHeader;
-  }
-
-  // Count bytes as they stream; abort and return 413 if OTEL_MAX_BODY_SIZE is exceeded.
-  // This guards against missing or falsified Content-Length headers.
-  let byteCount = 0;
-  let sizeExceeded = false;
-  const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>({
-    transform(chunk, controller) {
-      byteCount += chunk.byteLength;
-      if (byteCount > OTEL_MAX_BODY_SIZE) {
-        sizeExceeded = true;
-        controller.error(new Error('Payload too large'));
-      } else {
-        controller.enqueue(chunk);
-      }
-    },
-  });
-
-  // Pipe incoming body through the size-checking transform concurrently with the upstream fetch.
-  const pipePromise = request.body.pipeTo(writable).catch(() => {});
-
-  const upstream = `${env.POSTHOG_OTLP_URL.replace(/\/$/, '')}${signal}`;
-  let upstreamResponse: Response | null = null;
-  try {
-    upstreamResponse = await fetch(upstream, {
-      method: 'POST',
-      headers: upstreamHeaders,
-      body: readable,
-    });
-  } catch {
-    // fetch throws when the readable stream is aborted (e.g. size limit exceeded).
-  }
-
-  await pipePromise;
-
-  if (sizeExceeded) {
-    return new Response('Payload too large', { status: 413, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  if (!upstreamResponse) {
-    return new Response('Bad gateway', { status: 502, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  return new Response(upstreamResponse.body, {
-    status: upstreamResponse.status,
-    headers: {
-      'Content-Type': upstreamResponse.headers.get('Content-Type') ?? 'application/json',
-      ...corsHeaders(request.url, origin, allowed),
-    },
-  });
-};
-
 /**
  * Cloudflare Pages Functions Advanced mode set-up.
  * https://developers.cloudflare.com/pages/functions/advanced-mode
@@ -568,12 +475,14 @@ const handler: ExportedHandler<Env> = {
       return handlePublicationRead(request, env.EDGE_URL, previewRenderer(request, env));
     }
 
-    // OTel ingestion proxy.
-    if (url.pathname.startsWith(OTEL_PREFIX)) {
-      const signal = url.pathname.slice(OTEL_PREFIX.length);
-      if (OTEL_SIGNALS.has(signal)) {
-        return handleOtelProxy(request, env, signal);
-      }
+    const otel = OtelProxy.handle(request, {
+      url: env.POSTHOG_OTLP_URL,
+      token: env.POSTHOG_PROJECT_TOKEN,
+      extraOrigins: nativeOrigins(env.ENVIRONMENT),
+      maxBodySize: OTEL_MAX_BODY_SIZE,
+    });
+    if (otel) {
+      return otel;
     }
 
     return serveAsset(request, env);
