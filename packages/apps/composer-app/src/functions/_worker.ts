@@ -11,6 +11,7 @@ import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../ut
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
 import { type LinkPreviewDetails, injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
+import { edgeUrl } from './edge-url.ts';
 import { phosphorPath, renderCard } from './preview-image/index.ts';
 import { assets as previewAssets } from './preview-image/worker-assets.ts';
 import {
@@ -27,8 +28,6 @@ import {
 type Env = {
   ASSETS: Fetcher;
   APPLE_TEAM_ID?: string;
-  /** EDGE origin, which stores publications; the viewer host reads them through it. */
-  EDGE_URL?: string;
   ENVIRONMENT?: string;
   /**
    * Assets from previous builds, keyed by their path. Optional: while it is unbound the Worker
@@ -403,10 +402,11 @@ const withLinkPreview = async (request: Request, page: Response, url: URL): Prom
  */
 const withPublicationPreview = async (request: Request, page: Response, url: URL, env: Env): Promise<Response> => {
   const publicId = publicIdOf(url);
-  if (!publicId || !env.EDGE_URL || !isPreviewable(request, page)) {
+  const edge = edgeUrl();
+  if (!publicId || !edge || !isPreviewable(request, page)) {
     return page;
   }
-  const manifest = await readManifest(env.EDGE_URL, publicId);
+  const manifest = await readManifest(edge, publicId);
   const objectId = objectIdOf(url);
   const card = manifest && cardOf(manifest, objectId);
   const object = card?.kind === 'object' ? card.title : readLinkTitle(url);
@@ -473,7 +473,7 @@ const handler: ExportedHandler<Env> = {
     }
 
     if (isViewerHost(url.hostname) && url.pathname.startsWith(`${PUBLICATIONS_PATH}/`)) {
-      return handlePublicationRead(request, env.EDGE_URL, previewRenderer(request, env));
+      return handlePublicationRead(request, edgeUrl(), previewRenderer(request, env));
     }
 
     const otel = OtelProxy.handle(request, {

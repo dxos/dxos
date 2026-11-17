@@ -13,6 +13,9 @@ vi.mock('./preview-image/worker-assets.ts', async () => {
   return { assets: await loadRenderAssets() };
 });
 
+// What the worker's build injects from `dx.yml`.
+vi.stubGlobal('__CONFIG_DEFAULTS__', { runtime: { services: { edge: { url: 'https://edge.test' } } } });
+
 const INDEX_HTML = '<!doctype html><html><head><title>Composer</title></head><body></body></html>';
 const VIEWER_HTML = '<!doctype html><html><head><title>Viewer</title></head><body></body></html>';
 const ARCHIVED_CHUNK = 'assets/async-OLDHASH0.js';
@@ -53,7 +56,6 @@ const env = {
   ASSETS: assets,
   ASSET_ARCHIVE: archive,
   APPLE_TEAM_ID: 'TEAM',
-  EDGE_URL: 'https://edge.test',
 } as unknown as Parameters<typeof fetch>[1];
 
 const get = (path: string, secFetchMode?: string, host = 'composer.test') =>

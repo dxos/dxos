@@ -4,8 +4,13 @@
 
 import { type Plugin } from 'vite';
 
-/** `dx-local.yml`'s EDGE, used when `DX_EDGE_BASE_URL` does not point the dev server elsewhere. */
-const DEFAULT_EDGE_URL = 'https://preview.dxos.network';
+import { type EdgeConfig, resolveEdgeUrl } from '../functions/edge-url.ts';
+
+/** A config `ConfigPlugin` defined for the page, as the JSON it put in `define`. */
+const definedConfig = (define: Record<string, any> | undefined, key: string): EdgeConfig | undefined => {
+  const value = define?.[key];
+  return typeof value === 'string' ? JSON.parse(value) : undefined;
+};
 
 /**
  * Dev twin of the Worker's viewer routing on a `view.` host (`view.localhost` locally): a page
@@ -16,7 +21,13 @@ export const viewerRoutePlugin = (): Plugin => ({
   name: 'composer:viewer-route',
   apply: 'serve',
   configureServer: (server) => {
-    const edgeUrl = process.env.DX_EDGE_BASE_URL || DEFAULT_EDGE_URL;
+    // The EDGE the page is served against, from the config `ConfigPlugin` resolved for it.
+    const { define } = server.config;
+    const edgeUrl = resolveEdgeUrl(
+      definedConfig(define, '__CONFIG_ENVS__'),
+      definedConfig(define, '__CONFIG_LOCAL__'),
+      definedConfig(define, '__CONFIG_DEFAULTS__'),
+    );
     server.middlewares.use((req, res, next) => {
       const host = req.headers.host ?? '';
       const pathname = (req.url ?? '/').split('?')[0];
@@ -25,7 +36,7 @@ export const viewerRoutePlugin = (): Plugin => ({
         return;
       }
 
-      if (pathname.startsWith('/publications/')) {
+      if (pathname.startsWith('/publications/') && edgeUrl) {
         // EDGE serves publications from db-service, under `/db`.
         void proxyPublication(new URL(`/db${pathname}`, edgeUrl), req.method ?? 'GET').then(
           ({ status, headers, body }) => {
