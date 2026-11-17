@@ -16,6 +16,7 @@ import { type ElementKindSpec } from '@dxos/react-ui-canvas';
 import { graphSpec } from '../../components/Graph/index.ts';
 import { appFrameSpec } from './AppFrame.tsx';
 import { cardSpec } from './Card.tsx';
+import { studioCardCompositeSpec } from './CardComposite.ts';
 import { chipSpec } from './Chip.tsx';
 import { feedCardSpec } from './FeedCard.tsx';
 import { plankSpec } from './Plank.tsx';
@@ -29,4 +30,6 @@ export const STUDIO_KINDS: Readonly<Record<string, ElementKindSpec>> = {
   'app-frame': appFrameSpec,
   'space-graph': graphSpec,
   'substrate': substrateSpec,
+  // One definition, many placements: the card as a composite rather than a painted view.
+  'studio-card': studioCardCompositeSpec,
 };

@@ -150,6 +150,13 @@ export type SlideMetrics = {
   bodyCardHeight: number;
   /** A card whose body is a grid of chips, which needs the room the grid takes. */
   chipsCardHeight: number;
+  /** One chip of a grid, in scene units. */
+  chipHeight: number;
+  /** Between chips, both ways. */
+  chipGap: number;
+  /** The card's own title row above its grid, and the inset of the grid from the card's edges. */
+  chipHeader: number;
+  chipPadding: number;
   bannerHeight: number;
   bannerGap: number;
   /** The slide's own footnote: how far under the content it sits, and how large. */
@@ -179,6 +186,10 @@ export const SLIDE_METRICS: SlideMetrics = {
   bandLabelGap: 48,
   bodyCardHeight: 200,
   chipsCardHeight: 208,
+  chipHeight: 48,
+  chipGap: 12,
+  chipHeader: 56,
+  chipPadding: 24,
   bannerHeight: 176,
   bannerGap: 64,
   noteGap: 64,
@@ -483,6 +494,7 @@ export const seedSlideSpec =
       content[nodeKey(elementId(boxId_, 'frame'))] = {
         kind: 'node',
         scene: root,
+        dsl: { object: boxId_, element: 'frame' },
         node: {
           type: 'rect',
           id: elementId(boxId_, 'frame'),
@@ -498,6 +510,7 @@ export const seedSlideSpec =
       content[nodeKey(id)] = {
         kind: 'node',
         scene: root,
+        dsl: { object: `heading-${index}`, element: 'label' },
         node: {
           type: 'rect',
           id,
@@ -524,6 +537,7 @@ export const seedSlideSpec =
         content[nodeKey(boxId(id))] = {
           kind: 'node',
           scene: root,
+          dsl: { object: id, element: 'box' },
           node: {
             type: 'rect',
             id: boxId(id),
@@ -540,6 +554,7 @@ export const seedSlideSpec =
         content[nodeKey(boxId(id))] = {
           kind: 'node',
           scene: root,
+          dsl: { object: id, element: 'box' },
           node: {
             type: 'polyline',
             id: boxId(id),
@@ -558,6 +573,7 @@ export const seedSlideSpec =
         content[nodeKey(boxId(id))] = {
           kind: 'node',
           scene: root,
+          dsl: { object: id, element: 'box' },
           node: {
             type: card.component,
             id: boxId(id),
@@ -573,6 +589,7 @@ export const seedSlideSpec =
       content[nodeKey(boxId(id))] = {
         kind: 'node',
         scene: root,
+        dsl: { object: id, element: 'box' },
         node: {
           type: card.kind ?? 'card',
           id: boxId(id),
@@ -595,25 +612,55 @@ export const seedSlideSpec =
                   ...(card.feed.label ? { feedLabel: card.feed.label } : {}),
                 }
               : {}),
-            ...(card.chips
-              ? {
-                  chips: {
-                    items: card.chips.items.map(({ icon, label, note, tone, ghost }) => ({
-                      icon,
-                      label,
-                      ...(note ? { note } : {}),
-                      ...(tone ? { tone: TONES[tone] ?? tone } : {}),
-                      ...(ghost ? { ghost } : {}),
-                    })),
-                    ...(card.chips.cols !== undefined ? { cols: card.chips.cols } : {}),
-                    ...(card.chips.flat !== undefined ? { flat: card.chips.flat } : {}),
-                  },
-                }
-              : {}),
           },
         },
       };
     }
+    // A card's chips are ELEMENTS, not a field it draws: the `chip` kind already exists, a grid inside a card is a
+    // repeat that a composite's fixed parts cannot express, and a chip a reader can select and style is worth more
+    // than one painted into its neighbour. The grid fills the card under its title row.
+    const { chipHeight, chipGap, chipHeader, chipPadding } = { ...SLIDE_METRICS, ...spec.metrics };
+    for (const [id, { card, ...box }] of cards) {
+      if (isComponent(card) || isShape(card) || !card.chips) {
+        continue;
+      }
+      const { items, cols = items.length } = card.chips;
+      const rows = Math.ceil(items.length / cols);
+      const left = box.x + chipPadding;
+      const top = box.y + chipHeader;
+      const width = (box.width - chipPadding * 2 - chipGap * (cols - 1)) / cols;
+      // The grid is centred in what the title row leaves, so a card taller than its chips need does not strand them.
+      const used = rows * chipHeight + (rows - 1) * chipGap;
+      const offset = Math.max(0, (box.height - chipHeader - chipPadding - used) / 2);
+      items.forEach(({ icon, label, note, tone, ghost }, index) => {
+        const chipId = elementId(`${id}-chip-${index}`, 'box');
+        const column = index % cols;
+        const row = Math.floor(index / cols);
+        content[nodeKey(chipId)] = {
+          kind: 'node',
+          scene: root,
+          dsl: { object: `${id}-chip-${index}`, element: 'box' },
+          node: {
+            type: 'chip',
+            id: chipId,
+            z: 'a2',
+            center: {
+              x: left + column * (width + chipGap) + width / 2,
+              y: top + offset + row * (chipHeight + chipGap) + chipHeight / 2,
+            },
+            size: { width, height: chipHeight },
+            label,
+            ...(icon ? { icon: { type: icon } } : {}),
+            data: {
+              ...(note ? { note } : {}),
+              ...(tone ? { tone: TONES[tone] ?? tone } : {}),
+              ...(ghost ? { ghost } : {}),
+            },
+          },
+        };
+      });
+    }
+
     // Two passes, because a port depends on every other edge meeting that side: first which sides each edge uses,
     // then the fan across each side, in the order the far ends stand along it.
     const declared: (SlideEdge & { trunk?: boolean })[] = [
@@ -665,6 +712,7 @@ export const seedSlideSpec =
       content[`link:${id}`] = {
         kind: 'link',
         scene: root,
+        dsl: { object: 'links', element: id },
         link: {
           type: 'line',
           id,

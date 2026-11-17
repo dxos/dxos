@@ -169,6 +169,11 @@ export const feedCardSpec: ElementKindSpec = {
   }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 300 x 138 card, give or take.
   defaultSize: { width: 6, height: 3 },
+  // The card paints its own panel, radius and shadows, so the frame must paint none: otherwise the node's own box
+  // sits behind it at the look's radius and its `overflow-hidden` clips the card's corners. `unclipped` lets the
+  // raised shadow, drawn outside the frame, survive too.
+  bare: true,
+  unclipped: true,
   // Composite: every text of the card is edited in place, in reading order. The first is the node's main text, so
   // Enter on a selected card edits its title; Tab moves on through the strip's caption, the body and the footer.
   parts: [{ field: 'label' }, { field: 'data.feedLabel' }, { field: 'body', multiline: true }, { field: 'footer' }],

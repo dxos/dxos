@@ -10,6 +10,7 @@ import { describe, test } from 'vitest';
 import { type ContentMap, Dsl } from '@dxos/diagram';
 import { ROOT_VIEW_ID, iconOf, isLinkRecord, isNodeRecord, readViews } from '@dxos/react-ui-canvas';
 
+import { seedSlide, studioSlide } from './slides.ts';
 import {
   STUDIO_CANVAS,
   STUDIO_GRID,
@@ -266,6 +267,33 @@ describe('studio deck slides on a canvas', () => {
     const links = (content: ContentMap) => Object.values(content).filter(isLinkRecord).length;
     // Generator mode drops the four tap links, since a `Generator` cannot be linked to at all.
     expect({ kind: links(kind), generated: links(generated) }).toEqual({ kind: 11, generated: 7 });
+  });
+
+  test("a card's chips are placed as their own elements", ({ expect }) => {
+    // Chips used to be a field the card painted (`data.chips`), which a composite's fixed parts cannot express and
+    // which left the `chip` kind — a real kind, with its own schema and view — drawn by nothing. They are elements
+    // now: selectable, stylable, and inside the card that declares them.
+    const slides = [studioSlide('echo-layers'), studioSlide('architecture')];
+    for (const slide of slides) {
+      const content: ContentMap = {};
+      seedSlide(slide)(content, ROOT_VIEW_ID);
+      const chips = Object.values(content).flatMap((record) =>
+        isNodeRecord(record) && record.node.type === 'chip' ? [record.node] : [],
+      );
+      const declared = (slide.spec?.groups ?? []).flatMap((group) => [
+        ...(group.banner?.chips?.items ?? []),
+        ...(group.columns ?? []).flat().flatMap((cell) => ('chips' in cell ? (cell.chips?.items ?? []) : [])),
+      ]);
+      expect({ slide: slide.id, chips: chips.length }).toEqual({ slide: slide.id, chips: declared.length });
+      // Every one carries the label its spec gave it, and none is left inside a card's data.
+      for (const node of chips) {
+        expect(typeof node.label).toBe('string');
+      }
+      const withChipData = Object.values(content).filter(
+        (record) => isNodeRecord(record) && record.node.data && 'chips' in (record.node.data as object),
+      );
+      expect({ slide: slide.id, inCardData: withChipData.length }).toEqual({ slide: slide.id, inCardData: 0 });
+    }
   });
 
   test('the routes the sidecar carries are the ones the DSL dropped', ({ expect }) => {

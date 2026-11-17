@@ -238,16 +238,27 @@ export type StudioModel = Schema.Schema.Type<typeof StudioModel>;
 export const parseStudioModel = (text: string): StudioModel => Schema.decodeUnknownSync(StudioModel)(JSON.parse(text));
 
 /** The box a component occupies, from the circle or the rectangle its sidecar records. */
+/**
+ * The studio deck's exporter divided its runs and wrote the quotient: the Hyperspace planks are `(772 - 2 * 40) / 3`
+ * = 230.66666666666666 in the sidecar, and the three y positions carry the same third. The `.diagram` file rounds
+ * for display, but the sidecar keeps the float and the spec path reads it straight — so a component arrives off the
+ * grid with sub-pixel geometry. Every component extent is put back on the pitch here, which is the one place both
+ * the spec path and the deck import read it from.
+ */
+const snap = (value: number): number => Math.round(value / STUDIO_GRID) * STUDIO_GRID;
+
 export const componentFrame = (component: StudioComponent): { x: number; y: number; w: number; h: number } => {
   const { cx, cy, r, x, y, w, h } = component;
   if (cx !== undefined && cy !== undefined && r !== undefined) {
-    return { x: cx - r, y: cy - r, w: r * 2, h: r * 2 };
+    // A circle keeps its aspect whatever the snap does, since both extents are the one diameter.
+    const size = snap(r * 2);
+    return { x: snap(cx - r), y: snap(cy - r), w: size, h: size };
   }
   invariant(
     x !== undefined && y !== undefined && w !== undefined && h !== undefined,
     `component "${component.id}" has neither a circle nor a box`,
   );
-  return { x, y, w, h };
+  return { x: snap(x), y: snap(y), w: snap(w), h: snap(h) };
 };
 
 /**
@@ -1843,7 +1854,7 @@ export type LinkMode = 'deck' | 'ortho';
 export type PortMode = 'facing' | 'vertical';
 
 /**
- * The component kinds the studio stories register (`testing/studio/*.tsx`). A host that has registered fewer passes
+ * The component kinds the studio stories register (`experimental/studio/*.tsx`). A host that has registered fewer passes
  * its own set to {@link seedStudioSlide}; a kind the host does not have is left as the DSL's placeholder, which is
  * how the drawing reads where the kind is not there. `fat-arrow` is not here: it draws as plain shapes.
  */

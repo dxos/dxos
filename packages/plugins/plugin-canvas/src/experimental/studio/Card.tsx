@@ -155,6 +155,12 @@ export const cardSpec: ElementKindSpec = {
   // Nominal units (one unit is the major grid cell, 48px): the deck's 236 x 66 card, give or take.
   defaultSize: { width: 5, height: 1.5 },
   resizable: true,
+  // The card paints its own panel, radius and shadows, so the frame must paint none: otherwise the node's own box
+  // sits behind it at the look's radius (16px against the card's 12px) and its `overflow-hidden` clips the card's
+  // corners — which is the flattened corner the tone outline showed. `unclipped` lets the raised shadow, which is
+  // drawn outside the frame, survive too.
+  bare: true,
+  unclipped: true,
   // Composite: the title first, so Enter on a selected card edits it, then the body and footer the frame draws.
   parts: [{ field: 'label' }, { field: 'body', multiline: true }, { field: 'footer' }],
 };

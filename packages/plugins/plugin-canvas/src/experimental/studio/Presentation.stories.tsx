@@ -24,8 +24,8 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
-import type * as SlideTheme from '@dxos/plugin-presenter/SlideTheme';
 import { PresenterStoryPlugin } from '@dxos/plugin-presenter/testing';
+import { SlideTheme } from '@dxos/react-ui-slides/dialect';
 import * as Cell from '@dxos/storybook-testing/Cell';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
@@ -36,16 +36,10 @@ import { CanvasCapabilities } from '#types';
 
 import types from '../../capabilities/schema.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
-import { STUDIO_KINDS } from '../../testing/studio/kinds.ts';
-import { STUDIO_SLIDES, seedSlide } from '../../testing/studio/slides.ts';
-import { slideBounds } from '../../testing/studio/spec.ts';
-import {
-  STUDIO_CANVAS,
-  type StudioReport,
-  seedStudioSlide,
-  studioDeckSize,
-  studioPageFrame,
-} from '../../testing/studio/studio.ts';
+import { STUDIO_KINDS } from './registry.ts';
+import { STUDIO_SLIDES, seedSlide } from './slides.ts';
+import { slideBounds } from './spec.ts';
+import { STUDIO_CANVAS, type StudioReport, seedStudioSlide, studioDeckSize, studioPageFrame } from './studio.ts';
 
 /** The deck's look: the studio's own accent, and its fonts. */
 const THEME: SlideTheme.Settings = { accent: '#2d6fff', font: 'space-grotesk', monoFont: 'fira' };
@@ -157,7 +151,7 @@ const decorators = StoryHarness.decorators<StoryArgs>(({ args }) => ({
 }));
 
 const meta: Meta<StoryArgs> = {
-  title: 'plugins/plugin-canvas/containers/StudioPresentation',
+  title: 'plugins/plugin-canvas/experimental/Presentation',
   render: () => <ModuleContainer.Root />,
   decorators,
   argTypes: { borders: { control: 'boolean' } },
