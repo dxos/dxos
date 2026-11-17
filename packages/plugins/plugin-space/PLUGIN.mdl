@@ -620,7 +620,7 @@ feat F-9: Publishing
   req F-9.3: Copy public link copies the viewer link of a published space's object, `<viewer>/<publicId>/db/<typeSlug>+<objectId>`; Copy public link on the space copies `<viewer>/<publicId>`.
   req F-9.4: Composer opened with `?fork=<publicId>&path=<objectPath>` imports the publication as a new space of the user's once spaces are available, which is after sign-in, and opens the object at `path`. The fork clears the publication annotation and is migrated to the host's version, so it never asks to be migrated. Plugins the manifest names are not enabled.
   req F-9.5: With `readOnly`, the plugin's graph is navigation only: no space, object or section actions, no Settings, export or peer nodes, and no Selected objects companion. The Database section shows, and its type pages list and open objects with no selection, deletion, filing, merging or cell edits. The object properties companion shows the properties as static rows.
-  req F-9.6: Space settings has a Description field after Name, kept in the space properties. Space settings has a Publishing section after the space properties and before the space controls. Its Status row says whether the space is published and when, with Publish space while it is not and a Manage menu (Republish space, Unpublish space) while it is. A published space also shows its public link in a copyable field.
+  req F-9.6: Space settings has a Description field after Name, kept in the space properties. Space settings has a Publishing section after the space properties and before the space controls. Its Status row says whether the space is published, with Publish space while it is not; while it is, the row shows when it was published, beside a Manage menu (Republish space, Unpublish space). A published space also shows its public link in a copyable field.
   req F-9.7: Publications are read from the viewer origin: `<viewer>/publications/<publicId>/archive.json` and `manifest.json`, open to any origin. The viewer and a fork read there; `publicationsUrl` overrides it. The viewer host answers a crawler with link-preview tags: a space link is named and described after the manifest's space, and an object link after the manifest's object, else after the object title its URL carries. Each preview names an image, `<viewer>/publications/<publicId>/preview.png`, with `?object=<objectId>` for an object the manifest describes: a 1200×630 PNG card the Composer worker draws from the manifest. The space card shows the space's name, description and icon, its three most numerous types with a count of the rest, and a bar weighted by type; the object card shows the object's type, title and description, with the space's name beside its icon.
 ```
 
@@ -2012,6 +2012,23 @@ decision D-120: The worker draws a card with Satori 0.32 and resvg-wasm, with In
   affects: [F-9.7]
   why: Workers cannot compile WebAssembly at run time, so each engine is bundled as a precompiled module; Satori from 0.33 shapes text with HarfBuzz, which it compiles at run time. An image cannot read the theme's CSS, so hues need literal colours.
   rejected: Satori 0.33 and later; `workers-og`, which wraps the same engines; drawing at publish time and storing the PNG on EDGE, which leaves old images when the drawing changes.
+```
+
+```mdl
+decision D-121: The Status row shows when the space was published beside the Manage menu, in a more compact form without seconds.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.6]
+```
+
+```mdl
+decision D-122: The publish time is the app's relative `Timestamp` ("Published 18 minutes ago"), with the full date and time in its tooltip. Fills in [D-121].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: `Timestamp` is the app's one form for when something happened, and it keeps the exact time a hover away.
+  rejected: A short absolute date and time, which reads the same for every publish that day.
 ```
 
 ## Appendix: Extension Definitions

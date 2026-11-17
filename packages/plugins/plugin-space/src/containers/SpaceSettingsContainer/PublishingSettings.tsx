@@ -16,6 +16,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Menu from '@dxos/react-ui/Menu';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { Publication, SpaceOperation } from '#types';
 
@@ -73,31 +74,35 @@ export const PublishingSettings = ({ space }: PublishingSettingsProps) => {
         standalone
         label={t('publication-status.title')}
         description={
-          receipt
-            ? t('publication-status.published.description', { date: new Date(receipt.publishedAt).toLocaleString() })
-            : t('publication-status.unpublished.description')
+          receipt ? t('publication-status.published.description') : t('publication-status.unpublished.description')
         }
       >
         {receipt ? (
-          <Menu.Root>
-            <Menu.Trigger asChild>
-              <Button.Root caretDown disabled={pending} data-testid='spaceSettings.managePublication'>
-                {t('manage-publication.label')}
-              </Button.Root>
-            </Menu.Trigger>
-            <Menu.Content>
-              <Menu.Item
-                onClick={handlePublish}
-                item={{ value: 'republish', label: t('republish-space.label') }}
-                data-testid='spaceSettings.republish'
-              />
-              <Menu.Item
-                onClick={handleUnpublish}
-                item={{ value: 'unpublish', label: t('unpublish-space.label') }}
-                data-testid='spaceSettings.unpublish'
-              />
-            </Menu.Content>
-          </Menu.Root>
+          <div className='flex items-center gap-3'>
+            <span className='text-description whitespace-nowrap' data-testid='spaceSettings.publishedAt'>
+              {t('publication-status.published.label')}{' '}
+              <Typography.Timestamp date={receipt.publishedAt} variant='relative' justNow={t('just-now.label')} />
+            </span>
+            <Menu.Root>
+              <Menu.Trigger asChild>
+                <Button.Root caretDown disabled={pending} data-testid='spaceSettings.managePublication'>
+                  {t('manage-publication.label')}
+                </Button.Root>
+              </Menu.Trigger>
+              <Menu.Content>
+                <Menu.Item
+                  onClick={handlePublish}
+                  item={{ value: 'republish', label: t('republish-space.label') }}
+                  data-testid='spaceSettings.republish'
+                />
+                <Menu.Item
+                  onClick={handleUnpublish}
+                  item={{ value: 'unpublish', label: t('unpublish-space.label') }}
+                  data-testid='spaceSettings.unpublish'
+                />
+              </Menu.Content>
+            </Menu.Root>
+          </div>
         ) : (
           <Button.Root disabled={pending} onClick={handlePublish} data-testid='spaceSettings.publish'>
             {t('publish-space.label')}

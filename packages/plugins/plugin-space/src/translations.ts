@@ -136,7 +136,9 @@ export const translations = [
           'Share a read-only copy of this space at a public link. Anyone with the link can view it and copy it into Composer.',
         'publication-status.title': 'Status',
         'publication-status.published.description':
-          'Published {{date}}. Edits since then are not public until you republish. Unpublishing takes the copy down and the link stops working.',
+          'Edits since publishing are not public until you republish. Unpublishing takes the copy down and the link stops working.',
+        'publication-status.published.label': 'Published',
+        'just-now.label': 'just now',
         'publication-status.unpublished.description': 'Not published.',
         'public-link.title': 'Public link',
         'public-link.description': 'Anyone with this link can view the published copy.',
