@@ -183,13 +183,17 @@ describe('Trig', () => {
     expect(sameQuads(new Parser({ format: 'application/trig' }).parse(trig), quads)).toBe(true);
   });
 
-  test('keeps the base direction of a language-tagged literal', ({ expect }) => {
-    const directed = { ...Rdf.literal('مرحبا', 'ar'), direction: 'rtl' as const };
-    expect(Trig.write([Rdf.quad(ex('s'), ex('p'), directed)])).toContain('"مرحبا"@ar--rtl');
+  test('keeps the base direction of a language-tagged literal, as n3 does', ({ expect }) => {
+    const quads = [Rdf.quad(ex('s'), ex('p'), Rdf.literal('مرحبا', { language: 'ar', direction: 'rtl' }))];
+    const trig = Trig.write(quads);
+    expect(trig).toBe(n3Trig(quads));
+    expect(trig).toContain('"مرحبا"@ar--rtl');
   });
 
-  test('refuses a quoted triple rather than writing a malformed term', ({ expect }) => {
+  test('refuses quoted triples and variables rather than writing them as other terms', ({ expect }) => {
     const quoted = Rdf.quad(ex('s'), ex('p'), Rdf.literal('o'));
     expect(() => Trig.write([Rdf.quad(ex('s'), ex('p'), quoted)])).toThrow(/quoted triple/);
+    expect(() => Trig.write([Rdf.quad(ex('s'), Rdf.variable('p'), ex('o'))])).toThrow(/variable/);
+    expect(() => Trig.write([Rdf.quad(ex('s'), ex('p'), Rdf.variable('o'))])).toThrow(/variable/);
   });
 });

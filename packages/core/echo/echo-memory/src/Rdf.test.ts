@@ -90,4 +90,14 @@ describe('Rdf', () => {
     expect(Rdf.quad(subject, subject, subject, null).graph.equals(Rdf.defaultGraph())).toBe(true);
     expect(Rdf.quad(subject, subject, subject, null).equals(Rdf.quad(subject, subject, subject))).toBe(true);
   });
+  test('a directional literal is an rdf:dirLangString, distinct by direction', ({ expect }) => {
+    const rtl = Rdf.literal('x', { language: 'AR', direction: 'rtl' });
+    expect(rtl.language).toBe('ar');
+    expect(rtl.direction).toBe('rtl');
+    expect(rtl.datatype.value).toBe(Rdf.RDF_DIR_LANG_STRING);
+    expect(rtl.equals(Rdf.literal('x', { language: 'ar', direction: 'rtl' }))).toBe(true);
+    expect(rtl.equals(Rdf.literal('x', { language: 'ar', direction: 'ltr' }))).toBe(false);
+    expect(rtl.equals(Rdf.literal('x', 'ar'))).toBe(false);
+    expect(Rdf.literal('x', { language: 'ar' }).equals(Rdf.literal('x', 'ar'))).toBe(true);
+  });
 });

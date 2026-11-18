@@ -25,6 +25,7 @@ export type QuadGraph = RdfJs.Quad_Graph;
 
 export const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
 export const RDF_LANG_STRING = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString';
+export const RDF_DIR_LANG_STRING = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString';
 export const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
 
 class NamedNodeTerm<Iri extends string = string> implements RdfJs.NamedNode<Iri> {
@@ -49,6 +50,7 @@ class LiteralTerm implements RdfJs.Literal {
     readonly value: string,
     readonly language: string,
     readonly datatype: RdfJs.NamedNode,
+    readonly direction: '' | 'ltr' | 'rtl' = '',
   ) {}
   equals(other: RdfJs.Term | null | undefined): boolean {
     return (
@@ -56,6 +58,7 @@ class LiteralTerm implements RdfJs.Literal {
       other.termType === this.termType &&
       other.value === this.value &&
       other.language === this.language &&
+      (other.direction ?? '') === this.direction &&
       other.datatype.equals(this.datatype)
     );
   }
@@ -101,6 +104,7 @@ class QuadTerm implements RdfJs.Quad {
 const DEFAULT_GRAPH = new DefaultGraphTerm();
 const STRING_DATATYPE = new NamedNodeTerm(XSD_STRING);
 const LANG_STRING_DATATYPE = new NamedNodeTerm(RDF_LANG_STRING);
+const DIR_LANG_STRING_DATATYPE = new NamedNodeTerm(RDF_DIR_LANG_STRING);
 
 /** A named node for an IRI. */
 export const namedNode = <Iri extends string = string>(value: Iri): RdfJs.NamedNode<Iri> => new NamedNodeTerm(value);
@@ -111,17 +115,30 @@ let nextBlankNode = 0;
 export const blankNode = (value?: string): RdfJs.BlankNode => new BlankNodeTerm(value ?? `b${nextBlankNode++}`);
 
 /**
- * A literal: a string is a language tag (`rdf:langString`), a named node a datatype; neither makes an `xsd:string`.
- * Language tags are compared lower-case, as RDF 1.1 requires.
+ * A literal: a string is a language tag (`rdf:langString`), a language with a direction a directional one
+ * (`rdf:dirLangString`), a named node a datatype; none makes an `xsd:string`. Language tags are compared lower-case,
+ * as RDF 1.1 requires.
  */
-export const literal = (value: string, languageOrDatatype?: string | RdfJs.NamedNode): RdfJs.Literal =>
-  typeof languageOrDatatype === 'string' && languageOrDatatype.length > 0
-    ? new LiteralTerm(value, languageOrDatatype.toLowerCase(), LANG_STRING_DATATYPE)
-    : new LiteralTerm(
-        value,
-        '',
-        typeof languageOrDatatype === 'object' ? namedNode(languageOrDatatype.value) : STRING_DATATYPE,
-      );
+export const literal = (
+  value: string,
+  languageOrDatatype?: string | RdfJs.NamedNode | RdfJs.DirectionalLanguage,
+): RdfJs.Literal => {
+  if (typeof languageOrDatatype === 'string') {
+    return languageOrDatatype.length > 0
+      ? new LiteralTerm(value, languageOrDatatype.toLowerCase(), LANG_STRING_DATATYPE)
+      : new LiteralTerm(value, '', STRING_DATATYPE);
+  }
+  if (languageOrDatatype === undefined) {
+    return new LiteralTerm(value, '', STRING_DATATYPE);
+  }
+  if ('termType' in languageOrDatatype) {
+    return new LiteralTerm(value, '', namedNode(languageOrDatatype.value));
+  }
+  const { language, direction } = languageOrDatatype;
+  return direction
+    ? new LiteralTerm(value, language.toLowerCase(), DIR_LANG_STRING_DATATYPE, direction)
+    : new LiteralTerm(value, language.toLowerCase(), LANG_STRING_DATATYPE);
+};
 
 /** A SPARQL variable; `value` is its name without the leading `?`. */
 export const variable = (value: string): RdfJs.Variable => new VariableTerm(value);

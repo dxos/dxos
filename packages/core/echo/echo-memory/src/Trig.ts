@@ -8,8 +8,9 @@ import * as Rdf from './Rdf.ts';
 
 //
 // A TriG writer whose output matches n3's `Writer` in TriG mode character for character (prefix block, named graph
-// blocks, `;` and `,` grouping, datatype abbreviations, escapes), so readers of n3's TriG keep working, except where
-// n3 loses data: an IRI that only looks prefixed stays bracketed, and a literal keeps its base direction.
+// blocks, `;` and `,` grouping, datatype abbreviations, escapes, base direction), so readers of n3's TriG keep working;
+// it differs only where n3's output would not read back: an IRI that only looks prefixed stays bracketed, and quoted
+// triples and variables are refused.
 //
 
 const XSD = 'http://www.w3.org/2001/XMLSchema#';
@@ -84,9 +85,6 @@ export const write = (quads: Iterable<Rdf.Quad>, { prefixes = {} }: WriteOptions
     : undefined;
 
   const iriOrBlank = (term: Rdf.Term): string => {
-    if (term.termType === 'Quad') {
-      throw new TypeError('TriG cannot write a quoted triple as a term.');
-    }
     if (term.termType !== 'NamedNode') {
       return `_:${term.value}`;
     }
@@ -131,7 +129,8 @@ export const write = (quads: Iterable<Rdf.Quad>, { prefixes = {} }: WriteOptions
   };
 
   const object = (term: Rdf.QuadObject): string => (term.termType === 'Literal' ? literal(term) : iriOrBlank(term));
-  const predicate = (term: Rdf.QuadPredicate): string => (term.value === Rdf.RDF_TYPE ? 'a' : iriOrBlank(term));
+  const predicate = (term: Rdf.QuadPredicate): string =>
+    term.termType === 'NamedNode' && term.value === Rdf.RDF_TYPE ? 'a' : iriOrBlank(term);
 
   let graph: Rdf.QuadGraph = Rdf.defaultGraph();
   let subject: Rdf.QuadSubject | undefined;
@@ -139,6 +138,13 @@ export const write = (quads: Iterable<Rdf.Quad>, { prefixes = {} }: WriteOptions
   const closing = () => (graph.termType === 'DefaultGraph' ? '.\n' : '\n}\n');
 
   for (const next of quads) {
+    for (const term of [next.subject, next.predicate, next.object, next.graph]) {
+      if (term.termType === 'Quad' || term.termType === 'Variable') {
+        throw new TypeError(
+          `TriG cannot write a ${term.termType === 'Quad' ? 'quoted triple' : 'variable'} as a term.`,
+        );
+      }
+    }
     if (!next.graph.equals(graph)) {
       output +=
         (subject === undefined ? '' : closing()) +
