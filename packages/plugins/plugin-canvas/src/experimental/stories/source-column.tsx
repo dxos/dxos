@@ -36,8 +36,11 @@ import { CanvasLayoutBuilder, editCanvasContent, readCanvasContent } from '../..
  * The canvas the story seeded, for the column beside it. `onInit` runs during client init, before anything renders,
  * and the harness hands the layout to `ModuleContainer` rather than to the story — so the editor reads the canvas
  * from here instead of through props it has no way to receive.
+ *
+ * `source` is the text a story of intent was written as. The canvas cannot give it back: it holds what the text
+ * lowered to, so printing it shows grid boxes where the author wrote groups and nodes.
  */
-export const seeded: { canvas?: Canvas.Canvas } = {};
+export const seeded: { canvas?: Canvas.Canvas; source?: string } = {};
 
 /** The drawing as scene DSL: one `object` statement per shape, which is what a drawing serializes to. */
 const printCanvas = (canvas: Canvas.Canvas): string => Dsl.print(CanvasLayoutBuilder.read(canvas).scene);
@@ -51,7 +54,10 @@ const printCanvas = (canvas: Canvas.Canvas): string => Dsl.print(CanvasLayoutBui
  */
 const printRecords = (canvas: Canvas.Canvas): string => JSON.stringify(readCanvasContent(canvas), null, 2);
 
-type SourceView = 'dsl' | 'json';
+/** `scene` is what a document of intent lowered to: the boxes the canvas holds, which nobody writes. */
+type SourceView = 'dsl' | 'scene' | 'json';
+const SOURCE_VIEWS: readonly SourceView[] = ['dsl', 'scene', 'json'];
+const isSourceView = (value: string): value is SourceView => SOURCE_VIEWS.some((view) => view === value);
 
 /**
  * One editor per view, re-created when the view changes: CodeMirror takes its language at construction, so this
@@ -77,7 +83,7 @@ const TextPane = composable<HTMLDivElement, TextPaneProps>(
         extensions: [
           createBasicExtensions({ lineNumbers: true, readOnly: onTextChange === undefined }),
           createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-          ...(view === 'dsl' ? [diagramLanguage({ layout: false })] : [jsonLanguage()]),
+          ...(view === 'json' ? [jsonLanguage()] : [diagramLanguage({ layout: false })]),
           ...(onTextChange ? [listener({ onChange: ({ text }) => onTextChange(text) })] : []),
         ],
       }),
@@ -114,26 +120,28 @@ const TextPane = composable<HTMLDivElement, TextPaneProps>(
  * was rebuilt from half-typed text — and `applyCommands` is a full sync, which deleted every shape the broken parse
  * had dropped. `Parse` reports without touching the drawing, `Rebuild` is the one action that writes.
  */
-const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
-  const [initialValue] = useState(() => printCanvas(canvas));
+const SourceEditor = ({ canvas, intent }: { canvas: Canvas.Canvas; intent?: string }) => {
+  const [initialValue] = useState(() => intent ?? printCanvas(canvas));
   const [source, setSource] = useState(initialValue);
   const [view, setView] = useState<SourceView>('dsl');
   // Read again on every switch, so the records show the drawing as it is NOW rather than as it was at mount: a
   // `Rebuild` between the two views is exactly when the difference is worth seeing.
   const [records, setRecords] = useState(() => printRecords(canvas));
+  const [scene, setScene] = useState(() => printCanvas(canvas));
   const [problems, setProblems] = useState<readonly { severity: string; message: string }[]>([]);
   const [status, setStatus] = useState<string>();
 
-  // `read` rather than `compile`: these are scene statements, which carry their own coordinates, so there is no
-  // layout to solve — and solving one would move the shapes the slide placed.
+  // `read` for a printed drawing: its scene statements carry their own coordinates, so there is no layout to
+  // solve — and solving one would move the shapes the slide placed. A document of intent has no commands until
+  // its diagram is laid out, so it is parsed.
   const parse = useCallback(() => {
-    const { commands, problems: found } = Dsl.read(source);
+    const { commands, problems: found } = intent === undefined ? Dsl.read(source) : Dsl.parse(source);
     const errors = found.filter(({ severity }) => severity === 'error');
     setProblems(errors);
     const objects = commands.filter(({ op }) => op === 'upsert-object').length;
     setStatus(errors.length > 0 ? undefined : `${objects} object${objects === 1 ? '' : 's'}`);
     return { commands, errors };
-  }, [source]);
+  }, [source, intent]);
 
   const rebuild = useCallback(() => {
     const { commands, errors } = parse();
@@ -170,11 +178,14 @@ const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
 
   const onViewChange = useCallback(
     (next: string) => {
-      if (next !== 'dsl' && next !== 'json') {
+      if (!isSourceView(next)) {
         return;
       }
       if (next === 'json') {
         setRecords(printRecords(canvas));
+      }
+      if (next === 'scene') {
+        setScene(printCanvas(canvas));
       }
       setView(next);
     },
@@ -200,7 +211,7 @@ const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
             label='Rebuild'
             data-testid='studio-source.rebuild'
             onClick={rebuild}
-            disabled={view === 'json'}
+            disabled={view !== 'dsl'}
           />
           {/* The records are shown, not edited: writing them back is a different action from rebuilding a drawing
               out of its text, and it would have no undo here. */}
@@ -212,6 +223,15 @@ const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
               iconOnly
               data-testid='studio-source.view-dsl'
             />
+            {intent !== undefined && (
+              <ToggleGroup.Item
+                value='scene'
+                icon='ph--grid-four--regular'
+                label='Boxes'
+                iconOnly
+                data-testid='studio-source.view-scene'
+              />
+            )}
             <ToggleGroup.Item
               value='json'
               icon='ph--brackets-curly--regular'
@@ -227,6 +247,8 @@ const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
       <Panel.Body asChild>
         {view === 'dsl' ? (
           <TextPane key='dsl' view='dsl' value={source} onTextChange={onChange} />
+        ) : view === 'scene' ? (
+          <TextPane key='scene' view='scene' value={scene} />
         ) : (
           <TextPane key='json' view='json' value={records} />
         )}
@@ -238,7 +260,11 @@ const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
           </span>
         ) : (
           <span className='text-xs text-fg-muted' data-testid='studio-source.status'>
-            {view === 'json' ? `${records.split('\n').length} lines of records` : (status ?? ' ')}
+            {view === 'json'
+              ? `${records.split('\n').length} lines of records`
+              : view === 'scene'
+                ? `${scene.split('\n').length} lines of boxes from ${source.split('\n').length} of intent`
+                : (status ?? ' ')}
           </span>
         )}
       </Panel.Footer>
@@ -256,5 +282,5 @@ export const SourceColumn = () => {
     const timer = setInterval(() => seeded.canvas && setCanvas(seeded.canvas), 100);
     return () => clearInterval(timer);
   }, [canvas]);
-  return canvas ? <SourceEditor canvas={canvas} /> : <div className='dx-base-surface' />;
+  return canvas ? <SourceEditor canvas={canvas} intent={seeded.source} /> : <div className='dx-base-surface' />;
 };

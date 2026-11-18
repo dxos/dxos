@@ -109,6 +109,7 @@ const decorators = (slide: StudioSlide) =>
       // Assigned, never `??=`: each story seeds a space of its own, and keeping the first story's canvas leaves the
       // editor reading one whose space has since been torn down — which prints as an empty document.
       seeded.canvas = canvas;
+      seeded.source = undefined;
       const drawing = space.db.add(Drawing.make({ name: `${slide.id} · ${slide.title ?? slide.model.title}`, canvas }));
       await space.db.flush();
       const cell = Cell.article(drawing);
@@ -138,7 +139,7 @@ const slide = (id: string): Story => ({ decorators: decorators(studioSlide(id)) 
  * hierarchy of grids, so every position on screen is solved from a rule — which is what makes the text beside it
  * the thing to edit rather than a printout of what was already placed.
  */
-const fromSource = (name: string, source: string): Story => ({
+const fromSource = (name: string, source: string, { intent = false }: { intent?: boolean } = {}): Story => ({
   decorators: StoryHarness.decorators<StoryArgs>(({ args }) => ({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), StudioKindsPlugin()],
@@ -157,6 +158,8 @@ const fromSource = (name: string, source: string): Story => ({
         { ...STUDIO_CANVAS, readonly: true },
       );
       seeded.canvas = canvas;
+      // Assigned either way, as the canvas is: a story of boxes after one of intent would open on its text.
+      seeded.source = intent ? source : undefined;
       const drawing = space.db.add(Drawing.make({ name, canvas }));
       await space.db.flush();
       const cell = Cell.article(drawing);
@@ -177,18 +180,19 @@ export const Agent = fromSource('agent', agentGrid);
 
 //
 // The same nine slides written as intent (`diagram kind=grid` with `group`, `node` and `edge`) rather than as grid
-// boxes. Each lowers to the boxes of the story above it, so the two stories of a slide draw the same thing.
+// boxes. Each lowers to the boxes of the story above it, so the two stories of a slide draw the same thing. The
+// column beside the drawing shows the text as it was written, with the boxes it lowered to as a second view.
 //
 
-export const HyperspaceIntent = fromSource('hyperspace', hyperspaceIntent);
-export const EchoIntent = fromSource('echo', echoIntent);
-export const OntologyIntent = fromSource('ontology', ontologyIntent);
-export const PluginsIntent = fromSource('plugins', pluginsIntent);
-export const ComposerIntent = fromSource('composer', composerIntent);
-export const ArchitectureIntent = fromSource('architecture', architectureIntent);
-export const AgentsIntent = fromSource('agents', agentsIntent);
-export const ChatIntent = fromSource('chat', chatIntent);
-export const AgentIntent = fromSource('agent', agentIntent);
+export const HyperspaceIntent = fromSource('hyperspace', hyperspaceIntent, { intent: true });
+export const EchoIntent = fromSource('echo', echoIntent, { intent: true });
+export const OntologyIntent = fromSource('ontology', ontologyIntent, { intent: true });
+export const PluginsIntent = fromSource('plugins', pluginsIntent, { intent: true });
+export const ComposerIntent = fromSource('composer', composerIntent, { intent: true });
+export const ArchitectureIntent = fromSource('architecture', architectureIntent, { intent: true });
+export const AgentsIntent = fromSource('agents', agentsIntent, { intent: true });
+export const ChatIntent = fromSource('chat', chatIntent, { intent: true });
+export const AgentIntent = fromSource('agent', agentIntent, { intent: true });
 
 //
 // The Agents slide through the deck import rather than its spec: the richer `feed-card` kind, and the space graph

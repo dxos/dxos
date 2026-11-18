@@ -15,6 +15,7 @@ describe('DrawingSkill', () => {
   test('has an example for each diagram kind', ({ expect }) => {
     expect(examples.some((example) => example.includes('kind=sequence'))).toBe(true);
     expect(examples.some((example) => example.includes('kind=dataflow'))).toBe(true);
+    expect(examples.some((example) => example.includes('kind=grid'))).toBe(true);
   });
 
   test.each(examples.map((example) => [example.split('\n')[0], example]))('%s draws cleanly', (_name, example) => {

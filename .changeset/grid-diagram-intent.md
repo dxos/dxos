@@ -1,5 +1,6 @@
 ---
 '@dxos/diagram': minor
+'@dxos/plugin-illustrator': patch
 ---
 
 Add `diagram kind=grid`, which lays a drawing out from structure alone: the diagram states one frame and its
@@ -9,3 +10,6 @@ they sit (`alignContent=center`) and draw a frame (`border=true`); an empty grou
 a contributed component and carry its fields (`node calendar "Calendar" kind=card icon=calendar-blank`), and an
 `edge` can end on a group or on a place of a component (`frame/nav`) and say how it runs (`path=line`). The
 result is the same grid boxes a hand-placed drawing uses, so no coordinate is written and none is stored.
+
+The drawing skill teaches the new kind, so an agent can write a slide this way. Diagnostics measure a box that a
+grid places in the frame the grid gives it; they used to report every label in a grid as not fitting.

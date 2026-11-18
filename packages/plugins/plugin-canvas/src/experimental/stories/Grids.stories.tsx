@@ -76,6 +76,7 @@ const story = (name: string, source: string): StoryObj<typeof meta> => ({
       await space.db.flush();
       // The text IS the input here, so it is shown beside the drawing: edit a track and press Rebuild.
       seeded.canvas = canvas;
+      seeded.source = undefined;
       return [[Cell.article(drawing)], [{ object: drawing, component: SourceColumn }]];
     },
   }),
