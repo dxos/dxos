@@ -43,6 +43,8 @@ export type WorkingSetReport = WorkingSet & {
  * the index holds them.
  */
 export interface WorkingSetService {
+  /** The documents a database seeds itself with as it opens. */
   get(): Promise<WorkingSet>;
+  /** Takes a database's snapshot; a document sent from heads other than the held ones is dropped, not overwritten. */
   put(report: WorkingSetReport): Promise<void>;
 }
