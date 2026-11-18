@@ -22,6 +22,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import * as DeckPlugin from '#meta';
 import { DeckOperation } from '#types';
 
+import { DeckNamespace } from '../namespace.ts';
+
 await Harness.preload({ plugins: [DeckPlugin.make()] });
 
 const WORKSPACE_TYPE = 'example.com.type.workspace';
@@ -65,8 +67,10 @@ describe('DeckOperation.HandleExternalUrl', () => {
     await using harness = await Harness.createComposerTestApp({
       plugins: [DeckWorkspacePlugin(action.run), DeckPlugin.make()],
     });
-    const pending = () =>
-      harness.getAll(Capabilities.BootGate).some((gate) => harness.registry.get(gate.state).pending);
+    const gate = harness
+      .getAll(Capabilities.BootGate)
+      .find((gate) => gate.id === `${DeckNamespace.key}.bootGate.linkAction`);
+    const pending = () => gate !== undefined && harness.registry.get(gate.state).pending;
     await action.entered.promise;
     expect(pending()).toBe(true);
 
@@ -94,6 +98,35 @@ describe('DeckOperation.HandleExternalUrl', () => {
     action.release.resolve();
     await handled;
     expect(ran).toEqual([]);
+  });
+
+  test('a link overtaken while the next link runs its navigation handlers runs no action', async ({ expect }) => {
+    const ran: unknown[] = [];
+    const holds = new Map(['first', 'second'].map((name) => [name, heldStep()]));
+    const hold: AppCapabilities.NavigationHandler = (url) =>
+      holds.get(url.searchParams.get('hold') ?? '')?.run ?? Effect.void;
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [DeckWorkspacePlugin((data) => Effect.sync(() => ran.push(data)), undefined, hold), DeckPlugin.make()],
+    });
+    await harness.runPromise(
+      Operation.invoke(LayoutOperation.Set, { subject: [`${WORKSPACE}/deck`], workspace: WORKSPACE }),
+    );
+    const linked = new URL(window.location.href);
+    linked.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
+    linked.searchParams.set('hold', 'first');
+    const next = new URL(window.location.href);
+    next.searchParams.set('hold', 'second');
+
+    const first = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, { url: linked.href }));
+    await holds.get('first')!.entered.promise;
+    const second = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, { url: next.href }));
+    await holds.get('second')!.entered.promise;
+    holds.get('first')!.release.resolve();
+    await first;
+    expect(ran).toEqual([]);
+
+    holds.get('second')!.release.resolve();
+    await second;
   });
 
   test('a link whose URL opens no object runs no action', async ({ expect }) => {
@@ -125,6 +158,14 @@ const openedUrl = async () => {
   return new URL(window.location.href);
 };
 
+/** An effect that signals when it starts, then waits to be released. */
+const heldStep = () => {
+  const entered = Promise.withResolvers<void>();
+  const release = Promise.withResolvers<void>();
+  const run = Effect.sync(() => entered.resolve()).pipe(Effect.andThen(Effect.promise(() => release.promise)));
+  return { entered, release, run };
+};
+
 /** An action that signals when it starts, then records its object once released. */
 const heldAction = (ran: unknown[]) => {
   const entered = Promise.withResolvers<void>();
@@ -140,12 +181,13 @@ const heldAction = (ran: unknown[]) => {
 const DeckWorkspacePlugin = (
   run: LinkAction.LinkAction['run'],
   appliesTo: LinkAction.LinkAction['appliesTo'] = (data) => data === 'deck',
+  navigationHandler?: AppCapabilities.NavigationHandler,
 ) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.deckWorkspace'), name: 'Deck workspace' })).pipe(
     Plugin.addModule<void>(
       Capability.inlineModule(
         'docs',
-        { provides: [AppCapabilities.AppGraphBuilder, AppCapabilities.LinkAction] },
+        { provides: [AppCapabilities.AppGraphBuilder, AppCapabilities.LinkAction, AppCapabilities.NavigationHandler] },
         Effect.fnUntraced(function* () {
           const workspaces = yield* AppGraphBuilder.createExtension({
             id: 'workspaces',
@@ -166,6 +208,7 @@ const DeckWorkspacePlugin = (
               appliesTo,
               run,
             }),
+            ...(navigationHandler ? [Capability.contribute(AppCapabilities.NavigationHandler, navigationHandler)] : []),
           ];
         }),
       ),

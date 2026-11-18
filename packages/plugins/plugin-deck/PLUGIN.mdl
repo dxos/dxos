@@ -1211,6 +1211,15 @@ decision D-27: A link action runs only on an object its URL opened; a URL that o
   why: An action is defined on the object a link opens, so with no object there is nothing for it to act on.
 ```
 
+```mdl
+decision D-28: A URL from outside the app claims the navigation when it arrives, before its navigation handlers run; an earlier link's action that finishes after that claim is dropped, and its parameter stays in the address bar. Fills in [D-26].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: The single-flight projection only sees a newer URL once its handlers have finished, so a slow handler would let the earlier link strip the newer link's action from the address bar and run its own over it. The counter covers that gap; the projection handle still cancels on an in-app navigation.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using

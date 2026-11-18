@@ -59,11 +59,15 @@ const targetVerdict = (
     ),
   ).pipe(Effect.map((results) => NotFound.combineVerdicts(results.flat())));
 
+/** External navigations started, so a link action can tell when a newer one has overtaken it. */
+let externalNavigations = 0;
+
 /**
  * Dispatch navigation handlers for a URL arriving from outside the app, then project it. The link
  * action runs as part of the projection, so a newer navigation cancels it.
  */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
+  const navigation = ++externalNavigations;
   const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
   const registry = yield* Capability.get(Capabilities.AtomRegistry);
   const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
@@ -85,7 +89,7 @@ export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
 
   return yield* asOnlyProjection(
     project(resolvedUrl).pipe(
-      Effect.tap(({ opened }) => consumeLinkAction(resolvedUrl, opened)),
+      Effect.tap(({ opened }) => consumeLinkAction(resolvedUrl, opened, () => navigation === externalNavigations)),
       Effect.map(({ attend }) => attend),
     ),
   );
@@ -98,8 +102,12 @@ const loadOperationHandlers = Effect.gen(function* () {
   }
 });
 
-const consumeLinkAction = Effect.fnUntraced(function* (url: URL, plankId: string | undefined) {
-  if (!url.searchParams.has(LinkAction.PARAM)) {
+const consumeLinkAction = Effect.fnUntraced(function* (
+  url: URL,
+  plankId: string | undefined,
+  isCurrent: () => boolean,
+) {
+  if (!url.searchParams.has(LinkAction.PARAM) || !isCurrent()) {
     return;
   }
   const current = LinkAction.withoutAction(new URL(window.location.href));
@@ -113,7 +121,7 @@ const consumeLinkAction = Effect.fnUntraced(function* (url: URL, plankId: string
     return;
   }
   yield* loadOperationHandlers.pipe(
-    Effect.andThen(() => action.run(node.data)),
+    Effect.andThen(() => (isCurrent() ? action.run(node.data) : Effect.void)),
     Effect.catchCause((cause) => Effect.sync(() => log.warn('link action failed', { error: Cause.pretty(cause) }))),
   );
 });
