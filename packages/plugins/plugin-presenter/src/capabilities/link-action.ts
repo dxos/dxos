@@ -22,6 +22,6 @@ export const present: LinkAction.LinkAction = {
       : Effect.void,
 };
 
-const linkAction = () => Effect.succeed([Capability.contribute(AppCapabilities.LinkAction, present)]);
-
-export default linkAction;
+export default Capability.makeModule(() =>
+  Effect.succeed([Capability.contribute(AppCapabilities.LinkAction, present)]),
+);

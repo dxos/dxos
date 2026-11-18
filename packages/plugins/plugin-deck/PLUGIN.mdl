@@ -90,6 +90,7 @@ type EphemeralDeckState
     toasts: Toast[]
     currentUndoId?: string
     scrollIntoView?: { id: string; focus?: boolean }   # focus unset means the plank takes focus once in view
+    restored?: boolean            # the boot URL's first projection has ended, with or without a link action
 ```
 
 ```mdl
@@ -569,8 +570,9 @@ feat F-5: URL Navigation & Deep Linking
           without its `dxn:` prefix
     then: once the URL has landed, DeckPlugin removes the parameter from the address bar and runs the
           `LinkAction` a plugin contributes under that id on the object at the end of the chain, once;
-          an id no plugin contributes, or an action that does not apply to the object, is dropped with
-          a warning. When the app boots on such a URL, the boot loader stays up until the action has
+          an id no plugin contributes, an action that does not apply to the object, or a URL that opens
+          no object is dropped with a warning. A navigation that starts before the action has run
+          cancels it. When the app boots on such a URL, the boot loader stays up until the action has
           run, or for 10 seconds at most, so the page first shows what the action leaves
 ```
 
@@ -1188,6 +1190,25 @@ decision D-25: The ephemeral field is an optional `restored` flag, set once the 
   for: user:wittjosiah
   affects: [F-5.5]
   why: An optional field leaves every existing ephemeral state valid. The budget expiring does not mean the URL was projected, so it does not write `restored`.
+```
+
+```mdl
+decision D-26: A link action runs as part of its URL's projection, so a navigation that starts before the action has run cancels it. Fills in [D-21].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: An action that outlives its navigation reopens an object the reader has left, such as presenting a deck over the page they moved to.
+  rejected: Checking a navigation counter before the action runs; the projection's single-flight handle already marks a navigation as overtaken.
+```
+
+```mdl
+decision D-27: A link action runs only on an object its URL opened; a URL that opens nothing drops the action with a warning. Fills in [D-21].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: An action is defined on the object a link opens, so with no object there is nothing for it to act on.
 ```
 
 ## Appendix: Extension Definitions

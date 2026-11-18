@@ -58,37 +58,89 @@ describe('DeckOperation.HandleExternalUrl', () => {
 
   test('a link that names an action holds the boot loader until the action has run', async ({ expect }) => {
     const ran: unknown[] = [];
-    const record = (data: unknown) => Effect.sync(() => ran.push(data));
-    const opened = await (async () => {
-      await using harness = await Harness.createComposerTestApp({
-        plugins: [DeckWorkspacePlugin(record), DeckPlugin.make()],
-      });
-      await harness.runPromise(
-        Operation.invoke(LayoutOperation.Set, { subject: [`${WORKSPACE}/deck`], workspace: WORKSPACE }),
-      );
-      return new URL(window.location.href);
-    })();
-
+    const opened = await openedUrl();
     opened.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
     window.history.replaceState(null, '', opened);
-    const release = Promise.withResolvers<void>();
+    const action = heldAction(ran);
     await using harness = await Harness.createComposerTestApp({
-      plugins: [
-        DeckWorkspacePlugin((data) => Effect.promise(() => release.promise).pipe(Effect.andThen(record(data)))),
-        DeckPlugin.make(),
-      ],
+      plugins: [DeckWorkspacePlugin(action.run), DeckPlugin.make()],
     });
     const pending = () =>
       harness.getAll(Capabilities.BootGate).some((gate) => harness.registry.get(gate.state).pending);
+    await action.entered.promise;
     expect(pending()).toBe(true);
 
-    release.resolve();
+    action.release.resolve();
     await vi.waitFor(() => expect(pending()).toBe(false));
     expect(ran).toEqual(['deck']);
   });
+
+  test('a navigation that starts before the link action has run cancels it', async ({ expect }) => {
+    const ran: unknown[] = [];
+    const action = heldAction(ran);
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [DeckWorkspacePlugin(action.run), DeckPlugin.make()],
+    });
+    await harness.runPromise(
+      Operation.invoke(LayoutOperation.Set, { subject: [`${WORKSPACE}/deck`], workspace: WORKSPACE }),
+    );
+    const opened = new URL(window.location.href);
+    const linked = new URL(opened);
+    linked.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
+
+    const handled = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, { url: linked.href }));
+    await action.entered.promise;
+    await harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, { url: opened.href }));
+    action.release.resolve();
+    await handled;
+    expect(ran).toEqual([]);
+  });
+
+  test('a link whose URL opens no object runs no action', async ({ expect }) => {
+    const ran: unknown[] = [];
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [
+        DeckWorkspacePlugin(
+          (data) => Effect.sync(() => ran.push(data)),
+          () => true,
+        ),
+        DeckPlugin.make(),
+      ],
+    });
+    window.history.replaceState(null, '', `/?${LinkAction.PARAM}=com.example.linkAction.present`);
+    await harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, {}));
+    expect(ran).toEqual([]);
+    expect(new URL(window.location.href).searchParams.has(LinkAction.PARAM)).toBe(false);
+  });
 });
 
-const DeckWorkspacePlugin = (run: LinkAction.LinkAction['run']) =>
+/** The URL an app lands on after opening the workspace's document. */
+const openedUrl = async () => {
+  await using harness = await Harness.createComposerTestApp({
+    plugins: [DeckWorkspacePlugin(() => Effect.void), DeckPlugin.make()],
+  });
+  await harness.runPromise(
+    Operation.invoke(LayoutOperation.Set, { subject: [`${WORKSPACE}/deck`], workspace: WORKSPACE }),
+  );
+  return new URL(window.location.href);
+};
+
+/** An action that signals when it starts, then records its object once released. */
+const heldAction = (ran: unknown[]) => {
+  const entered = Promise.withResolvers<void>();
+  const release = Promise.withResolvers<void>();
+  const run: LinkAction.LinkAction['run'] = (data) =>
+    Effect.sync(() => entered.resolve()).pipe(
+      Effect.andThen(Effect.promise(() => release.promise)),
+      Effect.andThen(Effect.sync(() => ran.push(data))),
+    );
+  return { entered, release, run };
+};
+
+const DeckWorkspacePlugin = (
+  run: LinkAction.LinkAction['run'],
+  appliesTo: LinkAction.LinkAction['appliesTo'] = (data) => data === 'deck',
+) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.deckWorkspace'), name: 'Deck workspace' })).pipe(
     Plugin.addModule<void>(
       Capability.inlineModule(
@@ -111,7 +163,7 @@ const DeckWorkspacePlugin = (run: LinkAction.LinkAction['run']) =>
             Capability.contribute(AppCapabilities.LinkAction, {
               id: PRESENT,
               links: ['public'],
-              appliesTo: (data) => data === 'deck',
+              appliesTo,
               run,
             }),
           ];

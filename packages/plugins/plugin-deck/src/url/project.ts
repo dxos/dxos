@@ -59,7 +59,10 @@ const targetVerdict = (
     ),
   ).pipe(Effect.map((results) => NotFound.combineVerdicts(results.flat())));
 
-/** Dispatch navigation handlers for a URL arriving from outside the app, then project it. */
+/**
+ * Dispatch navigation handlers for a URL arriving from outside the app, then project it. The link
+ * action runs as part of the projection, so a newer navigation cancels it.
+ */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
   const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
   const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -80,9 +83,9 @@ export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
     );
   }
 
-  const plankId = yield* projectUrl(resolvedUrl);
-  yield* consumeLinkAction(resolvedUrl, plankId);
-  return plankId;
+  return yield* asOnlyProjection(
+    project(resolvedUrl).pipe(Effect.tap((plankId) => consumeLinkAction(resolvedUrl, plankId))),
+  );
 });
 
 const loadOperationHandlers = Effect.gen(function* () {
@@ -100,14 +103,14 @@ const consumeLinkAction = Effect.fnUntraced(function* (url: URL, plankId: string
   history.replaceState(history.state, '', current.pathname + current.search + current.hash);
 
   const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-  const data = plankId ? Option.getOrUndefined(AppGraph.getNode(graph, plankId))?.data : undefined;
-  const action = LinkAction.find(url, yield* Capability.getAll(AppCapabilities.LinkAction), data);
+  const node = plankId ? Option.getOrUndefined(AppGraph.getNode(graph, plankId)) : undefined;
+  const action = node && LinkAction.find(url, yield* Capability.getAll(AppCapabilities.LinkAction), node.data);
   if (!action) {
     log.warn('link action not run', { action: url.searchParams.get(LinkAction.PARAM), plankId });
     return;
   }
   yield* loadOperationHandlers.pipe(
-    Effect.andThen(() => action.run(data)),
+    Effect.andThen(() => action.run(node.data)),
     Effect.catchCause((cause) => Effect.sync(() => log.warn('link action failed', { error: Cause.pretty(cause) }))),
   );
 });
@@ -310,9 +313,12 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
  * one is the caller that has been overtaken, and it returns no plank to attend rather than failing:
  * its navigation is moot, not broken.
  */
-export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions) {
-  const handle = yield* Capability.get(DeckCapabilities.Projection);
-  const fiber = yield* FiberHandle.run(handle, project(url, options));
-  const outcome = yield* Effect.exit(Fiber.join(fiber));
-  return Exit.hasInterrupts(outcome) ? undefined : yield* outcome;
-});
+export const projectUrl = (url?: URL, options?: ProjectOptions) => asOnlyProjection(project(url, options));
+
+const asOnlyProjection = <E, R>(projection: Effect.Effect<string | undefined, E, R>) =>
+  Effect.gen(function* () {
+    const handle = yield* Capability.get(DeckCapabilities.Projection);
+    const fiber = yield* FiberHandle.run(handle, projection);
+    const outcome = yield* Effect.exit(Fiber.join(fiber));
+    return Exit.hasInterrupts(outcome) ? undefined : yield* outcome;
+  });

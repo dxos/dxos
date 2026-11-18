@@ -148,6 +148,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           activatesOn: ActivationEvents.Startup,
           requires: [
             Capabilities.OperationInvoker,
+            AppCapabilities.LinkAction,
             AppCapabilities.NavigationHandler,
             AppCapabilities.NavigationTargetLoader,
             Capabilities.AtomRegistry,

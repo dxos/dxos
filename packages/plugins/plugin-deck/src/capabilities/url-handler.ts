@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -19,10 +20,16 @@ export default Capability.makeModule(
     const operations = yield* Capabilities.OperationInvoker;
     const project = (url?: URL) => operations.invoke(DeckOperation.HandleExternalUrl, { url: url?.href });
 
-    const onPopState = () => void EffectEx.runAndForwardErrors(project());
-
     // Install before handleNavigation()/state-sync push entries on top of the sentinel.
     const sentinelKey = installLeaveTrap();
+
+    // The sentinel keeps the landing URL, link action included; `onCurrentEntryChange` handles it.
+    const onPopState = () => {
+      if (sentinelKey && window.navigation?.currentEntry?.key === sentinelKey) {
+        return;
+      }
+      void EffectEx.runAndForwardErrors(project());
+    };
 
     // Landing on the sentinel means a Back is about to leave Composer; confirm and act on it.
     // The guard stops our own back()/forward() from re-entering.
@@ -52,17 +59,10 @@ export default Capability.makeModule(
 
     // Tauri deep link support.
     let unlistenDeepLink: (() => void) | undefined;
+    let launch: Effect.Effect<void> = Effect.void;
     if (isTauri()) {
       yield* Effect.gen(function* () {
         const { getCurrent, onOpenUrl } = yield* Effect.promise(() => import('@tauri-apps/plugin-deep-link'));
-
-        const launchUrls = yield* Effect.promise(() => getCurrent());
-        if (launchUrls && launchUrls.length > 0) {
-          log('app launched with deep links', { urls: launchUrls });
-          for (const urlString of launchUrls) {
-            yield* handleDeepLink(urlString, project);
-          }
-        }
 
         unlistenDeepLink = yield* Effect.promise(() =>
           onOpenUrl((urls) => {
@@ -71,6 +71,18 @@ export default Capability.makeModule(
             }
           }),
         );
+
+        const launchUrls = yield* Effect.promise(() => getCurrent());
+        if (launchUrls && launchUrls.length > 0) {
+          log('app launched with deep links', { urls: launchUrls });
+          launch = Effect.forEach(launchUrls, (urlString) => handleDeepLink(urlString, project), {
+            discard: true,
+          }).pipe(
+            Effect.catchCause((cause) =>
+              Effect.sync(() => log.warn('launch deep link failed', { error: Cause.pretty(cause) })),
+            ),
+          );
+        }
       }).pipe(
         Effect.catch((error) => Effect.sync(() => log.warn('failed to initialize deep link listener', { error }))),
       );
@@ -82,7 +94,7 @@ export default Capability.makeModule(
 
     // Forked because this module sits on the startup pass: the restore can wait for late-arriving
     // URL keys, and awaiting it here would hold the whole pass, and the boot loader with it.
-    yield* Effect.forkScoped(project().pipe(Effect.ensuring(restored)));
+    yield* Effect.forkScoped(launch.pipe(Effect.andThen(project()), Effect.ensuring(restored)));
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {

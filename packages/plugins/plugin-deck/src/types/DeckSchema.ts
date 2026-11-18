@@ -225,7 +225,7 @@ export const EphemeralDeckState = Schema.Struct({
   currentUndoId: Schema.optional(Schema.String),
   /** A component to scroll into view when it is mounted. */
   scrollIntoView: Schema.optional(ScrollIntoView),
-  /** Whether the URL the app booted on has been projected, with the action it names. */
+  /** Whether the first projection of the URL the app booted on has ended, whether or not it opened anything or ran its action. */
   restored: Schema.optional(Schema.Boolean),
   /**
    * The deck's front as last measured: the first plank of a sliding deck not folded into its left pile (none when the

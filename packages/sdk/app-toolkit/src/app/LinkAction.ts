@@ -34,7 +34,7 @@ export const withAction = (url: URL, actions: readonly LinkAction[], kind: Kind,
     return url;
   }
   const next = new URL(url);
-  next.searchParams.set(PARAM, DXN.getName(action.id));
+  next.searchParams.set(PARAM, action.id.slice('dxn:'.length));
   return next;
 };
 

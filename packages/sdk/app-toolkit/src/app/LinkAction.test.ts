@@ -37,4 +37,11 @@ describe('LinkAction', () => {
     expect(LinkAction.find(unknown, actions, 'deck')).toBeUndefined();
     expect(LinkAction.withoutAction(shared).search).toBe('');
   });
+
+  test('a link to a versioned action runs that version', ({ expect }) => {
+    const versioned: LinkAction.LinkAction = { ...present, id: DXN.make('com.example.linkAction.present', '2.0.0') };
+    const shared = LinkAction.withAction(url, [versioned], 'public', 'deck');
+    expect(shared.searchParams.get(LinkAction.PARAM)).toBe('com.example.linkAction.present:2.0.0');
+    expect(LinkAction.find(shared, [present, versioned], 'deck')).toBe(versioned);
+  });
 });
