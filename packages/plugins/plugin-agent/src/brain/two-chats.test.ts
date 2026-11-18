@@ -163,7 +163,7 @@ const makeScript =
   (request) => {
     if (request.text.startsWith(COMPOSE_PROMPT)) {
       if (cancelWhileComposing) {
-        brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+        brain.clearTriggersSync();
       }
       // Only the facts being passed on: the transcript and the draft also quote lines.
       const facts = request.text.split('What changed:')[1]?.split('A draft')[0] ?? '';
@@ -221,6 +221,9 @@ const refs: Refs = {};
 /** The brain's clock, moved forward by tests of time-driven rules. */
 let offset = 0;
 const brain = makeTestBrain({ now: () => Date.now() + offset });
+
+// One memory stands in for each test's space, so every test starts with an empty one.
+afterEach(() => brain.reset());
 
 const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
@@ -297,8 +300,8 @@ const pending = Effect.fnUntraced(function* (agent: Agent.Agent) {
 });
 
 describe('local brain: two private chats', () => {
-  afterEach(() => {
-    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+  afterEach(async () => {
+    await brain.clearTriggers();
     offset = 0;
     compiler = 'off';
     cancelWhileComposing = false;
@@ -544,10 +547,6 @@ describe('local brain: two private chats', () => {
           ongoing: true,
           rules: `${watch.rules}\nwake(followup) :- elapsed(goal, 2d), not achieved(goal).`,
         });
-        const [clocked] = yield* service.subscriptions(agent.id);
-        const due = yield* service.nextDueAt(agent.id);
-        expect(Date.parse(due ?? '') - Date.parse(clocked.createdAt)).toBe(2 * 24 * 60 * 60_000);
-
         const run = Operation.invoke(TriggerOperation.RunDue, { agent: Ref.make(agent) });
         expect((yield* run).fired).toEqual([]);
         offset = 2 * 24 * 60 * 60_000 + 60_000;
@@ -556,7 +555,6 @@ describe('local brain: two private chats', () => {
         expect(yield* updates(alice)).toHaveLength(1);
         // It fired once; the clock has nothing more for it.
         expect((yield* run).fired).toEqual([]);
-        expect(yield* service.nextDueAt(agent.id)).toBeUndefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

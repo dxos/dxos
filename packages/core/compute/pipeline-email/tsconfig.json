@@ -32,6 +32,9 @@
       "path": "../../echo/echo-client"
     },
     {
+      "path": "../../echo/echo-memory"
+    },
+    {
       "path": "../ai"
     },
     {

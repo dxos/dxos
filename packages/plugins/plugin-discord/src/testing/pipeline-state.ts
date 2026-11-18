@@ -7,7 +7,7 @@ import { basename, dirname, join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 import { AiUsage } from '@dxos/ai';
-import { RDF } from '@dxos/pipeline-rdf';
+import { type Pipeline } from '@dxos/echo-memory';
 
 /** The Discord pipeline's stages in the order it runs them; a stage only the trace names goes after these. */
 const STAGES: ReadonlyArray<readonly [id: string, label: string]> = [
@@ -54,7 +54,7 @@ const text = (value: unknown): string | undefined => (typeof value === 'string' 
 const number = (value: unknown): number => (typeof value === 'number' ? value : Number(value ?? 0));
 
 /** Each stage's model usage, from the run's `ai.modelCall` events, priced at catalog prices. */
-const stagesOf = (calls: readonly ModelCall[], crawled: number): RDF.Pipeline.Stage[] => {
+const stagesOf = (calls: readonly ModelCall[], crawled: number): Pipeline.Stage[] => {
   const ids = [...new Set([...STAGES.map(([id]) => id), ...calls.flatMap((call) => (call.stage ? [call.stage] : []))])];
   return ids.map((id, order) => {
     const own = calls.filter((call) => call.stage === id);
@@ -93,7 +93,7 @@ const stagesOf = (calls: readonly ModelCall[], crawled: number): RDF.Pipeline.St
  * with its cursor and first and last message, and each stage's model calls and cost. Undefined when the crawl's own
  * database is not there.
  */
-export const pipelineState = (factsPath: string, facts: number): RDF.Pipeline.State | undefined => {
+export const pipelineState = (factsPath: string, facts: number): Pipeline.State | undefined => {
   const dir = dirname(factsPath);
   const crawlPath = join(dir, 'crawl.db');
   if (!existsSync(crawlPath)) {
@@ -101,7 +101,7 @@ export const pipelineState = (factsPath: string, facts: number): RDF.Pipeline.St
   }
   const db = new DatabaseSync(crawlPath);
   try {
-    const sources: RDF.Pipeline.Source[] = db
+    const sources: Pipeline.Source[] = db
       .prepare(
         `SELECT t.id AS id, t.cursor AS cursor, t.status AS status, COUNT(m.id) AS items,
            MIN(m.created_at) AS first, MAX(m.created_at) AS last,

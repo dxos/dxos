@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Fact, type Term } from '../types/index.ts';
+import { Fact } from '@dxos/echo-memory';
 
 /**
  * Read abstraction the graph builder traverses: facts in which an entity appears as **subject or
@@ -10,7 +10,7 @@ import { type Fact, type Term } from '../types/index.ts';
  * `FactStore.query({ entity })` results or {@link factSourceFromFacts} over an in-memory set.
  */
 export type FactSource = {
-  readonly factsForEntity: (entityId: string) => readonly Fact[];
+  readonly factsForEntity: (entityId: string) => readonly Fact.Fact[];
 };
 
 export type FactGraphNode = {
@@ -39,8 +39,8 @@ export type BuildFactGraphOptions = {
   readonly depth?: number;
 };
 
-const termKey = (term: Term): string => (term.kind === 'entity' ? term.entity : `literal:${term.literal}`);
-const termNode = (term: Term): FactGraphNode =>
+const termKey = (term: Fact.Term): string => (term.kind === 'entity' ? term.entity : `literal:${term.literal}`);
+const termNode = (term: Fact.Term): FactGraphNode =>
   term.kind === 'entity'
     ? { id: term.entity, label: term.label ?? term.entity }
     : { id: `literal:${term.literal}`, label: term.literal };
@@ -91,9 +91,9 @@ export const buildFactGraph = (
 };
 
 /** In-memory {@link FactSource}: indexes a fact set by the entity ids appearing as subject or object. */
-export const factSourceFromFacts = (facts: readonly Fact[]): FactSource => {
-  const byEntity = new Map<string, Fact[]>();
-  const add = (term: Term, fact: Fact) => {
+export const factSourceFromFacts = (facts: readonly Fact.Fact[]): FactSource => {
+  const byEntity = new Map<string, Fact.Fact[]>();
+  const add = (term: Fact.Term, fact: Fact.Fact) => {
     if (term.kind === 'entity') {
       const list = byEntity.get(term.entity) ?? [];
       list.push(fact);

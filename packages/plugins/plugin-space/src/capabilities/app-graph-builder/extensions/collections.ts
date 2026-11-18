@@ -17,6 +17,7 @@ import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as LinkAction from '@dxos/app-toolkit/LinkAction';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
@@ -495,7 +496,12 @@ const constructObjectActions = ({
                   return;
                 }
                 // The title lets the Composer Worker give the link a named preview in messengers.
-                const url = UrlPath.withTitle(new URL(path.value, shareableLinkOrigin), Obj.getLabel(object));
+                const url = LinkAction.withAction(
+                  UrlPath.withTitle(new URL(path.value, shareableLinkOrigin), Obj.getLabel(object)),
+                  yield* Capability.getAll(AppCapabilities.LinkAction),
+                  'internal',
+                  object,
+                );
                 yield* Effect.promise(() => navigator.clipboard.writeText(url.toString()));
               }),
             properties: {
@@ -522,10 +528,15 @@ const constructObjectActions = ({
                   log.warn('object has no public link', { nodeId, published: !!published });
                   return;
                 }
-                const url = PublicationLink.viewerUrl(
-                  publication.viewerOrigin,
-                  published.publicId,
-                  PublicationLink.objectPathOf(path.value),
+                const url = LinkAction.withAction(
+                  PublicationLink.viewerUrl(
+                    publication.viewerOrigin,
+                    published.publicId,
+                    PublicationLink.objectPathOf(path.value),
+                  ),
+                  yield* Capability.getAll(AppCapabilities.LinkAction),
+                  'public',
+                  object,
                 );
                 yield* Effect.promise(() => navigator.clipboard.writeText(url.toString()));
               }),

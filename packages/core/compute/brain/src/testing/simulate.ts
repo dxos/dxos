@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 
 import * as Compiler from '../Compiler.ts';
 import * as GoalRules from '../GoalRules.ts';
@@ -28,23 +28,24 @@ export type SimulationResult = {
   readonly failures: ReadonlyArray<string>;
 };
 
-/** Converts a scripted fact to an `RDF.Fact` said (and recorded) at `saidAt`. */
-export const toFact = (fact: ScenarioFact, saidAt: string): RDF.Fact => ({
-  id: fact.id,
-  assertion: {
-    subject: { kind: 'entity', entity: fact.s },
-    predicate: fact.p,
-    object: { kind: 'entity', entity: fact.o },
-    quote: fact.quote,
-  },
-  factuality: { value: fact.factuality, polarity: fact.polarity },
-  illocution: { force: fact.force, mood: fact.mood },
-  attribution: { agent: fact.speaker, source: fact.source, generatedAtTime: saidAt },
-  recordedAt: saidAt,
-  extractor: { id: 'scenario', model: 'none', version: '1' },
-  sourceHash: fact.id,
-  pass: 'scenario',
-});
+/** Converts a scripted fact to an `Fact.Fact` said (and recorded) at `saidAt`. */
+export const toFact = (fact: ScenarioFact, saidAt: string): Fact.Fact =>
+  Fact.make({
+    id: fact.id,
+    assertion: {
+      subject: { kind: 'entity', entity: fact.s },
+      predicate: fact.p,
+      object: { kind: 'entity', entity: fact.o },
+      quote: fact.quote,
+    },
+    factuality: { value: fact.factuality, polarity: fact.polarity },
+    illocution: { force: fact.force, mood: fact.mood },
+    attribution: { agent: fact.speaker, source: fact.source, generatedAtTime: saidAt },
+    recordedAt: saidAt,
+    extractor: { id: 'scenario', model: 'none', version: '1' },
+    sourceHash: fact.id,
+    pass: 'scenario',
+  });
 
 /**
  * Replays a scenario against compiled goal rules and checks every step's expectations; a

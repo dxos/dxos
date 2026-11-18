@@ -8,8 +8,9 @@ import * as Stream from 'effect/Stream';
 
 import type * as Agent from '@dxos/assistant/Agent';
 import { Database, Filter, Obj } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { Space } from '@dxos/halo';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type KnownEntity as ExtractEntity } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
 import { ChatParticipant } from '#types';
@@ -102,26 +103,31 @@ export const loadEntities = Effect.gen(function* () {
  * A term naming a member is re-keyed to the member's DID, and one naming a person or organization in the space to
  * its object's URI; its surface form stays the label.
  */
-const resolveTerm = (members: readonly Space.Member[], entities: EntityIndex, term: RDF.Term): RDF.Term => {
+const resolveTerm = (members: readonly Space.Member[], entities: EntityIndex, term: Fact.Term): Fact.Term => {
   if (term.kind !== 'entity') {
     return term;
   }
   const name = term.label ?? term.entity;
   const member = memberByName(members, name);
   if (member?.did) {
-    return { ...term, entity: member.did, label: term.label ?? member.displayName, type: 'person' };
+    return {
+      ...term,
+      entity: Fact.EntityKey.make(member.did),
+      label: term.label ?? member.displayName,
+      type: 'person',
+    };
   }
   const known = entities.get(nameKey(name));
-  return known ? { ...term, entity: known.uri, label: name, type: known.type } : term;
+  return known ? { ...term, entity: Fact.EntityKey.make(known.uri), label: name, type: known.type } : term;
 };
 
 /**
  * The members, people and organizations the extractor is shown by name, so a mention of one is stored under its DID
  * or object URI rather than an IRI local to the graph mentioning it.
  */
-export const knownEntities = (members: readonly Space.Member[], entities: EntityIndex): RDF.KnownEntity[] => {
-  const byIri = new Map<string, { label: string; aliases: string[]; type: RDF.EntityKind }>();
-  const add = (iri: string, name: string, type: RDF.EntityKind) => {
+export const knownEntities = (members: readonly Space.Member[], entities: EntityIndex): ExtractEntity[] => {
+  const byIri = new Map<string, { label: string; aliases: string[]; type: Fact.EntityKind }>();
+  const add = (iri: string, name: string, type: Fact.EntityKind) => {
     const known = byIri.get(iri);
     if (!known) {
       byIri.set(iri, { label: name, aliases: [], type });
@@ -151,9 +157,9 @@ export const knownEntities = (members: readonly Space.Member[], entities: Entity
 /** Re-keys the fact's subject and object to the members, people and organizations they name. */
 export const resolveTerms = (
   members: readonly Space.Member[],
-  fact: RDF.Fact,
+  fact: Fact.Fact,
   entities: EntityIndex = new Map(),
-): RDF.Fact => ({
+): Fact.Fact => ({
   ...fact,
   assertion: {
     ...fact.assertion,

@@ -6,9 +6,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import { Ontology, Vocab } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 
 import { KnowledgePanel } from '../components/index.ts';
@@ -18,13 +18,13 @@ import { entitiesInScope, factInScope, useFactsStory } from './context.ts';
  * The store's predicate pool as an ontology. Minted entries name the brain's namespace; a pool whose entries clash
  * (a predicate minted before the seed named it) falls back to the seed vocabulary extended by what does not clash.
  */
-const toOntology = (entries: readonly RDF.Ontology.Entry[]): RDF.Ontology.Ontology => {
-  const namespace = entries.find((entry) => entry.created !== undefined)?.definedBy ?? RDF.Vocab.LOCAL_BRAIN;
+const toOntology = (entries: readonly Ontology.Entry[]): Ontology.Ontology => {
+  const namespace = entries.find((entry) => entry.created !== undefined)?.definedBy ?? Vocab.LOCAL_BRAIN;
   try {
-    return RDF.Ontology.make(entries, { namespace });
+    return Ontology.make(entries, { namespace });
   } catch (error) {
     log.warn('predicate pool does not form an ontology; extending the seed', { error });
-    return RDF.Ontology.DEFAULT.withNamespace(namespace).include(entries);
+    return Ontology.DEFAULT.withNamespace(namespace).include(entries);
   }
 };
 
@@ -38,7 +38,7 @@ export const EntitiesModule = () => {
   const { facts, selected, setSelected, predicate, setPredicate, scope } = useFactsStory();
   const scoped = useMemo(() => (scope ? facts.filter((fact) => factInScope(fact, scope)) : facts), [facts, scope]);
   const entities = useMemo(() => (scope ? entitiesInScope(facts, scope) : undefined), [facts, scope]);
-  const [ontology, setOntology] = useState<RDF.Ontology.Ontology | undefined>(undefined);
+  const [ontology, setOntology] = useState<Ontology.Ontology | undefined>(undefined);
 
   // The pool grows as facts are written (an extractor mints predicates), so it is re-read whenever the facts change.
   useEffect(() => {

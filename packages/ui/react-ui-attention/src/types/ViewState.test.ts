@@ -8,7 +8,7 @@ import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
 import { createDefaultBackends } from '../core/index.ts';
-import { Manager, define } from './ViewState.ts';
+import { Manager, define, patch } from './ViewState.ts';
 
 const Counter = define({
   key: 'counter',
@@ -28,6 +28,7 @@ const Camera = define({
 });
 
 const A = 'echo:@A';
+const B = 'echo:@B';
 
 describe('Manager', () => {
   const make = () => {
@@ -106,5 +107,22 @@ describe('Manager', () => {
     expect(manager.origin(Followed, A)).toBe('local');
     expect(origins).toEqual(['follow', 'local']);
     dispose();
+  });
+
+  test('a patch merges its fields over the current value, held until the aspect is used', ({ expect }) => {
+    const manager = make();
+    manager.apply(patch(Camera, A, { zoom: 2 }));
+    manager.set(Camera, B, { zoom: 1, grid: true });
+    manager.apply(patch(Camera, B, { zoom: 3 }));
+    expect(manager.get(Camera, A)).toEqual({ zoom: 2, grid: false });
+    expect(manager.get(Camera, B)).toEqual({ zoom: 3, grid: true });
+    expect(manager.origin(Camera, A)).toBe('local');
+  });
+
+  test('a patch that does not decode is dropped', ({ expect }) => {
+    const manager = make();
+    manager.set(Camera, A, { zoom: 2, grid: true });
+    manager.apply({ aspect: 'camera', context: A, fields: { zoom: 'near' } });
+    expect(manager.get(Camera, A)).toEqual({ zoom: 2, grid: true });
   });
 });

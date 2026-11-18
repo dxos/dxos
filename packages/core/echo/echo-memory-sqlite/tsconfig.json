@@ -1,0 +1,27 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "exclude": [
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/sql-sqlite"
+    },
+    {
+      "path": "../../compute/brain"
+    },
+    {
+      "path": "../../compute/sparql-sqlite"
+    },
+    {
+      "path": "../echo-memory"
+    }
+  ]
+}

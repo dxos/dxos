@@ -19,7 +19,7 @@ import { CompanionViewState, DeckCapabilities } from '#types';
 import { getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../util/index.ts';
 import { type NavigationIntent } from './apply.ts';
 import * as Navigation from './navigation.ts';
-import { projectUrl } from './project.ts';
+import { claimNavigation, projectUrl } from './project.ts';
 
 /** What the URL currently says is open. */
 export const currentNavigation = Effect.fnUntraced(function* () {
@@ -48,6 +48,7 @@ export const navigate = Effect.fnUntraced(function* (
   if (!Navigation.push(next, options?.method)) {
     return false;
   }
+  claimNavigation();
 
   yield* projectUrl(undefined, { attend: false, navigatedIds: options?.navigatedIds, intent: options?.intent });
   return true;

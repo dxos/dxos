@@ -28,8 +28,9 @@ import { describe, test } from 'vitest';
 import { type AiService } from '@dxos/ai';
 import { DirectAiServiceLayer } from '@dxos/ai/testing';
 import { Database } from '@dxos/echo';
+import { Vocabularies } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive, RDF } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
 import { Finance } from '#types';
@@ -187,7 +188,7 @@ describe('finance pipeline', () => {
       const configs: Record<string, FinancePipeline.FinancePipelineOptions> = {
         // Generic packs (schema, foaf, dcterms, org, sioc), no finance terms; deterministic annotation only.
         'generic+lexicon': {
-          extract: { ontology: RDF.Vocabularies.DEFAULT },
+          extract: { ontology: Vocabularies.DEFAULT },
           annotate: { sentiment: 'lexicon', linkNames: false, events: false },
         },
         // The finance packs, thinking on; every annotation stage on the model.

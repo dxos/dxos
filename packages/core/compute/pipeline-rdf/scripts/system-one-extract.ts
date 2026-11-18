@@ -29,7 +29,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import * as Ontology from '../src/types/Ontology.ts';
+import { Ontology } from '@dxos/echo-memory';
 
 //
 // Config.

@@ -16,7 +16,7 @@ import { settingsAtom } from './settings.ts';
 /**
  * Contributes fact analysis as a feed processor rather than a toolbar menu item.
  *
- * This is what makes the missing-`FactStore` case structurally impossible instead of merely handled:
+ * This is what makes the missing-service case structurally impossible instead of merely handled:
  * the pass and the layer it needs are contributed by the same plugin, so a deployment without brain
  * has no `analyze` processor to run rather than one that dies resolving a service nobody provided.
  * The uniform precondition gate in plugin-inbox stays as the backstop for anything else.
