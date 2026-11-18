@@ -146,7 +146,7 @@ export const Recall = Operation.make({
     key: DXN.make('org.dxos.operation.agent.retrieveFacts'),
     name: 'Recall',
     description:
-      'Returns the facts about a subject (newest first), read from documents and conversations or recorded with Remember, and the goals it owns.',
+      'Returns the facts the agent knows, newest first, read from documents and conversations or recorded with Remember, and the live goals: about a subject when one is given, otherwise all of them (what you know, a summary of your memory).',
     icon: 'ph--magnifying-glass--regular',
   },
   services: [Database.Service, BrainService.BrainService],
