@@ -14,20 +14,18 @@ import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 
 import * as Evaluator from '@dxos/brain/Evaluator';
-import {
-  Fact,
-  Graph,
-  Hash,
-  Mapping,
-  MemoryError,
-  MemoryQuery,
-  MemoryService,
-  Ontology,
-  RdfStore,
-  Sparql,
-  Subscription,
-  Vocab,
-} from '@dxos/echo-memory';
+import * as Fact from '@dxos/echo-memory/Fact';
+import * as Graph from '@dxos/echo-memory/Graph';
+import * as Hash from '@dxos/echo-memory/Hash';
+import * as Mapping from '@dxos/echo-memory/Mapping';
+import * as MemoryError from '@dxos/echo-memory/MemoryError';
+import * as MemoryQuery from '@dxos/echo-memory/MemoryQuery';
+import * as MemoryService from '@dxos/echo-memory/MemoryService';
+import * as Ontology from '@dxos/echo-memory/Ontology';
+import * as RdfStore from '@dxos/echo-memory/RdfStore';
+import * as Sparql from '@dxos/echo-memory/Sparql';
+import * as Subscription from '@dxos/echo-memory/Subscription';
+import * as Vocab from '@dxos/echo-memory/Vocab';
 
 //
 // A memory over any RdfStore: facts are quads in the store's shared part, and the memory's own records

@@ -28,7 +28,7 @@ block only the tasks that name them.
 - [x] `RdfStore` port: `Quad`, `Write`, `Batch`, `Format`, `RdfStoreError` and the `RdfStore` tag [D-39].
 - [x] The RDF mapping modules `Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab` and `Hash`, moved
       from `@dxos/pipeline-rdf` with every call site [D-38, D-48]; `Fact.make` and `Fact.makeMany` [D-41].
-- [ ] Add the `## Rules` checks (`no-implementation-deps`, `port-modules-no-n3`) to CI's agentic review scope.
+- [ ] Add the `## Rules` checks (`no-implementation-deps`, `no-n3`) to CI's agentic review scope.
 
 ## 2. `@dxos/echo-memory-sqlite` (local implementations) — done
 

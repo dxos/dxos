@@ -909,14 +909,14 @@ rule no-implementation-deps: echo-memory imports no storage, SPARQL engine or ru
 ```
 
 ```mdl
-rule port-modules-no-n3: the port and data-model modules do not import the RDF library
-  files: src/{Fact,MemoryError,MemoryQuery,MemoryService,RdfStore,Subscription}.ts
+rule no-n3: echo-memory does not import the n3 RDF library
+  files: src/*.ts
   severity: error
-  grep: from '(n3|\./(Graph|Mapping|Ontology|Predicate|Sparql|Vocab)\.ts)'
-  question: Does this port or data-model module import n3 or one of the RDF mapping modules?
+  grep: from 'n3'
+  question: Does a non-test module of echo-memory import n3?
 
-  Protocols and the client import these modules by subpath, and n3 on their static graph breaks the workerd
-  bundle; only the RDF mapping modules may load it [F-1.4].
+  n3 loads `readable-stream`, which fails to load under workerd's `nodejs_compat`; the memory core runs on EDGE and
+  needs only RDF/JS terms (`Rdf`) and a TriG writer (`Trig`), so n3 is a test-only cross-check [D-63].
 ```
 
 ## Changelog
@@ -1539,6 +1539,14 @@ decision D-62: A space's fact feed always replicates, and its format (namespace,
   affects: [F-9.5]
   supersedes: D-33
   why: EDGE now accepts the `facts` namespace and lands with this change, and two replicas can only follow one feed if they derive its id and decode its blocks the same way.
+```
+
+```mdl
+decision D-63: echo-memory has no n3 dependency: its RDF/JS terms and data factory are its own `Rdf` module, and TriG is written by its own `Trig` module, whose output matches n3's writer; n3 stays only as a test dependency that cross-checks both. echo-memory-sqlite imports echo-memory by per-module subpath. Fills in [D-49].
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-1.4]
+  why: n3 pulls in `readable-stream`, which fails to load under workerd's `nodejs_compat`, so EDGE's `MemoryObject` could not load; the memory core needs only a term factory.
 ```
 
 ## Appendix: Extension Definitions
