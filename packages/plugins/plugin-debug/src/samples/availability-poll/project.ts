@@ -104,7 +104,7 @@ and \`GET /api/polls/:id\` answers it with each slot's \`free\` names and, once 
 run_worker_first: ['/api/*'] }\`, binds \`Poll\`, and declares it in a migration with \`new_sqlite_classes\`, which \
 a temporary account requires. \`.gitignore\` holds \`.wrangler\`, \`dist\`, \`node_modules\`, \`npm.*\` and \`ssr\`. M-3 adds \`zones.js\` for the \
 time zone math, so its features add a file and touch the others only by small edits.
-- Do each task in one call: one program that writes the task's files, restarts the server, checks the \
+- Do each feature task in one call: one program that writes the task's files, restarts the server, checks the \
 requirements the task adds, commits, and, when every check passed, sets the task's feature to \`prototype\` and the \
 task to \`review\`. Print only what failed, plus one line saying what passed. Each call is a fresh program: \
 nothing you assign in one is there in the next, so every program starts by finding its objects: \
@@ -191,8 +191,8 @@ Changes. When I change a feature's requirements and ask you to revalidate, run t
 \`localhost:8787\` under the changed requirement before touching any code. If it fails, set the feature to \`failing\`, update every \
 line of the spec's scenarios that the change moves (a count, a best slot), add a decision to the spec's Changelog saying \
 what changed, and file one task for the fix under the milestone that shipped the feature, linked to it. Then stop. \
-When I delegate the fix, change the code, rerun the scenario on \`localhost:8787\`, deploy, and set the feature back to \
-\`operational\`.
+When I delegate the fix, do it in one call like a feature task, but in place of setting \`prototype\` it reruns the \
+scenario on \`localhost:8787\`, deploys, sets the feature back to \`operational\` and the task to \`review\`.
 
 M-4, flight options, is for me to build later. Do not plan or build it unless I ask. This project needs no Cloudflare \
 login and no API keys; if a step seems to need either, it is the wrong step.`;
