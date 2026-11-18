@@ -5,25 +5,27 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { Fact } from '@dxos/echo-memory';
+
 import { SemanticIndexError } from '../errors.ts';
 import { serveFactStore } from '../testing/fact-server.ts';
-import { type Fact } from '../types/index.ts';
 import * as FactStoreHttp from './fact-store-http.ts';
 import * as FactStoreLive from './fact-store-live.ts';
 
-const fact = (id: string, subject: string): Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: subject, label: subject },
-    predicate: 'works on',
-    object: { kind: 'entity', entity: 'opfs' },
-  },
-  factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
-  attribution: { agent: subject, source: `dxn:q:${id}`, generatedAtTime: '2026-11-13T00:00:00.000Z' },
-  recordedAt: '2026-11-13T00:00:00.000Z',
-  extractor: { id: 'default', model: 'm', version: '1' },
-  sourceHash: id,
-});
+const fact = (id: string, subject: string): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: subject, label: subject },
+      predicate: 'works on',
+      object: { kind: 'entity', entity: 'opfs' },
+    },
+    factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
+    attribution: { agent: subject, source: `dxn:q:${id}`, generatedAtTime: '2026-11-13T00:00:00.000Z' },
+    recordedAt: '2026-11-13T00:00:00.000Z',
+    extractor: { id: 'default', model: 'm', version: '1' },
+    sourceHash: id,
+  });
 
 describe('FactStoreHttp', () => {
   it.effect(

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { type FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
+import { type MemoryError, type MemoryService } from '@dxos/echo-memory';
 
 import { BrainOperation } from '#types';
 
@@ -18,7 +18,7 @@ export default BrainOperation.QueryFacts.pipe(Operation.withHandler(Effect.fn((i
 export type QueryFactsResult = typeof BrainOperation.QueryFacts.output.Type;
 
 /**
- * Runs the structured query against the space FactStore and projects the window `offset`..`offset + limit` of the
+ * Runs the structured query against the space memory and projects the window `offset`..`offset + limit` of the
  * matches onto the compact LLM-facing shape, trimmed for the model. Named export so the read path is unit-testable
  * without the operation runtime.
  */
@@ -26,7 +26,11 @@ export const queryCompactFacts = ({
   limit,
   offset = 0,
   ...query
-}: typeof BrainOperation.QueryFacts.input.Type): Effect.Effect<QueryFactsResult, SemanticIndexError, FactStore> =>
+}: typeof BrainOperation.QueryFacts.input.Type): Effect.Effect<
+  QueryFactsResult,
+  MemoryError.MemoryError,
+  MemoryService.MemoryService
+> =>
   Effect.gen(function* () {
     const facts = yield* queryResolvedFacts(query);
     const window = facts.slice(offset, offset + (limit ?? BrainOperation.DEFAULT_QUERY_FACTS_LIMIT)).map(toCompactFact);

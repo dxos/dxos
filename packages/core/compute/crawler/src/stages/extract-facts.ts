@@ -5,8 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
+import { Fact, Graph, Hash } from '@dxos/echo-memory';
 import { Stage } from '@dxos/pipeline';
-import { DEFAULT_INDEX_BATCH_SIZE, FactStore, RDF, hashText, indexFactsBatch } from '@dxos/pipeline-rdf';
+import { DEFAULT_INDEX_BATCH_SIZE, FactStore, indexFactsBatch } from '@dxos/pipeline-rdf';
+import { type ExtractDocument, type KnownEntity } from '@dxos/pipeline-rdf';
+import { type ExtractOptions, type Extractor, type SystemOneOptions } from '@dxos/pipeline-rdf';
 
 import * as AgentRegistry from '../AgentRegistry.ts';
 import { type StateError } from '../errors.ts';
@@ -29,20 +32,20 @@ export type ExtractFactsOptions = {
    */
   readonly concurrency?: number;
   /** The predicates the extractor reuses (e.g. seeded with published vocabularies); defaults to the seed ontology. */
-  readonly ontology?: RDF.ExtractOptions['ontology'];
+  readonly ontology?: ExtractOptions['ontology'];
   /** Drop relations no listed predicate fits instead of minting one. */
   readonly closed?: boolean;
-  /** Whether the extraction model thinks first; see `RDF.ExtractOptions.thinking` (default on). */
+  /** Whether the extraction model thinks first; see `ExtractOptions.thinking` (default on). */
   readonly thinking?: boolean;
   /** `system-one` extracts each message with Cloudflare's System One models, falling back to the LLM per claim. */
-  readonly extractor?: RDF.Extractor;
-  readonly systemOne?: RDF.SystemOneOptions;
+  readonly extractor?: Extractor;
+  readonly systemOne?: SystemOneOptions;
 };
 
 type MessageEvent = Extract<Type.Event, { readonly _tag: 'Message' }>;
 
 /** Every user the registry knows as a known entity, keyed by source user id: their IRI, display name and usernames. */
-const knownUsers = (profiles: readonly AgentRegistry.Profile[]): Map<string, RDF.KnownEntity> =>
+const knownUsers = (profiles: readonly AgentRegistry.Profile[]): Map<string, KnownEntity> =>
   new Map(
     profiles.flatMap((profile) => {
       const user = AgentRegistry.userOf(profile);
@@ -50,7 +53,7 @@ const knownUsers = (profiles: readonly AgentRegistry.Profile[]): Map<string, RDF
         return [];
       }
       const usernames = AgentRegistry.usernamesOf(profile);
-      const entity: RDF.KnownEntity = {
+      const entity: KnownEntity = {
         iri: AgentRegistry.iriForUser(user),
         label: profile.label ?? usernames[0] ?? user.id,
         aliases: usernames,
@@ -61,7 +64,7 @@ const knownUsers = (profiles: readonly AgentRegistry.Profile[]): Map<string, RDF
   );
 
 /** Discord's `<@id>` / `<@!id>` mentions as `@name`, so the model reads a person it can link instead of an opaque id. */
-const resolveMentions = (text: string, users: ReadonlyMap<string, RDF.KnownEntity>): string =>
+const resolveMentions = (text: string, users: ReadonlyMap<string, KnownEntity>): string =>
   text.replace(/<@!?(\d+)>/g, (mention, id: string) => {
     const user = users.get(id);
     return user ? `@${user.label}` : mention;
@@ -81,7 +84,7 @@ const PROFILE_TIME = new Date(0).toISOString();
  * user's earlier profile graphs: `user —is a→ schema:Person` and
  * `user —has account→ "username"`, the subject carrying the display name, so the user's label comes from the source, never from a mention.
  */
-const profileFacts = (profile: AgentRegistry.Profile, supersedes: readonly string[] = []): RDF.Fact[] => {
+const profileFacts = (profile: AgentRegistry.Profile, supersedes: readonly string[] = []): Fact.Fact[] => {
   const user = AgentRegistry.userOf(profile);
   if (!user) {
     return [];
@@ -89,9 +92,9 @@ const profileFacts = (profile: AgentRegistry.Profile, supersedes: readonly strin
   const iri = AgentRegistry.iriForUser(user);
   const usernames = AgentRegistry.usernamesOf(profile);
   const label = profile.label ?? usernames[0] ?? user.id;
-  const hash = hashText(`${label}\n${usernames.join('\n')}`);
-  const subject: RDF.EntityTerm = { kind: 'entity', entity: iri, label, type: 'person' };
-  const statement = (predicate: string, object: RDF.Term): RDF.Fact => ({
+  const hash = Hash.text(`${label}\n${usernames.join('\n')}`);
+  const subject = { kind: 'entity', entity: iri, label, type: 'person' } as const;
+  const statement = (predicate: string, object: Fact.Encoded['assertion']['object']): Fact.Encoded => ({
     id: '',
     assertion: { subject, predicate, object },
     factuality: { value: 'CT+', polarity: '+' },
@@ -101,7 +104,7 @@ const profileFacts = (profile: AgentRegistry.Profile, supersedes: readonly strin
     sourceHash: hash,
     ...(supersedes.length > 0 ? { supersedes: [...supersedes] } : {}),
   });
-  return RDF.Graph.assign(
+  return Graph.assign(
     [
       statement('is a', { kind: 'entity', entity: 'https://schema.org/Person', label: 'Person' }),
       ...usernames.map((username) => statement('has account', { kind: 'literal', literal: username })),
@@ -131,7 +134,7 @@ export const extractFactsStage = (
   AgentRegistry.AgentRegistry | FactStore | AiService.AiService | StateStore.StateStore
 > => {
   const namespace = options?.sourceNamespace ?? 'discord';
-  const extractOptions: RDF.ExtractOptions = {
+  const extractOptions: ExtractOptions = {
     ...(options?.rules ? { rules: options.rules } : {}),
     ...(options?.ontology ? { ontology: options.ontology } : {}),
     ...(options?.closed ? { closed: true } : {}),
@@ -149,7 +152,7 @@ export const extractFactsStage = (
       authors.set(event.message.id, agent);
     }
     const users = knownUsers(yield* AgentRegistry.list());
-    const docs = events.map((event): RDF.ExtractDocument => {
+    const docs = events.map((event): ExtractDocument => {
       const user = event.message.author;
       return {
         text: resolveMentions(event.message.text, users),
@@ -161,7 +164,7 @@ export const extractFactsStage = (
       };
     });
     yield* indexFactsBatch(docs, { ...extractOptions, entities: [...users.values()] });
-    // A profile is rewritten only when it changed (an append-only store, such as an ECHO fact feed, would grow on every
+    // A profile is rewritten only when it changed (an append-only store would grow on every
     // batch). The cursor also names the graph last written, so each version supersedes the one before it on any store,
     // a write-only one included, with no read.
     const store = yield* FactStore;
@@ -174,7 +177,7 @@ export const extractFactsStage = (
       if (previous?.hash !== first.sourceHash) {
         const facts = profileFacts(profile, previous ? [previous.graph] : []);
         yield* store.putFacts(facts);
-        yield* store.setCursor(first.attribution.source, `${first.sourceHash} ${RDF.Mapping.graphOf(facts[0])}`);
+        yield* store.setCursor(first.attribution.source, `${first.sourceHash} ${Fact.graphOf(facts[0])}`);
       }
     }
   });

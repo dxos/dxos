@@ -6,8 +6,9 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { expect } from 'vitest';
 
+import { Vocab, Vocabularies } from '@dxos/echo-memory';
+
 import { queuedAiService } from '../testing/index.ts';
-import { Vocab, Vocabularies } from '../types/index.ts';
 import { extractDocFacts } from './extract-facts.ts';
 
 const fact = (subject: string, predicate: string, object: string) => ({

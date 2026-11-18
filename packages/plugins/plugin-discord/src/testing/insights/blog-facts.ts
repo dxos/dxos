@@ -17,7 +17,8 @@ import { parseArgs } from 'node:util';
 
 import { DirectAiServiceLayer } from '@dxos/ai/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStoreLive, RDF, indexFactsBatch } from '@dxos/pipeline-rdf';
+import { FactStoreLive, indexFactsBatch } from '@dxos/pipeline-rdf';
+import { type ExtractDocument } from '@dxos/pipeline-rdf';
 
 import { costReport, meter } from '../metering.ts';
 
@@ -47,7 +48,7 @@ const announcements = db
   .filter(isAnnouncement);
 db.close();
 
-const docs: RDF.ExtractDocument[] = announcements.map((item) => ({
+const docs: ExtractDocument[] = announcements.map((item) => ({
   text: `${item.title}\n\n${item.summary ?? ''}`.trim(),
   source: item.link,
   author: item.source === 'blog' ? 'Cloudflare Blog' : 'Cloudflare Changelog',

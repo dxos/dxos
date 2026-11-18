@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 
 import { type TextItem } from '../sources/text-item.ts';
 import { mentionFacts, sentimentFacts } from './facts.ts';
@@ -38,7 +38,7 @@ describe('annotation facts', () => {
     const facts = mentionFacts(ITEM, findTickers(ITEM.title), EXTRACTOR);
     const mentioned = facts
       .filter((fact) => fact.assertion.predicateIri === ANNOTATIONS.mentions.iri)
-      .map((fact) => RDF.termValue(fact.assertion.object));
+      .map((fact) => Fact.termValue(fact.assertion.object));
     expect(mentioned).toEqual([companyIri('NVDA'), companyIri('AMD')]);
     expect(facts.every((fact) => fact.attribution.source === 'news.google.com:CBMi1' && fact.graph)).toBe(true);
     // Deterministic: the same item writes the same statements.
@@ -60,7 +60,7 @@ describe('annotation facts', () => {
     expect(new Set(facts.map(({ graph }) => graph)).size).toBe(3);
     const literals = facts
       .filter((fact) => fact.assertion.predicateIri === ANNOTATIONS.sentimentScore.iri)
-      .map((fact) => RDF.termValue(fact.assertion.object));
+      .map((fact) => Fact.termValue(fact.assertion.object));
     expect(literals).toEqual(['0.40', '0.80', '-0.50']);
   });
 });

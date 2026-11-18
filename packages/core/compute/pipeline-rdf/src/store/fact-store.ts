@@ -5,9 +5,10 @@
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
+import { Fact, Ontology } from '@dxos/echo-memory';
+
 import { type SemanticIndexError } from '../errors.ts';
 import { type SemanticQuery } from '../internal/sparql/query-builder.ts';
-import { type Fact, type Ontology } from '../types/index.ts';
 
 //
 // The FactStore service tag and API surface only. Implementations live in `fact-store-live.ts`
@@ -24,9 +25,10 @@ export type SparqlTerm =
 /** One SPARQL solution: each bound variable (named without `?`) to its term; an unbound variable is absent. */
 export type SparqlRow = Readonly<Record<string, SparqlTerm>>;
 
+/** @deprecated Use `MemoryService.Service` from `@dxos/echo-memory`. */
 export interface FactStoreApi {
   /** Persist facts as statements in their named graphs (idempotent appends; no write-time merge). */
-  readonly putFacts: (facts: readonly Fact[]) => Effect.Effect<void, SemanticIndexError>;
+  readonly putFacts: (facts: readonly Fact.Fact[]) => Effect.Effect<void, SemanticIndexError>;
   /**
    * The predicates the store knows, as described in its ontology graph (outside every statement's graph): the seed
    * vocabulary every store starts with, then those its facts minted, with label, definition, defining namespace, and
@@ -34,9 +36,9 @@ export interface FactStoreApi {
    */
   readonly predicates: () => Effect.Effect<Ontology.Entry[], SemanticIndexError>;
   /** Run a structured query over the stored statements and reassemble the matching Facts. */
-  readonly query: (query: SemanticQuery) => Effect.Effect<Fact[], SemanticIndexError>;
+  readonly query: (query: SemanticQuery) => Effect.Effect<Fact.Fact[], SemanticIndexError>;
   /** Execute a raw SPARQL `SELECT ?g` and reassemble every statement in the graphs it binds. */
-  readonly select: (sparql: string) => Effect.Effect<Fact[], SemanticIndexError>;
+  readonly select: (sparql: string) => Effect.Effect<Fact.Fact[], SemanticIndexError>;
   /**
    * Execute a raw SPARQL `SELECT` as written and return its solutions, for queries whose answer is not a set of
    * facts (entities of a class, counts, labels). Anything but a `SELECT` (an update included) fails.
@@ -57,4 +59,5 @@ export interface FactStoreApi {
   readonly clear: () => Effect.Effect<void, SemanticIndexError>;
 }
 
+/** @deprecated Use `MemoryService` from `@dxos/echo-memory`, with `MemorySqlite` from `@dxos/echo-memory-sqlite`. */
 export class FactStore extends Context.Service<FactStore, FactStoreApi>()('@dxos/pipeline-rdf/FactStore') {}

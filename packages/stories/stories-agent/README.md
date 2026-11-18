@@ -36,22 +36,22 @@ In the **Setup** story:
 
 In the **DiscordPipeline → Setup** story (`?path=/story/stories-stories-agent-discordpipeline--setup`), a Discord
 back-index runs as a remote timer trigger on EDGE: plugin-discord's `CrawlDiscordChannels` reads the channels' history
-with the Discord token stored in the space, keeps its progress in a `CrawlState` object and appends the facts it
-extracts to a fact feed; the agent's brain indexes the fact feed once it is registered.
+with the Discord token stored in the space, keeps its progress in a `CrawlState` object and puts the facts it
+extracts into the space's memory, which every agent in the space reads.
 
 1. **Discord** panel: sign in, install Kai and **Connect** a channel, as steps 1 to 3 above. The sign-in stores the
    Discord connection, and its token, in the space.
 2. **Discord back-index** panel: pick the **Connection**, check the channel under **Channels**, set **Max days**
    (e.g. 30), leave **Descend threads** on, and pick an **Interval**.
-3. **Start**: the crawl state, the fact feed and the trigger are created, and the channel appears under **Targets**.
-   Each run of the trigger, or **Run now**, moves the targets' cursors and the **Messages read** and **Facts in the
-   feed** counters; the **Timeline** records each change of the crawl state.
-4. Switch **Agent brain** on: the brain indexes the fact feed, and the **brain** companion lists the facts.
-5. **Pause** and **Resume** switch the trigger off and on; a row's reset button re-reads that channel or thread from
+3. **Start**: the crawl state and the trigger are created, and the channel appears under **Targets**. Each run of
+   the trigger, or **Run now**, moves the targets' cursors and the **Messages read** and **Facts in the space's
+   memory** counters; the **Timeline** records each change of the crawl state, and the **brain** companion lists the
+   facts.
+4. **Pause** and **Resume** switch the trigger off and on; a row's reset button re-reads that channel or thread from
    the start, and **Reset all** re-reads every target, without a model call for a message read before.
 
 The **DiscordPipeline → Scripted** story runs the same panel with EDGE faked (`startFakeBackIndexRunner` steps the
-crawl state while the trigger is on, `installFakeBrain` answers the fact feed routes), with no Discord or EDGE at all.
+crawl state and puts facts into the space's memory while the trigger is on), with no Discord or EDGE at all.
 
 ## Troubleshooting
 
