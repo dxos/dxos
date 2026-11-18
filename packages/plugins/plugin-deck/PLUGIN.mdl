@@ -572,7 +572,9 @@ feat F-5: URL Navigation & Deep Linking
           `LinkAction` a plugin contributes under that id on the object at the end of the chain, once;
           an id no plugin contributes, an action that does not apply to the object, or a URL that opens
           no object is dropped with a warning. A navigation that starts before the action has run
-          cancels it. When the app boots on such a URL, the boot loader stays up until the action has
+          cancels it. A URL from outside the app that a newer navigation overtakes while its
+          navigation handlers run is not projected, so the newer navigation keeps its deck and its
+          link action; the handlers still run to the end. When the app boots on such a URL, the boot loader stays up until the action has
           run, or for 10 seconds at most, so the page first shows what the action leaves
 ```
 
@@ -1218,6 +1220,16 @@ decision D-28: Every navigation claims ownership when it starts: a URL from outs
   for: user:wittjosiah
   affects: [F-5.5]
   why: The single-flight projection only sees a newer navigation once that navigation projects, so a slow navigation handler would let the earlier link strip the newer URL's action and run its own over the newer page.
+```
+
+```mdl
+decision D-29: A URL from outside the app is not projected when a newer navigation has claimed ownership by the time its navigation handlers finish. Its handlers still run to the end. Fills in [D-28].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: A late projection replaces the newer navigation's deck and interrupts the newer URL's projection, which cancels that URL's link action. Navigation handlers have side effects, such as accepting an invitation, that the reader asked for whichever page they end on. The boot restore is a URL from outside the app too. In Composer its handlers finish within about 100 ms of its claim, and onboarding's first in-app navigation comes 2 to 3 seconds later, so boot never overtakes its own restore.
+  rejected: Interrupting the handlers when a newer navigation starts, which would drop an invitation the link carried.
 ```
 
 ## Appendix: Extension Definitions

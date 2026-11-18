@@ -69,8 +69,9 @@ export const claimNavigation = () => {
 };
 
 /**
- * Dispatch navigation handlers for a URL arriving from outside the app, then project it. The link
- * action runs as part of the projection, so a newer navigation cancels it.
+ * Dispatch navigation handlers for a URL arriving from outside the app, then project it unless a
+ * newer navigation has claimed ownership meanwhile. The link action runs as part of the projection,
+ * so a newer navigation cancels it.
  */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
   const isCurrent = claimNavigation();
@@ -91,6 +92,11 @@ export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
       ),
       { concurrency: 'unbounded' },
     );
+  }
+
+  // Handlers always run for their side effects, such as accepting an invitation; only the projection is moot.
+  if (!isCurrent()) {
+    return undefined;
   }
 
   return yield* asOnlyProjection(
