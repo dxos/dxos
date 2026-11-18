@@ -1708,6 +1708,12 @@ decision D-102: The public link that presents is the one Composer copies, which 
   rejected: Presenting every viewer URL to a Presentation, which would leave no way to link to its slides.
 ```
 
+```mdl
+decision D-103: Approve [D-102].
+  date: 2026-11-18
+  by: user:wittjosiah
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
