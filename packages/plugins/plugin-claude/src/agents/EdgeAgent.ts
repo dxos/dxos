@@ -402,6 +402,7 @@ const ensureProcess = (options: Options, chat: Chat.Chat): Effect.Effect<Target,
     const mode = definition.mode?.(chat);
     const meta = definition.sessionMeta?.(chat);
     const repositories = yield* checkoutsOf(chat);
+    const setupScript = setupScriptOf(chat);
     const snapshot = yield* control.spawn({
       spaceId,
       key: EdgeProtocol.PROCESS_KEY,
@@ -411,6 +412,8 @@ const ensureProcess = (options: Options, chat: Chat.Chat): Effect.Effect<Target,
         ...(mode !== undefined && { [EdgeProtocol.Annotation.mode]: mode }),
         ...(meta !== undefined && { [EdgeProtocol.Annotation.meta]: meta }),
         ...(repositories.length > 0 && { [EdgeProtocol.Annotation.repositories]: repositories }),
+        ...(repositories.length > 0 &&
+          setupScript !== undefined && { [EdgeProtocol.Annotation.setupScript]: setupScript }),
       }),
       // A spawn redelivered after a lost answer reaches the same process.
       idempotencyKey: `${definition.id}:${chat.id}`,
@@ -463,6 +466,15 @@ export const checkoutsOf = (
     }
     return checkouts;
   });
+
+/**
+ * The setup script of the chat's project, for the sandbox to run after the checkouts. Sent only with
+ * repositories: it prepares those checkouts, and a chat outside a project has no script.
+ */
+export const setupScriptOf = (chat: Chat.Chat): string | undefined => {
+  const project = Workspace.projectOf(chat);
+  return project ? Repo.getSetupScript(project) : undefined;
+};
 
 const GITHUB_HOST = 'github.com';
 

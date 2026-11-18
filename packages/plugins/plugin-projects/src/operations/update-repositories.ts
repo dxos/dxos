@@ -20,7 +20,7 @@ const refKey = (ref: Ref.Ref<Repo.Repo>): string => {
 const handler: Operation.WithHandler<typeof ProjectOperation.UpdateRepositories> =
   ProjectOperation.UpdateRepositories.pipe(
     Operation.withHandler(
-      Effect.fn(function* ({ project: projectRef, add = [], remove = [] }) {
+      Effect.fn(function* ({ project: projectRef, add = [], remove = [], setupScript }) {
         const project = yield* Database.load(projectRef);
         const current = Repo.getRepositories(project);
         const removed = new Set(remove.map(refKey));
@@ -35,7 +35,15 @@ const handler: Operation.WithHandler<typeof ProjectOperation.UpdateRepositories>
           Repo.setRepositories(project, next);
           yield* Database.flush();
         }
-        return { repositories: [...Repo.getRepositories(project)] };
+        if (setupScript !== undefined && setupScript !== (Repo.getSetupScript(project) ?? '')) {
+          Repo.setSetupScript(project, setupScript);
+          yield* Database.flush();
+        }
+        const script = Repo.getSetupScript(project);
+        return {
+          repositories: [...Repo.getRepositories(project)],
+          ...(script !== undefined && { setupScript: script }),
+        };
       }),
     ),
   );
