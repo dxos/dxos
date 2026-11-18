@@ -48,6 +48,7 @@ import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
+import { viewerRoutePlugin } from './src/vite/viewer-route.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -447,6 +448,7 @@ export default defineConfig((env) => ({
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
         recovery: path.resolve(dirname, './recovery.html'),
+        viewer: path.resolve(dirname, './viewer.html'),
       },
       // NOTE: Vite 8 / rolldown eagerly walks into the `test` config imported via
       // `vitest.base.config.ts`, which pulls in @vitest/browser-playwright -> playwright(-core)
@@ -741,7 +743,10 @@ export default defineConfig((env) => ({
     // inline markup. Wrapped in try/catch so an asset rename or move only
     // loses the brand mark — the loader still renders the bar + status
     // without it.
+    viewerRoutePlugin(),
+
     bootLoaderPlugin({
+      include: ['index.html', 'viewer.html'],
       // A prerelease bundle and the dev server recolour the released mark; production shows it as is.
       markFilter: bootMarkFilter(channelVariant(env.command)),
       markSvg: (() => {

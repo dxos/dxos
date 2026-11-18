@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService, AiUsage, ExtractionModel, Model } from '@dxos/ai';
+import { Fact, Ontology, Vocabularies } from '@dxos/echo-memory';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -18,11 +19,8 @@ import { SemanticIndexError } from '../../errors.ts';
 import {
   type ExtractDocument,
   type ExtractOptions,
-  type FactualityValue,
   type KnownEntity,
-  Ontology,
   type SystemOneThresholds,
-  Vocabularies,
 } from '../../types/index.ts';
 import { chunk } from './chunk.ts';
 import { type ExtractedFact, extractChunk } from './extract.ts';
@@ -233,7 +231,7 @@ export const factualityOf = (
     return { factuality: 'Uu', polarity: '?' };
   }
   const polarity = decision.negated > 0.5 ? '-' : '+';
-  const factuality: FactualityValue = `${CERTAINTY_PREFIX[decision.certainty]}${polarity}`;
+  const factuality: Fact.FactualityValue = `${CERTAINTY_PREFIX[decision.certainty]}${polarity}`;
   return { factuality, polarity };
 };
 

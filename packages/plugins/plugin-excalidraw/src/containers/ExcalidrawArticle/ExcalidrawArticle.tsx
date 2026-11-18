@@ -17,6 +17,7 @@ import {
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -92,6 +93,7 @@ export const ExcalidrawArticle = ({
   onCameraChange,
 }: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
+  const readonly = ToolkitHooks.useReadOnly();
   const containerRef = useRef<HTMLDivElement>(null);
   const themeMode = Hooks.useThemeMode();
   const [down, setDown] = useState<boolean>(false);
@@ -180,9 +182,12 @@ export const ExcalidrawArticle = ({
 
   // Track updates.
   const handleChange: ExcalidrawProps['onChange'] = (elements, appState) => {
-    const modified = adapter.update(elements);
-    if (!down && modified.length) {
-      adapter.save();
+    // View mode still reports element changes it makes itself, such as text re-measured after a font loads.
+    if (!readonly) {
+      const modified = adapter.update(elements);
+      if (!down && modified.length) {
+        adapter.save();
+      }
     }
     if (onSelectionChange) {
       const selected = selectedObjectIds(elements, appState.selectedElementIds);
@@ -269,6 +274,7 @@ export const ExcalidrawArticle = ({
         // gridModeEnabled={true}
         // detectScroll={false}
         theme={themeMode}
+        viewModeEnabled={readonly}
         onChange={handleChange}
         onPointerUpdate={handlePointerUpdate}
         onScrollChange={handleScrollChange}

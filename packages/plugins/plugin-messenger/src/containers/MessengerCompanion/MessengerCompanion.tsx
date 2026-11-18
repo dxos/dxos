@@ -10,7 +10,10 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import { Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -58,9 +61,17 @@ export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) =>
         loadLink(client, ref).pipe(
           Effect.flatMap((object) =>
             Effect.promise(async () => {
-              const path = GraphPath.getObjectPathFromObject(object);
+              // The owning plugin knows where an object lives; a spec, say, opens as part of its project, showing that spec.
+              const db = Obj.getDatabase(object);
+              const { data } = db
+                ? await invokePromise(NavigationOperation.ResolveNavigationTargets, {
+                    query: { uri: EID.make({ spaceId: db.spaceId, entityId: object.id }) },
+                  })
+                : { data: undefined };
+              const target = data?.targets[0];
               await invokePromise(LayoutOperation.Open, {
-                subject: [path],
+                subject: [target?.path ?? GraphPath.getObjectPathFromObject(object)],
+                viewState: target?.viewState,
                 variant: typeof companion === 'string' ? companion : undefined,
               });
             }),

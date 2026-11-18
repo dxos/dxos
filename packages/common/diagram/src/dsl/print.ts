@@ -25,6 +25,9 @@ export const formatNumber = (value: number): string => {
   if (!Number.isFinite(value)) {
     throw new TypeError(`A scene coordinate must be finite; got ${value}.`);
   }
+  // Decimal, never a fraction. The grammar accepts `692/3` so a person or an agent can SAY a quotient exactly, but
+  // printing one would emit text an older parser rejects, and the DSL carries no version to negotiate that on.
+  // Printing fractions belongs with a versioned DSL, not before it.
   return String(value);
 };
 

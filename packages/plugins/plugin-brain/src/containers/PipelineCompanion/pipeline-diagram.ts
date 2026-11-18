@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Pipeline } from '@dxos/echo-memory';
 
 // Kept out of `PipelineCompanion.tsx`: react-refresh only fast-refreshes a module whose exports are all components.
 
@@ -54,7 +54,7 @@ const quote = (text: string, max = 40): string =>
   JSON.stringify(text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
 /** The run's totals across its sources and models. */
-export const totals = (state: RDF.Pipeline.State) => {
+export const totals = (state: Pipeline.State) => {
   const sources = state.sources.filter((source) => source.items > 0);
   const usages = state.stages.flatMap((stage) => stage.models);
   return {
@@ -90,7 +90,7 @@ type Link = { id: string; from: string; to: string; text?: string; dashed?: bool
  * stage in order with what it passed on, the facts it wrote, and the model the stages called with calls and cost.
  * Drawn by `Scene2DView`, so it takes the canvas's own look rather than a UML figure's.
  */
-export const pipelineScene = (state: RDF.Pipeline.State): string => {
+export const pipelineScene = (state: Pipeline.State): string => {
   const sum = totals(state);
   const stages = [...state.stages].sort((left, right) => left.order - right.order);
   const models = [...new Set(stages.flatMap((stage) => stage.models.map((usage) => usage.model)))];

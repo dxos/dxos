@@ -61,8 +61,8 @@ jobs:
       - name: Install wrangler
         run: npm install --global wrangler@^4.59.1
 
-      - name: Exclude Worker script from asset upload
-        run: echo '_worker.js' > preview/packages/apps/composer-app/out/composer/.assetsignore
+      - name: Exclude Worker script and its modules from asset upload
+        run: printf '_worker.js\n_worker/\n' > preview/packages/apps/composer-app/out/composer/.assetsignore
 
       - name: Deploy preview version
         id: deploy

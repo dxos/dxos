@@ -20,6 +20,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `step`      | `org.dxos.mdl.step@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -277,6 +278,13 @@ feat F-7: AI Skill
     then: agent can create boards, place cards in columns, and update card fields
 ```
 
+```mdl
+feat F-8: Read-only Host
+  uses: [Kanban, KanbanArticle, KanbanSettings]
+
+  req F-8.1: When the host contributes `ReadOnly`, a board shows its columns and cards, but no card or column can be dragged, added or removed, nothing dropped on the board lands, a card's menu offers only Open, and the board has no properties panel.
+```
+
 ## Acceptance
 
 ```mdl
@@ -415,6 +423,45 @@ test QA-2: Showcase clip
     - name: Work in it
       do: Click across it as the clip gesture does.
       expect: the object responds to each click
+```
+
+## Changelog
+
+```mdl
+decision D-1: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-2: A `readOnly` option makes the board inert: no drag handles, no drop targets, no add or remove card, a card menu with only Open, and neither the properties panel nor the new-board pivot picker. Fills in [D-1].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.1, KanbanArticle, KanbanSettings]
+  why: Moving a card writes its pivot field and the board's arrangement, and Add to collection writes the collection, so each is withheld rather than left to fail; opening a card writes nothing.
+  rejected:
+    - Removing only the drag handles: an object dragged in from elsewhere would still land on a column and write.
+    - Hiding the card menu: it also hides Open.
+```
+
+```mdl
+decision D-3: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-1
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-4: When the host contributes `ReadOnly`, the board is inert as before: no drag handles, no drop targets, no add or remove card, a card menu with only Open, and neither the properties panel nor the new-board pivot picker renders. Fills in [D-3].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-2
+  affects: [F-8.1, KanbanArticle, KanbanSettings]
+  why: Moving a card writes its pivot field and the board's arrangement, Add to collection writes the collection, and the properties panel and pivot picker write the board's settings, so each is withheld rather than left to fail; opening a card writes nothing.
 ```
 
 ---

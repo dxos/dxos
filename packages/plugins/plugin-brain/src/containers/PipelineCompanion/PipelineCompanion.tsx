@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Pipeline } from '@dxos/echo-memory';
 import { Scene2DView } from '@dxos/react-ui-canvas';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -15,7 +15,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { BrainCapabilities } from '#types';
 
-import { type FactStoreRegistry } from '../../capabilities/fact-store.ts';
+import { type FactStoreRegistry } from '../../capabilities/fact-store-registry.ts';
 import { BrainNamespace } from '../../namespace.ts';
 import { TOP_SOURCES, count, elapsed, modelName, moment, totals, usd } from './pipeline-diagram.ts';
 import { pipelineDocument, readPipelines } from './pipeline.ts';
@@ -35,7 +35,7 @@ PipelineCompanion.displayName = 'PipelineCompanion';
 
 const PipelinePanel = ({ registry, spaceId }: { registry: FactStoreRegistry; spaceId: string }) => {
   const { t } = UiHooks.useTranslation(BrainNamespace.key);
-  const [pipelines, setPipelines] = useState<readonly RDF.Pipeline.State[]>([]);
+  const [pipelines, setPipelines] = useState<readonly Pipeline.State[]>([]);
   useEffect(() => {
     let cancelled = false;
     const refresh = () =>
@@ -69,7 +69,7 @@ const PipelinePanel = ({ registry, spaceId }: { registry: FactStoreRegistry; spa
   );
 };
 
-const PipelineView = ({ state }: { state: RDF.Pipeline.State }) => {
+const PipelineView = ({ state }: { state: Pipeline.State }) => {
   const { t } = UiHooks.useTranslation(BrainNamespace.key);
   const document = useMemo(() => pipelineDocument(state), [state]);
 

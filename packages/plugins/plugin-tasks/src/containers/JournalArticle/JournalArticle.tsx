@@ -5,6 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -22,6 +23,7 @@ export type JournalArticleProps = AppSurface.ObjectArticleProps<Journal.Journal>
 
 export const JournalArticle = ({ role, attendableId: _attendableId, subject: journal }: JournalArticleProps) => {
   const { t } = Hooks.useTranslation(TasksNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const [showCalendar, setShowCalendar] = useState(false);
   const controllerRef = useRef<CalendarController>(null);
 
@@ -74,7 +76,7 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
             </Calendar.Root>
           </Show.Show>
 
-          <JournalComponent journal={journal} classNames='dx-document' onSelect={handleSelect} />
+          <JournalComponent journal={journal} readonly={readonly} classNames='dx-document' onSelect={handleSelect} />
         </div>
       </Panel.Body>
     </Panel.Root>

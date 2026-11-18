@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { AgentRegistry, type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Fact, Graph, Hash } from '@dxos/echo-memory';
 import { log } from '@dxos/log';
 import { type Stage } from '@dxos/pipeline';
-import { FactStore, RDF, hashText } from '@dxos/pipeline-rdf';
+import { FactStore } from '@dxos/pipeline-rdf';
 import { Person } from '@dxos/types';
 
 import { DISCORD_SOURCE } from '../constants.ts';
@@ -50,10 +51,10 @@ export type AskedQuestion = {
  * `asker —asked→ question`, `question —is a→ schema:Question` and `question —has text→ "…"`. Later passes can add
  * structure to the same node (`question —about→ opfs`). Deterministic in its input, so a replay writes the same graph.
  */
-export const questionFacts = (asked: AskedQuestion): RDF.Fact[] => {
+export const questionFacts = (asked: AskedQuestion): Fact.Fact[] => {
   // The message time stands in for the record time: a wall-clock value would mint a new graph on every replay.
   const time = asked.askedAt ?? new Date(0).toISOString();
-  const node: RDF.EntityTerm = { kind: 'entity', entity: QUESTION_NODE, label: asked.question };
+  const node = { kind: 'entity', entity: QUESTION_NODE, label: asked.question } as const;
   const base = {
     id: '',
     factuality: { value: 'CT+', polarity: '+' },
@@ -67,8 +68,8 @@ export const questionFacts = (asked: AskedQuestion): RDF.Fact[] => {
     recordedAt: time,
     extractor: QUESTION_EXTRACTOR,
     sourceHash: asked.sourceHash,
-  } satisfies Omit<RDF.Fact, 'assertion'>;
-  return RDF.Graph.assign(
+  } satisfies Omit<Fact.Encoded, 'assertion'>;
+  return Graph.assign(
     [
       {
         ...base,
@@ -91,7 +92,7 @@ export const questionFacts = (asked: AskedQuestion): RDF.Fact[] => {
         assertion: { subject: node, predicate: 'has text', object: { kind: 'literal', literal: asked.question } },
       },
     ],
-    { name: () => `${asked.source}#question#${hashText(asked.question)}` },
+    { name: () => `${asked.source}#question#${Hash.text(asked.question)}` },
   );
 };
 
@@ -206,7 +207,7 @@ export const extractQuestionsStage = (
                 ...(agent.label ? { agentLabel: agent.label } : {}),
                 ...(event.message.createdAt ? { askedAt: event.message.createdAt } : {}),
                 ...(start >= 0 ? { span: { start, end: start + question.length } } : {}),
-                sourceHash: hashText(text),
+                sourceHash: Hash.text(text),
               });
             }),
           );

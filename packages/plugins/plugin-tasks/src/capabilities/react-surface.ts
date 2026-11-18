@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { Outline, RemoteSession, Task, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
@@ -47,9 +48,10 @@ const TaskSetSection: Role.Role<
  */
 const TaskRelated: Role.Role<{ subject: Task.Task }> = Role.make('org.dxos.role.related');
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactSurface, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const manager = yield* Capability.Service;
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'article.journal',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
@@ -63,7 +65,11 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'card.remoteSession',
         position: Position.first,
-        filter: AppSurface.object(AppSurface.CardContent, RemoteSession.RemoteSession),
+        filter: AppSurface.object(
+          AppSurface.CardContent,
+          RemoteSession.RemoteSession,
+          () => !ReadOnly.isActive(manager),
+        ),
         component: RemoteSessionCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
@@ -132,6 +138,6 @@ export default Capability.makeModule(() =>
         filter: AppSurface.component(AppSurface.Dialog, QUICK_ENTRY_DIALOG),
         component: QuickEntryDialog,
       }),
-    ]),
-  ),
+    ]);
+  }),
 );
