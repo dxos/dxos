@@ -86,6 +86,15 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
+const readonlyColDefault = {
+  frozenColsStart: sheetColDefault.frozenColsStart,
+  grid: { size: defaultColSize, readonly: true },
+};
+const readonlyRowDefault = {
+  frozenRowsStart: sheetRowDefault.frozenRowsStart,
+  grid: { size: defaultRowSize, readonly: true },
+};
+
 export type SheetContentProps = {
   /** Shows the used range only, scaled down to fit the box (never past 1:1) and inert: a sheet on a slide. */
   fit?: boolean;
@@ -108,6 +117,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   // The grid spans the sheet's own rows and columns, which grow past the defaults.
   const [sheetRows] = useObject(model.sheet, 'rows');
   const [sheetColumns] = useObject(model.sheet, 'columns');
+  const readonly = !!model.readonly;
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
@@ -262,6 +272,14 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      if (readonly) {
+        if ((event.metaKey || event.ctrlKey) && (event.key === 'c' || event.key === 'C')) {
+          event.preventDefault();
+          return cursorFallbackRange && model.copy(cursorFallbackRange);
+        }
+        return;
+      }
+
       switch (event.key) {
         case 'Backspace':
         case 'Delete':
@@ -302,21 +320,24 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
         }
       }
     },
-    [cursorFallbackRange, model, cursor, extraplanarFocus, selectEntireAxis],
+    [readonly, cursorFallbackRange, model, cursor, extraplanarFocus, selectEntireAxis],
   );
 
   const contextMenuAnchorRef = useRef<HTMLButtonElement | null>(null);
   const [contextMenuOpen, setContextMenuOpen] = useState<DxGridPosition | null>(null);
   const contextMenuAxis = contextMenuOpen?.plane.startsWith('frozenRows') ? 'col' : 'row';
 
-  const handleContextMenu = useCallback((event: MouseEvent) => {
-    const cell = closestCell(event.target);
-    if (cell && cell.plane.startsWith('frozen')) {
-      event.preventDefault();
-      contextMenuAnchorRef.current = event.target as HTMLButtonElement;
-      setContextMenuOpen(cell);
-    }
-  }, []);
+  const handleContextMenu = useCallback(
+    (event: MouseEvent) => {
+      const cell = closestCell(event.target);
+      if (!readonly && cell && cell.plane.startsWith('frozen')) {
+        event.preventDefault();
+        contextMenuAnchorRef.current = event.target as HTMLButtonElement;
+        setContextMenuOpen(cell);
+      }
+    },
+    [readonly],
+  );
 
   const handleAxisMenuAction = useCallback(
     (operation: 'insert-before' | 'insert-after' | 'drop') => {
@@ -388,13 +409,13 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
       limitRows={fit ? extent.rows : (sheetRows?.length ?? SheetUtil.DEFAULT_ROWS)}
       columns={columns}
       rows={rows}
-      columnDefault={sheetColDefault}
-      rowDefault={sheetRowDefault}
+      columnDefault={readonly ? readonlyColDefault : sheetColDefault}
+      rowDefault={readonly ? readonlyRowDefault : sheetRowDefault}
       activeRefs={activeRefs}
       frozen={frozen}
       overscroll='trap'
       addressing={addressing}
-      onAxisResize={handleAxisResize}
+      onAxisResize={readonly ? undefined : handleAxisResize}
       onSelect={handleSelect}
       onFocus={handleFocus}
       onWheelCapture={handleWheel}

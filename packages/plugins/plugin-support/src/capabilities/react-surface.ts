@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as DeckSurface from '@dxos/plugin-deck/DeckSurface';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import * as Position from '@dxos/util/Position';
@@ -38,24 +39,24 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Support.Ticket),
           AppSurface.object(AppSurface.Section, Support.Ticket),
         ),
-        component: SupportArticle,
+        component: ToolkitHooks.unlessReadOnly(SupportArticle),
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'feedback',
         filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
-        component: FeedbackPanel,
+        component: ToolkitHooks.unlessReadOnly(FeedbackPanel),
       }),
       Surface.create({
         id: 'discord',
         filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
-        component: DiscordPanel,
+        component: ToolkitHooks.unlessReadOnly(DiscordPanel),
       }),
       Surface.create({
         id: 'helpMenu',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
         position: Position.last,
-        component: HelpMenu,
+        component: ToolkitHooks.unlessReadOnly(HelpMenu),
       }),
       // Generic plank companion: shows the description from the plugin that
       // owns the open article's typename. Matches any article via
@@ -81,22 +82,22 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'hints',
         filter: Surface.makeFilter(DeckSurface.Hints),
-        component: ShortcutsHints,
+        component: ToolkitHooks.unlessReadOnly(ShortcutsHints),
       }),
       Surface.create({
         id: 'keyshortcuts',
         filter: Surface.makeFilter(DeckSurface.Keyshortcuts),
-        component: ShortcutsList,
+        component: ToolkitHooks.unlessReadOnly(ShortcutsList),
       }),
       Surface.create({
         id: SHORTCUTS_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, SHORTCUTS_DIALOG),
-        component: ShortcutsDialogContent,
+        component: ToolkitHooks.unlessReadOnly(ShortcutsDialogContent),
       }),
       Surface.create({
         id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, SupportNamespace.key),
-        component: SupportSettings,
+        component: ToolkitHooks.unlessReadOnly(SupportSettings),
         props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),

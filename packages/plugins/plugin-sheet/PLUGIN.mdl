@@ -332,6 +332,12 @@ feat F-8: Chart Types
     then: the chart shows a message naming the type in place of the chart, and keeps its settings
 ```
 
+```mdl
+feat F-9: Read-only Host
+
+  req F-9.1: When the host contributes `ReadOnly`, no cell can be edited, the toolbar shows with every action disabled, and the Charts companion shows each chart with no way to add, edit or remove one.
+```
+
 ## Acceptance
 
 ```mdl
@@ -685,6 +691,41 @@ decision D-10: The `addChart` operation takes the chart type as a string and nam
   why: A type another plugin contributes is as valid as the sheet's own, and the agent learns the common ones from the description and the skill.
   rejected:
     - A literal union of the sheet's types in the input schema: the built-in list D-5 rejected, and it refuses contributed types.
+```
+
+```mdl
+decision D-11: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-12: A `readOnly` option makes every cell read-only, disables the toolbar rather than hiding it, and withholds the chart editing controls. Fills in [D-11].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1]
+  why: A disabled toolbar keeps the article's layout the same as in Composer, as the markdown editor's does in a read-only host.
+  rejected: Hiding the toolbar; the article loses its toolbar row and readers cannot see what the sheet offers.
+```
+
+```mdl
+decision D-13: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-11
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-14: When the host contributes `ReadOnly`, every cell is read-only, the toolbar is disabled rather than hidden, and the chart editing controls are withheld. Fills in [D-13].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-12
+  affects: [F-9.1]
+  why: The sheet and chart containers read the capability when they render, so the behaviour [D-12] chose stays the same with no plugin option.
 ```
 
 ## Appendix: Extension Definitions
