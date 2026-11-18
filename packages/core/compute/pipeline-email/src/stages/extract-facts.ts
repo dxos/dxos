@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { type Fact } from '@dxos/echo-memory';
 import { Stage } from '@dxos/pipeline';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 // Extract + persist one message's facts, returning them. The store/AI-bound work is a Promise closure
 // so the stage's Effect stays R = never (a failed extraction must not fail the pipeline run).
-export type FactIndexer = (message: Message.Message) => Promise<RDF.Fact[]>;
+export type FactIndexer = (message: Message.Message) => Promise<Fact.Fact[]>;
 
 // Message-layer stage: index each message into the fact substrate, passing the Message through
 // unchanged. Extraction degrades to no facts on failure (advisory layer) but logs first, so the
@@ -20,7 +20,7 @@ export const extractFactsStage = (indexFacts: FactIndexer): Stage.Stage<Message.
   Stage.map('extract-facts', (message) =>
     Effect.tryPromise(() => indexFacts(message)).pipe(
       Effect.tapError((error) => Effect.logWarning('extract-facts failed; degrading to no facts', error)),
-      Effect.catch(() => Effect.succeed<RDF.Fact[]>([])),
+      Effect.catch(() => Effect.succeed<Fact.Fact[]>([])),
       Effect.as(message),
     ),
   );

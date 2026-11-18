@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Agent from '@dxos/assistant/Agent';
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
 import { Organization, Person } from '@dxos/types';
 
 import { AgentPresence, BrainService } from '#types';
@@ -87,5 +87,5 @@ export const spaceFacts = Effect.gen(function* () {
 });
 
 /** Whether the fact's subject or object is the entity, by any of the keys facts about it may use. */
-export const isAbout = (fact: RDF.Fact, keys: ReadonlySet<string>): boolean =>
+export const isAbout = (fact: Fact.Fact, keys: ReadonlySet<string>): boolean =>
   [fact.assertion.subject, fact.assertion.object].some((term) => term.kind === 'entity' && keys.has(term.entity));

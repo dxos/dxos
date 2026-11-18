@@ -12,12 +12,17 @@ import { AiService } from '@dxos/ai';
 import { Database, Obj } from '@dxos/echo';
 import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { Fact } from '@dxos/echo-memory';
+import { MemorySqlite } from '@dxos/echo-memory-sqlite';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreMemory } from '@dxos/pipeline-rdf';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
 import { generateReply, replySubject } from './generate-reply.ts';
+
+/** A space memory, and the FactStore the pipelines write through over it, for seeding. */
+const MemoryLayer = FactStoreMemory.layer.pipe(Layer.provideMerge(MemorySqlite.layerMemory));
 
 const makeMessage = (sender: string, subject: string, text: string, created: string) =>
   Obj.make(Message.Message, {
@@ -27,7 +32,7 @@ const makeMessage = (sender: string, subject: string, text: string, created: str
     properties: { subject },
   });
 
-const ALICE_FACT: RDF.Fact = {
+const ALICE_FACT = Fact.make({
   id: 'f-alice-1',
   assertion: {
     subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
@@ -39,7 +44,7 @@ const ALICE_FACT: RDF.Fact = {
   recordedAt: '2026-07-01T12:00:00.000Z',
   extractor: { id: 'test', model: 'stub', version: '1' },
   sourceHash: 'h-1',
-};
+});
 
 /** Stub `AiService` returning a canned body while capturing prompts for grounding assertions. */
 const capturingAiService = (text: string): { layer: Layer.Layer<AiService.AiService>; prompts: string[] } => {
@@ -93,11 +98,7 @@ describe('generateReply', () => {
         const store = yield* FactStore;
         yield* store.putFacts([ALICE_FACT]);
         return yield* generateReply({ mailbox, message: thread[0] });
-      }).pipe(
-        Effect.provide(
-          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
-        ),
-      ),
+      }).pipe(Effect.provide(Database.layer(db).pipe(Layer.provideMerge(MemoryLayer), Layer.provideMerge(ai.layer)))),
     );
 
     expect(result.subject).toBe('Re: Q2 report');
@@ -123,9 +124,7 @@ describe('generateReply', () => {
     const ai = capturingAiService('Sure, ask away.');
     const result = await EffectEx.runPromise(
       generateReply({ mailbox, message }).pipe(
-        Effect.provide(
-          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
-        ),
+        Effect.provide(Database.layer(db).pipe(Layer.provideMerge(MemoryLayer), Layer.provideMerge(ai.layer))),
       ),
     );
 

@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact, Graph, Mapping, Ontology } from '@dxos/echo-memory';
 import { KnowledgeCard, type KnowledgeCardRow, TurtleSnippet, VirtualList, curie } from '@dxos/react-ui-rdf';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
@@ -17,8 +17,8 @@ import * as Util from '@dxos/react-ui/Util';
 
 export type OntologyPanelProps = {
   /** The predicates the brain knows: the seed vocabulary plus those its extractors minted. */
-  ontology: RDF.Ontology.Ontology;
-  facts: RDF.Fact[];
+  ontology: Ontology.Ontology;
+  facts: Fact.Fact[];
   /** The IRI of the chosen predicate. */
   selected?: string;
   /** Makes each predicate selectable; choosing the chosen one again clears the choice. */
@@ -40,14 +40,14 @@ const VIEWS: ReadonlyArray<{ id: View; label: string }> = [
 ];
 
 /** An extractor minted the predicate (it carries a creation time, or lives in the brain's namespace); else it is seed. */
-const isMinted = (entry: RDF.Ontology.Entry, ontology: RDF.Ontology.Ontology): boolean =>
+const isMinted = (entry: Ontology.Entry, ontology: Ontology.Ontology): boolean =>
   entry.created !== undefined || entry.definedBy === ontology.namespace;
 
 /** How many facts state each predicate, by its canonical IRI, so merged-away predicates count toward their survivor. */
-export const predicateUsage = (facts: readonly RDF.Fact[], ontology: RDF.Ontology.Ontology): Map<string, number> => {
+export const predicateUsage = (facts: readonly Fact.Fact[], ontology: Ontology.Ontology): Map<string, number> => {
   const counts = new Map<string, number>();
   for (const fact of facts) {
-    const iri = RDF.Mapping.predicateOf(fact, ontology);
+    const iri = Mapping.predicateOf(fact, ontology);
     const canonical = ontology.canonical(iri)?.iri ?? iri;
     counts.set(canonical, (counts.get(canonical) ?? 0) + 1);
   }
@@ -75,11 +75,7 @@ export const OntologyPanel = Util.composable<HTMLDivElement, OntologyPanelProps>
     const minted = useMemo(() => entries.filter((entry) => isMinted(entry, ontology)).length, [entries, ontology]);
     const text = useMemo(
       () =>
-        view === 'ontology'
-          ? RDF.Graph.ontologyToTriG(ontology)
-          : view === 'trig'
-            ? RDF.Graph.toTriG(facts, ontology)
-            : '',
+        view === 'ontology' ? Graph.ontologyToTriG(ontology) : view === 'trig' ? Graph.toTriG(facts, ontology) : '',
       [view, ontology, facts],
     );
 
@@ -148,9 +144,9 @@ export const OntologyPanel = Util.composable<HTMLDivElement, OntologyPanelProps>
 OntologyPanel.displayName = 'OntologyPanel';
 
 type PredicateCardProps = {
-  entry: RDF.Ontology.Entry;
+  entry: Ontology.Entry;
   count: number;
-  ontology: RDF.Ontology.Ontology;
+  ontology: Ontology.Ontology;
   selected?: boolean;
   onClick?: () => void;
 };

@@ -621,7 +621,7 @@ feat F-9: Publishing
 
   req F-9.1: An editor or admin publishes the open space with Publish space; with no space open, it does nothing. The space's JSON export, cut to the objects the space shows as live whose type resolves to a schema with no password field, without edit history, trace feeds, or the archive's `originalSpaceId` and `exportedBy`, goes to EDGE with a manifest of the space's plugins and object ids, under an unguessable public id. The manifest's `preview` carries what link previews draw: the space's description, icon and hue, a count of the published objects of each type that has a label, most numerous first, and the title, type label, icon, hue and description of each published object that has a title. EDGE checks the publisher's role.
   req F-9.2: The space properties' `org.dxos.space.publication` annotation keeps the publication (public id, time), so Publish again replaces the same publication. Nothing republishes automatically. Unpublish removes the publication and clears the annotation to `null`. The annotation names the space that published it, so a copy of the space, however it was imported, reads as unpublished and never updates or withdraws the original's publication.
-  req F-9.3: Copy public link copies the viewer link of a published space's object, `<viewer>/<publicId>/db/<typeSlug>+<objectId>`; Copy public link on the space copies `<viewer>/<publicId>`.
+  req F-9.3: Copy public link copies the viewer link of a published space's object, `<viewer>/<publicId>/db/<typeSlug>+<objectId>`; Copy public link on the space copies `<viewer>/<publicId>`. Copy link and Copy public link on an object add the link action, if any, that a plugin contributes for that kind of link (`internal` or `public`) and that object, as `?action=<name>`, where `<name>` is the action's DXN without its `dxn:` prefix.
   req F-9.4: Composer opened with `?fork=<publicId>&path=<objectPath>` imports the publication as a new space of the user's once the user has an identity, which is after sign-in, and opens the object at `path`. The fork reads as unpublished and is migrated to the host's version, so it never asks to be migrated. Plugins the manifest names are not enabled.
   req F-9.5: When the host contributes `ReadOnly`, the plugin's graph is navigation only: no space, object or section actions, no Settings, export or peer nodes, and no Selected objects companion. The Database section shows, and its type pages list and open objects with no selection, deletion, filing, merging or cell edits. The object properties companion shows the properties as static rows.
   req F-9.6: Space settings has a Description field after Name, kept in the space properties. Space settings has a Publishing section after the space properties and before the space controls. Its Status row says whether the space is published, with Publish space while it is not; while it is, the row shows when it was published, beside a Manage menu (Republish space, Unpublish space). A published space also shows its public link in a copyable field.
@@ -2254,6 +2254,29 @@ decision D-146: The worker answers 404 for a publication file only when EDGE doe
   for: user:wittjosiah
   affects: [F-9.7]
   why: The viewer reads the archive through the worker, which answered every failure with 404, so an EDGE outage still said the space was no longer published.
+```
+
+```mdl
+decision D-147: Copied links add an action through one pattern that every kind of link shares.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-9.3]
+```
+
+```mdl
+decision D-148: Copy link and Copy public link pass their kind, `internal` or `public`, to `LinkAction.withAction`, which adds the first contributed link action that the kind carries and that applies to the object. A link carries one action at most. Fills in [D-147].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.3]
+  why: Each link action declares the kinds of link that carry it, so a link builder names only its own kind and needs no knowledge of any plugin's actions.
+```
+
+```mdl
+decision D-149: A link names its action by the action's DXN without the `dxn:` prefix.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-9.3]
 ```
 
 ## Appendix: Extension Definitions

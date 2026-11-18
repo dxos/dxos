@@ -9,6 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FactoryAnnotation, Text } from '@dxos/schema';
 
+import * as Skill from './Skill.ts';
+
 /**
  * A spec: normative `.mdl` text that its project's work delivers. Its dialects say which block kinds beyond the core
  * and changelog ones the text uses, which a plugin then extracts into objects of its own and keeps as annotations on
@@ -41,6 +43,9 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'violet' }),
+    // The feature-map skill edits a spec's blocks, so an agent bound to a spec (a comment on it) can change them. Plain
+    // dotted key, so the type does not depend on the plugin that owns the skill.
+    Skill.SkillsAnnotation.set(['org.dxos.skill.code.featureMap']),
     // A form's create needs the backing text, which `Obj.make` alone leaves out.
     FactoryAnnotation.set((values): unknown => make({ name: '', ...values })),
   ),
