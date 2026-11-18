@@ -189,9 +189,11 @@ Redeploy from the same sandbox to keep the account and the URL, which the redepl
 after about an hour, and if it has, deploy again and use the new URL.
 
 Changes. When I change a feature's requirements and ask you to revalidate, run the affected scenario on \
-\`localhost:8787\` under the changed requirement before touching any code. If it fails, set the feature to \`failing\`, update every \
+\`localhost:8787\` in the \`availability-poll\` sandbox, found and called as a build task does, under the changed \
+requirement before touching any code. If it fails, set the feature to \`failing\`, update every \
 line of the spec's scenarios that the change moves (a count, a best slot), add a decision to the spec's Changelog saying \
-what changed, and file one task for the fix under the milestone that shipped the feature, linked to it. Then stop. \
+what changed, and file one task for the fix under the milestone that shipped the feature with \`tasks.create\` \
+\`{ taskSet, title, milestone }\`, linked to it with \`linkTask\`, as planning does. Then stop. \
 When I delegate the fix, do it in one call like a feature task, but in place of setting \`prototype\` it reruns the \
 scenario on \`localhost:8787\`, deploys, sets the feature back to \`operational\` and the task to \`review\`.
 
