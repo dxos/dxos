@@ -214,28 +214,41 @@ const WORKER_RELOAD_CHANNEL = 'dxos-worker-reload';
 const WORKER_RELOAD_GUARD_KEY = 'dxos.composer.worker-reload';
 const WORKER_RELOAD_GUARD_MS = 10 * 60_000;
 
-/** Reloads this tab unless it already did so within the guard window; returns whether it reloads. */
-const reloadOnce = (): boolean => {
+/**
+ * Reloads this tab unless it already did so within the guard window.
+ * @returns ms until the guard allows a reload, 0 when reloading now, or undefined when it never can.
+ */
+const reloadOnce = (): number | undefined => {
   try {
-    const last = Number(sessionStorage.getItem(WORKER_RELOAD_GUARD_KEY) ?? 0);
-    if (Date.now() - last < WORKER_RELOAD_GUARD_MS) {
-      return false;
+    const remaining =
+      Number(sessionStorage.getItem(WORKER_RELOAD_GUARD_KEY) ?? 0) + WORKER_RELOAD_GUARD_MS - Date.now();
+    if (remaining > 0) {
+      return remaining;
     }
     sessionStorage.setItem(WORKER_RELOAD_GUARD_KEY, String(Date.now()));
   } catch {
     // Storage unavailable: no guard can be kept, so do not risk a reload loop.
-    return false;
+    return undefined;
   }
   window.location.reload();
-  return true;
+  return 0;
 };
+
+let deferredReload: ReturnType<typeof setTimeout> | undefined;
 
 /** Reloads every same-origin tab, whatever build it runs, so they converge on one generation. */
 const reloadAllTabs = () => {
   const channel = new BroadcastChannel(WORKER_RELOAD_CHANNEL);
   channel.postMessage('reload');
   channel.close();
-  reloadOnce();
+  const remaining = reloadOnce();
+  // The connection escalates once per streak, so a guarded-off reload is retried here or never.
+  if (remaining && !deferredReload) {
+    deferredReload = setTimeout(() => {
+      deferredReload = undefined;
+      reloadAllTabs();
+    }, remaining);
+  }
 };
 
 new BroadcastChannel(WORKER_RELOAD_CHANNEL).onmessage = () => {

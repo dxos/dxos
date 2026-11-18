@@ -510,43 +510,54 @@ describe('Connection multi-client', () => {
     expect((held ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
   }, 30_000);
 
-  test('two tabs on separate coordinators stop stealing the leader lock from each other and escalate', async () => {
-    // Separate hubs model two app builds: each build's SharedWorker coordinator is its own instance,
-    // while the leader lock is shared by origin.
-    const keys = uniqueKeys();
-    const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
+  // A budget of 1 can run out between two lock losses, which must still surface as contention.
+  test.each([undefined, 1])(
+    'two tabs on separate coordinators stop stealing the leader lock from each other and escalate (maxLeaderFailures=%s)',
+    async (maxLeaderFailures) => {
+      // Separate hubs model two app builds: each build's SharedWorker coordinator is its own instance,
+      // while the leader lock is shared by origin.
+      const keys = uniqueKeys();
+      const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
 
-    let leaderWorkers = 0;
-    const countingWorkerFactory = () => {
-      leaderWorkers++;
-      return createWorkerFactory(keys.storageLockKey)();
-    };
+      let leaderWorkers = 0;
+      const countingWorkerFactory = () => {
+        leaderWorkers++;
+        return createWorkerFactory(keys.storageLockKey)();
+      };
 
-    const first = makeConnection(createHub(), keys, timeouts, { createWorker: countingWorkerFactory });
-    await asyncTimeout(first.connection.open(), 10_000);
-    onTestFinished(async () => {
-      await first.connection.close();
-    });
+      const first = makeConnection(createHub(), keys, timeouts, {
+        maxLeaderFailures,
+        createWorker: countingWorkerFactory,
+      });
+      await asyncTimeout(first.connection.open(), 10_000);
+      onTestFinished(async () => {
+        await first.connection.close();
+      });
 
-    const second = makeConnection(createHub(), keys, timeouts, { createWorker: countingWorkerFactory });
-    await asyncTimeout(second.connection.open(), 10_000);
-    onTestFinished(async () => {
-      await second.connection.close();
-    });
+      const second = makeConnection(createHub(), keys, timeouts, {
+        maxLeaderFailures,
+        createWorker: countingWorkerFactory,
+      });
+      await asyncTimeout(second.connection.open(), 10_000);
+      onTestFinished(async () => {
+        await second.connection.close();
+      });
 
-    await waitForCondition({
-      condition: () => first.failures.length + second.failures.length > 0,
-      timeout: 10_000,
-    });
-    const failures = [...first.failures, ...second.failures];
-    expect(failures).toHaveLength(1);
-    expect(WorkerLeaderContentionError.is(failures[0])).toBe(true);
+      await waitForCondition({
+        condition: () => first.failures.length + second.failures.length > 0,
+        timeout: 10_000,
+      });
+      const failures = [...first.failures, ...second.failures];
+      expect(failures).toHaveLength(1);
+      expect(WorkerLeaderContentionError.is(failures[0])).toBe(true);
 
-    // The tab that yielded no longer steals, so the other keeps its worker.
-    const workersAtEscalation = leaderWorkers;
-    await sleep(timeouts.portTimeout * 5);
-    expect(leaderWorkers).toBe(workersAtEscalation);
-  }, 30_000);
+      // The tab that yielded no longer steals, so the other keeps its worker.
+      const workersAtEscalation = leaderWorkers;
+      await sleep(timeouts.portTimeout * 5);
+      expect(leaderWorkers).toBe(workersAtEscalation);
+    },
+    30_000,
+  );
 
   test('a connection closed while its leader session opens closes that session and does not lead again', async () => {
     const hub = createHub();

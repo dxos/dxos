@@ -824,6 +824,20 @@ export class Connection extends Resource {
   }
 
   async #maybeStealStaleLeader(): Promise<void> {
+    // Checked before the generic budget so the app learns the cause it can act on: a reload.
+    if (this.#lockLossCount >= LEADER_CONTENTION_LIMIT) {
+      // Yielding lets the other tab keep a working worker; this tab stays without one until reloaded.
+      if (!this.#contentionEscalated) {
+        this.#contentionEscalated = true;
+        log.warn('worker-connection: leader lock taken repeatedly by an unreachable tab, not stealing', {
+          clientId: this.#clientId,
+          lockLossCount: this.#lockLossCount,
+        });
+        this.#escalate(new WorkerLeaderContentionError({ context: { lockLossCount: this.#lockLossCount } }));
+      }
+      return;
+    }
+
     // Every steal kills the incumbent's worker, so it has to pay for itself: past this many with no
     // port to show for it, what is broken is this tab's coordinator link, which the lock cannot fix.
     if (this.#stealCount >= this.#maxLeaderFailures) {
@@ -836,19 +850,6 @@ export class Connection extends Resource {
           attempts: this.#stealCount,
         });
         this.#escalate(new Error(`Worker connection wedged: ${this.#stealCount} recovery attempts yielded no port.`));
-      }
-      return;
-    }
-
-    if (this.#lockLossCount >= LEADER_CONTENTION_LIMIT) {
-      // Yielding lets the other tab keep a working worker; this tab stays without one until reloaded.
-      if (!this.#contentionEscalated) {
-        this.#contentionEscalated = true;
-        log.warn('worker-connection: leader lock taken repeatedly by an unreachable tab, not stealing', {
-          clientId: this.#clientId,
-          lockLossCount: this.#lockLossCount,
-        });
-        this.#escalate(new WorkerLeaderContentionError({ context: { lockLossCount: this.#lockLossCount } }));
       }
       return;
     }
