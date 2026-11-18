@@ -1,6 +1,6 @@
 diagram kind=grid size=1600x880 cols=3 gap=64 padding=48
 
-group client-side "Client · app tab + shared worker" gap=16 {
+group client "Client · app tab + shared worker" gap=16 autoRows=128 alignContent=center {
   node c-plugins "Plugins" kind=card body="Surfaces, operations and skills in each app tab." footer="navtree · markdown · assistant · +100" icon=puzzle-piece variant="compact"
   node c-halo "HALO Vault" kind=card body="Keys and credentials for this device and its agents." footer="keyring · identity" icon=vault tone=accent variant="compact"
   node c-runtime "Runtime" kind=card body="Effect service layers, shared by every tab." footer=WorkerRuntime icon=cpu variant="compact"
@@ -8,9 +8,14 @@ group client-side "Client · app tab + shared worker" gap=16 {
   node c-spaces "Spaces" kind=card body="A local replica of every space, in SQLite on OPFS." footer="EchoHost · SpaceManager" icon=cube variant="compact"
 }
 
-node router "Router" kind=card footer="RouterObject DO" icon=arrows-left-right tone=ink variant="compact"
+group router-section rows="48 1fr" gap=16 {
+  group router-spacer { }
+  group router-body gap=24 autoRows=128 alignContent=center {
+    node router "Router" kind=card footer="RouterObject DO" icon=arrows-left-right tone=ink variant="compact"
+  }
+}
 
-group edge-side "EDGE · Workers + Durable Objects" gap=16 {
+group edge-section "EDGE · Workers + Durable Objects" gap=16 autoRows=128 alignContent=center {
   node e-plugins "Plugins" kind=card body="Plugin services that run next to the data." footer="layerSpec · workerd" icon=puzzle-piece variant="compact"
   node e-halo "HALO" kind=card body="Credential chains and membership, checked on every request." footer="identity · kms · state machine" icon=shield-check tone=accent variant="compact"
   node e-runtime "Plugin Manager" kind=card body="Loads plugin services and runs them per space." footer="Workers · service bindings" icon=plugs-connected variant="compact"

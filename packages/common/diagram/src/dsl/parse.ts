@@ -27,7 +27,9 @@ import {
   ELEMENT_ATTRS,
   ELEMENT_KINDS,
   type ElementKind,
+  GRID_RULE_ATTRS,
   GROUP_ATTRS,
+  GROUP_FRAME_ATTRS,
   KIND_ATTR,
   NODE_ATTRS,
   NOTE_ATTRS,
@@ -422,6 +424,10 @@ export const read = (text: string): Reading => {
           ...optional('rows', tracksAttr(attrs, 'rows')),
           ...optional('gap', numberAttr(attrs, 'gap')),
           ...optional('padding', numberAttr(attrs, 'padding')),
+          ...optional('autoCols', tracksAttr(attrs, 'autoCols')),
+          ...optional('autoRows', tracksAttr(attrs, 'autoRows')),
+          ...optional('justifyContent', enumAttr(attrs, 'justifyContent', Shape.Place.literals)),
+          ...optional('alignContent', enumAttr(attrs, 'alignContent', Shape.Place.literals)),
           ...optional('parent', nameAttr(attrs, 'parent')),
           ...optional('type', nameAttr(attrs, KIND_ATTR)),
           ...(Object.keys(data).length ? { data } : {}),
@@ -496,6 +502,7 @@ export const read = (text: string): Reading => {
           ...(route.length ? { route } : {}),
           ...optional('head', enumAttr(attrs, 'head', Shape.ArrowHead.literals)),
           ...optional('tail', enumAttr(attrs, 'tail', Shape.ArrowTail.literals)),
+          ...optional('path', enumAttr(attrs, 'path', Shape.Path.literals)),
           ...optional('relation', enumAttr(attrs, 'relation', Shape.Relation.literals)),
           ...style,
         };
@@ -594,6 +601,16 @@ export const read = (text: string): Reading => {
       const attr = attrs.get(name);
       attr && gridOnly.push({ range: rangeOf(attr.node), what: `"${name}"` });
     });
+  /** The rule a container places its members by, less `gap`, which a group of any kind also states. */
+  const readRule = (attrs: Map<string, Attr>): Omit<Semantic.GridRule, 'gap'> => ({
+    ...optional('cols', tracksAttr(attrs, 'cols')),
+    ...optional('rows', tracksAttr(attrs, 'rows')),
+    ...optional('padding', numberAttr(attrs, 'padding')),
+    ...optional('autoCols', tracksAttr(attrs, 'autoCols')),
+    ...optional('autoRows', tracksAttr(attrs, 'autoRows')),
+    ...optional('justifyContent', enumAttr(attrs, 'justifyContent', Shape.Place.literals)),
+    ...optional('alignContent', enumAttr(attrs, 'alignContent', Shape.Place.literals)),
+  });
 
   const sizeAttr = (attrs: Map<string, Attr>, name: string): Semantic.Size | undefined => {
     const attr = attrs.get(name);
@@ -829,9 +846,11 @@ export const read = (text: string): Reading => {
       ...optional('relation', relation),
       ...optional('head', op === '--' ? 'none' : enumAttr(attrs, 'head', Shape.ArrowHead.literals)),
       ...optional('tail', enumAttr(attrs, 'tail', Shape.ArrowTail.literals)),
+      ...optional('path', enumAttr(attrs, 'path', Shape.Path.literals)),
       ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
       ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
     };
+    gridAttrs(attrs, ['path']);
     const fan = sources.length > 1 || targets.length > 1;
     if (busNode && sources.length > 1 && targets.length > 1) {
       report(busNode, 'A bus joins one node to several: write `edge A -> B, C bus` or `edge B, C -> A bus`.');
@@ -999,7 +1018,7 @@ export const read = (text: string): Reading => {
       } else {
         nested.push({ node: idNode, id, outer });
       }
-      gridAttrs(attrs, ['cols', 'rows', 'padding']);
+      gridAttrs(attrs, [...GRID_RULE_ATTRS, ...GROUP_FRAME_ATTRS]);
       enlist(outer, id);
       diagram.groups.push({
         id,
@@ -1008,9 +1027,10 @@ export const read = (text: string): Reading => {
         range: rangeOf(statement),
         ...optional('heading', label ? unquote(slice(label)) : undefined),
         ...optional('parent', outer),
-        ...optional('cols', tracksAttr(attrs, 'cols')),
-        ...optional('rows', tracksAttr(attrs, 'rows')),
-        ...optional('padding', numberAttr(attrs, 'padding')),
+        ...readRule(attrs),
+        ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
+        ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
+        ...optional('border', booleanAttr(attrs, 'border')),
         ...optional('gap', gap),
         ...optional('maxWidth', maxWidth),
         ...optional('compact', compact),
@@ -1049,16 +1069,11 @@ export const read = (text: string): Reading => {
     if (size) {
       diagram.size = size;
     }
-    const rule: Semantic.GridRule = {
-      ...optional('cols', tracksAttr(attrs, 'cols')),
-      ...optional('rows', tracksAttr(attrs, 'rows')),
-      ...optional('gap', numberAttr(attrs, 'gap')),
-      ...optional('padding', numberAttr(attrs, 'padding')),
-    };
+    const rule: Semantic.GridRule = { ...readRule(attrs), ...optional('gap', numberAttr(attrs, 'gap')) };
     if (Object.keys(rule).length > 0) {
       diagram.rule = rule;
     }
-    gridAttrs(attrs, ['size', 'cols', 'rows', 'gap', 'padding']);
+    gridAttrs(attrs, ['size', 'gap', ...GRID_RULE_ATTRS]);
     if (origin) {
       diagram.origin = origin;
     }

@@ -1,9 +1,9 @@
 object ontology @ 0,0 scale=1 {
-  grid slide 0,0 1600x880 cols=3 gap=64 padding=48 {
+  grid slide 0,0 1600x880 cols="256 928 256" gap=32 padding=48 {
     grid types-section rows="48 1fr" gap=16 {
       rect types-heading "Types" fill=none border=false align=center valign=middle fontSize=34
       grid types-body gap=24 {
-        grid types-col-0 gap=16 {
+        grid types-col-0 gap=16 autoRows=88 alignContent=center {
           rect type-text "Text" kind=card icon=text-t
           rect type-drawing "Drawing" kind=card icon=scribble
           rect type-contact "Contact" kind=card icon=address-book
@@ -14,17 +14,17 @@ object ontology @ 0,0 scale=1 {
     }
     grid entities-section rows="48 1fr" gap=16 {
       rect entities-heading "Entities" fill=none border=false align=center valign=middle fontSize=34
-      grid entities-body cols=3 gap=24 {
-        grid entities-col-0 gap=16 {
+      grid entities-body cols=3 gap=56 padding=24 border=true {
+        grid entities-col-0 gap=16 autoRows=88 alignContent=center {
           rect project "Project" kind=card icon=folder
           rect group-box "Group" kind=card icon=users-three
           rect organization "Organization" kind=card icon=buildings
           rect account "Account" kind=card icon=user-circle
         }
-        grid entities-col-1 gap=16 {
+        grid entities-col-1 gap=16 autoRows=88 alignContent=center {
           rect person "Person" kind=card icon=user
         }
-        grid entities-col-2 gap=16 {
+        grid entities-col-2 gap=16 autoRows=88 alignContent=center {
           rect task "Task" kind=card icon=check-square
           rect event "Event" kind=card icon=calendar-blank tone=event
           rect message "Message" kind=card icon=chat-text tone=message
@@ -36,7 +36,7 @@ object ontology @ 0,0 scale=1 {
     grid containers-section rows="48 1fr" gap=16 {
       rect containers-heading "Containers" fill=none border=false align=center valign=middle fontSize=34
       grid containers-body gap=24 {
-        grid containers-col-0 gap=16 {
+        grid containers-col-0 gap=16 autoRows=88 alignContent=center {
           rect container-document "Document" kind=card icon=file-text
           rect container-presentation "Presentation" kind=card icon=presentation-chart
           rect container-sheet "Sheet" kind=card icon=grid-four tone=sheet

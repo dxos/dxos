@@ -1,45 +1,30 @@
-diagram kind=grid size=1600x880 gap=64 padding=48
+diagram kind=grid size=1600x880 gap=32 padding=48
 
-group layer-ui "UI / Control" cols=3 gap=24 {
-  group layer-ui-col-0 gap=16 {
-    node goal "Goal" kind=card icon=target
-    node project "Project" kind=card icon=folder
-  }
-  group layer-ui-col-1 gap=16 { }
-  group layer-ui-col-2 gap=16 {
-    node outcome "Outcome" kind=card icon=trophy
-    node task "Task" kind=card icon=check-square
-  }
+group layer-ui "UI / Control" cols="384 384 384" rows=2 gap=48 justifyContent=center {
+  node goal "Goal" kind=card icon=target
+  group ui-centre-0 { }
+  node outcome "Outcome" kind=card icon=trophy
+  node project "Project" kind=card icon=folder
+  group ui-centre-1 { }
+  node task "Task" kind=card icon=check-square
 }
 
-group layer-activity "Activity" cols=3 gap=24 {
-  group layer-activity-col-0 gap=16 {
-    node feed "Feed" kind=card icon=queue
-    node scheduler "Scheduler" kind=card icon=alarm
-  }
-  group layer-activity-col-1 gap=16 {
-    node session "Session" kind=card icon=play-circle
-    node tool "Tool" kind=card icon=wrench
-  }
-  group layer-activity-col-2 gap=16 {
-    node model "Model" kind=card icon=cpu
-    node plan "Plan" kind=card icon=list-numbers
-  }
+group layer-activity "Activity" cols="384 384 384" rows=2 gap=48 justifyContent=center {
+  node feed "Feed" kind=card icon=queue
+  node session "Session" kind=card icon=play-circle
+  node model "Model" kind=card icon=cpu
+  node scheduler "Scheduler" kind=card icon=alarm
+  node tool "Tool" kind=card icon=wrench
+  node plan "Plan" kind=card icon=list-numbers
 }
 
-group layer-knowledge "Knowledge" cols=3 gap=24 {
-  group layer-knowledge-col-0 gap=16 {
-    node memory "Memory" kind=card icon=brain
-    node schema "Schema" kind=card icon=brackets-curly
-  }
-  group layer-knowledge-col-1 gap=16 {
-    node graph "Graph" kind=card icon=graph
-    node artifact "Artifact" kind=card icon=cube
-  }
-  group layer-knowledge-col-2 gap=16 {
-    node skill "Skill" kind=card icon=graduation-cap
-    node spec "Specification" kind=card icon=clipboard-text
-  }
+group layer-knowledge "Knowledge" cols="384 384 384" rows=2 gap=48 justifyContent=center {
+  node memory "Memory" kind=card icon=brain
+  node graph "Graph" kind=card icon=graph
+  node skill "Skill" kind=card icon=graduation-cap
+  node schema "Schema" kind=card icon=brackets-curly
+  node artifact "Artifact" kind=card icon=cube
+  node spec "Specification" kind=card icon=clipboard-text
 }
 
 edge project -> goal "serves" head=triangle

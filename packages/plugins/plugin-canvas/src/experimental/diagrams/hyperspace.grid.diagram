@@ -14,8 +14,22 @@ object hyperspace @ 0,0 {
     }
     grid hyperspace rows="48 1fr" gap=16 {
       rect heading-hyperspace "ECHO Hyperspace" fill=none border=false align=center valign=middle fontSize=34
-      grid field-body {
-        rect field kind=substrate seed=29 pitch=24 data-fill=0.55 data-gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=9 rmin=34 rmax=150
+      grid field-row cols="1fr 0" gap=0 {
+        grid field-body padding=24 border=true {
+          rect field kind=substrate seed=29 pitch=24 data-fill=0.55 data-gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=6 rmin=36 rmax=300
+        }
+        grid field-ports gap=12 {
+          rect port-calendar fill=none border=false
+          rect port-email fill=none border=false
+          rect port-storage fill=none border=false
+          rect port-translation fill=none border=false
+          rect port-search fill=none border=false
+          rect port-sql fill=none border=false
+          rect port-files fill=none border=false
+          rect port-commerce fill=none border=false
+          rect port-travel fill=none border=false
+          rect port-slack fill=none border=false
+        }
       }
     }
     grid services rows="48 1fr" gap=16 {
@@ -34,6 +48,19 @@ object hyperspace @ 0,0 {
       }
     }
   }
+
+  # Each service reaching the field through the side of the column: the ports are a zero-width column on that
+  # edge, in the service list's own rhythm, so every line runs level with the card it leaves.
+  arrow tap-calendar calendar -> port-calendar path=line head=none stroke=dashed
+  arrow tap-email email -> port-email path=line head=none stroke=dashed
+  arrow tap-storage storage -> port-storage path=line head=none stroke=dashed
+  arrow tap-translation translation -> port-translation path=line head=none stroke=dashed
+  arrow tap-search search -> port-search path=line head=none stroke=dashed
+  arrow tap-sql sql -> port-sql path=line head=none stroke=dashed
+  arrow tap-files files -> port-files path=line head=none stroke=dashed
+  arrow tap-commerce commerce -> port-commerce path=line head=none stroke=dashed
+  arrow tap-travel travel -> port-travel path=line head=none stroke=dashed
+  arrow tap-slack slack -> port-slack path=line head=none stroke=dashed
 
   # The deck's dashed taps: each plank reading out of the field it draws from.
   arrow tap-board plank-board -> field head=none stroke=dashed

@@ -130,3 +130,54 @@ describe('grids', () => {
     expect(frames.get('loop')?.w).toEqual(100);
   });
 });
+
+describe('cell size and where the run sits', () => {
+  test('autoRows gives every implicit row that extent, whatever the neighbour holds', ({ expect }) => {
+    // CSS's `grid-auto-rows`: the cell size stops depending on how many cells there are, so a column of two and a
+    // column of four draw cards the same height.
+    const frames = solveGrids([
+      grid('slide', { x: 0, y: 0, w: 400, h: 300, cols: 2, gap: 0 }),
+      grid('left', { parent: 'slide', gap: 0, autoRows: 60 }),
+      grid('right', { parent: 'slide', gap: 0, autoRows: 60 }),
+      box('a', { parent: 'left' }),
+      box('b', { parent: 'left' }),
+      box('c', { parent: 'right' }),
+      box('d', { parent: 'right' }),
+      box('e', { parent: 'right' }),
+    ]);
+    expect(frames.get('a')).toEqual({ x: 0, y: 0, w: 200, h: 60 });
+    expect(frames.get('c')).toEqual({ x: 200, y: 0, w: 200, h: 60 });
+    expect(frames.get('e')).toEqual({ x: 200, y: 120, w: 200, h: 60 });
+  });
+
+  test('alignContent puts the space the tracks leave over on the side it names', ({ expect }) => {
+    const rule = { x: 0, y: 0, w: 100, h: 300, gap: 0, autoRows: 50 };
+    const centred = solveGrids([
+      grid('g', { ...rule, alignContent: 'center' }),
+      box('a', { parent: 'g' }),
+      box('b', { parent: 'g' }),
+    ]);
+    // Two 50-tall rows in 300 leave 200 over; centred, half of it sits above them.
+    expect(centred.get('a')).toEqual({ x: 0, y: 100, w: 100, h: 50 });
+    expect(centred.get('b')).toEqual({ x: 0, y: 150, w: 100, h: 50 });
+
+    const end = solveGrids([grid('g', { ...rule, alignContent: 'end' }), box('a', { parent: 'g' })]);
+    expect(end.get('a')).toEqual({ x: 0, y: 250, w: 100, h: 50 });
+
+    // An axis whose tracks take everything has nothing over, so it is where it always was.
+    const full = solveGrids([
+      grid('g', { ...rule, autoRows: undefined, alignContent: 'center' }),
+      box('a', { parent: 'g' }),
+    ]);
+    expect(full.get('a')).toEqual({ x: 0, y: 0, w: 100, h: 300 });
+  });
+
+  test('justifyContent does the same across, and padding is still taken off first', ({ expect }) => {
+    const frames = solveGrids([
+      grid('g', { x: 0, y: 0, w: 300, h: 100, gap: 0, padding: 20, rows: 1, autoCols: 100, justifyContent: 'center' }),
+      box('a', { parent: 'g' }),
+    ]);
+    // 260 wide inside the padding, one 100-wide column: 80 either side of it.
+    expect(frames.get('a')).toEqual({ x: 100, y: 20, w: 100, h: 60 });
+  });
+});

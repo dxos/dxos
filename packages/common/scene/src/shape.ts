@@ -48,6 +48,10 @@ export type Align = Schema.Schema.Type<typeof Align>;
 export const VerticalAlign = Schema.Literals(['top', 'middle', 'bottom']);
 export type VerticalAlign = Schema.Schema.Type<typeof VerticalAlign>;
 
+/** Where a grid's tracks sit along one axis when they leave space over, as CSS's `*-content` properties say it. */
+export const Place = Schema.Literals(['start', 'center', 'end']);
+export type Place = Schema.Schema.Type<typeof Place>;
+
 const styleFields = {
   color: Schema.optional(Color).annotate({ description: 'Stroke/text color.' }),
   fill: Schema.optional(Fill).annotate({ description: 'Interior fill of closed shapes.' }),
@@ -79,6 +83,22 @@ const gridFields = {
   gap: Schema.optional(Schema.Number).annotate({ description: 'Space between two cells.' }),
   /** Space between the grid's frame and its cells, in scene units. */
   padding: Schema.optional(Schema.Number).annotate({ description: "Space inside the grid's frame." }),
+  /**
+   * The size every implicit column takes, in the track spelling (CSS's `grid-auto-columns`). Unset is one share
+   * each, so an axis that states no count fills the frame; `136` instead gives every cell that extent, which is
+   * how a run of cards comes out one size whatever its neighbour holds.
+   */
+  autoCols: Schema.optional(Schema.Union([Schema.Number, Schema.String])).annotate({
+    description: 'Size of each implicit column track.',
+  }),
+  /** The size every implicit row takes, in the same spelling. */
+  autoRows: Schema.optional(Schema.Union([Schema.Number, Schema.String])).annotate({
+    description: 'Size of each implicit row track.',
+  }),
+  /** Where the columns sit when they do not fill the frame (CSS's `justify-content`). */
+  justifyContent: Schema.optional(Place).annotate({ description: 'Where the columns sit across the frame.' }),
+  /** Where the rows sit when they do not fill the frame (CSS's `align-content`). */
+  alignContent: Schema.optional(Place).annotate({ description: 'Where the rows sit down the frame.' }),
   /**
    * The grid that places this box. Its own `x`/`y` and size are then the grid's to decide; the size it states is
    * what an `auto` track measures, so a label can keep its own height while the body beside it takes the rest.
@@ -191,6 +211,14 @@ export const Text = Schema.Struct({
 export type Text = Schema.Schema.Type<typeof Text>;
 
 /** UML-style end markers: the head sits at the target, the tail at the source. */
+/**
+ * How a connector runs between its ends, as the canvas's link variants name it: `smart` (the default) leaves each
+ * port along its normal and joins the two, `ortho` turns at right angles, `line` runs straight and `curve` bends.
+ * `spline` is left out: its shape is its control points, which an arrow has no spelling for.
+ */
+export const Path = Schema.Literals(['smart', 'ortho', 'line', 'curve']);
+export type Path = Schema.Schema.Type<typeof Path>;
+
 export const ArrowHead = Schema.Literals(['arrow', 'triangle', 'crowsfoot', 'none']);
 export type ArrowHead = Schema.Schema.Type<typeof ArrowHead>;
 export const ArrowTail = Schema.Literals(['none', 'circle', 'arrow']);
@@ -272,6 +300,9 @@ export const Arrow = Schema.Struct({
    * moment the drawing was written down and snapped back to a straight run.
    */
   route: Schema.optional(Schema.Array(Point)).annotate({ description: "The connector's route, ends included." }),
+  path: Schema.optional(Path).annotate({
+    description: 'How the connector runs between its ends (default `smart`).',
+  }),
   relation: Schema.optional(Relation).annotate({
     description:
       'What the connector means; sets its markers: inheritance and implementation (hollow triangle at the target), composition and aggregation (filled or hollow diamond at the source, the whole), one-to-many (bar at the source, crow’s foot at the target), many-to-many, dependency (dashed, open arrow), association.',

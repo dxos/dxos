@@ -337,6 +337,11 @@ result). For both to write one model:
 
 ## Changelog
 
+- 2026-11-18 — agent: a grid states its cell size apart from its cell count. `autoCols`/`autoRows` size the
+  implicit tracks (CSS's `grid-auto-*`), so a column of two and a column of four draw cards the same height, and
+  `justifyContent`/`alignContent` put the space the tracks leave over on the side they name. Both ride on the rule
+  the drawing stores, so the Agents slide's centred, uniform columns survive the round trip as the tracks do.
+
 - 2026-11-17 — agent: the Hyperspace slide survives the whole records → text → records cycle. The card's glyph,
   body and footer moved into the kind's own `data` bag, and the substrate packs its spaces from the parameters
   that produced them rather than storing the result. Neither needed a value grammar, which is the decision above

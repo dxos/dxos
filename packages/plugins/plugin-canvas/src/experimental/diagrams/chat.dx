@@ -1,15 +1,25 @@
-diagram kind=grid size=1600x880 gap=64 padding=48
+diagram kind=grid size=1600x880 rows="128 320 128" gap=64 padding=48 alignContent=center
 
-group agent cols=3 gap=24 {
-  node skill "Skill" kind=card icon=graduation-cap
-  group agent-col-1 gap=16 {
-    node operator "Operator" kind=card icon=user
+group operator-row autoCols=384 justifyContent=center {
+  node operator "Operator" kind=card icon=user
+}
+
+group agent cols="384 384 384" gap=64 justifyContent=center {
+  group agent-col-0 gap=64 autoRows=128 {
+    node skill "Skill" kind=card icon=graduation-cap
+    node tool "Tool" kind=card icon=wrench
+  }
+  group agent-col-1 gap=64 autoRows=128 {
     node feed "Feed" kind=card icon=queue
     node session "Session" kind=card icon=play-circle
-    node tool "Tool" kind=card icon=wrench
-    node artifact "Artifact" kind=card icon=cube
   }
-  node model-box "Model" kind=card icon=cpu
+  group agent-col-2 gap=64 autoRows=128 {
+    node model-box "Model" kind=card icon=cpu
+  }
+}
+
+group artifact-row autoCols=384 justifyContent=center {
+  node artifact "Artifact" kind=card icon=cube
 }
 
 edge operator -> feed "writes" head=triangle

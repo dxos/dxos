@@ -16,7 +16,7 @@
 // inner one then inside the frame it was given.
 //
 
-import { type Box } from './shape.ts';
+import { type Box, type Place } from './shape.ts';
 
 /** A box's frame, in the units its object states. */
 export type Frame = { x: number; y: number; w: number; h: number };
@@ -61,6 +61,18 @@ export const parseTracks = (spec: number | string | undefined): Track[] | undefi
 };
 
 /**
+ * The size one implicit track takes: `auto`, a share, or a fixed extent. A bare number is that extent and not a
+ * count, unlike `cols`/`rows` — `autoRows=136` is one row size, and how many rows there are is the children's to
+ * say. Anything that means nothing is one share, which is what an axis with no rule at all takes.
+ */
+const autoTrack = (spec: number | string | undefined): Track => {
+  if (typeof spec === 'number') {
+    return Number.isFinite(spec) && spec >= 0 ? { kind: 'fixed', value: spec } : FR;
+  }
+  return parseTracks(spec)?.[0] ?? FR;
+};
+
+/**
  * The extent of each track along one axis. Fixed tracks take what they ask, `auto` takes the largest own size among
  * the children sitting in it, and the `fr` tracks divide what is left in proportion — never below zero, so an
  * over-committed grid collapses its shares rather than running its children off the end.
@@ -76,9 +88,13 @@ const solveTracks = (tracks: readonly Track[], extent: number, gap: number, cont
   return tracks.map((track, index) => (track.kind === 'fr' ? (spare * track.value) / shares : sizes[index]));
 };
 
-/** Where each track starts, given its extent and the gap between them. */
-const offsets = (sizes: readonly number[], gap: number): number[] => {
-  let offset = 0;
+/** Where each track starts, given its extent, the gap between them and where the run as a whole sits. */
+const offsets = (sizes: readonly number[], gap: number, extent: number, place: Place | undefined): number[] => {
+  // Tracks that do not fill the frame leave space over, and `place` says which side of them it goes. An axis
+  // holding an `fr` track has none left over, so this is the identity there, as CSS's `*-content` is.
+  const total = sizes.reduce((sum, size) => sum + size, 0) + gap * Math.max(sizes.length - 1, 0);
+  const spare = Math.max(extent - total, 0);
+  let offset = place === 'center' ? spare / 2 : place === 'end' ? spare : 0;
   return sizes.map((size) => {
     const start = offset;
     offset += size + gap;
@@ -87,7 +103,10 @@ const offsets = (sizes: readonly number[], gap: number): number[] => {
 };
 
 /** What a grid needs of itself. */
-export type GridRule = Pick<Box, 'cols' | 'rows' | 'gap' | 'padding'>;
+export type GridRule = Pick<
+  Box,
+  'cols' | 'rows' | 'gap' | 'padding' | 'autoCols' | 'autoRows' | 'justifyContent' | 'alignContent'
+>;
 
 /**
  * The frames of `children` inside `frame`, filled in order, row by row as CSS grid's auto-flow does. A child past
@@ -95,12 +114,20 @@ export type GridRule = Pick<Box, 'cols' | 'rows' | 'gap' | 'padding'>;
  * silently overflowing it would hide the mistake.
  */
 export const solveGrid = (grid: GridRule, frame: Frame, children: readonly Box[]): { id: string; frame: Frame }[] => {
-  // Implicit tracks: the axis that states none takes as many as the children need, each an equal share. Stating
-  // neither is a single column, which is the stack a `flex-col` gives and the shape most runs want.
+  // Implicit tracks: the axis that states none takes as many as the children need, each the size `autoCols` /
+  // `autoRows` gives — a share of the frame unless one says otherwise. Stating neither is a single column, which
+  // is the stack a `flex-col` gives and the shape most runs want.
   const stated = { cols: parseTracks(grid.cols), rows: parseTracks(grid.rows) };
-  const implicit = (count: number): Track[] => Array.from({ length: Math.max(count, 1) }, () => FR);
-  const cols = stated.cols ?? (stated.rows ? implicit(Math.ceil(children.length / stated.rows.length)) : [FR]);
-  const rows = stated.rows ?? implicit(Math.ceil(children.length / cols.length));
+  const implicit = (count: number, spec: number | string | undefined): Track[] => {
+    const track = autoTrack(spec);
+    return Array.from({ length: Math.max(count, 1) }, () => track);
+  };
+  const cols =
+    stated.cols ??
+    (stated.rows
+      ? implicit(Math.ceil(children.length / stated.rows.length), grid.autoCols)
+      : implicit(1, grid.autoCols));
+  const rows = stated.rows ?? implicit(Math.ceil(children.length / cols.length), grid.autoRows);
   const gap = grid.gap ?? 0;
   const padding = grid.padding ?? 0;
   const inner = {
@@ -119,8 +146,8 @@ export const solveGrid = (grid: GridRule, frame: Frame, children: readonly Box[]
   );
   const widths = solveTracks(cols, inner.w, gap, widest);
   const heights = solveTracks(rows, inner.h, gap, tallest);
-  const x = offsets(widths, gap);
-  const y = offsets(heights, gap);
+  const x = offsets(widths, gap, inner.w, grid.justifyContent);
+  const y = offsets(heights, gap, inner.h, grid.alignContent);
 
   return children.flatMap((child, index) => {
     const { col, row } = cellOf(index);

@@ -467,6 +467,10 @@ export const SceneHandler: ContentHandler = {
               ...(element.rows !== undefined ? { rows: element.rows } : {}),
               ...(element.gap !== undefined ? { gap: element.gap } : {}),
               ...(element.padding !== undefined ? { padding: element.padding } : {}),
+              ...(element.autoCols !== undefined ? { autoCols: element.autoCols } : {}),
+              ...(element.autoRows !== undefined ? { autoRows: element.autoRows } : {}),
+              ...(element.justifyContent !== undefined ? { justifyContent: element.justifyContent } : {}),
+              ...(element.alignContent !== undefined ? { alignContent: element.alignContent } : {}),
             },
           };
           put(element.id, withStyle(node, { fill: false, border: false, ...styleOf(element) }));
@@ -572,6 +576,10 @@ export const SceneHandler: ContentHandler = {
           if (!from || !to || from === to) {
             break;
           }
+          // `a#s2 -> b#n2` pins each end to a port, which is how a fan of links leaves one point rather than
+          // spreading along a side; without one the canvas picks the closest pair on every projection.
+          const source = { node: from, ...endPort(element.from) };
+          const target = { node: to, ...endPort(element.to) };
           const caption = captions.get(element.id);
           const text = element.text || caption?.text;
           if (diagram) {
@@ -600,7 +608,7 @@ export const SceneHandler: ContentHandler = {
                 : {}),
             };
             const link: Link = {
-              ...createLink({ type: 'smart', id, z: nextZ(), source: { node: from }, target: { node: to } }),
+              ...createLink({ type: element.path ?? 'smart', id, z: nextZ(), source, target }),
               ...(text ? { text } : {}),
               connector,
             };
@@ -617,13 +625,7 @@ export const SceneHandler: ContentHandler = {
           // Routed by the canvas (on a lattice, along its gutters) rather than through the layout's bends: the canvas
           // attaches at its own ports, so a route through the layout's points would kink at each end.
           const link: Link = {
-            ...createLink({
-              type: 'smart',
-              id,
-              z: nextZ(),
-              source: { node: from },
-              target: { node: to },
-            }),
+            ...createLink({ type: element.path ?? 'smart', id, z: nextZ(), source, target }),
             ...(ends ? { ends } : {}),
             ...(text ? { text } : {}),
             ...(Object.keys(lineStyle).length ? { style: lineStyle } : {}),
@@ -737,6 +739,14 @@ export const SceneHandler: ContentHandler = {
               ...(typeof rule.rows === 'number' || typeof rule.rows === 'string' ? { rows: rule.rows } : {}),
               ...(typeof rule.gap === 'number' ? { gap: rule.gap } : {}),
               ...(typeof rule.padding === 'number' ? { padding: rule.padding } : {}),
+              ...(typeof rule.autoCols === 'number' || typeof rule.autoCols === 'string'
+                ? { autoCols: rule.autoCols }
+                : {}),
+              ...(typeof rule.autoRows === 'number' || typeof rule.autoRows === 'string'
+                ? { autoRows: rule.autoRows }
+                : {}),
+              ...placeOf('justifyContent', rule.justifyContent),
+              ...placeOf('alignContent', rule.alignContent),
               ...(text ? { text } : {}),
               // A grid's own defaults are not worth writing down: it draws no fill and no border unless told to,
               // so emitting them would put two words on every grid that say only "as usual".
@@ -786,14 +796,18 @@ export const SceneHandler: ContentHandler = {
           const targetNode = endpointNode(record.link.target);
           // The DSL's arrows join elements; a link with a free end has no DSL form.
           if (sourceNode !== undefined && targetNode !== undefined) {
-            const from = refTo(content, sourceNode, id);
-            const to = refTo(content, targetNode, id);
+            const from = refTo(content, sourceNode, id, portOf(record.link.source));
+            const to = refTo(content, targetNode, id, portOf(record.link.target));
             elements.push({
               kind: 'arrow',
               id: element,
               from,
               to,
               ...(record.link.text ? { text: record.link.text } : {}),
+              // `smart` is what an arrow with no `path` becomes, so writing it back would be noise.
+              ...(record.link.type !== 'smart' && (Shape.Path.literals as readonly string[]).includes(record.link.type)
+                ? { path: record.link.type as Shape.Path }
+                : {}),
               ...(record.link.connector?.route?.length
                 ? { route: record.link.connector.route.map(({ x, y }) => ({ x: x - origin.x, y: y - origin.y })) }
                 : {}),
@@ -880,6 +894,15 @@ const textOf = (node: Node): string => nodeTitle(defaultNodeRegistry, node) ?? '
 const isBox = (element: Shape.Element): element is Shape.Box =>
   (Shape.BoxKind.literals as readonly string[]).includes(element.kind);
 
+/** One of a grid's `*-content` rules, where the stored value is still one of the three the schema names. */
+const placeOf = <Name extends 'justifyContent' | 'alignContent'>(
+  name: Name,
+  value: unknown,
+): Partial<Record<Name, Shape.Place>> =>
+  typeof value === 'string' && (Shape.Place.literals as readonly string[]).includes(value)
+    ? ({ [name]: value as Shape.Place } as Partial<Record<Name, Shape.Place>>)
+    : {};
+
 /** A grid's style, less the no-fill and no-border it takes by default. */
 const gridStyle = (style: NodeStyle | undefined): StyleFields => {
   const { fill, border, ...rest } = fieldsOf(style);
@@ -914,16 +937,26 @@ const dataOf = (node: Node): Record<string, unknown> | undefined => {
 };
 
 /** The DSL ref of the node a link end names, relative to `object`. */
-const refTo = (content: ContentMap, nodeId: string, object: string): string => {
+const refTo = (content: ContentMap, nodeId: string, object: string, port?: string): string => {
   const record = content[nodeKey(nodeId)];
   if (isNodeRecord(record) && record.dsl) {
     return Shape.formatRef({
       ...(record.dsl.object === object ? {} : { object: record.dsl.object }),
       element: record.dsl.element,
+      ...(port ? { port } : {}),
     });
   }
   return nodeId;
 };
+
+/** The port a DSL ref pins its end to, as a link endpoint carries it. */
+const endPort = (ref: string | undefined): { port?: string } => {
+  const port = ref === undefined ? undefined : Shape.parseRef(ref).port;
+  return port ? { port } : {};
+};
+
+/** The port an end is pinned to; a free end has none. */
+const portOf = (end: Link['source']): string | undefined => ('port' in end ? end.port : undefined);
 
 /** Objects without an index first, in insertion order; indexed objects follow in index order. */
 const byIndex = (left: ReadWorldObject, right: ReadWorldObject): number =>

@@ -160,6 +160,30 @@ export const Tracks = story(
 );
 
 /**
+ * One cell size, whatever the count. `autoRows` sizes the implicit tracks (CSS's `grid-auto-rows`), so the two
+ * columns draw cards the same height rather than each dividing its own frame; `alignContent` then says where the
+ * space they leave over goes, which is how a short run sits in the middle of a tall column.
+ */
+export const Uniform = story(
+  'uniform',
+  trim`
+    object demo @ 0,0 {
+      grid root 0,0 720x600 cols=2 gap=32 padding=32 border=true stroke=dashed {
+        grid left gap=16 autoRows=120 alignContent=center border=true stroke=dashed {
+          rect a "One"
+          rect b "Two"
+        }
+        grid right gap=16 autoRows=120 alignContent=center border=true stroke=dashed {
+          rect c "One"
+          rect d "Two"
+          rect e "Three"
+        }
+      }
+    }
+  `,
+);
+
+/**
  * Nesting, which is the shape a slide is: a row of three columns, each column a label over a body, each body a run
  * of cards. Nothing states a coordinate below the outermost frame — every position on screen comes from the rule.
  */

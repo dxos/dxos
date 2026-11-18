@@ -32,6 +32,12 @@
   --sd-t-file: #f2c14e;
   --sd-t-trip: #2d6fff;
   --sd-t-sheet: #ff7a45;
+
+  /* Hues with no role behind them: what the ECHO slide gives each layer's glyph. */
+  --sd-t-violet: #8b5cf6;
+  --sd-t-teal: #14b8a6;
+  --sd-t-lime: #a3e635;
+  --sd-t-rose: #fb7185;
 }
 
 /*

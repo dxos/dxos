@@ -6,8 +6,22 @@ group composer "Composer" gap=24 {
   node plank-thread "Design chat" kind=plank comp=thread package=react-ui-thread
 }
 
-group hyperspace "ECHO Hyperspace" {
-  node field kind=substrate seed=29 pitch=24 data-fill=0.55 gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=9 rmin=34 rmax=150
+group hyperspace "ECHO Hyperspace" cols="1fr 0" gap=0 {
+  group field-body padding=24 border=true {
+    node field kind=substrate seed=29 pitch=24 data-fill=0.55 data-gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=6 rmin=36 rmax=300
+  }
+  group field-ports gap=12 {
+    group port-calendar { }
+    group port-email { }
+    group port-storage { }
+    group port-translation { }
+    group port-search { }
+    group port-sql { }
+    group port-files { }
+    group port-commerce { }
+    group port-travel { }
+    group port-slack { }
+  }
 }
 
 group services "EDGE Services" gap=12 {
@@ -23,6 +37,16 @@ group services "EDGE Services" gap=12 {
   node slack "Slack" kind=card icon=hash variant=simple
 }
 
+edge calendar -- port-calendar path=line stroke=dashed
+edge email -- port-email path=line stroke=dashed
+edge storage -- port-storage path=line stroke=dashed
+edge translation -- port-translation path=line stroke=dashed
+edge search -- port-search path=line stroke=dashed
+edge sql -- port-sql path=line stroke=dashed
+edge files -- port-files path=line stroke=dashed
+edge commerce -- port-commerce path=line stroke=dashed
+edge travel -- port-travel path=line stroke=dashed
+edge slack -- port-slack path=line stroke=dashed
 edge plank-board -- field stroke=dashed
 edge plank-sheet -- field stroke=dashed
 edge plank-thread -- field stroke=dashed

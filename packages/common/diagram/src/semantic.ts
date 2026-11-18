@@ -66,7 +66,18 @@ export const ROLES_BY_KIND: Readonly<Record<DiagramKind, readonly Role[]>> = {
 export type Tracks = number | string;
 
 /** The rule a grid diagram's container places its members by; an axis with no tracks takes one per member. */
-export type GridRule = { cols?: Tracks; rows?: Tracks; gap?: number; padding?: number };
+export type GridRule = {
+  cols?: Tracks;
+  rows?: Tracks;
+  gap?: number;
+  padding?: number;
+  /** The size of every track an axis does not state, so a run of members comes out one size. */
+  autoCols?: Tracks;
+  autoRows?: Tracks;
+  /** Where the tracks sit when they leave space over. */
+  justifyContent?: Shape.Place;
+  alignContent?: Shape.Place;
+};
 
 /** A scalar a component's own field may hold, which is all the text form spells. */
 export type Scalar = string | number | boolean;
@@ -103,6 +114,14 @@ export type Group = {
   cols?: Tracks;
   rows?: Tracks;
   padding?: number;
+  autoCols?: Tracks;
+  autoRows?: Tracks;
+  justifyContent?: Shape.Place;
+  alignContent?: Shape.Place;
+  /** The frame a grid diagram draws round the members; the other kinds colour a group from their palette. */
+  fill?: Shape.Fill;
+  stroke?: Shape.Stroke;
+  border?: boolean;
   relations: Relation[];
   /** Extra clear space, in scene units, between this group and the groups it is placed relative to. */
   gap?: number;
@@ -167,6 +186,8 @@ export type EdgeStyle = {
   relation?: Shape.Relation;
   head?: Shape.ArrowHead;
   tail?: Shape.ArrowTail;
+  /** How the connector runs between its ends. Only a grid diagram reads it: the other kinds route their own. */
+  path?: Shape.Path;
   stroke?: Shape.Stroke;
   color?: Shape.Color;
 };

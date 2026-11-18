@@ -161,7 +161,11 @@ edge calendar -- field stroke=dashed
 
 - Every `group` is a grid and groups nest. Members fill the cells in the order written; `cols`/`rows` are a
   count or a track list (`"48 1fr"`), and an axis with none takes one track per member.
-- A group's label is drawn as a heading over its members.
+- `autoRows=88` (or `autoCols`) gives every unstated track one size; `alignContent`/`justifyContent`
+  (`start`, `center`, `end`) place the tracks when they leave space over.
+- A group's label is drawn as a heading over its members. `border=true` frames the members; an empty group
+  (`group port { }`) draws nothing and holds its cell.
+- `edge a -- b path=line` says how the connector runs (`line`, `ortho`, `curve`, `smart`).
 - `kind=<component>` places a component the host contributes; its other attributes are the component's fields.
 - State no coordinates and no placement hints: both are ignored here with a warning.
 

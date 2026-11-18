@@ -1,16 +1,16 @@
-diagram kind=grid size=1600x880 cols=3 gap=64 padding=48
+diagram kind=grid size=1600x880 cols="1fr 2fr 1fr" gap=64 padding=48
 
-group left gap=16 {
-  node navtree "Navtree" kind=card body="The space tree in the sidebar, built from the app graph." footer=plugin-navtree icon=tree-view
-  node document "Document" kind=card body="Collaborative markdown; the text lives in ECHO." footer=plugin-markdown icon=file-text
-  node sheet "Sheet" kind=card body="A spreadsheet embedded in the document." footer=plugin-sheet icon=grid-four
+group left gap=16 autoRows=240 alignContent=center {
+  node navtree "Navtree" kind=card body="The space tree in the sidebar, built from the app graph." footer=plugin-navtree icon=tree-view tone=accent
+  node document "Document" kind=card body="Collaborative markdown; the text lives in ECHO." footer=plugin-markdown icon=file-text tone=message
+  node sheet "Sheet" kind=card body="A spreadsheet embedded in the document." footer=plugin-sheet icon=grid-four tone=sheet
 }
 
-node frame kind=app-frame highlight=true
+node frame kind=app-frame highlight=true colors="nav~accent | doc~message | sheet~sheet | comp~event | canvas~violet"
 
-group right gap=16 {
-  node assistant "Assistant" kind=card body="Assistant chat about the object on screen." footer=plugin-assistant icon=sparkle
-  node canvas "Canvas" kind=card body="A diagram embedded in the document." footer=plugin-excalidraw icon=pen-nib
+group right gap=16 autoRows=240 alignContent=center {
+  node assistant "Assistant" kind=card body="Assistant chat about the object on screen." footer=plugin-assistant icon=sparkle tone=event
+  node canvas "Canvas" kind=card body="A diagram embedded in the document." footer=plugin-excalidraw icon=pen-nib tone=violet
 }
 
 edge navtree -- frame/r-nav stroke=dashed

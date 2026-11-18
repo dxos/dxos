@@ -148,6 +148,10 @@ export const formatElement = (element: Shape.Element, { nested = false }: { nest
           rows: element.rows,
           gap: element.gap,
           padding: element.padding,
+          autoCols: element.autoCols,
+          autoRows: element.autoRows,
+          justifyContent: element.justifyContent,
+          alignContent: element.alignContent,
           parent: nested ? undefined : element.parent,
           ...style(element),
         }),
@@ -213,6 +217,7 @@ export const formatElement = (element: Shape.Element, { nested = false }: { nest
         ...formatAttrs('arrow', {
           head: element.head,
           tail: element.tail,
+          path: element.path,
           relation: element.relation,
           ...style(element),
         }),

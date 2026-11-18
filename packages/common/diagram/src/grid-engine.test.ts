@@ -144,6 +144,64 @@ describe('grid diagrams', () => {
     ]);
   });
 
+  test('a group sizes the tracks it does not state, says where they sit, and draws a frame', ({ expect }) => {
+    const text = `
+      diagram kind=grid size=800x600 alignContent=center
+      group cards "Cards" autoRows=88 gap=12 alignContent=center justifyContent=end border=true stroke=dashed {
+        node a
+      }
+      group wide autoCols=384 fill=tint { node b }
+    `;
+    expect(messagesOf(text)).toEqual([]);
+    const [root, ...rest] = boxesOf(text);
+    expect(root).toMatchObject({ id: OBJECT, alignContent: 'center' });
+    // The rule and the frame are the members' grid's, so the heading stays outside the frame.
+    expect(rest.find(({ id }) => id === 'cards')).toEqual({
+      kind: 'grid',
+      id: 'cards',
+      ...placed,
+      rows: `${HEADING.height} 1fr`,
+      gap: HEADING.gap,
+      parent: OBJECT,
+    });
+    expect(rest.find(({ id }) => id === bodyId('cards'))).toEqual({
+      kind: 'grid',
+      id: bodyId('cards'),
+      ...placed,
+      gap: 12,
+      autoRows: 88,
+      alignContent: 'center',
+      justifyContent: 'end',
+      border: true,
+      stroke: 'dashed',
+      parent: 'cards',
+    });
+    expect(rest.find(({ id }) => id === 'wide')).toEqual({
+      kind: 'grid',
+      id: 'wide',
+      ...placed,
+      autoCols: 384,
+      fill: 'tint',
+      parent: OBJECT,
+    });
+    // One card of the stated height, centred in what the heading leaves.
+    expect(solveGrids(boxesOf(text)).get('a')?.h).toBe(88);
+  });
+
+  test('an edge says how it runs, and may end on an empty group that only holds a cell', ({ expect }) => {
+    const text = `
+      diagram kind=grid size=800x600 cols="1fr 0"
+      node a
+      group port { }
+      edge a -- port path=line stroke=dashed
+    `;
+    expect(messagesOf(text)).toEqual([]);
+    expect(elementsOf(text).filter((element) => element.kind === 'arrow')).toEqual([
+      { kind: 'arrow', id: 'a-port-0', from: 'a', to: 'port', head: 'none', path: 'line', stroke: 'dashed' },
+    ]);
+    expect(solveGrids(boxesOf(text)).get('port')).toEqual({ x: 800, y: 0, w: 0, h: 600 });
+  });
+
   test('a place is only looked for on a node that exists', ({ expect }) => {
     const text = 'diagram kind=grid size=800x600\nnode a\nedge a -> ghost/nav';
     expect(messagesOf(text)).toEqual(['error: Unknown node "ghost/nav"; declare it with `node ghost/nav`.']);
@@ -182,14 +240,17 @@ describe('grid diagrams', () => {
 
 describe('the other kinds', () => {
   test('what only a grid reads says so', ({ expect }) => {
-    const text = 'diagram size=800x600 cols=2\ngroup g rows=3 padding=4 { node a kind=card icon=x }';
-    expect(messagesOf(text)).toEqual([
-      'error: "size" belongs in a grid diagram; declare `diagram kind=grid`.',
-      'error: "cols" belongs in a grid diagram; declare `diagram kind=grid`.',
-      'error: "rows" belongs in a grid diagram; declare `diagram kind=grid`.',
-      'error: "padding" belongs in a grid diagram; declare `diagram kind=grid`.',
-      'error: "kind" belongs in a grid diagram; declare `diagram kind=grid`.',
-    ]);
+    const text = `
+      diagram size=800x600 cols=2
+      group g rows=3 padding=4 autoRows=88 alignContent=center border=true { node a kind=card icon=x }
+      node b
+      edge a -> b path=line
+    `;
+    expect(messagesOf(text).sort()).toEqual(
+      ['size', 'cols', 'rows', 'padding', 'autoRows', 'alignContent', 'border', 'kind', 'path']
+        .map((name) => `error: "${name}" belongs in a grid diagram; declare \`diagram kind=grid\`.`)
+        .sort(),
+    );
   });
 
   test('a group inside another gives its members to the outermost one', ({ expect }) => {

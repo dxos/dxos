@@ -160,16 +160,23 @@ edge calendar -- field stroke=dashed
 
 - `cols` and `rows` are a count (`3`) or a track list (`"48 1fr"`, `"1fr auto 2fr"`); an axis with none takes
   one track per member. `gap` is the space between cells and `padding` the space inside the frame.
+- `autoCols` and `autoRows` size every track an axis does not state (`autoRows=88` makes a run of cards one
+  height); `justifyContent` and `alignContent` (`start`, `center`, `end`) say where the tracks sit when they
+  leave space over.
 - A group with a label draws it as a heading over its members; a group without one is only their grid.
+- `border=true`, `fill`, `stroke` and `color` on a group draw a frame round its members. The heading stays
+  outside it; for a frame round the heading too, put the labelled group inside a framed one.
+- An empty group (`group port { }`) draws nothing and holds its cell: a spacer, or a place for an edge to end.
 - `node … kind=card` places a component. Every attribute the node does not define itself is the component's own
   field; one whose name the node does define is written escaped (`data-fill=0.55`).
 - An edge may end on a group, and on a place only the component knows (`frame/nav`, `frame#left`).
+  `path=line|ortho|curve|smart` says how it runs between its ends.
 - Placement relations, pins, sides, waypoints and buses are ignored with a warning.
 
 The engine places nothing itself. It lowers the diagram to one object of `grid` boxes, component boxes and
 arrows — the scene statements above — and `@dxos/scene` solves the tracks wherever the drawing is rendered, so the
-rule is what is stored. Outside a grid diagram a nested group still reports, and `size`, `cols`, `rows`,
-`padding` and `kind=` on a node say they belong to this kind.
+rule is what is stored. Outside a grid diagram a nested group still reports, and what only this kind reads
+(`size`, the track and frame attributes, `kind=` on a node, `path` on an edge) says it belongs here.
 
 A sequence diagram also reads two statements no other kind does:
 

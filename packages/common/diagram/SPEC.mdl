@@ -627,4 +627,14 @@ decision D-24: A fourth kind, `diagram kind=grid size=WxH`, reads a group as a g
     - One statement form for intent and positions alike: positions belong to the records ([D-23]).
     - A layout rule on a group inside a searched kind: the search places one level of frames, so a nested rule needs the placer changed; left for when a diagram needs both.
     - A second solver for the tracks: the rule would then be solved in two places that can disagree.
+
+decision D-25: A grid diagram's group also states the size of its unstated tracks (`autoCols`, `autoRows`), where the tracks sit (`justifyContent`, `alignContent`) and the frame it draws (`border`, `fill`, `stroke`, `color`); an edge states how it runs (`path`). An empty group draws nothing and holds its cell, so it is the spacer and the place an edge ends. Extends [D-24].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: The grid boxes gained these four track attributes and the arrow its path, and the nine slides use them; a kind that could not say them could no longer say the slides.
+  rejected:
+    - A frame attribute that also encloses the heading: a framed group around the labelled one says it with what the kind already has.
+    - A textless, borderless node for a spacer: an empty group already holds a cell and can end an edge.
 ```

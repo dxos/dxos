@@ -47,8 +47,26 @@ const DOC = { title: 34, first: 64, canvas: 106, second: 91, sheet: 113, gap: 12
 export const appFrameFields = {
   /** Outline every region in its plugin's colour. */
   highlight: Schema.optional(Schema.Boolean.annotate({ title: 'Highlight regions' })),
-  /** The outline colour per region (`nav`, `doc`, `canvas`, `sheet`, `comp`), by tone name. */
-  colors: Schema.optional(Schema.Record(Schema.String, Schema.String).annotate({ title: 'Region colours' })),
+  /**
+   * The outline colour per region (`nav`, `doc`, `canvas`, `sheet`, `comp`), by tone name. Written as one scalar
+   * (`nav~accent | doc~message`) where the text form carries it, since the DSL spells no nested object.
+   */
+  colors: Schema.optional(
+    Schema.Union([Schema.Record(Schema.String, Schema.String), Schema.String]).annotate({ title: 'Region colours' }),
+  ),
+};
+
+/** The region colours as a record, from either form. */
+export const regionColors = (colors: Readonly<Record<string, string>> | string | undefined) => {
+  if (typeof colors !== 'string') {
+    return colors;
+  }
+  return Object.fromEntries(
+    colors
+      .split('|')
+      .map((entry) => entry.split('~').map((part) => part.trim()))
+      .flatMap(([region, tone]) => (region && tone ? [[region, tone] as const] : [])),
+  );
 };
 
 /** The kind's own fields, kept under `data` (decision 21). */
@@ -64,7 +82,7 @@ type RegionProps = {
   /** The region's name in `colors` (`nav`, `doc`, `canvas`, `sheet`, `comp`). */
   region: string;
   highlight?: boolean;
-  colors?: Readonly<Record<string, string>>;
+  colors?: Readonly<Record<string, string>> | string;
   classNames?: string;
   style?: React.CSSProperties;
   children?: React.ReactNode;
@@ -73,7 +91,7 @@ type RegionProps = {
 /** A pane of the window, outlined in its plugin's colour where the slide highlights it. */
 const Region = ({ region, highlight, colors, classNames, style, children }: RegionProps) => {
   // The field carries a tone's name, as a card's does, so the outline follows the canvas's mode.
-  const tone = toneValue(colors?.[region]);
+  const tone = toneValue(regionColors(colors)?.[region]);
   const toned: Styled | undefined = highlight && tone ? { '--sd-hl': tone } : undefined;
   return (
     <div

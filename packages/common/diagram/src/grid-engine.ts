@@ -106,7 +106,21 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
       return;
     }
     claim(id, group.range);
-    const rule = present({ cols: group.cols, rows: group.rows, gap: group.gap, padding: group.padding });
+    // The rule and the frame are the members' grid's; a frame round the heading too is a group around this one.
+    const rule = present({
+      cols: group.cols,
+      rows: group.rows,
+      gap: group.gap,
+      padding: group.padding,
+      autoCols: group.autoCols,
+      autoRows: group.autoRows,
+      justifyContent: group.justifyContent,
+      alignContent: group.alignContent,
+      color: group.color,
+      fill: group.fill,
+      stroke: group.stroke,
+      border: group.border,
+    });
     const inner = group.heading === undefined ? id : bodyId(id);
     if (group.heading === undefined) {
       elements.push({ kind: 'grid', id, ...placed, ...rule, parent });
@@ -147,6 +161,7 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
         text: edge.label,
         head: edge.head,
         tail: edge.tail,
+        path: edge.path,
         relation: edge.relation,
         color: edge.color,
         stroke: edge.stroke,

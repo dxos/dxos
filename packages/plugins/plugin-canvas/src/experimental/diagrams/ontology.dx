@@ -1,6 +1,6 @@
-diagram kind=grid size=1600x880 cols=3 gap=64 padding=48
+diagram kind=grid size=1600x880 cols="256 928 256" gap=32 padding=48
 
-group types "Types" gap=16 {
+group types "Types" gap=16 autoRows=88 alignContent=center {
   node type-text "Text" kind=card icon=text-t
   node type-drawing "Drawing" kind=card icon=scribble
   node type-contact "Contact" kind=card icon=address-book
@@ -8,15 +8,17 @@ group types "Types" gap=16 {
   node type-file "File" kind=card icon=file tone=file
 }
 
-group entities "Entities" cols=3 gap=24 {
-  group entities-col-0 gap=16 {
+group entities "Entities" cols=3 gap=56 padding=24 border=true {
+  group entities-col-0 gap=16 autoRows=88 alignContent=center {
     node project "Project" kind=card icon=folder
     node group-box "Group" kind=card icon=users-three
     node organization "Organization" kind=card icon=buildings
     node account "Account" kind=card icon=user-circle
   }
-  node person "Person" kind=card icon=user
-  group entities-col-2 gap=16 {
+  group entities-col-1 gap=16 autoRows=88 alignContent=center {
+    node person "Person" kind=card icon=user
+  }
+  group entities-col-2 gap=16 autoRows=88 alignContent=center {
     node task "Task" kind=card icon=check-square
     node event "Event" kind=card icon=calendar-blank tone=event
     node message "Message" kind=card icon=chat-text tone=message
@@ -25,7 +27,7 @@ group entities "Entities" cols=3 gap=24 {
   }
 }
 
-group containers "Containers" gap=16 {
+group containers "Containers" gap=16 autoRows=88 alignContent=center {
   node container-document "Document" kind=card icon=file-text
   node container-presentation "Presentation" kind=card icon=presentation-chart
   node container-sheet "Sheet" kind=card icon=grid-four tone=sheet
