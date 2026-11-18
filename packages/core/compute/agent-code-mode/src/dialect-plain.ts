@@ -20,6 +20,7 @@ import {
   renderOperation,
   renderTypes,
 } from './Dialect.ts';
+import { REF_LABEL, renderJsonInput } from './json-input.ts';
 
 /**
  * A typename the registry has no object type for — an expected failure of the model's code, so it
@@ -192,12 +193,21 @@ const renderPlainOperations = (operations: readonly SandboxOperation[]): string 
   ### Operations
 
   The skills' instructions describe their capabilities as tools; in code mode they are NOT tools. Each one
-  is an async function on \`ops\`, taking one argument matching its parameter schema. A failed
-  operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
-  so they are indexed rather than dotted.
+  is an async function on \`ops\`, taking one argument of the shape its \`input\` line gives (\`?\` marks an
+  optional field). A failed operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The
+  names are kebab-case, so they are indexed rather than dotted.
+
+  A \`${REF_LABEL}\` field takes \`ref(obj)\` for an object you hold, or the object's URI as a string:
+  \`echo://<spaceId>/<objectId>\`, \`<spaceId>:<objectId>\`, or just \`<objectId>\` for an object in this space.
 
   ${operations
-    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
+    .map((operation) =>
+      renderOperation(
+        operation,
+        (name) => `await ops[${JSON.stringify(name)}](input)`,
+        renderJsonInput(operation.parameters),
+      ),
+    )
     .join('\n')}
 `;
 
