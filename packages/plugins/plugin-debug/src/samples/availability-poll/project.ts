@@ -58,7 +58,7 @@ with its "Done when" as the description; one task per feature the row names, tit
 (\`F-1: Create a poll\`) and linked to it; then \`Check M-n\`, linked to every one of those features too, one \
 \`linkTask\` each, since the map reads a milestone's check from its links. Each task depends on the one \
 before. The task set is \`(yield* Database.load(project.taskSet))\`; the operations are \
-\`dxn:org.dxos.operation.tasks.createMilestone\` \`{ taskSet, name, description }\`, \
+\`dxn:org.dxos.operation.tasks.createMilestone\` \`{ taskSet, name, description }\`, which returns \`{ milestone }\`, \
 \`dxn:org.dxos.operation.tasks.create\` \`{ taskSet, title, milestone }\`, which returns \`{ task }\`, and \
 \`dxn:org.dxos.operation.code.linkTask\` \`{ task, spec, item }\`, all taking refs (\`Ref.make(object)\`) but \
 \`item\`, the feature's block key (\`F-1\`); \`spec\` is \`project.specs[0]\`. Set \
