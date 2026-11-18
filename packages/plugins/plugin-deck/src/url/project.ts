@@ -68,38 +68,38 @@ export const claimNavigation = () => {
   return () => claimed === navigations;
 };
 
-/**
- * Dispatch navigation handlers for a URL arriving from outside the app, then project it. The link
- * action runs as part of the projection, so a newer navigation cancels it.
- */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
   const isCurrent = claimNavigation();
-  const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-  const registry = yield* Capability.get(Capabilities.AtomRegistry);
-  const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
-
   const resolvedUrl = url ?? new URL(window.location.href);
-  const settings = registry.get(settingsAtom);
-  if (!(settings?.enableNativeRedirect && shouldDeferNavigationHandlers())) {
-    yield* Effect.all(
-      navigationHandlers.map((handler) =>
-        handler(resolvedUrl).pipe(
-          Effect.catchCause((cause) =>
-            Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
-          ),
+  yield* dispatchNavigationHandlers(resolvedUrl);
+  return isCurrent() ? yield* projectExternalUrl(resolvedUrl, isCurrent) : undefined;
+});
+
+const dispatchNavigationHandlers = Effect.fnUntraced(function* (url: URL) {
+  const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
+  const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+  if (settings?.enableNativeRedirect && shouldDeferNavigationHandlers()) {
+    return;
+  }
+  yield* Effect.all(
+    navigationHandlers.map((handler) =>
+      handler(url).pipe(
+        Effect.catchCause((cause) =>
+          Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
         ),
       ),
-      { concurrency: 'unbounded' },
-    );
-  }
+    ),
+    { concurrency: 'unbounded' },
+  );
+});
 
-  return yield* asOnlyProjection(
-    project(resolvedUrl).pipe(
-      Effect.tap(({ opened }) => consumeLinkAction(resolvedUrl, opened, isCurrent)),
+const projectExternalUrl = (url: URL, isCurrent: () => boolean) =>
+  asOnlyProjection(
+    project(url).pipe(
+      Effect.tap(({ opened }) => consumeLinkAction(url, opened, isCurrent)),
       Effect.map(({ attend }) => attend),
     ),
   );
-});
 
 const loadOperationHandlers = Effect.gen(function* () {
   const manager = yield* Effect.serviceOption(Plugin.Service);
