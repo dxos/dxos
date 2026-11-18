@@ -58,14 +58,14 @@ export const hyperspaceSpec = (model: StudioModel): SlideSpec => {
             service('commerce', 'Commerce', 'shopping-cart', 'catalog · checkout'),
             service('travel', 'Travel', 'airplane-tilt', 'flights · stays', 'var(--t-trip)'),
             service('slack', 'Slack', 'hash', 'channels · threads'),
-            { id: 'more-down', shape: 'fat-arrow' as const, up: false, width: 64, height: 34 },
           ],
         ],
       },
     ],
-    // The deck's dashed taps: two planks reading out of the field they draw from.
+    // The deck's dashed taps: each plank reading out of the field it draws from.
     edges: [
       { from: 'plank-board', to: 'substrate', tap: true },
+      { from: 'plank-sheet', to: 'substrate', tap: true },
       { from: 'plank-thread', to: 'substrate', tap: true },
     ],
   };

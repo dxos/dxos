@@ -26,6 +26,12 @@ export const packSpaces = (
   );
   const packed: Circle[] = [];
   for (const r of radii) {
+    // A space wider than the field cannot clear its edge at any position: the sampling interval collapses to a
+    // point, which `every` then accepts, and the circle is drawn over the boundary. Skipping it is the same
+    // outcome as failing every try — fewer spaces, none of them wrong.
+    if (width < 2 * (r + gap) || height < 2 * (r + gap)) {
+      continue;
+    }
     for (let attempt = 0; attempt < TRIES; attempt++) {
       const x = r + gap + random() * Math.max(0, width - 2 * (r + gap));
       const y = r + gap + random() * Math.max(0, height - 2 * (r + gap));

@@ -198,9 +198,11 @@ const arrowEnds = (ends: Link['ends']): { head?: Shape.ArrowHead; tail?: Shape.A
       ? 'triangle'
       : ends?.end === 'many'
         ? 'crowsfoot'
-        : ends && ends.end === undefined
-          ? 'none'
-          : undefined;
+        : ends?.end === 'arrow'
+          ? 'arrow'
+          : ends && ends.end === undefined
+            ? 'none'
+            : undefined;
   const tail: Shape.ArrowTail | undefined =
     ends?.start === 'circle' || ends?.start === 'arrow' ? ends.start : undefined;
   return { ...(head ? { head } : {}), ...(tail ? { tail } : {}) };
@@ -399,6 +401,26 @@ export const SceneHandler: ContentHandler = {
         }
         continue;
       }
+      // A contributed kind draws its own frame, label and parts, so the box restores the kind and its fields
+      // whatever box shape carries it — an ellipse naming one kept the kind through the text and lost it here.
+      // A built-in type name is NOT a contributed kind: `kind=diagram` would store a diagram node with no
+      // `element`, and reading the drawing back then threw on its missing `kind`.
+      if (isBox(element) && element.type && !isBuiltinType(element.type)) {
+        const size = { width: element.w * placement.scale, height: element.h * placement.scale };
+        const center = place(element.x + element.w / 2, element.y + element.h / 2);
+        const label = element.text ?? titles.get(element.id)?.text;
+        const kind: Node = {
+          ...(element.data ? { data: element.data } : {}),
+          type: element.type,
+          id,
+          z: nextZ(),
+          center,
+          size,
+          ...(label ? { label } : {}),
+        };
+        put(element.id, withStyle(kind, styleOf(element)));
+        continue;
+      }
       switch (element.kind) {
         case 'rect':
         case 'diamond':
@@ -407,22 +429,6 @@ export const SceneHandler: ContentHandler = {
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
           const title = titles.get(element.id)?.text;
           const style = styleOf(element);
-          if (element.type) {
-            // A contributed kind draws its own frame, label and parts, so the box restores the kind and its fields;
-            // the engine's own fields win over anything `data` carries.
-            const label = element.text ?? title;
-            const kind: Node = {
-              ...(element.data ? { data: element.data } : {}),
-              type: element.type,
-              id,
-              z: nextZ(),
-              center,
-              size,
-              ...(label ? { label } : {}),
-            };
-            put(element.id, withStyle(kind, style));
-            break;
-          }
           const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text ?? title };
           // A title reads from the box's top-left corner, small, as the layout set it; a label stays centred.
           put(
@@ -520,8 +526,11 @@ export const SceneHandler: ContentHandler = {
           const text = element.text || caption?.text;
           if (diagram) {
             // The layout's route, bends and caption included, as long as the boxes stay where the layout put them.
-            const points =
-              path?.kind === 'line' && element.end
+            // A stated route first: an arrow carrying `via` says where it runs, and reading it back out of the
+            // companion line or the free ends cannot recover bends neither of those holds.
+            const points = element.route?.length
+              ? [...element.route]
+              : path?.kind === 'line' && element.end
                 ? [...path.points, element.end]
                 : element.start && element.end
                   ? [element.start, element.end]
@@ -792,6 +801,10 @@ const zOf = (record: ElementRecord) => (isNodeRecord(record) ? record.node.z : r
 // The DSL bridge has no plugin context, so it reads a node's text by the built-in types' parts; a
 // contributed type's text reads back empty.
 const textOf = (node: Node): string => nodeTitle(defaultNodeRegistry, node) ?? '';
+
+/** The four closed shapes that share a frame, and the only elements a contributed `kind=` may ride on. */
+const isBox = (element: Shape.Element): element is Shape.Box =>
+  (Shape.BoxKind.literals as readonly string[]).includes(element.kind);
 
 /** Whether the type is one the engine draws itself, as against a kind a plugin contributed. */
 const isBuiltinType = (type: string): boolean => NODE_TYPES.includes(type as (typeof NODE_TYPES)[number]);

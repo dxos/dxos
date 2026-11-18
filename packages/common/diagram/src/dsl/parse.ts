@@ -281,8 +281,16 @@ export const read = (text: string): Reading => {
     if (raw === 'true' || raw === 'false') {
       return raw === 'true';
     }
-    const value = Number(raw);
-    return raw !== '' && Number.isFinite(value) ? value : raw;
+    // A number through the grammar's own reader, which spells a fraction (`1/2`) that `Number()` gives back as
+    // NaN — storing the raw text instead, and turning a numeric field into a string on the way round.
+    const number = attr.valueNode.getChild('Number');
+    if (number) {
+      const value = readNumber(number);
+      if (value !== undefined) {
+        return value;
+      }
+    }
+    return raw;
   };
 
   /** The style fields every element shares. */

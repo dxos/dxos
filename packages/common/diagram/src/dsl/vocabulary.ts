@@ -133,9 +133,19 @@ export const KIND_ATTR = 'kind';
  */
 export const DATA_PREFIX = 'data-';
 
-/** The DSL spelling of a kind's field, escaped where an element attribute claims the name. */
-export const dataAttrName = (name: string, claimed: ReadonlySet<string>): string =>
-  claimed.has(name) || name.startsWith(DATA_PREFIX) ? `${DATA_PREFIX}${name}` : name;
+/**
+ * The DSL spelling of a kind's field, or `undefined` where the name has none. A name is escaped when an element
+ * attribute claims it, when the grammar reserves it (`text=hello` would not parse, since `AttrName` is a plain
+ * name token and `text` is a keyword), and when it already starts with the prefix, so the escape is reversible.
+ * A name that is not a bare word at all — `font.size`, which no `AttrName` can spell — has no escape: prefixing
+ * it leaves it just as unparseable, so it is left out, as a value the DSL cannot spell is.
+ */
+export const dataAttrName = (name: string, claimed: ReadonlySet<string>): string | undefined => {
+  if (!BARE_ID.test(name)) {
+    return undefined;
+  }
+  return claimed.has(name) || RESERVED.has(name) || name.startsWith(DATA_PREFIX) ? `${DATA_PREFIX}${name}` : name;
+};
 
 /** The field name a DSL attribute spells, the inverse of {@link dataAttrName}. */
 export const dataFieldName = (name: string): string =>

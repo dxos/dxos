@@ -82,8 +82,10 @@ const formatAttrs = (kind: keyof typeof ELEMENT_ATTRS, values: Partial<Record<st
  * - a field holding a list or a nested object, which has no spelling in the DSL at all — printed as a string it
  *   would read back as that string;
  * - a field whose name the element's own table already claims (`substrate`'s numeric `fill` against the style
- *   attribute) is written with the {@link DATA_PREFIX}, since the reader would otherwise resolve that name against
- *   the schema's literals and reject the value.
+ *   attribute), or that the grammar reserves (`text`), is written with the {@link DATA_PREFIX}: the reader would
+ *   otherwise resolve the name against the schema's literals, or fail to parse it as an attribute name at all;
+ * - a field whose name is not a bare word (`font.size`) has no spelling and no escape, since a prefix leaves it
+ *   just as unparseable, so it is left out as a value the DSL cannot spell is.
  *
  * The first is measured by the handler's conformance test rather than assumed away.
  */
@@ -94,11 +96,13 @@ const formatData = (
   const claimed = new Set(ELEMENT_ATTRS[kind].map(({ name }) => name));
   return Object.entries(data ?? {})
     .sort(([left], [right]) => (left < right ? -1 : 1))
-    .flatMap(([name, value]) =>
-      typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
-        ? [`${dataAttrName(name, claimed)}=${formatScalar(value)}`]
-        : [],
-    );
+    .flatMap(([name, value]) => {
+      const attr = dataAttrName(name, claimed);
+      return attr !== undefined &&
+        (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+        ? [`${attr}=${formatScalar(value)}`]
+        : [];
+    });
 };
 
 const style = ({

@@ -135,6 +135,14 @@ export const textOf = (node: NodeViewProps['node'], field: string): string | und
   return typeof value === 'string' ? value : undefined;
 };
 
+/**
+ * The part key for a node's text field: its own name where the node carries it, and the kind's bag otherwise.
+ * A part edits the field it names, so a kind keeping its text under `data` needs the part to say `data.<field>`
+ * or editing writes a second copy on the node that nothing reads.
+ */
+export const textPartOf = (node: NodeViewProps['node'], field: string): string =>
+  Reflect.get(node, field) !== undefined ? field : `data.${field}`;
+
 /** The symbol the icon component takes; a name that already names a set and weight is passed through. */
 export const iconSymbol = ({ type, weight }: IconSpec): string | undefined =>
   type === undefined ? undefined : type.includes('--') ? type : `ph--${type}--${weight ?? 'regular'}`;
@@ -179,7 +187,7 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
       {body !== undefined && (
         // The body takes what the header and the footer leave, its text at the top of it.
         <TextPart
-          part='body'
+          part={textPartOf(node, 'body')}
           text={body}
           editing={editing}
           classNames={mx('grow overflow-hidden text-sm whitespace-pre-wrap', PARAGRAPH_ON_GRID)}
@@ -190,7 +198,7 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
       {footer !== undefined && (
         // Half a cell above the text, less the hairline's own pixel, so the whole block is two cells tall.
         <TextPart
-          part='footer'
+          part={textPartOf(node, 'footer')}
           text={footer}
           editing={editing}
           classNames={mx(

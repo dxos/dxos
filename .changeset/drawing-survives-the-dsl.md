@@ -1,8 +1,5 @@
 ---
 '@dxos/diagram': minor
-'@dxos/react-ui-canvas': minor
-'@dxos/scene': minor
-'@dxos/plugin-canvas': patch
 ---
 
 A drawing that uses contributed element kinds, or connectors someone routed, survives being written down as text

@@ -143,6 +143,37 @@ describe('dsl round trip', () => {
     expect(roundTrip(source)).toEqual(source);
   });
 
+  test("a kind's field escapes a reserved name, and one the DSL cannot spell is left out", ({ expect }) => {
+    // `text` is an element keyword, so `text=hello` is not an attribute the grammar can read; `font.size` is not a
+    // name token at all, and a prefix leaves it just as unparseable, so it goes the way a list does.
+    const printed = print({
+      objects: [
+        {
+          id: 'A',
+          origin: { x: 0, y: 0 },
+          scale: 1,
+          elements: [
+            {
+              kind: 'rect',
+              id: 'box',
+              x: 0,
+              y: 0,
+              w: 10,
+              h: 10,
+              type: 'card',
+              data: { 'text': 'hello', 'font.size': 12, 'half': 1 / 2 },
+            },
+          ],
+        },
+      ],
+    });
+    expect(printed).toContain('data-text=hello');
+    expect(printed).not.toContain('font.size');
+    expect(parse(printed).problems).toEqual([]);
+    const [element] = toScene(parse(printed).commands).objects[0].elements;
+    expect(element.kind === 'rect' && element.data).toEqual({ text: 'hello', half: 0.5 });
+  });
+
   test('whitespace is insignificant', ({ expect }) => {
     const dense = 'object A @ 0,0 {rect box 0,0 10x10 "hi" color=red}';
     const loose = 'object   A\n  @ 0 , 0\n{\n  rect\n    box\n    0,0\n    10x10\n    "hi"\n    color=red\n}\n';
