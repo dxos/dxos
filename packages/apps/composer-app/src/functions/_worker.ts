@@ -10,7 +10,20 @@ import * as OtelProxy from '@dxos/observability/OtelProxy';
 import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
-import { injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
+import { edgeUrl } from '../util/edge-url.ts';
+import { type LinkPreviewDetails, injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
+import { PUBLICATIONS_PATH } from '../util/publication-paths.ts';
+import { phosphorPath, renderCard } from './preview-image/index.ts';
+import { assets as previewAssets } from './preview-image/worker-assets.ts';
+import {
+  type RenderPreview,
+  cardOf,
+  handlePublicationRead,
+  objectIdOf,
+  previewImageUrl,
+  publicIdOf,
+  readManifest,
+} from './publications.ts';
 
 type Env = {
   ASSETS: Fetcher;
@@ -344,13 +357,19 @@ const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise
  * client-side route. A navigation always is, so a route containing a dot keeps the SPA.
  */
 const serveAsset = async (request: Request, env: Env): Promise<Response> => {
+  const url = new URL(request.url);
+  const isFile = isFileRequest({ pathname: url.pathname, secFetchMode: request.headers.get('Sec-Fetch-Mode') });
+  // The app's `index.html` at `/` would install its service worker on the viewer's origin.
+  if (isViewerHost(url.hostname) && !isFile) {
+    return serveViewer(request, url, env);
+  }
+
   const response = await env.ASSETS.fetch(request);
   if (response.status !== 404) {
     return response;
   }
 
-  const url = new URL(request.url);
-  if (isFileRequest({ pathname: url.pathname, secFetchMode: request.headers.get('Sec-Fetch-Mode') })) {
+  if (isFile) {
     const archived = await serveArchivedAsset(request, env, url);
     return (
       archived ??
@@ -365,26 +384,69 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
   return withLinkPreview(request, page, url);
 };
 
+const serveViewer = async (request: Request, url: URL, env: Env): Promise<Response> => {
+  // `/viewer`, not `/viewer.html`: the asset server answers the `.html` path with a redirect to it.
+  const page = await env.ASSETS.fetch(new Request(new URL('/viewer', url), request));
+  return withPublicationPreview(request, page, url, env);
+};
+
+export const isViewerHost = (hostname: string): boolean => hostname.startsWith('view.');
+
 /**
  * Name a client-side route's `index.html` after the `title` its URL carries, so a link pasted into a
  * messenger previews as the object it opens rather than as the bare app. Anything else passes through.
  */
 const withLinkPreview = async (request: Request, page: Response, url: URL): Promise<Response> => {
   const title = readLinkTitle(url);
-  if (
-    !title ||
-    request.method !== 'GET' ||
-    page.status !== 200 ||
-    !page.headers.get('Content-Type')?.includes('text/html')
-  ) {
+  return title && isPreviewable(request, page) ? rewritePreview(page, title) : page;
+};
+
+const withPublicationPreview = async (request: Request, page: Response, url: URL, env: Env): Promise<Response> => {
+  const publicId = publicIdOf(url);
+  const edge = edgeUrl();
+  if (!publicId || !edge || !isPreviewable(request, page)) {
     return page;
   }
+  const manifest = await readManifest(edge, publicId);
+  const objectId = objectIdOf(url);
+  const card = manifest && cardOf(manifest, objectId);
+  const object = card?.kind === 'object' ? card.title : readLinkTitle(url);
+  const space = manifest?.name;
+  const title = object ?? space;
+  if (!title) {
+    return page;
+  }
+  // A space card describes only a space link, never an object the manifest has no entry for.
+  const cardMatchesLink = card?.kind === 'object' || object === undefined;
+  return rewritePreview(page, title, {
+    description:
+      (cardMatchesLink ? card?.description : undefined) ??
+      (object && space ? `From ${space}, published from Composer.` : 'A space published from Composer.'),
+    image: card && previewImageUrl(url.origin, publicId, card.kind === 'object' ? objectId : undefined).toString(),
+  });
+};
 
+const previewRenderer =
+  (request: Request, env: Env): RenderPreview =>
+  (card) =>
+    renderCard(card, {
+      assets: previewAssets,
+      loadIcon: async (id) => {
+        const path = phosphorPath(id);
+        const response = path ? await env.ASSETS.fetch(new Request(new URL(path, request.url))) : undefined;
+        return response?.ok ? response.text() : undefined;
+      },
+    });
+
+const isPreviewable = (request: Request, page: Response): boolean =>
+  request.method === 'GET' && page.status === 200 && !!page.headers.get('Content-Type')?.includes('text/html');
+
+const rewritePreview = async (page: Response, title: string, details?: LinkPreviewDetails): Promise<Response> => {
   const headers = new Headers(page.headers);
   // The body changes, so the asset's length and validator no longer describe it.
   headers.delete('Content-Length');
   headers.delete('ETag');
-  return new Response(injectLinkPreview(await page.text(), title), { status: page.status, headers });
+  return new Response(injectLinkPreview(await page.text(), title, details), { status: page.status, headers });
 };
 
 /**
@@ -409,6 +471,10 @@ const handler: ExportedHandler<Env> = {
 
     if (url.pathname === '/api/rss') {
       return handleRssProxy(request);
+    }
+
+    if (isViewerHost(url.hostname) && url.pathname.startsWith(`${PUBLICATIONS_PATH}/`)) {
+      return handlePublicationRead(request, edgeUrl(), previewRenderer(request, env));
     }
 
     const otel = OtelProxy.handle(request, {

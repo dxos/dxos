@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
@@ -15,7 +16,7 @@ import { trim } from '@dxos/util';
 
 import { AssistantOperation } from '#types';
 
-import { CommentThreadNotPersistedError } from '../errors.ts';
+import { CommentThreadNotPersistedError, ReadOnlyHostError } from '../errors.ts';
 
 /**
  * Runs a comment thread's agent turns as ordinary assistant turns: one chat per thread, parented to the thread and
@@ -26,10 +27,15 @@ import { CommentThreadNotPersistedError } from '../errors.ts';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const invoker = yield* Capabilities.OperationInvoker;
+    const manager = yield* Capability.Service;
 
     const runner: AppCapabilities.CommentAgentRunner = {
       run: ({ thread, subject, message }) =>
         Effect.gen(function* () {
+          if (ReadOnly.isActive(manager)) {
+            return yield* Effect.fail(new ReadOnlyHostError());
+          }
+
           const db = Obj.getDatabase(thread);
           if (!db) {
             return yield* Effect.fail(new CommentThreadNotPersistedError());

@@ -180,6 +180,8 @@ export type ObjectPropertiesProps = PropsWithChildren<
      * close; a pane that stays open leaves it unset, and every change writes as it is made.
      */
     onClose?: () => void;
+    /** Shows the values as static rows, empty ones omitted, and writes nothing. */
+    readonly?: boolean;
   } & Pick<RefFieldDataProps, 'getCreateDefaults' | 'resolveCreateEntry'>
 >;
 
@@ -189,7 +191,10 @@ export type ObjectPropertiesProps = PropsWithChildren<
  * the form's viewport.
  */
 export const ObjectProperties = Util.composable<HTMLDivElement, ObjectPropertiesProps>(
-  ({ children, object, showTags = true, onClose, getCreateDefaults, resolveCreateEntry, ...props }, forwardedRef) => {
+  (
+    { children, object, showTags = true, onClose, readonly, getCreateDefaults, resolveCreateEntry, ...props },
+    forwardedRef,
+  ) => {
     const db = Obj.getDatabase(object);
     const [snapshot] = useObject(object);
     const { values, handleCreate, handleChange, handleSave } = useObjectFormModel({ object, snapshot, db });
@@ -224,7 +229,8 @@ export const ObjectProperties = Util.composable<HTMLDivElement, ObjectProperties
         onCreate={handleCreate}
         getCreateDefaults={getCreateDefaults}
         resolveCreateEntry={resolveCreateEntry}
-        {...(onClose ? { onSave: save, onCancel: onClose } : { onValuesChanged: handleChange })}
+        readonly={readonly}
+        {...(readonly ? {} : onClose ? { onSave: save, onCancel: onClose } : { onValuesChanged: handleChange })}
       >
         {/* The actions sit in the pane's footer, so Save stays put while a form longer than the pane scrolls. */}
         <Form.Viewport {...props} scroll footer={onClose && <Form.Actions />} ref={forwardedRef}>

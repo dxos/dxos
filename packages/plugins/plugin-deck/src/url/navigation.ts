@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LinkAction from '@dxos/app-toolkit/LinkAction';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { EntityId } from '@dxos/keys';
 
@@ -75,11 +76,13 @@ export const parse = (pathname: string, table: UrlPath.KeyTable): Option.Option<
 
 /**
  * Write a navigation to the address bar, and report whether it changed. The caller is responsible
- * for projecting the new URL into deck state.
+ * for projecting the new URL into deck state. A pending link's action is not part of the comparison,
+ * and is dropped from any URL this writes.
  */
 export const push = (next: Navigation, method: 'push' | 'replace' = 'push'): boolean => {
-  const url = `${format(next)}${window.location.search}`;
-  if (`${window.location.pathname}${window.location.search}` === url) {
+  const { pathname, search } = LinkAction.withoutAction(new URL(window.location.href));
+  const url = `${format(next)}${search}`;
+  if (`${pathname}${search}` === url) {
     return false;
   }
   if (method === 'replace') {

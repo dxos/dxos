@@ -11,7 +11,8 @@ import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { QuestionStore } from '../stores/index.ts';
 import { answerOpenQuestions } from './answer-questions.ts';
@@ -95,19 +96,20 @@ describe('answerOpenQuestions', () => {
   );
 });
 
-const fact = (id: string): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: 'carol' },
-    predicate: 'works on',
-    object: { kind: 'entity', entity: 'opfs' },
-  },
-  factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
-  attribution: { agent: 'carol', source: `discord:${id}`, generatedAtTime: '2026-06-01T00:00:00.000Z' },
-  recordedAt: '2026-06-01T00:00:00.000Z',
-  extractor: { id: 'default', model: 'm', version: '1' },
-  sourceHash: 'h1',
-});
+const fact = (id: string): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: 'carol' },
+      predicate: 'works on',
+      object: { kind: 'entity', entity: 'opfs' },
+    },
+    factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
+    attribution: { agent: 'carol', source: `discord:${id}`, generatedAtTime: '2026-06-01T00:00:00.000Z' },
+    recordedAt: '2026-06-01T00:00:00.000Z',
+    extractor: { id: 'default', model: 'm', version: '1' },
+    sourceHash: 'h1',
+  });
 
 /**
  * Routes the two LLM calls the answer path makes: the query-generation prompt returns an

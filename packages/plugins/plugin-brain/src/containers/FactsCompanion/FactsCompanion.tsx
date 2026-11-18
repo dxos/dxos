@@ -6,22 +6,19 @@ import React from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { FactViewer } from '@dxos/react-ui-rdf';
 
-import { BrainCapabilities } from '#types';
-
-import { type FactStoreRegistry } from '../../capabilities/fact-store.ts';
 import { useFacts } from './use-facts.ts';
 
 /**
- * Companion surface rendering the semantic facts extracted for the active space. Reads the shared
- * per-space {@link FactStoreRegistry} (populated by the analysis pipeline) and hands its facts to the
- * presentational {@link FactViewer}. Space-scoped via {@link useActiveSpace} — no container coupling.
+ * Companion surface rendering the semantic facts in the active space's memory (populated by the analysis pipeline)
+ * through the presentational {@link FactViewer}. Space-scoped via {@link useActiveSpace} — no container coupling.
  */
 export const FactsCompanion = () => {
-  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
+  const client = Hooks.useCapability(ClientCapabilities.Client);
   const space = ToolkitHooks.useActiveSpace();
-  const facts = useFacts(registry, space?.id);
+  const facts = useFacts(client, space?.id);
   return <FactViewer.Root facts={facts} />;
 };
 

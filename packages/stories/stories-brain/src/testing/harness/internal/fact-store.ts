@@ -7,7 +7,8 @@ import * as Layer from 'effect/Layer';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { FACT_STORE_FIXTURE } from '../config.ts';
 
@@ -17,13 +18,14 @@ export const factStoreFixtureExists = (): boolean => existsSync(FACT_STORE_FIXTU
  * Serializes facts to disk. RDF facts are plain subject-predicate-object records, so a JSON array
  * round-trips losslessly through `FactStore.putFacts` — the store re-derives its triples on load.
  */
-export const saveFacts = (facts: readonly RDF.Fact[], path: string = FACT_STORE_FIXTURE): void => {
+export const saveFacts = (facts: readonly Fact.Fact[], path: string = FACT_STORE_FIXTURE): void => {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(facts, null, 2));
 };
 
-export const loadFacts = (path: string = FACT_STORE_FIXTURE): RDF.Fact[] =>
-  JSON.parse(readFileSync(path, 'utf8')) as RDF.Fact[];
+export const loadFacts = (path: string = FACT_STORE_FIXTURE): Fact.Fact[] => [
+  ...Fact.decode(JSON.parse(readFileSync(path, 'utf8'))),
+];
 
 /** Lowercase-hyphenated entity slug, matching how the Brain skill normalizes names. */
 export const slugify = (name: string): string =>
@@ -34,7 +36,7 @@ export const slugify = (name: string): string =>
     .replace(/^-+|-+$/g, '');
 
 /** The set of entity slugs appearing as subject or object across the facts. */
-export const factEntities = (facts: readonly RDF.Fact[]): Set<string> => {
+export const factEntities = (facts: readonly Fact.Fact[]): Set<string> => {
   const entities = new Set<string>();
   for (const fact of facts) {
     for (const term of [fact.assertion.subject, fact.assertion.object]) {
@@ -47,7 +49,7 @@ export const factEntities = (facts: readonly RDF.Fact[]): Set<string> => {
 };
 
 /** An in-memory `FactStore` layer preloaded with the given facts — used to inject a fixture. */
-export const factStoreLayer = (facts: readonly RDF.Fact[]): Layer.Layer<FactStore> =>
+export const factStoreLayer = (facts: readonly Fact.Fact[]): Layer.Layer<FactStore> =>
   Layer.effect(
     FactStore,
     Effect.gen(function* () {

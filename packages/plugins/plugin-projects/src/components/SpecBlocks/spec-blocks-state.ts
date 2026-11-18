@@ -115,6 +115,9 @@ export const blockListeners = ViewPlugin.fromClass(
 
     update(update: ViewUpdate) {
       this.listeners.forEach((listener) => listener(update));
+      if (update.docChanged) {
+        update.state.facet(specBlocksConfig).awareness?.textChanged();
+      }
     }
   },
 );

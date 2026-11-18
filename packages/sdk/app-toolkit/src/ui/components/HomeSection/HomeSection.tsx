@@ -63,7 +63,7 @@ type HomeSectionHeaderProps = Util.ThemedClassName<
 // TODO(burdon): Use Form.Field?
 const HomeSectionHeader = forwardRef<HTMLDivElement, HomeSectionHeaderProps>(
   ({ title, onClose, classNames, children }, forwardedRef) => (
-    <div ref={forwardedRef} className={mx('flex items-center gap-2', classNames)}>
+    <div ref={forwardedRef} className={mx('flex items-center gap-2 min-h-(--dx-rail-item)', classNames)}>
       {title && <h2 className='grow truncate text-sm font-medium text-fg-muted'>{title}</h2>}
       {!title && <span className='grow' />}
       {children}

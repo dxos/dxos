@@ -178,8 +178,8 @@ const watchesOn = (triggers: readonly Trigger.Trigger[], speaker: string) =>
   triggers.filter(({ when, ongoing }) => when.speaker === speaker && ongoing);
 
 describe('agent brain (local)', () => {
-  afterEach(() => {
-    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+  afterEach(async () => {
+    await brain.reset();
   });
 
   it.effect(

@@ -271,4 +271,19 @@ describe('GitHub access', () => {
 
     expect(resolved.pullRequest).toBe(pullRequest);
   });
+
+  // A nested call from another plugin's bundle delivers the ref bound to the database but not loaded.
+  test('resolves a stored pull request from a ref that is not loaded', async () => {
+    const db = await withConnections(DEAD_APP);
+    const pullRequest = db.add(
+      PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: '#1', state: 'open' }),
+    );
+    await db.flush();
+    const ref = db.makeRef(Obj.getURI(pullRequest));
+
+    const resolved = await EffectEx.runPromise(resolvePullRequest(ref));
+
+    expect(resolved.pullRequest).toBe(pullRequest);
+    expect(resolved.db).toBe(db);
+  });
 });

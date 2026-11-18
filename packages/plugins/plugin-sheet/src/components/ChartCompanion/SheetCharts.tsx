@@ -19,10 +19,11 @@ export type SheetChartsProps = {
   sheet: Sheet.Sheet;
   model: SheetModel;
   chartTypes: readonly SheetCapabilities.ChartTypeContribution[];
+  readonly?: boolean;
 };
 
 /** The sheet's charts in the charts companion; shares the sheet's selection through the `Selection` view state. */
-export const SheetCharts = ({ attendableId, sheet, model, chartTypes }: SheetChartsProps) => {
+export const SheetCharts = ({ attendableId, sheet, model, chartTypes, readonly }: SheetChartsProps) => {
   const [{ charts: refs = [] } = {}] = useObject(sheet);
   const charts = useObjects(refs);
   const getValues = useRangeValues(model);
@@ -72,6 +73,7 @@ export const SheetCharts = ({ attendableId, sheet, model, chartTypes }: SheetCha
       selection={selection && (selection.from === selection.to ? selection.from : `${selection.from}:${selection.to}`)}
       onSelectRange={handleSelectRange}
       chartTypes={chartTypes}
+      readonly={readonly}
     />
   );
 };

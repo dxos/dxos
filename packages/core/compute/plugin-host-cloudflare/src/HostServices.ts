@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import { handOffWorkingSet } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -206,11 +207,12 @@ export const makeOperations = ({
       ...(idSeed === undefined ? {} : { idSeed: { time: idSeed.time, seed: childSeed(EntityId.random()) } }),
     };
     return Effect.promise(async () => {
-      const result = await host.invoke(bareKey(String(op.meta.key)), await byReference(input), nested);
+      const encoded = await byReference(input);
       // Whether it succeeded or not, the callee may have written: its output's refs, and anything this invocation
       // reads next, resolve against the space as it left it.
-      await refreshWorkingSet?.();
-      return result;
+      return handOffWorkingSet(databaseOf(), refreshWorkingSet, () =>
+        host.invoke(bareKey(String(op.meta.key)), encoded, nested),
+      );
     }).pipe(
       Effect.flatMap((result) =>
         result.ok
@@ -252,7 +254,8 @@ export const makeOperations = ({
       for (const entity of unsaved) {
         database.add(entity);
       }
-      await database.flush();
+      // Stored, not indexed: the callee loads a reference by id.
+      await database.flush({ indexes: false });
     }
     return Output.encode(input, { entities: 'reference' });
   };

@@ -6,8 +6,10 @@
 /**
  * Records two (or more) people using the app at once, each with their own identity, as one side-by-side video.
  *
- * Every peer is its own Playwright browser context, so each has separate storage (OPFS, IndexedDB,
- * localStorage) and therefore a separate HALO identity, while one Chromium process keeps the launch cheap.
+ * Every peer is its own persistent Chromium profile in a temporary directory, so each has separate storage (OPFS,
+ * IndexedDB, localStorage) and therefore a separate HALO identity. The profile is on disk, as a person's is: an
+ * incognito context drops a site's OPFS a few minutes after its last page goes, so a peer that left for longer would
+ * come back as someone new. The directories are deleted when the take ends, since they hold the peers' keys.
  * Each page is recorded by `recorder.mjs` (2x VP9 from the screencast) and carries `overlay.mjs`'s cursor and
  * ripple. The recorders share one clock: they are cut at the same instant once the off-camera setup steps
  * end, and whatever residual skew remains is written to `timeline.json` and corrected by `compose.mjs`,
@@ -24,7 +26,8 @@
  */
 
 import { chromium } from '@playwright/test';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -87,7 +90,7 @@ mkdirSync(options.out, { recursive: true });
 
 // The cloud sandbox needs the pinned executable, the egress proxy, and a TLS 1.2 cap (see the `cloud-sandbox` skill).
 const sandbox = process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined;
-const browser = await chromium.launch({
+const launchOptions = {
   headless: true,
   executablePath: sandbox ? '/opt/pw-browsers/chromium' : undefined,
   args: [
@@ -102,7 +105,11 @@ const browser = await chromium.launch({
     // `deviceScaleFactor` alone leaves the screencast at CSS size; forcing it browser-wide makes the frames 2x.
     ...(options.scale !== 1 ? [`--force-device-scale-factor=${options.scale}`] : []),
   ],
-});
+};
+
+/** The peers' profile directories, deleted however the process ends. */
+const profiles = [];
+process.on('exit', () => profiles.forEach((profile) => rmSync(profile, { recursive: true, force: true })));
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -168,8 +175,15 @@ const bootPage = async (page, label) => {
  */
 const createPeer = async (name) => {
   const viewport = { width: options.width, height: options.height };
-  const context = await browser.newContext({ viewport, deviceScaleFactor: options.scale, colorScheme: options.theme });
-  const page = await context.newPage();
+  const profile = mkdtempSync(path.join(os.tmpdir(), `pair-${name.toLowerCase()}-`));
+  profiles.push(profile);
+  const context = await chromium.launchPersistentContext(profile, {
+    ...launchOptions,
+    viewport,
+    deviceScaleFactor: options.scale,
+    colorScheme: options.theme,
+  });
+  const page = context.pages()[0] ?? (await context.newPage());
   page.setDefaultTimeout(options['action-timeout']);
   const overlay = createOverlay(page, { enabled: true, feed: false });
   let lastPointer = { x: 0, y: 0 };
@@ -345,11 +359,12 @@ try {
   // Booting is never the subject: it is cut with the setup steps. A failed boot is reported like a failed step, so the panes recorded so far still show why.
   const boot = async () => {
     if (options.warm === 'on') {
+      const browser = await chromium.launch(launchOptions);
       const context = await browser.newContext({ viewport: { width: options.width, height: options.height } });
       // Only primes the server, so its own failure is not the take's.
       await bootPage(await context.newPage(), 'warm-up')
         .catch((error) => console.error(String(error?.message ?? error)))
-        .finally(() => context.close());
+        .finally(() => browser.close());
     }
     const booted = flow.boot ? peerList.filter((peer) => flow.boot.includes(peer.name.toLowerCase())) : peerList;
     if (options.boot === 'parallel') {
@@ -415,7 +430,7 @@ try {
     return undefined;
   });
   const stopped = await Promise.all(peerList.map((peer) => peer.recorder.stop().catch((error) => ({ error }))));
-  await browser.close();
+  await Promise.all(peerList.map((peer) => peer.context.close().catch(() => {})));
 
   const base = takeStart ?? Math.min(...peerList.map((peer) => peer.recorder.started));
   // `steps` is `driver.mjs`'s caption shape, so `trim-static.mjs --timeline` can trim the composed video.

@@ -6,7 +6,7 @@
 
 import * as Compiler from '@dxos/brain/Compiler';
 import * as Encoding from '@dxos/brain/Encoding';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Fact as MemoryFact } from '@dxos/echo-memory';
 
 import { BrainService, Trigger, type TriggerOperation } from '#types';
 
@@ -18,7 +18,7 @@ export type Fact = {
   /** Who said it: the member's name when known, else the id facts carry. */
   speaker?: string;
   saidAt: string;
-  fact: RDF.Fact;
+  fact: MemoryFact.Fact;
 };
 
 /** A fact as the rules engine sees it: the ground Datalog facts `@dxos/brain` encodes it to. */
