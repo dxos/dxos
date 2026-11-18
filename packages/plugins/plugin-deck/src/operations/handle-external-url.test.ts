@@ -129,7 +129,9 @@ describe('DeckOperation.HandleExternalUrl', () => {
     await second;
   });
 
-  test('an in-app navigation while a link runs its navigation handlers keeps its deck and drops the action', async ({ expect }) => {
+  test('an in-app navigation while a link runs its navigation handlers keeps its deck and drops the action', async ({
+    expect,
+  }) => {
     const ran: unknown[] = [];
     const held = heldStep();
     const hold: AppCapabilities.NavigationHandler = (url) => (url.searchParams.has('hold') ? held.run : Effect.void);
@@ -142,14 +144,38 @@ describe('DeckOperation.HandleExternalUrl', () => {
     const linked = new URL(window.location.href);
     linked.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
     linked.searchParams.set('hold', '1');
+    window.history.replaceState(null, '', linked);
 
-    const handled = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, { url: linked.href }));
+    const handled = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, {}));
     await held.entered.promise;
     await harness.runPromise(Operation.invoke(LayoutOperation.Set, { subject: [], workspace: WORKSPACE }));
     held.release.resolve();
     await handled;
     expect(ran).toEqual([]);
     expect(activePlanks(harness)).toEqual([]);
+    expect(new URL(window.location.href).searchParams.has(LinkAction.PARAM)).toBe(false);
+  });
+
+  test('a navigation to the deck a pending link opens leaves the link its action', async ({ expect }) => {
+    const ran: unknown[] = [];
+    const held = heldStep();
+    const hold: AppCapabilities.NavigationHandler = (url) => (url.searchParams.has('hold') ? held.run : Effect.void);
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [DeckWorkspacePlugin((data) => Effect.sync(() => ran.push(data)), undefined, hold), DeckPlugin.make()],
+    });
+    const subject = { subject: [`${WORKSPACE}/deck`], workspace: WORKSPACE };
+    await harness.runPromise(Operation.invoke(LayoutOperation.Set, subject));
+    const linked = new URL(window.location.href);
+    linked.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
+    linked.searchParams.set('hold', '1');
+    window.history.replaceState(null, '', linked);
+
+    const handled = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, {}));
+    await held.entered.promise;
+    await harness.runPromise(Operation.invoke(LayoutOperation.Set, subject));
+    held.release.resolve();
+    await handled;
+    expect(ran).toEqual(['deck']);
   });
 
   test('a link overtaken while it runs its navigation handlers leaves the next link its deck and action', async ({

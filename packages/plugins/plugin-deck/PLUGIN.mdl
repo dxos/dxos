@@ -574,8 +574,9 @@ feat F-5: URL Navigation & Deep Linking
           no object is dropped with a warning. A navigation that starts before the action has run
           cancels it. Any URL from outside the app, with or without an action, that a newer
           navigation overtakes while its navigation handlers run is not projected, so the newer
-          navigation keeps its deck and its link action; the handlers still run to the end. When
-          the app boots on such a URL, the boot loader stays up until the action has run, or for 10
+          navigation keeps its deck and its link action; the handlers still run to the end. An
+          in-app navigation never carries an `action` parameter into the URL it writes. When the
+          app boots on such a URL, the boot loader stays up until the action has run, or for 10
           seconds at most, so the page first shows what the action leaves
 ```
 
@@ -1231,6 +1232,23 @@ decision D-29: A URL from outside the app is not projected when a newer navigati
   affects: [F-5.5]
   why: A late projection replaces the newer navigation's deck and interrupts the newer URL's projection, which cancels that URL's link action. Navigation handlers have side effects, such as accepting an invitation, that the reader asked for whichever page they end on. The boot restore is a URL from outside the app too. In Composer its handlers finish within about 100 ms of its claim, and onboarding's first in-app navigation comes 2 to 3 seconds later, so boot never overtakes its own restore.
   rejected: Interrupting the handlers when a newer navigation starts, which would drop an invitation the link carried.
+```
+
+```mdl
+decision D-30: An in-app navigation that overtakes a link does not carry the link's `action` parameter into the URL it writes, so a reload does not run the action on the page the reader moved to.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-31: An in-app navigation drops the `action` parameter from the URL it writes, and leaves it out when comparing that URL with the current one. A navigation to what the address bar already shows stays a no-op, so it neither claims ownership nor cancels the pending link. Fills in [D-30].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: The deck writes its URL through the same path when it re-states the deck it already shows. Counting the dropped parameter as a change would turn that write into a newer navigation and cancel the link's action.
+  rejected: Having the overtaken link remove its parameter from the address bar, which cannot tell its own parameter from a newer link's.
 ```
 
 ## Appendix: Extension Definitions
