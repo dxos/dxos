@@ -94,7 +94,16 @@ describe('Trig', () => {
   });
 
   test('escapes literals: quotes, backslashes, control characters and astral characters', ({ expect }) => {
-    const values = ['say "hi"', 'back\\slash', 'tab\tline\nreturn\rfeed\fbell\b', '\u0001\u0019', 'emoji 😀', 'plain'];
+    const values = [
+      'say "hi"',
+      'back\\slash',
+      'tab\tline\nreturn\rfeed\fbell\b',
+      '\u0001\u0019\u001a\u001f',
+      'emoji 😀',
+      'lone \ud800 high',
+      'lone \udc00 low',
+      'plain',
+    ];
     const quads = values.map((value, index) => Rdf.quad(ex(`s${index}`), ex('p'), Rdf.literal(value)));
     expect(Trig.write(quads)).toBe(n3Trig(quads));
     expect(parse(Trig.write(quads)).map((quad) => quad.object.value)).toEqual(values);

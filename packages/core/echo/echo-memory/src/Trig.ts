@@ -14,9 +14,6 @@ import * as Rdf from './Rdf.ts';
 
 const XSD = 'http://www.w3.org/2001/XMLSchema#';
 
-/** Characters a literal or IRI must escape; a lone high surrogate makes the whole-string scan run. */
-const NEEDS_ESCAPE = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/;
-const ESCAPABLE = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g;
 const ESCAPES: Readonly<Record<string, string>> = {
   '\\': '\\\\',
   '"': '\\"',
@@ -40,7 +37,26 @@ const escapeCharacter = (character: string): string => {
   return `\\U${codePoint.toString(16).padStart(8, '0')}`;
 };
 
-const escape = (text: string): string => (NEEDS_ESCAPE.test(text) ? text.replace(ESCAPABLE, escapeCharacter) : text);
+/** Code units up to U+0019 are escaped, as n3 does (it leaves U+001A..U+001F as they are). */
+const isEscaped = (code: number): boolean => code === 0x22 || code === 0x5c || code <= 0x19;
+const isHighSurrogate = (code: number): boolean => code >= 0xd800 && code <= 0xdbff;
+const isLowSurrogate = (code: number): boolean => code >= 0xdc00 && code <= 0xdfff;
+
+/** Escapes quotes, backslashes, control characters and surrogate pairs, scanning code units so no regex holds control characters. */
+const escape = (text: string): string => {
+  let output = '';
+  let start = 0;
+  for (let index = 0; index < text.length; index++) {
+    const code = text.charCodeAt(index);
+    const width = isEscaped(code) ? 1 : isHighSurrogate(code) && isLowSurrogate(text.charCodeAt(index + 1)) ? 2 : 0;
+    if (width > 0) {
+      output += text.slice(start, index) + escapeCharacter(text.slice(index, index + width));
+      index += width - 1;
+      start = index + 1;
+    }
+  }
+  return start === 0 ? text : output + text.slice(start);
+};
 
 const escapeRegex = (text: string): string => text.replace(/[\]/()*+?.\\$]/g, '\\$&');
 
