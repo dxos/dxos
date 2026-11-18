@@ -48,6 +48,10 @@ export type Align = Schema.Schema.Type<typeof Align>;
 export const VerticalAlign = Schema.Literals(['top', 'middle', 'bottom']);
 export type VerticalAlign = Schema.Schema.Type<typeof VerticalAlign>;
 
+/** Where a grid's tracks sit along one axis when they leave space over, as CSS's `*-content` properties say it. */
+export const Place = Schema.Literals(['start', 'center', 'end']);
+export type Place = Schema.Schema.Type<typeof Place>;
+
 const styleFields = {
   color: Schema.optional(Color).annotate({ description: 'Stroke/text color.' }),
   fill: Schema.optional(Fill).annotate({ description: 'Interior fill of closed shapes.' }),
@@ -79,6 +83,22 @@ const gridFields = {
   gap: Schema.optional(Schema.Number).annotate({ description: 'Space between two cells.' }),
   /** Space between the grid's frame and its cells, in scene units. */
   padding: Schema.optional(Schema.Number).annotate({ description: "Space inside the grid's frame." }),
+  /**
+   * The size every implicit column takes, in the track spelling (CSS's `grid-auto-columns`). Unset is one share
+   * each, so an axis that states no count fills the frame; `136` instead gives every cell that extent, which is
+   * how a run of cards comes out one size whatever its neighbour holds.
+   */
+  autoCols: Schema.optional(Schema.Union([Schema.Number, Schema.String])).annotate({
+    description: 'Size of each implicit column track.',
+  }),
+  /** The size every implicit row takes, in the same spelling. */
+  autoRows: Schema.optional(Schema.Union([Schema.Number, Schema.String])).annotate({
+    description: 'Size of each implicit row track.',
+  }),
+  /** Where the columns sit when they do not fill the frame (CSS's `justify-content`). */
+  justifyContent: Schema.optional(Place).annotate({ description: 'Where the columns sit across the frame.' }),
+  /** Where the rows sit when they do not fill the frame (CSS's `align-content`). */
+  alignContent: Schema.optional(Place).annotate({ description: 'Where the rows sit down the frame.' }),
   /**
    * The grid that places this box. Its own `x`/`y` and size are then the grid's to decide; the size it states is
    * what an `auto` track measures, so a label can keep its own height while the body beside it takes the rest.

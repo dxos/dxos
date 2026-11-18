@@ -36,6 +36,15 @@ nothing to remove it and stayed on screen. Only DSL-managed records are cleared,
 in no text. And a read-only canvas draws no grid, no dots and no lattice cells — they are an editing affordance,
 what a shape snaps to, and nothing snaps when nothing can be placed.
 
+A drawing can also state how its boxes are placed rather than where they landed. A `grid` is a box that places
+the boxes written inside its braces, modelled on CSS grid: `cols` and `rows` are track lists (`"1fr auto 2fr"`),
+`gap` and `padding` are scene units, and an axis that states no count takes one track per child, as flexbox gives
+for free. `autoCols`/`autoRows` size those implicit tracks, so a column of two and a column of four draw cards the
+same height instead of each dividing its own frame, and `justifyContent`/`alignContent` put the space the tracks
+leave over at the start, the centre or the end — which is how a short run sits in the middle of a tall column. The
+rule is what is stored and what the text carries; a child's coordinates are a cached projection re-solved on every
+render, so adding a card to a run re-spaces it rather than leaving a gap someone has to close.
+
 Losslessness is a test rather than an inspection: a corpus pass over all nine slides compares every kind, its own
 fields, its glyph, every link's markers and every route point for point, and fails on five to nine slides with
 any one of these removed. The studio bench also gains a DSL/JSON toggle, so a drawing's records can be read

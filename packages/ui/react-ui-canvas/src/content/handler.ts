@@ -467,6 +467,10 @@ export const SceneHandler: ContentHandler = {
               ...(element.rows !== undefined ? { rows: element.rows } : {}),
               ...(element.gap !== undefined ? { gap: element.gap } : {}),
               ...(element.padding !== undefined ? { padding: element.padding } : {}),
+              ...(element.autoCols !== undefined ? { autoCols: element.autoCols } : {}),
+              ...(element.autoRows !== undefined ? { autoRows: element.autoRows } : {}),
+              ...(element.justifyContent !== undefined ? { justifyContent: element.justifyContent } : {}),
+              ...(element.alignContent !== undefined ? { alignContent: element.alignContent } : {}),
             },
           };
           put(element.id, withStyle(node, { fill: false, border: false, ...styleOf(element) }));
@@ -737,6 +741,14 @@ export const SceneHandler: ContentHandler = {
               ...(typeof rule.rows === 'number' || typeof rule.rows === 'string' ? { rows: rule.rows } : {}),
               ...(typeof rule.gap === 'number' ? { gap: rule.gap } : {}),
               ...(typeof rule.padding === 'number' ? { padding: rule.padding } : {}),
+              ...(typeof rule.autoCols === 'number' || typeof rule.autoCols === 'string'
+                ? { autoCols: rule.autoCols }
+                : {}),
+              ...(typeof rule.autoRows === 'number' || typeof rule.autoRows === 'string'
+                ? { autoRows: rule.autoRows }
+                : {}),
+              ...placeOf('justifyContent', rule.justifyContent),
+              ...placeOf('alignContent', rule.alignContent),
               ...(text ? { text } : {}),
               // A grid's own defaults are not worth writing down: it draws no fill and no border unless told to,
               // so emitting them would put two words on every grid that say only "as usual".
@@ -879,6 +891,15 @@ const textOf = (node: Node): string => nodeTitle(defaultNodeRegistry, node) ?? '
 /** The four closed shapes that share a frame, and the only elements a contributed `kind=` may ride on. */
 const isBox = (element: Shape.Element): element is Shape.Box =>
   (Shape.BoxKind.literals as readonly string[]).includes(element.kind);
+
+/** One of a grid's `*-content` rules, where the stored value is still one of the three the schema names. */
+const placeOf = <Name extends 'justifyContent' | 'alignContent'>(
+  name: Name,
+  value: unknown,
+): Partial<Record<Name, Shape.Place>> =>
+  typeof value === 'string' && (Shape.Place.literals as readonly string[]).includes(value)
+    ? ({ [name]: value as Shape.Place } as Partial<Record<Name, Shape.Place>>)
+    : {};
 
 /** A grid's style, less the no-fill and no-border it takes by default. */
 const gridStyle = (style: NodeStyle | undefined): StyleFields => {

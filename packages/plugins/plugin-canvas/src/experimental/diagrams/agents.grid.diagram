@@ -1,20 +1,20 @@
 object agents @ 0,0 scale=1 {
   grid slide 0,0 1600x880 cols=4 gap=64 padding=48 {
     grid inbound-body gap=24 {
-      grid inbound-col-0 gap=16 {
+      grid inbound-col-0 gap=16 autoRows=176 alignContent=center {
         rect email "Email" kind=feed-card feed=9 footer="plugin-inbox · JMAP" icon=envelope
         rect discord "Discord" kind=feed-card feed=9 footer=plugin-discord icon=discord-logo
         rect chat "Chat" kind=feed-card feed=9 footer=plugin-thread icon=chat-circle-dots
       }
     }
     grid agents-body gap=24 {
-      grid agents-col-0 gap=16 {
+      grid agents-col-0 gap=16 autoRows=176 alignContent=center {
         rect triage "Triage agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=ink
         rect planner "Planner agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=ink
       }
     }
     grid subagents-body gap=24 {
-      grid subagents-col-0 gap=16 {
+      grid subagents-col-0 gap=16 autoRows=176 alignContent=center {
         rect research "Research" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=magnifying-glass
         rect reply "Draft reply" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=pencil-simple-line
         rect calendar "Calendar" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=calendar-blank

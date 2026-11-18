@@ -91,6 +91,10 @@ const GRID: readonly AttrSpec[] = [
   { name: 'rows', type: 'scalar' },
   { name: 'gap', type: 'number' },
   { name: 'padding', type: 'number' },
+  { name: 'autoCols', type: 'scalar' },
+  { name: 'autoRows', type: 'scalar' },
+  { name: 'justifyContent', type: 'enum', values: Shape.Place.literals },
+  { name: 'alignContent', type: 'enum', values: Shape.Place.literals },
   { name: 'parent', type: 'name' },
 ];
 

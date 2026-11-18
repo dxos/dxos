@@ -195,6 +195,24 @@ describe('dsl round trip', () => {
     expect(roundTrip(source)).toEqual(source);
   });
 
+  test('a grid states its cell size and where the run sits, and reads them back', ({ expect }) => {
+    // The two rules a column of cards needs beside its children: one row height whatever the count, and the space
+    // left over put either side of them.
+    const source = [
+      'object A @ 0,0 {',
+      '  grid root 0,0 300x900 gap=16 autoRows=176 alignContent=center {',
+      '    rect a "One"',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [grid] = toScene(commands).objects[0].elements;
+    expect(grid.kind === 'grid' && [grid.autoRows, grid.alignContent]).toEqual([176, 'center']);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
   test('a flat `parent` is read, and printed back as nesting', ({ expect }) => {
     // Accepting both costs nothing and a program patching one attribute to reparent a box is a real use; there is
     // still only ONE canonical output, which is what the round trip is proved against.
