@@ -86,10 +86,11 @@ export const HomeVisibilityAnnotation = Annotation.make({
   schema: Schema.Record(Schema.String, Schema.Boolean),
 });
 
-/** Where a space is published as a read-only copy. */
+/** Where a space is published as a read-only copy, and which space published it. */
 export const Publication = Schema.Struct({
   publicId: Schema.String,
   publishedAt: Schema.String,
+  spaceId: Schema.String,
 });
 export interface Publication extends Schema.Schema.Type<typeof Publication> {}
 
@@ -102,6 +103,14 @@ export const PublicationAnnotation = Annotation.make({
   schema: Schema.NullOr(Publication),
 });
 
-/** The space's publication, if it is published. */
-export const getPublication = (properties: Entity.Unknown | Entity.Snapshot): Publication | undefined =>
-  Option.getOrUndefined(Annotation.get(properties, PublicationAnnotation)) ?? undefined;
+/**
+ * The space's publication, if it is published. A copy of the space carries its original's annotation,
+ * which names the original's space and so reads as unpublished.
+ */
+export const getPublication = (
+  properties: Entity.Unknown | Entity.Snapshot,
+  spaceId: string,
+): Publication | undefined => {
+  const publication = Option.getOrUndefined(Annotation.get(properties, PublicationAnnotation)) ?? undefined;
+  return publication?.spaceId === spaceId ? publication : undefined;
+};

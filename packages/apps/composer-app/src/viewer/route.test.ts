@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { composerOriginOf, parseRoute } from './route.ts';
+import { composerOriginOf, failureMessage, parseRoute } from './route.ts';
 
 const OBJECT_PATH = 'db/org.dxos.type.document+01ABC';
 
@@ -34,5 +34,13 @@ describe('composerOriginOf', () => {
     expect(composerOriginOf('https://view.dev.composer.space')).toBe('https://dev.composer.space');
     expect(composerOriginOf('https://view.composer.space')).toBe('https://composer.space');
     expect(composerOriginOf('http://view.localhost:5173')).toBe('http://localhost:5173');
+  });
+});
+
+describe('failureMessage', () => {
+  test('only a missing archive says the space is no longer published', ({ expect }) => {
+    expect(failureMessage(404)).toBe('This space is no longer published.');
+    expect(failureMessage(503)).not.toBe(failureMessage(404));
+    expect(failureMessage()).toBe(failureMessage(503));
   });
 });

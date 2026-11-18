@@ -357,13 +357,19 @@ const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise
  * client-side route. A navigation always is, so a route containing a dot keeps the SPA.
  */
 const serveAsset = async (request: Request, env: Env): Promise<Response> => {
+  const url = new URL(request.url);
+  const isFile = isFileRequest({ pathname: url.pathname, secFetchMode: request.headers.get('Sec-Fetch-Mode') });
+  // The app's `index.html` at `/` would install its service worker on the viewer's origin.
+  if (isViewerHost(url.hostname) && !isFile) {
+    return serveViewer(request, url, env);
+  }
+
   const response = await env.ASSETS.fetch(request);
   if (response.status !== 404) {
     return response;
   }
 
-  const url = new URL(request.url);
-  if (isFileRequest({ pathname: url.pathname, secFetchMode: request.headers.get('Sec-Fetch-Mode') })) {
+  if (isFile) {
     const archived = await serveArchivedAsset(request, env, url);
     return (
       archived ??
@@ -374,13 +380,14 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
     );
   }
 
-  if (isViewerHost(url.hostname)) {
-    // `/viewer`, not `/viewer.html`: the asset server answers the `.html` path with a redirect to it.
-    const page = await env.ASSETS.fetch(new Request(new URL('/viewer', url), request));
-    return withPublicationPreview(request, page, url, env);
-  }
   const page = await env.ASSETS.fetch(new Request(new URL('/', url), request));
   return withLinkPreview(request, page, url);
+};
+
+const serveViewer = async (request: Request, url: URL, env: Env): Promise<Response> => {
+  // `/viewer`, not `/viewer.html`: the asset server answers the `.html` path with a redirect to it.
+  const page = await env.ASSETS.fetch(new Request(new URL('/viewer', url), request));
+  return withPublicationPreview(request, page, url, env);
 };
 
 export const isViewerHost = (hostname: string): boolean => hostname.startsWith('view.');

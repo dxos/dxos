@@ -390,9 +390,10 @@ const createPublicationActions = (
   capabilities: CapabilityManager.CapabilityManager,
   publication: SpaceSchema.PublicationOptions,
 ) => {
+  // Only the open space: publishing makes a space public, so it never falls back to the default one.
   const activeSpace = Effect.gen(function* () {
     const client = yield* Capability.get(ClientCapabilities.Client);
-    return AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
+    return AppSpace.getActiveSpace(client, capabilities);
   });
   const toast = (id: string, title: string, icon: string) =>
     Operation.invoke(LayoutOperation.AddToast, {
@@ -429,7 +430,7 @@ const createPublicationActions = (
       id: SpaceOperation.UnpublishSpace.meta.key,
       data: Effect.fnUntraced(function* () {
         const space = yield* activeSpace;
-        if (space && AppAnnotation.getPublication(space.properties)) {
+        if (space && AppAnnotation.getPublication(space.properties, space.id)) {
           yield* Operation.invoke(SpaceOperation.UnpublishSpace, { space });
         }
       }),
@@ -443,7 +444,7 @@ const createPublicationActions = (
       id: `${SpaceOperation.PublishSpace.meta.key}.copyLink`,
       data: Effect.fnUntraced(function* () {
         const space = yield* activeSpace;
-        const published = space && AppAnnotation.getPublication(space.properties);
+        const published = space && AppAnnotation.getPublication(space.properties, space.id);
         if (published) {
           const url = PublicationLink.viewerUrl(publication.viewerOrigin, published.publicId).toString();
           yield* Effect.promise(() => navigator.clipboard.writeText(url));

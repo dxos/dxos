@@ -284,7 +284,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const [client] = get(clientAtom);
         const db = Obj.getDatabase(object);
         const space = publication && db && client?.spaces.get(db.spaceId);
-        const published = space ? AppAnnotation.getPublication(get(Obj.atom(space.properties))) !== undefined : false;
+        const published = space
+          ? AppAnnotation.getPublication(get(Obj.atom(space.properties)), space.id) !== undefined
+          : false;
 
         return Effect.succeed(
           constructObjectActions({
@@ -515,7 +517,7 @@ const constructObjectActions = ({
                 const path = UrlResolution.getShareableLinkPath(builder, nodeId);
                 const client = yield* Capability.get(ClientCapabilities.Client);
                 const space = client.spaces.get(db.spaceId);
-                const published = space && AppAnnotation.getPublication(space.properties);
+                const published = space && AppAnnotation.getPublication(space.properties, space.id);
                 if (Option.isNone(path) || !published) {
                   log.warn('object has no public link', { nodeId, published: !!published });
                   return;

@@ -18,7 +18,7 @@ import { remove } from './publication-client.ts';
 const handler: Operation.WithHandler<typeof SpaceOperation.UnpublishSpace> = SpaceOperation.UnpublishSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space }) {
-      const published = AppAnnotation.getPublication(space.properties);
+      const published = AppAnnotation.getPublication(space.properties, space.id);
       if (!published) {
         return yield* Effect.fail(new NotPublishedError());
       }

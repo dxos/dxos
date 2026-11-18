@@ -93,6 +93,11 @@ describe('viewer host', () => {
     expect(await response.text()).toBe(VIEWER_HTML);
   });
 
+  test('the root of a view. host is the viewer, never the app', async () => {
+    const response = await get('/', 'navigate', 'view.composer.test');
+    expect(await response.text()).toBe(VIEWER_HTML);
+  });
+
   test('the same navigation on the app host gets index.html', async () => {
     const response = await get('/pub-1/db/org.dxos.type.document+01ABC', 'navigate');
     expect(await response.text()).toBe(INDEX_HTML);
@@ -143,6 +148,13 @@ describe('publications on the viewer host', () => {
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
     expect(await response.json()).toEqual({ objects: [] });
     expect(requested).toEqual(['https://edge.test/db/publications/abc_123/archive.json']);
+  });
+
+  test('EDGE failing is not reported as a missing publication', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () => new Response('Unavailable', { status: 503 }));
+    const response = await get('/publications/abc_123/archive.json', 'cors', VIEWER);
+    expect(response.status).toBe(502);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
   });
 
   test('anything but the archive or manifest of a well-formed id never reaches EDGE', async () => {
@@ -212,6 +224,17 @@ describe('publications on the viewer host', () => {
     expect([...spacePng.slice(0, 8)]).toEqual(PNG_SIGNATURE);
     expect(pngSize(objectPng)).toEqual({ width: 1200, height: 630 });
     expect(objectPng).not.toEqual(spacePng);
+  });
+
+  test('an object key the manifest does not describe draws the space card', async () => {
+    edge();
+    const [space, inherited] = await Promise.all(
+      ['', '?object=constructor'].map(async (query) => {
+        const response = await get(`/publications/abc_123/preview.png${query}`, 'no-cors', VIEWER);
+        return new Uint8Array(await response.arrayBuffer());
+      }),
+    );
+    expect(inherited).toEqual(space);
   });
 
   test('a publication EDGE does not have has no preview image', async () => {

@@ -42,8 +42,11 @@ export const handlePublicationRead = async (
   const url = new URL(request.url);
   const [publicId, file, ...rest] = url.pathname.slice(PUBLICATIONS_PATH.length + 1).split('/');
   const method = request.method;
-  if (!edgeUrl || (method !== 'GET' && method !== 'HEAD') || !isPublicId(publicId) || rest.length > 0) {
+  if ((method !== 'GET' && method !== 'HEAD') || !isPublicId(publicId) || rest.length > 0) {
     return notFound();
+  }
+  if (!edgeUrl) {
+    return unavailable();
   }
   if (file === PREVIEW_FILE && renderPreview) {
     return handlePreviewImage(
@@ -63,7 +66,8 @@ export const handlePublicationRead = async (
     cf: { cacheEverything: true, cacheTtl: MAX_AGE_SECONDS },
   });
   if (!upstream.ok) {
-    return notFound();
+    // Only EDGE's 404 means the publication is gone; the viewer says so on a 404 alone.
+    return upstream.status === 404 ? notFound() : unavailable();
   }
   return new Response(upstream.body, {
     headers: {
@@ -137,7 +141,10 @@ export const readManifest = async (edgeUrl: string, publicId: string): Promise<M
 };
 
 export const cardOf = ({ name, preview }: Manifest, objectId?: string): Card => {
-  const object = objectId === undefined ? undefined : preview?.objects[objectId];
+  const object =
+    objectId !== undefined && preview && Object.hasOwn(preview.objects, objectId)
+      ? preview.objects[objectId]
+      : undefined;
   const space = { name, icon: preview?.icon, hue: preview?.hue };
   return object
     ? { kind: 'object', ...object, space }
@@ -146,6 +153,12 @@ export const cardOf = ({ name, preview }: Manifest, objectId?: string): Card => 
 
 const publicationFileUrl = (edgeUrl: string, publicId: string, file: string): URL =>
   edgePublicationUrl(`${PUBLICATIONS_PATH}/${publicId}/${file}`, edgeUrl);
+
+const unavailable = () =>
+  new Response('Unavailable', {
+    status: 502,
+    headers: { ...CORS_HEADERS, 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
+  });
 
 const notFound = () =>
   new Response('Not found', { status: 404, headers: { ...CORS_HEADERS, 'Content-Type': 'text/plain' } });

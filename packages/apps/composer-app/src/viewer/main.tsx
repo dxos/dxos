@@ -20,9 +20,17 @@ import { initAutomergeWasm, initEchoHostWasm } from '../util/automerge-wasm.ts';
 import { initializeObservability, setupConfig } from '../util/config.ts';
 import { APP_KEY } from '../util/constants.ts';
 import { getPlugins } from './plugin-defs.viewer.tsx';
-import { composerOriginOf, parseRoute, replaceWithSpace } from './route.ts';
+import { composerOriginOf, failureMessage, parseRoute, replaceWithSpace } from './route.ts';
 
 const bootStatus = (text: string) => App.bootLoader?.status({ humanized: text });
+
+const showFailure = (status?: number) => {
+  const root = document.getElementById('root');
+  if (root) {
+    root.textContent = failureMessage(status);
+  }
+  App.bootLoader?.dismiss();
+};
 
 const main = async () => {
   const route = parseRoute(window.location);
@@ -80,8 +88,7 @@ const main = async () => {
   bootStatus('Fetching the published space…');
   const response = await fetch(PublicationLink.archiveUrl(publicationsUrl, route.publicId));
   if (!response.ok) {
-    root.textContent = 'This space is no longer published.';
-    App.bootLoader?.dismiss();
+    showFailure(response.status);
     return;
   }
   const contents = new Uint8Array(await response.arrayBuffer());
@@ -105,4 +112,7 @@ const main = async () => {
   createRoot(root).render(<Main />);
 };
 
-void main().catch((error) => log.catch(error));
+void main().catch((error) => {
+  log.catch(error);
+  showFailure();
+});

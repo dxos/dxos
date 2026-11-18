@@ -33,3 +33,7 @@ export const composerOriginOf = (viewerOrigin: string): string => {
 };
 
 export const currentObjectPath = (): string | undefined => PublicationLink.objectPathOf(window.location.pathname);
+
+/** Only EDGE's 404 means the publication is gone; any other failure may pass. */
+export const failureMessage = (status?: number): string =>
+  status === 404 ? 'This space is no longer published.' : 'This published space could not be opened. Try again later.';

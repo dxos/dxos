@@ -17,7 +17,7 @@ import { PublicationLink, PublicationManifest, SpaceOperation } from '#types';
 import { PublishingDisabledError } from '../../errors.ts';
 import { SpaceOperationConfig } from '../helpers.ts';
 import { buildPreview } from './preview.ts';
-import { scrubArchive, upload } from './publication-client.ts';
+import { publishableIds, scrubArchive, upload } from './publication-client.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.PublishSpace> = SpaceOperation.PublishSpace.pipe(
   Operation.withHandler(
@@ -29,14 +29,16 @@ const handler: Operation.WithHandler<typeof SpaceOperation.PublishSpace> = Space
       const client = yield* Capability.get(ClientCapabilities.Client);
 
       yield* Effect.promise(() => space.waitUntilReady());
+      // The export holds whatever the space stores and the index decides what is live, so both see the same writes.
+      yield* Effect.promise(() => space.db.flush({ indexes: true }));
       const archive = yield* Effect.promise(() =>
         space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON }),
       );
-      const { text, objects } = scrubArchive(archive.contents);
-      const previous = AppAnnotation.getPublication(space.properties);
+      const contents = yield* Effect.promise(() => space.db.query(Filter.everything()).run());
+      const { text, objects } = scrubArchive(archive.contents, publishableIds(contents));
+      const previous = AppAnnotation.getPublication(space.properties, space.id);
       const resources = (yield* Capability.getAll(AppCapabilities.Translations)).flat();
       const baked = new Set(objects);
-      const contents = yield* Effect.promise(() => space.db.query(Filter.everything()).run());
       const preview = buildPreview({
         properties: space.properties,
         objects: contents.filter((object) => baked.has(object.id)),
@@ -53,7 +55,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.PublishSpace> = Space
 
       const published = yield* upload(client, { spaceId: space.id, manifest, archive: text }, previous?.publicId);
       Obj.update(space.properties, (properties) => {
-        Annotation.set(properties, AppAnnotation.PublicationAnnotation, { ...published });
+        Annotation.set(properties, AppAnnotation.PublicationAnnotation, { ...published, spaceId: space.id });
       });
 
       const url = PublicationLink.viewerUrl(publication.viewerOrigin, published.publicId).toString();

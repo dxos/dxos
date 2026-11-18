@@ -3,13 +3,12 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Annotation } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { Form } from '@dxos/react-ui-form';
@@ -30,9 +29,7 @@ export const PublishingSettings = ({ space }: PublishingSettingsProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const { publication } = Hooks.useCapability(SpaceOperationConfig);
-  const published =
-    Option.getOrUndefined(useAtomValue(Annotation.atom(space.properties, AppAnnotation.PublicationAnnotation))) ??
-    undefined;
+  const published = AppAnnotation.getPublication(useAtomValue(Obj.atom(space.properties)), space.id);
   const url =
     published && publication && PublicationLink.viewerUrl(publication.viewerOrigin, published.publicId).toString();
   const [pending, setPending] = useState(false);
