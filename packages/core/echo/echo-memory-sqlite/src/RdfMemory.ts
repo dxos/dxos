@@ -374,23 +374,22 @@ export const make = (rdf: RdfStore.Service): Effect.Effect<MemoryService.Service
     });
 
     /** A batch another replica wrote: a clear starts the rules over, and the facts it adds are pushed. */
-    const applyRemote = (batch: RdfStore.Batch) =>
-      Effect.gen(function* () {
-        if (own.delete(batch.id)) {
-          return;
-        }
-        if (batch.writes.some((write) => write._tag === 'clear')) {
-          yield* restart;
-        }
-        const graphs = new Set(
-          batch.writes.flatMap((write) =>
-            write._tag === 'insert'
-              ? write.quads.flatMap(({ g }) => (g && g.value !== Vocab.ONTOLOGY_GRAPH ? [g.value] : []))
-              : [],
-          ),
-        );
-        yield* push(yield* factsIn([...graphs]));
-      });
+    const applyRemote = Effect.fnUntraced(function* (batch: RdfStore.Batch) {
+      if (own.delete(batch.id)) {
+        return;
+      }
+      if (batch.writes.some((write) => write._tag === 'clear')) {
+        yield* restart;
+      }
+      const graphs = new Set(
+        batch.writes.flatMap((write) =>
+          write._tag === 'insert'
+            ? write.quads.flatMap(({ g }) => (g && g.value !== Vocab.ONTOLOGY_GRAPH ? [g.value] : []))
+            : [],
+        ),
+      );
+      yield* push(yield* factsIn([...graphs]));
+    });
 
     // Following the store starts before hydrating, so no batch applied in between goes unseen.
     const applied = yield* Queue.unbounded<RdfStore.Batch>();
