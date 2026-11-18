@@ -231,7 +231,8 @@ const reveal = async (page, { label, text }, { smooth = false, hold = smooth ? 0
                 element.textContent.trimStart().startsWith(text) &&
                 ![...element.children].some((child) => child.textContent.trimStart().startsWith(text)),
             );
-      const top = () => scroller.getBoundingClientRect().top + 24;
+      // Below a caption at the top of the plank.
+      const top = () => scroller.getBoundingClientRect().top + 120;
       const offset = () => {
         const element = find();
         if (element) {
@@ -318,6 +319,9 @@ const openSpecCompanion = async (demo, page, group) => {
     .locator(`${DECK_COMPANION} [data-testid="deck.companion.tab.spec-${group}"][aria-selected="true"]`)
     .first()
     .waitFor({ state: 'visible', timeout: 15_000 });
+  // The pointer that closed the last companion leaves a tooltip over this one's toolbar.
+  const plank = await page.locator('[data-testid="deck.plank"]').first().boundingBox();
+  await page.mouse.move(plank.x + plank.width / 2, plank.y + plank.height / 2);
 };
 
 /** Picks a view of the open Spec companion group, unless it is the one showing. */
@@ -557,36 +561,31 @@ const readReview = async (demo, page, milestone) => {
       : { value: `All ${done} verdicts done`, subtitle: 'A check covers every requirement', hold: BEAT * 3 },
   );
   await page.waitForTimeout(BEAT);
-  if (milestone.id === M1.id) {
-    // Requirement F-n.m belongs to M-1's nth feature.
-    const untested = (index) =>
-      verdicts.filter(({ id, status }) => status !== 'done' && id?.startsWith(`F-${index + 1}.`)).length;
-    const index = M1.features.reduce((best, _, index) => (untested(index) > untested(best) ? index : best), 2);
-    const feature = M1.features[index];
-    await page.evaluate(([key, feature]) => sessionStorage.setItem(key, feature), [SHOWN_FEATURE, feature]);
-    await jumpToFeature(page, feature);
+  // Requirement F-n.m belongs to feature F-n.
+  const untested = (name) =>
+    verdicts.filter(({ id, status }) => status !== 'done' && id?.startsWith(`${FEATURE_KEYS[name]}.`)).length;
+  const show = async (name, subtitle) => {
+    await jumpToFeature(page, name);
+    const open = untested(name);
     await demo.caption({
-      value: untested(index) > 0 ? `${feature}: ${untested(index)} untested` : `${feature}: every requirement done`,
-      subtitle: 'Operational all the same: its scenario passed on the Worker',
+      value: open > 0 ? `${name}: ${open} untested` : `${name}: every requirement done`,
+      subtitle: subtitle(open),
       hold: BEAT * 4,
     });
     await page.waitForTimeout(BEAT * 4);
+  };
+  if (milestone.id === M1.id) {
+    const feature = M1.features.reduce((best, name) => (untested(name) > untested(best) ? name : best), HEATMAP);
+    await page.evaluate(([key, feature]) => sessionStorage.setItem(key, feature), [SHOWN_FEATURE, feature]);
+    await show(feature, () => 'Operational all the same: its scenario passed on the Worker');
   } else {
     const feature = (await page.evaluate((key) => sessionStorage.getItem(key), SHOWN_FEATURE)) ?? HEATMAP;
-    await jumpToFeature(page, feature);
-    await demo.caption({
-      value: `${feature}: every requirement done`,
-      subtitle: "M-2's check covers what M-1's left untested",
-      hold: BEAT * 4,
-    });
-    await page.waitForTimeout(BEAT * 4);
-    await jumpToFeature(page, POLL_PAGE);
-    await demo.caption({
-      value: `${POLL_PAGE}: operational, every requirement done`,
-      subtitle: `${ACCENT}: the accent colour is the theme's blue`,
-      hold: BEAT * 4,
-    });
-    await page.waitForTimeout(BEAT * 4);
+    await show(feature, (open) =>
+      open > 0 ? "M-2's check covers the pages, not M-1's features" : "M-2's check covers what M-1's left untested",
+    );
+    await show(POLL_PAGE, (open) =>
+      open > 0 ? 'Operational: T-2 passed on the Worker' : `${ACCENT}: the accent colour is the theme's blue`,
+    );
   }
   await closeCompanion(page);
 };
