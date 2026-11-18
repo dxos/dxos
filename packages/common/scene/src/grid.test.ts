@@ -260,6 +260,50 @@ describe('a box that packs what it holds', () => {
   });
 });
 
+describe('a packing whose sizes do not fit', () => {
+  const frame = { x: 0, y: 0, w: 640, h: 672 };
+  // The Hyperspace field as it is written: nine graphs, each asking for more than a ninth of the frame.
+  const widths = [700, 500, 500, 550, 500, 550, 500, 575, 500];
+  const children = widths.map((width, index) => ({ ...box(`s${index}`), width }));
+  const rule = { layout: 'pack' as const, packSeed: 28, packMin: 36, packMax: 185, gap: 10 };
+  const placed = solveGrid(rule, frame, children);
+
+  test('fills the frame: the circles cover most of it, at one factor of the sizes asked', ({ expect }) => {
+    expect(placed).toHaveLength(9);
+    const factors = placed.map(({ frame: child }, index) => child.w / widths[index]);
+    for (const factor of factors) {
+      expect(factor).toBeCloseTo(factors[0], 6);
+    }
+    const covered = placed.reduce((area, { frame: child }) => area + (Math.PI * child.w * child.w) / 4, 0);
+    expect(covered / (frame.w * frame.h)).toBeGreaterThan(0.55);
+  });
+
+  test('keeps every circle inside the frame and clear of the others by the gap', ({ expect }) => {
+    for (const { frame: child } of placed) {
+      expect(child.x).toBeGreaterThanOrEqual(10 - 0.001);
+      expect(child.y).toBeGreaterThanOrEqual(10 - 0.001);
+      expect(child.x + child.w).toBeLessThanOrEqual(frame.w - 10 + 0.001);
+      expect(child.y + child.h).toBeLessThanOrEqual(frame.h - 10 + 0.001);
+    }
+    const circles = placed.map(({ frame: child }) => ({
+      x: child.x + child.w / 2,
+      y: child.y + child.h / 2,
+      r: child.w / 2,
+    }));
+    for (const [index, left] of circles.entries()) {
+      for (const right of circles.slice(index + 1)) {
+        // Half a unit of the gap may be given up where two circles are pushed together.
+        expect(Math.hypot(left.x - right.x, left.y - right.y)).toBeGreaterThanOrEqual(left.r + right.r + 10 - 0.5);
+      }
+    }
+  });
+
+  test('is the same field each time, and another for another seed', ({ expect }) => {
+    expect(solveGrid(rule, frame, children)).toEqual(placed);
+    expect(solveGrid({ ...rule, packSeed: 29 }, frame, children)).not.toEqual(placed);
+  });
+});
+
 describe('a child that states its own size', () => {
   const frame = { x: 0, y: 0, w: 400, h: 200 };
 

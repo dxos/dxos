@@ -170,7 +170,9 @@ edge calendar -- field stroke=dashed
   height); `justifyContent` and `alignContent` (`start`, `center`, `end`) say where the tracks sit when they
   leave space over.
 - `layout=pack` places a group's members as circles packed into its frame instead of on tracks; `packSeed`
-  fixes the arrangement and `packMin`/`packMax` bound a member's size.
+  fixes the arrangement and `packMin`/`packMax` bound the size drawn for a member that states none. Sizes that do
+  not all fit are drawn at one factor of what was asked, the largest that fits, so asking for more than the frame
+  holds fills it.
 - A group with a label draws it as a heading over its members; a group without one is only their grid.
 - `border=true`, `fill`, `stroke` and `color` on a group draw a frame round its members. The heading stays
   outside it; for a frame round the heading too, put the labelled group inside a framed one.

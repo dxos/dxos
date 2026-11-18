@@ -1078,3 +1078,14 @@ decision D-107: A packing places every member: where the sizes do not all fit, e
     - Leaving a member out, as the deck's own packing did: there a circle was a picture, and here it is a box something connects to.
 ```
 
+```mdl
+decision D-108: A packing whose sizes do not fit draws every circle at one factor of the size asked, the largest that fits, with the circles pushed up against each other; sizes that fit are scattered as they are. Asking for more than the frame holds is how a field is filled. Refines [D-107].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Layout]
+  why: Shrinking in steps and dropping each circle at a random place left a crowded field a quarter covered; pushing overlapping circles apart and searching for the largest factor covers about 60%.
+  rejected:
+    - Keeping stated sizes exact and shrinking only the rest: an author fills a field by over-asking, and exact sizes would then leave members out.
+```
+

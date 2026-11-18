@@ -23,8 +23,8 @@ export type StudioSlide = { id: string; title: string; source: string };
 
 /** The nine slides in the order they are presented. */
 export const STUDIO_SLIDES: readonly StudioSlide[] = [
-  { id: 'hyperspace', title: 'Composer · ECHO Hyperspace · EDGE Services', source: hyperspace },
   { id: 'echo', title: 'ECHO', source: echo },
+  { id: 'hyperspace', title: 'ECHO Hyperspace', source: hyperspace },
   { id: 'ontology', title: 'Ontologies', source: ontology },
   { id: 'plugins', title: 'Plugins', source: plugins },
   { id: 'composer', title: 'Composer', source: composer },

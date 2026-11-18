@@ -8,18 +8,22 @@ group composer "Composer" gap=24 {
 
 group hyperspace "ECHO Hyperspace" cols="1fr 0" gap=0 {
   group field-body padding=24 border=true {
-    group field gap=10 layout=pack packSeed=29 packMin=36 packMax=185 {
-      node s0 kind=graph border=true depth=5 dots=true extra=0.4 data-fill=0.55 pitch=24 root=0 seed=29 size=24 tones="violet | green | amber | blue"
-      node s1 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=30 size=24
-      node s2 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=31 size=24
-      node s3 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=32 size=24
-      node s4 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=33 size=24
-      node s5 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=34 size=24
-      node s6 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=35 size=24
-      node s7 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=36 size=24
-      node s8 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=37 size=24
+    group field gap=10 layout=pack packSeed=33 packMin=36 packMax=185 {
+      node s0  kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=1 size=24 width=800 root=9 depth=4 tones="violet | green | amber | blue"
+      node s1  kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=2 size=24 width=500 root=5 depth=3 tones="violet | green | amber | blue"
+      node s2  kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=3 size=24 width=400
+      node s3  kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=4 size=24 width=450
+      node s4  kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=5 size=24 width=400
+      node s5  kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=6 size=24 width=450
+      node s6  kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=7 size=24 width=400
+      node s7  kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=8 size=24 width=475
+      node s8  kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=9 size=24 width=400
+      node s9  kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=9 size=24 width=300
+      node s10 kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=9 size=24 width=200
+      node s11 kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=9 size=24 width=200
     }
   }
+
   group field-ports gap=12 {
     group port-calendar { }
     group port-email { }
@@ -47,24 +51,17 @@ group services "EDGE Services" gap=12 {
   node slack "Slack" kind=card icon=hash variant=simple
 }
 
-edge calendar -- port-calendar path=line stroke=dashed
-edge email -- port-email path=line stroke=dashed
-edge storage -- port-storage path=line stroke=dashed
-edge translation -- port-translation path=line stroke=dashed
-edge search -- port-search path=line stroke=dashed
-edge sql -- port-sql path=line stroke=dashed
-edge files -- port-files path=line stroke=dashed
-edge commerce -- port-commerce path=line stroke=dashed
-edge travel -- port-travel path=line stroke=dashed
-edge slack -- port-slack path=line stroke=dashed
-edge s0 -- s5 stroke=dashed
-edge s0 -- s6 stroke=dashed
-edge s1 -- s5 stroke=dashed
-edge s1 -- s4 stroke=dashed
-edge s3 -- s6 stroke=dashed
-edge s3 -- s8 stroke=dashed
-edge s4 -- s8 stroke=dashed
-edge s7 -- s8 stroke=dashed
-edge plank-board -- s1 path=line stroke=dashed
-edge plank-sheet -- s2 path=line stroke=dashed
-edge plank-thread -- s3 path=line stroke=dashed
+edge calendar     -- port-calendar    path=line stroke=dotted
+edge email        -- port-email       path=line stroke=dotted
+edge storage      -- port-storage     path=line stroke=dotted
+edge translation  -- port-translation path=line stroke=dotted
+edge search       -- port-search      path=line stroke=dotted
+edge sql          -- port-sql         path=line stroke=dotted
+edge files        -- port-files       path=line stroke=dotted
+edge commerce     -- port-commerce    path=line stroke=dotted
+edge travel       -- port-travel      path=line stroke=dotted
+edge slack        -- port-slack       path=line stroke=dotted
+
+edge plank-board  -- s0 path=line stroke=dashed
+edge plank-sheet  -- s1 path=line stroke=dashed
+edge plank-thread -- s1 path=line stroke=dashed

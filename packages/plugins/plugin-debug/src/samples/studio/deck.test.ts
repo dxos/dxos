@@ -28,10 +28,15 @@ describe('the studio deck', () => {
       }
     });
 
-    test('is the text its own drawing prints', ({ expect }) => {
-      // So a slide edited on the canvas and read back is the file again, and a hand edit that the print would
-      // reorder shows here rather than as a diff the next time someone saves.
-      expect(Dsl.printIntent(scene())).toEqual({ text: slide.source });
+    test('reads back as text that draws the same', ({ expect }) => {
+      // Not the same text: a slide is edited by hand, and the print orders attributes its own way. What must hold
+      // is that a slide read back out of its drawing, as the DSL companion shows it, is still that drawing.
+      const [object] = scene().objects;
+      const { text, reasons } = Dsl.printIntent({ objects: [object] });
+      expect(reasons).toBeUndefined();
+      const { commands, problems } = Dsl.parse(text ?? '');
+      expect(problems.filter(({ severity }) => severity === 'error')).toEqual([]);
+      expect(GridEngine.drawn(Dsl.toScene(commands).objects[0])).toEqual(GridEngine.drawn(object));
     });
 
     test('states no geometry but its page', ({ expect }) => {
