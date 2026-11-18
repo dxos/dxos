@@ -15,7 +15,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, useCallback, useEffect, useState } from 'react';
 import { expect, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -110,30 +110,51 @@ type SourceView = 'dsl' | 'json';
  * One editor per view, re-created when the view changes: CodeMirror takes its language at construction, so this
  * remounts rather than reconfiguring a live editor. The DSL text lives in the parent, so a remount keeps an edit.
  */
-const TextPane = ({
-  value,
-  view,
-  onChange,
-}: {
+type TextPaneProps = ComponentPropsWithoutRef<'div'> & {
   value: string;
   view: SourceView;
-  onChange?: (text: string) => void;
-}) => {
-  const themeMode = Hooks.useThemeMode();
-  const { parentRef, focusAttributes } = useTextEditor(
-    () => ({
-      initialValue: value,
-      extensions: [
-        createBasicExtensions({ lineNumbers: true, readOnly: onChange === undefined }),
-        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        ...(view === 'dsl' ? [diagramLanguage({ layout: false })] : []),
-        ...(onChange ? [listener({ onChange: ({ text }) => onChange(text) })] : []),
-      ],
-    }),
-    [themeMode, view],
-  );
-  return <div {...focusAttributes} ref={parentRef} className='overflow-hidden' data-testid='studio-source.editor' />;
+  onTextChange?: (text: string) => void;
 };
+
+const TextPane = forwardRef<HTMLDivElement, TextPaneProps>(
+  ({ value, view, onTextChange, className, ...props }, forwardedRef) => {
+    const themeMode = Hooks.useThemeMode();
+    const { parentRef, focusAttributes } = useTextEditor(
+      () => ({
+        initialValue: value,
+        extensions: [
+          createBasicExtensions({ lineNumbers: true, readOnly: onTextChange === undefined }),
+          createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+          ...(view === 'dsl' ? [diagramLanguage({ layout: false })] : []),
+          ...(onTextChange ? [listener({ onChange: ({ text }) => onTextChange(text) })] : []),
+        ],
+      }),
+      [themeMode, view],
+    );
+    // `Panel.Body asChild` hands this component the body's own class, `data-part` and ref, so it has to be a real
+    // slot: dropping them leaves the body unstyled, and ark-ui outlines the child in red to say so.
+    const setRef = useCallback(
+      (node: HTMLDivElement | null) => {
+        parentRef.current = node;
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(node);
+        } else if (forwardedRef) {
+          forwardedRef.current = node;
+        }
+      },
+      [forwardedRef, parentRef],
+    );
+    return (
+      <div
+        {...props}
+        {...focusAttributes}
+        ref={setRef}
+        className={['overflow-hidden', className].filter(Boolean).join(' ')}
+        data-testid='studio-source.editor'
+      />
+    );
+  },
+);
 
 /**
  * The DSL in the diagram language mode, applied to the canvas only when asked. Applying on a timer after each
@@ -234,7 +255,7 @@ const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
           absolutely filled child inside it pins to the panel instead and covers the header and footer. */}
       <Panel.Body asChild>
         {view === 'dsl' ? (
-          <TextPane key='dsl' view='dsl' value={source} onChange={onChange} />
+          <TextPane key='dsl' view='dsl' value={source} onTextChange={onChange} />
         ) : (
           <TextPane key='json' view='json' value={records} />
         )}
