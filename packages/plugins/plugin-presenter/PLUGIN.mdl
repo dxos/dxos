@@ -113,7 +113,7 @@ component Deck
     and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: Cmd (or Ctrl) with
     left or right, Shift with left or right, and Home and End jump to first and last, `f` toggles fullscreen,
     Escape exits fullscreen. Space and Down advance a click step, else the slide; Up retreats a click step,
-    else lands on the previous slide fully revealed. Right moves to the next slide at its first step, `]` to the next slide fully revealed, and Left and `[` to the
+    else lands on the previous slide fully revealed. Right and `]` move to the next slide fully revealed, and Left and `[` to the
     previous slide fully revealed, past any remaining click steps; none of them acts at the deck's end.
     Click steps are ephemeral and reset on slide change; Space
     does not act on a focused button or link. While the focused (or fullscreen) deck prints, it renders every
@@ -1712,6 +1712,14 @@ decision D-102: The public link that presents is the one Composer copies, which 
 decision D-103: Approve [D-102].
   date: 2026-11-18
   by: user:wittjosiah
+```
+
+```mdl
+decision D-104: Left and right skip a slide's click steps and land on the neighbouring slide fully revealed; Up, Down and Space step through the builds. Fills in [D-82], and replaces Right starting the next slide at its first step in [D-90].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [Deck]
+  why: A speaker steps through the builds once, forward; for the rest of a talk, such as Q&A, they jump between slides and do not want to replay them.
 ```
 
 ## Appendix: Extension Definitions
