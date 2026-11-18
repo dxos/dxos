@@ -576,6 +576,8 @@ export type NavigationTarget = {
    * position rather than path sniffing by the caller.
    */
   position?: Position.Position;
+  /** View state to set before `path` opens, so it opens on the part the target is about (a project on one of its specs). */
+  viewState?: readonly ViewState.Patch[];
 };
 
 export type NavigationQuery = {

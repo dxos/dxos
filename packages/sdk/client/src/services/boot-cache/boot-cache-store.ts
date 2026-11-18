@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type WorkingSetRow } from '@dxos/echo-client';
 import { log } from '@dxos/log';
+import { type WorkingSetRow } from '@dxos/protocols';
 
 const DATABASE = 'dxos-boot-cache';
 

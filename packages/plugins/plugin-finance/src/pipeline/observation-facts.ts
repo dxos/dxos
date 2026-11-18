@@ -3,7 +3,7 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { RDF, hashText } from '@dxos/pipeline-rdf';
+import { Fact, Hash, Ontology, Vocab } from '@dxos/echo-memory';
 
 import { type Finance } from '#types';
 
@@ -36,22 +36,22 @@ const provenanceOf = (observation: Finance.Observation): Provenance => {
     agent: agentIri(publisher),
     agentLabel: publisher,
     time: observation.date.length === 10 ? `${observation.date}T00:00:00.000Z` : observation.date,
-    hash: hashText(
+    hash: Hash.text(
       JSON.stringify([observation.kind, observation.symbol, observation.date, observation.values, observation.labels]),
     ),
   };
 };
 
-const number = (value: number | undefined): RDF.LiteralTerm[] => (value === undefined ? [] : [literal(String(value))]);
+const number = (value: number | undefined): Fact.LiteralTerm[] => (value === undefined ? [] : [literal(String(value))]);
 
-const person = (name: string): RDF.EntityTerm => ({
+const person = (name: string): Fact.EncodedEntityTerm => ({
   kind: 'entity',
-  entity: `${RDF.Vocab.ENTITY}person/${encodeURIComponent(name.toLowerCase().replace(/\s+/g, '-'))}`,
+  entity: `${Vocab.ENTITY}person/${encodeURIComponent(name.toLowerCase().replace(/\s+/g, '-'))}`,
   label: name,
   type: 'person',
 });
 
-const organization = (name: string): RDF.EntityTerm => ({
+const organization = (name: string): Fact.EncodedEntityTerm => ({
   kind: 'entity',
   entity: agentIri(name),
   label: name,
@@ -59,7 +59,7 @@ const organization = (name: string): RDF.EntityTerm => ({
 });
 
 /** The company an observation is about: the known listing by ticker, else the issuer by name. */
-const subjectOf = (observation: Finance.Observation): RDF.EntityTerm | undefined =>
+const subjectOf = (observation: Finance.Observation): Fact.EncodedEntityTerm | undefined =>
   observation.symbol
     ? companyTerm(observation.symbol, listing(observation.symbol)?.name ?? observation.issuer)
     : observation.issuer
@@ -67,7 +67,7 @@ const subjectOf = (observation: Finance.Observation): RDF.EntityTerm | undefined
       : undefined;
 
 /** The row as a node of its own graph (slugs are local to their graph). */
-const node = (label: string): RDF.EntityTerm => ({ kind: 'entity', entity: 'row', label, type: 'event' });
+const node = (label: string): Fact.EncodedEntityTerm => ({ kind: 'entity', entity: 'row', label, type: 'event' });
 
 /**
  * The facts one observation states, written without a model on the predicates the text extraction's ticker entities
@@ -75,13 +75,13 @@ const node = (label: string): RDF.EntityTerm => ({ kind: 'entity', entity: 'row'
  * node `about` the company plus a direct edge where one reads naturally (`insider —insider sells shares of→ company`,
  * `holder —holds position in→ company`, `company —files→ filing`).
  */
-export const observationFacts = (observation: Finance.Observation): RDF.Fact[] => {
+export const observationFacts = (observation: Finance.Observation): Fact.Fact[] => {
   const provenance = provenanceOf(observation);
   const company = subjectOf(observation);
   const day = literal(observation.date);
   const { values, labels } = observation;
   const statements: Statement[] = [];
-  const add = (subject: RDF.Term, predicate: RDF.Ontology.Entry, objects: RDF.Term[]) =>
+  const add = (subject: Fact.EncodedTerm, predicate: Ontology.Entry, objects: Fact.EncodedTerm[]) =>
     objects.forEach((object) => statements.push([subject, predicate, object]));
 
   switch (observation.kind) {
@@ -152,7 +152,7 @@ export const observationFacts = (observation: Finance.Observation): RDF.Fact[] =
       if (!company || !observation.link) {
         return [];
       }
-      const filing: RDF.EntityTerm = {
+      const filing: Fact.EncodedEntityTerm = {
         kind: 'entity',
         entity: observation.link,
         label: `${labels.form} ${observation.date}`,
@@ -169,7 +169,7 @@ export const observationFacts = (observation: Finance.Observation): RDF.Fact[] =
       if (!labels.member || !observation.link) {
         return [];
       }
-      const report: RDF.EntityTerm = {
+      const report: Fact.EncodedEntityTerm = {
         kind: 'entity',
         entity: observation.link,
         label: `${labels.member} periodic transaction report ${observation.date}`,

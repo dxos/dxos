@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { Ontology } from '../../types/index.ts';
+import { Ontology } from '@dxos/echo-memory';
+
 import {
   type ClaimDecision,
   DEFAULT_THRESHOLDS,

@@ -5,12 +5,15 @@
 import { create } from '@bufbuild/protobuf';
 import { Encoder, decode as cborDecode } from 'cbor-x';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
+import * as FactFeed from '@dxos/echo-memory/FactFeed';
 import { type EdgeConnection, MessageSchema, type ReconnectListener } from '@dxos/edge-client';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore, SyncServer } from '@dxos/feed';
@@ -21,9 +24,11 @@ import { createBuf } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { QuadStore } from '@dxos/sparql-sqlite/async';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import { bufferToArray } from '@dxos/util';
 
+import { factFeedLog } from '../rdf/index.ts';
 import { FeedSyncer } from './feed-syncer.ts';
 
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
@@ -445,6 +450,59 @@ describe('FeedSyncer', () => {
       expect(traceResult.blocks).toHaveLength(1);
       expect(dataResult.blocks[0].data).toEqual(new Uint8Array([1, 2, 3]));
       expect(traceResult.blocks[0].data).toEqual(new Uint8Array([7, 8, 9]));
+    });
+  });
+
+  test('replicates a fact feed, and a store over it applies what arrives', async () => {
+    const spaceId = SpaceId.random();
+    const feedId = EntityId.random();
+    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
+      spaceId,
+      syncNamespaces: [...syncNamespaces, FeedProtocol.WellKnownNamespaces.facts],
+    });
+
+    // A store on this device, over its own fact feed, before anything has replicated.
+    const scope = Scope.makeUnsafe();
+    onTestFinished(() => clientRuntime.runPromise(Scope.close(scope, Exit.void)));
+    const store = await clientRuntime.runPromise(
+      Effect.gen(function* () {
+        const log = yield* factFeedLog({ feeds: clientFeedStore, spaceId, feedId });
+        return yield* QuadStore.make({ prefix: 'rdf_test_', log });
+      }).pipe(Scope.provide(scope)),
+    );
+
+    // Another device's write, as it reaches the server.
+    const name = { termType: 'NamedNode', value: 'https://example.com/name' } as const;
+    await serverFeedStore
+      .appendLocal([
+        {
+          spaceId,
+          feedId,
+          feedNamespace: FactFeed.NAMESPACE,
+          data: FactFeed.encodeBlock({
+            id: 'b1',
+            writes: [
+              {
+                _tag: 'insert',
+                quads: [
+                  {
+                    s: { termType: 'NamedNode', value: 'https://example.com/dima' },
+                    p: name,
+                    o: { termType: 'Literal', value: 'Dima' },
+                  },
+                ],
+              },
+            ],
+          }),
+        },
+      ])
+      .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
+
+    await syncer.open(new Context());
+
+    await vi.waitFor(async () => {
+      const rows = await clientRuntime.runPromise(store.query('SELECT ?n WHERE { ?s <https://example.com/name> ?n }'));
+      expect(rows.map(({ n }) => n?.value)).toEqual(['Dima']);
     });
   });
 

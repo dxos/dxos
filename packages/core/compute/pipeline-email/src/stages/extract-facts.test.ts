@@ -8,9 +8,10 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
+import { type Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
-import { FactPipeline, FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { FactPipeline, FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 import { mockAiService } from '@dxos/pipeline-rdf/testing';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
@@ -55,7 +56,7 @@ describe('extractFactsStage', () => {
     expect(items).toHaveLength(1);
 
     // The fact was persisted; read it back from the same store.
-    const facts: RDF.Fact[] = await runtime.runPromise(
+    const facts: Fact.Fact[] = await runtime.runPromise(
       Effect.gen(function* () {
         const store = yield* FactStore;
         return yield* store.query({});

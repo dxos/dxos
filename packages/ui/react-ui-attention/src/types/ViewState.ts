@@ -64,6 +64,31 @@ export interface Aspect<T, Encoded = T> {
  */
 export const define = <T, Encoded = T>(def: Aspect<T, Encoded>): Aspect<T, Encoded> => def;
 
+/** Encoded fields to merge over one aspect's value for one context; plain JSON, so it can cross an operation. */
+export const Patch = Schema.Struct({
+  aspect: Schema.String.annotate({ description: "The aspect's key." }),
+  context: Schema.String.annotate({ description: 'The context the aspect is keyed by.' }),
+  fields: Schema.Record(Schema.String, Schema.Unknown).annotate({
+    description: "Encoded top-level fields, merged over the aspect's current value.",
+  }),
+});
+
+export type Patch = Schema.Schema.Type<typeof Patch>;
+
+/** A patch setting `fields` of `aspect` for `context`, encoded by the aspect's schema. */
+export const patch = <T extends object, Encoded>(
+  aspect: Aspect<T, Encoded>,
+  context: string,
+  fields: Partial<T>,
+): Patch => {
+  const encoded = Schema.encodeUnknownSync(Schema.toCodecJson(aspect.schema))({ ...aspect.defaultValue(), ...fields });
+  return {
+    aspect: aspect.key,
+    context,
+    fields: isRecord(encoded) ? pickKeys(encoded, Object.keys(fields)) : {},
+  };
+};
+
 /**
  * A backend produces a reactive, writable atom for each `(aspect, contextId)` pair. Backends may
  * hydrate asynchronously (an ECHO backend would), yielding `aspect.defaultValue()` until loaded;
@@ -96,6 +121,8 @@ export class Manager {
   readonly #aspects = new Map<string, Aspect<any, any>>();
   // A leader's encoded values of an aspect this session has not used yet, decoded when it first is.
   readonly #pending = new Map<string, Map<string, unknown>>();
+  // Patches to an aspect this session has not used yet, applied in order when it first is.
+  readonly #pendingPatches = new Map<string, Patch[]>();
   readonly #followListeners = new Set<(key: string, contextId: string) => void>();
   // Values written from the followed session, by aspect key and context; a local write clears its entry.
   readonly #fromFollow = new Set<string>();
@@ -209,6 +236,19 @@ export class Manager {
     }
   }
 
+  /**
+   * Merges a patch's fields over its aspect's value for its context, as a local write. A patch to an aspect this
+   * session has not used yet is held until it is; one whose merged value does not decode is dropped.
+   */
+  apply(patch: Patch): void {
+    const aspect = this.#aspects.get(patch.aspect);
+    if (aspect) {
+      this.#patchInto(aspect, patch);
+    } else {
+      this.#pendingPatches.set(patch.aspect, [...(this.#pendingPatches.get(patch.aspect) ?? []), patch]);
+    }
+  }
+
   #learn(aspect: Aspect<any, any>): void {
     if (this.#aspects.has(aspect.key)) {
       return;
@@ -217,6 +257,20 @@ export class Manager {
     const pending = this.#pending.get(aspect.key);
     this.#pending.delete(aspect.key);
     pending?.forEach((value, contextId) => this.#decodeInto(aspect, contextId, value));
+    const patches = this.#pendingPatches.get(aspect.key);
+    this.#pendingPatches.delete(aspect.key);
+    patches?.forEach((patch) => this.#patchInto(aspect, patch));
+  }
+
+  #patchInto(aspect: Aspect<any, any>, { context, fields }: Patch): void {
+    const own = this.#encode(aspect, context).pipe(
+      Option.filter(isRecord),
+      Option.getOrElse(() => ({})),
+    );
+    Option.match(Schema.decodeUnknownOption(Schema.toCodecJson(aspect.schema))({ ...own, ...fields }), {
+      onNone: () => log.warn('dropped a view-state patch that does not decode', { aspect: aspect.key, context }),
+      onSome: (decoded) => this.#write(aspect, context, decoded, 'local'),
+    });
   }
 
   #encode(aspect: Aspect<any, any>, contextId: string): Option.Option<Schema.Json> {
@@ -250,10 +304,11 @@ const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
 
 const isJsonObject = (value: Schema.Json): value is Schema.JsonObject => isRecord(value);
 
-const pickFields = <V>(aspect: Aspect<any, any>, record: Readonly<Record<string, V>>): Record<string, V> => {
-  const fields: readonly string[] = typeof aspect.follow === 'object' ? aspect.follow.fields : [];
-  return Object.fromEntries(Object.entries(record).filter(([field]) => fields.includes(field)));
-};
+const pickKeys = <V>(record: Readonly<Record<string, V>>, keys: readonly string[]): Record<string, V> =>
+  Object.fromEntries(Object.entries(record).filter(([key]) => keys.includes(key)));
+
+const pickFields = <V>(aspect: Aspect<any, any>, record: Readonly<Record<string, V>>): Record<string, V> =>
+  pickKeys(record, typeof aspect.follow === 'object' ? aspect.follow.fields : []);
 
 // An aspect that follows some fields sends only those; struct fields encode under their own names.
 const pickFollowed = (aspect: Aspect<any, any>, json: Schema.Json): Schema.Json =>

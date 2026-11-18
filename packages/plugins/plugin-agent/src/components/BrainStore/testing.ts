@@ -3,7 +3,7 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 import { Person } from '@dxos/types';
 
 import { type TriggerOperation } from '#types';
@@ -24,28 +24,29 @@ const fact = (
     object,
     saidAt,
   }: { speaker: string; quote: string; predicate: string; object: string; saidAt: string },
-): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: speaker, label: label(speaker) },
-    predicate,
-    object: { kind: 'literal', literal: object },
-    quote,
-  },
-  factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
-  illocution: { force: 'commissive', mood: 'declarative' },
-  attribution: {
-    agent: speaker,
-    agentLabel: label(speaker),
-    source: `dxn:queue:chat:${id}`,
-    generatedAtTime: saidAt,
-  },
-  recordedAt: saidAt,
-  extractor: { id: 'default', model: 'test', version: '1' },
-  sourceHash: id,
-});
+): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: speaker, label: label(speaker) },
+      predicate,
+      object: { kind: 'literal', literal: object },
+      quote,
+    },
+    factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
+    illocution: { force: 'commissive', mood: 'declarative' },
+    attribution: {
+      agent: speaker,
+      agentLabel: label(speaker),
+      source: `dxn:queue:chat:${id}`,
+      generatedAtTime: saidAt,
+    },
+    recordedAt: saidAt,
+    extractor: { id: 'default', model: 'test', version: '1' },
+    sourceHash: id,
+  });
 
-export const FACTS: RDF.Fact[] = [
+export const FACTS = Fact.makeMany([
   fact('fact-1', {
     speaker: BOB,
     quote: 'I am working on the indexer migration.',
@@ -67,7 +68,7 @@ export const FACTS: RDF.Fact[] = [
     object: 'indexer PR',
     saidAt: '2026-10-07T11:50:00.000Z',
   }),
-];
+]);
 
 const COMPILED_RULES = [
   'achieved(goal) :- speaker(F, "did:key:z6MkBob"), about(F, "indexer PR"), force(F, assertive).',

@@ -107,7 +107,7 @@ describe('generateFacts', () => {
         if (facts.length !== 4) {
           throw new Error(`expected 4 facts, got ${facts.length}`);
         }
-        for (const needle of ['travelsTo', 'Paris', 'Rome', 'PR+', 'CT+', 'satisfies RDF.Fact[]']) {
+        for (const needle of ['travelsTo', 'Paris', 'Rome', 'PR+', 'CT+', 'satisfies Fact.Encoded[]']) {
           if (!module.includes(needle)) {
             throw new Error(`generated module missing ${JSON.stringify(needle)}`);
           }

@@ -28,6 +28,12 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../echo/echo-memory"
+    },
+    {
+      "path": "../../echo/echo-memory-sqlite"
+    },
+    {
       "path": "../ai"
     },
     {

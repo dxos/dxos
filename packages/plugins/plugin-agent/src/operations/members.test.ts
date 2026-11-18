@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { Fact } from '@dxos/echo-memory';
 import { type Space } from '@dxos/halo';
-import { type RDF } from '@dxos/pipeline-rdf';
 
 import { TEST_MEMBERS } from '../brain/testing.ts';
 import { type EntityIndex, knownEntities, resolveTerms } from './members.ts';
@@ -13,19 +13,20 @@ import { type EntityIndex, knownEntities, resolveTerms } from './members.ts';
 const DIMA = TEST_MEMBERS.dima;
 const RICH = 'echo://SPACE/RICH';
 
-const fact = (subject: string, object: string): RDF.Fact => ({
-  id: 'f1',
-  assertion: {
-    subject: { kind: 'entity', entity: subject.toLowerCase(), label: subject },
-    predicate: 'works with',
-    object: { kind: 'entity', entity: object.toLowerCase(), label: object },
-  },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: 'doc', generatedAtTime: '2026-10-13T00:00:00Z' },
-  recordedAt: '2026-10-13T00:00:00Z',
-  extractor: { id: 'default', model: 'm', version: '1' },
-  sourceHash: 'h',
-});
+const fact = (subject: string, object: string): Fact.Fact =>
+  Fact.make({
+    id: 'f1',
+    assertion: {
+      subject: { kind: 'entity', entity: subject.toLowerCase(), label: subject },
+      predicate: 'works with',
+      object: { kind: 'entity', entity: object.toLowerCase(), label: object },
+    },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: 'doc', generatedAtTime: '2026-10-13T00:00:00Z' },
+    recordedAt: '2026-10-13T00:00:00Z',
+    extractor: { id: 'default', model: 'm', version: '1' },
+    sourceHash: 'h',
+  });
 
 describe('resolveTerms', () => {
   test('keys a member by DID, a person in the space by object URI, and leaves anyone else a slug', ({ expect }) => {

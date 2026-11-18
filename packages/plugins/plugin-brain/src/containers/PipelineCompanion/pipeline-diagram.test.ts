@@ -5,11 +5,11 @@
 import { describe, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Pipeline } from '@dxos/echo-memory';
 
 import { modelName, pipelineScene, totals } from './pipeline-diagram.ts';
 
-const usage = (model: string, calls: number, costUsd?: number): RDF.Pipeline.ModelUsage => ({
+const usage = (model: string, calls: number, costUsd?: number): Pipeline.ModelUsage => ({
   model,
   calls,
   inputTokens: calls * 1_000,
@@ -19,7 +19,7 @@ const usage = (model: string, calls: number, costUsd?: number): RDF.Pipeline.Mod
   ...(costUsd !== undefined ? { costUsd } : {}),
 });
 
-const STATE: RDF.Pipeline.State = {
+const STATE: Pipeline.State = {
   name: 'cloudflare-60d',
   status: 'done',
   startedAt: '2026-11-16T15:30:00.000Z',

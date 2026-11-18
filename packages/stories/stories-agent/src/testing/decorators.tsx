@@ -6,6 +6,7 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { type Database, type Type } from '@dxos/echo';
+import type * as MemoryService from '@dxos/echo-memory/MemoryService';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import * as AgentEmail from '@dxos/plugin-agent/AgentEmail';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
@@ -79,6 +80,8 @@ export type DecoratorsProps = {
   onReady: (props: {
     db: Database.Database;
     invoker: Capabilities.OperationInvoker;
+    /** The space's memory, which the client services host runs. */
+    memory: MemoryService.Service;
   }) => Promise<void | (() => Promise<void>)>;
 };
 

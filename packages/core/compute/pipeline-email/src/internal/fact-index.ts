@@ -3,7 +3,8 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
 // Surface forms (name + emails) under which a Person may be referenced in extracted facts.
@@ -34,7 +35,7 @@ export const buildEntityIndex = (
 // Resolve a fact's subject/object entity ids to canonical URIs where the index knows them; unknown
 // referents are simply omitted (an advisory fact about an unresolved entity is still a valid fact).
 export const reconcileFactEntities = (
-  fact: RDF.Fact,
+  fact: Fact.Fact,
   index: Map<string, string>,
 ): { subject?: string; object?: string } => {
   const subject = fact.assertion.subject.kind === 'entity' ? index.get(fact.assertion.subject.entity) : undefined;
