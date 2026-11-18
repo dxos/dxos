@@ -31,7 +31,7 @@ import { McpToolkit } from '@dxos/mcp-client';
 import { type ContentBlock, Message } from '@dxos/types';
 import { markWork } from '@dxos/util';
 
-import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request/index.ts';
+import { AiRequest, type GenerationObserver, formatSkills, formatSystemPrompt } from '../request/index.ts';
 import { ToolExecutionServices } from '../tool-runtime/index.ts';
 import * as AiContext from './AiContext.ts';
 import * as Harness from './Harness.ts';
@@ -351,7 +351,12 @@ export class Session extends Resource {
 
       markWork('session.request-begun');
 
-      // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
+      // The system prompt the turn started with, kept for every model call of the turn: a skill enabled mid-turn is
+      // announced in the conversation instead, since a changed system prompt discards the whole prompt cache (on EDGE one
+      // such call rewrote a 43.6k-token cache and took 13 s). The next turn's system prompt includes it as usual.
+      let turnSystem: { skills: Skill.Skill[]; text: string } | undefined;
+
+      // Turn loop: recompute toolkit between iterations to pick up dynamically enabled skills.
       // Each iteration is scoped so the MCP connections it opens are closed before the next opens its own.
       const runIteration = Effect.gen({ self: this }, function* () {
         markWork('session.iteration');
@@ -368,7 +373,18 @@ export class Session extends Resource {
 
         markWork('session.toolkit-built');
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
-        const system = yield* formatSystem(currentSkills, this.context.getObjects());
+        if (turnSystem === undefined) {
+          turnSystem = { skills: currentSkills, text: yield* formatSystem(currentSkills, this.context.getObjects()) };
+        } else if (currentSkills !== turnSystem.skills) {
+          const known = new Set(turnSystem.skills.map((skill) => skill.id));
+          const added = currentSkills.filter((skill) => !known.has(skill.id));
+          const definitions = yield* formatSkills(added).pipe(Effect.orDie);
+          if (definitions !== undefined) {
+            yield* request.submitNotice(`Skills enabled in this turn, in addition to those above:\n\n${definitions}`);
+          }
+          turnSystem = { skills: currentSkills, text: turnSystem.text };
+        }
+        const system = turnSystem.text;
         markWork('session.system-prompt-built');
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
