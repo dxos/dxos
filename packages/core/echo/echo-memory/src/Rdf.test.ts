@@ -85,4 +85,9 @@ describe('Rdf', () => {
     expect(ours.equals(theirs)).toBe(true);
     expect(theirs.equals(ours)).toBe(true);
   });
+  test('a null graph is the default graph, as RDF/JS requires', ({ expect }) => {
+    const subject = Rdf.namedNode('https://example.com/s');
+    expect(Rdf.quad(subject, subject, subject, null).graph.equals(Rdf.defaultGraph())).toBe(true);
+    expect(Rdf.quad(subject, subject, subject, null).equals(Rdf.quad(subject, subject, subject))).toBe(true);
+  });
 });

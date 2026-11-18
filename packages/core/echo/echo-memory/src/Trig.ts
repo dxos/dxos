@@ -7,9 +7,9 @@
 import * as Rdf from './Rdf.ts';
 
 //
-// A TriG writer. Its output matches n3's `Writer` in TriG mode character for character (prefix block, named graph
-// blocks, `;` and `,` grouping, datatype abbreviations, escapes), so readers that lay out or parse n3's TriG keep
-// working; it exists so the memory core does not load n3.
+// A TriG writer whose output matches n3's `Writer` in TriG mode character for character (prefix block, named graph
+// blocks, `;` and `,` grouping, datatype abbreviations, escapes), so readers of n3's TriG keep working, except where
+// n3 loses data: an IRI that only looks prefixed stays bracketed, and a literal keeps its base direction.
 //
 
 const XSD = 'http://www.w3.org/2001/XMLSchema#';
@@ -58,7 +58,7 @@ const escape = (text: string): string => {
   return start === 0 ? text : output + text.slice(start);
 };
 
-const escapeRegex = (text: string): string => text.replace(/[\]/()*+?.\\$]/g, '\\$&');
+const escapeRegex = (text: string): string => text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 
 export type WriteOptions = {
   /** Namespaces to abbreviate IRIs with, by prefix; a later prefix for the same namespace replaces an earlier one. */
@@ -78,15 +78,15 @@ export const write = (quads: Iterable<Rdf.Quad>, { prefixes = {} }: WriteOptions
     output += '\n';
   }
 
-  // Matches a name already written prefixed, or an IRI in one of the namespaces followed by a valid local name.
+  // An IRI in one of the namespaces followed by a valid local name; any other IRI keeps its angle brackets.
   const prefixPattern = hasPrefixes
-    ? new RegExp(
-        `^(?:${[...prefixByNamespace.values()].join('|')})[^/]*$|` +
-          `^(${escapeRegex([...prefixByNamespace.keys()].join('|'))})([_a-zA-Z0-9][\\-_a-zA-Z0-9]*)$`,
-      )
+    ? new RegExp(`^(${[...prefixByNamespace.keys()].map(escapeRegex).join('|')})([_a-zA-Z0-9][\\-_a-zA-Z0-9]*)$`)
     : undefined;
 
   const iriOrBlank = (term: Rdf.Term): string => {
+    if (term.termType === 'Quad') {
+      throw new TypeError('TriG cannot write a quoted triple as a term.');
+    }
     if (term.termType !== 'NamedNode') {
       return `_:${term.value}`;
     }
@@ -95,14 +95,13 @@ export const write = (quads: Iterable<Rdf.Quad>, { prefixes = {} }: WriteOptions
     if (!match) {
       return `<${iri}>`;
     }
-    const namespace = match[1];
-    return namespace === undefined ? iri : `${prefixByNamespace.get(namespace)}${match[2]}`;
+    return `${prefixByNamespace.get(match[1])}${match[2]}`;
   };
 
   const literal = (term: Rdf.Literal): string => {
     const value = escape(term.value);
     if (term.language) {
-      return `"${value}"@${term.language}`;
+      return `"${value}"@${term.language}${term.direction ? `--${term.direction}` : ''}`;
     }
     switch (term.datatype.value) {
       case `${XSD}string`:

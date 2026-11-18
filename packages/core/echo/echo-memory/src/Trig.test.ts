@@ -31,8 +31,17 @@ const n3Trig = (quads: readonly Rdf.Quad[], prefixes: Record<string, string> = {
 
 const parse = (trig: string): Rdf.Quad[] => new Parser({ format: 'application/trig' }).parse(trig);
 
-const sameQuads = (left: readonly Rdf.Quad[], right: readonly Rdf.Quad[]): boolean =>
-  left.length === right.length && left.every((quad) => right.some((other) => other.equals(quad)));
+/** Order-insensitive equality in which each quad consumes its own match, so a duplicate cannot stand in for a loss. */
+const sameQuads = (left: readonly Rdf.Quad[], right: readonly Rdf.Quad[]): boolean => {
+  const unmatched = [...right];
+  return (
+    left.length === right.length &&
+    left.every((quad) => {
+      const index = unmatched.findIndex((other) => other.equals(quad));
+      return index >= 0 && unmatched.splice(index, 1).length === 1;
+    })
+  );
+};
 
 const ex = (name: string) => Rdf.namedNode(`${EX}${name}`);
 
@@ -159,5 +168,28 @@ describe('Trig', () => {
     const trig = Trig.write(quads);
     expect(trig).toBe(n3Trig(quads));
     expect(Pipeline.fromValues(parse(trig).map((quad) => quad.object.value))).toEqual([state]);
+  });
+  test('abbreviates only namespace IRIs: a bracketed namespace is matched literally and a prefix-like IRI stays whole', ({
+    expect,
+  }) => {
+    const prefixes = { local: 'https://[::1]/', ex: EX };
+    const quads = [
+      Rdf.quad(Rdf.namedNode('https://[::1]/thing'), Rdf.namedNode('https://example'), Rdf.literal('one')),
+      Rdf.quad(Rdf.namedNode('ex:Post'), ex('p'), Rdf.literal('two')),
+    ];
+    const trig = Trig.write(quads, { prefixes });
+    expect(trig).toContain('local:thing <https://example> "one"');
+    expect(trig).toContain('<ex:Post> ex:p "two"');
+    expect(sameQuads(new Parser({ format: 'application/trig' }).parse(trig), quads)).toBe(true);
+  });
+
+  test('keeps the base direction of a language-tagged literal', ({ expect }) => {
+    const directed = { ...Rdf.literal('مرحبا', 'ar'), direction: 'rtl' as const };
+    expect(Trig.write([Rdf.quad(ex('s'), ex('p'), directed)])).toContain('"مرحبا"@ar--rtl');
+  });
+
+  test('refuses a quoted triple rather than writing a malformed term', ({ expect }) => {
+    const quoted = Rdf.quad(ex('s'), ex('p'), Rdf.literal('o'));
+    expect(() => Trig.write([Rdf.quad(ex('s'), ex('p'), quoted)])).toThrow(/quoted triple/);
   });
 });

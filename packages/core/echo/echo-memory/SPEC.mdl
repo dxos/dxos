@@ -557,10 +557,10 @@ feat F-1: Interface package
 
   req F-1.4:
     when: a package imports `@dxos/echo-memory/<Module>` for one of its noun modules
-    then: it loads that module and the modules it imports, and nothing else; only the RDF mapping modules
-          (`Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab`) import the RDF library `n3`, so the
-          protocol and client packages, which the workerd bundle reaches, import `RdfStore` and `MemoryQuery`
-          by subpath
+    then: it loads that module and the modules it imports, and nothing else; the RDF mapping modules
+          (`Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab`) import only echo-memory's own `Rdf`
+          and `Trig`, never `n3` [D-63], and the protocol and client packages, which the workerd bundle reaches,
+          still import `RdfStore` and `MemoryQuery` by subpath
 
   req F-1.5:
     when: an operation lists `MemoryService.MemoryService` or `RdfStore.RdfStore` in its `services` and runs
@@ -912,8 +912,8 @@ rule no-implementation-deps: echo-memory imports no storage, SPARQL engine or ru
 rule no-n3: echo-memory does not import the n3 RDF library
   files: src/*.ts
   severity: error
-  grep: from 'n3'
-  question: Does a non-test module of echo-memory import n3?
+  grep: 'n3'
+  question: Does a non-test module of echo-memory load n3 at runtime (a value import, side-effect import, dynamic import or value re-export)?
 
   n3 loads `readable-stream`, which fails to load under workerd's `nodejs_compat`; the memory core runs on EDGE and
   needs only RDF/JS terms (`Rdf`) and a TriG writer (`Trig`), so n3 is a test-only cross-check [D-63].

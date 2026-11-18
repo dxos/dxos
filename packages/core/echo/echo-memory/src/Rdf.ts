@@ -102,6 +102,7 @@ const DEFAULT_GRAPH = new DefaultGraphTerm();
 const STRING_DATATYPE = new NamedNodeTerm(XSD_STRING);
 const LANG_STRING_DATATYPE = new NamedNodeTerm(RDF_LANG_STRING);
 
+/** A named node for an IRI. */
 export const namedNode = <Iri extends string = string>(value: Iri): RdfJs.NamedNode<Iri> => new NamedNodeTerm(value);
 
 let nextBlankNode = 0;
@@ -122,13 +123,16 @@ export const literal = (value: string, languageOrDatatype?: string | RdfJs.Named
         typeof languageOrDatatype === 'object' ? namedNode(languageOrDatatype.value) : STRING_DATATYPE,
       );
 
+/** A SPARQL variable; `value` is its name without the leading `?`. */
 export const variable = (value: string): RdfJs.Variable => new VariableTerm(value);
 
+/** The default graph; every call returns the same term. */
 export const defaultGraph = (): RdfJs.DefaultGraph => DEFAULT_GRAPH;
 
+/** A quad; a missing or `null` graph is the default graph, as RDF/JS requires. */
 export const quad = (
   subject: RdfJs.Quad_Subject,
   predicate: RdfJs.Quad_Predicate,
   object: RdfJs.Quad_Object,
-  graph: RdfJs.Quad_Graph = DEFAULT_GRAPH,
-): RdfJs.Quad => new QuadTerm(subject, predicate, object, graph);
+  graph?: RdfJs.Quad_Graph | null,
+): RdfJs.Quad => new QuadTerm(subject, predicate, object, graph ?? DEFAULT_GRAPH);
