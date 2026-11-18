@@ -157,6 +157,21 @@ op quickJournalEntry
   effects: [echo:write, echo:read]
 ```
 
+```mdl
+op updateTask
+  key: org.dxos.operation.tasks.update
+  desc: |
+    Patches a task's fields. Returns the task ref, the fields that changed at their new value
+    (a cleared field is null) and the history entry the edit appended, not the whole task.
+  input:
+    task: Ref<Task>
+  output:
+    task: Ref<Task>
+    changed: object              # only the fields this call changed
+    historyEntry?: object        # the entry this edit appended, if it recorded one
+  effects: [echo:write, echo:read]
+```
+
 ## Features
 
 ```mdl
@@ -439,6 +454,17 @@ decision D-4: When the host contributes `ReadOnly`, outlines, journals, task set
   why: The host contributes `ReadOnly` at startup with no ordering against the plugin's modules, so the plugin contributes everything and reads it where each piece is used: the containers through `useReadOnly`, the quick-entry graph action in its match, and the remote session card in its surface filter, so the card slot still finds the generic card.
   rejected:
     - Returning nothing from the remote session card: the card slot renders one surface, so the generic card would no longer show.
+```
+
+```mdl
+decision D-5: Updating a task returns the task ref, the fields that changed and the history entry it appended, not the whole task.
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [op:updateTask]
+  why: Over MCP the full task with its history was 2.6 KB for one status change, the largest result in a typical workflow, and it filled an agent's context.
+  rejected:
+    - Returning the whole task and trimming the history: the caller still pays for fields it just sent.
 ```
 
 ## Appendix: Extension Definitions

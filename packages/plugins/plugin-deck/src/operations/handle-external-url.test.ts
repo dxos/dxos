@@ -20,7 +20,7 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
 import * as DeckPlugin from '#meta';
-import { DeckOperation } from '#types';
+import { DeckCapabilities, DeckOperation } from '#types';
 
 import { DeckNamespace } from '../namespace.ts';
 
@@ -129,7 +129,9 @@ describe('DeckOperation.HandleExternalUrl', () => {
     await second;
   });
 
-  test('an in-app navigation while a link runs its navigation handlers drops its action', async ({ expect }) => {
+  test('an in-app navigation while a link runs its navigation handlers keeps its deck and drops the action', async ({
+    expect,
+  }) => {
     const ran: unknown[] = [];
     const held = heldStep();
     const hold: AppCapabilities.NavigationHandler = (url) => (url.searchParams.has('hold') ? held.run : Effect.void);
@@ -142,13 +144,72 @@ describe('DeckOperation.HandleExternalUrl', () => {
     const linked = new URL(window.location.href);
     linked.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
     linked.searchParams.set('hold', '1');
+    window.history.replaceState(null, '', linked);
 
-    const handled = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, { url: linked.href }));
+    const handled = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, {}));
     await held.entered.promise;
     await harness.runPromise(Operation.invoke(LayoutOperation.Set, { subject: [], workspace: WORKSPACE }));
     held.release.resolve();
     await handled;
     expect(ran).toEqual([]);
+    expect(activePlanks(harness)).toEqual([]);
+    expect(new URL(window.location.href).searchParams.has(LinkAction.PARAM)).toBe(false);
+  });
+
+  test('a navigation to the deck a pending link opens leaves the link its action', async ({ expect }) => {
+    const ran: unknown[] = [];
+    const held = heldStep();
+    const hold: AppCapabilities.NavigationHandler = (url) => (url.searchParams.has('hold') ? held.run : Effect.void);
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [DeckWorkspacePlugin((data) => Effect.sync(() => ran.push(data)), undefined, hold), DeckPlugin.make()],
+    });
+    const subject = { subject: [`${WORKSPACE}/deck`], workspace: WORKSPACE };
+    await harness.runPromise(Operation.invoke(LayoutOperation.Set, subject));
+    const linked = new URL(window.location.href);
+    linked.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
+    linked.searchParams.set('hold', '1');
+    window.history.replaceState(null, '', linked);
+
+    const handled = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, {}));
+    await held.entered.promise;
+    await harness.runPromise(Operation.invoke(LayoutOperation.Set, subject));
+    held.release.resolve();
+    await handled;
+    expect(ran).toEqual(['deck']);
+  });
+
+  test('a link overtaken while it runs its navigation handlers leaves the next link its deck and action', async ({
+    expect,
+  }) => {
+    const ran: unknown[] = [];
+    const held = heldStep();
+    const action = heldAction(ran);
+    const hold: AppCapabilities.NavigationHandler = (url) => (url.searchParams.has('hold') ? held.run : Effect.void);
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [DeckWorkspacePlugin(action.run, () => true, hold), DeckPlugin.make()],
+    });
+    const openWithAction = async (doc: string) => {
+      await harness.runPromise(
+        Operation.invoke(LayoutOperation.Set, { subject: [`${WORKSPACE}/${doc}`], workspace: WORKSPACE }),
+      );
+      const url = new URL(window.location.href);
+      url.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
+      return url;
+    };
+    const overtaken = await openWithAction('other');
+    overtaken.searchParams.set('hold', '1');
+    const next = await openWithAction('deck');
+
+    const first = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, { url: overtaken.href }));
+    await held.entered.promise;
+    const second = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, { url: next.href }));
+    await action.entered.promise;
+    held.release.resolve();
+    await first;
+    action.release.resolve();
+    await second;
+    expect(ran).toEqual(['deck']);
+    expect(activePlanks(harness)).toEqual([`${WORKSPACE}/deck`]);
   });
 
   test('a link whose URL opens no object runs no action', async ({ expect }) => {
@@ -169,7 +230,9 @@ describe('DeckOperation.HandleExternalUrl', () => {
   });
 });
 
-/** The URL an app lands on after opening the workspace's document. */
+const activePlanks = (harness: Awaited<ReturnType<typeof Harness.createComposerTestApp>>) =>
+  harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.EphemeralState)).open[WORKSPACE]?.active;
+
 const openedUrl = async () => {
   await using harness = await Harness.createComposerTestApp({
     plugins: [DeckWorkspacePlugin(() => Effect.void), DeckPlugin.make()],
@@ -220,7 +283,11 @@ const DeckWorkspacePlugin = (
             id: 'docs',
             url: { key: 'doc', kind: 'item', path: [] },
             match: GraphNodeMatcher.whenNodeType(WORKSPACE_TYPE),
-            connector: () => Effect.succeed([{ id: 'deck', type: DOC_TYPE, data: 'deck' }]),
+            connector: () =>
+              Effect.succeed([
+                { id: 'deck', type: DOC_TYPE, data: 'deck' },
+                { id: 'other', type: DOC_TYPE, data: 'other' },
+              ]),
           });
           return [
             Capability.contribute(AppCapabilities.AppGraphBuilder, [...workspaces, ...docs]),
