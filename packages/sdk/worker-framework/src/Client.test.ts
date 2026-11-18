@@ -555,6 +555,8 @@ describe('Connection multi-client', () => {
       const workersAtEscalation = leaderWorkers;
       await sleep(timeouts.portTimeout * 5);
       expect(leaderWorkers).toBe(workersAtEscalation);
+      // Once per streak: a regression that escalates on every port timeout would add more here.
+      expect(first.failures.length + second.failures.length).toBe(1);
     },
     30_000,
   );
