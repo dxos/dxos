@@ -42,11 +42,27 @@ export const Point = Schema.Struct({
 export type Point = Schema.Schema.Type<typeof Point>;
 
 /** Style props shared by all elements; every field is optional with sensible defaults. */
+/** Where a shape's text sits across it, and down it. */
+export const Align = Schema.Literals(['left', 'center', 'right']);
+export type Align = Schema.Schema.Type<typeof Align>;
+export const VerticalAlign = Schema.Literals(['top', 'middle', 'bottom']);
+export type VerticalAlign = Schema.Schema.Type<typeof VerticalAlign>;
+
 const styleFields = {
   color: Schema.optional(Color).annotate({ description: 'Stroke/text color.' }),
   fill: Schema.optional(Fill).annotate({ description: 'Interior fill of closed shapes.' }),
   stroke: Schema.optional(Stroke).annotate({ description: 'Stroke rendering; sketchy is hand-drawn.' }),
   weight: Schema.optional(Weight).annotate({ description: 'Stroke weight / text size.' }),
+  /**
+   * Whether a closed shape draws its outline. Unset is the host's own default, which is to draw one, so a shape
+   * that draws none has to say so: without it a borderless label reads back as a bordered box — which is what a
+   * slide's column headings turned into on every trip through the text.
+   */
+  border: Schema.optional(Schema.Boolean).annotate({ description: 'Whether a closed shape draws its outline.' }),
+  align: Schema.optional(Align).annotate({ description: "Where the shape's text sits across it." }),
+  valign: Schema.optional(VerticalAlign).annotate({ description: "Where the shape's text sits down it." }),
+  /** Text size in scene units. `weight` names a size by role; this one states it. */
+  fontSize: Schema.optional(Schema.Number).annotate({ description: 'Text size in scene units.' }),
 };
 
 const id = Schema.String.annotate({

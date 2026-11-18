@@ -78,6 +78,10 @@ const STYLE: readonly AttrSpec[] = [
   { name: 'fill', type: 'enum', values: Shape.Fill.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
   { name: 'weight', type: 'enum', values: Shape.Weight.literals },
+  { name: 'border', type: 'boolean' },
+  { name: 'align', type: 'enum', values: Shape.Align.literals },
+  { name: 'valign', type: 'enum', values: Shape.VerticalAlign.literals },
+  { name: 'fontSize', type: 'number' },
 ];
 
 const BOX_ATTRS: readonly AttrSpec[] = [

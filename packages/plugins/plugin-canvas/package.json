@@ -126,6 +126,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@codemirror/lang-json": "catalog:",
     "@dxos/animation": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",

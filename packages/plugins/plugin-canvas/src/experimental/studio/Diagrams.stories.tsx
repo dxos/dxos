@@ -13,9 +13,10 @@
 // is derived, here the drawing is the subject and the DSL is its serialization.
 //
 
+import { json as jsonLanguage } from '@codemirror/lang-json';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { type ComponentPropsWithoutRef, forwardRef, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { expect, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -32,6 +33,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { composable } from '@dxos/react-ui/Util';
 import * as Cell from '@dxos/storybook-testing/Cell';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
@@ -110,13 +112,18 @@ type SourceView = 'dsl' | 'json';
  * One editor per view, re-created when the view changes: CodeMirror takes its language at construction, so this
  * remounts rather than reconfiguring a live editor. The DSL text lives in the parent, so a remount keeps an edit.
  */
-type TextPaneProps = ComponentPropsWithoutRef<'div'> & {
+type TextPaneProps = {
   value: string;
   view: SourceView;
   onTextChange?: (text: string) => void;
 };
 
-const TextPane = forwardRef<HTMLDivElement, TextPaneProps>(
+/**
+ * `composable()`, not a bare `forwardRef`: `Panel.Body asChild` hands its child the body's class, `data-part` and
+ * ref, and only a component built this way is marked as able to take them. A plain one is warned about and
+ * outlined in dev, which is the right diagnostic — dropping them leaves the body unstyled.
+ */
+const TextPane = composable<HTMLDivElement, TextPaneProps>(
   ({ value, view, onTextChange, className, ...props }, forwardedRef) => {
     const themeMode = Hooks.useThemeMode();
     const { parentRef, focusAttributes } = useTextEditor(
@@ -125,7 +132,7 @@ const TextPane = forwardRef<HTMLDivElement, TextPaneProps>(
         extensions: [
           createBasicExtensions({ lineNumbers: true, readOnly: onTextChange === undefined }),
           createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-          ...(view === 'dsl' ? [diagramLanguage({ layout: false })] : []),
+          ...(view === 'dsl' ? [diagramLanguage({ layout: false })] : [jsonLanguage()]),
           ...(onTextChange ? [listener({ onChange: ({ text }) => onTextChange(text) })] : []),
         ],
       }),

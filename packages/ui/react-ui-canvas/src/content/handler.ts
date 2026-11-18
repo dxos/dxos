@@ -79,7 +79,9 @@ const HUES: Partial<Record<Shape.Color, string>> = {
   'red': 'red',
 };
 
-const styleOf = (element: { color?: Shape.Color; fill?: Shape.Fill; stroke?: Shape.Stroke }): NodeStyle | undefined => {
+type StyleFields = Pick<Shape.Box, 'color' | 'fill' | 'stroke' | 'border' | 'align' | 'valign' | 'fontSize'>;
+
+const styleOf = (element: StyleFields): NodeStyle | undefined => {
   const hue = element.color ? HUES[element.color] : undefined;
   const fill = element.fill === 'none' ? false : undefined;
   // A tinted shape is a group's backdrop: a guide, an annotation the lattice and the link router pass over.
@@ -90,6 +92,10 @@ const styleOf = (element: { color?: Shape.Color; fill?: Shape.Fill; stroke?: Sha
     ...(fill !== undefined ? { fill } : {}),
     ...(guide ? { guide } : {}),
     ...(lineStyle ? { lineStyle } : {}),
+    ...(element.border !== undefined ? { border: element.border } : {}),
+    ...(element.align ? { alignHorizontal: element.align } : {}),
+    ...(element.valign ? { alignVertical: element.valign } : {}),
+    ...(element.fontSize !== undefined ? { fontSize: element.fontSize } : {}),
   };
   return Object.keys(style).length > 0 ? style : undefined;
 };
@@ -109,13 +115,17 @@ const COLORS: Partial<Record<string, Shape.Color>> = {
 };
 
 /** The DSL fields {@link styleOf} read, for a style a shape already has on the canvas. */
-const fieldsOf = (style: NodeStyle | undefined): { color?: Shape.Color; fill?: Shape.Fill; stroke?: Shape.Stroke } => {
+const fieldsOf = (style: NodeStyle | undefined): StyleFields => {
   const color = style?.hue ? COLORS[style.hue] : undefined;
   const fill = style?.guide ? 'tint' : style?.fill === false ? 'none' : undefined;
   return {
     ...(color ? { color } : {}),
     ...(fill ? { fill } : {}),
     ...(style?.lineStyle === 'dashed' || style?.lineStyle === 'dotted' ? { stroke: style.lineStyle } : {}),
+    ...(style?.border !== undefined ? { border: style.border } : {}),
+    ...(style?.alignHorizontal ? { align: style.alignHorizontal } : {}),
+    ...(style?.alignVertical ? { valign: style.alignVertical } : {}),
+    ...(style?.fontSize !== undefined ? { fontSize: style.fontSize } : {}),
   };
 };
 
@@ -661,6 +671,7 @@ export const SceneHandler: ContentHandler = {
               type: node.type,
               ...(data ? { data } : {}),
               ...(text ? { text } : {}),
+              ...fieldsOf(node.style),
             });
           } else if (text && !isEllipseNode(node) && isTitled(node)) {
             // A box's text is always centred, so a title is its own small text, which `upsert` folds back into the box.
@@ -677,11 +688,14 @@ export const SceneHandler: ContentHandler = {
               },
             );
           } else {
+            // The style the box is drawn with, which `read` used to drop: a borderless, centred label came back as
+            // a bordered box with its text in the corner, which is what a slide's column headings turned into.
             elements.push({
               kind: isEllipseNode(node) ? 'ellipse' : 'rect',
               id: element,
               ...local,
               ...(text ? { text } : {}),
+              ...fieldsOf(node.style),
             });
           }
         } else {

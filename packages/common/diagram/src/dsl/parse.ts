@@ -285,12 +285,16 @@ export const read = (text: string): Reading => {
     return raw !== '' && Number.isFinite(value) ? value : raw;
   };
 
-  /** The four style fields every element shares. */
+  /** The style fields every element shares. */
   const readStyle = (attrs: Map<string, Attr>) => ({
     ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
     ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
     ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
     ...optional('weight', enumAttr(attrs, 'weight', Shape.Weight.literals)),
+    ...optional('border', booleanAttr(attrs, 'border')),
+    ...optional('align', enumAttr(attrs, 'align', Shape.Align.literals)),
+    ...optional('valign', enumAttr(attrs, 'valign', Shape.VerticalAlign.literals)),
+    ...optional('fontSize', numberAttr(attrs, 'fontSize')),
   });
 
   const readEndpoint = (node: SyntaxNode): { ref?: string; point?: Shape.Point } => {

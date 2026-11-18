@@ -37,3 +37,39 @@ export const packSpaces = (
   }
   return packed.map(({ x, y, r }) => ({ x: x / width, y: y / height, r: r / width }));
 };
+
+/**
+ * A packed space as text: `x,y,r`, spaces apart, each a fraction of the field's box rounded to four places. The
+ * DSL carries no list and no nested object, so a kind whose field is a list of simple records writes it as one
+ * scalar and reads it back itself — the spelling `scene-model.ts` already uses for `points="0,0.5 1,0.5"`. The
+ * knowledge of the shape stays with the plugin that owns the kind, which is where it belongs.
+ */
+const round = (value: number): number => Math.round(value * 1e4) / 1e4;
+
+export const formatSpaces = (spaces: readonly Circle[]): string =>
+  spaces.map(({ x, y, r }) => `${round(x)},${round(y)},${round(r)}`).join(' ');
+
+export const parseSpaces = (value: string): Circle[] =>
+  value
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((entry) => {
+      const [x, y, r] = entry.split(',').map(Number);
+      return [x, y, r].every(Number.isFinite) ? [{ x, y, r }] : [];
+    });
+
+/** A lit object as text: `x,y,tone`, or `x,y` where it has no tone of its own. */
+export type LitPoint = { x: number; y: number; tone?: string };
+
+export const formatLit = (lit: readonly LitPoint[]): string =>
+  lit.map(({ x, y, tone }) => `${round(x)},${round(y)}${tone ? `,${tone}` : ''}`).join(' ');
+
+export const parseLit = (value: string): LitPoint[] =>
+  value
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((entry) => {
+      const [x, y, tone] = entry.split(',');
+      const [px, py] = [Number(x), Number(y)];
+      return Number.isFinite(px) && Number.isFinite(py) ? [{ x: px, y: py, ...(tone ? { tone } : {}) }] : [];
+    });

@@ -101,11 +101,24 @@ const formatData = (
     );
 };
 
-const style = ({ color, fill, stroke, weight }: Shape.Element): Partial<Record<string, AttrValue>> => ({
+const style = ({
   color,
   fill,
   stroke,
   weight,
+  border,
+  align,
+  valign,
+  fontSize,
+}: Shape.Element): Partial<Record<string, AttrValue>> => ({
+  color,
+  fill,
+  stroke,
+  weight,
+  border,
+  align,
+  valign,
+  fontSize,
 });
 
 export const formatElement = (element: Shape.Element): string => {

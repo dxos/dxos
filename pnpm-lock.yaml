@@ -10460,6 +10460,9 @@ importers:
 
   packages/plugins/plugin-canvas:
     dependencies:
+      '@codemirror/lang-json':
+        specifier: 'catalog:'
+        version: 6.0.2
       '@dxos/animation':
         specifier: workspace:*
         version: link:../../common/animation

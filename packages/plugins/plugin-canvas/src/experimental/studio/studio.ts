@@ -16,6 +16,8 @@ import { invariant } from '@dxos/invariant';
 import { SceneHandler, elementId, isLinkRecord, isNodeRecord, linkKey, nodeKey } from '@dxos/react-ui-canvas';
 import { type Node, type NodeBase, endpointNode } from '@dxos/scene';
 
+import { formatLit, formatSpaces } from './substrate-packing.ts';
+
 const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 
 /** A row of `n` small blocks, some of them marked in a tone; the deck's `feedStrip()`. */
@@ -894,11 +896,12 @@ const substrateFields = (component: StudioComponent) => {
   );
   return {
     ...latticeFields(component),
-    ...(spaces.length > 0 ? { spaces } : {}),
-    ...(lit.length > 0 ? { lit } : {}),
+    // As text, not as lists: the DSL carries no list, and a packing written down as `x,y,r` triples is the SAME
+    // packing when it comes back — which an approximation from the rule below would not be.
+    ...(spaces.length > 0 ? { spaces: formatSpaces(spaces) } : {}),
+    ...(lit.length > 0 ? { lit: formatLit(lit) } : {}),
     ...(typeof component.bridges === 'number' ? { bridges: component.bridges } : {}),
-    // The packing's own parameters, beside its result. A drawing written down as text keeps these and loses
-    // `spaces`, and the field packs itself again from them — nine spaces rather than the one it fell back to.
+    // The packing's own parameters, beside its result, so a field that arrives with neither can still pack itself.
     ...(spaces.length > 0 ? { spaceCount: spaces.length } : {}),
     ...(typeof component.params.rmin === 'number' ? { rmin: component.params.rmin } : {}),
     ...(typeof component.params.rmax === 'number' ? { rmax: component.params.rmax } : {}),

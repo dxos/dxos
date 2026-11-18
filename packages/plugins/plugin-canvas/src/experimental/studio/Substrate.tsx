@@ -27,7 +27,7 @@ import { Scene } from '@dxos/scene';
 import { layout } from '../../components/Graph/generator/space-graph.generator.ts';
 import { graphFields } from '../../components/Graph/index.ts';
 import { TONES, toneValue } from './FeedCard.tsx';
-import { type Circle, packSpaces } from './substrate-packing.ts';
+import { type Circle, type LitPoint, packSpaces, parseLit, parseSpaces } from './substrate-packing.ts';
 
 /** A packed space, as a fraction of the field's own box so it scales with the node. */
 const Space = Schema.Struct({
@@ -51,7 +51,7 @@ export const substrateFields = {
    * down as text keeps the rule (the four fields below) and loses this, and the field packs itself again — which
    * is the spec's "the rule is authoritative, geometry is a cached projection", for the one kind that needed it.
    */
-  spaces: Schema.optional(Schema.Array(Space).annotate({ title: 'Spaces' })),
+  spaces: Schema.optional(Schema.Union([Schema.Array(Space), Schema.String]).annotate({ title: 'Spaces' })),
   /** How many spaces the field packs when it has no `spaces` of its own. */
   spaceCount: Schema.optional(
     Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 64 })).annotate({
@@ -63,8 +63,8 @@ export const substrateFields = {
   rmax: Schema.optional(Schema.Number.annotate({ title: 'Max radius' })),
   /** Clearance between two packed spaces, and between a space and the field's edge, in scene units. */
   gap: Schema.optional(Schema.Number.annotate({ title: 'Gap' })),
-  /** The objects the plugin flows reach, drawn lit. */
-  lit: Schema.optional(Schema.Array(Lit).annotate({ title: 'Lit objects' })),
+  /** The objects the plugin flows reach, drawn lit. Text or a list, as {@link substrateFields.spaces} is. */
+  lit: Schema.optional(Schema.Union([Schema.Array(Lit), Schema.String]).annotate({ title: 'Lit objects' })),
   /** How many of the closest pairs of spaces are bridged. */
   bridges: Schema.optional(Schema.Number.check(Schema.isInt()).annotate({ title: 'Bridges' })),
 };
@@ -125,9 +125,13 @@ export const SubstrateNodeView = ({ node }: NodeViewProps) => {
   const { width, height } = node.size;
   // The stored packing where there is one, and the rule's own where there is not: fractions against the node's
   // own box either way, so the field moves and resizes with the node.
-  const spaces: Circle[] = (settings.spaces?.length ? settings.spaces : packSpaces(settings, width, height)).map(
-    ({ x, y, r }) => ({ x: x * width, y: y * height, r: r * width }),
-  );
+  const stored = typeof settings.spaces === 'string' ? parseSpaces(settings.spaces) : settings.spaces;
+  const spaces: Circle[] = (stored?.length ? stored : packSpaces(settings, width, height)).map(({ x, y, r }) => ({
+    x: x * width,
+    y: y * height,
+    r: r * width,
+  }));
+  const lit: LitPoint[] = typeof settings.lit === 'string' ? parseLit(settings.lit) : [...(settings.lit ?? [])];
   // Each space's own lattice, seeded by the field's seed and the space's place in the packing: one module, nine
   // scales. `layout` names the object radius `size`, which an element's own `size` (its frame) already takes.
   const graphs = spaces.map((space, index) =>
@@ -204,7 +208,7 @@ export const SubstrateNodeView = ({ node }: NodeViewProps) => {
         );
       })}
       {/* The lit objects sit over the lattice: a plugin's own elements, in the colour of the type that holds them. */}
-      {(settings.lit ?? []).map(({ x, y, tone }, index) => (
+      {lit.map(({ x, y, tone }, index) => (
         <circle
           key={`lit-${index}`}
           cx={x * width}
