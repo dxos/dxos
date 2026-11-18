@@ -13,12 +13,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
 import { DirectAiServiceLayer } from '@dxos/ai/testing';
+import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
 import { DEFAULT_MODEL } from '../internal/stages/extract.ts';
 import { type SystemOneReport, extractSystemOneDocFacts } from '../stages/index.ts';
-import { type ExtractDocument, type Fact, type KnownEntity } from '../types/index.ts';
+import { type ExtractDocument, type KnownEntity } from '../types/index.ts';
 import { readCredential, workersAiSystemOneService } from './workers-ai.ts';
 
 // Live System One extraction against Cloudflare Workers AI, with Claude Haiku as the fallback. Skipped unless the
@@ -86,7 +87,7 @@ describe.skipIf(!ENABLED)('System One extraction (live, Workers AI)', () => {
       const maxCost = Number(process.env.SYSTEM_ONE_MAX_COST ?? 0.5);
 
       let spent = 0;
-      const rows: Array<{ id: string; report: SystemOneReport; facts: Fact[]; llm: LlmFact[] }> = [];
+      const rows: Array<{ id: string; report: SystemOneReport; facts: Fact.Fact[]; llm: LlmFact[] }> = [];
       for (const message of messages) {
         if (spent > maxCost) {
           log.warn('system-one compare: budget reached', { spent });

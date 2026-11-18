@@ -19,6 +19,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -287,6 +288,12 @@ feat F-8: Scene DSL and Agent Skill
     mermaid / d2 / sequence / uml-class compilers that emit scene commands.
 ```
 
+```mdl
+feat F-9: Read-only Host
+
+  req F-9.1: When the host contributes `ReadOnly`, every drawing opens in tldraw's read-only mode: the toolbar offers only select, hand and laser, there is no style panel, quick-action menu or comment tool, and the reader can still pan, zoom and select.
+```
+
 ## Acceptance
 
 ```mdl
@@ -490,6 +497,44 @@ test QA-3: Showcase clip
     - name: Draw shapes
       do: Draw a rectangle, an ellipse, an arrow and a freehand line.
       expect: each shape appears as it is drawn
+```
+
+## Changelog
+
+```mdl
+decision D-1: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [SketchArticle, F-9.1]
+```
+
+```mdl
+decision D-2: A `readOnly` option opens every drawing in tldraw's read-only mode and drops the quick-action menu and comment tool, leaving the camera free. Fills in [D-1].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SketchArticle, F-9.1]
+  why: tldraw's own read-only mode already hides every editing tool and shortcut; a reader still needs to pan and zoom around a drawing larger than the view.
+  rejected:
+    - Reusing the slide role's read-only canvas: it also fixes the camera, so a reader could not move around the drawing.
+```
+
+```mdl
+decision D-3: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [SketchArticle, F-9.1]
+  supersedes: D-1
+```
+
+```mdl
+decision D-4: When the host contributes `ReadOnly`, every drawing opens in tldraw's read-only mode without the quick-action menu or comment tool, and the camera stays free. The article reads it with `useReadOnly`. Fills in [D-3].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SketchArticle, F-9.1]
+  supersedes: D-2
+  why: The capability lands at startup with no order against module activation, so the article reads it as it renders; tldraw's own read-only mode still hides every editing tool, and a reader still needs to pan and zoom.
 ```
 
 ## Appendix: Extension Definitions

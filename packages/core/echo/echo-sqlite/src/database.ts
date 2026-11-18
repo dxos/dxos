@@ -229,8 +229,9 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       if (version === this.#dataVersion) {
         return;
       }
-      this.#dataVersion = version;
       const { lastId, ids } = await this.#run(this.#store.readChanges(this.#changeCursor));
+      // Advanced only once the changes are read, so a failed read is retried on the next poll.
+      this.#dataVersion = version;
       this.#changeCursor = lastId;
       if (ids.size > 0) {
         this.applyCommitted(ids);
@@ -240,12 +241,6 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     } finally {
       this.#polling = false;
     }
-  }
-
-  /** Tells the databases sharing this file, in this process and others, that a commit wrote `ids`. */
-  async #announce(ids: ReadonlySet<string>): Promise<void> {
-    this.#graph.notifyCommitted(this, ids);
-    await this.#run(this.#store.logChanges(ids));
   }
 
   /**
@@ -1230,12 +1225,22 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
    */
   async applyRemote(): Promise<void> {
     const done = this.#writes.then(async () => {
-      const indexed = await this.#run(this.#store.index());
+      const store = this.#store;
+      // One transaction, so a pulled batch's index pass and change log share one sync.
+      const indexed = await this.#run(
+        store.transaction(
+          Effect.gen(function* () {
+            const indexed = yield* store.index();
+            yield* store.logChanges(indexed);
+            return indexed;
+          }),
+        ),
+      );
       await this.#refreshStale(indexed);
       await this.#applyMerges();
       if (indexed.size > 0) {
         this.#committed.emit(new Set([ANY_TYPE]));
-        await this.#announce(indexed);
+        this.#graph.notifyCommitted(this, indexed);
       }
     });
     this.#writes = done.catch((err) => {
@@ -1655,10 +1660,27 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
         .map((entity) => Entity.getTypeURI(entity) ?? '');
       this.#writes = this.#writes.then(async () => {
         try {
-          for (const { target, json } of items.values()) {
-            await this.#run(this.#store.appendItems(target.feedId, target.namespace, json));
-          }
-          const { results, indexed } = await this.#run(this.#store.write(records, purged));
+          const store = this.#store;
+          // One transaction, so the appends, the index pass and the change log share one sync.
+          const { results, indexed, written } = await this.#run(
+            store.transaction(
+              Effect.gen(function* () {
+                for (const { target, json } of items.values()) {
+                  yield* store.appendItems(target.feedId, target.namespace, json);
+                }
+                const { results, indexed } = yield* store.write(records, purged);
+                // Appended items and tombstones count too: a sibling's feed queries read them.
+                const written = new Set([
+                  ...indexed,
+                  ...results.keys(),
+                  ...batch.keys(),
+                  ...tombstones.map(([id]) => id),
+                ]);
+                yield* store.logChanges(written);
+                return { results, indexed, written };
+              }),
+            ),
+          );
           for (const [id, result] of results) {
             const entity = batch.get(id);
             if (entity) {
@@ -1682,10 +1704,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
           const current = new Set([...results].filter(([, result]) => !result.merged).map(([id]) => id));
           await this.#refreshStale([...indexed].filter((id) => !current.has(id)));
           await this.#applyMerges();
-          // Appended items and tombstones count too: a sibling's feed queries read them.
-          await this.#announce(
-            new Set([...indexed, ...results.keys(), ...batch.keys(), ...tombstones.map(([id]) => id)]),
-          );
+          this.#graph.notifyCommitted(this, written);
           // An appended item learns its block id and position from the row its block indexed into.
           for (const entity of batch.values()) {
             const target = this.#items.get(entity);
@@ -1708,6 +1727,8 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
         } catch (err) {
           log.error('failed to persist entities', { count: records.length, error: err });
           this.#writeError = err;
+          // A rolled-back transaction leaves cached documents and feed heads ahead of the file.
+          this.#store.invalidate(batch.keys());
           // Requeue so memory and disk cannot silently diverge; newer changes to the same id win.
           for (const [id, entity] of batch) {
             if (!this.#dirty.has(id)) {

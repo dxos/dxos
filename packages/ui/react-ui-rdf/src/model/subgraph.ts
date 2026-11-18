@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact, Predicate } from '@dxos/echo-memory';
 
 /** One value of a property: an entity is a chip that links to its own card, a literal is text. */
 export type EntityCardValue =
@@ -39,7 +39,7 @@ export type EntityCardOptions = {
 };
 
 /** Display classes for the kinds the extractor assigns, so stated types read like the ones a caller names. */
-const KIND_TYPES: Readonly<Record<RDF.EntityKind, string>> = {
+const KIND_TYPES: Readonly<Record<Fact.EntityKind, string>> = {
   person: 'Person',
   org: 'Organization',
   place: 'Place',
@@ -49,7 +49,7 @@ const KIND_TYPES: Readonly<Record<RDF.EntityKind, string>> = {
 };
 
 /** Classes by entity id: the caller's first, then the first type the facts state for each entity. */
-const typesOf = (facts: readonly RDF.Fact[], types: EntityCardOptions['types']): Map<string, string> => {
+const typesOf = (facts: readonly Fact.Fact[], types: EntityCardOptions['types']): Map<string, string> => {
   const result = new Map(Object.entries(types ?? {}));
   for (const { assertion } of facts) {
     for (const term of [assertion.subject, assertion.object]) {
@@ -61,7 +61,7 @@ const typesOf = (facts: readonly RDF.Fact[], types: EntityCardOptions['types']):
   return result;
 };
 
-const valueOf = (term: RDF.Term, types: ReadonlyMap<string, string>): EntityCardValue =>
+const valueOf = (term: Fact.Term, types: ReadonlyMap<string, string>): EntityCardValue =>
   term.kind === 'entity'
     ? { kind: 'entity', id: term.entity, label: term.label ?? term.entity, type: types.get(term.entity) }
     : { kind: 'literal', label: term.literal };
@@ -85,7 +85,7 @@ const add = (
  * One card per entity that is the subject of a fact, in first-seen order: its outgoing statements grouped by predicate,
  * and the statements that point at it grouped under the predicate's inverse.
  */
-export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOptions = {}): EntityCardModel[] => {
+export const toEntityCards = (facts: readonly Fact.Fact[], options: EntityCardOptions = {}): EntityCardModel[] => {
   const cards = new Map<
     string,
     { label: string; properties: Map<string, EntityCardProperty>; inverse: Map<string, EntityCardProperty> }
@@ -105,14 +105,14 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
     if (assertion.subject.kind !== 'entity') {
       continue;
     }
-    const predicate = RDF.Predicate.normalize(assertion.predicate);
-    const label = RDF.Predicate.label(options.labels?.[predicate] ?? assertion.predicate);
+    const predicate = Predicate.normalize(assertion.predicate);
+    const label = Predicate.label(options.labels?.[predicate] ?? assertion.predicate);
     const subject = card(assertion.subject.entity, assertion.subject.label);
     add(subject.properties, predicate, label, valueOf(assertion.object, types));
 
     if (assertion.object.kind === 'entity') {
       // Collected for every object; without `objects`, an object gets a card only if it is also a subject.
-      const inverseLabel = RDF.Predicate.label(options.inverses?.[predicate] ?? `${label}-of`);
+      const inverseLabel = Predicate.label(options.inverses?.[predicate] ?? `${label}-of`);
       add(
         card(assertion.object.entity, assertion.object.label).inverse,
         predicate,
@@ -122,7 +122,7 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
     }
   }
 
-  const subjects = new Set(
+  const subjects = new Set<string>(
     facts.flatMap(({ assertion }) => (assertion.subject.kind === 'entity' ? [assertion.subject.entity] : [])),
   );
   return [...cards]

@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { type Fact } from '@dxos/echo-memory';
 import { log } from '@dxos/log';
-import { type RDF } from '@dxos/pipeline-rdf';
 
 import {
   FACT_STORE_FIXTURE,
@@ -17,10 +17,10 @@ import {
 } from '../testing/harness/index.ts';
 
 /** The display label for a term (entity surface form, else the literal). */
-const termLabel = (term: RDF.Term): string => (term.kind === 'entity' ? (term.label ?? term.entity) : term.literal);
+const termLabel = (term: Fact.Term): string => (term.kind === 'entity' ? (term.label ?? term.entity) : term.literal);
 
 /** Renders a directive fact as a readable line, citing the source message. */
-const renderFact = (fact: RDF.Fact): string =>
+const renderFact = (fact: Fact.Fact): string =>
   `- **${termLabel(fact.assertion.subject)}** ${fact.assertion.predicate} **${termLabel(fact.assertion.object)}**` +
   ` _(${fact.attribution.source})_`;
 

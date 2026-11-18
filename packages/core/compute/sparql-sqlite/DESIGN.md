@@ -2,7 +2,9 @@
 
 A SPARQL 1.1 engine for a single SQLite database. It is built for Cloudflare Durable Object SQLite
 (`ctx.storage.sql`) and also runs on any synchronous SQLite behind the `SqlStorage` interface
-(`node:sqlite` and wa-sqlite through `@dxos/sql-sqlite/SqlStorage`). Each SPARQL request is parsed with `sparqljs` and compiled into **one**
+(`node:sqlite` and wa-sqlite through `@dxos/sql-sqlite/SqlStorage`). `SqlSparqlEngineAsync`
+(`@dxos/sparql-sqlite/async`) runs the same engine over Effect's async `SqlClient`, for a host whose
+database is only reachable that way. Each SPARQL request is parsed with `sparqljs` and compiled into **one**
 SQL statement. SQLite runs every join, filter, aggregate, sort and recursive path in C, and JS only
 decodes the result rows.
 
@@ -28,8 +30,26 @@ ingest: quads ─encode + hash53, dedupe, key→id cache─▶ ① INSERT OR IGN
 | `store.ts`       | `TermStore`: schema, term encoding and interning, set-oriented insert/delete.       |
 | `parser.ts`      | `parseSparql`: sparqljs's generated parser alone, with a minimal term factory.      |
 | `compiler.ts`    | `Compiler`: sparqljs AST → SQL text.                                                |
-| `engine.ts`      | `SqlSparqlEngine`: parse, plan cache, run, decode, ASK / CONSTRUCT / UPDATE.        |
+| `program.ts`     | `Program`: store and engine logic as generators that yield SQL; `runSync` driver.   |
+| `engine.ts`      | `EngineCore` (parse, plan cache, run, decode, ASK / CONSTRUCT / UPDATE) and the     |
+|                  | sync `SqlSparqlEngine`.                                                             |
+| `async.ts`       | `runEffect` driver over `SqlClient` and `SqlSparqlEngineAsync`.                     |
 | `testing/`       | Deterministic data generator, query set, probes, oracle JSON.                       |
+
+## Sync and async
+
+The store and the engine are written once, as generators (`Program<A>`) that yield the SQL statements they
+need and receive the rows back. `runSync` runs a program against `SqlStorage`; `runEffect` runs it through
+`SqlClient`, one round trip per statement. The compiler stays synchronous: it asks for constant ids and
+selectivity counts through a resolver. The sync engine answers those inline, as before. The async engine
+compiles against its caches, records what it missed, fetches those in one program and compiles again, so a
+cold plan compiles at most twice and a cached plan does not compile at all. Async operations run one at a
+time, since the plan and term caches describe the store between them.
+
+The sync path is not much faster on `node:sqlite`. A one-off timing on 20,000 facts (not a `pnpm perf`
+run) put warm benchmark queries at parity and ingest at parity; the sync path won only on many tiny
+statements, by about 15 µs each. The node `SqlStorage` adapter prepares each statement anew while Effect's
+client caches prepared statements, which hides the async overhead on larger queries.
 
 ## Schema
 

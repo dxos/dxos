@@ -2,15 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as LinkAction from '@dxos/app-toolkit/LinkAction';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import { DeckOperation } from '#types';
+import { DeckCapabilities, DeckOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -19,10 +21,16 @@ export default Capability.makeModule(
     const operations = yield* Capabilities.OperationInvoker;
     const project = (url?: URL) => operations.invoke(DeckOperation.HandleExternalUrl, { url: url?.href });
 
-    const onPopState = () => void EffectEx.runAndForwardErrors(project());
-
     // Install before handleNavigation()/state-sync push entries on top of the sentinel.
     const sentinelKey = installLeaveTrap();
+
+    // The sentinel keeps the landing URL, link action included; `onCurrentEntryChange` handles it.
+    const onPopState = () => {
+      if (sentinelKey && window.navigation?.currentEntry?.key === sentinelKey) {
+        return;
+      }
+      void EffectEx.runAndForwardErrors(project());
+    };
 
     // Landing on the sentinel means a Back is about to leave Composer; confirm and act on it.
     // The guard stops our own back()/forward() from re-entering.
@@ -49,46 +57,65 @@ export default Capability.makeModule(
     if ('navigation' in window) {
       window.navigation.addEventListener('currententrychange', onCurrentEntryChange);
     }
-
-    // Tauri deep link support.
-    let unlistenDeepLink: (() => void) | undefined;
-    if (isTauri()) {
-      yield* Effect.gen(function* () {
-        const { getCurrent, onOpenUrl } = yield* Effect.promise(() => import('@tauri-apps/plugin-deep-link'));
-
-        const launchUrls = yield* Effect.promise(() => getCurrent());
-        if (launchUrls && launchUrls.length > 0) {
-          log('app launched with deep links', { urls: launchUrls });
-          for (const urlString of launchUrls) {
-            yield* handleDeepLink(urlString, project);
-          }
-        }
-
-        unlistenDeepLink = yield* Effect.promise(() =>
-          onOpenUrl((urls) => {
-            for (const urlString of urls) {
-              void EffectEx.runAndForwardErrors(handleDeepLink(urlString, project));
-            }
-          }),
-        );
-      }).pipe(
-        Effect.catch((error) => Effect.sync(() => log.warn('failed to initialize deep link listener', { error }))),
-      );
-    }
-
-    // Forked because this module sits on the startup pass: the restore can wait for late-arriving
-    // URL keys, and awaiting it here would hold the whole pass, and the boot loader with it.
-    yield* Effect.forkScoped(project());
-
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
         if ('navigation' in window) {
           window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
         }
-        unlistenDeepLink?.();
       }),
     );
+
+    // Tauri deep link support.
+    let launch: Effect.Effect<void> = Effect.void;
+    if (isTauri()) {
+      yield* Effect.gen(function* () {
+        const { getCurrent, onOpenUrl } = yield* Effect.promise(() => import('@tauri-apps/plugin-deep-link'));
+
+        // A link opened after launch supersedes the launch URLs.
+        let opened = false;
+        const unlistenDeepLink = yield* Effect.promise(() =>
+          onOpenUrl((urls) => {
+            opened ||= urls.some((urlString) => !isRedirectPath(deepLinkPath(new URL(urlString))));
+            for (const urlString of urls) {
+              void EffectEx.runAndForwardErrors(handleDeepLink(urlString, project));
+            }
+          }),
+        );
+        yield* Effect.addFinalizer(() => Effect.sync(unlistenDeepLink));
+
+        const launchUrls = yield* Effect.promise(() => getCurrent());
+        if (launchUrls && launchUrls.length > 0) {
+          log('app launched with deep links', { urls: launchUrls });
+          launch = Effect.suspend(() =>
+            opened
+              ? Effect.void
+              : Effect.forEach(
+                  launchUrls,
+                  (urlString) => Effect.suspend(() => (opened ? Effect.void : handleDeepLink(urlString, project))),
+                  { discard: true },
+                ),
+          ).pipe(
+            Effect.catchCause((cause) =>
+              Effect.sync(() => log.warn('launch deep link failed', { error: Cause.pretty(cause) })),
+            ),
+          );
+        }
+      }).pipe(
+        Effect.catchCause((cause) =>
+          Effect.sync(() => log.warn('failed to initialize deep link listener', { error: Cause.pretty(cause) })),
+        ),
+      );
+    }
+
+    const registry = yield* Capabilities.AtomRegistry;
+    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
+    const restored = Effect.sync(() => registry.set(ephemeralAtom, { ...registry.get(ephemeralAtom), restored: true }));
+
+    // Forked because this module sits on the startup pass: the restore can wait for late-arriving
+    // URL keys, and awaiting it here would hold the whole pass, and the boot loader with it.
+    yield* Effect.forkScoped(launch.pipe(Effect.andThen(project()), Effect.ensuring(restored)));
+
     return [];
   }),
 );
@@ -135,6 +162,15 @@ const installLeaveTrap = (): string | undefined => {
   return undefined;
 };
 
+/**
+ * The app path a deep link names. For custom schemes (e.g., composer://a/b/c), new URL() treats the
+ * first segment as the hostname, so the path is rebuilt from hostname + pathname.
+ */
+const deepLinkPath = (url: URL): string =>
+  url.protocol !== 'https:' && url.protocol !== 'http:' && url.hostname
+    ? '/' + url.hostname + url.pathname
+    : url.pathname;
+
 /** Check if a path is a redirect path handled elsewhere (e.g., OAuth). */
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
@@ -143,20 +179,15 @@ const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: 
   log('deep link received', { url: urlString });
 
   const deepLinkUrl = new URL(urlString);
-
-  // For custom schemes (e.g., composer://a/b/c), new URL() treats the first segment as the
-  // hostname. Reconstruct the full path from hostname + pathname.
-  const fullPath =
-    deepLinkUrl.protocol !== 'https:' && deepLinkUrl.protocol !== 'http:' && deepLinkUrl.hostname
-      ? '/' + deepLinkUrl.hostname + deepLinkUrl.pathname
-      : deepLinkUrl.pathname;
+  const fullPath = deepLinkPath(deepLinkUrl);
 
   if (isRedirectPath(fullPath)) {
     return;
   }
 
-  // Merge deep link query params into the current window URL so handlers can read them.
-  const current = new URL(window.location.href);
+  // Merge deep link query params into the current window URL so handlers can read them; an earlier
+  // link's action is not this link's.
+  const current = LinkAction.withoutAction(new URL(window.location.href));
   if (deepLinkUrl.search) {
     deepLinkUrl.searchParams.forEach((value, key) => current.searchParams.set(key, value));
   }

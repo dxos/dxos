@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterAll, describe, test } from 'vitest';
 
-import { FactStore, FactStoreLive, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { FactStore, FactStoreLive, normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import { commitmentLedger } from './ledger.ts';
 
@@ -59,26 +60,27 @@ const fact = (
   predicate: string,
   object: string,
   extra?: { validTo?: string; confidence?: number },
-): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: normalizeEntityId(subject), label: subject },
-    predicate,
-    object: { kind: 'entity', entity: normalizeEntityId(object), label: object },
-    ...(extra?.validTo ? { validTo: extra.validTo } : {}),
-  },
-  factuality: {
-    value: 'CT+',
-    polarity: '+',
-    ...(extra?.confidence !== undefined ? { confidence: extra.confidence } : {}),
-  },
-  attribution: { source: `<${id}@enron.com>`, generatedAtTime: '2001-05-01T10:00:00.000Z' },
-  recordedAt: '2001-05-01T10:00:00.000Z',
-  extractor: { id: 'test', model: 'test', version: '1' },
-  sourceHash: `h-${id}`,
-});
+): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: normalizeEntityId(subject), label: subject },
+      predicate,
+      object: { kind: 'entity', entity: normalizeEntityId(object), label: object },
+      ...(extra?.validTo ? { validTo: extra.validTo } : {}),
+    },
+    factuality: {
+      value: 'CT+',
+      polarity: '+',
+      ...(extra?.confidence !== undefined ? { confidence: extra.confidence } : {}),
+    },
+    attribution: { source: `<${id}@enron.com>`, generatedAtTime: '2001-05-01T10:00:00.000Z' },
+    recordedAt: '2001-05-01T10:00:00.000Z',
+    extractor: { id: 'test', model: 'test', version: '1' },
+    sourceHash: `h-${id}`,
+  });
 
-const FACTS: RDF.Fact[] = [
+const FACTS: Fact.Fact[] = [
   fact('m1', 'alice@enron.com', 'will send', 'Q2 report', { validTo: '2001-05-18' }),
   fact('m2', 'bob@enron.com', 'owes', 'budget confirmation'),
   fact('m3', 'alice@enron.com', 'works at', 'Enron'),

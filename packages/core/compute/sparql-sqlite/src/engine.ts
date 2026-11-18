@@ -17,13 +17,17 @@ import {
 import { type Compiled, Compiler, quoteName } from './compiler.ts';
 import { UnsupportedSparqlError } from './errors.ts';
 import { parseSparql } from './parser.ts';
+import { type Program, pure, raw, rows, runSync } from './program.ts';
 import { type SqlStorage, asNumber } from './sql-storage.ts';
-import { type IndexSet, TermStore, encKey, encodeTerm, toTerm } from './store.ts';
+import { type Enc, type IndexSet, TermStore, encKey, encodeTerm, toTerm } from './store.ts';
+import { tables } from './tables.ts';
 import { type Quad, type Row, type Term, XSD } from './terms.ts';
 
 export type EngineOptions = {
   /** Covering quad orderings to maintain; persisted on first init (default `spo,pos,osp`). */
   indexes?: IndexSet;
+  /** Prefix of the store's table and index names, so several stores can share one database (default none). */
+  prefix?: string;
 };
 
 type QueryPlan = {
@@ -51,16 +55,28 @@ const numTerm = (value: number): Term =>
     ? { termType: 'Literal', value: String(value), datatype: `${XSD}integer` }
     : { termType: 'Literal', value: String(Number(value.toPrecision(15))), datatype: `${XSD}decimal` };
 
+/** What compiling a query reads from the store: constant ids and the counts behind selectivity hints. */
+type Resolver = {
+  termId: (key: string, enc: Enc) => number | undefined;
+  count: (where: string) => number;
+  total: () => number | undefined;
+};
+
+/** Store reads a compile pass asked for and the cache did not hold. */
+type Misses = { terms: Map<string, Enc>; counts: Set<string>; total: boolean };
+
 /**
- * SPARQL 1.1 engine over SQLite: every query compiles to one SQL statement over an interned quad store.
- * Synchronous; wrap writes in the host's transaction (e.g. `ctx.storage.transactionSync`) for atomicity.
+ * The engine's logic, independent of how SQL runs: every method that touches SQLite is a {@link Program}. With
+ * `inline` storage the compiler's store reads run synchronously as it asks for them; without it, a compile pass
+ * reads only from caches, records what it missed, and the program fetches those and compiles again.
  */
-export class SqlSparqlEngine {
+export class EngineCore {
   readonly store: TermStore;
   /** Pass per-constant selectivities to SQLite as `likelihood()` hints (see `#selectivity`). */
   selectivityHints = true;
   /** SQL of the last executed statement (diagnostics). */
   lastSql?: string;
+  readonly #inline: SqlStorage | undefined;
   /** Compiled SQL by query text (constants resolved at compile time, so invalidated on writes). */
   readonly #plans = new Map<string, QueryPlan>();
   /**
@@ -68,45 +84,50 @@ export class SqlSparqlEngine {
    * answer, and are dropped on every write together with the plans they were baked into.
    */
   readonly #counts = new Map<string, number>();
-  #countsTotal: number | undefined;
+  /** The quad total for hints; `null` once read and found missing, `undefined` until read. */
+  #countsTotal: number | null | undefined;
+  /** Constants looked up and not found, so a retried compile does not ask again; dropped on every write. */
+  readonly #absent = new Set<string>();
 
-  constructor(sql: SqlStorage, options: EngineOptions = {}) {
-    this.store = new TermStore(sql, options.indexes);
+  constructor(options: EngineOptions & { inline?: SqlStorage } = {}) {
+    this.store = new TermStore(options.indexes, tables(options.prefix));
+    this.#inline = options.inline;
   }
 
-  /** Creates the schema if missing; call once before use. */
-  init(): void {
-    this.store.init();
+  *init(): Program<void> {
+    yield* this.store.init();
   }
 
-  /** Drops all data (optionally switching the index set). */
-  reset(indexes?: IndexSet): void {
-    this.#plans.clear();
-    this.#clearCounts();
-    this.store.reset(indexes);
+  *reset(indexes?: IndexSet): Program<void> {
+    this.#invalidate();
+    yield* this.store.reset(indexes);
   }
 
-  /** Inserts quads in one set-oriented batch. */
-  insert(quads: readonly Quad[]): void {
-    this.#plans.clear();
-    this.store.insert(quads);
-    this.#clearCounts();
+  *insert(quads: readonly Quad[]): Program<void> {
+    this.#invalidate();
+    yield* this.store.insert(quads);
+    this.#invalidate();
   }
 
-  /** Number of stored quads. */
-  count(): number {
-    return this.store.count();
+  /** Deletes quads; absent ones are ignored. */
+  *delete(quads: readonly Quad[]): Program<void> {
+    this.#invalidate();
+    yield* this.store.delete(quads);
+    this.#invalidate();
+  }
+
+  *count(): Program<number> {
+    return yield* this.store.count();
   }
 
   clearPlans(): void {
     this.#plans.clear();
   }
 
-  stats(): Record<string, unknown> {
-    const sql = this.store.sql;
+  *stats(): Program<Record<string, unknown>> {
     return {
-      terms: asNumber(sql.exec('SELECT COUNT(*) AS n FROM terms').toArray()[0].n),
-      termLexBytes: sql.exec('SELECT SUM(length(CAST(lex AS BLOB))) AS n FROM terms').toArray()[0].n,
+      terms: asNumber((yield* rows(`SELECT COUNT(*) AS n FROM ${this.store.tables.terms}`))[0].n),
+      termLexBytes: (yield* rows(`SELECT SUM(length(CAST(lex AS BLOB))) AS n FROM ${this.store.tables.terms}`))[0].n,
       indexes: this.store.indexes,
     };
   }
@@ -116,39 +137,99 @@ export class SqlSparqlEngine {
    * CONSTRUCT returns distinct `{ s, p, o }` rows; UPDATE returns `[]`.
    * @throws UnsupportedSparqlError for constructs the compiler does not translate.
    */
-  query(sparql: string): Row[] {
-    const plan = this.#compile(sparql);
+  *query(sparql: string): Program<Row[]> {
+    const plan = yield* this.#compile(sparql);
     if (plan.kind === 'update') {
-      this.#update(plan.update);
+      yield* this.#update(plan.update);
       return [];
     }
-    const rows = this.#run(plan);
+    const found = yield* this.#run(plan);
     switch (plan.kind) {
       case 'ASK':
-        return rows.length ? [{}] : [];
+        return found.length ? [{}] : [];
       case 'CONSTRUCT':
-        return this.#construct(rows, plan.template ?? []);
+        return this.#construct(found, plan.template ?? []);
       default:
-        return rows;
+        return found;
     }
   }
 
   /** Compiled SQL and SQLite's EXPLAIN QUERY PLAN for a query. */
-  explain(sparql: string): { sql: string; plan: string[] } {
-    const plan = this.#compile(sparql);
+  *explain(sparql: string): Program<{ sql: string; plan: string[] }> {
+    const plan = yield* this.#compile(sparql);
     if (plan.kind === 'update') {
       throw new UnsupportedSparqlError('EXPLAIN of an update');
     }
     return {
       sql: plan.compiled.sql,
-      plan: this.store.sql
-        .exec(`EXPLAIN QUERY PLAN ${plan.compiled.sql}`)
-        .toArray()
-        .map((row) => `${row.id}/${row.parent} ${row.detail}`),
+      plan: (yield* rows(`EXPLAIN QUERY PLAN ${plan.compiled.sql}`)).map(
+        (row) => `${row.id}/${row.parent} ${row.detail}`,
+      ),
     };
   }
 
-  #compile(sparql: string): QueryPlan | { kind: 'update'; update: Update } {
+  #invalidate(): void {
+    this.#plans.clear();
+    this.#counts.clear();
+    this.#countsTotal = undefined;
+    this.#absent.clear();
+  }
+
+  /** Builds something that reads the store while it compiles, resolving its reads inline or by fetch-and-retry. */
+  *#resolve<A>(build: (resolver: Resolver) => A): Program<A> {
+    const inline = this.#inline;
+    if (inline) {
+      return yield* pure(
+        build({
+          termId: (key, enc) => runSync(inline, this.store.lookup(new Map([[key, enc]]))).get(key),
+          count: (where) => runSync(inline, this.#countOf(where)),
+          total: () => runSync(inline, this.#total()),
+        }),
+      );
+    }
+    while (true) {
+      const misses: Misses = { terms: new Map(), counts: new Set(), total: false };
+      const built = build({
+        termId: (key, enc) => {
+          const cached = this.store.cachedId(key);
+          if (cached === undefined && !this.#absent.has(key)) {
+            misses.terms.set(key, enc);
+          }
+          return cached;
+        },
+        count: (where) => {
+          const count = this.#counts.get(where);
+          if (count === undefined) {
+            misses.counts.add(where);
+          }
+          return count ?? 0;
+        },
+        total: () => {
+          if (this.#countsTotal === undefined) {
+            misses.total = true;
+          }
+          return this.#countsTotal ?? undefined;
+        },
+      });
+      if (misses.terms.size === 0 && misses.counts.size === 0 && !misses.total) {
+        return built;
+      }
+      const found = yield* this.store.lookup(misses.terms);
+      for (const key of misses.terms.keys()) {
+        if (!found.has(key)) {
+          this.#absent.add(key);
+        }
+      }
+      for (const where of misses.counts) {
+        yield* this.#countOf(where);
+      }
+      if (misses.total) {
+        yield* this.#total();
+      }
+    }
+  }
+
+  *#compile(sparql: string): Program<QueryPlan | { kind: 'update'; update: Update }> {
     const cached = this.#plans.get(sparql);
     if (cached) {
       return cached;
@@ -161,41 +242,43 @@ export class SqlSparqlEngine {
       // The store is one dataset; silently ignoring a dataset clause would answer over the wrong graphs.
       throw new UnsupportedSparqlError('FROM / FROM NAMED');
     }
-    const temps = new Map<number, Term>();
-    const compiler = this.#compiler(temps);
-    let compiled: Compiled;
-    let template: Triple[] | undefined;
-    switch (parsed.queryType) {
-      case 'SELECT':
-        compiled = compiler.compileSelect(parsed);
-        break;
-      case 'ASK':
-        compiled = compiler.compileSelect({
-          where: parsed.where ?? [],
-          values: parsed.values,
-          variables: [{ termType: 'Wildcard' }],
-          limit: 1,
-        });
-        break;
-      case 'CONSTRUCT':
-        // Solution modifiers apply to the WHERE solutions before the template is instantiated.
-        compiled = compiler.compileSelect({
-          where: parsed.where ?? [],
-          values: parsed.values,
-          variables: [{ termType: 'Wildcard' }],
-          ...constructModifiers(parsed),
-        });
-        template = parsed.template;
-        break;
-      default:
-        throw new UnsupportedSparqlError(`query type ${parsed.queryType}`);
-    }
-    const plan: QueryPlan = {
-      compiled: { ...compiled, sql: this.#wrap(compiler.ctes, compiled, temps, compiler.tempTermsUsed) },
-      temps,
-      kind: parsed.queryType,
-      template,
-    };
+    const plan = yield* this.#resolve((resolver): QueryPlan => {
+      const temps = new Map<number, Term>();
+      const compiler = this.#compiler(temps, resolver);
+      let compiled: Compiled;
+      let template: Triple[] | undefined;
+      switch (parsed.queryType) {
+        case 'SELECT':
+          compiled = compiler.compileSelect(parsed);
+          break;
+        case 'ASK':
+          compiled = compiler.compileSelect({
+            where: parsed.where ?? [],
+            values: parsed.values,
+            variables: [{ termType: 'Wildcard' }],
+            limit: 1,
+          });
+          break;
+        case 'CONSTRUCT':
+          // Solution modifiers apply to the WHERE solutions before the template is instantiated.
+          compiled = compiler.compileSelect({
+            where: parsed.where ?? [],
+            values: parsed.values,
+            variables: [{ termType: 'Wildcard' }],
+            ...constructModifiers(parsed),
+          });
+          template = parsed.template;
+          break;
+        default:
+          throw new UnsupportedSparqlError(`query type ${parsed.queryType}`);
+      }
+      return {
+        compiled: { ...compiled, sql: this.#wrap(compiler.ctes, compiled, temps, compiler.tempTermsUsed) },
+        temps,
+        kind: parsed.queryType,
+        template,
+      };
+    });
     if (this.#plans.size > PLAN_CACHE_LIMIT) {
       this.#plans.clear();
     }
@@ -203,57 +286,58 @@ export class SqlSparqlEngine {
     return plan;
   }
 
-  #compiler(temps: Map<number, Term>): Compiler {
-    const store = this.store;
+  #compiler(temps: Map<number, Term>, resolver: Resolver): Compiler {
     const tempIds = new Map<string, number>();
-    return new Compiler({
-      namedGraphs: store.namedGraphs,
-      constId: (term) => {
-        const value = toTerm(term);
-        const enc = encodeTerm(value);
-        const key = encKey(enc);
-        const id = store.lookup(new Map([[key, enc]])).get(key);
-        if (id !== undefined) {
-          return String(id);
-        }
-        let temp = tempIds.get(key);
-        if (temp === undefined) {
-          temp = -(tempIds.size + 1);
-          tempIds.set(key, temp);
-          temps.set(temp, value);
-        }
-        return String(temp);
+    return new Compiler(
+      {
+        namedGraphs: this.store.namedGraphs,
+        constId: (term) => {
+          const value = toTerm(term);
+          const enc = encodeTerm(value);
+          const key = encKey(enc);
+          const id = resolver.termId(key, enc);
+          if (id !== undefined) {
+            return String(id);
+          }
+          let temp = tempIds.get(key);
+          if (temp === undefined) {
+            temp = -(tempIds.size + 1);
+            tempIds.set(key, temp);
+            temps.set(temp, value);
+          }
+          return String(temp);
+        },
+        selectivity: this.selectivityHints
+          ? (p, o) => this.#selectivity(resolver, Number(p), o === undefined ? undefined : Number(o))
+          : undefined,
       },
-      selectivity: this.selectivityHints
-        ? (p, o) => this.#selectivity(Number(p), o === undefined ? undefined : Number(o))
-        : undefined,
-    });
+      this.store.tables,
+    );
   }
 
   /** Fractions for `likelihood()` hints: quads with predicate `p`, and of those with object `o`. */
-  #selectivity(p: number, o: number | undefined): { p: number; o?: number } | undefined {
-    this.#countsTotal ??= this.#statTotal();
-    const total = this.#countsTotal;
+  #selectivity(resolver: Resolver, p: number, o: number | undefined): { p: number; o?: number } | undefined {
+    const total = resolver.total();
     if (!total) {
       // Without sqlite_stat1 SQLite assumes a default table size, so absolute hints would mislead it.
       return undefined;
     }
     const clamp = (value: number) => Math.min(1, Math.max(MIN_PROBABILITY, value));
-    const pCount = p < 0 ? 0 : this.#count(`p = ${p}`);
+    const pCount = p < 0 ? 0 : resolver.count(`p = ${p}`);
     if (o === undefined) {
       return { p: clamp(pCount / total) };
     }
-    const poCount = p < 0 || o < 0 ? 0 : this.#count(`p = ${p} AND o = ${o}`);
+    const poCount = p < 0 || o < 0 ? 0 : resolver.count(`p = ${p} AND o = ${o}`);
     return { p: clamp(pCount / total), o: clamp(poCount / Math.max(pCount, 1)) };
   }
 
-  #count(where: string): number {
+  *#countOf(where: string): Program<number> {
     let count = this.#counts.get(where);
     if (count === undefined) {
       count = asNumber(
-        this.store.sql
-          .exec(`SELECT COUNT(*) AS n FROM (SELECT 1 FROM quads WHERE ${where} LIMIT ${COUNT_CAP})`)
-          .toArray()[0].n,
+        (yield* rows(
+          `SELECT COUNT(*) AS n FROM (SELECT 1 FROM ${this.store.tables.quads} WHERE ${where} LIMIT ${COUNT_CAP})`,
+        ))[0].n,
       );
       if (this.#counts.size >= COUNT_CACHE_LIMIT) {
         this.#counts.clear();
@@ -264,19 +348,17 @@ export class SqlSparqlEngine {
   }
 
   /** Quad count as of the last ANALYZE (first number of the quads indexes' sqlite_stat1 row). */
-  #statTotal(): number | undefined {
-    const sql = this.store.sql;
-    if (sql.exec(`SELECT 1 FROM sqlite_master WHERE name = 'sqlite_stat1'`).toArray().length === 0) {
-      return undefined;
+  *#total(): Program<number | undefined> {
+    if (this.#countsTotal === undefined) {
+      if ((yield* rows(`SELECT 1 FROM sqlite_master WHERE name = 'sqlite_stat1'`)).length === 0) {
+        this.#countsTotal = null;
+      } else {
+        const [row] = yield* rows(`SELECT stat FROM sqlite_stat1 WHERE tbl = ? LIMIT 1`, this.store.tables.quads);
+        const total = row ? Number(String(row.stat).split(' ')[0]) : 0;
+        this.#countsTotal = total > 0 ? total : null;
+      }
     }
-    const [row] = sql.exec(`SELECT stat FROM sqlite_stat1 WHERE tbl = 'quads' LIMIT 1`).toArray();
-    const total = row ? Number(String(row.stat).split(' ')[0]) : 0;
-    return total > 0 ? total : undefined;
-  }
-
-  #clearCounts(): void {
-    this.#counts.clear();
-    this.#countsTotal = undefined;
+    return this.#countsTotal ?? undefined;
   }
 
   /** Adds the CTEs and the final decode join (term id → kind/lex/dt/lang) around the compiled select. */
@@ -294,7 +376,7 @@ export class SqlSparqlEngine {
           `t${index}.lang AS g${index}`,
         );
         // `main.` bypasses the temp-terms CTE: temp ids are decoded in JS, and the base table keeps its index.
-        joins.push(`LEFT JOIN main.terms t${index} ON t${index}.id = ${ref}`);
+        joins.push(`LEFT JOIN main.${this.store.tables.terms} t${index} ON t${index}.id = ${ref}`);
       }
     });
     const all = tempTermsUsed && temps.size > 0 ? [this.#tempTerms(temps), ...ctes] : ctes;
@@ -310,27 +392,28 @@ export class SqlSparqlEngine {
    * and comparisons over them (`VALUES ?x { "new" } FILTER(STRLEN(?x) > 1)`) see a real term.
    */
   #tempTerms(temps: Map<number, Term>): string {
-    const rows = [...temps].map(([id, term]) => {
+    const values = [...temps].map(([id, term]) => {
       const enc = encodeTerm(term);
       const dt = enc.dt === null ? 'NULL' : String(this.store.dtIdIfKnown(enc.dt));
       const text = (value: string | null) => (value === null ? 'NULL' : `'${value.replace(/'/g, "''")}'`);
       const num = enc.num === null || !Number.isFinite(enc.num) ? 'NULL' : String(enc.num);
       return `(${id}, 0, ${enc.kind}, ${text(enc.lex)}, ${dt}, ${text(enc.lang)}, ${num})`;
     });
-    return `terms(id, h, kind, lex, dt, lang, num) AS NOT MATERIALIZED (SELECT id, h, kind, lex, dt, lang, num FROM main.terms UNION ALL VALUES ${rows.join(', ')})`;
+    const { terms } = this.store.tables;
+    return `${terms}(id, h, kind, lex, dt, lang, num) AS NOT MATERIALIZED (SELECT id, h, kind, lex, dt, lang, num FROM main.${terms} UNION ALL VALUES ${values.join(', ')})`;
   }
 
-  #run(plan: Pick<QueryPlan, 'compiled' | 'temps'>): Row[] {
+  *#run(plan: Pick<QueryPlan, 'compiled' | 'temps'>): Program<Row[]> {
     this.lastSql = plan.compiled.sql;
-    const rows: Row[] = [];
+    const solutions: Row[] = [];
     const { cols } = plan.compiled;
-    for (const raw of this.store.sql.exec(plan.compiled.sql).raw()) {
+    for (const values of yield* raw(plan.compiled.sql)) {
       const row: Row = {};
       let index = 0;
       for (const col of cols) {
-        const value = raw[index++];
+        const value = values[index++];
         if (col.type === 'id') {
-          const [kind, lex, dt, lang] = raw.slice(index, index + 4);
+          const [kind, lex, dt, lang] = values.slice(index, index + 4);
           index += 4;
           if (typeof value === 'number' && value < 0) {
             row[col.name] = plan.temps.get(value);
@@ -351,9 +434,9 @@ export class SqlSparqlEngine {
           }
         }
       }
-      rows.push(row);
+      solutions.push(row);
     }
-    return rows;
+    return solutions;
   }
 
   #construct(rows: Row[], template: Triple[]): Row[] {
@@ -383,48 +466,50 @@ export class SqlSparqlEngine {
   // SPARQL UPDATE.
   //
 
-  #update(update: Update): void {
-    this.#plans.clear();
-    this.#clearCounts();
+  *#update(update: Update): Program<void> {
+    this.#invalidate();
     for (const op of update.updates) {
       if ('updateType' in op) {
         switch (op.updateType) {
           case 'insert':
-            this.store.insert(groundQuads(op.insert, new Map()));
+            yield* this.store.insert(groundQuads(op.insert, new Map()));
             break;
           case 'delete':
-            this.store.delete(groundQuads(op.delete));
+            yield* this.store.delete(groundQuads(op.delete));
             break;
           case 'deletewhere':
-            this.#modify(op.delete, [], op.delete.map(quadsToPattern));
+            yield* this.#modify(op.delete, [], op.delete.map(quadsToPattern));
             break;
           case 'insertdelete':
-            this.#modify(op.delete ?? [], op.insert ?? [], op.where);
+            yield* this.#modify(op.delete ?? [], op.insert ?? [], op.where);
             break;
         }
       } else if ((op.type === 'clear' || op.type === 'drop') && (op.graph.default || op.graph.all)) {
-        this.store.reset();
+        yield* this.store.reset();
       } else {
         throw new UnsupportedSparqlError(
           op.type === 'clear' || op.type === 'drop' ? `${op.type} of a named graph` : `update ${op.type}`,
         );
       }
-      this.#plans.clear();
+      this.#invalidate();
     }
   }
 
   /** DELETE/INSERT … WHERE: the WHERE compiles to one SELECT; templates are instantiated in JS. */
-  #modify(deletes: Quads[], inserts: Quads[], where: Pattern[]): void {
-    const temps = new Map<number, Term>();
-    const compiler = this.#compiler(temps);
-    const compiled = compiler.compileWhere(where);
-    const rows = this.#run({
-      compiled: { ...compiled, sql: this.#wrap(compiler.ctes, compiled, temps, compiler.tempTermsUsed) },
-      temps,
+  *#modify(deletes: Quads[], inserts: Quads[], where: Pattern[]): Program<void> {
+    const plan = yield* this.#resolve((resolver) => {
+      const temps = new Map<number, Term>();
+      const compiler = this.#compiler(temps, resolver);
+      const compiled = compiler.compileWhere(where);
+      return {
+        compiled: { ...compiled, sql: this.#wrap(compiler.ctes, compiled, temps, compiler.tempTermsUsed) },
+        temps,
+      };
     });
+    const solutions = yield* this.#run(plan);
     const instantiateAll = (blocks: Quads[], freshBlanks: boolean) => {
       const quads: Quad[] = [];
-      for (const row of rows) {
+      for (const row of solutions) {
         const fresh = freshBlanks ? new Map<string, Term>() : undefined;
         for (const block of blocks) {
           const graph = block.type === 'graph' ? instantiate(row, block.name) : undefined;
@@ -444,8 +529,79 @@ export class SqlSparqlEngine {
     };
     const toDelete = instantiateAll(deletes, false);
     const toInsert = instantiateAll(inserts, true);
-    this.store.delete(toDelete);
-    this.store.insert(toInsert);
+    yield* this.store.delete(toDelete);
+    yield* this.store.insert(toInsert);
+  }
+}
+
+/**
+ * SPARQL 1.1 engine over synchronous SQLite: every query compiles to one SQL statement over an interned quad store.
+ * Wrap writes in the host's transaction (e.g. `ctx.storage.transactionSync`) for atomicity. For an async connection,
+ * use `SqlSparqlEngineAsync` from `@dxos/sparql-sqlite/async`.
+ */
+export class SqlSparqlEngine {
+  readonly core: EngineCore;
+  readonly #sql: SqlStorage;
+
+  constructor(sql: SqlStorage, options: EngineOptions = {}) {
+    this.#sql = sql;
+    this.core = new EngineCore({ ...options, inline: sql });
+  }
+
+  get store(): TermStore {
+    return this.core.store;
+  }
+
+  /** Pass per-constant selectivities to SQLite as `likelihood()` hints. */
+  get selectivityHints(): boolean {
+    return this.core.selectivityHints;
+  }
+
+  set selectivityHints(value: boolean) {
+    this.core.selectivityHints = value;
+  }
+
+  /** SQL of the last executed statement (diagnostics). */
+  get lastSql(): string | undefined {
+    return this.core.lastSql;
+  }
+
+  /** Creates the schema if missing; call once before use. */
+  init(): void {
+    runSync(this.#sql, this.core.init());
+  }
+
+  /** Drops all data (optionally switching the index set). */
+  reset(indexes?: IndexSet): void {
+    runSync(this.#sql, this.core.reset(indexes));
+  }
+
+  /** Inserts quads in one set-oriented batch. */
+  insert(quads: readonly Quad[]): void {
+    runSync(this.#sql, this.core.insert(quads));
+  }
+
+  /** Number of stored quads. */
+  count(): number {
+    return runSync(this.#sql, this.core.count());
+  }
+
+  clearPlans(): void {
+    this.core.clearPlans();
+  }
+
+  stats(): Record<string, unknown> {
+    return runSync(this.#sql, this.core.stats());
+  }
+
+  /** See {@link EngineCore.query}. */
+  query(sparql: string): Row[] {
+    return runSync(this.#sql, this.core.query(sparql));
+  }
+
+  /** Compiled SQL and SQLite's EXPLAIN QUERY PLAN for a query. */
+  explain(sparql: string): { sql: string; plan: string[] } {
+    return runSync(this.#sql, this.core.explain(sparql));
   }
 }
 

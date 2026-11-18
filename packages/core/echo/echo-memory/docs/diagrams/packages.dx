@@ -1,0 +1,26 @@
+diagram flow=down
+group page "Page and operations" {
+  node Ops "operations"
+  node Client "client.memory()" ref="packages/sdk/client/src/client/rpc-memory.ts"
+}
+group host "client-services worker" {
+  node Host "MemoryHostLayer" ref="packages/sdk/client-services/src/internal/rdf/memory-host.ts"
+  node Spaces "SpaceMemories" ref="packages/sdk/client-services/src/internal/rdf/space-memories.ts"
+  node Memory "RdfMemory" ref="packages/core/echo/echo-memory-sqlite/src/RdfMemory.ts"
+  node QuadStore "QuadStore" ref="packages/core/compute/sparql-sqlite/src/QuadStore.ts"
+  node Feed "facts feed" ref="packages/sdk/client-services/src/internal/rdf/fact-feed.ts"
+  node Sqlite "host SQLite"
+}
+group iface "@dxos/echo-memory" {
+  node Mem "MemoryService" ref="packages/core/echo/echo-memory/src/MemoryService.ts"
+  node Port "RdfStore" ref="packages/core/echo/echo-memory/src/RdfStore.ts"
+}
+edge Ops -> Client "MemoryService"
+edge Client -> Host "MemoryService RPC"
+edge Host -> Spaces
+edge Spaces -> Memory "one per space"
+edge Memory -> QuadStore "SPARQL + batches"
+edge QuadStore -> Feed "append first"
+edge QuadStore -> Sqlite "apply"
+edge Memory implements Mem
+edge QuadStore implements Port

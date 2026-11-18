@@ -33,13 +33,13 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
     const { t } = Hooks.useTranslation(KanbanNamespace.key);
     const label = useLabel(data);
     const { model } = useBoard(KANBAN_CARD_TILE_NAME);
-    const { projection, columnFieldPath, onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
+    const { projection, columnFieldPath, onCardRemove, readonly } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
     const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
 
     // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
     const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
-    const objectMenuItems = ToolkitHooks.useObjectMenuItems(data, pivotId);
+    const objectMenuItems = ToolkitHooks.useObjectMenuItems(data, pivotId, { readonly });
 
     const menuItems = useMemo(
       () => [
@@ -53,7 +53,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
             ]
           : []),
       ],
-      [objectMenuItems, onCardRemove, data, t],
+      [objectMenuItems, readonly, onCardRemove, data, t],
     );
 
     return (
@@ -63,7 +63,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         data={data}
         location={location}
         debug={debug}
-        draggable={draggable}
+        draggable={draggable && !readonly}
         dragHandle={dragHandle}
       >
         <Focus.Item asChild>
@@ -75,7 +75,11 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
             data-testid='board-item'
           >
             <Card.Header ref={cardRef}>
-              <DragHandle.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
+              {readonly ? (
+                <Layout.Block />
+              ) : (
+                <DragHandle.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
+              )}
               <Card.Title truncate data-testid='mosaicBoard.cardTitle'>
                 {label}
               </Card.Title>

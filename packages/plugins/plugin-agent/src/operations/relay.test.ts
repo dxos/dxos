@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { beforeEach, describe, it } from '@effect/vitest';
+import { afterEach, beforeEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -46,6 +46,9 @@ const mirrored = makeTestChannelBackend({ mirrored: true });
 
 // Deliveries into a Composer chat wake it; this suite checks where they go, not the turn that follows.
 const brain = makeTestBrain({ wake: 'record' });
+
+// One memory stands in for each test's space, so every test starts with an empty one.
+afterEach(() => brain.reset());
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.merge(AgentOperationHandlerSet, ThreadOperationHandlerSet.handlers),

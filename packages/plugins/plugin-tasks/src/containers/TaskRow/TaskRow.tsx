@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { TaskList } from '@dxos/react-ui-task';
 import { type Task } from '@dxos/types';
@@ -19,6 +20,7 @@ export type TaskRowProps = {
  * beside the object it relates to (e.g. under the email it was extracted from).
  */
 export const TaskRow = ({ subject: task }: TaskRowProps) => {
+  const readonly = ToolkitHooks.useReadOnly();
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const getTaskActions = useTaskActions();
   const getDelegateActions = useDelegateActions();
@@ -33,9 +35,9 @@ export const TaskRow = ({ subject: task }: TaskRowProps) => {
       flush
       groupByStatus={false}
       members={members}
-      getTaskActions={getTaskActions}
-      getDelegateActions={getDelegateActions}
-      onTaskUpdate={handleUpdate}
+      getTaskActions={readonly ? undefined : getTaskActions}
+      getDelegateActions={readonly ? undefined : getDelegateActions}
+      onTaskUpdate={readonly ? undefined : handleUpdate}
     >
       <TaskList.Content />
     </TaskList.Root>

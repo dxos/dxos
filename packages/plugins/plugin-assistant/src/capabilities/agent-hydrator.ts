@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { log } from '@dxos/log';
@@ -19,10 +20,15 @@ import { log } from '@dxos/log';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const manager = yield* Capability.Service;
     const runtime = yield* Capabilities.ProcessManagerRuntime;
 
     runtime.runFork(
       Effect.gen(function* () {
+        if (ReadOnly.isActive(manager)) {
+          return;
+        }
+
         const service = yield* AgentService.AgentService;
         yield* service.hydrate();
       }).pipe(

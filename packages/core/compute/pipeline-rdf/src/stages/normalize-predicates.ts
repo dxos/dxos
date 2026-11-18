@@ -4,10 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Fact, Graph, Ontology, Predicate } from '@dxos/echo-memory';
 import { Stage } from '@dxos/pipeline';
 
-import { type Fact, Graph, Ontology } from '../types/index.ts';
-import * as Predicate from '../types/Predicate.ts';
 import { type DocumentFacts } from './extract-facts.ts';
 
 export type NormalizeOptions = {
@@ -32,7 +31,7 @@ export const normalizeFactsStage = ({
 }: NormalizeOptions): Stage.Stage<DocumentFacts, DocumentFacts> => {
   const lookup = new Map(Object.entries(synonyms).map(([key, value]) => [Predicate.normalize(key), value]));
   const vocabulary = ontology ?? Ontology.DEFAULT;
-  const canonicalize = (fact: Fact): Fact => {
+  const canonicalize = (fact: Fact.Fact): Fact.Fact => {
     const surface = lookup.get(Predicate.normalize(fact.assertion.predicate)) ?? fact.assertion.predicate;
     const entry = ontology?.find(surface);
     if (!entry && surface === fact.assertion.predicate) {

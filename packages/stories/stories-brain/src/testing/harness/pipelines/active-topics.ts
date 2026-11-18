@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { type Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { EMAIL_EXTRACT_OPTIONS, deriveThreadId, messageToDocument } from '@dxos/pipeline-email';
-import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { extractDocFacts } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
 import { type ActiveTopicsDeps, type TopicContext } from '../internal/active-topics.ts';
@@ -27,7 +28,7 @@ const run = <A>(variant: ModelVariant, effect: Effect.Effect<A, never, AiService
 const term = (value: { readonly entity?: string; readonly literal?: string }): string =>
   value.entity ?? value.literal ?? '?';
 
-const renderFact = (fact: RDF.Fact): string =>
+const renderFact = (fact: Fact.Fact): string =>
   `${term(fact.assertion.subject)} ${fact.assertion.predicate} ${term(fact.assertion.object)}`;
 
 const threadDigest = (context: TopicContext): string =>
@@ -105,7 +106,7 @@ export const makeActiveTopicsDeps = (policy?: ModelPolicy): ActiveTopicsDeps => 
               strict: factsVariant.strict,
             }).pipe(
               Effect.timeout('120 seconds'),
-              Effect.catch(() => Effect.succeed([] as RDF.Fact[])),
+              Effect.catch(() => Effect.succeed([] as Fact.Fact[])),
             );
             collected.push(...extracted.map(renderFact));
           }
