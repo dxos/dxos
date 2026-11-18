@@ -37,6 +37,8 @@ export type MergePlan = {
     orders: readonly QueryAST.Order[];
     limit: number;
   };
+  /** A limit with no order and no skip, which a short remote answer leaves room in for unindexed local matches. */
+  unorderedLimit?: number;
   /**
    * Present when the merged entries are sorted locally: a property order with no limit or skip, which the working
    * set evaluates over what it holds and the engine applies over the union.
@@ -87,6 +89,11 @@ export const createMergePlan = (query: QueryAST.Query): MergePlan => {
       ? { orders: flat.orders, limit: flat.limit }
       : undefined;
 
+  const unorderedLimit =
+    revalidate && flat?.limit !== undefined && flat.skip === undefined && flat.orders.length === 0
+      ? flat.limit
+      : undefined;
+
   const ids =
     single?.class === 'local-complete' && single.selection === 'id' && flat
       ? flat.filters.flatMap((filter) => (filter.type === 'object' ? (filter.id ?? []) : []))
@@ -133,6 +140,7 @@ export const createMergePlan = (query: QueryAST.Query): MergePlan => {
     characteristics,
     revalidate,
     window,
+    unorderedLimit,
     order,
     paths,
     manifest: manifest && { aggregates: manifest },

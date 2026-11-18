@@ -13,6 +13,7 @@ export * from './profile-archive.ts';
 export * from './space-archive.ts';
 export * from './storage.ts';
 export type * from './types.ts';
+export type * from './working-set.ts';
 export * as Config2 from './Config2.ts';
 export * as FunctionProtocol from './FunctionProtocol.ts';
 export * as PluginProtocol from './PluginProtocol.ts';

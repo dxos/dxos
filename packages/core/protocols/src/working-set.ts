@@ -24,7 +24,27 @@ export type WorkingSetRow = {
   directoryJson?: string;
 };
 
-export type ExportWorkingSetOptions = {
-  /** Upper bound on the summed {@link WorkingSetRow.bytes}; documents that do not fit are left out. */
-  maxBytes: number;
+/**
+ * What an owner holds of a database's working set for one space: a local copy of the documents its databases read or
+ * wrote, as a client's boot cache holds them.
+ */
+export type WorkingSet = {
+  rows: WorkingSetRow[];
 };
+
+/** A database's snapshot of the documents it holds, sent to its working set as it closes or before a call. */
+export type WorkingSetReport = WorkingSet & {
+  /** Per document id, the heads the working set last had from this database; absent for a document it had none of. */
+  base: Record<string, string[]>;
+};
+
+/**
+ * A working set an owner keeps for the databases it starts, so that consecutive ones read each other's writes before
+ * the index holds them.
+ */
+export interface WorkingSetService {
+  /** The documents a database seeds itself with as it opens. */
+  get(): Promise<WorkingSet>;
+  /** Takes a database's snapshot; a document sent from heads other than the held ones is dropped, not overwritten. */
+  put(report: WorkingSetReport): Promise<void>;
+}

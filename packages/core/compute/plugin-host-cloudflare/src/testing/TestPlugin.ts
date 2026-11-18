@@ -223,6 +223,24 @@ const FollowupHandler = Followup.pipe(
   ),
 );
 
+/** Adds a person to the space, then runs another plugin's operation, as a handler that writes before a call does. */
+export const RecordThenDelegate = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.recordThenDelegate'), name: 'Record then delegate' },
+  services: [Database.Service, Operation.Service],
+  input: Schema.Struct({ name: Schema.String }),
+  output: Schema.Struct({ id: Schema.String }),
+});
+
+const RecordThenDelegateHandler = RecordThenDelegate.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ name }) {
+      const person = yield* Database.add(Obj.make(TestSchema.Person, { name }));
+      yield* Operation.invoke(Fibonacci, { iterations: 1 });
+      return { id: person.id };
+    }),
+  ),
+);
+
 /** Makes a person, as an operation that returns an ECHO object does. */
 export const MakePerson = Operation.make({
   meta: { key: DXN.make('com.example.operation.hostTest.makePerson'), name: 'Make person' },
@@ -278,6 +296,7 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
             InspectHandler,
             GreetHandler,
             DelegateHandler,
+            RecordThenDelegateHandler,
             NestHandler,
             FollowupHandler,
             MakePersonHandler,

@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeResponse, makeInProcessClient } from '@dxos/protocols';
-import type { EdgeFunctionEnv, FunctionProtocol } from '@dxos/protocols';
+import type { EdgeFunctionEnv, FunctionProtocol, WorkingSetService } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
 import { ServiceContainer } from './internal/index.ts';
@@ -116,11 +116,14 @@ export const createFunctionContext = async ({
   contextSpaceId,
   serviceScope,
   accessTokenService,
+  workingSetService,
 }: {
   serviceContainer: ServiceContainer;
   contextSpaceId: SpaceId | undefined;
   serviceScope: Scope.Scope;
   accessTokenService?: EdgeFunctionEnv.AccessTokenService;
+  /** The caller's working set; see `FunctionProtocol.Context`. */
+  workingSetService?: WorkingSetService;
 }): Promise<FunctionProtocol.Context> => {
   // Phase marks: on Workers `Date.now()` advances only across I/O, so a span here is zero-length
   // while these deltas are real.
@@ -163,6 +166,7 @@ export const createFunctionContext = async ({
       queueService,
       functionsAiService: services.functionsAiService,
       accessTokenService,
+      workingSetService,
     },
     spaceId: contextSpaceId,
     spaceKey,
