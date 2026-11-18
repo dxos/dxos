@@ -18,6 +18,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
@@ -50,6 +51,7 @@ import {
 /** Creates database extensions: types section, schema nodes, schema children, and schema actions. */
 export const createDatabaseExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
+  const readOnly = yield* ReadOnly.atom;
   const pluginManager = yield* Plugin.Service;
   // Fired from the schema-actions evaluation below, which re-runs reactively; the scheduler
   // short-circuits a dispatch with nothing left to activate, so repeats cost a lookup.
@@ -277,9 +279,11 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // Actions for schema nodes.
     AppGraphBuilder.createExtension({
       id: 'schemaActions',
-      match: (node) => {
+      match: (node, get) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return space && Type.isType(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
+        return !get(readOnly) && space && Type.isType(node.data)
+          ? Option.some({ space, schema: node.data })
+          : Option.none();
       },
       actions: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);

@@ -14,6 +14,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
@@ -57,11 +58,14 @@ export default Capability.makeModule(
       return !settingsAtom || !get(settingsAtom).hideHelpCompanions;
     };
 
+    const readOnly = yield* ReadOnly.atom;
+    const whenWritableRoot = ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot);
+
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
       AppGraphBuilder.createExtension({
         id: 'root',
-        match: GraphNodeMatcher.whenRoot,
+        match: whenWritableRoot,
         actions: () =>
           Effect.succeed([
             AppGraphNode.makeAction({
@@ -123,7 +127,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'help',
         relation: AppNode.companion,
-        match: GraphNodeMatcher.whenRoot,
+        match: whenWritableRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
@@ -143,7 +147,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'discord',
         relation: AppNode.companion,
-        match: GraphNodeMatcher.whenRoot,
+        match: whenWritableRoot,
         connector: (_root, get) => {
           const [settingsAtom] = get(settingsCapabilityAtom);
           if (!settingsAtom) {

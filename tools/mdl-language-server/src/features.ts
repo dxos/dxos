@@ -20,6 +20,7 @@ import {
   SymbolKind,
 } from 'vscode-languageserver';
 
+import { dialectBlockTypes, fileDialects } from '@dxos/deus/dialect';
 import {
   BLOCK_TYPES,
   extensionTerms,
@@ -29,7 +30,7 @@ import {
   parseMdlBlocks,
   scanFenceLines,
 } from '@dxos/deus/parse';
-import { VERDICT_STATUSES, findSourceKeys, findSymbolLine, parseReview } from '@dxos/deus/review';
+import { VERDICT_STATUSES, findSourceKeys, findSymbolLine, parseReview, parseVerdictHeader } from '@dxos/deus/review';
 import { frontmatter, reqs } from '@dxos/deus/spec-index';
 
 import { keyCard, specCard, verdictCard } from './hover.ts';
@@ -54,6 +55,9 @@ export const toDocument = (path: string, text: string): Document => ({ path, tex
 
 const isReview = (path: string): boolean => path.endsWith('.review.mdl');
 
+/** The block types the dialects a document is read with declare (its frontmatter's, else the software dialect), as `deus lint` reads them. */
+const dialectTypes = (text: string): readonly string[] => dialectBlockTypes(fileDialects(text));
+
 const SEVERITY = {
   error: DiagnosticSeverity.Error,
   warning: DiagnosticSeverity.Warning,
@@ -72,21 +76,16 @@ const SEVERITY = {
  */
 export const diagnostics = (workspace: Workspace, { path, text, lines }: Document): Diagnostic[] => {
   const review = isReview(path);
-  // The lint knows only the core types; a document's `## Extensions` table and `ext` blocks declare the rest.
-  const declaredTypes = new Set([
-    ...extensionTerms(text),
-    ...parseMdlBlocks(text).flatMap(({ type, id }) => (type === 'ext' && id ? [id] : [])),
-  ]);
-  const headerTypes = new Map(parseBlockHeaders(text).map(({ from, type }) => [from, type]));
+  const types = dialectTypes(text);
   // A review's frontmatter names its spec by key, which the reference rules would reject; it is no spec itself.
-  const found: Diagnostic[] = lintMdl(text, review ? {} : { index: workspace.index })
-    .filter(({ source, from }) => source !== 'mdl/block-type' || !declaredTypes.has(headerTypes.get(from) ?? ''))
-    .map(({ from, to, severity, source, message }) => ({
+  const found: Diagnostic[] = lintMdl(text, review ? { types } : { index: workspace.index, types }).map(
+    ({ from, to, severity, source, message }) => ({
       range: lines.range(from, to),
       severity: SEVERITY[severity],
       source: source ?? 'mdl',
       message,
-    }));
+    }),
+  );
 
   const warn = (from: number, to: number, source: string, message: string) =>
     found.push({ range: lines.range(from, to), severity: DiagnosticSeverity.Warning, source, message });
@@ -111,13 +110,15 @@ export const diagnostics = (workspace: Workspace, { path, text, lines }: Documen
   if (review) {
     const specPath = reviewedSpecPath(workspace, path, text);
     const spec = workspace.read(specPath);
-    const items = spec === undefined ? undefined : new Set(declarations(spec).map(({ id }) => id));
-    for (const { type, id, to, body } of parseBlockHeaders(text)) {
+    const items = spec === undefined ? undefined : new Set(declarations(spec).map(({ reviewId }) => reviewId));
+    for (const { type, to, body } of parseBlockHeaders(text)) {
       if (type !== 'verdict') {
         continue;
       }
       const header = to + 1;
-      const headerEnd = header + body.split('\n', 1)[0].length;
+      const headerLine = body.split('\n', 1)[0];
+      const headerEnd = header + headerLine.length;
+      const id = parseVerdictHeader(headerLine)?.id;
       const status = body.match(/^\s+status:[ \t]*([\w-]*)/m)?.[1];
       if (!status) {
         found.push({
@@ -218,6 +219,17 @@ export const definition = (workspace: Workspace, document: Document, position: P
   const reference = referenceAt(workspace, document, offset);
   if (reference) {
     return 'error' in reference.target ? undefined : location(reference.target);
+  }
+  if (isReview(document.path)) {
+    const header = document.lines.line(position.line);
+    const verdict = parseVerdictHeader(header);
+    const idStart = verdict ? header.indexOf(verdict.id, header.indexOf('verdict') + 'verdict'.length) : -1;
+    const onId = verdict && position.character >= idStart && position.character <= idStart + verdict.id.length;
+    const specPath = reviewedSpecPath(workspace, document.path, document.text);
+    const line = onId ? itemLine(workspace.read(specPath) ?? '', verdict.id) : undefined;
+    if (line !== undefined) {
+      return { uri: uriOfPath(workspace, specPath), range: lineRange(line) };
+    }
   }
   const word = wordAt(document.text, offset);
   if (!word) {
@@ -391,20 +403,23 @@ export const completions = (workspace: Workspace, document: Document, position: 
         detail: path,
       }));
     }
-    const verdictId = before.match(/^\s*verdict\s+[\w.-]*$/);
+    const verdictId = before.match(/^\s*verdict\s+[\w.:-]*$/);
     if (verdictId && isReview(document.path)) {
       const spec = workspace.read(reviewedSpecPath(workspace, document.path, text)) ?? '';
-      return declarations(spec).map(({ kind, id }) => ({
-        label: id,
+      return declarations(spec).map(({ kind, reviewId }) => ({
+        label: reviewId,
         kind: CompletionItemKind.Reference,
         detail: kind,
       }));
     }
     if (/^\s*[\w-]*$/.test(before)) {
-      return [...new Set([...BLOCK_TYPES, ...extensionTerms(text)])].map((type) => ({
-        label: type,
-        kind: CompletionItemKind.Keyword,
-      }));
+      const declared = parseMdlBlocks(text).flatMap(({ type, id }) => (type === 'ext' && id ? [id] : []));
+      return [...new Set([...BLOCK_TYPES, ...dialectTypes(text), ...extensionTerms(text), ...declared])].map(
+        (type) => ({
+          label: type,
+          kind: CompletionItemKind.Keyword,
+        }),
+      );
     }
     return [];
   }

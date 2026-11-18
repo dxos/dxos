@@ -1,0 +1,18 @@
+version: 1
+
+# EDGE features as Composer sets them, so a space syncs between the two apps and through EDGE.
+runtime:
+  client:
+    storage:
+      persistent: true
+    edgeFeatures:
+      signaling: true
+      subductionReplicator: true
+      feedReplicator: true
+      agents: true
+
+  services:
+    edge:
+      url: https://dxos.network/
+    iceProviders:
+      - urls: https://dxos.network/ice

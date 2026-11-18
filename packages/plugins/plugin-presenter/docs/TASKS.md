@@ -70,7 +70,7 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **Print stylesheet** — `Deck/print.css`, imported by `Deck`; scoped by `html[data-printing-deck]`, prints every slide.
 - [x] **Object image embeds** — `![label](echo:///<id>)` renders the object like `<Surface ref>`, keeping main's reveal-era syntax (#14152) and plugin-debug's presenter sample working.
 - [x] **Themes** — `default`, `light`, `dark`, `serif` via `--slide-*` variables; `theme:` headmatter, Presentation `theme` setting with color/font overrides; story `plugins/plugin-presenter/components/SlideTheme`.
-- [x] **Slide grid** — the Presentation article shows every slide as a thumbnail (`SlideGrid`, react-ui-list `Listbox` tiles in a `Viewport`), no pager; drag a thumbnail to reorder sections, double-click to present from it (D-51).
+- [x] **Slide grid** — the Presentation article shows every slide as a thumbnail (`SlideGallery`, react-ui-list `Listbox` tiles in a `Viewport`), no pager; drag a thumbnail to reorder sections, double-click to present from it (D-51).
 - [ ] Theme-driven Tailwind utilities for plugin-contributed themes (a `SlideTheme` capability) if a second source of themes appears.
 - [ ] `class:` frontmatter only works with Tailwind utilities that are already generated (the markdown is not scanned); consider a safelist.
 - [ ] Known deck conversion losses: per-colour tints behind the ECHO/HALO/MESH/EDGE images (needs a tint layer separate from `backgroundOpacity`), fixed image heights, and the dropped hidden FADE slide.

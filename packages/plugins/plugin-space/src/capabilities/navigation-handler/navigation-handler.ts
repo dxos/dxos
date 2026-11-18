@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -23,6 +24,7 @@ import { SpaceOperation, type SpaceSchema } from '#types';
 import { JoinByKeyError, NoIdentityError } from '../../errors.ts';
 import { SpaceNamespace } from '../../namespace.ts';
 import { readJoinSpaceKey } from './join-space-key.ts';
+import { hasPendingFork, saveForkLink, takePendingFork } from './pending-fork.ts';
 
 /**
  * NavigationHandler for space invitation URL params.
@@ -32,7 +34,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* (options: SpaceSchema.SpacePluginOptions = {}) {
     // `invitationUrlHandler` is deliberately not read: the handler has always been registered
     // unconditionally, and honoring the option would change that.
-    const { invitationProp = 'spaceInvitationCode', joinSpaceKeyProp = 'spaceKey' } = options;
+    const { invitationProp = 'spaceInvitationCode', joinSpaceKeyProp = 'spaceKey', publication } = options;
     const invitationUrlHandler = true;
     const capabilities = yield* Capability.Service;
     const operationService = yield* Capabilities.OperationInvoker;
@@ -70,8 +72,44 @@ export default Capability.makeModule(
         ),
       );
 
+    // A fork waits for an identity, which arrives after onboarding, possibly in another tab.
+    let forkWaiting = false;
+    const forkWhenSignedIn = Effect.gen(function* () {
+      yield* Identity.identity.pipe(Stream.filter(Option.isSome), Stream.runHead, Effect.provide(HaloServices.layer));
+      const pending = takePendingFork();
+      if (!pending) {
+        return;
+      }
+      log.info('forking publication', { publicId: pending.publicId });
+      yield* Operation.invoke(SpaceOperation.ForkPublication, { publicId: pending.publicId, path: pending.path });
+    }).pipe(
+      Effect.catch((error) =>
+        Effect.gen(function* () {
+          log.warn('fork failed', { error });
+          yield* Operation.invoke(LayoutOperation.AddToast, {
+            id: `${SpaceNamespace.key}/fork-failed`,
+            title: ['fork-failed-toast.title', { ns: SpaceNamespace.key }],
+            icon: 'ph--warning--regular',
+          }).pipe(Effect.catch((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))));
+        }),
+      ),
+      Effect.ensuring(
+        Effect.sync(() => {
+          forkWaiting = false;
+        }),
+      ),
+    );
+
     const handler: AppCapabilities.NavigationHandler = (url: URL) =>
       Effect.gen(function* () {
+        if (publication) {
+          saveForkLink(url);
+          if (!forkWaiting && hasPendingFork()) {
+            forkWaiting = true;
+            yield* Effect.forkDetach(forkWhenSignedIn);
+          }
+        }
+
         const joinSpaceKey = readJoinSpaceKey(url, joinSpaceKeyProp);
         if (joinSpaceKey) {
           // Detached because URL projection waits on every handler, and a join waits on a member coming online.

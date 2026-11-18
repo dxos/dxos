@@ -49,10 +49,8 @@ for (const app of apps) {
 
   console.log(`::group::Deploy ${name} -> ${environment}`);
 
-  // A `_worker.js` in the asset dir is the Worker script (Pages advanced-mode carryover), not an asset —
-  // keep it out of the upload. Pure-static apps have no `_worker.js`, so this is skipped for them.
   if (existsSync(join(root, outDir, '_worker.js'))) {
-    writeFileSync(join(root, outDir, '.assetsignore'), '_worker.js\n');
+    writeFileSync(join(root, outDir, '.assetsignore'), '_worker.js\n_worker/\n');
   }
 
   execFileSync('pnpm', ['exec', 'wrangler', 'deploy', '--config', join(root, wranglerConfig), '--env', environment], {

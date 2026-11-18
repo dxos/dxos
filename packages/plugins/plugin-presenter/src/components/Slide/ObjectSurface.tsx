@@ -8,9 +8,8 @@ import React, { useEffect, useMemo } from 'react';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
+import { type SlideSurfaceRole } from '@dxos/react-ui-slides';
 import * as Icon from '@dxos/react-ui/Icon';
-
-import { type SlideSurfaceRole } from '../MarkdownSlide/index.ts';
 
 export type ObjectSurfaceProps = {
   object: Obj.Unknown;

@@ -9,6 +9,7 @@ import { setHeading } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
 
+import { isReadonly } from './readonly.ts';
 import { type EditorToolbarState } from './types.ts';
 
 const headingIcons: Record<string, string> = {
@@ -43,6 +44,7 @@ export const addHeadings =
         selectCardinality: 'single',
         // TODO(wittjosiah): Remove? Not sure this does anything.
         value: headingValue,
+        disabled: isReadonly(state),
       } as ToolbarMenuActionGroupProperties,
       (group) => {
         for (const [levelStr, icon] of Object.entries(headingIcons)) {
@@ -53,6 +55,7 @@ export const addHeadings =
               label: ['heading-level.label', { count: level, ns: translationKey }],
               icon,
               checked: levelStr === headingValue,
+              disabled: isReadonly(state),
             },
             () => setHeading(level)(getView()),
           );

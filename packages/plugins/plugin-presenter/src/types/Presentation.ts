@@ -9,11 +9,10 @@ import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 import * as Variant from '@dxos/plugin-studio/Variant';
+import { SlideTheme, splitSlides } from '@dxos/react-ui-slides/dialect';
 import { Text } from '@dxos/schema';
 
-import { splitSlides } from '../markdown/split.ts';
 import { PresenterNamespace } from '../namespace.ts';
-import * as SlideTheme from './SlideTheme.ts';
 
 /** Key of the presenter skill, attached to the Presentation type. */
 export const SKILL_KEY = 'org.dxos.skill.presenter';
@@ -51,7 +50,7 @@ export class Slide extends Type.makeObject<Slide>(DXN.make('org.dxos.type.slide'
     image: Schema.optional(Ref.Ref(MediaArtifact.MediaArtifact)).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['title']),
-    Annotation.IconAnnotation.set({ icon: 'ph--rectangle--regular', hue: 'orange' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--rectangle--regular', hue: 'indigo' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
   ),
 ) {}
@@ -69,7 +68,7 @@ export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dx
     theme: Schema.optional(SlideTheme.Settings).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'orange' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'indigo' }),
     Annotation.UserType.set({ tags: [Collection.ItemTag] }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
     // Its navtree node lists `slides`; a slide is deleted only through the undoable space Delete.

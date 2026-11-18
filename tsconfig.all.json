@@ -148,6 +148,9 @@
       "path": "packages/common/diagram/tsconfig.json"
     },
     {
+      "path": "packages/apps/diagram-app/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
@@ -190,6 +193,9 @@
       "path": "packages/core/echo/echo-host/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-native/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-panproto/tsconfig.json"
     },
     {
@@ -209,9 +215,6 @@
     },
     {
       "path": "packages/apps/echo-sqlite-demo/tsconfig.json"
-    },
-    {
-      "path": "packages/core/echo/echo-sqlite-sync/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-sync-worker/tsconfig.json"
@@ -923,6 +926,9 @@
     },
     {
       "path": "packages/ui/react-ui-search/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-slides/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-syntax-highlighter/tsconfig.json"

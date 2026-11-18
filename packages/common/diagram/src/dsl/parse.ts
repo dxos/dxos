@@ -126,10 +126,21 @@ export const read = (text: string): Reading => {
    * (`formatNumber` refuses it). Rejecting it here keeps `parse` and `print` accepting the same
    * documents.
    */
+  /** A number as the DSL spells it: a decimal, or a quotient (`692/3`) for a value a decimal cannot say exactly. */
+  const parseValue = (raw: string): number => {
+    const slash = raw.indexOf('/');
+    if (slash <= 0) {
+      return Number.parseFloat(raw);
+    }
+    const denominator = Number.parseFloat(raw.slice(slash + 1));
+    return denominator === 0 ? Number.NaN : Number.parseFloat(raw.slice(0, slash)) / denominator;
+  };
+
   const readNumber = (node: SyntaxNode): number | undefined => {
-    const value = Number.parseFloat(slice(node));
+    const raw = slice(node);
+    const value = parseValue(raw);
     if (!Number.isFinite(value)) {
-      report(node, `"${slice(node)}" is not a finite number.`);
+      report(node, `"${raw}" is not a finite number.`);
       return undefined;
     }
     return value;
@@ -146,7 +157,7 @@ export const read = (text: string): Reading => {
 
   // `100x50`; `x` appears only as the separator, so a negative extent needs no special case.
   const readSize = (node: SyntaxNode): { w: number; h: number } | undefined => {
-    const [width, height] = slice(node).split('x').map(Number.parseFloat);
+    const [width, height] = slice(node).split('x').map(parseValue);
     if (!Number.isFinite(width) || !Number.isFinite(height)) {
       report(node, `"${slice(node)}" is not a finite size.`);
       return undefined;
@@ -446,7 +457,7 @@ export const read = (text: string): Reading => {
       return undefined;
     }
     const raw = slice(attr.valueNode);
-    const [width, height] = raw.split('x').map(Number.parseFloat);
+    const [width, height] = raw.split('x').map(parseValue);
     if (!/^[^x]+x[^x]+$/.test(raw) || !(width > 0) || !(height > 0)) {
       report(attr.node, `"${name}" takes a size like 384x224.`);
       return undefined;

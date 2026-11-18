@@ -10,6 +10,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';
 import { type CreateEntryOverride, ObjectProperties } from '@dxos/react-ui-form';
@@ -27,6 +28,7 @@ export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknow
  */
 export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesProps>(
   ({ role, subject: object }, forwardedRef) => {
+    const readonly = ToolkitHooks.useReadOnly();
     const manager = PluginManagerProvider.usePluginManager();
     const operationInvoker = Hooks.useOperationInvoker();
     // Demand signal: this companion can create related objects, so pull parked entry providers.
@@ -63,9 +65,9 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
           <Toolbar.Root classNames='dx-document' />
         </Panel.Header>
         <Panel.Body asChild>
-          <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry}>
+          <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry} readonly={readonly}>
             {/* TODO(burdon): Ambiguous naming since providers only replace parts; can't update Toolbar, etc. Consider DefaultSettings pattern. */}
-            <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
+            {!readonly && <Surface.Surface type={AppSurface.ObjectProperties} data={data} />}
           </ObjectProperties>
         </Panel.Body>
       </Panel.Root>

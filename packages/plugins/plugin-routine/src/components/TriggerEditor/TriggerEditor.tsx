@@ -260,12 +260,15 @@ const CronField = (props: FormFieldRendererProps) => {
     [props.type, props.onValueChange],
   );
 
-  // TODO(wittjosiah): Add read-only support.
   return (
     <Schedule.Root kinds={RECURRING_KINDS} defaultValue={initial} onValueChange={handleChange}>
       <Schedule.Header />
-      <Schedule.Kind />
-      <Schedule.Body />
+      {!props.readonly && (
+        <>
+          <Schedule.Kind />
+          <Schedule.Body />
+        </>
+      )}
     </Schedule.Root>
   );
 };
