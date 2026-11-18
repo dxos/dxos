@@ -8,16 +8,18 @@ import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useAttention } from '@dxos/react-ui-attention';
+import { type LayoutName } from '@dxos/react-ui-slides';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Deck, LayoutPicker, SectionPicker } from '#components';
+import { AddSlideButton, Deck, SectionPicker, newSlideContent } from '#components';
 import { type SlideSource } from '#deck';
 import {
   useGridSize,
@@ -28,15 +30,10 @@ import {
   useSetPresenting,
   useSlideIndex,
 } from '#hooks';
-import { type LayoutName } from '#markdown';
 import { Presentation, PresenterSurface } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
 import PresentedOverlay from '../PresentedOverlay/index.ts';
-
-/** Content of a slide created from the toolbar, with its `layout:` unless that is the default. */
-const newSlideContent = (layout: LayoutName = 'default'): string =>
-  layout === 'default' ? '# New slide' : `---\nlayout: ${layout}\n---\n\n# New slide`;
 
 export type PresentationArticleProps = AppSurface.ObjectArticleProps<Presentation.Presentation>;
 
@@ -44,6 +41,7 @@ export type PresentationArticleProps = AppSurface.ObjectArticleProps<Presentatio
  * A presentation's slides as a grid, presented fullscreen in place; the current slide is per-viewer view state.
  */
 export const PresentationArticle = ({ role, subject, attendableId }: PresentationArticleProps) => {
+  const readonly = ToolkitHooks.useReadOnly();
   const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const slides = usePresentationDeck(subject);
   const [theme] = useObject(subject, 'theme');
@@ -107,6 +105,14 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
     [subject],
   );
 
+  const handlePlaySlide = useCallback(
+    (slideIndex: number) => {
+      setIndex(slideIndex, slides.length);
+      void setPresenting(true);
+    },
+    [slides.length, setIndex, setPresenting],
+  );
+
   const handleMoveSlide = useCallback(
     (from: number, to: number) => {
       Presentation.move(subject, from, to);
@@ -130,30 +136,13 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
           {!fullscreen && (
             <Panel.Header>
               <Toolbar.Root>
-                {/* A split button (the caret picks the layout the plus adds), unwrapped so the toolbar sees an icon button first. */}
-                <Button.Root
-                  data-testid='presenter.add-slide'
-                  icon='ph--plus--regular'
-                  iconOnly
-                  variant='ghost'
-                  label={t('add-slide.label')}
-                  onClick={handleAddSlide}
-                />
-                <LayoutPicker
-                  value={newSlideLayout}
-                  onChange={setNewSlideLayout}
-                  trigger={
-                    <Button.Root
-                      data-testid='presenter.add-slide.layout'
-                      icon='ph--caret-down--regular'
-                      iconOnly
-                      variant='ghost'
-                      label={t('add-slide-layout.label')}
-                    />
-                  }
-                />
+                {!readonly && (
+                  <>
+                    <AddSlideButton layout={newSlideLayout} onLayoutChange={setNewSlideLayout} onAdd={handleAddSlide} />
 
-                <SectionPicker presentation={subject} />
+                    <SectionPicker presentation={subject} />
+                  </>
+                )}
                 <div className='grow' />
                 <Surface.Surface type={PresenterSurface.Toolbar} data={{ subject }} />
                 <Button.Root
@@ -177,10 +166,10 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
             ) : (
               <Deck.Grid
                 size={gridSize}
-                onMove={handleMoveSlide}
-                onOpen={handleOpenSlide}
-                onAddSlide={handleAddSlide}
-                contextMenuId={contextMenuId}
+                onMove={readonly ? undefined : handleMoveSlide}
+                onOpen={readonly ? handlePlaySlide : handleOpenSlide}
+                onAddSlide={readonly ? undefined : handleAddSlide}
+                contextMenuId={readonly ? undefined : contextMenuId}
               />
             )}
           </Panel.Body>

@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -12,6 +13,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
@@ -68,12 +70,15 @@ export const createSectionsExtension = () =>
   });
 
 /** An owned slide's companion shows the rendered slide beside its editor. */
-export const createSlidePreviewExtension = () =>
+export const createSlidePreviewExtension = (readOnly: Atom.Atom<boolean>) =>
   AppGraphBuilder.createExtension({
     id: 'slidePreview',
     relation: AppNode.companion,
     // Only a markdown slide has an editor to preview beside.
-    match: (node) => {
+    match: (node, get) => {
+      if (get(readOnly)) {
+        return Option.none();
+      }
       const content = Obj.instanceOf(Presentation.Slide, node.data) ? node.data.content.target : undefined;
       return Obj.instanceOf(Presentation.Slide, node.data) && content && Presentation.isOwnedContent(node.data, content)
         ? Option.some(node.data)
@@ -91,10 +96,11 @@ export const createSlidePreviewExtension = () =>
   });
 
 /** A slide can be hidden from (or shown in) the presentation, from the navtree and the context menu. */
-export const createSlideActionsExtension = () =>
+export const createSlideActionsExtension = (readOnly: Atom.Atom<boolean>) =>
   AppGraphBuilder.createExtension({
     id: 'slideActions',
-    match: (node) => (Obj.instanceOf(Presentation.Slide, node.data) ? Option.some(node.data) : Option.none()),
+    match: (node, get) =>
+      !get(readOnly) && Obj.instanceOf(Presentation.Slide, node.data) ? Option.some(node.data) : Option.none(),
     actions: (slide, get) => {
       const hidden = get(Obj.atomProperty(slide, 'hidden')) === true;
       return Effect.succeed([
@@ -119,6 +125,7 @@ export const createSlideActionsExtension = () =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const readOnly = yield* ReadOnly.atom;
     const companionExtensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
       relation: AppNode.companion,
@@ -165,8 +172,8 @@ export default Capability.makeModule(
     });
 
     const sectionsExtensions = yield* createSectionsExtension();
-    const slidePreviewExtensions = yield* createSlidePreviewExtension();
-    const slideActionsExtensions = yield* createSlideActionsExtension();
+    const slidePreviewExtensions = yield* createSlidePreviewExtension(readOnly);
+    const slideActionsExtensions = yield* createSlideActionsExtension(readOnly);
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...companionExtensions,

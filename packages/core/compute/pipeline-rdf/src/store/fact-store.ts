@@ -46,6 +46,13 @@ export interface FactStoreApi {
   readonly cursor: (source: string) => Effect.Effect<string | undefined, SemanticIndexError>;
   /** Upsert the ingest cursor for the given source DXN. */
   readonly setCursor: (source: string, hash: string) => Effect.Effect<void, SemanticIndexError>;
+  /**
+   * Serializes every statement, its graph metadata and the ontology as TriG, the Turtle syntax that also carries named
+   * graphs (plain Turtle has none, and each fact is a named graph).
+   */
+  readonly exportTrig: () => Effect.Effect<string, SemanticIndexError>;
+  /** Adds the quads of a TriG (or Turtle) document to the store and returns how many it read; existing quads stay. */
+  readonly importTrig: (trig: string) => Effect.Effect<number, SemanticIndexError>;
   /** Remove all facts, entities, and cursors from the store; the seed vocabulary is restored. */
   readonly clear: () => Effect.Effect<void, SemanticIndexError>;
 }

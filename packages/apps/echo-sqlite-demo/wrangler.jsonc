@@ -4,7 +4,9 @@
 {
   "name": "echo-sqlite-demo",
   "main": "./src/worker/main.ts",
-  "compatibility_date": "2026-10-01",
+  "compatibility_date": "2026-07-01",
+  // `@dxos/*` packages import Node built-ins (`@dxos/log` reads `node:os`).
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./out/echo-sqlite-demo",
     "binding": "ASSETS",

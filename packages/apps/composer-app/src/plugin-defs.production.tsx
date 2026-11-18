@@ -4,8 +4,11 @@
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
+import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
@@ -26,8 +29,11 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   ...getCorePlugins({ ...config, externalPlugins: false }),
   // `Agent` and `Sequence` are unfinished, so the curated set does not offer creating them.
   AssistantPlugin.make({ experimentalTypes: false }),
+  CanvasPlugin.make(),
   IllustratorPlugin.make(),
   MarkdownPlugin.make(),
+  MermaidPlugin.make(),
+  PresenterPlugin.make(),
   ProjectsPlugin.make(),
   ReviewPlugin.make(),
   TasksPlugin.make(),

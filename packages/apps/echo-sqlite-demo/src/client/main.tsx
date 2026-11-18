@@ -21,10 +21,9 @@ import '@dxos/react-ui/theme.css';
 import {
   DatabaseBusyError,
   DatabaseUnavailableError,
-  openDatabase,
-  resolveSlug,
+  openBrowserDatabase,
   waitForDatabase,
-} from '@dxos/echo-sqlite-sync';
+} from '@dxos/echo-sqlite/browser';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
@@ -34,6 +33,13 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { types } from '../schema.ts';
 import { App } from './components/index.ts';
+import { resolveSlug, spaceIdForSlug } from './slug.ts';
+
+/**
+ * The lock names the FILE, not the graph: one SQLite file holds every space of this origin, so a second
+ * tab is refused whichever graph it asks for.
+ */
+const DATABASE_LOCK = 'echo-sqlite-demo:opfs';
 
 /** Without these the design system's own labels render as raw keys ("save-button.label"). */
 const translations = [...uiTranslations, ...formTranslations, ...menuTranslations, ...tableTranslations];
@@ -56,30 +62,39 @@ const render = (children: React.ReactNode) =>
 const slug = resolveSlug();
 
 // Opening reads only the persisted type rows, so it costs the same at any space size.
-openDatabase(slug, types).then(
-  ({ db }) => render(<App db={db} slug={slug} />),
-  (error) => {
-    console.error(error);
-    if (error instanceof DatabaseBusyError) {
-      // The other tab's lock is released when it closes; this tab then opens without a manual reload.
-      void waitForDatabase().then(() => window.location.reload());
-    }
-    render(
-      <div className='p-4 space-y-2'>
-        <p className='text-fg'>
-          {error instanceof DatabaseBusyError ? 'The app is open in another tab.' : 'Could not open the database.'}
-        </p>
-        <p className='text-fg-muted text-sm'>
-          {error instanceof DatabaseBusyError
-            ? 'One tab at a time holds this browser’s database, whichever graph it shows. Close the other tab and this one opens by itself; to watch two peers sync, open the second in another browser or profile.'
-            : error instanceof DatabaseUnavailableError
-              ? 'The worker never got the file. A private window may block origin storage, and some browsers keep the handle for a moment after a tab holding it closes — reloading often works.'
-              : 'This demo needs OPFS in a dedicated worker. It works in Chrome, Edge and Safari 17+; a private window may block origin storage.'}
-        </p>
-        {!(error instanceof DatabaseBusyError) && !(error instanceof DatabaseUnavailableError) && (
-          <pre className='text-fg-subtle text-xs overflow-x-auto'>{String(error)}</pre>
-        )}
-      </div>,
-    );
-  },
-);
+spaceIdForSlug(slug)
+  .then((spaceId) =>
+    openBrowserDatabase({
+      worker: () => new Worker(new URL('./opfs-worker.ts', import.meta.url), { type: 'module' }),
+      lockName: DATABASE_LOCK,
+      spaceId,
+      types,
+    }),
+  )
+  .then(
+    (db) => render(<App db={db} />),
+    (error) => {
+      console.error(error);
+      if (error instanceof DatabaseBusyError) {
+        // The other tab's lock is released when it closes; this tab then opens without a manual reload.
+        void waitForDatabase(DATABASE_LOCK).then(() => window.location.reload());
+      }
+      render(
+        <div className='p-4 space-y-2'>
+          <p className='text-fg'>
+            {error instanceof DatabaseBusyError ? 'The app is open in another tab.' : 'Could not open the database.'}
+          </p>
+          <p className='text-fg-muted text-sm'>
+            {error instanceof DatabaseBusyError
+              ? 'One tab at a time holds this browser’s database, whichever graph it shows. Close the other tab and this one opens by itself; to watch two peers sync, open the second in another browser or profile.'
+              : error instanceof DatabaseUnavailableError
+                ? 'The worker never got the file. A private window may block origin storage, and some browsers keep the handle for a moment after a tab holding it closes — reloading often works.'
+                : 'This demo needs OPFS in a dedicated worker. It works in Chrome, Edge and Safari 17+; a private window may block origin storage.'}
+          </p>
+          {!(error instanceof DatabaseBusyError) && !(error instanceof DatabaseUnavailableError) && (
+            <pre className='text-fg-subtle text-xs overflow-x-auto'>{String(error)}</pre>
+          )}
+        </div>,
+      );
+    },
+  );

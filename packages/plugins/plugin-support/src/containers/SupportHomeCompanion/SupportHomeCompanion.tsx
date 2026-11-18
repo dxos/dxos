@@ -6,6 +6,7 @@ import React, { memo, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Button from '@dxos/react-ui/Button';
 import * as Carousel from '@dxos/react-ui/Carousel';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -24,6 +25,7 @@ const WELCOME_SLIDE = {
 };
 
 export const SupportHomeCompanion = () => {
+  const readonly = ToolkitHooks.useReadOnly();
   const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
@@ -31,12 +33,14 @@ export const SupportHomeCompanion = () => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Root
-            icon='ph--path--regular'
-            label={t('start-tour.button')}
-            onClick={() => invokePromise(HelpOperation.Start)}
-            data-testid='supportPlugin.startTour'
-          />
+          {!readonly && (
+            <Button.Root
+              icon='ph--path--regular'
+              label={t('start-tour.button')}
+              onClick={() => invokePromise(HelpOperation.Start)}
+              data-testid='supportPlugin.startTour'
+            />
+          )}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

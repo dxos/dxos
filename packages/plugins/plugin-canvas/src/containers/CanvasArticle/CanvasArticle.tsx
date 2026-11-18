@@ -5,11 +5,12 @@
 import React, { useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useAttention } from '@dxos/react-ui-attention';
-import { SceneEditor } from '@dxos/react-ui-canvas-editor';
+import { Canvas2DHost, SceneEditor } from '@dxos/react-ui-canvas-editor';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Scene } from '@dxos/scene';
 
@@ -17,9 +18,11 @@ import { canvasDimension, sceneClipboardCodec } from '#model';
 import { Canvas } from '#types';
 
 import { useCanvasLoaded } from '../CanvasStage/index.ts';
+import { CanvasCursors } from './CanvasCursors.tsx';
 import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { type SceneDimension } from './dimension.ts';
+import { SceneEditorParts } from './SceneEditorParts.tsx';
 import { type CanvasEditorHost, useCanvasEditor } from './use-canvas-editor.ts';
 import { useDimension2D } from './use-dimension2d.ts';
 import { useDimension3D } from './use-dimension3d.ts';
@@ -52,9 +55,19 @@ const DimensionArticle = (props: DimensionArticleProps) => {
 
 const CanvasArticle2D = (props: DimensionArticleProps) => {
   const host = useCanvasEditor(props.canvas, '2d');
-  // The 3D camera is an orbit, which the drawing's camera does not carry.
-  const dimension = useDimension2D(props.canvas, props.camera, props.onCameraChange);
-  return <SceneEditorArticle {...props} host={host} dimension={dimension} />;
+  const dimension = useDimension2D(props.canvas);
+  // The drawing's camera is the view a follower shares; the 3D camera is an orbit, which it does not carry. A slide is a
+  // picture placed on another drawing, where collaborators point at the drawing itself.
+  return (
+    <SceneEditorArticle
+      {...props}
+      host={host}
+      dimension={dimension}
+      sharedCamera={props.camera}
+      onSharedCameraChange={props.onCameraChange}
+      cursors={props.role !== AppSurface.Slide.role}
+    />
+  );
 };
 
 const CanvasArticle3D = (props: DimensionArticleProps) => {
@@ -64,7 +77,15 @@ const CanvasArticle3D = (props: DimensionArticleProps) => {
   return <SceneEditorArticle {...props} host={host} dimension={dimension} />;
 };
 
-type SceneEditorArticleProps<C> = DimensionArticleProps & { host: CanvasEditorHost; dimension: SceneDimension<C> };
+type SceneEditorArticleProps<C> = Omit<DimensionArticleProps, 'camera' | 'onCameraChange'> & {
+  host: CanvasEditorHost;
+  dimension: SceneDimension<C>;
+  /** The view a peer follows, in the dimension's terms. */
+  sharedCamera?: C;
+  onSharedCameraChange?: (camera: C) => void;
+  /** Shows collaborators' pointers; 2D only, since they read the 2D camera. */
+  cursors?: boolean;
+};
 
 /** The shared editor over the host's scene, in the dimension's config. */
 const SceneEditorArticle = <C,>({
@@ -74,15 +95,20 @@ const SceneEditorArticle = <C,>({
   extrinsic,
   host,
   dimension,
+  sharedCamera,
+  onSharedCameraChange,
+  cursors,
 }: SceneEditorArticleProps<C>) => {
   const [element, setElement] = useState<HTMLElement | null>(null);
   const { hasAttention } = useAttention(attendableId);
+  const readOnly = ToolkitHooks.useReadOnly();
   const { stored, document } = host;
   if (!stored || !document) {
     return null;
   }
 
   const section = role === AppSurface.Section.role;
+  const fit = { frame: host.frame, fitZoom: host.fitZoom };
   return (
     <Panel.Root
       role={role}
@@ -94,47 +120,43 @@ const SceneEditorArticle = <C,>({
       ref={setElement}
     >
       <Panel.Body>
-        <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
-          <SceneEditor.Root
-            config={dimension.config}
-            document={document}
-            scene={stored.key}
-            role={role}
-            navigable={section && hasAttention}
-            readonly={host.readonly}
-            onReadonlyChange={host.onReadonlyChange}
-            onIntent={host.onIntent}
-            history={host.history}
-            onModelIntent={host.onModelIntent}
-            readDocument={host.readDocument}
-            onLayersChange={host.onLayersChange}
-            codec={sceneClipboardCodec}
-            display={dimension.display}
-            onDisplayChange={dimension.onDisplayChange}
-            camera={dimension.camera}
-            authoredCamera={dimension.authoredCamera}
-            onCameraChange={dimension.onCameraChange}
-            refitKey={host.refitKey}
-            docked={host.docked}
-            onDockedChange={host.onDockedChange}
-            sceneChoice={host.sceneChoice}
-            shots={host.shots}
-            onShotChange={host.onShotChange}
-          >
-            <CanvasEditCommands element={element} />
-            <SceneEditor.Viewport>
-              <SceneEditor.Navigation />
-              <SceneEditor.Tools />
-              <SceneEditor.Actions />
-              <SceneEditor.Camera />
-              <SceneEditor.Display />
-              <SceneEditor.ContextMenu />
-              <SceneEditor.Notice />
-              <SceneEditor.Timeline />
-            </SceneEditor.Viewport>
-            <SceneEditor.Inspector catalogs={dimension.catalogs} />
-          </SceneEditor.Root>
-        </CanvasDatabaseContext.Provider>
+        {/* What Fit frames and how far it may magnify, where the drawing says so: the 2D root reads them from here. */}
+        <Canvas2DHost value={fit}>
+          <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
+            <SceneEditor.Root
+              config={dimension.config}
+              document={document}
+              scene={stored.key}
+              role={role}
+              navigable={section && hasAttention}
+              readonly={readOnly || host.readonly}
+              onReadonlyChange={readOnly ? undefined : host.onReadonlyChange}
+              onIntent={host.onIntent}
+              history={host.history}
+              onModelIntent={host.onModelIntent}
+              readDocument={host.readDocument}
+              onLayersChange={host.onLayersChange}
+              codec={sceneClipboardCodec}
+              display={dimension.display}
+              onDisplayChange={dimension.onDisplayChange}
+              camera={dimension.camera}
+              authoredCamera={dimension.authoredCamera}
+              onCameraChange={dimension.onCameraChange}
+              sharedCamera={sharedCamera}
+              onSharedCameraChange={onSharedCameraChange}
+              refitKey={host.refitKey}
+              docked={host.docked}
+              onDockedChange={host.onDockedChange}
+              sceneChoice={host.sceneChoice}
+              shots={host.shots}
+              onShotChange={host.onShotChange}
+              overlay={cursors && <CanvasCursors object={canvas} />}
+            >
+              <CanvasEditCommands element={element} />
+              <SceneEditorParts catalogs={dimension.catalogs} />
+            </SceneEditor.Root>
+          </CanvasDatabaseContext.Provider>
+        </Canvas2DHost>
       </Panel.Body>
     </Panel.Root>
   );

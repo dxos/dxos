@@ -31,6 +31,7 @@ export type SpecDocumentArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
  */
 export const SpecDocumentArticle = ({ role, subject, attendableId }: SpecDocumentArticleProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   // The spec's text, which comments on the document anchor into.
   const text = useResolveRef(subject.content);
   const binding = useMemo(() => (text ? { object: text, path: ['content'] } : undefined), [text]);
@@ -46,16 +47,18 @@ export const SpecDocumentArticle = ({ role, subject, attendableId }: SpecDocumen
     [specExtensions, subject.id, owner, setCursor],
   );
 
+  const shownViewMode: EditorViewMode = readonly ? 'readonly' : viewMode;
+
   return (
-    <Editor.Root viewMode={viewMode}>
+    <Editor.Root viewMode={shownViewMode}>
       <Panel.Root role={role}>
-        <SpecDocumentToolbar attendableId={attendableId} onViewModeChange={setViewMode} />
+        {!readonly && <SpecDocumentToolbar attendableId={attendableId} onViewModeChange={setViewMode} />}
         <Panel.Body>
           <SpecDocumentEditor
             spec={subject}
             extensions={extensions}
             fieldExtensions={fieldExtensions}
-            viewMode={viewMode}
+            viewMode={shownViewMode}
             classNames='h-full'
             data-testid='spec-document.editor'
           />

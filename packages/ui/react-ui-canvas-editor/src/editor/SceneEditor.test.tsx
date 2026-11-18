@@ -5,7 +5,7 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React, { useEffect } from 'react';
+import React, { type ReactNode, useEffect } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { type ConstrainContext, type ViewportProps } from '@dxos/react-ui-canvas';
@@ -71,16 +71,20 @@ const Editor = ({
   onDisplayChange,
   onCameraChange = () => {},
   refitKey,
+  overlay,
+  commands,
 }: {
+  commands?: DimensionConfig<TestCamera>['commands'];
   dim: Scene.Dimension;
   role?: string;
   readonly?: boolean;
   onDisplayChange?: (display: Partial<EditorDisplay>) => void;
   onCameraChange?: (camera: { zoom: number }) => void;
   refitKey?: string | number;
+  overlay?: ReactNode;
 }) => (
   <SceneEditor.Root
-    config={config(dim)}
+    config={{ ...config(dim), commands }}
     document={DOCUMENT}
     scene='s'
     role={role}
@@ -93,6 +97,7 @@ const Editor = ({
     onCameraChange={onCameraChange}
     refitKey={refitKey}
     onReadonlyChange={() => {}}
+    overlay={overlay}
   >
     <SceneEditor.Viewport>
       <SceneEditor.Navigation />
@@ -110,7 +115,7 @@ describe('SceneEditor', () => {
 
   test('both configs render the same regions', () => {
     const regions = () =>
-      ['viewport', 'canvas-toolbar', 'palette', 'scene-actions', 'canvas-debug', 'canvas-display'].map(
+      ['viewport', 'canvas-toolbar', 'palette', 'scene-action-undo', 'canvas-debug', 'theme-trigger'].map(
         (id) => screen.queryByTestId(id) !== null,
       );
     render(<Editor dim='2d' />);
@@ -125,8 +130,16 @@ describe('SceneEditor', () => {
     render(<Editor dim='3d' role='card' />);
     expect(screen.getByTestId('viewport')).toBeDefined();
     expect(screen.getByTestId('viewport').dataset.grid).toBe('false');
-    for (const id of ['canvas-toolbar', 'palette', 'scene-actions', 'canvas-debug', 'canvas-display']) {
+    for (const id of ['canvas-toolbar', 'palette', 'scene-action-undo', 'canvas-debug', 'theme-trigger', 'scene-bar']) {
       expect(screen.queryByTestId(id)).toBeNull();
+    }
+  });
+
+  test('the overlay is drawn in the viewport in every role', () => {
+    for (const role of ['article', 'card', 'section', 'slide']) {
+      render(<Editor dim='2d' role={role} overlay={<div data-testid='overlay' />} />);
+      expect(screen.getByTestId('viewport').contains(screen.getByTestId('overlay'))).toBe(true);
+      cleanup();
     }
   });
 
@@ -411,6 +424,53 @@ describe('SceneEditor', () => {
       outside.remove();
     }
   });
+  test("a press in a menu's portal, outside the editor, leaves Cmd+Z working once the menu returns focus", () => {
+    const undo = vi.fn();
+    const history: History = {
+      canUndo: true,
+      canRedo: false,
+      record: (change) => (change(), true),
+      recordDocument: () => {},
+      undo,
+      redo: () => {},
+    };
+    render(
+      <SceneEditor.Root
+        config={config('2d')}
+        document={DOCUMENT}
+        scene='s'
+        onIntent={() => {}}
+        history={history}
+        display={DISPLAY}
+      >
+        <SceneEditor.Viewport />
+      </SceneEditor.Root>,
+    );
+    fireEvent.pointerDown(screen.getByTestId('viewport'));
+    const editor = globalThis.document.activeElement as HTMLElement;
+    const menu = globalThis.document.createElement('div');
+    globalThis.document.body.appendChild(menu);
+    fireEvent.pointerDown(menu);
+    editor.blur();
+    editor.focus();
+    fireEvent.keyDown(editor, { key: 'z', metaKey: true });
+    expect(undo).toHaveBeenCalledTimes(1);
+    menu.remove();
+  });
+
+  test("a configured command keeps its button when its id is a display control's", async () => {
+    const run = vi.fn();
+    render(
+      <Editor
+        dim='2d'
+        commands={[{ id: 'theme', label: 'Recolor', icon: 'ph--palette--regular', enabled: () => true, run }]}
+      />,
+    );
+    await userEvent.click(screen.getByTestId('scene-action-theme'));
+    expect(run).toHaveBeenCalledOnce();
+    expect(screen.getByTestId('theme-trigger')).toBeTruthy();
+  });
+
   test("the config's constrain rewrites or refuses every write, and sees the snap and lattice toggles", () => {
     const write = vi.fn();
     const seen: ConstrainContext[] = [];

@@ -19,6 +19,23 @@ import { EID } from '@dxos/keys';
 import { Button } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Editor, type EditorToolbarState, useEditorContext } from '@dxos/react-ui-editor';
+import {
+  type LayoutName,
+  LAYOUTS,
+  type SlideEdit,
+  SNIPPETS,
+  columnSnippet,
+  hasSlots,
+  insertSnippet,
+  nextSlot,
+  notesEdit,
+  parseSlide,
+  setFrontmatter,
+  slotBefore,
+  surfaceSnippet,
+} from '@dxos/react-ui-slides';
+import { slideCompletion } from '@dxos/react-ui-slides/editor';
+import { slideHighlight } from '@dxos/react-ui-slides/editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Splitter from '@dxos/react-ui/Splitter';
@@ -35,29 +52,19 @@ import {
   scrollbarAutohide,
 } from '@dxos/ui-editor';
 
-import { type BackgroundSettings, type SlideInsert, SlideToolbar, useSlideInsertActions } from '#components';
+import {
+  type BackgroundSettings,
+  type SlideInsert,
+  SlideToolbar,
+  newSlideContent,
+  useSlideInsertActions,
+} from '#components';
 import { type SlideSource, slideSourcesAtom } from '#deck';
 import { slideEditorSyncAtom, useObjectOptions } from '#hooks';
-import {
-  LAYOUTS,
-  type SlideEdit,
-  SNIPPETS,
-  columnSnippet,
-  hasSlots,
-  insertSnippet,
-  nextSlot,
-  notesEdit,
-  parseSlide,
-  setFrontmatter,
-  slotBefore,
-  surfaceSnippet,
-} from '#markdown';
 import { Presentation, PresenterOperation, SlideEditorViewState, SlideViewState } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
 import { SlidePreview } from '../SlidePreviewArticle/SlidePreview.tsx';
-import { slideCompletion } from './slide-completion.ts';
-import { slideHighlight } from './slide-highlight.ts';
 
 export type SlideEditorArticleProps = AppSurface.ObjectArticleProps<Text.Text>;
 
@@ -233,6 +240,7 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
   );
 
   const [objectsOpen, setObjectsOpen] = useState(false);
+  const [newSlideLayout, setNewSlideLayout] = useState<LayoutName>();
   const include = useCallback((object: Obj.Unknown) => object.id !== subject.id, [subject]);
   const objects = useObjectOptions(objectsOpen ? Obj.getDatabase(subject) : undefined, include);
 
@@ -254,22 +262,56 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
     [view],
   );
 
-  const open = useCallback(
-    (index: number) => {
-      const id = slides[index]?.id;
+  /** Opens a path in this slide's space; the deck's own article, or one of its slides. */
+  const openPath = useCallback(
+    (path: string | undefined) => {
       const db = Obj.getDatabase(subject);
-      if (!presentation || !db || !id) {
+      if (!db || !path) {
         return;
       }
       void invokePromise(LayoutOperation.Open, {
-        subject: [GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(presentation), id)],
+        subject: [path],
         workspace: GraphPath.getSpacePath(db.spaceId),
       });
     },
-    [invokePromise, presentation, slides, subject],
+    [invokePromise, subject],
   );
 
+  const openSlide = useCallback(
+    (id: string | undefined) =>
+      openPath(
+        presentation && id
+          ? GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(presentation), id)
+          : undefined,
+      ),
+    [openPath, presentation],
+  );
+
+  const open = useCallback((index: number) => openSlide(slides[index]?.id), [openSlide, slides]);
+
   return {
+    newSlideLayout,
+    onNewSlideLayoutChange: setNewSlideLayout,
+    // Added after the slide being edited rather than last, which is where the gallery's own button puts one: here
+    // the deck has a current slide, and the new one belongs next to it. The index is read from `slides` on the
+    // presentation, not from the deck's sources: those drop an entry whose slide no longer resolves, so a dangling
+    // one before this slide would shift the insert in front of it. A slide not in the array at all appends.
+    onAddSlide: presentation
+      ? () => {
+          // By the ref's own entity id, which is there whether or not the slide has loaded.
+          const slideId = Presentation.getSlide(subject)?.id;
+          const index = slideId
+            ? presentation.slides.findIndex((ref) => {
+                const uri = EID.tryParse(ref.uri);
+                return uri !== undefined && EID.getEntityId(uri) === slideId;
+              })
+            : -1;
+          return openSlide(
+            Presentation.addSlide(presentation, newSlideContent(newSlideLayout), index >= 0 ? index + 1 : undefined).id,
+          );
+        }
+      : undefined,
+    onOpenGallery: presentation ? () => openPath(GraphPath.getObjectPathFromObject(presentation)) : undefined,
     onLayoutChange: (layout: (typeof LAYOUTS)[number]) =>
       apply((content) => setFrontmatter(content, { layout: layout === 'default' ? undefined : layout }), false),
     onInsert: (insert: SlideInsert) =>

@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
@@ -12,12 +13,18 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Support } from '#types';
 
+import { ReadOnlyError } from '../errors.ts';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Support.Ticket),
       createObject: (props, options) =>
         Effect.gen(function* () {
+          if (yield* ReadOnly.current) {
+            return yield* Effect.fail(new ReadOnlyError());
+          }
+
           const object = Support.make(props);
           return yield* Operation.invoke(
             SpaceOperation.AddObject,

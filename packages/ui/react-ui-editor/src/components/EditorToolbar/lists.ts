@@ -9,6 +9,7 @@ import { List, toggleList } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
 
+import { isReadonly } from './readonly.ts';
 import { type EditorToolbarState } from './types.ts';
 
 const listStyles = {
@@ -30,13 +31,14 @@ export const addLists =
         variant: 'toggleGroup',
         selectCardinality: 'single',
         value,
+        disabled: isReadonly(state),
       } as ToolbarMenuActionGroupProperties,
       (group) => {
         for (const [listStyle, icon] of Object.entries(listStyles)) {
           const checked = value === listStyle;
           group.action(
             `list-${listStyle}`,
-            { label: [`list.${listStyle}.label`, { ns: translationKey }], checked, icon },
+            { label: [`list.${listStyle}.label`, { ns: translationKey }], checked, icon, disabled: isReadonly(state) },
             () => {
               const view = getView();
               if (!view) {

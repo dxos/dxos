@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-// Rewrites the other placements of a background from the one you edited: `bg-echo-left.svg` gives `bg-echo-center.svg`
-// and `bg-echo-right.svg`.
-// The icon moves without mirroring, so asymmetric marks such as KUBE keep their orientation, and the lines move with it.
+// Rewrites the other placements of a background from the one you edited: `echo-left.svg` gives `echo-center.svg`
+// and `echo-right.svg`.
+// The icon moves without mirroring, so asymmetric marks such as EDGE keep their orientation, and the lines move with it.
 // A line that reached the edge of the frame is extended back to the frame after the move, so no edge is left bare.
-// Usage: node scripts/place-backgrounds.mjs <bg-name-left.svg | bg-name-center.svg | bg-name-right.svg>...
+// Usage: node scripts/place-backgrounds.mjs <name-left.svg | name-center.svg | name-right.svg>...
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
@@ -133,16 +133,14 @@ const iconCentre = (group) => {
 
 const files = process.argv.slice(2).map((arg) => basename(arg));
 if (files.length === 0) {
-  console.error(
-    'Usage: node scripts/place-backgrounds.mjs <bg-name-left.svg | bg-name-center.svg | bg-name-right.svg>...',
-  );
+  console.error('Usage: node scripts/place-backgrounds.mjs <name-left.svg | name-center.svg | name-right.svg>...');
   process.exit(1);
 }
 
 for (const file of files) {
-  const [, name, placement] = file.match(/^(bg-[a-z]+)-(left|center|right)\.svg$/) ?? [];
+  const [, name, placement] = file.match(/^([a-z]+)-(left|center|right)\.svg$/) ?? [];
   if (!name) {
-    throw new Error(`${file}: expected a file named bg-<name>-left.svg, bg-<name>-center.svg or bg-<name>-right.svg.`);
+    throw new Error(`${file}: expected a file named <mark>-left.svg, <mark>-center.svg or <mark>-right.svg.`);
   }
 
   const svg = readFileSync(join(DIR, file), 'utf8');

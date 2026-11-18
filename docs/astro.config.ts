@@ -389,7 +389,7 @@ export default defineConfig({
         // SiteTitle: './src/components/CustomSiteTitle.astro',
       },
       logo: {
-        light: './node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-block.svg',
+        light: './node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-black.svg',
         dark: './node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-white.svg',
         alt: 'DXOS Logotype',
         replacesTitle: true,

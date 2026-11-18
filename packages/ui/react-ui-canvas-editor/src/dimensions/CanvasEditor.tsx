@@ -89,6 +89,7 @@ const CanvasEditorRoot = ({
   onViewChange,
   refitKey,
   refitDuration,
+  frame,
   fitZoom,
   children,
 }: CanvasEditorRootProps) => {
@@ -132,8 +133,8 @@ const CanvasEditorRoot = ({
       latest.current.onBackgroundGridChange?.(next.grid === false ? 'none' : next.gridKind);
   }, []);
   const host = useMemo<Canvas2DHostProps>(
-    () => ({ drift, onViewChange, refitKey, refitDuration, fitZoom }),
-    [drift, onViewChange, refitKey, refitDuration, fitZoom],
+    () => ({ drift, onViewChange, refitKey, refitDuration, frame, fitZoom }),
+    [drift, onViewChange, refitKey, refitDuration, frame, fitZoom],
   );
   // Kept for this view alone, so the camera bar's zoom has a camera to read and move.
   const [camera, setCamera] = useState<Camera>();

@@ -85,6 +85,9 @@ export const defaultDeck: StoredDeck = {
   plankNames: {},
 };
 
+/** A deck whose companions start closed; an absent `companionPlanks` instead follows the layout's default. */
+export const closedCompanionsDeck: StoredDeck = { ...defaultDeck, companionPlanks: [] };
+
 //
 // Layout
 //

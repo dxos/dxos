@@ -11,4 +11,5 @@ export * from './NotFoundArticle/index.ts';
 export * from './ObjectCard/index.ts';
 export * from './ObjectCombobox/index.ts';
 export * from './PluginRegistryButton/index.ts';
+export * from './ResetDialog/index.ts';
 export * from './SettingsScope/index.ts';

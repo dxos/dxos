@@ -24,6 +24,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ## Types
 
+The ECHO objects below are parts of a drawing, not user types: none carries `Annotation.UserType`.
+
 ```mdl
 type Model
   desc: >
@@ -1028,11 +1030,18 @@ decision D-102: react-ui-canvas-editor's `SceneEditor` edits the scene model and
 ```
 
 ```mdl
-decision D-103: `Model2D`, `Model3D`, `Layout2D`, `Layout3D`, `Scene2D`, `Scene3D` and `StyleCatalog` are not user types: they are the parts of a drawing, which is what a person opens, so they stay out of pickers, the nav tree and a space's Database section.
-  date: 2026-11-04
+decision D-103: Scene's ECHO types are not user types, so their objects do not show up in a space's Database section or its Recent list.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [Model, Layout, Scene]
+```
+
+```mdl
+decision D-104: "Scene's ECHO types" is all seven: `Model2D`, `Model3D`, `Layout2D`, `Layout3D`, `Scene2D`, `Scene3D` and `StyleCatalog`. Fills in [D-103].
+  date: 2026-11-16
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [Scene]
-  why: Each canvas drawing listed its scene types, unlabelled, in the Database section, none of which a person creates or opens on its own.
-  rejected: Labelling the types, which keeps internal parts in every type list.
+  affects: [Model, Layout, Scene, StyleCatalog]
+  why: Each is reached only through the drawing that owns it; a style catalog is shared by drawings but never opened on its own.
+  rejected: Only the 2D types, which leaves the 3D ones to show up the same way once a 3D drawing is saved.
 ```
