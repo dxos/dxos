@@ -128,7 +128,14 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
         // A component draws itself, so it shows no text it was not given; a plain box falls back to its id.
         ...present({ text: node.labelled || node.type === undefined ? node.label : undefined }),
         parent,
-        ...present({ type: node.type, data: node.data, color: node.color, fill: node.fill, stroke: node.stroke }),
+        ...present({
+          type: node.type,
+          data: node.data,
+          color: node.color,
+          fill: node.fill,
+          stroke: node.stroke,
+          border: node.border,
+        }),
       });
       return;
     }
@@ -147,6 +154,10 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
       autoRows: group.autoRows,
       justifyContent: group.justifyContent,
       alignContent: group.alignContent,
+      layout: group.layout,
+      packSeed: group.packSeed,
+      packMin: group.packMin,
+      packMax: group.packMax,
       color: group.color,
       fill: group.fill,
       stroke: group.stroke,
@@ -254,6 +265,10 @@ const groupFields = (grid: Shape.Box) =>
     autoRows: grid.autoRows,
     justifyContent: grid.justifyContent,
     alignContent: grid.alignContent,
+    layout: grid.layout,
+    packSeed: grid.packSeed,
+    packMin: grid.packMin,
+    packMax: grid.packMax,
     color: grid.color,
     fill: grid.fill,
     stroke: grid.stroke,
@@ -330,6 +345,7 @@ export const infer = (object: Scene.WorldObject): Semantic.Diagram | undefined =
           color: box.color,
           fill: box.fill,
           stroke: box.stroke,
+          border: box.border,
         }),
       });
       return;

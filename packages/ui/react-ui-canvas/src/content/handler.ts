@@ -475,6 +475,10 @@ export const SceneHandler: ContentHandler = {
               ...(element.rows !== undefined ? { rows: element.rows } : {}),
               ...(element.gap !== undefined ? { gap: element.gap } : {}),
               ...(element.padding !== undefined ? { padding: element.padding } : {}),
+              ...(element.layout !== undefined ? { layout: element.layout } : {}),
+              ...(element.packSeed !== undefined ? { packSeed: element.packSeed } : {}),
+              ...(element.packMin !== undefined ? { packMin: element.packMin } : {}),
+              ...(element.packMax !== undefined ? { packMax: element.packMax } : {}),
               ...(element.autoCols !== undefined ? { autoCols: element.autoCols } : {}),
               ...(element.autoRows !== undefined ? { autoRows: element.autoRows } : {}),
               ...(element.justifyContent !== undefined ? { justifyContent: element.justifyContent } : {}),
@@ -747,6 +751,10 @@ export const SceneHandler: ContentHandler = {
               ...(typeof rule.rows === 'number' || typeof rule.rows === 'string' ? { rows: rule.rows } : {}),
               ...(typeof rule.gap === 'number' ? { gap: rule.gap } : {}),
               ...(typeof rule.padding === 'number' ? { padding: rule.padding } : {}),
+              ...(rule.layout === 'pack' ? { layout: 'pack' as const } : {}),
+              ...(typeof rule.packSeed === 'number' ? { packSeed: rule.packSeed } : {}),
+              ...(typeof rule.packMin === 'number' ? { packMin: rule.packMin } : {}),
+              ...(typeof rule.packMax === 'number' ? { packMax: rule.packMax } : {}),
               ...(typeof rule.autoCols === 'number' || typeof rule.autoCols === 'string'
                 ? { autoCols: rule.autoCols }
                 : {}),

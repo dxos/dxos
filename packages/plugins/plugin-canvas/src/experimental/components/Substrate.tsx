@@ -183,18 +183,20 @@ export const SubstrateNodeView = ({ node }: NodeViewProps) => {
                   opacity={0.3}
                 />
               ))}
-            {links.map(([from, to], linkIndex) => (
-              <line
-                key={`link-${linkIndex}`}
-                x1={nodes[from].x}
-                y1={nodes[from].y}
-                x2={nodes[to].x}
-                y2={nodes[to].y}
-                className='stroke-neutral-border'
-                strokeWidth={Math.max(1.2, nodeR * 0.32)}
-                opacity={0.55}
-              />
-            ))}
+            {links.map(([from, to], linkIndex) => {
+              return (
+                <line
+                  key={`link-${linkIndex}`}
+                  x1={nodes[from].x}
+                  y1={nodes[from].y}
+                  x2={nodes[to].x}
+                  y2={nodes[to].y}
+                  className='stroke-neutral-border'
+                  strokeWidth={Math.max(1.2, nodeR * 0.32)}
+                  opacity={0.55}
+                />
+              );
+            })}
             {nodes.map((point, objectIndex) => (
               <circle
                 key={`object-${objectIndex}`}

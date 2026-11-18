@@ -188,16 +188,46 @@ describe('grid diagrams', () => {
     expect(solveGrids(boxesOf(text)).get('a')?.h).toBe(88);
   });
 
+  test('a group packs its members where it says so, and a node says whether it draws its border', ({ expect }) => {
+    const text = `
+      diagram kind=grid size=800x600
+      group field layout=pack packSeed=29 packMin=36 packMax=185 gap=10 {
+        node s0 kind=space-graph border=true seed=29
+        node s1 kind=space-graph border=false
+      }
+    `;
+    expect(messagesOf(text)).toEqual([]);
+    expect(boxesOf(text).slice(1)).toEqual([
+      {
+        kind: 'grid',
+        id: 'field',
+        ...placed,
+        gap: 10,
+        layout: 'pack',
+        packSeed: 29,
+        packMin: 36,
+        packMax: 185,
+        parent: OBJECT,
+      },
+      // `seed` is the component's own; the packing's is named apart from it.
+      { kind: 'rect', id: 's0', ...placed, parent: 'field', type: 'space-graph', data: { seed: 29 }, border: true },
+      { kind: 'rect', id: 's1', ...placed, parent: 'field', type: 'space-graph', border: false },
+    ]);
+  });
+
   test('an edge says how it runs, and may end on an empty group that only holds a cell', ({ expect }) => {
     const text = `
       diagram kind=grid size=800x600 cols="1fr 0"
       node a
       group port { }
       edge a -- port path=line stroke=dashed
+      edge a#e3 -> port#w1
     `;
     expect(messagesOf(text)).toEqual([]);
     expect(elementsOf(text).filter((element) => element.kind === 'arrow')).toEqual([
       { kind: 'arrow', id: 'a-port-0', from: 'a', to: 'port', head: 'none', path: 'line', stroke: 'dashed' },
+      // A port is a place on a box, and a group's frame is a box.
+      { kind: 'arrow', id: 'a#e3-port#w1-1', from: 'a#e3', to: 'port#w1' },
     ]);
     expect(solveGrids(boxesOf(text)).get('port')).toEqual({ x: 800, y: 0, w: 0, h: 600 });
   });

@@ -424,6 +424,10 @@ export const read = (text: string): Reading => {
           ...optional('rows', tracksAttr(attrs, 'rows')),
           ...optional('gap', numberAttr(attrs, 'gap')),
           ...optional('padding', numberAttr(attrs, 'padding')),
+          ...optional('layout', enumAttr(attrs, 'layout', Shape.Layout.literals)),
+          ...optional('packSeed', numberAttr(attrs, 'packSeed')),
+          ...optional('packMin', numberAttr(attrs, 'packMin')),
+          ...optional('packMax', numberAttr(attrs, 'packMax')),
           ...optional('autoCols', tracksAttr(attrs, 'autoCols')),
           ...optional('autoRows', tracksAttr(attrs, 'autoRows')),
           ...optional('justifyContent', enumAttr(attrs, 'justifyContent', Shape.Place.literals)),
@@ -610,6 +614,10 @@ export const read = (text: string): Reading => {
     ...optional('autoRows', tracksAttr(attrs, 'autoRows')),
     ...optional('justifyContent', enumAttr(attrs, 'justifyContent', Shape.Place.literals)),
     ...optional('alignContent', enumAttr(attrs, 'alignContent', Shape.Place.literals)),
+    ...optional('layout', enumAttr(attrs, 'layout', Shape.Layout.literals)),
+    ...optional('packSeed', numberAttr(attrs, 'packSeed')),
+    ...optional('packMin', numberAttr(attrs, 'packMin')),
+    ...optional('packMax', numberAttr(attrs, 'packMax')),
   });
 
   const sizeAttr = (attrs: Map<string, Attr>, name: string): Semantic.Size | undefined => {
@@ -717,7 +725,7 @@ export const read = (text: string): Reading => {
     const relations = readRelations(statement);
     diagram.hinted ||= pin !== undefined || relations.length > 0;
     const data = readData(attrs, own);
-    gridAttrs(attrs, [KIND_ATTR]);
+    gridAttrs(attrs, [KIND_ATTR, 'border']);
     enlist(group, id);
     diagram.nodes.push({
       id,
@@ -735,6 +743,7 @@ export const read = (text: string): Reading => {
       ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
       ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
       ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
+      ...optional('border', booleanAttr(attrs, 'border')),
     });
     ranges.set(id, rangeOf(statement));
   };
@@ -1192,13 +1201,15 @@ export const read = (text: string): Reading => {
     const groupIds = new Set(diagram.groups.map((group) => group.id));
     const known = (end: Semantic.End) => {
       if (grid && !nodeIds.has(end.node)) {
-        // A grid's frames are boxes like any other, so a connector may end on one; and a component has places of
-        // its own (`frame/nav`, `frame#left`) that only its host can resolve, so the rest of the ref is carried.
+        // A grid's frames are boxes like any other, so a connector may end on one; and a box has places of its
+        // own (a component's `frame/nav`, a port `frame#left`) that only its host can resolve, so the rest of the
+        // ref is carried.
         if (groupIds.has(end.node)) {
           return true;
         }
         const cut = end.node.search(/[/#]/);
-        if (cut > 0 && nodeIds.has(end.node.slice(0, cut))) {
+        const box = cut > 0 ? end.node.slice(0, cut) : undefined;
+        if (box !== undefined && (nodeIds.has(box) || groupIds.has(box))) {
           end.part = end.node.slice(cut);
           end.node = end.node.slice(0, cut);
           return true;

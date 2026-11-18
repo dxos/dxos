@@ -1,20 +1,43 @@
 diagram kind=grid size=1600x880 cols="1fr 2fr 1fr" gap=64 padding=48
 
-group left gap=16 autoRows=240 alignContent=center {
-  node navtree "Navtree" kind=card body="The space tree in the sidebar, built from the app graph." footer=plugin-navtree icon=tree-view tone=accent
-  node document "Document" kind=card body="Collaborative markdown; the text lives in ECHO." footer=plugin-markdown icon=file-text tone=message
-  node sheet "Sheet" kind=card body="A spreadsheet embedded in the document." footer=plugin-sheet icon=grid-four tone=sheet
+group left-body gap=24 {
+  group left-col-0 rows="100 136 92 136 12 136" gap=0 {
+    group left-gap-0 { }
+    node navtree "Navtree" kind=card body="The space tree in the sidebar, built from the app graph." footer=plugin-navtree icon=tree-view tone=accent
+    group left-gap-1 { }
+    node document "Document" kind=card body="Collaborative markdown; the text lives in ECHO." footer=plugin-markdown icon=file-text tone=message
+    group left-gap-2 { }
+    node sheet "Sheet" kind=card body="A spreadsheet embedded in the document." footer=plugin-sheet icon=grid-four tone=sheet
+  }
 }
 
-node frame kind=app-frame colors="nav~accent | doc~message | sheet~sheet | comp~event | canvas~violet" highlight=true
-
-group right gap=16 autoRows=240 alignContent=center {
-  node assistant "Assistant" kind=card body="Assistant chat about the object on screen." footer=plugin-assistant icon=sparkle tone=event
-  node canvas "Canvas" kind=card body="A diagram embedded in the document." footer=plugin-excalidraw icon=pen-nib tone=violet
+group frame rows="44 1fr 36" color=grey fill=solid {
+  node frame-bar "composer.space" kind=app-chrome part=bar
+  group frame-body cols="160 1fr 160" gap=10 padding=10 {
+    node r-nav kind=app-pane pane=nav tone=accent
+    group r-doc rows="40 74 124 106 132" gap=15 padding=20 color=green border=true {
+      node doc-title kind=app-lines lines=1 strong=true
+      node doc-first kind=app-lines lines=3
+      node r-canvas "CANVAS" kind=app-embed embed=canvas tone=violet
+      node doc-second kind=app-lines lines=3
+      node r-sheet "SHEET" kind=app-embed embed=sheet tone=sheet
+    }
+    node r-comp kind=app-pane pane=comp tone=event
+  }
+  node frame-foot kind=app-chrome part=foot
 }
 
-edge navtree -- frame/r-nav stroke=dashed
-edge document -- frame/r-doc stroke=dashed
-edge sheet -- frame/r-sheet stroke=dashed
-edge assistant -- frame/r-comp stroke=dashed
-edge canvas -- frame/r-canvas stroke=dashed
+group right-body gap=24 {
+  group right-col-0 rows="212 136 94 136" gap=0 {
+    group right-gap-0 { }
+    node canvas "Canvas" kind=card body="A diagram embedded in the document." footer=plugin-excalidraw icon=pen-nib tone=violet
+    group right-gap-1 { }
+    node assistant "Assistant" kind=card body="Assistant chat about the object on screen." footer=plugin-assistant icon=sparkle tone=event
+  }
+}
+
+edge navtree#e3 -- r-nav#w1 path=line stroke=dashed color=light-blue
+edge document#e3 -- r-doc#w2 path=line stroke=dashed color=green
+edge sheet#e3 -- r-sheet#w3 path=line stroke=dashed color=orange
+edge canvas#w3 -- r-canvas#e3 path=line stroke=dashed color=violet
+edge assistant#w3 -- r-comp#e4 path=line stroke=dashed color=light-violet

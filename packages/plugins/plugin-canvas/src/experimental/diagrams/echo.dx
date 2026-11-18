@@ -1,8 +1,8 @@
 diagram kind=grid size=1600x880 cols="1088 352" gap=64 padding=48
 
-group layers rows="256 512" gap=16 {
-  group types-frame padding=24 border=true {
-    group types "ECHO Core" cols=3 gap=64 {
+group layers-section rows="256 512" gap=16 {
+  group types-section padding=24 border=true {
+    group types-section-inner "ECHO Core" cols=3 gap=64 {
       group types-col-0 gap=16 {
         node validation "Validation" kind=card footer="every write" icon=shield-check variant=simple
         node typescript "TypeScript" kind=card footer="Effect Schema" icon=file-ts variant=simple
@@ -36,8 +36,8 @@ group layers rows="256 512" gap=16 {
   }
 }
 
-group runtime-frame padding=24 border=true {
-  group runtime "Runtime" gap=16 autoRows=144 alignContent=end {
+group runtime-section padding=24 border=true {
+  group runtime-section-inner "Runtime" gap=16 autoRows=144 alignContent=end {
     node browser "Browser" kind=card body="Full replica in the tab; works offline." footer="wa-sqlite on OPFS" icon=browser
     node node-box "Node" kind=card body="Agents, CLIs and servers." footer="native SQLite" icon=terminal-window
     node worker "Worker" kind=card body="Always-on peer, sync hub and index per space." footer="Workers · DO SQLite" icon=cloud

@@ -648,4 +648,11 @@ decision D-26: A grid diagram's text is read back out of a drawing (`Dsl.printIn
     - An optional source field on the drawing: two copies of one drawing, with no rule for which wins after an edit on the canvas.
     - Printing the nearest diagram when the drawing holds more than the kind can say: the text would then draw a different picture, silently.
     - Inferring rows and columns from hand-placed boxes: that is a guess with tolerances, not a reading.
+
+decision D-27: A grid diagram's group may pack its members (`layout=pack`, `packSeed`, `packMin`, `packMax`), a node says whether it draws its border (`border`), and an edge may end on a port of a group's frame (`frame#w2`). Extends [D-25].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: The grid boxes gained a packing layout and the slides use it, give their space graphs a border, and wire a card to a port on a framed pane; `Dsl.printIntent` refused the Composer slide until a port on a group resolved.
 ```

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
@@ -15,6 +15,12 @@ const here = dirname(fileURLToPath(import.meta.url));
 const SLIDES = ['agent', 'agents', 'architecture', 'chat', 'composer', 'echo', 'hyperspace', 'ontology', 'plugins'];
 
 const sourceOf = (file: string): string => readFileSync(join(here, file), 'utf8');
+
+/**
+ * Set to re-read every `.dx` from its boxes instead of checking it: the boxes are what is edited by hand, and the
+ * intent file is their reading. `DX_WRITE_INTENT=1 pnpm exec vitest run --project=node <this file>`.
+ */
+const WRITE_INTENT = process.env.DX_WRITE_INTENT === '1';
 
 /** The scene a document draws, and what it shows apart from how its grids say it. */
 const read = (text: string) => {
@@ -48,11 +54,16 @@ describe('a slide as a grid diagram', () => {
       expect(Dsl.printIntent(read(text).scene)).toEqual({ text });
     });
 
-    test('can be read back out of the boxes written by hand', ({ expect }) => {
+    test('is what the boxes written by hand read back as', ({ expect }) => {
       const boxes = read(sourceOf(`${name}.grid.diagram`));
       const { text, reasons } = Dsl.printIntent(boxes.scene);
       expect(reasons).toBeUndefined();
       expect(read(text ?? '').drawn).toEqual(boxes.drawn);
+      // The intent file is this reading and nothing else, so a change to the boxes shows here until it is re-read.
+      if (WRITE_INTENT && text !== undefined) {
+        writeFileSync(join(here, `${name}.dx`), text);
+      }
+      expect(text).toBe(sourceOf(`${name}.dx`));
     });
 
     test('states no geometry but its frame', ({ expect }) => {

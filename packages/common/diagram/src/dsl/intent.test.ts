@@ -57,6 +57,15 @@ const SOURCES: Record<string, string> = {
     group cards "Cards" autoRows=88 gap=12 alignContent=center border=true stroke=dashed { node a }
     group wide autoCols=384 fill=tint color=red { node b }
   `,
+  'packing and node borders': `
+    diagram kind=grid size=800x600
+    group field layout=pack packSeed=29 packMin=36 packMax=185 gap=10 {
+      node s0 kind=space-graph border=true seed=29 tones="violet | green"
+      node s1 kind=space-graph border=false
+    }
+    group frame cols=2 { node left "L" }
+    edge s0#e3 -- frame#w2 path=line
+  `,
   'edges': `
     diagram kind=grid size=800x600 cols="1fr 0"
     group side { node a }

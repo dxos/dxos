@@ -163,13 +163,17 @@ edge calendar -- field stroke=dashed
 - `autoCols` and `autoRows` size every track an axis does not state (`autoRows=88` makes a run of cards one
   height); `justifyContent` and `alignContent` (`start`, `center`, `end`) say where the tracks sit when they
   leave space over.
+- `layout=pack` places a group's members as circles packed into its frame instead of on tracks; `packSeed`
+  fixes the arrangement and `packMin`/`packMax` bound a member's size.
 - A group with a label draws it as a heading over its members; a group without one is only their grid.
 - `border=true`, `fill`, `stroke` and `color` on a group draw a frame round its members. The heading stays
   outside it; for a frame round the heading too, put the labelled group inside a framed one.
 - An empty group (`group port { }`) draws nothing and holds its cell: a spacer, or a place for an edge to end.
 - `node … kind=card` places a component. Every attribute the node does not define itself is the component's own
   field; one whose name the node does define is written escaped (`data-fill=0.55`).
-- An edge may end on a group, and on a place only the component knows (`frame/nav`, `frame#left`).
+- `border=true|false` on a node says whether its box draws a border.
+- An edge may end on a group, on a place only the component knows (`frame/nav`), and on a port of a node or of a
+  group's frame (`card#e3`, `frame#w2`).
   `path=line|ortho|curve|smart` says how it runs between its ends.
 - Placement relations, pins, sides, waypoints and buses are ignored with a warning.
 

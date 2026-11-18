@@ -1,14 +1,16 @@
 diagram kind=grid size=1600x880 cols="256 928 256" gap=32 padding=48
 
-group types "Types" gap=16 autoRows=88 alignContent=center {
-  node type-text "Text" kind=card icon=text-t
-  node type-drawing "Drawing" kind=card icon=scribble
-  node type-contact "Contact" kind=card icon=address-book
-  node type-address "Address" kind=card icon=map-pin
-  node type-file "File" kind=card icon=file tone=file
+group types-section "Types" gap=24 {
+  group types-col-0 gap=16 autoRows=88 alignContent=center {
+    node type-text "Text" kind=card icon=text-t
+    node type-drawing "Drawing" kind=card icon=scribble
+    node type-contact "Contact" kind=card icon=address-book
+    node type-address "Address" kind=card icon=map-pin
+    node type-file "File" kind=card icon=file tone=file
+  }
 }
 
-group entities "Entities" cols=3 gap=56 padding=24 border=true {
+group entities-section "Entities" cols=3 gap=56 padding=24 border=true {
   group entities-col-0 gap=16 autoRows=88 alignContent=center {
     node project "Project" kind=card icon=folder
     node group-box "Group" kind=card icon=users-three
@@ -27,14 +29,16 @@ group entities "Entities" cols=3 gap=56 padding=24 border=true {
   }
 }
 
-group containers "Containers" gap=16 autoRows=88 alignContent=center {
-  node container-document "Document" kind=card icon=file-text
-  node container-presentation "Presentation" kind=card icon=presentation-chart
-  node container-sheet "Sheet" kind=card icon=grid-four tone=sheet
-  node container-kanban "Kanban" kind=card icon=kanban
-  node container-table "Table" kind=card icon=table
-  node container-transcript "Transcript" kind=card icon=microphone
-  node container-tag "Tag" kind=card icon=tag
+group containers-section "Containers" gap=24 {
+  group containers-col-0 gap=16 autoRows=88 alignContent=center {
+    node container-document "Document" kind=card icon=file-text
+    node container-presentation "Presentation" kind=card icon=presentation-chart
+    node container-sheet "Sheet" kind=card icon=grid-four tone=sheet
+    node container-kanban "Kanban" kind=card icon=kanban
+    node container-table "Table" kind=card icon=table
+    node container-transcript "Transcript" kind=card icon=microphone
+    node container-tag "Tag" kind=card icon=tag
+  }
 }
 
 edge group-box -> organization "part of" head=triangle

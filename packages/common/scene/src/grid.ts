@@ -16,6 +16,7 @@
 // inner one then inside the frame it was given.
 //
 
+import { packCircles } from './pack.ts';
 import { type Box, type Place } from './shape.ts';
 
 /** A box's frame, in the units its object states. */
@@ -105,8 +106,52 @@ const offsets = (sizes: readonly number[], gap: number, extent: number, place: P
 /** What a grid needs of itself. */
 export type GridRule = Pick<
   Box,
-  'cols' | 'rows' | 'gap' | 'padding' | 'autoCols' | 'autoRows' | 'justifyContent' | 'alignContent'
+  | 'cols'
+  | 'rows'
+  | 'gap'
+  | 'padding'
+  | 'autoCols'
+  | 'autoRows'
+  | 'justifyContent'
+  | 'alignContent'
+  | 'layout'
+  | 'packSeed'
+  | 'packMin'
+  | 'packMax'
 >;
+
+/**
+ * The frames of `children` packed into `frame`: each gets the square its circle fits, so a child draws itself
+ * inside the room the packing gave it. A child the packing left out keeps its own frame, which is the same answer
+ * a track past the last cell gets — the box is not hidden, it is simply not placed.
+ */
+const solvePack = (grid: GridRule, frame: Frame, children: readonly Box[]): { id: string; frame: Frame }[] => {
+  const padding = grid.padding ?? 0;
+  const inner = {
+    x: frame.x + padding,
+    y: frame.y + padding,
+    w: Math.max(frame.w - 2 * padding, 0),
+    h: Math.max(frame.h - 2 * padding, 0),
+  };
+  const circles = packCircles(
+    { seed: grid.packSeed, rmin: grid.packMin, rmax: grid.packMax, gap: grid.gap },
+    children.length,
+    inner.w,
+    inner.h,
+  );
+  return children.flatMap((child, index) => {
+    const circle = circles[index];
+    if (!circle) {
+      return [];
+    }
+    return [
+      {
+        id: child.id,
+        frame: { x: inner.x + circle.x - circle.r, y: inner.y + circle.y - circle.r, w: circle.r * 2, h: circle.r * 2 },
+      },
+    ];
+  });
+};
 
 /**
  * The frames of `children` inside `frame`, filled in order, row by row as CSS grid's auto-flow does. A child past
@@ -114,6 +159,9 @@ export type GridRule = Pick<
  * silently overflowing it would hide the mistake.
  */
 export const solveGrid = (grid: GridRule, frame: Frame, children: readonly Box[]): { id: string; frame: Frame }[] => {
+  if (grid.layout === 'pack') {
+    return solvePack(grid, frame, children);
+  }
   // Implicit tracks: the axis that states none takes as many as the children need, each the size `autoCols` /
   // `autoRows` gives — a share of the frame unless one says otherwise. Stating neither is a single column, which
   // is the stack a `flex-col` gives and the shape most runs want.

@@ -16,7 +16,17 @@ object hyperspace @ 0,0 {
       rect heading-hyperspace "ECHO Hyperspace" fill=none border=false align=center valign=middle fontSize=34
       grid field-row cols="1fr 0" gap=0 {
         grid field-body padding=24 border=true {
-          rect field kind=substrate seed=29 pitch=24 data-fill=0.55 data-gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=6 rmin=36 rmax=300
+          grid field layout=pack packSeed=29 packMin=36 packMax=185 gap=10 {
+            rect s0 kind=space-graph border=true seed=29 pitch=24 data-fill=0.55 extra=0.4 size=24 dots=true root=0 depth=5 tones="violet | green | amber | blue"
+            rect s1 kind=space-graph border=true seed=30 pitch=24 data-fill=0.55 extra=0.4 size=24 dots=true
+            rect s2 kind=space-graph border=true seed=31 pitch=24 data-fill=0.55 extra=0.4 size=24 dots=true
+            rect s3 kind=space-graph border=true seed=32 pitch=24 data-fill=0.55 extra=0.4 size=24 dots=true
+            rect s4 kind=space-graph border=true seed=33 pitch=24 data-fill=0.55 extra=0.4 size=24 dots=true
+            rect s5 kind=space-graph border=true seed=34 pitch=24 data-fill=0.55 extra=0.4 size=24 dots=true
+            rect s6 kind=space-graph border=true seed=35 pitch=24 data-fill=0.55 extra=0.4 size=24 dots=true
+            rect s7 kind=space-graph border=true seed=36 pitch=24 data-fill=0.55 extra=0.4 size=24 dots=true
+            rect s8 kind=space-graph border=true seed=37 pitch=24 data-fill=0.55 extra=0.4 size=24 dots=true
+          }
         }
         grid field-ports gap=12 {
           rect port-calendar fill=none border=false
@@ -62,8 +72,17 @@ object hyperspace @ 0,0 {
   arrow tap-travel travel -> port-travel path=line head=none stroke=dashed
   arrow tap-slack slack -> port-slack path=line head=none stroke=dashed
 
+  arrow bridge-0-5 s0 -> s5 head=none stroke=dashed
+  arrow bridge-0-6 s0 -> s6 head=none stroke=dashed
+  arrow bridge-1-5 s1 -> s5 head=none stroke=dashed
+  arrow bridge-1-4 s1 -> s4 head=none stroke=dashed
+  arrow bridge-3-6 s3 -> s6 head=none stroke=dashed
+  arrow bridge-3-8 s3 -> s8 head=none stroke=dashed
+  arrow bridge-4-8 s4 -> s8 head=none stroke=dashed
+  arrow bridge-7-8 s7 -> s8 head=none stroke=dashed
+
   # The deck's dashed taps: each plank reading out of the field it draws from.
-  arrow tap-board plank-board -> field head=none stroke=dashed
-  arrow tap-sheet plank-sheet -> field head=none stroke=dashed
-  arrow tap-thread plank-thread -> field head=none stroke=dashed
+  arrow tap-board plank-board -> s1 path=line head=none stroke=dashed
+  arrow tap-sheet plank-sheet -> s2 path=line head=none stroke=dashed
+  arrow tap-thread plank-thread -> s3 path=line head=none stroke=dashed
 }

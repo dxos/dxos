@@ -77,6 +77,11 @@ export type GridRule = {
   /** Where the tracks sit when they leave space over. */
   justifyContent?: Shape.Place;
   alignContent?: Shape.Place;
+  /** `pack` places the members as circles packed into the frame, where the tracks say nothing. */
+  layout?: Shape.Layout;
+  packSeed?: number;
+  packMin?: number;
+  packMax?: number;
 };
 
 /** A scalar a component's own field may hold, which is all the text form spells. */
@@ -94,6 +99,8 @@ export type Node = {
   color?: Shape.Color;
   fill?: Shape.Fill;
   stroke?: Shape.Stroke;
+  /** Whether the box draws its border. Only a grid diagram reads it: the other kinds draw every node's. */
+  border?: boolean;
   /** The component the node places (`kind=card`), which a host that knows it draws instead of a plain box. */
   type?: string;
   /** That component's own fields. */
@@ -118,6 +125,11 @@ export type Group = {
   autoRows?: Tracks;
   justifyContent?: Shape.Place;
   alignContent?: Shape.Place;
+  /** `pack` places the members as circles packed into the frame, where the tracks say nothing. */
+  layout?: Shape.Layout;
+  packSeed?: number;
+  packMin?: number;
+  packMax?: number;
   /** The frame a grid diagram draws round the members; the other kinds colour a group from their palette. */
   fill?: Shape.Fill;
   stroke?: Shape.Stroke;

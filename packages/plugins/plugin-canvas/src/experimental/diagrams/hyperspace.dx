@@ -8,7 +8,17 @@ group composer "Composer" gap=24 {
 
 group hyperspace "ECHO Hyperspace" cols="1fr 0" gap=0 {
   group field-body padding=24 border=true {
-    node field kind=substrate bridges=10 extra=0.4 data-fill=0.55 gap=10 hue=neutral pitch=24 rmax=300 rmin=36 seed=29 size=24 spaceCount=6
+    group field gap=10 layout=pack packSeed=29 packMin=36 packMax=185 {
+      node s0 kind=space-graph border=true depth=5 dots=true extra=0.4 data-fill=0.55 pitch=24 root=0 seed=29 size=24 tones="violet | green | amber | blue"
+      node s1 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=30 size=24
+      node s2 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=31 size=24
+      node s3 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=32 size=24
+      node s4 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=33 size=24
+      node s5 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=34 size=24
+      node s6 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=35 size=24
+      node s7 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=36 size=24
+      node s8 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=37 size=24
+    }
   }
   group field-ports gap=12 {
     group port-calendar { }
@@ -47,6 +57,14 @@ edge files -- port-files path=line stroke=dashed
 edge commerce -- port-commerce path=line stroke=dashed
 edge travel -- port-travel path=line stroke=dashed
 edge slack -- port-slack path=line stroke=dashed
-edge plank-board -- field stroke=dashed
-edge plank-sheet -- field stroke=dashed
-edge plank-thread -- field stroke=dashed
+edge s0 -- s5 stroke=dashed
+edge s0 -- s6 stroke=dashed
+edge s1 -- s5 stroke=dashed
+edge s1 -- s4 stroke=dashed
+edge s3 -- s6 stroke=dashed
+edge s3 -- s8 stroke=dashed
+edge s4 -- s8 stroke=dashed
+edge s7 -- s8 stroke=dashed
+edge plank-board -- s1 path=line stroke=dashed
+edge plank-sheet -- s2 path=line stroke=dashed
+edge plank-thread -- s3 path=line stroke=dashed

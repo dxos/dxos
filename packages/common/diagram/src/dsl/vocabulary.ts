@@ -91,6 +91,10 @@ const GRID: readonly AttrSpec[] = [
   { name: 'rows', type: 'scalar' },
   { name: 'gap', type: 'number' },
   { name: 'padding', type: 'number' },
+  { name: 'layout', type: 'enum', values: Shape.Layout.literals },
+  { name: 'packSeed', type: 'number' },
+  { name: 'packMin', type: 'number' },
+  { name: 'packMax', type: 'number' },
   { name: 'autoCols', type: 'scalar' },
   { name: 'autoRows', type: 'scalar' },
   { name: 'justifyContent', type: 'enum', values: Shape.Place.literals },
@@ -185,6 +189,10 @@ const RULE: readonly AttrSpec[] = [
   { name: 'autoRows', type: 'scalar' },
   { name: 'justifyContent', type: 'enum', values: Shape.Place.literals },
   { name: 'alignContent', type: 'enum', values: Shape.Place.literals },
+  { name: 'layout', type: 'enum', values: Shape.Layout.literals },
+  { name: 'packSeed', type: 'number' },
+  { name: 'packMin', type: 'number' },
+  { name: 'packMax', type: 'number' },
 ];
 
 /** The rule's attributes other than `gap`, which every kind's group reads. */
@@ -223,6 +231,7 @@ export const NODE_ATTRS: readonly AttrSpec[] = [
   { name: 'color', type: 'enum', values: Shape.Color.literals },
   { name: 'fill', type: 'enum', values: Shape.Fill.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
+  { name: 'border', type: 'boolean' },
 ];
 
 /** `edge` attributes. */

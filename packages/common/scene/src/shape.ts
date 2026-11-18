@@ -48,6 +48,10 @@ export type Align = Schema.Schema.Type<typeof Align>;
 export const VerticalAlign = Schema.Literals(['top', 'middle', 'bottom']);
 export type VerticalAlign = Schema.Schema.Type<typeof VerticalAlign>;
 
+/** How a box places what names it: on tracks, as CSS grid does, or by packing circles into its frame. */
+export const Layout = Schema.Literals(['tracks', 'pack']);
+export type Layout = Schema.Schema.Type<typeof Layout>;
+
 /** Where a grid's tracks sit along one axis when they leave space over, as CSS's `*-content` properties say it. */
 export const Place = Schema.Literals(['start', 'center', 'end']);
 export type Place = Schema.Schema.Type<typeof Place>;
@@ -99,6 +103,19 @@ const gridFields = {
   justifyContent: Schema.optional(Place).annotate({ description: 'Where the columns sit across the frame.' }),
   /** Where the rows sit when they do not fill the frame (CSS's `align-content`). */
   alignContent: Schema.optional(Place).annotate({ description: 'Where the rows sit down the frame.' }),
+  /**
+   * How the box places what names it: on tracks (the default) or by packing circles into its frame, where `seed`,
+   * `rmin` and `rmax` are the packing's and `cols`/`rows` say nothing.
+   */
+  layout: Schema.optional(Layout).annotate({ description: 'How the box places its children.' }),
+  /**
+   * The seed a packing is laid out from; the same seed always gives the same field. Named apart from a kind's own
+   * `seed`, which a box carrying a kind keeps in its `data`.
+   */
+  packSeed: Schema.optional(Schema.Number).annotate({ description: "A packing's seed." }),
+  /** The smallest and largest a packed child may be, in scene units. */
+  packMin: Schema.optional(Schema.Number).annotate({ description: 'Smallest packed child.' }),
+  packMax: Schema.optional(Schema.Number).annotate({ description: 'Largest packed child.' }),
   /**
    * The grid that places this box. Its own `x`/`y` and size are then the grid's to decide; the size it states is
    * what an `auto` track measures, so a label can keep its own height while the body beside it takes the rest.
