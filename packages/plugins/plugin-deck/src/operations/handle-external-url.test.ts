@@ -129,7 +129,7 @@ describe('DeckOperation.HandleExternalUrl', () => {
     await second;
   });
 
-  test('an in-app navigation while a link runs its navigation handlers drops its action', async ({ expect }) => {
+  test('an in-app navigation while a link runs its navigation handlers keeps its deck and drops the action', async ({ expect }) => {
     const ran: unknown[] = [];
     const held = heldStep();
     const hold: AppCapabilities.NavigationHandler = (url) => (url.searchParams.has('hold') ? held.run : Effect.void);
@@ -149,7 +149,7 @@ describe('DeckOperation.HandleExternalUrl', () => {
     held.release.resolve();
     await handled;
     expect(ran).toEqual([]);
-    expect(active(harness)).toEqual([]);
+    expect(activePlanks(harness)).toEqual([]);
   });
 
   test('a link overtaken while it runs its navigation handlers leaves the next link its deck and action', async ({
@@ -162,7 +162,7 @@ describe('DeckOperation.HandleExternalUrl', () => {
     await using harness = await Harness.createComposerTestApp({
       plugins: [DeckWorkspacePlugin(action.run, () => true, hold), DeckPlugin.make()],
     });
-    const link = async (doc: string) => {
+    const openWithAction = async (doc: string) => {
       await harness.runPromise(
         Operation.invoke(LayoutOperation.Set, { subject: [`${WORKSPACE}/${doc}`], workspace: WORKSPACE }),
       );
@@ -170,9 +170,9 @@ describe('DeckOperation.HandleExternalUrl', () => {
       url.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
       return url;
     };
-    const overtaken = await link('other');
+    const overtaken = await openWithAction('other');
     overtaken.searchParams.set('hold', '1');
-    const next = await link('deck');
+    const next = await openWithAction('deck');
 
     const first = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, { url: overtaken.href }));
     await held.entered.promise;
@@ -183,7 +183,7 @@ describe('DeckOperation.HandleExternalUrl', () => {
     action.release.resolve();
     await second;
     expect(ran).toEqual(['deck']);
-    expect(active(harness)).toEqual([`${WORKSPACE}/deck`]);
+    expect(activePlanks(harness)).toEqual([`${WORKSPACE}/deck`]);
   });
 
   test('a link whose URL opens no object runs no action', async ({ expect }) => {
@@ -204,7 +204,7 @@ describe('DeckOperation.HandleExternalUrl', () => {
   });
 });
 
-const active = (harness: Awaited<ReturnType<typeof Harness.createComposerTestApp>>) =>
+const activePlanks = (harness: Awaited<ReturnType<typeof Harness.createComposerTestApp>>) =>
   harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.EphemeralState)).open[WORKSPACE]?.active;
 
 const openedUrl = async () => {

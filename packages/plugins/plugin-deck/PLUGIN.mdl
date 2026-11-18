@@ -572,10 +572,11 @@ feat F-5: URL Navigation & Deep Linking
           `LinkAction` a plugin contributes under that id on the object at the end of the chain, once;
           an id no plugin contributes, an action that does not apply to the object, or a URL that opens
           no object is dropped with a warning. A navigation that starts before the action has run
-          cancels it. A URL from outside the app that a newer navigation overtakes while its
-          navigation handlers run is not projected, so the newer navigation keeps its deck and its
-          link action; the handlers still run to the end. When the app boots on such a URL, the boot loader stays up until the action has
-          run, or for 10 seconds at most, so the page first shows what the action leaves
+          cancels it. Any URL from outside the app, with or without an action, that a newer
+          navigation overtakes while its navigation handlers run is not projected, so the newer
+          navigation keeps its deck and its link action; the handlers still run to the end. When
+          the app boots on such a URL, the boot loader stays up until the action has run, or for 10
+          seconds at most, so the page first shows what the action leaves
 ```
 
 ```mdl
