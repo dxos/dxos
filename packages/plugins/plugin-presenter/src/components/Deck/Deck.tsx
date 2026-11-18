@@ -236,7 +236,7 @@ const DeckRoot = ({
         case 'ArrowLeft':
           return command || event.shiftKey ? go(0) : previousSlide();
         case 'ArrowRight':
-          return command || event.shiftKey ? go(count - 1) : nextSlide();
+          return command || event.shiftKey ? go(count - 1) : nextSlide(Number.POSITIVE_INFINITY);
         case 'ArrowUp':
           return backward();
         case 'ArrowDown':

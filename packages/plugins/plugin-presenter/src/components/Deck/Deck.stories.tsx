@@ -478,7 +478,7 @@ export const GridSpaceOnTile: Story = {
   },
 };
 
-/** Left, right and the brackets move whole slides past any build; Cmd or Ctrl with left or right jumps to the deck's ends. */
+/** Left, right and the brackets move whole slides past any build, landing fully built; Cmd or Ctrl with left or right jumps to the deck's ends. */
 export const SlideKeys: Story = {
   render: ClickStepsStory,
   decorators: [withEmptyPlugins],
@@ -521,24 +521,33 @@ export const SlideKeysAtEnd: Story = {
     const canvas = within(canvasElement);
     const deck = await canvas.findByTestId('presenter.deck');
     const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    // The list mounts after the page number, so a count of hidden items waits for the items.
+    const built = () =>
+      waitFor(async () => {
+        await expect(canvasElement.querySelectorAll('li')).toHaveLength(3);
+        await expect(hidden()).toBe(0);
+      });
     deck.focus();
     await userEvent.keyboard('{ArrowRight}');
     await expect(await canvas.findByText('2 / 2')).toBeVisible();
-    await waitFor(() => expect(hidden()).toBe(3));
-    await userEvent.keyboard('{ArrowDown}');
-    await waitFor(() => expect(hidden()).toBe(2));
+    await built();
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(hidden()).toBe(1));
     await userEvent.keyboard('{ArrowRight}');
     await expect(canvas.getByText('2 / 2')).toBeVisible();
-    await expect(hidden()).toBe(2);
+    await expect(hidden()).toBe(1);
 
-    // The brackets land on a slide fully built, and Right at its first step.
+    // Left and right, like the brackets, land on a slide fully built.
     await userEvent.keyboard('[[');
     await expect(await canvas.findByText('1 / 2')).toBeVisible();
     await userEvent.keyboard(']');
     await expect(await canvas.findByText('2 / 2')).toBeVisible();
-    await waitFor(() => expect(hidden()).toBe(0));
-    await userEvent.keyboard('{ArrowLeft}{ArrowRight}');
-    await waitFor(() => expect(hidden()).toBe(3));
+    await built();
+    await userEvent.keyboard('{ArrowUp}{ArrowLeft}');
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await built();
   },
 };
 
