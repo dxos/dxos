@@ -1212,12 +1212,12 @@ decision D-27: A link action runs only on an object its URL opened; a URL that o
 ```
 
 ```mdl
-decision D-28: A URL from outside the app claims the navigation when it arrives, before its navigation handlers run; an earlier link's action that finishes after that claim is dropped, and its parameter stays in the address bar. Fills in [D-26].
+decision D-28: Every navigation claims ownership when it starts: a URL from outside the app when it arrives, before its navigation handlers run, and an in-app navigation when its URL is pushed. An earlier link whose navigation has been claimed by a newer one does not run its action and leaves the newer URL's `action` parameter in place. Fills in [D-26].
   date: 2026-11-18
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-5.5]
-  why: The single-flight projection only sees a newer URL once its handlers have finished, so a slow handler would let the earlier link strip the newer link's action from the address bar and run its own over it. The counter covers that gap; the projection handle still cancels on an in-app navigation.
+  why: The single-flight projection only sees a newer navigation once that navigation projects, so a slow navigation handler would let the earlier link strip the newer URL's action and run its own over the newer page.
 ```
 
 ## Appendix: Extension Definitions

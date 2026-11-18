@@ -76,7 +76,7 @@ export default Capability.makeModule(
         let opened = false;
         const unlistenDeepLink = yield* Effect.promise(() =>
           onOpenUrl((urls) => {
-            opened = true;
+            opened ||= urls.some((urlString) => !isRedirectPath(deepLinkPath(new URL(urlString))));
             for (const urlString of urls) {
               void EffectEx.runAndForwardErrors(handleDeepLink(urlString, project));
             }
@@ -90,7 +90,11 @@ export default Capability.makeModule(
           launch = Effect.suspend(() =>
             opened
               ? Effect.void
-              : Effect.forEach(launchUrls, (urlString) => handleDeepLink(urlString, project), { discard: true }),
+              : Effect.forEach(
+                  launchUrls,
+                  (urlString) => Effect.suspend(() => (opened ? Effect.void : handleDeepLink(urlString, project))),
+                  { discard: true },
+                ),
           ).pipe(
             Effect.catchCause((cause) =>
               Effect.sync(() => log.warn('launch deep link failed', { error: Cause.pretty(cause) })),
@@ -158,6 +162,15 @@ const installLeaveTrap = (): string | undefined => {
   return undefined;
 };
 
+/**
+ * The app path a deep link names. For custom schemes (e.g., composer://a/b/c), new URL() treats the
+ * first segment as the hostname, so the path is rebuilt from hostname + pathname.
+ */
+const deepLinkPath = (url: URL): string =>
+  url.protocol !== 'https:' && url.protocol !== 'http:' && url.hostname
+    ? '/' + url.hostname + url.pathname
+    : url.pathname;
+
 /** Check if a path is a redirect path handled elsewhere (e.g., OAuth). */
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
@@ -166,13 +179,7 @@ const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: 
   log('deep link received', { url: urlString });
 
   const deepLinkUrl = new URL(urlString);
-
-  // For custom schemes (e.g., composer://a/b/c), new URL() treats the first segment as the
-  // hostname. Reconstruct the full path from hostname + pathname.
-  const fullPath =
-    deepLinkUrl.protocol !== 'https:' && deepLinkUrl.protocol !== 'http:' && deepLinkUrl.hostname
-      ? '/' + deepLinkUrl.hostname + deepLinkUrl.pathname
-      : deepLinkUrl.pathname;
+  const fullPath = deepLinkPath(deepLinkUrl);
 
   if (isRedirectPath(fullPath)) {
     return;

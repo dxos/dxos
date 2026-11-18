@@ -129,6 +129,28 @@ describe('DeckOperation.HandleExternalUrl', () => {
     await second;
   });
 
+  test('an in-app navigation while a link runs its navigation handlers drops its action', async ({ expect }) => {
+    const ran: unknown[] = [];
+    const held = heldStep();
+    const hold: AppCapabilities.NavigationHandler = (url) => (url.searchParams.has('hold') ? held.run : Effect.void);
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [DeckWorkspacePlugin((data) => Effect.sync(() => ran.push(data)), undefined, hold), DeckPlugin.make()],
+    });
+    await harness.runPromise(
+      Operation.invoke(LayoutOperation.Set, { subject: [`${WORKSPACE}/deck`], workspace: WORKSPACE }),
+    );
+    const linked = new URL(window.location.href);
+    linked.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
+    linked.searchParams.set('hold', '1');
+
+    const handled = harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, { url: linked.href }));
+    await held.entered.promise;
+    await harness.runPromise(Operation.invoke(LayoutOperation.Set, { subject: [], workspace: WORKSPACE }));
+    held.release.resolve();
+    await handled;
+    expect(ran).toEqual([]);
+  });
+
   test('a link whose URL opens no object runs no action', async ({ expect }) => {
     const ran: unknown[] = [];
     await using harness = await Harness.createComposerTestApp({

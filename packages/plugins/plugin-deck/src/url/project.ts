@@ -59,15 +59,21 @@ const targetVerdict = (
     ),
   ).pipe(Effect.map((results) => NotFound.combineVerdicts(results.flat())));
 
-/** External navigations started, so a link action can tell when a newer one has overtaken it. */
-let externalNavigations = 0;
+/** Navigations started, external or in-app, so a link action can tell when a newer one has overtaken it. */
+let navigations = 0;
+
+/** Claim the navigation; the returned check says whether it is still the newest. */
+export const claimNavigation = () => {
+  const claimed = ++navigations;
+  return () => claimed === navigations;
+};
 
 /**
  * Dispatch navigation handlers for a URL arriving from outside the app, then project it. The link
  * action runs as part of the projection, so a newer navigation cancels it.
  */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
-  const navigation = ++externalNavigations;
+  const isCurrent = claimNavigation();
   const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
   const registry = yield* Capability.get(Capabilities.AtomRegistry);
   const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
@@ -89,7 +95,7 @@ export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
 
   return yield* asOnlyProjection(
     project(resolvedUrl).pipe(
-      Effect.tap(({ opened }) => consumeLinkAction(resolvedUrl, opened, () => navigation === externalNavigations)),
+      Effect.tap(({ opened }) => consumeLinkAction(resolvedUrl, opened, isCurrent)),
       Effect.map(({ attend }) => attend),
     ),
   );
@@ -138,7 +144,7 @@ export type ProjectOptions = {
 type Projected = {
   /** The plank attention should move to; unset when it should stay where it is. */
   attend?: string;
-  /** The last plank the URL opened, which a link action acts on. */
+  /** The node the URL's last plank resolved to, which a link action acts on. */
   opened?: string;
 };
 
@@ -278,6 +284,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
   );
 
   const planks: Navigation.Plank[] = [];
+  let opened: string | undefined;
   let companion: CompanionTarget | undefined;
   let companionAnchorId: string | undefined;
   pairs.forEach((pair, index) => {
@@ -294,6 +301,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
       }
       return;
     }
+    opened = nodeId;
     planks.push({
       id: nodeId ?? resolved[index]?.candidateId ?? getUnresolvedPlankId(pair),
       segment: Navigation.toSegment(pair),
@@ -315,7 +323,6 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     });
   }
 
-  const opened = planks[planks.length - 1]?.id;
   return { attend: attendChainEnd ? chainEnd : displaced, opened } satisfies Projected;
 });
 
