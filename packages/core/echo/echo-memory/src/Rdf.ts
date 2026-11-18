@@ -135,6 +135,9 @@ export const literal = (
     return new LiteralTerm(value, '', namedNode(languageOrDatatype.value));
   }
   const { language, direction } = languageOrDatatype;
+  if (language.length === 0) {
+    return new LiteralTerm(value, '', STRING_DATATYPE);
+  }
   return direction
     ? new LiteralTerm(value, language.toLowerCase(), DIR_LANG_STRING_DATATYPE, direction)
     : new LiteralTerm(value, language.toLowerCase(), LANG_STRING_DATATYPE);

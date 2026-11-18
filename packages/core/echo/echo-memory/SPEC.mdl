@@ -1542,7 +1542,7 @@ decision D-62: A space's fact feed always replicates, and its format (namespace,
 ```
 
 ```mdl
-decision D-63: echo-memory has no n3 dependency: its RDF/JS terms and data factory are its own `Rdf` module, and TriG is written by its own `Trig` module, whose output matches n3's writer; n3 stays only as a test dependency that cross-checks both. echo-memory-sqlite imports echo-memory by per-module subpath. Fills in [D-49].
+decision D-63: echo-memory has no n3 dependency: its RDF/JS terms and data factory are its own `Rdf` module, and TriG is written by its own `Trig` module, whose output matches n3's writer except where n3's would not read back (an absolute IRI that only looks prefixed stays bracketed; quoted triples and variables are refused); n3 stays only as a test dependency that cross-checks both. echo-memory-sqlite imports echo-memory by per-module subpath. Fills in [D-49].
   date: 2026-11-18
   by: user:dmaretskyi
   affects: [F-1.4]

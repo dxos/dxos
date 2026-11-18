@@ -99,5 +99,6 @@ describe('Rdf', () => {
     expect(rtl.equals(Rdf.literal('x', { language: 'ar', direction: 'ltr' }))).toBe(false);
     expect(rtl.equals(Rdf.literal('x', 'ar'))).toBe(false);
     expect(Rdf.literal('x', { language: 'ar' }).equals(Rdf.literal('x', 'ar'))).toBe(true);
+    expect(Rdf.literal('x', { language: '', direction: '' }).equals(Rdf.literal('x'))).toBe(true);
   });
 });
