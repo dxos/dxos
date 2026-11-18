@@ -557,7 +557,7 @@ decision D-34: Approve [D-32] and [D-33].
 ```
 
 ```mdl
-decision D-35: The DSL companion ([F-3]) reads the drawing's text from its records each time and stores none. After a Rebuild the author's text stays in the editor until the drawing next changes.
+decision D-39: The DSL companion ([F-3]) reads the drawing's text from its records each time and stores none. After a Rebuild the author's text stays in the editor until the drawing next changes.
   date: 2026-11-18
   by: agent:claude-code
   for: user:richburdon
