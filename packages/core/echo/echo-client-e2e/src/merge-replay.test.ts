@@ -135,6 +135,12 @@ const setUpFanOutPair = async (
   return { db1, db2, winnerId: winner.id, loserId: loser.id };
 };
 
+/** How many changes of `winner`'s document replay `loserId`'s edits. */
+const replaysOf = (winner: FanOutDoc, loserId: string): number =>
+  A.getChangesMetaSince(getObjectCore(winner).getDoc(), []).filter(
+    (meta) => meta.message === `merge-replay: ${loserId}`,
+  ).length;
+
 describe('creation-heads replay against the real engine', () => {
   let builder: EchoTestBuilder;
   let network: TestReplicationNetwork | undefined;
@@ -198,6 +204,9 @@ describe('creation-heads replay against the real engine', () => {
     const winnerOnDb1 = await queryById(db1, winnerId);
     expect(winnerOnDb1.note).to.eq('loser edit');
     const headsAfterFirstMerge = headsOf(winnerOnDb1);
+    // Each peer's host can service the group before it sees the other's replay, so the first merge writes one or two.
+    const replaysAfterFirstMerge = replaysOf(winnerOnDb1, loserId);
+    expect(replaysAfterFirstMerge).to.be.greaterThan(0);
 
     // Further indexing passes on both peers with NO new edits: the group is already serviced, so
     // this exercises the same "nothing left to do" path the crash-retry unit test
@@ -211,9 +220,7 @@ describe('creation-heads replay against the real engine', () => {
     expect(winnerAfterResync.note).to.eq('loser edit');
     expect(headsOf(winnerAfterResync)).to.deep.eq(headsAfterFirstMerge);
 
-    const doc = getObjectCore(winnerAfterResync).getDoc();
-    const replays = A.getChangesMetaSince(doc, []).filter((meta) => meta.message === `merge-replay: ${loserId}`);
-    expect(replays.length).to.eq(1);
+    expect(replaysOf(winnerAfterResync, loserId)).to.eq(replaysAfterFirstMerge);
   });
 
   test('a field both sides edited becomes a real Automerge conflict, converged identically on both peers (E5d)', async () => {

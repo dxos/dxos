@@ -65,7 +65,7 @@ const absorbLens = Lens.make(ContactV1, ContactV2, { address: Lens.absorb('addre
 /** Waits until a peer's host has synced the version documents of what its database wrote. */
 const settle = async (peer: { host: { versionsSettled(): Promise<void> } }, db: TestDatabase): Promise<void> => {
   await db._repo.flush();
-  await db.flush({ indexes: true });
+  await db.flush({ indexes: true, updates: true });
   await peer.host.versionsSettled();
 };
 
@@ -119,7 +119,8 @@ describe('extracted objects across versions', () => {
       condition: async () => {
         await settle(peer1, db);
         [address] = await addresses(db);
-        return address !== undefined;
+        // The index can answer the extracted object before the root that moves the person onto the newer version arrives.
+        return address !== undefined && JSON.stringify(Obj.getValue(person, ['address'])).includes(address.id);
       },
       interval: 100,
       timeout: 20_000,
