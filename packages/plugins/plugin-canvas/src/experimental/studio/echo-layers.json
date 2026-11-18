@@ -1,0 +1,228 @@
+{
+  "id": "echo-layers",
+  "title": "ECHO",
+  "subtitle": "A typed, local-first database shared by people and agents",
+  "page": {
+    "w": 1600,
+    "h": 900
+  },
+  "size": {
+    "w": 370.6666666666667,
+    "h": 178
+  },
+  "nodes": {
+    "types": {
+      "cx": 648,
+      "cy": 228,
+      "w": 1136,
+      "h": 172,
+      "icon": "brackets-curly",
+      "title": "Types",
+      "chips": {
+        "items": [
+          {
+            "icon": "shield-check",
+            "label": "Validation",
+            "note": "every write"
+          },
+          {
+            "icon": "file-ts",
+            "label": "TypeScript",
+            "note": "Effect Schema"
+          },
+          {
+            "icon": "brackets-angle",
+            "label": "JSON Schema",
+            "note": "agent tools"
+          },
+          {
+            "icon": "link",
+            "label": "URI",
+            "note": "dxn:type:org.dxos/Task"
+          },
+          {
+            "icon": "git-branch",
+            "label": "Versioning",
+            "note": "semver per type"
+          },
+          {
+            "icon": "arrows-clockwise",
+            "label": "Schema migration",
+            "note": "lenses"
+          }
+        ],
+        "cols": 3,
+        "flat": true,
+        "columnGap": 56.80000000000001
+      }
+    },
+    "graph": {
+      "cx": 265.33333333333337,
+      "cy": 415,
+      "w": 370.6666666666667,
+      "h": 178,
+      "icon": "graph",
+      "title": "Graph",
+      "footer": "one Automerge doc per object",
+      "body": "Typed objects and relations: a property graph per space."
+    },
+    "feeds": {
+      "cx": 648,
+      "cy": 415,
+      "w": 370.6666666666667,
+      "h": 178,
+      "icon": "queue",
+      "title": "Feeds",
+      "footer": "EDGE: FeedSpace DO",
+      "body": "Append-only logs: chat, transcripts, agent trajectories."
+    },
+    "blobs": {
+      "cx": 1030.6666666666667,
+      "cy": 415,
+      "w": 370.6666666666667,
+      "h": 178,
+      "icon": "files",
+      "title": "Blobs",
+      "footer": "EDGE: R2",
+      "body": "Files and binary content, referenced from objects."
+    },
+    "crdt": {
+      "cx": 265.33333333333337,
+      "cy": 605,
+      "w": 370.6666666666667,
+      "h": 178,
+      "icon": "git-merge",
+      "title": "CRDT",
+      "footer": "no locks · no primary",
+      "body": "Automerge: concurrent edits from people and agents merge deterministically."
+    },
+    "sync": {
+      "cx": 648,
+      "cy": 605,
+      "w": 370.6666666666667,
+      "h": 178,
+      "icon": "arrows-clockwise",
+      "title": "Sync",
+      "footer": "EDGE: replicator DO",
+      "body": "Subduction exchanges compacted history fragments by fingerprint."
+    },
+    "cache": {
+      "cx": 1030.6666666666667,
+      "cy": 605,
+      "w": 370.6666666666667,
+      "h": 178,
+      "icon": "lightning",
+      "title": "Cache",
+      "footer": "OPFS · KV fast path",
+      "body": "A full replica on every device; reads never wait on the network."
+    },
+    "pipeline": {
+      "cx": 265.33333333333337,
+      "cy": 795,
+      "w": 370.6666666666667,
+      "h": 178,
+      "icon": "flow-arrow",
+      "title": "Pipeline",
+      "footer": "EDGE: Scheduler DO · alarms",
+      "body": "Triggers on queries, feeds, cron, webhooks and email run functions on each change."
+    },
+    "index": {
+      "cx": 648,
+      "cy": 795,
+      "w": 370.6666666666667,
+      "h": 178,
+      "icon": "list-magnifying-glass",
+      "title": "Index",
+      "footer": "EDGE: Indexer DO · vectors planned",
+      "body": "SQLite everywhere: typed queries, full-text search, reverse references. 0.4–1.8 ms at 10k objects."
+    },
+    "memory": {
+      "cx": 1030.6666666666667,
+      "cy": 795,
+      "w": 370.6666666666667,
+      "h": 178,
+      "icon": "brain",
+      "title": "Memory",
+      "footer": "EDGE: Agent DO · BrainObject",
+      "body": "Shared memory for people and agents: branches, provenance, facts and rules."
+    },
+    "browser": {
+      "cx": 1385,
+      "cy": 273,
+      "w": 234,
+      "h": 226,
+      "icon": "browser",
+      "title": "Browser",
+      "body": "Full replica in the tab; works offline.",
+      "footer": "wa-sqlite on OPFS"
+    },
+    "node": {
+      "cx": 1385,
+      "cy": 513,
+      "w": 234,
+      "h": 226,
+      "icon": "terminal-window",
+      "title": "Node",
+      "body": "Agents, CLIs and servers.",
+      "footer": "native SQLite"
+    },
+    "worker": {
+      "cx": 1385,
+      "cy": 753,
+      "w": 234,
+      "h": 226,
+      "icon": "cloud",
+      "title": "Worker",
+      "body": "Always-on peer, sync hub and index per space.",
+      "footer": "Workers · DO SQLite"
+    }
+  },
+  "edges": [],
+  "frames": [
+    {
+      "id": "runtimes",
+      "x": 1250,
+      "y": 142,
+      "w": 270,
+      "h": 742
+    }
+  ],
+  "texts": [
+    {
+      "id": "l-runtime",
+      "x": 1250,
+      "y": 110,
+      "w": 270,
+      "text": "Runtime",
+      "role": "label",
+      "align": "center"
+    }
+  ],
+  "layout": [
+    {
+      "id": "layers",
+      "kind": "stack",
+      "x": 80,
+      "y": 142,
+      "w": 1136,
+      "h": 742,
+      "rows": [1, 3, 3, 3],
+      "heights": [172, 178, 178, 178],
+      "gap": 12
+    },
+    {
+      "id": "runtimes",
+      "kind": "down",
+      "x": 1268,
+      "y": 160,
+      "w": 234,
+      "h": 706,
+      "n": 3,
+      "gap": 14
+    }
+  ],
+  "controls": {
+    "footers": true,
+    "runtimes": true
+  }
+}

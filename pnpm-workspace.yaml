@@ -750,7 +750,7 @@ allowBuilds:
   geckodriver: true
   msgpackr-extract: true
   node-datachannel: true
-  onnxruntime-node: true
+  onnxruntime-node: false
   oxc-resolver: true
   sharp: true
   sodium-native: true
