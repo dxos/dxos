@@ -8,4 +8,5 @@ export * as DiscordBot from './DiscordBot.ts';
 export * as DiscordChannel from './DiscordChannel.ts';
 export * as DiscordEvents from './DiscordEvents.ts';
 export * as DiscordOperation from './DiscordOperation.ts';
+export * as DiscordService from './DiscordService.ts';
 export * as DiscordTargetOptions from './DiscordTargetOptions.ts';

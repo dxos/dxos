@@ -66,6 +66,11 @@ const config: Plugin.PluginConfig = Plugin.config({
       name: 'DiscordBot',
       environments: ['browser', 'node', 'tauri'],
     }),
+    // The back-index's reads over the same routes; EDGE provides the service itself, from its invocation scope.
+    AppCapability.layerSpec(() => import('./src/capabilities/discord-service.ts', { with: { type: 'module-url' } }), {
+      name: 'DiscordService',
+      environments: ['browser', 'node', 'tauri'],
+    }),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {

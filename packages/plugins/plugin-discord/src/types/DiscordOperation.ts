@@ -18,6 +18,7 @@ import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { DISCORD_PROVIDER_ID, DISCORD_USER_PROVIDER_ID } from '../constants.ts';
+import * as DiscordService from './DiscordService.ts';
 
 /**
  * Discovery only — list Discord text channels across every guild the
@@ -97,8 +98,8 @@ export const DEFAULT_BACK_INDEX_STEPS = 2;
 export const DEFAULT_BACK_INDEX_CRON = '*/2 * * * *';
 
 const CrawlConfigFields = {
-  connection: Ref.Ref(Connection.Connection).annotate({
-    description: 'The Discord connection whose token (from the space) reads the channels.',
+  applicationId: Schema.String.annotate({
+    description: "The Discord app (bot) installed in the server; its host reads the channels with the bot's token.",
   }),
   channels: Schema.Array(Schema.String).annotate({ description: 'Top-level Discord channel ids to crawl.' }),
   descendThreads: Schema.optional(
@@ -119,8 +120,8 @@ const CrawlConfigFields = {
 
 /**
  * One bounded run of a Discord back-index: reconciles the crawl's frontier with `channels`, reads up to `maxSteps`
- * pages from the targets' cursors with the space's Discord token, extracts each page's facts in one model request and
- * puts them into the space's memory. Every bit of progress lives in the {@link CrawlState.CrawlState} `state`, so
+ * pages from the targets' cursors as the bot `applicationId` through {@link DiscordService.DiscordService}, runs them
+ * through `DiscordPipeline`'s stages and puts the facts it extracts into the space's memory. Every bit of progress lives in the {@link CrawlState.CrawlState} `state`, so
  * a trigger invoking it on a schedule continues where the last run stopped, and a message read again unchanged costs
  * no model call. Writes the run's status, outcome and error into `state` rather than failing, so they persist.
  */
@@ -131,8 +132,8 @@ export const CrawlDiscordChannels = Operation.make({
     description: "Back-index Discord channels into the space's memory, a bounded number of pages per run.",
     icon: 'ph--bulldozer--regular',
   },
-  services: [AiService.AiService, Credential.CredentialsService, Database.Service, MemoryService.MemoryService],
-  types: [CrawlState.CrawlState, Connection.Connection],
+  services: [AiService.AiService, Database.Service, DiscordService.DiscordService, MemoryService.MemoryService],
+  types: [CrawlState.CrawlState],
   input: Schema.Struct({
     ...CrawlConfigFields,
     state: Ref.Ref(CrawlState.CrawlState).annotate({ description: 'The durable state of this crawl.' }),

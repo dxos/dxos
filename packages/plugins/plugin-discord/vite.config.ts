@@ -19,6 +19,7 @@ export default defineConfig({
     'DiscordChannel': 'src/types/DiscordChannel.ts',
     'DiscordEvents': 'src/types/DiscordEvents.ts',
     'DiscordOperation': 'src/types/DiscordOperation.ts',
+    'DiscordService': 'src/types/DiscordService.ts',
     'types': 'src/types/index.ts',
   },
   jsx: 'react',

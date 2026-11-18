@@ -7,6 +7,7 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } fro
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Agent from '@dxos/assistant/Agent';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -20,10 +21,11 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { DiscordSetup } from '#components';
-import { DiscordAdminOperation } from '#types';
+import { DiscordAdminOperation, DiscordOperation } from '#types';
 
 import { DISCORD_USER_PROVIDER_ID, edgeConsoleUrl, kaiApplicationId } from '../../constants.ts';
 import { DiscordNamespace } from '../../namespace.ts';
+import { findBackIndex, toggleChannel } from './back-index.ts';
 
 /**
  * The permissions Kai asks for when installed: view, send, read history, create public threads, send in threads, and
@@ -74,6 +76,14 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
   const [guildId, setGuildId] = useState<string>();
   const [channels, setChannels] = useState<DiscordAdminOperation.GuildChannel[]>([]);
   const [bindings, setBindings] = useState<DiscordAdminOperation.ChannelBinding[]>([]);
+
+  // The space's back-index for this bot: the channels whose history is extracted into the space's memory.
+  const triggers = useQuery(db, Filter.type(Trigger.Trigger));
+  const backIndex = useMemo(
+    () => (applicationId ? findBackIndex(triggers, applicationId) : undefined),
+    [triggers, applicationId],
+  );
+  const indexed = useMemo(() => new Set(backIndex?.channels ?? []), [backIndex]);
 
   const refreshGuilds = useCallback(async () => {
     if (!spaceId) {
@@ -173,6 +183,30 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
     [invokePromise, spaceId, applicationId, guildId, agent, refreshChannels],
   );
 
+  const handleIndex = useCallback(
+    async (channel: DiscordAdminOperation.GuildChannel) => {
+      if (!spaceId || !applicationId) {
+        return;
+      }
+      setBusy(true);
+      const channels = toggleChannel(backIndex?.channels ?? [], channel.id);
+      const { error } = await invokePromise(
+        DiscordOperation.ConfigureBackIndex,
+        {
+          applicationId,
+          channels,
+          ...(backIndex ? { trigger: Ref.make(backIndex.trigger) } : { name: t('discord-setup-index-name.label') }),
+          // A back-index with no channels left stops running rather than being deleted with its crawl state.
+          enabled: channels.length > 0,
+        },
+        { spaceId },
+      );
+      setError(error?.message);
+      setBusy(false);
+    },
+    [invokePromise, spaceId, applicationId, backIndex, t],
+  );
+
   const installedIds = useMemo(() => new Set(installed.map(({ id }) => id)), [installed]);
   // This agent's channels in the selected server first, then the rest it could be connected to.
   const isMine = useCallback(
@@ -262,7 +296,18 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
             ) : (
               <DiscordSetup.List ids={connected.map(({ id }) => id)}>
                 {connected.map((channel) => (
-                  <DiscordSetup.Item key={channel.id} id={channel.id} icon='ph--hash--regular' label={channel.name}>
+                  <DiscordSetup.Item
+                    key={channel.id}
+                    id={channel.id}
+                    icon='ph--hash--regular'
+                    label={channel.name}
+                    detail={indexed.has(channel.id) ? t('discord-setup-indexed.label') : undefined}
+                  >
+                    <IndexButton
+                      indexed={indexed.has(channel.id)}
+                      disabled={busy}
+                      onClick={() => void handleIndex(channel)}
+                    />
                     <Button.Root
                       variant='ghost'
                       iconOnly
@@ -288,8 +333,20 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
                     id={channel.id}
                     icon='ph--hash--regular'
                     label={channel.name}
-                    detail={elsewhere ? t('discord-setup-bound-other.label') : undefined}
+                    detail={
+                      [
+                        elsewhere ? t('discord-setup-bound-other.label') : undefined,
+                        indexed.has(channel.id) ? t('discord-setup-indexed.label') : undefined,
+                      ]
+                        .filter((part) => part !== undefined)
+                        .join(' · ') || undefined
+                    }
                   >
+                    <IndexButton
+                      indexed={indexed.has(channel.id)}
+                      disabled={busy}
+                      onClick={() => void handleIndex(channel)}
+                    />
                     <Button.Root
                       variant='ghost'
                       iconOnly
@@ -310,6 +367,21 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
 };
 
 DiscordAgentSetup.displayName = 'DiscordAgentSetup';
+
+/** Adds a channel to the space's back-index, or takes it out. */
+const IndexButton = ({ indexed, disabled, onClick }: { indexed: boolean; disabled: boolean; onClick: () => void }) => {
+  const { t } = UiHooks.useTranslation(DiscordNamespace.key);
+  return (
+    <Button.Root
+      variant='ghost'
+      iconOnly
+      icon={indexed ? 'ph--magnifying-glass-minus--regular' : 'ph--magnifying-glass-plus--regular'}
+      label={t(indexed ? 'discord-setup-unindex.label' : 'discord-setup-index.label')}
+      disabled={disabled}
+      onClick={onClick}
+    />
+  );
+};
 
 /** Whether the server files the channel under an archive category. */
 const isArchived = ({ category }: DiscordAdminOperation.GuildChannel): boolean =>

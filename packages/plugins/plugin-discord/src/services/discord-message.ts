@@ -3,9 +3,9 @@
 //
 
 // Type-only imports keep `dfx` and the crawler out of the bundle of a worker that serves the crawler's `Source`.
-import type { MessageResponse, UserResponse } from 'dfx/types';
-
 import type { ThreadRef, Type } from '@dxos/crawler';
+
+import type { DiscordService } from '#types';
 
 /**
  * Discord snowflake epoch — 2015-01-01 00:00:00 UTC in milliseconds. All
@@ -32,7 +32,7 @@ export const snowflakeForTimestamp = (timestampMs: number): string => {
 };
 
 /** Discord message types we ingest: DEFAULT (0) and REPLY (19); everything else is a system event. */
-const isContentMessage = (raw: MessageResponse): boolean => {
+const isContentMessage = (raw: DiscordService.Message): boolean => {
   const type = raw.type ?? 0;
   return type === 0 || type === 19;
 };
@@ -42,7 +42,10 @@ const isContentMessage = (raw: MessageResponse): boolean => {
  * `@displayName`, custom emoji collapse to `:name:`, and channel/role mentions (whose names aren't
  * carried on the message) are dropped. Without this the extractor treats e.g. `<#837…>` as an entity.
  */
-export const normalizeMentions = (content: string, mentions: ReadonlyArray<UserResponse>): string => {
+export const normalizeMentions = (
+  content: string,
+  mentions: ReadonlyArray<{ readonly id: string; readonly username: string; readonly global_name?: string | null }>,
+): string => {
   const names = new Map(mentions.map((user) => [user.id, user.global_name || user.username]));
   return content
     .replace(/<@!?(\d+)>/g, (_match, id) => `@${names.get(id) ?? 'user'}`)
@@ -58,7 +61,7 @@ export const normalizeMentions = (content: string, mentions: ReadonlyArray<UserR
  * sender's display name), this preserves the author's stable `id` so the agent registry tokenizes by
  * user id, not name.
  */
-export const mapDiscordMessage = (raw: MessageResponse): Type.Message | undefined => {
+export const mapDiscordMessage = (raw: DiscordService.Message): Type.Message | undefined => {
   if (!isContentMessage(raw)) {
     return undefined;
   }
@@ -78,7 +81,7 @@ export const mapDiscordMessage = (raw: MessageResponse): Type.Message | undefine
 };
 
 /** Thread sub-channels spawned by messages in a page. */
-export const threadRefsOf = (raw: readonly MessageResponse[]): ThreadRef[] =>
+export const threadRefsOf = (raw: readonly DiscordService.Message[]): ThreadRef[] =>
   raw.flatMap((message) =>
     message.thread ? [{ threadId: message.thread.id, parentMessageId: message.id, name: message.thread.name }] : [],
   );

@@ -7,14 +7,13 @@ import type { GuildChannelResponse, MessageResponse, MyGuildResponse } from 'dfx
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import * as Credential from '@dxos/compute/Credential';
 import { CrawlError, Source, type SourceApi, type Type } from '@dxos/crawler';
-import { type Error, type Ref } from '@dxos/echo';
-import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
+import { DiscordService } from '#types';
+
 import { mapDiscordMessage, snowflakeForTimestamp, threadRefsOf } from './discord-message.ts';
-import { makeDiscordConnectionLayer, makeDiscordLayerFromToken } from './discord.ts';
+import { makeDiscordLayerFromToken } from './discord.ts';
 
 const MESSAGE_PAGE_LIMIT = 100;
 const GUILD_PAGE_LIMIT = 200;
@@ -38,7 +37,8 @@ export type SourceOptions = {
   readonly pageLimit?: number;
 };
 
-const byId = (left: MessageResponse, right: MessageResponse) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+const byId = (left: { readonly id: string }, right: { readonly id: string }) =>
+  left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
 
 /** Construct the Source API over an ambient DiscordREST (transport bound by the caller's layer). */
 const makeSource = (options: SourceOptions = {}): Effect.Effect<SourceApi, never, DiscordREST> =>
@@ -135,12 +135,57 @@ export const discordSourceLayer = (token: string, options?: SourceOptions): Laye
   Layer.effect(Source, makeSource(options)).pipe(Layer.provide(makeDiscordLayerFromToken(token)));
 
 /**
- * Live {@link Source} authenticated from a persisted {@link Connection} ref (the operation path): the space's token,
- * as a bearer token for a Discord user OAuth connection. The token is resolved at layer construction, so the handler
- * never sees it.
+ * Live {@link Source} that reads as a bot through {@link DiscordService.DiscordService}, whose host holds the bot's
+ * token and answers only channels and messages of the servers the space connected: the back-index's source.
  */
-export const discordSourceLayerFromConnection = (
-  connection: Ref.Ref<Connection.Connection>,
-  options?: SourceOptions,
-): Layer.Layer<Source, Error.EntityNotFoundError, Credential.CredentialsService> =>
-  Layer.effect(Source, makeSource(options)).pipe(Layer.provide(makeDiscordConnectionLayer(connection)));
+export const discordSourceLayerFromService = (
+  bot: DiscordService.Bot,
+  options: SourceOptions = {},
+): Layer.Layer<Source, never, DiscordService.DiscordService> =>
+  Layer.effect(
+    Source,
+    Effect.gen(function* () {
+      const service = yield* DiscordService.DiscordService;
+
+      const drain = Effect.fnUntraced(function* (channelId: string, after: string) {
+        if (options.pageLimit !== undefined) {
+          const limit = Math.max(1, Math.min(options.pageLimit, MESSAGE_PAGE_LIMIT));
+          return [...(yield* service.fetchMessages(bot, { channelId, after, limit }))].sort(byId);
+        }
+        const raw: DiscordService.Message[] = [];
+        let cursor = after;
+        while (true) {
+          const page = [
+            ...(yield* service.fetchMessages(bot, { channelId, after: cursor, limit: MESSAGE_PAGE_LIMIT })),
+          ].sort(byId);
+          raw.push(...page);
+          if (page.length < MESSAGE_PAGE_LIMIT) {
+            return raw;
+          }
+          cursor = page[page.length - 1].id;
+        }
+      });
+
+      const fetchMessages: SourceApi['fetchMessages'] = ({ channelId, threadId, cursor, maxDays }) =>
+        drain(threadId ?? channelId, initialCursor(cursor, maxDays)).pipe(
+          Effect.map((raw) => ({
+            messages: raw.map(mapDiscordMessage).filter((message): message is Type.Message => message !== undefined),
+            cursor: raw.length > 0 ? raw[raw.length - 1].id : undefined,
+            threads: threadRefsOf(raw),
+          })),
+          Effect.mapError(
+            (cause) => new CrawlError({ message: `Failed to fetch Discord messages: ${cause.message}`, cause }),
+          ),
+        );
+
+      const listChannels: SourceApi['listChannels'] = () =>
+        service.listChannels(bot).pipe(
+          Effect.map((channels) =>
+            channels.map(({ id, name, guildId, guildName }) => ({ id, name: `#${name} — ${guildName}`, guildId })),
+          ),
+          Effect.mapError((cause) => new CrawlError({ message: 'Failed to list Discord channels', cause })),
+        );
+
+      return { listChannels, fetchMessages } satisfies SourceApi;
+    }),
+  );

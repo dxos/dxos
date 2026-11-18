@@ -92,7 +92,6 @@ type BackIndexInput
   desc: The trigger's input; ConfigureBackIndex writes it and CrawlDiscordChannels reads it.
   fields:
     applicationId: string             # the Discord app (bot) installed in the server
-    accessToken?: Ref<AccessToken>    # the bot's token; absent for Kai, whose token EDGE holds
     channels: string[]                # top-level Discord channel ids to crawl
     descendThreads?: boolean          # default true
     maxDays?: number                  # lookback for a channel crawled for the first time
@@ -113,7 +112,8 @@ type DiscordMessage
     timestamp: string
     author: { id: string, username: string, global_name?: string }
     mentions: { id: string, username: string, global_name?: string }[]
-    referencedMessageId?: string
+    referenced_message?: { id: string }
+    message_reference?: { message_id: string }
     thread?: { id: string, name: string }
 ```
 
@@ -166,7 +166,6 @@ op ConfigureBackIndex
   desc: Creates or updates the space's back-index for a bot: its CrawlState and the remote timer trigger.
   input:
     applicationId: string
-    accessToken?: Ref<AccessToken>
     channels: string[]
     trigger?: Ref<Trigger>        # the back-index to reconfigure; a new one when absent
     name?: string
@@ -232,7 +231,7 @@ feat F-4: Token custody
 
   req F-4.1: Kai's token never leaves the bot host: not to compute-service, not to a plugin bundle, not to the app, and not into the space.
 
-  req F-4.2: For a bot that is not Kai, the space holds its AccessToken and the trigger names it by reference; the bot host reads the token from the space by id.
+  req F-4.2: The back-index names only the bot. The bot host signs every read with the token the bot runs on: Kai's, which EDGE holds, or, for a bot that is not Kai, the AccessToken the space gave when it connected the bot.
 
   req F-4.3: No answer of the bot host carries a token, an authorization header or a raw Discord API response.
 ```
@@ -398,4 +397,14 @@ decision D-11: The crawl runs as plugin-discord's bundle under compute-service's
   for: user:dmaretskyi
   affects: [F-7.1, F-7.2]
   why: plugin-discord is routed to bundles, not held on operation-service, and a bundle gets a service only by its key in the invocation scope, which offers no MemoryService today.
+```
+
+```mdl
+decision D-12: The back-index names only the bot's application id, with no access token, and DiscordMessage keeps Discord's own field names (`referenced_message`, `message_reference`). Fills in [D-9].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [BackIndexInput, ConfigureBackIndex, DiscordMessage, F-4.2]
+  why: The bot host already signs with the token its owner space bound it with, so a token reference in the trigger would go unused; Discord's field names let the plugin map a message the same way whether it came from the REST API or the bot host.
+  rejected: Carrying the access token id in every read, which the host would only compare with the one it holds.
 ```

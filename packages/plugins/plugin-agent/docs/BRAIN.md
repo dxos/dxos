@@ -21,7 +21,8 @@ asked.
   brain's index (pipeline-rdf's SQLite schema) is derived and rebuildable.
 - **Back-indexing is a trigger-run operation outside the brain:** a remote timer trigger runs
   plugin-discord's `CrawlDiscordChannels`, which reads a channel's history live with `@dxos/crawler`
-  (the Discord token comes from the space, where the Discord OAuth sign-in stored it), keeps its
+  (reading as the bot installed in the server through plugin-discord's `DiscordService`, whose host on EDGE
+  holds the bot's token, so the space holds none for Kai), keeps its
   progress in a `CrawlState` ECHO object and puts the facts it extracts into the space's memory
   (`MemoryService`), whose replicated `facts` feed every replica, EDGE's included, follows.
 - **Goals are directives, not tasks:** plain-text outcomes or conditions, owned by an `Actor` (user,

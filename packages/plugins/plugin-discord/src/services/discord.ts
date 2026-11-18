@@ -16,7 +16,7 @@ import { Database, Error, type Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { DISCORD_API_BASE, DISCORD_USER_PROVIDER_ID } from '../constants.ts';
+import { DISCORD_API_BASE } from '../constants.ts';
 import { DISCORD_BOT_USER_AGENT, makeEdgeProxyHttpClientLayer } from './proxy-http-client.ts';
 
 /** Where the Discord REST client sends requests: the API base and whether the CORS proxy carries them. */
@@ -219,20 +219,3 @@ export const makeDiscordUserLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<DiscordREST, Error.EntityNotFoundError, Credential.CredentialsService> =>
   Layer.unwrap(Effect.map(resolveConnectionToken(connectionRef), makeDiscordUserLayerFromToken));
-
-/**
- * Build a `DiscordREST` layer from a persisted {@link Connection} ref with the token kind its connector issues: a
- * Discord user OAuth connection's token is a bearer token, any other a bot token.
- */
-export const makeDiscordConnectionLayer = (
-  connectionRef: Ref.Ref<Connection.Connection>,
-): Layer.Layer<DiscordREST, Error.EntityNotFoundError, Credential.CredentialsService> =>
-  Layer.unwrap(
-    Effect.gen(function* () {
-      const connection = yield* Database.load(connectionRef);
-      const token = yield* resolveConnectionToken(connectionRef);
-      return connection.connectorId === DISCORD_USER_PROVIDER_ID
-        ? makeDiscordUserLayerFromToken(token)
-        : makeDiscordLayerFromToken(token);
-    }),
-  );
