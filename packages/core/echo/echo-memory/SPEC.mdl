@@ -1492,6 +1492,29 @@ decision D-56: The Discord, finance and System One extraction work merged from m
   affects: [F-1.4]
 ```
 
+```mdl
+decision D-57: On EDGE a space's memory is one `MemoryObject` Durable Object in db-service, named by the space id and running the same memory over its own SQLite; existing agent brains start fresh, their old fact and trigger tables left unread.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9]
+  why: One shared store per space, as in the app, rather than one brain per agent.
+```
+
+```mdl
+decision D-58: Callers on EDGE (operation-service, plugin bundles) reach the space memory directly through db-service's `MemoryServiceEntrypoint`, and `BrainService` there is plugin-agent's `BrainMemory` over it; compute-service's brain calls for facts and triggers are removed, and the agent's `BrainObject` keeps only wakes, sessions, provisioning and roles until each finds its own home. Fills in [D-57].
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9]
+```
+
+```mdl
+decision D-59: EDGE's `MemoryObject` is a replica of the space's `facts` feed, so the app and EDGE share one memory per space; the fact-feed indexer, plugin-agent's `AddFactFeed`/`RemoveFactFeed` and its `FactItem` feeds are removed, and producers such as the Discord crawl write with `put` or import TriG. Fills in [D-57].
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9, F-1.4]
+  why: Facts reach a space's memory one way, through its replicated log, instead of a second feed format and an indexer per agent.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
