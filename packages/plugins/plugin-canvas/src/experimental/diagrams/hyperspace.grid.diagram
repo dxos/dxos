@@ -16,7 +16,7 @@ object hyperspace @ 0,0 {
       rect heading-hyperspace "ECHO Hyperspace" fill=none border=false align=center valign=middle fontSize=34
       grid field-row cols="1fr 0" gap=0 {
         grid field-body padding=24 border=true {
-          rect field kind=substrate seed=29 pitch=24 data-fill=0.55 gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=6 rmin=36 rmax=300
+          rect field kind=substrate seed=29 pitch=24 data-fill=0.55 gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=14 rmin=36 rmax=185 rootSpace=0 root=0 depth=5 tones="event | message | file | trip"
         }
         grid field-ports gap=12 {
           rect port-calendar fill=none border=false
@@ -63,7 +63,7 @@ object hyperspace @ 0,0 {
   arrow tap-slack slack -> port-slack path=line head=none stroke=dashed
 
   # The deck's dashed taps: each plank reading out of the field it draws from.
-  arrow tap-board plank-board -> field head=none stroke=dashed
-  arrow tap-sheet plank-sheet -> field head=none stroke=dashed
-  arrow tap-thread plank-thread -> field head=none stroke=dashed
+  arrow tap-board plank-board -> field#space-1 path=line head=none stroke=dashed
+  arrow tap-sheet plank-sheet -> field#space-2 path=line head=none stroke=dashed
+  arrow tap-thread plank-thread -> field#space-3 path=line head=none stroke=dashed
 }
