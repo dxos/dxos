@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { Ontology, Vocabularies } from '@dxos/echo-memory';
+
 import { type RequestCapture, queuedAiService } from '../../testing/index.ts';
-import { Ontology, Vocabularies } from '../../types/index.ts';
 import { ExtractPayload, buildExtractionInstructions, extractChunk, parseExtractPayload } from './extract.ts';
 
 describe('extractChunk request', () => {

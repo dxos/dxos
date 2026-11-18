@@ -9,6 +9,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import type * as Instructions from '@dxos/compute/Instructions';
 import type * as Project from '@dxos/compute/Project';
 import { type Database } from '@dxos/echo';
@@ -35,6 +36,7 @@ export type ConfigSectionProps = {
 
 export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const groups = useConfigGroups();
   const agentFields = groups.find(({ id }) => id === ProjectCapabilities.AgentConfigGroupId)?.fields ?? [];
   const [skills = []] = useObject(instructions, 'skills');
@@ -54,12 +56,22 @@ export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps)
         summary={agentSummary}
       >
         {instructions && (
-          <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} extensions={presence} />
+          <InstructionsEditor.InstructionsEditor
+            db={db}
+            instructions={instructions}
+            extensions={presence}
+            readonly={readonly}
+          />
         )}
         {/* Standing context (inputs bound into every project session), kept apart from Artifacts (outputs the project owns). */}
         {instructions && (
           <Form.FieldSet label={t('context.label')}>
-            <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
+            <InstructionsEditor.InstructionsEditor
+              db={db}
+              instructions={instructions}
+              fields={CONTEXT_FIELDS}
+              readonly={readonly}
+            />
           </Form.FieldSet>
         )}
         {agentFields.length > 0 && <ConfigFields db={db} project={project} fields={agentFields} />}
@@ -174,6 +186,7 @@ const ConfigFields = ({ db, project, fields }: ConfigFieldsProps) => {
 type ConfigFormProps = ConfigFieldsProps & ConfigFieldValues;
 
 const ConfigForm = ({ db, project, fields, values, hidden }: ConfigFormProps) => {
+  const readonly = ToolkitHooks.useReadOnly();
   const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const schema = useMemo(
     () =>
@@ -220,6 +233,7 @@ const ConfigForm = ({ db, project, fields, values, hidden }: ConfigFormProps) =>
       schema={schema}
       values={values}
       fieldOverrides={fieldOverrides}
+      readonly={readonly}
       onValuesChanged={handleValuesChanged}
       onCreate={handleCreate}
     >

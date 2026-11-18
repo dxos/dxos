@@ -9,19 +9,15 @@ import * as Schema from 'effect/Schema';
 import { Parser } from 'sparqljs';
 
 import { AiService } from '@dxos/ai';
+import { Fact, Graph, Mapping, Ontology, Vocab } from '@dxos/echo-memory';
 import { trim } from '@dxos/util';
 
 import { SemanticIndexError } from '../../errors.ts';
-import { type EntityKind } from '../../types/Entity.ts';
-import * as Graph from '../../types/Graph.ts';
-import * as Mapping from '../../types/Mapping.ts';
-import * as Ontology from '../../types/Ontology.ts';
-import * as Vocab from '../../types/Vocab.ts';
 import { DEFAULT_MODEL } from '../stages/extract.ts';
 
 const SparqlShape = Schema.Struct({ sparql: Schema.String });
 
-const KINDS: readonly EntityKind[] = ['person', 'org', 'place', 'event', 'concept', 'thing'];
+const KINDS: readonly Fact.EntityKind[] = ['person', 'org', 'place', 'event', 'concept', 'thing'];
 
 /** Predicates listed in the prompt; a pool past this is cut to keep the prompt bounded. */
 const MAX_PREDICATES = 300;

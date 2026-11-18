@@ -5,12 +5,17 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import { DXN, Type } from '@dxos/echo';
+import { Client } from '@dxos/client';
+import { DXN, Obj, Type } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import * as GraphPath from '../app/GraphPath.ts';
+import { makeGraphBuilderHost } from '../testing/graph-builder-host.ts';
 import * as TypeSection from './TypeSection.ts';
 
 class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.testbook', '0.1.0'))(
@@ -76,6 +81,66 @@ describe('createTypeSectionExtension', () => {
       const bindings = bindingsByKey('library');
       expect(AppGraphBuilder.nodeUrlSegment(LIBRARY_NODE_ID, bindings.library)).toBe('/library');
       expect(AppGraphBuilder.nodeUrlSegment(`${LIBRARY_NODE_ID}/book1`, bindings.book)).toBe('/book/book1');
+    });
+  });
+
+  describe('on a read-only host', () => {
+    const setup = async (readOnly: boolean) => {
+      const client = await new Client({ types: [Book] }).initialize();
+      onTestFinished(() => client.destroy());
+      await client.halo.createIdentity();
+      const space = await client.spaces.create();
+      await space.waitUntilReady();
+      space.db.add(Obj.make(Book, { title: 'Published' }));
+      await space.db.flush({ indexes: true });
+
+      const host = makeGraphBuilderHost({ readOnly });
+
+      const root = await EffectEx.runPromise(
+        AppGraphBuilder.createExtension({
+          id: 'testSpaces',
+          match: GraphNodeMatcher.whenRoot,
+          connector: () => Effect.succeed([{ id: space.id, type: 'org.dxos.type.space', data: space, properties: {} }]),
+        }),
+      );
+      const section = await host.build(
+        TypeSection.createTypeSectionExtension(Book, { urlKey: 'book', createObject: () => Effect.void }),
+      );
+      const graph = host.setup([...root, ...section]);
+      const spaceId = GraphNode.qualifyId(GraphNode.RootId, space.id);
+      const sectionId = GraphNode.qualifyId(spaceId, TYPENAME);
+      await graph.expand(GraphNode.RootId);
+      await expect
+        .poll(async () => {
+          await graph.expand(spaceId);
+          return graph.getNode(sectionId);
+        })
+        .not.toBeNull();
+      await graph.expand(sectionId);
+      await graph.expand(sectionId, 'action');
+
+      const node = graph.getNode(sectionId)!;
+      return {
+        node,
+        books: graph.getConnections(sectionId),
+        actions: graph.registry.get(graph.graph.actions(sectionId)).map((action) => GraphNode.segmentId(action.id)),
+      };
+    };
+
+    test('lists the objects but offers no create, drop or rearrange', async ({ expect }) => {
+      const { node, books, actions } = await setup(true);
+      expect(books).toHaveLength(1);
+      expect(books[0].properties.draggable).toBe(false);
+      expect(actions).toEqual([]);
+      expect(node.properties.onRearrange).toBeUndefined();
+      expect(node.properties.canDrop({ item: books[0] })).toBe(false);
+    });
+
+    test('a writable host keeps create and rearrange', async ({ expect }) => {
+      const { node, books, actions } = await setup(false);
+      expect(books[0].properties.draggable).toBeUndefined();
+      expect(actions).toEqual(['create']);
+      expect(node.properties.onRearrange).toBeTypeOf('function');
     });
   });
 });

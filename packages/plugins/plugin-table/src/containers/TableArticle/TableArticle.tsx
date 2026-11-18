@@ -50,6 +50,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
   ({ role, subject: object, attendableId }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const { invokePromise } = Hooks.useOperationInvoker();
+    const readonly = ToolkitHooks.useReadOnly();
     const tableRef = useRef<TableController>(null);
 
     const db = Obj.getDatabase(object);
@@ -90,11 +91,11 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const schemaEditable = schema != null && Type.getDatabase(schema) != null;
     const features: Partial<TableFeatures> = useMemo(
       () => ({
-        selection: { enabled: true, mode: 'multiple' },
-        dataEditable: true,
-        schemaEditable,
+        selection: { enabled: !readonly, mode: 'multiple' },
+        dataEditable: !readonly,
+        schemaEditable: !readonly && schemaEditable,
       }),
-      [schemaEditable],
+      [readonly, schemaEditable],
     );
 
     const handleCellUpdate = useCallback<Required<TableModelProps>['onCellUpdate']>((cell) => {
@@ -195,11 +196,15 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     const handleRowClick = useCallback(
       (row: any) => {
-        if (model?.getDraftRowCount() === 0 && ['frozenRowsEnd', 'fixedEndStart', 'fixedEndEnd'].includes(row?.plane)) {
+        if (
+          !readonly &&
+          model?.getDraftRowCount() === 0 &&
+          ['frozenRowsEnd', 'fixedEndStart', 'fixedEndEnd'].includes(row?.plane)
+        ) {
           handleInsertRow();
         }
       },
-      [model],
+      [readonly, model],
     );
 
     return (
@@ -209,10 +214,11 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
             <TableComponent.Toolbar
               attendableId={attendableId}
               customActions={customActions}
+              readonly={readonly}
               viewDirty={model?.getViewDirty()}
               onAdd={handleInsertRow}
               onExport={handleExport}
-              onSave={handleSave}
+              onSave={readonly ? undefined : handleSave}
             />
           </Panel.Header>
           <Panel.Body asChild>

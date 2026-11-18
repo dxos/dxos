@@ -8,10 +8,10 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import { Ontology } from '@dxos/echo-memory';
 import { trim } from '@dxos/util';
 
 import { SemanticIndexError } from '../../errors.ts';
-import * as Ontology from '../../types/Ontology.ts';
 import { DEFAULT_MODEL } from '../stages/extract.ts';
 import { type SemanticQuery } from './query-builder.ts';
 

@@ -20,7 +20,7 @@ import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, type Entity, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
-import { type DatabaseImpl, EchoClient, type TypeSource, makeRegistry } from '@dxos/echo-client';
+import { DatabaseImpl, EchoClient, type TypeSource, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
@@ -271,6 +271,8 @@ export class FunctionContext extends Resource {
             spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
             reactiveSchemaQuery: false,
             preloadSchemaOnOpen: false,
+            // The caller's working set, which the database opens from and keeps current as the host stores its writes.
+            workingSet: this.context.services.workingSetService,
           })
         : undefined;
 
@@ -381,7 +383,7 @@ export class FunctionContext extends Resource {
       : AiService.notAvailable;
 
     const operationServiceLayer = this.context.services.functionsService
-      ? makeOperationServiceLayer(this.context.services.functionsService)
+      ? makeOperationServiceLayer(this.context.services.functionsService, this.db)
       : unavailableOperationServiceLayer;
 
     const traceWriterLayer = this.context.services.traceService
@@ -458,6 +460,30 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
 };
 
 /**
+ * Runs `call`, a nested invocation in the caller's space, so each reads the other's writes: the caller snapshots its
+ * working set first, and afterwards re-reads its documents through `refresh` and takes the working set again.
+ */
+export const handOffWorkingSet = async <T>(
+  db: Database.Database | undefined,
+  refresh: (() => Promise<void>) | undefined,
+  call: () => Promise<T>,
+): Promise<T> => {
+  if (db instanceof DatabaseImpl) {
+    await db.saveWorkingSet();
+  } else {
+    await db?.flush({ indexes: false }).catch((error) => log.warn('caller writes not stored before a call', { error }));
+  }
+  try {
+    return await call();
+  } finally {
+    await refresh?.().catch((error) => log.warn('caller documents not re-read after a call', { error }));
+    if (db instanceof DatabaseImpl) {
+      await db.absorbWorkingSet();
+    }
+  }
+};
+
+/**
  * Backs `Operation.Service` with the EDGE-provided `FunctionsService` so that operation
  * handlers can invoke other deployed operations remotely. The `deployedId` on the operation
  * definition is used as the routing key.
@@ -466,6 +492,8 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
  */
 export const makeOperationServiceLayer = (
   functionsService: EdgeFunctionEnv.FunctionsService,
+  /** The invoking operation's database, whose working set the callee starts from (`handOffWorkingSet`). */
+  database?: Database.Database,
 ): Layer.Layer<Operation.Service> => {
   const invokeRemote = async (
     op: Operation.Definition.Any,
@@ -473,12 +501,15 @@ export const makeOperationServiceLayer = (
     options?: Operation.InvokeOptions,
   ): Promise<{ data?: unknown; error?: Error }> => {
     invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot invoke remotely.`);
-    const result = await functionsService.invoke(op.meta.deployedId, input, {
-      spaceId: options?.spaceId,
-      // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
-      // services (e.g. `HarnessService`) needed by operations like `GetContext`.
-      conversation: options?.conversation,
-    });
+    const deployedId = op.meta.deployedId;
+    const result = await handOffWorkingSet(database, undefined, () =>
+      functionsService.invoke(deployedId, input, {
+        spaceId: options?.spaceId,
+        // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
+        // services (e.g. `HarnessService`) needed by operations like `GetContext`.
+        conversation: options?.conversation,
+      }),
+    );
     if (result._kind === 'success') {
       return { data: result.data };
     }

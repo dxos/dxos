@@ -82,6 +82,27 @@ describe('dsl round trip', () => {
     expect(print(toScene(commands))).toEqual('object A @ 0,0 {\n  rect box 0,0 10x10\n}\n');
   });
 
+  test('a fraction says a value a decimal cannot', ({ expect }) => {
+    // A layout that divides a run of 772 by three produces 230.66666666666666, which is not that number: printing
+    // it loses the quotient, and the text no longer says what the drawing means. The fraction is read back exactly.
+    const source = 'object A @ 0,0 {\n  rect box 0,0 300x692/3 "Third"\n}\n';
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [element] = toScene(commands).objects[0].elements;
+    expect(element.kind === 'rect' && element.h).toBeCloseTo(692 / 3, 12);
+    // Printing normalizes to a decimal: the grammar accepts a fraction so it can be written, but emitting one
+    // would produce text an older parser rejects, and the DSL has no version to negotiate that on.
+    expect(roundTrip(source)).toEqual('object A @ 0,0 {\n  rect box 0,0 300x230.66666666666666 "Third"\n}\n');
+  });
+
+  test('a value a decimal says exactly stays a decimal', ({ expect }) => {
+    // Only the repeating values are worth a fraction: binary holds a half and a quarter, so printing them as `1/2`
+    // would churn every ordinary coordinate for nothing.
+    const source = 'object A @ 0,0 {\n  rect box 0,0 10.5x20.25\n}\n';
+    expect(parse(source).problems).toEqual([]);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
   test('whitespace is insignificant', ({ expect }) => {
     const dense = 'object A @ 0,0 {rect box 0,0 10x10 "hi" color=red}';
     const loose = 'object   A\n  @ 0 , 0\n{\n  rect\n    box\n    0,0\n    10x10\n    "hi"\n    color=red\n}\n';

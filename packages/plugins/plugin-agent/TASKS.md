@@ -64,7 +64,7 @@ in-memory trigger registry ("durable triggers").
 - [ ] **M4 Planning and constraints** — sub-goals, action drivers, session → durable promotion.
 - [ ] **M5 Pattern library and evals** — goal-pattern skill, eval personas, cost controls.
 - [ ] **Directive types** — `Instruction` / `Preference` / `Concept` (ONTOLOGY.md §4); reconcile with goals as directives.
-- [ ] **Recall via SPARQL** — load fact feeds into pipeline-rdf's store for judgment-time retrieval.
+- [ ] **Recall via SPARQL** — query the space's memory with SPARQL for judgment-time retrieval.
 - [ ] **Speakers as Person refs** — attribute facts to Person DXNs rather than name ids.
 - [ ] **readSource for URLs** — fetch page text when only a URL is given.
 

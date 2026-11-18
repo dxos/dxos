@@ -39,6 +39,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0` |
 | `op`        | `org.dxos.mdl.op@1.1`        |
 | `test`      | `org.dxos.mdl.test@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
 
 ## Types
 
@@ -481,6 +482,25 @@ test QA-2: Timer trigger from a template
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: A read-only host includes this plugin to translate and render routine objects; it runs no routines.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-2]
+```
+
+```mdl
+decision D-2: When the host contributes `ReadOnly`, the trigger runtime controller starts no dispatcher, the routine article shows its form read-only with no Run action, a routine has no runs companion, and the skill article's `TemplateEditor` is read-only. Fills in [D-1].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2, F-3, TemplateEditor]
+  why: Runs are the local device's history, and a host that runs nothing has none to show. `ReadOnly` is contributed at startup, before the controller activates on available spaces, so the controller reads it once.
+  rejected: Leaving out the trigger runtime module would need a host option, where the capability already says the host is read-only.
+```
 
 ## Appendix: Extension Definitions
 

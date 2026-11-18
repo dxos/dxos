@@ -48,7 +48,8 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
   const filter = useMemo(() => (valid ? Filter.id(valid) : Filter.nothing()), [valid]);
   const [object] = useQuery(valid ? space?.db : undefined, filter);
   // Before the guard below, so the hook count is stable; it answers `[]` for a missing subject.
-  const menuItems = ToolkitHooks.useObjectMenuItems(object);
+  const readonly = ToolkitHooks.useReadOnly();
+  const menuItems = ToolkitHooks.useObjectMenuItems(object, undefined, { readonly });
   if (!object || !Obj.instanceOf(Task.Task, object) || !questionId) {
     return null;
   }

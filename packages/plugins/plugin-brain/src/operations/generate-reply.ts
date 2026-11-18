@@ -10,7 +10,8 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { Fact, MemoryQuery, MemoryService } from '@dxos/echo-memory';
+import { normalizeEntityId } from '@dxos/pipeline-rdf';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { DraftMessage, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -54,8 +55,8 @@ const normalizeSubject = (subject: string | undefined): string =>
 const senderLabel = (message: Message.Message): string | undefined =>
   message.sender.name ?? message.sender.email?.split('@')[0];
 
-const factLine = (fact: RDF.Fact): string => {
-  const term = (value: RDF.Term) => (value.kind === 'entity' ? (value.label ?? value.entity) : value.literal);
+const factLine = (fact: Fact.Fact): string => {
+  const term = (value: Fact.Term) => (value.kind === 'entity' ? (value.label ?? value.entity) : value.literal);
   const { subject, predicate, object } = fact.assertion;
   return `- ${term(subject)} — ${predicate} — ${term(object)} (${fact.factuality.value}, ${fact.recordedAt.slice(0, 10)})`;
 };
@@ -86,7 +87,7 @@ export const generateReply = (options: {
 }): Effect.Effect<
   { subject: string; body: string },
   GenerateReplyError,
-  FactStore | AiService.AiService | Database.Service
+  MemoryService.MemoryService | AiService.AiService | Database.Service
 > =>
   Effect.gen(function* () {
     const { mailbox } = options;
@@ -121,15 +122,15 @@ export const generateReply = (options: {
 
     // Facts about the participants (sender + thread senders), deduped, bounded. Advisory: a failing
     // store must not block drafting.
-    const store = yield* FactStore;
+    const memory = yield* MemoryService.MemoryService;
     const participants = [
       ...new Set([senderLabel(message), ...thread.map(senderLabel)].filter((label) => label !== undefined)),
     ];
-    const factsById = new Map<string, RDF.Fact>();
+    const factsById = new Map<string, Fact.Fact>();
     for (const participant of participants) {
-      const facts = yield* store
-        .query({ entity: normalizeEntityId(participant) })
-        .pipe(Effect.orElseSucceed((): RDF.Fact[] => []));
+      const facts = yield* memory
+        .query(MemoryQuery.facts({ entity: Fact.EntityKey.make(normalizeEntityId(participant)) }))
+        .pipe(Effect.orElseSucceed((): readonly Fact.Fact[] => []));
       for (const fact of facts) {
         factsById.set(fact.id, fact);
       }

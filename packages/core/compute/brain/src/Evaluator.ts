@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
 
 import * as GoalRules from './GoalRules.ts';
 
@@ -28,7 +28,7 @@ export type Event = {
   readonly label: string;
   readonly cause: GoalRules.Wake['cause'];
   /** The facts behind the wake, in the order they arrived. */
-  readonly facts: ReadonlyArray<RDF.Fact>;
+  readonly facts: ReadonlyArray<Fact.Fact>;
   /** Evaluation time (epoch ms). */
   readonly at: number;
 };
@@ -56,7 +56,7 @@ export const eventId = (subscription: string, label: string, facts: ReadonlyArra
 export class Evaluator {
   readonly #goals = new Map<string, { subscription: Subscription; rules: GoalRules.GoalRules }>();
   /** Recent facts, which seed a subscription added later and resolve the facts behind a wake. */
-  readonly #facts = new Map<string, RDF.Fact>();
+  readonly #facts = new Map<string, Fact.Fact>();
   readonly #maxFacts: number;
   #at = 0;
 
@@ -93,7 +93,7 @@ export class Evaluator {
   }
 
   /** Evaluates new facts at time `at`; returns the wakes, one event each. */
-  push(facts: ReadonlyArray<RDF.Fact>, { at, quiet = [] }: PushOptions): Event[] {
+  push(facts: ReadonlyArray<Fact.Fact>, { at, quiet = [] }: PushOptions): Event[] {
     const quietIds = new Set(
       facts
         .filter(({ attribution }) => attribution.agent !== undefined && quiet.includes(attribution.agent))
@@ -114,7 +114,7 @@ export class Evaluator {
    * {@link tick} or {@link push}.
    * @throws Compiler.CompileError if a subscription's rules do not compile.
    */
-  hydrate(subscriptions: ReadonlyArray<Subscription>, facts: ReadonlyArray<RDF.Fact>, at: number): void {
+  hydrate(subscriptions: ReadonlyArray<Subscription>, facts: ReadonlyArray<Fact.Fact>, at: number): void {
     this.#goals.clear();
     this.#facts.clear();
     this.#remember(facts);
@@ -134,7 +134,7 @@ export class Evaluator {
     return due.length === 0 ? undefined : Math.min(...due);
   }
 
-  #evaluate(input: { at: number; facts?: ReadonlyArray<RDF.Fact> }, quiet: ReadonlySet<string>): Event[] {
+  #evaluate(input: { at: number; facts?: ReadonlyArray<Fact.Fact> }, quiet: ReadonlySet<string>): Event[] {
     this.#at = Math.max(this.#at, input.at);
     const events: Event[] = [];
     for (const { subscription, rules } of this.#goals.values()) {
@@ -160,7 +160,7 @@ export class Evaluator {
   }
 
   /** Keeps the newest facts, at most `maxFacts`, in arrival order. */
-  #remember(facts: ReadonlyArray<RDF.Fact>): void {
+  #remember(facts: ReadonlyArray<Fact.Fact>): void {
     for (const fact of facts) {
       this.#facts.delete(fact.id);
       this.#facts.set(fact.id, fact);

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
 
 import * as Compiler from './Compiler.ts';
 import * as Evaluator from './Evaluator.ts';
@@ -13,7 +13,7 @@ import { REFERENCE, SCENARIOS, simulate, toFact } from './testing/index.ts';
 const START = '2027-01-04T09:00:00.000Z';
 const minutes = (count: number): number => Date.parse(START) + count * 60_000;
 
-const said = (id: string, speaker: string, quote: string, at: number): RDF.Fact =>
+const said = (id: string, speaker: string, quote: string, at: number): Fact.Fact =>
   toFact(
     {
       id,

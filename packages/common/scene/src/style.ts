@@ -67,7 +67,6 @@ export class StyleCatalog extends Type.makeObject<StyleCatalog>(DXN.make('org.dx
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--palette--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 

@@ -81,6 +81,15 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
         () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
+        'LinkActionGate',
+        {
+          activatesOn: ActivationEvents.Startup,
+          requires: [Capabilities.AtomRegistry, DeckCapabilities.EphemeralState],
+          provides: [Capabilities.BootGate],
+        },
+        () => import('./src/capabilities/link-action-gate.ts', { with: { type: 'module-url' } }),
+      ),
+      Capability.lazyModule(
         'LayoutViewState',
         {
           requires: [
@@ -139,6 +148,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           activatesOn: ActivationEvents.Startup,
           requires: [
             Capabilities.OperationInvoker,
+            AppCapabilities.LinkAction,
             AppCapabilities.NavigationHandler,
             AppCapabilities.NavigationTargetLoader,
             Capabilities.AtomRegistry,

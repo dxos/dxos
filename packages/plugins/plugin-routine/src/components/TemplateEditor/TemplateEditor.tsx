@@ -30,10 +30,11 @@ export type TemplateEditorProps = {
   /** Markdown + Handlebars source text. */
   source?: Ref.Ref<Text.Text>;
   lineNumbers?: boolean;
+  readonly?: boolean;
 };
 
 export const TemplateEditor = Util.composable<HTMLDivElement, TemplateEditorProps>(
-  ({ classNames, id, source, lineNumbers = true, ...props }, forwardedRef) => {
+  ({ classNames, id, source, lineNumbers = true, readonly, ...props }, forwardedRef) => {
     const { t } = Hooks.useTranslation(RoutineNamespace.key);
     const themeMode = Hooks.useThemeMode();
     const [resolved] = useObject(source);
@@ -52,6 +53,7 @@ export const TemplateEditor = Util.composable<HTMLDivElement, TemplateEditorProp
             lineNumbers,
             lineWrapping: true,
             placeholder: t('template.placeholder'),
+            readOnly: readonly,
           }),
           createThemeExtensions({ themeMode }),
           createMarkdownExtensions(),
@@ -63,7 +65,7 @@ export const TemplateEditor = Util.composable<HTMLDivElement, TemplateEditorProp
           syntaxHighlighting(defaultHighlightStyle),
         ].filter(isNonNullable),
       };
-    }, [themeMode, resolved, lineNumbers]);
+    }, [themeMode, resolved, lineNumbers, readonly]);
 
     return (
       <div

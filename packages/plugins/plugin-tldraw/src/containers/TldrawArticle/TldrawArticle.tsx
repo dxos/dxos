@@ -39,10 +39,13 @@ export const TldrawArticle = ({
   const [settings, updateSettings] = Hooks.useAtomCapabilityState(TldrawCapabilities.Settings);
   const id = Obj.getURI(drawing as Obj.Any);
   const { hasAttention } = useAttention(attendableId);
+  const readonly = ToolkitHooks.useReadOnly();
   const embedded = role === AppSurface.Section.role;
+  const slide = role === AppSurface.Slide.role;
 
   const props = {
-    readonly: role === AppSurface.Slide.role,
+    readonly: readonly || slide,
+    locked: slide,
     autoCenter: embedded ? true : undefined,
   };
 
@@ -64,7 +67,7 @@ export const TldrawArticle = ({
       // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
       hideUi={embedded ? !hasAttention : !hasAttention && !isTauri()}
       focusContainer={!embedded}
-      onThreadCreate={handleThreadCreate}
+      onThreadCreate={readonly ? undefined : handleThreadCreate}
       selection={selection}
       onSelectionChange={onSelectionChange}
       onActivate={onActivate}

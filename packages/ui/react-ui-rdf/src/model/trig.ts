@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact, Graph, Predicate, Vocab } from '@dxos/echo-memory';
 
 /** The vocabularies stored facts use, as TriG prefixes. */
-export const TRIG_PREFIXES = Object.entries(RDF.Graph.PREFIXES)
+export const TRIG_PREFIXES = Object.entries(Graph.PREFIXES)
   .map(([prefix, iri]) => `@prefix ${prefix}: <${iri}>.`)
   .join('\n');
 
@@ -16,8 +16,8 @@ const SHARED_PREFIXES = new Set(TRIG_PREFIXES.split('\n'));
  * the graph's provenance (pipeline-rdf's `factToTriples`). The prefixes of its graph-local entities and the brain's
  * namespace are particular to the fact, so they stay.
  */
-export const formatRawFact = (fact: RDF.Fact): string => {
-  const lines = RDF.Graph.toTriG([fact])
+export const formatRawFact = (fact: Fact.Fact): string => {
+  const lines = Graph.toTriG([fact])
     .split('\n')
     .filter((line) => !SHARED_PREFIXES.has(line));
   const own = lines.filter((line) => line.startsWith('@prefix'));
@@ -79,8 +79,8 @@ const GRAPH = 'https://dxos.org/semantic/graph/';
 
 const PREFIXES: readonly (readonly [prefix: string, iri: string])[] = [
   ['dx', DX],
-  ['sx', RDF.Vocab.SX],
-  ['prov', RDF.Vocab.PROV],
+  ['sx', Vocab.SX],
+  ['prov', Vocab.PROV],
   ['rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'],
   ['rdfs', 'http://www.w3.org/2000/01/rdf-schema#'],
   ['xsd', 'http://www.w3.org/2001/XMLSchema#'],
@@ -89,7 +89,7 @@ const PREFIXES: readonly (readonly [prefix: string, iri: string])[] = [
 export type NamedGraphOptions = {
   /** Real IRIs for the entities the extractor could resolve (an ECHO object, `mailto:`, a URL), by entity id. */
   entities?: Readonly<Record<string, string>>;
-  /** Ontology local names (`hasRole`) for predicates, keyed by the normalized predicate (`RDF.Predicate.normalize`). */
+  /** Ontology local names (`hasRole`) for predicates, keyed by the normalized predicate (`Predicate.normalize`). */
   predicates?: Readonly<Record<string, string>>;
 };
 
@@ -111,7 +111,7 @@ const slug = (text: string): string =>
 const quote = (value: string): string => JSON.stringify(value);
 
 /** Statements that share all of these go in one graph; any difference starts another. */
-const provenanceKey = (fact: RDF.Fact): string =>
+const provenanceKey = (fact: Fact.Fact): string =>
   JSON.stringify([
     fact.attribution.source,
     fact.attribution.agent,
@@ -126,7 +126,7 @@ const provenanceKey = (fact: RDF.Fact): string =>
   ]);
 
 /** `iri` is the graph's namespace: the graph itself is `<prefix>:graph`, and the entities minted in it share the prefix. */
-type Graph = { prefix: string; iri: string; facts: RDF.Fact[] };
+type Graph = { prefix: string; iri: string; facts: Fact.Fact[] };
 
 /**
  * The facts in the fuller form `docs/BRAIN.md` ("Named graphs, IRIs and the ontology") describes, as TriG: real triples
@@ -134,7 +134,7 @@ type Graph = { prefix: string; iri: string; facts: RDF.Fact[] };
  * known — otherwise scoped to their graph. A mock-up for review, predating the store's own form: the store now scopes
  * unresolved entities to their graph and mints invented predicates in the brain's namespace ({@link formatRawFact}).
  */
-export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGraphOptions = {}): string => {
+export const formatNamedGraphs = (facts: readonly Fact.Fact[], options: NamedGraphOptions = {}): string => {
   const graphs = new Map<string, Graph>();
   for (const fact of facts) {
     const key = provenanceKey(fact);
@@ -150,7 +150,7 @@ export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGrap
   // Predicate local name → the surface forms the extractor used for it, which become its synonyms.
   const predicates = new Map<string, Set<string>>();
   const predicateName = (predicate: string): string => {
-    const normalized = RDF.Predicate.normalize(predicate);
+    const normalized = Predicate.normalize(predicate);
     const name = options.predicates?.[normalized] ?? (camelCase(normalized) || 'relatedTo');
     predicates.set(name, (predicates.get(name) ?? new Set()).add(predicate));
     return `dx:${name}`;
@@ -159,7 +159,7 @@ export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGrap
   const blocks = [...graphs.values()].map((graph) => {
     // Entities with no real IRI, minted in this graph, each described once.
     const scoped = new Map<string, string | undefined>();
-    const term = (value: RDF.Term): string => {
+    const term = (value: Fact.Term): string => {
       if (value.kind === 'literal') {
         return quote(value.literal);
       }
@@ -211,7 +211,7 @@ export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGrap
   const ontology = [...predicates].map(([name, forms]) =>
     [
       `dx:${name} a rdf:Property ;`,
-      `  rdfs:label ${quote(RDF.Predicate.label(name))} ;`,
+      `  rdfs:label ${quote(Predicate.label(name))} ;`,
       `  sx:synonym ${[...forms].map(quote).join(', ')} .`,
     ].join('\n'),
   );
@@ -227,7 +227,7 @@ export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGrap
 /** The prefixed name an IRI reads as (`schema:worksFor`; a predicate the brain minted as `brain:…`). */
 export const curie = (iri: string, namespace: string): string => {
   const [prefix, base] =
-    [['brain', namespace] as const, ...Object.entries(RDF.Graph.PREFIXES)]
+    [['brain', namespace] as const, ...Object.entries(Graph.PREFIXES)]
       .filter(([, base]) => iri.startsWith(base))
       .sort(([, left], [, right]) => right.length - left.length)[0] ?? [];
   return prefix !== undefined && base !== undefined ? `${prefix}:${iri.slice(base.length)}` : `<${iri}>`;

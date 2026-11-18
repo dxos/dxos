@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
@@ -52,11 +53,13 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  */
 export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attendableId }: TaskArticleProps) => {
   const { t } = UiHooks.useTranslation(TasksNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
   const handleUpdate = useTaskUpdate(spaceId);
-  const { onFiles: handleAttach, pending: pendingAttachments } = useAttachFiles(task);
+  const { onFiles: attachFiles, pending: pendingAttachments } = useAttachFiles(task);
+  const handleAttach = readonly ? undefined : attachFiles;
 
   // The task as plain values for the form; the article's other parts read the live task.
   const [snapshot] = useObject(task);
@@ -102,7 +105,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
           {/* Actions only: what the task IS — its status, estimate and priority — reads with the
               text below, while the toolbar carries what can be done to it. */}
           <Toolbar.Separator variant='gap' />
-          <TaskActions task={task} />
+          {!readonly && <TaskActions task={task} />}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
@@ -123,10 +126,11 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                   values={snapshot}
                   extensions={descriptionExtensions}
                   testId='tasksPlugin.fields'
-                  autoSave
-                  onSave={handleSave}
+                  readonly={readonly}
+                  autoSave={!readonly}
+                  onSave={readonly ? undefined : handleSave}
                 >
-                  <TaskFields untitled={!task.title} />
+                  <TaskFields untitled={!readonly && !task.title} />
                 </Form.Root>
 
                 {/* What the task carries, in a flow rather than the row's one scrolling line: the
@@ -142,8 +146,8 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 <TaskProperties
                   task={task}
                   members={members}
-                  delegateActions={delegateActions}
-                  onTaskUpdate={handleUpdate}
+                  delegateActions={readonly ? undefined : delegateActions}
+                  onTaskUpdate={readonly ? undefined : handleUpdate}
                 />
 
                 {/* Headed like the sections around it, and only when something is waiting: a
@@ -160,7 +164,9 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                         <TaskQuestion
                           key={thread.question.id}
                           thread={thread}
-                          onAnswer={(answer) => handleQuestionAnswer(task, thread.question.id, answer)}
+                          onAnswer={
+                            readonly ? undefined : (answer) => handleQuestionAnswer(task, thread.question.id, answer)
+                          }
                         />
                       ))}
                     </section>

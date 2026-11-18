@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -28,6 +29,7 @@ export type MoveTaskDialogProps = {
 /** Picks the project a task (with its sub-tasks) moves into, then runs `MoveTaskToSet`. */
 export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
+  const readOnly = ToolkitHooks.useReadOnly();
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(task);
   const [error, setError] = useState<string>();
@@ -70,6 +72,10 @@ export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
     },
     [invokePromise, task, db],
   );
+
+  if (readOnly) {
+    return null;
+  }
 
   return (
     <Dialog.Content>

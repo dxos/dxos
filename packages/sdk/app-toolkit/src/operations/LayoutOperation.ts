@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
-import { Selection } from '@dxos/react-ui-attention/types';
+import { Selection, ViewState } from '@dxos/react-ui-attention/types';
 
 import { Translations } from '../app/index.ts';
 
@@ -338,6 +338,11 @@ export const Open = Operation.make({
     ),
     workspace: Schema.optional(Schema.String.annotate({ description: 'The workspace to open the items in.' })),
     scrollIntoView: Schema.optional(Schema.Boolean.annotate({ description: 'Scroll the items into view.' })),
+    viewState: Schema.optional(
+      Schema.Array(ViewState.Patch).annotate({
+        description: "View state to set before the items open; pass a resolved navigation target's `viewState` as is.",
+      }),
+    ),
     focus: Schema.optional(
       Schema.Union([Schema.Boolean, Schema.Literal('content')]).annotate({
         description:

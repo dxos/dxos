@@ -17,8 +17,9 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { BrainCapabilities } from '#types';
 
-import { type FactStoreRegistry, type SparqlQueryRecord } from '../../capabilities/fact-store.ts';
+import { type FactStoreRegistry } from '../../capabilities/fact-store-registry.ts';
 import { BrainNamespace } from '../../namespace.ts';
+import type * as QueryLog from '../../QueryLog.ts';
 import { downloadText, exportTrig, importTrig, runQuery, statementCount } from './memory.ts';
 import { useQueryLog } from './use-query-log.ts';
 
@@ -159,7 +160,7 @@ const QueryHistory = ({
   selected,
   onSelect,
 }: {
-  log: readonly SparqlQueryRecord[];
+  log: readonly QueryLog.Entry[];
   selected: number | undefined;
   onSelect: (id: number) => void;
 }) => {
@@ -187,7 +188,7 @@ const QueryHistory = ({
 };
 
 /** One query: its text, whether it is still running, and its solutions as a table. */
-const QueryView = ({ entry, following }: { entry: SparqlQueryRecord | undefined; following: boolean }) => {
+const QueryView = ({ entry, following }: { entry: QueryLog.Entry | undefined; following: boolean }) => {
   const { t } = UiHooks.useTranslation(BrainNamespace.key);
   if (!entry) {
     return null;

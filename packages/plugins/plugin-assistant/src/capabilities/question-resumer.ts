@@ -8,6 +8,7 @@ import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
@@ -39,11 +40,12 @@ const isAnswer = <E extends { operation: Operation.Definition.Any }>(event: E): 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const invoker = yield* Capabilities.OperationInvoker;
+    const manager = yield* Capability.Service;
 
     yield* Effect.forkScoped(
       Stream.fromPubSub(invoker.invocations).pipe(
         Stream.filter(isAnswer),
-        Stream.filter((event) => event.output.accepted),
+        Stream.filter((event) => event.output.accepted && !ReadOnly.isActive(manager)),
         Stream.runForEach((event) =>
           Effect.gen(function* () {
             const { task: taskRef, question: questionId } = event.input;
