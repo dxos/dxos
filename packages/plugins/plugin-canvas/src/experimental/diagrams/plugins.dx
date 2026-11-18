@@ -28,13 +28,13 @@ group contributions rows="224 504" gap=56 {
   }
 }
 
-edge plugin#s3 -> types#n3 path=ortho head=triangle
-edge plugin#s3 -> skills#n3 path=ortho head=triangle
-edge plugin#s3 -> components#n3 path=ortho head=triangle
-edge plugin#s3 -> operations#n3 path=ortho head=triangle
-edge plugin#s3 -> services#n3 path=ortho head=triangle
-edge use-types#n3 -> types#s3 path=ortho head=triangle
-edge use-skills#n3 -> skills#s3 path=ortho head=triangle
-edge use-components#n3 -> components#s3 path=ortho head=triangle
-edge use-operations#n3 -> operations#s3 path=ortho head=triangle
-edge use-services#n3 -> services#s3 path=ortho head=triangle
+edge plugin#s3 -> types#n3 head=triangle path=ortho
+edge plugin#s3 -> skills#n3 head=triangle path=ortho
+edge plugin#s3 -> components#n3 head=triangle path=ortho
+edge plugin#s3 -> operations#n3 head=triangle path=ortho
+edge plugin#s3 -> services#n3 head=triangle path=ortho
+edge use-types#n3 -> types#s3 head=triangle path=ortho
+edge use-skills#n3 -> skills#s3 head=triangle path=ortho
+edge use-components#n3 -> components#s3 head=triangle path=ortho
+edge use-operations#n3 -> operations#s3 head=triangle path=ortho
+edge use-services#n3 -> services#s3 head=triangle path=ortho

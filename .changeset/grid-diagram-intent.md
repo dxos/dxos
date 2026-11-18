@@ -11,5 +11,8 @@ a contributed component and carry its fields (`node calendar "Calendar" kind=car
 `edge` can end on a group or on a place of a component (`frame/nav`) and say how it runs (`path=line`). The
 result is the same grid boxes a hand-placed drawing uses, so no coordinate is written and none is stored.
 
+`Dsl.printIntent` reads that text back out of a drawing made of grid boxes. It returns the text or the reasons a
+grid diagram cannot say the drawing, and it checks its own answer by lowering it and comparing what is drawn.
+
 The drawing skill teaches the new kind, so an agent can write a slide this way. Diagnostics measure a box that a
 grid places in the frame the grid gives it; they used to report every label in a grid as not fitting.

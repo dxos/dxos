@@ -6,7 +6,7 @@ group left gap=16 autoRows=240 alignContent=center {
   node sheet "Sheet" kind=card body="A spreadsheet embedded in the document." footer=plugin-sheet icon=grid-four tone=sheet
 }
 
-node frame kind=app-frame highlight=true colors="nav~accent | doc~message | sheet~sheet | comp~event | canvas~violet"
+node frame kind=app-frame colors="nav~accent | doc~message | sheet~sheet | comp~event | canvas~violet" highlight=true
 
 group right gap=16 autoRows=240 alignContent=center {
   node assistant "Assistant" kind=card body="Assistant chat about the object on screen." footer=plugin-assistant icon=sparkle tone=event

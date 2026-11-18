@@ -637,4 +637,15 @@ decision D-25: A grid diagram's group also states the size of its unstated track
   rejected:
     - A frame attribute that also encloses the heading: a framed group around the labelled one says it with what the kind already has.
     - A textless, borderless node for a spacer: an empty group already holds a cell and can end an edge.
+
+decision D-26: A grid diagram's text is read back out of a drawing (`Dsl.printIntent`), not stored beside it. The function infers the diagram from the grid boxes, prints it, lowers its own text and compares what the two draw; it returns the text or the reasons there is none, never text that draws something else. Upholds [D-23]: the records stay the store and the intent stays what is authored.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: An agent that wrote a drawing as intent read it back as boxes, so it authored in one form and edited in another. A stored copy of the text would disagree with the records as soon as someone moved a box.
+  rejected:
+    - An optional source field on the drawing: two copies of one drawing, with no rule for which wins after an edit on the canvas.
+    - Printing the nearest diagram when the drawing holds more than the kind can say: the text would then draw a different picture, silently.
+    - Inferring rows and columns from hand-placed boxes: that is a guess with tolerances, not a reading.
 ```

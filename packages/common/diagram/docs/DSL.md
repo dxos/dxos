@@ -178,6 +178,25 @@ arrows — the scene statements above — and `@dxos/scene` solves the tracks wh
 rule is what is stored. Outside a grid diagram a nested group still reports, and what only this kind reads
 (`size`, the track and frame attributes, `kind=` on a node, `path` on an edge) says it belongs here.
 
+#### Reading a grid diagram back out of a drawing
+
+A drawing stores records, not the text it was written as. `Dsl.printIntent(scene)` gives the `diagram kind=grid`
+text for a drawing made of grid boxes: each grid is a `group`, a grid holding a heading over a second grid is a
+labelled group, a box that draws nothing is an empty group, every other box a `node`, every arrow an `edge`.
+
+It returns either `{ text }` or `{ reasons }`, never an approximation. Before it returns text it lowers that text
+again and compares what the two draw: the same boxes in the same frames, the same group frames, the same
+connectors. So text that comes back always draws the drawing it came from.
+
+- From a drawing a grid diagram made, the text lowers to the same object, element for element, and printing its
+  own text again gives the same text.
+- From boxes written by hand it draws the same picture, but the grids are the engine's: a heading and its
+  members' grid take the engine's ids, and a heading's grid that is also padded or framed becomes two groups.
+- It is refused, with the reason, when the drawing holds what this kind cannot say: text style on a box
+  (`align`, `fontSize`), a routed connector or one with a free end, a box no grid places, a box whose own size an
+  `auto` track measures, a shape that is not a box, a scaled object, or more than one object.
+- Comments and the author's spacing are not in the records, so they do not come back.
+
 A sequence diagram also reads two statements no other kind does:
 
 - `note A "…"`, `note A:left "…"`, `note A, B "…"` — a note beside one participant or over several.

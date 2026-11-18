@@ -8,7 +8,7 @@ group composer "Composer" gap=24 {
 
 group hyperspace "ECHO Hyperspace" cols="1fr 0" gap=0 {
   group field-body padding=24 border=true {
-    node field kind=substrate seed=29 pitch=24 data-fill=0.55 data-gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=6 rmin=36 rmax=300
+    node field kind=substrate bridges=10 extra=0.4 data-fill=0.55 gap=10 hue=neutral pitch=24 rmax=300 rmin=36 seed=29 size=24 spaceCount=6
   }
   group field-ports gap=12 {
     group port-calendar { }
