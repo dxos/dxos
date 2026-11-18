@@ -356,6 +356,17 @@
   box-shadow: var(--sd-inset-sm);
 }
 
+/* A part of the window drawn as its own node: the outline the frame's own regions take. */
+.studio-frame-part[data-highlight] {
+  box-shadow: inset 0 0 0 1.9px var(--sd-hl);
+}
+
+.studio-frame-part.studio-frame-embed[data-highlight] {
+  box-shadow:
+    var(--sd-inset-sm),
+    inset 0 0 0 1.9px var(--sd-hl);
+}
+
 /* A highlighted region: outlined in the colour of the plugin card that supplies it. */
 .studio-frame [data-highlight] {
   box-shadow: inset 0 0 0 1.9px var(--sd-hl);

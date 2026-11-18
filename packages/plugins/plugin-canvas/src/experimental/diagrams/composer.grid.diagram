@@ -7,8 +7,20 @@ object composer @ 0,0 scale=1 {
         rect sheet "Sheet" kind=card body="A spreadsheet embedded in the document." footer=plugin-sheet icon=grid-four tone=sheet
       }
     }
-    grid app-body gap=24 {
-      rect frame kind=app-frame highlight=true colors="nav~accent | doc~message | sheet~sheet | comp~event | canvas~violet"
+    grid frame rows="44 1fr 36" fill=solid color=grey {
+      rect frame-bar "composer.space" kind=app-chrome part=bar
+      grid frame-body cols="160 1fr 160" gap=10 padding=10 {
+        rect r-nav kind=app-pane pane=nav tone=accent
+        grid r-doc rows="40 74 124 106 132" gap=15 padding=20 border=true color=green {
+          rect doc-title kind=app-lines lines=1 strong=true
+          rect doc-first kind=app-lines lines=3
+          rect r-canvas "CANVAS" kind=app-embed embed=canvas tone=violet
+          rect doc-second kind=app-lines lines=3
+          rect r-sheet "SHEET" kind=app-embed embed=sheet tone=sheet
+        }
+        rect r-comp kind=app-pane pane=comp tone=event
+      }
+      rect frame-foot kind=app-chrome part=foot
     }
     grid right-body gap=24 {
       grid right-col-0 gap=16 autoRows=240 alignContent=center {
@@ -17,9 +29,9 @@ object composer @ 0,0 scale=1 {
       }
     }
   }
-  arrow wire-navtree navtree#e3 -> frame#w1 path=ortho head=none stroke=dashed color=light-blue
-  arrow wire-document document#e3 -> frame#w3 path=ortho head=none stroke=dashed color=green
-  arrow wire-sheet sheet#e3 -> frame#w5 path=ortho head=none stroke=dashed color=orange
-  arrow wire-assistant assistant#w3 -> frame#e2 path=ortho head=none stroke=dashed color=light-violet
-  arrow wire-canvas canvas#w3 -> frame#e4 path=ortho head=none stroke=dashed color=violet
+  arrow wire-navtree navtree#e3 -> r-nav#w3 path=line head=none stroke=dashed color=light-blue
+  arrow wire-document document#e3 -> r-doc#w3 path=line head=none stroke=dashed color=green
+  arrow wire-sheet sheet#e3 -> r-sheet#w3 path=line head=none stroke=dashed color=orange
+  arrow wire-assistant assistant#w3 -> r-comp#e3 path=line head=none stroke=dashed color=light-violet
+  arrow wire-canvas canvas#w3 -> r-canvas#e3 path=line head=none stroke=dashed color=violet
 }

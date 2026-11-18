@@ -29,20 +29,20 @@ import { Scene } from '@dxos/scene';
 import { type Styled, toneValue } from './FeedCard.tsx';
 
 /** The window the deck draws, which the node scales to its own frame. */
-const FRAME = { width: 660, height: 650 };
+export const FRAME = { width: 660, height: 650 };
 
 /** `.d-frame`'s own rows and columns (1cqw = 16 slide units). */
-const BAR = 41.6;
-const FOOT = 35.2;
+export const BAR = 41.6;
+export const FOOT = 35.2;
 const PAD = 9.6;
-const SIDE = 192;
+export const SIDE = 192;
 
 /**
  * The document column's blocks, top to bottom, at the heights that put the two embeds on the regions the sidecar
  * records (`r-canvas` at 197, `r-sheet` at 420): the slide measures them after mount, which an import cannot, so the
  * run of text above each embed is given its measured height instead.
  */
-const DOC = { title: 34, first: 64, canvas: 106, second: 91, sheet: 113, gap: 12.8 };
+export const DOC = { title: 34, first: 64, canvas: 106, second: 91, sheet: 113, gap: 12.8 };
 
 export const appFrameFields = {
   /** Outline every region in its plugin's colour. */
@@ -106,12 +106,12 @@ const Region = ({ region, highlight, colors, classNames, style, children }: Regi
 };
 
 /** A line of the wireframe: a filled bar standing for a run of text. */
-const Line = ({ width, strong }: { width: string; strong?: boolean }) => (
+export const Line = ({ width, strong }: { width: string; strong?: boolean }) => (
   <i className='studio-wire-line block' data-strong={strong ? true : undefined} style={{ width }} />
 );
 
 /** A paragraph as the lines the deck's text comes out as, filling `height`. */
-const Paragraph = ({ height }: { height: number }) => (
+export const Paragraph = ({ height }: { height: number }) => (
   <div className='flex flex-col justify-between' style={{ height }}>
     {['96%', '88%', '92%', '64%'].slice(0, Math.max(2, Math.round(height / 22.8))).map((width, index) => (
       <Line key={index} width={width} />
@@ -124,7 +124,7 @@ const NAV: readonly { folder: string; objects: readonly string[]; selected?: num
   { folder: 'Team', objects: ['Inbox', 'Design chat'] },
 ];
 
-const Nav = () => (
+export const Nav = () => (
   <div className='flex flex-col' style={{ gap: 5.6 }}>
     <div className='studio-frame-heading font-mono' style={{ marginBottom: 4.8 }}>
       SPACES
@@ -151,7 +151,7 @@ const Nav = () => (
 );
 
 /** The sheet embedded in the document: a header row and five rows of a table. */
-const SheetEmbed = () => (
+export const SheetEmbed = () => (
   <div className='flex flex-col justify-between dx-grow'>
     {Array.from({ length: 6 }, (_, row) => (
       <div key={row} className='flex' style={{ gap: 2.4 }}>
@@ -169,7 +169,7 @@ const SheetEmbed = () => (
 );
 
 /** The canvas embedded in the document: three nodes and the links between them. */
-const CanvasEmbed = () => (
+export const CanvasEmbed = () => (
   <svg className='dx-grow w-full' viewBox='0 0 160 60' preserveAspectRatio='xMidYMid meet'>
     <line x1={34} y1={30} x2={80} y2={16} className='stroke-neutral-border' strokeWidth={1.4} />
     <line x1={34} y1={30} x2={80} y2={44} className='stroke-neutral-border' strokeWidth={1.4} />
@@ -185,7 +185,7 @@ const CanvasEmbed = () => (
   </svg>
 );
 
-const Assistant = () => (
+export const Assistant = () => (
   <div className='flex flex-col h-full' style={{ gap: 9.6 }}>
     <div className='flex items-center' style={{ gap: 6.4 }}>
       <Icon.Icon icon='ph--sparkle--regular' classNames='studio-frame-glyph' style={{ width: 18, height: 18 }} />

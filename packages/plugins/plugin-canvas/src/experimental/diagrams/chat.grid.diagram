@@ -18,12 +18,12 @@ object chat @ 0,0 scale=1 {
       rect artifact "Artifact" kind=card icon=cube iconTone=rose
     }
   }
-  arrow operator-feed operator -> feed "writes" head=triangle
-  arrow operator-skill operator -> skill head=triangle
-  arrow operator-model-box operator -> model-box head=triangle
-  arrow session-feed session -> feed "writes" head=triangle
-  arrow session-model-box session -> model-box "run by" head=triangle
-  arrow session-tool session -> tool "uses" head=triangle
-  arrow skill-tool skill -> tool "defines" head=triangle
-  arrow tool-artifact tool -> artifact "makes" head=triangle
+  arrow operator-feed operator#s3 -> feed#n3 "writes" path=ortho head=triangle
+  arrow operator-skill operator#w3 -> skill#n3 path=ortho head=triangle
+  arrow operator-model-box operator#e3 -> model-box#n3 path=ortho head=triangle
+  arrow session-feed session#n3 -> feed#s3 "writes" path=ortho head=triangle
+  arrow session-model-box session#e3 -> model-box#w3 "run by" path=ortho head=triangle
+  arrow session-tool session#s3 -> tool#n3 "uses" path=ortho head=triangle
+  arrow skill-tool skill#e3 -> tool#w3 "defines" path=ortho head=triangle
+  arrow tool-artifact tool#s3 -> artifact#n3 "makes" path=ortho head=triangle
 }

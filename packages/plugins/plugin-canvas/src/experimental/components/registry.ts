@@ -15,6 +15,7 @@ import { type ElementKindSpec } from '@dxos/react-ui-canvas';
 
 import { graphSpec } from '../../components/Graph/index.ts';
 import { appFrameSpec } from './AppFrame.tsx';
+import { appChromeSpec, appEmbedSpec, appLinesSpec, appPaneSpec } from './AppParts.tsx';
 import { cardSpec } from './Card.tsx';
 import { studioCardCompositeSpec } from './CardComposite.ts';
 import { chipSpec } from './Chip.tsx';
@@ -28,6 +29,11 @@ export const STUDIO_KINDS: Readonly<Record<string, ElementKindSpec>> = {
   'chip': chipSpec,
   'plank': plankSpec,
   'app-frame': appFrameSpec,
+  // The same window taken apart, so a wire ends on the pane it supplies.
+  'app-chrome': appChromeSpec,
+  'app-pane': appPaneSpec,
+  'app-embed': appEmbedSpec,
+  'app-lines': appLinesSpec,
   'space-graph': graphSpec,
   'substrate': substrateSpec,
   // One definition, many placements: the card as a composite rather than a painted view.
