@@ -148,7 +148,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       provides: [CanvasCapabilities.Settings],
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'module-url' } }), {
-      roles: [AppSurface.ObjectProperties],
+      roles: [AppSurface.Article, AppSurface.ObjectProperties],
     }),
     AppCapability.spaceTemplates(
       () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),

@@ -191,9 +191,13 @@ const endsOf = (arrow: Shape.Arrow): Link['ends'] => {
  * Only the markers an arrow can spell are given back. A `diamond` end has no `ArrowHead`, and a marker reached
  * through a `relation` cannot be read back as that relation, since several relations draw the same marker.
  */
-const arrowEnds = (ends: Link['ends']): { head?: Shape.ArrowHead; tail?: Shape.ArrowTail } => {
-  // A link that carries ends but no end marker draws no arrowhead, and an arrow's default head IS an arrow, so the
-  // absence has to be written down: the deck's two dashed connectors grew arrowheads without this.
+const arrowEnds = (
+  ends: Link['ends'],
+  connector: Link['connector'],
+): { head?: Shape.ArrowHead; tail?: Shape.ArrowTail } => {
+  // A link with no end marker draws no arrowhead, and an arrow's default head IS an arrow, so the absence has to be
+  // written down: the deck's two dashed connectors grew arrowheads without this. A headless arrow with no tail is
+  // stored with no `ends` at all (see `endsOf`), so that reads as headless too, unless a connector says the markers.
   const head: Shape.ArrowHead | undefined =
     ends?.end === 'triangle'
       ? 'triangle'
@@ -201,9 +205,13 @@ const arrowEnds = (ends: Link['ends']): { head?: Shape.ArrowHead; tail?: Shape.A
         ? 'crowsfoot'
         : ends?.end === 'arrow'
           ? 'arrow'
-          : ends && ends.end === undefined
-            ? 'none'
-            : undefined;
+          : ends
+            ? ends.end === undefined
+              ? 'none'
+              : undefined
+            : connector === undefined
+              ? 'none'
+              : undefined;
   const tail: Shape.ArrowTail | undefined =
     ends?.start === 'circle' || ends?.start === 'arrow' ? ends.start : undefined;
   return { ...(head ? { head } : {}), ...(tail ? { tail } : {}) };
@@ -817,7 +825,7 @@ export const SceneHandler: ContentHandler = {
               // connector). The connector still fills in what the link does not say, such as a `relation`.
               ...(record.link.connector ? connectorStyle(record.link.connector) : {}),
               ...fieldsOf(record.link.style),
-              ...arrowEnds(record.link.ends),
+              ...arrowEnds(record.link.ends, record.link.connector),
             });
           }
         }

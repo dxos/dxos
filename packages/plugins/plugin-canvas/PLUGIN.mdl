@@ -84,6 +84,14 @@ feat F-2: Frame
   req F-2.1: The plugin exports `CanvasFrame`: the 2D article as a new drawing opens, over an empty scene, with the toolbars and panels the article draws, for an app to show before its plugins start. It needs no plugin context, so it offers the plugin's own node kinds, and its controls change nothing.
 ```
 
+```mdl
+feat F-3: DSL companion
+
+  req F-3.1: A Canvas drawing has a `DSL` companion beside its article that shows the drawing's open scene as text. It shows the grid diagram the drawing says (`diagram kind=grid`) where there is one, and the drawing's boxes where there is not, with the reason in its footer. A drawing with both can switch between them.
+  req F-3.2: The text is printed again whenever the scene changes. An edit holds while the drawing is still the one it was typed over.
+  req F-3.3: The text can be edited. `Rebuild` makes the drawing what the text says: it clears the elements the DSL manages and draws the text, as one edit. Text that does not parse changes nothing and its errors show in the footer. `Discard edits` shows the drawing's text again.
+```
+
 ## QA
 
 Executable tests. Each step carries a human instruction (`do`) and an expectation (`expect`). Report
@@ -546,4 +554,15 @@ decision D-33: The view-state camera is the scene point at the view's centre and
 decision D-34: Approve [D-32] and [D-33].
   date: 2026-11-16
   by: user:wittjosiah
+```
+
+```mdl
+decision D-35: The DSL companion ([F-3]) reads the drawing's text from its records each time and stores none. After a Rebuild the author's text stays in the editor until the drawing next changes.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3]
+  why: A stored copy of the text would disagree with the records as soon as someone moved a box; keeping the typed text after a Rebuild keeps comments and spacing, which the records do not hold.
+  rejected:
+    - Rebuilding on every keystroke: half-typed text parses to part of a drawing, and a rebuild is a full sync, so it would delete what the broken parse dropped.
 ```

@@ -13,24 +13,19 @@
 // defect this bench exists to catch.
 //
 
-import { json as jsonLanguage } from '@codemirror/lang-json';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Dsl, applyCommands } from '@dxos/diagram';
-import { diagram as diagramLanguage } from '@dxos/diagram/extension';
-import { SceneHandler } from '@dxos/react-ui-canvas';
-import { useTextEditor } from '@dxos/react-ui-editor';
+import { Dsl } from '@dxos/diagram';
 import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { composable } from '@dxos/react-ui/Util';
-import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 
 import { type Canvas } from '#types';
 
-import { CanvasLayoutBuilder, editCanvasContent, readCanvasContent } from '../../model/canvas-content.ts';
+import { SourceEditor } from '../../components/SourceEditor/index.ts';
+import { CanvasLayoutBuilder, readCanvasContent } from '../../model/canvas-content.ts';
+import { rebuildCanvas } from '../../model/canvas-dsl.ts';
 
 /**
  * The canvas the story seeded, for the column beside it. `onInit` runs during client init, before anything renders,
@@ -60,67 +55,12 @@ const SOURCE_VIEWS: readonly SourceView[] = ['dsl', 'scene', 'json'];
 const isSourceView = (value: string): value is SourceView => SOURCE_VIEWS.some((view) => view === value);
 
 /**
- * One editor per view, re-created when the view changes: CodeMirror takes its language at construction, so this
- * remounts rather than reconfiguring a live editor. The DSL text lives in the parent, so a remount keeps an edit.
- */
-type TextPaneProps = {
-  value: string;
-  view: SourceView;
-  onTextChange?: (text: string) => void;
-};
-
-/**
- * `composable()`, not a bare `forwardRef`: `Panel.Body asChild` hands its child the body's class, `data-part` and
- * ref, and only a component built this way is marked as able to take them. A plain one is warned about and
- * outlined in dev, which is the right diagnostic — dropping them leaves the body unstyled.
- */
-const TextPane = composable<HTMLDivElement, TextPaneProps>(
-  ({ value, view, onTextChange, className, ...props }, forwardedRef) => {
-    const themeMode = Hooks.useThemeMode();
-    const { parentRef, focusAttributes } = useTextEditor(
-      () => ({
-        initialValue: value,
-        extensions: [
-          createBasicExtensions({ lineNumbers: true, readOnly: onTextChange === undefined }),
-          createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-          ...(view === 'json' ? [jsonLanguage()] : [diagramLanguage({ layout: false })]),
-          ...(onTextChange ? [listener({ onChange: ({ text }) => onTextChange(text) })] : []),
-        ],
-      }),
-      [themeMode, view],
-    );
-    // `Panel.Body asChild` hands this component the body's own class, `data-part` and ref, so it has to be a real
-    // slot: dropping them leaves the body unstyled, and ark-ui outlines the child in red to say so.
-    const setRef = useCallback(
-      (node: HTMLDivElement | null) => {
-        parentRef.current = node;
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(node);
-        } else if (forwardedRef) {
-          forwardedRef.current = node;
-        }
-      },
-      [forwardedRef, parentRef],
-    );
-    return (
-      <div
-        {...props}
-        {...focusAttributes}
-        ref={setRef}
-        className={['overflow-hidden', className].filter(Boolean).join(' ')}
-        data-testid='studio-source.editor'
-      />
-    );
-  },
-);
-
-/**
  * The DSL in the diagram language mode, applied to the canvas only when asked. Applying on a timer after each
  * keystroke cannot work: a document mid-edit parses to whatever the parser can still make sense of, so the drawing
  * was rebuilt from half-typed text — and `applyCommands` is a full sync, which deleted every shape the broken parse
  * had dropped. `Parse` reports without touching the drawing, `Rebuild` is the one action that writes.
  */
-const SourceEditor = ({ canvas, intent }: { canvas: Canvas.Canvas; intent?: string }) => {
+const ColumnEditor = ({ canvas, intent }: { canvas: Canvas.Canvas; intent?: string }) => {
   const [initialValue] = useState(() => intent ?? printCanvas(canvas));
   const [source, setSource] = useState(initialValue);
   const [view, setView] = useState<SourceView>('dsl');
@@ -144,32 +84,10 @@ const SourceEditor = ({ canvas, intent }: { canvas: Canvas.Canvas; intent?: stri
   }, [source, intent]);
 
   const rebuild = useCallback(() => {
-    const { commands, errors } = parse();
-    if (errors.length > 0) {
-      return;
-    }
-    // `Rebuild` means the text IS the drawing, so the canvas is cleared first. `applyCommands` only touches the
-    // objects its commands name — it re-renders each one and removes nothing else — so an object deleted from the
-    // text had no command to remove it and simply stayed on the canvas.
-    //
-    // Only DSL-managed records go: a shape drawn by hand is in no text and clearing it would lose work that the
-    // text cannot bring back. Both halves are one edit, so the canvas is never written empty.
-    let cleared = 0;
-    let drawn = 0;
-    editCanvasContent(canvas, (content) => {
-      for (const [key, record] of Object.entries(content)) {
-        const identity = SceneHandler.identify(record);
-        if (identity) {
-          delete content[key];
-          if (identity.part === undefined) {
-            cleared++;
-          }
-        }
-      }
-      drawn = applyCommands(content, commands, SceneHandler).upserted.length;
-    });
-    setStatus(`${drawn} drawn, ${cleared} cleared`);
-  }, [parse, canvas]);
+    const { errors, drawn, cleared } = rebuildCanvas(canvas, source, intent === undefined ? 'boxes' : 'intent');
+    setProblems(errors.map((message) => ({ severity: 'error', message })));
+    setStatus(errors.length > 0 ? undefined : `${drawn} drawn, ${cleared} cleared`);
+  }, [canvas, source, intent]);
 
   const onChange = useCallback((text: string) => {
     setSource(text);
@@ -246,11 +164,11 @@ const SourceEditor = ({ canvas, intent }: { canvas: Canvas.Canvas; intent?: stri
           absolutely filled child inside it pins to the panel instead and covers the header and footer. */}
       <Panel.Body asChild>
         {view === 'dsl' ? (
-          <TextPane key='dsl' view='dsl' value={source} onTextChange={onChange} />
+          <SourceEditor key='dsl' data-testid='studio-source.editor' value={source} onTextChange={onChange} />
         ) : view === 'scene' ? (
-          <TextPane key='scene' view='scene' value={scene} />
+          <SourceEditor key='scene' data-testid='studio-source.editor' value={scene} />
         ) : (
-          <TextPane key='json' view='json' value={records} />
+          <SourceEditor key='json' data-testid='studio-source.editor' language='json' value={records} />
         )}
       </Panel.Body>
       <Panel.Footer classNames='p-1'>
@@ -282,5 +200,5 @@ export const SourceColumn = () => {
     const timer = setInterval(() => seeded.canvas && setCanvas(seeded.canvas), 100);
     return () => clearInterval(timer);
   }, [canvas]);
-  return canvas ? <SourceEditor canvas={canvas} intent={seeded.source} /> : <div className='dx-base-surface' />;
+  return canvas ? <ColumnEditor canvas={canvas} intent={seeded.source} /> : <div className='dx-base-surface' />;
 };

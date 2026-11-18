@@ -120,6 +120,40 @@ describe('SceneHandler', () => {
     expect(Reflect.get(rebuiltNode, 'icon')).toBeUndefined();
   });
 
+  test('a connector keeps the head it was drawn with, a missing one included', ({ expect }) => {
+    const heads: (Shape.ArrowHead | undefined)[] = [undefined, 'arrow', 'triangle', 'crowsfoot', 'none'];
+    const object = {
+      id: 'heads',
+      origin: { x: 0, y: 0 },
+      elements: [
+        { kind: 'rect' as const, id: 'a', x: 0, y: 0, w: 128, h: 64, text: 'A' },
+        { kind: 'rect' as const, id: 'b', x: 256, y: 0, w: 128, h: 64, text: 'B' },
+        ...heads.map((head, index) => ({
+          kind: 'arrow' as const,
+          id: `link-${index}`,
+          from: 'a',
+          to: 'b',
+          ...(head ? { head } : {}),
+        })),
+        { kind: 'arrow' as const, id: 'tailed', from: 'a', to: 'b', head: 'none' as const, tail: 'circle' as const },
+      ],
+    };
+    const content: ContentMap = {};
+    applyCommands(content, [{ op: 'upsert-object', object }], SceneHandler);
+    const [read] = SceneHandler.read(content).scene.objects;
+    const arrows = read.elements.flatMap((element) => (element.kind === 'arrow' ? [element] : []));
+    // An arrow that states no head draws the default one, so it reads back as that head, not as none. A headless
+    // one is stored with no end markers at all, which is what once came back as the default arrow.
+    expect(arrows.map(({ id, head, tail }) => `${id}:${head}:${tail}`)).toEqual([
+      'link-0:arrow:undefined',
+      'link-1:arrow:undefined',
+      'link-2:triangle:undefined',
+      'link-3:crowsfoot:undefined',
+      'link-4:none:undefined',
+      'tailed:none:circle',
+    ]);
+  });
+
   test('moves and removes objects; edits by the canvas keep the identity', ({ expect }) => {
     const content: ContentMap = {};
     applyCommands(content, [{ op: 'upsert-object', object: face }], SceneHandler);
