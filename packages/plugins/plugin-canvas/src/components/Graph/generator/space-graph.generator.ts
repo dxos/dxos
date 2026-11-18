@@ -41,7 +41,7 @@ export type Params = {
 // ---------------------------------------------------------------- geometry (pure; tested against the golden file)
 
 /** Mulberry32: seeded floats in [0, 1). `ctx.random()` would give a different graph than the deck's. */
-const rng = (seed: number) => {
+export const rng = (seed: number) => {
   let a = seed | 0;
   return () => {
     a = (a + 0x6d2b79f5) | 0;

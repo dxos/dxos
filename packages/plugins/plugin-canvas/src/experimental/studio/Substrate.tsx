@@ -27,6 +27,7 @@ import { Scene } from '@dxos/scene';
 import { layout } from '../../components/Graph/generator/space-graph.generator.ts';
 import { graphFields } from '../../components/Graph/index.ts';
 import { TONES, toneValue } from './FeedCard.tsx';
+import { type Circle, packSpaces } from './substrate-packing.ts';
 
 /** A packed space, as a fraction of the field's own box so it scales with the node. */
 const Space = Schema.Struct({
@@ -45,8 +46,23 @@ const Lit = Schema.Struct({
 
 export const substrateFields = {
   ...graphFields,
-  /** The packed spaces, in packing order; without them the field draws one space of its own. */
+  /**
+   * The packed spaces, in packing order: the CACHED result of the packing, not its definition. A drawing written
+   * down as text keeps the rule (the four fields below) and loses this, and the field packs itself again — which
+   * is the spec's "the rule is authoritative, geometry is a cached projection", for the one kind that needed it.
+   */
   spaces: Schema.optional(Schema.Array(Space).annotate({ title: 'Spaces' })),
+  /** How many spaces the field packs when it has no `spaces` of its own. */
+  spaceCount: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 64 })).annotate({
+      title: 'Spaces',
+    }),
+  ),
+  /** The smallest and largest a packed space may be, in scene units. */
+  rmin: Schema.optional(Schema.Number.annotate({ title: 'Min radius' })),
+  rmax: Schema.optional(Schema.Number.annotate({ title: 'Max radius' })),
+  /** Clearance between two packed spaces, and between a space and the field's edge, in scene units. */
+  gap: Schema.optional(Schema.Number.annotate({ title: 'Gap' })),
   /** The objects the plugin flows reach, drawn lit. */
   lit: Schema.optional(Schema.Array(Lit).annotate({ title: 'Lit objects' })),
   /** How many of the closest pairs of spaces are bridged. */
@@ -62,9 +78,17 @@ export const SubstrateNode = Schema.Struct({
   data: SubstrateData,
 });
 
-const DEFAULTS = { pitch: 24, fill: 0.55, extra: 0.4, size: 24, bridges: 0 } as const;
-
-type Circle = { x: number; y: number; r: number };
+const DEFAULTS = {
+  pitch: 24,
+  fill: 0.55,
+  extra: 0.4,
+  size: 24,
+  bridges: 0,
+  spaceCount: 9,
+  rmin: 34,
+  rmax: 150,
+  gap: 10,
+} as const;
 
 /** The `count` closest pairs of spaces, by the gap between their edges: what the field bridges. */
 const bridgesOf = (spaces: readonly Circle[], count: number): [number, number][] =>
@@ -99,10 +123,11 @@ export const SubstrateNodeView = ({ node }: NodeViewProps) => {
 
   const settings = { ...DEFAULTS, ...data };
   const { width, height } = node.size;
-  // The sidecar's fractions against the node's own box, so the field moves and resizes with the node.
-  const spaces: Circle[] = (
-    settings.spaces ?? [{ x: 0.5, y: 0.5, r: Math.min(width, height) / 2 / Math.max(1, width) }]
-  ).map(({ x, y, r }) => ({ x: x * width, y: y * height, r: r * width }));
+  // The stored packing where there is one, and the rule's own where there is not: fractions against the node's
+  // own box either way, so the field moves and resizes with the node.
+  const spaces: Circle[] = (settings.spaces?.length ? settings.spaces : packSpaces(settings, width, height)).map(
+    ({ x, y, r }) => ({ x: x * width, y: y * height, r: r * width }),
+  );
   // Each space's own lattice, seeded by the field's seed and the space's place in the packing: one module, nine
   // scales. `layout` names the object radius `size`, which an element's own `size` (its frame) already takes.
   const graphs = spaces.map((space, index) =>

@@ -897,6 +897,12 @@ const substrateFields = (component: StudioComponent) => {
     ...(spaces.length > 0 ? { spaces } : {}),
     ...(lit.length > 0 ? { lit } : {}),
     ...(typeof component.bridges === 'number' ? { bridges: component.bridges } : {}),
+    // The packing's own parameters, beside its result. A drawing written down as text keeps these and loses
+    // `spaces`, and the field packs itself again from them — nine spaces rather than the one it fell back to.
+    ...(spaces.length > 0 ? { spaceCount: spaces.length } : {}),
+    ...(typeof component.params.rmin === 'number' ? { rmin: component.params.rmin } : {}),
+    ...(typeof component.params.rmax === 'number' ? { rmax: component.params.rmax } : {}),
+    ...(typeof component.params.gap === 'number' ? { gap: component.params.gap } : {}),
   };
 };
 
