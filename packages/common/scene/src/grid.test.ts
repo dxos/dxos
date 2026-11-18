@@ -214,13 +214,36 @@ describe('a box that packs what it holds', () => {
     expect(solveGrid({ layout: 'pack', packSeed: 4, packMin: 20, packMax: 60 }, frame, children)).not.toEqual(first);
   });
 
-  test('leaves out a child the packing could not place', ({ expect }) => {
-    // Three circles of 90 cannot fit a 200-wide frame: the first is placed and the rest find no room.
-    const placed = solveGrid(
-      { layout: 'pack', packSeed: 1, packMin: 90, packMax: 90, gap: 4 },
-      { x: 0, y: 0, w: 200, h: 200 },
-      [box('a'), box('b'), box('c')],
-    );
-    expect(placed.length).toBeLessThan(3);
+  test('places every child, smaller than asked where the sizes asked for do not fit', ({ expect }) => {
+    // Three circles of 90 cannot fit a 200-wide frame, so all three are drawn smaller rather than two left out.
+    const frame = { x: 0, y: 0, w: 200, h: 200 };
+    const placed = solveGrid({ layout: 'pack', packSeed: 1, packMin: 90, packMax: 90, gap: 4 }, frame, [
+      box('a'),
+      box('b'),
+      box('c'),
+    ]);
+    expect(placed.map(({ id }) => id)).toEqual(['a', 'b', 'c']);
+    for (const { frame: child } of placed) {
+      expect(child.w).toBeLessThan(180);
+      expect(child.w).toBeGreaterThan(0);
+      expect(child.x).toBeGreaterThanOrEqual(4);
+      expect(child.x + child.w).toBeLessThanOrEqual(196);
+    }
+  });
+
+  test('places every child for any seed of a field its sizes crowd', ({ expect }) => {
+    // The Hyperspace field: nine members, sizes up to 185. Some seeds draw sizes that do not all fit at full size.
+    const frame = { x: 0, y: 0, w: 592, h: 624 };
+    const children = Array.from({ length: 9 }, (_, index) => box(`s${index}`));
+    for (let packSeed = 0; packSeed < 64; packSeed++) {
+      const placed = solveGrid({ layout: 'pack', packSeed, packMin: 36, packMax: 185, gap: 10 }, frame, children);
+      expect(placed, `seed ${packSeed}`).toHaveLength(9);
+    }
+  });
+
+  test('keeps the sizes its seed draws where they fit', ({ expect }) => {
+    const rule = { layout: 'pack' as const, packSeed: 7, packMin: 40, packMax: 40, gap: 8 };
+    const placed = solveGrid(rule, { x: 0, y: 0, w: 400, h: 400 }, [box('a'), box('b'), box('c')]);
+    expect(placed.map(({ frame }) => frame.w)).toEqual([80, 80, 80]);
   });
 });

@@ -154,6 +154,54 @@ describe('SceneHandler', () => {
     ]);
   });
 
+  test('a connector keeps the stroke it was drawn with, dotted included', ({ expect }) => {
+    const strokes: (Shape.Stroke | undefined)[] = [undefined, 'solid', 'dashed', 'dotted'];
+    const object = {
+      id: 'strokes',
+      origin: { x: 0, y: 0 },
+      elements: [
+        { kind: 'rect' as const, id: 'a', x: 0, y: 0, w: 128, h: 64, text: 'A' },
+        { kind: 'rect' as const, id: 'b', x: 256, y: 0, w: 128, h: 64, text: 'B', stroke: 'dotted' as const },
+        ...strokes.map((stroke, index) => ({
+          kind: 'arrow' as const,
+          id: `link-${index}`,
+          from: 'a',
+          to: 'b',
+          ...(stroke ? { stroke } : {}),
+        })),
+        // A relation that draws dashes of its own, which a stated stroke overrides.
+        { kind: 'arrow' as const, id: 'depends', from: 'a', to: 'b', relation: 'dependency' as const },
+        {
+          kind: 'arrow' as const,
+          id: 'depends-dotted',
+          from: 'a',
+          to: 'b',
+          relation: 'dependency' as const,
+          stroke: 'dotted' as const,
+        },
+      ],
+    };
+    const content: ContentMap = {};
+    applyCommands(content, [{ op: 'upsert-object', object }], SceneHandler);
+    // What the canvas draws: the link's own line style.
+    const drawn = Object.values(content).flatMap((record) =>
+      record.kind === 'link' ? [`${record.link.id.split('/').pop()}:${record.link.style?.lineStyle}`] : [],
+    );
+    expect(drawn).toEqual([
+      'link-0:undefined',
+      'link-1:undefined',
+      'link-2:dashed',
+      'link-3:dotted',
+      'depends:dashed',
+      'depends-dotted:dotted',
+    ]);
+    const [read] = SceneHandler.read(content).scene.objects;
+    const strokeOf = (id: string) => read.elements.flatMap((element) => (element.id === id ? [element] : []))[0];
+    expect(Reflect.get(strokeOf('link-3'), 'stroke')).toBe('dotted');
+    expect(Reflect.get(strokeOf('link-2'), 'stroke')).toBe('dashed');
+    expect(Reflect.get(strokeOf('b'), 'stroke')).toBe('dotted');
+  });
+
   test('moves and removes objects; edits by the canvas keep the identity', ({ expect }) => {
     const content: ContentMap = {};
     applyCommands(content, [{ op: 'upsert-object', object: face }], SceneHandler);

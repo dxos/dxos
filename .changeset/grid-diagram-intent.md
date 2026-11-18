@@ -21,3 +21,8 @@ A Canvas drawing has a DSL companion beside its article: the drawing as text, as
 as boxes otherwise, editable, with Rebuild to redraw from the text. Where the host is read-only the text can be read
 but not edited. A connector drawn with no arrowhead now reads
 back with none; it used to come back with the default arrow.
+
+A packed group (`layout=pack`) now places every member: where the sizes its seed draws do not all fit, the whole
+field is drawn smaller. It used to leave members out, which drew them at the origin with every connector to them
+running there. A connector with `stroke=dotted` is drawn dotted on a canvas; it used to be drawn solid. A card's
+body and footer start under its title, beside the glyph, not under the glyph.

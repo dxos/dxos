@@ -628,10 +628,12 @@ export const SceneHandler: ContentHandler = {
             break;
           }
           const ends = endsOf(element);
-          const dashed = Shape.markersOf(element).dashed;
+          // The stroke the arrow states, or the dashes its relation draws where it states none.
+          const pattern =
+            element.stroke === 'dotted' ? 'dotted' : Shape.markersOf(element).dashed ? 'dashed' : undefined;
           // A link's own line style, which is where a plain canvas keeps what a routed link keeps on its connector.
           const lineStyle: Link['style'] = {
-            ...(dashed ? { lineStyle: 'dashed' as const } : {}),
+            ...(pattern ? { lineStyle: pattern } : {}),
             ...(element.color && HUES[element.color] ? { hue: HUES[element.color] } : {}),
           };
           // Routed by the canvas (on a lattice, along its gutters) rather than through the layout's bends: the canvas

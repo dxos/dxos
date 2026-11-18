@@ -85,10 +85,7 @@
    canvas's three-cell header, which would push a 120px card's footer out of its frame. */
 .studio-card-frame {
   --dx-card-glyph: 26px;
-}
-
-.studio-card-frame [data-part='card-header'] {
-  gap: 9px;
+  --dx-card-gap: 9px;
 }
 
 .studio-card-frame [data-part='label'] {

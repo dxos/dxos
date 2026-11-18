@@ -33,6 +33,16 @@ import { LINE_ON_GRID, PAD_TO_GRID, PARAGRAPH_ON_GRID } from './text.ts';
 /** Every region of a card is half a cell from the next. Spelled out: Tailwind emits only what it can read verbatim. */
 const GAP_ON_GRID = 'gap-[calc(var(--dx-minor-grid)/2)]';
 
+/** Between the header's glyph and its title; a type with its own type scale sets `--dx-card-gap`. */
+const HEADER_GAP = 'gap-[var(--dx-card-gap,calc(var(--dx-minor-grid)/2))]';
+
+/**
+ * The card's content column: where the title starts, past the glyph and its gap. The body and the footer start
+ * there too, so a card reads as a rail of one glyph beside a column of text.
+ */
+const CONTENT_COLUMN =
+  'ps-[calc(var(--dx-card-glyph,calc(var(--dx-minor-grid)*3))+var(--dx-card-gap,calc(var(--dx-minor-grid)/2)))]';
+
 /**
  * The header's glyph: three minor cells, so the row it sets is three cells tall. A type whose own type scale is not
  * the canvas's (the studio deck's cards) sets `--dx-card-glyph` to the size its header was drawn at.
@@ -174,7 +184,7 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
     >
       {(symbol || label !== undefined) && (
         // The glyph is three cells and sets the row's height: a card is read by its icon before its title.
-        <div className={mx('flex items-center shrink-0', GAP_ON_GRID)} data-part='card-header'>
+        <div className={mx('flex items-center shrink-0', HEADER_GAP)} data-part='card-header'>
           {symbol && <Icon.Icon icon={symbol} hue={hueOf(node)} classNames={mx('shrink-0', HEADER_GLYPH)} />}
           {label !== undefined && (
             <TextPart part='label' text={label} editing={editing} classNames={mx('grow truncate', LINE_ON_GRID)}>
@@ -190,7 +200,11 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
           part={textPartOf(node, 'body')}
           text={body}
           editing={editing}
-          classNames={mx('grow overflow-hidden text-sm whitespace-pre-wrap', PARAGRAPH_ON_GRID)}
+          classNames={mx(
+            'grow overflow-hidden text-sm whitespace-pre-wrap',
+            symbol && CONTENT_COLUMN,
+            PARAGRAPH_ON_GRID,
+          )}
         >
           {body}
         </TextPart>
@@ -203,6 +217,7 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
           editing={editing}
           classNames={mx(
             'mt-auto shrink-0 pt-[calc(var(--dx-minor-grid)/2-1px)] border-bs border-separator text-xs text-description truncate',
+            symbol && CONTENT_COLUMN,
             LINE_ON_GRID,
           )}
         >

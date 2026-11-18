@@ -56,6 +56,8 @@ type Edit = { text: string; base: string; applied: boolean };
 type CanvasDslEditorProps = Pick<CanvasDslProps, 'role' | 'attendableId'> & { canvas: Canvas.Canvas };
 
 const CanvasDslEditor = ({ role, canvas, attendableId }: CanvasDslEditorProps) => {
+  // The print reads the canvas's stored objects, which change in place: the compiler keys it on `canvas` alone.
+  'use no memo';
   const { t } = Hooks.useTranslation(CanvasNamespace.key);
   // A host that locks every canvas locks its text too: Rebuild is an edit of the drawing.
   const readOnly = ToolkitHooks.useReadOnly();
