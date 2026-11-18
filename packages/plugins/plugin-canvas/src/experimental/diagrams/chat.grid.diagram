@@ -1,0 +1,27 @@
+object chat @ 0,0 scale=1 {
+  grid slide 0,0 1600x880 gap=64 padding=48 {
+    grid agent-body cols=3 gap=24 {
+      grid agent-col-0 gap=16 {
+        rect skill "Skill" kind=card icon=graduation-cap
+      }
+      grid agent-col-1 gap=16 {
+        rect operator "Operator" kind=card icon=user
+        rect feed "Feed" kind=card icon=queue
+        rect session "Session" kind=card icon=play-circle
+        rect tool "Tool" kind=card icon=wrench
+        rect artifact "Artifact" kind=card icon=cube
+      }
+      grid agent-col-2 gap=16 {
+        rect model-box "Model" kind=card icon=cpu
+      }
+    }
+  }
+  arrow operator-feed operator -> feed "writes" head=triangle
+  arrow operator-skill operator -> skill head=triangle
+  arrow operator-model-box operator -> model-box head=triangle
+  arrow session-feed session -> feed "writes" head=triangle
+  arrow session-model-box session -> model-box "run by" head=triangle
+  arrow session-tool session -> tool "uses" head=triangle
+  arrow skill-tool skill -> tool "defines" head=triangle
+  arrow tool-artifact tool -> artifact "makes" head=triangle
+}

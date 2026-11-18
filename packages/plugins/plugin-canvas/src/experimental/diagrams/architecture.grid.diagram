@@ -1,0 +1,40 @@
+object architecture @ 0,0 scale=1 {
+  grid slide 0,0 1600x880 cols=3 gap=64 padding=48 {
+    grid client-section rows="48 1fr" gap=16 {
+      rect client-heading "Client · app tab + shared worker" fill=none border=false align=center valign=middle fontSize=34
+      grid client-body gap=24 {
+        grid client-col-0 gap=16 {
+          rect c-plugins "Plugins" kind=card body="Surfaces, operations and skills in each app tab." footer="navtree · markdown · assistant · +100" icon=puzzle-piece variant="compact"
+          rect c-halo "HALO Vault" kind=card body="Keys and credentials for this device and its agents." footer="keyring · identity" icon=vault tone=accent variant="compact"
+          rect c-runtime "Runtime" kind=card body="Effect service layers, shared by every tab." footer=WorkerRuntime icon=cpu variant="compact"
+          rect c-services "Client services" kind=card chips="database~ECHO~~accent | sparkle~AI~~accent | user-circle~Identity~~accent | files~Blobs~~accent | robot~Agents~~accent | video-camera~Calls | waveform~Transcription | cube~Sandbox" footer="client-protocol · RPC from every tab" icon=stack variant="compact"
+          rect c-spaces "Spaces" kind=card body="A local replica of every space, in SQLite on OPFS." footer="EchoHost · SpaceManager" icon=cube variant="compact"
+        }
+      }
+    }
+    grid router-body gap=24 {
+      rect router "Router" kind=card footer="RouterObject DO" icon=arrows-left-right tone=ink variant="compact"
+    }
+    grid edge-section rows="48 1fr" gap=16 {
+      rect edge-heading "EDGE · Workers + Durable Objects" fill=none border=false align=center valign=middle fontSize=34
+      grid edge-body gap=24 {
+        grid edge-col-0 gap=16 {
+          rect e-plugins "Plugins" kind=card body="Plugin services that run next to the data." footer="layerSpec · workerd" icon=puzzle-piece variant="compact"
+          rect e-halo "HALO" kind=card body="Credential chains and membership, checked on every request." footer="identity · kms · state machine" icon=shield-check tone=accent variant="compact"
+          rect e-runtime "Plugin Manager" kind=card body="Loads plugin services and runs them per space." footer="Workers · service bindings" icon=plugs-connected variant="compact"
+          rect e-services "EDGE services" kind=card chips="database~ECHO~~accent | sparkle~AI~~accent | user-circle~Identity~~accent | files~Blobs~~accent | robot~Agents~~accent | video-camera~Calls | waveform~Transcription | cube~Sandbox" footer="db · ai · calls · transcription · sandbox" icon=stack variant="compact"
+          rect e-spaces "Space" kind=card body="One Durable Object group per space." footer="replicator · indexer · feeds · scheduler" icon=cube variant="compact"
+        }
+      }
+    }
+  }
+  arrow c-plugins-e-plugins c-plugins -> e-plugins "one plugin, two halves" head=triangle
+  arrow c-halo-router c-halo -> router "credentials" head=triangle
+  arrow router-e-halo router -> e-halo head=triangle
+  arrow c-runtime-router c-runtime -> router "activation" head=triangle
+  arrow router-e-runtime router -> e-runtime head=triangle
+  arrow c-services-router c-services -> router "RPC" head=triangle
+  arrow router-e-services router -> e-services head=triangle
+  arrow c-spaces-router c-spaces -> router "sync" head=triangle
+  arrow router-e-spaces router -> e-spaces head=triangle
+}

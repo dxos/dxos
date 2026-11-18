@@ -28,7 +28,7 @@ import {
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 
-import { ChipList, Chips } from './Chip.tsx';
+import { ChipList, Chips, chipsOf } from './Chip.tsx';
 import { type Styled, TONES, toneValue } from './FeedCard.tsx';
 
 //
@@ -48,7 +48,7 @@ export const CardData = Schema.Struct({
    */
   variant: Schema.optional(Schema.Literals(['full', 'compact', 'simple']).annotate({ title: 'Variant' })),
   /** A row or grid of chips in the card's body: what the layer holds, or which services it runs. */
-  chips: Schema.optional(ChipList.annotate({ title: 'Chips' })),
+  chips: Schema.optional(Schema.Union([ChipList, Schema.String]).annotate({ title: 'Chips' })),
 });
 
 export const CardNode = Schema.Struct({
@@ -120,7 +120,7 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
         style={{ padding: '12px 18px', ...style }}
       >
         <CardFrame node={node} editing={editing} classNames='studio-card-frame p-0 gap-[7px]'>
-          {data.chips ? <Chips {...data.chips} /> : null}
+          {chipsOf(data.chips) ? <Chips {...chipsOf(data.chips)!} /> : null}
         </CardFrame>
       </div>
     );

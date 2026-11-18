@@ -55,6 +55,40 @@ export const ChipList = Schema.Struct({
 });
 export type ChipList = Schema.Schema.Type<typeof ChipList>;
 
+/**
+ * A chip row as text: `icon~label~note~tone`, chips separated by `|`. The DSL carries no list and no nested
+ * object, so a kind whose field is a list of simple records writes it as one scalar and reads it back itself —
+ * the spelling the substrate's packing uses, and `points="0,0.5 1,0.5"` before it.
+ *
+ * Neither separator is a space or a colon, because a note is prose and prose holds both: "every write" is one
+ * note, and `dxn:type:org.dxos/Task` is one note with two colons in it.
+ */
+export const parseChips = (value: string): ChipList => ({
+  items: value
+    .split('|')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const [icon, label, note, tone] = entry.split('~').map((part) => part.trim());
+      return {
+        icon,
+        label: label ?? '',
+        ...(note ? { note } : {}),
+        ...(tone ? { tone } : {}),
+      };
+    }) as ChipList['items'],
+});
+
+/** The inverse, so what a drawing writes down reads back as the same chips. */
+export const formatChips = (chips: ChipList): string =>
+  chips.items
+    .map((chip) => [chip.icon, chip.label, chip.note ?? '', chip.tone ?? ''].join('~').replace(/~+$/, ''))
+    .join(' | ');
+
+/** The chips a card carries, however it carries them. */
+export const chipsOf = (chips: ChipList | string | undefined): ChipList | undefined =>
+  typeof chips === 'string' ? parseChips(chips) : chips;
+
 export type ChipProps = ChipItem & {
   /** The large chip of a standalone node: the deck's `.d-chip-fill.lg`. */
   large?: boolean;

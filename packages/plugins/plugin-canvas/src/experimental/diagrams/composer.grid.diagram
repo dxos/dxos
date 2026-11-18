@@ -1,0 +1,25 @@
+object composer @ 0,0 scale=1 {
+  grid slide 0,0 1600x880 cols=3 gap=64 padding=48 {
+    grid left-body gap=24 {
+      grid left-col-0 gap=16 {
+        rect navtree "Navtree" kind=card body="The space tree in the sidebar, built from the app graph." footer=plugin-navtree icon=tree-view
+        rect document "Document" kind=card body="Collaborative markdown; the text lives in ECHO." footer=plugin-markdown icon=file-text
+        rect sheet "Sheet" kind=card body="A spreadsheet embedded in the document." footer=plugin-sheet icon=grid-four
+      }
+    }
+    grid app-body gap=24 {
+      rect frame kind=app-frame highlight=true
+    }
+    grid right-body gap=24 {
+      grid right-col-0 gap=16 {
+        rect assistant "Assistant" kind=card body="Assistant chat about the object on screen." footer=plugin-assistant icon=sparkle
+        rect canvas "Canvas" kind=card body="A diagram embedded in the document." footer=plugin-excalidraw icon=pen-nib
+      }
+    }
+  }
+  arrow "navtree-frame/r-nav" navtree -> frame/r-nav head=none stroke=dashed
+  arrow "document-frame/r-doc" document -> frame/r-doc head=none stroke=dashed
+  arrow "sheet-frame/r-sheet" sheet -> frame/r-sheet head=none stroke=dashed
+  arrow "assistant-frame/r-comp" assistant -> frame/r-comp head=none stroke=dashed
+  arrow "canvas-frame/r-canvas" canvas -> frame/r-canvas head=none stroke=dashed
+}

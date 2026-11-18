@@ -42,14 +42,22 @@ import { cardSpec } from '../components/Card.tsx';
 import { feedCardSpec } from '../components/FeedCard.tsx';
 import { STUDIO_KINDS } from '../components/registry.ts';
 import agentSource from '../diagrams/agent.diagram?raw';
+import agentGrid from '../diagrams/agent.grid.diagram?raw';
 import agentModel from '../diagrams/agent.json?raw';
 import agentsSource from '../diagrams/agents.diagram?raw';
+import agentsGrid from '../diagrams/agents.grid.diagram?raw';
 import agentsModel from '../diagrams/agents.json?raw';
+import architectureGrid from '../diagrams/architecture.grid.diagram?raw';
 import chatSource from '../diagrams/chat.diagram?raw';
+import chatGrid from '../diagrams/chat.grid.diagram?raw';
 import chatModel from '../diagrams/chat.json?raw';
+import composerGrid from '../diagrams/composer.grid.diagram?raw';
+import echoGrid from '../diagrams/echo.grid.diagram?raw';
 import hyperspaceGrid from '../diagrams/hyperspace.grid.diagram?raw';
 import ontologySource from '../diagrams/ontology.diagram?raw';
+import ontologyGrid from '../diagrams/ontology.grid.diagram?raw';
 import ontologyModel from '../diagrams/ontology.json?raw';
+import pluginsGrid from '../diagrams/plugins.grid.diagram?raw';
 import { type StudioSlide, seedSlide, studioSlide } from '../diagrams/slides.ts';
 import {
   type ComponentMode,
@@ -148,14 +156,14 @@ const fromSource = (name: string, source: string): Story => ({
 });
 
 export const Hyperspace = fromSource('hyperspace', hyperspaceGrid);
-export const Echo = slide('echo');
-export const Ontology = slide('ontology');
-export const Plugins = slide('plugins');
-export const Composer = slide('composer');
-export const Architecture = slide('architecture');
-export const Agents = slide('agents');
-export const Chat = slide('chat');
-export const Agent = slide('agent');
+export const Echo = fromSource('echo', echoGrid);
+export const Ontology = fromSource('ontology', ontologyGrid);
+export const Plugins = fromSource('plugins', pluginsGrid);
+export const Composer = fromSource('composer', composerGrid);
+export const Architecture = fromSource('architecture', architectureGrid);
+export const Agents = fromSource('agents', agentsGrid);
+export const Chat = fromSource('chat', chatGrid);
+export const Agent = fromSource('agent', agentGrid);
 
 //
 // The Agents slide through the deck import rather than its spec: the richer `feed-card` kind, and the space graph
