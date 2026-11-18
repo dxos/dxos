@@ -9,16 +9,17 @@ import * as Layer from 'effect/Layer';
 import * as Trigger from '@dxos/compute/Trigger';
 import { CrawlState } from '@dxos/crawler';
 import { deterministicAiService } from '@dxos/crawler/testing';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { MemoryQuery, MemoryService } from '@dxos/echo-memory';
 import * as MemorySqlite from '@dxos/echo-memory-sqlite/MemorySqlite';
+import { AccessToken, Connection } from '@dxos/link';
 import { Topic } from '@dxos/pipeline-discord';
 import { Person } from '@dxos/types';
 
-import { DiscordService } from '#types';
+import { DiscordOperation, DiscordService } from '#types';
 
-import { KAI_APPLICATION_IDS } from '../constants.ts';
+import { DISCORD_USER_PROVIDER_ID, KAI_APPLICATION_IDS } from '../constants.ts';
 import configureBackIndex from './configure-back-index.ts';
 import crawl from './crawl.ts';
 
@@ -58,7 +59,16 @@ const fakeDiscord = (history: Map<string, DiscordService.Message[]>, reads: Read
   });
 
 const TestLayer = Layer.merge(
-  TestDatabaseLayer({ types: [CrawlState.CrawlState, Person.Person, Topic.Topic, Trigger.Trigger] }),
+  TestDatabaseLayer({
+    types: [
+      AccessToken.AccessToken,
+      Connection.Connection,
+      CrawlState.CrawlState,
+      Person.Person,
+      Topic.Topic,
+      Trigger.Trigger,
+    ],
+  }),
   MemorySqlite.layerMemory,
 );
 
@@ -190,6 +200,29 @@ describe('ConfigureBackIndex', () => {
       expect(trigger).toMatchObject({ enabled: false, spec: { kind: 'timer', cron: '*/5 * * * *' } });
       expect(trigger.input?.channels).toEqual(['c2', 'c3']);
       expect(CrawlState.listTargets(state).map(({ id }) => id)).toEqual(['c2', 'c3']);
+      expect(yield* Database.query(Filter.type(Trigger.Trigger)).run).toHaveLength(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('makes the trigger and crawl state children of the Discord connection that set them up', () =>
+    Effect.gen(function* () {
+      const accessToken = yield* Database.add(
+        Obj.make(AccessToken.AccessToken, { source: 'discord.com', token: 'oauth' }),
+      );
+      const connection = yield* Database.add(
+        Connection.make({ connectorId: DISCORD_USER_PROVIDER_ID, accessToken: Ref.make(accessToken) }),
+      );
+      const created = yield* configureBackIndex.handler({
+        applicationId: KAI,
+        channels: ['c1'],
+        connection: Ref.make(connection),
+      });
+      const trigger = yield* Database.load(created.trigger);
+      const state = yield* Database.load(created.state);
+      expect(Obj.getParent(trigger)?.id).toBe(connection.id);
+      expect(Obj.getParent(state)?.id).toBe(connection.id);
+      const annotation = Annotation.get(connection, DiscordOperation.BackIndexAnnotation);
+      expect(annotation._tag).toBe('Some');
       expect(yield* Database.query(Filter.type(Trigger.Trigger)).run).toHaveLength(1);
     }).pipe(Effect.provide(TestLayer)),
   );

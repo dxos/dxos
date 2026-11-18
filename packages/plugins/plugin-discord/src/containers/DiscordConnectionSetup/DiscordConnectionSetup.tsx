@@ -142,13 +142,14 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
           ...(changes.maxDays !== undefined ? { maxDays: changes.maxDays } : {}),
           ...(changes.cron !== undefined ? { cron: changes.cron } : {}),
           ...(backIndex ? { trigger: Ref.make(backIndex.trigger) } : { name: t('discord-setup-index-name.label') }),
+          connection: Ref.make(connection),
           enabled: next.length > 0,
         },
         { spaceId },
       );
       setError(error?.message);
     },
-    [invokePromise, spaceId, applicationId, backIndex, t],
+    [invokePromise, spaceId, applicationId, backIndex, connection, t],
   );
 
   const handleIndexServer = useCallback(

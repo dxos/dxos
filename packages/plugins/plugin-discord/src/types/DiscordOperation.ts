@@ -12,10 +12,10 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as CrawlState from '@dxos/crawler/CrawlState';
-import { Database, DXN, Ref } from '@dxos/echo';
+import { Annotation, Database, DXN, Ref } from '@dxos/echo';
 import * as MemoryService from '@dxos/echo-memory/MemoryService';
-import { Topic } from '@dxos/pipeline-discord';
 import { Connection } from '@dxos/link';
+import { Topic } from '@dxos/pipeline-discord';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { Person } from '@dxos/types';
 
@@ -123,9 +123,9 @@ const CrawlConfigFields = {
 /**
  * One bounded run of a Discord back-index: reconciles the crawl's frontier with `channels`, reads up to `maxSteps`
  * pages from the targets' cursors as the bot `applicationId` through {@link DiscordService.DiscordService}, runs them
- * through `DiscordPipeline`'s stages and puts the facts it extracts into the space's memory. Every bit of progress lives in the {@link CrawlState.CrawlState} `state`, so
- * a trigger invoking it on a schedule continues where the last run stopped, and a message read again unchanged costs
- * no model call. Writes the run's status, outcome and error into `state` rather than failing, so they persist.
+ * through `DiscordPipeline`'s stages and puts the facts it extracts into the space's memory. Every bit of progress
+ * lives in the {@link CrawlState.CrawlState} `state`, so a trigger invoking it on a schedule continues where the last
+ * run stopped, and a message read again unchanged costs no model call. Writes the run's status, outcome and error into `state` rather than failing, so they persist.
  */
 export const CrawlDiscordChannels = Operation.make({
   meta: {
@@ -151,6 +151,18 @@ export const CrawlDiscordChannels = Operation.make({
 });
 
 /**
+ * On the Discord connection that set a back-index up: refs to its trigger and crawl state, which make them the
+ * connection's ECHO children, shown under it and deleted with it.
+ */
+export const BackIndexAnnotation = Annotation.make({
+  id: 'org.dxos.discord.backIndex',
+  schema: Schema.Struct({
+    trigger: Ref.Ref(Trigger.Trigger),
+    state: Ref.Ref(CrawlState.CrawlState),
+  }),
+});
+
+/**
  * Creates or updates a Discord back-index: its {@link CrawlState.CrawlState} and the remote timer trigger that runs
  * {@link CrawlDiscordChannels} on EDGE, which puts the facts it extracts into the space's memory. With `trigger`, that
  * back-index is reconfigured in place (the trigger's input names its state); without, both are created.
@@ -169,6 +181,11 @@ export const ConfigureBackIndex = Operation.make({
       Ref.Ref(Trigger.Trigger).annotate({ description: 'The back-index to reconfigure; a new one when absent.' }),
     ),
     name: Schema.optional(Schema.String.annotate({ description: 'Names a new crawl state.' })),
+    connection: Schema.optional(
+      Ref.Ref(Connection.Connection).annotate({
+        description: 'The Discord connection that sets it up; the trigger and crawl state become its children.',
+      }),
+    ),
     cron: Schema.optional(
       Schema.String.annotate({ description: `How often it runs; \`${DEFAULT_BACK_INDEX_CRON}\` when absent.` }),
     ),
