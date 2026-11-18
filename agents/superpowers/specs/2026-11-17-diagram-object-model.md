@@ -73,8 +73,22 @@ prefix escapes itself.
 
 Measured in the running story, which is where it counts. Seeded, Hyperspace draws 10 cards, 3 planks, 1 substrate,
 10 card icons, 9 substrate spaces and 2 routed connectors. After `Rebuild` — the full records → text → records
-cycle — it draws all of them except the icons and the spaces. Before stage 1 the same `Rebuild` left no cards, no
-planks and no substrate at all.
+cycle — it now draws **every one of them**. Before stage 1 the same `Rebuild` left no cards, no planks and no
+substrate at all.
+
+The two fields that held it back were both the same gap, and neither needed a value grammar to close:
+
+1. **The card's glyph** was not a nested object at all. `iconOf` has always accepted a bare name, and the sidecar
+   already writes one; the `{ type }` wrapper was created on the way in. The glyph, body and footer moved into the
+   kind's own `data` bag — which is where `parts.ts` says a plugin kind keeps its fields, and the only place the
+   text form carries — and they survive as scalars.
+2. **The substrate's nine spaces** were the cached output of the deck's packer. The packing's parameters are now
+   the node's own (`spaceCount`, `rmin`, `rmax`, `gap`, beside the `seed`), and the field packs from them whenever
+   it has no stored `spaces`. A stored packing still wins, so nothing re-lays-out on load.
+
+The second is the decision "the rule is authoritative, geometry is a cached projection" applied to the one kind
+that needed it, and it generalises: a kind holding a list of computed geometry does not need the DSL to spell the
+list, it needs the rule that produced it.
 
 ### What a value grammar would have to spell
 
@@ -322,6 +336,11 @@ result). For both to write one model:
    emitting one would produce text an older parser rejects with no way to negotiate.
 
 ## Changelog
+
+- 2026-11-17 — agent: the Hyperspace slide survives the whole records → text → records cycle. The card's glyph,
+  body and footer moved into the kind's own `data` bag, and the substrate packs its spaces from the parameters
+  that produced them rather than storing the result. Neither needed a value grammar, which is the decision above
+  holding under the first two cases that tested it.
 
 - 2026-11-17 — user: no value grammar for the scene DSL. The scene DSL is not a round-trip format: a concrete
   drawing is stored as records, and the semantic DSL is what agents and humans author. The fields that would have
