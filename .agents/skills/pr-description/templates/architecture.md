@@ -66,11 +66,11 @@ other.
    source and prints a layout report:
 
    ```bash
-   CHROMIUM_PATH=/opt/pw-browsers/chromium moon run plugin-illustrator:render-diagrams -- \
+   moon run plugin-illustrator:render-diagrams -- \
      "$SCRATCH/before.dx" "$SCRATCH/after.dx"
    ```
 
-   Pass only `"$SCRATCH/after.dx"` when there is no before diagram. Omit `CHROMIUM_PATH` outside the cloud sandbox. A DSL or layout `error` exits 1; fix it before
+   Pass only `"$SCRATCH/after.dx"` when there is no before diagram. A DSL or layout `error` exits 1; fix it before
    going on.
 
 5. `Read` every PNG you rendered and run the look-before-you-submit checklist in `drawing-diagrams` step 4.
