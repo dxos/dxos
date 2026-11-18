@@ -138,6 +138,38 @@ gives them its own meaning. The full reference an agent reads is the drawing ski
 | `structure` (default) | boxes on a grid; `shape=`                                   | routed connectors; relationship words set markers                    | `semantic-engine.ts`                 |
 | `sequence`            | participants, as columns in declaration order; `role=actor` | messages, as rows in source order: `->`, `calls`, `returns`, `sends` | `sequence-engine.ts`                 |
 | `dataflow`            | `role=process` (default), `store`, `external`               | flows of named data                                                  | `semantic-engine.ts` + `dataflow.ts` |
+| `grid`                | boxes in the next cell of their group; `kind=` a component  | connectors between boxes, groups and places on a component           | `grid-engine.ts`                     |
+
+### Grid diagrams
+
+`diagram kind=grid size=1600x880 cols=3 gap=64 padding=48` divides a frame by tracks, as CSS grid does. Every
+`group` is a grid in the cell it was given and may hold other groups; each member takes the next cell in the order
+it is written, so nothing states a coordinate and nothing is searched for.
+
+```diagram
+diagram kind=grid size=1600x880 cols="1fr 2fr 1fr" gap=64 padding=48
+
+group services "EDGE Services" gap=12 {
+  node calendar "Calendar" kind=card icon=calendar-blank tone=event
+  node email "Email" kind=card icon=envelope
+}
+node field kind=substrate seed=29 spaceCount=9
+
+edge calendar -- field stroke=dashed
+```
+
+- `cols` and `rows` are a count (`3`) or a track list (`"48 1fr"`, `"1fr auto 2fr"`); an axis with none takes
+  one track per member. `gap` is the space between cells and `padding` the space inside the frame.
+- A group with a label draws it as a heading over its members; a group without one is only their grid.
+- `node … kind=card` places a component. Every attribute the node does not define itself is the component's own
+  field; one whose name the node does define is written escaped (`data-fill=0.55`).
+- An edge may end on a group, and on a place only the component knows (`frame/nav`, `frame#left`).
+- Placement relations, pins, sides, waypoints and buses are ignored with a warning.
+
+The engine places nothing itself. It lowers the diagram to one object of `grid` boxes, component boxes and
+arrows — the scene statements above — and `@dxos/scene` solves the tracks wherever the drawing is rendered, so the
+rule is what is stored. Outside a grid diagram a nested group still reports, and `size`, `cols`, `rows`,
+`padding` and `kind=` on a node say they belong to this kind.
 
 A sequence diagram also reads two statements no other kind does:
 

@@ -1,0 +1,38 @@
+diagram kind=grid size=1600x880 gap=64 padding=48
+
+group contributions rows="auto 1fr" gap=16 {
+  node plugin "Plugin" kind=card body="modules load lazily on activation events, in the browser, Node, desktop (Tauri) or at the EDGE (workerd)." footer="106 plugins in dxos/dxos" icon=puzzle-piece
+  group contributions-cols cols=5 gap=24 {
+    group contributions-col-0 gap=16 {
+      node types "Types" kind=card body="Effect Schema types, registered with ECHO." footer="schema · 66" icon=brackets-curly
+      node use-types "ECHO" kind=card icon=database
+    }
+    group contributions-col-1 gap=16 {
+      node skills "Skills" kind=card body="Operations offered to agents as tools." footer="skillDefinition · 41" icon=robot
+      node use-skills "Agents" kind=card icon=sparkle
+    }
+    group contributions-col-2 gap=16 {
+      node components "Components" kind=card body="React surfaces bound to roles: article, card, section." footer="surface · 88" icon=squares-four
+      node use-components "Surface" kind=card icon=app-window
+    }
+    group contributions-col-3 gap=16 {
+      node operations "Operations" kind=card body="Typed operations with input and output schemas." footer="operationHandler · 81" icon=function
+      node use-operations "UI · agents · MCP" kind=card icon=plugs-connected
+    }
+    group contributions-col-4 gap=16 {
+      node services "Services" kind=card body="Effect services that run at the EDGE (workerd)." footer="layerSpec · 11" icon=cloud
+      node use-services "EDGE" kind=card icon=cloud
+    }
+  }
+}
+
+edge plugin -> types head=triangle
+edge plugin -> skills head=triangle
+edge plugin -> components head=triangle
+edge plugin -> operations head=triangle
+edge plugin -> services head=triangle
+edge use-types -> types head=triangle
+edge use-skills -> skills head=triangle
+edge use-components -> components head=triangle
+edge use-operations -> operations head=triangle
+edge use-services -> services head=triangle

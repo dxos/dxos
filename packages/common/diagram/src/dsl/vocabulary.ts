@@ -170,6 +170,14 @@ export const OBJECT_ATTRS: readonly AttrSpec[] = [
   { name: 'ref', type: 'string' },
 ];
 
+/** The rule a grid diagram's frame divides by; a group states the same four. */
+const RULE: readonly AttrSpec[] = [
+  { name: 'cols', type: 'scalar' },
+  { name: 'rows', type: 'scalar' },
+  { name: 'gap', type: 'number' },
+  { name: 'padding', type: 'number' },
+];
+
 /** `diagram` attributes. */
 export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
   { name: 'kind', type: 'enum', values: Semantic.DIAGRAM_KINDS },
@@ -177,17 +185,20 @@ export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
   { name: 'grid', type: 'size' },
   { name: 'box', type: 'size' },
   { name: 'aspect', type: 'ratio' },
+  { name: 'size', type: 'size' },
+  ...RULE,
 ];
 
 /** `group` attributes. */
 export const GROUP_ATTRS: readonly AttrSpec[] = [
-  { name: 'gap', type: 'number' },
+  ...RULE,
   { name: 'max-width', type: 'number' },
   { name: 'color', type: 'enum', values: Shape.Color.literals },
 ];
 
-/** `node` attributes. */
+/** `node` attributes. A node naming a component (`kind=card`) also takes that component's own, as a box does. */
 export const NODE_ATTRS: readonly AttrSpec[] = [
+  { name: 'kind', type: 'name' },
   { name: 'ref', type: 'string' },
   { name: 'role', type: 'enum', values: Semantic.ROLES },
   { name: 'shape', type: 'enum', values: Shape.BoxKind.literals },

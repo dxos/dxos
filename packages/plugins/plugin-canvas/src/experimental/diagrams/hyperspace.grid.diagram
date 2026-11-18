@@ -15,7 +15,7 @@ object hyperspace @ 0,0 {
     grid hyperspace rows="48 1fr" gap=16 {
       rect heading-hyperspace "ECHO Hyperspace" fill=none border=false align=center valign=middle fontSize=34
       grid field-body {
-        rect field kind=substrate seed=29 pitch=24 data-fill=0.55 gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=9 rmin=34 rmax=150
+        rect field kind=substrate seed=29 pitch=24 data-fill=0.55 data-gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=9 rmin=34 rmax=150
       }
     }
     grid services rows="48 1fr" gap=16 {

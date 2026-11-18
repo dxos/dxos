@@ -1,0 +1,64 @@
+diagram kind=grid size=1600x880 gap=64 padding=48
+
+group layer-ui "UI / Control" cols=3 gap=24 {
+  group layer-ui-col-0 gap=16 {
+    node goal "Goal" kind=card icon=target
+    node project "Project" kind=card icon=folder
+  }
+  group layer-ui-col-1 gap=16 { }
+  group layer-ui-col-2 gap=16 {
+    node outcome "Outcome" kind=card icon=trophy
+    node task "Task" kind=card icon=check-square
+  }
+}
+
+group layer-activity "Activity" cols=3 gap=24 {
+  group layer-activity-col-0 gap=16 {
+    node feed "Feed" kind=card icon=queue
+    node scheduler "Scheduler" kind=card icon=alarm
+  }
+  group layer-activity-col-1 gap=16 {
+    node session "Session" kind=card icon=play-circle
+    node tool "Tool" kind=card icon=wrench
+  }
+  group layer-activity-col-2 gap=16 {
+    node model "Model" kind=card icon=cpu
+    node plan "Plan" kind=card icon=list-numbers
+  }
+}
+
+group layer-knowledge "Knowledge" cols=3 gap=24 {
+  group layer-knowledge-col-0 gap=16 {
+    node memory "Memory" kind=card icon=brain
+    node schema "Schema" kind=card icon=brackets-curly
+  }
+  group layer-knowledge-col-1 gap=16 {
+    node graph "Graph" kind=card icon=graph
+    node artifact "Artifact" kind=card icon=cube
+  }
+  group layer-knowledge-col-2 gap=16 {
+    node skill "Skill" kind=card icon=graduation-cap
+    node spec "Specification" kind=card icon=clipboard-text
+  }
+}
+
+edge project -> goal "serves" head=triangle
+edge outcome -> goal "achieves" head=triangle
+edge task -> project "in" head=triangle
+edge task -> outcome "produces" head=triangle
+edge task -> spec "implements" head=triangle
+edge plan -> spec "follows" head=triangle
+edge session -> task "works on" head=triangle
+edge session -> model "run by" head=triangle
+edge session -> tool "uses" head=triangle
+edge session -> feed "writes" head=triangle
+edge scheduler -> session "starts" head=triangle
+edge scheduler -> feed "watches" head=triangle
+edge feed -> graph "updates" head=triangle
+edge memory -> feed "learns from" head=triangle
+edge memory -> graph "part of" head=triangle
+edge tool -> graph "acts on" head=triangle
+edge tool -> artifact "makes" head=triangle
+edge skill -> tool "defines" head=triangle
+edge graph -> schema "typed by" head=triangle
+edge artifact -> graph "stored in" head=triangle

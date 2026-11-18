@@ -144,6 +144,27 @@ default, a bubble), `store` (a box with its D-number) or `external` (a shaded bo
 with the data that flows. The report warns about data moving without a process, a process with no
 inputs or no outputs, and a store nobody reads.
 
+### Grid diagrams
+
+`diagram kind=grid size=WxH` lays a slide out by rule instead of by search. Use it when the drawing is rows and
+columns of components (cards, panels) rather than a graph to untangle.
+
+```
+diagram kind=grid size=1600x880 cols="1fr 2fr 1fr" gap=64 padding=48
+group services "EDGE Services" gap=12 {
+  node calendar "Calendar" kind=card icon=calendar-blank
+  node email "Email" kind=card icon=envelope
+}
+node field kind=substrate seed=29
+edge calendar -- field stroke=dashed
+```
+
+- Every `group` is a grid and groups nest. Members fill the cells in the order written; `cols`/`rows` are a
+  count or a track list (`"48 1fr"`), and an axis with none takes one track per member.
+- A group's label is drawn as a heading over its members.
+- `kind=<component>` places a component the host contributes; its other attributes are the component's fields.
+- State no coordinates and no placement hints: both are ignored here with a warning.
+
 The full reference the in-app agent reads is the `uml` skill text in
 `packages/plugins/plugin-illustrator/src/skills/DrawingSkill.ts`. The Storybook bench, which shows the
 rendered diagram, its DSL and its scores side by side, is

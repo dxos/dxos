@@ -42,21 +42,30 @@ import { cardSpec } from '../components/Card.tsx';
 import { feedCardSpec } from '../components/FeedCard.tsx';
 import { STUDIO_KINDS } from '../components/registry.ts';
 import agentSource from '../diagrams/agent.diagram?raw';
+import agentIntent from '../diagrams/agent.dx?raw';
 import agentGrid from '../diagrams/agent.grid.diagram?raw';
 import agentModel from '../diagrams/agent.json?raw';
 import agentsSource from '../diagrams/agents.diagram?raw';
+import agentsIntent from '../diagrams/agents.dx?raw';
 import agentsGrid from '../diagrams/agents.grid.diagram?raw';
 import agentsModel from '../diagrams/agents.json?raw';
+import architectureIntent from '../diagrams/architecture.dx?raw';
 import architectureGrid from '../diagrams/architecture.grid.diagram?raw';
 import chatSource from '../diagrams/chat.diagram?raw';
+import chatIntent from '../diagrams/chat.dx?raw';
 import chatGrid from '../diagrams/chat.grid.diagram?raw';
 import chatModel from '../diagrams/chat.json?raw';
+import composerIntent from '../diagrams/composer.dx?raw';
 import composerGrid from '../diagrams/composer.grid.diagram?raw';
+import echoIntent from '../diagrams/echo.dx?raw';
 import echoGrid from '../diagrams/echo.grid.diagram?raw';
+import hyperspaceIntent from '../diagrams/hyperspace.dx?raw';
 import hyperspaceGrid from '../diagrams/hyperspace.grid.diagram?raw';
 import ontologySource from '../diagrams/ontology.diagram?raw';
+import ontologyIntent from '../diagrams/ontology.dx?raw';
 import ontologyGrid from '../diagrams/ontology.grid.diagram?raw';
 import ontologyModel from '../diagrams/ontology.json?raw';
+import pluginsIntent from '../diagrams/plugins.dx?raw';
 import pluginsGrid from '../diagrams/plugins.grid.diagram?raw';
 import { type StudioSlide, seedSlide, studioSlide } from '../diagrams/slides.ts';
 import {
@@ -137,7 +146,8 @@ const fromSource = (name: string, source: string): Story => ({
       const canvas = addTestCanvas(
         space.db,
         (content) => {
-          const { commands, problems } = Dsl.read(source);
+          // `parse`, not `read`: a document of intent has no commands until its diagram is laid out.
+          const { commands, problems } = Dsl.parse(source);
           const errors = problems.filter(({ severity }) => severity === 'error');
           if (errors.length > 0) {
             throw new Error(`${name} does not parse: ${errors.map(({ message }) => message).join(' · ')}`);
@@ -164,6 +174,21 @@ export const Architecture = fromSource('architecture', architectureGrid);
 export const Agents = fromSource('agents', agentsGrid);
 export const Chat = fromSource('chat', chatGrid);
 export const Agent = fromSource('agent', agentGrid);
+
+//
+// The same nine slides written as intent (`diagram kind=grid` with `group`, `node` and `edge`) rather than as grid
+// boxes. Each lowers to the boxes of the story above it, so the two stories of a slide draw the same thing.
+//
+
+export const HyperspaceIntent = fromSource('hyperspace', hyperspaceIntent);
+export const EchoIntent = fromSource('echo', echoIntent);
+export const OntologyIntent = fromSource('ontology', ontologyIntent);
+export const PluginsIntent = fromSource('plugins', pluginsIntent);
+export const ComposerIntent = fromSource('composer', composerIntent);
+export const ArchitectureIntent = fromSource('architecture', architectureIntent);
+export const AgentsIntent = fromSource('agents', agentsIntent);
+export const ChatIntent = fromSource('chat', chatIntent);
+export const AgentIntent = fromSource('agent', agentIntent);
 
 //
 // The Agents slide through the deck import rather than its spec: the richer `feed-card` kind, and the space graph

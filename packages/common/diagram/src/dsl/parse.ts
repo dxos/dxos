@@ -13,6 +13,7 @@ import type { SyntaxNode } from '@lezer/common';
 
 import { Shape } from '@dxos/scene';
 
+import * as GridEngine from '../grid-engine.ts';
 import * as Scene from '../scene.ts';
 import * as SemanticEngine from '../semantic-engine.ts';
 import * as Semantic from '../semantic.ts';
@@ -300,6 +301,34 @@ export const read = (text: string): Reading => {
     return typeof value === 'boolean' ? undefined : value;
   };
 
+  /**
+   * The attributes a component's own fields add to a statement naming one (`kind=card`). No table can list them —
+   * the plugin that defines the component decides them — so they are admitted here and ride on `data`, which is
+   * what lets a drawing that uses a component be written down instead of flattening to a plain box. An escaped
+   * name is the component's field whatever the table says: that is what the prefix is for.
+   */
+  const ownAttrs = (nodes: SyntaxNode[], allowed: readonly AttrSpec[]): AttrSpec[] => {
+    const names = nodes.flatMap((node) => {
+      const attrName = node.getChild('AttrName');
+      return attrName ? [slice(attrName)] : [];
+    });
+    if (!allowed.some((spec) => spec.name === KIND_ATTR) || !names.includes(KIND_ATTR)) {
+      return [];
+    }
+    return names
+      .filter((name) => name.startsWith(DATA_PREFIX) || !allowed.some((spec) => spec.name === name))
+      .map((name) => ({ name, type: 'scalar' as const }));
+  };
+
+  /** A component's own fields, under the names the component gives them. */
+  const readData = (attrs: Map<string, Attr>, own: readonly AttrSpec[]): Record<string, Semantic.Scalar> =>
+    Object.fromEntries(
+      own.flatMap((spec) => {
+        const value = scalarAttr(attrs, spec.name);
+        return value === undefined ? [] : [[dataFieldName(spec.name), value] as const];
+      }),
+    );
+
   /** The style fields every element shares. */
   const readStyle = (attrs: Map<string, Attr>) => ({
     ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
@@ -364,33 +393,9 @@ export const read = (text: string): Reading => {
     }
 
     const attributeNodes = parts.filter((part) => part.name === 'Attribute');
-    const nameOf = (node: SyntaxNode) => {
-      const attrName = node.getChild('AttrName');
-      return attrName ? slice(attrName) : undefined;
-    };
-    // A box naming a contributed kind takes that kind's own attributes as well. No table can list them — the
-    // plugin that defines the kind decides them — so they are admitted here and ride on `data`, which is what
-    // lets a drawing that uses a kind be written down instead of flattening to a plain box.
-    const declared = ELEMENT_ATTRS[kind].some((spec) => spec.name === KIND_ATTR)
-      ? attributeNodes.some((node) => nameOf(node) === KIND_ATTR)
-      : false;
-    const extra: AttrSpec[] = declared
-      ? attributeNodes.flatMap((node) => {
-          const attrName = nameOf(node);
-          // An escaped name is the kind's field whatever the table says: that is what the prefix is for.
-          return attrName !== undefined &&
-            (attrName.startsWith(DATA_PREFIX) || !ELEMENT_ATTRS[kind].some((spec) => spec.name === attrName))
-            ? [{ name: attrName, type: 'scalar' as const }]
-            : [];
-        })
-      : [];
+    const extra = ownAttrs(attributeNodes, ELEMENT_ATTRS[kind]);
     const attrs = readAttrs(attributeNodes, [...ELEMENT_ATTRS[kind], ...extra], `${kind} "${id}"`);
-    const data = Object.fromEntries(
-      extra.flatMap((spec) => {
-        const value = scalarAttr(attrs, spec.name);
-        return value === undefined ? [] : [[dataFieldName(spec.name), value] as const];
-      }),
-    );
+    const data = readData(attrs, extra);
     const style = readStyle(attrs);
 
     switch (kind) {
@@ -574,6 +579,22 @@ export const read = (text: string): Reading => {
   let semantic = false;
   const rangeOf = (node: SyntaxNode): Range => ({ from: node.from, to: node.to });
 
+  /** What only a grid diagram reads, reported once the kind is known: `diagram` may come after what it governs. */
+  const gridOnly: { range: Range; what: string }[] = [];
+  /** Groups written inside another, which only a grid diagram keeps. */
+  const nested: { node: SyntaxNode; id: string; outer: string }[] = [];
+  const members = new Map<string, string[]>();
+  diagram.members = members;
+  const enlist = (owner: string | undefined, id: string): void => {
+    const key = owner ?? Semantic.ROOT;
+    members.set(key, [...(members.get(key) ?? []), id]);
+  };
+  const gridAttrs = (attrs: Map<string, Attr>, names: readonly string[]): void =>
+    names.forEach((name) => {
+      const attr = attrs.get(name);
+      attr && gridOnly.push({ range: rangeOf(attr.node), what: `"${name}"` });
+    });
+
   const sizeAttr = (attrs: Map<string, Attr>, name: string): Semantic.Size | undefined => {
     const attr = attrs.get(name);
     if (!attr) {
@@ -660,7 +681,9 @@ export const read = (text: string): Reading => {
     }
     const id = readId(idNode);
     const label = statement.getChild('Label');
-    const attrs = readAttrs(attributesOf(statement), NODE_ATTRS, `node "${id}"`);
+    const attributeNodes = attributesOf(statement);
+    const own = ownAttrs(attributeNodes, NODE_ATTRS);
+    const attrs = readAttrs(attributeNodes, [...NODE_ATTRS, ...own], `node "${id}"`);
     const pins = childrenOf(statement).filter((child) => child.name === 'Pin');
     if (pins.length > 1) {
       report(pins[1], `node "${id}" has more than one pin.`);
@@ -676,11 +699,17 @@ export const read = (text: string): Reading => {
     const pin = readPin(statement);
     const relations = readRelations(statement);
     diagram.hinted ||= pin !== undefined || relations.length > 0;
+    const data = readData(attrs, own);
+    gridAttrs(attrs, [KIND_ATTR]);
+    enlist(group, id);
     diagram.nodes.push({
       id,
       label: label ? unquote(slice(label)) : id,
       relations,
       range: rangeOf(statement),
+      ...(label ? { labelled: true } : {}),
+      ...optional('type', nameAttr(attrs, KIND_ATTR)),
+      ...(Object.keys(data).length ? { data } : {}),
       ...optional('group', group),
       ...optional('pin', pin),
       ...optional('ref', stringAttr(attrs, 'ref')),
@@ -948,13 +977,13 @@ export const read = (text: string): Reading => {
       return;
     }
     const id = readId(idNode);
-    if (outer !== undefined) {
-      report(idNode, `Groups do not nest; the members of "${id}" join "${outer}".`);
-    } else if (id === Semantic.CONNECTORS) {
+    let declared = false;
+    if (id === Semantic.CONNECTORS) {
       report(idNode, CONNECTORS_CLASH);
     } else if (diagram.groups.some((group) => group.id === id) || diagram.nodes.some((node) => node.id === id)) {
       report(idNode, `"${id}" is already declared.`);
     } else {
+      declared = true;
       const label = statement.getChild('Label');
       const attrs = readAttrs(attributesOf(statement), GROUP_ATTRS, `group "${id}"`);
       const relations = readRelations(statement);
@@ -965,12 +994,23 @@ export const read = (text: string): Reading => {
         report(attrs.get('max-width')?.node ?? statement, '"max-width" takes a whole number of columns, at least 1.');
       }
       const compact = statement.getChild('Compact') !== null ? true : undefined;
-      diagram.hinted ||= relations.length > 0 || gap !== undefined || maxWidth !== undefined || compact === true;
+      if (outer === undefined) {
+        diagram.hinted ||= relations.length > 0 || gap !== undefined || maxWidth !== undefined || compact === true;
+      } else {
+        nested.push({ node: idNode, id, outer });
+      }
+      gridAttrs(attrs, ['cols', 'rows', 'padding']);
+      enlist(outer, id);
       diagram.groups.push({
         id,
         label: label ? unquote(slice(label)) : id,
         relations,
         range: rangeOf(statement),
+        ...optional('heading', label ? unquote(slice(label)) : undefined),
+        ...optional('parent', outer),
+        ...optional('cols', tracksAttr(attrs, 'cols')),
+        ...optional('rows', tracksAttr(attrs, 'rows')),
+        ...optional('padding', numberAttr(attrs, 'padding')),
         ...optional('gap', gap),
         ...optional('maxWidth', maxWidth),
         ...optional('compact', compact),
@@ -978,7 +1018,7 @@ export const read = (text: string): Reading => {
       });
       ranges.set(id, rangeOf(statement));
     }
-    const owner = outer ?? id;
+    const owner = declared ? id : (outer ?? id);
     for (const child of childrenOf(statement.getChild('GroupBody') ?? statement)) {
       if (child.name === 'NodeDecl') {
         readNode(child, owner);
@@ -1005,6 +1045,20 @@ export const read = (text: string): Reading => {
     if (aspect) {
       diagram.aspect = aspect;
     }
+    const size = sizeAttr(attrs, 'size');
+    if (size) {
+      diagram.size = size;
+    }
+    const rule: Semantic.GridRule = {
+      ...optional('cols', tracksAttr(attrs, 'cols')),
+      ...optional('rows', tracksAttr(attrs, 'rows')),
+      ...optional('gap', numberAttr(attrs, 'gap')),
+      ...optional('padding', numberAttr(attrs, 'padding')),
+    };
+    if (Object.keys(rule).length > 0) {
+      diagram.rule = rule;
+    }
+    gridAttrs(attrs, ['size', 'cols', 'rows', 'gap', 'padding']);
     if (origin) {
       diagram.origin = origin;
     }
@@ -1028,6 +1082,46 @@ export const read = (text: string): Reading => {
       for (const { range, what } of sequenceOnly) {
         report(range, `${what} belongs in a sequence diagram; declare \`diagram kind=sequence\`.`);
       }
+    }
+    if (kind !== 'grid') {
+      for (const { range, what } of gridOnly) {
+        report(range, `${what} belongs in a grid diagram; declare \`diagram kind=grid\`.`);
+      }
+      // The search places one level of frames, so a group inside another gives its members to the outermost one.
+      const outermost = (id: string): string => {
+        const entry = nested.find((candidate) => candidate.id === id);
+        return entry ? outermost(entry.outer) : id;
+      };
+      for (const { node, id, outer } of nested) {
+        report(node, `Groups do not nest; the members of "${id}" join "${outermost(outer)}".`);
+      }
+      const inner = new Set(nested.map((entry) => entry.id));
+      diagram.nodes.forEach((node) => node.group !== undefined && (node.group = outermost(node.group)));
+      diagram.groups = diagram.groups.filter((group) => !inner.has(group.id));
+    } else {
+      // Every member takes the next cell of the grid it is written in, so nothing is left for a hint to steer.
+      const ignored = (range: Range, what: string) =>
+        report(range, `${what} is ignored in a grid diagram: the order of statements is the layout.`, 'warning');
+      for (const node of diagram.nodes) {
+        if (node.pin) {
+          ignored(node.pin.range, 'A pin');
+        }
+        node.relations.forEach((relation) => ignored(relation.range, 'A placement relation'));
+      }
+      for (const group of diagram.groups) {
+        group.relations.forEach((relation) => ignored(relation.range, 'A placement relation'));
+      }
+      for (const edge of diagram.edges) {
+        if (edge.via.length > 0) {
+          ignored(edge.via[0].range, 'A waypoint');
+        } else if (edge.from.sides || edge.to.sides) {
+          ignored(edge.from.sides ? edge.from.range : edge.to.range, 'A side');
+        }
+      }
+      for (const entry of pendingBuses) {
+        ignored(rangeOf(entry.node), 'A bus');
+      }
+      pendingBuses.length = 0;
     }
     for (const node of diagram.nodes) {
       const { role } = node;
@@ -1070,16 +1164,31 @@ export const read = (text: string): Reading => {
     checkKind();
     // The layout sizes a frame from its members and fails on an empty one, which is what redeclaring
     // existing nodes inside a new group leaves behind.
+    const grid = diagram.kind === 'grid';
     const occupied = new Set(diagram.nodes.flatMap((node) => (node.group === undefined ? [] : [node.group])));
+    // A grid keeps an empty group: it still takes its cell, which is how a column is left blank.
     diagram.groups = diagram.groups.filter((group) => {
-      if (!occupied.has(group.id)) {
+      if (!grid && !occupied.has(group.id)) {
         report(group.range, `Group "${group.id}" has no members; declare its nodes inside its braces.`, 'warning');
       }
-      return occupied.has(group.id);
+      return grid || occupied.has(group.id);
     });
     const nodeIds = new Set(diagram.nodes.map((node) => node.id));
     const groupIds = new Set(diagram.groups.map((group) => group.id));
     const known = (end: Semantic.End) => {
+      if (grid && !nodeIds.has(end.node)) {
+        // A grid's frames are boxes like any other, so a connector may end on one; and a component has places of
+        // its own (`frame/nav`, `frame#left`) that only its host can resolve, so the rest of the ref is carried.
+        if (groupIds.has(end.node)) {
+          return true;
+        }
+        const cut = end.node.search(/[/#]/);
+        if (cut > 0 && nodeIds.has(end.node.slice(0, cut))) {
+          end.part = end.node.slice(cut);
+          end.node = end.node.slice(0, cut);
+          return true;
+        }
+      }
       if (!nodeIds.has(end.node)) {
         report(end.range, `Unknown node "${end.node}"; declare it with \`node ${end.node}\`.`);
         return false;
@@ -1285,11 +1394,11 @@ export const read = (text: string): Reading => {
   resolveSemantic();
   // The layout emits objects named after nodes and groups, plus one `edges` object; a scene
   // statement claiming one of those ids would silently replace part of the diagram.
-  const claimed = new Set([
-    ...diagram.nodes.map((node) => node.id),
-    ...diagram.groups.map((group) => group.id),
-    'edges',
-  ]);
+  const claimed = new Set(
+    diagram.kind === 'grid'
+      ? [GridEngine.OBJECT]
+      : [...diagram.nodes.map((node) => node.id), ...diagram.groups.map((group) => group.id), 'edges'],
+  );
   for (const command of commands) {
     if (command.op === 'upsert-object' && claimed.has(command.object.id) && diagram.nodes.length > 0) {
       const range = ranges.get(command.object.id);
@@ -1314,6 +1423,18 @@ export const withLayout = (
   ranges: reading.ranges,
 });
 
+/** The layout of a diagram by the engine its kind names; the search is the synchronous one. */
+const solve = (diagram: Semantic.Diagram): Pick<SemanticEngine.Solution, 'commands' | 'issues'> => {
+  switch (diagram.kind) {
+    case 'sequence':
+      return SequenceEngine.solve(diagram);
+    case 'grid':
+      return GridEngine.solve(diagram);
+    default:
+      return SemanticEngine.solve(diagram);
+  }
+};
+
 /**
  * Reads a document and lays out its semantic statements with the grid search, synchronously, so
  * an editor can lint and preview it; see {@link compile} for the full search.
@@ -1321,10 +1442,7 @@ export const withLayout = (
 export const parse = (text: string): ParseResult => {
   const reading = read(text);
   const { diagram } = reading;
-  return withLayout(
-    reading,
-    diagram && (diagram.kind === 'sequence' ? SequenceEngine.solve(diagram) : SemanticEngine.solve(diagram)),
-  );
+  return withLayout(reading, diagram && solve(diagram));
 };
 
 /** Applies commands in order, the same semantics `Scene.Command` documents. */

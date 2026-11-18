@@ -1,0 +1,28 @@
+diagram kind=grid size=1600x880 cols="1fr 2fr 1fr" gap=64 padding=48
+
+group composer "Composer" gap=24 {
+  node plank-board "Roadmap" kind=plank comp=board package=react-ui-board
+  node plank-sheet "Budget" kind=plank comp=sheet package=react-ui-sheet
+  node plank-thread "Design chat" kind=plank comp=thread package=react-ui-thread
+}
+
+group hyperspace "ECHO Hyperspace" {
+  node field kind=substrate seed=29 pitch=24 data-fill=0.55 gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=9 rmin=34 rmax=150
+}
+
+group services "EDGE Services" gap=12 {
+  node calendar "Calendar" kind=card icon=calendar-blank tone=event variant=simple
+  node email "Email" kind=card icon=envelope tone=message variant=simple
+  node storage "Storage" kind=card icon=database tone=file variant=simple
+  node translation "Translation" kind=card icon=translate variant=simple
+  node search "Search" kind=card icon=magnifying-glass variant=simple
+  node sql "SQL" kind=card icon=table variant=simple
+  node files "Files" kind=card icon=folder variant=simple
+  node commerce "Commerce" kind=card icon=shopping-cart variant=simple
+  node travel "Travel" kind=card icon=airplane-tilt tone=trip variant=simple
+  node slack "Slack" kind=card icon=hash variant=simple
+}
+
+edge plank-board -- field stroke=dashed
+edge plank-sheet -- field stroke=dashed
+edge plank-thread -- field stroke=dashed

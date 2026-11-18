@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as GridEngine from '../grid-engine.ts';
 import * as SemanticEngine from '../semantic-engine.ts';
 import * as SequenceEngine from '../sequence-engine.ts';
 import { type ParseResult, read, withLayout } from './parse.ts';
@@ -26,6 +27,10 @@ export const compile: (text: string, options?: CompileOptions) => Effect.Effect<
     // A sequence diagram's layout is its statement order; there is nothing to search.
     if (diagram.kind === 'sequence') {
       return withLayout(reading, SequenceEngine.solve(diagram));
+    }
+    // A grid diagram's layout is its rules; they are solved where the drawing is rendered.
+    if (diagram.kind === 'grid') {
+      return withLayout(reading, GridEngine.solve(diagram));
     }
     const solution = yield* Effect.promise(() => SemanticEngine.compile(diagram, options));
     return withLayout(reading, solution);

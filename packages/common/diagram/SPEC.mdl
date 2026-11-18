@@ -144,10 +144,14 @@ type Diagram
   desc: >
     The semantic statements of a document, before any coordinate exists (`Semantic.Diagram`). The
     `kind` picks the engine; `timeline` keeps messages, notes and fragments in source order for a
-    sequence diagram.
+    sequence diagram, and `members` keeps what each container holds in source order for a grid
+    diagram, whose frame is `size` and whose outermost tracks are `rule`.
   fields:
     kind: DiagramKind
     flow: 'down' | 'up' | 'right' | 'left'
+    size?: Size
+    rule?: GridRule
+    members?: Map<string, string[]>
     nodes: Node[]
     groups: Group[]
     edges: Edge[]
@@ -157,7 +161,7 @@ type Diagram
 ```mdl
 type DiagramKind
   desc: What a diagram depicts, which decides its layout ([F-1]).
-  literals: structure | sequence | dataflow
+  literals: structure | sequence | dataflow | grid
 ```
 
 ```mdl
@@ -600,4 +604,27 @@ decision D-22: Only a trunk whose hub nothing else feeds is mirrored, at most on
   for: user:richburdon
   affects: [F-5.8]
   why: A hub with its own inputs has to stay downstream of them; the far side has one gutter, so a third trunk keeps the usual side.
+```
+
+```mdl
+decision D-23: Agents author the coordinate-free statements (`diagram`, `group`, `node`, `edge`) only. The text that states positions (`scene`, `layout`, `element`) is a print of the records for a person to read or diff, and no agent skill teaches it.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-1, Diagram]
+  why: An agent writes `node Store below PM` from understanding and cannot write `rect box 1312,-417 304x64` from understanding; two authored vocabularies for one drawing is the cost a weaker model pays most.
+  rejected:
+    - Agents author the positioned text too: it would need the relations and containers the intent statements have, and the agent two vocabularies.
+```
+
+```mdl
+decision D-24: A fourth kind, `diagram kind=grid size=WxH`, reads a group as a grid of tracks (`cols`, `rows`, `gap`, `padding`), lets groups nest, and lets a node name a component (`kind=card`) and carry its fields. It places nothing: it lowers to the grid boxes `@dxos/scene` solves where the drawing is rendered, a labelled group becoming a heading over its members. Fills in [D-5] and [D-23].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, DiagramKind, Diagram, GridEngine]
+  why: The nine studio slides were already grids of components, written as `object { grid … rect … kind= }`; said as intent they lose the object wrapper, the styled heading boxes, the wrapper grids and the arrow ids, and a test holds each to the same boxes in the same frames.
+  rejected:
+    - One statement form for intent and positions alike: positions belong to the records ([D-23]).
+    - A layout rule on a group inside a searched kind: the search places one level of frames, so a nested rule needs the placer changed; left for when a diagram needs both.
+    - A second solver for the tracks: the rule would then be solved in two places that can disagree.
 ```
