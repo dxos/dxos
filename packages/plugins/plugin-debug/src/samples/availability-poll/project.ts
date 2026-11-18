@@ -99,7 +99,8 @@ each \`Tag\` hue and for \`pink\`, \`teal\` and \`amber\`. The spec's Interface 
 requirements say what each page holds; a grid's cells are plain elements with an inline \`background\`.
 - \`worker.js\` holds the \`/api\` routes and the \`Poll\` Durable Object, created with \`newUniqueId()\`; it keeps \
 one storage key, \`poll\`: \`{ title, minutes, slots: [{ id, start }], marks: { [name]: [slotId] } }\`, whose key order is the respondents' order, \
-and \`GET /api/polls/:id\` answers it with each slot's \`free\` names and, once F-3 adds it, \`best\`. \
+and \`GET /api/polls/:id\` answers it as the spec's \`Poll\` type: each slot's \`free\` names, \`respondents\` as \
+\`[{ name }]\` objects rather than strings, and, once F-3 adds it, \`best\`. \
 \`wrangler.jsonc\` declares \`assets: { directory: './dist', not_found_handling: 'single-page-application', \
 run_worker_first: ['/api/*'] }\`, binds \`Poll\`, and declares it in a migration with \`new_sqlite_classes\`, which \
 a temporary account requires. \`.gitignore\` holds \`.wrangler\`, \`dist\`, \`node_modules\`, \`npm.*\` and \`ssr\`. M-3 adds \`zones.js\` for the \

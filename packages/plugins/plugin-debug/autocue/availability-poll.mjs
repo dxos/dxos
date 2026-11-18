@@ -813,8 +813,9 @@ const checkT1 = async () => {
     // The order is the page's to choose, and the bonus change moves it.
     [
       'respondents',
+      // T-1 states names, not the type; the agent's review judges the shape.
       poll.respondents
-        ?.map((respondent) => respondent.name)
+        ?.map((respondent) => (typeof respondent === 'string' ? respondent : respondent.name))
         .sort()
         .join(', '),
       'Ana, Ben, Chika',
