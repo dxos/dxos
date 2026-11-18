@@ -18,17 +18,22 @@ npm skips the publish and only configures the trusted publisher.
 ## Procedure
 
 The agent does every step except the npm sign-in and the browser approvals, which belong to the user's npm
-account. A local agent cannot run the real publish itself: it is interactive, and the harness's permission check
-refuses it as publishing. So the agent checks, dry-runs, hands over **two commands**, follows the user's terminal,
-and verifies. With an operator's 1Password access, `--op` removes the user from the loop entirely (step 4).
+account. Without `--op` the real publish is interactive, so the agent checks, dry-runs, hands over **two commands**,
+follows the user's terminal, and verifies. With `--op` the agent's Bash tool runs the whole thing as the npm bot
+(step 4).
 
 ### 1. Choose and check the packages
 
-- List what is not on npm: `node scripts/publish-unpublished-packages.mjs --list`. It includes packages from other
-  work; keep the ones this change makes public, plus any already-published package that still lacks a trusted
-  publisher.
-- Order them dependencies first (`@dxos/animation` before `@dxos/scene`, which depends on it): read each
-  `package.json`'s `@dxos/*` dependencies.
+- Find every package CI cannot publish. Locally, `node scripts/publish-unpublished-packages.mjs --list` and
+  `bun scripts/check-packages-published.ts` see only packages missing from npm. A published package without a
+  trusted publisher shows up only in CI, where the preflight does the OIDC exchange. When the user asks for a
+  publish, dispatch one (`gh workflow run publish-all.yml --ref main`, an `@next` snapshot): a failing preflight
+  stops before the build and lists each package as `never published` or `no trusted publisher for publish-all.yml`.
+  A passing preflight goes on to publish `@next`, so dispatch only on the user's word.
+- Keep the packages this change makes public plus every one the preflight names. Packages from unrelated work that
+  are still `"private": true` stay out.
+- Order the never-published ones dependencies first (`@dxos/echo-memory` before `@dxos/echo-memory-sqlite`, which
+  depends on it): read each `package.json`'s `@dxos/*` dependencies. Trust-only packages go in any order.
 - Each has no `"private": true` and has `"publishConfig": { "access": "public" }`. New packages are private by rule
   (AGENTS.md); removing the flag is a change the user asked for — say so in the PR.
 - The worktree has `node_modules` (`pnpm install`); otherwise `pnpm publish` fails with
@@ -81,13 +86,25 @@ reads only `eng-dev`), add `--op`: the run logs in as the
 [npm bot account](#npm-bot-account), answers each 2FA prompt with a fresh TOTP code, and revokes the session token on
 exit, so the Bash tool runs it with no user step.
 
+In a local session `op` goes through the 1Password desktop app, which asks the user to authorize it. The `1password`
+skill keeps agents off local `op`, so run `--op` locally only once the user has chosen it. Send the output to a log
+file and grep it for `Package:`, `Registry:`, `Published` and `Trusted publisher configured`. A network error
+(`read EADDRNOTAVAIL`) ends the run at that package. Re-run with that package and the ones after it only: a package
+the run just published still reads `not published` during the registry lag (step 5), and the script would try to
+publish `0.0.0` again.
+
 ### 5. Verify
 
 - In the terminal, every package ends with `Trusted publisher configured: dxos/dxos → publish-all.yml.` Grep the
   scrollback for it (`read_terminal` with a large `lines` saves to a file).
-- **The registry lags.** `npm view`, `pnpm check-packages-published` and the script's own `Registry:` check answer
-  404 for a new package for a while after its publish. Do not re-run the script without `--dry-run` in that window:
-  it would try to publish `0.0.0` again.
+- **The registry lags.** `npm view`, `pnpm check-packages-published`, the CI preflight and the script's own
+  `Registry:` check answer 404 for a new package for a few minutes after its publish (about two in November 2026).
+  Do not re-run the script without `--dry-run` in that window: it would try to publish `0.0.0` again. Poll
+  `npm view @dxos/<name> version` until it answers `0.0.0`.
+- When the user asked for a publish, dispatch `publish-all.yml` again once `npm view` finds every new package. A
+  passing preflight proves every trusted publisher at once and validates the pending ones. The publish job then
+  takes over ten minutes, so watch it in the background (`gh run watch <id> --exit-status`), then check
+  `npm view @dxos/<name> dist-tags.next` on a few of the fixed packages.
 - Read each `https://www.npmjs.com/package/@dxos/<name>/access` instead (Claude in Chrome, where the user is signed
   in). A new trusted publisher shows **Status: Pending validation** and a deadline (about two days) by which a
   publish through it must happen. Report that date: the next `publish-all.yml` release (`@latest`, or an `@next`
@@ -132,6 +149,8 @@ order, at `0.0.0`, without trusted publishers; then run `publish-package.mjs --t
 | `Registry: not published` for a package just published                    | The registry lags after a bootstrap publish; check the access page instead, and do not re-run without `--dry-run` until `npm view` finds it.                                                                    |
 | `Unknown command: "trust"`                                                | npm < 11.15 called directly; the script uses `npx npm@11.15.0` — run it through the script.                                                                                                                     |
 | `ERR_PNPM_CANNOT_RESOLVE_WORKSPACE_PROTOCOL`                              | Missing `node_modules`; run `pnpm install`.                                                                                                                                                                     |
+| `ERROR: read EADDRNOTAVAIL` after a `Package:` line                       | Transient network error; the run stops there. Re-run naming that package and the ones after it (step 4).                                                                                                        |
+| Preflight says `never published` for a package bootstrapped minutes ago   | Registry lag. Poll `npm view @dxos/<name> version` until it answers, then dispatch again.                                                                                                                       |
 | `publish-all.yml` fails with 404/ENEEDAUTH for a package                  | No trusted publisher for it yet; run the script with `--trust`. The `preflight` job (`scripts/check-packages-published.ts`) now catches this before the build, for every package at once.                       |
 | `E401 … token is invalid` on one package mid-publish                      | Transient: preflight's OIDC exchange had passed for the same package. Re-run the failed job; `changeset publish` skips versions already on npm, so a re-run resumes the release.                                |
 | `E409 … Cannot publish over previously staged version`                    | npm is holding that version in **Validating** (automated review, shown on the package's Versions tab); nobody staged it and nothing needs approving. Wait until it shows Published, then re-run the failed job. |
