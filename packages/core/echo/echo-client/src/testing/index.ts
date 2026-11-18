@@ -5,4 +5,5 @@
 export * from './echo-test-builder.ts';
 export * from './test-database-layer.ts';
 export * from './utils.ts';
+export * from './working-set.ts';
 export { getObjectCore } from '../echo-handler/index.ts';

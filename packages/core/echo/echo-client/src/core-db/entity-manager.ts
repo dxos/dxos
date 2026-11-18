@@ -47,7 +47,7 @@ import {
 import { assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, runServiceCall, runServiceEffect, subscribeStream } from '@dxos/protocols';
+import { RpcClosedError, type WorkingSetRow, runServiceCall, runServiceEffect, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, countWork, deepMapValues } from '@dxos/util';
@@ -80,7 +80,7 @@ import {
 } from './types.ts';
 import { UpdateDispatch } from './update-dispatch.ts';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
-import { type ExportWorkingSetOptions, type WorkingSetRow } from './working-set-row.ts';
+import { type ExportWorkingSetOptions } from './working-set-export.ts';
 
 const TRACE_LOADING = false;
 
@@ -254,6 +254,8 @@ export class EntityManager implements IDatabaseBinding {
   readonly #objectsForLocalCommit = new Set<string>();
   /** Objects written locally since the last flush that reached the index, with the sequence of their last write. */
   readonly #unindexedWrites = new Map<string, number>();
+  /** Objects of the working set the database opened from; see {@link noteWorkingSetObjects}. */
+  #workingSetObjects: ReadonlySet<string> = new Set();
   #writeSequence = 0;
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
@@ -496,6 +498,7 @@ export class EntityManager implements IDatabaseBinding {
     this._objectsForNextDbUpdate.clear();
     this.#objectsForLocalCommit.clear();
     this.#unindexedWrites.clear();
+    this.#workingSetObjects = new Set();
     this._objectsForNextUpdate.clear();
     await this._repoProxy.close(ctx);
   }
@@ -531,11 +534,22 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Objects written locally that the index may not reflect yet: everything written since the last flush that waited
-   * for indexing. Only these can disagree with an index answer, since the index holds everything else this client has.
+   * Objects whose index rows may lag: this client's writes since the last flush that waited for indexing, and the
+   * working set's objects (see {@link noteWorkingSetObjects}).
    */
   unindexedWrites(): Iterable<string> {
-    return this.#unindexedWrites.keys();
+    if (this.#workingSetObjects.size === 0) {
+      return this.#unindexedWrites.keys();
+    }
+    return new Set([...this.#unindexedWrites.keys(), ...this.#workingSetObjects]);
+  }
+
+  /**
+   * Counts the working set's objects among this client's unindexed writes, so queries merge them where the index lags;
+   * a flush keeps them, and each call replaces the last.
+   */
+  noteWorkingSetObjects(ids: Iterable<string>): void {
+    this.#workingSetObjects = new Set(ids);
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {

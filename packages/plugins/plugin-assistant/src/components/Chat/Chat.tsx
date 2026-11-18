@@ -85,7 +85,7 @@ import { SurfaceWidget } from './SurfaceWidget.tsx';
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'chat' | 'chatModel' | 'debug'> & {
+  Pick<ChatContextValue, 'chat' | 'chatModel' | 'debug' | 'readonly'> & {
     /** Fallback database when the chat is transient (not yet persisted). */
     db?: Database.Database;
     onEvent?: (event: ChatEvent) => void;
@@ -111,6 +111,7 @@ const ChatRoot = ({
   onSubmit,
   getContext,
   defaultDrawer,
+  readonly = false,
   ...props
 }: ChatRootProps) => {
   const [debug, setDebug] = useState(debugProp ?? false);
@@ -177,6 +178,10 @@ const ChatRoot = ({
         }
 
         case 'rewind': {
+          if (readonly) {
+            break;
+          }
+
           // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
           // composer so it can be revised. Recorded on the feed, where the agent's next turn reads it. A stale
           // click (message already gone) resolves to nothing and is a no-op. A prompt sent from here keeps its
@@ -194,7 +199,7 @@ const ChatRoot = ({
 
         case 'fork': {
           // A fork opens at once, so the reader goes straight to the thread they asked for.
-          if (feed && db) {
+          if (feed && db && !readonly) {
             void EffectEx.runPromise(
               TrajectoryStore.forkThread(feed, { from: ev.id }).pipe(Effect.provide(Database.layer(db))),
             )
@@ -208,7 +213,7 @@ const ChatRoot = ({
           // Withdrawing a prompt the agent has not taken up: a `promptCancel` takes it out of the agent's queue,
           // and the outbox forgets this client's copy.
           const row = delivery.get(ev.id);
-          if (row?.status === 'failed' || row?.status === 'delivered') {
+          if (!readonly && (row?.status === 'failed' || row?.status === 'delivered')) {
             if (row.entryId && db && feed) {
               void EffectEx.runPromise(
                 TrajectoryStore.cancelPrompt(feed, row.entryId).pipe(Effect.provide(Database.layer(db))),
@@ -226,11 +231,11 @@ const ChatRoot = ({
     });
     // `feed`, `messages` and `delivery` are dependencies because the rewind and prompt branches read
     // them: without them the handler would keep resolving against whatever was mounted first.
-  }, [event, dump, onEvent, db, feed, messages, delivery, chatModel]);
+  }, [event, dump, onEvent, db, feed, messages, delivery, chatModel, readonly]);
 
   useEffect(() => {
     return event.on((ev) => {
-      if (ev.type !== 'respond' || !chat) {
+      if (ev.type !== 'respond' || !chat || readonly) {
         return;
       }
       const { messageId, requestId, optionId } = ev;
@@ -252,10 +257,10 @@ const ChatRoot = ({
         }
       });
     });
-  }, [event, chat, invokePromise]);
+  }, [event, chat, invokePromise, readonly]);
 
   useEffect(() => {
-    if (!chatModel) {
+    if (!chatModel || readonly) {
       return;
     }
 
@@ -384,7 +389,7 @@ const ChatRoot = ({
         }
       }
     });
-  }, [event, chatModel, streaming, active, queued, onSubmit, getContext, invokePromise, chat, db, feed]);
+  }, [event, chatModel, streaming, active, queued, onSubmit, getContext, invokePromise, chat, db, feed, readonly]);
 
   // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
   // turn, so the agent resumes without the report reading as something the user typed.
@@ -397,6 +402,7 @@ const ChatRoot = ({
       db={db}
       chat={chat}
       chatModel={chatModel}
+      readonly={readonly}
       queueSize={queued}
       started={messages.length > 0 || queued > 0}
       setController={setController}
@@ -619,7 +625,8 @@ const ChatThread = ({
   onViewUsage,
 }: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
-  const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { chat, db, debug, event, chatModel, readonly, setController, setVisibleRange } =
+    useChatContext(CHAT_THREAD_NAME);
   const { messages, tail, lanes, forks } = useChatThreadContext(CHAT_THREAD_NAME);
   const getLane = useCallback((message: Message.Message) => lanes?.get(message.id), [lanes]);
   const forkMarkers = useMemo(() => {
@@ -751,9 +758,9 @@ const ChatThread = ({
         tailLines={tailLines}
         debug={debug}
         // An external agent keeps its own context, which a rewind of the transcript cannot reach.
-        rewind={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
+        rewind={!readonly && SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
         // Forking needs the trajectory the Composer harness writes; an external agent keeps its own.
-        fork={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
+        fork={!readonly && SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
         getForks={getForks}
         showTokens={showTokens}
         onEvent={handleEvent}

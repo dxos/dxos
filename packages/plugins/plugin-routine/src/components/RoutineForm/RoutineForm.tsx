@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
@@ -377,13 +377,6 @@ const useOperations = (db: Database.Database) =>
 /** Subscribe to the routine and derive its primary (first) trigger. */
 const usePrimaryTrigger = (routine: Routine.Routine): Trigger.Trigger | undefined => {
   const [snapshot] = useObject(routine);
-  return useMemo(() => {
-    for (const ref of snapshot.triggers) {
-      const target = ref.target;
-      if (Obj.instanceOf(Trigger.Trigger, target)) {
-        return target;
-      }
-    }
-    return undefined;
-  }, [snapshot.triggers]);
+  const target = useResolveRef(snapshot.triggers.at(0));
+  return Obj.instanceOf(Trigger.Trigger, target) ? target : undefined;
 };

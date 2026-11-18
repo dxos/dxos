@@ -38,6 +38,7 @@ export type UseChatModelProps = {
   sender?: AgentService.PromptSender;
   /** The fork the chat model shows and sends into; main when absent. */
   thread?: Trajectory.ThreadId;
+  readonly?: boolean;
 };
 
 /**
@@ -52,6 +53,7 @@ export const useChatModel = ({
   settings,
   sender,
   thread,
+  readonly = false,
 }: UseChatModelProps): ChatModel | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
@@ -128,7 +130,7 @@ export const useChatModel = ({
   // A remount (e.g. the user navigated to another page mid-turn) gets a fresh chat model whose
   // active/streaming state starts empty, while the agent process for the feed keeps running;
   // adopting it restores the running indicator and the streamed blocks.
-  useEffect(() => chatModel?.adopt(), [chatModel]);
+  useEffect(() => (readonly ? undefined : chatModel?.adopt()), [chatModel, readonly]);
 
   return chatModel;
 };

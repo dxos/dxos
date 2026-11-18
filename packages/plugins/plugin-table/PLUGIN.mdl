@@ -213,6 +213,12 @@ feat F-7: Collaboration
     then: the reader sees that cell outlined in the member's hue with their name, on the same row and field even when the reader's sort or filter puts it elsewhere
 ```
 
+```mdl
+feat F-8: Read-only Host
+
+  req F-8.1: When the host contributes `ReadOnly`, no cell can be edited, there is no draft row or row selection, and the toolbar shows with Add row disabled while Export still works.
+```
+
 ## Acceptance
 
 ```mdl
@@ -411,6 +417,41 @@ decision D-2: The published selection is what the member's grid shows, kept by f
   why: A header or draft row names no record, so keeping the last cell showed peers a record the member had left; a filtered-out row cannot be told apart from a deleted one, so renaming the selection to the row now in its place published records the member never chose.
   rejected:
     - Rename the selection to the row now at its position when its row is gone: a search makes that a record the member never chose.
+```
+
+```mdl
+decision D-3: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-4: A `readOnly` option turns off data editing and row selection and drops the draft row; the toolbar stays, with only adding rows disabled. Fills in [D-3].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.1]
+  why: Export writes nothing to the table, so a reader can still take the data away; a disabled toolbar keeps the layout the same as in Composer.
+  rejected: Hiding the toolbar; it also hides Export.
+```
+
+```mdl
+decision D-5: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-3
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-6: When the host contributes `ReadOnly`, data editing and row selection are off and there is no draft row; the toolbar stays, with only adding rows disabled. Fills in [D-5].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-4
+  affects: [F-8.1]
+  why: The table article reads the capability when it renders, so the behaviour [D-4] chose stays the same with no plugin option.
 ```
 
 ## Appendix: Extension Definitions

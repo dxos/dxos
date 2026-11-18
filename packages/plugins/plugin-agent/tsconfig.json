@@ -76,6 +76,12 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-memory"
+    },
+    {
+      "path": "../../core/echo/echo-memory-sqlite"
+    },
+    {
       "path": "../../core/echo/echo-protocol"
     },
     {

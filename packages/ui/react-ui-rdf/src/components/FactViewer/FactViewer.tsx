@@ -4,7 +4,8 @@
 
 import React, { type ReactNode, createContext, forwardRef, useContext, useMemo, useState } from 'react';
 
-import { type RDF, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
+import { buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
 import { Tree } from '@dxos/react-ui-graph';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
@@ -42,7 +43,7 @@ type View = 'list' | 'graph';
 //
 
 type FactViewerContextValue = {
-  facts: RDF.Fact[];
+  facts: Fact.Fact[];
   context?: string;
   predicate?: string;
   groups: Group[];
@@ -71,7 +72,7 @@ const useFactViewerContext = (consumer: string): FactViewerContextValue => {
 //
 
 type FactViewerRootProps = Util.ThemedClassName<{
-  facts: RDF.Fact[];
+  facts: Fact.Fact[];
   /** Context entity id; scopes the list and roots the graph. */
   context?: string;
   /** Predicate filter; when set, only facts with this predicate are shown. */
@@ -282,7 +283,7 @@ FactViewerGroup.displayName = 'FactViewer.Group';
 // Row
 //
 
-type FactViewerRowProps = Util.ThemedClassName<{ fact: RDF.Fact; conflicting?: boolean }>;
+type FactViewerRowProps = Util.ThemedClassName<{ fact: Fact.Fact; conflicting?: boolean }>;
 
 const FactViewerRow = forwardRef<HTMLDivElement, FactViewerRowProps>(
   ({ classNames, fact, conflicting }, forwardedRef) => {

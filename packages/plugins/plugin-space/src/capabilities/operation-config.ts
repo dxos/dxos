@@ -16,6 +16,7 @@ export default Capability.makeModule((options: SpaceSchema.SpacePluginOptions) =
       createInvitationUrl: makeCreateInvitationUrl(options),
       createJoinUrl: makeCreateJoinUrl(options),
       createObjectUrl: makeCreateObjectUrl(options),
+      publication: options.publication,
     }),
   ),
 );

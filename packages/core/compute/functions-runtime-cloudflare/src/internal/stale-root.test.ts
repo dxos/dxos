@@ -14,7 +14,7 @@ import { type DatabaseImpl, EchoClient } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey, SpaceId, URI } from '@dxos/keys';
-import { type EdgeFunctionEnv, makeInProcessClient } from '@dxos/protocols';
+import { type EdgeFunctionEnv, type WorkingSetRow, makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
 import { ServiceContainer } from './service-container.ts';
@@ -84,8 +84,14 @@ afterEach(async () => {
   }
 });
 
-/** A database opened as a function invocation opens it: through the Cloudflare handlers, on the space root. */
-const openDatabase = async (store: MemoryDataService): Promise<{ db: DatabaseImpl; container: ServiceContainer }> => {
+/**
+ * A database opened as a function invocation opens it: through the Cloudflare handlers, on the space root, seeded from
+ * `seed` when given.
+ */
+const openDatabase = async (
+  store: MemoryDataService,
+  seed?: readonly WorkingSetRow[],
+): Promise<{ db: DatabaseImpl; container: ServiceContainer }> => {
   const container = new ServiceContainer(
     {} as EdgeFunctionEnv.TraceContext,
     store,
@@ -112,6 +118,9 @@ const openDatabase = async (store: MemoryDataService): Promise<{ db: DatabaseImp
   // As `wrapFunctionHandler` registers an operation's types.
   db.graph.registry.add([TestSchema.Expando]);
   await db.setSpaceRoot(`automerge:${store.rootDocumentId}`);
+  if (seed) {
+    db.seedWorkingSet(seed);
+  }
   await db.open();
   cleanup.push(async () => {
     await client.close();
@@ -144,6 +153,23 @@ describe('a nested call returning on the pull-only data plane', () => {
 
       const id = await nestedCallCreating(store, 'canvas');
       // What the host does when the nested call returns, before the caller decodes its output.
+      await container.refreshWorkingSet();
+
+      const loaded = await caller.makeRef(URI.make(`echo:///${id}`)).load();
+      expect((loaded as { name?: string }).name).toBe('canvas');
+    },
+  );
+
+  test(
+    'a caller seeded with the space root loads an object the nested call created, once refreshed',
+    { timeout: 20_000 },
+    async ({ expect }) => {
+      const store = new MemoryDataService(SpaceId.random());
+      const { db: exporter } = await openDatabase(store);
+      // The seeded root is held, not fetched, which is the copy a refresh must still bring up to date.
+      const { db: caller, container } = await openDatabase(store, exporter.exportWorkingSet({ maxBytes: 1 << 20 }));
+
+      const id = await nestedCallCreating(store, 'canvas');
       await container.refreshWorkingSet();
 
       const loaded = await caller.makeRef(URI.make(`echo:///${id}`)).load();

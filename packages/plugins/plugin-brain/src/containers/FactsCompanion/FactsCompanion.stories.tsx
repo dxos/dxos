@@ -6,41 +6,36 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
-import { BrainCapabilities } from '#types';
-
-import { makeFactStoreRegistry } from '../../capabilities/fact-store.ts';
 import { FactsCompanion } from './FactsCompanion.tsx';
 
 // A shared registry contributed as the `FactStoreRegistry` capability and seeded (below) for the story's
 // space, so `FactsCompanion` (space-scoped via `useActiveSpace`) renders real facts.
-const registry = makeFactStoreRegistry();
-
 /** Minimal RDF fact fixture (subject —predicate→ object) for the viewer. */
-const fact = (id: string, subject: string, predicate: string, object: string): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: subject.toLowerCase(), label: subject },
-    predicate,
-    object: { kind: 'entity', entity: object.toLowerCase(), label: object },
-  },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: 'story:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
-  recordedAt: '2026-01-01T00:00:00.000Z',
-  extractor: { id: 'story', model: 'story', version: '1' },
-  sourceHash: id,
-});
+const fact = (id: string, subject: string, predicate: string, object: string): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: subject.toLowerCase(), label: subject },
+      predicate,
+      object: { kind: 'entity', entity: object.toLowerCase(), label: object },
+    },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: 'story:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
+    recordedAt: '2026-01-01T00:00:00.000Z',
+    extractor: { id: 'story', model: 'story', version: '1' },
+    sourceHash: id,
+  });
 
-const FACTS: RDF.Fact[] = [fact('f1', 'Alice', 'worksAt', 'Acme'), fact('f2', 'Alice', 'knows', 'Bob')];
+const FACTS: Fact.Fact[] = [fact('f1', 'Alice', 'worksAt', 'Acme'), fact('f2', 'Alice', 'knows', 'Bob')];
 
 const meta = {
   title: 'plugins/plugin-brain/containers/FactsCompanion',
@@ -49,15 +44,13 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      // Contribute the seeded registry directly so the companion resolves it without the full FactStore module.
-      capabilities: [Capability.contribute(BrainCapabilities.FactStoreRegistry, registry)],
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => EffectEx.runPromise(registry.forSpace(defaultSpace.id).putFacts(FACTS)));
+              yield* Effect.promise(() => EffectEx.runPromise(client.memory(defaultSpace.id).put(FACTS)));
             }),
         }),
         StorybookPlugin.make({}),

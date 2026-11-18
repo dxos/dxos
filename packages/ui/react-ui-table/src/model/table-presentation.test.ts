@@ -135,6 +135,21 @@ describe('TablePresentation', () => {
       expect(cells['0,0']?.value).toBe('Pinned');
     });
 
+    it('keeps pinned cells read-only when data is not editable', async () => {
+      const readonlyModel = createTableModel(registry, {
+        features: { selection: { enabled: true, mode: 'multiple' }, dataEditable: false, pinColumns: 1 },
+      });
+      await readonlyModel.open();
+      const rows: any[] = [{ id: '1', title: 'A', count: 1 }];
+      readonlyModel.setRows(rows);
+      const cells = new TablePresentation(registry, readonlyModel).getCells(
+        { start: { row: 0, col: 0 }, end: { row: 0, col: 1 } },
+        'frozenColsStart',
+      );
+      expect(cells['0,0']?.readonly).toBe('no-text-select');
+      expect(cells['1,0']?.readonly).toBe('text-select');
+    });
+
     it('ignores mutations for out-of-range columns without throwing', () => {
       expect(() => model.updateCellData({ plane: 'grid', col: 999, row: 0 }, () => 'x')).not.toThrow();
       // The pinned field is unchanged.

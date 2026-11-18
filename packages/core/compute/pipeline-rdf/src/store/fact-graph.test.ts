@@ -4,18 +4,20 @@
 
 import { describe, test } from 'vitest';
 
-import { type Fact } from '../types/index.ts';
+import { Fact } from '@dxos/echo-memory';
+
 import { buildFactGraph, factSourceFromFacts } from './fact-graph.ts';
 
-const mk = (id: string, subject: string, predicate: string, object: string): Fact => ({
-  id,
-  assertion: { subject: { kind: 'entity', entity: subject }, predicate, object: { kind: 'entity', entity: object } },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: `test:${id}`, generatedAtTime: '2026-06-30T00:00:00.000Z' },
-  recordedAt: '2026-06-30T00:00:00.000Z',
-  extractor: { id: 'test', model: 'test', version: '1' },
-  sourceHash: id,
-});
+const mk = (id: string, subject: string, predicate: string, object: string): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: { subject: { kind: 'entity', entity: subject }, predicate, object: { kind: 'entity', entity: object } },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: `test:${id}`, generatedAtTime: '2026-06-30T00:00:00.000Z' },
+    recordedAt: '2026-06-30T00:00:00.000Z',
+    extractor: { id: 'test', model: 'test', version: '1' },
+    sourceHash: id,
+  });
 
 // Socrates-isa-man, man-is-mortal.
 const SYLLOGISM = [mk('f1', 'socrates', 'is a', 'man'), mk('f2', 'man', 'is', 'mortal')];
