@@ -16,7 +16,7 @@ export const NavTreeDocumentTitle = ({ node }: { node?: AppGraphNode.Node }) => 
     document.title = node
       ? Theme.toLocalizedString(node.properties.label, t)
       : t('current-app.name', { ns: osTranslations });
-  }, [node?.properties?.label]);
+  }, [node?.properties?.label, t]);
   return null;
 };
 

@@ -341,6 +341,23 @@ feat F-9: Token Labels
   req F-9.3: The count is an estimate (tokenx, the estimator the preprocessor budgets with), since per-request usage covers a whole turn and cannot be attributed to one block; status and stats blocks count zero.
 ```
 
+```mdl
+feat F-10: Read-only Host
+  uses: [Chat, ChatPanel, EnsureCompanionChat]
+
+  req F-10.1:
+    when: the host contributes `ReadOnly`
+    then: a chat opens as its transcript, with no prompt, toolbar, rewind, fork or withdraw, and a question in it shows
+          without a way to answer
+  req F-10.2:
+    when: the host contributes `ReadOnly`
+    then: the navtree keeps the AI group and its chats, with no action to create or delete one, and nothing offers the
+          companion chat, the chat dialog, agents, slash commands or the trace panel
+  req F-10.3:
+    when: the host contributes `ReadOnly`
+    then: nothing sends an AI request to EDGE, runs or resumes an agent turn, or provisions a companion chat
+```
+
 ## Acceptance
 
 ```mdl
@@ -840,6 +857,54 @@ decision D-26: RunPromptInNewChat binds context through the database it is given
   for: user:dmaretskyi
   affects: [RunPromptInNewChat]
   why: EDGE hosts contribute no client either, and the handler already provides that database.
+```
+
+```mdl
+decision D-27: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-10]
+```
+
+```mdl
+decision D-28: In read-only mode chats can be opened and read, with no companion, no editing and no interaction with chat history.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-10]
+```
+
+```mdl
+decision D-29: plugin-assistant reads `ReadOnly` when the work runs, never when a module activates: surfaces through `useReadOnly`, app-graph extensions through the capability's atom, and background work through the capability manager. Every module still activates, and only the work it would do is gated. Fills in [D-27].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10]
+  why: The host may contribute the capability after the plugin activates, so a module that read it once would keep the wrong answer.
+  rejected:
+    - Make the gated modules require `ReadOnly`, or drop them from the module list: that only adds modules, it cannot remove the ones a writable host needs.
+```
+
+```mdl
+decision D-30: A read-only chat renders from its feed with the same thread component as a writable one, with no prompt or toolbar. Its chat model never adopts the agent process, the thread's event handlers drop rewind, fork, withdraw, respond and submit, and a question card shows the question and any answer with no way to answer. Fills in [D-28].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10]
+  why: The transcript then looks as it does in the app, forks included, and nothing a reader clicks can write to the feed.
+  rejected:
+    - A separate read-only transcript built on the feed alone: it would duplicate how the thread groups messages, lanes and forks.
+    - Hide question cards: the question and its answer are part of the conversation a reader came to see.
+```
+
+```mdl
+decision D-31: The navtree keeps the AI group and the Chats section with no create or delete action. Every surface that prompts, edits, configures or runs an agent renders nothing, agent articles included. The EDGE AI client refuses to start, and the agent hydrator, question resumer, companion provisioner, comment-agent runner, MCP server registry and the markdown Run button each do nothing. Fills in [D-28].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10]
+  why: A read-only host shows a space its reader cannot edit, and an agent turn or AI request would act in it.
+  rejected:
+    - Unregister the operations, skills and slash commands: nothing a read-only host shows can invoke them, and the EDGE client check stops any that would call a model.
 ```
 
 ---

@@ -17,6 +17,7 @@ import React, {
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -244,6 +245,7 @@ export type TaskAttachmentsProps = {
  */
 export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: TaskAttachmentsProps) => {
   const { t } = UiHooks.useTranslation(TasksNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const [refs] = useObject(task, 'attachments');
   const dragging = useContext(FileDragContext);
 
@@ -293,7 +295,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
           {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
         >
           {hasCards ? (
-            <RemoveAttachmentContext.Provider value={handleRemove}>
+            <RemoveAttachmentContext.Provider value={readonly ? undefined : handleRemove}>
               <CardMasonry.CardMasonry
                 objects={refs ?? []}
                 size='compact'

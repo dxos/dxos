@@ -47,6 +47,7 @@ export type ChartCompanionProps = {
   onSelectRange?: (range: string) => void;
   /** Every chart type, from `SheetCapabilities.ChartType`; a new chart starts as the first. */
   chartTypes: readonly SheetCapabilities.ChartTypeContribution[];
+  readonly?: boolean;
 };
 
 /** Master-detail editor of a sheet's charts: the list of ranges above, the selected chart and its settings below. */
@@ -60,6 +61,7 @@ export const ChartCompanion = ({
   selection,
   onSelectRange,
   chartTypes,
+  readonly,
 }: ChartCompanionProps) => {
   const { t } = Hooks.useTranslation(SheetNamespace.key);
   const [selected, setSelected] = useState<string | undefined>(charts[0]?.id);
@@ -158,9 +160,11 @@ export const ChartCompanion = ({
 
   return (
     <Panel.Root>
-      <Panel.Header>
-        <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />
-      </Panel.Header>
+      {!readonly && (
+        <Panel.Header>
+          <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />
+        </Panel.Header>
+      )}
       <Panel.Body asChild>
         <Splitter.Root
           orientation='vertical'
@@ -178,14 +182,16 @@ export const ChartCompanion = ({
                         <Listbox.ItemIcon icon={item.icon} />
                         <Listbox.ItemText />
                         <Listbox.ItemDescription />
-                        <SystemButton.Edit
-                          variant='ghost'
-                          iconOnly
-                          onClick={() => {
-                            handleSelect(item.value);
-                            setEditing(true);
-                          }}
-                        />
+                        {!readonly && (
+                          <SystemButton.Edit
+                            variant='ghost'
+                            iconOnly
+                            onClick={() => {
+                              handleSelect(item.value);
+                              setEditing(true);
+                            }}
+                          />
+                        )}
                       </Listbox.Item>
                     ))}
                   </Listbox.Content>
@@ -204,6 +210,7 @@ export const ChartCompanion = ({
                 getValues={getValues}
                 chartTypes={chartTypes}
                 typeOptions={typeOptions}
+                readonly={readonly}
                 onUpdate={(values) => {
                   handleUpdate(values);
                   setEditing(false);
@@ -222,7 +229,7 @@ export const ChartCompanion = ({
 
 ChartCompanion.displayName = 'ChartCompanion';
 
-type ChartDetailProps = Pick<ChartCompanionProps, 'getValues' | 'chartTypes'> & {
+type ChartDetailProps = Pick<ChartCompanionProps, 'getValues' | 'chartTypes' | 'readonly'> & {
   chart: ChartItem;
   typeOptions: SelectFieldOption[];
   editing: boolean;
@@ -231,7 +238,16 @@ type ChartDetailProps = Pick<ChartCompanionProps, 'getValues' | 'chartTypes'> & 
 };
 
 /** The selected chart, or its settings form while editing. */
-const ChartDetail = ({ chart, editing, getValues, chartTypes, typeOptions, onUpdate, onCancel }: ChartDetailProps) => {
+const ChartDetail = ({
+  chart,
+  editing,
+  getValues,
+  chartTypes,
+  typeOptions,
+  readonly,
+  onUpdate,
+  onCancel,
+}: ChartDetailProps) => {
   const { id: _id, ...values } = chart;
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
@@ -258,6 +274,11 @@ const ChartDetail = ({ chart, editing, getValues, chartTypes, typeOptions, onUpd
       </Form.Viewport>
     </Form.Root>
   ) : (
-    <ChartView chart={values} getValues={getValues} onUpdate={onUpdate} chartTypes={chartTypes} />
+    <ChartView
+      chart={values}
+      getValues={getValues}
+      onUpdate={readonly ? undefined : onUpdate}
+      chartTypes={chartTypes}
+    />
   );
 };

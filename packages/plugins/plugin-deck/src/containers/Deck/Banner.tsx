@@ -18,6 +18,7 @@ import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar/index.ts';
 
 export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
   const { t } = Hooks.useTranslation(DeckNamespace.key);
+  const start = Surface.useContributions(DeckSurface.BannerStart);
 
   return (
     <header
@@ -29,7 +30,11 @@ export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?:
       )}
     >
       {variant === 'sidebar' ? <CloseSidebarButton /> : <ToggleSidebarButton />}
-      <span className='self-center grow ms-1'>{t('current-app.name', { ns: osTranslations })}</span>
+      {variant === 'topbar' && start.length > 0 ? (
+        <Surface.Surface type={DeckSurface.BannerStart} limit={1} />
+      ) : (
+        <span className='self-center grow ms-1'>{t('current-app.name', { ns: osTranslations })}</span>
+      )}
       {variant === 'topbar' && (
         <div className='dx-cover pointer-events-none'>
           <Layout.Grid classNames='h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>
@@ -38,6 +43,7 @@ export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?:
         </div>
       )}
       <span className='grow' />
+      {variant === 'topbar' && <Surface.Surface type={DeckSurface.BannerEnd} />}
       <Surface.Surface type={DeckSurface.VersionInfo} limit={1} />
     </header>
   );

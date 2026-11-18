@@ -1,0 +1,305 @@
+{
+  "id": "composer",
+  "title": "Composer",
+  "subtitle": "Every part of the screen is supplied by a plugin",
+  "page": {
+    "w": 1600,
+    "h": 900
+  },
+  "size": {
+    "w": 330,
+    "h": 156
+  },
+  "nodes": {
+    "navtree": {
+      "cx": 235,
+      "cy": 312.69,
+      "w": 330,
+      "h": 156,
+      "icon": "tree-view",
+      "title": "Navtree",
+      "body": "The space tree in the sidebar, built from the app graph.",
+      "footer": "plugin-navtree",
+      "iconTone": "var(--t-event)"
+    },
+    "document": {
+      "cx": 235,
+      "cy": 492.69,
+      "w": 330,
+      "h": 156,
+      "icon": "file-text",
+      "title": "Document",
+      "body": "Collaborative markdown; the text lives in ECHO.",
+      "footer": "plugin-markdown",
+      "iconTone": "var(--t-trip)"
+    },
+    "sheet": {
+      "cx": 235,
+      "cy": 672.69,
+      "w": 330,
+      "h": 156,
+      "icon": "grid-four",
+      "title": "Sheet",
+      "body": "A spreadsheet embedded in the document.",
+      "footer": "plugin-sheet",
+      "iconTone": "var(--t-sheet)"
+    },
+    "assistant": {
+      "cx": 1365,
+      "cy": 312.69,
+      "w": 330,
+      "h": 156,
+      "icon": "sparkle",
+      "title": "Assistant",
+      "body": "Assistant chat about the object on screen.",
+      "footer": "plugin-assistant",
+      "iconTone": "var(--t-message)"
+    },
+    "canvas": {
+      "cx": 1365,
+      "cy": 492.69,
+      "w": 330,
+      "h": 156,
+      "icon": "pen-nib",
+      "title": "Canvas",
+      "body": "A diagram embedded in the document.",
+      "footer": "plugin-excalidraw",
+      "iconTone": "var(--t-file)"
+    }
+  },
+  "edges": [
+    [
+      "navtree",
+      "frame",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "arrow": "none",
+        "color": "var(--t-event)",
+        "width": 2.2,
+        "halo": true,
+        "dot": true,
+        "region": "r-nav",
+        "ends": {
+          "from": {
+            "x": 400,
+            "y": 312.69
+          },
+          "to": {
+            "x": 479.6,
+            "y": 318
+          }
+        }
+      }
+    ],
+    [
+      "document",
+      "frame",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "arrow": "none",
+        "color": "var(--t-trip)",
+        "width": 2.2,
+        "halo": true,
+        "dot": true,
+        "region": "r-doc",
+        "ends": {
+          "from": {
+            "x": 400,
+            "y": 492.69
+          },
+          "to": {
+            "x": 681.2,
+            "y": 517.52
+          }
+        }
+      }
+    ],
+    [
+      "sheet",
+      "frame",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "arrow": "none",
+        "color": "var(--t-sheet)",
+        "width": 2.2,
+        "halo": true,
+        "dot": true,
+        "region": "r-sheet",
+        "ends": {
+          "from": {
+            "x": 400,
+            "y": 672.69
+          },
+          "to": {
+            "x": 706.8000000000001,
+            "y": 642.55
+          }
+        }
+      }
+    ],
+    [
+      "assistant",
+      "frame",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "arrow": "none",
+        "color": "var(--t-message)",
+        "width": 2.2,
+        "halo": true,
+        "dot": true,
+        "region": "r-comp",
+        "ends": {
+          "from": {
+            "x": 1200,
+            "y": 312.69
+          },
+          "to": {
+            "x": 1120.4,
+            "y": 279.03999999999996
+          }
+        }
+      }
+    ],
+    [
+      "canvas",
+      "frame",
+      "",
+      {
+        "route": "curve-h",
+        "dash": true,
+        "arrow": "none",
+        "color": "var(--t-file)",
+        "width": 2.2,
+        "halo": true,
+        "dot": true,
+        "region": "r-canvas",
+        "ends": {
+          "from": {
+            "x": 1200,
+            "y": 492.69
+          },
+          "to": {
+            "x": 893.2,
+            "y": 416.08
+          }
+        }
+      }
+    ]
+  ],
+  "components": [
+    {
+      "id": "frame",
+      "kind": "app-frame",
+      "x": 470,
+      "y": 156,
+      "w": 660,
+      "h": 650,
+      "params": {
+        "highlight": true,
+        "colors": {
+          "nav": "var(--t-event)",
+          "doc": "var(--t-trip)",
+          "sheet": "var(--t-sheet)",
+          "comp": "var(--t-message)",
+          "canvas": "var(--t-file)"
+        }
+      },
+      "parts": [
+        {
+          "id": "r-nav",
+          "x": 9.600000000000023,
+          "y": 51.19999999999999,
+          "w": 192,
+          "h": 553.9999999999999
+        },
+        {
+          "id": "r-doc",
+          "x": 211.20000000000005,
+          "y": 51.19999999999999,
+          "w": 237.59999999999997,
+          "h": 553.9999999999999
+        },
+        {
+          "id": "r-comp",
+          "x": 458.4,
+          "y": 51.19999999999999,
+          "w": 192,
+          "h": 553.9999999999999
+        },
+        {
+          "id": "r-status",
+          "x": 0,
+          "y": 614.8,
+          "w": 660,
+          "h": 35.2
+        },
+        {
+          "id": "r-canvas",
+          "x": 236.80000000000007,
+          "y": 197.03999999999996,
+          "w": 186.39999999999998,
+          "h": 106.08
+        },
+        {
+          "id": "r-sheet",
+          "x": 236.80000000000007,
+          "y": 419.91999999999996,
+          "w": 186.39999999999998,
+          "h": 113.26
+        }
+      ],
+      "anchors": {
+        "a-nav": {
+          "x": 22.400000000000034,
+          "y": 149.60000000000002,
+          "w": 166.4,
+          "h": 24.8
+        },
+        "a-canvas": {
+          "x": 246.4000000000001,
+          "y": 226.64,
+          "w": 167.2,
+          "h": 66.88
+        },
+        "a-doc": {
+          "x": 236.80000000000007,
+          "y": 315.91999999999996,
+          "w": 186.39999999999998,
+          "h": 91.19999999999999
+        },
+        "a-sheet": {
+          "x": 246.4000000000001,
+          "y": 449.52,
+          "w": 167.2,
+          "h": 74.06
+        },
+        "a-comp": {
+          "x": 492.37,
+          "y": 95.99999999999997,
+          "w": 143.63,
+          "h": 54.08
+        },
+        "a-status": {
+          "x": 19.19999999999999,
+          "y": 624.9,
+          "w": 144.48,
+          "h": 16
+        }
+      }
+    }
+  ],
+  "frames": [],
+  "texts": [],
+  "controls": {
+    "wires": true,
+    "highlight": true
+  }
+}

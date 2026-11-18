@@ -1,0 +1,87 @@
+# Architecture: The worker mirrors the EDGE: same shape, a subset of its services
+# Exported from studio assets/deck (slide "architecture"), 1600 × 900 slide units.
+
+object title @ 80,40 {
+  text heading 0,0 "Architecture"
+  text subtitle 0,44 "The worker mirrors the EDGE: same shape, a subset of its services"
+}
+
+object client-col @ 60,128 {
+  rect frame 0,0 632x728 "Client · app tab + shared worker" color=grey stroke=dashed
+}
+object edge-col @ 908,128 {
+  rect frame 0,0 632x728 "EDGE · Workers + Durable Objects" color=grey stroke=dashed
+}
+object client-bracket @ 70,280 {
+  rect frame 0,0 612x570 "Worker · shared by every tab" color=grey stroke=dashed
+}
+object edge-bracket @ 918,280 {
+  rect frame 0,0 612x570 "EDGE worker · per identity and space" color=grey stroke=dashed
+}
+object l-halo @ 726,369 {
+  text label 0,0 "credentials"
+}   # role=link-label for=c-halo-router,router-e-halo
+object l-runtime @ 726,477 {
+  text label 0,0 "activation"
+}   # role=link-label for=c-runtime-router,router-e-runtime
+object l-services @ 726,627 {
+  text label 0,0 "RPC"
+}   # role=link-label for=c-services-router,router-e-services
+object l-spaces @ 726,779 {
+  text label 0,0 "sync"
+}   # role=link-label for=c-spaces-router,router-e-spaces
+object l-plugins @ 715,201 {
+  text label 0,0 "one plugin, two halves"
+}   # role=link-label for=c-plugins-e-plugins
+object footnote @ 60,864 {
+  text label 0,0 "Outlined services run only at the EDGE; the worker reaches them through the router."
+}   # role=note
+
+object c-plugins @ 80,172 {
+  rect box 0,0 592x104 "Plugins"
+}   # card variant=compact icon=puzzle-piece tag="tab" footer="navtree · markdown · assistant · +100" body="Surfaces, operations and skills in each app tab."
+object c-halo @ 80,306 {
+  rect box 0,0 592x113 "HALO Vault"
+}   # card variant=compact icon=vault tone=accent footer="keyring · identity" body="Keys and credentials for this device and its agents."
+object c-runtime @ 80,431 {
+  rect box 0,0 592x111 "Runtime"
+}   # card variant=compact icon=cpu footer="WorkerRuntime" body="Effect service layers, shared by every tab."
+object c-services @ 80,553 {
+  rect box 0,0 592x166 "Client services"
+}   # card variant=compact icon=stack chips="database:ECHO | sparkle:AI | user-circle:Identity | files:Blobs | robot:Agents | video-camera:Calls:ghost | waveform:Transcription:ghost | cube:Sandbox:ghost" footer="client-protocol · RPC from every tab"
+object c-spaces @ 80,731 {
+  rect box 0,0 592x113 "Spaces"
+}   # card variant=compact icon=cube footer="EchoHost · SpaceManager" body="A local replica of every space, in SQLite on OPFS."
+object e-plugins @ 928,172 {
+  rect box 0,0 592x104 "Plugins"
+}   # card variant=compact icon=puzzle-piece tag="edge" footer="layerSpec · workerd" body="Plugin services that run next to the data."
+object e-halo @ 928,306 {
+  rect box 0,0 592x113 "HALO"
+}   # card variant=compact icon=shield-check tone=accent footer="identity · kms · state machine" body="Credential chains and membership, checked on every request."
+object e-runtime @ 928,431 {
+  rect box 0,0 592x111 "Plugin Manager"
+}   # card variant=compact icon=plugs-connected footer="Workers · service bindings" body="Loads plugin services and runs them per space."
+object e-services @ 928,553 {
+  rect box 0,0 592x166 "EDGE services"
+}   # card variant=compact icon=stack chips="database:ECHO | sparkle:AI | user-circle:Identity | files:Blobs | robot:Agents | video-camera:Calls | waveform:Transcription | cube:Sandbox" footer="db · ai · calls · transcription · sandbox"
+object e-spaces @ 928,731 {
+  rect box 0,0 592x113 "Space"
+}   # card variant=compact icon=cube footer="replicator · indexer · feeds · scheduler" body="One Durable Object group per space."
+object router @ 716,306 {
+  rect box 0,0 168x538 "Router"
+}   # card variant=compact icon=arrows-left-right tone=ink footer="RouterObject DO"
+
+object links @ 0,0 {
+  arrow c-halo-router c-halo/box -> router/box head=triangle   # arrow=both
+  arrow router-e-halo router/box -> e-halo/box head=triangle   # arrow=both
+  arrow c-runtime-router c-runtime/box -> router/box head=triangle   # arrow=both
+  arrow router-e-runtime router/box -> e-runtime/box head=triangle   # arrow=both
+  arrow c-services-router c-services/box -> router/box head=triangle   # arrow=both
+  arrow router-e-services router/box -> e-services/box head=triangle   # arrow=both
+  arrow c-spaces-router c-spaces/box -> router/box head=triangle   # arrow=both
+  arrow router-e-spaces router/box -> e-spaces/box head=triangle   # arrow=both
+  arrow c-plugins-e-plugins c-plugins/box -> e-plugins/box head=triangle stroke=dashed   # arrow=both
+}
+
+# layout client-rows stack @ 60,128 632x728 rows=1,1,1,1,1 heights=104,110,108,162,110 gap=12
+# layout edge-rows stack @ 908,128 632x728 rows=1,1,1,1,1 heights=104,110,108,162,110 gap=12

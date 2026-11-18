@@ -7,6 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
@@ -43,11 +44,13 @@ export const OutlineArticle = ({
   role,
   attendableId,
   subject: outline,
-  taskSet,
+  taskSet: taskSetProp,
   toolbar = true,
 }: OutlineArticleProps) => {
   const { t } = Hooks.useTranslation(TasksNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const db = Obj.getDatabase(outline);
+  const taskSet = readonly ? undefined : taskSetProp;
 
   // Link the user navigated into; the back button clears it to return to the outline.
   const [selected, setSelected] = useState<URI.URI>();
@@ -159,7 +162,7 @@ export const OutlineArticle = ({
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
         </Panel.Header>
         <Panel.Body>
-          <TaskForm task={task} />
+          <TaskForm task={task} readonly={readonly} />
         </Panel.Body>
       </Panel.Root>
     );
@@ -173,6 +176,7 @@ export const OutlineArticle = ({
           // The outline's URI, which keys the editor's comments as it does a Markdown document's.
           id={Obj.getURI(outline)}
           text={text}
+          readonly={readonly}
           onConvertToTask={taskSet ? handleConvertToTask : undefined}
           onConvertibleChange={setConvertible}
           onSelectLink={handleSelectLink}
@@ -197,7 +201,7 @@ export const OutlineArticle = ({
 
 OutlineArticle.displayName = 'OutlineArticle';
 
-const TaskForm = ({ task }: { task: Task.Task }) => {
+const TaskForm = ({ task, readonly }: { task: Task.Task; readonly?: boolean }) => {
   const schema = useMemo(() => omitId(Type.getSchema(Task.Task)), []);
   const [snapshot] = useObject(task);
 
@@ -215,7 +219,13 @@ const TaskForm = ({ task }: { task: Task.Task }) => {
   );
 
   return (
-    <Form.Root schema={schema} values={snapshot} autoSave onSave={handleSave}>
+    <Form.Root
+      schema={schema}
+      values={snapshot}
+      readonly={readonly}
+      autoSave={!readonly}
+      onSave={readonly ? undefined : handleSave}
+    >
       <Form.Viewport scroll width='document'>
         <Form.Content>
           <Form.Fields />

@@ -42,12 +42,14 @@ import { FoldSpine, SPINE_PX } from '#components';
 import {
   useBreakpoints,
   useCompanions,
+  useComplementarySidebarState,
   useDeckPresentation,
   useDeckSettings,
   useDeckState,
   useIsLiveDeck,
   useSelectedCompanion,
   useSelectedCompanionVariant,
+  useTopbar,
 } from '#hooks';
 import { DeckCapabilities, DeckOperation, DeckSurface } from '#types';
 
@@ -59,7 +61,6 @@ import {
   getRenderedPlanks,
   isCompanionOpen,
   isCompanionShown,
-  layoutAppliesTopbar,
 } from '../../util/index.ts';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
@@ -202,8 +203,8 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
     state: { sidebarState, complementarySidebarState, fullscreen },
   } = useDeckContext(DECK_VIEWPORT_NAME);
 
-  const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
+  const topbar = useTopbar(!!fullscreen);
+  const complementaryState = useComplementarySidebarState(complementarySidebarState);
 
   return (
     <Main.Content
@@ -223,9 +224,9 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
                 ? 'var(--dx-l0-size)'
                 : '0',
           '--main-complementary-width':
-            complementarySidebarState === 'expanded'
+            complementaryState === 'expanded'
               ? 'var(--dx-complementary-sidebar-size)'
-              : complementarySidebarState === 'collapsed'
+              : complementaryState === 'collapsed'
                 ? 'var(--dx-rail-size)'
                 : '0',
         } as Main.ContentProps['style']
@@ -243,9 +244,8 @@ DeckViewport.displayName = DECK_VIEWPORT_NAME;
 //
 
 export const DeckContentEmpty = () => {
-  const breakpoint = useBreakpoints();
   const { state } = useDeckState();
-  const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
+  const topbar = useTopbar(!!state.fullscreen);
   return (
     <Layout.Flex
       column
@@ -1446,7 +1446,7 @@ export const DeckPlanks = () => {
   const presentation = useDeckPresentation(planks.length);
   const fullscreenId = state.fullscreen;
   const fullscreen = !!fullscreenId;
-  const topbar = layoutAppliesTopbar(breakpoint, fullscreen);
+  const topbar = useTopbar(fullscreen);
   const isSliding = presentation === 'sliding';
   // Gated on the sliding deck: a fullbleed singleton has nothing to expose, and no stack to scale.
   const expose = !!state.expose && isSliding;
