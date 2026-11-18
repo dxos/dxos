@@ -35,7 +35,7 @@
     // missing chunk with index.html before the Worker could 404 it or serve it from ASSET_ARCHIVE.
     "not_found_handling": "none",
     // These must reach the Worker even where an asset would match.
-    "run_worker_first": ["/api/*", "/.well-known/*"],
+    "run_worker_first": ["/", "/api/*", "/.well-known/*"],
   },
   // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,
   // others suffixed). Bindings are NOT inherited, so each env repeats them. Cloudflare-side: each Worker

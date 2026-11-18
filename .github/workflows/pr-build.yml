@@ -64,6 +64,9 @@ jobs:
           # EDGE preview — the instance Composer `dev` targets, so a PR preview and a dev deploy
           # see the same data.
           DX_EDGE_BASE_URL: https://preview.dxos.network/
+          # A workers.dev preview alias cannot take a `view.` host, so publications open in dev's viewer,
+          # which reads the same EDGE.
+          DX_VIEWER_URL: https://view.dev.composer.space
 
       - name: Write deploy metadata
         run: |

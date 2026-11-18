@@ -5,6 +5,7 @@
 import * as Option from 'effect/Option';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -25,6 +26,7 @@ export const makeEdgeAiClient = (manager: CapabilityManager.CapabilityManager): 
   let unsubscribe: (() => void) | undefined;
   const get = (): EdgeHttpClient => {
     if (!edgeClient) {
+      invariant(!ReadOnly.isActive(manager), 'A read-only host makes no AI requests.');
       const [client] = manager.getAll(ClientCapabilities.Client);
       invariant(client, 'Client capability is required for edge AI requests.');
       const [haloIdentity] = manager.getAll(ClientCapabilities.IdentityService);

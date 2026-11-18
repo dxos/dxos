@@ -3,11 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { TrajectoryStore } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -18,7 +20,7 @@ import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import { useRegistry } from '@dxos/react-client/echo';
-import { type ChatView } from '@dxos/react-ui-assistant';
+import { ChatView } from '@dxos/react-ui-assistant';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -39,7 +41,17 @@ export type ChatArticleProps = Merge<
   Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>
 >;
 
-export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
+export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>((props, forwardedRef) =>
+  ToolkitHooks.useReadOnly() ? (
+    <ChatTranscript {...props} ref={forwardedRef} />
+  ) : (
+    <ChatEditor {...props} ref={forwardedRef} />
+  ),
+);
+
+ChatArticle.displayName = 'ChatArticle';
+
+const ChatEditor = forwardRef<HTMLDivElement, ChatArticleProps>(
   ({ role, attendableId, nodeId, subject: chat, companionTo, debug, onEvent, onSubmit }, forwardedRef) => {
     const registry = useRegistry();
     // The marker rail is a hover/precision target pinned to the thread's left edge, and the status
@@ -86,11 +98,8 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         .then(() => setThread(undefined))
         .catch((err: unknown) => log.catch(err));
     }, [feedSnapshot, db, thread]);
-    const { t } = UiHooks.useTranslation(AssistantNamespace.key);
     const getContext = useSelectionContext(companionTo);
-
-    const [chatViewType] = useObject(chat, 'viewType');
-    const viewType = (chatViewType as ChatView | undefined) ?? settings.chatView;
+    const viewType = useViewType(chat, settings.chatView);
 
     const { invokePromise } = Hooks.useOperationInvoker();
     const handleViewUsage = useCallback(() => {
@@ -146,30 +155,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 {/* Thread outline (Table of Contents). */}
                 {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
 
-                {thread !== undefined && (
-                  <div
-                    className='absolute top-0 left-0 right-0 z-10 dx-document flex items-center gap-2 px-3 py-1 bg-base-surface'
-                    data-testid='assistant.fork-bar'
-                  >
-                    <Button.Root
-                      icon='ph--arrow-left--regular'
-                      label={t('fork-back.label')}
-                      variant='ghost'
-                      size='sm'
-                      data-testid='assistant.fork-back'
-                      onClick={() => setThread(undefined)}
-                    />
-                    <span className='grow truncate text-sm text-fg-muted'>{t('fork-bar.label')}</span>
-                    <Button.Root
-                      icon='ph--git-merge--regular'
-                      label={t('fork-merge.label')}
-                      variant='ghost'
-                      size='sm'
-                      data-testid='assistant.fork-merge'
-                      onClick={handleMergeFork}
-                    />
-                  </div>
-                )}
+                {thread !== undefined && <ForkBar onBack={() => setThread(undefined)} onMerge={handleMergeFork} />}
 
                 {/* Main thread. */}
                 <ChatComponent.Thread
@@ -220,4 +206,82 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
   },
 );
 
-ChatArticle.displayName = 'ChatArticle';
+ChatEditor.displayName = 'ChatEditor';
+
+const ChatTranscript = forwardRef<HTMLDivElement, ChatArticleProps>(({ role, subject: chat, debug }, forwardedRef) => {
+  const registry = useRegistry();
+  const mobile = usePlatform() === 'mobile';
+  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
+  const runtime = Hooks.useCapability(Capabilities.ProcessManagerRuntime);
+  const db = chat && Obj.getDatabase(chat);
+  const [thread, setThread] = useState<Trajectory.ThreadId>();
+  useEffect(() => setThread(undefined), [chat?.id]);
+  const chatModel = useChatModel({ db, chat, runtime, registry, settings, thread, readonly: true });
+  const handleEvent = useCallback<NonNullable<ChatRootProps['onEvent']>>((event) => {
+    if (event.type === 'open-fork') {
+      setThread(Trajectory.ThreadId.make(event.thread));
+    }
+  }, []);
+
+  const viewType = useViewType(chat, settings.chatView);
+
+  return (
+    <ChatComponent.Root chat={chat} db={db} chatModel={chatModel} debug={debug} readonly onEvent={handleEvent}>
+      <Panel.Root role={role} ref={forwardedRef}>
+        <Panel.Body asChild>
+          <ChatComponent.Content>
+            <Layout.Flex classNames='dx-expand relative'>
+              {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
+              {thread !== undefined && <ForkBar onBack={() => setThread(undefined)} />}
+              <ChatComponent.Thread viewType={viewType} showTokens={settings.showTokens} />
+            </Layout.Flex>
+          </ChatComponent.Content>
+        </Panel.Body>
+      </Panel.Root>
+    </ChatComponent.Root>
+  );
+});
+
+ChatTranscript.displayName = 'ChatTranscript';
+
+const isChatView = Schema.is(ChatView);
+
+const useViewType = (chat: Chat.Chat | undefined, fallback: ChatView | undefined): ChatView | undefined => {
+  const [viewType] = useObject(chat, 'viewType');
+  return isChatView(viewType) ? viewType : fallback;
+};
+
+type ForkBarProps = {
+  onBack: () => void;
+  onMerge?: () => void;
+};
+
+const ForkBar = ({ onBack, onMerge }: ForkBarProps) => {
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
+  return (
+    <div
+      className='absolute top-0 left-0 right-0 z-10 dx-document flex items-center gap-2 px-3 py-1 bg-base-surface'
+      data-testid='assistant.fork-bar'
+    >
+      <Button.Root
+        icon='ph--arrow-left--regular'
+        label={t('fork-back.label')}
+        variant='ghost'
+        size='sm'
+        data-testid='assistant.fork-back'
+        onClick={onBack}
+      />
+      <span className='grow truncate text-sm text-fg-muted'>{t('fork-bar.label')}</span>
+      {onMerge && (
+        <Button.Root
+          icon='ph--git-merge--regular'
+          label={t('fork-merge.label')}
+          variant='ghost'
+          size='sm'
+          data-testid='assistant.fork-merge'
+          onClick={onMerge}
+        />
+      )}
+    </div>
+  );
+};

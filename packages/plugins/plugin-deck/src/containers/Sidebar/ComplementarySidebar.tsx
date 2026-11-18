@@ -30,10 +30,10 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { iconSize, mx } from '@dxos/ui-theme';
 
 import { PlankLoading } from '#components';
-import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState } from '#hooks';
+import { type DeckCompanion, useDeckCompanions, useDeckState, useTopbar } from '#hooks';
 
 import { DeckNamespace } from '../../namespace.ts';
-import { isDeckCompanionMounted, layoutAppliesTopbar } from '../../util/index.ts';
+import { isDeckCompanionMounted } from '../../util/index.ts';
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 import { ToggleComplementarySidebarButton } from './SidebarButton.tsx';
 
@@ -47,8 +47,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = UiHooks.useTranslation(DeckNamespace.key);
   const { state, updateState } = useDeckState();
-  const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
+  const topbar = useTopbar(!!state.fullscreen);
 
   const companions = useDeckCompanions();
   const activeCompanion = companions.find((companion) => Attention.getLinkedVariant(companion.id) === current);

@@ -6,6 +6,7 @@ import React from 'react';
 
 import type * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Database, Obj } from '@dxos/echo';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import * as Field from '@dxos/react-ui/Field';
@@ -16,13 +17,14 @@ export type PivotColumnFieldProps = Surface.ComponentProps<AppSurface.FormInputD
   Omit<FormFieldRendererProps, 'type'>;
 
 export const PivotColumnField = ({ data, ...inputProps }: PivotColumnFieldProps) => {
+  const readOnly = ToolkitHooks.useReadOnly();
   const ast = data.fieldPropertyAst;
   const target = data.target;
   const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
   const { typename: typeUri } = useFormValues('KanbanForm');
   const singleSelectColumns = useSingleSelectFields(db, typeUri);
 
-  if (!ast || !db || !typeUri) {
+  if (readOnly || !ast || !db || !typeUri) {
     return null;
   }
 
