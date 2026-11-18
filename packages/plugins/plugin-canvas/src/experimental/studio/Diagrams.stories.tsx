@@ -30,6 +30,7 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Cell from '@dxos/storybook-testing/Cell';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
@@ -43,7 +44,7 @@ import { type Canvas, CanvasCapabilities, Generator } from '#types';
 import types from '../../capabilities/schema.ts';
 import generatorParams from '../../components/Graph/generator/params.schema.json?raw';
 import generatorSource from '../../components/Graph/generator/space-graph.generator.ts?raw';
-import { CanvasLayoutBuilder } from '../../model/canvas-content.ts';
+import { CanvasLayoutBuilder, readCanvasContent } from '../../model/canvas-content.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import agentSource from './agent.diagram?raw';
 import agentModel from './agent.json?raw';
@@ -95,15 +96,58 @@ const seeded: { canvas?: Canvas.Canvas } = {};
 const printCanvas = (canvas: Canvas.Canvas): string => Dsl.print(CanvasLayoutBuilder.read(canvas).scene);
 
 /**
+ * The drawing as the records it is actually stored as. The DSL is a second way of saying the same drawing, so
+ * showing the two side by side is how a loss is SEEN rather than measured: a kind, a marker or a route present in
+ * the records and absent from the text is the whole class of defect this bench exists to catch. It is also what a
+ * model would emit if a drawing were authored as JSON instead of as text, which is worth weighing by eye — the
+ * records run 3–6x the size of the DSL for the same drawing.
+ */
+const printRecords = (canvas: Canvas.Canvas): string => JSON.stringify(readCanvasContent(canvas), null, 2);
+
+type SourceView = 'dsl' | 'json';
+
+/**
+ * One editor per view, re-created when the view changes: CodeMirror takes its language at construction, so this
+ * remounts rather than reconfiguring a live editor. The DSL text lives in the parent, so a remount keeps an edit.
+ */
+const TextPane = ({
+  value,
+  view,
+  onChange,
+}: {
+  value: string;
+  view: SourceView;
+  onChange?: (text: string) => void;
+}) => {
+  const themeMode = Hooks.useThemeMode();
+  const { parentRef, focusAttributes } = useTextEditor(
+    () => ({
+      initialValue: value,
+      extensions: [
+        createBasicExtensions({ lineNumbers: true, readOnly: onChange === undefined }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+        ...(view === 'dsl' ? [diagramLanguage({ layout: false })] : []),
+        ...(onChange ? [listener({ onChange: ({ text }) => onChange(text) })] : []),
+      ],
+    }),
+    [themeMode, view],
+  );
+  return <div {...focusAttributes} ref={parentRef} className='overflow-hidden' data-testid='studio-source.editor' />;
+};
+
+/**
  * The DSL in the diagram language mode, applied to the canvas only when asked. Applying on a timer after each
  * keystroke cannot work: a document mid-edit parses to whatever the parser can still make sense of, so the drawing
  * was rebuilt from half-typed text — and `applyCommands` is a full sync, which deleted every shape the broken parse
  * had dropped. `Parse` reports without touching the drawing, `Rebuild` is the one action that writes.
  */
 const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
-  const themeMode = Hooks.useThemeMode();
   const [initialValue] = useState(() => printCanvas(canvas));
   const [source, setSource] = useState(initialValue);
+  const [view, setView] = useState<SourceView>('dsl');
+  // Read again on every switch, so the records show the drawing as it is NOW rather than as it was at mount: a
+  // `Rebuild` between the two views is exactly when the difference is worth seeing.
+  const [records, setRecords] = useState(() => printRecords(canvas));
   const [problems, setProblems] = useState<readonly { severity: string; message: string }[]>([]);
   const [status, setStatus] = useState<string>();
 
@@ -127,21 +171,22 @@ const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
     setStatus(`${result.upserted.length} drawn, ${result.removed} removed`);
   }, [parse, canvas]);
 
-  const onChange = useCallback(({ text }: { text: string }) => {
+  const onChange = useCallback((text: string) => {
     setSource(text);
     setStatus(undefined);
   }, []);
-  const { parentRef, focusAttributes } = useTextEditor(
-    () => ({
-      initialValue,
-      extensions: [
-        createBasicExtensions({ lineNumbers: true }),
-        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        diagramLanguage({ layout: false }),
-        listener({ onChange }),
-      ],
-    }),
-    [themeMode],
+
+  const onViewChange = useCallback(
+    (next: string) => {
+      if (next !== 'dsl' && next !== 'json') {
+        return;
+      }
+      if (next === 'json') {
+        setRecords(printRecords(canvas));
+      }
+      setView(next);
+    },
+    [canvas],
   );
 
   // A panel, as the article beside it is: the toolbar is its header, the editor its body, and the status bar its
@@ -163,13 +208,36 @@ const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
             label='Rebuild'
             data-testid='studio-source.rebuild'
             onClick={rebuild}
+            disabled={view === 'json'}
           />
+          {/* The records are shown, not edited: writing them back is a different action from rebuilding a drawing
+              out of its text, and it would have no undo here. */}
+          <Toolbar.ToggleGroup type='single' value={view} onValueChange={onViewChange} aria-label='View'>
+            <ToggleGroup.Item
+              value='dsl'
+              icon='ph--text-align-left--regular'
+              label='DSL'
+              iconOnly
+              data-testid='studio-source.view-dsl'
+            />
+            <ToggleGroup.Item
+              value='json'
+              icon='ph--brackets-curly--regular'
+              label='JSON'
+              iconOnly
+              data-testid='studio-source.view-json'
+            />
+          </Toolbar.ToggleGroup>
         </Toolbar.Root>
       </Panel.Header>
       {/* `asChild`, so the editor IS the body: `.dx-panel-body` is a grid row, not a positioning context, and an
           absolutely filled child inside it pins to the panel instead and covers the header and footer. */}
       <Panel.Body asChild>
-        <div {...focusAttributes} ref={parentRef} className='overflow-hidden' data-testid='studio-source.editor' />
+        {view === 'dsl' ? (
+          <TextPane key='dsl' view='dsl' value={source} onChange={onChange} />
+        ) : (
+          <TextPane key='json' view='json' value={records} />
+        )}
       </Panel.Body>
       <Panel.Footer classNames='p-1'>
         {problems.length > 0 ? (
@@ -178,7 +246,7 @@ const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
           </span>
         ) : (
           <span className='text-xs text-fg-muted' data-testid='studio-source.status'>
-            {status ?? ' '}
+            {view === 'json' ? `${records.split('\n').length} lines of records` : (status ?? ' ')}
           </span>
         )}
       </Panel.Footer>
