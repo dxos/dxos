@@ -1,6 +1,6 @@
 # Diagram object model: DSL as the source of truth
 
-Status: design, with stage 1 implemented — a box carries the contributed kind it is (`kind=card`) and that
+Status: design, with stages 1 and 2 implemented — a box carries the contributed kind it is (`kind=card`) and that
 kind's own scalar fields, so the nine slides below survive records → text → records with every kind intact.
 
 The studio deck (`plugin-canvas/src/experimental/studio`) is the use case this came out of: nine slides
@@ -51,22 +51,55 @@ with plain boxes. Stage 1 puts `type` and a `data` bag on `Shape.Box`, spells th
 DSL, and maps them both ways in `SceneHandler`; a corpus test over all nine slides asserts that every contributed
 kind keeps its exact count through records → text → records, and fails on nine slides without the mapping.
 
-Three gaps remain, each asserted in `handler.test.ts` so they stay measured:
+Stage 2 did the same for links. A link on a plain canvas keeps its markers and line style on itself and only a
+routed link carries a connector, so `read` — which looked at the connector alone — returned 51 of the deck's 64
+connectors as a default arrow rather than the triangle they were drawn with, and dropped 13 dashed strokes. An
+arrow now also states its own bends (`arrow link a -> b via 10,20 30,20`), which a connector routed by hand or by
+a layout had no spelling for at all: 14 connectors and 66 bends were lost on every trip through the text, and the
+sidecar carried them precisely because the DSL could not.
 
-1. a kind field holding a **list or nested object** (`marks`, `chips`, `icon`) has no spelling in either DSL layer
-   — `scene-model.ts` declines one too, rather than printing a list as a string the reader hands back as a string;
-2. a kind field whose **name an element attribute already claims** (`substrate`'s numeric `fill`) is left out,
-   since the reader resolves that name against the schema's literals;
-3. a kind's remaining **top-level fields** (a card's `icon`, `body`, `footer`) are not carried at all: placing a
+Two gaps remain, each asserted in `handler.test.ts` so they stay measured:
+
+1. a kind field holding a **list or nested object** has no spelling in either DSL layer — `scene-model.ts`
+   declines one too, rather than printing a list as a string the reader hands back as a string;
+2. a kind's remaining **top-level fields** (a card's `icon`, `body`, `footer`) are not carried at all: placing a
    name back on the right side of the `data` split needs the kind's own schema, which only the registry holding
    the kind has. Those three are the card's composite-template parts, which is where the design puts them.
 
-Measured in the running story, which is where it counts. Seeded, Hyperspace draws 10 cards, 3 planks, 1 substrate
-and 10 card icons. After `Rebuild` — the full records → text → records cycle — it draws 10 cards, 3 planks, 1
-substrate and **0** icons: the structure and every kind survive, and the icon is the one visible loss. Before
-stage 1 the same `Rebuild` left no cards, no planks and no substrate at all. Closing the icon gap is the
-composite-template work, where a card's glyph is a part with a bound field rather than a node field whose place
-only the registry knows.
+A field whose name an element attribute already claims is no longer a gap: it is escaped rather than dropped.
+`substrate` keeps a numeric `fill` against the style attribute, and that field is the density its hexagon is drawn
+at, so dropping it flattened the drawing to a uniform field of dots. It is written `data-fill=0.55`, and the
+prefix escapes itself.
+
+Measured in the running story, which is where it counts. Seeded, Hyperspace draws 10 cards, 3 planks, 1 substrate,
+10 card icons, 9 substrate spaces and 2 routed connectors. After `Rebuild` — the full records → text → records
+cycle — it draws all of them except the icons and the spaces. Before stage 1 the same `Rebuild` left no cards, no
+planks and no substrate at all.
+
+### What a value grammar would have to spell
+
+Both remaining visible losses are gap 1, and the shapes are worth knowing before anything is designed for them.
+Every non-scalar field across the nine slides:
+
+| Field              | Shape                                     | Count |
+| ------------------ | ----------------------------------------- | ----- |
+| `card.icon`        | `{type}`                                  | 87    |
+| `chip.icon`        | `{type}`                                  | 5     |
+| `card.chips`       | `{items}` / `{cols,columnGap,flat,items}` | 3     |
+| `app-frame.colors` | `{canvas,comp,doc,nav,sheet}`             | 1     |
+| `substrate.lit`    | `[{tone,x,y}]`                            | 1     |
+| `substrate.spaces` | `[{r,x,y}]`                               | 1     |
+
+**92 of 96 are `{type}`** — a one-field object holding a glyph name, which is the whole of the icon loss. So the
+choice is not between "a value grammar" and "no value grammar":
+
+1. **A braced value** — `icon={type=ph--calendar--regular}`, `spaces=[{x=1 y=2 r=3} …]`. General, unambiguous,
+   covers all six shapes, and extends `AttrValue` permanently.
+2. **The glyph alone** — a one-field object collapses to its value. Covers 92 of 96 with no grammar change, but it
+   needs the kind's schema to know the field's name on the way back, which is gap 2's blocker.
+3. **Neither, for now** — the icon and the spaces are template parts and generator params respectively, and the
+   design already moves both out of node fields. Closing gap 2 (the composite template) would remove most of this
+   case rather than spelling it.
 
 ## Terms
 
@@ -248,6 +281,11 @@ result). For both to write one model:
    emitting one would produce text an older parser rejects with no way to negotiate.
 
 ## Changelog
+
+- 2026-11-17 — agent: stage 2 implemented. A link keeps its markers, line style and colour through the DSL, an
+  arrow states its own bends (`via`), and a kind field colliding with an element attribute is escaped rather than
+  dropped. The corpus test compares each kind's own fields, each link's markers and each route point for point,
+  over all nine slides. Remaining: lists and nested objects, measured above and left for a decision.
 
 - 2026-11-17 — agent: stage 1 implemented. `Shape.Box` gained optional `type` and `data`; the DSL spells them
   `kind=<name>` plus the kind's own scalar attributes, with the element table's names reserved; `SceneHandler`
