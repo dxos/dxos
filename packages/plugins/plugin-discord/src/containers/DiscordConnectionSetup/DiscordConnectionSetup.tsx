@@ -11,8 +11,8 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Connection } from '@dxos/link';
 import { useConfig } from '@dxos/react-client';
+import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
-import * as Fieldset from '@dxos/react-ui/Fieldset';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Select from '@dxos/react-ui/Select';
 import * as Typography from '@dxos/react-ui/Typography';
@@ -80,8 +80,10 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
   );
   const [triggerView] = useObject(backIndex?.trigger);
   const stateRef = Ref.isRef(triggerView?.input?.state) ? triggerView?.input?.state : undefined;
+  const maxDays = typeof triggerView?.input?.maxDays === 'number' ? triggerView.input.maxDays : undefined;
   const [stateSnapshot] = useObject(stateRef);
   const state = stateSnapshot && Obj.snapshotOf(CrawlState.CrawlState, stateSnapshot) ? stateSnapshot : undefined;
+  const crawlState = useQuery(db, Filter.type(CrawlState.CrawlState)).find(({ id }) => id === state?.id);
   const targets = useMemo(
     () => new Map((state ? CrawlState.listTargets(state) : []).map((target) => [target.id, target])),
     [state],
@@ -187,6 +189,26 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
     [configure, backIndex],
   );
 
+  // One run here and now, with the input the trigger runs; the schedule is untouched.
+  const handleCheckNow = useCallback(async () => {
+    if (!spaceId || !applicationId || !backIndex || !crawlState) {
+      return;
+    }
+    setBusy(true);
+    const { error } = await invokePromise(
+      DiscordOperation.CrawlDiscordChannels,
+      {
+        applicationId,
+        channels: [...backIndex.channels],
+        ...(maxDays !== undefined ? { maxDays } : {}),
+        state: Ref.make(crawlState),
+      },
+      { spaceId },
+    );
+    setError(error?.message);
+    setBusy(false);
+  }, [invokePromise, spaceId, applicationId, backIndex, crawlState, maxDays]);
+
   const handlePause = useCallback(() => {
     if (backIndex) {
       Obj.update(backIndex.trigger, (trigger) => {
@@ -197,7 +219,6 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
 
   const installedIds = useMemo(() => new Set(installed.map(({ id }) => id)), [installed]);
   const guildIndexed = guildId !== undefined && indexedGuilds.includes(guildId);
-  const maxDays = typeof triggerView?.input?.maxDays === 'number' ? triggerView.input.maxDays : undefined;
   const cron = triggerView?.spec?.kind === 'timer' ? triggerView.spec.cron : DiscordOperation.DEFAULT_BACK_INDEX_CRON;
   const historyItems = HISTORY_DAYS.map((days) => ({
     value: String(days),
@@ -212,8 +233,7 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
     <>
       {error && <Typography.Text tone='muted'>{t('discord-index-error.label', { error })}</Typography.Text>}
 
-      <Fieldset.Root>
-        <Fieldset.Legend>{t('discord-index-servers.label')}</Fieldset.Legend>
+      <Form.FieldSet label={t('discord-index-servers.label')}>
         {managed.length === 0 ? (
           <Typography.Text tone='muted'>{t('discord-setup-servers-empty.label')}</Typography.Text>
         ) : (
@@ -269,11 +289,10 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
             })}
           </DiscordSetup.List>
         )}
-      </Fieldset.Root>
+      </Form.FieldSet>
 
       {guildIndexed && (
-        <Fieldset.Root>
-          <Fieldset.Legend>{t('discord-index-channels.label')}</Fieldset.Legend>
+        <Form.FieldSet label={t('discord-index-channels.label')}>
           <DiscordSetup.List ids={channels.map(({ id }) => id)}>
             {channels.map((channel) => {
               const isIndexed = indexedChannels.has(channel.id);
@@ -304,42 +323,55 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
               );
             })}
           </DiscordSetup.List>
-        </Fieldset.Root>
+        </Form.FieldSet>
       )}
 
       {backIndex && (
-        <Fieldset.Root>
-          <Fieldset.Legend>{t('discord-index-run.label')}</Fieldset.Legend>
-          <Select.Root
-            items={historyItems}
-            value={maxDays !== undefined ? [String(maxDays)] : []}
-            onValueChange={({ value: [value] }) => value && void configure({ maxDays: Number(value) })}
+        <Form.FieldSet label={t('discord-index-run.label')}>
+          <Form.Field
+            standalone
+            label={t('discord-index-history.label')}
+            description={t('discord-index-history.description')}
           >
-            <Select.Trigger placeholder={t('discord-index-history.label')} />
-            <Select.Content>
-              {historyItems.map((item) => (
-                <Select.Item key={item.value} item={item} />
-              ))}
-            </Select.Content>
-          </Select.Root>
-          <Select.Root
-            items={INTERVALS}
-            value={[cron]}
-            onValueChange={({ value: [value] }) => value && void configure({ cron: value })}
+            <Select.Root
+              items={historyItems}
+              value={maxDays !== undefined ? [String(maxDays)] : []}
+              onValueChange={({ value: [value] }) => value && void configure({ maxDays: Number(value) })}
+            >
+              <Select.Trigger placeholder={t('discord-index-history-all.label')} />
+              <Select.Content>
+                {historyItems.map((item) => (
+                  <Select.Item key={item.value} item={item} />
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </Form.Field>
+          <Form.Field
+            standalone
+            label={t('discord-index-interval.label')}
+            description={t('discord-index-interval.description')}
           >
-            <Select.Trigger placeholder={t('discord-index-interval.label')} />
-            <Select.Content>
-              {INTERVALS.map((item) => (
-                <Select.Item key={item.value} item={item} />
-              ))}
-            </Select.Content>
-          </Select.Root>
+            <Select.Root
+              items={INTERVALS}
+              value={[cron]}
+              onValueChange={({ value: [value] }) => value && void configure({ cron: value })}
+            >
+              <Select.Trigger />
+              <Select.Content>
+                {INTERVALS.map((item) => (
+                  <Select.Item key={item.value} item={item} />
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </Form.Field>
           <Typography.Text tone='muted'>
-            {t('discord-index-totals.label', {
-              messages: state?.messages ?? 0,
-              status: state?.runStatus ?? 'idle',
-              at: state?.lastRun?.at ? new Date(state.lastRun.at).toLocaleTimeString() : '—',
-            })}
+            {state?.lastRun
+              ? t('discord-index-totals.label', {
+                  messages: state.messages,
+                  status: state.runStatus,
+                  at: new Date(state.lastRun.at).toLocaleTimeString(),
+                })
+              : t('discord-index-not-run.label')}
           </Typography.Text>
           <Button.Root
             icon={triggerView?.enabled ? 'ph--pause--regular' : 'ph--play--regular'}
@@ -347,7 +379,13 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
             disabled={busy || indexedChannels.size === 0}
             onClick={handlePause}
           />
-        </Fieldset.Root>
+          <Button.Root
+            icon='ph--arrows-clockwise--regular'
+            label={t('discord-index-check-now.label')}
+            disabled={busy || indexedChannels.size === 0 || !crawlState}
+            onClick={() => void handleCheckNow()}
+          />
+        </Form.FieldSet>
       )}
     </>
   );

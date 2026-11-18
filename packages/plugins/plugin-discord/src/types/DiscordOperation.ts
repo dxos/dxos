@@ -14,8 +14,10 @@ import * as Trigger from '@dxos/compute/Trigger';
 import * as CrawlState from '@dxos/crawler/CrawlState';
 import { Database, DXN, Ref } from '@dxos/echo';
 import * as MemoryService from '@dxos/echo-memory/MemoryService';
+import { Topic } from '@dxos/pipeline-discord';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import { Person } from '@dxos/types';
 
 import { DISCORD_PROVIDER_ID, DISCORD_USER_PROVIDER_ID } from '../constants.ts';
 import * as DiscordService from './DiscordService.ts';
@@ -133,7 +135,8 @@ export const CrawlDiscordChannels = Operation.make({
     icon: 'ph--bulldozer--regular',
   },
   services: [AiService.AiService, Database.Service, DiscordService.DiscordService, MemoryService.MemoryService],
-  types: [CrawlState.CrawlState],
+  // Registered with the invocation's database, which the pipeline writes Topics and question askers (Persons) to.
+  types: [CrawlState.CrawlState, Person.Person, Topic.Topic],
   input: Schema.Struct({
     ...CrawlConfigFields,
     state: Ref.Ref(CrawlState.CrawlState).annotate({ description: 'The durable state of this crawl.' }),
