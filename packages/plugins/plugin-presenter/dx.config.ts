@@ -53,6 +53,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'node', 'tauri'],
       },
     ),
+    AppCapability.linkAction(() => import('./src/capabilities/link-action.ts', { with: { type: 'module-url' } })),
     SpaceCapability.createObject(
       () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
       {

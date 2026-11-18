@@ -384,6 +384,7 @@ feat F-1: Presentation Mode
   req F-1.4:
     when: user activates TogglePresentation on a Presentation
     then: the Presentation's own plank fills the screen in the fullscreen overlay and the URL does not change
+  req F-1.5: The plugin contributes the `org.dxos.linkAction.presenter.present` link action, carried by the public link Composer copies for a Presentation, so that link opens the Presentation presenting. The viewer's own URL, once the action has run, opens the slides. An internal link opens it to edit, and links to a markdown document carry no action.
 ```
 
 ```mdl
@@ -1678,6 +1679,39 @@ decision D-99: When the host contributes `ReadOnly`, the graph has no slide prev
   affects: [F-13.1]
   supersedes: D-97
   why: A read-only slide already opens as its preview, and hiding a slide writes to the deck; the capability lands at startup with no order against module activation, so it is read when the graph expands and when an article renders.
+```
+
+```mdl
+decision D-100: Every public link to a presentation opens it presenting. An internal link opens it to edit.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-1.5]
+```
+
+```mdl
+decision D-101: The present link action applies to Presentations only; a markdown document's public link opens the document. Fills in [D-100].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5]
+  why: A document is presented through its Presenter companion, but a public link to a document is most likely shared to be read.
+  rejected: Presenting markdown documents from public links too.
+```
+
+```mdl
+decision D-102: The public link that presents is the one Composer copies, which carries the action; a viewer URL without it, such as the address bar after the action has run, opens the slides. Fills in [D-100].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5]
+  why: The deck removes the action from the address bar once it has run, so a reload or a copied address bar shows the slides, and the viewer has no other signal that a link was shared to present.
+  rejected: Presenting every viewer URL to a Presentation, which would leave no way to link to its slides.
+```
+
+```mdl
+decision D-103: Approve [D-102].
+  date: 2026-11-18
+  by: user:wittjosiah
 ```
 
 ## Appendix: Extension Definitions
