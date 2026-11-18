@@ -487,7 +487,9 @@ export const CreateMilestone = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.createMilestone'),
     name: 'Create Milestone',
-    description: 'Create a milestone in a task set, appended to the milestone sequence.',
+    description:
+      'Create a milestone in a task set, appended to the milestone sequence. ' +
+      'Returns `{ milestone }`, the object itself: pass `Ref.make(milestone)` where a ref is wanted.',
     icon: 'ph--flag-banner--regular',
   },
   services: [Database.Service],
