@@ -9,10 +9,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Dsl, applyCommands } from '@dxos/diagram';
+import { DXN } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { SceneHandler } from '@dxos/react-ui-canvas';
@@ -64,10 +70,24 @@ const PLACED = trim`
   }
 `;
 
-const story = (name: string, source: string): Story => ({
+/** A host that locks every object, the way a published copy of a space does. */
+const ReadOnlyHost = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.canvas.story.readOnly'), name: 'Read-only host' }),
+).pipe(
+  Plugin.addModule(
+    Capability.inlineModule(
+      'read-only',
+      { provides: [AppCapabilities.ReadOnly], activatesOn: ActivationEvents.Startup },
+      () => Effect.succeed([Capability.contribute(AppCapabilities.ReadOnly, true)]),
+    ),
+  ),
+  Plugin.make,
+);
+
+const story = (name: string, source: string, { readOnly = false }: { readOnly?: boolean } = {}): Story => ({
   decorators: StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
-    plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), ...(readOnly ? [ReadOnlyHost()] : [])],
     onInit: async ({ space }) => {
       const canvas = addTestCanvas(space.db, (content) => {
         const { commands, problems } = Dsl.parse(source);
@@ -131,5 +151,21 @@ export const Test: Story = {
     await waitFor(() =>
       expect(within(canvasElement).getByTestId('canvas-dsl.editor').textContent).toContain('diagram kind=grid'),
     );
+  },
+};
+
+/**
+ * 1. The companion shows the drawing's text, and typing in it changes nothing.
+ * 2. The toolbar offers "Show boxes" only: there is no Rebuild and no Discard edits.
+ */
+export const ReadOnly: Story = {
+  ...story('read-only', INTENT, { readOnly: true }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('canvas-dsl.editor', undefined, { timeout: 30_000 });
+    await waitFor(() => expect(editor.textContent).toContain('diagram kind=grid'), { timeout: 30_000 });
+    await expect(canvas.queryByTestId('canvas-dsl.rebuild')).toBeNull();
+    await expect(canvas.queryByTestId('canvas-dsl.revert')).toBeNull();
+    await expect(await canvas.findByTestId('canvas-dsl.form')).toBeEnabled();
   },
 };

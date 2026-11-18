@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -17,11 +18,12 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { isSpace } from '@dxos/client/echo';
+import { type Space, isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import { Sequence } from '@dxos/conductor';
@@ -71,20 +73,22 @@ const whenPromptHost = GraphNodeMatcher.whenAny(
   GraphNodeMatcher.whenNodeType(SpaceSchema.SPACE_HOME_NODE_TYPE),
 );
 
+const WRITABLE: Atom.Atom<boolean> = Atom.make(false);
+
 /** A prompt node under every node that hosts a chat prompt, where other plugins file prompt actions. */
-export const createPromptExtension = () =>
+export const createPromptExtension = (readOnly = WRITABLE) =>
   AppGraphBuilder.createExtension({
     id: 'prompt',
-    match: whenPromptHost,
+    match: ReadOnly.unless(readOnly, whenPromptHost),
     connector: () => Effect.succeed([AppNode.makePrompt()]),
   });
 
 /** The assistant panel in each space's settings section. */
-export const createSpaceSettingsExtension = () =>
+export const createSpaceSettingsExtension = (readOnly = WRITABLE) =>
   AppGraphBuilder.createExtension({
     id: 'spaceSettingsAssistant',
     url: { key: SPACE_SETTINGS_ID, kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
-    match: GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
+    match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE)),
     connector: () =>
       Effect.succeed([
         AppNode.makeSettingsPanel({
@@ -98,8 +102,78 @@ export const createSpaceSettingsExtension = () =>
       ]),
   });
 
+export const createChatSectionExtensions = (readOnly = WRITABLE) =>
+  Effect.all([
+    AppGraphBuilder.createExtension({
+      id: GraphPath.GroupSegments.ai,
+      match: AppNodeMatcher.whenSpace,
+      connector: (space) =>
+        Effect.succeed([
+          AppNode.makeGroup({
+            id: GraphPath.GroupSegments.ai,
+            type: GraphPath.GroupTypes.ai,
+            label: ['nav-tree-group-ai.label', { ns: AssistantNamespace.key }],
+            icon: AI_ACTION_ICON,
+            space,
+            position: 300,
+          }),
+        ]),
+    }),
+
+    TypeSection.createTypeSectionExtension(Chat.Chat, {
+      match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
+      groupSegment: GraphPath.GroupSegments.ai,
+      urlKey: 'chat',
+    }),
+
+    // Create-chat action on the Chats section header.
+    AppGraphBuilder.createExtension({
+      id: 'chatsSectionActions',
+      match: ReadOnly.unless<Space>(readOnly, (node) => {
+        const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+        return node.type === Type.getTypename(Chat.Chat) && space ? Option.some(space) : Option.none();
+      }),
+      actions: (space) =>
+        Effect.succeed([
+          AppGraphNode.makeAction({
+            id: 'create-chat',
+            data: () =>
+              Effect.gen(function* () {
+                const { object: chat } = yield* Operation.invoke(
+                  AssistantOperation.CreateChat,
+                  {},
+                  { spaceId: space.db.spaceId },
+                );
+                yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: space.db.spaceId });
+                const { targets } = yield* Operation.invoke(
+                  NavigationOperation.ResolveNavigationTargets,
+                  { query: { uri: Obj.getURI(chat) } },
+                  { spaceId: space.db.spaceId },
+                );
+                const navigationTarget = targets[0];
+                if (navigationTarget) {
+                  yield* Operation.invoke(
+                    LayoutOperation.Open,
+                    { subject: [navigationTarget.path] },
+                    { spaceId: space.db.spaceId },
+                  );
+                }
+              }),
+            properties: {
+              label: ['create-chat.label', { ns: AssistantNamespace.key }],
+              icon: 'ph--plus--regular',
+              disposition: 'list-item-primary',
+            },
+          }),
+        ]),
+    }),
+  ]).pipe(Effect.map((extensions) => extensions.flat()));
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const readOnly = yield* ReadOnly.atom;
+    const chatSection = yield* createChatSectionExtensions(readOnly);
+
     // Read through their atoms so the "companionChat" extension establishes a reactive dependency
     // and re-evaluates once these capabilities land (dependency modules contribute individually,
     // not batched per wave) or their values change.
@@ -107,27 +181,14 @@ export default Capability.makeModule(
     const cacheCapabilityAtom = yield* Capability.atom(AssistantCapabilities.CompanionChatCache);
 
     const extensions = yield* Effect.all([
-      // AI section group — created here so it shows only when the assistant plugin is active.
-      AppGraphBuilder.createExtension({
-        id: GraphPath.GroupSegments.ai,
-        match: AppNodeMatcher.whenSpace,
-        connector: (space) =>
-          Effect.succeed([
-            AppNode.makeGroup({
-              id: GraphPath.GroupSegments.ai,
-              type: GraphPath.GroupTypes.ai,
-              label: ['nav-tree-group-ai.label', { ns: AssistantNamespace.key }],
-              icon: AI_ACTION_ICON,
-              space,
-              position: 300,
-            }),
-          ]),
-      }),
-
       AppGraphBuilder.createTypeExtension({
         id: 'root',
         type: Chat.Chat,
-        actions: (chat) => {
+        actions: (chat, get) => {
+          if (get(readOnly)) {
+            return Effect.succeed([]);
+          }
+
           return Effect.succeed([
             AppGraphNode.makeAction({
               id: AssistantOperation.UpdateChatName.meta.key,
@@ -150,7 +211,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createExtension({
         id: 'assistant',
-        match: GraphNodeMatcher.whenRoot,
+        match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot),
         actions: () =>
           Effect.succeed([
             AppGraphNode.makeAction({
@@ -203,7 +264,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'companionChat',
         relation: AppNode.companion,
-        match: whenNonChatObject,
+        match: ReadOnly.unless<Obj.Unknown>(readOnly, whenNonChatObject),
         connector: (object, get) =>
           Effect.gen(function* () {
             const [stateAtom] = get(stateCapabilityAtom);
@@ -241,15 +302,18 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
       }),
 
-      createPromptExtension(),
-      createSpaceSettingsExtension(),
+      createPromptExtension(readOnly),
+      createSpaceSettingsExtension(readOnly),
 
       AppGraphBuilder.createExtension({
         id: 'invocations',
         relation: AppNode.companion,
-        match: GraphNodeMatcher.whenAny(
-          AppNodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
-          AppNodeMatcher.whenEchoTypeMatches(Instructions.Instructions),
+        match: ReadOnly.unless(
+          readOnly,
+          GraphNodeMatcher.whenAny(
+            AppNodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
+            AppNodeMatcher.whenEchoTypeMatches(Instructions.Instructions),
+          ),
         ),
         connector: () =>
           Effect.succeed([
@@ -265,7 +329,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'trace',
         relation: AppNode.companion,
-        match: GraphNodeMatcher.whenRoot,
+        match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot),
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
@@ -278,56 +342,8 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-
-      TypeSection.createTypeSectionExtension(Chat.Chat, {
-        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
-        groupSegment: GraphPath.GroupSegments.ai,
-        urlKey: 'chat',
-      }),
-
-      // Create-chat action on the Chats section header.
-      AppGraphBuilder.createExtension({
-        id: 'chatsSectionActions',
-        match: (node) => {
-          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === Type.getTypename(Chat.Chat) && space ? Option.some(space) : Option.none();
-        },
-        actions: (space) =>
-          Effect.succeed([
-            AppGraphNode.makeAction({
-              id: 'create-chat',
-              data: () =>
-                Effect.gen(function* () {
-                  const { object: chat } = yield* Operation.invoke(
-                    AssistantOperation.CreateChat,
-                    {},
-                    { spaceId: space.db.spaceId },
-                  );
-                  yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: space.db.spaceId });
-                  const { targets } = yield* Operation.invoke(
-                    NavigationOperation.ResolveNavigationTargets,
-                    { query: { uri: Obj.getURI(chat) } },
-                    { spaceId: space.db.spaceId },
-                  );
-                  const navigationTarget = targets[0];
-                  if (navigationTarget) {
-                    yield* Operation.invoke(
-                      LayoutOperation.Open,
-                      { subject: [navigationTarget.path] },
-                      { spaceId: space.db.spaceId },
-                    );
-                  }
-                }),
-              properties: {
-                label: ['create-chat.label', { ns: AssistantNamespace.key }],
-                icon: 'ph--plus--regular',
-                disposition: 'list-item-primary',
-              },
-            }),
-          ]),
-      }),
     ]);
 
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [...chatSection, ...extensions]);
   }),
 );

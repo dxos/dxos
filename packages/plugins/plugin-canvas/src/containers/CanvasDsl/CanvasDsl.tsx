@@ -4,6 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -56,6 +57,8 @@ type CanvasDslEditorProps = Pick<CanvasDslProps, 'role' | 'attendableId'> & { ca
 
 const CanvasDslEditor = ({ role, canvas, attendableId }: CanvasDslEditorProps) => {
   const { t } = Hooks.useTranslation(CanvasNamespace.key);
+  // A host that locks every canvas locks its text too: Rebuild is an edit of the drawing.
+  const readOnly = ToolkitHooks.useReadOnly();
 
   // The text is printed again whenever the scene it is printed from changes, wherever the change came from.
   const loaded = useCanvasLoaded(canvas);
@@ -113,33 +116,35 @@ const CanvasDslEditor = ({ role, canvas, attendableId }: CanvasDslEditorProps) =
 
   const hasIntent = printed.intent !== undefined;
   const menuActions = useMenuBuilder(() => {
-    const builder = MenuBuilder.make()
-      .action(
-        'rebuild',
-        {
-          label: ['dsl.rebuild.label', { ns: CanvasNamespace.key }],
-          icon: 'ph--arrows-clockwise--regular',
-          disabled: !dirty,
-          disposition: 'toolbar',
-          testId: 'canvas-dsl.rebuild',
-        },
-        () => handleRebuild(),
-      )
-      .action(
-        'revert',
-        {
-          label: ['dsl.revert.label', { ns: CanvasNamespace.key }],
-          icon: 'ph--arrow-counter-clockwise--regular',
-          disabled: !dirty,
-          disposition: 'toolbar',
-          testId: 'canvas-dsl.revert',
-        },
-        () => handleRevert(),
-      );
+    const editing = readOnly
+      ? MenuBuilder.make()
+      : MenuBuilder.make()
+          .action(
+            'rebuild',
+            {
+              label: ['dsl.rebuild.label', { ns: CanvasNamespace.key }],
+              icon: 'ph--arrows-clockwise--regular',
+              disabled: !dirty,
+              disposition: 'toolbar',
+              testId: 'canvas-dsl.rebuild',
+            },
+            () => handleRebuild(),
+          )
+          .action(
+            'revert',
+            {
+              label: ['dsl.revert.label', { ns: CanvasNamespace.key }],
+              icon: 'ph--arrow-counter-clockwise--regular',
+              disabled: !dirty,
+              disposition: 'toolbar',
+              testId: 'canvas-dsl.revert',
+            },
+            () => handleRevert(),
+          );
     // Only a drawing with both readings has a choice between them; the item names the one it switches to.
     return (
       hasIntent
-        ? builder.action(
+        ? editing.action(
             'form',
             {
               label: [
@@ -152,9 +157,9 @@ const CanvasDslEditor = ({ role, canvas, attendableId }: CanvasDslEditorProps) =
             },
             () => handleToggleForm(),
           )
-        : builder
+        : editing
     ).build();
-  }, [dirty, hasIntent, form, handleRebuild, handleRevert, handleToggleForm]);
+  }, [readOnly, dirty, hasIntent, form, handleRebuild, handleRevert, handleToggleForm]);
 
   const status =
     result ??
@@ -174,10 +179,10 @@ const CanvasDslEditor = ({ role, canvas, attendableId }: CanvasDslEditorProps) =
           again, since an editor reads its text once. */}
       <Panel.Body asChild>
         <SourceEditor
-          key={`${form}:${current ? 'edit' : text}`}
+          key={`${form}:${readOnly}:${current ? 'edit' : text}`}
           data-testid='canvas-dsl.editor'
           value={shown}
-          onTextChange={handleChange}
+          onTextChange={readOnly ? undefined : handleChange}
         />
       </Panel.Body>
       <Panel.Footer classNames='p-1'>

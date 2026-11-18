@@ -18,5 +18,6 @@ The drawing skill teaches the new kind, so an agent can write a slide this way. 
 grid places in the frame the grid gives it; they used to report every label in a grid as not fitting.
 
 A Canvas drawing has a DSL companion beside its article: the drawing as text, as a grid diagram where it is one and
-as boxes otherwise, editable, with Rebuild to redraw from the text. A connector drawn with no arrowhead now reads
+as boxes otherwise, editable, with Rebuild to redraw from the text. Where the host is read-only the text can be read
+but not edited. A connector drawn with no arrowhead now reads
 back with none; it used to come back with the default arrow.

@@ -8,6 +8,8 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
+import { type Space } from '@dxos/client/echo';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import * as Position from '@dxos/util/Position';
 
@@ -28,9 +30,10 @@ import { SpaceNamespace } from '../../../namespace.ts';
  * plugin (general, members) and by other plugins (automation, functions).
  */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
+  const readOnly = yield* ReadOnly.atom;
   const sectionExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsSection',
-    match: AppNodeMatcher.whenSpace,
+    match: ReadOnly.unless<Space>(readOnly, AppNodeMatcher.whenSpace),
     connector: (space) =>
       Effect.succeed([
         AppNode.makeSection({

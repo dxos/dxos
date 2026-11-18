@@ -6,6 +6,7 @@ import { useAtom, useAtomValue } from '@effect/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import type * as Spec from '@dxos/compute/Spec';
 import { type ReviewModel } from '@dxos/deus/review';
 import { Doc } from '@dxos/echo-doc';
@@ -243,6 +244,7 @@ export type SpecViewProps = { spec: Spec.Spec; view: SpecViewId; attendableId?: 
 
 /** A view of an ECHO spec in its companion tab, reading what else it needs from the plugin that provides it. */
 export const SpecView = ({ spec, view, attendableId }: SpecViewProps) => {
+  const readOnly = ToolkitHooks.useReadOnly();
   const [dialects = NO_DIALECTS] = useObject(spec, 'dialects');
   const [content] = useObject(spec.content);
   const { reviews, review } = useSpecReviews(spec);
@@ -257,6 +259,7 @@ export const SpecView = ({ spec, view, attendableId }: SpecViewProps) => {
     reviews,
     review,
     facts,
+    readOnly,
   };
   return Provider ? (
     <Provider spec={spec} attendableId={attendableId}>

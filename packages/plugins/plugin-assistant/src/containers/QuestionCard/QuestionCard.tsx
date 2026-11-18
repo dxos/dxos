@@ -5,6 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -34,6 +35,7 @@ export type QuestionCardProps = {
 export const QuestionCard = ({ task, questionId }: QuestionCardProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
+  const readonly = ToolkitHooks.useReadOnly();
   // Snapshot rather than the object: the card must repaint when the answer lands, including when
   // it lands from another surface showing the same question — the task's own row, say.
   const [snapshot] = useObject(task);
@@ -89,7 +91,7 @@ export const QuestionCard = ({ task, questionId }: QuestionCardProps) => {
           thread={thread}
           busy={busy}
           message={failed ? t('question-failed.message') : stranded ? t('question-stranded.message') : undefined}
-          onAnswer={(answer) => void handleAnswer(answer)}
+          onAnswer={readonly ? undefined : (answer) => void handleAnswer(answer)}
         />
       </Card.Row>
     </Card.Body>

@@ -6,8 +6,8 @@
 
 import type * as Ast from '@dxos/datalog/Ast';
 import * as Engine from '@dxos/datalog/Engine';
+import { Fact } from '@dxos/echo-memory';
 import { BaseError } from '@dxos/errors';
-import { RDF } from '@dxos/pipeline-rdf';
 
 import * as Builtins from './Builtins.ts';
 import * as Compiler from './Compiler.ts';
@@ -67,7 +67,7 @@ export type Options = {
   readonly text?: Builtins.TextIndex;
   readonly entities?: Builtins.EntityIndex;
   /** Entities a fact concerns; defaults to its subject. */
-  readonly concerns?: (fact: RDF.Fact) => ReadonlyArray<string>;
+  readonly concerns?: (fact: Fact.Fact) => ReadonlyArray<string>;
   /**
    * Working-memory size; defaults to {@link MAX_FACTS}. Each `update` first retires facts whose
    * `assertion.validTo` is before the clock, then the oldest (by `generatedAtTime`, then arrival)
@@ -85,7 +85,7 @@ export type Options = {
 export type Input = {
   /** Evaluation time (epoch ms); a change re-evaluates time built-ins. */
   readonly at: number;
-  readonly facts?: ReadonlyArray<RDF.Fact>;
+  readonly facts?: ReadonlyArray<Fact.Fact>;
   /** Current status of each sub-goal; a new id adds the sub-goal. */
   readonly subgoals?: Readonly<Record<string, string>>;
 };
@@ -101,7 +101,7 @@ export class GoalRules {
   readonly #vocabulary: Vocabulary.Vocabulary;
   readonly #text: Builtins.TextIndex;
   readonly #entities: Builtins.EntityIndex;
-  readonly #concerns: (fact: RDF.Fact) => ReadonlyArray<string>;
+  readonly #concerns: (fact: Fact.Fact) => ReadonlyArray<string>;
   /** Working memory in arrival order. */
   readonly #facts = new Map<string, Admitted>();
   readonly #subgoals = new Map<string, string>();
@@ -123,7 +123,7 @@ export class GoalRules {
     this.#vocabulary = options.vocabulary ?? Compiler.defaultVocabulary();
     this.#text = options.text ?? new Builtins.KeywordIndex();
     this.#entities = options.entities ?? new Builtins.MemoryEntityIndex();
-    this.#concerns = options.concerns ?? ((fact) => [RDF.termValue(fact.assertion.subject)]);
+    this.#concerns = options.concerns ?? ((fact) => [Fact.termValue(fact.assertion.subject)]);
     const builtins = Builtins.make({
       clock: {
         now: () => this.#now,
@@ -157,7 +157,7 @@ export class GoalRules {
     this.#previous = this.#now;
     this.#now = at;
 
-    const arrived = new Map<string, { fact: RDF.Fact; admitted: Admitted }>();
+    const arrived = new Map<string, { fact: Fact.Fact; admitted: Admitted }>();
     for (const fact of facts) {
       if (!this.#facts.has(fact.id) && !arrived.has(fact.id)) {
         arrived.set(fact.id, { fact, admitted: this.#admit(fact) });
@@ -241,7 +241,7 @@ export class GoalRules {
     }
   }
 
-  #admit(fact: RDF.Fact): Admitted {
+  #admit(fact: Fact.Fact): Admitted {
     const validTo = fact.assertion.validTo === undefined ? undefined : Date.parse(fact.assertion.validTo);
     return {
       id: fact.id,
@@ -375,9 +375,9 @@ const age = (saidAt: number): number => (Number.isNaN(saidAt) ? Number.NEGATIVE_
 export const make = (options: Options): GoalRules => new GoalRules(options);
 
 /** A term's id and, for an entity known by an opaque id (a DID), its label, so `about` matches the name. */
-const termText = (term: RDF.Term): string =>
-  term.kind === 'entity' && term.label !== undefined ? `${term.entity} ${term.label}` : RDF.termValue(term);
+const termText = (term: Fact.Term): string =>
+  term.kind === 'entity' && term.label !== undefined ? `${term.entity} ${term.label}` : Fact.termValue(term);
 
 /** The text `about` matches: what was said plus the triple. */
-const factText = ({ assertion }: RDF.Fact): string =>
+const factText = ({ assertion }: Fact.Fact): string =>
   [assertion.quote ?? '', termText(assertion.subject), assertion.predicate, termText(assertion.object)].join(' ');

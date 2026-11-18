@@ -85,6 +85,9 @@ export const defaultDeck: StoredDeck = {
   plankNames: {},
 };
 
+/** A deck whose companions start closed; an absent `companionPlanks` instead follows the layout's default. */
+export const closedCompanionsDeck: StoredDeck = { ...defaultDeck, companionPlanks: [] };
+
 //
 // Layout
 //
@@ -222,6 +225,8 @@ export const EphemeralDeckState = Schema.Struct({
   currentUndoId: Schema.optional(Schema.String),
   /** A component to scroll into view when it is mounted. */
   scrollIntoView: Schema.optional(ScrollIntoView),
+  /** Whether the first projection of the URL the app booted on has ended, whether or not it opened anything or ran its action. */
+  restored: Schema.optional(Schema.Boolean),
   /**
    * The deck's front as last measured: the first plank of a sliding deck not folded into its left pile (none when the
    * deck is not sliding), and the planks it was measured among, joined by newlines.

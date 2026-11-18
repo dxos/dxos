@@ -11,6 +11,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { Entity, Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -35,6 +36,7 @@ const drawsOnCanvas = (drawing: Drawing.Drawing): boolean => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const readOnly = yield* ReadOnly.atom;
     // Read reactively, so the action appears once the capability lands.
     const viewStateCapabilityAtom = yield* Capability.atom(AttentionCapabilities.ViewState);
 
@@ -47,6 +49,10 @@ export default Capability.makeModule(
           return drawsOnCanvas(drawing);
         }),
       actions: (drawing, get) => {
+        if (get(readOnly)) {
+          return Effect.succeed([]);
+        }
+
         // The mode is this viewer's, kept in the canvas's view state where the article reads it; the item flips it, so
         // it names the one it switches to.
         const [viewState] = get(viewStateCapabilityAtom);

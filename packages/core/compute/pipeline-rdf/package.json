@@ -27,11 +27,6 @@
       "source": "./src/store/fact-store.ts",
       "types": "./dist/types/src/store/fact-store.d.ts",
       "import": "./dist/lib/fact-store.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -41,6 +36,7 @@
   ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -54,6 +50,8 @@
     "sparqljs": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-memory-sqlite": "workspace:*",
+    "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/n3": "catalog:",
     "@types/sparqljs": "catalog:",

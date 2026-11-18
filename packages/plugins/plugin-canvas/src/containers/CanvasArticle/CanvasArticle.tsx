@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
@@ -100,6 +101,7 @@ const SceneEditorArticle = <C,>({
 }: SceneEditorArticleProps<C>) => {
   const [element, setElement] = useState<HTMLElement | null>(null);
   const { hasAttention } = useAttention(attendableId);
+  const readOnly = ToolkitHooks.useReadOnly();
   const { stored, document } = host;
   if (!stored || !document) {
     return null;
@@ -127,8 +129,8 @@ const SceneEditorArticle = <C,>({
               scene={stored.key}
               role={role}
               navigable={section && hasAttention}
-              readonly={host.readonly}
-              onReadonlyChange={host.onReadonlyChange}
+              readonly={readOnly || host.readonly}
+              onReadonlyChange={readOnly ? undefined : host.onReadonlyChange}
               onIntent={host.onIntent}
               history={host.history}
               onModelIntent={host.onModelIntent}
