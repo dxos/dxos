@@ -71,6 +71,7 @@ export const optional = <K extends string, V>(key: K, value: V | undefined): { [
 
 /** Single-kind element nodes; the multi-kind ones carry a `BoxKind`/`PathKind` child instead. */
 const SHAPE_KINDS: Record<string, string | undefined> = {
+  GridElement: 'grid',
   CircleElement: 'circle',
   ArcElement: 'arc',
   TextElement: 'text',
@@ -399,11 +400,10 @@ export const read = (text: string): Reading => {
       case 'triangle':
       case 'grid': {
         const sizeNode = parts.find((part) => part.name === 'Size');
-        const origin = points[0] && readPoint(points[0]);
-        const size = sizeNode && readSize(sizeNode);
-        if (!origin || !size) {
-          return undefined;
-        }
+        // Both are optional: inside a grid the origin and the size are the grid's to decide, and a size of zero is
+        // how a track is told to share what is left.
+        const origin = (points[0] && readPoint(points[0])) ?? { x: 0, y: 0 };
+        const size = (sizeNode && readSize(sizeNode)) ?? { w: 0, h: 0 };
         return {
           kind,
           id,
@@ -513,19 +513,57 @@ export const read = (text: string): Reading => {
     }
   };
 
-  const readElements = (body: SyntaxNode | null, objectId: string): Shape.Element[] =>
-    body
-      ? childrenOf(body)
-          .filter((child) => child.name === 'Element')
-          .flatMap((child) => {
-            const element = readElement(child);
-            if (!element) {
-              return [];
-            }
-            ranges.set(`${objectId}/${element.id}`, { from: child.from, to: child.to });
-            return [element];
-          })
-      : [];
+  /**
+   * The elements of a body, flattened. A grid's children are written inside its braces and come out beside it with
+   * a `parent` naming it: the text is a tree because that is how a reader holds a layout, and the model is flat
+   * because that is how records merge and undo. Nesting is therefore the spelling of `parent`, not a second shape.
+   */
+  /** Where each element was written, so a check made after the whole body is read can still point at it. */
+  const declaredAt = new Map<string, SyntaxNode>();
+
+  const readElements = (body: SyntaxNode | null, objectId: string, top = true): Shape.Element[] => {
+    if (!body) {
+      return [];
+    }
+    const elements = childrenOf(body)
+      .filter((child) => child.name === 'Element')
+      .flatMap((child) => {
+        const element = readElement(child);
+        if (!element) {
+          return [];
+        }
+        ranges.set(`${objectId}/${element.id}`, { from: child.from, to: child.to });
+        declaredAt.set(element.id, child);
+        const nested = child.firstChild?.getChild('GridBody');
+        if (!nested) {
+          return [element];
+        }
+        return [
+          element,
+          ...readElements(nested, objectId, false).map((inner) =>
+            // An explicit `parent` is left alone: it is the same statement said the other way, and a child that
+            // names one container while sitting inside another is a contradiction the reader should not resolve.
+            'parent' in inner && inner.parent !== undefined ? inner : { ...inner, parent: element.id },
+          ),
+        ];
+      });
+
+    // A box with no extent draws nothing, and only a grid can give it one. Checked once the whole body is read,
+    // because the grid that places a child is the braces around it, which are not known while the child is.
+    if (top) {
+      for (const element of elements) {
+        const sizeless =
+          (element.kind === 'rect' || element.kind === 'ellipse' || element.kind === 'diamond') &&
+          (element.w === 0 || element.h === 0) &&
+          element.parent === undefined;
+        const at = declaredAt.get(element.id);
+        if (sizeless && at) {
+          report(at, `"${element.id}" has no size, and no grid to give it one.`);
+        }
+      }
+    }
+    return elements;
+  };
 
   //
   // Semantic statements, collected into one diagram and checked once every statement is read, since

@@ -115,7 +115,7 @@ export const ECHO_LAYERS: SlideSpec = {
       columns: [
         [
           card('browser', 'Browser', 'browser', 'Full replica in the tab; works offline.', 'wa-sqlite on OPFS'),
-          card('node', 'Node', 'terminal-window', 'Agents, CLIs and servers.', 'native SQLite'),
+          card('node-box', 'Node', 'terminal-window', 'Agents, CLIs and servers.', 'native SQLite'),
           card('worker', 'Worker', 'cloud', 'Always-on peer, sync hub and index per space.', 'Workers · DO SQLite'),
         ],
       ],

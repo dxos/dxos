@@ -34,7 +34,7 @@ object feed @ 362,402 {
 object session @ 762,402 {
   rect box 0,0 236x56 "Session"
 }   # card icon=play-circle
-object model @ 1162,402 {
+object model-box @ 1162,402 {
   rect box 0,0 236x56 "Model"
 }   # card icon=cpu
 object scheduler @ 362,531 {
@@ -73,7 +73,7 @@ object links @ 0,0 {
   arrow plan-spec plan/box -> spec/box "follows" head=triangle   # route=via 1458,559 1458,805
   arrow task-outcome task/box -> outcome/box "produces" head=triangle
   arrow session-task session/box -> task/box "works on" head=triangle
-  arrow session-model session/box -> model/box "run by" head=triangle
+  arrow session-model session/box -> model-box/box "run by" head=triangle
   arrow session-tool session/box -> tool/box "uses" head=triangle
   arrow session-feed session/box -> feed/box "writes" head=triangle
   arrow scheduler-session scheduler/box -> session/box "starts" head=triangle

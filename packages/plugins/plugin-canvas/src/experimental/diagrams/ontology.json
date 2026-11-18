@@ -17,7 +17,7 @@
       "cx": 800,
       "cy": 251
     },
-    "group": {
+    "group-box": {
       "icon": "users-three",
       "title": "Group",
       "cx": 520,
@@ -149,11 +149,11 @@
     }
   },
   "edges": [
-    ["group", "organization", "part of"],
+    ["group-box", "organization", "part of"],
     ["project", "organization", "owned by"],
     ["transaction", "organization", "payer"],
     ["transaction", "person", "payee"],
-    ["person", "group", "member of"],
+    ["person", "group-box", "member of"],
     ["task", "project", "in"],
     ["task", "person", "assignee"],
     ["message", "person", "sender"],

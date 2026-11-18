@@ -30,7 +30,7 @@
       "cx": 800,
       "cy": 500
     },
-    "model": {
+    "model-box": {
       "icon": "cpu",
       "title": "Model",
       "cx": 1200,
@@ -58,7 +58,7 @@
   },
   "edges": [
     ["session", "feed", "writes"],
-    ["session", "model", "run by"],
+    ["session", "model-box", "run by"],
     ["operator", "feed", "writes"],
     ["session", "tool", "uses"],
     ["skill", "tool", "defines"],
@@ -74,7 +74,7 @@
     ],
     [
       "operator",
-      "model",
+      "model-box",
       "",
       {
         "elbow": "hv",

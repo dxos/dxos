@@ -34,7 +34,7 @@ object c-containers @ 1284,168 {
 object organization @ 682,218 {
   rect box 0,0 236x66 "Organization"
 }   # card icon=buildings
-object "group" @ 402,393 {
+object "group-box" @ 402,393 {
   rect box 0,0 236x66 "Group"
 }   # card icon=users-three
 object transaction @ 682,393 {
@@ -90,11 +90,11 @@ object container-document @ 1304,558 {
 }   # card icon=file-text
 
 object links @ 0,0 {
-  arrow group-organization group/box -> organization/box "part of" head=triangle
+  arrow group-organization group-box/box -> organization/box "part of" head=triangle
   arrow project-organization project/box -> organization/box "owned by" head=triangle
   arrow transaction-organization transaction/box -> organization/box "payer" head=triangle
   arrow transaction-person transaction/box -> person/box "payee" head=triangle
-  arrow person-group person/box -> group/box "member of" head=triangle
+  arrow person-group person/box -> group-box/box "member of" head=triangle
   arrow task-project task/box -> project/box "in" head=triangle
   arrow task-person task/box -> person/box "assignee" head=triangle
   arrow message-person message/box -> person/box "sender" head=triangle

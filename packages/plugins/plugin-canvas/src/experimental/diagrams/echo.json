@@ -156,7 +156,7 @@
       "body": "Full replica in the tab; works offline.",
       "footer": "wa-sqlite on OPFS"
     },
-    "node": {
+    "node-box": {
       "cx": 1385,
       "cy": 513,
       "w": 234,

@@ -46,7 +46,7 @@ object memory @ 845,706 {
 object browser @ 1268,160 {
   rect box 0,0 234x226 "Browser"
 }   # card icon=browser footer="wa-sqlite on OPFS" body="Full replica in the tab; works offline."
-object "node" @ 1268,400 {
+object "node-box" @ 1268,400 {
   rect box 0,0 234x226 "Node"
 }   # card icon=terminal-window footer="native SQLite" body="Agents, CLIs and servers."
 object worker @ 1268,640 {

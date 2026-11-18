@@ -174,6 +174,34 @@ describe('dsl round trip', () => {
     expect(element.kind === 'rect' && element.data).toEqual({ text: 'hello', half: 0.5 });
   });
 
+  test('a grid holds what it places, in braces', ({ expect }) => {
+    // Containment is structural in the text and `parent` in the model: nesting is the spelling, not a second
+    // shape. A child written inside the braces drops the attribute, since saying it twice lets the two disagree.
+    const source = [
+      'object A @ 0,0 {',
+      '  grid root 0,0 900x300 cols=3 gap=24 {',
+      '    rect a "One"',
+      '    rect b "Two"',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [grid, a, b] = toScene(commands).objects[0].elements;
+    expect(grid.kind).toEqual('grid');
+    expect([a.id, 'parent' in a && a.parent]).toEqual(['a', 'root']);
+    expect([b.id, 'parent' in b && b.parent]).toEqual(['b', 'root']);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('a flat `parent` is read, and printed back as nesting', ({ expect }) => {
+    // Accepting both costs nothing and a program patching one attribute to reparent a box is a real use; there is
+    // still only ONE canonical output, which is what the round trip is proved against.
+    const flat = 'object A @ 0,0 {\n  grid root 0,0 900x300 cols=2\n  rect a 0,0 0x0 parent=root\n}\n';
+    expect(roundTrip(flat)).toEqual('object A @ 0,0 {\n  grid root 0,0 900x300 cols=2 {\n    rect a\n  }\n}\n');
+  });
+
   test('whitespace is insignificant', ({ expect }) => {
     const dense = 'object A @ 0,0 {rect box 0,0 10x10 "hi" color=red}';
     const loose = 'object   A\n  @ 0 , 0\n{\n  rect\n    box\n    0,0\n    10x10\n    "hi"\n    color=red\n}\n';
@@ -275,6 +303,7 @@ describe('dsl diagnostics', () => {
   }
 
   test('a syntax error is located', ({ expect }) => {
+    // A box with a point and no size: legal to the grammar now, and reported because nothing can give it one.
     const { problems } = parse('object A @ 0,0 {\n  rect box 0,0\n}\n');
     expect(problems.length).toBeGreaterThan(0);
     expect(problems[0].to).toBeGreaterThan(problems[0].from);

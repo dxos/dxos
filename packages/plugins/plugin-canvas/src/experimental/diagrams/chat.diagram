@@ -19,7 +19,7 @@ object feed @ 682,307 {
 object session @ 682,467 {
   rect box 0,0 236x66 "Session"
 }   # card icon=play-circle
-object model @ 1082,467 {
+object model-box @ 1082,467 {
   rect box 0,0 236x66 "Model"
 }   # card icon=cpu
 object skill @ 282,627 {
@@ -34,11 +34,11 @@ object artifact @ 682,787 {
 
 object links @ 0,0 {
   arrow session-feed session/box -> feed/box "writes" head=triangle
-  arrow session-model session/box -> model/box "run by" head=triangle
+  arrow session-model session/box -> model-box/box "run by" head=triangle
   arrow operator-feed operator/box -> feed/box "writes" head=triangle
   arrow session-tool session/box -> tool/box "uses" head=triangle
   arrow skill-tool skill/box -> tool/box "defines" head=triangle
   arrow tool-artifact tool/box -> artifact/box "makes" head=triangle
   arrow operator-skill operator/box -> skill/box head=triangle stroke=dashed   # route=elbow-hv
-  arrow operator-model operator/box -> model/box head=triangle stroke=dashed   # route=elbow-hv
+  arrow operator-model operator/box -> model-box/box head=triangle stroke=dashed   # route=elbow-hv
 }

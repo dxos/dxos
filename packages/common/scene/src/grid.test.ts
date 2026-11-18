@@ -25,9 +25,44 @@ describe('grid tracks', () => {
       { kind: 'fr', value: 2 },
       { kind: 'fixed', value: 120 },
     ]);
-    // Nothing, and anything that means nothing, is one share: a typo spreads rather than collapsing the grid.
-    expect(parseTracks(undefined)).toEqual([{ kind: 'fr', value: 1 }]);
+    // An axis that states nothing has implicit tracks, which only the children can count.
+    expect(parseTracks(undefined)).toBeUndefined();
+    // Anything that means nothing is one share: a typo spreads rather than collapsing the grid.
     expect(parseTracks('wat')).toEqual([{ kind: 'fr', value: 1 }]);
+  });
+});
+
+describe('implicit tracks', () => {
+  test('a grid that states nothing is a column, one row per child', ({ expect }) => {
+    // What `flex flex-col gap-3` gives in Tailwind, and `grid-auto-rows` in CSS: the count IS the child count.
+    const frames = solveGrids([
+      grid('stack', { x: 0, y: 0, w: 100, h: 300, gap: 0 }),
+      box('a', { parent: 'stack' }),
+      box('b', { parent: 'stack' }),
+      box('c', { parent: 'stack' }),
+    ]);
+    expect(frames.get('a')).toEqual({ x: 0, y: 0, w: 100, h: 100 });
+    expect(frames.get('b')).toEqual({ x: 0, y: 100, w: 100, h: 100 });
+    expect(frames.get('c')).toEqual({ x: 0, y: 200, w: 100, h: 100 });
+  });
+
+  test('stated columns give implicit rows, and stated rows give implicit columns', ({ expect }) => {
+    const down = solveGrids([
+      grid('g', { x: 0, y: 0, w: 200, h: 200, cols: 2 }),
+      box('a', { parent: 'g' }),
+      box('b', { parent: 'g' }),
+      box('c', { parent: 'g' }),
+    ]);
+    // Three children over two columns need two rows, and nothing had to say so.
+    expect(down.get('c')).toEqual({ x: 0, y: 100, w: 100, h: 100 });
+
+    const across = solveGrids([
+      grid('g', { x: 0, y: 0, w: 300, h: 100, rows: 1 }),
+      box('a', { parent: 'g' }),
+      box('b', { parent: 'g' }),
+      box('c', { parent: 'g' }),
+    ]);
+    expect(across.get('c')).toEqual({ x: 200, y: 0, w: 100, h: 100 });
   });
 });
 

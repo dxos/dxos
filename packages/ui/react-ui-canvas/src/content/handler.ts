@@ -329,8 +329,19 @@ export const SceneHandler: ContentHandler = {
 
     const diagram = canvasRecordOf(content)?.diagramShapes === true;
     const records: ContentMap = {};
+    const parentOf = new Map(
+      object.elements.filter(isBox).flatMap((box) => (box.parent ? [[box.id, box.parent] as const] : [])),
+    );
     const put = (element: string, node: Node) => {
-      records[nodeKey(node.id)] = { kind: 'node', scene, node, dsl: identity(element) } satisfies NodeRecord;
+      // The grid that placed it, carried on the node: its frame here is the rule's result, and the membership is
+      // the only part of the rule the child itself holds.
+      const parent = parentOf.get(element);
+      records[nodeKey(node.id)] = {
+        kind: 'node',
+        scene,
+        node: parent ? { ...node, parent } : node,
+        dsl: identity(element),
+      } satisfies NodeRecord;
     };
 
     // A small text belongs to what it captions rather than standing alone: a connector's caption
@@ -438,9 +449,26 @@ export const SceneHandler: ContentHandler = {
           // A grid is a frame that places what names it. It draws nothing of its own by default, as a CSS grid
           // container does not, but it IS a box: a style it states wins, so a container with a visible frame is
           // written rather than faked with a rect behind it.
+          //
+          // The RULE goes on the node, not just its result: the children's frames here are a cached projection,
+          // and without the rule beside them `read` could only give back the boxes where they landed — the grid,
+          // its tracks and every `parent` gone, which is a drawing that cannot be re-solved.
           const size = { width: element.w * placement.scale, height: element.h * placement.scale };
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
-          const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text };
+          const node: Node & Record<string, unknown> = {
+            type: 'grid',
+            id,
+            z: nextZ(),
+            center,
+            size,
+            ...(element.text !== undefined ? { label: element.text } : {}),
+            data: {
+              ...(element.cols !== undefined ? { cols: element.cols } : {}),
+              ...(element.rows !== undefined ? { rows: element.rows } : {}),
+              ...(element.gap !== undefined ? { gap: element.gap } : {}),
+              ...(element.padding !== undefined ? { padding: element.padding } : {}),
+            },
+          };
           put(element.id, withStyle(node, { fill: false, border: false, ...styleOf(element) }));
           break;
         }
@@ -675,6 +703,10 @@ export const SceneHandler: ContentHandler = {
         taken.add(candidate);
         return candidate;
       };
+      const placedBy = (node: Node): { parent?: string } => {
+        const parent = node.parent;
+        return typeof parent === 'string' && parent.length > 0 ? { parent } : {};
+      };
       for (const record of members.sort((left, right) => (zOf(left) < zOf(right) ? -1 : 1))) {
         const element = record.dsl?.element ?? '';
         if (isNodeRecord(record)) {
@@ -693,6 +725,24 @@ export const SceneHandler: ContentHandler = {
             elements.push({ kind: 'text', id: element, x: local.x, y: local.y, w: local.w, text });
           } else if (record.dsl?.portal !== undefined) {
             elements.push({ kind: 'portal', id: element, ...local, ref: record.dsl.portal, ...(text ? { text } : {}) });
+          } else if (node.type === 'grid') {
+            // The rule back out of the node, so the text says how the children are placed rather than only where
+            // they landed. Their frames stay as they are: a cached projection the next render re-solves.
+            const rule = dataOf(node) ?? {};
+            elements.push({
+              kind: 'grid',
+              id: element,
+              ...local,
+              ...(typeof rule.cols === 'number' || typeof rule.cols === 'string' ? { cols: rule.cols } : {}),
+              ...(typeof rule.rows === 'number' || typeof rule.rows === 'string' ? { rows: rule.rows } : {}),
+              ...(typeof rule.gap === 'number' ? { gap: rule.gap } : {}),
+              ...(typeof rule.padding === 'number' ? { padding: rule.padding } : {}),
+              ...(text ? { text } : {}),
+              // A grid's own defaults are not worth writing down: it draws no fill and no border unless told to,
+              // so emitting them would put two words on every grid that say only "as usual".
+              ...gridStyle(node.style),
+              ...placedBy(node),
+            });
           } else if (!isBuiltinType(node.type)) {
             const data = dataOf(node);
             elements.push({
@@ -703,6 +753,7 @@ export const SceneHandler: ContentHandler = {
               ...(data ? { data } : {}),
               ...(text ? { text } : {}),
               ...fieldsOf(node.style),
+              ...placedBy(node),
             });
           } else if (text && !isEllipseNode(node) && isTitled(node)) {
             // A box's text is always centred, so a title is its own small text, which `upsert` folds back into the box.
@@ -727,6 +778,7 @@ export const SceneHandler: ContentHandler = {
               ...local,
               ...(text ? { text } : {}),
               ...fieldsOf(node.style),
+              ...placedBy(node),
             });
           }
         } else {
@@ -827,6 +879,16 @@ const textOf = (node: Node): string => nodeTitle(defaultNodeRegistry, node) ?? '
 /** The four closed shapes that share a frame, and the only elements a contributed `kind=` may ride on. */
 const isBox = (element: Shape.Element): element is Shape.Box =>
   (Shape.BoxKind.literals as readonly string[]).includes(element.kind);
+
+/** A grid's style, less the no-fill and no-border it takes by default. */
+const gridStyle = (style: NodeStyle | undefined): StyleFields => {
+  const { fill, border, ...rest } = fieldsOf(style);
+  return {
+    ...rest,
+    ...(fill !== undefined && fill !== 'none' ? { fill } : {}),
+    ...(border === true ? { border } : {}),
+  };
+};
 
 /** Whether the type is one the engine draws itself, as against a kind a plugin contributed. */
 const isBuiltinType = (type: string): boolean => NODE_TYPES.includes(type as (typeof NODE_TYPES)[number]);

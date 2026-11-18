@@ -125,7 +125,8 @@ const style = ({
   fontSize,
 });
 
-export const formatElement = (element: Shape.Element): string => {
+/** `nested`: the element is written inside its grid's braces, so its `parent` is already said by where it sits. */
+export const formatElement = (element: Shape.Element, { nested = false }: { nested?: boolean } = {}): string => {
   switch (element.kind) {
     case 'rect':
     case 'ellipse':
@@ -135,8 +136,9 @@ export const formatElement = (element: Shape.Element): string => {
       return [
         element.kind,
         formatId(element.id),
-        formatPoint(element),
-        formatSize(element.w, element.h),
+        // A child the braces place states neither: its frame is the rule's result, re-solved on every render, and
+        // writing it down would be a coordinate that the next solve contradicts.
+        ...(nested ? [] : [formatPoint(element), formatSize(element.w, element.h)]),
         ...(element.text === undefined ? [] : [formatString(element.text)]),
         ...formatAttrs(element.kind, {
           kind: element.type,
@@ -146,7 +148,7 @@ export const formatElement = (element: Shape.Element): string => {
           rows: element.rows,
           gap: element.gap,
           padding: element.padding,
-          parent: element.parent,
+          parent: nested ? undefined : element.parent,
           ...style(element),
         }),
         ...formatData(element.kind, element.data),
@@ -228,8 +230,39 @@ export const formatElement = (element: Shape.Element): string => {
   }
 };
 
-const block = (header: string, elements: readonly Shape.Element[]): string =>
-  [`${header} {`, ...elements.map((element) => `  ${formatElement(element)}`), '}'].join('\n');
+/**
+ * A body, with each grid's children nested inside it. `parent` is the model's word for containment and braces are
+ * the text's, so a child written here drops the attribute: saying it twice would let the two disagree. An element
+ * naming a parent that is not a grid of this object stays at the top level, where its `parent` still prints —
+ * otherwise it would simply vanish from the text.
+ */
+const block = (header: string, elements: readonly Shape.Element[]): string => {
+  const grids = new Set(elements.filter((element) => element.kind === 'grid').map((element) => element.id));
+  const childrenOf = new Map<string, Shape.Element[]>();
+  for (const element of elements) {
+    const parent = 'parent' in element ? element.parent : undefined;
+    if (parent !== undefined && grids.has(parent)) {
+      childrenOf.set(parent, [...(childrenOf.get(parent) ?? []), element]);
+    }
+  }
+  const placed = new Set([...childrenOf.values()].flat().map((element) => element.id));
+
+  const lines = (element: Shape.Element, depth: number): string[] => {
+    const indent = '  '.repeat(depth);
+    const children = childrenOf.get(element.id);
+    const text = formatElement(element, { nested: placed.has(element.id) });
+    if (!children?.length) {
+      return [`${indent}${text}`];
+    }
+    return [`${indent}${text} {`, ...children.flatMap((child) => lines(child, depth + 1)), `${indent}}`];
+  };
+
+  return [
+    `${header} {`,
+    ...elements.filter((element) => !placed.has(element.id)).flatMap((element) => lines(element, 1)),
+    '}',
+  ].join('\n');
+};
 
 export const formatObject = (object: Scene.WorldObject): string =>
   block(

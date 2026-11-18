@@ -30,12 +30,14 @@ export type Track =
 const FR = { kind: 'fr', value: 1 } as const;
 
 /**
- * A track list: `3` is three equal shares, `"1fr auto 2fr"` is what it says, and nothing at all is a single share.
- * An entry that means nothing is one share, so a typo spreads rather than collapsing the grid.
+ * A track list: `3` is three equal shares and `"1fr auto 2fr"` is what it says. An entry that means nothing is one
+ * share, so a typo spreads rather than collapsing the grid. An axis that states nothing has IMPLICIT tracks — one
+ * per child, as CSS's `grid-auto-rows` gives and as flexbox gives for free — which is why a column of ten cards
+ * needs no count beside it.
  */
-export const parseTracks = (spec: number | string | undefined): Track[] => {
+export const parseTracks = (spec: number | string | undefined): Track[] | undefined => {
   if (spec === undefined) {
-    return [FR];
+    return undefined;
   }
   if (typeof spec === 'number') {
     return Array.from({ length: Math.max(Math.floor(spec), 1) }, () => FR);
@@ -93,8 +95,12 @@ export type GridRule = Pick<Box, 'cols' | 'rows' | 'gap' | 'padding'>;
  * silently overflowing it would hide the mistake.
  */
 export const solveGrid = (grid: GridRule, frame: Frame, children: readonly Box[]): { id: string; frame: Frame }[] => {
-  const cols = parseTracks(grid.cols);
-  const rows = parseTracks(grid.rows);
+  // Implicit tracks: the axis that states none takes as many as the children need, each an equal share. Stating
+  // neither is a single column, which is the stack a `flex-col` gives and the shape most runs want.
+  const stated = { cols: parseTracks(grid.cols), rows: parseTracks(grid.rows) };
+  const implicit = (count: number): Track[] => Array.from({ length: Math.max(count, 1) }, () => FR);
+  const cols = stated.cols ?? (stated.rows ? implicit(Math.ceil(children.length / stated.rows.length)) : [FR]);
+  const rows = stated.rows ?? implicit(Math.ceil(children.length / cols.length));
   const gap = grid.gap ?? 0;
   const padding = grid.padding ?? 0;
   const inner = {

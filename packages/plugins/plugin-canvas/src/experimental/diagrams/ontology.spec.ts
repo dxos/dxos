@@ -43,7 +43,7 @@ export const ONTOLOGY: SlideSpec = {
         // What a person belongs to.
         [
           card('project', 'Project', 'folder'),
-          card('group', 'Group', 'users-three'),
+          card('group-box', 'Group', 'users-three'),
           card('organization', 'Organization', 'buildings'),
           card('account', 'Account', 'user-circle'),
         ],
@@ -77,9 +77,9 @@ export const ONTOLOGY: SlideSpec = {
     },
   ],
   edges: [
-    { from: 'group', to: 'organization', label: 'part of' },
-    { from: 'project', to: 'group', label: 'owned by' },
-    { from: 'person', to: 'group', label: 'member of' },
+    { from: 'group-box', to: 'organization', label: 'part of' },
+    { from: 'project', to: 'group-box', label: 'owned by' },
+    { from: 'person', to: 'group-box', label: 'member of' },
     { from: 'task', to: 'project', label: 'in' },
     { from: 'task', to: 'person', label: 'assignee' },
     { from: 'event', to: 'person', label: 'attendee' },

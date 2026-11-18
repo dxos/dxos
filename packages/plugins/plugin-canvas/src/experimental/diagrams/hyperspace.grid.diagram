@@ -1,0 +1,42 @@
+# The Hyperspace slide as a hierarchy of grids: three columns, each a heading over a body, each body a run of
+# what the column holds. Nothing below the outermost frame states a coordinate — every position on screen comes
+# from a rule, so adding a service or resizing the slide re-solves rather than needing the deck re-exported.
+
+object hyperspace @ 0,0 {
+  grid slide 0,0 1600x880 cols="1fr 2fr 1fr" gap=64 padding=48 {
+    grid composer rows="48 1fr" gap=16 {
+      rect heading-composer "Composer" fill=none border=false align=center valign=middle fontSize=34
+      grid planks gap=24 {
+        rect plank-board "Roadmap" kind=plank comp=board package=react-ui-board
+        rect plank-sheet "Budget" kind=plank comp=sheet package=react-ui-sheet
+        rect plank-thread "Design chat" kind=plank comp=thread package=react-ui-thread
+      }
+    }
+    grid hyperspace rows="48 1fr" gap=16 {
+      rect heading-hyperspace "ECHO Hyperspace" fill=none border=false align=center valign=middle fontSize=34
+      grid field-body {
+        rect field kind=substrate seed=29 pitch=24 data-fill=0.55 gap=10 extra=0.4 size=24 hue=neutral bridges=10 spaceCount=9 rmin=34 rmax=150
+      }
+    }
+    grid services rows="48 1fr" gap=16 {
+      rect heading-services "EDGE Services" fill=none border=false align=center valign=middle fontSize=34
+      grid service-list gap=12 {
+        rect calendar "Calendar" kind=card icon=calendar-blank tone=event variant=simple
+        rect email "Email" kind=card icon=envelope tone=message variant=simple
+        rect storage "Storage" kind=card icon=database tone=file variant=simple
+        rect translation "Translation" kind=card icon=translate variant=simple
+        rect search "Search" kind=card icon=magnifying-glass variant=simple
+        rect sql "SQL" kind=card icon=table variant=simple
+        rect files "Files" kind=card icon=folder variant=simple
+        rect commerce "Commerce" kind=card icon=shopping-cart variant=simple
+        rect travel "Travel" kind=card icon=airplane-tilt tone=trip variant=simple
+        rect slack "Slack" kind=card icon=hash variant=simple
+      }
+    }
+  }
+
+  # The deck's dashed taps: each plank reading out of the field it draws from.
+  arrow tap-board plank-board -> field head=none stroke=dashed
+  arrow tap-sheet plank-sheet -> field head=none stroke=dashed
+  arrow tap-thread plank-thread -> field head=none stroke=dashed
+}

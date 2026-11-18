@@ -20,10 +20,12 @@ import { expect, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import { Dsl, applyCommands } from '@dxos/diagram';
 import { DXN } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
+import { SceneHandler } from '@dxos/react-ui-canvas';
 import * as Cell from '@dxos/storybook-testing/Cell';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
@@ -45,6 +47,7 @@ import agentsSource from '../diagrams/agents.diagram?raw';
 import agentsModel from '../diagrams/agents.json?raw';
 import chatSource from '../diagrams/chat.diagram?raw';
 import chatModel from '../diagrams/chat.json?raw';
+import hyperspaceGrid from '../diagrams/hyperspace.grid.diagram?raw';
 import ontologySource from '../diagrams/ontology.diagram?raw';
 import ontologyModel from '../diagrams/ontology.json?raw';
 import { type StudioSlide, seedSlide, studioSlide } from '../diagrams/slides.ts';
@@ -113,7 +116,38 @@ type Story = StoryObj<StoryArgs>;
 
 const slide = (id: string): Story => ({ decorators: decorators(studioSlide(id)) });
 
-export const Hyperspace = slide('hyperspace');
+/**
+ * A slide seeded from DSL text alone: no `SlideSpec`, no sidecar, no baked coordinates. The document is a
+ * hierarchy of grids, so every position on screen is solved from a rule — which is what makes the text beside it
+ * the thing to edit rather than a printout of what was already placed.
+ */
+const fromSource = (name: string, source: string): Story => ({
+  decorators: StoryHarness.decorators<StoryArgs>(({ args }) => ({
+    types: [Drawing.Drawing, Drawing.Canvas, ...types],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), StudioKindsPlugin()],
+    onInit: async ({ space }) => {
+      const canvas = addTestCanvas(
+        space.db,
+        (content) => {
+          const { commands, problems } = Dsl.read(source);
+          const errors = problems.filter(({ severity }) => severity === 'error');
+          if (errors.length > 0) {
+            throw new Error(`${name} does not parse: ${errors.map(({ message }) => message).join(' · ')}`);
+          }
+          applyCommands(content, commands, SceneHandler);
+        },
+        { ...STUDIO_CANVAS, readonly: true },
+      );
+      seeded.canvas = canvas;
+      const drawing = space.db.add(Drawing.make({ name, canvas }));
+      await space.db.flush();
+      const cell = Cell.article(drawing);
+      return args.editor ? [[cell], [{ object: drawing, component: SourceColumn }]] : [[cell]];
+    },
+  })),
+});
+
+export const Hyperspace = fromSource('hyperspace', hyperspaceGrid);
 export const Echo = slide('echo');
 export const Ontology = slide('ontology');
 export const Plugins = slide('plugins');

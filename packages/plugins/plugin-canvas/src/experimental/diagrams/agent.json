@@ -47,7 +47,7 @@
       "cx": 880,
       "cy": 430
     },
-    "model": {
+    "model-box": {
       "icon": "cpu",
       "title": "Model",
       "cx": 1280,
@@ -156,7 +156,7 @@
     ],
     ["task", "outcome", "produces"],
     ["session", "task", "works on"],
-    ["session", "model", "run by"],
+    ["session", "model-box", "run by"],
     ["session", "tool", "uses"],
     ["session", "feed", "writes"],
     ["scheduler", "session", "starts"],

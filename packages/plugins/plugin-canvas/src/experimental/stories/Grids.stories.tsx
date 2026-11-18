@@ -101,10 +101,11 @@ export const Columns = story(
   'columns',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 900x300 cols=3 gap=24 padding=24 border=true stroke=dashed
-      rect a 0,0 0x0 "One" parent=root
-      rect b 0,0 0x0 "Two" parent=root
-      rect c 0,0 0x0 "Three" parent=root
+      grid root 0,0 900x300 cols=3 gap=24 padding=24 border=true stroke=dashed {
+        rect a "One"
+        rect b "Two"
+        rect c "Three"
+      }
     }
   `,
 );
@@ -114,10 +115,11 @@ export const Rows = story(
   'rows',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 400x480 rows=3 gap=16 padding=16 border=true stroke=dashed
-      rect a 0,0 0x0 "One" parent=root
-      rect b 0,0 0x0 "Two" parent=root
-      rect c 0,0 0x0 "Three" parent=root
+      grid root 0,0 400x480 rows=3 gap=16 padding=16 border=true stroke=dashed {
+        rect a "One"
+        rect b "Two"
+        rect c "Three"
+      }
     }
   `,
 );
@@ -127,13 +129,14 @@ export const Cells = story(
   'cells',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 720x480 cols=3 rows=2 gap=16 padding=16 border=true stroke=dashed
-      rect a 0,0 0x0 "1" parent=root
-      rect b 0,0 0x0 "2" parent=root
-      rect c 0,0 0x0 "3" parent=root
-      rect d 0,0 0x0 "4" parent=root
-      rect e 0,0 0x0 "5" parent=root
-      rect f 0,0 0x0 "6" parent=root
+      grid root 0,0 720x480 cols=3 rows=2 gap=16 padding=16 border=true stroke=dashed {
+        rect a "1"
+        rect b "2"
+        rect c "3"
+        rect d "4"
+        rect e "5"
+        rect f "6"
+      }
     }
   `,
 );
@@ -146,11 +149,12 @@ export const Tracks = story(
   'tracks',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 900x240 cols="160 auto 1fr 2fr" gap=16 padding=16 border=true stroke=dashed
-      rect fixed 0,0 0x0 "160" parent=root
-      rect content 0,0 200x0 "auto" parent=root
-      rect one 0,0 0x0 "1fr" parent=root
-      rect two 0,0 0x0 "2fr" parent=root
+      grid root 0,0 900x240 cols="160 auto 1fr 2fr" gap=16 padding=16 border=true stroke=dashed {
+        rect fixed "160"
+        rect content 200x0 "auto"
+        rect one "1fr"
+        rect two "2fr"
+      }
     }
   `,
 );
@@ -163,25 +167,32 @@ export const Nested = story(
   'nested',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 1200x600 cols=3 gap=32 padding=32 border=true stroke=dashed
-      grid col-0 0,0 0x0 rows="auto 1fr" gap=12 parent=root
-      grid col-1 0,0 0x0 rows="auto 1fr" gap=12 parent=root
-      grid col-2 0,0 0x0 rows="auto 1fr" gap=12 parent=root
-      rect label-0 0,0 0x40 "Composer" fill=none border=false align=center valign=middle fontSize=28 parent=col-0
-      rect label-1 0,0 0x40 "ECHO Hyperspace" fill=none border=false align=center valign=middle fontSize=28 parent=col-1
-      rect label-2 0,0 0x40 "EDGE Services" fill=none border=false align=center valign=middle fontSize=28 parent=col-2
-      grid body-0 0,0 0x0 rows=3 gap=12 parent=col-0
-      grid body-1 0,0 0x0 rows=1 gap=12 parent=col-1
-      grid body-2 0,0 0x0 rows=5 gap=8 parent=col-2
-      rect plank-0 0,0 0x0 "Roadmap" kind=plank comp=board package=react-ui-board parent=body-0
-      rect plank-1 0,0 0x0 "Budget" kind=plank comp=sheet package=react-ui-sheet parent=body-0
-      rect plank-2 0,0 0x0 "Design chat" kind=plank comp=thread package=react-ui-thread parent=body-0
-      rect field 0,0 0x0 kind=substrate seed=29 pitch=24 data-fill=0.55 gap=10 spaceCount=6 rmin=34 rmax=120 parent=body-1
-      rect svc-0 0,0 0x0 "Calendar" kind=card icon=calendar-blank tone=event variant=simple parent=body-2
-      rect svc-1 0,0 0x0 "Email" kind=card icon=envelope tone=message variant=simple parent=body-2
-      rect svc-2 0,0 0x0 "Storage" kind=card icon=database tone=file variant=simple parent=body-2
-      rect svc-3 0,0 0x0 "Search" kind=card icon=magnifying-glass variant=simple parent=body-2
-      rect svc-4 0,0 0x0 "Travel" kind=card icon=airplane-tilt tone=trip variant=simple parent=body-2
+      grid root 0,0 1200x600 cols=3 gap=32 padding=32 border=true stroke=dashed {
+        grid col-0 rows="40 1fr" gap=12 {
+          rect label-0 "Composer" fill=none border=false align=center valign=middle fontSize=28
+          grid body-0 gap=12 {
+            rect plank-0 "Roadmap" kind=plank comp=board package=react-ui-board
+            rect plank-1 "Budget" kind=plank comp=sheet package=react-ui-sheet
+            rect plank-2 "Design chat" kind=plank comp=thread package=react-ui-thread
+          }
+        }
+        grid col-1 rows="40 1fr" gap=12 {
+          rect label-1 "ECHO Hyperspace" fill=none border=false align=center valign=middle fontSize=28
+          grid body-1 gap=12 {
+            rect field kind=substrate seed=29 pitch=24 data-fill=0.55 gap=10 spaceCount=6 rmin=34 rmax=120
+          }
+        }
+        grid col-2 rows="40 1fr" gap=12 {
+          rect label-2 "EDGE Services" fill=none border=false align=center valign=middle fontSize=28
+          grid body-2 gap=8 {
+            rect svc-0 "Calendar" kind=card icon=calendar-blank tone=event variant=simple
+            rect svc-1 "Email" kind=card icon=envelope tone=message variant=simple
+            rect svc-2 "Storage" kind=card icon=database tone=file variant=simple
+            rect svc-3 "Search" kind=card icon=magnifying-glass variant=simple
+            rect svc-4 "Travel" kind=card icon=airplane-tilt tone=trip variant=simple
+          }
+        }
+      }
     }
   `,
 );
