@@ -4,14 +4,14 @@
 
 /**
  * Availability Poll: the development loop at the spec and feature level. The template holds a finished spec staged as
- * four milestones, its feature map and design docs, and no tasks. Ask the project's chat to plan a milestone from
- * the spec, delegate the tasks it files and watch the Gantt chart and the feature cards: Prototype as each task runs
- * its feature in the sandbox, Operational once the milestone's scenario passes there and the Worker is deployed. A
- * person accepts the reviewed tasks. Then change a requirement on its card and watch the feature fail, get fixed and
- * recover. Flight options stay planned for the viewer. After each milestone the take pulls the agent's code from the
- * sandbox, serves it on this machine with `wrangler dev`, runs the milestone's scenario against it and shows its pages,
- * all in windows drawn over the app. Then it opens the spec review the agent's check recorded, whose verdicts also mark
- * each requirement on the spec's feature cards, before the person signs off.
+ * four milestones, a `feat` block per feature, design docs, and no tasks. Ask the project's chat to plan a milestone
+ * from the spec, delegate the tasks it files and watch the Gantt chart and the Board: Prototype as each task runs its
+ * feature in the sandbox, Operational once the milestone's scenario passes there and the Worker is deployed. A person
+ * accepts the reviewed tasks. Then change a requirement on its feature's card in the spec and watch the feature fail,
+ * get fixed and recover. Flight options stay planned for the viewer. After each milestone the take pulls the agent's
+ * code from the sandbox, serves it on this machine with `wrangler dev`, runs the milestone's scenario against it and
+ * shows its pages, all in windows drawn over the app. Then it opens the spec review the agent's check recorded, a
+ * verdict per requirement, before the person signs off.
  *
  * @title Availability Poll: from a spec to a Worker, milestone by milestone
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-11
@@ -73,9 +73,6 @@ const PLAN_SPEED = 4;
 const TASK_ROW = '[data-testid="deck.plank"] [data-testid="taskList.item"]';
 const taskRow = (title) => `${TASK_ROW}:has([data-testid="taskList.item.title"]:text-is("${title}"))`;
 const PROJECT_NODE = `[data-testid="deck.sidebar"] [data-testid="spacePlugin.object"]:has(:text-is("${PROJECT}")) >> nth=0`;
-// By the whole name: "Poll page" is also part of "New poll page".
-const node = (name) => `[data-testid="feature-canvas-node"]:has(:text-is("${name}")) >> nth=0`;
-const COMPANION = '[data-testid="feature-companion"]';
 const ARTIFACTS = '[data-testid="projectsPlugin.artifacts"]';
 const DECK_COMPANION = '[data-testid="deck.companion"]';
 const PROMPT = `${DECK_COMPANION} [data-testid="assistant.prompt"] .cm-content`;
@@ -115,8 +112,9 @@ const showProject = async (page) => {
 };
 
 /**
- * The take's work as plain data, read from ECHO: each task with its status, its milestone's name and whether it is
- * assigned, and each feature's status and requirements. Only the take's space: a reused profile keeps earlier ones.
+ * The take's work as plain data, read from ECHO: each task with its status, its milestone's name, whether it is
+ * assigned and how many spec items it implements, and each `feat` block of the project's specs by title, with its
+ * status and requirements. Only the take's space: a reused profile keeps earlier ones.
  */
 const snapshot = (page) =>
   page
@@ -133,7 +131,7 @@ const snapshot = (page) =>
           .run()
           .catch(() => []);
       const links = {};
-      for (const link of await query('org.dxos.relation.implements')) {
+      for (const link of await query('org.dxos.relation.implementsItem')) {
         const source = dxos.Relation.getSource(link)?.id;
         links[source] = (links[source] ?? 0) + 1;
       }
@@ -146,19 +144,22 @@ const snapshot = (page) =>
           features: links[task.id] ?? 0,
         })),
       );
-      const features = Object.fromEntries(
-        (await query('org.dxos.type.feature')).map((feature) => [
-          feature.name,
-          {
-            status: feature.status,
-            // Requirements are stored by key, in `requirementOrder`'s order.
-            requirements: (feature.requirementOrder ?? []).map((key) => {
-              const { id, text } = feature.requirements[key];
-              return { id, text };
-            }),
-          },
-        ]),
-      );
+      // Each feature is a `feat` block of a spec's text: its title on the header line, then indented fields.
+      const features = {};
+      const [project] = await query('org.dxos.type.project');
+      for (const ref of project?.specs ?? []) {
+        const spec = await ref.load().catch(() => undefined);
+        const text = (await spec?.content?.load?.().catch(() => undefined))?.content ?? '';
+        for (const block of text.split(/^(?=feat F-)/m).slice(1)) {
+          const title = block.match(/^feat F-\d+: (.*)$/m)?.[1];
+          if (title) {
+            features[title] = {
+              status: block.match(/^ {2}status: (.*)$/m)?.[1],
+              requirements: [...block.matchAll(/^ {2}req (F-[\d.]+): (.*)$/gm)].map(([, id, text]) => ({ id, text })),
+            };
+          }
+        }
+      }
       return { tasks, features };
     }, TAKE_SPACE)
     .catch(() => ({ tasks: [], features: {} }));
@@ -166,38 +167,20 @@ const snapshot = (page) =>
 const tasksOf = (state, milestone) => state.tasks.filter((task) => task.milestone.startsWith(milestone));
 const allOperational = (state, names) => names.every((name) => state.features[name]?.status === 'operational');
 
-/** The Specs tab's views of the spec: its text, or its features as a map. */
-const SPEC_VIEWS = { document: 'document', features: 'canvas' };
-
-/**
- * Opens a tab of the project's plank: `overview`, `tasks`, or a view of the Specs tab — `document` for the spec's
- * text, `features` for its map.
- */
+/** Opens a tab of the project's plank: `overview`, `tasks`, or `document`, the Specs tab's cards for each block. */
 const openProjectTab = async (demo, page, tab) => {
-  const view = SPEC_VIEWS[tab];
-  const selector = `[data-testid="projectsPlugin.tab.${view ? 'spec' : tab}"]`;
+  const spec = tab === 'document';
+  const selector = `[data-testid="projectsPlugin.tab.${spec ? 'spec' : tab}"]`;
   await showProjectTabs(demo, page, selector);
   await closeCompanion(page);
-  if (!view) {
+  if (!spec) {
     await demo.click({ selector: `${selector} >> nth=0`, label: tab[0].toUpperCase() + tab.slice(1) });
     return;
   }
   if ((await page.locator(selector).first().getAttribute('aria-selected')) !== 'true') {
     await demo.click({ selector: `${selector} >> nth=0`, label: 'Specs' });
   }
-  // The companion button's tooltip, left up by the pointer that closed the companion, covers the view toggles.
-  const plank = await page.locator('[data-testid="deck.plank"]').first().boundingBox();
-  await page.mouse.move(plank.x + plank.width / 2, plank.y + plank.height / 2);
-  const toggle = `[data-testid="projectsPlugin.specView.${view}"]`;
-  await page.locator(toggle).first().waitFor({ state: 'visible', timeout: 15_000 });
-  if ((await page.locator(toggle).first().getAttribute('aria-checked')) !== 'true') {
-    await demo.click({ selector: `${toggle} >> nth=0`, label: view === 'canvas' ? 'Map' : 'Document' });
-  }
-  if (view === 'canvas') {
-    await page.getByTestId('feature-map.canvas').first().waitFor({ state: 'visible', timeout: 15_000 });
-  } else {
-    await page.getByTestId('projectsPlugin.spec.document').first().waitFor({ state: 'visible', timeout: 15_000 });
-  }
+  await page.locator(SCROLLER).first().waitFor({ state: 'visible', timeout: 15_000 });
 };
 
 /** Brings the project's plank up, at the project's own level, with its tabs showing. */
@@ -214,106 +197,155 @@ const showProjectTabs = async (demo, page, selector) => {
   await page.locator(selector).first().waitFor({ state: 'visible', timeout: 15_000 });
 };
 
-/** Selects the feature on its project's map, which opens it in the plank's feature companion. */
-const openFeature = async (demo, page, name) => {
-  await openProjectTab(demo, page, 'features');
-  await page.locator(node(name)).waitFor({ state: 'visible', timeout: 15_000 });
-  await demo.click({ selector: node(name), label: name });
-  // The selection outlives a closed companion, so a card already selected needs the companion reopened.
-  if (!(await visible(page.locator(COMPANION), 3_000))) {
-    await demo.click({ selector: '[data-testid="plankHeading.companion"] >> nth=0', label: 'Companion' });
-  }
-  await page.locator(COMPANION).first().waitFor({ state: 'visible', timeout: 15_000 });
-};
-
 const DOCUMENT = '[data-testid="projectsPlugin.spec.document"]';
+const SCROLLER = `${DOCUMENT} [data-testid="spec-article.spec"]`;
+/** A block's card in the spec, by its label: `F-3`; a scenario's, such as `T-1`, by its name. */
+const card = (label) =>
+  `${DOCUMENT} [data-testid="spec-block"]:has([data-testid="spec-block.label"]:text-is("${label}"), [data-testid="spec-block.name"]:text-is("${label}"))`;
 
 /**
- * Wheels the spec's text down a notch at a time, so the camera follows, until a line holding `text` (or, when `exact`,
- * a line of just `text`, such as a feature card's name) is in the upper part of the view or the text ends; the editor
- * draws only the lines near the view, so the line cannot be scrolled to. `delay` between notches sets the pace.
+ * Brings a block's card (`label`) or the prose that starts with `text` to the top of the spec. The spec draws only the
+ * cards near the view, so until the target is drawn it heads for where the editor estimates the target's line to be.
+ * `smooth` scrolls a screen or so at a time, which the viewer can follow; otherwise it cuts there and holds the target in
+ * place for `hold` ms, since a write to the spec redraws its cards.
  */
-const scrollDocumentTo = async (page, text, { exact = false, delay = 250 } = {}) => {
-  const box = await page.locator(DOCUMENT).first().boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  const line = page.locator(`${DOCUMENT} .cm-line:${exact ? 'text-is' : 'has-text'}("${text}")`);
-  let last;
-  for (let notch = 0; notch < 200; notch++) {
-    const top = (await line.count()) > 0 ? (await line.first().boundingBox())?.y : undefined;
-    const above = top !== undefined && top < box.y;
-    if (top !== undefined && !above && (top < box.y + box.height * 0.4 || top === last)) {
-      return;
-    }
-    last = top;
-    await page.mouse.wheel(0, above ? -120 : 120);
-    await page.waitForTimeout(delay);
-  }
-};
-
-/**
- * Puts the spec's line holding `find` at the top of the view in one move, so the camera cuts to it rather than following
- * a scroll, and holds it there for `hold` ms; `line` is that line's rendered text, for the wheel when the editor is not
- * reachable. The editor is laid out at full height inside the plank, so the plank's scroller moves. A write to a feature
- * resets that scroller to the top, so every frame of the hold puts the line back.
- */
-const jumpDocumentTo = async (page, find, line, { hold = 10_000 } = {}) => {
-  const jumped = await page.evaluate(
-    async ({ selector, find, hold }) => {
-      const place = () => {
-        const view = document.querySelector(selector)?.cmTile?.root?.view;
-        const text = view?.state.doc.toString() ?? '';
-        const at = text.indexOf(find);
-        let scroller = view?.dom.parentElement;
-        while (
-          scroller &&
-          !(scroller.scrollHeight > scroller.clientHeight && /auto|scroll/.test(getComputedStyle(scroller).overflowY))
-        ) {
-          scroller = scroller.parentElement;
+const reveal = async (page, { label, text }, { smooth = false, hold = smooth ? 0 : 10_000 } = {}) => {
+  const source = text ?? (label.startsWith('F-') ? `feat ${label}:` : `scenario ${label}:`);
+  const found = await page.evaluate(
+    async ({ selector, label, text, source, smooth, hold }) => {
+      const scroller = document.querySelector(selector);
+      const view = scroller?.querySelector('.cm-content')?.cmTile?.root?.view;
+      if (!view) {
+        return false;
+      }
+      const find = () =>
+        label
+          ? [...scroller.querySelectorAll('[data-testid="spec-block"]')].find(
+              (block) =>
+                block
+                  .querySelector('[data-testid="spec-block.label"], [data-testid="spec-block.name"]')
+                  ?.textContent.trim() === label,
+            )
+          : [...scroller.querySelectorAll('.cm-line, .cm-line *')].find(
+              (element) =>
+                element.textContent.trimStart().startsWith(text) &&
+                ![...element.children].some((child) => child.textContent.trimStart().startsWith(text)),
+            );
+      const top = () => scroller.getBoundingClientRect().top + 24;
+      const offset = () => {
+        const element = find();
+        if (element) {
+          return element.getBoundingClientRect().top - top();
         }
-        if (at < 0 || !scroller) {
-          return undefined;
-        }
-        const offset = view.documentTop + view.lineBlockAt(at).top - scroller.getBoundingClientRect().top - 24;
-        if (Math.abs(offset) >= 4) {
-          scroller.scrollTop += offset;
-        }
-        return Math.abs(offset) < 4;
+        const at = view.state.doc.toString().indexOf(source);
+        return at < 0 ? undefined : view.documentTop + view.lineBlockAt(at).top - top();
       };
+      const wait = () =>
+        smooth
+          ? new Promise((resolve) => setTimeout(resolve, 600))
+          : new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       globalThis.__autocueUnpin?.();
-      const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      // The lines brought into view replace their estimated heights, so it takes a pass or two to settle.
-      for (let pass = 0; pass < 6; pass++) {
-        const placed = place();
-        if (placed === undefined) {
+      let placed = false;
+      for (let pass = 0; pass < 60; pass++) {
+        const distance = offset();
+        if (distance === undefined) {
           return false;
         }
-        if (placed) {
+        if (Math.abs(distance) < 4) {
+          placed = true;
           break;
         }
-        await frame();
-      }
-      const until = Date.now() + hold;
-      let request;
-      const keep = () => {
-        if (Date.now() < until) {
-          place();
-          request = requestAnimationFrame(keep);
+        const step = smooth
+          ? Math.sign(distance) * Math.min(Math.abs(distance), scroller.clientHeight * 1.2)
+          : distance;
+        const before = scroller.scrollTop;
+        scroller.scrollBy({ top: step, behavior: smooth ? 'smooth' : 'instant' });
+        await wait();
+        if (scroller.scrollTop === before) {
+          // At the end of the spec: as close as it gets.
+          placed = find() !== undefined;
+          break;
         }
-      };
-      request = requestAnimationFrame(keep);
-      globalThis.__autocueUnpin = () => cancelAnimationFrame(request);
-      return true;
+      }
+      if (placed && hold > 0) {
+        const until = Date.now() + hold;
+        let request;
+        const keep = () => {
+          const distance = find() && offset();
+          if (distance !== undefined && Math.abs(distance) >= 4) {
+            scroller.scrollBy({ top: distance, behavior: 'instant' });
+          }
+          if (Date.now() < until) {
+            request = requestAnimationFrame(keep);
+          }
+        };
+        request = requestAnimationFrame(keep);
+        globalThis.__autocueUnpin = () => cancelAnimationFrame(request);
+      }
+      return placed;
     },
-    { selector: `${DOCUMENT} .cm-content`, find, hold },
+    { selector: SCROLLER, label, text, source, smooth, hold },
   );
-  if (!jumped) {
-    await scrollDocumentTo(page, line, { exact: true, delay: 30 });
+  if (!found) {
+    throw new Error(`${label ?? text} not found in the spec`);
   }
   await page.waitForTimeout(500);
 };
 
-/** A feature's card in the spec's text, which embeds each feature by name. */
-const jumpToFeature = (page, name) => jumpDocumentTo(page, `![${name}](`, name);
+/** A feature's key in the spec, by its title. */
+const FEATURE_KEYS = {
+  'Create a poll': 'F-1',
+  'Mark availability': 'F-2',
+  'Heat map and best slot': 'F-3',
+  'New poll page': 'F-4',
+  'Poll page': 'F-5',
+};
+
+/** Cuts to a feature's card in the spec, whose tag shows its status. */
+const jumpToFeature = (page, name) => reveal(page, { label: FEATURE_KEYS[name] });
+
+/**
+ * Opens a group of the Spec companion (`structure`, `review`) beside the Specs tab. The companion button reopens the
+ * last tab, which after a delegation is the build chat and its claim URL, so the operation opens the group directly.
+ */
+const openSpecCompanion = async (demo, page, group) => {
+  await openProjectTab(demo, page, 'document');
+  await page.evaluate(
+    (subject) => composer.invoke('org.dxos.operation.appToolkit.updateCompanion', { subject }),
+    `~spec-${group}`,
+  );
+  await page
+    .locator(`${DECK_COMPANION} [data-testid="deck.companion.tab.spec-${group}"][aria-selected="true"]`)
+    .first()
+    .waitFor({ state: 'visible', timeout: 15_000 });
+};
+
+/** Picks a view of the open Spec companion group, unless it is the one showing. */
+const openSpecView = async (demo, page, group, view, label) => {
+  const body = `${DECK_COMPANION} [data-testid="spec-companion.${group}"]`;
+  await page.locator(body).first().waitFor({ state: 'visible', timeout: 15_000 });
+  if ((await page.locator(body).first().getAttribute('data-view')) !== view) {
+    await demo.click({ selector: `${DECK_COMPANION} [data-testid="spec-companion.view.${view}"] >> nth=0`, label });
+  }
+  await page.locator(`${body}[data-view="${view}"]`).first().waitFor({ state: 'visible', timeout: 15_000 });
+};
+
+const COLUMN = (status) => `${DECK_COMPANION} [data-testid="board-column"][data-status="${status}"]`;
+
+/**
+ * The spec's features on the Board, a column per status, scrolled to `status`'s column; the companion fits little more
+ * than one.
+ */
+const showBoard = async (demo, page, status = 'planned') => {
+  await openSpecCompanion(demo, page, 'structure');
+  await openSpecView(demo, page, 'structure', 'kanban', 'Board');
+  await page.locator(COLUMN(status)).first().waitFor({ state: 'visible', timeout: 15_000 });
+  await page
+    .locator(COLUMN(status))
+    .first()
+    .evaluate((column) => column.scrollIntoView({ inline: 'start', block: 'nearest', behavior: 'smooth' }));
+  await page.waitForTimeout(800);
+};
 
 /** The M-1 feature the reviews show, kept in the page so a later step's run finds it. */
 const SHOWN_FEATURE = '__availabilityPollShownFeature';
@@ -423,7 +455,7 @@ const showGantt = async (demo, page) => {
 
 /**
  * Holds the camera on the task list and Gantt chart while the milestone's tasks run, captioning each task as it
- * finishes. Ends once every task is finished and every feature operational, on the feature map.
+ * finishes. Ends once every task is finished and every feature operational, on the Board's Operational column.
  */
 const watchMilestone = async (demo, page, milestone, minutes) => {
   await showGantt(demo, page);
@@ -450,7 +482,7 @@ const watchMilestone = async (demo, page, milestone, minutes) => {
   );
   await demo.caption({ value: `Every ${milestone.id} task in review`, position: 'top' });
   await page.waitForTimeout(BEAT * 2);
-  await openProjectTab(demo, page, 'features');
+  await showBoard(demo, page, 'operational');
   await page.waitForTimeout(BEAT);
 };
 
@@ -495,22 +527,12 @@ const acceptMilestone = async (demo, page, milestone, caption) => {
 
 /**
  * The review the milestone's check recorded, in the Spec companion's Review view, then one feature's card in the spec,
- * where each requirement shows its verdict: after M-1, its feature with the most left untested; after M-2, that feature
+ * whose tag shows its status: after M-1, its feature with the most requirements left untested; after M-2, that feature
  * again and the Poll page.
  */
 const readReview = async (demo, page, milestone) => {
-  await openProjectTab(demo, page, 'document');
-  // The companion button reopens the last tab, which after a delegation is the build chat and its claim URL; the
-  // Spec companion opens directly instead, and the project gets an empty chat in case anything shows the chat tab.
-  await freshChat(page);
-  await page.evaluate(() => composer.invoke('org.dxos.operation.appToolkit.updateCompanion', { subject: '~spec' }));
-  const tab = `${DECK_COMPANION} [data-testid="deck.companion.tab.spec"][aria-selected="true"]`;
-  await page.locator(tab).first().waitFor({ state: 'visible', timeout: 15_000 });
-  const view = '[data-testid="spec-article.view.review"]';
-  await page.locator(view).first().waitFor({ state: 'visible', timeout: 15_000 });
-  if ((await page.locator(view).first().getAttribute('aria-checked')) !== 'true') {
-    await demo.click({ selector: `${view} >> nth=0`, label: 'Review' });
-  }
+  await openSpecCompanion(demo, page, 'review');
+  await openSpecView(demo, page, 'review', 'review', 'Review');
   await page.getByTestId('verdict-card').first().waitFor({ state: 'visible', timeout: 15_000 });
   await demo.caption({
     value: `The agent's review of ${milestone.id}`,
@@ -545,7 +567,7 @@ const readReview = async (demo, page, milestone) => {
     await jumpToFeature(page, feature);
     await demo.caption({
       value: untested(index) > 0 ? `${feature}: ${untested(index)} untested` : `${feature}: every requirement done`,
-      subtitle: 'In the spec, a tag on each requirement and the feature status',
+      subtitle: 'Operational all the same: its scenario passed on the Worker',
       hold: BEAT * 4,
     });
     await page.waitForTimeout(BEAT * 4);
@@ -1255,42 +1277,49 @@ export const steps = [
     run: async ({ demo, page }) => {
       await openProjectTab(demo, page, 'document');
       await demo.caption({ value: 'The spec, as the agent reads it', subtitle: 'Features, milestones and scenarios' });
-      await scrollDocumentTo(page, M1.features[0], { exact: true });
+      await reveal(page, { label: 'F-1' }, { smooth: true });
       await demo.caption({
         value: 'Each feature lists its requirements',
         subtitle: 'F-1: a poll lives in a Durable Object of its own',
         hold: BEAT * 4,
       });
-      // The milestones are a table, whose cells are not editor lines, so the scroll stops on the line above it.
-      await scrollDocumentTo(page, 'The work ships in this order');
+      await page.waitForTimeout(BEAT * 3);
+      await reveal(page, { text: 'The work ships in this order' }, { smooth: true });
       await demo.caption({
         value: 'The spec stages the work as milestones',
         subtitle: 'This take builds M-1 and M-2',
         hold: BEAT * 4,
       });
-      await scrollDocumentTo(page, 'scenario T-1: One zone');
+      await page.waitForTimeout(BEAT * 3);
+      await reveal(page, { label: 'T-1' }, { smooth: true });
       await demo.caption({
         value: 'Each milestone ends in a scenario',
         subtitle: 'T-1: three respondents, eight slots, one best slot',
         hold: BEAT * 4,
       });
-      await wheel(page, DOCUMENT, 3, { delay: 600 });
+      await page.waitForTimeout(BEAT * 3);
+      await wheel(page, SCROLLER, 3, { delay: 600 });
       await page.waitForTimeout(BEAT * 2);
     },
   },
   {
     name: 'Open a feature',
     run: async ({ demo, page }) => {
-      await openProjectTab(demo, page, 'features');
-      await demo.caption({ value: 'Each feature is a block of the spec', subtitle: 'Planned, and no tasks yet' });
-      await page.locator(node(HEATMAP)).waitFor({ state: 'visible', timeout: 15_000 });
-      await page.waitForTimeout(BEAT * 2);
-      await openFeature(demo, page, HEATMAP);
+      await openProjectTab(demo, page, 'document');
+      await reveal(page, { label: FEATURE_KEYS[HEATMAP] }, { smooth: true });
       await demo.caption({
-        value: 'A feature: its requirements and status',
+        value: 'Each feature is a block of the spec',
+        subtitle: 'Its requirements, what it depends on, and its status: planned',
+        hold: BEAT * 4,
+      });
+      await page.waitForTimeout(BEAT * 4);
+      await showBoard(demo, page, 'planned');
+      await demo.caption({
+        value: 'The Board: every feature by its status',
         subtitle: 'The status moves as the work is checked',
         hold: BEAT * 4,
       });
+      await page.waitForTimeout(BEAT * 4);
       await closeCompanion(page);
     },
   },
@@ -1444,29 +1473,29 @@ export const steps = [
         subtitle: `${ACCENT}: the accent turns from blue to pink`,
         hold: BEAT * 3,
       });
-      await openFeature(demo, page, POLL_PAGE);
+      await openProjectTab(demo, page, 'document');
+      const key = FEATURE_KEYS[POLL_PAGE];
+      await reveal(page, { label: key }, { hold: 0 });
       // Each requirement's text is an editor of its own, found by its current text.
-      const editor = `${COMPANION} [data-testid^="requirement-editor."][data-testid$=".text"]:has-text("${ACCENT_PREFIX}") .cm-content`;
+      const editor = `${card(key)} [data-testid^="req["][data-testid$="].text"]:has-text("${ACCENT_PREFIX}") .cm-content`;
       if (!(await visible(page.locator(editor), 10_000))) {
-        throw new Error(`no editor holds ${ACCENT} in the feature companion`);
+        throw new Error(`no editor holds ${ACCENT} on ${key}'s card`);
       }
-      await page.locator(editor).first().scrollIntoViewIfNeeded();
+      await page
+        .locator(editor)
+        .first()
+        .evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'smooth' }));
       await page.waitForTimeout(BEAT * 2);
       await demo.click({ selector: `${editor} >> nth=0`, label: ACCENT });
-      await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+      await page.keyboard.press('ControlOrMeta+A');
       await page.keyboard.type(NEW_ACCENT, { delay: 20 });
-      await page.waitForFunction(
-        async ({ key, text }) => {
-          const space = dxos
-            .spaces()
-            .find((candidate) => candidate.id === (globalThis[key] ??= sessionStorage.getItem(key) ?? undefined));
-          const features = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.feature'))).run();
-          return features.some((feature) =>
-            Object.values(feature.requirements ?? {}).some((requirement) => requirement.text === text),
-          );
-        },
-        { key: TAKE_SPACE, text: NEW_ACCENT },
-        { timeout: 10_000 },
+      await waitFor(
+        demo,
+        page,
+        (state) => state.features[POLL_PAGE]?.requirements.some(({ id, text }) => id === ACCENT && text === NEW_ACCENT),
+        0.25,
+        'the requirement edit',
+        1,
       );
       await demo.caption({ value: 'The requirement changes; the code does not, yet', hold: BEAT * 3 });
       await page.waitForTimeout(BEAT * 3);
@@ -1484,7 +1513,7 @@ export const steps = [
       await ask(demo, page, REVALIDATE_PROMPT);
       await page.waitForTimeout(BEAT);
       await closeCompanion(page);
-      await openProjectTab(demo, page, 'features');
+      await showBoard(demo, page, 'operational');
       await demo.caption({
         value: 'The agent reruns T-2 under the new requirement',
         subtitle: 'Fast-forwarded',
@@ -1492,6 +1521,7 @@ export const steps = [
       });
       // Revalidating has taken 22 minutes, and the fix 40: each reruns T-2, and the fix rebuilds and redeploys.
       await waitFor(demo, page, (state) => state.features[POLL_PAGE]?.status === 'failing', 45, 'the revalidation');
+      await showBoard(demo, page, 'failing');
       await demo.caption({
         value: 'The Worker no longer meets it: failing',
         subtitle: 'Its cells are still blue',
@@ -1541,7 +1571,7 @@ export const steps = [
         60,
         'the fix',
       );
-      await openProjectTab(demo, page, 'features');
+      await showBoard(demo, page, 'operational');
       await demo.caption({ value: 'Verified again: Poll page is operational', hold: BEAT * 3 });
       await page.waitForTimeout(BEAT * 3);
       await acceptMilestone(demo, page, M2.id, { value: 'Sign off the fix' });
