@@ -688,14 +688,20 @@ const pullBuild = async (page, milestone) => {
   }
   const chunks = [];
   for (let offset = 0; offset < size; offset += PULL_CHUNK) {
-    const { stdout, exitCode } = await sandboxExec(
-      page,
-      `dd if=${archive} bs=${PULL_CHUNK} skip=${offset / PULL_CHUNK} count=1 2>/dev/null | base64 -w0`,
-    );
-    if (exitCode !== 0) {
-      throw new Error(`The sandbox's archive could not be read at ${offset} (${exitCode})`);
+    const expected = Math.min(PULL_CHUNK, size - offset);
+    let chunk;
+    // An exec can succeed with empty output; read the chunk again rather than fail the take.
+    for (let attempt = 0; attempt < 3 && chunk?.length !== expected; attempt++) {
+      const { stdout, exitCode } = await sandboxExec(
+        page,
+        `dd if=${archive} bs=${PULL_CHUNK} skip=${offset / PULL_CHUNK} count=1 2>/dev/null | base64 -w0`,
+      );
+      if (exitCode !== 0) {
+        throw new Error(`The sandbox's archive could not be read at ${offset} (${exitCode})`);
+      }
+      chunk = Buffer.from(String(stdout ?? '').trim(), 'base64');
     }
-    chunks.push(Buffer.from(stdout.trim(), 'base64'));
+    chunks.push(chunk);
   }
   const bytes = Buffer.concat(chunks);
   if (bytes.length !== size) {
