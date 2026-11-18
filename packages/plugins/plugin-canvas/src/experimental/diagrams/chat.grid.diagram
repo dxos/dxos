@@ -1,23 +1,21 @@
 object chat @ 0,0 scale=1 {
-  grid slide 0,0 1600x880 rows="128 320 128" gap=64 padding=48 alignContent=center {
-    grid operator-row autoCols=384 justifyContent=center {
-      rect operator "Operator" kind=card icon=user
+  grid slide 0,0 1600x880 rows="96 480 96" gap=56 padding=48 autoCols=1152 justifyContent=center alignContent=center {
+    grid operator-row autoCols=320 justifyContent=center {
+      rect operator "Operator" kind=card icon=user iconTone=accent
     }
-    grid agent-body cols="384 384 384" gap=64 justifyContent=center {
-      grid agent-col-0 gap=64 autoRows=128 {
-        rect skill "Skill" kind=card icon=graduation-cap
-        rect tool "Tool" kind=card icon=wrench
-      }
-      grid agent-col-1 gap=64 autoRows=128 {
-        rect feed "Feed" kind=card icon=queue
-        rect session "Session" kind=card icon=play-circle
-      }
-      grid agent-col-2 gap=64 autoRows=128 {
-        rect model-box "Model" kind=card icon=cpu
-      }
+    grid agent-box cols=3 rows=3 gap=64 padding=32 border=true {
+      rect cell-nw fill=none border=false
+      rect feed "Feed" kind=card icon=queue iconTone=file
+      rect cell-ne fill=none border=false
+      rect cell-w fill=none border=false
+      rect session "Session" kind=card icon=play-circle iconTone=message
+      rect model-box "Model" kind=card icon=cpu iconTone=teal
+      rect skill "Skill" kind=card icon=graduation-cap iconTone=violet
+      rect tool "Tool" kind=card icon=wrench iconTone=sheet
+      rect cell-se fill=none border=false
     }
-    grid artifact-row autoCols=384 justifyContent=center {
-      rect artifact "Artifact" kind=card icon=cube
+    grid artifact-row autoCols=320 justifyContent=center {
+      rect artifact "Artifact" kind=card icon=cube iconTone=rose
     }
   }
   arrow operator-feed operator -> feed "writes" head=triangle

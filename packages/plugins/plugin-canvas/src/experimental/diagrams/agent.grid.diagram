@@ -1,8 +1,8 @@
 object agent @ 0,0 scale=1 {
-  grid slide 0,0 1600x880 gap=32 padding=48 {
+  grid slide 0,0 1600x880 gap=32 padding=48 autoCols=1296 justifyContent=center {
     grid layer-ui-section rows="48 1fr" gap=16 {
       rect layer-ui-heading "UI / Control" fill=none border=false align=center valign=middle fontSize=34
-      grid layer-ui-body cols="384 384 384" rows=2 gap=48 justifyContent=center {
+      grid layer-ui-body cols=3 rows=2 gap=32 padding=16 border=true {
         rect goal "Goal" kind=card icon=target
         rect ui-centre-0 fill=none border=false
         rect outcome "Outcome" kind=card icon=trophy
@@ -13,7 +13,7 @@ object agent @ 0,0 scale=1 {
     }
     grid layer-activity-section rows="48 1fr" gap=16 {
       rect layer-activity-heading "Activity" fill=none border=false align=center valign=middle fontSize=34
-      grid layer-activity-body cols="384 384 384" rows=2 gap=48 justifyContent=center {
+      grid layer-activity-body cols=3 rows=2 gap=32 padding=16 border=true {
         rect feed "Feed" kind=card icon=queue
         rect session "Session" kind=card icon=play-circle
         rect model "Model" kind=card icon=cpu
@@ -24,7 +24,7 @@ object agent @ 0,0 scale=1 {
     }
     grid layer-knowledge-section rows="48 1fr" gap=16 {
       rect layer-knowledge-heading "Knowledge" fill=none border=false align=center valign=middle fontSize=34
-      grid layer-knowledge-body cols="384 384 384" rows=2 gap=48 justifyContent=center {
+      grid layer-knowledge-body cols=3 rows=2 gap=32 padding=16 border=true {
         rect memory "Memory" kind=card icon=brain
         rect graph "Graph" kind=card icon=graph
         rect skill "Skill" kind=card icon=graduation-cap

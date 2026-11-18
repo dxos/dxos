@@ -17,9 +17,9 @@ object composer @ 0,0 scale=1 {
       }
     }
   }
-  arrow "navtree-frame/r-nav" navtree -> frame/r-nav head=none stroke=dashed
-  arrow "document-frame/r-doc" document -> frame/r-doc head=none stroke=dashed
-  arrow "sheet-frame/r-sheet" sheet -> frame/r-sheet head=none stroke=dashed
-  arrow "assistant-frame/r-comp" assistant -> frame/r-comp head=none stroke=dashed
-  arrow "canvas-frame/r-canvas" canvas -> frame/r-canvas head=none stroke=dashed
+  arrow wire-navtree navtree#e3 -> frame#w1 path=ortho head=none stroke=dashed color=light-blue
+  arrow wire-document document#e3 -> frame#w3 path=ortho head=none stroke=dashed color=green
+  arrow wire-sheet sheet#e3 -> frame#w5 path=ortho head=none stroke=dashed color=orange
+  arrow wire-assistant assistant#w3 -> frame#e2 path=ortho head=none stroke=dashed color=light-violet
+  arrow wire-canvas canvas#w3 -> frame#e4 path=ortho head=none stroke=dashed color=violet
 }
