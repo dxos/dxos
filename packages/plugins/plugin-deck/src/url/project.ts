@@ -84,7 +84,10 @@ export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
   }
 
   return yield* asOnlyProjection(
-    project(resolvedUrl).pipe(Effect.tap((plankId) => consumeLinkAction(resolvedUrl, plankId))),
+    project(resolvedUrl).pipe(
+      Effect.tap(({ opened }) => consumeLinkAction(resolvedUrl, opened)),
+      Effect.map(({ attend }) => attend),
+    ),
   );
 });
 
@@ -124,10 +127,16 @@ export type ProjectOptions = {
   intent?: NavigationIntent;
 };
 
-/**
- * Project a URL into deck state, returning the plank attention should move to, or `undefined` when
- * it should stay where it is.
- */
+type Projected = {
+  /** The plank attention should move to; unset when it should stay where it is. */
+  attend?: string;
+  /** The last plank the URL opened, which a link action acts on. */
+  opened?: string;
+};
+
+const NOTHING_PROJECTED: Projected = {};
+
+/** Project a URL into deck state. */
 const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions) {
   const attendChainEnd = options?.attend ?? true;
   const navigationTargetLoaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
@@ -188,11 +197,11 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
       },
     }));
     window.location.pathname = '/';
-    return;
+    return NOTHING_PROJECTED;
   }
 
   if (pathname === '/') {
-    return;
+    return NOTHING_PROJECTED;
   }
 
   yield* UrlPath.readWorkspace(pathname).pipe(
@@ -223,7 +232,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
   );
   if (Option.isNone(parsed)) {
     yield* applyActive([{ id: NotFound.NOT_FOUND_PATH }]);
-    return undefined;
+    return NOTHING_PROJECTED;
   }
 
   const { workspace, pairs } = parsed.value;
@@ -298,11 +307,8 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     });
   }
 
-  if (!attendChainEnd) {
-    return displaced;
-  }
-
-  return chainEnd;
+  const opened = planks[planks.length - 1]?.id;
+  return { attend: attendChainEnd ? chainEnd : displaced, opened } satisfies Projected;
 });
 
 /**
@@ -313,7 +319,8 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
  * one is the caller that has been overtaken, and it returns no plank to attend rather than failing:
  * its navigation is moot, not broken.
  */
-export const projectUrl = (url?: URL, options?: ProjectOptions) => asOnlyProjection(project(url, options));
+export const projectUrl = (url?: URL, options?: ProjectOptions) =>
+  asOnlyProjection(project(url, options).pipe(Effect.map(({ attend }) => attend)));
 
 const asOnlyProjection = <E, R>(projection: Effect.Effect<string | undefined, E, R>) =>
   Effect.gen(function* () {

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as LinkAction from '@dxos/app-toolkit/LinkAction';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
@@ -84,7 +85,9 @@ export default Capability.makeModule(
           );
         }
       }).pipe(
-        Effect.catch((error) => Effect.sync(() => log.warn('failed to initialize deep link listener', { error }))),
+        Effect.catchCause((cause) =>
+          Effect.sync(() => log.warn('failed to initialize deep link listener', { error: Cause.pretty(cause) })),
+        ),
       );
     }
 
@@ -171,8 +174,9 @@ const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: 
     return;
   }
 
-  // Merge deep link query params into the current window URL so handlers can read them.
-  const current = new URL(window.location.href);
+  // Merge deep link query params into the current window URL so handlers can read them; an earlier
+  // link's action is not this link's.
+  const current = LinkAction.withoutAction(new URL(window.location.href));
   if (deepLinkUrl.search) {
     deepLinkUrl.searchParams.forEach((value, key) => current.searchParams.set(key, value));
   }
