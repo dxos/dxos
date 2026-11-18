@@ -1,9 +1,12 @@
 object composer @ 0,0 scale=1 {
   grid slide 0,0 1600x880 cols="1fr 2fr 1fr" gap=64 padding=48 {
     grid left-body gap=24 {
-      grid left-col-0 gap=16 autoRows=240 alignContent=center {
+      grid left-col-0 rows="100 136 92 136 12 136" gap=0 {
+        rect left-gap-0 fill=none border=false
         rect navtree "Navtree" kind=card body="The space tree in the sidebar, built from the app graph." footer=plugin-navtree icon=tree-view tone=accent
+        rect left-gap-1 fill=none border=false
         rect document "Document" kind=card body="Collaborative markdown; the text lives in ECHO." footer=plugin-markdown icon=file-text tone=message
+        rect left-gap-2 fill=none border=false
         rect sheet "Sheet" kind=card body="A spreadsheet embedded in the document." footer=plugin-sheet icon=grid-four tone=sheet
       }
     }
@@ -23,15 +26,17 @@ object composer @ 0,0 scale=1 {
       rect frame-foot kind=app-chrome part=foot
     }
     grid right-body gap=24 {
-      grid right-col-0 gap=16 autoRows=240 alignContent=center {
-        rect assistant "Assistant" kind=card body="Assistant chat about the object on screen." footer=plugin-assistant icon=sparkle tone=event
+      grid right-col-0 rows="212 136 94 136" gap=0 {
+        rect right-gap-0 fill=none border=false
         rect canvas "Canvas" kind=card body="A diagram embedded in the document." footer=plugin-excalidraw icon=pen-nib tone=violet
+        rect right-gap-1 fill=none border=false
+        rect assistant "Assistant" kind=card body="Assistant chat about the object on screen." footer=plugin-assistant icon=sparkle tone=event
       }
     }
   }
-  arrow wire-navtree navtree#e3 -> r-nav#w3 path=line head=none stroke=dashed color=light-blue
-  arrow wire-document document#e3 -> r-doc#w3 path=line head=none stroke=dashed color=green
+  arrow wire-navtree navtree#e3 -> r-nav#w1 path=line head=none stroke=dashed color=light-blue
+  arrow wire-document document#e3 -> r-doc#w2 path=line head=none stroke=dashed color=green
   arrow wire-sheet sheet#e3 -> r-sheet#w3 path=line head=none stroke=dashed color=orange
-  arrow wire-assistant assistant#w3 -> r-comp#e3 path=line head=none stroke=dashed color=light-violet
   arrow wire-canvas canvas#w3 -> r-canvas#e3 path=line head=none stroke=dashed color=violet
+  arrow wire-assistant assistant#w3 -> r-comp#e4 path=line head=none stroke=dashed color=light-violet
 }
