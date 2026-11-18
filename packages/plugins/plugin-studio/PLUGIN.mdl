@@ -219,6 +219,8 @@ component ImageVariant / VideoVariant / AudioVariant   # default VariantRenderer
 
 ```mdl
 feat kind:image
+  uses: [generate, MediaArtifact, Variant]
+  uses: [generate, MediaArtifact, Variant]
   provider: plugin-ideogram (GenerationService id 'ideogram', source 'ideogram.ai')
   requestSchema: { model?, aspectRatio?, negativePrompt?, styleType?, seed? }
   renderer: ImageVariant (<img>)
@@ -244,6 +246,7 @@ feat kind:video
 
 ```mdl
 feat F-1: Author + generate
+  uses: [generate, MediaArtifact, MediaArtifactArticle, Variant]
   req F-1.1: A MediaArtifact opens in MediaArtifactArticle showing its prompt + kind-specific request form.
   req F-1.2: Generate runs op:generate against the resolved kind provider and appends Variant(s).
   req F-1.3: The request form is rendered from provider.requestSchema unless a kind GenerateForm surface overrides it.
@@ -259,6 +262,7 @@ feat F-2: Variants + rendering
 
 ```mdl
 feat F-3: Galleries + lightboxes
+  uses: [Lightbox, MediaArtifact]
   req F-3.1: A Collection of Artifacts renders as a masonry gallery; Create adds a new MediaArtifact; multi-select + Delete removes.
   req F-3.2: A Lightbox renders its Artifacts spatially on a board; dragging persists positions.
   req F-3.3: A MediaArtifact renders as a cover card (CardContent) so it composes into host-laid-out collections/boards.
@@ -266,6 +270,7 @@ feat F-3: Galleries + lightboxes
 
 ```mdl
 feat F-4: Navigation hub
+  uses: [generate, MediaArtifact, MediaArtifactArticle]
   req F-4.1: A "Studio" section node appears under the navtree `content` group (AppNode.makeSection) only while the space contains at least one MediaArtifact.
   req F-4.2: A virtual "Artifacts" child node under Studio opens ArtifactsArticle (bound by node data sentinel, not an ECHO object).
   req F-4.3: ArtifactsArticle shows a masonry of all Artifacts in the space; a toolbar kind selector sets the create-kind; Create makes a MediaArtifact of that kind and opens it. Clicking a card opens its MediaArtifactArticle.
@@ -353,6 +358,7 @@ feat Storyboard
 
 ```mdl
 feat StudioSkill
+  uses: [generate, Lightbox]
   desc: >
     org.dxos.skill.studio — list-providers → create-storyboard (frames inline, generate: true) or
     append-frame + generate per beat; narrative = establishing shot → development → resolution.

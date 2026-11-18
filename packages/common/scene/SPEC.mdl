@@ -24,6 +24,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ## Types
 
+The ECHO objects below are parts of a drawing, not user types: none carries `Annotation.UserType`.
+
 ```mdl
 type Model
   desc: >
@@ -217,6 +219,7 @@ type Camera3D
 
 ```mdl
 feat F-1: One model for 2D and 3D
+  uses: [Model]
 
   req F-1.1: A drawing is a Model of objects, Layouts of elements and Scenes over layouts, each one ECHO object whose records live inside it; types are shared only where 2D and 3D share properties.
   req F-1.2: There is one record kind, Element, for shapes and links alike; a link's ends are endpoints on other elements of its layout, or free points.
@@ -1024,4 +1027,21 @@ decision D-102: react-ui-canvas-editor's `SceneEditor` edits the scene model and
   for: user:richburdon
   affects: [Scene]
   why: The scene UI split into a surface and an editor application, and this spec names where each lives.
+```
+
+```mdl
+decision D-103: Scene's ECHO types are not user types, so their objects do not show up in a space's Database section or its Recent list.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [Model, Layout, Scene]
+```
+
+```mdl
+decision D-104: "Scene's ECHO types" is all seven: `Model2D`, `Model3D`, `Layout2D`, `Layout3D`, `Scene2D`, `Scene3D` and `StyleCatalog`. Fills in [D-103].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Model, Layout, Scene, StyleCatalog]
+  why: Each is reached only through the drawing that owns it; a style catalog is shared by drawings but never opened on its own.
+  rejected: Only the 2D types, which leaves the 3D ones to show up the same way once a 3D drawing is saved.
 ```

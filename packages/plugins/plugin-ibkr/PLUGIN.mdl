@@ -602,6 +602,7 @@ op GetInstrumentFundamentals
 
 ```mdl
 feat F-1: Connection
+  uses: [PortfolioSyncAction]
 
   req F-1.1:
     desc: |
@@ -621,6 +622,13 @@ feat F-1: Connection
 
 ```mdl
 feat F-2: Daily Sync
+  uses:
+    - ImportPortfolioReport
+    - Portfolio
+    - PortfolioArticle
+    - PortfolioProperties
+    - PortfolioReport
+    - SyncPortfolioReport
 
   req F-2.1:
     when: the daily timer trigger fires (cron 0 6 * * *, 06:00 UTC)
@@ -665,6 +673,7 @@ feat F-2: Daily Sync
 
 ```mdl
 feat F-3: Rate Limiting
+  uses: [FlexWebService, SyncPortfolioReport]
 
   req F-3.1:
     desc: |
@@ -688,6 +697,7 @@ feat F-3: Rate Limiting
 
 ```mdl
 feat F-4: Assistant Skill
+  uses: [GetPortfolio, GetTrades, SyncPortfolioReport]
 
   req F-4.1:
     desc: |
@@ -715,6 +725,7 @@ feat F-4: Assistant Skill
 
 ```mdl
 feat F-5: Report Browsing
+  uses: [PortfolioArticle, PortfolioReport, PortfolioReportDetail]
 
   req F-5.1:
     when: component:PortfolioArticle is shown
@@ -732,6 +743,14 @@ feat F-5: Report Browsing
 
 ```mdl
 feat F-6: Instrument Research
+  uses:
+    - GetInstrumentFundamentals
+    - Instrument
+    - InstrumentArticle
+    - InstrumentCard
+    - MaterializeInstrument
+    - PortfolioReportDetail
+    - SecEdgar
 
   req F-6.1:
     desc: |

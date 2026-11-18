@@ -1,0 +1,69 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
+import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
+import { log } from '@dxos/log';
+import type * as Observability from '@dxos/observability/Observability';
+import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
+import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
+import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
+
+import { DiagramAppPlugin } from './layout-plugin/index.ts';
+import { addClientProviders } from './observability.ts';
+
+export type PluginOptions = {
+  client: Client;
+  config: Config;
+  services: ClientServicesProvider;
+  observability: Fiber.Fiber<Observability.Observability, unknown>;
+  /** Shows the reset dialog in place of the app. */
+  onFatalError: (error: Error) => void;
+};
+
+/**
+ * The plugin set (spec F-1.2): the canvas article needs attention and the app graph its shortcuts resolve
+ * against, the illustrator owns the `Drawing` type and its variants, and SpacePlugin's dialogs and popovers
+ * show in the app's layout. Each plugin body is a lazy chunk.
+ */
+export const getPlugins = ({
+  client,
+  config,
+  services,
+  observability,
+  onFatalError,
+}: PluginOptions): Plugin.Plugin[] => [
+  AttentionPlugin.make(),
+  CanvasPlugin.make(),
+  ClientPlugin.make({
+    client,
+    config,
+    services,
+    types: [Drawing.Drawing, Drawing.Canvas],
+    onClientInitialized: ({ client }) =>
+      Fiber.join(observability).pipe(
+        Effect.flatMap((observability) => addClientProviders(observability, client)),
+        Effect.catchCause((cause) => Effect.sync(() => log.warn('client telemetry not started', { cause }))),
+        Effect.forkDetach,
+        Effect.asVoid,
+      ),
+    onClientInitializationError: ({ error }) =>
+      Effect.sync(() => onFatalError(error instanceof Error ? error : new Error(String(error)))),
+  }),
+  DiagramAppPlugin(),
+  GraphPlugin.make(),
+  IllustratorPlugin.make(),
+  ProcessManagerPlugin.make(),
+  SpacePlugin.make({}),
+  ThemePlugin.make({ appName: 'Diagram' }),
+];

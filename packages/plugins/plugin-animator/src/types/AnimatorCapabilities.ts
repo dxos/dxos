@@ -20,8 +20,7 @@ import type {
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 
-import { meta } from '#meta';
-
+import { AnimatorNamespace } from '../namespace.ts';
 import type * as Animation from './Animation.ts';
 
 /** A property of a stage target that a timeline may key. */
@@ -127,7 +126,7 @@ export type StageDef = {
 };
 
 /** Contributed by a plugin that owns objects, one per stage object type (F-4.1). */
-export const Stage = Capability.make<StageDef>()(`${meta.profile.key}.capability.stage`);
+export const Stage = Capability.make<StageDef>()(`${AnimatorNamespace.key}.capability.stage`);
 
 /** The stage that renders `object`, by its typename. */
 export const findStage = (stages: readonly StageDef[], object: Obj.Unknown | undefined): StageDef | undefined => {

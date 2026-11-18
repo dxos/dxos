@@ -1,7 +1,7 @@
 {
   "name": "@dxos/react-ui-rdf",
   "version": "0.16.0",
-  "description": "Presentational viewer for extracted semantic facts.",
+  "description": "Presentational components for extracted semantic facts: an entity browser, a fact viewer with type filters, and a Turtle snippet.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -12,11 +12,23 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -25,17 +37,24 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/ui-types": "workspace:*"
+    "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
+    "@tanstack/react-virtual": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
+    "@types/n3": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "n3": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

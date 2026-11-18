@@ -54,15 +54,36 @@ const pickTarget = (targets: readonly Type.Target[], volatile: Volatile): Type.T
   return undefined;
 };
 
-/** Seed the frontier with the configured top-level channels (idempotent — only when empty). */
+/**
+ * Seed the frontier with the configured top-level channels. Idempotent: channels already on it are left as they are,
+ * so a channel added to the config joins an existing crawl.
+ */
 const seedFrontier = (config: Type.Config): Effect.Effect<void, StateError, StateStore.StateStore> =>
+  StateStore.pushTargets(
+    config.channels.map((channelId) => ({ id: channelId, channelId, depth: 0, status: 'pending' as const })),
+  );
+
+/** The settings a target crawls with: its top-level channel's overrides over the crawl-wide ones. */
+const settingsFor = (config: Type.Config, target: Type.Target): Type.ChannelSettings => {
+  const channel = config.channelSettings?.[target.rootId ?? target.id];
+  return {
+    maxDays: channel?.maxDays ?? config.seed?.maxDays,
+    descendThreads: channel?.descendThreads ?? config.descendThreads,
+  };
+};
+
+/**
+ * Re-arms the targets an earlier run marked `error`, so a re-run retries them from their committed cursor; a cause
+ * outside the crawl (a bot not yet in the server, a network blip) must not strand a target for good. They resume as
+ * `active` because the failed run already opened them.
+ */
+const retryErrored = (): Effect.Effect<void, StateError, StateStore.StateStore> =>
   Effect.gen(function* () {
-    const existing = yield* StateStore.listTargets();
-    if (existing.length > 0) {
-      return;
-    }
-    yield* StateStore.pushTargets(
-      config.channels.map((channelId) => ({ id: channelId, channelId, depth: 0, status: 'pending' as const })),
+    const targets = yield* StateStore.listTargets();
+    yield* Effect.forEach(
+      targets.filter((target) => target.status === 'error'),
+      (target) => StateStore.setStatus(target.id, 'active'),
+      { discard: true },
     );
   });
 
@@ -105,7 +126,7 @@ const advance = (
         channelId: target.channelId,
         threadId: target.threadId,
         cursor: volatile.cursors.get(target.id) ?? target.cursor,
-        maxDays: config.seed?.maxDays,
+        maxDays: settingsFor(config, target).maxDays,
       }),
     );
     if (Exit.isFailure(fetched)) {
@@ -124,7 +145,7 @@ const advance = (
 
     // Push discovered threads on top of the frontier ⇒ they are drained before this target resumes.
     // Idempotent (existing ids are ignored), so safe at fetch time.
-    if (config.descendThreads && target.depth < (config.maxDepth ?? Number.POSITIVE_INFINITY)) {
+    if (settingsFor(config, target).descendThreads && target.depth < (config.maxDepth ?? Number.POSITIVE_INFINITY)) {
       yield* StateStore.pushTargets(
         page.threads.map((thread) => ({
           id: thread.threadId,
@@ -163,6 +184,7 @@ export const stream = (
   Stream.unwrap(
     Effect.gen(function* () {
       yield* seedFrontier(config);
+      yield* retryErrored();
       const volatile: Volatile = { cursors: new Map(), done: new Set() };
       const maxSteps = options.maxSteps ?? Number.POSITIVE_INFINITY;
       let taken = 0;

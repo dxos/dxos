@@ -19,6 +19,7 @@ import React, {
   useState,
 } from 'react';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -41,23 +42,25 @@ import { FoldSpine, SPINE_PX } from '#components';
 import {
   useBreakpoints,
   useCompanions,
+  useComplementarySidebarState,
   useDeckPresentation,
   useDeckSettings,
   useDeckState,
   useIsLiveDeck,
   useSelectedCompanion,
   useSelectedCompanionVariant,
+  useTopbar,
 } from '#hooks';
-import { DeckOperation, DeckSurface } from '#types';
+import { DeckCapabilities, DeckOperation, DeckSurface } from '#types';
 
 import { DeckNamespace } from '../../namespace.ts';
 import { Navigation } from '../../url/index.ts';
 import {
   findAttendedPlank,
+  getFrontPlankIndex,
   getRenderedPlanks,
   isCompanionOpen,
   isCompanionShown,
-  layoutAppliesTopbar,
 } from '../../util/index.ts';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
@@ -200,8 +203,8 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
     state: { sidebarState, complementarySidebarState, fullscreen },
   } = useDeckContext(DECK_VIEWPORT_NAME);
 
-  const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
+  const topbar = useTopbar(!!fullscreen);
+  const complementaryState = useComplementarySidebarState(complementarySidebarState);
 
   return (
     <Main.Content
@@ -221,9 +224,9 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
                 ? 'var(--dx-l0-size)'
                 : '0',
           '--main-complementary-width':
-            complementarySidebarState === 'expanded'
+            complementaryState === 'expanded'
               ? 'var(--dx-complementary-sidebar-size)'
-              : complementarySidebarState === 'collapsed'
+              : complementaryState === 'collapsed'
                 ? 'var(--dx-rail-size)'
                 : '0',
         } as Main.ContentProps['style']
@@ -241,9 +244,8 @@ DeckViewport.displayName = DECK_VIEWPORT_NAME;
 //
 
 export const DeckContentEmpty = () => {
-  const breakpoint = useBreakpoints();
   const { state } = useDeckState();
-  const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
+  const topbar = useTopbar(!!state.fullscreen);
   return (
     <Layout.Flex
       column
@@ -790,17 +792,21 @@ const useFoldedPlanks = ({
   getPlankTiles,
   isSliding,
   expose,
-  plankCount,
+  plankIds,
   maxPlankWidthPx,
   scrollIntentRef,
+  onFront,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
   isSliding: boolean;
   expose: boolean;
-  plankCount: number;
+  /** The planks' ids, so a plank replaced in place, which neither scrolls nor changes the count, re-measures. */
+  plankIds: string;
   maxPlankWidthPx: number;
   scrollIntentRef: RefObject<string | undefined>;
+  /** Called with the first plank not folded into the left pile, or undefined while the deck is not sliding. */
+  onFront: (id: string | undefined, plankIds: string) => void;
 }) => {
   const { attention } = useAttentionContext(DECK_VIEWPORT_NAME);
   const wasExposedRef = useRef(expose);
@@ -811,6 +817,7 @@ const useFoldedPlanks = ({
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport || !isSliding) {
+      onFront(undefined, plankIds);
       return;
     }
 
@@ -869,6 +876,8 @@ const useFoldedPlanks = ({
       });
 
       const offscreen = (rect: DOMRect) => rect.right <= vpRect.left || rect.left >= vpRect.right;
+      const frontIndex = getFrontPlankIndex(rects, vpRect, folded);
+      onFront(tiles[frontIndex]?.getAttribute('data-object-id') ?? undefined, plankIds);
 
       // A plank the user asked to see (a spine click, or a navigation) is focused as soon as the scroll
       // starts, while it is still folded in the pile. Hold that focus until the plank has actually
@@ -945,7 +954,7 @@ const useFoldedPlanks = ({
     };
     // `maxPlankWidthPx` is a dep so the fold state recomputes when the width cap shrinks planks (else a
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
-  }, [isSliding, expose, plankCount, maxPlankWidthPx, getPlankTiles, attention, viewportRef, scrollIntentRef]);
+  }, [isSliding, expose, plankIds, maxPlankWidthPx, getPlankTiles, attention, viewportRef, scrollIntentRef, onFront]);
 };
 
 /**
@@ -1437,13 +1446,34 @@ export const DeckPlanks = () => {
   const presentation = useDeckPresentation(planks.length);
   const fullscreenId = state.fullscreen;
   const fullscreen = !!fullscreenId;
-  const topbar = layoutAppliesTopbar(breakpoint, fullscreen);
+  const topbar = useTopbar(fullscreen);
   const isSliding = presentation === 'sliding';
   // Gated on the sliding deck: a fullbleed singleton has nothing to expose, and no stack to scale.
   const expose = !!state.expose && isSliding;
   const viewportRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
+
+  // The deck being left stays mounted while it fades, and keys pressed meanwhile are for the entered one.
+  const live = useIsLiveDeck();
+
+  // Written only when it changes, which is when a plank crosses the pile, not every scroll frame. Only the live deck
+  // writes, so a fading one cannot overwrite it; becoming live changes this callback, which re-runs the fold pass.
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
+  const onFront = useCallback(
+    (id: string | undefined, planks: string) => {
+      if (!live) {
+        return;
+      }
+      registry.update(ephemeralAtom, (ephemeral) =>
+        ephemeral.front?.id === id && ephemeral.front?.planks === planks
+          ? ephemeral
+          : { ...ephemeral, front: { id, planks } },
+      );
+    },
+    [registry, ephemeralAtom, live],
+  );
 
   // The plank a scroll-into-view is currently travelling to, shared between the scroller and the fold
   // hysteresis so the two do not fight over focus mid-scroll. A ref, not state: it changes per scroll
@@ -1481,17 +1511,16 @@ export const DeckPlanks = () => {
     getPlankTiles,
     isSliding,
     expose,
-    plankCount: planks.length,
+    plankIds: planks.join('\n'),
     maxPlankWidthPx,
     scrollIntentRef,
+    onFront,
   });
   useExposeInert({ getPlankTiles, expose });
   useExposeScale({ viewportRef, stackRef, hostRef, getPlankTiles, expose });
   // Last of the layout effects, so it measures the deck only once the scroll, the folds and the scale have
   // all landed — the FLIP inversion is against the final geometry, not an intermediate one.
   const captureExposeGeometry = useExposeFlip({ stackRef, getPlankTiles, expose });
-  // The deck being left stays mounted while it fades, and keys pressed meanwhile are for the entered one.
-  const live = useIsLiveDeck();
   const toggleFullscreen = useFullscreen(fullscreenId, live);
   const { invokePromise } = Hooks.useOperationInvoker();
 

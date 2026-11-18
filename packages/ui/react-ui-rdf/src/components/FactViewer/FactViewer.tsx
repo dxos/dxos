@@ -4,7 +4,8 @@
 
 import React, { type ReactNode, createContext, forwardRef, useContext, useMemo, useState } from 'react';
 
-import { type RDF, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
+import { buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
 import { Tree } from '@dxos/react-ui-graph';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
@@ -19,6 +20,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { formatRawFact } from '../../model/index.ts';
 import {
   type Group,
   factualityColor,
@@ -28,6 +30,8 @@ import {
   groupFacts,
   termKey,
 } from '../../types.ts';
+import { TurtleSnippet } from '../TurtleSnippet/index.ts';
+import { VirtualList } from '../VirtualList/index.ts';
 import { factViewerTheme } from './FactViewer.theme.ts';
 
 const styles = factViewerTheme.styles();
@@ -39,7 +43,7 @@ type View = 'list' | 'graph';
 //
 
 type FactViewerContextValue = {
-  facts: RDF.Fact[];
+  facts: Fact.Fact[];
   context?: string;
   predicate?: string;
   groups: Group[];
@@ -48,6 +52,9 @@ type FactViewerContextValue = {
   setFilter: (value: string) => void;
   view: View;
   setView: (view: View) => void;
+  /** Whether each fact row also shows the fact as stored, in TriG. */
+  turtle: boolean;
+  setTurtle: (turtle: boolean) => void;
 };
 
 const FactViewerContext = createContext<FactViewerContextValue | null>(null);
@@ -65,7 +72,7 @@ const useFactViewerContext = (consumer: string): FactViewerContextValue => {
 //
 
 type FactViewerRootProps = Util.ThemedClassName<{
-  facts: RDF.Fact[];
+  facts: Fact.Fact[];
   /** Context entity id; scopes the list and roots the graph. */
   context?: string;
   /** Predicate filter; when set, only facts with this predicate are shown. */
@@ -86,6 +93,7 @@ const FactViewerRoot = forwardRef<HTMLDivElement, FactViewerRootProps>(
   ({ classNames, facts, context, predicate, children }, forwardedRef) => {
     const [filter, setFilter] = useState('');
     const [view, setView] = useState<View>('list');
+    const [turtle, setTurtle] = useState(false);
     const scoped = useMemo(
       () =>
         facts.filter(
@@ -105,8 +113,8 @@ const FactViewerRoot = forwardRef<HTMLDivElement, FactViewerRootProps>(
     );
 
     const value = useMemo<FactViewerContextValue>(
-      () => ({ facts, context, predicate, groups, graph, filter, setFilter, view, setView }),
-      [facts, context, predicate, groups, graph, filter, view],
+      () => ({ facts, context, predicate, groups, graph, filter, setFilter, view, setView, turtle, setTurtle }),
+      [facts, context, predicate, groups, graph, filter, view, turtle],
     );
 
     return (
@@ -133,7 +141,7 @@ FactViewerRoot.displayName = 'FactViewer.Root';
 type FactViewerToolbarProps = Util.ThemedClassName<{}>;
 
 const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
-  const { filter, setFilter, view, setView } = useFactViewerContext('Toolbar');
+  const { filter, setFilter, view, setView, turtle, setTurtle } = useFactViewerContext('Toolbar');
   return (
     <Panel.Header>
       <Toolbar.Root classNames={classNames}>
@@ -146,6 +154,16 @@ const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
           />
         </Field.Root>
         <div className={styles.toolbarSpacer()} />
+        <Button.Root
+          icon='ph--brackets-curly--regular'
+          iconOnly
+          label={turtle ? 'Hide Turtle' : 'Show Turtle'}
+          variant={turtle ? 'primary' : 'default'}
+          disabled={view !== 'list'}
+          aria-pressed={turtle}
+          data-testid='fact-viewer-turtle'
+          onClick={() => setTurtle(!turtle)}
+        />
         <Button.Root
           icon='ph--list--regular'
           iconOnly
@@ -173,16 +191,33 @@ FactViewerToolbar.displayName = 'FactViewer.Toolbar';
 
 type FactViewerListProps = Util.ThemedClassName<{}>;
 
+/** A subject group's height before it is measured: its header and a few fact rows. */
+const ESTIMATED_GROUP_HEIGHT = 200;
+
+/** Space between groups, and above the first and below the last, in px. */
+const GROUP_GAP = 8;
+
 const FactViewerList = ({ classNames }: FactViewerListProps) => {
   const { groups } = useFactViewerContext('List');
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
   return (
     <Panel.Body asChild>
       <ScrollArea.Root classNames={classNames}>
-        <ScrollArea.Viewport classNames={styles.listViewport()}>
-          {groups.length === 0 && <Status.Empty>No facts.</Status.Empty>}
-          {groups.map((group) => (
-            <FactViewerGroup key={group.subject} group={group} />
-          ))}
+        <ScrollArea.Viewport classNames={styles.listViewport()} ref={setViewport}>
+          {groups.length === 0 ? (
+            <Status.Empty>No facts.</Status.Empty>
+          ) : (
+            // Groups have no fixed height (a quote, a TriG snippet), so each is measured as it scrolls into view.
+            <VirtualList
+              count={groups.length}
+              getKey={(index) => groups[index].subject}
+              renderItem={(index) => <FactViewerGroup group={groups[index]} />}
+              scrollElement={viewport}
+              estimateSize={ESTIMATED_GROUP_HEIGHT}
+              gap={GROUP_GAP}
+              padding={GROUP_GAP / 2}
+            />
+          )}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </Panel.Body>
@@ -231,14 +266,13 @@ const FactViewerGroup = forwardRef<HTMLDivElement, FactViewerGroupProps>(({ clas
         </Tag.Tag>
       )}
     </div>
+    {/* Bare content, so the list's one ScrollArea scrolls every group and each keeps its natural height. */}
     <Listbox.Root items={group.facts.map((fact) => ({ value: fact.id, label: fact.assertion.predicate }))}>
-      <Listbox.Viewport>
-        <Listbox.Content aria-label={group.subject}>
-          {group.facts.map((fact) => (
-            <FactViewerRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
-          ))}
-        </Listbox.Content>
-      </Listbox.Viewport>
+      <Listbox.Content aria-label={group.subject}>
+        {group.facts.map((fact) => (
+          <FactViewerRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   </div>
 ));
@@ -249,11 +283,14 @@ FactViewerGroup.displayName = 'FactViewer.Group';
 // Row
 //
 
-type FactViewerRowProps = Util.ThemedClassName<{ fact: RDF.Fact; conflicting?: boolean }>;
+type FactViewerRowProps = Util.ThemedClassName<{ fact: Fact.Fact; conflicting?: boolean }>;
 
 const FactViewerRow = forwardRef<HTMLDivElement, FactViewerRowProps>(
   ({ classNames, fact, conflicting }, forwardedRef) => {
     const { assertion, factuality, attribution } = fact;
+    // A row can render outside a Root (composed by hand), where it has no Turtle toggle.
+    const turtle = useContext(FactViewerContext)?.turtle ?? false;
+    const source = useMemo(() => (turtle ? formatRawFact(fact) : undefined), [turtle, fact]);
     return (
       <Listbox.Item id={fact.id} classNames={styles.row({ conflicting, class: mx(classNames) })} ref={forwardedRef}>
         {assertion.quote && <div className={styles.rowQuote()}>"{assertion.quote}"</div>}
@@ -278,6 +315,10 @@ const FactViewerRow = forwardRef<HTMLDivElement, FactViewerRowProps>(
         <div className={styles.rowAttribution()}>
           {[attribution.agent, attribution.source, formatDate(attribution.generatedAtTime)].filter(Boolean).join(' · ')}
         </div>
+
+        {source && (
+          <TurtleSnippet data-testid='fact-viewer-turtle-snippet' className={styles.rowTurtle()} source={source} />
+        )}
       </Listbox.Item>
     );
   },

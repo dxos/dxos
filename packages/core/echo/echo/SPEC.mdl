@@ -384,6 +384,7 @@ module Dataset
 
 ```mdl
 feat F-1: Namespace-module API surface
+  uses: [Filter, Obj]
 
   req F-1.1:
     when: a caller imports @dxos/echo
@@ -399,6 +400,7 @@ feat F-1: Namespace-module API surface
 
 ```mdl
 feat F-2: Type declaration
+  uses: [Type]
 
   req F-2.1:
     when: a named, reusable type is declared
@@ -419,6 +421,7 @@ feat F-2: Type declaration
 
 ```mdl
 feat F-3: Object data model
+  uses: [Obj, Type]
 
   req F-3.1:
     when: Obj.make(Type, props) is called
@@ -439,6 +442,7 @@ feat F-3: Object data model
 
 ```mdl
 feat F-4: References
+  uses: [Database, Ref]
 
   req F-4.1:
     when: a ref field is declared with Ref.Ref(Schema)
@@ -452,6 +456,7 @@ feat F-4: References
 
 ```mdl
 feat F-5: Query and filter
+  uses: [Aggregate, Filter, Order, Query, QueryResult]
 
   req F-5.1:
     when: db.query(filterOrQuery) is called
@@ -470,6 +475,7 @@ feat F-5: Query and filter
 
 ```mdl
 feat F-6: Effect Database service
+  uses: [Database]
 
   req F-6.1:
     when: Effect code declares Database.Service
@@ -484,6 +490,7 @@ feat F-6: Effect Database service
 
 ```mdl
 feat F-7: Feed options
+  uses: [Feed]
 
   desc: |
     A feed's indexing and retention options are fields of its `Feed` object, so they replicate,

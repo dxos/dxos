@@ -4,6 +4,7 @@
 
 import { type DataService } from '@dxos/protocols/rpc';
 
+/** Per-peer replication state of a space. */
 export type SpaceSyncState = DataService.SpaceSyncState;
 export namespace SpaceSyncState {
   export type PeerState = DataService.SpaceSyncState.PeerState;
@@ -25,7 +26,6 @@ export {
   META_NAMESPACE,
   type ObjectCoreOptions,
   type SpaceDocumentHeads,
-  type WorkingSetRow,
   objectIsUpdated,
 } from './core-db/index.ts';
 // One definition, in `echo`, now that the write gate is shared; re-exported so the public name is

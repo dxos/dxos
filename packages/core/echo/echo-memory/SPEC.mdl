@@ -1,0 +1,1641 @@
+---
+id: org.dxos.echo-memory
+name: EchoMemory
+version: 0.1.0
+---
+
+`@dxos/echo-memory` defines **memory**: what a space knows, held as attributed
+facts, and the subscriptions that wake when new facts arrive. It is the one interface that replaces two
+that grew separately and overlap:
+
+- `BrainService` (`@dxos/plugin-agent`): per-agent facts plus goal-rule subscriptions, an outbox per
+  subscription, read cursors and the clock.
+- `FactStore` (`@dxos/pipeline-rdf`): an RDF fact store with structured and SPARQL queries, an ontology
+  of predicates and ingest cursors.
+
+The package holds **interface definitions only**: the `MemoryService` tag and its API, the `RdfStore`
+port a memory runs on, the fact data model and the small pure functions over it. It contains no storage,
+no SPARQL engine and no rule evaluator, so any package can import it — an operation definition, a UI
+component, an EDGE worker — without pulling an implementation into its bundle [F-1]. Like `@dxos/echo`,
+it is a flat set of noun modules (`Fact`, `MemoryQuery`, `MemoryService`, `RdfStore`, `Subscription`,
+`MemoryError`, and the RDF mapping `Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab`, `Hash`),
+each one also a subpath of its own, so a consumer that must not load the RDF library imports only the
+modules it names [F-1.4]. Operations ask for `MemoryService` (or `RdfStore`) in their `services` like
+any other space service [F-1.5].
+
+Implementations live elsewhere. `@dxos/echo-memory-sqlite` holds the memory core, `RdfMemory`: a
+MemoryService over any `RdfStore`, with the goal-rule evaluator and every record it keeps stored as quads.
+Beside it is a local `RdfStore` over `@dxos/sparql-sqlite`'s quad store, which the CLI, tests and node
+servers open in one process [F-7]. EDGE serves the same interface from a Durable Object over that same core
+[F-7.4].
+
+In the app the memory and the store both run in the client-services backend, one memory per space, so every
+page and operation shares its rule evaluation, its outboxes and its clock. The backend runs `@dxos/sparql-sqlite`
+over the SQLite database it already holds, and the memory core (`RdfMemory`) over that store. Every shared write
+goes first to the space's feed in the `facts` namespace, which is durable and replicates like any feed, and only
+then to the store, which remembers how far it has read the feed and can be rebuilt from it. Subscriptions and
+outboxes are quads in the store's local part, which is never logged or replicated [F-9]. A store's quads move in and out in bulk as TriG or a compact binary form, serialized
+where the store is [F-10].
+
+`BrainService` and `FactStore` are deprecated in favour of `MemoryService`; `docs/MIGRATION.md` lists the
+work to get there, both the implementations still missing and the call sites to move [F-8].
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`     |
+| `service`  | `org.dxos.mdl.service@1.0`  |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `rule`     | `org.dxos.mdl.rule@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `question` | `org.dxos.mdl.question@1.0` |
+
+## Service
+
+```mdl
+service MemoryService
+  desc: |
+    Memory of one space, in two halves over one store.
+    - Knowledge base: `put` stores facts; `query` reads them back, with one MemoryQuery per kind of read.
+    - Event base: a subscription carries goal rules; whenever put facts or the clock wake them, an event is
+      queued in that subscription's own outbox, which its consumer drains with `take` and `ack`.
+    Every op is an Effect that fails only with MemoryError. Context tag `@dxos/echo-memory/MemoryService`.
+  ops:
+    put(facts: Fact[], options?: PutOptions) → number           # events queued [F-3.1, F-4.3]
+    query<T>(query: MemoryQuery<T>) → T                         # every knowledge-base read [F-3.2]
+    reset() → void                                              # [F-3.6]
+    subscribe(subscription: Subscription) → boolean             # false at MAX_SUBSCRIPTIONS [F-4.1]
+    subscriptions(owner?: EntityKey) → Subscription[]           # oldest first [F-4.1]
+    unsubscribe(id: SubscriptionId) → boolean                   # [F-4.2]
+    take(id: SubscriptionId) → MemoryEvent[]                    # oldest first [F-4.4]
+    ack(id: SubscriptionId, events: MemoryEventId[]) → void     # [F-4.4]
+  errors:
+    MemoryError: the store refused, could not be reached, or the input does not compile; the message says which
+  note: |
+    An instance is scoped to one space, so no op takes a space or agent argument [F-5].
+```
+
+### Operations
+
+**Knowledge base**
+
+- **`put(facts, options?) → number`** writes facts to the space's memory. Writing the same fact again
+  changes nothing, so a source can be re-read safely. Predicates the memory has not seen are added to
+  its ontology. `options.read` moves the source's read cursor in the same write, so memory never claims
+  to have read facts it does not hold; `put([], { read })` moves only the cursor. `options.quiet` lists
+  speakers whose facts are stored but wake no subscription on their own, so an agent is not woken by
+  its own words. Returns how many events the write queued across all subscriptions [F-3.1, F-4.3].
+- **`query(MemoryQuery<T>) → T`** is the only read of the knowledge base. The query's kind fixes what it
+  returns: facts matching a pattern, the facts in SPARQL-selected graphs, SPARQL rows, the known
+  predicates, or a source's read cursor (see [Queries](#queries)). It never changes the memory
+  [F-3.2 to F-3.5].
+- **`reset() → void`** forgets what the memory knows: facts, read cursors and queued events, and the
+  ontology goes back to the seed vocabulary. Subscriptions stay, with their rule state started over,
+  so a watch outlives a reset. Sources are read again from the start because their cursors are gone
+  [F-3.6].
+
+**Event base**
+
+A subscription is a standing question: "tell me when these rules hold". Its life is:
+
+1. `subscribe` registers it.
+2. Each `put`, and the passing of time, may wake its rules; every wake queues one MemoryEvent in the
+   subscription's own outbox.
+3. Its consumer calls `take` to read the outbox and `ack` once it has handled the events.
+4. `unsubscribe` ends it.
+
+- **`subscribe(subscription) → boolean`** adds a subscription, or replaces the one with the same id.
+  It wakes only on facts written from `createdAt` on, though its rules may read earlier facts. Returns
+  false, adding nothing, when the space already holds `MAX_SUBSCRIPTIONS` others; fails with MemoryError
+  when its rules do not compile [F-4.1].
+- **`subscriptions(owner?) → Subscription[]`** lists subscriptions, oldest first: all of them, or only
+  those whose `owner` is the given agent [F-4.1, F-5.3].
+- **`unsubscribe(id) → boolean`** removes a subscription and drops its outbox, events included. Returns
+  false when it was already gone, so when two consumers race to end a one-time subscription, exactly
+  one sees true and acts on it [F-4.2].
+- **`take(id) → MemoryEvent[]`** reads a subscription's unacknowledged events, oldest first, without
+  removing them; an unknown id gives an empty list. Calling it twice returns the same events, so a
+  consumer that fails before acknowledging sees them again [F-4.4].
+- **`ack(id, events) → void`** removes the named events from the outbox, once their consumer has handled
+  them. Ids it does not hold are ignored, so acknowledging twice is safe. An acknowledged event is not
+  queued again even if the same wake is derived later [F-4.4].
+
+### RdfStore
+
+```mdl
+service RdfStore
+  desc: |
+    A space's quads in two parts: a shared part, replicated, every write to which is recorded durably before it
+    is applied; and a local part, the device's own. A memory runs over this port wherever the store is: in the
+    same process, or across the client-services bridge. Every op fails only with RdfStoreError. Context tag
+    `@dxos/echo-memory/RdfStore`.
+  ops:
+    query(sparql: string, options?: { local?: boolean }) → Effect<SparqlRow[], RdfStoreError>
+    write(writes: Write[], options?: { local?: boolean }) → Effect<string, RdfStoreError>
+    export(format: RdfFormat) → Effect<Uint8Array, RdfStoreError>
+    import(data: Uint8Array, format: RdfFormat) → Effect<string, RdfStoreError>
+    listen(onApplied: (batch: Batch) → void) → Effect<void, never, Scope>
+```
+
+- **query**: runs a SPARQL read (SELECT, ASK or CONSTRUCT) over the shared part, or the local part with
+  `local`. An update fails: changes go through `write`.
+- **write**: applies the writes as one batch, in order, and returns the batch id once it is durable (shared)
+  or written (local). A `clear` empties only the part it is written to.
+- **export**: every quad of the shared part, serialized where the store is, so a large store crosses a
+  boundary once [F-10.1].
+- **import**: parses the data where the store is and inserts its quads into the shared part as one batch
+  [F-10.2].
+- **listen**: calls back with each shared batch once applied, this replica's and other replicas', in order;
+  in process the listener is registered before the op returns.
+
+```mdl
+type Quad
+  desc: A triple in the default graph, or a quad in the named graph `g`.
+  fields:
+    s: SparqlTerm
+    p: SparqlTerm
+    o: SparqlTerm
+    g?: SparqlTerm
+```
+
+```mdl
+type Write
+  desc: |
+    One change to a store: `insert` adds quads (one stored already is kept once), `delete` removes them (one not
+    stored is ignored), `clear` removes every quad of the part written to. Tagged by `_tag`.
+  literals: insert | delete | clear
+```
+
+```mdl
+type Batch
+  desc: Writes recorded together and applied together; the unit the fact feed carries and `listen` reports.
+  fields:
+    id: string
+    writes: Write[]
+```
+
+```mdl
+type RdfFormat
+  desc: |
+    `trig`: the Turtle family's text syntax with named graphs, which every fact is stored in and plain Turtle
+    cannot express. `binary`: a term dictionary followed by the quads as indexes into it, several times smaller.
+  literals: trig | binary
+```
+
+## Data model
+
+The fact model is the one `@dxos/pipeline-rdf` defines today, moved here unchanged in shape so stored
+facts and their JSON stay valid [F-2.1]. Every type below is an Effect `Schema` with an interface of the
+same name.
+
+### Identifiers
+
+Every id in the model is a branded string (Effect `Schema.String.pipe(Schema.brand(...))`): its JSON
+form is a plain string, so stored facts still decode [F-2.1], but the type checker keeps one kind of id
+from being passed where another is expected [F-2.4].
+
+```mdl
+type FactId
+  desc: A statement's id, derived from its graph and the statement; stable across writes.
+```
+
+```mdl
+type GraphIri
+  desc: The IRI of a named graph; what `graph`, `supersedes` and `retracts` hold.
+```
+
+```mdl
+type EntityKey
+  desc: |
+    An entity: an absolute IRI where one is known (`echo://…`, `did:…`, `mailto:…`, a URL), else a
+    normalized slug local to the graph that mentions it. Names speakers, subjects, objects and owners.
+```
+
+```mdl
+type SourceUri
+  desc: The item facts were read from, or a source read into facts: a DXN or another URI.
+```
+
+```mdl
+type SubscriptionId
+  desc: A subscription's id, unique in its space; chosen by the caller.
+```
+
+```mdl
+type MemoryEventId
+  desc: An event's id, stable per subscription, wake and facts, so a wake derived twice queues once.
+```
+
+### What a fact records
+
+A fact is not just a triple. It is a triple plus everything needed to decide how far to trust it, and
+whether it still holds. Take one sentence from a chat:
+
+> Bob, 2026-11-03: "I think Alice will probably join Acme in January."
+
+That sentence becomes one Fact with these parts:
+
+| Part          | Question it answers                          | For the example                                                     |
+| ------------- | -------------------------------------------- | ------------------------------------------------------------------- |
+| `assertion`   | What is claimed?                             | subject `alice`, predicate `joins`, object `acme`, `validFrom: 2026-01` |
+| `factuality`  | How committed is the speaker to it?          | `PR+`: probable and positive ("I think … probably")                 |
+| `illocution`  | What was the speaker doing by saying it?     | absent, so `assertive`: Bob informs; he does not ask or promise     |
+| `attribution` | Who said it, where, and when?                | agent `bob`, source the message's DXN, `generatedAtTime` 2026-11-03 |
+| `recordedAt`  | When did memory learn it?                    | the time the extractor stored it, e.g. 2026-11-16                   |
+| `extractor`   | Which program and model read it?             | the extractor id, its model and version                             |
+
+The parts in detail:
+
+- **Assertion** is the proposition itself: a subject, a predicate and an object (RDF's triple). A
+  subject or object is a Term, which is either an entity (`alice`, with its surface label `Alice` and
+  a kind such as `person`) or a literal value (`"January"`). `validFrom` and `validTo` bound when the
+  claimed state is true in the world, and `quote` keeps the words it was read from.
+- **Factuality** is the speaker's epistemic commitment, from FactBank. `value` combines a degree —
+  `CT` certain, `PR` probable, `PS` possible — with a polarity: `+` it is so, `-` it is not so.
+  `CTu` is certain but of unknown polarity; `Uu` is uncommitted, as in a question ("Is Alice joining
+  Acme?") or a request. `confidence` is the extractor's own confidence in its reading, 0..1, not the
+  speaker's.
+- **Illocution** is the speech act (Searle). `assertive` informs, `directive` asks someone to act or
+  answer (`mood` tells a question from a request), `commissive` commits the speaker ("I'll send it
+  Friday"), `expressive` states a feeling ("thanks"). Wake rules use it, so a question can wake an
+  agent that a statement would not.
+- **Attribution** is provenance, named after PROV-O: `agent` is who said it (an entity id, with
+  `agentLabel` for display), `source` is the DXN of the item it came from, `generatedAtTime` is when
+  it was said, and `span` locates it in that item.
+- **Two times.** `attribution.generatedAtTime` is when the statement was made (valid time of the
+  utterance); `recordedAt` is when memory stored it (transaction time). A mailbox read a month late
+  has old `generatedAtTime`s and new `recordedAt`s; ordering by the first replays the conversation,
+  by the second replays what memory learned.
+- **Run and change detection.** `extractor` names the program and model, `pass` groups the facts one
+  extraction run produced (so a run can be replayed or withdrawn as a whole), and `sourceHash` is the
+  hash of the source content read, so a changed source is re-read.
+
+### Graphs and revision
+
+Statements that share all of their provenance — same source, speaker, time, quote, factuality and run
+— are stored in one RDF named graph, `graph`, which carries that provenance once. A Fact is one
+statement in a graph; its `id` derives from the graph and the statement.
+
+Facts are never edited in place. A later graph changes what holds by naming earlier graphs:
+`supersedes` replaces them (Bob later says "Alice joins in March"), `retracts` withdraws them ("Alice
+is not joining after all"). `graphStatus` reads every graph as `active`, `superseded` or `retracted`,
+and `currentFacts(facts, now)` keeps only the facts of active graphs whose `validTo` has not passed
+[F-2.3].
+
+A graph with a `kind` records a free-text memory (a `preference`, a `commitment`) rather than a
+fact, and `currentFacts` leaves it out; `origin` says whether the speaker `stated` it or the
+agent `inferred` it.
+
+```mdl
+type Fact
+  desc: |
+    One statement and what is known about it. Statements that share their provenance live in one named
+    graph (`graph`), which carries that provenance once.
+  fields:
+    id: FactId                    # the statement's id: derived from the graph and the statement
+    graph?: GraphIri              # the named graph holding the statement
+    assertion: Assertion
+    factuality: Factuality
+    illocution?: Illocution       # absent ⇒ assertive
+    attribution: Attribution
+    recordedAt: string            # ISO transaction time
+    extractor: { id: string, model: string, version: string }
+    sourceHash: string            # for incremental divergence detection
+    pass?: string                 # extraction pass id; groups one run's facts
+    kind?: string                 # a free-text memory's sort (`preference`, `commitment`); absent for a fact
+    origin?: stated | inferred
+    supersedes?: GraphIri[]       # the graphs this one replaces
+    retracts?: GraphIri[]         # the graphs this one withdraws
+```
+
+```mdl
+type Assertion
+  fields:
+    subject: Term
+    predicate: string             # label: the surface form, or the ontology's label once stored
+    predicateIri?: string
+    predicateDescription?: string # what a minted predicate means, as its extractor defined it
+    object: Term
+    validFrom?: string            # ISO
+    validTo?: string              # ISO
+    quote?: string                # source span text
+```
+
+```mdl
+type Term
+  desc: An entity reference or a literal, tagged by `kind`.
+  literals: EntityTerm | LiteralTerm
+```
+
+```mdl
+type EntityTerm
+  fields:
+    kind: entity
+    entity: EntityKey
+    label?: string                # surface form, for display
+    type?: EntityKind
+```
+
+```mdl
+type LiteralTerm
+  fields:
+    kind: literal
+    literal: string
+```
+
+```mdl
+type EntityKind
+  literals: person | org | place | event | concept | thing
+```
+
+```mdl
+type Entity
+  fields:
+    id: string
+    kind: EntityKind
+    label: string
+    aliases: string[]
+    ref?: string                  # DXN of a canonical ECHO object, once resolved
+```
+
+```mdl
+type Attribution
+  desc: PROV-O-named provenance.
+  fields:
+    agent?: EntityKey             # who said it
+    agentLabel?: string
+    source: SourceUri             # the item it came from
+    generatedAtTime: string       # ISO
+    wasDerivedFrom?: string[]
+    span?: { start: number, end: number }
+```
+
+```mdl
+type Factuality
+  desc: The author's epistemic commitment to the proposition (FactBank).
+  fields:
+    value: CT+ | CT- | PR+ | PR- | PS+ | PS- | CTu | Uu
+    polarity: + | - | ?
+    confidence?: number           # 0..1
+    nature?: epistemic | aleatory
+```
+
+```mdl
+type Illocution
+  desc: The speech act the source performed.
+  fields:
+    force: assertive | directive | commissive | expressive
+    mood?: declarative | interrogative | imperative
+    addressee?: string
+```
+
+```mdl
+type GraphStatus
+  desc: Whether a named graph still holds.
+  literals: active | superseded | retracted
+```
+
+```mdl
+type FactQuery
+  desc: What a FactsQuery selects; every field set must hold.
+  fields:
+    subjectEntity?: EntityKey     # in the subject position
+    entity?: EntityKey            # in the subject or object position
+    predicate?: string            # IRI, or a surface form resolved through the memory's ontology
+    source?: SourceUri            # the item the facts were read from
+    minConfidence?: number        # inclusive lower bound on factuality confidence
+```
+
+```mdl
+type SparqlTerm
+  literals: NamedNode | BlankNode | Literal
+  note: |
+    Plain data: { termType, value, datatype?, language? }, so rows cross a wire as JSON.
+```
+
+```mdl
+type SparqlRow
+  desc: One SPARQL solution: each bound variable (named without `?`) to its SparqlTerm; unbound ones are absent.
+```
+
+```mdl
+type PredicateEntry
+  desc: A predicate a memory knows, as its ontology graph describes it (RDFS / OWL / SKOS).
+  fields:
+    iri: string
+    name: string                  # lowercase shorthand rules use, e.g. works_on
+    label: string
+    synonyms?: string[]
+    description?: string
+    domain?: string
+    range?: string
+    inverse?: string
+    equivalents?: string[]
+    definedBy?: string
+    created?: string
+    creator?: string
+    example?: string
+    replacedBy?: string
+```
+
+```mdl
+type ReadCursor
+  desc: How far a source has been read into facts.
+  fields:
+    source: SourceUri             # the source read (a chat, a feed, a mailbox)
+    through: string               # URI or hash of the last item read; the next read starts after it
+```
+
+```mdl
+type PutOptions
+  fields:
+    quiet?: EntityKey[]           # speakers whose facts are stored but wake nothing on their own
+    read?: ReadCursor             # moved in the same write as the facts
+```
+
+```mdl
+type Subscription
+  desc: Goal rules held against a space's memory, and the caller's own record of why.
+  fields:
+    id: SubscriptionId
+    owner?: EntityKey             # the agent that holds it; `subscriptions(owner)` filters by it
+    rules: string                 # Datalog goal rules (`@dxos/brain`)
+    createdAt: string             # ISO; facts put before it wake nothing
+    payload?: Json                # stored and returned as is; never interpreted by memory
+```
+
+```mdl
+type MemoryEvent
+  desc: One wake of a subscription's rules, queued in its outbox until acknowledged.
+  fields:
+    id: MemoryEventId             # stable per subscription, wake and facts
+    subscription: SubscriptionId
+    label: string                 # the rules' wake label, `achieved`, or a sub-goal id
+    facts: Fact[]                 # empty for a wake the clock caused
+    at: string                    # ISO
+```
+
+## Queries
+
+A `MemoryQuery<T>` is one read of the knowledge base whose answer has type `T`. It is a tagged struct:
+`_tag` names the kind, the other fields are its parameters, and `T` is fixed by the kind. Each kind
+has a constructor that returns the typed query (`MemoryQuery.facts(pattern)` is a
+`MemoryQuery<Fact[]>`), so `query(MemoryQuery.facts(pattern))` is typed `Fact[]` at the call site
+[F-3.2]. A query is plain JSON, and each kind names the schema of its result, so a remote client
+decodes an answer by the query's `_tag` [F-3.7].
+
+```mdl
+type MemoryQuery
+  desc: One read of the knowledge base; the kind fixes the result type T.
+  literals: FactsQuery | GraphsQuery | SparqlQuery | PredicatesQuery | CursorQuery
+```
+
+```mdl
+type FactsQuery
+  desc: |
+    Facts whose statement matches a pattern. Result: Fact[]. Answered without SPARQL on every
+    implementation [F-3.2].
+  fields:
+    _tag: facts
+    pattern: FactQuery
+```
+
+```mdl
+type GraphsQuery
+  desc: |
+    Every fact in the named graphs a SPARQL `SELECT ?g` binds. Result: Fact[] [F-3.3].
+  fields:
+    _tag: graphs
+    sparql: string
+```
+
+```mdl
+type SparqlQuery
+  desc: Any SPARQL SELECT, its solutions returned as written. Result: SparqlRow[] [F-3.3].
+  fields:
+    _tag: sparql
+    sparql: string
+```
+
+```mdl
+type PredicatesQuery
+  desc: The predicates the memory knows. Result: PredicateEntry[] [F-3.4].
+  fields:
+    _tag: predicates
+```
+
+```mdl
+type CursorQuery
+  desc: How far a source has been read. Result: string | undefined, the cursor's `through` [F-3.5].
+  fields:
+    _tag: cursor
+    source: SourceUri
+```
+
+## Features
+
+```mdl
+feat F-1: Interface package
+
+  req F-1.1:
+    when: a package imports `@dxos/echo-memory`
+    then: it gets the MemoryService tag, its API type, every type in the data model, MemoryError and the
+          pure functions of [F-2.3] — and nothing that stores, queries or evaluates
+
+  req F-1.2:
+    when: `@dxos/echo-memory` is built
+    then: its only runtime dependencies are `effect` and `@dxos/*` packages with no storage of their own
+          (`@dxos/errors`, `@dxos/util`); it depends on no RDF, SPARQL, SQL or Datalog library
+
+  req F-1.3:
+    when: an operation definition names MemoryService in its `services`
+    then: importing that definition loads no implementation chunk
+
+  req F-1.4:
+    when: a package imports `@dxos/echo-memory/<Module>` for one of its noun modules
+    then: it loads that module and the modules it imports, and nothing else; only the RDF mapping modules
+          (`Graph`, `Mapping`, `Ontology`, `Predicate`, `Sparql`, `Vocab`) import the RDF library `n3`, so the
+          protocol and client packages, which the workerd bundle reaches, import `RdfStore` and `MemoryQuery`
+          by subpath
+
+  req F-1.5:
+    when: an operation lists `MemoryService.MemoryService` or `RdfStore.RdfStore` in its `services` and runs
+          for a space in the app
+    then: the runtime provides the space's memory (over `client.rdf(space)`) or store, as it provides
+          `Database.Service`; the memory core loads on the first such request
+```
+
+```mdl
+feat F-2: Fact data model
+
+  req F-2.1:
+    when: a fact written by `@dxos/pipeline-rdf` before the move is decoded with `Fact`
+    then: it decodes unchanged; the move renames no field and narrows no type
+
+  req F-2.2:
+    when: a type of the data model crosses a wire (an EDGE RPC, an HTTP handler, a host-service proxy)
+    then: its encoded form is plain JSON, and decoding it gives back an equal value
+
+  req F-2.3:
+    when: code needs to read facts without a store
+    then: echo-memory provides the pure functions `graphStatus(facts)`, `currentFacts(facts, now)`,
+          `termValue(term)`, `termText(term)` and `factText(fact)`, with the behaviour they have today in
+          `@dxos/pipeline-rdf` and `BrainService`
+
+  req F-2.4:
+    when: code passes an id
+    then: it is typed by its brand (FactId, GraphIri, EntityKey, SourceUri, SubscriptionId,
+          MemoryEventId); passing one kind where another is expected is a type error, while the encoded
+          form stays a plain string
+```
+
+```mdl
+feat F-3: Knowledge base
+
+  req F-3.1:
+    when: `put` is called with facts
+    then: each fact is stored once (a repeated put is idempotent), predicates the memory does not know are
+          added to its ontology, the read cursor in `options.read` moves in the same write, and the result
+          counts the events queued [F-4.3]; a put with no facts only moves the cursor
+
+  req F-3.2:
+    when: `query` is called with a MemoryQuery<T>
+    then: it answers with a T for that query's kind; there is no other read op on the knowledge base. A
+          FactsQuery returns every stored fact whose statement matches all of the pattern's set fields,
+          and an entity key matches both a graph-local slug and its absolute IRI
+
+  req F-3.3:
+    when: `query` is called with a GraphsQuery or a SparqlQuery
+    then: a GraphsQuery runs a `SELECT ?g` and returns every fact in the graphs it binds; a SparqlQuery
+          returns the solutions as SparqlRows; anything but a SELECT fails with MemoryError
+
+  req F-3.4:
+    when: `query` is called with a PredicatesQuery
+    then: it returns the seed vocabulary every memory starts with, then the predicates its facts minted
+
+  req F-3.5:
+    when: `query` is called with a CursorQuery for a source
+    then: it returns the `through` of the last ReadCursor put for that source, or undefined; a memory that
+          loses its facts loses its cursors with them, so the source is read again
+
+  req F-3.6:
+    when: `reset` is called
+    then: the memory's facts, cursors and queued events are removed and the seed vocabulary is restored;
+          its subscriptions stay, with their rule state started over
+
+  req F-3.7:
+    when: a MemoryQuery crosses a wire
+    then: it is sent as JSON, and the answer is decoded with the result schema its `_tag` names; a kind
+          the implementation does not support fails with MemoryError
+```
+
+```mdl
+feat F-4: Event base
+
+  req F-4.1:
+    when: `subscribe` is called
+    then: the subscription is added, or replaces the one with its id; it returns false when the memory
+          already holds MAX_SUBSCRIPTIONS (256) others, and fails with MemoryError when its rules do not compile
+
+  req F-4.2:
+    when: `unsubscribe` is called
+    then: the subscription and its outbox are removed; it returns false when it was already gone, so only
+          one caller acts on a one-time subscription
+
+  req F-4.3:
+    when: facts are put
+    then: every subscription of that memory whose rules wake queues one MemoryEvent per wake; facts whose
+          speaker is in `options.quiet` are stored and evaluated but wake nothing on their own
+
+  req F-4.4:
+    when: a consumer drains an outbox
+    then: `take` returns the unacknowledged events oldest first, and they stay until `ack` names them; an
+          event with an id already queued for that subscription is not queued again
+
+  req F-4.5:
+    when: a time-driven rule (`elapsed`, `every`, `due`) comes due
+    then: the implementation re-evaluates it and queues its wakes by itself; the interface has no op for
+          the clock, and a caller only sees the events in the outbox
+
+  req F-4.6:
+    when: rules are evaluated by any implementation
+    then: they run on `@dxos/brain`'s Evaluator, so a subscription wakes the same way wherever memory runs
+```
+
+```mdl
+feat F-5: Memory scope
+
+  req F-5.1:
+    when: a host needs memory
+    then: it gets a MemoryService scoped to one space, as it gets the space's Database.Service; each space
+          has exactly one memory store
+
+  req F-5.2:
+    when: two spaces' MemoryServices are used
+    then: they share no facts, cursors, ontology entries or subscriptions
+
+  req F-5.3:
+    when: several agents work in one space
+    then: they read and write the space's one store; a subscription's `owner` says which agent holds it,
+          and a fact's `attribution.agent` says who said it
+```
+
+```mdl
+feat F-6: Errors
+
+  req F-6.1:
+    when: any op fails
+    then: it fails with MemoryError (a `BaseError` from `@dxos/errors`), which replaces both
+          `BrainError` and `SemanticIndexError`; implementation errors are wrapped with the cause kept
+```
+
+```mdl
+feat F-7: SQLite implementation (@dxos/echo-memory-sqlite)
+
+  req F-7.1:
+    when: `@dxos/echo-memory-sqlite` is used
+    then: it provides MemoryService over the `@dxos/sparql-sqlite` quad store, with
+          `layer(storage: SqlStorage)`, `layerFile(path)` (node) and `layerMemory` (a private in-memory
+          SQLite), each a `Layer<MemoryService>`
+
+  req F-7.2:
+    when: subscriptions, outboxes, queued-event ids and read cursors are written
+    then: they are rows in the same SQLite database as the facts, so a memory reopened from a file has
+          its event base back
+
+  req F-7.3:
+    when: memory must be reached from another process (a dev fact server, a CLI against a running node)
+    then: echo-memory-sqlite provides an HTTP client layer and a fetch-style handler for MemoryService
+
+  req F-7.4:
+    when: EDGE serves a space's memory
+    then: one Durable Object per space builds MemoryService with `layer(ctx.storage.sql)` from echo-memory-sqlite,
+          so the client and EDGE run one implementation
+
+  req F-7.5:
+    when: a SQLite memory is open
+    then: it schedules its own re-evaluation of time-driven rules in the layer's scope; a memory opened
+          from a file after rules came due while it was closed evaluates them on open
+```
+
+```mdl
+feat F-8: Deprecation of BrainService and FactStore
+
+  req F-8.1:
+    when: echo-memory is published
+    then: `BrainService` and `FactStore` (and `FactStoreLive`, `FactStoreHttp`) carry `@deprecated` JSDoc
+          naming their MemoryService replacement
+
+  req F-8.2:
+    when: every call site in `docs/MIGRATION.md` is moved
+    then: `BrainService`, `BrainMemory`, `FactStore`, `FactStoreLive` and `FactStoreHttp` are deleted, with
+          no re-export left behind
+
+  req F-8.3:
+    when: an agent's turn must be started from a wake
+    then: that is not memory's job: `wake` leaves the interface and stays with the agent runtime in
+          `@dxos/plugin-agent`
+```
+
+```mdl
+feat F-9: The app's memory: the store and the memory in the backend, logged to a fact feed
+
+  req F-9.1:
+    when: a page or an operation in the app uses MemoryService
+    then: its calls cross the client-services bridge as `MemoryService` RPCs to the memory the backend runs for the
+          space, beside the space's store: one rule evaluator, one outbox per subscription and one clock per space,
+          however many pages and operations call it; `client.memory(spaceId)` returns it
+
+  req F-9.2:
+    when: a write to the shared part is made (`put` or `reset` of a memory)
+    then: its batch is appended to the space's fact feed, in the `facts` feed namespace, before the store
+          changes; the store applies it by reading the feed back
+
+  req F-9.3:
+    when: the store applies feed batches
+    then: it records the feed cursor it has read through in the same transaction as each batch, and on open
+          applies only the batches after that cursor
+
+  req F-9.4:
+    when: the store is empty or lost and the feed is not
+    then: opening the store replays the whole feed and a memory over it answers every query as before;
+          clears in the feed are replayed in order
+
+  req F-9.5:
+    when: another replica appends to the fact feed
+    then: the store applies the new batches as they arrive, and a memory over it pushes the facts they add to
+          its rules, so they wake its subscriptions as a local `put` would
+
+  req F-9.6:
+    when: subscriptions, outboxes, acknowledgements or the time of the last evaluation change
+    then: they are written to the store's local part as quads, which is never written to the fact feed and is
+          untouched by a `clear` of the shared part
+
+  req F-9.7:
+    when: the backend reaches its database only through an async connection (Effect's `SqlClient`)
+    then: it runs `@dxos/sparql-sqlite`'s async engine over that connection; the sync engine stays for hosts
+          with synchronous SQLite (Durable Objects, node, the CLI), and both give the same answers
+
+  req F-9.8:
+    when: the backend holds stores for several spaces in its one database
+    then: each space's tables carry a prefix of its own, so spaces share no rows and no name meets one of the
+          host's tables
+
+  req F-9.9:
+    when: a page calls a space's store
+    then: `client.rdf(spaceId)` returns an RdfStore whose calls cross the bridge as the `RdfStoreService`
+          RPCs; the backend opens that space's store on its first call and closes it with the host
+```
+
+```mdl
+feat F-10: Moving a store in bulk
+
+  req F-10.1:
+    when: a store is exported
+    then: every quad of its shared part is serialized beside the store, as TriG or as the binary form, and
+          only the result crosses to the caller
+
+  req F-10.2:
+    when: data is imported into a store
+    then: it is parsed beside the store and its quads are inserted into the shared part as one batch, so the
+          import is logged and replicated like any write
+
+  req F-10.3:
+    when: a store's export is imported into an empty store, in either format
+    then: the second store holds the same quads, blank nodes included, and a memory over it answers the
+          same facts
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Facts round-trip
+  given: two MemoryServices from `layerMemory`, for spaces A and B
+  when: three facts are put in A and read with a FactsQuery on `entity`
+  then:
+    - query in A returns the facts whose subject or object is the entity
+    - the same query in B returns nothing
+```
+
+```mdl
+scenario T-2: A subscription wakes and is drained
+  given: a space's memory with a subscription owned by `alice` whose rules match `works_on(alice, X)`
+  when: a fact `alice works_on dxos` is put
+  then:
+    - put returns 1
+    - take returns one MemoryEvent carrying the fact
+    - after ack, take returns nothing
+```
+
+```mdl
+scenario T-3: Quiet speakers wake nothing
+  given: the subscription of T-2
+  when: the same fact is put with `quiet: [alice]` and alice as the speaker
+  then:
+    - put returns 0
+    - a FactsQuery returns the fact
+```
+
+```mdl
+scenario T-4: Event base survives a reopen
+  given: a memory from `layerFile(path)` with a subscription and one unacknowledged event
+  when: the layer is closed and built again from the same path
+  then:
+    - subscriptions returns the subscription
+    - take returns the event
+```
+
+```mdl
+scenario T-5: Reset keeps subscriptions
+  given: a memory with facts, a cursor, a subscription and a queued event
+  when: reset is called
+  then:
+    - a FactsQuery and a CursorQuery return nothing
+    - a PredicatesQuery returns only the seed vocabulary
+    - subscriptions still returns the subscription; take returns nothing
+```
+
+```mdl
+scenario T-6: Wire form is JSON
+  given: a Fact, a Subscription with a payload, and a MemoryEvent
+  when: each is encoded, passed through JSON.stringify and JSON.parse, and decoded
+  then: each decodes to a value equal to the original
+```
+
+```mdl
+scenario T-7: One query op, typed per kind
+  given: a memory holding facts about `dxos`
+  when: query is called with MemoryQuery.facts, MemoryQuery.sparql and MemoryQuery.cursor
+  then:
+    - each call is typed at the call site as Fact[], SparqlRow[] and string | undefined
+    - each answer, sent through the HTTP handler and client, decodes to an equal value
+```
+
+```mdl
+scenario T-8: The store is rebuilt from the fact feed
+  given: a memory over an empty database and a fact log, with facts put, a reset, and a read cursor moved
+  when: a second memory opens over a new, empty database and the same log
+  then:
+    - a FactsQuery returns the same facts and a CursorQuery the same cursor
+    - a fact put through the first memory afterwards appears in the second without a write to it, and wakes
+      the second memory's own subscription
+    - the first memory has none of the second's subscriptions
+```
+
+```mdl
+scenario T-9: A store moves in bulk
+  given: a memory holding facts, over a store
+  when: the store is exported as TriG and as binary, and each export is imported into a new, empty store
+  then:
+    - a memory over each new store answers the same facts
+    - the binary export is smaller than the TriG one
+```
+
+## Rules
+
+```mdl
+rule no-implementation-deps: echo-memory imports no storage, SPARQL engine or rule evaluator
+  files: src/*.ts
+  severity: error
+  grep: from '(sparqljs|@dxos/sparql-sqlite|@dxos/sql-sqlite|@dxos/brain|@effect/sql[^']*|node:[^']*)'
+  question: Does this file import a SPARQL engine or parser, SQL, Datalog or a node-only module?
+
+  `@dxos/echo-memory` is the interface every layer imports; an implementation import here puts that
+  machinery in every bundle that names MemoryService [F-1.2].
+```
+
+```mdl
+rule port-modules-no-n3: the port and data-model modules do not import the RDF library
+  files: src/{Fact,MemoryError,MemoryQuery,MemoryService,RdfStore,Subscription}.ts
+  severity: error
+  grep: from '(n3|\./(Graph|Mapping|Ontology|Predicate|Sparql|Vocab)\.ts)'
+  question: Does this port or data-model module import n3 or one of the RDF mapping modules?
+
+  Protocols and the client import these modules by subpath, and n3 on their static graph breaks the workerd
+  bundle; only the RDF mapping modules may load it [F-1.4].
+```
+
+## Changelog
+
+```mdl
+decision D-1: `@dxos/echo-memory`, in the ECHO package group, holds the memory service: the combination of `BrainService` and `FactStore`. Both are deprecated in favour of it.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [MemoryService, F-8]
+```
+
+```mdl
+decision D-2: `@dxos/echo-memory` holds only interface definitions.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-3: `@dxos/echo-memory` also holds the data structures for facts and related types.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [Fact, F-2]
+```
+
+```mdl
+decision D-4: `@dxos/echo-memory-native` holds the local implementations, for the CLI and similar hosts: an RDF store over SQLite.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-7]
+```
+
+```mdl
+decision D-5: The RDF store over SQLite is `@dxos/sparql-sqlite`'s interned quad store, the one `FactStoreLive` already runs on. Fills in [D-4].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.1]
+  why: No package is named rdf-sqlite; sparql-sqlite is the RDF-over-SQLite store in the repo and already runs in node and in Durable Object SQLite.
+  rejected:
+    - A new RDF table layout written for echo-memory-native, which would fork the SPARQL compiler.
+```
+
+```mdl
+decision D-6: One MemoryService serves many memories; every op that reads or writes a memory takes its MemoryId. Fills in [D-1].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryService, F-5]
+  why: BrainService is keyed by agent and FactStore is one instance per space; a key covers both, and EDGE routes a key to a Durable Object without a layer per memory.
+  rejected:
+    - One MemoryService instance per memory, provided as a Layer, which forces hosts that serve many agents to build a layer per call.
+```
+
+```mdl
+decision D-7: The fact model moves from `@dxos/pipeline-rdf` with its shape unchanged; `FactQuery` merges BrainService's `FactQuery` and pipeline-rdf's `SemanticQuery` (adding `minConfidence`). Fills in [D-3].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Fact, FactQuery, F-2.1]
+  why: Facts are already stored in files, Durable Objects and ECHO feeds; a reshape would need a data migration with no benefit to the interface.
+```
+
+```mdl
+decision D-8: echo-memory carries no ontology resolution, IRI minting or RDF serialization; those stay with the implementation and the pipeline. Fills in [D-2].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, no-implementation-deps]
+  why: They depend on n3; an interface package that imports n3 brings it into every UI and operation bundle.
+  rejected:
+    - Moving `Ontology`, `Mapping` and `Vocab` wholesale.
+```
+
+```mdl
+decision D-9: A Subscription is goal rules plus an opaque JSON payload; the agent `Trigger` type stays in `@dxos/plugin-agent` and is stored as that payload. Fills in [D-1].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Subscription, F-4.1]
+  why: Trigger holds ECHO refs and a notify action that memory never reads; EDGE already stores it as opaque JSON beside its rules.
+  rejected:
+    - Moving Trigger into echo-memory, which would give the interface a dependency on plugin-agent's Goal type.
+```
+
+```mdl
+decision D-10: `wake` is not part of MemoryService; starting an agent's turn stays with the agent runtime. Fills in [D-1].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.3]
+  why: It needs Database.Service and a Chat, which are not memory, and would make the interface depend on the assistant packages.
+```
+
+```mdl
+decision D-11: One cursor model: a ReadCursor moves with `put`, and `cursor` reads it; FactStore's `setCursor` and BrainService's `readThrough` both map onto these. Fills in [D-1].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1, F-3.5]
+  why: Moving the cursor in the same write as the facts means a memory that loses its facts never claims to have read their source.
+```
+
+```mdl
+decision D-12: MemoryError is the only error of the interface, replacing BrainError and SemanticIndexError. Fills in [D-1].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.1]
+```
+
+```mdl
+decision D-13: echo-memory-native has one platform-neutral core over `SqlStorage` that persists the event base beside the facts; EDGE uses it, and the HTTP client and handler live in it too. Fills in [D-4].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7]
+  why: Today the client brain keeps subscriptions in memory maps and EDGE re-implements them in its Durable Object; one core removes the second copy and makes a file-backed CLI memory keep its subscriptions.
+```
+
+```mdl
+question Q-1: echo-memory-native depends on `@dxos/brain` and `@dxos/sparql-sqlite`, which live under the compute packages. Where should they sit relative to ECHO?
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7]
+  context: An ECHO package depending on compute packages reverses the usual layering.
+  options:
+    - Keep: echo-memory-native depends on the compute packages; only the interface is in ECHO.
+    - Move: sparql-sqlite and the brain evaluator move under the ECHO package group.
+    - Relocate: echo-memory-native lives under the compute packages instead.
+```
+
+```mdl
+question Q-2: Does the interface keep raw SPARQL (`select`, `rows`), or only the structured `query`?
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.3]
+  context: Every implementation today runs on sparql-sqlite, but SPARQL in the interface ties any future implementation to a SPARQL engine. EDGE's BrainObject does not expose them yet.
+  options:
+    - Keep: both are required ops.
+    - Optional: they fail with MemoryError on implementations without SPARQL.
+    - Drop: callers that need SPARQL use the native implementation directly.
+```
+
+```mdl
+question Q-3: Should MemoryService expose change notifications (a stream that fires after `put` and `reset`)?
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryService]
+  context: plugin-brain wraps its FactStore to notify the UI after writes; without a stream every UI host repeats that wrapper.
+  options:
+    - Add: `changes(memory) → Stream<void>` is part of the interface.
+    - Leave: hosts wrap the service as they do today.
+```
+
+```mdl
+decision D-14: Each space has one memory store, and the MemoryService a caller gets is scoped to a space.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  supersedes: D-6
+  affects: [MemoryService, F-5]
+```
+
+```mdl
+decision D-15: No op takes a memory, space or agent argument; a Subscription carries an optional `owner`, and `subscriptions(owner?)` filters by it. Fills in [D-14].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryService, Subscription, F-5.3]
+  why: plugin-agent lists one agent's triggers; an owner field does that without memory reading the opaque payload.
+  rejected:
+    - Filtering by the payload in plugin-agent, which loads every subscription in the space to show one agent's.
+```
+
+```mdl
+question Q-4: With one store per space, can an agent keep facts the other agents in the space do not read?
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3]
+  context: BrainService today gives each agent its own facts; with a store per space, every agent in the space reads every fact.
+  options:
+    - Shared: all facts in a space are visible to all agents in it.
+    - Owned graphs: a graph may name an owning agent, and query reads only shared graphs and the caller's own.
+```
+
+```mdl
+decision D-16: Memory has a typed query, `MemoryQuery<T>`. Every query option is combined into one op, `query(MemoryQuery<T>) → T`, and the spec describes each kind of query.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [MemoryService, MemoryQuery, F-3.2]
+```
+
+```mdl
+decision D-17: The query kinds are `facts`, `graphs`, `sparql`, `predicates` and `cursor`, replacing the ops `query`, `select`, `rows`, `predicates` and `cursor`; the event-base reads (`subscriptions`, `take`, `nextDueAt`) stay ops. Fills in [D-16].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryQuery, F-3.2, F-3.3, F-3.4, F-3.5]
+  why: Those five are the knowledge-base reads; the event-base reads are tied to subscription ids and outbox state, which the query kinds do not touch.
+```
+
+```mdl
+decision D-18: A MemoryQuery is a tagged JSON struct whose `_tag` names the schema of its result; a constructor per kind gives the typed `MemoryQuery<T>`, and an unsupported kind fails with MemoryError. Fills in [D-16].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryQuery, F-3.7]
+  why: The query crosses EDGE RPC and HTTP, so T must be recoverable from data; a phantom type alone would leave the remote client unable to decode the answer.
+  rejected:
+    - One op per kind, which is what D-16 replaces.
+```
+
+```mdl
+question Q-5: Should the event-base reads (`subscriptions`, `take`, `nextDueAt`) also be MemoryQuery kinds?
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryQuery, F-4]
+  context: D-17 keeps them as ops. As kinds, every read of memory goes through one op; as ops, `query` stays about facts.
+  options:
+    - Ops: only knowledge-base reads are query kinds.
+    - Kinds: `subscriptions`, `events` and `nextDueAt` join MemoryQuery.
+```
+
+```mdl
+decision D-19: When time-driven rules are evaluated is a detail of each implementation, not part of the interface; `tick` and `nextDueAt` are removed.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [MemoryService, F-4.5]
+```
+
+```mdl
+decision D-20: A native memory schedules its own time-driven evaluation in its layer's scope and catches up on open; EDGE drives the same evaluation from its Durable Object alarm. Fills in [D-19].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.5, F-7.4]
+  why: A CLI memory backed by a file is not running while rules come due, so without catch-up a reminder due overnight would never wake.
+```
+
+```mdl
+decision D-21: Ids in the memory interface are branded types.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [MemoryService, F-2.4]
+```
+
+```mdl
+decision D-22: The branded ids are FactId, GraphIri, EntityKey, SourceUri, SubscriptionId and MemoryEventId, each a branded string whose JSON form is unchanged. Fills in [D-21].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FactId, GraphIri, EntityKey, SourceUri, SubscriptionId, MemoryEventId, F-2.4]
+  why: These are the ids the ops take or the model cross-links; a brand on the type alone keeps stored facts and wire JSON decoding as before (D-7).
+  rejected:
+    - Reusing `@dxos/keys` DXN for SourceUri, which would reject the non-DXN URIs read cursors already hold.
+    - Branding predicate IRIs, which callers pass as surface forms as often as IRIs.
+```
+
+```mdl
+decision D-23: The SQLite implementation package is `@dxos/echo-memory-sqlite`, not `@dxos/echo-memory-native`.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-7]
+```
+
+```mdl
+decision D-24: In the app, memory calls, SPARQL queries included, go over the client-services bridge to a backend, and the backend runs `@dxos/sparql-sqlite` over the SQLite database it already has.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-25: Every write goes first to a new feed in the `facts` namespace, for durability and replication, and then to the store. The store remembers its feed cursor and can be rebuilt from the feed, and that rebuild is tested.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-9.2, F-9.3, F-9.4, T-8]
+```
+
+```mdl
+decision D-26: The fact feed records `put` (with its facts, read cursor and quiet speakers) and `reset` as entries; subscriptions, outboxes and acknowledgements stay local. Fills in [D-25].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.2, F-9.6]
+  why: Replaying puts and resets in order is enough to rebuild the knowledge base; an outbox is one consumer's progress, so replicating it would drain a subscription for every device at once.
+```
+
+```mdl
+decision D-27: A memory applies entries other replicas append as they arrive, and they wake its own subscriptions as a local put would; it starts listening to the feed before its first read, so no entry lands unseen between them. Fills in [D-25].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.5]
+  why: A fact said on another device is new to this device's watches; without the listen-then-read order, a write made just after open was never applied.
+```
+
+```mdl
+decision D-28: `facts` is a protocol well-known feed namespace beside `data` and `trace`. Fills in [D-25].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.2]
+  why: The feed store and replication only carry well-known namespaces; ECHO's indexer reads only `data` and `trace`, so fact blocks never reach the object index.
+```
+
+```mdl
+question Q-6: Should subscriptions also be written to the fact feed, so a watch set on one device runs on every device?
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.6]
+  context: D-26 keeps them local, so each device evaluates only the watches made on it, and a rebuilt store has none.
+  options:
+    - Local: subscriptions and outboxes stay per device.
+    - Replicated: subscriptions go to the feed; outboxes stay local.
+```
+
+```mdl
+decision D-29: `@dxos/sparql-sqlite` also runs over an async connection; it has a sync and an async variant.
+  date: 2026-11-16
+  by: user:dmaretskyi
+  affects: [F-9.7]
+```
+
+```mdl
+decision D-30: Both variants share one engine: the store and engine logic yield SQL statements that a sync or an async driver runs, and the async variant compiles from caches and retries once with the store reads it missed. Fills in [D-29].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.7]
+  why: Two copies of the store and engine would drift; the compiler's lookups are synchronous callbacks, and fetch-and-retry keeps the compiler unchanged.
+  rejected:
+    - Running the sync engine against a synchronous handle borrowed from the host's async connection, which needs the SQLite clients to expose their connection.
+```
+
+```mdl
+decision D-31: Each space's memory lives in the host's database under a table prefix of its own; the store's legacy cleanup runs only for an unprefixed store. Fills in [D-24].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.8]
+  why: The store's tables (quads, terms, meta, …) had fixed names, so two spaces in one database would share one store and could meet the host's own tables; the old layout's cleanup drops tables named cursors and entities, which a shared database may own.
+  rejected:
+    - One SQLite database per space, which is not the database the backend already has.
+```
+
+```mdl
+decision D-32: The backend serves `MemoryService` RPCs and opens a space's memory on its first call; a space's fact feed id is derived from its space id, so every device addresses the same feed; the page gets a space's memory from `client.memory(spaceId)`. Fills in [D-24].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.9]
+  why: The host has no per-space open and close hook, and a random feed id per device would give each device its own fact feed instead of one replicated feed.
+```
+
+```mdl
+decision D-33: Replicating fact feeds is behind a client-services stack option, off by default, until EDGE accepts the `facts` namespace. Fills in [D-25].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.5]
+  why: EDGE's pinned feed store rejects appends to an unknown namespace, and the syncer pulls every listed namespace for every space on every poll, so turning it on first would fail pushes and add an EDGE round trip per space for spaces that never use memory.
+```
+
+```mdl
+decision D-34: client-services does not depend on `@dxos/echo-memory-sqlite`, and `@dxos/echo-memory-sqlite` is a standalone implementation over native SQLite that pulls in no other SPARQL store.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9.1, F-7]
+```
+
+```mdl
+decision D-35: The backend is thin and the memory runs in the page: client-services only runs `@dxos/sparql-sqlite` over its database and appends to the facts feed; the page's MemoryService turns calls into SPARQL over the bridge, and rule evaluation and outboxes live page-side.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9.1, F-9.9]
+  supersedes: D-32
+```
+
+```mdl
+decision D-36: The store API has import and export verbs, with TriG as one format and a binary form as the other, and the backend forms the export and parses the import, for efficiency.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [RdfStore, F-10]
+```
+
+```mdl
+decision D-37: Subscriptions and outboxes live in the RDF store, outside the log, and are never replicated.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9.6]
+  supersedes: D-26
+  answers: Q-6
+```
+
+```mdl
+decision D-38: The RDF type definitions move from `@dxos/pipeline-rdf` to `@dxos/echo-memory`.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-1.4]
+  supersedes: D-8
+```
+
+```mdl
+decision D-39: The port between a memory and its store is `RdfStore`: SPARQL reads, batches of insert, delete and clear writes, bulk import and export, and a listener for applied shared batches; each op reads or writes a shared part or, with `local`, a local part. Fills in [D-35].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [RdfStore, F-9.1, F-9.6]
+  why: A memory in the page needs exactly what the backend can give without knowing about memory, and the local part is where subscriptions and outboxes go without reaching the log.
+  rejected:
+    - Keeping MemoryService as the RPC, which puts the memory (and the rule evaluator) in the backend.
+    - SPARQL UPDATE as the write path, which the log could not record as data without parsing it.
+```
+
+```mdl
+decision D-40: The mapping between facts and RDF, and between fact queries and SPARQL text, is the subpath `@dxos/echo-memory/rdf`; the main entry stays free of `n3`, and the fact schemas are the branded ones in `Fact` with no second copy. Fills in [D-38].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4]
+  why: Protocols and the client import the main entry, and n3 on their static graph breaks the workerd bundle; one fact schema means one place for the brands.
+  rejected:
+    - Moving the RDF modules into the main entry, which would put n3 into every bundle that names MemoryService.
+```
+
+```mdl
+decision D-41: Hand-built facts are made through `Fact.make` (and `Fact.makeMany`) from their plain form, and `Graph.assign` takes facts in their plain form, since the ids they end up with are known only there. Fills in [D-22].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2]
+  why: The brands make a string literal no longer a FactId, so fixtures and extractors need one way to brand a whole fact.
+```
+
+```mdl
+decision D-42: The memory core is `RdfMemory` in `@dxos/echo-memory-sqlite`, importable on its own subpath so the page loads no SQLite; the CLI opens it over `LocalRdfStore`, the same port over `@dxos/sparql-sqlite` in process. Fills in [D-35].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7, F-9.1]
+  why: The core needs the rule evaluator, which `@dxos/echo-memory` must not import; one core keeps the CLI, the page and EDGE alike.
+```
+
+```mdl
+decision D-43: The fact feed carries the store's batches (insert, delete and clear of quads), not memory entries; a memory's `put` is one batch holding the facts' quads and its read cursor, and `reset` is a clear plus the seed vocabulary. Fills in [D-35].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.2, F-9.4]
+  why: The backend no longer knows about facts, only quads, and a batch replays to the same store on every replica.
+```
+
+```mdl
+decision D-44: A memory pushes the facts in another replica's batch to its rules without `quiet`, which is not recorded in the batch. Fills in [D-43].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.5]
+  why: `quiet` names speakers whose facts wake nothing on the device that wrote them; a batch is quads only, and reading speakers back would need memory knowledge in the log.
+  rejected:
+    - Adding a memory-specific field to every batch, which the backend would carry without understanding.
+```
+
+```mdl
+decision D-45: In process, `RdfStore.listen` registers its listener before it returns; across the bridge the change stream starts once the host answers. Fills in [D-39].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [RdfStore]
+  why: A forked stream gives no sign that it is subscribed, so a write right after a replica opened went unseen; a registered listener closes that gap where the store is in process.
+```
+
+```mdl
+decision D-46: Operations can request MemoryService the way they request the other services.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-1.5]
+```
+
+```mdl
+decision D-47: In the app, a space-affinity layer gives operations the space's RdfStore from `client.rdf(space)` and a MemoryService over it, contributed beside `Database.Service`; the memory core is imported on the first request. Fills in [D-46].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.5]
+  why: A space-affinity layer is how every space service reaches an operation, and the layer's scope is the memory's lifetime; the dynamic import keeps the rule evaluator and n3 out of the boot bundle.
+```
+
+```mdl
+decision D-48: `@dxos/echo-memory` has the structure of `@dxos/echo`: a flat set of noun modules, the RDF mapping included, with no `rdf` subpath.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-1.4]
+  supersedes: D-40
+```
+
+```mdl
+decision D-49: Every noun module is also a subpath export, `hashText` becomes `Hash.text`, and the packages the workerd bundle reaches (protocols, client, client-services, plugin-client) import `RdfStore`, `MemoryQuery` and `MemoryService` by subpath, so n3 stays off their static graph. Fills in [D-48].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4]
+  why: With the RDF mapping in the main entry, importing the barrel would put n3 on those packages' static graph, which broke the workerd bundle before.
+```
+
+```mdl
+decision D-50: Rule evaluation, outboxes and the clock of a space's memory run in the client-services worker, not in the page.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9.1]
+  supersedes: D-35
+```
+
+```mdl
+decision D-51: The worker holds one store and one memory per space (`SpaceMemories`) and serves both `RdfStoreService` and `MemoryService` RPCs from them; `client.memory(spaceId)` is the page's MemoryService, and operations get it through the same space layer. client-services imports `@dxos/echo-memory-sqlite`'s `RdfMemory` and `LocalRdfStore` modules, by dynamic import. Fills in [D-50].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1, F-1.5]
+  supersedes: D-34
+  why: Running the memory in the worker needs its core there; the concern behind D-34 was a second SPARQL store, which `RdfMemory` no longer brings, and the dynamic import keeps the core out of the worker's boot.
+  rejected:
+    - Moving the memory core to a package of its own, which adds a package for two modules.
+```
+
+```mdl
+decision D-52: plugin-brain's fact store registry and plugin-agent's in-memory brain move onto MemoryService in this change.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-8.2]
+```
+
+```mdl
+decision D-53: plugin-agent's BrainService becomes an adapter over the space's MemoryService: a trigger is a subscription owned by its agent with the trigger as payload, facts and cursors are the space's, `reset` resets the space's memory, `tick` does nothing and `nextDueAt` asks the host back within a minute while the agent has watches. Fills in [D-52].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.2]
+  why: Every BrainService caller is an operation with a space, so a space layer reaches it, and keeping the BrainService API leaves its forty call sites and EDGE's wire unchanged while the facts move.
+  rejected:
+    - Rewriting every plugin-agent operation onto MemoryService now, which also moves EDGE's BrainObject and its wire.
+```
+
+```mdl
+decision D-54: A memory reads time from the clock it was opened with, and `take` first evaluates the time-driven rules that have come due. Fills in [D-19].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4]
+  why: A caller's context (an operation's test clock) must not move the memory's time, and a consumer that drains an outbox expects every wake due by now without depending on when the timer fiber last ran.
+```
+
+```mdl
+decision D-55: `FactStoreMemory` in `@dxos/pipeline-rdf` adapts both ways: a FactStore over a MemoryService for the pipelines that still take one, and a MemoryService over a FactStore (no event base) for a remote fact server, which a story plugin provides at process affinity so it outranks the client's space memory. Fills in [D-52].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.2]
+  why: The email, Discord and finance pipelines write through FactStore and run on EDGE too, so they keep that seam while the app's side of it becomes the memory.
+```
+
+```mdl
+decision D-56: The Discord, finance and System One extraction work merged from main uses the moved fact model, and its `Vocabularies` packs join `@dxos/echo-memory` as a noun module.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-1.4]
+```
+
+```mdl
+decision D-57: On EDGE a space's memory is one `MemoryObject` Durable Object in db-service, named by the space id and running the same memory over its own SQLite; existing agent brains start fresh, their old fact and trigger tables left unread.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9]
+  why: One shared store per space, as in the app, rather than one brain per agent.
+```
+
+```mdl
+decision D-58: Callers on EDGE (operation-service, plugin bundles) reach the space memory directly through db-service's `MemoryServiceEntrypoint`, and `BrainService` there is plugin-agent's `BrainMemory` over it; compute-service's brain calls for facts and triggers are removed, and the agent's `BrainObject` keeps only wakes, sessions, provisioning and roles until each finds its own home. Fills in [D-57].
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9]
+```
+
+```mdl
+decision D-59: EDGE's `MemoryObject` is a replica of the space's `facts` feed, so the app and EDGE share one memory per space; the fact-feed indexer, plugin-agent's `AddFactFeed`/`RemoveFactFeed` and its `FactItem` feeds are removed, and producers such as the Discord crawl write with `put` or import TriG. Fills in [D-57].
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-9, F-1.4]
+  why: Facts reach a space's memory one way, through its replicated log, instead of a second feed format and an indexer per agent.
+```
+
+```mdl
+decision D-60: On EDGE the space's `MemoryObject` drives time-driven rules itself: it sets its alarm to the memory's next due time and, when it fires, asks for the due watches of each subscription owner to run, so the agent's `BrainObject` keeps no location and no polling alarm. Fills in [D-57].
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-9]
+  why: The memory knows when its rules are next due; a per-agent poll every minute both runs late and runs when nothing is due.
+```
+
+```mdl
+decision D-61: On EDGE a space's memory is inspected through db-service's memory routes (facts, subscriptions and SPARQL for a space, for admins), which replace compute-service's per-agent brain state and fact routes and `BrainServiceEntrypoint.state`. Fills in [D-57].
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-9]
+  why: What the brain view showed now lives in the space memory, so its reads belong beside the `MemoryObject` rather than to one agent.
+```
+
+```mdl
+decision D-62: A space's fact feed always replicates, and its format (namespace, id and block encoding) is echo-memory's `FactFeed` module, which the client services and EDGE's `MemoryObject` share; the client-services `replicateFacts` option is removed. Fills in [D-59].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.5]
+  supersedes: D-33
+  why: EDGE now accepts the `facts` namespace and lands with this change, and two replicas can only follow one feed if they derive its id and decode its blocks the same way.
+```
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap                 # name(params) → ReturnType
+    errors?: ErrorMap
+    note?: Prose
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent or the System One checker.
+  inline-prose: true
+  fields:
+    files:       Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:       Prose             # optional regex pre-filter over file contents
+    severity?:   warn | error      # defaults to warn
+    scope?:      dir | repo        # glob base: this file's dir (default) or repo root
+    unit?:       file | pr         # one verdict per file (default) or per change set
+    context?:    ContextKind[]     # diff | imports | importers | siblings | package | public-api | similar | test | pr
+    system-one?: on | off          # off when no fetcher can supply what the rule needs
+    question?:   Prose             # literal yes/no question for the System One checker
+```
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true ("Bounds are derived, never stored."), not as the edit
+    that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    affects?: RefList           # block ids the decision constrains, e.g. [Scene, F-2.1]
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+    answers?: Identifier        # a question this decision answers, e.g. Q-1
+  inline-prose: true
+```
+
+```mdl
+ext question
+  uri: org.dxos.mdl.question@1.0
+  desc: |
+    A choice the spec needs that nobody has made yet, attributed to the actor that asked it. The
+    inline prose is the question. It is answered by a later `decision` whose `answers:` names it.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day it was asked
+    by: ActorRef                # user:<handle> | agent:<name> — who asked
+    for?: UserRef               # agent questions only: the person the agent acted for
+    affects?: RefList           # block ids the answer will constrain
+    context?: Prose             # why it is asked, and what depends on the answer
+    options?: ProseList         # suggested answers, each `<title>: <description>`
+    source?: URI                # PR, review comment, issue, or session where it was asked
+  inline-prose: true
+```

@@ -18,12 +18,14 @@ Each extension is defined in the Appendix or resolved via its URI.
 | Term        | URI                            |
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `op@1.1`    | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -201,7 +203,7 @@ op Open
     navigation?: immediate        # skip validation; expand path only
     scrollIntoView?: boolean      # default true; set false to suppress auto-scroll
     state?: any
-    variant?: string
+    variant?: string              # a linked companion (`~comments`) opens beside the last opened plank
   output: string[]
   effects: [echo:read, layout:state]
   requires: [AppGraph, AttentionCapabilities, ClientCapabilities, DeckCapabilities]
@@ -396,6 +398,7 @@ op RevertWorkspace
 
 ```mdl
 feat F-1: Deck Presentations
+  uses: [UpdateTilingSize]
 
   req F-1.1:
     when: the active deck changes length or the breakpoint changes
@@ -442,10 +445,34 @@ feat F-1: Deck Presentations
     when: viewing plank controls
     then: the reordering controls (increment-start / increment-end) are hidden pending a
           reordering UX revisit
+
+  req F-1.10:
+    when: a sliding deck scrolls, or a plank folds into or out of its left pile
+    then: the deck's front names the first plank not folded with at least half its width in view; a deck that is not
+          sliding names its first plank, and a flat deck (flattened, or mobile) its current one; a sliding deck whose
+          planks changed since it last measured names none until it measures the planks it shows
+
+  req F-1.11:
+    when: the deck shows planks in a space
+    then: it reports its front plank there, when that plank is in the space, as the viewport of the space's
+          `ViewLocation` (keyed by the space's EID), and its planks there whose companion is open, with the companion
+          tab it shows them in, as the space's `AppCapabilities.Companions` view state; a space it no longer shows goes
+          back to the defaults
+
+  req F-1.12:
+    when: a `LayoutAccent` contribution holds a palette hue
+    then: every plank heading, companions included, takes a light wash of that hue over a one-pixel underline in it
+
+  req F-1.13:
+    when: a plank shows an object's article
+    then: the article is inside a scroll scope keyed by the object's EID, so its outermost scrolling area reports and
+          restores its position as the object's `ScrollPosition` view state, which a follow carries; a companion's
+          scope has no EID and keeps no view state, and an article nested in another has no scope of its own
 ```
 
 ```mdl
 feat F-2: Fullscreen
+  uses: [AdjustPlank, EphemeralDeckState]
 
   req F-2.1:
     when: user triggers AdjustPlank with type=fullscreen for a plank
@@ -463,6 +490,7 @@ feat F-2: Fullscreen
 
 ```mdl
 feat F-3: Sidebar & Complementary Sidebar
+  uses: [UpdateComplementary, UpdateDrawer, UpdateSidebar]
 
   req F-3.1:
     when: UpdateSidebar is dispatched with a new state
@@ -489,6 +517,7 @@ feat F-3: Sidebar & Complementary Sidebar
 
 ```mdl
 feat F-4: Dialog & Popover Overlay
+  uses: [UpdateDialog, UpdatePopover]
 
   req F-4.1:
     when: UpdateDialog is dispatched with a subject component
@@ -505,6 +534,7 @@ feat F-4: Dialog & Popover Overlay
 
 ```mdl
 feat F-5: URL Navigation & Deep Linking
+  uses: [Open]
 
   desc: |
     The URL is a pair chain (`/w/<workspace>/<key>/<id>/…`) with one pair per plank path segment;
@@ -537,6 +567,7 @@ feat F-5: URL Navigation & Deep Linking
 
 ```mdl
 feat F-6: Toast Notifications
+  uses: [AddToast]
 
   req F-6.1:
     when: AddToast is dispatched
@@ -549,6 +580,7 @@ feat F-6: Toast Notifications
 
 ```mdl
 feat F-7: Navigation Model
+  uses: [Open]
 
   desc: |
     Interaction model replacing the former `navigationDefault` setting and replace-the-attended-plank
@@ -615,6 +647,7 @@ feat F-7: Navigation Model
 
 ```mdl
 feat F-8: Flat Navigation (breadcrumbs)
+  uses: [Close]
 
   desc: |
     The `flatten` setting (on by default) collapses the scrolling deck into a single-plank view whose
@@ -641,6 +674,19 @@ feat F-8: Flat Navigation (breadcrumbs)
     when: the flatten setting is off
     then: the deck renders the full active stack as the scrolling/tiling/fullbleed presentation (F-1),
           with no breadcrumbs
+```
+
+```mdl
+feat F-9: Informational Banner
+
+  req F-9.1: When a host contributes to `BannerStart` or `BannerEnd`, the deck shows its top bar at every breakpoint except fullscreen.
+  req F-9.2: The top bar's start renders the `BannerStart` surface in place of the app name, and its end renders the `BannerEnd` surface, where a host puts its notice and actions.
+```
+
+```mdl
+feat F-10: Companions Start Closed
+
+  req F-10.1: On a read-only host, each workspace's deck starts with every companion closed, so a plank shows a companion only once the reader opens one.
 ```
 
 ## Acceptance
@@ -910,7 +956,156 @@ test QA-2: Sidebar and companion toggles
       expect: the companion pane closes
 ```
 
+## Changelog
+
+```mdl
+decision D-1: The deck reports where it is scrolled as its front plank, the first one not folded with at least half its width in view, and whether it shows only its current plank, through `front` and `flat` on the layout. A follower in plugin-space mirrors a leader's deck scroll with them.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.10]
+  why: The scroll offset depends on the viewport's width and the planks' sizes; the plank at the front reads the same in another deck. The fold pass already measures every plank's place in the viewport. A plank that slides off the left edge without folding leaves a sliver, so being unfolded is not enough.
+  rejected: Expose the scroll offset in pixels.
+```
+
+```mdl
+decision D-2: A sliding deck re-measures its front when its planks change, not only their number, so a plank replaced in place is measured, and it keeps the planks each measurement was taken among; until it has measured the planks it shows (after a plank closes, before or at the front, a reorder, or the deck starting to slide), `front` is unset rather than naming a plank it may be nowhere near. Fills in [D-1].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.10]
+  why: The layout is broadcast the moment it changes, before the fold pass runs, so a stale fallback reached followers as the leader's front and slid them to the first plank and back.
+  rejected:
+    - Name the first plank while the front is stale; the first plank can be far from where the deck is scrolled.
+    - Withhold only a front plank that closed; a plank closing before it shifts the deck just as far.
+```
+
+```mdl
+decision D-3: The deck's front, flatness and open companions stay deck state rather than fields on the generic layout. The deck reports its front as the space's `ViewLocation` viewport and its open companions as `AppCapabilities.Companions` view state, and plugin-space's follow shows them with the generic `LayoutOperation.ScrollIntoView` and `UpdateCompanion` (org.dxos.plugin.space#D-79); the heading wash comes from a `LayoutAccent` contribution. Replaces how [D-1] publishes the front.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-1.10, F-1.11, F-1.12]
+  why: `front`, `flat` and companion state describe the deck, not every layout. Reporting them as view state lets the follow carry them like any other followed state, and applying them through layout operations keeps the follow free of deck code.
+  rejected:
+    - Generic layout fields for the front and companions; they are the deck's, not every layout's.
+    - A deck `follow` that opens what the leader shows; every plugin with state that needs navigating would need its own.
+    - plugin-space reading the deck's state directly; it ties follow to one layout plugin.
+```
+
+```mdl
+decision D-4: `LayoutOperation.Set` takes an optional `workspace`, as `Open` does, so a follow can land each view with one `Set` or `Open` that names the space's workspace rather than a `SwitchWorkspace` before it.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.11]
+  why: Two operations for one navigation race: the workspace switch seeds the space's first plank and scrolls to it while the open is still on its way. The URL a `Set` writes names its workspace, and projecting it switches the deck there.
+  rejected:
+    - Await `SwitchWorkspace` before opening; its seed still writes a plank and a scroll intent the follow then replaces.
+```
+
+```mdl
+decision D-5: `Open`'s `variant`, when it is a linked segment (`~comments`), opens that companion beside the plank the open lands on, in the same navigation.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [op Open]
+  why: Opening an object with a companion took `Open` and then `UpdateCompanion`, two navigations where `UpdateCompanion` read a deck that `Open`'s navigation may not have applied yet.
+  rejected: A new `companion` field, since `variant` was unread.
+```
+
+```mdl
+decision D-6: Each plank puts a scroll scope keyed by its object's EID around its article, and companions get none, so a follower restores the leader's scroll in each plank it mirrors.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.13]
+  why: The plank is where the layout knows both the article and the object it shows. A companion of the same object would share the plank's position and move it.
+  rejected:
+    - A scope in every `Article` surface, nested ones included; an embedded article would track a second object's scroll inside the first.
+```
+
+```mdl
+decision D-7: Approve [D-6].
+  date: 2026-11-16
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-8: A companion's article sits in a scroll scope with no EID, which keeps no view state, rather than in no scope. Refines [D-6].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.13]
+  why: Every plank renders its article the same way; leaving out the EID is enough to keep a companion from sharing or moving the plank's position.
+```
+
 ---
+
+```mdl
+decision D-9: A host can show a full-width top bar that carries information and actions but no command search.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-10: The `banner` option turns the top bar on, and a `BannerEnd` surface holds the host's content. Fills in [D-9].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+  why: The top bar already exists for Windows desktop; an option reuses it and a surface keeps host content out of the deck.
+```
+
+```mdl
+decision D-11: In a read-only host, companions start closed.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-10.1]
+```
+
+```mdl
+decision D-12: A `companionsClosed` option seeds each new workspace deck with an empty companion list, through a `NewDeck` capability that URL navigation also reads. Fills in [D-11].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10.1]
+  why: An empty list already means every companion was closed, so no new deck state is needed; a deck opened from a link is created by URL navigation and starts the same way.
+```
+
+```mdl
+decision D-13: The top bar turns on when a host contributes to the banner's surfaces, with no deck option.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-10
+  affects: [F-9.1, F-9.2]
+```
+
+```mdl
+decision D-14: The deck starts a read-only host's workspace decks with their companions closed, read from `AppCapabilities.ReadOnly` when URL navigation creates a deck, with no deck option.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-12
+  affects: [F-10.1]
+```
+
+```mdl
+decision D-15: A `BannerStart` surface replaces the app name, so a host draws its own title, and a contribution to either banner surface turns the top bar on. Fills in [D-13].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+  why: The viewer's wordmark and its font then live in the viewer, and Composer, which contributes to neither surface, keeps its bar as before.
+  rejected: Turning the bar on only for `BannerEnd`: a host with only a title would get no bar.
+```
+
+```mdl
+decision D-16: `DeckSchema.closedCompanionsDeck` names the deck whose companion list is empty, as opposed to absent. Fills in [D-14].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10.1]
+  why: An empty list and an absent one mean different things to the companion layout, so the closed deck gets a name instead of an inline literal.
+```
 
 ## Appendix: Extension Definitions
 

@@ -1,0 +1,41 @@
+# Composer: Every part of the screen is supplied by a plugin
+# Exported from studio assets/deck (slide "composer"), 1600 × 900 slide units.
+
+object title @ 80,40 {
+  text heading 0,0 "Composer"
+  text subtitle 0,44 "Every part of the screen is supplied by a plugin"
+}
+
+object navtree @ 70,235 {
+  rect box 0,0 330x156 "Navtree"
+}   # card icon=tree-view icon-tone=var(--t-event) footer="plugin-navtree" body="The space tree in the sidebar, built from the app graph."
+object document @ 70,415 {
+  rect box 0,0 330x156 "Document"
+}   # card icon=file-text icon-tone=var(--t-trip) footer="plugin-markdown" body="Collaborative markdown; the text lives in ECHO."
+object sheet @ 70,595 {
+  rect box 0,0 330x156 "Sheet"
+}   # card icon=grid-four icon-tone=var(--t-sheet) footer="plugin-sheet" body="A spreadsheet embedded in the document."
+object assistant @ 1200,235 {
+  rect box 0,0 330x156 "Assistant"
+}   # card icon=sparkle icon-tone=var(--t-message) footer="plugin-assistant" body="Assistant chat about the object on screen."
+object canvas @ 1200,415 {
+  rect box 0,0 330x156 "Canvas"
+}   # card icon=pen-nib icon-tone=var(--t-file) footer="plugin-excalidraw" body="A diagram embedded in the document."
+
+object frame @ 470,156 {
+  rect box 0,0 660x650
+  rect r-nav 10,51 192x554 color=grey
+  rect r-doc 211,51 238x554 color=grey
+  rect r-comp 458,51 192x554 color=grey
+  rect r-status 0,615 660x35 color=grey
+  rect r-canvas 237,197 186x106 color=grey
+  rect r-sheet 237,420 186x113 color=grey
+}   # component=app-frame highlight=true colors={"nav":"var(--t-event)","doc":"var(--t-trip)","sheet":"var(--t-sheet)","comp":"var(--t-message)","canvas":"var(--t-file)"}
+
+object links @ 0,0 {
+  arrow navtree-frame navtree/box -> frame/r-nav stroke=dashed   # route=curve-h color=var(--t-event) arrow=none
+  arrow document-frame document/box -> frame/r-doc stroke=dashed   # route=curve-h color=var(--t-trip) arrow=none
+  arrow sheet-frame sheet/box -> frame/r-sheet stroke=dashed   # route=curve-h color=var(--t-sheet) arrow=none
+  arrow assistant-frame assistant/box -> frame/r-comp stroke=dashed   # route=curve-h color=var(--t-message) arrow=none
+  arrow canvas-frame canvas/box -> frame/r-canvas stroke=dashed   # route=curve-h color=var(--t-file) arrow=none
+}

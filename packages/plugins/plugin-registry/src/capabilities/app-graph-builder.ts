@@ -68,6 +68,7 @@ export default Capability.makeModule(
               type: SPACE_SETTINGS_TYPE,
               label: ['space-plugins.label', { ns: RegistryNamespace.key }],
               icon: 'ph--squares-four--regular',
+              iconHue: 'emerald',
               position: Position.last,
             }),
           ]),

@@ -39,9 +39,10 @@ export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
   placeholder?: string;
   /**
-   * Edit a description under the title — the selected task's, or the new task's when creating, so a
-   * task can be added with one. Off by default, matching `Root`'s `showDescription`: a markdown
-   * field is several rows tall wherever it appears, which a single-line strip has no room for.
+   * Edit a description under the title — the selected task's, or the new task's when creating, so a task can be
+   * added with one. This is what makes the pane two lines rather than one: either way its property controls sit on
+   * the list's own column tracks, and the description spans the title's. Off by default, matching `Root`'s
+   * `showDescription`: a markdown field is several rows tall, which a single-line strip has no room for.
    */
   showDescription?: boolean;
   /** Placeholder for the description field; translated by default. */
@@ -59,11 +60,6 @@ export type TaskListEditorProps = ComposableProps<{
    * and then handed to `onTaskCreate` with it. A host sets this only when it can store a file.
    */
   acceptFiles?: boolean;
-  /**
-   * One line on the list's own columns, each field under the column it edits, as the chat prompt's add row. Otherwise
-   * the title and description stack above a row of labelled tags.
-   */
-  inline?: boolean;
 }>;
 
 /**
@@ -85,7 +81,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       descriptionExtensions,
       createOnly = false,
       acceptFiles = false,
-      inline = false,
       ...props
     },
     forwardedRef,
@@ -250,6 +245,30 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       setFiles([]);
       onTaskSelect?.(undefined);
     }, [task, current, updateDraft, onTaskSelect]);
+    // Synced in an effect, as `submitRef` is: a render React abandons would otherwise leave this pointing at a
+    // handler from a render that never committed (see the note on `editingId`).
+    const cancelRef = Hooks.useDynamicRef(handleCancel);
+
+    const handlePaneKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+      // An IME may report its own cancel as Escape mid-composition, and discarding the draft on that would throw
+      // away far more than the composition it meant to end. `keyCode` 229 as well as `isComposing`, because Safari
+      // is known to end a composition with an `isComposing` of false (see `useSubmitOnEnter`, for Enter); a real
+      // Escape carries 27, so this cannot swallow one.
+      if (event.key !== 'Escape' || event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) {
+        return;
+      }
+
+      // A picker portals its menu out of the pane but stays its React child, so the menu's own Escape — the one
+      // that closes it — arrives here too. Discarding on that would throw away the title and files the reader is
+      // still writing, so only an Escape from a field inside the pane counts: a portalled target is not contained.
+      if (!(event.target instanceof Node) || !event.currentTarget.contains(event.target)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      cancelRef.current();
+    }, []);
 
     // Only while creating: an existing task's attachments are its article's to manage. Captured, so
     // the description editor does not take a dropped file and insert its bytes as text.
@@ -336,8 +355,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const hasDescription = !!(showDescription && (current ? onTaskUpdate : onTaskCreate));
     // Valid only with a title: a task cannot be created, or renamed, to nothing.
     const canSave = draft.title.trim().length > 0;
-    // Something to throw away: an edit in progress, or a draft.
-    const canCancel = !!current || canSave;
     const values: TaskEditorValues = current
       ? {
           title: draft.title,
@@ -362,7 +379,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       <div
         {...rest}
         className={mx(
-          inline ? 'grid gap-y-2' : 'flex flex-col gap-2',
+          'grid gap-y-1',
           'w-full min-w-0 shrink-0',
           // The drop target is the pane itself, marked while files are held over it.
           dragOver && 'ring-2 ring-inset ring-accent-bg',
@@ -370,8 +387,12 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           !flush && 'px-(--dx-gap-size)',
           className,
         )}
-        style={inline ? ({ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties) : undefined}
+        style={{ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties}
         data-testid='taskList.edit'
+        // The pane shows only Save, so Escape is what throws a pending edit away — the exit the cancel button
+        // used to be. Captured on the pane so it reaches the description's editor too, and handled without
+        // moving focus: a blur commits, which would write the very text this discards.
+        onKeyDownCapture={handlePaneKeyDown}
         {...(takesFiles && {
           onDragEnterCapture: handleDragEnter,
           onDragLeaveCapture: handleDragLeave,
@@ -385,7 +406,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           key={current?.id ?? 'create'}
           values={values}
           cells={cells}
-          inline={inline}
           members={members}
           people={people}
           title={{
@@ -398,13 +418,13 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             onSave: handleSave,
           }}
           description={description}
-          end={
-            canCancel && (
-              <SystemButton.Cancel
-                variant='ghost'
-                classNames={inline ? undefined : 'ms-auto'}
-                data-testid='taskList.edit.cancel'
-                onClick={handleCancel}
+          save={
+            canSave && (
+              <SystemButton.Save
+                variant='primary'
+                data-testid='taskList.edit.save'
+                onClick={handleSave}
+                // The title commits on blur, which would otherwise run before the click and move the button.
                 onMouseDown={(event) => event.preventDefault()}
               />
             )
@@ -414,7 +434,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           {takesFiles && files.length > 0 && (
             <div
               className='flex flex-wrap items-center gap-1 min-w-0'
-              style={inline ? { gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) } : undefined}
+              style={{ gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) }}
             >
               {files.map((file, index) => (
                 <Tag.Tag

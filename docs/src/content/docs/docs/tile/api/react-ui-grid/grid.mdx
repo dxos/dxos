@@ -1,0 +1,57 @@
+---
+title: Grid
+description: A fast, editable grid of cells.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+
+<ApiStory id="react-ui-grid/grid" height="22rem" />
+
+```ts
+import { Grid, GridCellEditor } from '@dxos/react-ui-grid';
+```
+
+```sh
+npm install @dxos/react-ui-grid
+```
+
+`Grid` is the grid under Composer's sheets and tables. It draws only the cells in view, so it stays fast for large
+data, and it handles selection, keyboard movement and resizing. You give it cells; it asks for the ones it shows.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Grid.Root` | Holds which cell is being edited (`editing`, `onEditingChange`) |
+| `Grid.Content` | The grid itself; `getCells` gives it the cells in view |
+| `GridCellEditor` | An editor that opens over the cell being edited |
+
+## `Grid.Content`
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `getCells` | `(range, plane) => cells` | A plane's cells, keyed `col,row`, each with a `value` |
+| `frozen` | `DxGridFrozenAxes` | How many rows or columns each frozen edge plane has |
+| `columnDefault` | `per plane` | Default column sizes |
+| `rowDefault` | `per plane` | Default row sizes |
+| `limitColumns` | `number` | How far the grid scrolls across |
+| `limitRows` | `number` | How far the grid scrolls down |
+| `overscroll` | `'trap' | 'inline' | 'block'` | Which wheel scrolls stay in the grid at its edges |
+
+## Cells and planes
+
+A grid has planes: the main `grid` plane, and frozen planes at its edges for headers that stay in place as it scrolls.
+A new `getCells` makes the grid ask again, so build it from your state. Here `limitColumns` and `limitRows` run past the
+data, so blank rows and columns wait to be filled in, and `overscroll='trap'` keeps wheel and trackpad scrolls in the
+grid, so the page neither scrolls nor swipes back.
+
+## Edit a cell
+
+`GridCellEditor` opens over the cell when the user double-clicks or types. `getCellContent` gives the editor its
+starting text, and `onBlur` hands back the new text. `editorKeys` closes the editor on Enter or Tab, and `refocus` moves
+the focus on, as a spreadsheet does:
+
+<Snippet file="tile-guide-grid" region="sheet" lang="tsx" />
+
+The story at the top of this page runs this example.

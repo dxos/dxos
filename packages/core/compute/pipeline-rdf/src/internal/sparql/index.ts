@@ -4,5 +4,6 @@
 
 // Public query surface (re-exported at the package root); the sparql engine stays internal.
 export { generateQuery } from './nl-to-query.ts';
+export { generateSparql } from './nl-to-sparql.ts';
 export { type SemanticQuery, buildSparql } from './query-builder.ts';
 export { parseSparqlToQuery } from './sparql-to-query.ts';

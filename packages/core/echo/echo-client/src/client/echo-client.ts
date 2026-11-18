@@ -10,7 +10,7 @@ import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, subscribeStream } from '@dxos/protocols';
+import { RpcClosedError, type WorkingSetService, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
 import { type BranchStore, type DocumentRetention } from '../core-db/index.ts';
@@ -64,6 +64,9 @@ export type ConstructDatabaseProps = {
 
   /** Which loaded object documents the database keeps in memory. */
   documentRetention?: DocumentRetention;
+
+  /** A working set the database opens from and keeps current; see `EchoDatabaseProps.workingSet`. */
+  workingSet?: WorkingSetService;
 };
 
 /**
@@ -206,6 +209,7 @@ export class EchoClient extends Resource {
     branchStore,
     documentRetention,
     createEpoch,
+    workingSet,
   }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
@@ -222,6 +226,7 @@ export class EchoClient extends Resource {
       branchStore,
       documentRetention,
       createEpoch,
+      workingSet,
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);

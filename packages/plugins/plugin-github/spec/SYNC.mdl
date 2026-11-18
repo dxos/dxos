@@ -346,6 +346,7 @@ type SyncResult
 
 ```mdl
 feat F-1: One object per GitHub item
+  uses: [PullRequest]
 
   req F-1.1: A binding's Cursor targets a Repo, found or created by its github.com foreign key.
 
@@ -364,6 +365,7 @@ feat F-1: One object per GitHub item
 
 ```mdl
 feat F-2: Delta polling
+  uses: [PullRequest]
 
   req F-2.1:
     when: a binding is polled

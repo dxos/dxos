@@ -5,6 +5,7 @@
 import { type Heads } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Option from 'effect/Option';
@@ -59,7 +60,14 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import {
+  RpcClosedError,
+  type WorkingSetReport,
+  type WorkingSetRow,
+  type WorkingSetService,
+  runServiceCall,
+  subscribeStream,
+} from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { type EventAttributes, trace } from '@dxos/tracing';
 
@@ -72,7 +80,6 @@ import {
   type ExportWorkingSetOptions,
   type LoadObjectOptions,
   type SpaceDocumentHeads,
-  type WorkingSetRow,
 } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
@@ -223,6 +230,9 @@ export type EchoDatabaseProps = {
 
   /** Which loaded object documents the database keeps in memory. */
   documentRetention?: DocumentRetention;
+
+  /** A working set the database opens from and snapshots to when it closes, so the owner's next database reads its writes. */
+  workingSet?: WorkingSetService;
 
   /**
    * Run a reactive query for dynamic schemas.
@@ -387,6 +397,27 @@ const writeContentField = (target: object, field: string, before: unknown, after
   }
 };
 
+/** How long a working-set call may take before the database goes on without it. */
+const WORKING_SET_TIMEOUT = Duration.seconds(2);
+
+/** How long loading the working set's objects may stall before the database goes on without them. */
+const WORKING_SET_LOAD_TIMEOUT = Duration.seconds(5);
+
+/** The bytes of documents one working-set snapshot carries. */
+const WORKING_SET_MAX_BYTES = 4 * 1024 * 1024;
+
+/** Runs a working-set call, bounded; a failure leaves the database as it would be without a working set. */
+const bestEffort = <T>(label: string, call: () => Promise<T>): Promise<T | undefined> =>
+  EffectEx.runPromise(
+    Effect.tryPromise(call).pipe(
+      Effect.timeout(WORKING_SET_TIMEOUT),
+      Effect.catch((error) => Effect.sync(() => log.warn('working set unavailable', { call: label, error }))),
+    ),
+  );
+
+const sameHeads = (left: readonly string[] | undefined, right: readonly string[]): boolean =>
+  left !== undefined && left.length === right.length && left.every((head) => right.includes(head));
+
 /**
  * User-facing API for the space database.
  * Implements EchoDatabase interface; delegates all document and core-object
@@ -407,6 +438,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   private readonly _reactiveSchemaQuery: boolean;
   private readonly _preloadSchemaOnOpen: boolean;
   #seed?: readonly WorkingSetRow[];
+  readonly #workingSet: WorkingSetService | undefined;
+  /** Per document id, the heads the working set last had from this database: what its next snapshot starts from. */
+  #workingSetBase: Record<string, string[]> = {};
 
   /**
    * Backend for feed operations. Set on construction and refreshed on reconnect.
@@ -453,6 +487,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
+    this.#workingSet = params.workingSet;
 
     // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
     // that recurses through the whole entity graph and throws on the first strict-mode function it
@@ -531,7 +566,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   protected override async _open(): Promise<void> {
     await this._entityManager.open(this._ctx);
 
-    const seed = this.#seed;
+    // A seed given directly comes first; the working set seeds only a database given none.
+    const workingSet = this.#seed === undefined ? this.#workingSet : undefined;
+    const fromWorkingSet = workingSet && (await bestEffort('get', () => workingSet.get()))?.rows;
+    const seed = this.#seed ?? fromWorkingSet;
     this.#seed = undefined;
     if (seed) {
       this._entityManager.seedDocuments(seed);
@@ -561,10 +599,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       const unsubscribe = this.query(Filter.type(PersistentSchema)).subscribe(() => {});
       this._ctx.onDispose(unsubscribe);
     }
+
+    this.#workingSetBase = Object.fromEntries((fromWorkingSet ?? []).map((row) => [row.documentId, row.heads]));
+    await this.#takeWorkingSet(fromWorkingSet ?? []);
   }
 
   @synchronized
   protected override async _close(ctx: Context): Promise<void> {
+    await this.saveWorkingSet();
     const disposals = await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
     for (const disposal of disposals) {
       if (disposal.status === 'rejected') {
@@ -592,6 +634,55 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** The working set as rows to {@link seedWorkingSet} a later session with; empty until the space root is loaded. */
   exportWorkingSet(options: ExportWorkingSetOptions): WorkingSetRow[] {
     return this._lifecycleState === LifecycleState.OPEN ? this._entityManager.exportWorkingSet(options) : [];
+  }
+
+  /** Stores this database's writes and snapshots the documents it holds to its working set, for the owner's next one. */
+  async saveWorkingSet(): Promise<void> {
+    const workingSet = this.#workingSet;
+    if (!workingSet) {
+      return;
+    }
+    await this._entityManager
+      .flush({ indexes: false })
+      .catch((error) => log.warn('writes not stored before the working set snapshot', { error }));
+    const base = this.#workingSetBase;
+    const rows = this._entityManager
+      .exportWorkingSet({ maxBytes: WORKING_SET_MAX_BYTES })
+      .filter((row) => !sameHeads(base[row.documentId], row.heads));
+    if (rows.length === 0) {
+      return;
+    }
+    const report: WorkingSetReport = {
+      rows,
+      base: Object.fromEntries(
+        rows.flatMap(({ documentId }) => (base[documentId] ? [[documentId, base[documentId]]] : [])),
+      ),
+    };
+    rows.forEach((row) => (base[row.documentId] = row.heads));
+    await bestEffort('put', () => workingSet.put(report));
+  }
+
+  /** Takes the working set again, after a call this database made let another database of its owner change it. */
+  async absorbWorkingSet(): Promise<void> {
+    const workingSet = this.#workingSet;
+    const fetched = workingSet && (await bestEffort('get', () => workingSet.get()));
+    if (fetched && this._lifecycleState === LifecycleState.OPEN) {
+      await this.#takeWorkingSet(fetched.rows);
+    }
+  }
+
+  /** Counts the working set's objects among the unindexed writes queries merge, and loads them. */
+  async #takeWorkingSet(rows: readonly WorkingSetRow[]): Promise<void> {
+    const ids = rows.flatMap((row) => (row.objectId === undefined ? [] : [row.objectId]));
+    this._entityManager.noteWorkingSetObjects(ids);
+    if (ids.length > 0) {
+      await this._entityManager
+        .batchLoadObjectCores(ids, {
+          inactivityTimeout: Duration.toMillis(WORKING_SET_LOAD_TIMEOUT),
+          returnDeleted: true,
+        })
+        .catch((error) => log.warn('working set objects not loaded', { count: ids.length, error }));
+    }
   }
 
   // ── Space state ─────────────────────────────────────────────────────────

@@ -1,0 +1,20 @@
+---
+title: Popover
+description: "Short content beside the control that opens it, such as a share link."
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+<Snippet file="tile-components" region="popover" lang="tsx" />
+
+<TilePreview id="popover" />
+
+```ts
+import * as Popover from '@dxos/react-ui/Popover';
+```
+
+A popover opens beside its trigger, in a portal, and closes when the user clicks elsewhere. With `modal` it holds focus.
+
+The same parts as [`Dialog`](/docs/tile/api/dialog/), plus `Popover.Anchor` to position the popover against an element other than its trigger.
+`Popover.Content` takes `arrow` to draw an arrow toward the trigger.

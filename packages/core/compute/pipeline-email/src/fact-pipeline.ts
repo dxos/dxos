@@ -98,7 +98,7 @@ export const runFactPipeline = (options: {
     // prefilter (the newest message keys equal to the advanced cursor, so `< cursorKey` alone would
     // re-extract it).
     const priorFacts = yield* store.query({}).pipe(Effect.orElseSucceed(() => []));
-    const indexedSources = new Set(priorFacts.map((fact) => fact.attribution.source));
+    const indexedSources = new Set<string>(priorFacts.map((fact) => fact.attribution.source));
 
     // NOTE(workaround): the cursor key is `message.created` (epoch-ms) because ECHO's native feed
     // cursor is unimplemented (`Feed.cursor` is stubbed). Replace with the native queue sequence when

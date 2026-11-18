@@ -19,7 +19,16 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/diagram"
+    },
+    {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
     },
     {
       "path": "../../common/graph"
@@ -32,6 +41,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/scene"
     },
     {
       "path": "../../common/util"
@@ -109,16 +121,28 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-canvas"
+    },
+    {
+      "path": "../../ui/react-ui-canvas-editor"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-markdown"
+    },
+    {
       "path": "../../ui/react-ui-masonry"
     },
     {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-search"
@@ -131,6 +155,12 @@
     },
     {
       "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-assistant"

@@ -673,6 +673,10 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
 
     if (A.equals(headsBefore, body.hostHeads)) {
       this.#hostHolds(body, A.getHeads(body.doc));
+    } else if (body.sending && A.equals(headsBefore, body.sending)) {
+      // Every local change is in flight, so its acknowledgement leaves the host holding the whole document, including a
+      // change the host made itself (EDGE's empty first change of a created document) that arrived mid-send.
+      body.sending = A.getHeads(body.doc);
     }
 
     this._wakeReady();

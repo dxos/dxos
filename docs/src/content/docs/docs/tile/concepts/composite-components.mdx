@@ -1,0 +1,54 @@
+---
+title: Composite components
+description: One namespace per component, and one part per element.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+A TILE component that has more than one element is a namespace of parts. A dialog is `Dialog.Root`, `Dialog.Trigger`,
+`Dialog.Content`, `Dialog.Title` and so on. You compose the parts in JSX, in the shape you want.
+
+## Model
+
+**One subpath, one namespace.** Each component is its own entry point of `@dxos/react-ui`, imported as a namespace:
+
+```ts
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Input from '@dxos/react-ui/Input';
+```
+
+A few namespaces group related components. `Button` holds `Root`, `Group`, `Menu` and `Toggle`. `Input` holds `Root`,
+`Checkbox`, `Switch`, `Textarea` and the other controls. `Layout` and `Status` are covered on their own API pages.
+
+**Parts.** `Root` holds the state and renders no element, or the outer one. The other parts each render one element and
+read the state from `Root` through React context. A part you leave out is not rendered: a dialog with no
+`Dialog.Description` has none.
+
+<Snippet file="tile-components" region="dialog" lang="tsx" />
+
+<TilePreview id="dialog" />
+
+**`asChild`.** A part with `asChild` renders no element of its own. It passes its props, ref and handlers to its single
+child instead. `Dialog.Trigger asChild` around a `Button.Root` makes the button the trigger, rather than a button inside
+a button.
+
+**Behavior from state machines.** The parts are built on [Ark UI](https://ark-ui.com), whose components run
+[zag](https://zagjs.com) state machines. The machine owns opening, closing, keyboard handling and the ARIA attributes,
+and each part spreads the props the machine gives it.
+
+## Behavior
+
+- ARIA roles and state attributes on interactive parts come from the machine, so don't add them to such a part. An
+  icon-only part still needs an accessible name, such as `aria-label` or a component's `label`. Layout primitives are
+  different: `Layout.Grid` defaults to `role='none'`, so give it a role such as `list` when you use it
+  with `asChild` around a list.
+- A component that can be controlled takes `open` and `onOpenChange`, or `value` and `onValueChange`, and works
+  uncontrolled when you leave them out.
+- Every part takes `classNames` for overrides. See [Theme and tokens](/docs/tile/concepts/theme-and-tokens/).
+
+## Limits
+
+- `asChild` needs exactly one child element that forwards its ref and spreads its props. A TILE component does both; a
+  plain function component that drops its props does not.
+- A part needs its `Root` above it. Outside one it has no state to read, and it fails.

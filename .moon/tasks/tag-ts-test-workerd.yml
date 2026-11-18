@@ -4,7 +4,7 @@ tasks:
     # Runs `*.workerd.test.{ts,tsx}` suites inside the Cloudflare Workers runtime
     # (`workerd`) via `@cloudflare/vitest-pool-workers`. See `createWorkerdProject`
     # in `vite.base.config.ts` for the shared project definition.
-    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=workerd
+    command: dx-killorphans vitest run --passWithNoTests --project=workerd
     deps:
       - esbuild-plugins:build
       - node-std:build

@@ -1,0 +1,16 @@
+---
+title: Select
+description: "Picks one value from a list."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/select" narrow />
+
+```ts
+import * as Select from '@dxos/react-ui/Select';
+```
+
+`Select.Root` takes `items`, a list of `{ value, label, disabled?, icon? }`, and `value` with `onValueChange`, or
+`defaultValue`. `Select.Trigger` shows the chosen label, or its `placeholder`. `Select.Content` holds one `Select.Item`
+per item, each given its `item`.

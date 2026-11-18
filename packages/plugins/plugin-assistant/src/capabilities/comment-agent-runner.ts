@@ -7,27 +7,35 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import { Filter, Obj, Query, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { AssistantOperation } from '#types';
 
-import { CommentThreadNotPersistedError } from '../errors.ts';
+import { CommentThreadNotPersistedError, ReadOnlyHostError } from '../errors.ts';
 
 /**
  * Runs a comment thread's agent turns as ordinary assistant turns: one chat per thread, parented to the thread and
  * running on the thread's own feed, with the commented object bound so its type's skills apply. A run returns once the
- * turn has settled.
+ * turn has settled, with the turn's final reply: the turn itself writes only trajectory events, which comment readers
+ * do not show.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const invoker = yield* Capabilities.OperationInvoker;
+    const manager = yield* Capability.Service;
 
     const runner: AppCapabilities.CommentAgentRunner = {
       run: ({ thread, subject, message }) =>
         Effect.gen(function* () {
+          if (ReadOnly.isActive(manager)) {
+            return yield* Effect.fail(new ReadOnlyHostError());
+          }
+
           const db = Obj.getDatabase(thread);
           if (!db) {
             return yield* Effect.fail(new CommentThreadNotPersistedError());
@@ -52,11 +60,14 @@ export default Capability.makeModule(
 
           const resolvers = yield* Capability.getAll(AppCapabilities.AnchorResolver);
           const anchorText = yield* Effect.promise(() => resolveAnchorText(thread, subject, resolvers));
+          const readMessages = TrajectoryStore.messages(feed).pipe(Effect.provide(Database.layer(db)));
+          const earlier = new Set((yield* readMessages).map(({ id }) => id));
           yield* invoker.invoke(
             AssistantOperation.RunPromptInChat,
             { chat, disposition: 'synthetic', prompt: commentPrompt({ subject, message, anchorText }), wait: true },
             { spaceId },
           );
+          return finalReply((yield* readMessages).filter(({ id }) => !earlier.has(id)));
         }),
     };
 
@@ -106,3 +117,17 @@ const commentPrompt = ({
 
 const textOf = (message: Message.Message): string =>
   message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n');
+
+/** The text of the last assistant message among a turn's messages that says something, leaving out its reasoning. */
+const finalReply = (messages: readonly Message.Message[]): string | undefined =>
+  messages
+    .filter(({ sender }) => sender.role === 'assistant')
+    .map((message) =>
+      message.blocks
+        .flatMap((block) =>
+          block._tag === 'text' && block.disposition !== 'cot' && block.disposition !== 'synthetic' ? [block.text] : [],
+        )
+        .join('\n')
+        .trim(),
+    )
+    .findLast((text) => text.length > 0);

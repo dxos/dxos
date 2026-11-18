@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { EID } from '@dxos/keys';
-import { RDF } from '@dxos/pipeline-rdf';
 
 import { BrainService, Goal, MemoryOperation, Profile } from '#types';
 
@@ -15,7 +15,7 @@ import { canonicalKey, expandKeys, identityGroups } from './identity.ts';
 import { entityKeys, knownIdentities, spaceFacts, strongEntityKeys } from './knowledge.ts';
 
 /** The names of the facts' sources that are objects in the space (documents); a chat message is a feed item, so has none. */
-const sourceNames = Effect.fnUntraced(function* (facts: readonly RDF.Fact[]) {
+const sourceNames = Effect.fnUntraced(function* (facts: readonly Fact.Fact[]) {
   const names = new Map<string, string>();
   for (const uri of new Set(facts.map(({ attribution }) => attribution.source))) {
     const eid = EID.tryParse(uri);
@@ -85,7 +85,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
       return {
         ...(queryMatched ? {} : { queryMatched: false }),
         facts: facts.map((fact) => ({
-          id: RDF.Mapping.graphOf(fact),
+          id: Fact.graphOf(fact),
           fact: BrainService.factText(fact),
           ...(fact.assertion.quote ? { quote: fact.assertion.quote } : {}),
           ...((fact.attribution.agentLabel ?? fact.attribution.agent)

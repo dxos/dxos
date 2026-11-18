@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -18,8 +18,8 @@ export type SpeechActKind = 'question' | 'request' | 'notification';
 export type SpeechAct = {
   readonly text: string;
   readonly kind: SpeechActKind;
-  readonly force: RDF.IllocutionaryForce;
-  readonly mood: NonNullable<RDF.Illocution['mood']>;
+  readonly force: Fact.IllocutionaryForce;
+  readonly mood: NonNullable<Fact.Illocution['mood']>;
 };
 
 export type QuestionResult = {

@@ -248,6 +248,7 @@ service QueryService
 
 ```mdl
 feat F-1: One engine, local views, remote sources
+  uses: [LocalQueryEngine, QueryService]
 
   req F-1.1:
     when: a live query is created
@@ -284,10 +285,16 @@ feat F-2: Local writes are synchronous
   req F-2.4:
     when: a query has no order of its own
     then: entries appear in natural order (by id), wherever each object is held
+
+  req F-2.5:
+    when: a database is told the objects of the working set it opened from (`noteWorkingSetObjects`)
+    then: they count among its unindexed writes until the next such list replaces them or it closes; a flush, which
+          waits for the index to take this client's writes, does not clear them
 ```
 
 ```mdl
 feat F-3: Characteristics and completeness
+  uses: [BranchCharacteristics, Completeness]
 
   req F-3.1:
     when: Query.characteristics(ast) is called
@@ -304,6 +311,7 @@ feat F-3: Characteristics and completeness
 
 ```mdl
 feat F-4: Versions
+  uses: [Version]
 
   req F-4.1:
     when: a remote row is sent
@@ -358,6 +366,7 @@ feat F-6: By-id queries
 
 ```mdl
 feat F-7: Traversal paths
+  uses: [PathEdge]
 
   req F-7.1:
     when: a traversal reaches a hit
@@ -421,6 +430,11 @@ feat F-9: Local ordering and windows
   req F-9.3:
     when: any other window is merged
     then: local evidence can only drop entries from it, never re-page it
+
+  req F-9.4:
+    when: a query with a limit, no skip and no order gets a remote answer shorter than the limit
+    then: loaded local matches with an unindexed write that the answer lacks are added, up to the limit; a full
+          answer, and the rest of the merge, are as without the rule
 ```
 
 ```mdl
@@ -730,4 +744,58 @@ decision D-17: Every revalidation field on the wire is optional. An old host or 
   for: user:dmaretskyi
   affects: [QueryService]
   why: The host, EDGE and clients deploy separately; optional fields keep every pairing working without a protocol version.
+```
+
+```mdl
+decision D-18: A database takes the unindexed writes of another client, and keeps them through a flush. Fills in [D-4].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.5]
+  why: |
+    EDGE runs consecutive operations of one caller as separate clients, and edge's working set hands each one the
+    objects the ones before it wrote (edge `org.dxos.edge.working-set`). A flush that waits for indexing clears only
+    this client's writes: it cannot tell when the index takes another client's.
+```
+
+```mdl
+decision D-19: A window with no order of its own admits local unindexed matches when the remote answer is short of its limit, and none when it is full. Fills in [D-4].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-9.4]
+  why: |
+    A short answer is every match the index holds, so adding the matches it has not seen yet re-pages nothing. A
+    full answer has no boundary to admit against without an order. plugin-space's `queryObjects` asks for one past
+    its limit with no order, so without this a write made by the operation before it never entered its result.
+```
+
+```mdl
+decision D-20: A query with a limit and no order is not a window: it merges as before, and a short remote answer only gains the loaded local matches with an unindexed write that it lacks. Fills in [D-4].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-9.4]
+  supersedes: D-19
+  why: |
+    Taking the window path dropped the registry's entries from every such query and, on a full answer, every local
+    entry, which changed results for every client, not only EDGE's. A review of dxos/dxos#14530 found it.
+```
+
+```mdl
+decision D-21: Each list of another client's unindexed writes replaces the one before. Fills in [D-18].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.5]
+  why: The caller's list is the whole of what its other clients wrote and the index may not hold, bounded and aged; adding to a set instead grew without bound in a database that lives as long as an agent process.
+```
+
+```mdl
+decision D-22: The objects a database counts beside its own unindexed writes are those its working set holds, not a separate list of objects another client wrote. Fills in [D-18].
+  date: 2026-11-17
+  by: user:mykola-vrmchk
+  affects: [F-2.5]
+  supersedes: D-21
+  why: The working set is a local copy of the database, as a client's boot cache is; the objects it holds are what the owner's own operations read and wrote, so they are what a query merges.
 ```

@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, URI } from '@dxos/keys';
+import { ViewState } from '@dxos/react-ui-attention/types';
 
 const NAVIGATION_PLUGIN = 'org.dxos.plugin.navigation';
 
@@ -21,6 +22,11 @@ const TargetSchema = Schema.Struct({
   path: Schema.String.annotate({ description: 'Navigation path to use with the Open operation.' }),
   label: Schema.String.annotate({ description: 'Human-readable label.' }),
   type: Schema.String.annotate({ description: 'Object type.' }),
+  viewState: Schema.optional(
+    Schema.Array(ViewState.Patch).annotate({
+      description: 'View state the target opens with; pass it to the Open operation with the path.',
+    }),
+  ),
 });
 
 /**
@@ -43,7 +49,7 @@ export const ResolveNavigationTargets = Operation.make({
     key: DXN.make('org.dxos.operation.appToolkit.resolveNavigationTargets'),
     name: 'Resolve navigation targets',
     description:
-      "Resolve a navigation path for the Open operation. Pass an object's URI (its DXN, e.g. a context object's <dxn>) as the query uri to resolve that object to its navigation target, or omit the query to list pages that can be navigated to. Targets are ordered best-first; pass the first target's path to Open.",
+      "Resolve a navigation path for the Open operation. Pass an object's URI (its DXN, e.g. a context object's <dxn>) as the query uri to resolve that object to its navigation target, or omit the query to list pages that can be navigated to. Targets are ordered best-first; pass the first target's path, and its viewState if any, to Open.",
     icon: 'ph--compass--regular',
   },
   services: [Capability.Service],

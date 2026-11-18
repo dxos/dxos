@@ -75,7 +75,7 @@ const makeScript =
     if (request.text.startsWith(COMPOSE_PROMPT)) {
       return { parts: [text(SCENARIO.composed)] };
     }
-    if (request.text.includes(EXTRACTION_PROMPT)) {
+    if (request.system.includes(EXTRACTION_PROMPT)) {
       const facts = SCENARIO.facts
         .filter(({ quote }) => request.text.includes(quote))
         .map((fact) => ({ ...fact, factuality: 'CT+', polarity: '+' }));
@@ -178,8 +178,8 @@ const watchesOn = (triggers: readonly Trigger.Trigger[], speaker: string) =>
   triggers.filter(({ when, ongoing }) => when.speaker === speaker && ongoing);
 
 describe('agent brain (local)', () => {
-  afterEach(() => {
-    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+  afterEach(async () => {
+    await brain.reset();
   });
 
   it.effect(

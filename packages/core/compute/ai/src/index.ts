@@ -8,6 +8,7 @@ export * as AiPreprocessor from './AiPreprocessor.ts';
 export * as AiService from './AiService.ts';
 export * as AiSummarizer from './AiSummarizer.ts';
 export * as AiTelemetry from './AiTelemetry.ts';
+export * as AiUsage from './AiUsage.ts';
 export * as ExtractionModel from './ExtractionModel.ts';
 export * as Model from './Model.ts';
 export * as Provider from './Provider.ts';

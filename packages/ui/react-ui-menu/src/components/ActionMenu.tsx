@@ -3,6 +3,8 @@
 //
 
 import React, {
+  type CSSProperties,
+  Fragment,
   type MouseEvent,
   type ReactNode,
   type RefObject,
@@ -94,12 +96,17 @@ const ItemIcon = ({ menu, action }: { menu: MenuActions; action: MenuAction | Me
     <Menu.ItemIcon spin={action.properties.spin} size={menu.iconSize} classNames={action.properties.iconClassNames} />
   ) : null;
 
+/** A row's indent within a menu listing a tree, added to the row's own inset. */
+const indentStyle = ({ indent }: MenuAction['properties']): CSSProperties | undefined =>
+  indent ? { paddingInlineStart: `calc(var(--dx-gap-size) * 1.5 + ${indent}rem)` } : undefined;
+
 const ActionMenuItem = ({ menu, action, group }: ActionItemProps) => {
   const item = useItemData(action.id, action.properties);
   const handleClick = useInvoke(menu, action, group);
   return (
     <Menu.Item
       item={item}
+      style={indentStyle(action.properties)}
       onClick={handleClick}
       // Picking several values from a multi-select group should not close the menu after the first.
       closeOnSelect={!isMultiSelect(group)}
@@ -118,6 +125,7 @@ const ActionCheckboxItem = ({ menu, action, group }: ActionItemProps) => {
   return (
     <Menu.CheckboxItem
       item={item}
+      style={indentStyle(action.properties)}
       // The graph owns the state: the action flips it and the item re-renders from `checked`.
       checked={!!action.properties.checked}
       onClick={handleClick}
@@ -137,6 +145,7 @@ const ActionRadioItem = ({ menu, action, group }: ActionItemProps) => {
   return (
     <Menu.RadioItem
       item={item}
+      style={indentStyle(action.properties)}
       onClick={handleClick}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
@@ -186,16 +195,19 @@ const isMenuRow = (item: MenuItem): boolean =>
     item.properties?.variant !== 'text' &&
     item.properties?.variant !== 'custom');
 
+/** A toggle group is a set of options, which a menu lists in place, ruled off from its neighbours. */
+const isOptionSet = (item: MenuItem): boolean => isMenuGroup(item) && item.properties.variant === 'toggleGroup';
+
 type Segment = { kind: 'item'; item: MenuItem } | { kind: 'radio'; id: string; actions: MenuAction[] };
 
 /**
  * Runs of checkable items in a single-select group become one radio group (Ark's radio items need one), whose value is
- * the member marked `checked`.
+ * the member marked `checked`; a `toggle` is pressed on its own (a toolbar's, collapsed into ⋮), so it stays a checkbox.
  */
 const segment = (items: MenuItem[], multiple: boolean): Segment[] =>
   items.reduce<Segment[]>((segments, item) => {
     const last = segments.at(-1);
-    if (multiple || !isCheckable(item)) {
+    if (multiple || !isCheckable(item) || item.properties.variant === 'toggle') {
       segments.push({ kind: 'item', item });
     } else if (last?.kind === 'radio') {
       last.actions.push(item);
@@ -205,6 +217,8 @@ const segment = (items: MenuItem[], multiple: boolean): Segment[] =>
     return segments;
   }, []);
 
+const isOptionSetSegment = (segment: Segment): boolean => segment.kind === 'item' && isOptionSet(segment.item);
+
 const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuItem; group?: MenuGroupContext }) => {
   if (isSeparator(item)) {
     return <Menu.Separator />;
@@ -213,6 +227,9 @@ const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuI
     // A toolbar's overflow items are already "more" in a menu, so they follow the other items rather than nest.
     if (item.id === TOOLBAR_OVERFLOW_ID) {
       return <OverflowSection menu={menu} group={item} />;
+    }
+    if (isOptionSet(item)) {
+      return <ActionMenuItems menu={menu} group={item} />;
     }
     // A graph group's properties are an open record, validated by the plugin that contributed them.
     return item.properties.variant ? (
@@ -258,7 +275,7 @@ const ActionMenuItems = ({
   const segments = useMemo(() => segment(items ?? [], isMultiSelect(group)), [items, group]);
   return (
     <>
-      {segments.map((entry) =>
+      {segments.map((entry, index) =>
         entry.kind === 'radio' ? (
           <Menu.RadioItemGroup
             key={entry.id}
@@ -271,7 +288,10 @@ const ActionMenuItems = ({
               ))}
           </Menu.RadioItemGroup>
         ) : (
-          <ActionMenuEntry key={entry.item.id} menu={menu} item={entry.item} group={group} />
+          <Fragment key={entry.item.id}>
+            {index > 0 && (isOptionSet(entry.item) || isOptionSetSegment(segments[index - 1])) && <Menu.Separator />}
+            <ActionMenuEntry menu={menu} item={entry.item} group={group} />
+          </Fragment>
         ),
       )}
     </>

@@ -11,10 +11,11 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Trigger from '@dxos/compute/Trigger';
 import { CrawlState } from '@dxos/crawler';
 import { deterministicAiService } from '@dxos/crawler/testing';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { MemoryQuery, MemoryService } from '@dxos/echo-memory';
+import * as MemorySqlite from '@dxos/echo-memory-sqlite/MemorySqlite';
 import { AccessToken, Connection } from '@dxos/link';
-import * as FactFeed from '@dxos/plugin-agent/FactFeed';
 
 import { DISCORD_SOURCE, DISCORD_USER_PROVIDER_ID } from '../constants.ts';
 import { DiscordEndpoint } from '../services/index.ts';
@@ -44,19 +45,21 @@ const credentials = Layer.succeed(Credential.CredentialsService, {
   queryCredentials: async () => [{ service: DISCORD_SOURCE, apiKey: TOKEN }],
 });
 
-const TestLayer = TestDatabaseLayer({
-  types: [AccessToken.AccessToken, Connection.Connection, CrawlState.CrawlState, FactFeed.FactItem, Trigger.Trigger],
-});
+const TestLayer = Layer.merge(
+  TestDatabaseLayer({
+    types: [AccessToken.AccessToken, Connection.Connection, CrawlState.CrawlState, Trigger.Trigger],
+  }),
+  MemorySqlite.layerMemory,
+);
 
-/** The space as a Discord OAuth sign-in leaves it, with a crawl state and fact feed. */
+/** The space as a Discord OAuth sign-in leaves it, with a crawl state. */
 const setup = Effect.gen(function* () {
   const accessToken = yield* Database.add(Obj.make(AccessToken.AccessToken, { source: DISCORD_SOURCE, token: TOKEN }));
   const connection = yield* Database.add(
     Connection.make({ connectorId: DISCORD_USER_PROVIDER_ID, accessToken: Ref.make(accessToken) }),
   );
   const state = yield* Database.add(CrawlState.make());
-  const feed = yield* Database.add(Feed.make({ name: 'facts' }));
-  return { connection, state, feed };
+  return { connection, state };
 });
 
 const directEndpoint = Layer.succeed(DiscordEndpoint, { baseUrl: FAKE_API_BASE, via: 'direct' });
@@ -64,20 +67,21 @@ const directEndpoint = Layer.succeed(DiscordEndpoint, { baseUrl: FAKE_API_BASE, 
 /** Parameterized per test: the AI stand-in records the prompts it is sent into `prompts`. */
 const crawlLayer = (prompts: string[]) => Layer.mergeAll(credentials, deterministicAiService(prompts), directEndpoint);
 
-const factItems = (feed: Feed.Feed) => Feed.query(feed, Filter.type(FactFeed.FactItem)).run;
+/** The facts in the space's memory. */
+const memoryFacts = MemoryService.MemoryService.use((memory) => memory.query(MemoryQuery.facts()));
 
 describe('CrawlDiscordChannels', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it.effect('back-indexes a channel into the fact feed, a page per model request, resumably', () =>
+  it.effect("back-indexes a channel into the space's memory, a page per model request, resumably", () =>
     Effect.gen(function* () {
       const history = new Map([[CHANNEL, [...HISTORY]]]);
       const rest = makeFakeRest(history);
       vi.stubGlobal('fetch', rest.fetch);
       const prompts: string[] = [];
-      const { connection, state, feed } = yield* setup;
+      const { connection, state } = yield* setup;
       const run = (maxSteps = 10) =>
         crawl
           .handler({
@@ -85,7 +89,6 @@ describe('CrawlDiscordChannels', () => {
             channels: [CHANNEL],
             maxSteps,
             state: Ref.make(state),
-            facts: Ref.make(feed),
           })
           .pipe(Effect.provide(crawlLayer(prompts)));
 
@@ -94,10 +97,16 @@ describe('CrawlDiscordChannels', () => {
       // The page of three messages was one model request; the OAuth token went as a bearer token.
       expect(prompts).toHaveLength(1);
       expect(rest.calls.every(({ authorization }) => authorization === `Bearer ${TOKEN}`)).toBe(true);
-      const items = yield* factItems(feed);
-      expect(items.length).toBeGreaterThan(0);
+      const facts = yield* memoryFacts;
+      expect(facts.length).toBeGreaterThan(0);
+      // Facts cite the message they came from, except each author's profile, which cites the user.
       const sources = new Set(HISTORY.map(({ id }) => `discord:${id}`));
-      expect(items.every(({ fact }) => sources.has(fact.attribution.source))).toBe(true);
+      const profiles = facts.filter((fact) => fact.extractor.id === 'agent-registry');
+      expect(profiles.length).toBeGreaterThan(0);
+      expect(profiles.every((fact) => fact.attribution.source.startsWith('https://discord.com/users/'))).toBe(true);
+      expect(
+        facts.filter((fact) => !profiles.includes(fact)).every((fact) => sources.has(fact.attribution.source)),
+      ).toBe(true);
       expect(CrawlState.listTargets(state)).toEqual([
         expect.objectContaining({ id: CHANNEL, status: 'done', cursor: HISTORY.at(-1)?.id }),
       ]);
@@ -112,11 +121,11 @@ describe('CrawlDiscordChannels', () => {
       expect(prompts).toHaveLength(2);
 
       // A reset re-reads the whole channel, and the unchanged messages cost no model request.
-      const extracted = (yield* factItems(feed)).length;
+      const extracted = (yield* memoryFacts).length;
       Obj.update(state, (state) => CrawlState.resetTargets(state));
       expect(yield* run()).toMatchObject({ done: true, messages: HISTORY.length + 1 });
       expect(prompts).toHaveLength(2);
-      expect((yield* factItems(feed)).length).toBe(extracted);
+      expect((yield* memoryFacts).length).toBe(extracted);
       expect(state.messages).toBe(2 * HISTORY.length + 2);
     }).pipe(Effect.provide(TestLayer)),
   );
@@ -128,14 +137,13 @@ describe('CrawlDiscordChannels', () => {
       );
       vi.stubGlobal('fetch', makeFakeRest(new Map([[CHANNEL, many]])).fetch);
       const prompts: string[] = [];
-      const { connection, state, feed } = yield* setup;
+      const { connection, state } = yield* setup;
       const run = crawl
         .handler({
           connection: Ref.make(connection),
           channels: [CHANNEL],
           maxSteps: 1,
           state: Ref.make(state),
-          facts: Ref.make(feed),
         })
         .pipe(Effect.provide(crawlLayer(prompts)));
 
@@ -151,13 +159,12 @@ describe('CrawlDiscordChannels', () => {
 
   it.effect('records a failure in the crawl state instead of failing', () =>
     Effect.gen(function* () {
-      const { connection, state, feed } = yield* setup;
+      const { connection, state } = yield* setup;
       const result = yield* crawl
         .handler({
           connection: Ref.make(connection),
           channels: [CHANNEL],
           state: Ref.make(state),
-          facts: Ref.make(feed),
         })
         .pipe(
           Effect.provide(
@@ -180,7 +187,7 @@ describe('CrawlDiscordChannels', () => {
 });
 
 describe('ConfigureBackIndex', () => {
-  it.effect('creates the crawl state, fact feed and remote timer trigger, then reconfigures them in place', () =>
+  it.effect('creates the crawl state and remote timer trigger, then reconfigures them in place', () =>
     Effect.gen(function* () {
       const { connection } = yield* setup;
       const created = yield* configureBackIndex.handler({
@@ -202,7 +209,6 @@ describe('ConfigureBackIndex', () => {
         enabled: false,
       });
       expect((yield* Database.load(updated.state)).id).toBe(state.id);
-      expect((yield* Database.load(updated.facts)).id).toBe((yield* Database.load(created.facts)).id);
       expect(trigger).toMatchObject({ enabled: false, spec: { kind: 'timer', cron: '*/5 * * * *' } });
       expect(trigger.input?.channels).toEqual(['c2', 'c3']);
       expect(CrawlState.listTargets(state).map(({ id }) => id)).toEqual(['c2', 'c3']);

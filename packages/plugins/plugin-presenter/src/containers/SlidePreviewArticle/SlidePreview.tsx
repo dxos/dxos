@@ -7,12 +7,12 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
 import { useObject } from '@dxos/echo-react';
+import { hasSlots, parseSlide, slotAtOffset, stepAtOffset } from '@dxos/react-ui-slides';
 import { type Text } from '@dxos/schema';
 
 import { Slide, SlideThemeProvider } from '#components';
 import { type SlideSource, slideSourcesAtom } from '#deck';
 import { slideEditorSyncAtom, useDeckTheme } from '#hooks';
-import { hasSlots, parseSlide, slotAtOffset, stepAtOffset } from '#markdown';
 import { Presentation } from '#types';
 
 /** Stands in for the deck of a slide with no presentation. */
@@ -58,7 +58,8 @@ export const SlidePreview = ({ subject }: SlidePreviewProps) => {
           activeSlot={activeSlot}
           onSourceClick={handleSourceClick}
         >
-          <Slide.Frame inset>
+          {/* The panel is part of Composer, not a projection, so its scrim is the app's rather than the deck's. */}
+          <Slide.Frame inset scrim='var(--color-scrim-surface)'>
             <Slide.Content />
           </Slide.Frame>
         </Slide.Root>

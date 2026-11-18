@@ -152,6 +152,7 @@
     "@dxos/crawler": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -179,6 +180,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-memory-sqlite": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -187,6 +189,7 @@
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "fast-xml-parser": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

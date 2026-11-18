@@ -8,6 +8,7 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
+import { getEnvString } from '@dxos/config';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import type * as Observability from '@dxos/observability/Observability';
 import * as AtprotoPlugin from '@dxos/plugin-atproto/AtprotoPlugin';
@@ -40,6 +41,12 @@ import { isTruthy } from '@dxos/util';
 import { downloadLogs } from './util/index.ts';
 
 const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
+
+const viewerOriginOf = (origin: string): string => {
+  const url = new URL(origin);
+  url.hostname = `view.${url.hostname}`;
+  return url.origin;
+};
 
 export type State = {
   appKey: string;
@@ -156,6 +163,10 @@ export const getCorePlugins = ({
       shareableLinkOrigin: origin,
       // plugin-onboarding owns invitation URL params in Composer.
       invitationUrlHandler: false,
+      publication: {
+        viewerOrigin: getEnvString(config, 'DX_VIEWER_URL') ?? viewerOriginOf(origin),
+        publicationsUrl: getEnvString(config, 'DX_PUBLICATIONS_URL'),
+      },
     }),
     StatusBarPlugin.make(),
     SupportPlugin.make({ helpSteps: () => import('./util/help.ts').then(({ steps }) => steps) }),

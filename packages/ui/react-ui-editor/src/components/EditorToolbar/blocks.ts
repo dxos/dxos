@@ -9,6 +9,7 @@ import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeb
 
 import { translationKey } from '#translations';
 
+import { isReadonly } from './readonly.ts';
 import { type EditorToolbarState } from './types.ts';
 
 const blockTypes = {
@@ -26,11 +27,11 @@ export const addBlocks =
       'block',
       {
         label: ['block.label', { ns: translationKey }],
-        placement: { collapse: 2 },
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'single',
         value,
+        disabled: isReadonly(state),
       } as ToolbarMenuActionGroupProperties,
       (group) => {
         for (const [type, icon] of Object.entries(blockTypes)) {
@@ -42,7 +43,7 @@ export const addBlocks =
               checked,
               // A table replaces the line it lands on, so it is offered on a blank one and withheld
               // where it would clobber content — the condition was inverted.
-              ...(type === 'table' && { disabled: !state.blankLine }),
+              disabled: isReadonly(state) || (type === 'table' && !state.blankLine),
               icon,
             },
             () => {

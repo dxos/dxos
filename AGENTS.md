@@ -221,13 +221,13 @@ is invisible there until something publishes it.
 
 - **When both repos are checked out, link locally — never publish to see your own change.** From the
   edge checkout: `pnpm link-packages` (`scripts/link-packages.mjs ../dxos --all --install`) packs this
-  workspace and installs it over `pnpm.overrides` `file:` entries. It is faster than a publish round
+  workspace and installs it over `file:` entries in the `overrides` of edge's `pnpm-workspace.yaml`. It is faster than a publish round
   trip, depends on no external service, and picks up an export or subpath that does not exist in any
   published build yet — which is exactly the inner loop for a feature spanning both repos.
 - Do not dispatch `.github/workflows/pkg-pr-new.yml` to unblock local work. A pinned build is for a
   commit someone else consumes (a catalog bump, edge CI), not for iterating. It publishes `main` once a
   day (06:00 UTC); to bump edge to a commit that landed since, dispatch it first.
-- The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
+- The `file:` overrides live in edge's `pnpm-workspace.yaml` and must not be committed there; edge's
   `CLAUDE.md` covers the undo.
 - **Skills edge shares live here.** edge installs them with `npx skills` (recorded in its
   `skills-lock.json`), so change a skill here, never in edge's copy; a skill folder holds no

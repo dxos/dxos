@@ -5,9 +5,19 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact, Graph, Ontology, Vocab } from '@dxos/echo-memory';
 import { Editor } from '@dxos/react-ui-editor';
 import { Masonry } from '@dxos/react-ui-masonry';
+import {
+  EntityBrowser,
+  EntityCard,
+  type EntityCardModel,
+  TRIG_PREFIXES,
+  curie,
+  formatNamedGraphs,
+  formatRawFact,
+  toEntityCards,
+} from '@dxos/react-ui-rdf';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -25,10 +35,6 @@ import {
   type AgentKnowledgeGoal,
   type AgentKnowledgeView,
 } from './AgentKnowledge.tsx';
-import { EntityBrowser } from './EntityBrowser.tsx';
-import { EntityCard } from './EntityCard.tsx';
-import { type EntityCardModel, toEntityCards } from './subgraph.ts';
-import { TRIG_PREFIXES, curie, formatNamedGraphs, formatRawFact } from './trig.ts';
 
 const hoursAgo = (hours: number) => new Date(NOW.getTime() - hours * 3_600_000).toISOString();
 
@@ -40,7 +46,7 @@ const FACTS: AgentKnowledgeFact[] = [
     source: 'CI triage',
     speaker: 'dima',
     saidAt: hoursAgo(2),
-    fact: {
+    fact: Fact.make({
       id: 'f1',
       assertion: {
         subject: { kind: 'entity', entity: 'dima', label: 'Dima' },
@@ -53,7 +59,7 @@ const FACTS: AgentKnowledgeFact[] = [
       recordedAt: hoursAgo(2),
       extractor: { id: 'read-source', model: 'claude-haiku-5-5', version: '1' },
       sourceHash: '3f2a9c',
-    },
+    }),
   },
   {
     id: 'f2',
@@ -100,24 +106,25 @@ const SPACE = 'BBW5ANOFUMCIHWGKE2W3JFTXJUOATRJKF';
 
 const rdfFact = (
   id: string,
-  [subject, predicate, object]: readonly [RDF.Term, string, RDF.Term],
-  provenance: Pick<RDF.Fact['assertion'], 'quote'> & { source: string; agent?: string; at: string; hash: string },
-): RDF.Fact => ({
-  id,
-  assertion: { subject, predicate, object, quote: provenance.quote },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: provenance.source, agent: provenance.agent, generatedAtTime: provenance.at },
-  recordedAt: provenance.at,
-  extractor: { id: 'default', model: 'claude-haiku-5-5', version: '1' },
-  sourceHash: provenance.hash,
-});
+  [subject, predicate, object]: readonly [Fact.Term, string, Fact.Term],
+  provenance: Pick<Fact.Fact['assertion'], 'quote'> & { source: string; agent?: string; at: string; hash: string },
+): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: { subject, predicate, object, quote: provenance.quote },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: provenance.source, agent: provenance.agent, generatedAtTime: provenance.at },
+    recordedAt: provenance.at,
+    extractor: { id: 'default', model: 'claude-haiku-5-5', version: '1' },
+    sourceHash: provenance.hash,
+  });
 
-const entity = (id: string, label?: string): RDF.Term => ({ kind: 'entity', entity: id, label });
+const entity = (id: string, label?: string): Fact.Term => ({ kind: 'entity', entity: Fact.EntityKey.make(id), label });
 const slugOf = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
 
 /** One roster sentence read from the team page (two statements, one provenance) and a line Dima said in CI triage. */
 const ROSTER = { source: 'https://dxos.org/team', at: hoursAgo(30), hash: 'e7f0d44f' };
-const RDF_FACTS: RDF.Fact[] = [
+const RDF_FACTS = Fact.makeMany([
   rdfFact('team-1', [entity('rich-burdon', 'Rich Burdon'), 'is-a', entity('founder', 'Founder')], {
     ...ROSTER,
     quote: 'Rich Burdon (Rich) is on the DXOS team as Founder',
@@ -133,7 +140,7 @@ const RDF_FACTS: RDF.Fact[] = [
     hash: '3f2a9c',
     quote: 'I own the indexer',
   }),
-];
+]);
 
 /** What the extractor could resolve: people and the team to ECHO objects; roles and the indexer stay graph-scoped. */
 const RESOLVED = {
@@ -187,7 +194,7 @@ const NamedGraphsStory = () => {
 /** The graph around one researcher, as facts read from a profile page and a lab roster. */
 const PROFILE = { source: 'https://example.com/alice', at: hoursAgo(5), hash: 'a11ce' };
 const COLLEAGUES = ['Bob', 'Carol', ...Array.from({ length: 12 }, (_, index) => `Colleague ${index + 1}`)];
-const PROFILE_FACTS: RDF.Fact[] = [
+const PROFILE_FACTS = Fact.makeMany([
   rdfFact('p-1', [entity('alice', 'Alice Chen'), 'works at', entity('acme', 'Acme')], PROFILE),
   ...COLLEAGUES.map((name, index) =>
     rdfFact(`p-knows-${index}`, [entity('alice', 'Alice Chen'), 'knows', entity(slugOf(name), name)], PROFILE),
@@ -200,7 +207,7 @@ const PROFILE_FACTS: RDF.Fact[] = [
   // Literal objects are not entities: the card counts them and the browser opens them as statements.
   rdfFact('p-7', [entity('alice', 'Alice Chen'), 'has role', { kind: 'literal', literal: 'indexing lead' }], PROFILE),
   rdfFact('p-8', [entity('alice', 'Alice Chen'), 'prefers', { kind: 'literal', literal: 'async reviews' }], PROFILE),
-];
+]);
 
 const CARD_OPTIONS = {
   types: {
@@ -284,7 +291,7 @@ type StoryProps = {
 };
 
 /** The seed vocabulary, as the Predicates view lists it for a brain that has minted nothing yet. */
-const SEED = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace('story-agent'));
+const SEED = Ontology.DEFAULT.withNamespace(Vocab.brainNamespace('story-agent'));
 const PREDICATES = SEED.entries.map((entry) => ({
   iri: entry.iri,
   curie: curie(entry.iri, SEED.namespace),
@@ -302,7 +309,7 @@ const DefaultStory = ({ scenario, defaultView, brain }: StoryProps) => {
     <AgentKnowledge.Root defaultView={defaultView} brain={brain}>
       <AgentKnowledge.Facts facts={scenario === 'empty' ? [] : FACTS} now={NOW} />
       <AgentKnowledge.Entities cards={scenario === 'empty' ? [] : ENTITY_CARDS} />
-      <AgentKnowledge.Predicates predicates={PREDICATES} trig={RDF.Graph.ontologyToTriG(SEED)} />
+      <AgentKnowledge.Predicates predicates={PREDICATES} trig={Graph.ontologyToTriG(SEED)} />
       <AgentKnowledge.Goals goals={scenario === 'empty' ? [] : GOALS} />
       <AgentKnowledge.Graph nodes={nodes} edges={edges} />
     </AgentKnowledge.Root>
