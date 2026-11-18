@@ -213,6 +213,23 @@ describe('dsl round trip', () => {
     expect(roundTrip(source)).toEqual(source);
   });
 
+  test('an arrow states the path it runs, and reads it back', ({ expect }) => {
+    // The canvas has had orthogonal links all along; what the text could not say was which one a connector is.
+    const source = [
+      'object A @ 0,0 {',
+      '  rect a 0,0 10x10',
+      '  rect b 100,0 10x10',
+      '  arrow a-b a -> b path=ortho',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const arrow = toScene(commands).objects[0].elements.find((element) => element.kind === 'arrow');
+    expect(arrow?.kind === 'arrow' && arrow.path).toEqual('ortho');
+    expect(roundTrip(source)).toEqual(source);
+  });
+
   test('a flat `parent` is read, and printed back as nesting', ({ expect }) => {
     // Accepting both costs nothing and a program patching one attribute to reparent a box is a real use; there is
     // still only ONE canonical output, which is what the round trip is proved against.

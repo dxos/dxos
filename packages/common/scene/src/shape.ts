@@ -211,6 +211,14 @@ export const Text = Schema.Struct({
 export type Text = Schema.Schema.Type<typeof Text>;
 
 /** UML-style end markers: the head sits at the target, the tail at the source. */
+/**
+ * How a connector runs between its ends, as the canvas's link variants name it: `smart` (the default) leaves each
+ * port along its normal and joins the two, `ortho` turns at right angles, `line` runs straight and `curve` bends.
+ * `spline` is left out: its shape is its control points, which an arrow has no spelling for.
+ */
+export const Path = Schema.Literals(['smart', 'ortho', 'line', 'curve']);
+export type Path = Schema.Schema.Type<typeof Path>;
+
 export const ArrowHead = Schema.Literals(['arrow', 'triangle', 'crowsfoot', 'none']);
 export type ArrowHead = Schema.Schema.Type<typeof ArrowHead>;
 export const ArrowTail = Schema.Literals(['none', 'circle', 'arrow']);
@@ -292,6 +300,9 @@ export const Arrow = Schema.Struct({
    * moment the drawing was written down and snapped back to a straight run.
    */
   route: Schema.optional(Schema.Array(Point)).annotate({ description: "The connector's route, ends included." }),
+  path: Schema.optional(Path).annotate({
+    description: 'How the connector runs between its ends (default `smart`).',
+  }),
   relation: Schema.optional(Relation).annotate({
     description:
       'What the connector means; sets its markers: inheritance and implementation (hollow triangle at the target), composition and aggregation (filled or hollow diamond at the source, the whole), one-to-many (bar at the source, crow’s foot at the target), many-to-many, dependency (dashed, open arrow), association.',

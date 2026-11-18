@@ -217,6 +217,7 @@ export const formatElement = (element: Shape.Element, { nested = false }: { nest
         ...formatAttrs('arrow', {
           head: element.head,
           tail: element.tail,
+          path: element.path,
           relation: element.relation,
           ...style(element),
         }),

@@ -1,19 +1,23 @@
 object chat @ 0,0 scale=1 {
-  grid slide 0,0 1600x880 gap=64 padding=48 {
-    grid agent-body cols=3 gap=64 {
-      grid agent-col-0 gap=32 autoRows=128 alignContent=center {
+  grid slide 0,0 1600x880 rows="128 320 128" gap=64 padding=48 alignContent=center {
+    grid operator-row autoCols=384 justifyContent=center {
+      rect operator "Operator" kind=card icon=user
+    }
+    grid agent-body cols="384 384 384" gap=64 justifyContent=center {
+      grid agent-col-0 gap=64 autoRows=128 {
         rect skill "Skill" kind=card icon=graduation-cap
+        rect tool "Tool" kind=card icon=wrench
       }
-      grid agent-col-1 gap=32 autoRows=128 alignContent=center {
-        rect operator "Operator" kind=card icon=user
+      grid agent-col-1 gap=64 autoRows=128 {
         rect feed "Feed" kind=card icon=queue
         rect session "Session" kind=card icon=play-circle
-        rect tool "Tool" kind=card icon=wrench
-        rect artifact "Artifact" kind=card icon=cube
       }
-      grid agent-col-2 gap=32 autoRows=128 alignContent=center {
+      grid agent-col-2 gap=64 autoRows=128 {
         rect model-box "Model" kind=card icon=cpu
       }
+    }
+    grid artifact-row autoCols=384 justifyContent=center {
+      rect artifact "Artifact" kind=card icon=cube
     }
   }
   arrow operator-feed operator -> feed "writes" head=triangle

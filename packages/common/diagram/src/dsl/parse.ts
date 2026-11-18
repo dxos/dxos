@@ -495,6 +495,7 @@ export const read = (text: string): Reading => {
           ...(route.length ? { route } : {}),
           ...optional('head', enumAttr(attrs, 'head', Shape.ArrowHead.literals)),
           ...optional('tail', enumAttr(attrs, 'tail', Shape.ArrowTail.literals)),
+          ...optional('path', enumAttr(attrs, 'path', Shape.Path.literals)),
           ...optional('relation', enumAttr(attrs, 'relation', Shape.Relation.literals)),
           ...style,
         };

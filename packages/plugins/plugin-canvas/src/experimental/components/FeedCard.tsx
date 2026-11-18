@@ -35,7 +35,19 @@ export type Styled = CSSProperties & Record<`--${string}`, string>;
  * so the field is a select rather than free text and every value resolves to a token that follows the mode — a
  * sidecar's `var(--t-trip)` is mapped to `trip` when a slide is loaded.
  */
-export const TONES = ['accent', 'ink', 'event', 'message', 'file', 'trip', 'sheet'] as const;
+export const TONES = [
+  'accent',
+  'ink',
+  'event',
+  'message',
+  'file',
+  'trip',
+  'sheet',
+  'violet',
+  'teal',
+  'lime',
+  'rose',
+] as const;
 
 /** The most blocks a feed strip draws. The field is a form input, so an unbounded count would be rendered. */
 export const FEED_BLOCKS_MAX = 50;
@@ -50,6 +62,10 @@ const TONE_TOKENS: Record<Tone, string> = {
   file: 'var(--sd-t-file)',
   trip: 'var(--sd-t-trip)',
   sheet: 'var(--sd-t-sheet)',
+  violet: 'var(--sd-t-violet)',
+  teal: 'var(--sd-t-teal)',
+  lime: 'var(--sd-t-lime)',
+  rose: 'var(--sd-t-rose)',
 };
 
 /** The token a tone draws in; an unknown name draws nothing rather than an unresolved colour. */

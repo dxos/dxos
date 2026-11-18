@@ -130,6 +130,7 @@ export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
   arrow: [
     { name: 'head', type: 'enum', values: Shape.ArrowHead.literals },
     { name: 'tail', type: 'enum', values: Shape.ArrowTail.literals },
+    { name: 'path', type: 'enum', values: Shape.Path.literals },
     { name: 'relation', type: 'enum', values: Shape.Relation.literals },
     ...STYLE,
   ],

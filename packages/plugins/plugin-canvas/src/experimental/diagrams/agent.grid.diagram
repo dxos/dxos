@@ -1,51 +1,36 @@
 object agent @ 0,0 scale=1 {
-  grid slide 0,0 1600x880 gap=64 padding=48 {
+  grid slide 0,0 1600x880 gap=32 padding=48 {
     grid layer-ui-section rows="48 1fr" gap=16 {
       rect layer-ui-heading "UI / Control" fill=none border=false align=center valign=middle fontSize=34
-      grid layer-ui-body cols=3 gap=64 {
-        grid layer-ui-col-0 gap=16 {
-          rect goal "Goal" kind=card icon=target
-          rect project "Project" kind=card icon=folder
-        }
-        grid layer-ui-col-1 gap=16
-        grid layer-ui-col-2 gap=16 {
-          rect outcome "Outcome" kind=card icon=trophy
-          rect task "Task" kind=card icon=check-square
-        }
+      grid layer-ui-body cols="384 384 384" rows=2 gap=48 justifyContent=center {
+        rect goal "Goal" kind=card icon=target
+        rect ui-centre-0 fill=none border=false
+        rect outcome "Outcome" kind=card icon=trophy
+        rect project "Project" kind=card icon=folder
+        rect ui-centre-1 fill=none border=false
+        rect task "Task" kind=card icon=check-square
       }
     }
     grid layer-activity-section rows="48 1fr" gap=16 {
       rect layer-activity-heading "Activity" fill=none border=false align=center valign=middle fontSize=34
-      grid layer-activity-body cols=3 gap=64 {
-        grid layer-activity-col-0 gap=16 {
-          rect feed "Feed" kind=card icon=queue
-          rect scheduler "Scheduler" kind=card icon=alarm
-        }
-        grid layer-activity-col-1 gap=16 {
-          rect session "Session" kind=card icon=play-circle
-          rect tool "Tool" kind=card icon=wrench
-        }
-        grid layer-activity-col-2 gap=16 {
-          rect model "Model" kind=card icon=cpu
-          rect plan "Plan" kind=card icon=list-numbers
-        }
+      grid layer-activity-body cols="384 384 384" rows=2 gap=48 justifyContent=center {
+        rect feed "Feed" kind=card icon=queue
+        rect session "Session" kind=card icon=play-circle
+        rect model "Model" kind=card icon=cpu
+        rect scheduler "Scheduler" kind=card icon=alarm
+        rect tool "Tool" kind=card icon=wrench
+        rect plan "Plan" kind=card icon=list-numbers
       }
     }
     grid layer-knowledge-section rows="48 1fr" gap=16 {
       rect layer-knowledge-heading "Knowledge" fill=none border=false align=center valign=middle fontSize=34
-      grid layer-knowledge-body cols=3 gap=64 {
-        grid layer-knowledge-col-0 gap=16 {
-          rect memory "Memory" kind=card icon=brain
-          rect schema "Schema" kind=card icon=brackets-curly
-        }
-        grid layer-knowledge-col-1 gap=16 {
-          rect graph "Graph" kind=card icon=graph
-          rect artifact "Artifact" kind=card icon=cube
-        }
-        grid layer-knowledge-col-2 gap=16 {
-          rect skill "Skill" kind=card icon=graduation-cap
-          rect spec "Specification" kind=card icon=clipboard-text
-        }
+      grid layer-knowledge-body cols="384 384 384" rows=2 gap=48 justifyContent=center {
+        rect memory "Memory" kind=card icon=brain
+        rect graph "Graph" kind=card icon=graph
+        rect skill "Skill" kind=card icon=graduation-cap
+        rect schema "Schema" kind=card icon=brackets-curly
+        rect artifact "Artifact" kind=card icon=cube
+        rect spec "Specification" kind=card icon=clipboard-text
       }
     }
   }

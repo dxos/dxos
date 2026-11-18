@@ -1,5 +1,5 @@
 object ontology @ 0,0 scale=1 {
-  grid slide 0,0 1600x880 cols="256 880 256" gap=56 padding=48 {
+  grid slide 0,0 1600x880 cols="256 928 256" gap=32 padding=48 {
     grid types-section rows="48 1fr" gap=16 {
       rect types-heading "Types" fill=none border=false align=center valign=middle fontSize=34
       grid types-body gap=24 {
@@ -14,7 +14,7 @@ object ontology @ 0,0 scale=1 {
     }
     grid entities-section rows="48 1fr" gap=16 {
       rect entities-heading "Entities" fill=none border=false align=center valign=middle fontSize=34
-      grid entities-body cols=3 gap=56 {
+      grid entities-body cols=3 gap=56 padding=24 border=true {
         grid entities-col-0 gap=16 autoRows=88 alignContent=center {
           rect project "Project" kind=card icon=folder
           rect group-box "Group" kind=card icon=users-three

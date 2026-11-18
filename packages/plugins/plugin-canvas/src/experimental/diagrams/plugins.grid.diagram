@@ -1,39 +1,41 @@
 object plugins @ 0,0 scale=1 {
   grid slide 0,0 1600x880 gap=64 padding=48 {
     grid contributions-section rows="224 504" gap=56 {
-      rect plugin "Plugin" kind=card body="modules load lazily on activation events, in the browser, Node, desktop (Tauri) or at the EDGE (workerd)." footer="106 plugins in dxos/dxos" icon=puzzle-piece
+      grid plugin-row autoCols=512 justifyContent=center {
+        rect plugin "Plugin" kind=card body="modules load lazily on activation events, in the browser, Node, desktop (Tauri) or at the EDGE (workerd)." footer="106 plugins in dxos/dxos" icon=puzzle-piece
+      }
       grid contributions-body cols=5 gap=56 {
-        grid contributions-col-0 gap=56 autoRows=224 {
+        grid contributions-col-0 rows="352 96" gap=56 {
           rect types "Types" kind=card body="Effect Schema types, registered with ECHO." footer="schema · 66" icon=brackets-curly
           rect use-types "ECHO" kind=card icon=database
         }
-        grid contributions-col-1 gap=56 autoRows=224 {
+        grid contributions-col-1 rows="352 96" gap=56 {
           rect skills "Skills" kind=card body="Operations offered to agents as tools." footer="skillDefinition · 41" icon=robot
           rect use-skills "Agents" kind=card icon=sparkle
         }
-        grid contributions-col-2 gap=56 autoRows=224 {
+        grid contributions-col-2 rows="352 96" gap=56 {
           rect components "Components" kind=card body="React surfaces bound to roles: article, card, section." footer="surface · 88" icon=squares-four
           rect use-components "Surface" kind=card icon=app-window
         }
-        grid contributions-col-3 gap=56 autoRows=224 {
+        grid contributions-col-3 rows="352 96" gap=56 {
           rect operations "Operations" kind=card body="Typed operations with input and output schemas." footer="operationHandler · 81" icon=function
           rect use-operations "UI · agents · MCP" kind=card icon=plugs-connected
         }
-        grid contributions-col-4 gap=56 autoRows=224 {
+        grid contributions-col-4 rows="352 96" gap=56 {
           rect services "Services" kind=card body="Effect services that run at the EDGE (workerd)." footer="layerSpec · 11" icon=cloud
           rect use-services "EDGE" kind=card icon=cloud
         }
       }
     }
   }
-  arrow plugin-types plugin -> types head=triangle
-  arrow plugin-skills plugin -> skills head=triangle
-  arrow plugin-components plugin -> components head=triangle
-  arrow plugin-operations plugin -> operations head=triangle
-  arrow plugin-services plugin -> services head=triangle
-  arrow use-types-types use-types -> types head=triangle
-  arrow use-skills-skills use-skills -> skills head=triangle
-  arrow use-components-components use-components -> components head=triangle
-  arrow use-operations-operations use-operations -> operations head=triangle
-  arrow use-services-services use-services -> services head=triangle
+  arrow plugin-types plugin#s3 -> types#n3 path=ortho head=triangle
+  arrow plugin-skills plugin#s3 -> skills#n3 path=ortho head=triangle
+  arrow plugin-components plugin#s3 -> components#n3 path=ortho head=triangle
+  arrow plugin-operations plugin#s3 -> operations#n3 path=ortho head=triangle
+  arrow plugin-services plugin#s3 -> services#n3 path=ortho head=triangle
+  arrow use-types-types use-types#n3 -> types#s3 path=ortho head=triangle
+  arrow use-skills-skills use-skills#n3 -> skills#s3 path=ortho head=triangle
+  arrow use-components-components use-components#n3 -> components#s3 path=ortho head=triangle
+  arrow use-operations-operations use-operations#n3 -> operations#s3 path=ortho head=triangle
+  arrow use-services-services use-services#n3 -> services#s3 path=ortho head=triangle
 }
