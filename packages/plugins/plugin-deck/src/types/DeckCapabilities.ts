@@ -54,11 +54,6 @@ export const Projection = Capability.makeSingleton<FiberHandle.FiberHandle<strin
   `${DeckNamespace.key}.capability.projection`,
 );
 
-/** Holds the boot loader while the action the boot URL names runs, so the page first shows what the action leaves. */
-export const LinkActionGate = Capability.makeSingleton<Atom.Writable<Capabilities.BootGateState>>()(
-  `${DeckNamespace.key}.capability.linkActionGate`,
-);
-
 /**
  * The active workspace's deck: its persisted preferences, plus what the URL says is open. The two
  * live in different atoms because only one of them is the deck's to remember.

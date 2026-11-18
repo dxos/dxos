@@ -18,16 +18,16 @@ const LINK_ACTION_BUDGET = '10 seconds';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
-    const gate = Atom.make<Capabilities.BootGateState>({
-      pending: !!globalThis.location && new URL(globalThis.location.href).searchParams.has(LinkAction.PARAM),
-    }).pipe(Atom.keepAlive);
+    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
+    const linked = !!globalThis.location && new URL(globalThis.location.href).searchParams.has(LinkAction.PARAM);
+    const expired = Atom.make(false).pipe(Atom.keepAlive);
+    const state = Atom.make<Capabilities.BootGateState>((get) => ({
+      pending: linked && !get(expired) && !get(ephemeralAtom).restored,
+    })).pipe(Atom.keepAlive);
     yield* Effect.forkScoped(
-      Effect.sleep(LINK_ACTION_BUDGET).pipe(Effect.andThen(Effect.sync(() => registry.set(gate, { pending: false })))),
+      Effect.sleep(LINK_ACTION_BUDGET).pipe(Effect.andThen(Effect.sync(() => registry.set(expired, true)))),
     );
 
-    return [
-      Capability.contribute(Capabilities.BootGate, { id: `${DeckNamespace.key}.bootGate.linkAction`, state: gate }),
-      Capability.contribute(DeckCapabilities.LinkActionGate, gate),
-    ];
+    return Capability.contribute(Capabilities.BootGate, { id: `${DeckNamespace.key}.bootGate.linkAction`, state });
   }),
 );

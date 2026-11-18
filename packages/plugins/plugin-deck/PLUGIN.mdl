@@ -1173,6 +1173,23 @@ decision D-23: The boot gate comes from its own startup-pass module, `LinkAction
   why: The gate shares nothing with the deck's state but the startup pass, so a module of its own says why it activates there.
 ```
 
+```mdl
+decision D-24: The URL handler records in the deck's ephemeral state that the boot URL has been projected, and the link-action gate reads that state to release itself, as the app's other boot gates do; the gate is no longer a capability the URL handler writes.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-5.5]
+  supersedes: D-23
+```
+
+```mdl
+decision D-25: The ephemeral field is an optional `restored` flag, set once the URL handler's first projection ends, whether or not it ran an action. The gate module keeps the 10-second budget in an atom of its own. Fills in [D-24].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: An optional field leaves every existing ephemeral state valid. The budget expiring does not mean the URL was projected, so it does not write `restored`.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using

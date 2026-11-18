@@ -84,8 +84,8 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
         'LinkActionGate',
         {
           activatesOn: ActivationEvents.Startup,
-          requires: [Capabilities.AtomRegistry],
-          provides: [Capabilities.BootGate, DeckCapabilities.LinkActionGate],
+          requires: [Capabilities.AtomRegistry, DeckCapabilities.EphemeralState],
+          provides: [Capabilities.BootGate],
         },
         () => import('./src/capabilities/link-action-gate.ts', { with: { type: 'module-url' } }),
       ),
@@ -157,7 +157,6 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
             AppCapabilities.AppGraph,
             AttentionCapabilities.ViewState,
             AttentionCapabilities.Attention,
-            DeckCapabilities.LinkActionGate,
           ],
           provides: [],
         },

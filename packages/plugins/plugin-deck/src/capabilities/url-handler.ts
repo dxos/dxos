@@ -77,12 +77,12 @@ export default Capability.makeModule(
     }
 
     const registry = yield* Capabilities.AtomRegistry;
-    const linkActionGate = yield* DeckCapabilities.LinkActionGate;
-    const release = Effect.sync(() => registry.set(linkActionGate, { pending: false }));
+    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
+    const restored = Effect.sync(() => registry.set(ephemeralAtom, { ...registry.get(ephemeralAtom), restored: true }));
 
     // Forked because this module sits on the startup pass: the restore can wait for late-arriving
     // URL keys, and awaiting it here would hold the whole pass, and the boot loader with it.
-    yield* Effect.forkScoped(project().pipe(Effect.ensuring(release)));
+    yield* Effect.forkScoped(project().pipe(Effect.ensuring(restored)));
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
