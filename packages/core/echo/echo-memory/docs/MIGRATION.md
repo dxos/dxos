@@ -64,12 +64,14 @@ two together over native SQLite for the CLI and tests. The package depends on no
       `FeedStore`; export and import are formed in the host [F-9.1, F-10].
 - [x] `client.rdf(spaceId)` (`createRpcRdfStore`) and `client.memory(spaceId)` (`createRpcMemory`) over the bridge;
       the memory itself runs in the host, one per space (`SpaceMemories`) [F-9.1, F-9.9, D-50].
-- [x] The fact feed id is `EntityId.deterministic('org.dxos.memory.facts', spaceId)`, the same on every device.
-- [x] The feed syncer replicates `facts` when the stack option `replicateFacts` is set; a test shows a fact
-      feed replicating and a store over it applying what arrives [F-9.5].
-- [ ] EDGE: bump the pinned `@dxos/feed` / `@dxos/protocols` so `FeedSpace` accepts `facts`, then add `facts` to
-      its space deletion (`FEED_SPACE_NAMESPACES`), backups (`FEED_NAMESPACES`) and `QueueSubspaceTag`; then turn
-      `replicateFacts` on by default.
+- [x] The fact feed's format is echo-memory's `FactFeed`: namespace `facts`, id `FactFeed.feedId(spaceId)`
+      (`EntityId.deterministic('org.dxos.memory.facts', spaceId)`, the same on every replica), one encoded
+      `RdfStore.Batch` per block. It is the only feed of facts (D-59): plugin-agent's `FactItem` feeds and
+      `AddFactFeed`/`RemoveFactFeed`/`ListFactFeeds` are removed, and the Discord back-index writes with `put`.
+- [x] The feed syncer replicates `facts` like `data` and `trace`; a test shows a fact feed replicating and a store
+      over it applying what arrives [F-9.5].
+- [ ] EDGE: `FeedSpace` accepts `facts`, which joins its space deletion (`FEED_SPACE_NAMESPACES`), backups
+      (`FEED_NAMESPACES`) and `QueueSubspaceTag`; its `MemoryObject` follows the feed as a replica (D-59).
 - [ ] Space archives: export and import map every non-trace namespace to `data`; keep `facts` as `facts`.
 - [x] Operations get `MemoryService` and `RdfStore` for their space from plugin-client's space-affinity layers,
       like `Database.Service` [F-1.5].

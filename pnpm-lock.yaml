@@ -7058,6 +7058,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       n3:
         specifier: 'catalog:'
         version: 2.1.0
@@ -12779,6 +12782,9 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
+      '@dxos/echo-memory-sqlite':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-memory-sqlite
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -23283,6 +23289,9 @@ importers:
       '@dxos/echo-memory':
         specifier: workspace:*
         version: link:../../core/echo/echo-memory
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys

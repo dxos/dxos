@@ -179,7 +179,7 @@ describe('extractFactsStage', () => {
     return Effect.gen(function* () {
       const memory = yield* FactStore;
       const written: Fact.Fact[] = [];
-      // Like the ECHO fact feed: writes and cursors work, reads fail.
+      // A write-only store: writes and cursors work, reads fail.
       const writeOnly: FactStoreApi = {
         ...memory,
         putFacts: (facts) => memory.putFacts(facts).pipe(Effect.tap(() => Effect.sync(() => written.push(...facts)))),

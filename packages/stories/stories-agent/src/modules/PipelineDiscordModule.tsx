@@ -2,23 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Exit from 'effect/Exit';
+import * as Scope from 'effect/Scope';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as Surface from '@dxos/app-framework/Surface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import * as Agent from '@dxos/assistant/Agent';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as CrawlState from '@dxos/crawler/CrawlState';
-import { Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { MemoryQuery } from '@dxos/echo-memory';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { type SpaceId } from '@dxos/keys';
 import { Connection } from '@dxos/link';
-import { LogEntry, LogLevel } from '@dxos/log';
-import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
-import * as FactFeed from '@dxos/plugin-agent/FactFeed';
+import { LogEntry, LogLevel, log } from '@dxos/log';
 import * as DiscordAdminOperation from '@dxos/plugin-discord/DiscordAdminOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import * as DiscordOperation from '@dxos/plugin-discord/DiscordOperation';
-import { useConfig } from '@dxos/react-client';
+import { useClient, useConfig } from '@dxos/react-client';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { LogBuffer, Logger } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
@@ -100,19 +102,38 @@ const targetDetail = (target: { depth: number; cursor?: string; lastRunAt?: stri
     .filter(Boolean)
     .join(' · ');
 
+/** How many facts the space's memory holds, refreshed as each batch is applied. */
+const useMemoryFactCount = (spaceId: SpaceId | undefined): number => {
+  const client = useClient();
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!spaceId) {
+      return;
+    }
+    const memory = client.memory(spaceId);
+    const refresh = () =>
+      void EffectEx.runPromise(memory.query(MemoryQuery.facts())).then(
+        (facts) => setCount(facts.length),
+        (error) => log.catch(error),
+      );
+    const scope = Scope.makeUnsafe();
+    void EffectEx.runPromise(client.rdf(spaceId).listen(refresh).pipe(Scope.provide(scope))).then(refresh);
+    return () => void EffectEx.runPromise(Scope.close(scope, Exit.void));
+  }, [client, spaceId]);
+  return count;
+};
+
 const numberOrUndefined = (value: unknown): number | undefined => (typeof value === 'number' ? value : undefined);
 
 /**
  * Configures, controls and observes a Discord back-index purely through ECHO: the remote timer trigger that runs
- * plugin-discord's `CrawlDiscordChannels` on EDGE, the `CrawlState` it keeps its progress in, and the fact feed it
- * appends to. Apply creates or updates all three (`ConfigureBackIndex`); Pause / Resume flip the trigger; Reset rewinds
- * targets in the crawl state; the brain toggle registers the fact feed with the space's first agent's brain, which is
- * the only thing the brain is told.
+ * plugin-discord's `CrawlDiscordChannels` on EDGE and the `CrawlState` it keeps its progress in; the facts it extracts
+ * land in the space's memory. Apply creates or updates both (`ConfigureBackIndex`); Pause / Resume flip the trigger;
+ * Reset rewinds targets in the crawl state.
  */
 export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<string, unknown>>) => {
   const space = Hooks.useActiveSpace();
   const db = space?.db;
-  const [agent] = useQuery(db, Filter.type(Agent.Agent));
   const { invokePromise } = AppHooks.useOperationInvoker();
   const config = useConfig();
   const kaiId = DiscordChannel.kaiApplicationId(config.values.runtime?.services?.edge?.url);
@@ -124,22 +145,15 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
   const [triggerView] = useObject(trigger);
   const input = triggerView?.input;
   const stateRef = Ref.isRef(input?.state) ? input?.state : undefined;
-  const factsRef = Ref.isRef(input?.facts) ? input?.facts : undefined;
   const [stateSnapshot] = useObject(stateRef);
   const stateView = stateSnapshot && Obj.snapshotOf(CrawlState.CrawlState, stateSnapshot) ? stateSnapshot : undefined;
   const state = useQuery(db, Filter.type(CrawlState.CrawlState)).find(({ id }) => id === stateView?.id);
-  const [feedSnapshot] = useObject(factsRef);
-  const feed = useQuery(db, Filter.type(Feed.Feed)).find(({ id }) => id === feedSnapshot?.id);
-  const facts = useQuery(
-    feed ? db : undefined,
-    Query.select(Filter.type(FactFeed.FactItem)).from(Scope.feed(feed ? String(Obj.getURI(feed)) : '')),
-  );
+  const facts = useMemoryFactCount(space?.id);
 
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [edits, setEdits] = useState<Edits>({});
   const [names, setNames] = useState<Record<string, string>>({});
-  const [brainFeeds, setBrainFeeds] = useState<readonly string[]>([]);
 
   const enabled = triggerView?.enabled ?? false;
   const configuredChannels: string[] = Array.isArray(input?.channels) ? input.channels : [];
@@ -157,8 +171,6 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
   const cron =
     edits.cron ??
     (triggerView?.spec?.kind === 'timer' ? triggerView.spec.cron : DiscordOperation.DEFAULT_BACK_INDEX_CRON);
-  const feedUri = feed ? String(Obj.getURI(feed)) : undefined;
-  const indexed = feedUri !== undefined && brainFeeds.includes(feedUri);
 
   // Channel names come from Discord through EDGE (the Kai bot's guilds); a failure only leaves ids showing.
   useEffect(() => {
@@ -187,24 +199,6 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
     };
   }, [invokePromise, space, kaiId, channelConfigs]);
 
-  // Which fact feeds the agent's brain indexes, so the toggle shows whether it consumes this one.
-  useEffect(() => {
-    if (!agent || !space) {
-      return;
-    }
-    let cancelled = false;
-    void invokePromise(AgentOperation.ListFactFeeds, { agent: Ref.make(agent) }, { spaceId: space.id }).then(
-      ({ data }) => {
-        if (!cancelled && data) {
-          setBrainFeeds(data.feeds);
-        }
-      },
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [invokePromise, agent, space]);
-
   // The timeline records each distinct state the crawl state passes through.
   const lastRef = useRef<string>(undefined);
   useEffect(() => {
@@ -215,13 +209,13 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
     if (!stateView) {
       return;
     }
-    const message = describe(stateView, enabled, facts.length);
+    const message = describe(stateView, enabled, facts);
     if (message !== lastRef.current) {
       lastRef.current = message;
       const level = stateView.lastRun?.error ? LogLevel.ERROR : LogLevel.INFO;
       timelineBuffer.append(new LogEntry({ level, message }));
     }
-  }, [stateView, enabled, facts.length]);
+  }, [stateView, enabled, facts]);
 
   /** Runs one action, showing its error. */
   const run = useCallback(async (action: () => Promise<{ error?: Error } | void>) => {
@@ -272,7 +266,7 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
 
   // One invocation here and now, as the trigger would run it; the trigger's schedule is untouched.
   const handleRunNow = useCallback(() => {
-    if (!space || !connection || !state || !feed) {
+    if (!space || !connection || !state) {
       return;
     }
     void run(() =>
@@ -285,12 +279,11 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
           ...(maxDays !== undefined ? { maxDays } : {}),
           ...(maxDepth !== undefined ? { maxDepth } : {}),
           state: Ref.make(state),
-          facts: Ref.make(feed),
         },
         { spaceId: space.id },
       ),
     );
-  }, [space, connection, state, feed, configuredChannels, descendThreads, maxDays, maxDepth, invokePromise, run]);
+  }, [space, connection, state, configuredChannels, descendThreads, maxDays, maxDepth, invokePromise, run]);
 
   const handleReset = useCallback(
     (targets?: string[]) => {
@@ -299,27 +292,6 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
       }
     },
     [state],
-  );
-
-  const handleBrain = useCallback(
-    (next: boolean) => {
-      if (!agent || !space || !feed) {
-        return;
-      }
-      void run(async () => {
-        const operation = next ? AgentOperation.AddFactFeed : AgentOperation.RemoveFactFeed;
-        const result = await invokePromise(
-          operation,
-          { agent: Ref.make(agent), feed: Ref.make(feed) },
-          { spaceId: space.id },
-        );
-        if (result.data) {
-          setBrainFeeds(result.data.feeds);
-        }
-        return result;
-      });
-    },
-    [agent, space, feed, invokePromise, run],
   );
 
   const targets = stateView ? CrawlState.listTargets(stateView) : [];
@@ -366,7 +338,7 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
               <Button.Root
                 icon='ph--lightning--regular'
                 label='Run now'
-                disabled={busy || !state || !feed || !connection}
+                disabled={busy || !state || !connection}
                 onClick={handleRunNow}
               />
               <Button.Root
@@ -468,22 +440,6 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
                         </Select.Content>
                       </Select.Root>
                     </Form.Field>
-                    <Form.Field label='Fact feed' description='Every extracted fact is appended here.'>
-                      <Typography.Text data-testid='crawl-fact-feed'>
-                        {feed?.name ?? 'Created on Start'}
-                      </Typography.Text>
-                    </Form.Field>
-                    <Form.Field
-                      label='Agent brain'
-                      description={`Whether ${agent?.name ?? 'the agent'}'s brain indexes the fact feed.`}
-                    >
-                      <Input.Switch
-                        data-testid='crawl-brain'
-                        checked={indexed}
-                        disabled={busy || !agent || !feed}
-                        onCheckedChange={({ checked }) => handleBrain(checked === true)}
-                      />
-                    </Form.Field>
                   </Form.FieldSet>
 
                   <Form.FieldSet label='Progress'>
@@ -501,8 +457,8 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
                     <Form.Field standalone label='Messages read'>
                       <Typography.Text data-testid='crawl-messages'>{stateView?.messages ?? 0}</Typography.Text>
                     </Form.Field>
-                    <Form.Field standalone label='Facts in the feed'>
-                      <Typography.Text data-testid='crawl-facts'>{facts.length}</Typography.Text>
+                    <Form.Field standalone label="Facts in the space's memory">
+                      <Typography.Text data-testid='crawl-facts'>{facts}</Typography.Text>
                     </Form.Field>
                     <Form.Field standalone label='Last run'>
                       {stateView?.lastRun ? (

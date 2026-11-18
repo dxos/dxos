@@ -3,6 +3,7 @@
 //
 
 export * as Fact from './Fact.ts';
+export * as FactFeed from './FactFeed.ts';
 export * as Graph from './Graph.ts';
 export * as Hash from './Hash.ts';
 export * as Mapping from './Mapping.ts';

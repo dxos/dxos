@@ -13,6 +13,7 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
+import * as FactFeed from '@dxos/echo-memory/FactFeed';
 import { type EdgeConnection, MessageSchema, type ReconnectListener } from '@dxos/edge-client';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore, SyncServer } from '@dxos/feed';
@@ -27,7 +28,7 @@ import { QuadStore } from '@dxos/sparql-sqlite/async';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import { bufferToArray } from '@dxos/util';
 
-import { FACTS_NAMESPACE, batchToBytes, factFeedLog } from '../rdf/index.ts';
+import { factFeedLog } from '../rdf/index.ts';
 import { FeedSyncer } from './feed-syncer.ts';
 
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
@@ -477,8 +478,8 @@ describe('FeedSyncer', () => {
         {
           spaceId,
           feedId,
-          feedNamespace: FACTS_NAMESPACE,
-          data: batchToBytes({
+          feedNamespace: FactFeed.NAMESPACE,
+          data: FactFeed.encodeBlock({
             id: 'b1',
             writes: [
               {

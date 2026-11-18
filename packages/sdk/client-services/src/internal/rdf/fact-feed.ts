@@ -3,35 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 import type * as SqlClient from 'effect/sql/SqlClient';
 
-import * as RdfStore from '@dxos/echo-memory/RdfStore';
+import * as FactFeed from '@dxos/echo-memory/FactFeed';
+import type * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { type FeedStore } from '@dxos/feed';
-import { EntityId, type SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import type { QuadStore } from '@dxos/sparql-sqlite/async';
-
-/** Seed of the id of a space's fact feed, which every device derives the same way so the feed replicates as one. */
-const FACT_FEED_SEED = 'org.dxos.memory.facts';
-
-/** The id of a space's feed in the `facts` namespace. */
-export const factFeedId = (spaceId: SpaceId): EntityId => EntityId.deterministic(FACT_FEED_SEED, spaceId);
-
-/** The feed namespace a space's RDF store is logged in. */
-export const FACTS_NAMESPACE = FeedProtocol.WellKnownNamespaces.facts;
-
-const encodeBatch = Schema.encodeSync(RdfStore.Batch);
-const decodeBatch = Schema.decodeUnknownSync(RdfStore.Batch);
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
-
-/** Serializes a batch as a block payload. */
-export const batchToBytes = (batch: RdfStore.Batch): Uint8Array =>
-  textEncoder.encode(JSON.stringify(encodeBatch(batch)));
-
-/** Inverse of {@link batchToBytes}. */
-export const batchFromBytes = (data: Uint8Array): RdfStore.Batch => decodeBatch(JSON.parse(textDecoder.decode(data)));
 
 /** Most blocks one read pulls from the feed per query. */
 const PAGE_SIZE = 500;
@@ -54,7 +33,7 @@ export const factFeedLog: (options: FactFeedOptions) => Effect.Effect<QuadStore.
     return {
       append: (batch) =>
         feeds
-          .appendLocal([{ spaceId, feedId, feedNamespace: FACTS_NAMESPACE, data: batchToBytes(batch) }])
+          .appendLocal([{ spaceId, feedId, feedNamespace: FactFeed.NAMESPACE, data: FactFeed.encodeBlock(batch) }])
           .pipe(Effect.asVoid, Effect.provide(services)),
 
       read: (cursor) =>
@@ -64,12 +43,12 @@ export const factFeedLog: (options: FactFeedOptions) => Effect.Effect<QuadStore.
           while (true) {
             const page = yield* feeds.query({
               spaceId,
-              feedNamespace: FACTS_NAMESPACE,
+              feedNamespace: FactFeed.NAMESPACE,
               query: { feedIds: [feedId] },
               cursor: next,
               limit: PAGE_SIZE,
             });
-            batches.push(...page.blocks.map(({ data }) => batchFromBytes(data)));
+            batches.push(...page.blocks.map(({ data }) => FactFeed.decodeBlock(data)));
             next = page.nextCursor;
             if (!page.hasMore) {
               return { batches, next };
@@ -81,7 +60,7 @@ export const factFeedLog: (options: FactFeedOptions) => Effect.Effect<QuadStore.
         Effect.acquireRelease(
           Effect.sync(() =>
             feeds.onNewBlocks.on((event) => {
-              if (event.spaceId === spaceId && (event.feedNamespace ?? FACTS_NAMESPACE) === FACTS_NAMESPACE) {
+              if (event.spaceId === spaceId && (event.feedNamespace ?? FactFeed.NAMESPACE) === FactFeed.NAMESPACE) {
                 onChange();
               }
             }),

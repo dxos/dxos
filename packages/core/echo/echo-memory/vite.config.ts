@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     Fact: 'src/Fact.ts',
+    FactFeed: 'src/FactFeed.ts',
     Graph: 'src/Graph.ts',
     Hash: 'src/Hash.ts',
     Mapping: 'src/Mapping.ts',

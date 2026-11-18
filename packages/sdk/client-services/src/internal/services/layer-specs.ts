@@ -581,24 +581,24 @@ export const EdgeSubductionReplicatorRegistrationSpec = LayerSpec.make(
   () => registerReplicator(EdgeAutomergeReplicatorService),
 );
 
-export const FeedSyncerSpec = (options: Pick<ServiceStackServices, 'replicateFacts'>) =>
-  LayerSpec.make(
-    {
-      affinity: 'application',
-      requires: [Hook.Controller, SqlClient.SqlClient, EchoHostService, EdgeConnectionService],
-      provides: [FeedSyncerService],
-      eager: true,
-    },
-    () =>
-      FeedSyncerLayer({
-        peerId: '',
-        syncNamespaces: [
-          FeedProtocol.WellKnownNamespaces.data,
-          FeedProtocol.WellKnownNamespaces.trace,
-          ...(options.replicateFacts ? [FeedProtocol.WellKnownNamespaces.facts] : []),
-        ],
-      }),
-  );
+export const FeedSyncerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Hook.Controller, SqlClient.SqlClient, EchoHostService, EdgeConnectionService],
+    provides: [FeedSyncerService],
+    eager: true,
+  },
+  () =>
+    FeedSyncerLayer({
+      peerId: '',
+      syncNamespaces: [
+        FeedProtocol.WellKnownNamespaces.data,
+        FeedProtocol.WellKnownNamespaces.trace,
+        // A space's memory replicates through its fact feed, which EDGE's memory follows as a replica.
+        FeedProtocol.WellKnownNamespaces.facts,
+      ],
+    }),
+);
 
 //
 // RPC services. Each handler keeps its own tag, and its registration with the router is a separate
@@ -952,7 +952,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   ...(options.disableP2pReplication ? [] : [MeshReplicatorSpec, MeshReplicatorRegistrationSpec]),
   ...(subductionEnabled(options) ? [EdgeSubductionReplicatorSpec, EdgeSubductionReplicatorRegistrationSpec] : []),
   ...(options.edgeAvailable ? [IdentityEdgeServicesSpec(options)] : []),
-  FeedSyncerSpec(options),
+  FeedSyncerSpec,
 
   RpcRouterSpec,
   SystemServiceSpec,

@@ -1531,6 +1531,16 @@ decision D-61: On EDGE a space's memory is inspected through db-service's memory
   why: What the brain view showed now lives in the space memory, so its reads belong beside the `MemoryObject` rather than to one agent.
 ```
 
+```mdl
+decision D-62: A space's fact feed always replicates, and its format (namespace, id and block encoding) is echo-memory's `FactFeed` module, which the client services and EDGE's `MemoryObject` share; the client-services `replicateFacts` option is removed. Fills in [D-59].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.5]
+  supersedes: D-33
+  why: EDGE now accepts the `facts` namespace and lands with this change, and two replicas can only follow one feed if they derive its id and decode its blocks the same way.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

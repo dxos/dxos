@@ -10,12 +10,13 @@ import * as Semaphore from 'effect/Semaphore';
 import * as SqlClient from 'effect/sql/SqlClient';
 
 import { EchoHostService } from '@dxos/echo-host';
+import * as FactFeed from '@dxos/echo-memory/FactFeed';
 import * as MemoryError from '@dxos/echo-memory/MemoryError';
 import type * as MemoryService from '@dxos/echo-memory/MemoryService';
 import * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { type SpaceId } from '@dxos/keys';
 
-import { factFeedId, factFeedLog } from './fact-feed.ts';
+import { factFeedLog } from './fact-feed.ts';
 
 /** Each space's store lives in the host database under its own table prefix, apart from ECHO's tables. */
 const tablePrefix = (spaceId: SpaceId): string => `rdf_${spaceId.toLowerCase()}_`;
@@ -62,7 +63,7 @@ export const SpaceMemoriesLayer: Layer.Layer<SpaceMemories, never, EchoHostServi
           const [{ QuadStore }, LocalRdfStore] = yield* Effect.promise(() =>
             Promise.all([import('@dxos/sparql-sqlite/async'), import('@dxos/echo-memory-sqlite/LocalRdfStore')]),
           );
-          const log = yield* factFeedLog({ feeds: echoHost.feedStore, spaceId, feedId: factFeedId(spaceId) });
+          const log = yield* factFeedLog({ feeds: echoHost.feedStore, spaceId, feedId: FactFeed.feedId(spaceId) });
           const quads = yield* QuadStore.make({ prefix: tablePrefix(spaceId), log });
           const entry: Held = { store: LocalRdfStore.fromQuadStore(quads) };
           spaces.set(spaceId, entry);

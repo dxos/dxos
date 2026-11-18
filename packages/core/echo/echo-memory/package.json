@@ -23,6 +23,11 @@
       "types": "./dist/types/src/Fact.d.ts",
       "import": "./dist/lib/Fact.mjs"
     },
+    "./FactFeed": {
+      "source": "./src/FactFeed.ts",
+      "types": "./dist/types/src/FactFeed.d.ts",
+      "import": "./dist/lib/FactFeed.mjs"
+    },
     "./Graph": {
       "source": "./src/Graph.ts",
       "types": "./dist/types/src/Graph.d.ts",
@@ -102,6 +107,7 @@
   ],
   "dependencies": {
     "@dxos/errors": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "n3": "catalog:"
   },
   "devDependencies": {

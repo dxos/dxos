@@ -164,7 +164,7 @@ export const extractFactsStage = (
       };
     });
     yield* indexFactsBatch(docs, { ...extractOptions, entities: [...users.values()] });
-    // A profile is rewritten only when it changed (an append-only store, such as an ECHO fact feed, would grow on every
+    // A profile is rewritten only when it changed (an append-only store would grow on every
     // batch). The cursor also names the graph last written, so each version supersedes the one before it on any store,
     // a write-only one included, with no read.
     const store = yield* FactStore;
