@@ -1163,6 +1163,16 @@ decision D-22: The deck contributes a `BootGate` from its startup-pass state mod
   rejected: Contributing the gate from the URL handler, which decides it too late; running the action before the projection, which clears the fullscreen state the action sets.
 ```
 
+```mdl
+decision D-23: The boot gate comes from its own startup-pass module, `LinkActionGate`, which also releases it after the 10-second budget; the deck's state module no longer holds it. Fills in [D-21].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  supersedes: D-22
+  why: The gate shares nothing with the deck's state but the startup pass, so a module of its own says why it activates there.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using

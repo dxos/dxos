@@ -35,7 +35,7 @@ describe('DeckOperation.HandleExternalUrl', () => {
   test('runs the action a link names on the object it opens, once', async ({ expect }) => {
     const ran: unknown[] = [];
     await using harness = await Harness.createComposerTestApp({
-      plugins: [DocsPlugin((data) => Effect.sync(() => ran.push(data))), DeckPlugin.make()],
+      plugins: [DeckWorkspacePlugin((data) => Effect.sync(() => ran.push(data))), DeckPlugin.make()],
     });
     await harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, {}));
     await harness.runPromise(
@@ -60,7 +60,9 @@ describe('DeckOperation.HandleExternalUrl', () => {
     const ran: unknown[] = [];
     const record = (data: unknown) => Effect.sync(() => ran.push(data));
     const opened = await (async () => {
-      await using harness = await Harness.createComposerTestApp({ plugins: [DocsPlugin(record), DeckPlugin.make()] });
+      await using harness = await Harness.createComposerTestApp({
+        plugins: [DeckWorkspacePlugin(record), DeckPlugin.make()],
+      });
       await harness.runPromise(
         Operation.invoke(LayoutOperation.Set, { subject: [`${WORKSPACE}/deck`], workspace: WORKSPACE }),
       );
@@ -72,7 +74,7 @@ describe('DeckOperation.HandleExternalUrl', () => {
     const release = Promise.withResolvers<void>();
     await using harness = await Harness.createComposerTestApp({
       plugins: [
-        DocsPlugin((data) => Effect.promise(() => release.promise).pipe(Effect.andThen(record(data)))),
+        DeckWorkspacePlugin((data) => Effect.promise(() => release.promise).pipe(Effect.andThen(record(data)))),
         DeckPlugin.make(),
       ],
     });
@@ -86,9 +88,8 @@ describe('DeckOperation.HandleExternalUrl', () => {
   });
 });
 
-/** A workspace with one deck, addressable by URL, and a present action that runs `run` on it. */
-const DocsPlugin = (run: LinkAction.LinkAction['run']) =>
-  Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.docs'), name: 'Docs' })).pipe(
+const DeckWorkspacePlugin = (run: LinkAction.LinkAction['run']) =>
+  Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.deckWorkspace'), name: 'Deck workspace' })).pipe(
     Plugin.addModule<void>(
       Capability.inlineModule(
         'docs',

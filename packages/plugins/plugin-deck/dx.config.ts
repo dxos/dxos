@@ -70,8 +70,6 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           activatesOn: ActivationEvents.Startup,
           requires: [Capabilities.AtomRegistry],
           provides: [
-            Capabilities.BootGate,
-            DeckCapabilities.LinkActionGate,
             DeckCapabilities.State,
             DeckCapabilities.EphemeralState,
             AppCapabilities.Layout,
@@ -81,6 +79,15 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           ],
         },
         () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
+      ),
+      Capability.lazyModule(
+        'LinkActionGate',
+        {
+          activatesOn: ActivationEvents.Startup,
+          requires: [Capabilities.AtomRegistry],
+          provides: [Capabilities.BootGate, DeckCapabilities.LinkActionGate],
+        },
+        () => import('./src/capabilities/link-action-gate.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'LayoutViewState',

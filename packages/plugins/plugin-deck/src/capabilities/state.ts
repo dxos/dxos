@@ -6,10 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as FiberHandle from 'effect/FiberHandle';
 import * as Atom from 'effect/reactivity/Atom';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as LinkAction from '@dxos/app-toolkit/LinkAction';
 import * as KvsStore from '@dxos/effect/KvsStore';
 import { invariant } from '@dxos/invariant';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
@@ -117,24 +115,7 @@ export default Capability.makeModule(
       return { flat, front, companions: { items, ...(variant !== undefined && { variant }) } };
     });
 
-    // Decided here, on the startup pass, because the URL handler that runs the action activates after the loader would
-    // have dismissed. The budget shows the page even if the action never finishes.
-    const registry = yield* Capabilities.AtomRegistry;
-    const linkActionGate = Atom.make<Capabilities.BootGateState>({
-      pending: !!globalThis.location && new URL(globalThis.location.href).searchParams.has(LinkAction.PARAM),
-    }).pipe(Atom.keepAlive);
-    yield* Effect.forkScoped(
-      Effect.sleep(LINK_ACTION_BUDGET).pipe(
-        Effect.andThen(Effect.sync(() => registry.set(linkActionGate, { pending: false }))),
-      ),
-    );
-
     return [
-      Capability.contribute(Capabilities.BootGate, {
-        id: `${DeckNamespace.key}.bootGate.linkAction`,
-        state: linkActionGate,
-      }),
-      Capability.contribute(DeckCapabilities.LinkActionGate, linkActionGate),
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
       Capability.contribute(DeckCapabilities.Projection, projection),
@@ -144,6 +125,3 @@ export default Capability.makeModule(
     ];
   }),
 );
-
-/** How long a link action may hold the boot loader before the page shows without it. */
-const LINK_ACTION_BUDGET = '10 seconds';

@@ -45,7 +45,6 @@ export const find = (url: URL, actions: readonly LinkAction[], data: unknown): L
   return id ? actions.find((action) => action.id === id && action.appliesTo(data)) : undefined;
 };
 
-/** `url` without its action. */
 export const withoutAction = (url: URL): URL => {
   const next = new URL(url);
   next.searchParams.delete(PARAM);

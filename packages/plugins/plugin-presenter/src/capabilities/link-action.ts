@@ -12,7 +12,6 @@ import { DXN, Obj } from '@dxos/echo';
 
 import { Presentation, PresenterOperation } from '#types';
 
-/** A public link to a presentation opens it presenting; an internal one opens it to edit. */
 export const present: LinkAction.LinkAction = {
   id: DXN.make('org.dxos.linkAction.presenter.present'),
   links: ['public'],

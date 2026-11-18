@@ -81,16 +81,18 @@ export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
   }
 
   const plankId = yield* projectUrl(resolvedUrl);
-  yield* runLinkAction(resolvedUrl, plankId);
+  yield* consumeLinkAction(resolvedUrl, plankId);
   return plankId;
 });
 
-/**
- * Runs the action the URL names on the plank it landed on, once: the action leaves the address bar first, so neither
- * a reload nor a later projection runs it again. It runs after the projection, because opening a workspace clears
- * the fullscreen state an action such as presenting sets.
- */
-const runLinkAction = Effect.fnUntraced(function* (url: URL, plankId: string | undefined) {
+const loadOperationHandlers = Effect.gen(function* () {
+  const manager = yield* Effect.serviceOption(Plugin.Service);
+  if (Option.isSome(manager)) {
+    yield* Effect.asVoid(manager.value.activate(ActivationEvents.Idle));
+  }
+});
+
+const consumeLinkAction = Effect.fnUntraced(function* (url: URL, plankId: string | undefined) {
   if (!url.searchParams.has(LinkAction.PARAM)) {
     return;
   }
@@ -104,10 +106,7 @@ const runLinkAction = Effect.fnUntraced(function* (url: URL, plankId: string | u
     log.warn('link action not run', { action: url.searchParams.get(LinkAction.PARAM), plankId });
     return;
   }
-  // Actions run operations, whose handlers load when the app goes idle.
-  const manager = yield* Effect.serviceOption(Plugin.Service);
-  const idle = Option.isSome(manager) ? Effect.asVoid(manager.value.activate(ActivationEvents.Idle)) : Effect.void;
-  yield* idle.pipe(
+  yield* loadOperationHandlers.pipe(
     Effect.andThen(() => action.run(data)),
     Effect.catchCause((cause) => Effect.sync(() => log.warn('link action failed', { error: Cause.pretty(cause) }))),
   );
