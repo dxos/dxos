@@ -1,0 +1,29 @@
+diagram flow=down
+group app "Composer (client)" {
+  node Companion "Discord companion" ref="packages/plugins/plugin-discord/src/containers/DiscordAgentSetup/DiscordAgentSetup.tsx"
+  node Configure "ConfigureBackIndex" ref="packages/plugins/plugin-discord/src/operations/configure-back-index.ts"
+}
+group space "ECHO space" {
+  node Trigger "Trigger (timer)" ref="packages/core/compute/compute/src/types/Trigger.ts"
+  node State "CrawlState" ref="packages/core/compute/crawler/src/CrawlState.ts"
+  node Facts "Fact feed" ref="packages/plugins/plugin-agent/src/FactFeed.ts"
+  node Topics "Topics, Persons" ref="packages/core/compute/pipeline-discord/src/types/Topic.ts"
+}
+group cloud "EDGE" {
+  node Compute "compute-service"
+  node Host "Kai bot host"
+  node Token "Kai token secret"
+}
+node Discord "Discord API"
+edge Companion -> Configure "Index toggle"
+edge Companion -> Host "bind: claims owner"
+edge Configure -> Trigger "creates"
+edge Configure -> State
+edge Configure -> Facts
+edge Trigger -> Compute "runs crawl"
+edge Compute -> Host "fetchMessages"
+edge Token -> Host "signs"
+edge Host -> Discord "GET as Kai"
+edge Compute -> State "cursors"
+edge Compute -> Facts "facts"
+edge Compute -> Topics "topics"
