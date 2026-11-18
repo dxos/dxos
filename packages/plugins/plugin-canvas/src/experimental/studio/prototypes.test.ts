@@ -88,7 +88,8 @@ describe('core prototypes', () => {
     // Its own: the view (it adds the feed strip), the size, and a part for the strip's caption.
     expect(card.component).toEqual(feedCardSpec.component);
     expect(card.defaultSize).toEqual({ width: 6, height: 3 });
-    expect(card.parts?.map(({ field }) => field)).toEqual(['label', 'data.feedLabel', 'body', 'footer']);
+    // Every field but the title is addressed through the kind's own bag, which is where the DSL carries it.
+    expect(card.parts?.map(({ field }) => field)).toEqual(['label', 'data.feedLabel', 'data.body', 'data.footer']);
     // Inherited: what the kind no longer restates.
     expect(card.resizable).toEqual(cardPrototype.resizable);
     expect(card.minSize).toEqual(cardPrototype.minSize);

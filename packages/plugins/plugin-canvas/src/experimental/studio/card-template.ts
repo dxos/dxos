@@ -12,6 +12,8 @@
 //
 //   1. `composite <id> size=WxH name="…" { element … }` declares it once.
 //   2. `bind=<field>` on an element is the override point: the part draws the placing node's field of that name.
+//      A kind's own field is `data.<field>`, QUOTED: a bare DSL name cannot contain a dot, so an unquoted
+//      `bind=data.icon` does not lex, and it takes the whole template — and the kind registration — down with it.
 //   3. `object <id> <kind> [size=WxH] [name=value]*` places it; the node carries `composite`, the bound fields, and
 //      an `overrides` style struct that wins over its named style.
 //
@@ -57,10 +59,10 @@ const round = (value: number) => Math.round(value * 100) / 100;
  */
 export const STUDIO_CARD_TEMPLATE = `composite studioCardObject size=${STUDIO_CARD_SIZE.width}x${STUDIO_CARD_SIZE.height} name="Studio card" {
   element frame rect @ 0,0 size=${STUDIO_CARD_SIZE.width}x${STUDIO_CARD_SIZE.height} constrain=stretch rounded=true
-  element icon icon @ ${round(LEFT + GLYPH / 2)},${round(TOP + GLYPH / 2)} size=${GLYPH}x${GLYPH} fontSize=${FONT.icon} constrain=min bind=icon optional=true
+  element icon icon @ ${round(LEFT + GLYPH / 2)},${round(TOP + GLYPH / 2)} size=${GLYPH}x${GLYPH} fontSize=${FONT.icon} constrain=min bind="data.icon" optional=true
   element title note "" @ ${round((LEFT + GLYPH + GAP + RIGHT) / 2)},${round(TOP + GLYPH / 2)} size=${round(WIDTH - GLYPH - GAP)}x${TITLE} fontSize=${FONT.title} alignVertical=middle constrain=stretch,min bind=label padding=0,0 grow=icon
-  element body note "" @ 0,${round((BODY_TOP + BODY_BOTTOM) / 2)} size=${WIDTH}x${round(BODY_BOTTOM - BODY_TOP)} fontSize=${FONT.body} constrain=stretch bind=body padding=0,0 optional=true grow="footer rule"
+  element body note "" @ 0,${round((BODY_TOP + BODY_BOTTOM) / 2)} size=${WIDTH}x${round(BODY_BOTTOM - BODY_TOP)} fontSize=${FONT.body} constrain=stretch bind="data.body" padding=0,0 optional=true grow="footer rule"
   element rule polyline @ 0,${round(BOTTOM - FOOTER - GAP / 2)} size=${WIDTH}x${RULE} constrain=stretch,max points="0,0.5 1,0.5" follows=footer
-  element footer note "" @ 0,${round(BOTTOM - FOOTER / 2)} size=${WIDTH}x${FOOTER} fontSize=${FONT.footer} constrain=stretch,max bind=footer padding=0,0 optional=true
+  element footer note "" @ 0,${round(BOTTOM - FOOTER / 2)} size=${WIDTH}x${FOOTER} fontSize=${FONT.footer} constrain=stretch,max bind="data.footer" padding=0,0 optional=true
 }
 `;

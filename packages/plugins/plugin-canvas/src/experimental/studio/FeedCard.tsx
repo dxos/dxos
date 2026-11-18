@@ -176,5 +176,10 @@ export const feedCardSpec: ElementKindSpec = {
   unclipped: true,
   // Composite: every text of the card is edited in place, in reading order. The first is the node's main text, so
   // Enter on a selected card edits its title; Tab moves on through the strip's caption, the body and the footer.
-  parts: [{ field: 'label' }, { field: 'data.feedLabel' }, { field: 'body', multiline: true }, { field: 'footer' }],
+  parts: [
+    { field: 'label' },
+    { field: 'data.feedLabel' },
+    { field: 'data.body', multiline: true },
+    { field: 'data.footer' },
+  ],
 };

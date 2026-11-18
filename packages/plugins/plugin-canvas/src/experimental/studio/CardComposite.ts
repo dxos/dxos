@@ -21,9 +21,6 @@ export const StudioCardCompositeNode = Schema.Struct({
   ...Scene.Element2D.fields,
   type: Schema.Literal('studio-card'),
   label: Schema.String,
-  icon: Schema.optional(Schema.Struct({ type: Schema.String })),
-  body: Schema.optional(Schema.String),
-  footer: Schema.optional(Schema.String),
   data: Schema.optional(CardData),
 });
 
@@ -38,8 +35,6 @@ export const StudioCardCompositeNode = Schema.Struct({
 export const studioCardCompositeSpec: ElementKindSpec = {
   // Five ports a side, as the painted card has: a true middle for a trunk, and room either side for a fan.
   portsPerSide: 5,
-  // The card prototype owns the `icon`, `body` and `footer` slots; without it a kind's own fields must sit under
-  // `data`, and the composite binds to top-level names.
   extends: 'card',
   name: 'Studio card (composite)',
   icon: 'ph--cards-three--regular',
@@ -53,9 +48,8 @@ export const studioCardCompositeSpec: ElementKindSpec = {
     size,
     composite: STUDIO_CARD_COMPOSITE,
     label: 'Card',
-    body: 'Body',
-    footer: 'Footer',
-    icon: { type: 'ph--command--regular' },
+    // The kind's own fields, in the bag its parts bind through (`data.<field>`) and the DSL carries.
+    data: { icon: 'ph--command--regular', body: 'Body', footer: 'Footer' },
   }),
   // Nominal units (one unit is the major grid cell, 48px).
   defaultSize: { width: STUDIO_CARD_SIZE.width / 48, height: STUDIO_CARD_SIZE.height / 48 },
@@ -64,5 +58,5 @@ export const studioCardCompositeSpec: ElementKindSpec = {
   // clipped the painted card's corners.
   bare: true,
   unclipped: true,
-  parts: [{ field: 'label' }, { field: 'body', multiline: true }, { field: 'footer' }],
+  parts: [{ field: 'label' }, { field: 'data.body', multiline: true }, { field: 'data.footer' }],
 };

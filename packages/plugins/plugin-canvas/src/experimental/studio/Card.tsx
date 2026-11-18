@@ -162,5 +162,5 @@ export const cardSpec: ElementKindSpec = {
   bare: true,
   unclipped: true,
   // Composite: the title first, so Enter on a selected card edits it, then the body and footer the frame draws.
-  parts: [{ field: 'label' }, { field: 'body', multiline: true }, { field: 'footer' }],
+  parts: [{ field: 'label' }, { field: 'data.body', multiline: true }, { field: 'data.footer' }],
 };
