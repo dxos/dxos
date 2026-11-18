@@ -350,7 +350,6 @@ const promoteCards = (content: ContentMap, model: StudioModel, remap: Readonly<R
     const record = content[nodeKey(boxOf(key))];
     invariant(isNodeRecord(record), `no node for card "${key}"`);
     const { style: _style, ...node } = record.node;
-    const icon = { type: card.icon };
     const tone = card.tone ? { tone: TONES[card.tone] ?? card.tone } : {};
     const iconTone = card.iconTone ? { iconTone: TONES[card.iconTone] ?? card.iconTone } : {};
     content[nodeKey(boxOf(key))] = {
@@ -359,9 +358,13 @@ const promoteCards = (content: ContentMap, model: StudioModel, remap: Readonly<R
         ...node,
         type: remap[card.kind ?? 'card'] ?? card.kind ?? 'card',
         label: labelOf(record.node) ?? card.title,
-        // The glyph, body and footer are the core card's fields; everything else is the kind's own, under `data`.
-        icon,
+        // Every field the kind draws goes under `data`, which is where `parts.ts` says a plugin kind keeps its own
+        // and the only place the DSL carries: a glyph on the node itself was lost the moment the drawing was
+        // written down. The glyph is the bare name `iconOf` already accepts, not a wrapper around it.
         data: {
+          ...(card.icon ? { icon: card.icon } : {}),
+          ...(card.body ? { body: card.body } : {}),
+          ...(card.footer ? { footer: card.footer } : {}),
           ...tone,
           ...iconTone,
           ...(card.variant ? { variant: card.variant } : {}),
@@ -371,8 +374,6 @@ const promoteCards = (content: ContentMap, model: StudioModel, remap: Readonly<R
           ...(card.note ? { note: card.note } : {}),
           ...(card.ghost ? { ghost: card.ghost } : {}),
         },
-        ...(card.body ? { body: card.body } : {}),
-        ...(card.footer ? { footer: card.footer } : {}),
       },
     };
   }

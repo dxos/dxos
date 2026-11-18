@@ -597,11 +597,13 @@ export const seedSlideSpec =
           center,
           size,
           label: card.label,
-          icon: { type: card.icon },
-          // The core card's own fields stay at the top; the kind's go under `data` (decision 21).
-          ...(card.body !== undefined ? { body: card.body } : {}),
-          ...(card.footer !== undefined ? { footer: card.footer } : {}),
+          // Every field the kind draws goes under `data`, which is where `parts.ts` says a plugin kind keeps its
+          // own and the only place the DSL carries: a glyph, body or footer on the node itself was lost the
+          // moment the drawing was written down. The glyph is the bare name `iconOf` already accepts.
           data: {
+            icon: card.icon,
+            ...(card.body !== undefined ? { body: card.body } : {}),
+            ...(card.footer !== undefined ? { footer: card.footer } : {}),
             ...(card.tone ? { tone: TONES[card.tone] ?? card.tone } : {}),
             ...(card.iconTone ? { iconTone: TONES[card.iconTone] ?? card.iconTone } : {}),
             ...(card.variant ? { variant: card.variant } : {}),
@@ -650,8 +652,8 @@ export const seedSlideSpec =
             },
             size: { width, height: chipHeight },
             label,
-            ...(icon ? { icon: { type: icon } } : {}),
             data: {
+              ...(icon ? { icon } : {}),
               ...(note ? { note } : {}),
               ...(tone ? { tone: TONES[tone] ?? tone } : {}),
               ...(ghost ? { ghost } : {}),

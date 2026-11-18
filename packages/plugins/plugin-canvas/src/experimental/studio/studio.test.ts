@@ -349,6 +349,14 @@ describe('studio deck slides on a canvas', () => {
         .sort();
     expect(marksOfLinks(rebuilt)).toEqual(marksOfLinks(content));
 
+    // The glyph specifically. It survives only because it lives in the kind's own bag rather than on the node,
+    // and `iconOf` reads the node first — so moving it back there would pass every other assertion here and
+    // still come back blank, which is how it stayed lost through two rounds of this test.
+    const glyphs = (map: ContentMap) =>
+      Object.values(readViews(map)[ROOT_VIEW_ID].nodes).filter((node) => iconOf(node) !== undefined).length;
+    expect(glyphs(content)).toBeGreaterThan(0);
+    expect(glyphs(rebuilt)).toEqual(glyphs(content));
+
     // And its route, point for point. A connector routed by hand or by the layout had no spelling at all, so the
     // deck's 14 routed connectors lost all 66 of their bends and snapped back to straight runs.
     const routesOfLinks = (map: ContentMap) =>

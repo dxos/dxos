@@ -101,9 +101,23 @@ const stringAt = (value: unknown, field: string): string | undefined => {
   return typeof found === 'string' ? found : undefined;
 };
 
+/**
+ * A field of a node, from the node itself or from the `data` bag a plugin kind keeps its own fields in (as
+ * `parts.ts` addresses them, `data.<field>`). Both are read because a kind that paints itself has historically put
+ * a few fields on the node directly, and only the bag survives being written down as text.
+ */
+const fieldOf = (node: NodeViewProps['node'], field: string): unknown => {
+  const own: unknown = Reflect.get(node, field);
+  if (own !== undefined) {
+    return own;
+  }
+  const bag: unknown = Reflect.get(node, 'data');
+  return typeof bag === 'object' && bag !== null ? Reflect.get(bag, field) : undefined;
+};
+
 /** The glyph a node declares, if it declares one; a bare string is the older spelling and still reads. */
 export const iconOf = (node: NodeViewProps['node']): IconSpec | undefined => {
-  const icon: unknown = Reflect.get(node, 'icon');
+  const icon: unknown = fieldOf(node, 'icon');
   if (typeof icon === 'string') {
     return { type: icon };
   }
@@ -117,7 +131,7 @@ export const iconOf = (node: NodeViewProps['node']): IconSpec | undefined => {
 
 /** A node's text field, which only a type declaring it has. */
 export const textOf = (node: NodeViewProps['node'], field: string): string | undefined => {
-  const value = Reflect.get(node, field);
+  const value = fieldOf(node, field);
   return typeof value === 'string' ? value : undefined;
 };
 
