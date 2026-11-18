@@ -353,7 +353,7 @@ type Story = StoryObj<StoryArgs>;
 const slide = (id: string): Story => ({ decorators: decorators(studioSlide(id)) });
 
 export const Hyperspace = slide('hyperspace');
-export const EchoLayers = slide('echo-layers');
+export const Echo = slide('echo-layers');
 export const Ontology = slide('ontology');
 export const Plugins = slide('plugins');
 export const Composer = slide('composer');

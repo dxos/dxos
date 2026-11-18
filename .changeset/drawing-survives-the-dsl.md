@@ -33,6 +33,12 @@ back itself: the substrate's packing and its lit objects are `x,y,r` and `x,y,to
 owns the kind, which is where it belongs. The packing's parameters (`spaceCount`, `rmin`, `rmax`, `gap`) are on
 the node too, so a field that arrives with neither can still pack itself.
 
+Two things the bench got wrong along the way. `Rebuild` means the text IS the drawing, so it now clears the
+canvas first: `applyCommands` only touches the objects its commands name, so an object deleted from the text had
+nothing to remove it and stayed on screen. Only DSL-managed records are cleared, since a shape drawn by hand is
+in no text. And a read-only canvas draws no grid, no dots and no lattice cells — they are an editing affordance,
+what a shape snaps to, and nothing snaps when nothing can be placed.
+
 Losslessness is a test rather than an inspection: a corpus pass over all nine slides compares every kind, its own
 fields, its glyph, every link's markers and every route point for point, and fails on five to nine slides with
 any one of these removed. The studio bench also gains a DSL/JSON toggle, so a drawing's records can be read

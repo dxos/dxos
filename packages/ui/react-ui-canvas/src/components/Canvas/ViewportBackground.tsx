@@ -53,14 +53,19 @@ export const ViewportBackground = ({
     [look.background, backgroundBounds, bounds, latticeBounds],
   );
   const zooming = useChanging(camera.zoom, ZOOM_SETTLE);
-  // A lattice scene draws what a shape snaps to: its cells (the guides, drawn over the scene) or else the grid's lines,
-  // unless the look draws no grid at all; read-only or as a picture nothing snaps, so it draws neither.
+  // The grid, the dots and a lattice's cells are an editing affordance — what a shape snaps to — not part of the
+  // drawing. Read-only nothing snaps and nothing is placed, so none of them is drawn whatever the look asks for;
+  // as a picture (`transparent`) the same holds. Otherwise a lattice scene draws its cells (the guides, over the
+  // scene) or else the grid's lines, and any other scene draws whatever grid its look names.
   const latticeScene = draw.lattice !== undefined;
-  const gridDrawn: BackgroundGrid = latticeScene
-    ? guidesShown || readonly || transparent || look.background.grid === 'none'
+  const gridDrawn: BackgroundGrid =
+    readonly || transparent || look.background.grid === 'none'
       ? 'none'
-      : 'lines'
-    : look.background.grid;
+      : latticeScene
+        ? guidesShown
+          ? 'none'
+          : 'lines'
+        : look.background.grid;
   // While editing with snap on, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws
   // no lines too; with snap off the field draws the lines itself.
   const snapLines = !readonly && gridDrawn === 'lines';
