@@ -1,5 +1,5 @@
 # ECHO: A typed, local-first database shared by people and agents
-# Exported from studio assets/deck (slide "echo-layers"), 1600 × 900 slide units.
+# Exported from studio assets/deck (slide "echo"), 1600 × 900 slide units.
 
 object title @ 80,40 {
   text heading 0,0 "ECHO"

@@ -26,9 +26,9 @@ import { CHAT } from './chat.spec.ts';
 import composerSource from './composer.diagram?raw';
 import composerModel from './composer.json?raw';
 import { composerSpec } from './composer.spec.ts';
-import echoLayersSource from './echo-layers.diagram?raw';
-import echoLayersModel from './echo-layers.json?raw';
-import { ECHO_LAYERS } from './echo-layers.spec.ts';
+import echoSlideSource from './echo.diagram?raw';
+import echoSlideModel from './echo.json?raw';
+import { ECHO_LAYERS } from './echo.spec.ts';
 import hyperspaceSource from './hyperspace.diagram?raw';
 import hyperspaceModel from './hyperspace.json?raw';
 import { hyperspaceSpec } from './hyperspace.spec.ts';
@@ -122,7 +122,7 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   // The deck fitted three columns to one page; a drawing is not a page, so its columns take the air they read better
   // with, and the field sits in the middle of the two rather than where the deck's own margins left it.
   slide('hyperspace', hyperspaceSource, hyperspaceModel, { spec: hyperspaceSpec }),
-  slide('echo-layers', echoLayersSource, echoLayersModel, { spec: ECHO_LAYERS, title: ECHO_LAYERS.title }),
+  slide('echo', echoSlideSource, echoSlideModel, { spec: ECHO_LAYERS, title: ECHO_LAYERS.title }),
   // Declared rather than imported: three boxed groups, the entities in three columns about a Person. The deck's own
   // hand-placed graph and the passes that recovered columns from it are not used here.
   slide('ontology', ontologySource, ontologyModel, { spec: ONTOLOGY, title: ONTOLOGY.title }),

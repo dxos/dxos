@@ -32,7 +32,7 @@ const slide = (name: string): { source: string; model: StudioModel } => ({
 /** Every slide the deck exports, in its order; `agents` is seeded by the stories that register its kinds. */
 const SLIDES = [
   'hyperspace',
-  'echo-layers',
+  'echo',
   'plugins',
   'composer',
   'architecture',
@@ -274,7 +274,7 @@ describe('studio deck slides on a canvas', () => {
     // Chips used to be a field the card painted (`data.chips`), which a composite's fixed parts cannot express and
     // which left the `chip` kind — a real kind, with its own schema and view — drawn by nothing. They are elements
     // now: selectable, stylable, and inside the card that declares them.
-    const slides = [studioSlide('echo-layers'), studioSlide('architecture')];
+    const slides = [studioSlide('echo'), studioSlide('architecture')];
     for (const slide of slides) {
       const content: ContentMap = {};
       seedSlide(slide)(content, ROOT_VIEW_ID);

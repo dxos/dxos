@@ -18,7 +18,7 @@ const card = (id: string, label: string, icon: string, body: string, footer: str
 });
 
 export const ECHO_LAYERS: SlideSpec = {
-  id: 'echo-layers',
+  id: 'echo',
   title: 'ECHO',
   // Wide enough for three lines of body at the deck's reading size; no captions to leave a lane for.
   metrics: { cardWidth: 368, bodyCardHeight: 176, columnGap: 64, groupGap: 96, bannerHeight: 160 },

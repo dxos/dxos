@@ -6,10 +6,10 @@ contributes one. Nothing in `plugin-canvas` itself changed.
 
 | Where                                                  | What                                                                         |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| `src/experimental/studio/*.diagram`                    | The three slides in the scene DSL, as studio exported them (one fix, below). |
-| `src/experimental/studio/*.json`                       | The sidecar: everything the DSL has no word for.                             |
-| `src/experimental/studio/studio.ts`                    | The loader — parse, apply, then repair from the sidecar.                     |
-| `src/experimental/studio/studio.test.ts`               | What the loader had to repair, as assertions.                                |
+| `src/experimental/*.diagram`                           | The three slides in the scene DSL, as studio exported them (one fix, below). |
+| `src/experimental/*.json`                              | The sidecar: everything the DSL has no word for.                             |
+| `src/experimental/studio.ts`                           | The loader — parse, apply, then repair from the sidecar.                     |
+| `src/experimental/studio.test.ts`                      | What the loader had to repair, as assertions.                                |
 | `src/containers/CanvasArticle/StudioCards.stories.tsx` | The `card` kind and a story per slide.                                       |
 
 Stories: [Ontology](http://localhost:9009/?path=/story/plugins-plugin-canvas-containers-studiocards--ontology),
@@ -228,7 +228,7 @@ a few frames. The six numbered slides are a step up, and each stresses something
 
 | Slide             | What is new                                                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `02-echo-layers`  | Cards with a body and a footer, and a grid of chips _inside_ the card — a kind with nested content, not one label. |
+| `02-echo`         | Cards with a body and a footer, and a grid of chips _inside_ the card — a kind with nested content, not one label. |
 | `03-plugins`      | One card fanning out to five, `wire`/`path` connectors with their own labels, and consumer chips sharing a width.  |
 | `05-architecture` | Two mirrored stacks, one shared service grid in a fixed order, groups with labels, wires with labels.              |
 | `06-agents`       | Feed strips, and a _generated_ hex-lattice space graph drawn inside the slide (`substrate-view.mjs`).              |
@@ -345,7 +345,7 @@ gets the Neu look _and_ the app's mode, and it needs no addition to the registry
 ### The card kinds
 
 A style set draws the canvas's own shapes; a contributed kind draws its own DOM, so the deck's card had to carry
-the same tokens. [`theme.css`](../src/experimental/studio/theme.css) is `deck.css`'s token block, with every value a
+the same tokens. [`theme.css`](../src/experimental/theme.css) is `deck.css`'s token block, with every value a
 `light-dark()` pair:
 
 ```css

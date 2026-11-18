@@ -23,6 +23,7 @@ import {
   iconOf,
   iconSymbol,
   kindData,
+  textOf,
 } from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
@@ -66,8 +67,10 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
     return null;
   }
   const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
-  const footer = 'footer' in node && typeof node.footer === 'string' ? node.footer : undefined;
-  const body = 'body' in node && typeof node.body === 'string' ? node.body : undefined;
+  // Through `textOf`, which reads the node and then the kind's own bag: these live under `data` now, and reading
+  // only the node left the simple card's footer blank.
+  const footer = textOf(node, 'footer');
+  const body = textOf(node, 'body');
   const tone = toneValue(data.tone);
   // The glyph takes the card's tone where it has one, its own where the slide colours only the glyph.
   const glyph = tone ?? toneValue(data.iconTone);

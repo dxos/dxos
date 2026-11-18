@@ -32,8 +32,8 @@ import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
 
-import types from '../../capabilities/schema.ts';
-import { addTestCanvas } from '../../testing/canvas.ts';
+import types from '../capabilities/schema.ts';
+import { addTestCanvas } from '../testing/canvas.ts';
 import { STUDIO_CARD_SIZE } from './card-template.ts';
 import { STUDIO_CARD_COMPOSITE } from './CardComposite.ts';
 import { STUDIO_KINDS } from './registry.ts';

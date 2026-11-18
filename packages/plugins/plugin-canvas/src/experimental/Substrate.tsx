@@ -24,8 +24,8 @@ import React from 'react';
 import { type ElementKindSpec, type NodeViewProps, kindData } from '@dxos/react-ui-canvas';
 import { Scene } from '@dxos/scene';
 
-import { layout } from '../../components/Graph/generator/space-graph.generator.ts';
-import { graphFields } from '../../components/Graph/index.ts';
+import { layout } from '../components/Graph/generator/space-graph.generator.ts';
+import { graphFields } from '../components/Graph/index.ts';
 import { TONES, toneValue } from './FeedCard.tsx';
 import { type Circle, type LitPoint, packSpaces, parseLit, parseSpaces } from './substrate-packing.ts';
 

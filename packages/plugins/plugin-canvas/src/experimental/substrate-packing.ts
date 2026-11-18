@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { rng } from '../../components/Graph/generator/space-graph.generator.ts';
+import { rng } from '../components/Graph/generator/space-graph.generator.ts';
 
 /** A packed space: a circle in the field's own units, or as a fraction of its box. */
 export type Circle = { x: number; y: number; r: number };

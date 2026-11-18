@@ -34,8 +34,8 @@ import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
 
-import types from '../../capabilities/schema.ts';
-import { addTestCanvas } from '../../testing/canvas.ts';
+import types from '../capabilities/schema.ts';
+import { addTestCanvas } from '../testing/canvas.ts';
 import { STUDIO_KINDS } from './registry.ts';
 import { STUDIO_SLIDES, seedSlide } from './slides.ts';
 import { slideBounds } from './spec.ts';

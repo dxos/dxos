@@ -14,7 +14,7 @@ Slides to do, in the order they get cheaper:
 | -------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `03-plugins`               | One card fanning out to five; `wire`/`path` connectors with their own labels; consumer chips of a shared width. |
 | `05-architecture`          | Two mirrored stacks; one shared service grid in a fixed order; groups with labels; labelled wires.              |
-| `02-echo-layers`           | Cards with a body **and** a chip grid inside them — a card whose content is a list, not a line.                 |
+| `02-echo`                  | Cards with a body **and** a chip grid inside them — a card whose content is a list, not a line.                 |
 | `06-agents` (deck slide 6) | Already exported as `agents` in round 2; nothing further unless the slide changes.                              |
 | `01-hyperspace`            | Wireframe Composer planks, and the packed substrate view (many space graphs at once).                           |
 | `04-composer`              | The Composer app frame with region ids.                                                                         |
@@ -97,11 +97,11 @@ stand-in, with the fields in the trailing comment.
 For the remaining slides, say in the component README **what the fields are** before writing any code, the way
 `components/README.md` did for the feed card. The three that are coming:
 
-| Kind                    | Fields                                                                    | Seen on                                           |
-| ----------------------- | ------------------------------------------------------------------------- | ------------------------------------------------- |
-| `chip` / `chips`        | `icon`, `label`, `note`, `tone`, `ghost`; a grid takes `cols`             | `02-echo-layers`, `03-plugins`, `05-architecture` |
-| `card` with a body slot | the plain card plus `body: Chips \| Text`, so a card can hold a chip grid | `02-echo-layers`                                  |
-| `wire`                  | not a node: a link with its own label and a named route                   | `03-plugins`, `05-architecture`                   |
+| Kind                    | Fields                                                                    | Seen on                                    |
+| ----------------------- | ------------------------------------------------------------------------- | ------------------------------------------ |
+| `chip` / `chips`        | `icon`, `label`, `note`, `tone`, `ghost`; a grid takes `cols`             | `02-echo`, `03-plugins`, `05-architecture` |
+| `card` with a body slot | the plain card plus `body: Chips \| Text`, so a card can hold a chip grid | `02-echo`                                  |
+| `wire`                  | not a node: a link with its own label and a named route                   | `03-plugins`, `05-architecture`            |
 
 A kind keeps its title in `label`, always. That is the shared slot, and it is why a drawing still reads when the
 plugin that defines the kind is not loaded.

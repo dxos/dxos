@@ -1864,7 +1864,7 @@ export type LinkMode = 'deck' | 'ortho';
 export type PortMode = 'facing' | 'vertical';
 
 /**
- * The component kinds the studio stories register (`experimental/studio/*.tsx`). A host that has registered fewer passes
+ * The component kinds the studio stories register (`experimental/*.tsx`). A host that has registered fewer passes
  * its own set to {@link seedStudioSlide}; a kind the host does not have is left as the DSL's placeholder, which is
  * how the drawing reads where the kind is not there. `fat-arrow` is not here: it draws as plain shapes.
  */

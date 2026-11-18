@@ -434,6 +434,16 @@ export const SceneHandler: ContentHandler = {
         continue;
       }
       switch (element.kind) {
+        case 'grid': {
+          // A grid is a frame that places what names it. It draws nothing of its own by default, as a CSS grid
+          // container does not, but it IS a box: a style it states wins, so a container with a visible frame is
+          // written rather than faked with a rect behind it.
+          const size = { width: element.w * placement.scale, height: element.h * placement.scale };
+          const center = place(element.x + element.w / 2, element.y + element.h / 2);
+          const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text };
+          put(element.id, withStyle(node, { fill: false, border: false, ...styleOf(element) }));
+          break;
+        }
         case 'rect':
         case 'diamond':
         case 'triangle': {
