@@ -6,23 +6,24 @@
 Add `diagram kind=grid`, which lays a drawing out from structure alone: the diagram states one frame and its
 tracks (`size=1600x880 cols="1fr 2fr 1fr"`), a `group` is a grid in the cell it was given, groups nest, and each
 member takes the next cell in the order written. A group can size its unstated tracks (`autoRows=88`), say where
-they sit (`alignContent=center`) and draw a frame (`border=true`); an empty group holds a cell. A `node` can name
-a contributed component and carry its fields (`node calendar "Calendar" kind=card icon=calendar-blank`), and an
-`edge` can end on a group or on a place of a component (`frame/nav`) and say how it runs (`path=line`). The
-result is the same grid boxes a hand-placed drawing uses, so no coordinate is written and none is stored.
+they sit (`alignContent=center`), draw a frame (`border=true`) or pack its members as circles (`layout=pack`); an
+empty group holds a cell. A `node` can name a contributed component and carry its fields
+(`node calendar "Calendar" kind=card icon=calendar-blank`), and state the size it keeps in its cell
+(`width=240 height=48`). An `edge` can end on a group or on a place of a component (`frame/nav`) and say how it
+runs (`path=line`). No coordinate is written and none is stored.
 
 `Dsl.printIntent` reads that text back out of a drawing made of grid boxes. It returns the text or the reasons a
-grid diagram cannot say the drawing, and it checks its own answer by lowering it and comparing what is drawn.
+grid diagram cannot say the drawing, and it checks its own answer by lowering it and comparing what is drawn. A
+Canvas drawing has a DSL companion beside its article that shows this text, lets it be edited, and rebuilds the
+drawing from it; where the host is read-only the text can be read but not edited.
 
-The drawing skill teaches the new kind, so an agent can write a slide this way. Diagnostics measure a box that a
-grid places in the frame the grid gives it; they used to report every label in a grid as not fitting.
+In the box form, a box a component draws is written `custom <id> kind=<name>`; a shape word with `kind=` is an
+error. The space graph's element kind is named `graph`, and a node stored as `space-graph` reads as it.
 
-A Canvas drawing has a DSL companion beside its article: the drawing as text, as a grid diagram where it is one and
-as boxes otherwise, editable, with Rebuild to redraw from the text. Where the host is read-only the text can be read
-but not edited. A connector drawn with no arrowhead now reads
-back with none; it used to come back with the default arrow.
+plugin-debug gains the DXOS Deck space template: DXOS in nine diagrams, each a canvas drawing built from one
+`.dx` file, and the presentation that embeds them. plugin-canvas's `experimental` folder is removed.
 
-A packed group (`layout=pack`) now places every member: where the sizes its seed draws do not all fit, the whole
-field is drawn smaller. It used to leave members out, which drew them at the origin with every connector to them
-running there. A connector with `stroke=dotted` is drawn dotted on a canvas; it used to be drawn solid. A card's
-body and footer start under its title, beside the glyph, not under the glyph.
+Fixes: diagnostics measure a box a grid places in the frame the grid gives it; they used to report every label in
+a grid as not fitting. A packed group places every member; it used to leave some at the origin. A connector with
+`stroke=dotted` is drawn dotted on a canvas, and one drawn with no arrowhead reads back with none. A card's body
+and footer start under its title.

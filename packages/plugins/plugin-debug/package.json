@@ -129,6 +129,11 @@
       "types": "./dist/types/src/samples/stockfish/StockfishSpace.d.ts",
       "import": "./dist/lib/StockfishSpace.mjs"
     },
+    "./StudioSpace": {
+      "source": "./src/samples/studio/StudioSpace.ts",
+      "types": "./dist/types/src/samples/studio/StudioSpace.d.ts",
+      "import": "./dist/lib/StudioSpace.mjs"
+    },
     "./TidepoolSpace": {
       "source": "./src/samples/tidepool/TidepoolSpace.ts",
       "types": "./dist/types/src/samples/tidepool/TidepoolSpace.d.ts",

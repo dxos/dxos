@@ -32,7 +32,7 @@ import { graphSpec } from './Graph.tsx';
 const NODES = createNodeRegistry(
   {
     ...defaultNodeTypes,
-    'graph': kindNodeDef('graph', { group: EXTENSIONS_GROUP, ...graphSpec }),
+    graph: kindNodeDef('graph', { group: EXTENSIONS_GROUP, ...graphSpec }),
   },
   defaultNodePrototypes,
 );

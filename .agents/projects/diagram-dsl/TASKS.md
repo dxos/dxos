@@ -1,6 +1,6 @@
 # Diagram DSL — Tasks
 
-_Resume: give the Architecture slide's cards room for a second body line, then push and update the PR body. Uncommitted: none. Last: the deck moved to plugin-debug as the DXOS Deck template._
+_Resume: land #14583, then mark #14595 ready (`moon run :lint :build :test-types`, `gh pr ready`). Uncommitted: none. Last: the `custom` keyword, a node's stated size, the `graph` rename, and the deck as plugin-debug's DXOS Deck template._
 
 ## Phase 1: A drawing as intent
 
@@ -28,7 +28,7 @@ The nine slides exist in four generations and live in `plugin-canvas/src/experim
       layout is read (`@dxos/scene` D-105); the stored name changes when the element is next written.
 - [x] **`.dx` is the only slide source** — delete the deck export (`.diagram`, `.json`), the `SlideSpec` layout
       (`*.spec.ts`, `spec.ts`, `studio.ts`, `studio.test.ts`), the grid boxes (`.grid.diagram`) and their stories.
-- [ ] **Give the Architecture slide's cards room for a second body line** (the HALO card clips).
+- [x] **Give the Architecture slide's cards room for a second body line** — 136 tall, 8 apart.
 - [x] **Move the Grids story out of `experimental`** into `src/dsl/`, with its source column.
 - [x] **The deck as a space template in plugin-debug**, beside "DXOS Architecture", with the slide kinds (card, feed
       card, chip, plank, app frame, substrate); `graph` stays in plugin-canvas.
