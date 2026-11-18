@@ -97,9 +97,17 @@ export const PlainDialect: Dialect = {
             // Matched on the typename rather than by URI: a registered type is indexed under its
             // VERSIONED DXN, and the model names a type the same way it does in a query —
             // unversioned. Objects only: a relation needs a source and target `make` cannot take.
-            const type = db.registry
-              .list()
-              .find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
+            const registered = () =>
+              db.registry.list().find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
+            // A type the registry lacks is asked of the graph's type sources, which add what they find to the
+            // registry: on EDGE an agent's database registers only its own types, and the rest are published by
+            // the plugin bundles that contribute them.
+            const type =
+              registered() ??
+              (yield* Effect.promise(async () => {
+                await db.graph.createRefResolver({ context: { space: db.spaceId } }).resolveType?.(DXN.make(typename));
+                return registered();
+              }));
             if (type === undefined || !Type.isType(type) || !Type.isObject(type)) {
               return yield* Effect.fail(
                 new UnknownObjectTypeError({ typename, message: `Unknown object type: ${typename}` }),

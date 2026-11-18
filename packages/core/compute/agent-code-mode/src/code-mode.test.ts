@@ -18,6 +18,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { HypergraphImpl } from '@dxos/echo-client';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
@@ -32,6 +33,9 @@ import * as Sandbox from './Sandbox.ts';
 EntityId.dangerouslyDisableRandomness();
 
 const TASK_TYPENAME = 'com.example.type.task';
+
+/** A type no layer registers, which only a type source supplies. */
+const NOTE_TYPENAME = 'com.example.type.note';
 
 /** The versioned DXN the effect dialect resolves the type by. */
 const TASK_DXN = String(DXN.make(TASK_TYPENAME, '0.1.0'));
@@ -596,6 +600,45 @@ describe('code mode records the operations an eval ran', () => {
           { toolCallId: 'effect', invocations: [{ operationKey: SCORE_KEY }] },
           { toolCallId: 'promise', invocations: [{ operationKey: SCORE_KEY }] },
         ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+// No model in the loop, so not tagged `model-fixture`: it runs with every `moon run :test`.
+describe('code mode types', () => {
+  it.effect(
+    'make finds a type the registry lacks through the type sources',
+    Effect.fnUntraced(
+      function* (_) {
+        class Note extends Type.makeObject<Note>(DXN.make(NOTE_TYPENAME, '0.1.0'))(
+          Schema.Struct({ title: Schema.String }),
+        ) {}
+        const { db } = yield* Database.Service;
+        const graph = db.graph;
+        if (!(graph instanceof HypergraphImpl)) {
+          throw new Error('The test database is not backed by echo-client.');
+        }
+        const asked: string[] = [];
+        const unregister = graph.registerTypeSource(async (uri) => {
+          asked.push(String(uri));
+          return DXN.isDXN(uri) && DXN.getName(uri) === NOTE_TYPENAME ? Note : undefined;
+        });
+        yield* Effect.addFinalizer(() => Effect.sync(unregister));
+
+        const output = yield* runEval(`
+          const note = await make('${NOTE_TYPENAME}', { title: 'Plan' });
+          await add(note);
+          await flush();
+          print('notes:', (await query('${NOTE_TYPENAME}')).length);
+        `);
+        expect(output).toEqual('notes: 1');
+        expect(asked).toEqual([String(DXN.make(NOTE_TYPENAME))]);
+
+        const unknown = yield* runEvalResult(`await make('com.example.type.unknown', {});`);
+        expect(unknown).toEqual({ output: 'Error: Unknown object type: com.example.type.unknown', ok: false });
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
