@@ -10,7 +10,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import { DeckOperation } from '#types';
+import { DeckCapabilities, DeckOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -76,9 +76,13 @@ export default Capability.makeModule(
       );
     }
 
+    const registry = yield* Capabilities.AtomRegistry;
+    const linkActionGate = yield* DeckCapabilities.LinkActionGate;
+    const release = Effect.sync(() => registry.set(linkActionGate, { pending: false }));
+
     // Forked because this module sits on the startup pass: the restore can wait for late-arriving
     // URL keys, and awaiting it here would hold the whole pass, and the boot loader with it.
-    yield* Effect.forkScoped(project());
+    yield* Effect.forkScoped(project().pipe(Effect.ensuring(release)));
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {

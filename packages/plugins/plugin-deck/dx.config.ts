@@ -70,6 +70,8 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           activatesOn: ActivationEvents.Startup,
           requires: [Capabilities.AtomRegistry],
           provides: [
+            Capabilities.BootGate,
+            DeckCapabilities.LinkActionGate,
             DeckCapabilities.State,
             DeckCapabilities.EphemeralState,
             AppCapabilities.Layout,
@@ -148,6 +150,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
             AppCapabilities.AppGraph,
             AttentionCapabilities.ViewState,
             AttentionCapabilities.Attention,
+            DeckCapabilities.LinkActionGate,
           ],
           provides: [],
         },

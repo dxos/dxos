@@ -565,11 +565,13 @@ feat F-5: URL Navigation & Deep Linking
     then: Open operation redirects to a 404 node
 
   req F-5.5:
-    when: a URL from outside the app carries `?action=<DXN>`
+    when: a URL from outside the app carries `?action=<name>`, where `<name>` is a link action's DXN
+          without its `dxn:` prefix
     then: once the URL has landed, DeckPlugin removes the parameter from the address bar and runs the
           `LinkAction` a plugin contributes under that id on the object at the end of the chain, once;
           an id no plugin contributes, or an action that does not apply to the object, is dropped with
-          a warning
+          a warning. When the app boots on such a URL, the boot loader stays up until the action has
+          run, or for 10 seconds at most, so the page first shows what the action leaves
 ```
 
 ```mdl
@@ -1135,6 +1137,30 @@ decision D-18: Plugins contribute link actions as an `AppCapabilities.LinkAction
 decision D-19: Approve [D-18].
   date: 2026-11-18
   by: user:wittjosiah
+```
+
+```mdl
+decision D-20: A link names its action by the action's DXN without the `dxn:` prefix.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-21: A link that runs an action opens in the state the action leaves; the reader does not see the page change into it. A public link to a presentation is presenting when it loads.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-22: The deck contributes a `BootGate` from its startup-pass state module, pending when the boot URL names an action. The URL handler releases it when its first projection, and the action with it, has finished; the state module releases it after 10 seconds regardless. Fills in [D-21].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: The URL handler waits on capabilities that arrive after the startup pass, so it activates after the boot loader would have dismissed, and a dismissed loader does not come back. The state module activates on the startup pass with only the atom registry, so the gate is decided in time. The budget keeps a projection that never finishes from holding the loader forever.
+  rejected: Contributing the gate from the URL handler, which decides it too late; running the action before the projection, which clears the fullscreen state the action sets.
 ```
 
 ## Appendix: Extension Definitions

@@ -22,7 +22,7 @@ const url = new URL('https://view.example.com/pub-1/deck');
 describe('LinkAction', () => {
   test('a link carries the action its kind takes for the object, and only that', ({ expect }) => {
     const shared = LinkAction.withAction(url, actions, 'public', 'deck');
-    expect(shared.searchParams.get(LinkAction.PARAM)).toBe(present.id);
+    expect(shared.searchParams.get(LinkAction.PARAM)).toBe('com.example.linkAction.present');
     expect(LinkAction.withAction(url, actions, 'internal', 'deck').search).toBe('');
     expect(LinkAction.withAction(url, actions, 'public', 'doc').search).toBe('');
   });
@@ -33,7 +33,7 @@ describe('LinkAction', () => {
     expect(LinkAction.find(shared, actions, 'doc')).toBeUndefined();
 
     const unknown = new URL(url);
-    unknown.searchParams.set(LinkAction.PARAM, DXN.make('com.example.linkAction.delete'));
+    unknown.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.delete');
     expect(LinkAction.find(unknown, actions, 'deck')).toBeUndefined();
     expect(LinkAction.withoutAction(shared).search).toBe('');
   });

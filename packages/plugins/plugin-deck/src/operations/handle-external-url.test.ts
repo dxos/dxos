@@ -5,8 +5,9 @@
 // @vitest-environment happy-dom
 
 import * as Effect from 'effect/Effect';
-import { beforeEach, describe, test } from 'vitest';
+import { beforeEach, describe, test, vi } from 'vitest';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -34,7 +35,7 @@ describe('DeckOperation.HandleExternalUrl', () => {
   test('runs the action a link names on the object it opens, once', async ({ expect }) => {
     const ran: unknown[] = [];
     await using harness = await Harness.createComposerTestApp({
-      plugins: [DocsPlugin(ran), DeckPlugin.make()],
+      plugins: [DocsPlugin((data) => Effect.sync(() => ran.push(data))), DeckPlugin.make()],
     });
     await harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, {}));
     await harness.runPromise(
@@ -42,7 +43,7 @@ describe('DeckOperation.HandleExternalUrl', () => {
     );
     const opened = new URL(window.location.href);
 
-    for (const action of [PRESENT, DXN.make('com.example.linkAction.unknown')]) {
+    for (const action of ['com.example.linkAction.present', 'com.example.linkAction.unknown']) {
       const url = new URL(opened);
       url.searchParams.set(LinkAction.PARAM, action);
       window.history.replaceState(null, '', url);
@@ -54,10 +55,39 @@ describe('DeckOperation.HandleExternalUrl', () => {
     await harness.runPromise(Operation.invoke(DeckOperation.HandleExternalUrl, {}));
     expect(ran).toEqual(['deck']);
   });
+
+  test('a link that names an action holds the boot loader until the action has run', async ({ expect }) => {
+    const ran: unknown[] = [];
+    const record = (data: unknown) => Effect.sync(() => ran.push(data));
+    const opened = await (async () => {
+      await using harness = await Harness.createComposerTestApp({ plugins: [DocsPlugin(record), DeckPlugin.make()] });
+      await harness.runPromise(
+        Operation.invoke(LayoutOperation.Set, { subject: [`${WORKSPACE}/deck`], workspace: WORKSPACE }),
+      );
+      return new URL(window.location.href);
+    })();
+
+    opened.searchParams.set(LinkAction.PARAM, 'com.example.linkAction.present');
+    window.history.replaceState(null, '', opened);
+    const release = Promise.withResolvers<void>();
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [
+        DocsPlugin((data) => Effect.promise(() => release.promise).pipe(Effect.andThen(record(data)))),
+        DeckPlugin.make(),
+      ],
+    });
+    const pending = () =>
+      harness.getAll(Capabilities.BootGate).some((gate) => harness.registry.get(gate.state).pending);
+    expect(pending()).toBe(true);
+
+    release.resolve();
+    await vi.waitFor(() => expect(pending()).toBe(false));
+    expect(ran).toEqual(['deck']);
+  });
 });
 
-/** A workspace with one deck, addressable by URL, and a present action that records what it ran on. */
-const DocsPlugin = (ran: unknown[]) =>
+/** A workspace with one deck, addressable by URL, and a present action that runs `run` on it. */
+const DocsPlugin = (run: LinkAction.LinkAction['run']) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.docs'), name: 'Docs' })).pipe(
     Plugin.addModule<void>(
       Capability.inlineModule(
@@ -81,7 +111,7 @@ const DocsPlugin = (ran: unknown[]) =>
               id: PRESENT,
               links: ['public'],
               appliesTo: (data) => data === 'deck',
-              run: (data) => Effect.sync(() => ran.push(data)),
+              run,
             }),
           ];
         }),

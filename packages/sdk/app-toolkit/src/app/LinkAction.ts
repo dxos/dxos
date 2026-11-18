@@ -9,7 +9,7 @@ import type * as Effect from 'effect/Effect';
 import type * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-/** The query parameter that names the action a link runs on the object it opens. */
+/** The query parameter that names, by its DXN without the `dxn:` prefix, the action a link runs on the object it opens. */
 export const PARAM = 'action';
 
 /** A copied link: `internal` opens Composer, `public` opens a published space in the viewer. */
@@ -34,13 +34,14 @@ export const withAction = (url: URL, actions: readonly LinkAction[], kind: Kind,
     return url;
   }
   const next = new URL(url);
-  next.searchParams.set(PARAM, action.id);
+  next.searchParams.set(PARAM, DXN.getName(action.id));
   return next;
 };
 
 /** The action `url` names, when one is contributed and applies to `data`. */
 export const find = (url: URL, actions: readonly LinkAction[], data: unknown): LinkAction | undefined => {
-  const id = DXN.tryMake(url.searchParams.get(PARAM) ?? '');
+  const name = url.searchParams.get(PARAM);
+  const id = name ? DXN.tryMake(`dxn:${name}`) : undefined;
   return id ? actions.find((action) => action.id === id && action.appliesTo(data)) : undefined;
 };
 
