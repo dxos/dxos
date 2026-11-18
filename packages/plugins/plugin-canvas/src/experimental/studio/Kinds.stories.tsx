@@ -211,7 +211,7 @@ export const Card: Story = {
   play: drawsAs('card-node'),
 };
 
-export const FeedCard: Story = {
+export const Feed: Story = {
   decorators: decorators({
     type: 'feed-card',
     width: 304,

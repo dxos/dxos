@@ -293,6 +293,12 @@ export const read = (text: string): Reading => {
     return raw;
   };
 
+  /** A grid's track list: a count, or the spelling `"1fr auto 2fr"`. A boolean is neither, so it is not one. */
+  const tracksAttr = (attrs: Map<string, Attr>, name: string): number | string | undefined => {
+    const value = scalarAttr(attrs, name);
+    return typeof value === 'boolean' ? undefined : value;
+  };
+
   /** The style fields every element shares. */
   const readStyle = (attrs: Map<string, Attr>) => ({
     ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
@@ -390,7 +396,8 @@ export const read = (text: string): Reading => {
       case 'rect':
       case 'ellipse':
       case 'diamond':
-      case 'triangle': {
+      case 'triangle':
+      case 'grid': {
         const sizeNode = parts.find((part) => part.name === 'Size');
         const origin = points[0] && readPoint(points[0]);
         const size = sizeNode && readSize(sizeNode);
@@ -406,6 +413,11 @@ export const read = (text: string): Reading => {
           ...optional('rotation', numberAttr(attrs, 'rotation')),
           ...optional('text', text),
           ...optional('corners', enumAttr(attrs, 'corners', Shape.Corners.literals)),
+          ...optional('cols', tracksAttr(attrs, 'cols')),
+          ...optional('rows', tracksAttr(attrs, 'rows')),
+          ...optional('gap', numberAttr(attrs, 'gap')),
+          ...optional('padding', numberAttr(attrs, 'padding')),
+          ...optional('parent', nameAttr(attrs, 'parent')),
           ...optional('type', nameAttr(attrs, KIND_ATTR)),
           ...(Object.keys(data).length ? { data } : {}),
           ...style,

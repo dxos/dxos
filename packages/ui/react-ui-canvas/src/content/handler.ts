@@ -31,6 +31,7 @@ import {
   isEllipseNode,
   isHullNode,
   isNoteNode,
+  solveGrids,
 } from '@dxos/scene';
 
 import { defaultNodeRegistry } from '../components/index.ts';
@@ -362,10 +363,21 @@ export const SceneHandler: ContentHandler = {
       }
     }
 
-    for (const element of object.elements) {
-      if (absorbed.has(element.id)) {
+    // Grids place what names them before anything is drawn: the rule is what the object stores, and a child's
+    // coordinates are a cached projection of it, so they are re-solved here rather than read back. A drawing with
+    // no grid skips this entirely, so it costs nothing where nothing is placed.
+    const boxes = object.elements.filter(isBox);
+    const solved = boxes.some((box) => box.kind === 'grid') ? solveGrids(boxes) : undefined;
+    const framed = <T extends Shape.Element>(element: T): T => {
+      const frame = solved?.get(element.id);
+      return frame && isBox(element) ? ({ ...element, ...frame } as T) : element;
+    };
+
+    for (const original of object.elements) {
+      if (absorbed.has(original.id)) {
         continue;
       }
+      const element = framed(original);
       const id = elementId(object.id, element.id);
       if (diagram && element.kind !== 'arrow') {
         const shape = diagramShape(element, placement.scale);

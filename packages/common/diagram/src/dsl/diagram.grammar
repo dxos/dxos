@@ -169,7 +169,10 @@ TextElement   { kw<"text"> Id Point Label Attribute* }
 ArrowElement  { kw<"arrow"> Id Connection Label? (Via | Attribute)* }
 PortalElement { kw<"portal"> Id Point Size Label? Attribute* }
 
-BoxKind  { kw<"rect"> | kw<"ellipse"> | kw<"diamond"> | kw<"triangle"> }
+// `grid` is a box that places what names it rather than drawing itself: same frame, same attributes, a rule.
+// Contextual, because `diagram grid=384x224` already spells a grid as an ATTRIBUTE name: a hard keyword there
+// stops `grid=` lexing as an attribute at all.
+BoxKind  { kw<"rect"> | kw<"ellipse"> | kw<"diamond"> | kw<"triangle"> | ckw<"grid"> }
 PathKind { kw<"line"> | kw<"curve"> }
 
 // Both ends are written. `from`/`to` are independently optional in the schema, and `_` is how an

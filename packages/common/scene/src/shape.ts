@@ -65,12 +65,33 @@ const styleFields = {
   fontSize: Schema.optional(Schema.Number).annotate({ description: 'Text size in scene units.' }),
 };
 
+/**
+ * What a `grid` box places with, modelled on CSS grid. The rule is what is stored and what the text carries; the
+ * children's coordinates are a cached projection of it, re-solved whenever the drawing is rendered — which is what
+ * keeps a run evenly spaced when a member is added or the grid is resized.
+ */
+const gridFields = {
+  /** Column tracks: a count (`3`), or a list (`"1fr auto 2fr"`) of shares, content sizes and fixed extents. */
+  cols: Schema.optional(Schema.Union([Schema.Number, Schema.String])).annotate({ description: 'Column tracks.' }),
+  /** Row tracks, in the same spelling. */
+  rows: Schema.optional(Schema.Union([Schema.Number, Schema.String])).annotate({ description: 'Row tracks.' }),
+  /** Space between two cells, in scene units. */
+  gap: Schema.optional(Schema.Number).annotate({ description: 'Space between two cells.' }),
+  /** Space between the grid's frame and its cells, in scene units. */
+  padding: Schema.optional(Schema.Number).annotate({ description: "Space inside the grid's frame." }),
+  /**
+   * The grid that places this box. Its own `x`/`y` and size are then the grid's to decide; the size it states is
+   * what an `auto` track measures, so a label can keep its own height while the body beside it takes the rest.
+   */
+  parent: Schema.optional(Schema.String).annotate({ description: 'The grid that places this box.' }),
+};
+
 const id = Schema.String.annotate({
   description: 'Stable element id, unique within the object (e.g. "left-eye"). Used to edit or delete the element.',
 });
 
 /** The closed-shape kinds {@link Box} covers. */
-export const BoxKind = Schema.Literals(['rect', 'ellipse', 'diamond', 'triangle']);
+export const BoxKind = Schema.Literals(['rect', 'ellipse', 'diamond', 'triangle', 'grid']);
 export type BoxKind = Schema.Schema.Type<typeof BoxKind>;
 
 /** Which corners a rect rounds. */
@@ -100,6 +121,7 @@ export const Box = Schema.Struct({
   data: Schema.optional(Schema.Record(Schema.String, Schema.Any)).annotate({
     description: "A contributed kind's own fields.",
   }),
+  ...gridFields,
   ...styleFields,
 });
 export type Box = Schema.Schema.Type<typeof Box>;

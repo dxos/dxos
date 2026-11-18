@@ -131,6 +131,7 @@ export const formatElement = (element: Shape.Element): string => {
     case 'ellipse':
     case 'diamond':
     case 'triangle':
+    case 'grid':
       return [
         element.kind,
         formatId(element.id),
@@ -141,6 +142,11 @@ export const formatElement = (element: Shape.Element): string => {
           kind: element.type,
           rotation: element.rotation,
           corners: element.corners,
+          cols: element.cols,
+          rows: element.rows,
+          gap: element.gap,
+          padding: element.padding,
+          parent: element.parent,
           ...style(element),
         }),
         ...formatData(element.kind, element.data),

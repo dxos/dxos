@@ -51,7 +51,8 @@ export const CLAUSE_KEYWORDS = ['cell', 'via', 'bus', 'compact'] as const;
  */
 export const RESERVED: ReadonlySet<string> = new Set<string>([
   ...RESERVED_STATEMENTS,
-  ...ELEMENT_KINDS,
+  // `grid` is contextual, so an id may still be called that; every other element kind is reserved.
+  ...ELEMENT_KINDS.filter((kind) => kind !== 'grid'),
   ...CLAUSE_KEYWORDS,
   '_',
 ]);
@@ -84,6 +85,15 @@ const STYLE: readonly AttrSpec[] = [
   { name: 'fontSize', type: 'number' },
 ];
 
+/** What a `grid` places with, and what a child needs to be placed by one. */
+const GRID: readonly AttrSpec[] = [
+  { name: 'cols', type: 'scalar' },
+  { name: 'rows', type: 'scalar' },
+  { name: 'gap', type: 'number' },
+  { name: 'padding', type: 'number' },
+  { name: 'parent', type: 'name' },
+];
+
 const BOX_ATTRS: readonly AttrSpec[] = [
   /**
    * The contributed element kind the box really is (`kind=card`). An open set: a plugin contributes kinds, so
@@ -93,6 +103,7 @@ const BOX_ATTRS: readonly AttrSpec[] = [
   { name: 'kind', type: 'name' },
   { name: 'rotation', type: 'number' },
   { name: 'corners', type: 'enum', values: Shape.Corners.literals },
+  ...GRID,
   ...STYLE,
 ];
 
@@ -103,6 +114,7 @@ const BOX_ATTRS: readonly AttrSpec[] = [
  */
 export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
   rect: BOX_ATTRS,
+  grid: BOX_ATTRS,
   ellipse: BOX_ATTRS,
   diamond: BOX_ATTRS,
   triangle: BOX_ATTRS,
