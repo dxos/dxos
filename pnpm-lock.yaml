@@ -27110,6 +27110,9 @@ importers:
 
   packages/ui/react-ui-rdf:
     dependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf

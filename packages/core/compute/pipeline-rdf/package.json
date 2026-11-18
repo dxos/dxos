@@ -23,6 +23,11 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
+    "./testing/server": {
+      "source": "./src/testing/fact-server.ts",
+      "types": "./dist/types/src/testing/fact-server.d.ts",
+      "import": "./dist/lib/testing-server.mjs"
+    },
     "./fact-store": {
       "source": "./src/store/fact-store.ts",
       "types": "./dist/types/src/store/fact-store.d.ts",

@@ -115,9 +115,12 @@ export const humanize = (value: string): string =>
 
 export const formatDate = (iso: string): string => iso.slice(0, 10);
 
-/** Map FactBank factuality to a real react-ui palette member. */
+/**
+ * Map FactBank factuality to a real react-ui palette member. Takes any string: a value grouped out of the store
+ * is read back from a literal, so narrowing it at the call site would mean a cast rather than a check.
+ */
 export const factualityColor = (
-  factuality: RDF.FactualityValue,
+  factuality: RDF.FactualityValue | string,
 ): NeutralPalette | ChromaticPalette | MessageValence => {
   switch (factuality) {
     case 'CT+':

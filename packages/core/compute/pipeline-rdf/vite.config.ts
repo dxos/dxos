@@ -10,6 +10,7 @@ export default defineConfig({
     'fact-store': 'src/store/fact-store.ts',
     'types': 'src/types/index.ts',
     'testing': 'src/testing/index.ts',
+    'testing-server': 'src/testing/fact-server.ts',
   },
   test: { node: true },
 });
