@@ -57,28 +57,41 @@ export default Capability.makeModule(
     if ('navigation' in window) {
       window.navigation.addEventListener('currententrychange', onCurrentEntryChange);
     }
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        window.removeEventListener('popstate', onPopState);
+        if ('navigation' in window) {
+          window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
+        }
+      }),
+    );
 
     // Tauri deep link support.
-    let unlistenDeepLink: (() => void) | undefined;
     let launch: Effect.Effect<void> = Effect.void;
     if (isTauri()) {
       yield* Effect.gen(function* () {
         const { getCurrent, onOpenUrl } = yield* Effect.promise(() => import('@tauri-apps/plugin-deep-link'));
 
-        unlistenDeepLink = yield* Effect.promise(() =>
+        // A link opened after launch supersedes the launch URLs.
+        let opened = false;
+        const unlistenDeepLink = yield* Effect.promise(() =>
           onOpenUrl((urls) => {
+            opened = true;
             for (const urlString of urls) {
               void EffectEx.runAndForwardErrors(handleDeepLink(urlString, project));
             }
           }),
         );
+        yield* Effect.addFinalizer(() => Effect.sync(unlistenDeepLink));
 
         const launchUrls = yield* Effect.promise(() => getCurrent());
         if (launchUrls && launchUrls.length > 0) {
           log('app launched with deep links', { urls: launchUrls });
-          launch = Effect.forEach(launchUrls, (urlString) => handleDeepLink(urlString, project), {
-            discard: true,
-          }).pipe(
+          launch = Effect.suspend(() =>
+            opened
+              ? Effect.void
+              : Effect.forEach(launchUrls, (urlString) => handleDeepLink(urlString, project), { discard: true }),
+          ).pipe(
             Effect.catchCause((cause) =>
               Effect.sync(() => log.warn('launch deep link failed', { error: Cause.pretty(cause) })),
             ),
@@ -99,15 +112,6 @@ export default Capability.makeModule(
     // URL keys, and awaiting it here would hold the whole pass, and the boot loader with it.
     yield* Effect.forkScoped(launch.pipe(Effect.andThen(project()), Effect.ensuring(restored)));
 
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        window.removeEventListener('popstate', onPopState);
-        if ('navigation' in window) {
-          window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
-        }
-        unlistenDeepLink?.();
-      }),
-    );
     return [];
   }),
 );
