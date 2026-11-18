@@ -7,6 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import type * as Operation from '@dxos/compute/Operation';
+import type * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database, type Error, Obj, type Registry } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
@@ -17,6 +18,24 @@ import { trim } from '@dxos/util';
 import { AiAssistantError } from '../util/index.ts';
 import type * as AiRequest from './AiRequest.ts';
 import { ArtifactDiffResolver } from './artifact-diff.ts';
+
+/**
+ * The skills' instructions as the system prompt carries them, under `## Skills Definitions`; `undefined` for none.
+ */
+export const formatSkills = (skills: readonly Skill.Skill[]) =>
+  Function.pipe(
+    skills,
+    Effect.forEach((skill) =>
+      Effect.gen(function* () {
+        return trim`
+          <skill>
+            ${yield* Template.processTemplate(skill.instructions)}
+          </skill>
+        `;
+      }),
+    ),
+    Effect.map((defs) => (defs.length > 0 ? ['## Skills Definitions', ...defs].join('\n\n') : undefined)),
+  );
 
 /**
  * Formats the system prompt.
@@ -33,22 +52,7 @@ export const formatSystemPrompt = ({
   Database.Service | Registry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
-    const skillDefs = yield* Function.pipe(
-      skills,
-      Effect.forEach((skill) => Effect.succeed(skill.instructions)),
-      Effect.flatMap(
-        Effect.forEach((template) =>
-          Effect.gen(function* () {
-            return trim`
-            <skill>
-              ${yield* Template.processTemplate(template)}
-            </skill>
-          `;
-          }),
-        ),
-      ),
-      Effect.map((skills) => (skills.length > 0 ? ['## Skills Definitions', ...skills].join('\n\n') : undefined)),
-    );
+    const skillDefs = yield* formatSkills(skills);
 
     // Instructions steer the session, so their text (and sentinel commands) belongs in the system
     // prompt itself — a context-object stub would force the model to tool-load them and follow nothing.
