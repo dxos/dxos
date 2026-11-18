@@ -121,6 +121,7 @@ export class DocStore {
       const docs = yield* this.load(objects.map((object) => object.id));
       const messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[] = [];
       const written = new Map<string, Doc>();
+      const appended = new Set<string>();
       const results = new Map<string, WriteResult>();
       for (const object of objects) {
         const { id } = object;
@@ -128,6 +129,7 @@ export class DocStore {
         // A document whose last append failed has changes `saveIncremental` counts as saved already.
         const chunk = this.#resave.has(id) ? A.save(after) : A.saveIncremental(after);
         if (chunk.byteLength > 0) {
+          appended.add(id);
           messages.push({
             spaceId: this.#spaceId,
             feedId: documentFeedId(id),
@@ -139,8 +141,25 @@ export class DocStore {
         // An object written in several edits merged if any of them did.
         results.set(id, { heads: A.getHeads(after), merged: behind || (results.get(id)?.merged ?? false) });
       }
+      // Cached before the append, and unsaved until it lands: an edit made while it is pending (a history
+      // read applies edits synchronously) builds on this document, since the one it replaces is outdated.
+      for (const [id, doc] of written) {
+        this.#remember(id, doc);
+        if (appended.has(id)) {
+          this.#unsaved.add(id);
+        }
+      }
       if (messages.length > 0) {
-        const blocks = yield* this.#feedStore.appendLocal(messages);
+        const blocks = yield* this.#feedStore.appendLocal(messages).pipe(
+          // The dropped chunk is counted as saved, so the next append of these documents is a full save.
+          Effect.onError(() =>
+            Effect.sync(() => {
+              for (const id of appended) {
+                this.#resave.add(id);
+              }
+            }),
+          ),
+        );
         for (const block of blocks) {
           const id = block.feedId === undefined ? undefined : objectOfFeed(block.feedId);
           const result = id === undefined ? undefined : results.get(id);
@@ -149,12 +168,12 @@ export class DocStore {
           }
         }
       }
-      // Cached only once durable: a failed append leaves the cache at the stored state, so a retry
-      // computes the same change again instead of finding nothing new to write.
       for (const [id, doc] of written) {
-        this.#unsaved.delete(id);
         this.#resave.delete(id);
-        this.#remember(id, doc);
+        // A document edited while the append was pending keeps the marker that appends that edit.
+        if (this.#cache.get(id) === doc) {
+          this.#unsaved.delete(id);
+        }
       }
       return results;
     });
@@ -243,19 +262,25 @@ export class DocStore {
    */
   persist(ids: readonly string[]): Store<void> {
     return Effect.gen({ self: this }, function* () {
+      const chunked: string[] = [];
       const messages = [...ids].flatMap((id) => {
         const doc = this.#unsaved.has(id) ? this.#cache.get(id) : undefined;
         // A full save holds the changes a failed append dropped; loading it next to earlier chunks is harmless.
         const chunk = doc ? (this.#resave.has(id) ? A.save(doc) : A.saveIncremental(doc)) : undefined;
-        return chunk && chunk.byteLength > 0
-          ? [{ spaceId: this.#spaceId, feedId: documentFeedId(id), feedNamespace: AUTOMERGE_NAMESPACE, data: chunk }]
-          : [];
+        if (!chunk || chunk.byteLength === 0) {
+          return [];
+        }
+        chunked.push(id);
+        return [
+          { spaceId: this.#spaceId, feedId: documentFeedId(id), feedNamespace: AUTOMERGE_NAMESPACE, data: chunk },
+        ];
       });
       if (messages.length > 0) {
         yield* this.#feedStore.appendLocal(messages).pipe(
+          // Only a document whose chunk was dropped has changes `saveIncremental` now counts as saved.
           Effect.onError(() =>
             Effect.sync(() => {
-              for (const id of ids) {
+              for (const id of chunked) {
                 this.#resave.add(id);
               }
             }),

@@ -141,6 +141,46 @@ describe('DocStore', () => {
       });
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('an edit made while a write is appending is kept', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const objectId = 'object';
+      const feedStore = new FeedStore({ localActorId: 'test', assignPositions: false });
+      yield* feedStore.migrate();
+      const first = A.change(A.init<DatabaseDirectory>(), (draft) => {
+        draft.objects = { [objectId]: { meta: { keys: [] }, data: { value: 1 } } };
+      });
+      yield* feedStore.appendLocal([
+        { spaceId, feedId: documentFeedId(objectId), feedNamespace: AUTOMERGE_NAMESPACE, data: A.save(first) },
+      ]);
+
+      const docs = new DocStore(feedStore, spaceId);
+      yield* docs.load([objectId]);
+      const doc = docs.peek(objectId);
+      invariant(doc);
+      const current: EntityStructure | undefined = A.toJS(doc).objects?.[objectId];
+      invariant(current);
+
+      // The edit lands while the write's append is pending, as a synchronous history read's would.
+      const appendLocal = feedStore.appendLocal;
+      feedStore.appendLocal = (messages) => {
+        docs.change(objectId, (draft) => {
+          const object = draft.objects?.[objectId];
+          if (object) {
+            object.data.extra = 'during the append';
+          }
+        });
+        feedStore.appendLocal = appendLocal;
+        return appendLocal(messages);
+      };
+      yield* docs.write([{ id: objectId, structure: { ...current, data: { ...current.data, value: 2 } } }]);
+      yield* docs.persist([objectId]);
+
+      const reloaded = yield* new DocStore(feedStore, spaceId).load([objectId]);
+      expect(reloaded.get(objectId)?.objects?.[objectId]?.data).toMatchObject({ value: 2, extra: 'during the append' });
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });
 
 const concatBytes = (left: Uint8Array, right: Uint8Array): Uint8Array => {

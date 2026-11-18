@@ -10,60 +10,98 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder, createTmpPath } from './echo-test-builder.ts';
 
+// Run: DX_RUN_MANUAL_TESTS=1 pnpm exec vitest run --project node src/testing/cold-query.bench.test.ts
 const NAME = 'echo-sqlite';
-const BUILDER = () => new EchoTestBuilder();
 
-const OBJECTS = Number(process.env.COLD_QUERY_OBJECTS ?? 1_000);
-const ROUNDS = Number(process.env.COLD_QUERY_ROUNDS ?? 7);
+/** One SQLite file; each builder opens its own connection to it. */
+const createStorage = () => {
+  const path = createTmpPath();
+  return {
+    path,
+    makeBuilder: () => new EchoTestBuilder(),
+    cleanup: () => {
+      for (const file of [path, `${path}-wal`, `${path}-shm`]) {
+        rmSync(file, { force: true });
+      }
+    },
+  };
+};
 
-const median = (values: number[]): number =>
-  [...values].sort((left, right) => left - right)[Math.floor(values.length / 2)];
+const OBJECTS = parseCount('COLD_QUERY_OBJECTS', 1_000);
+const ROUNDS = parseCount('COLD_QUERY_ROUNDS', 7);
 
 /**
- * Cold query: a file holds `OBJECTS` objects; each round reloads the peer, reopens the database and
- * runs one query for every object, reading a field of each so every object is hydrated. Prints the
- * median open and query times; asserts only that every object came back.
+ * Cold query: a file holds `OBJECTS` objects. Each round starts a new builder and peer on that file (a new
+ * SQLite connection, or a new wasm instance), opens the database, and runs one query for every object. A second
+ * query on the same database follows. Prints median open, first-query and repeat-query times; asserts that
+ * every written object came back with its value.
  */
 describe('cold query', { tags: ['manual'], timeout: 600_000 }, () => {
-  test(`query ${OBJECTS} objects after reopening`, async () => {
-    const storagePath = createTmpPath();
-    await using builder = await BUILDER().open();
-    const peer = await builder.createPeer({ types: [TestSchema.Expando], storagePath });
-    const db = await peer.createDatabase();
-    for (let index = 0; index < OBJECTS; index++) {
-      db.add(Obj.make(TestSchema.Expando, { value: index, label: `label-${index}` }));
-      if (index % 100 === 99) {
+  test(`query ${OBJECTS} objects in a fresh peer`, async () => {
+    const storage = createStorage();
+    try {
+      const written = new Map<string, number>();
+      {
+        await using builder = await storage.makeBuilder().open();
+        const peer = await builder.createPeer({ types: [TestSchema.Expando], storagePath: storage.path });
+        const db = await peer.createDatabase();
+        for (let index = 0; index < OBJECTS; index++) {
+          const object = db.add(Obj.make(TestSchema.Expando, { value: index, label: `label-${index}` }));
+          written.set(object.id, index);
+          if (index % 100 === 99) {
+            await db.flush();
+          }
+        }
         await db.flush();
+        await peer.host.updateIndexes();
       }
-    }
-    await db.flush();
-    await peer.host.updateIndexes();
 
-    const opens: number[] = [];
-    const queries: number[] = [];
-    const warm: number[] = [];
-    for (let round = 0; round < ROUNDS; round++) {
-      await peer.reload();
-      const start = performance.now();
-      const reopened = await peer.openLastDatabase();
-      const opened = performance.now();
-      const objects = await reopened.query(Filter.type(TestSchema.Expando)).run();
-      const total = objects.reduce((sum, object) => sum + Number(object.value), 0);
-      const queried = performance.now();
-      expect(objects).toHaveLength(OBJECTS);
-      expect(total).toBe((OBJECTS * (OBJECTS - 1)) / 2);
-      // The same query again, with every object now resident: what is left is the query itself.
-      const again = await reopened.query(Filter.type(TestSchema.Expando)).run();
-      expect(again).toHaveLength(OBJECTS);
-      opens.push(opened - start);
-      queries.push(queried - opened);
-      warm.push(performance.now() - queried);
+      const opens: number[] = [];
+      const queries: number[] = [];
+      const repeats: number[] = [];
+      for (let round = 0; round < ROUNDS; round++) {
+        const start = performance.now();
+        await using builder = await storage.makeBuilder().open();
+        const peer = await builder.createPeer({ types: [TestSchema.Expando], storagePath: storage.path });
+        const db = await peer.openLastDatabase();
+        const opened = performance.now();
+        const objects = await db.query(Filter.type(TestSchema.Expando)).run();
+        // Reading a field of each object builds all of them, as a view showing them would.
+        const read = objects.map((object) => [object.id, Number(object.value)] as const);
+        const queried = performance.now();
+        const again = await db.query(Filter.type(TestSchema.Expando)).run();
+        const repeated = performance.now();
+
+        expect(new Map(read)).toEqual(written);
+        expect(again).toHaveLength(OBJECTS);
+        opens.push(opened - start);
+        queries.push(queried - opened);
+        repeats.push(repeated - queried);
+      }
+      // oxlint-disable-next-line no-console
+      console.log(
+        `cold query (${NAME}, ${OBJECTS} objects, ${ROUNDS} rounds): open ${median(opens).toFixed(1)} ms, ` +
+          `first query ${median(queries).toFixed(1)} ms, repeat query ${median(repeats).toFixed(1)} ms, ` +
+          `open + first query ${median(opens.map((open, index) => open + queries[index])).toFixed(1)} ms`,
+      );
+    } finally {
+      storage.cleanup();
     }
-    // oxlint-disable-next-line no-console
-    console.log(
-      `cold query (${NAME}, ${OBJECTS} objects, ${ROUNDS} rounds): open ${median(opens).toFixed(1)} ms, ` +
-        `query ${median(queries).toFixed(1)} ms, warm query ${median(warm).toFixed(1)} ms, total ${median(opens.map((open, index) => open + queries[index])).toFixed(1)} ms`,
-    );
-    rmSync(storagePath, { recursive: true, force: true });
   });
 });
+
+/** Middle sample, or the mean of the two middle samples for an even count. */
+const median = (values: number[]): number => {
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+};
+
+/** A positive integer from the environment, so a typo fails before anything is written. */
+function parseCount(name: string, fallback: number): number {
+  const value = Number(process.env[name] ?? fallback);
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${name} must be a positive integer, got ${process.env[name]}`);
+  }
+  return value;
+}
