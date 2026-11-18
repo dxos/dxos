@@ -11,10 +11,10 @@ import { graphSpec } from './index.ts';
 describe('the graph kind', () => {
   test('names no prototype, so it takes none of the card or the box', ({ expect }) => {
     const registry = createNodeRegistry(
-      { ...defaultNodeTypes, 'space-graph': kindNodeDef('space-graph', graphSpec) },
+      { ...defaultNodeTypes, graph: kindNodeDef('graph', graphSpec) },
       defaultNodePrototypes,
     );
-    const space = registry['space-graph'];
+    const space = registry['graph'];
     expect(space.ellipse).toBe(true);
     expect([space.bare, space.outline]).toEqual([undefined, true]);
     expect(space.minSize).toEqual({ width: 120, height: 120 });

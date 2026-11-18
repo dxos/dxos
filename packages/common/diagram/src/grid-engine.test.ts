@@ -192,8 +192,8 @@ describe('grid diagrams', () => {
     const text = `
       diagram kind=grid size=800x600
       group field layout=pack packSeed=29 packMin=36 packMax=185 gap=10 {
-        node s0 kind=space-graph border=true seed=29
-        node s1 kind=space-graph border=false
+        node s0 kind=graph border=true seed=29
+        node s1 kind=graph border=false
       }
     `;
     expect(messagesOf(text)).toEqual([]);
@@ -210,8 +210,8 @@ describe('grid diagrams', () => {
         parent: OBJECT,
       },
       // `seed` is the component's own; the packing's is named apart from it.
-      { kind: 'rect', id: 's0', ...placed, parent: 'field', type: 'space-graph', data: { seed: 29 }, border: true },
-      { kind: 'rect', id: 's1', ...placed, parent: 'field', type: 'space-graph', border: false },
+      { kind: 'rect', id: 's0', ...placed, parent: 'field', type: 'graph', data: { seed: 29 }, border: true },
+      { kind: 'rect', id: 's1', ...placed, parent: 'field', type: 'graph', border: false },
     ]);
   });
 

@@ -807,14 +807,23 @@ export const isBoxNode = (node: NodeBase): node is RectNode | ViewNode => isRect
 export const showsContents = (node: ViewNode): boolean => node.link?.contents ?? node.label === undefined;
 export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES.some((type) => type === node.type);
 
-/** Node types stored under an earlier name: `frame` is what `view` was called before the View rename. */
-const LEGACY_NODE_TYPES: ReadonlyMap<string, BuiltinNodeType> = new Map([['frame', 'view']]);
+/**
+ * Node types stored under an earlier name: `frame` is what `view` was called before the View rename, and
+ * `space-graph` is what plugin-canvas's `graph` kind was called while it was the only graph a canvas drew.
+ */
+const LEGACY_NODE_TYPES: ReadonlyMap<string, NodeType> = new Map([
+  ['frame', 'view'],
+  ['space-graph', 'graph'],
+]);
+
+/** An element stored under an earlier type name reads as its current type; any other is returned as it is. */
+export const withCurrentType = <T extends { type?: string }>(element: T): T => {
+  const type = element.type === undefined ? undefined : LEGACY_NODE_TYPES.get(element.type);
+  return type ? { ...element, type } : element;
+};
 
 /** A node stored under an earlier type name reads as its current type; any other node is returned as it is. */
-export const withLegacyNodeType = (node: NodeBase): NodeBase => {
-  const type = LEGACY_NODE_TYPES.get(node.type);
-  return type ? { ...node, type } : node;
-};
+export const withLegacyNodeType = (node: NodeBase): NodeBase => withCurrentType(node);
 
 /** The settings each type once stored beside the shared fields, which it now keeps in `params`. */
 const LEGACY_PARAMS: Readonly<Record<string, readonly string[]>> = { cloud: ['bumps'], polygon: ['sides', 'fit'] };

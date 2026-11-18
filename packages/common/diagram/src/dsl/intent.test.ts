@@ -60,8 +60,8 @@ const SOURCES: Record<string, string> = {
   'packing and node borders': `
     diagram kind=grid size=800x600
     group field layout=pack packSeed=29 packMin=36 packMax=185 gap=10 {
-      node s0 kind=space-graph border=true seed=29 tones="violet | green"
-      node s1 kind=space-graph border=false
+      node s0 kind=graph border=true seed=29 tones="violet | green"
+      node s1 kind=graph border=false
     }
     group frame cols=2 { node left "L" }
     edge s0#e3 -- frame#w2 path=line

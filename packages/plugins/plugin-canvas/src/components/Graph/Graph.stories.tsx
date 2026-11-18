@@ -32,14 +32,14 @@ import { graphSpec } from './Graph.tsx';
 const NODES = createNodeRegistry(
   {
     ...defaultNodeTypes,
-    'space-graph': kindNodeDef('space-graph', { group: EXTENSIONS_GROUP, ...graphSpec }),
+    'graph': kindNodeDef('graph', { group: EXTENSIONS_GROUP, ...graphSpec }),
   },
   defaultNodePrototypes,
 );
 
 /** A space graph as the engine draws one: the node base, and the kind's own fields under `data`. */
 const graph = (id: string, x: number, data: Record<string, unknown>): Node & { data: Record<string, unknown> } => ({
-  type: 'space-graph',
+  type: 'graph',
   id,
   z: `a${id}`,
   center: { x, y: 0 },
@@ -98,7 +98,7 @@ export const Test: Story = {
 
     const palette = await canvas.findByTestId('palette');
     // A group is a child of the rail; folded, it shows one of its tools and offers the rest from a flyout.
-    const tool = palette.querySelector('[data-testid="canvas.tool.node:space-graph"]');
+    const tool = palette.querySelector('[data-testid="canvas.tool.node:graph"]');
     const group = tool?.closest('[data-testid="palette"] > *');
     await expect(group).toBeTruthy();
     await expect(

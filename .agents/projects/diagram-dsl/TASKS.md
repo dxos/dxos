@@ -1,6 +1,6 @@
 # Diagram DSL — Tasks
 
-_Resume: rename `space-graph` to `graph`. Uncommitted: none. Last: the deck moved to plugin-debug as the DXOS Deck template._
+_Resume: a node states its own size (`width=` / `height=`). Uncommitted: none. Last: the deck moved to plugin-debug as the DXOS Deck template._
 
 ## Phase 1: A drawing as intent
 
@@ -24,7 +24,8 @@ The nine slides exist in four generations and live in `plugin-canvas/src/experim
 ### Tasks
 
 - [x] **Presentation story from the nine `.dx` files** — `plugins/plugin-debug/samples/Studio` › Deck.
-- [ ] **Rename the `space-graph` kind to `graph`**, with a migration for stored nodes.
+- [x] **Rename the `space-graph` kind to `graph`** — a stored node under the old name reads as `graph` where a stored
+      layout is read (`@dxos/scene` D-105); the stored name changes when the element is next written.
 - [x] **`.dx` is the only slide source** — delete the deck export (`.diagram`, `.json`), the `SlideSpec` layout
       (`*.spec.ts`, `spec.ts`, `studio.ts`, `studio.test.ts`), the grid boxes (`.grid.diagram`) and their stories.
 - [ ] **Give the Architecture slide's cards room for a second body line** (the HALO card clips).

@@ -9,15 +9,15 @@ group composer "Composer" gap=24 {
 group hyperspace "ECHO Hyperspace" cols="1fr 0" gap=0 {
   group field-body padding=24 border=true {
     group field gap=10 layout=pack packSeed=29 packMin=36 packMax=185 {
-      node s0 kind=space-graph border=true depth=5 dots=true extra=0.4 data-fill=0.55 pitch=24 root=0 seed=29 size=24 tones="violet | green | amber | blue"
-      node s1 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=30 size=24
-      node s2 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=31 size=24
-      node s3 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=32 size=24
-      node s4 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=33 size=24
-      node s5 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=34 size=24
-      node s6 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=35 size=24
-      node s7 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=36 size=24
-      node s8 kind=space-graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=37 size=24
+      node s0 kind=graph border=true depth=5 dots=true extra=0.4 data-fill=0.55 pitch=24 root=0 seed=29 size=24 tones="violet | green | amber | blue"
+      node s1 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=30 size=24
+      node s2 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=31 size=24
+      node s3 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=32 size=24
+      node s4 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=33 size=24
+      node s5 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=34 size=24
+      node s6 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=35 size=24
+      node s7 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=36 size=24
+      node s8 kind=graph border=true dots=true extra=0.4 data-fill=0.55 pitch=24 seed=37 size=24
     }
   }
   group field-ports gap=12 {

@@ -14,7 +14,7 @@ import * as CanvasCapabilities from '../types/CanvasCapabilities.ts';
  * capability another plugin uses, so the canvas learns of them exactly as it learns of anyone's.
  */
 export const EXTENSION_KINDS: readonly CanvasCapabilities.NodeTypeContribution[] = [
-  { type: 'space-graph', spec: graphSpec },
+  { type: 'graph', spec: graphSpec },
 ];
 
 export default Capability.makeModule(() =>

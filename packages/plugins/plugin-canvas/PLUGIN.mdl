@@ -610,3 +610,20 @@ decision D-40: The DSL companion follows [D-38]: under the host's `ReadOnly` its
   affects: [F-3]
   why: Rebuild rewrites the drawing's records, so a companion that kept it would be a way round the lock on the article beside it.
 ```
+
+```mdl
+decision D-41: The space graph's element kind is named `graph`; it was `space-graph`. A node stored under the old name reads as `graph` ([D-105] of `@dxos/scene`).
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  why: It is the one graph a canvas draws, and a drawing's text names it on every node (`node s0 kind=graph`).
+```
+
+```mdl
+decision D-42: The studio deck's diagrams, stories and element kinds leave this plugin for plugin-debug's DXOS Deck template; the Grids story moves from `experimental` to `src/dsl`.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  why: The deck was here only while the diagram language was built against it; the canvas keeps the language's own stories and its one contributed kind.
+```
+

@@ -25,7 +25,7 @@ group subagents-body gap=24 {
 }
 
 group space-body gap=24 {
-  node space kind=space-graph extra=0.45 data-fill=0.6 hue=neutral pitch=26 seed=7 size=24
+  node space kind=graph extra=0.45 data-fill=0.6 hue=neutral pitch=26 seed=7 size=24
 }
 
 edge email -> triage head=triangle
