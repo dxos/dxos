@@ -101,6 +101,47 @@ choice is not between "a value grammar" and "no value grammar":
    design already moves both out of node fields. Closing gap 2 (the composite template) would remove most of this
    case rather than spelling it.
 
+### Decision: no value grammar, because the scene DSL is not a round-trip format
+
+Option 3. The fields that would need one are not node fields for much longer: `chips`, `colors` and the
+substrate's `show` belong to composite templates and generator params, which the design already moves off the
+node. The icon needs nothing at all — `iconOf` already accepts a bare string
+(`react-ui-canvas/src/components/SceneLayer/CardNodeView.tsx:106`) and the sidecar already writes one; the
+`{type}` wrapper is created by `promoteCards` (`studio/studio.ts:353`) and can simply stop being created.
+
+Behind that sits the larger decision, which settles what the scene DSL is for. Two jobs were wearing one name:
+
+| Job                                    | Form             | Why                                                                              |
+| -------------------------------------- | ---------------- | -------------------------------------------------------------------------------- |
+| Serialize a concrete, laid-out drawing | records, as JSON | No second model, so no isomorphism to prove and no translation to lose things in |
+| Author intent                          | the semantic DSL | `node`, `edge`, `group`, relations; the engine places. JSON has no form for this |
+
+The measurement that decides the first row is size, over three slides: the DSL is 3.0–3.6 KB and 85–121 lines,
+the records are 19–22 KB and 1,000–1,200 lines pretty-printed, 11–13 KB compact. The DSL is 3–6× smaller, which
+is real — and it is bought with a hand-written print/parse pair whose agreement has to be re-proved by a
+conformance test. Stages 1 and 2 ARE that proof, and all four of their fixes were translation losses.
+
+One thing not to overclaim: those losses came from there being **two object models**, not from the text being
+text. They happened at the records↔scene boundary in `SceneHandler`, which exists because `Scene.Scene` /
+`Shape.Element` and the `ContentMap` records are different shapes. Serializing the store itself removes that
+boundary; serializing `Scene.Scene` as JSON instead of as DSL would have bought nothing.
+
+### What an agent writes well
+
+The agent is a primary author, so this is a design input rather than a footnote. Ranked by observed reliability:
+
+1. **A whole object against a schema** — the Effect Schemas already exist, so constrained decoding makes the
+   output mechanically valid. No equivalent exists for a lezer grammar.
+2. **Line-oriented text, edited by exact string replacement** — the coding loop. One element per line suits it;
+   a 1,000-line nested blob is its worst case.
+3. **A JSON Patch** — clearly the weakest. Paths go subtly wrong and the failure is quiet. If a drawing is
+   written as JSON it should be whole-object writes, never patches.
+
+What an agent cannot do well is layout arithmetic. It can write `node Store "ProcessStore" below PM` from
+understanding; it cannot write `rect box 1312,-417 304x64` from understanding. That is the whole argument for
+keeping the semantic layer, and the reason the studio deck — a laid-out drawing carrying absolute coordinates —
+sat in the wrong layer and needed `kind=`, `via`, a `data-` escape and a JSON sidecar to survive at all.
+
 ## Terms
 
 | Term               | What it is                                            | In the code today                                                         |
@@ -281,6 +322,10 @@ result). For both to write one model:
    emitting one would produce text an older parser rejects with no way to negotiate.
 
 ## Changelog
+
+- 2026-11-17 — user: no value grammar for the scene DSL. The scene DSL is not a round-trip format: a concrete
+  drawing is stored as records, and the semantic DSL is what agents and humans author. The fields that would have
+  needed a value grammar move onto composite templates and generators instead.
 
 - 2026-11-17 — agent: stage 2 implemented. A link keeps its markers, line style and colour through the DSL, an
   arrow states its own bends (`via`), and a kind field colliding with an element attribute is escaped rather than
