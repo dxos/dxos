@@ -1515,6 +1515,14 @@ decision D-59: EDGE's `MemoryObject` is a replica of the space's `facts` feed, s
   why: Facts reach a space's memory one way, through its replicated log, instead of a second feed format and an indexer per agent.
 ```
 
+```mdl
+decision D-60: On EDGE the space's `MemoryObject` drives time-driven rules itself: it sets its alarm to the memory's next due time and, when it fires, asks for the due watches of each subscription owner to run, so the agent's `BrainObject` keeps no location and no polling alarm. Fills in [D-57].
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-9]
+  why: The memory knows when its rules are next due; a per-agent poll every minute both runs late and runs when nothing is due.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
