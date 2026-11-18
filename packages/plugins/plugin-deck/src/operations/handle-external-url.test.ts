@@ -204,11 +204,9 @@ describe('DeckOperation.HandleExternalUrl', () => {
   });
 });
 
-/** The planks open in {@link WORKSPACE}. */
 const active = (harness: Awaited<ReturnType<typeof Harness.createComposerTestApp>>) =>
   harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.EphemeralState)).open[WORKSPACE]?.active;
 
-/** The URL an app lands on after opening the workspace's document. */
 const openedUrl = async () => {
   await using harness = await Harness.createComposerTestApp({
     plugins: [DeckWorkspacePlugin(() => Effect.void), DeckPlugin.make()],
