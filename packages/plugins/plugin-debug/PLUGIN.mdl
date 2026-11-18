@@ -147,6 +147,16 @@ feat Wireframe
 ```
 
 ```mdl
+feat DeckTemplate
+  desc: |
+    The DXOS Deck space template: DXOS in nine diagrams (ECHO, the ontology, plugins, Composer, the
+    architecture, agents, a chat, an agent), each a canvas drawing built from its `.dx` text in
+    `src/samples/studio/diagrams`, and one presentation that embeds them. The plugin contributes the
+    element kinds the drawings are drawn by (card, feed card, chip, plank, app frame and its parts) to
+    the canvas; the graph kind is plugin-canvas's own.
+```
+
+```mdl
 feat StatsPanel
   desc: |
     The shared telemetry store (`AppCapabilities.StatsPanel`) as one `StatCard` per plugin
@@ -554,4 +564,14 @@ decision D-3: [QA-10] demos the loop with the Ride Check template, a ride-foreca
   affects: [QA-10]
   why: Every step of the loop has to change something a viewer can see; a greeting endpoint gives the deploy and the edit nothing to show.
   rejected: Rewriting Hello Worker in place, which its eval, QA-9 and the showcase speaking track still describe.
+```
+
+```mdl
+decision D-4: The nine studio diagrams, their deck and the element kinds they draw with live here as the DXOS Deck template ([DeckTemplate]). Each diagram has one source, its `.dx` text.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+  why: They are a presentation, not part of the canvas; plugin-canvas held them only while the diagram language was being built against them.
+  rejected:
+    - Adding them to plugin-canvas's DXOS Architecture template, which would keep presentation kinds in the canvas plugin.
 ```

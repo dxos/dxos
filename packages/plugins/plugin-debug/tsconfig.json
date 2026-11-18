@@ -23,6 +23,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/diagram"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -119,10 +122,16 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../stories/storybook-testing"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-canvas"
     },
     {
       "path": "../../ui/react-ui-canvas-compute"
@@ -201,6 +210,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-presenter"
     },
     {
       "path": "../plugin-progress"
