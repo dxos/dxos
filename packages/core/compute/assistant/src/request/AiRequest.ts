@@ -43,10 +43,10 @@ import { formatSystemPrompt, formatUserPrompt } from './format.ts';
 import { GenerationObserver } from './observer.ts';
 
 /**
- * Turns a model call carries whole, counting the one in progress: it and the two before keep their tool calls and
+ * Turns a model call carries whole, counting the one in progress: it and the four before keep their tool calls and
  * results, so the agent can still build on what it just did; older turns keep only what was said.
  */
-const FULL_TURNS = 3;
+const FULL_TURNS = 5;
 
 export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
