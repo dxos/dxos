@@ -34,12 +34,18 @@ import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
 
-import types from '../capabilities/schema.ts';
-import { addTestCanvas } from '../testing/canvas.ts';
-import { STUDIO_KINDS } from './registry.ts';
-import { STUDIO_SLIDES, seedSlide } from './slides.ts';
-import { slideBounds } from './spec.ts';
-import { STUDIO_CANVAS, type StudioReport, seedStudioSlide, studioDeckSize, studioPageFrame } from './studio.ts';
+import types from '../../capabilities/schema.ts';
+import { addTestCanvas } from '../../testing/canvas.ts';
+import { STUDIO_KINDS } from '../components/registry.ts';
+import { STUDIO_SLIDES, seedSlide } from '../diagrams/slides.ts';
+import { slideBounds } from '../diagrams/spec.ts';
+import {
+  STUDIO_CANVAS,
+  type StudioReport,
+  seedStudioSlide,
+  studioDeckSize,
+  studioPageFrame,
+} from '../diagrams/studio.ts';
 
 /** The deck's look: the studio's own accent, and its fonts. */
 const THEME: SlideTheme.Settings = { accent: '#2d6fff', font: 'space-grotesk', monoFont: 'fira' };

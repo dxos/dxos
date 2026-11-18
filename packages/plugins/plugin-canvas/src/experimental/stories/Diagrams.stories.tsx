@@ -32,23 +32,22 @@ import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
 import { CanvasCapabilities, Generator } from '#types';
 
-import types from '../capabilities/schema.ts';
-import generatorParams from '../components/Graph/generator/params.schema.json?raw';
-import generatorSource from '../components/Graph/generator/space-graph.generator.ts?raw';
-import { addTestCanvas } from '../testing/canvas.ts';
-import agentSource from './agent.diagram?raw';
-import agentModel from './agent.json?raw';
-import agentsSource from './agents.diagram?raw';
-import agentsModel from './agents.json?raw';
-import { cardSpec } from './Card.tsx';
-import chatSource from './chat.diagram?raw';
-import chatModel from './chat.json?raw';
-import { feedCardSpec } from './FeedCard.tsx';
-import ontologySource from './ontology.diagram?raw';
-import ontologyModel from './ontology.json?raw';
-import { STUDIO_KINDS } from './registry.ts';
-import { type StudioSlide, seedSlide, studioSlide } from './slides.ts';
-import { SourceColumn, seeded } from './source-column.tsx';
+import types from '../../capabilities/schema.ts';
+import generatorParams from '../../components/Graph/generator/params.schema.json?raw';
+import generatorSource from '../../components/Graph/generator/space-graph.generator.ts?raw';
+import { addTestCanvas } from '../../testing/canvas.ts';
+import { cardSpec } from '../components/Card.tsx';
+import { feedCardSpec } from '../components/FeedCard.tsx';
+import { STUDIO_KINDS } from '../components/registry.ts';
+import agentSource from '../diagrams/agent.diagram?raw';
+import agentModel from '../diagrams/agent.json?raw';
+import agentsSource from '../diagrams/agents.diagram?raw';
+import agentsModel from '../diagrams/agents.json?raw';
+import chatSource from '../diagrams/chat.diagram?raw';
+import chatModel from '../diagrams/chat.json?raw';
+import ontologySource from '../diagrams/ontology.diagram?raw';
+import ontologyModel from '../diagrams/ontology.json?raw';
+import { type StudioSlide, seedSlide, studioSlide } from '../diagrams/slides.ts';
 import {
   type ComponentMode,
   type Generators,
@@ -56,7 +55,8 @@ import {
   type StudioModel,
   parseStudioModel,
   seedStudioSlide,
-} from './studio.ts';
+} from '../diagrams/studio.ts';
+import { SourceColumn, seeded } from './source-column.tsx';
 
 /** Every kind the deck's slides use, contributed once for all of them. */
 const StudioKindsPlugin = Plugin.define(

@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-canvas';
 import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '@dxos/scene';
 
-import { graphSpec } from '../components/index.ts';
+import { graphSpec } from '../../components/index.ts';
 import { feedCardSpec } from './FeedCard.tsx';
 
 const registry = () =>

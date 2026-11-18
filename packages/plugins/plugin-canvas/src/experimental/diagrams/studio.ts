@@ -16,7 +16,7 @@ import { invariant } from '@dxos/invariant';
 import { SceneHandler, elementId, isLinkRecord, isNodeRecord, linkKey, nodeKey } from '@dxos/react-ui-canvas';
 import { type Node, type NodeBase, endpointNode } from '@dxos/scene';
 
-import { formatLit, formatSpaces } from './substrate-packing.ts';
+import { formatLit, formatSpaces } from '../components/substrate-packing.ts';
 
 const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 

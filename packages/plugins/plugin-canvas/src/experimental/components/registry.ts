@@ -13,7 +13,7 @@
 
 import { type ElementKindSpec } from '@dxos/react-ui-canvas';
 
-import { graphSpec } from '../components/Graph/index.ts';
+import { graphSpec } from '../../components/Graph/index.ts';
 import { appFrameSpec } from './AppFrame.tsx';
 import { cardSpec } from './Card.tsx';
 import { studioCardCompositeSpec } from './CardComposite.ts';

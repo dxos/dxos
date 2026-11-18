@@ -32,13 +32,13 @@ import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
 
-import types from '../capabilities/schema.ts';
-import { addTestCanvas } from '../testing/canvas.ts';
-import { STUDIO_CARD_SIZE } from './card-template.ts';
-import { STUDIO_CARD_COMPOSITE } from './CardComposite.ts';
-import { STUDIO_KINDS } from './registry.ts';
-import { studioSlide } from './slides.ts';
-import { STUDIO_CANVAS, type StudioModel, studioComponentData } from './studio.ts';
+import types from '../../capabilities/schema.ts';
+import { addTestCanvas } from '../../testing/canvas.ts';
+import { STUDIO_CARD_SIZE } from '../components/card-template.ts';
+import { STUDIO_CARD_COMPOSITE } from '../components/CardComposite.ts';
+import { STUDIO_KINDS } from '../components/registry.ts';
+import { studioSlide } from '../diagrams/slides.ts';
+import { STUDIO_CANVAS, type StudioModel, studioComponentData } from '../diagrams/studio.ts';
 
 const StudioKindsPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.canvasStudioKind'), name: 'Studio Kinds' }),

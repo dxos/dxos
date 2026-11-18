@@ -30,7 +30,7 @@ import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui
 
 import { type Canvas } from '#types';
 
-import { CanvasLayoutBuilder, editCanvasContent, readCanvasContent } from '../model/canvas-content.ts';
+import { CanvasLayoutBuilder, editCanvasContent, readCanvasContent } from '../../model/canvas-content.ts';
 
 /**
  * The canvas the story seeded, for the column beside it. `onInit` runs during client init, before anything renders,

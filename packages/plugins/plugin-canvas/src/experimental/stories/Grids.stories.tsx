@@ -32,11 +32,11 @@ import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
 
-import types from '../capabilities/schema.ts';
-import { addTestCanvas } from '../testing/canvas.ts';
-import { STUDIO_KINDS } from './registry.ts';
+import types from '../../capabilities/schema.ts';
+import { addTestCanvas } from '../../testing/canvas.ts';
+import { STUDIO_KINDS } from '../components/registry.ts';
+import { STUDIO_CANVAS } from '../diagrams/studio.ts';
 import { SourceColumn, seeded } from './source-column.tsx';
-import { STUDIO_CANVAS } from './studio.ts';
 
 const StudioGridsPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.canvasStudioGrid'), name: 'Studio Grids' }),
