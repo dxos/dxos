@@ -409,12 +409,13 @@ const DeckViewport = Util.composable<HTMLDivElement>(({ children, ...props }, fo
     >
       <div className='dx-cover flex flex-col'>
         <SlideThemeProvider settings={themeSettings}>
+          {/* The frame outlives the slide: a new frame paints nothing until it has measured itself, which flashes. */}
           {slide && (
-            <Slide.Root key={slide.id} source={slide} attendableId={attendableId} step={step}>
-              <Slide.Frame inset={!fullscreen}>
+            <Slide.Frame inset={!fullscreen}>
+              <Slide.Root key={slide.id} source={slide} attendableId={attendableId} step={step}>
                 <Slide.Content />
-              </Slide.Frame>
-            </Slide.Root>
+              </Slide.Root>
+            </Slide.Frame>
           )}
         </SlideThemeProvider>
       </div>

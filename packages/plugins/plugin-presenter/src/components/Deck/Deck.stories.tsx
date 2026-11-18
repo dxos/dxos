@@ -246,6 +246,34 @@ export const Default: Story = {
   },
 };
 
+/** A slide stays on screen through every slide change; no commit leaves the frame empty, which would flash. */
+export const SlideChangeKeepsFrame: Story = {
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck', undefined, { timeout: 10_000 });
+    await waitFor(() => expect(deck.querySelector('[data-slide]')).not.toBeNull());
+    let emptyCommits = 0;
+    const observer = new MutationObserver(() => {
+      if (!deck.querySelector('[data-slide]')) {
+        emptyCommits++;
+      }
+    });
+    observer.observe(deck, { childList: true, subtree: true });
+    deck.focus();
+    for (const [key, page] of [
+      ['{ArrowRight}', '2 / 5'],
+      ['{ArrowRight}', '3 / 5'],
+      ['{ArrowLeft}', '2 / 5'],
+    ] as const) {
+      await userEvent.keyboard(key);
+      await expect(await canvas.findByText(page)).toBeVisible();
+    }
+    observer.disconnect();
+    await expect(emptyCommits).toBe(0);
+  },
+};
+
 export const Empty: Story = {
   decorators: [withEmptyPlugins],
   args: { count: 0 },
@@ -586,7 +614,7 @@ export const ClickStepsEdited: Story = {
     await userEvent.keyboard('{ArrowDown}{ArrowDown}');
     await waitFor(() => expect(hidden()).toBe(1));
     await userEvent.click(canvas.getByTestId('replace-slide'));
-    // The replaced slide remounts under a fresh frame, which shows once its size is measured.
+    // The replaced slide remounts inside the frame and shows once its content has rendered.
     const after = await canvas.findByRole('heading', { name: 'After' });
     await waitFor(() => expect(after).toBeVisible());
     await waitFor(() => expect(hidden()).toBe(3));
