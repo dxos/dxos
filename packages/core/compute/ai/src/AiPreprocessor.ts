@@ -47,14 +47,20 @@ export const preprocessPrompt: (
      * (see {@link retireUnofferedToolCalls}); absent, every call is kept as a call.
      */
     tools?: readonly string[];
+    /**
+     * How many turns, counted back from the last and including it, keep their tool calls, tool results and reasoning;
+     * older turns keep only what was said (see {@link compactEarlierTurns}). Absent, every turn is kept whole.
+     */
+    fullTurns?: number;
   },
 ) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (
   messages,
-  { system, cacheControl = 'no-cache', tools } = {},
+  { system, cacheControl = 'no-cache', tools, fullTurns } = {},
 ) {
   return yield* Function.pipe(
     messages,
     applySummaryTrimming,
+    Effect.map(fullTurns === undefined ? Function.identity : compactEarlierTurns(fullTurns)),
     Effect.map(tools === undefined ? Function.identity : retireUnofferedToolCalls(new Set(tools))),
     Effect.map(groupAssistantMessages),
     Effect.flatMap(
@@ -819,6 +825,43 @@ const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt 
   }
   return Prompt.fromMessages(result);
 };
+
+/** The internals of a turn: how it reached its answer, which only the turns still in progress or just past need. */
+const TURN_INTERNALS: ReadonlySet<ContentBlock.Any['_tag']> = new Set(['toolCall', 'toolResult', 'reasoning', 'stats']);
+
+/** Whether a message starts a turn: someone's prompt. A hook's synthetic follow-up continues the turn it follows. */
+const startsTurn = (message: Message.Message): boolean =>
+  message.sender.role === 'user' &&
+  message.blocks.some(
+    (block) => block._tag === 'text' && block.disposition !== 'synthetic' && block.text.trim() !== '',
+  );
+
+/**
+ * Drops the tool calls, tool results, reasoning and stats of every turn before the last `fullTurns`, keeping what was
+ * said in them: the prompts and the agent's replies.
+ *
+ * A long conversation otherwise resends every earlier turn's code and tool output with every model call: a Discord
+ * thread four days old added 11-15k input tokens to each call of a new turn. What the agent needs to remember beyond
+ * its last turns is in its replies and its memory, not in how it got there. A call and its result are dropped together,
+ * so the history stays a valid tool-use sequence.
+ */
+const compactEarlierTurns =
+  (fullTurns: number) =>
+  (messages: readonly Message.Message[]): readonly Message.Message[] => {
+    const starts = messages.flatMap((message, index) => (startsTurn(message) ? [index] : []));
+    if (starts.length <= fullTurns) {
+      return messages;
+    }
+    const keepFrom = starts[starts.length - fullTurns];
+    const earlier = messages.slice(0, keepFrom).flatMap((message) => {
+      const blocks = message.blocks.filter((block) => !TURN_INTERNALS.has(block._tag));
+      if (blocks.length === message.blocks.length) {
+        return [message];
+      }
+      return blocks.length > 0 ? [Message.make({ sender: message.sender, blocks })] : [];
+    });
+    return [...earlier, ...messages.slice(keepFrom)];
+  };
 
 /** Characters of a retired call's input or result kept in its text form; the head is what the model acts on. */
 const MAX_RETIRED_RESULT = 2_000;

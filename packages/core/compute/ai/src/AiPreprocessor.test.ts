@@ -859,6 +859,50 @@ describe('AiPreprocessor.preprocessPrompt with offered tools', () => {
   );
 });
 
+describe('AiPreprocessor.preprocessPrompt with full turns', () => {
+  /** One turn: a prompt, an `eval` call with its reasoning, its result, and the reply. */
+  const turn = (index: number) => [
+    makeMessage('user', [{ _tag: 'text', text: `Request ${index}.` }]),
+    makeMessage('assistant', [
+      { _tag: 'reasoning', reasoningText: `Thinking about ${index}.` },
+      { _tag: 'toolCall', toolCallId: `call-${index}`, name: 'eval', input: '{"code":"1"}', providerExecuted: false },
+    ]),
+    makeMessage('tool', [
+      { _tag: 'toolResult', toolCallId: `call-${index}`, name: 'eval', result: `"${index}"`, providerExecuted: false },
+    ]),
+    makeMessage('assistant', [{ _tag: 'text', text: `Reply ${index}.` }]),
+  ];
+
+  const partsOf = (prompt: Prompt.Prompt) =>
+    prompt.content.flatMap((message) =>
+      typeof message.content === 'string' ? [] : message.content.map((part) => ({ role: message.role, part })),
+    );
+
+  it.effect(
+    'an earlier turn keeps what was said, and only the last turns keep their calls and results',
+    Effect.fn(function* ({ expect }) {
+      const parts = partsOf(
+        yield* AiPreprocessor.preprocessPrompt([...turn(1), ...turn(2), ...turn(3)], { fullTurns: 2 }),
+      );
+      const callIds = parts.flatMap(({ part }) => (part.type === 'tool-call' ? [part.id] : []));
+      expect(callIds).toEqual(['call-2', 'call-3']);
+      const resultIds = parts.flatMap(({ part }) => (part.type === 'tool-result' ? [part.id] : []));
+      expect(resultIds).toEqual(['call-2', 'call-3']);
+      const texts = parts.flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
+      expect(texts).toEqual(expect.arrayContaining(['Request 1.', 'Reply 1.', 'Request 3.', 'Reply 3.']));
+      expect(parts.some(({ part }) => part.type === 'reasoning' && part.text.includes('1.'))).toBe(false);
+    }),
+  );
+
+  it.effect(
+    'without full turns every turn is kept whole',
+    Effect.fn(function* ({ expect }) {
+      const parts = partsOf(yield* AiPreprocessor.preprocessPrompt([...turn(1), ...turn(2), ...turn(3)]));
+      expect(parts.filter(({ part }) => part.type === 'tool-call')).toHaveLength(3);
+    }),
+  );
+});
+
 describe('AiPreprocessor.estimateTokens', () => {
   it.effect(
     'should estimate tokens for a simple user message with text',
