@@ -74,6 +74,8 @@ export const optional = <K extends string, V>(key: K, value: V | undefined): { [
 
 /** Single-kind element nodes; the multi-kind ones carry a `BoxKind`/`PathKind` child instead. */
 const SHAPE_KINDS: Record<string, string | undefined> = {
+  // A component's box is stored as a rect carrying the component's name; `custom` is how the text says so.
+  CustomElement: 'rect',
   GridElement: 'grid',
   CircleElement: 'circle',
   ArcElement: 'arc',
@@ -81,6 +83,9 @@ const SHAPE_KINDS: Record<string, string | undefined> = {
   ArrowElement: 'arrow',
   PortalElement: 'portal',
 };
+
+/** The closed shapes, the grid included: the kinds a `Shape.Box` covers. */
+const BOX_KINDS: ReadonlySet<string> = new Set(Shape.BoxKind.literals);
 
 /** The DSL word for an element, which is also its scene `kind`. */
 const kindOf = (shapeName: string, keyword: string | undefined): ElementKind | undefined => {
@@ -399,6 +404,14 @@ export const read = (text: string): Reading => {
     const attrs = readAttrs(attributeNodes, [...ELEMENT_ATTRS[kind], ...extra], `${kind} "${id}"`);
     const data = readData(attrs, extra);
     const style = readStyle(attrs);
+    // One spelling for a box a component draws: the shape words draw shapes, and `custom` names a component.
+    const custom = shape.name === 'CustomElement';
+    const component = nameAttr(attrs, KIND_ATTR);
+    if (custom && component === undefined) {
+      report(shape, `\`custom\` is drawn by a component; say which with \`${KIND_ATTR}=<name>\`.`);
+    } else if (!custom && component !== undefined && BOX_KINDS.has(kind)) {
+      report(shape, `A box a component draws is written \`custom ${id} ${KIND_ATTR}=${component}\`, not \`${kind}\`.`);
+    }
 
     switch (kind) {
       case 'rect':
@@ -728,6 +741,10 @@ export const read = (text: string): Reading => {
     diagram.hinted ||= pin !== undefined || relations.length > 0;
     const data = readData(attrs, own);
     gridAttrs(attrs, [KIND_ATTR, 'border', 'width', 'height']);
+    // A component draws itself, so the shape of the box under it is not seen and has no spelling in the box form.
+    if (attrs.has(KIND_ATTR) && attrs.has('shape')) {
+      report(statement, `"shape" says nothing on a node a component draws; drop it or \`${KIND_ATTR}\`.`);
+    }
     enlist(group, id);
     diagram.nodes.push({
       id,

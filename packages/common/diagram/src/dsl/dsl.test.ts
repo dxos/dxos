@@ -131,7 +131,7 @@ describe('dsl round trip', () => {
     // The element's own attributes print first, then the kind's, each by name: the order is what makes the text
     // stable, not the order the fields happened to be written in.
     const source =
-      'object A @ 0,0 {\n  rect box 0,0 10x10 kind=substrate fill=solid data-data-fill=on data-fill=0.55\n}\n';
+      'object A @ 0,0 {\n  custom box 0,0 10x10 kind=substrate fill=solid data-data-fill=on data-fill=0.55\n}\n';
     const { commands, problems } = parse(source);
     expect(problems).toEqual([]);
     const [element] = toScene(commands).objects[0].elements;
@@ -141,6 +141,37 @@ describe('dsl round trip', () => {
       { 'fill': 0.55, 'data-fill': 'on' },
     ]);
     expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('a box a component draws is written `custom`, and only so', ({ expect }) => {
+    // Nested in a grid it states no frame, as any placed box does; `custom` is still an id anywhere else.
+    const source = [
+      'object A @ 0,0 {',
+      '  grid root 0,0 400x200 cols=2 {',
+      '    custom s0 kind=graph width=120 seed=7',
+      '    rect custom "Plain"',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const elements = toScene(commands).objects[0].elements;
+    const summary = elements.map((element) => [element.kind, element.id, Reflect.get(element, 'type')]);
+    expect(summary).toEqual([
+      ['grid', 'root', undefined],
+      ['rect', 's0', 'graph'],
+      ['rect', 'custom', undefined],
+    ]);
+    expect(roundTrip(source)).toEqual(source);
+
+    const messages = (text: string) => parse(text).problems.map(({ message }) => message);
+    expect(messages('object A @ 0,0 {\n  rect s0 0,0 10x10 kind=graph\n}\n')).toEqual([
+      'A box a component draws is written `custom s0 kind=graph`, not `rect`.',
+    ]);
+    expect(messages('object A @ 0,0 {\n  custom s0 0,0 10x10\n}\n')).toEqual([
+      '`custom` is drawn by a component; say which with `kind=<name>`.',
+    ]);
   });
 
   test("a kind's field escapes a reserved name, and one the DSL cannot spell is left out", ({ expect }) => {

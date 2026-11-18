@@ -667,3 +667,13 @@ decision D-28: A grid diagram's node may state the size it keeps in its cell (`w
     - A weight on the node that the packing ranks by: it says which member is largest, not how large.
 ```
 
+```mdl
+decision D-29: A box a contributed component draws is written `custom <id> kind=<name>` in the box form. A shape word (`rect`, `ellipse`, `diamond`, `triangle`, `grid`) with `kind=` is an error, and so is a node that states both `kind` and `shape`.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: `rect s0 kind=graph` said a rectangle where a component draws something else; the record keeps the box as a rect carrying the component's name, which is storage and not what the text should say.
+  rejected:
+    - The component's name as the statement (`graph s0`): the set of statement words would be open, so a misspelt component would read as an unknown statement and not as a box.
+```
+

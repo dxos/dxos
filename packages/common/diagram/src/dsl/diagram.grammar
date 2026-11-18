@@ -150,6 +150,7 @@ Body { "{" Element* "}" }
 
 Element {
   BoxElement |
+  CustomElement |
   GridElement |
   CircleElement |
   PathElement |
@@ -162,6 +163,9 @@ Element {
 // The origin and the size are optional: inside a grid they are the grid's to decide, and stating them there
 // would be noise that the next solve overwrites. Absent, they are 0 — which a track reads as "share what is left".
 BoxElement    { BoxKind Id Point? Size? Label? Attribute* }
+// A box a contributed component draws (`custom s0 kind=graph`): the keyword says the box is not one of the shapes,
+// and `kind=` names what draws it. Contextual, as `grid` is, so an id may still be called `custom`.
+CustomElement { ckw<"custom"> Id Point? Size? Label? Attribute* }
 // A grid holds what it places, in braces. Containment is then structural: there is no naming a parent that does
 // not exist, no cycle to detect, and the cell a child lands in is the order it is written in — all three of which
 // a `parent=` attribute leaves representable and needing code to catch.

@@ -67,6 +67,7 @@ label is a bare quoted string, and everything else is `name=value`.
 | Kind                                  | Geometry                          | Label    |
 | ------------------------------------- | --------------------------------- | -------- |
 | `rect` `ellipse` `diamond` `triangle` | `<x>,<y> <w>x<h>`                 | optional |
+| `custom`                              | `<x>,<y> <w>x<h>`                 | optional |
 | `circle`                              | `<cx>,<cy> <r>`                   | optional |
 | `line` `curve`                        | `<x>,<y> <x>,<y> …` (two or more) | —        |
 | `arc`                                 | `<cx>,<cy> <r> <from>..<to>`      | —        |
@@ -77,6 +78,11 @@ label is a bare quoted string, and everything else is `name=value`.
 Attributes, all optional unless noted: `color` `fill` `stroke` `weight` on every element;
 `rotation` and `corners` on the box kinds; `w` (wrap width) on `text`; `closed` on `line`; `head`
 and `tail` on `arrow`; `ref` on `portal`, where the schema requires it.
+
+`custom <id> kind=<name>` is a box a contributed component draws (`custom s0 kind=graph seed=7`): `kind` is
+required and names the component, and every attribute the box does not define is the component's own field. A
+shape word never takes `kind`, so a component has one spelling. Inside a `grid` a box states no geometry, and
+`width` and `height` are the size it keeps in its cell.
 
 There are no bare flags — `closed=true`, not `closed`. A bare word after an arrow's `->` would be
 ambiguous between a ref and a flag, and an LR(1) parser cannot settle it without looking past the
@@ -153,7 +159,7 @@ group services "EDGE Services" gap=12 {
   node calendar "Calendar" kind=card icon=calendar-blank tone=event
   node email "Email" kind=card icon=envelope
 }
-node field kind=substrate seed=29 spaceCount=9
+node field kind=graph seed=29
 
 edge calendar -- field stroke=dashed
 ```

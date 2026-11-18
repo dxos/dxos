@@ -1,6 +1,6 @@
 # Diagram DSL — Tasks
 
-_Resume: `custom <id> kind=<name>` in the box form. Uncommitted: none. Last: the deck moved to plugin-debug as the DXOS Deck template._
+_Resume: give the Architecture slide's cards room for a second body line, then push and update the PR body. Uncommitted: none. Last: the deck moved to plugin-debug as the DXOS Deck template._
 
 ## Phase 1: A drawing as intent
 
@@ -34,7 +34,7 @@ The nine slides exist in four generations and live in `plugin-canvas/src/experim
       card, chip, plank, app frame, substrate); `graph` stays in plugin-canvas.
 - [x] **A node states its own size** — `width=` / `height=`; a diameter in a packed group, kept in the middle of its
       cell on tracks. Stored apart from the frame (`extent` on a node). Groups do not take them yet.
-- [ ] **`custom <id> kind=<name>` in the box form**, replacing `rect … kind=`.
+- [x] **`custom <id> kind=<name>` in the box form**, replacing `rect … kind=`, which is now an error.
 - [ ] **Land** — #14583 first, then #14595 stacked on it.
 
 ### References

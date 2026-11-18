@@ -152,7 +152,8 @@ export const formatElement = (element: Shape.Element, { nested = false }: { nest
     case 'triangle':
     case 'grid':
       return [
-        element.kind,
+        // A box a component draws says so, in place of a shape it does not draw.
+        element.type === undefined ? element.kind : 'custom',
         formatId(element.id),
         // A child the braces place states neither: its frame is the rule's result, re-solved on every render, and
         // writing it down would be a coordinate that the next solve contradicts.

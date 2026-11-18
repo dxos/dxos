@@ -50,7 +50,8 @@ const SOURCES: Record<string, string> = {
   'components and their fields': `
     diagram kind=grid size=800x600
     node field kind=substrate seed=29 data-fill=0.55 hue=neutral live=true note="true" count="12"
-    node card "Calendar" kind=card icon=calendar-blank stroke=dashed fill=tint color=blue shape=ellipse
+    node card "Calendar" kind=card icon=calendar-blank stroke=dashed fill=tint color=blue
+    node round "Round" shape=ellipse
   `,
   'track sizes, placement and frames': `
     diagram kind=grid size=800x600 alignContent=center justifyContent=end autoRows=120
@@ -131,7 +132,7 @@ describe('printIntent', () => {
           grid left rows="${HEADING.height} 1fr" gap=${HEADING.gap} {
             rect title-left "Left" fill=none border=false align=center valign=middle fontSize=${HEADING.fontSize}
             grid stack gap=8 {
-              rect a "A" kind=card icon=x
+              custom a "A" kind=card icon=x
               rect gap-1 fill=none border=false
             }
           }

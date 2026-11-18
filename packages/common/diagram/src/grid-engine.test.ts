@@ -250,6 +250,12 @@ describe('grid diagrams', () => {
     expect(solveGrids(boxesOf(text)).get('port')).toEqual({ x: 800, y: 0, w: 0, h: 600 });
   });
 
+  test('a node a component draws states no shape', ({ expect }) => {
+    expect(messagesOf('diagram kind=grid size=400x200\nnode a kind=card shape=ellipse')).toEqual([
+      'error: "shape" says nothing on a node a component draws; drop it or `kind`.',
+    ]);
+  });
+
   test('a place is only looked for on a node that exists', ({ expect }) => {
     const text = 'diagram kind=grid size=800x600\nnode a\nedge a -> ghost/nav';
     expect(messagesOf(text)).toEqual(['error: Unknown node "ghost/nav"; declare it with `node ghost/nav`.']);
