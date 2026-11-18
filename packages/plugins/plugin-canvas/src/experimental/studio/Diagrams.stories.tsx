@@ -21,12 +21,13 @@ import { expect, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Dsl } from '@dxos/diagram';
+import { Dsl, applyCommands } from '@dxos/diagram';
 import { diagram as diagramLanguage } from '@dxos/diagram/extension';
 import { DXN } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
+import { SceneHandler } from '@dxos/react-ui-canvas';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -46,7 +47,7 @@ import { type Canvas, CanvasCapabilities, Generator } from '#types';
 import types from '../../capabilities/schema.ts';
 import generatorParams from '../../components/Graph/generator/params.schema.json?raw';
 import generatorSource from '../../components/Graph/generator/space-graph.generator.ts?raw';
-import { CanvasLayoutBuilder, readCanvasContent } from '../../model/canvas-content.ts';
+import { CanvasLayoutBuilder, editCanvasContent, readCanvasContent } from '../../model/canvas-content.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import agentSource from './agent.diagram?raw';
 import agentModel from './agent.json?raw';
@@ -195,8 +196,27 @@ const SourceEditor = ({ canvas }: { canvas: Canvas.Canvas }) => {
     if (errors.length > 0) {
       return;
     }
-    const result = CanvasLayoutBuilder.apply(canvas, commands);
-    setStatus(`${result.upserted.length} drawn, ${result.removed} removed`);
+    // `Rebuild` means the text IS the drawing, so the canvas is cleared first. `applyCommands` only touches the
+    // objects its commands name — it re-renders each one and removes nothing else — so an object deleted from the
+    // text had no command to remove it and simply stayed on the canvas.
+    //
+    // Only DSL-managed records go: a shape drawn by hand is in no text and clearing it would lose work that the
+    // text cannot bring back. Both halves are one edit, so the canvas is never written empty.
+    let cleared = 0;
+    let drawn = 0;
+    editCanvasContent(canvas, (content) => {
+      for (const [key, record] of Object.entries(content)) {
+        const identity = SceneHandler.identify(record);
+        if (identity) {
+          delete content[key];
+          if (identity.part === undefined) {
+            cleared++;
+          }
+        }
+      }
+      drawn = applyCommands(content, commands, SceneHandler).upserted.length;
+    });
+    setStatus(`${drawn} drawn, ${cleared} cleared`);
   }, [parse, canvas]);
 
   const onChange = useCallback((text: string) => {
