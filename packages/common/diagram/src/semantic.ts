@@ -101,6 +101,12 @@ export type Node = {
   stroke?: Shape.Stroke;
   /** Whether the box draws its border. Only a grid diagram reads it: the other kinds draw every node's. */
   border?: boolean;
+  /**
+   * The size the node keeps in the cell its group gives it, in scene units; an axis left out fills the cell. In a
+   * packed group the larger is the diameter of its circle. Only a grid diagram reads them.
+   */
+  width?: number;
+  height?: number;
   /** The component the node places (`kind=card`), which a host that knows it draws instead of a plain box. */
   type?: string;
   /** That component's own fields. */

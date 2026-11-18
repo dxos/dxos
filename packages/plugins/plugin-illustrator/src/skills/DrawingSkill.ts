@@ -243,6 +243,8 @@ export const semanticDiagrams = trim`
     grid. \`border=true\` (with \`fill\`, \`stroke\`, \`color\`) frames the members; for a frame round the
     heading too, put the labelled group inside a framed one.
   - An empty group (\`group spacer { }\`) draws nothing and holds its cell.
+  - A node fills its cell. \`width=240\` and \`height=48\` make it keep that size in the middle of the
+    cell instead; state one and the other axis still fills.
   - \`node id "Label" kind=<component>\` places a component the canvas provides (a card, a panel);
     every other attribute on it is that component's own field (\`icon=calendar-blank\`). Use only
     kinds you know the canvas has; without \`kind\` a node is a plain box with its label.

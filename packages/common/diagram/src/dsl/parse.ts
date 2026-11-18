@@ -433,6 +433,8 @@ export const read = (text: string): Reading => {
           ...optional('justifyContent', enumAttr(attrs, 'justifyContent', Shape.Place.literals)),
           ...optional('alignContent', enumAttr(attrs, 'alignContent', Shape.Place.literals)),
           ...optional('parent', nameAttr(attrs, 'parent')),
+          ...optional('width', numberAttr(attrs, 'width')),
+          ...optional('height', numberAttr(attrs, 'height')),
           ...optional('type', nameAttr(attrs, KIND_ATTR)),
           ...(Object.keys(data).length ? { data } : {}),
           ...style,
@@ -725,7 +727,7 @@ export const read = (text: string): Reading => {
     const relations = readRelations(statement);
     diagram.hinted ||= pin !== undefined || relations.length > 0;
     const data = readData(attrs, own);
-    gridAttrs(attrs, [KIND_ATTR, 'border']);
+    gridAttrs(attrs, [KIND_ATTR, 'border', 'width', 'height']);
     enlist(group, id);
     diagram.nodes.push({
       id,
@@ -744,6 +746,8 @@ export const read = (text: string): Reading => {
       ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
       ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
       ...optional('border', booleanAttr(attrs, 'border')),
+      ...optional('width', numberAttr(attrs, 'width')),
+      ...optional('height', numberAttr(attrs, 'height')),
     });
     ranges.set(id, rangeOf(statement));
   };

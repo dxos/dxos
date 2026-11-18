@@ -66,6 +66,15 @@ const SOURCES: Record<string, string> = {
     group frame cols=2 { node left "L" }
     edge s0#e3 -- frame#w2 path=line
   `,
+  'a node that states its own size': `
+    diagram kind=grid size=800x600 cols=2
+    node wide "Wide" width=240
+    node small "Small" kind=card width=120 height=48 data-width=3
+    group field layout=pack packSeed=3 packMin=20 packMax=60 {
+      node big kind=graph width=200
+      node other kind=graph
+    }
+  `,
   'edges': `
     diagram kind=grid size=800x600 cols="1fr 0"
     group side { node a }

@@ -656,3 +656,14 @@ decision D-27: A grid diagram's group may pack its members (`layout=pack`, `pack
   affects: [F-1, Diagram, GridEngine]
   why: The grid boxes gained a packing layout and the slides use it, give their space graphs a border, and wire a card to a port on a framed pane; `Dsl.printIntent` refused the Composer slide until a port on a group resolved.
 ```
+
+```mdl
+decision D-28: A grid diagram's node may state the size it keeps in its cell (`width`, `height`), centred there; an axis left out fills the cell, and in a packed group the larger is the diameter of its circle. The names are not `size`, which a component may give a field of its own.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: A group's tracks decide every member's size, and one member that should be larger or smaller than its cell had no way to say so; in a packing the seed chose which member was large.
+  rejected:
+    - A weight on the node that the packing ranks by: it says which member is largest, not how large.
+```
+

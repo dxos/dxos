@@ -100,6 +100,8 @@ const GRID: readonly AttrSpec[] = [
   { name: 'justifyContent', type: 'enum', values: Shape.Place.literals },
   { name: 'alignContent', type: 'enum', values: Shape.Place.literals },
   { name: 'parent', type: 'name' },
+  { name: 'width', type: 'number' },
+  { name: 'height', type: 'number' },
 ];
 
 const BOX_ATTRS: readonly AttrSpec[] = [
@@ -232,6 +234,9 @@ export const NODE_ATTRS: readonly AttrSpec[] = [
   { name: 'fill', type: 'enum', values: Shape.Fill.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
   { name: 'border', type: 'boolean' },
+  // The size the node keeps in its cell. Not `size`, which a component may name a field of its own.
+  { name: 'width', type: 'number' },
+  { name: 'height', type: 'number' },
 ];
 
 /** `edge` attributes. */

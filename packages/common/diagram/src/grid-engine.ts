@@ -135,6 +135,8 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
           fill: node.fill,
           stroke: node.stroke,
           border: node.border,
+          width: node.width,
+          height: node.height,
         }),
       });
       return;
@@ -346,6 +348,8 @@ export const infer = (object: Scene.WorldObject): Semantic.Diagram | undefined =
           fill: box.fill,
           stroke: box.stroke,
           border: box.border,
+          width: box.width,
+          height: box.height,
         }),
       });
       return;

@@ -175,6 +175,8 @@ export const formatElement = (element: Shape.Element, { nested = false }: { nest
           justifyContent: element.justifyContent,
           alignContent: element.alignContent,
           parent: nested ? undefined : element.parent,
+          width: element.width,
+          height: element.height,
           ...style(element),
         }),
         ...formatData(element.kind, element.data),
@@ -360,6 +362,8 @@ export const formatGridDiagram = (diagram: Semantic.Diagram): string => {
           fill: node.fill,
           stroke: node.stroke,
           border: node.border,
+          width: node.width,
+          height: node.height,
         }),
         ...formatFields(NODE_ATTRS, node.data),
       ];

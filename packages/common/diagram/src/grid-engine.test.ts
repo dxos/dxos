@@ -215,6 +215,24 @@ describe('grid diagrams', () => {
     ]);
   });
 
+  test('a node keeps the size it states in its cell, and a component field of that name is escaped', ({ expect }) => {
+    const text = `
+      diagram kind=grid size=800x200 cols=2
+      node a "A" width=200 height=50
+      node b "B" kind=card data-width=3
+    `;
+    expect(messagesOf(text)).toEqual([]);
+    expect(boxesOf(text).slice(1)).toEqual([
+      { kind: 'rect', id: 'a', ...placed, text: 'A', parent: OBJECT, width: 200, height: 50 },
+      // `width` is the element's; the component's own field of that name stays in its bag.
+      { kind: 'rect', id: 'b', ...placed, text: 'B', parent: OBJECT, type: 'card', data: { width: 3 } },
+    ]);
+    const frames = solveGrids(boxesOf(text));
+    // Two 400-wide cells: `a` sits in the middle of the first at its own size, `b` fills the second.
+    expect(frames.get('a')).toEqual({ x: 100, y: 75, w: 200, h: 50 });
+    expect(frames.get('b')).toEqual({ x: 400, y: 0, w: 400, h: 200 });
+  });
+
   test('an edge says how it runs, and may end on an empty group that only holds a cell', ({ expect }) => {
     const text = `
       diagram kind=grid size=800x600 cols="1fr 0"
@@ -273,11 +291,11 @@ describe('the other kinds', () => {
     const text = `
       diagram size=800x600 cols=2
       group g rows=3 padding=4 autoRows=88 alignContent=center border=true { node a kind=card icon=x }
-      node b
+      node b width=120 height=40
       edge a -> b path=line
     `;
     expect(messagesOf(text).sort()).toEqual(
-      ['size', 'cols', 'rows', 'padding', 'autoRows', 'alignContent', 'border', 'kind', 'path']
+      ['size', 'cols', 'rows', 'padding', 'autoRows', 'alignContent', 'border', 'kind', 'width', 'height', 'path']
         .map((name) => `error: "${name}" belongs in a grid diagram; declare \`diagram kind=grid\`.`)
         .sort(),
     );

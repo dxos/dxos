@@ -202,6 +202,33 @@ describe('SceneHandler', () => {
     expect(Reflect.get(strokeOf('b'), 'stroke')).toBe('dotted');
   });
 
+  test('a box keeps the size it asks its grid for, apart from the frame the grid gives it', ({ expect }) => {
+    const object = {
+      id: 'sized',
+      origin: { x: 0, y: 0 },
+      elements: [
+        { kind: 'grid' as const, id: 'root', x: 0, y: 0, w: 800, h: 200, cols: 2 },
+        { kind: 'rect' as const, id: 'a', x: 0, y: 0, w: 0, h: 0, text: 'A', parent: 'root', width: 200, height: 50 },
+        { kind: 'rect' as const, id: 'b', x: 0, y: 0, w: 0, h: 0, text: 'B', parent: 'root' },
+      ],
+    };
+    const content: ContentMap = {};
+    applyCommands(content, [{ op: 'upsert-object', object }], SceneHandler);
+    const node = (id: string) =>
+      Object.values(content).flatMap((record) =>
+        record.kind === 'node' && record.dsl?.element === id ? [record.node] : [],
+      )[0];
+    // The node's size is the grid's answer; what it asked for is beside it.
+    expect(node('a').size).toEqual({ width: 200, height: 50 });
+    expect(node('a').extent).toEqual({ width: 200, height: 50 });
+    expect(node('b').size).toEqual({ width: 400, height: 200 });
+    expect(node('b').extent).toBeUndefined();
+    const [read] = SceneHandler.read(content).scene.objects;
+    const box = (id: string) => read.elements.flatMap((element) => (element.id === id ? [element] : []))[0];
+    expect([Reflect.get(box('a'), 'width'), Reflect.get(box('a'), 'height')]).toEqual([200, 50]);
+    expect(Reflect.get(box('b'), 'width')).toBeUndefined();
+  });
+
   test('moves and removes objects; edits by the canvas keep the identity', ({ expect }) => {
     const content: ContentMap = {};
     applyCommands(content, [{ op: 'upsert-object', object: face }], SceneHandler);

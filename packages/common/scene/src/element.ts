@@ -271,6 +271,13 @@ export const nodeBase = {
    * its nodes stand in the scene beside everything else, each naming the hull it came from.
    */
   parent: Schema.optional(Schema.String.annotate({ title: 'Parent' })),
+  /**
+   * The size the node keeps in the cell a grid gives it; an axis left out fills the cell. The node's own `size` is
+   * that grid's result, so the size it asks for has to be kept apart from it.
+   */
+  extent: Schema.optional(
+    Schema.Struct({ width: Schema.optional(Schema.Number), height: Schema.optional(Schema.Number) }),
+  ),
   ...constrainFields,
 };
 

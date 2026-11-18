@@ -172,6 +172,9 @@ edge calendar -- field stroke=dashed
 - `node … kind=card` places a component. Every attribute the node does not define itself is the component's own
   field; one whose name the node does define is written escaped (`data-fill=0.55`).
 - `border=true|false` on a node says whether its box draws a border.
+- `width=240` and `height=48` on a node are the size it keeps in its cell, centred there; an axis left out fills
+  the cell. In a packed group the larger is the diameter of its circle. They are the only way a node states a
+  size: a component's own field named `width` is written `data-width`.
 - An edge may end on a group, on a place only the component knows (`frame/nav`), and on a port of a node or of a
   group's frame (`card#e3`, `frame#w2`).
   `path=line|ortho|curve|smart` says how it runs between its ends.

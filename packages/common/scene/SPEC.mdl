@@ -1058,3 +1058,23 @@ decision D-105: A node type stored under a retired name is read as its current n
     - A migration that rewrites stored layouts, which has to run on every peer before a drawing with the old name is opened.
 ```
 
+```mdl
+decision D-106: A box a grid places may state the size it keeps in its cell (`width`, `height` on `Shape.Box`; `extent` on a node), apart from its frame. An `auto` track measures the stated size where there is one.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Layout]
+  why: A placed box's frame is the grid's last answer and is written over on every solve, so a size the box asks for cannot be read from it once the drawing has been stored.
+```
+
+```mdl
+decision D-107: A packing places every member: where the sizes do not all fit, every circle is drawn smaller, stated sizes included, until they do.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Layout]
+  why: A member left out has no frame, so it was drawn at the origin and every connector to it ran there; a member smaller than asked is still where its connectors end.
+  rejected:
+    - Leaving a member out, as the deck's own packing did: there a circle was a picture, and here it is a box something connects to.
+```
+

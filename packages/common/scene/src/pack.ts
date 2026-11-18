@@ -45,19 +45,31 @@ const SHRINK = 0.9;
 const PASSES = 24;
 
 /**
- * One pass: `count` circles at `scale` of the radii the seed draws, largest first. A circle that cannot clear the
- * frame's edge at any position is skipped: the interval it samples collapses to a point, which every candidate then
- * passes, and the circle would be drawn over the boundary.
+ * One pass: a circle per entry of `sizes` at `scale`, largest first. An entry that states a diameter is that size;
+ * the rest take the radii the seed draws, the largest to the first. A circle that cannot clear the frame's edge at
+ * any position is skipped: the interval it samples collapses to a point, which every candidate then passes, and the
+ * circle would be drawn over the boundary.
  */
-const packAt = (rule: PackRule, count: number, width: number, height: number, scale: number): Circle[] => {
+const packAt = (
+  rule: PackRule,
+  sizes: readonly (number | undefined)[],
+  width: number,
+  height: number,
+  scale: number,
+): (Circle | undefined)[] => {
   const { seed = 0, rmin = 16, rmax = 64, gap = 0 } = rule;
   const random = rng(seed);
-  const radii = Array.from(
-    { length: Math.max(count, 0) },
-    () => (rmin + random() * Math.max(0, rmax - rmin)) * scale,
-  ).sort((left, right) => right - left);
+  const drawn = sizes
+    .filter((size) => size === undefined)
+    .map(() => rmin + random() * Math.max(0, rmax - rmin))
+    .sort((left, right) => right - left);
+  let next = 0;
+  const circles = sizes
+    .map((size, index) => ({ index, r: (size === undefined ? drawn[next++] : size / 2) * scale }))
+    .sort((left, right) => right.r - left.r);
   const packed: Circle[] = [];
-  for (const r of radii) {
+  const placed: (Circle | undefined)[] = sizes.map(() => undefined);
+  for (const { index, r } of circles) {
     if (width < 2 * (r + gap) || height < 2 * (r + gap)) {
       continue;
     }
@@ -66,26 +78,34 @@ const packAt = (rule: PackRule, count: number, width: number, height: number, sc
       const y = r + gap + random() * Math.max(0, height - 2 * (r + gap));
       if (packed.every((other) => Math.hypot(other.x - x, other.y - y) >= other.r + r + gap)) {
         packed.push({ x, y, r });
+        placed[index] = { x, y, r };
         break;
       }
     }
   }
-  return packed;
+  return placed;
 };
 
 /**
- * `count` circles packed into `width` x `height`. A field too full for the sizes its seed draws is packed again
- * with every circle smaller, below `rmin` if it must be, until all of them fit: a member left out has no frame, so
- * it is drawn at the origin and every connector to it runs there. Only a frame no circle can enter gives fewer.
+ * A circle per entry of `sizes`, packed into `width` x `height`; an entry is a diameter the circle states, or
+ * `undefined` for one the seed draws. A field too full for its sizes is packed again with every circle smaller,
+ * stated ones included and below `rmin` if it must be, until all of them fit: a member left out has no frame, so
+ * it is drawn at the origin and every connector to it runs there. Only a frame no circle can enter leaves any out.
  */
-export const packCircles = (rule: PackRule, count: number, width: number, height: number): Circle[] => {
-  let best: Circle[] = [];
+export const packCircles = (
+  rule: PackRule,
+  sizes: readonly (number | undefined)[],
+  width: number,
+  height: number,
+): (Circle | undefined)[] => {
+  const count = (circles: readonly (Circle | undefined)[]) => circles.filter((circle) => circle !== undefined).length;
+  let best: (Circle | undefined)[] = sizes.map(() => undefined);
   for (let pass = 0, scale = 1; pass < PASSES; pass++, scale *= SHRINK) {
-    const packed = packAt(rule, count, width, height, scale);
-    if (packed.length >= count) {
+    const packed = packAt(rule, sizes, width, height, scale);
+    if (count(packed) >= sizes.length) {
       return packed;
     }
-    if (packed.length > best.length) {
+    if (count(packed) > count(best)) {
       best = packed;
     }
   }

@@ -133,9 +133,12 @@ const solvePack = (grid: GridRule, frame: Frame, children: readonly Box[]): { id
     w: Math.max(frame.w - 2 * padding, 0),
     h: Math.max(frame.h - 2 * padding, 0),
   };
+  // A child that states a size is a circle of that diameter; the rest take the sizes the seed draws.
   const circles = packCircles(
     { seed: grid.packSeed, rmin: grid.packMin, rmax: grid.packMax, gap: grid.gap },
-    children.length,
+    children.map(({ width, height }) =>
+      width === undefined && height === undefined ? undefined : Math.max(width ?? 0, height ?? 0),
+    ),
     inner.w,
     inner.h,
   );
@@ -184,13 +187,20 @@ export const solveGrid = (grid: GridRule, frame: Frame, children: readonly Box[]
     w: Math.max(frame.w - 2 * padding, 0),
     h: Math.max(frame.h - 2 * padding, 0),
   };
-  // An `auto` track takes the largest own size among the children that land in it.
+  // An `auto` track takes the largest own size among the children that land in it: the size a child states, or
+  // the frame it was written with where it states none.
   const cellOf = (index: number) => ({ col: index % cols.length, row: Math.floor(index / cols.length) });
   const widest = cols.map((_, col) =>
-    Math.max(0, ...children.filter((_child, index) => cellOf(index).col === col).map((child) => child.w)),
+    Math.max(
+      0,
+      ...children.filter((_child, index) => cellOf(index).col === col).map((child) => child.width ?? child.w),
+    ),
   );
   const tallest = rows.map((_, row) =>
-    Math.max(0, ...children.filter((_child, index) => cellOf(index).row === row).map((child) => child.h)),
+    Math.max(
+      0,
+      ...children.filter((_child, index) => cellOf(index).row === row).map((child) => child.height ?? child.h),
+    ),
   );
   const widths = solveTracks(cols, inner.w, gap, widest);
   const heights = solveTracks(rows, inner.h, gap, tallest);
@@ -202,7 +212,11 @@ export const solveGrid = (grid: GridRule, frame: Frame, children: readonly Box[]
     if (row >= rows.length) {
       return [];
     }
-    return [{ id: child.id, frame: { x: inner.x + x[col], y: inner.y + y[row], w: widths[col], h: heights[row] } }];
+    // A child fills its cell on every axis it states no size for, and sits in the middle of it on the others.
+    const cell = { x: inner.x + x[col], y: inner.y + y[row], w: widths[col], h: heights[row] };
+    const w = child.width ?? cell.w;
+    const h = child.height ?? cell.h;
+    return [{ id: child.id, frame: { x: cell.x + (cell.w - w) / 2, y: cell.y + (cell.h - h) / 2, w, h } }];
   });
 };
 

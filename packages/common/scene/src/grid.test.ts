@@ -246,4 +246,38 @@ describe('a box that packs what it holds', () => {
     const placed = solveGrid(rule, { x: 0, y: 0, w: 400, h: 400 }, [box('a'), box('b'), box('c')]);
     expect(placed.map(({ frame }) => frame.w)).toEqual([80, 80, 80]);
   });
+
+  test('a child that states a size is a circle of that diameter; the rest take what the seed draws', ({ expect }) => {
+    const frame = { x: 0, y: 0, w: 600, h: 600 };
+    const rule = { layout: 'pack' as const, packSeed: 5, packMin: 20, packMax: 40, gap: 8 };
+    const stated = solveGrid(rule, frame, [box('a'), { ...box('b'), width: 300 }, { ...box('c'), height: 120 }]);
+    const widthOf = (id: string) => stated.find((entry) => entry.id === id)?.frame.w ?? 0;
+    expect(widthOf('b')).toBe(300);
+    expect(widthOf('c')).toBe(120);
+    // The one that states nothing is drawn from the rule's range.
+    expect(widthOf('a')).toBeGreaterThanOrEqual(40);
+    expect(widthOf('a')).toBeLessThanOrEqual(80);
+  });
+});
+
+describe('a child that states its own size', () => {
+  const frame = { x: 0, y: 0, w: 400, h: 200 };
+
+  test('keeps it in the middle of its cell, and fills the axis it leaves out', ({ expect }) => {
+    const placed = solveGrid({ cols: 2 }, frame, [
+      { ...box('a'), width: 100 },
+      { ...box('b'), width: 80, height: 50 },
+    ]);
+    const frames = new Map(placed.map((entry) => [entry.id, entry.frame]));
+    expect(frames.get('a')).toEqual({ x: 50, y: 0, w: 100, h: 200 });
+    expect(frames.get('b')).toEqual({ x: 260, y: 75, w: 80, h: 50 });
+  });
+
+  test('is what an `auto` track measures, over the frame the child was written with', ({ expect }) => {
+    // The frame is the last solve's result once a drawing has been stored, so it cannot be what the child asks for.
+    const placed = solveGrid({ cols: 'auto 1fr' }, frame, [{ ...box('a'), w: 999, width: 120 }, box('b')]);
+    const frames = new Map(placed.map((entry) => [entry.id, entry.frame]));
+    expect(frames.get('a')).toEqual({ x: 0, y: 0, w: 120, h: 200 });
+    expect(frames.get('b')).toEqual({ x: 120, y: 0, w: 280, h: 200 });
+  });
 });
