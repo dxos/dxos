@@ -1,0 +1,9 @@
+{
+  // tsx applies compiler options only to files this config includes, so it spans the repo: the ECHO
+  // types the render loads from source in other packages carry legacy decorators.
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "target": "esnext"
+  },
+  "include": ["../../../../**/*"]
+}

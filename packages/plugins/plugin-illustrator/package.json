@@ -193,7 +193,6 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/platform-node": "catalog:",
-    "@playwright/test": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -201,6 +200,7 @@
     "mermaid": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "sharp": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

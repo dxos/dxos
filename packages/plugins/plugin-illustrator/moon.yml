@@ -20,19 +20,27 @@ tasks:
   # Renders docs/diagrams/*.mmd to .svg through the SVG variant and prints the layout report;
   # `-- --scoreboard` prints the strategy × metric table instead. See docs/diagrams/README.md.
   render-diagrams:
-    # Straight from source (`scripts/vite.render.config.ts` resolves the `source` condition), so a
-    # render never waits on the plugin's ~150 upstream builds. vite-node, not tsx: the ECHO types the
-    # `.dx.svg` payload needs carry legacy decorators, and the diagram rules load as `?raw`. Not bun:
-    # its CJS interop cannot construct elkjs's bundled fake worker.
-    command: vite-node
+    # Straight from source (`--conditions=source`), so a render never waits on the plugin's ~150 upstream
+    # builds. Plain node + tsx rather than vite-node, because tsx caches its transforms on disk and vite-node
+    # re-transforms the whole source graph on every run; the tsconfig turns on the legacy decorators the ECHO
+    # types carry, and `raw-loader.mjs` serves the diagram rules' `?raw` imports. Not bun: its CJS interop
+    # cannot construct elkjs's bundled fake worker.
+    command: node
     args:
-      - '-c'
-      - scripts/vite.render.config.ts
+      - '--conditions=source'
+      - '--import'
+      - tsx
+      - '--import'
+      - ./scripts/raw-loader.mjs
       - scripts/render-diagrams.tsx
+    env:
+      TSX_TSCONFIG_PATH: scripts/tsconfig.render.json
     inputs:
       - scripts/render-diagrams.tsx
       - scripts/raw-loader.mjs
-      - scripts/vite.render.config.ts
+      - scripts/render.tsx
+      - scripts/emit-worker.ts
+      - scripts/tsconfig.render.json
       - docs/diagrams/*.mmd
       - src/**/*
     outputs:
