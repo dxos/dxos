@@ -3,7 +3,7 @@ object architecture @ 0,0 scale=1 {
     grid client-section rows="48 1fr" gap=16 {
       rect client-heading "Client · app tab + shared worker" fill=none border=false align=center valign=middle fontSize=34
       grid client-body gap=24 {
-        grid client-col-0 gap=16 {
+        grid client-col-0 gap=16 autoRows=128 alignContent=center {
           rect c-plugins "Plugins" kind=card body="Surfaces, operations and skills in each app tab." footer="navtree · markdown · assistant · +100" icon=puzzle-piece variant="compact"
           rect c-halo "HALO Vault" kind=card body="Keys and credentials for this device and its agents." footer="keyring · identity" icon=vault tone=accent variant="compact"
           rect c-runtime "Runtime" kind=card body="Effect service layers, shared by every tab." footer=WorkerRuntime icon=cpu variant="compact"
@@ -12,13 +12,16 @@ object architecture @ 0,0 scale=1 {
         }
       }
     }
-    grid router-body gap=24 {
-      rect router "Router" kind=card footer="RouterObject DO" icon=arrows-left-right tone=ink variant="compact"
+    grid router-section rows="48 1fr" gap=16 {
+      rect router-spacer fill=none border=false
+      grid router-body gap=24 autoRows=128 alignContent=center {
+        rect router "Router" kind=card footer="RouterObject DO" icon=arrows-left-right tone=ink variant="compact"
+      }
     }
     grid edge-section rows="48 1fr" gap=16 {
       rect edge-heading "EDGE · Workers + Durable Objects" fill=none border=false align=center valign=middle fontSize=34
       grid edge-body gap=24 {
-        grid edge-col-0 gap=16 {
+        grid edge-col-0 gap=16 autoRows=128 alignContent=center {
           rect e-plugins "Plugins" kind=card body="Plugin services that run next to the data." footer="layerSpec · workerd" icon=puzzle-piece variant="compact"
           rect e-halo "HALO" kind=card body="Credential chains and membership, checked on every request." footer="identity · kms · state machine" icon=shield-check tone=accent variant="compact"
           rect e-runtime "Plugin Manager" kind=card body="Loads plugin services and runs them per space." footer="Workers · service bindings" icon=plugs-connected variant="compact"

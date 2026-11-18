@@ -1,7 +1,7 @@
 object composer @ 0,0 scale=1 {
-  grid slide 0,0 1600x880 cols=3 gap=64 padding=48 {
+  grid slide 0,0 1600x880 cols="1fr 2fr 1fr" gap=64 padding=48 {
     grid left-body gap=24 {
-      grid left-col-0 gap=16 {
+      grid left-col-0 gap=16 autoRows=240 alignContent=center {
         rect navtree "Navtree" kind=card body="The space tree in the sidebar, built from the app graph." footer=plugin-navtree icon=tree-view
         rect document "Document" kind=card body="Collaborative markdown; the text lives in ECHO." footer=plugin-markdown icon=file-text
         rect sheet "Sheet" kind=card body="A spreadsheet embedded in the document." footer=plugin-sheet icon=grid-four
@@ -11,7 +11,7 @@ object composer @ 0,0 scale=1 {
       rect frame kind=app-frame highlight=true
     }
     grid right-body gap=24 {
-      grid right-col-0 gap=16 {
+      grid right-col-0 gap=16 autoRows=240 alignContent=center {
         rect assistant "Assistant" kind=card body="Assistant chat about the object on screen." footer=plugin-assistant icon=sparkle
         rect canvas "Canvas" kind=card body="A diagram embedded in the document." footer=plugin-excalidraw icon=pen-nib
       }

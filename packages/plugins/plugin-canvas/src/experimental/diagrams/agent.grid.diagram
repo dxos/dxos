@@ -2,7 +2,7 @@ object agent @ 0,0 scale=1 {
   grid slide 0,0 1600x880 gap=64 padding=48 {
     grid layer-ui-section rows="48 1fr" gap=16 {
       rect layer-ui-heading "UI / Control" fill=none border=false align=center valign=middle fontSize=34
-      grid layer-ui-body cols=3 gap=24 {
+      grid layer-ui-body cols=3 gap=64 {
         grid layer-ui-col-0 gap=16 {
           rect goal "Goal" kind=card icon=target
           rect project "Project" kind=card icon=folder
@@ -16,7 +16,7 @@ object agent @ 0,0 scale=1 {
     }
     grid layer-activity-section rows="48 1fr" gap=16 {
       rect layer-activity-heading "Activity" fill=none border=false align=center valign=middle fontSize=34
-      grid layer-activity-body cols=3 gap=24 {
+      grid layer-activity-body cols=3 gap=64 {
         grid layer-activity-col-0 gap=16 {
           rect feed "Feed" kind=card icon=queue
           rect scheduler "Scheduler" kind=card icon=alarm
@@ -33,7 +33,7 @@ object agent @ 0,0 scale=1 {
     }
     grid layer-knowledge-section rows="48 1fr" gap=16 {
       rect layer-knowledge-heading "Knowledge" fill=none border=false align=center valign=middle fontSize=34
-      grid layer-knowledge-body cols=3 gap=24 {
+      grid layer-knowledge-body cols=3 gap=64 {
         grid layer-knowledge-col-0 gap=16 {
           rect memory "Memory" kind=card icon=brain
           rect schema "Schema" kind=card icon=brackets-curly
