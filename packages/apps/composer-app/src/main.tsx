@@ -41,6 +41,7 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, markMilestone, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
+import { WorkerLeaderContentionError } from '@dxos/worker-framework';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
 import { initAutomergeWasm, initEchoHostWasm } from './util/automerge-wasm.ts';
@@ -205,14 +206,41 @@ const whenIdle = (timeout: number): Promise<void> =>
 /** Stands in for the prespawned worker when the worker is deferred, so nothing spawns at load. */
 const NOT_PRESPAWNED: PrespawnedWorker = { take: () => undefined, dispose: () => {} };
 
-// Cross-tab reload coordination for persistent worker failures (dev only — see
-// `onPersistentWorkerFailure` below). The sessionStorage guard makes each tab escalate at most
-// once per tab session, so a failure that reloads don't fix cannot loop the reloads.
-const DEV_RELOAD_CHANNEL = 'dxos-dev-worker-reload';
-const DEV_RELOAD_GUARD_KEY = 'dxos.composer.dev-worker-reload';
-if (import.meta.env?.DEV) {
-  new BroadcastChannel(DEV_RELOAD_CHANNEL).onmessage = () => window.location.reload();
-}
+// Cross-tab reload coordination for persistent worker failures (see `onPersistentWorkerFailure`
+// below). BroadcastChannel is shared by origin, so it reaches tabs on other app builds, which the
+// SharedWorker coordinator cannot. The guard lets each tab reload at most once per window, so a
+// failure that reloads don't fix cannot loop them, while a later deploy can still recover.
+const WORKER_RELOAD_CHANNEL = 'dxos-worker-reload';
+const WORKER_RELOAD_GUARD_KEY = 'dxos.composer.worker-reload';
+const WORKER_RELOAD_GUARD_MS = 10 * 60_000;
+
+/** Reloads this tab unless it already did so within the guard window; returns whether it reloads. */
+const reloadOnce = (): boolean => {
+  try {
+    const last = Number(sessionStorage.getItem(WORKER_RELOAD_GUARD_KEY) ?? 0);
+    if (Date.now() - last < WORKER_RELOAD_GUARD_MS) {
+      return false;
+    }
+    sessionStorage.setItem(WORKER_RELOAD_GUARD_KEY, String(Date.now()));
+  } catch {
+    // Storage unavailable: no guard can be kept, so do not risk a reload loop.
+    return false;
+  }
+  window.location.reload();
+  return true;
+};
+
+/** Reloads every same-origin tab, whatever build it runs, so they converge on one generation. */
+const reloadAllTabs = () => {
+  const channel = new BroadcastChannel(WORKER_RELOAD_CHANNEL);
+  channel.postMessage('reload');
+  channel.close();
+  reloadOnce();
+};
+
+new BroadcastChannel(WORKER_RELOAD_CHANNEL).onmessage = () => {
+  reloadOnce();
+};
 
 /**
  * Picks the platform-appropriate offline asset cache for third-party plugins.
@@ -603,16 +631,14 @@ const main = async () => {
       }),
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-    // Stale mixed-generation workers (tabs from before a dev-server restart) present as an endless
-    // boot spinner with only a console warning; in dev, force every same-origin tab through one
-    // coordinated reload so all generations converge. Production relies on the fatal dialog via the
-    // startup timeout (tagged for telemetry — see ResetDialog).
+    // Tabs on different builds (one opened before a deploy or dev-server restart) fight over the
+    // worker and neither keeps one, so force every same-origin tab through one coordinated reload.
+    // Leader contention is that case for certain, so it reloads in production too; other persistent
+    // failures in production rely on the fatal dialog via the startup timeout (see ResetDialog).
     onPersistentWorkerFailure: (error) => {
       log.error('worker connection failing persistently', { error });
-      if (import.meta.env?.DEV && !sessionStorage.getItem(DEV_RELOAD_GUARD_KEY)) {
-        sessionStorage.setItem(DEV_RELOAD_GUARD_KEY, '1');
-        new BroadcastChannel(DEV_RELOAD_CHANNEL).postMessage('reload');
-        window.location.reload();
+      if (import.meta.env?.DEV || WorkerLeaderContentionError.is(error)) {
+        reloadAllTabs();
       }
     },
   });
