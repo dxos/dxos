@@ -563,6 +563,13 @@ feat F-5: URL Navigation & Deep Linking
   req F-5.4:
     when: a navigation target cannot be resolved (unknown key, failed resolver, or missing node)
     then: Open operation redirects to a 404 node
+
+  req F-5.5:
+    when: a URL from outside the app carries `?action=<DXN>`
+    then: once the URL has landed, DeckPlugin removes the parameter from the address bar and runs the
+          `LinkAction` a plugin contributes under that id on the object at the end of the chain, once;
+          an id no plugin contributes, or an action that does not apply to the object, is dropped with
+          a warning
 ```
 
 ```mdl
@@ -1105,6 +1112,29 @@ decision D-16: `DeckSchema.closedCompanionsDeck` names the deck whose companion 
   for: user:wittjosiah
   affects: [F-10.1]
   why: An empty list and an absent one mean different things to the companion layout, so the closed deck gets a name instead of an inline literal.
+```
+
+```mdl
+decision D-17: A link can carry an action that the app runs on the object the link opens. An action's id is a DXN, so plugins' actions do not collide.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-18: Plugins contribute link actions as an `AppCapabilities.LinkAction` capability, and a link names one in its `action` parameter. The deck's URL projection runs it after the URL lands, activates the app's idle modules first, and removes the parameter before it runs. Fills in [D-17].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: Contributions are the only actions a link can name, so a link cannot run an arbitrary operation. The projection is what turns a URL into deck state, and it clears fullscreen when it opens a workspace, so an action that sets fullscreen has to run after it. Operation handlers load when the app goes idle, which is after boot. Removing the parameter first means a reload or a failed action never runs it again.
+  rejected: A link naming an operation key directly, which would let any link run any operation; a viewer-only handler, which would not serve Composer links or Tauri deep links.
+```
+
+```mdl
+decision D-19: Approve [D-18].
+  date: 2026-11-18
+  by: user:wittjosiah
 ```
 
 ## Appendix: Extension Definitions

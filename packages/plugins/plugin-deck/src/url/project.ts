@@ -13,9 +13,11 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LinkAction from '@dxos/app-toolkit/LinkAction';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { Key } from '@dxos/echo';
@@ -78,7 +80,37 @@ export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
     );
   }
 
-  return yield* projectUrl(resolvedUrl);
+  const plankId = yield* projectUrl(resolvedUrl);
+  yield* runLinkAction(resolvedUrl, plankId);
+  return plankId;
+});
+
+/**
+ * Runs the action the URL names on the plank it landed on, once: the action leaves the address bar first, so neither
+ * a reload nor a later projection runs it again. It runs after the projection, because opening a workspace clears
+ * the fullscreen state an action such as presenting sets.
+ */
+const runLinkAction = Effect.fnUntraced(function* (url: URL, plankId: string | undefined) {
+  if (!url.searchParams.has(LinkAction.PARAM)) {
+    return;
+  }
+  const current = LinkAction.withoutAction(new URL(window.location.href));
+  history.replaceState(history.state, '', current.pathname + current.search + current.hash);
+
+  const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+  const data = plankId ? Option.getOrUndefined(AppGraph.getNode(graph, plankId))?.data : undefined;
+  const action = LinkAction.find(url, yield* Capability.getAll(AppCapabilities.LinkAction), data);
+  if (!action) {
+    log.warn('link action not run', { action: url.searchParams.get(LinkAction.PARAM), plankId });
+    return;
+  }
+  // Actions run operations, whose handlers load when the app goes idle.
+  const manager = yield* Effect.serviceOption(Plugin.Service);
+  const idle = Option.isSome(manager) ? Effect.asVoid(manager.value.activate(ActivationEvents.Idle)) : Effect.void;
+  yield* idle.pipe(
+    Effect.andThen(() => action.run(data)),
+    Effect.catchCause((cause) => Effect.sync(() => log.warn('link action failed', { error: Cause.pretty(cause) }))),
+  );
 });
 
 export type ProjectOptions = {

@@ -35,6 +35,8 @@ import * as Position from '@dxos/util/Position';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as AppUpdate$ from '../app/AppUpdate.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as LinkAction$ from '../app/LinkAction.ts';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations.ts';
 import type * as AppSettings from '../types/AppSettings.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -653,6 +655,12 @@ export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
 export const NavigationHandler = Capability$.make<NavigationHandler>()(
   'org.dxos.app-toolkit.capability.navigationHandler',
 );
+
+/**
+ * An action a link can run on the object it opens (see {@link LinkAction$}).
+ * @category Capability
+ */
+export const LinkAction = Capability$.make<LinkAction$.LinkAction>()('org.dxos.app-toolkit.capability.linkAction');
 
 /** A transient progress monitor handle — the update side of one registry entry. */
 export type ProgressMonitor = Progress.TaskHandle;
