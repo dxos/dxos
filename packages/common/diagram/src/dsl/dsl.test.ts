@@ -213,6 +213,30 @@ describe('dsl round trip', () => {
     expect(roundTrip(source)).toEqual(source);
   });
 
+  test('a box packs what it holds, and reads the rule back', ({ expect }) => {
+    // The other layout a box may state: the children are placed by a packing, so the text says the seed and the
+    // range of sizes rather than a coordinate per child.
+    const source = [
+      'object A @ 0,0 {',
+      '  grid field 0,0 400x400 gap=8 layout=pack packSeed=7 packMin=40 packMax=80 {',
+      '    rect a',
+      '    rect b',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [field] = toScene(commands).objects[0].elements;
+    expect(field.kind === 'grid' && [field.layout, field.packSeed, field.packMin, field.packMax]).toEqual([
+      'pack',
+      7,
+      40,
+      80,
+    ]);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
   test('an arrow states the path it runs, and reads it back', ({ expect }) => {
     // The canvas has had orthogonal links all along; what the text could not say was which one a connector is.
     const source = [

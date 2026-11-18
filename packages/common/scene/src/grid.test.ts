@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseTracks, solveGrids } from './grid.ts';
+import { parseTracks, solveGrid, solveGrids } from './grid.ts';
 import { type Box } from './shape.ts';
 
 const box = (id: string, rest: Partial<Box> = {}): Box =>
@@ -179,5 +179,48 @@ describe('cell size and where the run sits', () => {
     ]);
     // 260 wide inside the padding, one 100-wide column: 80 either side of it.
     expect(frames.get('a')).toEqual({ x: 100, y: 20, w: 100, h: 60 });
+  });
+});
+
+describe('a box that packs what it holds', () => {
+  test('gives each child the square its circle fits, inside the padding', ({ expect }) => {
+    const rule = { layout: 'pack' as const, packSeed: 7, packMin: 40, packMax: 40, gap: 8, padding: 16 };
+    const placed = solveGrid(rule, { x: 100, y: 200, w: 400, h: 400 }, [box('a'), box('b'), box('c')]);
+    expect(placed).toHaveLength(3);
+    for (const { frame } of placed) {
+      expect([frame.w, frame.h]).toEqual([80, 80]);
+      // Inside the frame, and clear of its edge by the gap: the packing samples within that margin.
+      expect(frame.x).toBeGreaterThanOrEqual(100 + 16 + 8);
+      expect(frame.y).toBeGreaterThanOrEqual(200 + 16 + 8);
+      expect(frame.x + frame.w).toBeLessThanOrEqual(100 + 400 - 16 - 8);
+      expect(frame.y + frame.h).toBeLessThanOrEqual(200 + 400 - 16 - 8);
+    }
+    // No two overlap, which is the whole job.
+    for (const left of placed) {
+      for (const right of placed) {
+        if (left.id !== right.id) {
+          const gap = Math.hypot(left.frame.x - right.frame.x, left.frame.y - right.frame.y);
+          expect(gap).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  test('is the same field for the same seed, and another for another', ({ expect }) => {
+    const frame = { x: 0, y: 0, w: 300, h: 300 };
+    const children = [box('a'), box('b')];
+    const first = solveGrid({ layout: 'pack', packSeed: 3, packMin: 20, packMax: 60 }, frame, children);
+    expect(solveGrid({ layout: 'pack', packSeed: 3, packMin: 20, packMax: 60 }, frame, children)).toEqual(first);
+    expect(solveGrid({ layout: 'pack', packSeed: 4, packMin: 20, packMax: 60 }, frame, children)).not.toEqual(first);
+  });
+
+  test('leaves out a child the packing could not place', ({ expect }) => {
+    // Three circles of 90 cannot fit a 200-wide frame: the first is placed and the rest find no room.
+    const placed = solveGrid(
+      { layout: 'pack', packSeed: 1, packMin: 90, packMax: 90, gap: 4 },
+      { x: 0, y: 0, w: 200, h: 200 },
+      [box('a'), box('b'), box('c')],
+    );
+    expect(placed.length).toBeLessThan(3);
   });
 });

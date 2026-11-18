@@ -45,6 +45,13 @@ leave over at the start, the centre or the end — which is how a short run sits
 rule is what is stored and what the text carries; a child's coordinates are a cached projection re-solved on every
 render, so adding a card to a run re-spaces it rather than leaving a gap someone has to close.
 
+A box may also pack what it holds instead of laying it on tracks. `layout=pack` with `packSeed`, `packMin` and
+`packMax` places each child in the circle a seeded packing gives it, largest first, and a child that finds no room
+is left where it is rather than overlapped — which is how the Hyperspace slide's field is now written: nine space
+graphs inside one container, with the bridges between them ordinary dashed links and a plank's wire ending ON the
+space it reads. That slide used to be a single element that drew every circle itself, so nothing could be linked to
+and the rule was the kind's rather than the drawing's.
+
 Losslessness is a test rather than an inspection: a corpus pass over all nine slides compares every kind, its own
 fields, its glyph, every link's markers and every route point for point, and fails on five to nine slides with
 any one of these removed. The studio bench also gains a DSL/JSON toggle, so a drawing's records can be read

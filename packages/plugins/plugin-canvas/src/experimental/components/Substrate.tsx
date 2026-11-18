@@ -21,10 +21,10 @@ import './theme.css';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { type ElementKindSpec, type NodeViewProps, defaultPorts, kindData } from '@dxos/react-ui-canvas';
-import { type Node, type Port, Scene } from '@dxos/scene';
+import { type ElementKindSpec, type NodeViewProps, kindData } from '@dxos/react-ui-canvas';
+import { Scene } from '@dxos/scene';
 
-import { layout, rng, subgraph } from '../../components/Graph/generator/space-graph.generator.ts';
+import { layout } from '../../components/Graph/generator/space-graph.generator.ts';
 import { graphFields } from '../../components/Graph/index.ts';
 import { TONES, toneValue } from './FeedCard.tsx';
 import { type Circle, type LitPoint, packSpaces, parseLit, parseSpaces } from './substrate-packing.ts';
@@ -67,18 +67,6 @@ export const substrateFields = {
   lit: Schema.optional(Schema.Union([Schema.Array(Lit), Schema.String]).annotate({ title: 'Lit objects' })),
   /** How many of the closest pairs of spaces are bridged. */
   bridges: Schema.optional(Schema.Number.check(Schema.isInt()).annotate({ title: 'Bridges' })),
-  /**
-   * The subgraph a space lights up, as a rule rather than a list of points: which space (its place in the packing),
-   * which object it grows from, and how many hops out the colour reaches. The walk is over the graph this seed
-   * produces, so the same objects light up after the field re-packs itself.
-   */
-  rootSpace: Schema.optional(Schema.Number.check(Schema.isInt()).annotate({ title: 'Lit space' })),
-  root: Schema.optional(Schema.Number.check(Schema.isInt()).annotate({ title: 'Root object' })),
-  depth: Schema.optional(Schema.Number.check(Schema.isInt()).annotate({ title: 'Depth' })),
-  /** The colours the subgraph draws from, one per object, dealt by the field's own seed (`accent | message`). */
-  tones: Schema.optional(
-    Schema.Union([Schema.Array(Schema.Literals(TONES)), Schema.String]).annotate({ title: 'Subgraph tones' }),
-  ),
 };
 
 /** The kind's own fields, kept under `data` (decision 21). */
@@ -101,13 +89,6 @@ const DEFAULTS = {
   rmax: 150,
   gap: 10,
 } as const;
-
-/** The palette a marked subgraph draws from, from either form; a name the deck does not know is dropped. */
-const tonesOf = (tones: readonly string[] | string | undefined): string[] =>
-  (typeof tones === 'string' ? tones.split('|').map((name) => name.trim()) : (tones ?? [])).flatMap((name) => {
-    const value = toneValue(name);
-    return value ? [value] : [];
-  });
 
 /** The `count` closest pairs of spaces, by the gap between their edges: what the field bridges. */
 const bridgesOf = (spaces: readonly Circle[], count: number): [number, number][] =>
@@ -160,22 +141,6 @@ export const SubstrateNodeView = ({ node }: NodeViewProps) => {
       size: settings.size,
     }),
   );
-  // The subgraph the field marks, walked over the graph the seed produced rather than read off a list of points.
-  const palette = tonesOf(settings.tones);
-  const markSpace = settings.rootSpace ?? 0;
-  const mark =
-    palette.length && settings.depth !== undefined && graphs[markSpace]
-      ? subgraph(graphs[markSpace].links, settings.root ?? 0, settings.depth)
-      : undefined;
-  // A colour per object, dealt once from the field's own seed: the same object keeps its colour across renders,
-  // and a link takes the colour of the end it leaves.
-  const marked = new Map<number, string>();
-  if (mark && palette.length) {
-    const random = rng(settings.seed + 977);
-    for (const index of [...mark.nodes].sort((left, right) => left - right)) {
-      marked.set(index, palette[Math.floor(random() * palette.length)]);
-    }
-  }
   return (
     <svg
       className='dx-cover overflow-visible'
@@ -219,9 +184,6 @@ export const SubstrateNodeView = ({ node }: NodeViewProps) => {
                 />
               ))}
             {links.map(([from, to], linkIndex) => {
-              // A marked link takes the colour as an attribute and drops the class: a Tailwind `stroke-*` would
-              // win over it, which is how the first attempt came out grey.
-              const tone = index === markSpace && mark?.links.has(linkIndex) ? marked.get(from) : undefined;
               return (
                 <line
                   key={`link-${linkIndex}`}
@@ -229,26 +191,21 @@ export const SubstrateNodeView = ({ node }: NodeViewProps) => {
                   y1={nodes[from].y}
                   x2={nodes[to].x}
                   y2={nodes[to].y}
-                  className={tone ? undefined : 'stroke-neutral-border'}
-                  stroke={tone}
-                  strokeWidth={Math.max(1.2, nodeR * (tone ? 0.42 : 0.32))}
-                  opacity={tone ? 0.9 : 0.55}
+                  className='stroke-neutral-border'
+                  strokeWidth={Math.max(1.2, nodeR * 0.32)}
+                  opacity={0.55}
                 />
               );
             })}
-            {nodes.map((point, objectIndex) => {
-              const tone = index === markSpace ? marked.get(objectIndex) : undefined;
-              return (
-                <circle
-                  key={`object-${objectIndex}`}
-                  cx={point.x}
-                  cy={point.y}
-                  r={tone ? nodeR * 1.2 : nodeR}
-                  className={tone ? undefined : 'fill-neutral-border'}
-                  fill={tone}
-                />
-              );
-            })}
+            {nodes.map((point, objectIndex) => (
+              <circle
+                key={`object-${objectIndex}`}
+                cx={point.x}
+                cy={point.y}
+                r={nodeR}
+                className='fill-neutral-border'
+              />
+            ))}
           </g>
         );
       })}
@@ -267,31 +224,6 @@ export const SubstrateNodeView = ({ node }: NodeViewProps) => {
   );
 };
 
-/**
- * A port per packed space, on both sides of the field at that space's own height: what a drawing links to when it
- * says which space a plank reads. The packing is the same function the view draws, so a port follows its space
- * rather than naming a point someone has to keep in step. The defaults stay beside them, so the field can still be
- * tied to by its own edges.
- */
-const substratePorts = (node: Node): readonly Port[] => {
-  const data = kindData(SubstrateData, node);
-  if (!data) {
-    return defaultPorts;
-  }
-  const settings = { ...DEFAULTS, ...data, seed: data.seed ?? 0 };
-  const { width, height } = node.size;
-  const stored = typeof settings.spaces === 'string' ? parseSpaces(settings.spaces) : settings.spaces;
-  // Both forms are fractions of the field's own box, which is what a port's offset along a side already is.
-  const spaces: readonly Circle[] = stored?.length ? stored : packSpaces(settings, width, height);
-  return [
-    ...spaces.flatMap((space, index) => [
-      { id: `space-${index}`, side: 'w' as const, offset: space.y },
-      { id: `space-${index}-e`, side: 'e' as const, offset: space.y },
-    ]),
-    ...defaultPorts,
-  ];
-};
-
 export const substrateSpec: ElementKindSpec = {
   // Five ports a side: a true middle to tie a trunk to, and room either side of it for a fan of edges
   // that converge on one card.
@@ -306,7 +238,6 @@ export const substrateSpec: ElementKindSpec = {
   defaultSize: { width: 17, height: 17 },
   resizable: true,
   minSize: { width: 180, height: 180 },
-  ports: substratePorts,
   // The field is the shape: the kind draws every circle it holds.
   bare: true,
 };
