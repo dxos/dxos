@@ -1523,6 +1523,14 @@ decision D-60: On EDGE the space's `MemoryObject` drives time-driven rules itsel
   why: The memory knows when its rules are next due; a per-agent poll every minute both runs late and runs when nothing is due.
 ```
 
+```mdl
+decision D-61: On EDGE a space's memory is inspected through db-service's memory routes (facts, subscriptions and SPARQL for a space, for admins), which replace compute-service's per-agent brain state and fact routes and `BrainServiceEntrypoint.state`. Fills in [D-57].
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-9]
+  why: What the brain view showed now lives in the space memory, so its reads belong beside the `MemoryObject` rather than to one agent.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
