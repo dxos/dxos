@@ -4,11 +4,10 @@
 
 // @import-as-namespace
 
-import { DataFactory } from 'n3';
-
 import * as Fact from './Fact.ts';
+import * as Rdf from './Rdf.ts';
 
-const { namedNode, literal } = DataFactory;
+const { namedNode, literal } = Rdf;
 
 /** Semantic-index vocabulary (provenance and factuality predicates). */
 export const SX = 'https://dxos.org/semantic#';

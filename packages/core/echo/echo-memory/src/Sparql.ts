@@ -5,12 +5,12 @@
 // @import-as-namespace
 
 import type * as Schema from 'effect/Schema';
-import { DataFactory, type Quad as RdfQuad, type Term as RdfTerm } from 'n3';
 
 import * as Fact from './Fact.ts';
 import * as Mapping from './Mapping.ts';
 import type * as MemoryQuery from './MemoryQuery.ts';
 import * as Ontology from './Ontology.ts';
+import * as Rdf from './Rdf.ts';
 import type * as RdfStore from './RdfStore.ts';
 import * as Vocab from './Vocab.ts';
 
@@ -71,7 +71,7 @@ export const deleteSeedSparql = (iris: readonly string[]): string[] => [
 /** The label of each stored predicate: from the ontology graph, else the ontology, else its IRI. */
 export const predicateLabels = (
   stored: Iterable<string>,
-  ontologyQuads: readonly RdfQuad[],
+  ontologyQuads: readonly Rdf.Quad[],
   ontology: Ontology.Ontology = Ontology.DEFAULT,
 ): Map<string, string> => {
   const labels = new Map<string, string>();
@@ -174,12 +174,12 @@ export const statementMatches = (fact: Fact.Fact, query: Pattern, predicates?: R
   );
 };
 
-const { blankNode, defaultGraph, literal, namedNode, quad } = DataFactory;
+const { blankNode, defaultGraph, literal, namedNode, quad } = Rdf;
 
 const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
 
 /** RDF/JS term → the engine's plain-data term. */
-export const toTerm = (term: RdfTerm): MemoryQuery.SparqlTerm => {
+export const toTerm = (term: Rdf.Term): MemoryQuery.SparqlTerm => {
   switch (term.termType) {
     case 'NamedNode':
     case 'BlankNode':
@@ -196,7 +196,7 @@ export const toTerm = (term: RdfTerm): MemoryQuery.SparqlTerm => {
 };
 
 /** RDF/JS quad → engine quad (the default graph is the engine's absent `g`). */
-export const toQuad = (triple: RdfQuad): RdfStore.Quad => ({
+export const toQuad = (triple: Rdf.Quad): RdfStore.Quad => ({
   s: toTerm(triple.subject),
   p: toTerm(triple.predicate),
   o: toTerm(triple.object),
@@ -215,7 +215,7 @@ const toObject = (term: MemoryQuery.SparqlTerm) =>
  * `?g ?s ?p ?o` solutions as quads: a row with `?s` bound is a quad in graph `?g`, one without it is a default-graph
  * triple about `?g` (its provenance). Rows with a literal in a resource position are skipped.
  */
-export const rowsToQuads = (rows: readonly Row[]): RdfQuad[] =>
+export const rowsToQuads = (rows: readonly Row[]): Rdf.Quad[] =>
   rows.flatMap(({ g, s, p, o }) => {
     if (g?.termType !== 'NamedNode' || p?.termType !== 'NamedNode' || o === undefined) {
       return [];
