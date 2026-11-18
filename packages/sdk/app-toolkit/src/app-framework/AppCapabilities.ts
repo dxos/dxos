@@ -185,6 +185,14 @@ export type StatsPanelStore = Readonly<{
 export const StatsPanel = Capability$.makeSingleton<StatsPanelStore>()('org.dxos.app-toolkit.capability.statsPanel');
 
 /**
+ * Present when the whole app is read-only, as in the published-space viewer: plugins show content
+ * and drop every control that writes. The host contributes it at startup, so read it when rendering
+ * or expanding the graph, never while a module activates.
+ * @category Capability
+ */
+export const ReadOnly = Capability$.makeSingleton<true>()('org.dxos.app-toolkit.capability.readOnly');
+
+/**
  * The graph builder instance. Its `graph` is the reactive node tree; the builder also carries the
  * `urlKey` declarations and node→extension provenance that URL resolution (`@dxos/app-graph`'s
  * `path-resolution.ts`) reads and reverse-maps — neither derivable from `graph` alone.
@@ -566,6 +574,8 @@ export type NavigationTarget = {
    * position rather than path sniffing by the caller.
    */
   position?: Position.Position;
+  /** View state to set before `path` opens, so it opens on the part the target is about (a project on one of its specs). */
+  viewState?: readonly ViewState.Patch[];
 };
 
 export type NavigationQuery = {

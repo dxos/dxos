@@ -26,13 +26,13 @@ import { Outline, type OutlineController, type OutlineRootProps } from '../Outli
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
-export type JournalProps = Pick<JournalEntryProps, 'onSelect'> & {
+export type JournalProps = Pick<JournalEntryProps, 'onSelect' | 'readonly'> & {
   journal: JournalObject;
 };
 
 // TODO(burdon): Virtualize.
 export const Journal = Util.composable<HTMLDivElement, JournalProps>(
-  ({ journal, onSelect, ...props }, forwardedRef) => {
+  ({ journal, readonly, onSelect, ...props }, forwardedRef) => {
     const { t } = Hooks.useTranslation(TasksNamespace.key);
     const date = new Date();
 
@@ -71,11 +71,12 @@ export const Journal = Util.composable<HTMLDivElement, JournalProps>(
               key={dateKey}
               entryRef={ref}
               classNames='p-2'
+              readonly={readonly}
               onSelect={onSelect}
-              autoFocus={i === entryRefs.length - 1}
+              autoFocus={!readonly && i === entryRefs.length - 1}
             />
           ))}
-          {!hasTodayEntry && (
+          {!readonly && !hasTodayEntry && (
             <div className='p-2'>
               <Button.Root
                 label={t('start-today.label')}
@@ -96,7 +97,7 @@ type JournalEntryProps = Util.ThemedClassName<
   {
     entryRef: Ref.Ref<JournalEntryObject>;
     onSelect?: (event: { date: Date }) => void;
-  } & Pick<OutlineRootProps, 'autoFocus'>
+  } & Pick<OutlineRootProps, 'autoFocus' | 'readonly'>
 >;
 
 const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntryProps) => {

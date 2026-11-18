@@ -119,6 +119,11 @@ export const useObjectNavigate = (
   }, [subject, detailOf, invoke]);
 };
 
+export type UseObjectMenuItemsOptions = {
+  /** Offers only Open, the one action that writes nothing. */
+  readonly?: boolean;
+};
+
 /**
  * Returns object-scoped menu items (Open, Add to collection) for the given subject.
  * Only includes items when subject is an Echo object of a user-facing type.
@@ -128,7 +133,11 @@ export const useObjectNavigate = (
  * supplies the plank's attendable id as `pivot` — via {@link useCardPivot} when the card knows only its
  * own element.
  */
-export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[] => {
+export const useObjectMenuItems = (
+  subject: unknown,
+  pivot?: string,
+  { readonly = false }: UseObjectMenuItemsOptions = {},
+): MenuItem[] => {
   const { invoke } = Hooks.useOperationInvoker();
   const { t } = UiHooks.useTranslation(osTranslations);
 
@@ -137,16 +146,21 @@ export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[]
       return [];
     }
 
+    const open = createMenuAction(
+      'navigate',
+      (params) =>
+        void EffectEx.runPromise(openObject(subject, invoke, { pivotId: pivot, modifiers: params?.modifiers })),
+      {
+        label: t('open.label'),
+        icon: OPEN_ICON,
+      },
+    );
+    if (readonly) {
+      return [open];
+    }
+
     return [
-      createMenuAction(
-        'navigate',
-        (params) =>
-          void EffectEx.runPromise(openObject(subject, invoke, { pivotId: pivot, modifiers: params?.modifiers })),
-        {
-          label: t('open.label'),
-          icon: OPEN_ICON,
-        },
-      ),
+      open,
       createMenuAction(
         'addToCollection',
         () =>
@@ -162,7 +176,7 @@ export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[]
         },
       ),
     ];
-  }, [subject, invoke, t, pivot]);
+  }, [subject, invoke, t, pivot, readonly]);
 };
 
 /** ID for object-actions (Open, Add to collection). Use with `useMenuContribution`. */

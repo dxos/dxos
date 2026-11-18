@@ -52,6 +52,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         yield* applyWorkspace(workspaceToEnter);
       }
 
+      // Before the planks mount, so each opens on the part the caller asked for.
+      if (input.viewState?.length) {
+        const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+        input.viewState.forEach((patch) => viewState.apply(patch));
+      }
+
       // The same object can appear under several graph paths (two collections, or a collection and its
       // type). A plain navigation moves its open plank onto the path asked for; any other open reuses
       // the plank where it is rather than opening the object twice.

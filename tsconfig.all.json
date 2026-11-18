@@ -199,6 +199,9 @@
       "path": "packages/core/echo/echo-memory-sqlite/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-native/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-panproto/tsconfig.json"
     },
     {

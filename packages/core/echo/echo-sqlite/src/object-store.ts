@@ -88,8 +88,6 @@ export class ObjectStore {
   readonly #docs: DocStore;
   /** Objects convergence-key merges changed since {@link takeMerged}. */
   #merged = new Set<string>();
-  /** For the merge, whose document callbacks run effects from promises. */
-  readonly #sql: SqlClient.SqlClient;
   /** Names this store's commits in the change log, so it skips its own. */
   readonly #writer = crypto.randomUUID();
   readonly #engine: IndexEngine;
@@ -98,7 +96,6 @@ export class ObjectStore {
 
   private constructor(spaceId: SpaceId, sql: SqlClient.SqlClient, actorId: string, assignPositions: boolean) {
     this.#spaceId = spaceId;
-    this.#sql = sql;
     // A replica, whose positions come from the space's authority, unless this file is the authority.
     this.#feedStore = new FeedStore({ localActorId: actorId, assignPositions });
     this.#docs = new DocStore(this.#feedStore, spaceId);
@@ -242,6 +239,22 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
   }
 
   /**
+   * Runs `effect` in one transaction (a savepoint inside another), so a commit's statements share one sync.
+   */
+  transaction<A, E>(
+    effect: Effect.Effect<A, E, SqlClient.SqlClient>,
+  ): Effect.Effect<A, E | SqlError.SqlError, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      return yield* sql.withTransaction(effect).pipe(
+        // A rollback leaves every in-memory checkpoint the body advanced ahead of the file, including
+        // documents outside the caller's batch (a convergence merge's winner).
+        Effect.onError(() => Effect.sync(() => this.#rolledBack())),
+      );
+    });
+  }
+
+  /**
    * Writes entities into their cached documents now; their next {@link write} appends the changes.
    * Undefined when a document is not cached.
    */
@@ -306,8 +319,11 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
         return new Set<string>();
       }
       const changed = new Set<string>();
+      // The merger's callbacks run in this fiber's context, so they join a transaction it holds instead of
+      // waiting for the connection that transaction owns.
+      const context = yield* Effect.context<SqlClient.SqlClient>();
       const run = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient>): Promise<A> =>
-        EffectEx.runPromise(effect.pipe(Effect.provideService(SqlClient.SqlClient, this.#sql)));
+        EffectEx.runPromise(effect.pipe(Effect.provideContext(context)));
       const docs = this.#docs;
       const documentRef = (id: string): MergeDocumentRef | null => {
         const doc = docs.peek(id);
@@ -468,6 +484,12 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
     this.#feedStore.resetCaches();
   }
 
+  #rolledBack(): void {
+    this.#docs.invalidateSaved();
+    this.#source.forgetRecorded();
+    this.#feedStore.resetCaches();
+  }
+
   #purge(ids: readonly string[]): Effect.Effect<void, SqlError.SqlError | CypherError, SqlClient.SqlClient> {
     return Effect.gen({ self: this }, function* () {
       yield* this.#engine.deleteObjects({
@@ -544,11 +566,15 @@ SELECT ?1, value, ?2, ?3 FROM json_each(?4)`,
         const [row] = yield* sql<{ lastId: number | null }>`SELECT MAX(id) AS lastId FROM echo_sqlite_change_log`;
         return { lastId: row?.lastId ?? 0, ids: new Set<string>() };
       }
-      const rows = yield* sql<{ id: number; objectId: string; writer: string }>`
-        SELECT id, objectId, writer FROM echo_sqlite_change_log WHERE spaceId = ${spaceId} AND id > ${afterId} ORDER BY id`;
+      // The cursor is read first and bounds the rows, so a commit landing between the two reads is
+      // picked up by the next poll instead of being skipped.
       const [newest] = yield* sql<{ lastId: number | null }>`SELECT MAX(id) AS lastId FROM echo_sqlite_change_log`;
+      const lastId = newest?.lastId ?? afterId;
+      const rows = yield* sql<{ id: number; objectId: string; writer: string }>`
+        SELECT id, objectId, writer FROM echo_sqlite_change_log
+        WHERE spaceId = ${spaceId} AND id > ${afterId} AND id <= ${lastId} ORDER BY id`;
       return {
-        lastId: newest?.lastId ?? afterId,
+        lastId,
         ids: new Set(rows.filter((row) => row.writer !== writer).map((row) => row.objectId)),
       };
     });

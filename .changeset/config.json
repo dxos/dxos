@@ -71,6 +71,7 @@
       "@dxos/echo-host",
       "@dxos/echo-memory",
       "@dxos/echo-memory-sqlite",
+      "@dxos/echo-native",
       "@dxos/echo-panproto",
       "@dxos/echo-protocol",
       "@dxos/echo-query",

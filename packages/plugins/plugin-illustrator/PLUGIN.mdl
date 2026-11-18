@@ -409,3 +409,44 @@ decision D-8: The drawing article owns the camera as it owns the selection: a vi
   rejected:
     - Following each renderer's own view state; the 2D canvas keys its camera by the canvas, which presence does not report, and tldraw and excalidraw keep none.
 ```
+
+```mdl
+decision D-9: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [VariantProvider]
+```
+
+```mdl
+decision D-10: A `readOnly` option withholds the actions that convert a drawing to another variant. Fills in [D-9].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [VariantProvider]
+  why: A conversion writes a copy, which a read-only host has nowhere to put.
+```
+
+```mdl
+decision D-11: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [VariantProvider]
+  supersedes: D-9
+```
+
+```mdl
+decision D-12: When the host contributes `ReadOnly`, the actions that convert a drawing to another variant are withheld; the graph builder checks it when it builds a drawing's actions. Each variant's article reads `ReadOnly` itself, so a variant contributes one article. Fills in [D-11].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [VariantProvider]
+  supersedes: D-10
+  why: A conversion writes a copy, which a read-only host has nowhere to put. The capability lands at startup with no order against module activation, so it is read when the graph expands.
+```
+
+```mdl
+decision D-13: When the host contributes `ReadOnly`, a drawing has no Scores companion.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [VariantProvider]
+```

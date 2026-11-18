@@ -7,6 +7,7 @@ import * as Fiber from 'effect/Fiber';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Obj } from '@dxos/echo';
@@ -33,6 +34,10 @@ import { type Space } from '@dxos/react-client/echo';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    if (yield* ReadOnly.current) {
+      return [];
+    }
+
     const client = yield* ClientCapabilities.Client;
     const runtime = yield* Capabilities.ProcessManagerRuntime;
 
