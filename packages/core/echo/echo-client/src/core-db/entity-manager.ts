@@ -1378,6 +1378,8 @@ export class EntityManager implements IDatabaseBinding {
 
     if (updates) {
       await this._updateScheduler.runBlocking();
+      // Processing the updates can queue objects to move onto a newly routed version, an update to them too.
+      await this.#rerouteChain;
     }
   }
 

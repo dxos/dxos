@@ -92,9 +92,17 @@ const settle = async (host: EchoHost, db: TestDatabase): Promise<void> => {
     condition: async () => {
       // Edits made through raw document handles are sent by the repo, not tracked by the database.
       await db._repo.flush();
-      await db.flush({ indexes: true });
+      await db.flush({ indexes: true, updates: true });
       await host.versionsSettled();
       const { heads } = await db.getDocumentHeads();
+      // The database reports the root's heads as this client holds them, so a root the host rewrote but has not sent yet
+      // would look settled; the host's heads make `caughtUp` wait for it.
+      const rootId = db._getSpaceRootDocHandle().documentId;
+      invariant(rootId, 'space root has no document id');
+      const [hostRoot] = await host.automergeHost.getHeads([rootId]);
+      if (hostRoot) {
+        heads[rootId] = [...hostRoot];
+      }
       const state = JSON.stringify(Object.entries(heads).sort(([left], [right]) => left.localeCompare(right)));
       const stable = state === previous && (await caughtUp(db, heads));
       previous = state;
