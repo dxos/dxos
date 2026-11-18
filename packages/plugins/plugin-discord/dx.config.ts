@@ -9,6 +9,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as ConnectorSurface from '@dxos/plugin-connector/ConnectorSurface';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 import { trim } from '@dxos/util';
@@ -84,7 +85,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'module-url' } }), {
-      roles: [AppSurface.Article, AppSurface.ObjectProperties],
+      roles: [AppSurface.Article, AppSurface.ObjectProperties, ConnectorSurface.ConnectionSection],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
