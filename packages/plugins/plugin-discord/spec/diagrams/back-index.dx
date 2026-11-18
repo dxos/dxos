@@ -1,6 +1,6 @@
 diagram flow=down
 group app "Composer (client)" {
-  node Companion "Discord companion" ref="packages/plugins/plugin-discord/src/containers/DiscordAgentSetup/DiscordAgentSetup.tsx"
+  node Companion "Discord connection" ref="packages/plugins/plugin-discord/src/containers/DiscordConnectionSetup/DiscordConnectionSetup.tsx"
   node Configure "ConfigureBackIndex" ref="packages/plugins/plugin-discord/src/operations/configure-back-index.ts"
 }
 group space "ECHO space" {
@@ -16,7 +16,7 @@ group cloud "EDGE" {
 }
 node Discord "Discord API"
 edge Companion -> Configure "Index toggle"
-edge Companion -> Host "bind: claims owner"
+edge Companion -> Host "grant server"
 edge Configure -> Trigger "creates"
 edge Configure -> State
 edge Trigger -> Compute "runs crawl"

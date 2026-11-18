@@ -128,6 +128,11 @@
       "types": "./dist/types/src/types/ConnectorSpec.d.ts",
       "import": "./dist/lib/ConnectorSpec.mjs"
     },
+    "./ConnectorSurface": {
+      "source": "./src/types/ConnectorSurface.ts",
+      "types": "./dist/types/src/types/ConnectorSurface.d.ts",
+      "import": "./dist/lib/ConnectorSurface.mjs"
+    },
     "./ConnectorsSkill": {
       "source": "./src/skills/ConnectorsSkill.ts",
       "types": "./dist/types/src/skills/ConnectorsSkill.d.ts",
@@ -165,6 +170,9 @@
       ],
       "ConnectorSpec": [
         "dist/types/src/types/ConnectorSpec.d.ts"
+      ],
+      "ConnectorSurface": [
+        "dist/types/src/types/ConnectorSurface.d.ts"
       ]
     }
   },
