@@ -13,20 +13,6 @@ import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 /**
- * How a tool's reference field ({@link ArtifactURI}) is described to the model: the formats it accepts. A prompt that
- * lists many operations states it once and recognizes the fields by this text.
- */
-export const ARTIFACT_URI_DESCRIPTION = trim`
-  The URI of the referenced object. Protocols accepted:
-  - echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4.
-  - space ID, object ID tuple (spaceID:objectID)
-  - Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)
-  - dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.
-
-  URIs can be prepended with an @ symbol for compatibility with in-text references.
-`;
-
-/**
  * @deprecated
  */
 export const createArtifactElement = (id: EntityId) => `<artifact id=${id} />`;
@@ -45,7 +31,15 @@ const ArtifactURI: Schema.Schema<string> & {
   ) => Effect.Effect<Type.InstanceType<S>, EchoError.EntityNotFoundError, Database.Service>;
 } = class extends Schema.String.annotate({
   // TODO(dmaretskyi): This section gets overriden.
-  description: ARTIFACT_URI_DESCRIPTION,
+  description: trim`
+    The URI of the referenced object. Protocols accepted:
+    - echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4. 
+    - space ID, object ID tuple (spaceID:objectID)
+    - Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)
+    - dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.
+
+    URIs can be prepended with an @ symbol for compatibility with in-text references.
+  `,
   examples: [
     'echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
     '@echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
