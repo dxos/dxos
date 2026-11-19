@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Database, type Entity, Ref, Type } from '@dxos/echo';
+import { type Entity, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 /**

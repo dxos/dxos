@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
-import { DXN, EID, SpaceId } from '@dxos/keys';
+import { EID, SpaceId } from '@dxos/keys';
 
 /**
  * Lists spaces this query will select from.
