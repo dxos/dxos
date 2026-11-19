@@ -2,6 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+// The page ships production's app link; every other host's app is at `app.` of it (spec F-13.1), and the dev
+// server serves the page and the app from one origin.
+const appOrigin =
+  import.meta.env.VITE_DRAWING_APP_URL ??
+  (window.location.pathname.endsWith('.html')
+    ? window.location.origin
+    : `${window.location.protocol}//app.${window.location.host.replace(/^www\./, '')}`);
+for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-app-link]')) {
+  link.href = `${appOrigin}/`;
+}
+
 const copy = document.getElementById('copy');
 const command = document.getElementById('install-command');
 let reset: number | undefined;

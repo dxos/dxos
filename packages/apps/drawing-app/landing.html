@@ -107,10 +107,27 @@
       .mark span {
         color: var(--route);
       }
+      .top {
+        display: flex;
+        align-items: baseline;
+        gap: 28px;
+      }
       nav {
         display: flex;
         gap: 28px;
         font-size: 15px;
+      }
+      .open-app {
+        padding: 7px 14px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: var(--on-accent);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 500;
+      }
+      .open-app:hover {
+        background: var(--accent-hover);
       }
       nav a {
         text-decoration: none;
@@ -620,6 +637,32 @@
       .cta:hover {
         background: var(--accent-hover);
       }
+      .cta.secondary {
+        background: transparent;
+        color: var(--ink);
+        box-shadow: inset 0 0 0 1px var(--grid);
+      }
+      .cta.secondary:hover {
+        background: var(--sheet);
+      }
+      .start {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        margin: 0 0 32px;
+      }
+      .start .cta {
+        margin-top: 0;
+      }
+      .start span {
+        color: var(--muted);
+      }
+      .label {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 15px;
+      }
       footer {
         border-top: 1px solid var(--grid);
         padding: 28px 0 48px;
@@ -667,21 +710,30 @@
     <div class="wrap">
       <header>
         <a class="mark" href="#">drawing<span>.sh</span></a>
-        <nav aria-label="Sections">
-          <a href="#how">How it works</a>
-          <a href="#language">The language</a>
-          <a href="https://github.com/dxos/dxos/tree/main/packages/devtools/drawing">GitHub</a>
-        </nav>
+        <div class="top">
+          <nav aria-label="Sections">
+            <a href="#how">How it works</a>
+            <a href="#language">The language</a>
+            <a href="#composer">Composer</a>
+            <a href="https://github.com/dxos/dxos/tree/main/packages/devtools/drawing">GitHub</a>
+          </nav>
+          <a class="open-app" href="https://app.drawing.sh/" data-app-link>Open app</a>
+        </div>
       </header>
 
       <main>
         <div class="hero">
           <h1>Diagrams your agent can draw.</h1>
           <p class="lede">
-            Install the skill and ask for a diagram. Your agent writes a few lines of text; drawing places the boxes,
-            routes every arrow around them and hands back an SVG with zero crossings. Try it below: edit the text and
-            the drawing follows.
+            Draw a diagram in your browser, or ask your agent for one. Your agent writes a few lines of text; drawing
+            places the boxes, routes every arrow around them and hands back an SVG with zero crossings. Try it below:
+            edit the text and the drawing follows.
           </p>
+          <div class="start">
+            <a class="cta" href="https://app.drawing.sh/" data-app-link>Open the app</a>
+            <span>Runs in your browser. Nothing to install.</span>
+          </div>
+          <p class="label">Or teach your agent:</p>
           <div class="install">
             <code id="install-command">npx skills add dxos/dxos --skill drawing</code>
             <button type="button" id="copy" data-state="idle" aria-live="polite">
@@ -712,11 +764,11 @@
                 <button
                   type="button"
                   class="action"
-                  id="open-in-composer"
+                  id="open-in-app"
                   title="Open this drawing on an editable canvas in the drawing.sh app"
                   disabled
                 >
-                  Open in Composer
+                  Open in app
                 </button>
                 <a class="action primary" id="download" href="arch.dx.svg" download="arch.dx.svg">Download</a>
               </span>
@@ -765,7 +817,7 @@
                 A .dx.svg is an ordinary image, and it also carries everything needed to edit it again. Nothing is
                 locked in a service you have to log in to.
               </p>
-              <a class="cta" href="https://composer.space">Try Composer</a>
+              <a class="cta" href="https://app.drawing.sh/" data-app-link>Open the app</a>
             </div>
             <ul>
               <li><b>Shows up anywhere</b><span>GitHub, browsers and docs render it like any other SVG.</span></li>
@@ -776,8 +828,32 @@
               <li>
                 <b>Opens as a live canvas</b
                 ><span
-                  >Import it into a Composer space with <code>dx drawing import</code> and keep editing it with your
-                  team and your agents.</span
+                  >Import it into the drawing.sh app, or into a Composer space with <code>dx drawing import</code>, and
+                  keep editing it with your team and your agents.</span
+                >
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="composer">
+          <div class="file">
+            <div>
+              <h2>Also in Composer</h2>
+              <p class="intro">
+                The same diagram editor is a plugin in Composer, DXOS's collaborative local-first workspace. There a
+                diagram is one more object in a space, next to documents, tasks and everything else your team keeps, and
+                it works with Composer's other plugins and agents.
+              </p>
+              <a class="cta secondary" href="https://dxos.org/composer/">Request early access</a>
+            </div>
+            <ul>
+              <li><b>Composer is in early access</b><span>Request access to get a Composer space.</span></li>
+              <li>
+                <b>Start drawing today</b
+                ><span
+                  >The drawing.sh app is the same canvas, open to everyone now. Export a diagram as a .dx.svg and import
+                  it into Composer once you have access.</span
                 >
               </li>
             </ul>
@@ -786,7 +862,7 @@
       </main>
 
       <footer>
-        <span>drawing.sh is built by DXOS on the layout engine behind Composer.</span>
+        <span>drawing.sh is built by DXOS. Its diagram editor is also a plugin in Composer.</span>
         <a href="https://dxos.org">dxos.org</a>
       </footer>
     </div>

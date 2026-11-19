@@ -15,11 +15,11 @@ import { createRoot } from 'react-dom/client';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 
-import { shareSource } from './composer.ts';
 import initialSource from './diagrams/arch.dx?raw';
 import initialMermaid from './diagrams/arch.mmd?raw';
 import { type Drawing, type Language } from './drawing.ts';
 import { HERO, escapeHtml } from './markup.ts';
+import { shareSource } from './share.ts';
 
 /** Long enough that a burst of typing lays out once, short enough to feel live. */
 const DEBOUNCE = Duration.millis(250);
@@ -126,7 +126,7 @@ type Elements = {
   readonly canvas: HTMLElement;
   readonly report: HTMLElement;
   readonly download: HTMLAnchorElement;
-  readonly composer: HTMLButtonElement;
+  readonly appButton: HTMLButtonElement;
   readonly tabs: readonly HTMLButtonElement[];
 };
 
@@ -136,10 +136,10 @@ const find = (playground: HTMLElement): Elements | undefined => {
   const canvas = playground.querySelector<HTMLElement>('.canvas');
   const report = playground.querySelector<HTMLElement>('#report');
   const download = playground.querySelector<HTMLAnchorElement>('#download');
-  const composer = playground.querySelector<HTMLButtonElement>('#open-in-composer');
+  const appButton = playground.querySelector<HTMLButtonElement>('#open-in-app');
   const tabs = [...playground.querySelectorAll<HTMLButtonElement>('[role="tab"][data-language]')];
-  return editor && output && canvas && report && download && composer
-    ? { editor, output, canvas, report, download, composer, tabs }
+  return editor && output && canvas && report && download && appButton
+    ? { editor, output, canvas, report, download, appButton, tabs }
     : undefined;
 };
 
@@ -196,13 +196,13 @@ const scheduler = ({ output, canvas, report, download }: Elements) => {
  * click, since a popup blocker refuses one opened after the network round trip, and is pointed at the link once
  * the share API answers.
  */
-const openInComposer = ({ composer, report }: Elements, language: Language, text: string) => {
+const openInApp = ({ appButton, report }: Elements, language: Language, text: string) => {
   const tab = window.open('', '_blank');
   if (tab) {
     tab.opener = null;
     tab.document.title = 'Opening drawing…';
   }
-  composer.setAttribute('aria-busy', 'true');
+  appButton.setAttribute('aria-busy', 'true');
   Effect.runFork(
     Effect.tryPromise(() => import('./drawing.ts')).pipe(
       Effect.flatMap(({ toDsl }) => toDsl(language, text)),
@@ -227,7 +227,7 @@ const openInComposer = ({ composer, report }: Elements, language: Language, text
           report.insertAdjacentHTML('beforeend', `<span class="note error">${escapeHtml(message)}</span>`);
         }),
       ),
-      Effect.ensuring(Effect.sync(() => composer.removeAttribute('aria-busy'))),
+      Effect.ensuring(Effect.sync(() => appButton.removeAttribute('aria-busy'))),
     ),
   );
 };
@@ -242,8 +242,8 @@ export const mount = (playground: HTMLElement) => {
   // Each language keeps its own text, so switching back and forth loses no edits.
   const texts: Record<Language, string> = { dx: initialSource, mermaid: initialMermaid };
   let current: Language = 'dx';
-  elements.composer.disabled = false;
-  elements.composer.addEventListener('click', () => openInComposer(elements, current, texts[current]));
+  elements.appButton.disabled = false;
+  elements.appButton.addEventListener('click', () => openInApp(elements, current, texts[current]));
   const root = createRoot(elements.editor);
   const show = (language: Language) => {
     current = language;

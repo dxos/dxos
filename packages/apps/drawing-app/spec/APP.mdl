@@ -159,8 +159,10 @@ feat F-13: Landing page and hosts
   req F-13.1: Each environment serves the landing page at its own host and the app at `app.` of that host: production at drawing.sh (and www.drawing.sh) and app.drawing.sh, dev at dev.drawing.sh and app.dev.drawing.sh, preview at preview.drawing.sh and app.preview.drawing.sh. Staging serves only the app, on its `workers.dev` host.
   req F-13.2: The landing page is the agent-diagram DSL site: what the `drawing` skill and CLI do, a live editor that draws `.dx` (and converts Mermaid) as you type, the DSL's relations, and a download of the drawing. Its diagrams are rendered at build time, so the page shows them without JavaScript.
   req F-13.3: On a landing host, `/` is the landing page and `/api/*` is the Worker's API. Any other address without a file extension, and `/` with an app parameter (`spaceInvitationCode`, `d` or `src`), redirects to the same path and query on the app host.
-  req F-13.4: The landing editor's "Open in Composer" button posts the source to its own host's share API and opens the link it returns, which names the app host.
+  req F-13.4: The landing editor's "Open in app" button posts the source to its own host's share API and opens the link it returns, which names the app host.
   req F-13.5: The landing page loads only its own script: no client, identity, plugins or telemetry.
+  req F-13.6: The landing page offers the app first: an "Open app" button in its header and "Open the app" as the hero's first action, before the agent skill's install command. Each opens the app host of the environment the page is served from.
+  req F-13.7: The landing page points to Composer as a second place to use the same editor: a Composer section says the diagram editor is a plugin in Composer that works with Composer's other plugins and agents, that Composer is in early access, and that the drawing.sh app can be used now. It links to Composer's early-access request. The page never calls drawing the engine behind Composer.
 ```
 
 ## Running against EDGE without an account
@@ -516,13 +518,13 @@ test QA-9: Export and import
 test QA-10: Landing page and share links
   desc: The landing page hands a diagram to the app through a share link, and app links on the landing host reach the app.
   actors: human
-  covers: [F-11.4, F-11.5, F-12.1, F-12.2, F-13.3, F-13.4]
+  covers: [F-11.4, F-11.5, F-12.1, F-12.2, F-13.3, F-13.4, F-13.6]
   status: unverified
   given:
     - a deployed environment with both hosts, such as dev.drawing.sh and app.dev.drawing.sh
   steps:
-    - name: Open in Composer
-      do: On the landing page, edit the hero source, then press Open in Composer.
+    - name: Open in app
+      do: On the landing page, edit the hero source, then press Open in app.
       expect: a new tab opens on the app host with the edited diagram open as a canvas diagram, and its URL has no `?d=`
     - name: Reload
       do: Reload that tab.
@@ -530,6 +532,9 @@ test QA-10: Landing page and share links
     - name: App link on the landing host
       do: Open the landing host with the space path from the app's URL.
       expect: the browser lands on the app host at the same path
+    - name: Open app
+      do: On the landing page, press Open app in the header.
+      expect: the app host of the same environment opens, such as app.dev.drawing.sh from dev.drawing.sh
 ```
 
 ## Changelog
@@ -1936,4 +1941,23 @@ decision D-152: A link import lands in the space the app opens anyway, and a fir
   for: user:wittjosiah
   affects: [F-11.5, F-12.1]
   why: A `?src=` or `?d=` link names no space. An empty "Untitled" beside the imported diagram is a diagram nobody asked for. The landing page posts to its own host, but the link it opens must name the app.
+```
+
+```mdl
+decision D-153: The landing page has an Open app button. It points to Composer as well, but Composer is waitlisted, so the page lets people use the drawing.sh app right away. It describes the diagram editor as available in Composer and integrated with Composer and its other plugins, not as the layout engine behind Composer.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-13.6, F-13.7]
+```
+
+```mdl
+decision D-154: The header carries an "Open app" button and the hero leads with "Open the app", ahead of the skill's install command. The editor's button is renamed "Open in app", since it opens the drawing.sh app. A Composer section after the file section links to the early-access request on dxos.org/composer. The app links are built in the page's script from the host it is served on. Fills in [D-153].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.4, F-13.6, F-13.7]
+  why: The app is the one way in that needs nothing installed, so it comes first. One page build serves every environment, so a link fixed at build time would name the wrong app host everywhere but one; the markup keeps production's link for a page read without its script.
+  rejected:
+    - Linking the hero to Composer: Composer is waitlisted, so a visitor could not draw anything today.
+    - Keeping "Open in Composer" on the editor's button: it opens the drawing.sh app, not Composer.
 ```
