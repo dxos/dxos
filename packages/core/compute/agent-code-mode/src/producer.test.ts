@@ -16,7 +16,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { Database, Feed, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection } from '@dxos/link';
@@ -26,7 +26,7 @@ import { type ContentBlock } from '@dxos/types';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import { EVAL_TOOL_NAME } from './eval-tool.ts';
-import { makeCodeModeTurnProducer } from './producer.ts';
+import { makeCodeModeTurnProducer, toToolInput } from './producer.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 
@@ -254,4 +254,21 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
       { timeout: 30_000 },
     );
   });
+});
+
+describe('toToolInput', () => {
+  it.effect(
+    'passes a ref as the URI string a tool reference field decodes, at any depth',
+    Effect.fnUntraced(
+      function* (_) {
+        const ticket = yield* Database.add(Obj.make(Ticket, { title: 'Write the docs' }));
+        const uri = String(Ref.make(ticket).uri);
+        const input = JSON.parse(toToolInput({ target: Ref.make(ticket), files: [Ref.make(ticket)], note: 'x' }));
+        expect(input).toEqual({ target: uri, files: [uri], note: 'x' });
+        expect(toToolInput(undefined)).toEqual('{}');
+      },
+      Effect.provide(AssistantTestLayer({ types: [Ticket] })),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
