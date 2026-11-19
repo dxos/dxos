@@ -11,11 +11,11 @@ import * as Layer from 'effect/Layer';
 import * as Operation from '@dxos/compute/Operation';
 import { AgentRegistry, Crawler, CrawlState, StateStore } from '@dxos/crawler';
 import { Database, Obj } from '@dxos/echo';
-import { DiscordPipeline, ExtractedQuestionStore, MessageStore, QuestionStore } from '@dxos/pipeline-discord';
+import { DiscordPipeline, MessageStore, QuestionStore } from '@dxos/pipeline-discord';
 
 import { DiscordOperation } from '#types';
 
-import { discordSourceLayerFromService, memoryFactStoreLayer } from '../services/index.ts';
+import { discordSourceLayerFromService, spaceMemoryFactStoreLayer } from '../services/index.ts';
 
 /**
  * Runs one bounded slice of `DiscordPipeline` with its stores injected for this invocation: the frontier and fact
@@ -56,12 +56,18 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
                 { applicationId, spaceId: db.spaceId },
                 { pageLimit: DiscordOperation.BACK_INDEX_PAGE_SIZE },
               ),
+              // Durable across runs: the frontier and cursors in the CrawlState, the facts in the space's memory.
               StateStore.layerEcho(state),
+              spaceMemoryFactStoreLayer({ state }),
+              // Per run, safe to lose: the extractor resolves mentions and links people only among this run's
+              // authors, and each author's identity is already durable as a Person and as the facts naming them.
               AgentRegistry.layerMemory,
+              // Per run, safe to lose: it buffers the page batch for topic detection, and the CrawlState cursors,
+              // not this store, keep a message from being read twice.
               MessageStore.layerMemory,
+              // Per run, safe to lose: it holds standing questions put to the pipeline, which nothing here writes;
+              // the questions people ask in Discord are recorded as facts in the space's memory.
               QuestionStore.layerMemory,
-              ExtractedQuestionStore.layerMemory,
-              memoryFactStoreLayer({ state }),
             ),
           ),
         );

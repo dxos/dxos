@@ -162,7 +162,7 @@ invocation; its output is a fact feed. The brain consumes fact feeds and knows n
 | Cursors    | `StateStore.layerEcho` over the `CrawlState`; moved only by `Crawler.commit`, once an event cleared every stage. Reset rewinds targets there; each run reopens the channels |
 | Identities | `AgentRegistry.layerMemory` per invocation: an author's canonical id is their Discord user id, so it is stable across runs without a store                                  |
 | Extraction | `extractFactsStage`: a page of messages per model request; a fact's `source` is `discord:<message id>`                                                                      |
-| Record     | A `FactStore` over the space's `MemoryService` (`memoryFactStoreLayer`): each fact is put into the space's memory; its content hashes live in the `CrawlState`              |
+| Record     | A `FactStore` over the space's `MemoryService` (`spaceMemoryFactStoreLayer`): each fact is put into the space's memory; its content hashes live in the `CrawlState`         |
 
 Why not the crawl in the brain Durable Object: the brain then owned scheduling, the Discord source
 (over discord-service's bot), the crawl state (in its SQLite, invisible to the space) and controls
