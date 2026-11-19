@@ -25,7 +25,7 @@ import type * as Type from './types.ts';
 
 const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
 
-const ALL_TAGS: Type.EventTag[] = ['ChannelStart', 'Message', 'ThreadStart', 'ThreadEnd', 'ChannelEnd'];
+const ALL_TAGS: Type.EventTag[] = ['ChannelStart', 'Message', 'Skipped', 'ThreadStart', 'ThreadEnd', 'ChannelEnd'];
 
 /** Default assembly used by these tests: profile + extraction, committed via the sink. */
 const runCrawl = (config: Type.Config, options?: Crawler.StreamOptions) =>
@@ -236,6 +236,33 @@ describe('Crawler', () => {
       expect(summary.done).toBe(true);
       const [target] = yield* StateStore.listTargets();
       expect(target.cursor).toBe('5');
+    }, Effect.provide(servicesLayer)),
+  );
+
+  it.effect(
+    'a filtered page after a batched message keeps its cursor, and a resumed crawl starts past it',
+    Effect.fnUntraced(function* () {
+      const fetches: Source.Fetch[] = [];
+      const message: Type.Message = { id: '3', text: 'hello there', author: { id: 'u1', source: 'discord' } };
+      // The message waits in extract-facts' batch while the next page, all system messages, moves the cursor to 5.
+      const pages: Source.Page[] = [
+        { messages: [message], threads: [], cursor: '3' },
+        { messages: [], threads: [], cursor: '5' },
+      ];
+      const source = Layer.succeed(Source.Source, {
+        listChannels: () => Effect.succeed([]),
+        fetchMessages: (request: Source.Fetch) =>
+          Effect.sync(() => {
+            fetches.push(request);
+            return pages.shift() ?? { messages: [], threads: [] };
+          }),
+      });
+      const config: Type.Config = { channels: ['chan-1'], descendThreads: false };
+      yield* runCrawl(config, { maxSteps: 2 }).pipe(Effect.provide(source));
+      const [target] = yield* StateStore.listTargets();
+      expect(target.cursor).toBe('5');
+      yield* runCrawl(config).pipe(Effect.provide(source));
+      expect(fetches.map((fetch) => fetch.cursor)).toEqual([undefined, '3', '5']);
     }, Effect.provide(servicesLayer)),
   );
 

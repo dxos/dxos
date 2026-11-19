@@ -93,6 +93,11 @@ const backIndexInput = (page) =>
     return trigger ? JSON.parse(JSON.stringify(trigger.input ?? {})) : undefined;
   });
 
+/** Whether the agent's last outputs exist: a presentation and a document other than the space's README. */
+const findingsMade = async (page) =>
+  (await objectsOfType(page, 'org.dxos.type.presentation')).length > 0 &&
+  (await objectsOfType(page, 'org.dxos.type.document')).some((name) => name && name !== 'README');
+
 const channelOption = (name) => `[role="option"]:has(p:text-matches("┆?${name}$"))`;
 
 export const steps = [
@@ -182,27 +187,25 @@ export const steps = [
   },
   {
     name: 'Ask for findings',
-    done: async ({ page }) => ((await objectsOfType(page, 'org.dxos.type.sheet')) ?? []).length > 0,
+    // Done once the last outputs exist: the deck and the summary come after the sheets.
+    done: async ({ page }) => findingsMade(page),
     narration: 'The agent is asked what is interesting in the memory, and to report it as artifacts.',
     run: async ({ demo, page }) => {
       await demo.caption({
         value: 'Ask the agent what the memory says',
         subtitle: 'brain, sheet, presenter and markdown skills',
       });
-      await page.getByRole('treeitem', { name: 'Home' }).first().click();
-      await page.locator(PROMPT).first().waitFor({ timeout: 30_000 });
-      await demo.click({ selector: PROMPT, label: 'Prompt' });
-      await demo.type({ selector: PROMPT, value: REQUEST, delay: 6 });
-      await demo.press({ key: 'Enter', hud: false });
+      // The space starts with no chat, so a chat means the request went out before a restart: wait for it, never resend.
+      const sent = (await objectsOfType(page, 'org.dxos.type.assistant.chat')).length > 0;
+      if (!sent) {
+        await page.getByRole('treeitem', { name: 'Home' }).first().click();
+        await page.locator(PROMPT).first().waitFor({ timeout: 30_000 });
+        await demo.click({ selector: PROMPT, label: 'Prompt' });
+        await demo.type({ selector: PROMPT, value: REQUEST, delay: 6 });
+        await demo.press({ key: 'Enter', hud: false });
+      }
       await demo.speed({ factor: 8 });
-      await until(
-        page,
-        (p) => objectsOfType(p, 'org.dxos.type.sheet'),
-        (sheets) => (sheets?.length ?? 0) >= 1,
-        {
-          timeout: 1_200_000,
-        },
-      );
+      await until(page, findingsMade, (made) => made === true, { timeout: 1_200_000, every: 10_000 });
       await agentIdle(page);
       await demo.speed({ factor: 1 });
     },

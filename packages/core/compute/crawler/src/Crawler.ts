@@ -164,9 +164,8 @@ const advance = (
     if (page.cursor) {
       volatile.cursors.set(target.id, page.cursor);
       if (page.messages.length === 0) {
-        // No message will reach the commit sink, and nothing in the page needs extracting, so the durable cursor
-        // moves now; otherwise every run would refetch the same filtered page.
-        yield* StateStore.setCursor(target.id, page.cursor);
+        // No message carries this cursor to the commit sink, so an event does; otherwise every run would refetch the page.
+        events.push({ _tag: 'Skipped', target: current, cursor: page.cursor });
       }
     }
     if (drained) {
@@ -224,6 +223,8 @@ export const commit = (event: Type.Event): Effect.Effect<void, StateError, State
   switch (event._tag) {
     case 'Message':
       return StateStore.setCursor(event.target.id, event.message.id);
+    case 'Skipped':
+      return StateStore.setCursor(event.target.id, event.cursor);
     case 'ThreadEnd':
     case 'ChannelEnd':
       return StateStore.setStatus(event.target.id, 'done');
