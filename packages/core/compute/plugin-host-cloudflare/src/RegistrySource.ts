@@ -10,6 +10,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { type Entity, Obj, type Query, type Registry, Type } from '@dxos/echo';
 import { DXN, type URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 import type { PluginProtocol } from '@dxos/protocols';
 
 import * as TypeSource from './TypeSource.ts';
@@ -68,7 +69,7 @@ export const fromRegistry = (registry: PluginProtocol.Registry, own: Own): Regis
       const selected = selectedTypenames(query);
       const answers: Entity.Unknown[] = [];
       if (selected.has(Type.getTypename(Type.Type) ?? '')) {
-        answers.push(...(await registry.listTypes()).map(TypeSource.fromRecord));
+        answers.push(...(await registry.listTypes()).flatMap(rebuildType));
       }
       if (selected.has(Type.getTypename(Skill.Skill) ?? '')) {
         answers.push(...(await skills()));
@@ -96,6 +97,19 @@ export const fromSkillRecord = (record: PluginProtocol.SkillRecord): Skill.Skill
     // `enableSkills` refuses a skill without it, so dropping it would leave an agent unable to turn the skill on.
     ...(record.agentCanEnable ? { agentCanEnable: true } : {}),
   });
+
+/**
+ * A listed type rebuilt from its JSON Schema, or none: one record whose schema cannot be rebuilt costs only that type,
+ * not the whole listing.
+ */
+const rebuildType = (record: PluginProtocol.TypeRecord): Type.AnyEntity[] => {
+  try {
+    return [TypeSource.fromRecord(record)];
+  } catch (error) {
+    log.warn('published type not rebuilt from its JSON Schema', { typename: record.typename, error });
+    return [];
+  }
+};
 
 /** Keys compare without the `dxn:` prefix, which records and definitions spell differently. */
 export const bareKey = (key: string): string => key.replace(/^dxn:/, '');
