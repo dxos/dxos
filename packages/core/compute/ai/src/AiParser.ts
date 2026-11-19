@@ -441,6 +441,9 @@ export const parseResponse =
                 inputTokens: inputTokens.total ?? 0,
                 outputTokens: outputTokens.total ?? 0,
                 totalTokens: (inputTokens.total ?? 0) + (outputTokens.total ?? 0),
+                // Whether a call hit the prompt cache, which `inputTokens` alone cannot tell.
+                ...(inputTokens.cacheRead !== undefined ? { cacheReadTokens: inputTokens.cacheRead } : {}),
+                ...(inputTokens.cacheWrite !== undefined ? { cacheWriteTokens: inputTokens.cacheWrite } : {}),
               };
               yield* emitFullBlock(
                 {

@@ -40,6 +40,9 @@ import { type DocEntry, STATIC_DOCS, loadDocs } from './docs/index.ts';
 export const EffectDialect: Dialect = {
   name: 'effect',
 
+  operations: (operations) =>
+    [renderOperationList(operations), renderEffectTools(operations)].filter((part) => part !== '').join('\n\n'),
+
   // `DOCS` is assembled ahead of the program so the model reads it as the plain object it is told it is.
   wrap: (code) =>
     `const DOCS = Object.freeze({ ...(await runEffect(loadDocs)), ...catalog });\n` +

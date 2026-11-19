@@ -150,6 +150,15 @@ describe('Interview', () => {
         expect(teamRecall.facts.map(({ id }) => id)).toEqual([role]);
         expect(teamRecall.goals).toHaveLength(0);
 
+        // Without a subject, everything the agent knows: what "summarize your memory" reads.
+        const everything = yield* Operation.invoke(MemoryOperation.Recall, {});
+        expect(everything.facts.map(({ id }) => id)).toEqual(
+          expect.arrayContaining(recalled.facts.map(({ id }) => id)),
+        );
+        expect(everything.goals.map(({ title }) => title)).toEqual(
+          expect.arrayContaining(recalled.goals.map(({ title }) => title)),
+        );
+
         // The profile is regenerated in place.
         const { document: firstProfile } = yield* Operation.invoke(MemoryOperation.UpdateProfile, {
           subject: first.entity,
