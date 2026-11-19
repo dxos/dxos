@@ -163,6 +163,10 @@ describe('keyLabels', () => {
     expect(type('x')).toBe(state.doc);
     expect(type(' x')).toBe(state.doc);
     expect(type(': Folder rules').toString()).toBe(TEXT);
+    const newline = end;
+    expect(state.update({ changes: { from: newline, to: newline + 1 }, userEvent: 'delete.forward' }).state.doc).toBe(
+      state.doc,
+    );
   });
 
   test('Enter after spaces at the end of a requirement starts the next one', ({ expect }) => {

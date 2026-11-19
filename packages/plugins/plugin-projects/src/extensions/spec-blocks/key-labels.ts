@@ -5,6 +5,7 @@
 import {
   EditorState,
   type Extension,
+  MapMode,
   Prec,
   type Range,
   RangeSet,
@@ -34,8 +35,6 @@ export type Guard = Span & {
 
 /** A key or id as a reference names it: `k7q2x`, `F-3`, `F-3.2`; a dot ends it unless more of it follows. */
 const TOKEN = /[A-Za-z0-9](?:[\w-]|\.(?=[\w-]))*/g;
-const TOKEN_END = /[\w.-]$/;
-const TOKEN_START = /^[\w.-]/;
 /** Where a value's note starts: a `#` at the line's start or after a space. */
 const NOTE = /(^|[ \t])#/;
 
@@ -132,32 +131,35 @@ export const guards = (state: EditorState): Guard[] => {
   return result;
 };
 
+/** A character that would extend a key it touches. */
+const TOKEN_CHAR = /[\w.-]/;
+
 /**
- * Whether a change breaks a guard without removing all of what it keeps: it edits inside the guard, writes on a keyed
- * line's start or joins that line to the one above, or writes onto a key's bare end.
+ * Whether a change keeps a guarded key as it was: the key reads the same at its mapped place afterwards, or the change
+ * removes all of what the guard keeps. A declared key must still declare its item; a referenced key must not run into
+ * the text beside it.
  */
-const breaks = (state: EditorState, guard: Guard, from: number, to: number, inserted: string) => {
-  const inside = from === to ? from > guard.from && from < guard.to : from < guard.to && to > guard.from;
-  // Ends at a keyed line's start without leaving a line break there: text before the line, or a join with the one above.
-  const keepsBreak =
-    inserted.endsWith('\n') || (inserted === '' && (from === 0 || state.doc.sliceString(from - 1, from) === '\n'));
-  const atLineStart =
-    guard.item?.entry !== undefined && to === guard.from && (from < to || inserted !== '') && !keepsBreak;
-  // Writes onto a key's bare end: a reference's either end, or a header's id with no colon after it, where only the
-  // colon that starts a title or a line break may follow.
-  const bare = guard.to === guard.key.to;
-  const extended =
-    (to === guard.from && guard.from === guard.key.from && TOKEN_END.test(inserted)) ||
-    (from === guard.to &&
-      bare &&
-      (guard.item ? inserted !== '' && !/^[:\n]/.test(inserted) : TOKEN_START.test(inserted)));
-  if (!inside && !atLineStart && !extended) {
+const keeps = (transaction: Transaction, guard: Guard, changed: readonly Span[]) => {
+  if (changed.some(({ from, to }) => from < to && from <= guard.extent.from && to >= guard.extent.to)) {
+    return true;
+  }
+  const { changes, newDoc } = transaction;
+  const from = changes.mapPos(guard.key.from, 1, MapMode.TrackDel);
+  const to = changes.mapPos(guard.key.to, -1, MapMode.TrackDel);
+  const key = transaction.startState.doc.sliceString(guard.key.from, guard.key.to);
+  if (from === null || to === null || newDoc.sliceString(from, to) !== key) {
     return false;
   }
-  return !(from <= guard.extent.from && to >= guard.extent.to);
+  if (guard.item) {
+    return transaction.state.field(specBlocksField).items.some((item) => {
+      const range = item.entry ? item.entry.keyRange : item.block.header.id;
+      return item.key === key && range?.from === from && range.to === to;
+    });
+  }
+  return !TOKEN_CHAR.test(newDoc.sliceString(from - 1, from)) && !TOKEN_CHAR.test(newDoc.sliceString(to, to + 1));
 };
 
-/** Drops a typed or deleted edit that would change part of a key, so a key only goes with its item. */
+/** Drops a typed or deleted edit that would change a key without removing its item, so a key only goes with it. */
 const keepKeys = EditorState.transactionFilter.of((transaction: Transaction) => {
   const { startState } = transaction;
   if (
@@ -167,12 +169,12 @@ const keepKeys = EditorState.transactionFilter.of((transaction: Transaction) => 
   ) {
     return transaction;
   }
-  const kept = guards(startState);
-  let broken = false;
-  transaction.changes.iterChanges((from, to, _fromB, _toB, inserted) => {
-    broken ||= kept.some((guard) => breaks(startState, guard, from, to, inserted.toString()));
-  });
-  return broken ? [] : transaction;
+  const changed: Span[] = [];
+  transaction.changes.iterChangedRanges((from, to) => changed.push({ from, to }));
+  const touched = guards(startState).filter((guard) =>
+    changed.some(({ from, to }) => from <= guard.to && to >= guard.from),
+  );
+  return touched.every((guard) => keeps(transaction, guard, changed)) ? transaction : [];
 });
 
 /** The keyed line of a numbered item whose text, or the spaces after it, holds the caret, and where that text starts. */
