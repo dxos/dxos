@@ -1,8 +1,9 @@
 ---
+title: 'ECHO'
 layout: 'default'
 ---
 
-# ECHO
+# ECHO DB
 
 <Surface ref="{{echo}}" />
 

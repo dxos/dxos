@@ -1,4 +1,5 @@
 ---
+title: 'Architecture'
 layout: 'default'
 ---
 

@@ -74,7 +74,9 @@ export const theme = {
           'relative px-10 py-12 rounded-[20px] bg-(--slide-code) text-[32px] leading-normal [counter-increment:slide-step] ' +
           'before:content-[counter(slide-step)] before:text-[28px] before:opacity-60 ' +
           // The arrow sits in the gap after every card but the last; it is decoration, so it never reaches the text.
-          "after:content-['→'] after:absolute after:start-full after:top-1/2 after:ms-5 after:-translate-y-1/2 " +
+          // Its box is the gap's own width (`w-24` for `gap-24`), so the glyph is centred between the two cards.
+          "after:content-['→'] after:absolute after:start-full after:top-1/2 after:w-24 after:text-center " +
+          'after:-translate-y-1/2 ' +
           'after:text-[88px] after:leading-none after:opacity-70 last:after:content-none ' +
           // During a build the arrow waits for the card it points at, which is laid out but not yet revealed.
           '[&:has(+li.invisible)]:after:content-none ' +

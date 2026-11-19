@@ -1,4 +1,5 @@
 ---
+title: 'Chat'
 layout: 'default'
 ---
 

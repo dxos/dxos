@@ -1,4 +1,5 @@
 ---
+title: 'The Stack'
 layout: 'default'
 ---
 

@@ -1,4 +1,5 @@
 ---
+title: 'Ontology'
 layout: 'default'
 ---
 

@@ -23,9 +23,11 @@ import architecture from './slides/architecture.md?raw';
 import chat from './slides/chat.md?raw';
 import composer from './slides/composer.md?raw';
 import cover from './slides/cover.md?raw';
+import demo from './slides/demo.md?raw';
 import echo from './slides/echo.md?raw';
 import evolution from './slides/evolution.md?raw';
 import hyperspace from './slides/hyperspace.md?raw';
+import next from './slides/next.md?raw';
 // import ontology from './slides/ontology.md?raw';
 import plugins from './slides/plugins.md?raw';
 import stack from './slides/stack.md?raw';
@@ -33,7 +35,7 @@ import stack from './slides/stack.md?raw';
 /** A diagram the deck draws: its text, written as intent (`diagram kind=grid`), and the id a slide embeds it by. */
 export type StudioDiagram = { id: string; source: string };
 
-/** A slide of the deck: a markdown file in the presenter's dialect. Its title is its first heading. */
+/** A slide of the deck: a markdown file in the presenter's dialect, titled by its frontmatter or its first heading. */
 export type StudioSlide = { id: string; markdown: string };
 
 /** The diagrams, each drawn once; a slide embeds one by naming it (`<Surface ref="{{echo}}" />`). */
@@ -63,14 +65,15 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   { id: 'agents', markdown: agents },
   { id: 'chat', markdown: chat },
   { id: 'agent', markdown: agent },
+  { id: 'demo', markdown: demo },
+  { id: 'next', markdown: next },
 ];
 
 /** Where a slide embeds a diagram: the diagram's id in braces, replaced with a reference to its drawing. */
 const PLACEHOLDER = /\{\{([a-z-]+)\}\}/g;
 
-/** A slide's title: its first heading, or its id where it has none. */
-export const slideTitle = ({ id, markdown }: StudioSlide): string =>
-  /^#{1,6}\s+(.+)$/m.exec(markdown)?.[1].trim() ?? id;
+/** A slide's title, as the presenter labels it: its frontmatter's `title`, else its first heading, else its id. */
+export const slideTitle = ({ id, markdown }: StudioSlide): string => Presentation.contentTitle(markdown) ?? id;
 
 /** The name a diagram's drawing takes: the title of the slide that embeds it, or its id where none does. */
 export const diagramTitle = (diagram: string): string => {

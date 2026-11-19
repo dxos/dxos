@@ -1,4 +1,5 @@
 ---
+title: 'DXOS'
 layout: 'cover'
 accent: 'rgb(31,213,138)'
 background: 'https://assets.dxos.org/brand/backgrounds/bg-dxos-glow.svg'
