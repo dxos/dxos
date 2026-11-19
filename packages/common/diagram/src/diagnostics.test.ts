@@ -37,6 +37,23 @@ describe('diagnostics', () => {
     expect(report.metrics).toMatchObject({ nodes: 2, connectors: 1, crossings: 0, bends: 0 });
   });
 
+  test('a box a grid places is measured where the grid puts it, not as it is written', ({ expect }) => {
+    const grid = (w: number): Scene.WorldObject => ({
+      id: 'slide',
+      elements: [
+        { kind: 'grid', id: 'root', x: 0, y: 0, w, h: 120, cols: 2, gap: 16 },
+        { kind: 'rect', id: 'a', x: 0, y: 0, w: 0, h: 0, text: 'Calendar', parent: 'root' },
+        { kind: 'rect', id: 'b', x: 0, y: 0, w: 0, h: 0, text: 'Storage', parent: 'root' },
+      ],
+    });
+    expect(analyze([grid(400)]).diagnostics).toEqual([]);
+    // A frame too narrow for the words is still reported, so the solved frame is what is measured.
+    expect(analyze([grid(40)]).diagnostics.map(({ code, refs }) => `${code} ${refs.join()}`)).toEqual([
+      'label-overflow slide/a',
+      'label-overflow slide/b',
+    ]);
+  });
+
   test('detects partially overlapping nodes, but not containment', ({ expect }) => {
     const overlapping = analyze([box('a', 0, 0), box('b', 32, 32)]);
     expect(overlapping.diagnostics.map(({ code }) => code)).toEqual(['node-overlap']);

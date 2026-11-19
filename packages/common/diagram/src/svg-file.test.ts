@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import * as Dsl from './dsl/index.ts';
+import * as DSL from './dsl/index.ts';
 import { toSvgFile } from './svg-file.ts';
 
 /** The marker ids an SVG element references, by attribute, with the per-instance prefix dropped. */
@@ -39,7 +39,7 @@ describe('relation markers', () => {
     expect,
   }) => {
     const { commands, problems } = await EffectEx.runPromise(
-      Dsl.compile(`
+      DSL.compile(`
         node Animal
         node Dog below Animal
         node Owner left-of Dog
@@ -53,7 +53,7 @@ describe('relation markers', () => {
       `),
     );
     expect(problems).toEqual([]);
-    const svg = toSvgFile(Dsl.toScene(commands).objects);
+    const svg = toSvgFile(DSL.toScene(commands).objects);
     // Every marker shape is defined once.
     for (const marker of ['triangle', 'diamond', 'diamond-filled', 'one', 'crowsfoot', 'open']) {
       expect(svg).toContain(`-${marker}"`);
@@ -68,7 +68,7 @@ describe('relation markers', () => {
   });
 
   test('old arrows without a relation keep their arrowhead', ({ expect }) => {
-    const svg = toSvgFile(Dsl.parseScene('object e @ 0,0 { arrow a 0,0 -> 100,0 }').scene.objects);
+    const svg = toSvgFile(DSL.parseScene('object e @ 0,0 { arrow a 0,0 -> 100,0 }').scene.objects);
     expect(markerRefs(svg, 'line', 'marker-end')).toEqual(['arrow']);
   });
 });
@@ -92,7 +92,7 @@ describe('renderer fallbacks', () => {
   });
 
   test('every custom property names a plain fallback', ({ expect }) => {
-    const svg = toSvgFile(Dsl.parseScene('object e @ 0,0 { arrow a 0,0 -> 100,0 }').scene.objects);
+    const svg = toSvgFile(DSL.parseScene('object e @ 0,0 { arrow a 0,0 -> 100,0 }').scene.objects);
     expect(svg).toContain('fill="var(--surface-bg, #ffffff)"');
     expect(svg).not.toMatch(/var\(--[\w-]+\)/);
   });

@@ -5,7 +5,7 @@
 import type { ManifoldToplevel } from 'manifold-3d';
 import { beforeAll, describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { resolveLayout3D } from '@dxos/scene';
 
@@ -25,7 +25,7 @@ describe('exportSTL', () => {
   });
 
   test('the solid exemplar exports the evaluated solid, as many triangles as it draws', () => {
-    const { document } = Dsl.readScenes(EXEMPLARS.solid);
+    const { document } = DSL.readScenes(EXEMPLARS.solid);
     const layout = document.layouts[0];
     expect(layout.dim).toBe('3d');
     if (layout.dim !== '3d') {
@@ -40,7 +40,7 @@ describe('exportSTL', () => {
   });
 
   test('with no ids it exports every visible element, primitives included', () => {
-    const { document } = Dsl.readScenes(EXEMPLARS.cube);
+    const { document } = DSL.readScenes(EXEMPLARS.cube);
     const layout = document.layouts[0];
     const buffer = exportSTL(document, layout.id, undefined, wasm);
     expect(triangles(buffer)).toBeGreaterThan(0);

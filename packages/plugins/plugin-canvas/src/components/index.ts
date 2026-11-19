@@ -3,3 +3,4 @@
 //
 
 export * from './Graph/index.ts';
+export * from './SourceEditor/index.ts';

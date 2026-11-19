@@ -4,11 +4,15 @@
 
 import { describe, test } from 'vitest';
 
+import { type Shape } from '@dxos/scene';
+
 import { REFERENCE } from '../util.ts';
 import { BOX, type Commands, LINE_HEIGHT, MAX_LINES, captionRun, lineCount, makeScenes } from './drawings.ts';
 
 type Element = Extract<Commands[number], { op: 'upsert-object' }>['object']['elements'][number];
-type Box = Extract<Element, { kind: 'rect' | 'ellipse' | 'diamond' | 'triangle' }>;
+// Through the scene's own union, not a copy: `Extract` matches the box member only when the filter covers every
+// kind it can be, so a kind added there reduced this to `never`.
+type Box = Extract<Element, { kind: Shape.BoxKind }>;
 
 const elementsOf = (commands: Commands): Element[] =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [...command.object.elements] : []));

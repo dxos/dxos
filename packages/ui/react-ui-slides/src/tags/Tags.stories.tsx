@@ -426,6 +426,12 @@ export const FlowVariant: Story = {
     await expect(getComputedStyle(items[0], '::after').content).toBe('"→"');
     await expect(getComputedStyle(items[3], '::after').content).toBe('none');
 
+    // The arrow's box is the gap between two cards, with the glyph in the middle of it: an arrow hung off the
+    // card's edge sat against the next card.
+    const arrow = getComputedStyle(items[0], '::after');
+    await expect(parseFloat(arrow.width)).toBeCloseTo(parseFloat(getComputedStyle(flow).columnGap), 0);
+    await expect(arrow.textAlign).toBe('center');
+
     // `active` marks the fourth item, and only it.
     await expect(items.filter((item) => item.dataset.active !== undefined)).toEqual([items[3]]);
   },

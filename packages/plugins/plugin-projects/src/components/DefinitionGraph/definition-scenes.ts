@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Scene as DiagramScene, Dsl, Semantic, SemanticEngine } from '@dxos/diagram';
+import { type Scene as DiagramScene, DSL, Semantic, SemanticEngine } from '@dxos/diagram';
 import { type DiagramSet, type LatticeSpec, boxId, quantize } from '@dxos/react-ui-canvas';
 
 import {
@@ -230,13 +230,13 @@ const toDsl = (
   const nodeLine = (node: SceneNode) => {
     const id = dslId.get(node.id) ?? node.id;
     const cell = cells?.get(id);
-    return `node ${id} ${Dsl.formatString(node.id)}${cell ? ` @cell(${cell.x},${cell.y})` : ''}`;
+    return `node ${id} ${DSL.formatString(node.id)}${cell ? ` @cell(${cell.x},${cell.y})` : ''}`;
   };
   const byId = new Map(scene.nodes.map((node) => [node.id, node]));
   const framed = new Set<string>();
   scene.frames.forEach((frame, index) => {
     lines.push(
-      `group g${index} ${Dsl.formatString(frame.label)}${frame.maxWidth ? ` max-width=${frame.maxWidth}` : ''} {`,
+      `group g${index} ${DSL.formatString(frame.label)}${frame.maxWidth ? ` max-width=${frame.maxWidth}` : ''} {`,
     );
     for (const member of frame.members) {
       const node = byId.get(member);
@@ -282,8 +282,8 @@ export type CompiledScene = {
 };
 
 const solve = (source: string): DiagramScene.Command[] => {
-  const reading = Dsl.read(source);
-  return Dsl.withLayout(reading, reading.diagram && SemanticEngine.solve(reading.diagram, { restarts: 1 })).commands;
+  const reading = DSL.read(source);
+  return DSL.withLayout(reading, reading.diagram && SemanticEngine.solve(reading.diagram, { restarts: 1 })).commands;
 };
 
 /** The cell of each box the commands place, by DSL id, counted from the top-left box. */

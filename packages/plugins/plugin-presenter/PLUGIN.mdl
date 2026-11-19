@@ -52,7 +52,7 @@ type Slide
     `Slide`, so the assistant beside it has the slide as its context. Its type icon is indigo.
   fields:
     content: Ref<Obj>           # owned Text or a linked object
-    title?: string              # overrides the label read from the content's first heading
+    title?: string              # overrides the label read from the content (frontmatter `title`, else first heading)
     hidden?: boolean            # left out when presenting; replaces frontmatter `hide:`
     notes?: Ref<Text>           # speaker notes for any slide
     image?: Ref<MediaArtifact>  # the image a layout places (cover and image layouts), from plugin-studio
@@ -533,7 +533,7 @@ feat F-5: Navtree Folder
   uses: [Presentation, Slide, SlideEditorArticle]
 
   req F-5.1: A Presentation node lists its sections as children.
-  req F-5.2: An owned slide is labelled by its name, else its first markdown heading, else "Slide N".
+  req F-5.2: An owned slide is labelled by its name, else the `title` its frontmatter states, else its first markdown heading, else "Slide N".
   req F-5.3:
     when: user drags a child to a new position
     then: `sections` is reordered to match
@@ -1720,6 +1720,14 @@ decision D-104: Left and right skip a slide's click steps and land on the neighb
   by: user:richburdon
   affects: [Deck]
   why: A speaker steps through the builds once, forward; for the rest of a talk, such as Q&A, they jump between slides and do not want to replay them.
+```
+
+```mdl
+decision D-105: A slide's label reads the `title` its frontmatter states before its first heading, in the gallery and in the navtree. Refines [D-15].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-5]
+  why: A slide's first heading is not always its name: a cover's is the product, and a slide of cards has only the cards' captions.
 ```
 
 ## Appendix: Extension Definitions

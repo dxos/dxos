@@ -26,6 +26,7 @@ export const BOX_VARIANTS = [
   'card',
   'outline',
   'hero',
+  'brand',
   'fill',
   'lockup',
   'spread',

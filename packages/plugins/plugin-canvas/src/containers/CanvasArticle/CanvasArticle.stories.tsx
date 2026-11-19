@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { type ContentMap, Dsl } from '@dxos/diagram';
+import { type ContentMap, DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -86,7 +86,7 @@ const withDocument = (document: Scene.SceneDocument) =>
   });
 
 /** A canvas over scenes written in `.dx`. */
-const withScenes = (text: string) => withDocument(Dsl.readScenes(text).document);
+const withScenes = (text: string) => withDocument(DSL.readScenes(text).document);
 
 const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'plugins/plugin-canvas/containers/CanvasArticle',
@@ -346,7 +346,7 @@ export const MarkdownEmbed: Story = {
     types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
     onInit: async ({ space }) => {
-      const drawing = addDocumentDrawing(space.db, Dsl.readScenes(EXEMPLARS.subscene).document);
+      const drawing = addDocumentDrawing(space.db, DSL.readScenes(EXEMPLARS.subscene).document);
       describeEmbedTarget = async () => {
         const target = await space.db.makeRef(Obj.getURI(drawing)).tryLoad();
         return `the drawing ${target ? 'loads' : 'does not load'} by its URI; the page is ${globalThis.document.visibilityState} at ${innerWidth}x${innerHeight}`;

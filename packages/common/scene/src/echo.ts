@@ -4,6 +4,7 @@
 
 import { Obj, Ref } from '@dxos/echo';
 
+import { withCurrentType } from './element.ts';
 import {
   type Element2D,
   type Element3D,
@@ -203,7 +204,12 @@ export const readDocument = ({
     const model = isStoredModel(target) ? target : undefined;
     const base = { id: layout.key, ...(model ? { model: model.key } : {}) };
     if (Obj.instanceOf(Layout2D, layout)) {
-      const elements: Record<string, Element2D> = plain({ ...layout.elements });
+      // A stored layout keeps the type name an element was written with, so a renamed type is read as its current
+      // name here: this is the one place every reader of a stored drawing goes through.
+      const stored: Record<string, Element2D> = plain({ ...layout.elements });
+      const elements: Record<string, Element2D> = Object.fromEntries(
+        Object.entries(stored).map(([id, element]) => [id, withCurrentType(element)]),
+      );
       layouts.push({ ...base, ...plain(defined(layout, LAYOUT_2D_FIELDS)), dim: '2d', elements });
     } else {
       const elements: Record<string, Element3D> = plain({ ...layout.elements });

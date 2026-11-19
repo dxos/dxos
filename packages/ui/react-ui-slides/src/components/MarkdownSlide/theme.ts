@@ -74,7 +74,9 @@ export const theme = {
           'relative px-10 py-12 rounded-[20px] bg-(--slide-code) text-[32px] leading-normal [counter-increment:slide-step] ' +
           'before:content-[counter(slide-step)] before:text-[28px] before:opacity-60 ' +
           // The arrow sits in the gap after every card but the last; it is decoration, so it never reaches the text.
-          "after:content-['→'] after:absolute after:start-full after:top-1/2 after:ms-5 after:-translate-y-1/2 " +
+          // Its box is the gap's own width (`w-24` for `gap-24`), so the glyph is centred between the two cards.
+          "after:content-['→'] after:absolute after:start-full after:top-1/2 after:w-24 after:text-center " +
+          'after:-translate-y-1/2 ' +
           'after:text-[88px] after:leading-none after:opacity-70 last:after:content-none ' +
           // During a build the arrow waits for the card it points at, which is laid out but not yet revealed.
           '[&:has(+li.invisible)]:after:content-none ' +
@@ -98,6 +100,15 @@ export const theme = {
       hero: {
         box: 'flex flex-col items-center',
         img: 'h-[420px] w-auto max-w-full object-contain',
+        p: '[&:has(>img)]:contents',
+      },
+      // A product's mark over its name, as one centred block. The name is set in the brand's display face whatever
+      // font the deck picked, since it is the product's wordmark rather than a heading of the deck's.
+      brand: {
+        box: 'flex flex-col items-center gap-16',
+        img: 'h-[640px] w-auto max-w-full object-contain',
+        // `!`: an emphasis layout sizes its headings with a descendant rule that outranks a class on the heading.
+        h1: "text-[240px]! leading-none! font-['Poiret_One',ui-sans-serif,sans-serif] text-(color:--slide-foreground)",
         p: '[&:has(>img)]:contents',
       },
       // A picture drawn to the column's height and left to run past its sides, which the slide crops rather than the

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { type Scene } from '@dxos/scene';
 
 import { type SceneClipboard, copyFragment, nextPaste, pasteInto } from './clipboard.ts';
@@ -12,10 +12,10 @@ import { type ClipboardCodec } from './config.ts';
 
 /** `.dx` text in one dimension only; the plugin's codec lifts and flattens across them. */
 const codec: ClipboardCodec = {
-  write: (_document, _layout, fragment) => Dsl.printScenes({ scenes: [], layouts: [fragment], models: [] }),
+  write: (_document, _layout, fragment) => DSL.printScenes({ scenes: [], layouts: [fragment], models: [] }),
   read: (text, dim) => {
     try {
-      const layout = Dsl.readScenes(text).document.layouts[0];
+      const layout = DSL.readScenes(text).document.layouts[0];
       return layout?.dim === dim ? layout : undefined;
     } catch {
       return undefined;
