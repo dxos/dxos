@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as TestClock from 'effect/testing/TestClock';
 
+import { LanguageModelFixture } from '@dxos/ai/testing';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
@@ -91,6 +92,9 @@ describe('formatSystemPrompt', () => {
         'Base prompt.\n\n## Current Date\n\n' +
           'Today is Thursday, 2026-11-19 (UTC). Use it to resolve relative dates and dates given without a year.',
       );
+
+      // Model fixtures match without the section, so a recording outlives the day it was made on.
+      expect(LanguageModelFixture.__testing.normalizeForMatching(prompt, [])).toBe('Base prompt.');
 
       // A day, not a time: the prompt changes only when the UTC date does.
       yield* TestClock.adjust('1 minute');

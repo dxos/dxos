@@ -45,7 +45,7 @@ const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.
  * through {@link __testing.normalizeForMatching}.
  */
 const CURRENT_DATE_SECTION_PATTERN =
-  /(?:\n\n)?## Current Date\n\nToday is [A-Za-z]+, \d{4}-\d{2}-\d{2} \(UTC\)\.[^\n]*/g;
+  /(?:\n\n)?## Current Date\n\nToday is [A-Za-z]+, \d{4}-\d{2}-\d{2} \(UTC\)\. Use it to resolve relative dates and dates given without a year\./g;
 
 const isEmptySystemMessage = (value: unknown): boolean =>
   typeof value === 'object' &&
@@ -54,6 +54,12 @@ const isEmptySystemMessage = (value: unknown): boolean =>
   value.role === 'system' &&
   'content' in value &&
   value.content === '';
+
+/** Drops the prompt's system messages left empty; only its message list, so a tool result's own arrays stay whole. */
+const dropEmptySystemMessages = (prompt: unknown): unknown =>
+  typeof prompt === 'object' && prompt !== null && 'content' in prompt && Array.isArray(prompt.content)
+    ? { ...prompt, content: prompt.content.filter((message) => !isEmptySystemMessage(message)) }
+    : prompt;
 
 /**
  * NEVER redact EntityIds, EIDs, or DXNs in this module. Fixture prompts
@@ -67,22 +73,21 @@ const isEmptySystemMessage = (value: unknown): boolean =>
 const TIMESTAMP_PLACEHOLDER = '<memoized-timestamp>';
 
 const normalizePromptForMatching = (prompt: unknown, dynamicMatcher?: RegExp): unknown => {
-  const normalized = deepMapValues(prompt, (value, recurse, key) => {
-    // Message metadata `timestamp` fields are stamped with the live clock as each turn completes and
-    // are fed back verbatim into the prompt of every subsequent turn. They carry no meaning for the
-    // model's reasoning, so collapse them — otherwise no multi-turn conversation can ever replay on a
-    // different run/day. (This is NOT id redaction; see the note above — ids are left intact.)
-    if (key === 'timestamp') {
-      return TIMESTAMP_PLACEHOLDER;
-    }
-    if (typeof value === 'string') {
-      return value.replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER).replace(CURRENT_DATE_SECTION_PATTERN, '');
-    }
-    if (Array.isArray(value)) {
-      return recurse(value).filter((item: unknown) => !isEmptySystemMessage(item));
-    }
-    return recurse(value);
-  });
+  const normalized = dropEmptySystemMessages(
+    deepMapValues(prompt, (value, recurse, key) => {
+      // Message metadata `timestamp` fields are stamped with the live clock as each turn completes and
+      // are fed back verbatim into the prompt of every subsequent turn. They carry no meaning for the
+      // model's reasoning, so collapse them — otherwise no multi-turn conversation can ever replay on a
+      // different run/day. (This is NOT id redaction; see the note above — ids are left intact.)
+      if (key === 'timestamp') {
+        return TIMESTAMP_PLACEHOLDER;
+      }
+      if (typeof value === 'string') {
+        return value.replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER).replace(CURRENT_DATE_SECTION_PATTERN, '');
+      }
+      return recurse(value);
+    }),
+  );
   // Canonicalize opt-in dynamic identifiers (e.g. space keys) so matching is independent of their
   // run-specific values. This is NOT the blanket id redaction warned against above: it only touches
   // tokens the caller explicitly declared dynamic, and structural equality is still enforced.

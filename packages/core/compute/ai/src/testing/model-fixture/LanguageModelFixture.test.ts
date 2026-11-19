@@ -235,7 +235,32 @@ describe('dynamic value matching', () => {
     // A prompt with no system text of its own gains a system message holding only the section.
     const user = { role: 'user', content: 'Hi.' };
     const dateOnly = { role: 'system', content: section('Thursday, 2026-11-19').trimStart() };
-    expect(__testing.normalizeForMatching([dateOnly, user], [])).toEqual(__testing.normalizeForMatching([user], []));
+    expect(__testing.normalizeForMatching({ content: [dateOnly, user] }, [])).toEqual(
+      __testing.normalizeForMatching({ content: [user] }, []),
+    );
+  });
+
+  test('text after the current-date section still takes part in the match', ({ expect }) => {
+    const message = (tail: string) => [
+      {
+        role: 'user',
+        content:
+          '## Current Date\n\nToday is Thursday, 2026-11-19 (UTC). ' +
+          `Use it to resolve relative dates and dates given without a year.${tail}`,
+      },
+    ];
+    expect(__testing.normalizeForMatching(message(' Book the hall.'), [])).not.toEqual(
+      __testing.normalizeForMatching(message(' Cancel the hall.'), []),
+    );
+  });
+
+  test("an empty system message inside a tool result's payload takes part in the match", ({ expect }) => {
+    const prompt = (result: unknown[]) => ({
+      content: [{ role: 'tool', content: [{ type: 'tool-result', result }] }],
+    });
+    expect(__testing.normalizeForMatching(prompt([{ role: 'system', content: '' }]), [])).not.toEqual(
+      __testing.normalizeForMatching(prompt([]), []),
+    );
   });
 
   test('without patterns the differing space keys do not match (opt-in)', ({ expect }) => {
