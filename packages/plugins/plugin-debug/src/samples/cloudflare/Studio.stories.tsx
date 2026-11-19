@@ -131,6 +131,7 @@ const slide = (id: string): Story => ({
 export const ReAct = slide('react');
 export const Agents = slide('agents');
 export const Superagent = slide('superagent');
+export const Problem = slide('problem');
 export const Echo = slide('echo');
 export const Hyperspace = slide('hyperspace');
 export const App = slide('app');

@@ -1,0 +1,12 @@
+diagram kind=grid size=1600x880 cols=3 gap=32 padding=48 autoRows=240 alignContent=start
+
+node memory "Shared Memory" kind=card icon=brain iconTone=rose {
+  item "Beyond silos"
+}
+node access "Access and Authorization" kind=card icon=shield-check iconTone=accent {
+  item "Delegation"
+  item "Policy and auditing"
+}
+node coordination "Coordination and Collaboration" kind=card icon=users-three iconTone=teal {
+  item "Rethinking the User Interface"
+}
