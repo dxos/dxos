@@ -11,7 +11,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Dsl, DxSvg, type Scene, SVG_SCHEMA } from '@dxos/diagram';
+import { DSL, DxSvg, type Scene, SVG_SCHEMA } from '@dxos/diagram';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -144,7 +144,7 @@ export class ImportError extends BaseError.extend(
 /** Lays a source-only payload out again, into the payload a Composer export would have carried. */
 const fromSource = Effect.fn('DrawingFile.fromSource')(function* (raw: unknown) {
   const { name = 'Drawing', source } = yield* Schema.decodeUnknownEffect(SourcePayload)(raw);
-  const { commands, problems } = yield* Dsl.compile(source.text);
+  const { commands, problems } = yield* DSL.compile(source.text);
   const errors = problems.filter(({ severity }) => severity === 'error');
   if (errors.length > 0) {
     return yield* Effect.fail(

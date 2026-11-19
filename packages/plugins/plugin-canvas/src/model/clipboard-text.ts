@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { flattenLayout, liftLayout } from '@dxos/react-ui-canvas';
 import { type ClipboardCodec } from '@dxos/react-ui-canvas-editor';
 import { fromRenderList2D, toRenderList2D } from '@dxos/react-ui-canvas/headless';
@@ -37,13 +37,13 @@ const inlined = (doc: SceneDocument, layout: Scene.LayoutRecord, fragment: Fragm
 
 /** A copied fragment as `.dx` text, which pastes back into any canvas, a document or the assistant. */
 export const fragmentText = (doc: SceneDocument, layout: Scene.LayoutRecord, fragment: Fragment): string =>
-  Dsl.printScenes({ scenes: [], layouts: [inlined(doc, layout, fragment)], models: [] });
+  DSL.printScenes({ scenes: [], layouts: [inlined(doc, layout, fragment)], models: [] });
 
 /** The first layout in `.dx` text, in the dimension it is pasted into: 2D lifted onto the ground, 3D flattened. */
 export const readFragment = (text: string, dim: Scene.Dimension): Fragment | undefined => {
   let layout: Scene.LayoutRecord | undefined;
   try {
-    layout = Dsl.readScenes(text).document.layouts[0];
+    layout = DSL.readScenes(text).document.layouts[0];
   } catch {
     return undefined;
   }

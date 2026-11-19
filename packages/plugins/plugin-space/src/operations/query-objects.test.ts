@@ -37,13 +37,18 @@ describe('SpaceOperation.QueryObjects', () => {
           expect(results).toHaveLength(Math.min(limit, count));
         }
 
-        // `includeContent` changes the shape of a row, never which rows match.
+        // `includeContent` adds each object's fields beside its names, never changes which rows match or how one is named.
         const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
           typename: Type.getTypename(TestObject),
           includeContent: true,
           limit: 200,
         });
         expect(results).toHaveLength(count);
+        for (const row of results) {
+          expect(row).toMatchObject({ dxn: expect.stringMatching(/^echo:/), typename: Type.getTypename(TestObject) });
+          expect(row).toHaveProperty('id');
+          expect(row).toHaveProperty('name', expect.stringMatching(/^typed-/));
+        }
 
         // A second registration of the same typename persisted in the space. Resolving the typename
         // to one registration and filtering on that pinned the query to whichever copy the registry

@@ -87,6 +87,35 @@ describe('update-task', () => {
     ),
   );
 
+  it.effect('reports a session claim in an output its schema accepts, the delegate keeping its session ref', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
+
+      const result = yield* updateTask.handler({
+        task: Ref.make(task),
+        assignee: owner,
+        remoteSession: { sessionId: 'session_output' },
+      });
+
+      // As the runtime checks it before the output leaves the process (compute-runtime `protocol.ts`).
+      expect(() =>
+        Schema.decodeUnknownSync(Schema.toType(updateTask.output), { onExcessProperty: 'error' })(result),
+      ).not.toThrow();
+      expect(Ref.isRef(result.changed.delegate?.subject)).toBe(true);
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({
+            types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
+          }),
+        ),
+      ),
+    ),
+  );
+
   it.effect('names an untitled session after the task it claims, keeping a name it already has', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({}));

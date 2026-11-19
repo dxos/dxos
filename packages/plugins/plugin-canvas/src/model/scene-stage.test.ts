@@ -4,12 +4,12 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 
 import { applySample, sceneBinding, sceneTargets } from './scene-stage.ts';
 
-const read = (name: keyof typeof EXEMPLARS) => Dsl.readScenes(EXEMPLARS[name]).document;
+const read = (name: keyof typeof EXEMPLARS) => DSL.readScenes(EXEMPLARS[name]).document;
 
 describe('scene stage', () => {
   test('2D targets expose center and size', () => {

@@ -42,6 +42,12 @@ import { type AiAssistantError } from '../util/index.ts';
 import { formatSystemPrompt, formatUserPrompt } from './format.ts';
 import { GenerationObserver } from './observer.ts';
 
+/**
+ * Turns a model call carries whole, counting the one in progress: it and the four before keep their tool calls and
+ * results, so the agent can still build on what it just did; older turns keep only what was said.
+ */
+const FULL_TURNS = 5;
+
 export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
 /**
@@ -353,6 +359,7 @@ export class Request {
       const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
         system,
         cacheControl: 'ephemeral',
+        fullTurns: FULL_TURNS,
         // History can hold calls to tools this turn does not offer (the toolkit changed); kept as
         // calls, they invite the model to call them again.
         tools: toolkit ? Object.keys(toolkit.tools) : undefined,

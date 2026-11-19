@@ -11,7 +11,12 @@ import { invariant } from '@dxos/invariant';
 import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 
 import * as Client from './Client.ts';
-import { WorkerConnectionError, WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
+import {
+  WorkerConnectionError,
+  WorkerLeaderContentionError,
+  WorkerNotTerminableError,
+  WorkerTerminationError,
+} from './errors.ts';
 import { displaceChannelFor } from './internal/displace-channel.ts';
 import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks.ts';
 import {
@@ -504,6 +509,57 @@ describe('Connection multi-client', () => {
     const { held } = await navigator.locks.query();
     expect((held ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
   }, 30_000);
+
+  // A budget of 1 can run out between two lock losses, which must still surface as contention.
+  test.each([undefined, 1])(
+    'two tabs on separate coordinators stop stealing the leader lock from each other and escalate (maxLeaderFailures=%s)',
+    async (maxLeaderFailures) => {
+      // Separate hubs model two app builds: each build's SharedWorker coordinator is its own instance,
+      // while the leader lock is shared by origin.
+      const keys = uniqueKeys();
+      const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
+
+      let leaderWorkers = 0;
+      const countingWorkerFactory = () => {
+        leaderWorkers++;
+        return createWorkerFactory(keys.storageLockKey)();
+      };
+
+      const first = makeConnection(createHub(), keys, timeouts, {
+        maxLeaderFailures,
+        createWorker: countingWorkerFactory,
+      });
+      await asyncTimeout(first.connection.open(), 10_000);
+      onTestFinished(async () => {
+        await first.connection.close();
+      });
+
+      const second = makeConnection(createHub(), keys, timeouts, {
+        maxLeaderFailures,
+        createWorker: countingWorkerFactory,
+      });
+      await asyncTimeout(second.connection.open(), 10_000);
+      onTestFinished(async () => {
+        await second.connection.close();
+      });
+
+      await waitForCondition({
+        condition: () => first.failures.length + second.failures.length > 0,
+        timeout: 10_000,
+      });
+      const failures = [...first.failures, ...second.failures];
+      expect(failures).toHaveLength(1);
+      expect(WorkerLeaderContentionError.is(failures[0])).toBe(true);
+
+      // The tab that yielded no longer steals, so the other keeps its worker.
+      const workersAtEscalation = leaderWorkers;
+      await sleep(timeouts.portTimeout * 5);
+      expect(leaderWorkers).toBe(workersAtEscalation);
+      // Once per streak: a regression that escalates on every port timeout would add more here.
+      expect(first.failures.length + second.failures.length).toBe(1);
+    },
+    30_000,
+  );
 
   test('a connection closed while its leader session opens closes that session and does not lead again', async () => {
     const hub = createHub();

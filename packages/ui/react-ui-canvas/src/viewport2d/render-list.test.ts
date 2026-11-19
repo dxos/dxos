@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLAR_NAMES, EXEMPLARS } from '@dxos/diagram/testing';
 import { LINK_TYPES, MAJOR_GRID, type Node, NODE_TYPES, type Scene, readDocument, toEcho } from '@dxos/scene';
 
@@ -25,7 +25,7 @@ import { fromRenderList2D, namedStyles, styleClasses, toRenderList2D, toRenderLi
 
 /** A board whose layout declares two layers and names a style on two elements. */
 const DOCUMENT_2D: Scene.SceneDocument = (() => {
-  const { document } = Dsl.readScenes(`scene board dim=2d layout=board {
+  const { document } = DSL.readScenes(`scene board dim=2d layout=board {
   camera center=0,0 zoom=1
 }
 
@@ -62,7 +62,7 @@ model shapes dim=2d {
   };
 })();
 
-const views = (text: string) => toRenderLists2D(Dsl.readScenes(text).document);
+const views = (text: string) => toRenderLists2D(DSL.readScenes(text).document);
 
 describe('toRenderLists2D', () => {
   test('maps a link naming no type to a smart link between the bound nodes', () => {
@@ -167,7 +167,7 @@ describe('toRenderLists2D', () => {
 
   test('puts every edge of every 2D exemplar node on a major grid line', () => {
     const offGrid = EXEMPLAR_NAMES.flatMap((name) =>
-      toRenderLists2D(Dsl.readScenes(EXEMPLARS[name]).document)
+      toRenderLists2D(DSL.readScenes(EXEMPLARS[name]).document)
         .lists.flatMap((view) => Object.values(view.nodes))
         .filter((node) =>
           [
@@ -398,7 +398,7 @@ describe('fromRenderList2D', () => {
   });
 
   test('a .dx layout with one canvas-written element shows every element, hidden ones left out', () => {
-    const { document } = Dsl.readScenes(EXEMPLARS.links);
+    const { document } = DSL.readScenes(EXEMPLARS.links);
     const layout = document.layouts[0];
     if (layout.dim !== '2d') {
       throw new Error('links is a 2D exemplar.');

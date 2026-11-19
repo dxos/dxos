@@ -10,8 +10,22 @@
 
 import { Shape } from '@dxos/scene';
 
+import { itemsOf } from '../items.ts';
 import type * as Scene from '../scene.ts';
-import { BARE_ID, BARE_REF, ELEMENT_ATTRS, OBJECT_ATTRS, RESERVED } from './vocabulary.ts';
+import * as Semantic from '../semantic.ts';
+import {
+  type AttrSpec,
+  BARE_ID,
+  BARE_REF,
+  DIAGRAM_ATTRS,
+  EDGE_ATTRS,
+  ELEMENT_ATTRS,
+  GROUP_ATTRS,
+  NODE_ATTRS,
+  OBJECT_ATTRS,
+  RESERVED,
+  dataAttrName,
+} from './vocabulary.ts';
 
 const ESCAPES: Record<string, string> = { '\\': '\\\\', '"': '\\"', '\n': '\\n', '\t': '\\t', '\r': '\\r' };
 
@@ -54,36 +68,129 @@ const formatEndpoint = (ref: string | undefined, point: Shape.Point | undefined)
 
 type AttrValue = string | number | boolean;
 
+/** A scalar in the form the parser reads back as the same value; `true`/`false` quoted so a string stays one. */
+const formatScalar = (value: AttrValue): string =>
+  typeof value === 'string'
+    ? BARE_ID.test(value) && value !== 'true' && value !== 'false' && !RESERVED.has(value)
+      ? value
+      : formatString(value)
+    : String(value);
+
 /** Prints `name=value` for the attributes of `kind` that are set, in the table's order. */
 const formatAttrs = (kind: keyof typeof ELEMENT_ATTRS, values: Partial<Record<string, AttrValue>>): string[] =>
-  ELEMENT_ATTRS[kind].flatMap(({ name, type }) => {
+  formatSpecs(ELEMENT_ATTRS[kind], values);
+
+/** Prints `name=value` for the attributes of `specs` that are set, in the order `specs` lists them. */
+const formatSpecs = (specs: readonly AttrSpec[], values: Partial<Record<string, AttrValue>>): string[] =>
+  specs.flatMap(({ name, type }) => {
     const value = values[name];
     if (value === undefined) {
       return [];
     }
-    return [`${name}=${type === 'string' && typeof value === 'string' ? formatString(value) : String(value)}`];
+    if (type === 'string' && typeof value === 'string') {
+      return [`${name}=${formatString(value)}`];
+    }
+    return [`${name}=${type === 'name' || type === 'scalar' ? formatScalar(value) : String(value)}`];
   });
 
-const style = ({ color, fill, stroke, weight }: Shape.Element): Partial<Record<string, AttrValue>> => ({
+/**
+ * A contributed kind's own fields, flat and by key so the text is stable. Two are left out, because writing them
+ * would say something false rather than nothing:
+ *
+ * - a field holding a list or a nested object, which has no spelling in the DSL at all — printed as a string it
+ *   would read back as that string;
+ * - a field whose name the element's own table already claims (`substrate`'s numeric `fill` against the style
+ *   attribute), or that the grammar reserves (`text`), is written with the {@link DATA_PREFIX}: the reader would
+ *   otherwise resolve the name against the schema's literals, or fail to parse it as an attribute name at all;
+ * - a field whose name is not a bare word (`font.size`) has no spelling and no escape, since a prefix leaves it
+ *   just as unparseable, so it is left out as a value the DSL cannot spell is.
+ *
+ * The first is measured by the handler's conformance test rather than assumed away.
+ */
+const formatData = (kind: keyof typeof ELEMENT_ATTRS, data: Readonly<Record<string, unknown>> | undefined): string[] =>
+  formatFields(ELEMENT_ATTRS[kind], data);
+
+/** A component's rows, one to a line inside the braces that follow it, and the closing brace; nothing for none. */
+const formatItems = (items: readonly Semantic.Item[] | undefined, pad: string): string[] =>
+  items?.length
+    ? [
+        ...items.map(({ text, data }) => [`${pad}  item`, formatString(text), ...formatFields([], data)].join(' ')),
+        `${pad}}`,
+      ]
+    : [];
+
+/** A kind's own fields beside the attributes `specs` already claims, whose names are written escaped. */
+const formatFields = (specs: readonly AttrSpec[], data: Readonly<Record<string, unknown>> | undefined): string[] => {
+  const claimed = new Set(specs.map(({ name }) => name));
+  return Object.entries(data ?? {})
+    .sort(([left], [right]) => (left < right ? -1 : 1))
+    .flatMap(([name, value]) => {
+      const attr = dataAttrName(name, claimed);
+      return attr !== undefined &&
+        (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+        ? [`${attr}=${formatScalar(value)}`]
+        : [];
+    });
+};
+
+const style = ({
   color,
   fill,
   stroke,
   weight,
+  border,
+  align,
+  valign,
+  fontSize,
+}: Shape.Element): Partial<Record<string, AttrValue>> => ({
+  color,
+  fill,
+  stroke,
+  weight,
+  border,
+  align,
+  valign,
+  fontSize,
 });
 
-export const formatElement = (element: Shape.Element): string => {
+/** `nested`: the element is written inside its grid's braces, so its `parent` is already said by where it sits. */
+export const formatElement = (element: Shape.Element, { nested = false }: { nested?: boolean } = {}): string => {
   switch (element.kind) {
     case 'rect':
     case 'ellipse':
     case 'diamond':
     case 'triangle':
+    case 'grid':
       return [
-        element.kind,
+        // A box a component draws says so, in place of a shape it does not draw.
+        element.type === undefined ? element.kind : 'custom',
         formatId(element.id),
-        formatPoint(element),
-        formatSize(element.w, element.h),
+        // A child the braces place states neither: its frame is the rule's result, re-solved on every render, and
+        // writing it down would be a coordinate that the next solve contradicts.
+        ...(nested ? [] : [formatPoint(element), formatSize(element.w, element.h)]),
         ...(element.text === undefined ? [] : [formatString(element.text)]),
-        ...formatAttrs(element.kind, { rotation: element.rotation, corners: element.corners, ...style(element) }),
+        ...formatAttrs(element.kind, {
+          kind: element.type,
+          rotation: element.rotation,
+          corners: element.corners,
+          cols: element.cols,
+          rows: element.rows,
+          gap: element.gap,
+          padding: element.padding,
+          layout: element.layout,
+          packSeed: element.packSeed,
+          packMin: element.packMin,
+          packMax: element.packMax,
+          autoCols: element.autoCols,
+          autoRows: element.autoRows,
+          justifyContent: element.justifyContent,
+          alignContent: element.alignContent,
+          parent: nested ? undefined : element.parent,
+          width: element.width,
+          height: element.height,
+          ...style(element),
+        }),
+        ...formatData(element.kind, element.data),
       ].join(' ');
 
     case 'circle':
@@ -139,9 +246,13 @@ export const formatElement = (element: Shape.Element): string => {
         '->',
         formatEndpoint(element.to, element.end),
         ...(element.text === undefined ? [] : [formatString(element.text)]),
+        // The bends come before the attributes, as they do on a semantic edge: the route is part of what the
+        // connector IS, and an attribute after it still reads as the arrow's.
+        ...(element.route?.length ? ['via', ...element.route.map(formatPoint)] : []),
         ...formatAttrs('arrow', {
           head: element.head,
           tail: element.tail,
+          path: element.path,
           relation: element.relation,
           ...style(element),
         }),
@@ -159,8 +270,41 @@ export const formatElement = (element: Shape.Element): string => {
   }
 };
 
-const block = (header: string, elements: readonly Shape.Element[]): string =>
-  [`${header} {`, ...elements.map((element) => `  ${formatElement(element)}`), '}'].join('\n');
+/**
+ * A body, with each grid's children nested inside it. `parent` is the model's word for containment and braces are
+ * the text's, so a child written here drops the attribute: saying it twice would let the two disagree. An element
+ * naming a parent that is not a grid of this object stays at the top level, where its `parent` still prints —
+ * otherwise it would simply vanish from the text.
+ */
+const block = (header: string, elements: readonly Shape.Element[]): string => {
+  const grids = new Set(elements.filter((element) => element.kind === 'grid').map((element) => element.id));
+  const childrenOf = new Map<string, Shape.Element[]>();
+  for (const element of elements) {
+    const parent = 'parent' in element ? element.parent : undefined;
+    if (parent !== undefined && grids.has(parent)) {
+      childrenOf.set(parent, [...(childrenOf.get(parent) ?? []), element]);
+    }
+  }
+  const placed = new Set([...childrenOf.values()].flat().map((element) => element.id));
+
+  const lines = (element: Shape.Element, depth: number): string[] => {
+    const indent = '  '.repeat(depth);
+    const children = childrenOf.get(element.id);
+    const text = formatElement(element, { nested: placed.has(element.id) });
+    if (!children?.length) {
+      // A component's rows follow it in braces, as a grid's children follow the grid.
+      const items = 'data' in element ? itemsOf(element.data) : undefined;
+      return [`${indent}${text}${items ? ' {' : ''}`, ...formatItems(items, indent)];
+    }
+    return [`${indent}${text} {`, ...children.flatMap((child) => lines(child, depth + 1)), `${indent}}`];
+  };
+
+  return [
+    `${header} {`,
+    ...elements.filter((element) => !placed.has(element.id)).flatMap((element) => lines(element, 1)),
+    '}',
+  ].join('\n');
+};
 
 export const formatObject = (object: Scene.WorldObject): string =>
   block(
@@ -201,3 +345,119 @@ export const printCommands = (commands: readonly Scene.Command[]): string =>
 /** A scene document — every statement an `object`, which is what a drawing serializes to. */
 export const print = (scene: Scene.Scene): string =>
   printCommands(scene.objects.map((object) => ({ op: 'upsert-object', object }) as const));
+
+const RELATION_WORD = new Map(Object.entries(Semantic.RELATIONSHIPS).map(([word, relation]) => [relation, word]));
+
+/**
+ * A grid diagram as the statements that say it: `diagram kind=grid`, then every member in the order its container
+ * holds it, then every edge. It writes what a grid diagram reads and nothing else: the placement hints, sides and
+ * waypoints of the searched kinds have no meaning here, so a diagram of another kind is not this function's to print.
+ */
+export const formatGridDiagram = (diagram: Semantic.Diagram): string => {
+  const nodes = new Map(diagram.nodes.map((node) => [node.id, node]));
+  const groups = new Map(diagram.groups.map((group) => [group.id, group]));
+  const membersOf = (owner: string): readonly string[] => diagram.members?.get(owner) ?? [];
+
+  const member = (id: string, depth: number): string[] => {
+    const pad = '  '.repeat(depth);
+    const node = nodes.get(id);
+    if (node) {
+      const words = [
+        'node',
+        formatId(node.id),
+        ...(node.labelled || node.label !== node.id ? [formatString(node.label)] : []),
+        ...formatSpecs(NODE_ATTRS, {
+          kind: node.type,
+          ref: node.ref,
+          role: node.role,
+          shape: node.shape,
+          color: node.color,
+          fill: node.fill,
+          stroke: node.stroke,
+          border: node.border,
+          width: node.width,
+          height: node.height,
+        }),
+        ...formatFields(NODE_ATTRS, node.data),
+      ];
+      return [`${pad}${words.join(' ')}${node.items?.length ? ' {' : ''}`, ...formatItems(node.items, pad)];
+    }
+    const group = groups.get(id);
+    if (!group) {
+      return [];
+    }
+    const head = [
+      'group',
+      formatId(group.id),
+      ...(group.heading === undefined ? [] : [formatString(group.heading)]),
+      ...formatSpecs(GROUP_ATTRS, {
+        cols: group.cols,
+        rows: group.rows,
+        gap: group.gap,
+        padding: group.padding,
+        autoCols: group.autoCols,
+        autoRows: group.autoRows,
+        justifyContent: group.justifyContent,
+        alignContent: group.alignContent,
+        layout: group.layout,
+        packSeed: group.packSeed,
+        packMin: group.packMin,
+        packMax: group.packMax,
+        color: group.color,
+        fill: group.fill,
+        stroke: group.stroke,
+        border: group.border,
+      }),
+    ].join(' ');
+    const inner = membersOf(id).flatMap((child) => member(child, depth + 1));
+    return inner.length === 0 ? [`${pad}${head} { }`] : [`${pad}${head} {`, ...inner, `${pad}}`];
+  };
+
+  const end = ({ node, part }: Semantic.End): string => formatRef(`${node}${part ?? ''}`);
+  const edges = diagram.edges.map((edge) => {
+    const word = edge.relation === undefined ? undefined : RELATION_WORD.get(edge.relation);
+    const op = word ?? (edge.head === 'none' ? '--' : '->');
+    return [
+      'edge',
+      end(edge.from),
+      op,
+      end(edge.to),
+      ...(edge.label === undefined ? [] : [formatString(edge.label)]),
+      ...formatSpecs(EDGE_ATTRS, {
+        head: op === '--' ? undefined : edge.head,
+        tail: edge.tail,
+        path: edge.path,
+        stroke: edge.stroke,
+        color: edge.color,
+      }),
+    ].join(' ');
+  });
+
+  const { x, y } = diagram.origin;
+  const header = [
+    'diagram',
+    'kind=grid',
+    ...(x === 0 && y === 0 ? [] : ['@', formatPoint(diagram.origin)]),
+    ...formatSpecs(
+      DIAGRAM_ATTRS.filter(({ name }) => name !== 'kind'),
+      { ...(diagram.size ? { size: formatSize(diagram.size.w, diagram.size.h) } : {}), ...diagram.rule },
+    ),
+  ].join(' ');
+  // A group is a block of its own; a run of nodes at the top reads as one.
+  const blocks: string[][] = [];
+  let run: string[] | undefined;
+  for (const id of membersOf(Semantic.ROOT)) {
+    const lines = member(id, 0);
+    if (!nodes.has(id)) {
+      run = undefined;
+      blocks.push(lines);
+    } else if (run) {
+      run.push(...lines);
+    } else {
+      run = [...lines];
+      blocks.push(run);
+    }
+  }
+  const statements = [[header], ...blocks, edges].filter((block) => block.length > 0);
+  return `${statements.map((block) => block.join('\n')).join('\n\n')}\n`;
+};
