@@ -5,7 +5,7 @@
 /** The folder of the app's build output that holds the site's build (spec F-13.2). */
 export const SITE_DIR = '/site';
 
-/** A file such as a script, a stylesheet or the hero `.dx.svg`, as against a page address. */
+/** A file such as a script, a stylesheet or the favicon, as against a page address. */
 export const isFile = (pathname: string) => /\.[^/]+$/.test(pathname);
 
 /**
