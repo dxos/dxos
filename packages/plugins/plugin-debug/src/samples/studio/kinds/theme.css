@@ -70,6 +70,23 @@
   --sd-card-simple-note: 15px;
 }
 
+/* A row's heading: its glyph over its title, in the row's tone, larger than any card's title beside it. */
+.studio-heading {
+  --sd-heading-title: 32px;
+  gap: 10px;
+  color: var(--sd-fg);
+}
+
+.studio-heading-title {
+  font-size: var(--sd-heading-title);
+  line-height: 1.1;
+  text-align: center;
+}
+
+.studio-heading-icon {
+  color: var(--sd-tone, var(--sd-accent));
+}
+
 /* A plain card's title: the framed card's size, so the two read as one family. */
 .studio-card-title {
   font-size: var(--sd-card-title);

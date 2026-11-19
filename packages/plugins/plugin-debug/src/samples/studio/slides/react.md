@@ -1,9 +1,9 @@
 ---
-title: 'Chat'
+title: 'ReAct'
 layout: 'default'
 ---
 
-# Chat
+# ReAct
 
 <Surface ref="{{chat}}" />
 

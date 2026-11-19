@@ -153,7 +153,7 @@ feat DeckTemplate
     `src/samples/studio/slides`, in the order `deck.ts` lists them. A slide embeds a diagram by naming
     it (`<Surface ref="{{echo}}" />`); each diagram is a canvas drawing built from its `.dx` text in
     `src/samples/studio/diagrams`, named after the slide that shows it. The plugin contributes the
-    element kinds the drawings are drawn by (card, feed card, chip, plank, app frame and its parts) to
+    element kinds the drawings are drawn by (card, feed card, chip, heading, plank, app frame and its parts) to
     the canvas; the graph kind is plugin-canvas's own.
 ```
 
@@ -583,5 +583,14 @@ decision D-5: Every slide of the DXOS Deck is a markdown file, the diagram slide
   by: user:richburdon
   affects: [DeckTemplate]
   why: A title or a note is then changed in the slide's own file, and a slide with no diagram (the cover, the stack) is written the same way as one with.
+
+decision D-6: A row named down a slide's left edge is a `heading` element: a glyph over a title, in a tone, with no panel behind them. The row's cards take the same tone on their glyphs (`iconTone`). Refines [D-4].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+  why: A group's own label is a heading over its members, at one size and with no glyph; a row label beside its cards needed a size and a colour of its own, which a plain node cannot state.
+  rejected:
+    - A `fontSize` on a plain node: it gives the size but no glyph, and adds a field to the language for one slide.
+    - A fourth card variant: a heading draws no card.
 ```
 

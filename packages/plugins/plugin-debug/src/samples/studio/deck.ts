@@ -19,7 +19,6 @@ import pluginsDiagram from './diagrams/plugins.dx?raw';
 import superagentDiagram from './diagrams/superagent.dx?raw';
 import agents from './slides/agents.md?raw';
 import architecture from './slides/architecture.md?raw';
-import chat from './slides/chat.md?raw';
 import composer from './slides/composer.md?raw';
 import cover from './slides/cover.md?raw';
 import demo from './slides/demo.md?raw';
@@ -29,6 +28,7 @@ import hyperspace from './slides/hyperspace.md?raw';
 import next from './slides/next.md?raw';
 // import ontology from './slides/ontology.md?raw';
 import plugins from './slides/plugins.md?raw';
+import react from './slides/react.md?raw';
 import stack from './slides/stack.md?raw';
 import superagent from './slides/superagent.md?raw';
 
@@ -62,7 +62,7 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   { id: 'plugins', markdown: plugins },
   { id: 'composer', markdown: composer },
   { id: 'architecture', markdown: architecture },
-  { id: 'chat', markdown: chat },
+  { id: 'react', markdown: react },
   { id: 'agents', markdown: agents },
   { id: 'superagent', markdown: superagent },
   { id: 'demo', markdown: demo },

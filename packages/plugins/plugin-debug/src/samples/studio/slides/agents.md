@@ -3,7 +3,7 @@ title: 'Agents'
 layout: 'default'
 ---
 
-# Agents
+# Autonomous Agents
 
 <Surface ref="{{agents}}" />
 
