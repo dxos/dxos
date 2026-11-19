@@ -1,7 +1,7 @@
-diagram kind=grid size=1944x880 cols="592 284 908" gap=64 padding=16 autoRows=744 alignContent=center
+diagram kind=grid size=1968x880 cols="616 284 908" gap=64 padding=16 autoRows=744 alignContent=center
 
 group client-cell rows="496 1fr" {
-  group client-section cols=2 gap=8 padding=8 border=true {
+  group client-section cols=2 gap=32 padding=8 border=true {
     group client-col rows=2 gap=16 {
       node client "Client" kind=card icon=browser iconTone=teal {
         item "Composer app tab"
