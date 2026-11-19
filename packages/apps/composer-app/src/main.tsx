@@ -603,7 +603,7 @@ const main = async () => {
     onPersistentWorkerFailure: (error) => {
       log.error('worker connection failing persistently', { error });
       if (WorkerLeaderContentionError.is(error)) {
-        showPausedPage('contention');
+        showPausedPage('contention', { version: __DX_BUILD_TIME__ });
       }
     },
     // One tab owns the worker; every hand-over between tabs goes through the paused page, so the
@@ -611,9 +611,9 @@ const main = async () => {
     workerTakeover: {
       generation: { id: String(__DX_BUILD_TIME__), time: __DX_BUILD_TIME__ },
       takeover: consumeTakeover(),
-      onTakeoverRequired: () => showPausedPage('unresponsive'),
-      onLockStolen: () => showPausedPage('stolen'),
-      onSuperseded: (newer) => showPausedPage('superseded', { newer }),
+      onTakeoverRequired: () => showPausedPage('unresponsive', { version: __DX_BUILD_TIME__ }),
+      onLockStolen: () => showPausedPage('stolen', { version: __DX_BUILD_TIME__ }),
+      onSuperseded: (newer) => showPausedPage('superseded', { version: __DX_BUILD_TIME__, otherVersion: newer.time }),
     },
   });
 

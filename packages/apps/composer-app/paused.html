@@ -76,10 +76,14 @@
         margin: 8px 0 0;
         line-height: 1.5;
       }
-      details pre {
+      details dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 4px 12px;
         margin: 8px 0 0;
-        white-space: pre-wrap;
-        word-break: break-word;
+      }
+      details dd {
+        margin: 0;
       }
     </style>
   </head>
@@ -89,8 +93,8 @@
     <button id="continue" type="button" autofocus>Continue here</button>
     <details>
       <summary>Details</summary>
-      <p id="reason"></p>
-      <pre id="detail" hidden></pre>
+      <dl id="facts"></dl>
+      <p id="explanation"></p>
     </details>
     <script type="module" src="/src/pages/paused.ts"></script>
   </body>

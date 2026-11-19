@@ -10,17 +10,34 @@ const PAUSED_PAGE = '/paused.html';
 // One-shot flag the paused page leaves for the app, so the next boot takes the worker over.
 const TAKEOVER_KEY = 'dxos.composer.takeover';
 
+/** The builds involved, as build times (ms since epoch), for the page's details. */
+export type PausedVersions = {
+  /** The build this tab ran. */
+  version: number;
+  /** The build in the other tab, when it differs. */
+  otherVersion?: number;
+};
+
+/** Query parameters the paused page reads. */
+export const PausedParam = {
+  REASON: 'reason',
+  FROM: 'from',
+  VERSION: 'version',
+  OTHER_VERSION: 'otherVersion',
+} as const;
+
 /**
  * Leaves the app for the paused page, which offers to continue in this tab. Replacing the entry keeps
  * Back from re-entering an app that would only pause again.
  */
-export const showPausedPage = (reason: PausedReason, detail?: Record<string, unknown>): void => {
+export const showPausedPage = (reason: PausedReason, { version, otherVersion }: PausedVersions): void => {
   const params = new URLSearchParams({
-    reason,
-    from: `${location.pathname}${location.search}${location.hash}`,
+    [PausedParam.REASON]: reason,
+    [PausedParam.FROM]: `${location.pathname}${location.search}${location.hash}`,
+    [PausedParam.VERSION]: String(version),
   });
-  if (detail) {
-    params.set('detail', JSON.stringify(detail));
+  if (otherVersion !== undefined) {
+    params.set(PausedParam.OTHER_VERSION, String(otherVersion));
   }
   location.replace(`${PAUSED_PAGE}?${params}`);
 };
