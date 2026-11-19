@@ -19,6 +19,12 @@ import { requireOwner, validateAssignee, validateDelegate } from './validate-ass
 /** A plain copy, so a before/after comparison is not fooled by live proxies. */
 const plain = <T>(value: T): T | undefined => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
 
+/**
+ * An actor as the output reports it: a copy that keeps its refs (`subject`, `contact`) as refs, which the output schema
+ * requires; a JSON copy turns them into `{ "/": uri }` and fails it.
+ */
+const copyActor = <T extends object>(actor: T | undefined): T | null => (actor ? { ...actor } : null);
+
 const differs = (before: unknown, after: unknown): boolean => JSON.stringify(before) !== JSON.stringify(after);
 
 const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOperation.UpdateTask.pipe(
@@ -140,8 +146,8 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
         ...(differs(before.status, task.status) && { status: task.status }),
         ...(differs(before.priority, task.priority) && { priority: task.priority ?? null }),
         ...(differs(before.estimate, task.estimate) && { estimate: task.estimate ?? null }),
-        ...(differs(before.assignee, task.assignee) && { assignee: plain(task.assignee) ?? null }),
-        ...(differs(before.delegate, task.delegate) && { delegate: plain(task.delegate) ?? null }),
+        ...(differs(before.assignee, task.assignee) && { assignee: copyActor(task.assignee) }),
+        ...(differs(before.delegate, task.delegate) && { delegate: copyActor(task.delegate) }),
         ...(differs(before.milestone, task.milestone?.uri) && { milestone: task.milestone ?? null }),
         ...(differs(before.parentTask, parent?.id) && { parentTask: parent ? Ref.make(parent) : null }),
       };
